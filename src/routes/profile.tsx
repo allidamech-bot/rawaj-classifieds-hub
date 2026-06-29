@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import {
   BadgeCheck,
   Bell,
@@ -10,6 +11,7 @@ import {
   LifeBuoy,
   Lock,
   LogIn,
+  LogOut,
   MessageCircle,
   Plus,
   Settings,
@@ -71,13 +73,24 @@ const settings = [
 
 function ProfilePage() {
   const auth = useAuth();
+  const [logoutError, setLogoutError] = useState("");
   const displayName = auth.profile?.displayName || auth.profile?.email || "زائر";
   const authNote =
     auth.status === "authUnavailable"
       ? "Supabase غير مهيأ حالياً — يبقى RAWAJ قابلاً للتصفح كنموذج تجريبي."
-      : auth.status === "signedIn"
-        ? "تم تحميل جلسة Supabase. الصلاحيات تظهر فقط إذا كانت محفوظة في قاعدة البيانات."
-        : "تسجيل الدخول غير مفعّل للمستخدم الحالي — صلاحيات الإدارة ستُربط بالحسابات لاحقاً.";
+      : auth.status === "loading"
+        ? "جاري تحميل جلسة الحساب."
+        : auth.status === "authError"
+          ? "حدث خطأ أثناء قراءة بيانات الحساب أو الصلاحيات."
+          : auth.status === "signedIn"
+            ? "تم تحميل جلسة Supabase. الصلاحيات تظهر فقط إذا كانت محفوظة في قاعدة البيانات."
+            : "تسجيل الدخول غير مفعّل للمستخدم الحالي — صلاحيات الإدارة ستُربط بالحسابات لاحقاً.";
+
+  async function handleLogout() {
+    setLogoutError("");
+    const result = await auth.signOut();
+    if (result.error) setLogoutError(result.error);
+  }
 
   return (
     <>
@@ -93,20 +106,32 @@ function ProfilePage() {
               <p className="text-xs text-primary-foreground/80">{authNote}</p>
             </div>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <button
-              disabled
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gold px-3 py-2 text-xs font-bold text-gold-foreground opacity-90 cursor-not-allowed"
-            >
-              <LogIn className="h-4 w-4" /> تسجيل الدخول · قريباً
-            </button>
-            <button
-              disabled
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-foreground/10 px-3 py-2 text-xs font-bold opacity-90 cursor-not-allowed"
-            >
-              <UserPlus className="h-4 w-4" /> إنشاء حساب · قريباً
-            </button>
-          </div>
+          {auth.status === "signedIn" ? (
+            <div className="mt-4">
+              <button
+                onClick={handleLogout}
+                className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary-foreground/10 px-3 py-2 text-xs font-bold"
+              >
+                <LogOut className="h-4 w-4" /> تسجيل الخروج
+              </button>
+              {logoutError && <p className="mt-2 text-xs text-gold">{logoutError}</p>}
+            </div>
+          ) : (
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Link
+                to="/login"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gold px-3 py-2 text-xs font-bold text-gold-foreground"
+              >
+                <LogIn className="h-4 w-4" /> تسجيل الدخول
+              </Link>
+              <button
+                disabled
+                className="inline-flex cursor-not-allowed items-center justify-center gap-1.5 rounded-xl bg-primary-foreground/10 px-3 py-2 text-xs font-bold opacity-70"
+              >
+                <UserPlus className="h-4 w-4" /> إنشاء حساب · لاحقاً
+              </button>
+            </div>
+          )}
         </section>
 
         <section className="rounded-2xl bg-card p-4 hairline">

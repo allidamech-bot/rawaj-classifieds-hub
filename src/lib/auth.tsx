@@ -10,6 +10,10 @@ import { AuthContext, type AuthContextValue } from "./auth-context";
 import type { AuthStatus } from "./auth-status";
 import { getSupabaseAuthUnavailableReason, isSupabaseConfigured, supabase } from "./supabase";
 
+const rolePriority: UserRole[] = ["owner", "admin", "moderator", "seller", "user"];
+
+const unavailableReason = getSupabaseAuthUnavailableReason();
+
 const signedOutState: AuthContextValue = {
   status: "signedOut",
   user: null,
@@ -18,9 +22,8 @@ const signedOutState: AuthContextValue = {
   reason: null,
   canAccessAdmin: false,
   canAccessOwnerControls: false,
+  signOut: async () => ({ error: null }),
 };
-
-const rolePriority: UserRole[] = ["owner", "admin", "moderator", "seller", "user"];
 
 function normalizeRoles(roles: string[] | null | undefined): UserRole[] {
   const knownRoles = new Set<UserRole>(rolePriority);
@@ -36,7 +39,7 @@ function primaryRole(roles: UserRole[]): UserRole {
 }
 
 async function fetchProfile(client: SupabaseClient, user: User): Promise<UserProfile> {
-  const { data: profileData } = await client
+  const { data: profileData, error: profileError } = await client
     .from("profiles")
     .select(
       "id,email,display_name,account_status,verification_status,governorate,created_at,updated_at",
@@ -44,7 +47,19 @@ async function fetchProfile(client: SupabaseClient, user: User): Promise<UserPro
     .eq("id", user.id)
     .maybeSingle();
 
-  const { data: roleData } = await client.from("user_roles").select("role").eq("user_id", user.id);
+  if (profileError) {
+    throw new Error(profileError.message);
+  }
+
+  const { data: roleData, error: roleError } = await client
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id);
+
+  if (roleError) {
+    throw new Error(roleError.message);
+  }
+
   const roles = normalizeRoles(roleData?.map((row) => row.role));
   const role = primaryRole(roles);
 
@@ -68,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [reason, setReason] = useState<string | null>(unavailableReason);
 
   useEffect(() => {
     const client = supabase;
@@ -76,28 +92,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStatus("authUnavailable");
       setSession(null);
       setProfile(null);
+      setReason(unavailableReason);
       return;
     }
 
     let active = true;
 
-    async function loadSession(client: SupabaseClient) {
-      const { data } = await client.auth.getSession();
-      if (!active) return;
-      setSession(data.session);
-      setStatus(data.session ? "signedIn" : "signedOut");
-      await loadProfile(client, data.session?.user ?? null);
-    }
-
     async function loadProfile(client: SupabaseClient, user: User | null) {
       if (!user) {
         setProfile(null);
+        setReason(null);
         return;
       }
 
-      const nextProfile = await fetchProfile(client, user);
+      try {
+        const nextProfile = await fetchProfile(client, user);
+        if (!active) return;
+        setProfile(nextProfile);
+        setReason(null);
+        setStatus("signedIn");
+      } catch (error) {
+        if (!active) return;
+        setProfile(null);
+        setStatus("authError");
+        setReason(error instanceof Error ? error.message : "تعذّر تحميل بيانات الحساب.");
+      }
+    }
+
+    async function loadSession(client: SupabaseClient) {
+      const { data, error } = await client.auth.getSession();
       if (!active) return;
-      setProfile(nextProfile);
+
+      if (error) {
+        setSession(null);
+        setProfile(null);
+        setStatus("authError");
+        setReason(error.message);
+        return;
+      }
+
+      setSession(data.session);
+      setStatus(data.session ? "signedIn" : "signedOut");
+      await loadProfile(client, data.session?.user ?? null);
     }
 
     loadSession(client);
@@ -115,11 +151,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(() => {
+    const signOut = async () => {
+      const client = supabase;
+
+      if (!client) {
+        return { error: unavailableReason };
+      }
+
+      const { error } = await client.auth.signOut();
+      if (error) return { error: error.message };
+
+      setSession(null);
+      setProfile(null);
+      setStatus("signedOut");
+      setReason(null);
+      return { error: null };
+    };
+
     if (!isSupabaseConfigured) {
       return {
         ...signedOutState,
         status: "authUnavailable",
-        reason: getSupabaseAuthUnavailableReason(),
+        reason: unavailableReason,
+        signOut,
       };
     }
 
@@ -128,11 +182,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user: session?.user ?? null,
       session,
       profile,
-      reason: null,
+      reason,
       canAccessAdmin: canAccessAdmin(profile),
       canAccessOwnerControls: canAccessOwnerControls(profile),
+      signOut,
     };
-  }, [profile, session, status]);
+  }, [profile, reason, session, status]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

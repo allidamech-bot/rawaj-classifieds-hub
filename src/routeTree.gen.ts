@@ -17,6 +17,7 @@ import { Route as PromotionRouteImport } from './routes/promotion'
 import { Route as ProhibitedRouteImport } from './routes/prohibited'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ListingsRouteImport } from './routes/listings'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as ChatsRouteImport } from './routes/chats'
@@ -71,6 +72,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ListingsRoute = ListingsRouteImport.update({
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/chats': typeof ChatsRoute
   '/favorites': typeof FavoritesRoute
   '/listings': typeof ListingsRouteWithChildren
+  '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/prohibited': typeof ProhibitedRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/chats': typeof ChatsRoute
   '/favorites': typeof FavoritesRoute
+  '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/prohibited': typeof ProhibitedRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/chats': typeof ChatsRoute
   '/favorites': typeof FavoritesRoute
   '/listings': typeof ListingsRouteWithChildren
+  '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/prohibited': typeof ProhibitedRoute
@@ -233,6 +242,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/favorites'
     | '/listings'
+    | '/login'
     | '/privacy'
     | '/profile'
     | '/prohibited'
@@ -256,6 +266,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/chats'
     | '/favorites'
+    | '/login'
     | '/privacy'
     | '/profile'
     | '/prohibited'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/favorites'
     | '/listings'
+    | '/login'
     | '/privacy'
     | '/profile'
     | '/prohibited'
@@ -307,6 +319,7 @@ export interface RootRouteChildren {
   ChatsRoute: typeof ChatsRoute
   FavoritesRoute: typeof FavoritesRoute
   ListingsRoute: typeof ListingsRouteWithChildren
+  LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   ProhibitedRoute: typeof ProhibitedRoute
@@ -374,6 +387,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/listings': {
@@ -524,6 +544,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatsRoute: ChatsRoute,
   FavoritesRoute: FavoritesRoute,
   ListingsRoute: ListingsRouteWithChildren,
+  LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   ProhibitedRoute: ProhibitedRoute,

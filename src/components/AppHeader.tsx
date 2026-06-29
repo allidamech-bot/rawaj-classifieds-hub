@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { Bell, MapPin, ShieldCheck } from "lucide-react";
+import { Bell, LogIn, MapPin, ShieldCheck, User, UserCog } from "lucide-react";
 import { useState } from "react";
 import { governorates } from "@/data/mockData";
+import { useAuth } from "@/lib/use-auth";
 
 interface Props {
   /** Compact header (used on inner pages). */
@@ -12,6 +13,7 @@ interface Props {
 export function AppHeader({ compact = false, title }: Props) {
   const [gov, setGov] = useState("كل سوريا");
   const [open, setOpen] = useState(false);
+  const auth = useAuth();
 
   return (
     <header className="sticky top-0 z-30 bg-primary text-primary-foreground shadow-soft">
@@ -40,6 +42,28 @@ export function AppHeader({ compact = false, title }: Props) {
           >
             <Bell className="h-4 w-4" />
           </button>
+          {auth.canAccessOwnerControls && (
+            <Link
+              to="/admin"
+              aria-label="لوحة المالك"
+              title="لوحة المالك"
+              className="grid h-9 w-9 place-items-center rounded-full bg-gold text-gold-foreground transition hover:opacity-90"
+            >
+              <UserCog className="h-4 w-4" />
+            </Link>
+          )}
+          <Link
+            to={auth.status === "signedIn" ? "/profile" : "/login"}
+            aria-label={auth.status === "signedIn" ? "حسابي" : "تسجيل الدخول"}
+            title={auth.status === "signedIn" ? "حسابي" : "تسجيل الدخول"}
+            className="grid h-9 w-9 place-items-center rounded-full bg-primary-foreground/10 text-primary-foreground/80 transition hover:bg-primary-foreground/20"
+          >
+            {auth.status === "signedIn" ? (
+              <User className="h-4 w-4" />
+            ) : (
+              <LogIn className="h-4 w-4" />
+            )}
+          </Link>
         </div>
       </div>
 

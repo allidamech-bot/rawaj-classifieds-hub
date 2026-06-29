@@ -11,6 +11,7 @@ export interface AuthContextValue {
   reason: string | null;
   canAccessAdmin: boolean;
   canAccessOwnerControls: boolean;
+  signOut: () => Promise<{ error: string | null }>;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
