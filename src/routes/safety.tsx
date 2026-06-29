@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ShieldAlert, MapPin, AlertTriangle, MessageSquare, EyeOff, UserCheck } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ShieldAlert, ShoppingCart, Store, CreditCard, Flag } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 
 export const Route = createFileRoute("/safety")({
@@ -7,33 +7,82 @@ export const Route = createFileRoute("/safety")({
   component: SafetyPage,
 });
 
-const tips = [
-  { icon: ShieldAlert, text: "لا تحول المال قبل التأكد من السلعة." },
-  { icon: MapPin, text: "قابل البائع في مكان آمن إن أمكن." },
-  { icon: AlertTriangle, text: "احذر الأسعار غير الواقعية." },
-  { icon: MessageSquare, text: "أبلغ عن الإعلانات المشبوهة فوراً." },
-  { icon: EyeOff, text: "لا تشارك معلوماتك الحساسة مع الغرباء." },
-  { icon: UserCheck, text: "تأكد من هوية البائع عند التعامل بمبالغ كبيرة." },
+const sections: { icon: typeof ShoppingCart; title: string; items: string[]; tone?: "warn" }[] = [
+  {
+    icon: ShoppingCart,
+    title: "أمان المشتري",
+    items: [
+      "افحص السلعة قبل الدفع.",
+      "قابل البائع في مكان عام وآمن.",
+      "لا تحوّل المال قبل التأكد.",
+      "احذر الأسعار غير المنطقية.",
+      "اطلب صوراً إضافية أو معاينة فيديو عند الشك.",
+    ],
+  },
+  {
+    icon: Store,
+    title: "أمان البائع",
+    items: [
+      "لا تشارك بيانات حساسة (هوية، حسابات بنكية، رموز).",
+      "تأكد من جدية المشتري قبل تحديد موعد المعاينة.",
+      "استخدم أماكن آمنة للتسليم.",
+      "احتفظ بسجل المحادثة (سيتم تفعيله لاحقاً عند ربط الرسائل).",
+    ],
+  },
+  {
+    icon: CreditCard,
+    title: "أمان الدفع والتحويل",
+    tone: "warn",
+    items: [
+      "لا يوجد نظام دفع داخل رَوَاج حالياً.",
+      "أي تحويل خارج المنصة هو على مسؤولية المستخدم.",
+      "سيتم توضيح أي نظام دفع رسمي لاحقاً عند تفعيله.",
+      "لا تشارك أرقام بطاقات أو كلمات مرور مع أي طرف.",
+    ],
+  },
+  {
+    icon: Flag,
+    title: "التبليغ والإبلاغ",
+    items: [
+      "بلّغ عن الإعلانات المشبوهة أو المضللة.",
+      "بلّغ عن المستخدمين المسيئين أو الذين يحاولون الاحتيال.",
+      "ميزة التبليغ قيد التطوير وستُفعَّل لاحقاً مع لوحة الإدارة.",
+    ],
+  },
 ];
 
 function SafetyPage() {
   return (
     <>
       <PageHeader title="نصائح الأمان" />
-      <main className="container-wide pt-4 pb-8">
-        <p className="mb-4 text-sm text-muted-foreground">
-          سلامتك أولوية. اتّبع هذه الإرشادات للتعامل بأمان داخل رَوَاج.
-        </p>
-        <div className="space-y-2">
-          {tips.map((t, i) => (
-            <div key={i} className="flex items-start gap-3 rounded-2xl bg-card p-4 hairline">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-warning/10 text-warning">
-                <t.icon className="h-5 w-5" />
-              </span>
-              <p className="pt-1.5 text-sm font-medium text-foreground">{t.text}</p>
+      <main className="container-wide pt-4 pb-8 space-y-4">
+        <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-soft">
+          <div className="flex items-center gap-3">
+            <ShieldAlert className="h-6 w-6 text-gold" />
+            <div>
+              <h2 className="text-lg font-extrabold">سلامتك أولويتنا</h2>
+              <p className="text-xs text-primary-foreground/80">
+                رَوَاج منصة وساطة بين الأفراد، ولا نتدخل في عمليات البيع والشراء بشكل مباشر.
+              </p>
             </div>
-          ))}
-        </div>
+          </div>
+        </section>
+
+        {sections.map((s) => (
+          <section key={s.title} className={`rounded-2xl p-4 hairline ${s.tone === "warn" ? "bg-warning/10" : "bg-card"}`}>
+            <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-extrabold">
+              <s.icon className="h-4 w-4 text-gold" /> {s.title}
+            </h3>
+            <ul className="list-disc ps-5 space-y-1.5 text-sm text-foreground/90">
+              {s.items.map((t) => (<li key={t}>{t}</li>))}
+            </ul>
+          </section>
+        ))}
+
+        <p className="text-center text-xs text-muted-foreground">
+          هل تحتاج مساعدة فورية؟{" "}
+          <Link to="/support" className="font-bold text-primary underline-offset-2 hover:underline">تواصل مع الدعم</Link>
+        </p>
       </main>
     </>
   );
