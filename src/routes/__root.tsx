@@ -76,7 +76,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#101722" },
-      { title: "رَوَاج | RAWAJ — السوق القريب بثقة" },
+      { title: "رَوَاج | RAWAJ" },
       {
         name: "description",
         content:
@@ -84,9 +84,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { name: "author", content: "RAWAJ" },
       { property: "og:title", content: "رَوَاج | RAWAJ" },
-      { property: "og:description", content: "السوق السوري للإعلانات المجانية — منظّم وموثوق." },
+      { property: "og:description", content: "سوق إعلانات مبوبة مجاني لسوريا. بيع واشتري سيارات، عقارات، موبايلات، وظائف وخدمات حسب المحافظة بسهولة وبدون تعقيد." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "رَوَاج | RAWAJ" },
+      { name: "description", content: "سوق إعلانات مبوبة مجاني لسوريا. بيع واشتري سيارات، عقارات، موبايلات، وظائف وخدمات حسب المحافظة بسهولة وبدون تعقيد." },
+      { name: "twitter:description", content: "سوق إعلانات مبوبة مجاني لسوريا. بيع واشتري سيارات، عقارات، موبايلات، وظائف وخدمات حسب المحافظة بسهولة وبدون تعقيد." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/zIwkXClYffUK7hi3aEKhqqdn3Nh1/social-images/social-1782706568346-ChatGPT_Image_29_يونيو_2026،_07_15_42_ص.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/zIwkXClYffUK7hi3aEKhqqdn3Nh1/social-images/social-1782706568346-ChatGPT_Image_29_يونيو_2026،_07_15_42_ص.webp" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
