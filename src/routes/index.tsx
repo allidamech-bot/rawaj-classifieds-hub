@@ -27,10 +27,10 @@ export const Route = createFileRoute("/")({
 });
 
 const quickFilters = [
-  { id: "latest", label: "الأحدث", icon: Clock },
-  { id: "featured", label: "المميز", icon: Sparkles },
-  { id: "nearby", label: "الأقرب", icon: MapPin },
-  { id: "gov", label: "حسب المحافظة", icon: MapPin },
+  { id: "latest", label: "الأحدث", icon: Clock, disabled: false },
+  { id: "featured", label: "المميز", icon: Sparkles, disabled: false },
+  { id: "gov", label: "حسب المحافظة", icon: MapPin, disabled: false },
+  { id: "nearby", label: "الأقرب · قريباً", icon: MapPin, disabled: true },
 ];
 
 function HomePage() {
