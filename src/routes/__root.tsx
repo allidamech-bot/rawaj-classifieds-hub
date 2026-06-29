@@ -120,7 +120,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background pb-24">
+      <div className="min-h-screen bg-background pb-24 lg:pb-8">
         <Outlet />
       </div>
       <BottomNav />
