@@ -46,13 +46,24 @@ function HomePage() {
       <AppHeader />
 
       <main className="container-wide pt-4">
+        {/* Hero / value proposition */}
+        <section className="mb-4 rounded-2xl bg-gradient-to-bl from-card to-muted-surface p-4 sm:p-5 hairline shadow-soft">
+          <h1 className="text-lg font-extrabold leading-tight text-foreground sm:text-xl">
+            رَوَاج — سوق سوريا المجاني للإعلانات
+          </h1>
+          <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+            بيع واشتري داخل سوريا بسهولة: إعلانات محلية حسب المحافظة، بدون عمولات وبدون تعقيد.
+          </p>
+        </section>
+
         {/* Search */}
         <div className="rounded-2xl bg-card p-2 shadow-soft hairline">
           <div className="flex items-center gap-2 rounded-xl bg-muted-surface px-3 py-2.5">
             <Search className="h-4 w-4 text-muted-foreground" />
             <input
               type="search"
-              placeholder="ابحث عن سيارة، منزل، هاتف، خدمة…"
+              aria-label="ابحث في رَوَاج"
+              placeholder="ابحث عن سيارة، منزل، هاتف، وظيفة…"
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>

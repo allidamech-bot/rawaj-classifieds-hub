@@ -208,13 +208,26 @@ function AddListingPage() {
               >
                 السابق
               </button>
-              <button
-                disabled={step === steps.length - 1}
-                onClick={() => setStep((s) => Math.min(steps.length - 1, s + 1))}
-                className="rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
-              >
-                متابعة
-              </button>
+              {step < steps.length - 1 ? (
+                <button
+                  disabled={
+                    (step === 0 && !categoryId) ||
+                    (step === 2 && (title.length < 4 || !gov || !district))
+                  }
+                  onClick={() => setStep((s) => Math.min(steps.length - 1, s + 1))}
+                  className="rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
+                >
+                  متابعة
+                </button>
+              ) : (
+                <button
+                  disabled
+                  title="النشر سيُفعَّل لاحقاً"
+                  className="cursor-not-allowed rounded-xl bg-emerald-trust/80 px-6 py-2.5 text-sm font-bold text-emerald-trust-foreground opacity-90"
+                >
+                  نشر الإعلان · يُفعَّل لاحقاً
+                </button>
+              )}
             </div>
           </div>
 

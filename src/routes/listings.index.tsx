@@ -125,8 +125,12 @@ function ListingsPage() {
               {c.label}
             </button>
           ))}
-          <button className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold hairline">
-            <SlidersHorizontal className="h-3.5 w-3.5" /> فلاتر أخرى
+          <button
+            disabled
+            title="قريباً"
+            className="inline-flex shrink-0 cursor-not-allowed items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground hairline opacity-70"
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5" /> فلاتر أخرى · قريباً
           </button>
         </div>
 
@@ -157,8 +161,12 @@ function ListingsPage() {
         {/* List */}
         {filtered.length === 0 ? (
           <div className="mt-10 rounded-2xl bg-card p-10 text-center hairline">
-            <p className="text-sm font-semibold text-foreground">لا توجد إعلانات حالياً في هذا القسم</p>
-            <p className="mt-1 text-xs text-muted-foreground">جرّب تغيير الفلاتر أو المحافظة.</p>
+            <p className="text-sm font-semibold text-foreground">لا توجد إعلانات مطابقة حالياً</p>
+            <p className="mt-1 text-xs text-muted-foreground">جرّب تغيير المحافظة أو القسم، أو اعرض كل الإعلانات.</p>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <Link to="/listings" className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">عرض كل الإعلانات</Link>
+              <Link to="/add-listing" className="rounded-xl bg-gold px-4 py-2 text-xs font-bold text-gold-foreground">أضف إعلانك</Link>
+            </div>
           </div>
         ) : (
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

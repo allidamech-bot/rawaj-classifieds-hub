@@ -34,8 +34,8 @@ function PromotionPage() {
                   <p className="mt-1 text-xs text-muted-foreground">{p.d}</p>
                 </div>
               </div>
-              <button className="mt-4 w-full rounded-xl bg-primary py-2 text-xs font-bold text-primary-foreground opacity-90">
-                طلب التمييز
+              <button disabled title="سيُفعَّل لاحقاً" className="mt-4 w-full cursor-not-allowed rounded-xl bg-primary py-2 text-xs font-bold text-primary-foreground opacity-60">
+                طلب التمييز · قريباً
               </button>
             </div>
           ))}
