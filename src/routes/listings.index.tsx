@@ -125,8 +125,12 @@ function ListingsPage() {
               {c.label}
             </button>
           ))}
-          <button className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold hairline">
-            <SlidersHorizontal className="h-3.5 w-3.5" /> فلاتر أخرى
+          <button
+            disabled
+            title="قريباً"
+            className="inline-flex shrink-0 cursor-not-allowed items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground hairline opacity-70"
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5" /> فلاتر أخرى · قريباً
           </button>
         </div>
 
