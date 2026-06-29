@@ -64,6 +64,11 @@ export interface ContactOptions {
   whatsapp: boolean;
 }
 
+export type ListingStatus = "active" | "pending" | "rejected" | "sold" | "expired";
+export type PromotionStatus = "none" | "pending_review" | "active" | "expired";
+export type VerificationStatus = "unverified" | "pending" | "verified";
+export type PaymentStatus = "none" | "awaiting_proof" | "under_review" | "confirmed" | "rejected";
+
 export interface Listing {
   id: string;
   title: string;
@@ -89,4 +94,15 @@ export interface Listing {
   details: ListingDetails;
   placeholderType: PlaceholderType;
   contactOptions: ContactOptions;
+  /** Optional UI-only fields */
+  condition?: string;
+  imageCount?: number;
+  sellerBio?: string;
+  sellerLocation?: string;
+  sellerListingsCount?: number;
+  contactAvailability?: string;
+  listingStatus?: ListingStatus;
+  promotionStatus?: PromotionStatus;
+  verificationStatus?: VerificationStatus;
+  isDemo?: boolean;
 }
