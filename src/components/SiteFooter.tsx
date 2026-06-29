@@ -25,7 +25,6 @@ const groups: { title: string; links: { to: string; label: string }[] }[] = [
     links: [
       { to: "/terms", label: "شروط الاستخدام" },
       { to: "/privacy", label: "سياسة الخصوصية" },
-      { to: "/admin", label: "لوحة الإدارة (مستقبلي)" },
     ],
   },
 ];
