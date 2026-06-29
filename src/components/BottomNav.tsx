@@ -34,7 +34,7 @@ export function BottomNav() {
             return (
               <Link
                 key={it.to}
-                to={it.to}
+                to={it.to as "/"}
                 className="flex flex-col items-center gap-1 pt-1 pb-2"
                 aria-label={it.label}
               >
@@ -48,7 +48,7 @@ export function BottomNav() {
           return (
             <Link
               key={it.to}
-              to={it.to}
+              to={it.to as "/"}
               className={`flex flex-col items-center gap-1 py-2 transition ${
                 active ? "text-primary" : "text-muted-foreground"
               }`}
