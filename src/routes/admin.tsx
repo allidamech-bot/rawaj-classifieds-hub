@@ -7,13 +7,13 @@ export const Route = createFileRoute("/admin")({
   component: AdminLayout,
 });
 
-const tabs = [
+const tabs: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
   { to: "/admin", label: "نظرة عامة", icon: LayoutDashboard, exact: true },
   { to: "/admin/pending", label: "إعلانات للمراجعة", icon: FileCheck },
   { to: "/admin/reports", label: "البلاغات", icon: Flag },
   { to: "/admin/users", label: "المستخدمون", icon: Users },
   { to: "/admin/promotions", label: "طلبات التمييز", icon: Sparkles },
-] as const;
+];
 
 function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
