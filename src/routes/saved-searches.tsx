@@ -64,8 +64,10 @@ function SavedSearchesPage() {
   if (auth.status === "authUnavailable") {
     return (
       <State
-        heading="Supabase غير مهيأ"
-        body="عرض البحث المحفوظ يحتاج ضبط متغيرات Supabase العامة أولاً."
+        heading="البحث المحفوظ قيد التفعيل"
+        body="حفظ عمليات البحث سيعمل مع الحسابات بعد اكتمال التفعيل. يمكنك استخدام فلاتر التصفح حالياً."
+        actionLabel="ابدأ البحث"
+        actionTo="/listings"
       />
     );
   }
@@ -77,14 +79,20 @@ function SavedSearchesPage() {
         <div className="rounded-2xl bg-card p-4 hairline">
           <h2 className="text-sm font-extrabold">عمليات البحث المحفوظة</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            تعرض هذه الصفحة عمليات البحث المحفوظة للحساب الحالي من Supabase فقط.
+            تعرض هذه الصفحة عمليات البحث المحفوظة للحساب الحالي فقط، ولا تستخدم بيانات تجريبية
+            كبديل.
           </p>
         </div>
 
         {loading ? (
           <Panel title="جارٍ تحميل عمليات البحث" />
         ) : error ? (
-          <Panel title={error.message} />
+          <Panel
+            title="تعذر تحميل عمليات البحث"
+            body="البحث المحفوظ قيد التفعيل حالياً. استخدم صفحة التصفح للبحث مباشرة."
+            actionLabel="تصفح الإعلانات"
+            actionTo="/listings"
+          />
         ) : items.length === 0 ? (
           <Panel
             title="لا توجد عمليات بحث محفوظة"

@@ -78,8 +78,10 @@ function FavoritesPage() {
     return (
       <State
         title="المفضلة"
-        heading="Supabase غير مهيأ"
-        body="عرض المفضلة الحقيقي يحتاج ضبط VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY."
+        heading="المفضلة قيد التفعيل"
+        body="حفظ الإعلانات سيعمل مع الحسابات بعد اكتمال التفعيل. يمكنك تصفح الإعلانات حالياً والعودة للمفضلة قريباً."
+        actionLabel="تصفح الإعلانات"
+        actionTo="/listings"
       />
     );
   }
@@ -91,7 +93,8 @@ function FavoritesPage() {
         <div className="rounded-2xl bg-card p-4 hairline">
           <h2 className="text-sm font-extrabold">المفضلة</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            هذه الصفحة تعرض مفضلة الحساب الحالي من Supabase فقط.
+            هذه الصفحة تعرض الإعلانات التي يحفظها الحساب الحالي فقط، ولا تستخدم بيانات تجريبية
+            كبديل.
           </p>
         </div>
 
@@ -101,7 +104,13 @@ function FavoritesPage() {
             title="جارٍ تحميل المفضلة"
           />
         ) : error ? (
-          <Panel icon={<Heart className="h-6 w-6 text-muted-foreground" />} title={error.message} />
+          <Panel
+            icon={<Heart className="h-6 w-6 text-muted-foreground" />}
+            title="تعذر تحميل المفضلة"
+            body="المفضلة قيد التفعيل حالياً. حاول لاحقاً أو تابع تصفح الإعلانات."
+            actionLabel="تصفح الإعلانات"
+            actionTo="/listings"
+          />
         ) : items.length === 0 ? (
           <Panel
             icon={<Heart className="h-6 w-6 text-muted-foreground" />}

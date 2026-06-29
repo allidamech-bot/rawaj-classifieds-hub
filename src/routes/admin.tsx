@@ -28,7 +28,7 @@ function AdminLayout() {
         <main className="container-wide pt-4 pb-8">
           <AdminStateCard
             title="جاري التحقق من الصلاحيات"
-            message="يتم تحميل جلسة Supabase وقراءة الدور من قاعدة البيانات."
+            message="يتم تحميل جلسة الحساب وقراءة الدور من جدول الأدوار."
           />
         </main>
       </>
@@ -41,8 +41,8 @@ function AdminLayout() {
         <PageHeader title="لوحة الإدارة" />
         <main className="container-wide pt-4 pb-8">
           <AdminStateCard
-            title="المصادقة غير مهيأة"
-            message="لا يمكن عرض لوحة المالك قبل ضبط Supabase URL و anon key. التصفح العام يبقى متاحاً."
+            title="لوحة الإدارة قيد التفعيل"
+            message="لا يمكن عرض لوحة المالك التشغيلية قبل اكتمال ربط الحسابات. التصفح العام يبقى متاحاً."
           />
         </main>
       </>
@@ -56,7 +56,7 @@ function AdminLayout() {
         <main className="container-wide pt-4 pb-8">
           <AdminStateCard
             title="تسجيل الدخول مطلوب"
-            message="يجب تسجيل الدخول أولاً، ثم يتم التحقق من دور المالك من جدول الأدوار في Supabase."
+            message="يجب تسجيل الدخول أولاً، ثم يتم التحقق من دور المالك من جدول الأدوار."
             actionTo="/login"
             actionLabel="تسجيل الدخول"
           />
@@ -72,7 +72,7 @@ function AdminLayout() {
         <main className="container-wide pt-4 pb-8">
           <AdminStateCard
             title="غير مخوّل"
-            message="هذه المساحة مخصّصة لمالك المنصة فقط. الصلاحية تُقرأ من جدول الأدوار في Supabase ولا تُمنح من الواجهة."
+            message="هذه المساحة مخصّصة لمالك المنصة فقط. الصلاحية تُقرأ من جدول الأدوار ولا تُمنح من الواجهة."
           />
         </main>
       </>
@@ -86,8 +86,8 @@ function AdminLayout() {
         <div className="mb-4 flex items-start gap-2 rounded-2xl bg-warning/10 p-3 hairline">
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <p className="text-xs text-foreground/90">
-            لوحة إدارة مستقبلية لصاحب التطبيق والمشرفين. Auth والأدوار تُقرأ من Supabase، ومعظم
-            إجراءات الإدارة ما زالت غير مفعّلة أو بانتظار ربط جداول الإنتاج. {demoNotice}.
+            لوحة إدارة مستقبلية لصاحب التطبيق والمشرفين. الحسابات والأدوار تُقرأ من مصدر الصلاحيات،
+            ومعظم إجراءات الإدارة ما زالت غير مفعّلة أو بانتظار اكتمال الربط التشغيلي. {demoNotice}.
           </p>
         </div>
         <nav className="mb-4 flex gap-2 overflow-x-auto pb-1">

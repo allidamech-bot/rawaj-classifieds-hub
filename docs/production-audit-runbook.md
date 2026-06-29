@@ -62,3 +62,9 @@ from Supabase Dashboard SQL Editor only.
 - Messages, payments, promotion payment proof, user freezing/deletion, and real seller verification
   remain future/admin-demo areas.
 - Admin audit-log writes for listing/report moderation should be connected in a later backend pass.
+
+## Backend work intentionally postponed
+
+This frontend stabilization batch freezes backend/Supabase changes temporarily. The next backend pass should
+handle production deploy env wiring, final listing lifecycle QA, real signup/onboarding, public seller profile
+fields, messaging, notifications, promotion/payment review, and production support workflows.

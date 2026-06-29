@@ -62,7 +62,8 @@ function AdminOverview() {
               <p className="text-xs font-bold text-primary-foreground/75">Owner Control Center</p>
               <h2 className="text-xl font-extrabold">صاحب التطبيق</h2>
               <p className="mt-1 max-w-2xl text-xs text-primary-foreground/80">
-                هذه لوحة المالك كنموذج تجريبي — سيتم تفعيل الصلاحيات عند ربط الحسابات والـ Backend.
+                هذه لوحة المالك كنموذج تجريبي — سيتم تفعيل الصلاحيات عند اكتمال ربط الحسابات
+                والأنظمة التشغيلية.
               </p>
             </div>
           </div>
@@ -304,8 +305,8 @@ function AdminOverview() {
       </section>
 
       <div className="rounded-2xl bg-warning/10 p-3 text-xs text-foreground/90 hairline">
-        كل الأزرار والإجراءات داخل لوحة المالك/الإدارة معطّلة ومعلّمة كنموذج تجريبي. Normal users لا
-        يظهر لهم وصول إداري حقيقي الآن.
+        كل الأزرار والإجراءات داخل لوحة المالك/الإدارة معطّلة ومعلّمة كنموذج تجريبي. المستخدمون
+        العاديون لا يظهر لهم وصول إداري حقيقي الآن.
         <Link to="/profile" className="ms-1 font-bold text-primary">
           عرض ربط الحسابات في الملف الشخصي
         </Link>

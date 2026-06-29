@@ -1,6 +1,7 @@
 import type { AdminPermissions, UserRole } from "@/types";
 
-export const demoNotice = "نموذج تجريبي · غير مفعّل حالياً · يتطلب Backend وصلاحيات حقيقية لاحقاً";
+export const demoNotice =
+  "نموذج تجريبي · غير مفعّل حالياً · يتطلب ربطاً تشغيلياً وصلاحيات حقيقية لاحقاً";
 
 export const roleLabels: Record<UserRole, string> = {
   guest: "زائر",

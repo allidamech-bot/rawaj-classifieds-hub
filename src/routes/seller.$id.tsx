@@ -56,8 +56,8 @@ function SellerPage() {
       <PageHeader title="ملف البائع" />
       <main className="container-wide pt-4 pb-8">
         <div className="mb-4 rounded-2xl bg-warning/10 p-3 text-xs text-foreground/90 hairline">
-          ملف البائع الحالي نموذج عرض غير إنتاجي. عند التفعيل يجب قراءة بيانات عامة فقط من Supabase
-          وعرض الإعلانات المعتمدة لهذا البائع دون كشف أي بيانات خاصة.
+          ملف البائع العام قيد التجهيز حالياً. عند التفعيل ستظهر البيانات العامة والإعلانات المعتمدة
+          فقط دون كشف أي بيانات خاصة.
         </div>
 
         <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-premium">

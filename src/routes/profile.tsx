@@ -56,7 +56,7 @@ const accountMenu = [
 const accountLevels = [
   ["مستخدم عادي", "تصفح وحفظ وإضافة إعلانات لاحقاً"],
   ["بائع", "حساب يملك إعلانات منشورة"],
-  ["بائع موثّق", "توثيق تجريبي يحتاج Backend لاحقاً"],
+  ["بائع موثّق", "توثيق تجريبي يحتاج ربطاً تشغيلياً لاحقاً"],
   ["متجر", "واجهة بائع تجارية ضمن سوريا"],
   ["نشاط تجاري", "حساب أعمال placeholder"],
   ["مشرف", "صلاحيات إدارية يحددها المالك لاحقاً"],
@@ -83,14 +83,14 @@ function ProfilePage() {
   const displayName = auth.profile?.displayName || auth.profile?.email || "زائر";
   const authNote =
     auth.status === "authUnavailable"
-      ? "Supabase غير مهيأ حالياً — يبقى RAWAJ قابلاً للتصفح كنموذج تجريبي."
+      ? "الحسابات قيد التفعيل حالياً — يبقى رَوَاج متاحاً للتصفح كواجهة بيتا."
       : auth.status === "loading"
         ? "جاري تحميل جلسة الحساب."
         : auth.status === "authError"
           ? "حدث خطأ أثناء قراءة بيانات الحساب أو الصلاحيات."
           : auth.status === "signedIn"
-            ? "تم تحميل جلسة Supabase. الصلاحيات تظهر فقط إذا كانت محفوظة في قاعدة البيانات."
-            : "أنت غير مسجل الدخول حالياً. صلاحيات الإدارة تظهر فقط بعد تسجيل الدخول وقراءة الدور من Supabase.";
+            ? "تم تحميل جلسة الحساب. الصلاحيات تظهر فقط إذا كانت محفوظة في جدول الأدوار."
+            : "أنت غير مسجل الدخول حالياً. صلاحيات الإدارة تظهر فقط بعد تسجيل الدخول وقراءة الدور من جدول الأدوار.";
 
   async function handleLogout() {
     setLogoutError("");
@@ -198,12 +198,13 @@ function ProfilePage() {
           </p>
           {auth.status === "authUnavailable" && (
             <p className="mt-2 rounded-xl bg-card p-2 text-[11px] text-muted-foreground hairline">
-              Supabase غير مهيأ حالياً، لذلك تبقى لوحة الإدارة المعروضة نموذجاً تجريبياً فقط.
+              الحسابات قيد التفعيل حالياً، لذلك تبقى لوحة الإدارة واجهة تمهيدية فقط حتى اكتمال الربط
+              التشغيلي.
             </p>
           )}
           {auth.status === "signedIn" && (
             <p className="mt-2 rounded-xl bg-card p-2 text-[11px] text-muted-foreground hairline">
-              الدور الحالي من قاعدة البيانات: {auth.profile?.role ?? "غير محدد"} · الوصول الإداري:{" "}
+              الدور الحالي من جدول الأدوار: {auth.profile?.role ?? "غير محدد"} · الوصول الإداري:{" "}
               {auth.canAccessAdmin ? "مسموح حسب الدور" : "غير مسموح"}
             </p>
           )}
@@ -253,7 +254,7 @@ function ProfilePage() {
               </Link>
             </div>
             {myListingsLoading ? (
-              <p className="text-xs text-muted-foreground">جارٍ تحميل إعلاناتك من Supabase.</p>
+              <p className="text-xs text-muted-foreground">جارٍ تحميل إعلاناتك المرتبطة بالحساب.</p>
             ) : myListingsError ? (
               <p className="text-xs text-muted-foreground">{myListingsError.message}</p>
             ) : myListings.length === 0 ? (
@@ -315,7 +316,7 @@ function ProfilePage() {
           </h3>
           <p className="text-xs text-muted-foreground">
             التوثيق وميزات المتاجر وإدارة المشرفين غير مفعّلة حالياً. سيتم ربطها لاحقاً بالحسابات،
-            Backend، صلاحيات حقيقية، وقيود أمان.
+            الحسابات والصلاحيات وقيود الأمان التشغيلية.
           </p>
           <button
             disabled
