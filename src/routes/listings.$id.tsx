@@ -178,10 +178,10 @@ function ListingDetailsPage() {
 
         {/* Report / block */}
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold text-destructive hairline transition hover:bg-destructive/5">
+          <button title="عرض فقط — سيُفعَّل لاحقاً" className="inline-flex items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold text-destructive hairline transition hover:bg-destructive/5">
             <Flag className="h-4 w-4" /> إبلاغ
           </button>
-          <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold text-foreground hairline transition hover:bg-muted-surface">
+          <button title="عرض فقط — سيُفعَّل لاحقاً" className="inline-flex items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold text-foreground hairline transition hover:bg-muted-surface">
             <Ban className="h-4 w-4" /> حظر المستخدم
           </button>
         </div>
