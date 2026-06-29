@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 import {
   canAccessAdmin,
@@ -6,21 +6,9 @@ import {
   type UserProfile,
   type UserRole,
 } from "./auth-types";
+import { AuthContext, type AuthContextValue } from "./auth-context";
+import type { AuthStatus } from "./auth-status";
 import { getSupabaseAuthUnavailableReason, isSupabaseConfigured, supabase } from "./supabase";
-
-export type AuthStatus = "loading" | "signedOut" | "signedIn" | "authUnavailable";
-
-interface AuthContextValue {
-  status: AuthStatus;
-  user: User | null;
-  session: Session | null;
-  profile: UserProfile | null;
-  reason: string | null;
-  canAccessAdmin: boolean;
-  canAccessOwnerControls: boolean;
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const signedOutState: AuthContextValue = {
   status: "signedOut",
@@ -32,28 +20,45 @@ const signedOutState: AuthContextValue = {
   canAccessOwnerControls: false,
 };
 
+const rolePriority: UserRole[] = ["owner", "admin", "moderator", "seller", "user"];
+
+function normalizeRoles(roles: string[] | null | undefined): UserRole[] {
+  const knownRoles = new Set<UserRole>(rolePriority);
+  const normalized = (roles ?? []).filter((role): role is UserRole =>
+    knownRoles.has(role as UserRole),
+  );
+
+  return normalized.length > 0 ? normalized : ["user"];
+}
+
+function primaryRole(roles: UserRole[]): UserRole {
+  return rolePriority.find((role) => roles.includes(role)) ?? "user";
+}
+
 async function fetchProfile(client: SupabaseClient, user: User): Promise<UserProfile> {
-  const { data } = await client
+  const { data: profileData } = await client
     .from("profiles")
     .select(
-      "id,email,display_name,account_status,verification_status,governorate,created_at,updated_at,user_roles(role)",
+      "id,email,display_name,account_status,verification_status,governorate,created_at,updated_at",
     )
     .eq("id", user.id)
     .maybeSingle();
 
-  const roleRows = Array.isArray(data?.user_roles) ? data.user_roles : [];
-  const role = (roleRows[0]?.role ?? "user") as UserRole;
+  const { data: roleData } = await client.from("user_roles").select("role").eq("user_id", user.id);
+  const roles = normalizeRoles(roleData?.map((row) => row.role));
+  const role = primaryRole(roles);
 
   return {
     id: user.id,
-    email: data?.email ?? user.email ?? null,
-    displayName: data?.display_name ?? null,
+    email: profileData?.email ?? user.email ?? null,
+    displayName: profileData?.display_name ?? null,
     role,
-    accountStatus: data?.account_status ?? "pending_review",
-    verificationStatus: data?.verification_status ?? "unverified",
-    governorate: data?.governorate ?? null,
-    createdAt: data?.created_at ?? null,
-    updatedAt: data?.updated_at ?? null,
+    roles,
+    accountStatus: profileData?.account_status ?? "pending_review",
+    verificationStatus: profileData?.verification_status ?? "unverified",
+    governorate: profileData?.governorate ?? null,
+    createdAt: profileData?.created_at ?? null,
+    updatedAt: profileData?.updated_at ?? null,
   };
 }
 
@@ -130,12 +135,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [profile, session, status]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const value = useContext(AuthContext);
-  if (!value) {
-    throw new Error("useAuth must be used inside AuthProvider");
-  }
-  return value;
 }
