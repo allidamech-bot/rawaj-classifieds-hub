@@ -74,7 +74,11 @@ function HomePage() {
           {quickFilters.map((f) => (
             <button
               key={f.id}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold hairline transition hover:bg-muted-surface"
+              disabled={f.disabled}
+              title={f.disabled ? "قريباً" : undefined}
+              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold hairline transition ${
+                f.disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-muted-surface"
+              }`}
             >
               <f.icon className="h-3.5 w-3.5 text-gold" />
               {f.label}
