@@ -368,3 +368,45 @@ function Tip({ children }: { children: React.ReactNode }) {
     </li>
   );
 }
+
+const CATEGORY_FIELDS: Record<string, string[]> = {
+  cars: ["الماركة", "الموديل", "سنة الصنع", "المسافة المقطوعة", "نوع الوقود", "ناقل الحركة", "اللون"],
+  "real-estate": ["نوع العقار", "للبيع/للإيجار", "المساحة (م²)", "عدد الغرف", "عدد الحمامات", "الطابق", "مفروش"],
+  mobiles: ["الماركة", "الموديل", "السعة", "الرام", "الضمان", "الملحقات"],
+  electronics: ["النوع", "الماركة", "الموديل", "الضمان", "المواصفات"],
+  furniture: ["النوع", "المادة", "الأبعاد", "مناسب لـ"],
+  jobs: ["نوع العمل", "الدوام", "مكان العمل", "الراتب", "الخبرة المطلوبة", "المؤهل"],
+  services: ["نوع الخدمة", "منطقة التغطية", "وقت التوفر", "طريقة التسعير", "الخبرة"],
+  fashion: ["النوع", "المقاس", "الجنس/الفئة", "الماركة"],
+  food: ["نوع المنتج", "الكمية/التغليف", "تاريخ الإنتاج", "منطقة التوصيل"],
+  animals: ["النوع", "العمر", "الجنس", "الحالة الصحية", "اللقاحات"],
+  education: ["المادة/الدورة", "المستوى", "طريقة التعليم", "المدة", "الشهادة"],
+  business: ["النوع", "الكمية", "الاستخدام", "الضمان/الصيانة"],
+  misc: ["النوع", "ملاحظات"],
+};
+
+function CategorySpecificFields({
+  categoryId,
+  extra,
+  setExtra,
+}: {
+  categoryId: string;
+  extra: Record<string, string>;
+  setExtra: (u: Record<string, string>) => void;
+}) {
+  const fields = CATEGORY_FIELDS[categoryId] ?? CATEGORY_FIELDS.misc;
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {fields.map((f) => (
+        <label key={f} className="block">
+          <span className="mb-1 block text-[10px] font-semibold text-muted-foreground">{f}</span>
+          <input
+            value={extra[f] ?? ""}
+            onChange={(e) => setExtra({ ...extra, [f]: e.target.value })}
+            className="input"
+          />
+        </label>
+      ))}
+    </div>
+  );
+}
