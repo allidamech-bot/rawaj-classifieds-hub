@@ -198,11 +198,17 @@ function HomePage() {
         </section>
 
         {/* Safety strip */}
-        <section className="mt-7 flex items-start gap-3 rounded-2xl bg-warning/10 p-4 hairline">
-          <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
-          <p className="text-sm font-medium text-foreground">
-            لا تحول المال قبل التأكد من السلعة والبائع.
-          </p>
+        <section className="mt-7 rounded-2xl bg-warning/10 p-4 hairline">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="h-5 w-5 shrink-0 text-warning" />
+            <h3 className="text-sm font-extrabold">تعامل بأمان</h3>
+          </div>
+          <ul className="mt-2 grid gap-1 text-xs text-foreground sm:grid-cols-2">
+            <li>• لا تحوّل المال قبل معاينة السلعة.</li>
+            <li>• قابل البائع في مكان عام وآمن.</li>
+            <li>• احذر الأسعار غير المنطقية.</li>
+            <li>• بلّغ عن أي إعلان مشبوه عبر <Link to="/support" className="font-bold text-primary">الدعم</Link>.</li>
+          </ul>
         </section>
 
         {/* Footer links */}
