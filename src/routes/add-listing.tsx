@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Camera, Check, Info } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -6,6 +6,7 @@ import {
   createListing,
   fetchPublicCategories,
   fetchPublicGovernorates,
+  uploadListingImage,
 } from "@/lib/classifieds-api";
 import type {
   ClassifiedCategory,
@@ -27,6 +28,7 @@ const steps = ["القسم", "الصور", "التفاصيل", "التواصل",
 
 function AddListingPage() {
   const auth = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
   const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
@@ -34,6 +36,8 @@ function AddListingPage() {
   const [setupError, setSetupError] = useState<ClassifiedsError | null>(null);
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [createdListingId, setCreatedListingId] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
 
   const [categoryId, setCategoryId] = useState("");
   const [title, setTitle] = useState("");
@@ -130,7 +134,25 @@ function AddListingPage() {
       return;
     }
 
-    setSubmitMessage("تم إرسال الإعلان للمراجعة. لن يظهر للعموم قبل موافقة المالك/الإدارة.");
+    const imageErrors: string[] = [];
+    for (const [index, file] of selectedImages.entries()) {
+      const uploadResult = await uploadListingImage({
+        userId: auth.profile?.id ?? null,
+        listing: result.data,
+        file,
+        sortOrder: index,
+        altAr: title.trim(),
+      });
+
+      if (!uploadResult.ok) imageErrors.push(uploadResult.error.message);
+    }
+
+    setCreatedListingId(result.data.id);
+    setSubmitMessage(
+      imageErrors.length > 0
+        ? `تم إرسال الإعلان للمراجعة، لكن تعذر رفع بعض الصور: ${imageErrors[0]}`
+        : "تم إرسال الإعلان للمراجعة. لن يظهر للعموم قبل موافقة المالك/الإدارة.",
+    );
   }
 
   if (auth.status === "loading") {
@@ -240,21 +262,37 @@ function AddListingPage() {
 
               {step === 1 && (
                 <Card title="صور الإعلان">
-                  <div className="grid grid-cols-3 gap-2">
-                    {[0, 1, 2, 3, 4, 5].map((item) => (
-                      <button
-                        key={item}
-                        disabled
-                        title="رفع الصور يحتاج Supabase Storage لاحقاً"
-                        className="flex aspect-square cursor-not-allowed flex-col items-center justify-center rounded-xl bg-muted-surface text-muted-foreground opacity-80"
+                  <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl bg-muted-surface p-6 text-center text-muted-foreground">
+                    <Camera className="h-8 w-8" />
+                    <span className="mt-2 text-sm font-bold">اختر صور الإعلان</span>
+                    <span className="mt-1 text-[11px]">اختياري · حتى 6 صور · 5MB للصورة</span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/jpeg,image/png,image/webp"
+                      className="sr-only"
+                      onChange={(event) => {
+                        const files = Array.from(event.target.files ?? []).slice(0, 6);
+                        setSelectedImages(files);
+                      }}
+                    />
+                  </label>
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {selectedImages.map((file) => (
+                      <div
+                        key={`${file.name}-${file.size}`}
+                        className="rounded-xl bg-card p-3 text-xs hairline"
                       >
-                        <Camera className="h-6 w-6" />
-                        <span className="mt-1 text-[10px]">قريباً</span>
-                      </button>
+                        <p className="truncate font-bold">{file.name}</p>
+                        <p className="mt-1 text-muted-foreground">
+                          {(file.size / 1024 / 1024).toFixed(1)} MB
+                        </p>
+                      </div>
                     ))}
                   </div>
                   <p className="mt-3 text-[11px] text-muted-foreground">
-                    رفع الصور غير مفعّل حالياً حتى تتم مراجعة Supabase Storage وسياساته.
+                    إذا لم تكن bucket التخزين وسياساتها مطبقة بعد، سيتم إنشاء الإعلان نصياً وتظهر
+                    رسالة خطأ واضحة للصور فقط.
                   </p>
                 </Card>
               )}
@@ -397,6 +435,7 @@ function AddListingPage() {
                     <PreviewRow label="العنوان" value={title || "—"} />
                     <PreviewRow label="المحافظة" value={governorate?.nameAr ?? "—"} />
                     <PreviewRow label="المنطقة" value={district || "—"} />
+                    <PreviewRow label="الصور" value={`${selectedImages.length} صورة مختارة`} />
                     <PreviewRow label="حالة النشر" value="سيُرسل كإعلان قيد المراجعة" />
                   </div>
                   <div className="mt-3 rounded-xl bg-emerald-trust/10 p-3 text-[11px] font-medium text-emerald-trust">
@@ -434,9 +473,27 @@ function AddListingPage() {
               </div>
 
               {submitMessage && (
-                <p className="rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground">
-                  {submitMessage}
-                </p>
+                <div className="rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground">
+                  <p>{submitMessage}</p>
+                  {createdListingId && (
+                    <div className="mt-3 flex flex-wrap justify-center gap-2">
+                      <button
+                        onClick={() =>
+                          void navigate({ to: "/listings/$id", params: { id: createdListingId } })
+                        }
+                        className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+                      >
+                        عرض الإعلان
+                      </button>
+                      <Link
+                        to="/profile"
+                        className="rounded-xl bg-card px-3 py-2 text-xs font-bold hairline"
+                      >
+                        إعلاناتي
+                      </Link>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -450,7 +507,7 @@ function AddListingPage() {
               <Card title="تنبيه">
                 <p className="flex items-start gap-2 text-xs text-foreground/80">
                   <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold" />
-                  الصور والرسائل والدفع ليست مفعّلة في هذا المسار.
+                  الصور اختيارية وتتطلب إعداد bucket التخزين يدوياً. الرسائل والدفع غير مفعّلة.
                 </p>
               </Card>
             </aside>

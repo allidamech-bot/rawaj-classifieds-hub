@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Flag, ShieldAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import { demoNotice, reports } from "@/data/adminMockData";
-import { adminFetchReports } from "@/lib/classifieds-api";
-import type { ClassifiedsError, ListingReport } from "@/lib/classifieds-types";
+import { adminFetchReports, adminModerateReport } from "@/lib/classifieds-api";
+import type { ClassifiedsError, ListingReport, ListingReportStatus } from "@/lib/classifieds-types";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin/reports")({
@@ -22,6 +22,26 @@ function ReportsPage() {
   const [realReports, setRealReports] = useState<ListingReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
+  const [message, setMessage] = useState("");
+  const [notes, setNotes] = useState<Record<string, string>>({});
+
+  async function loadReports() {
+    setLoading(true);
+    setError(null);
+    const result = await adminFetchReports(auth.canAccessOwnerControls);
+
+    if (!result.ok) {
+      setError(result.error);
+      setRealReports([]);
+    } else {
+      setRealReports(result.data);
+      setNotes(
+        Object.fromEntries(result.data.map((report) => [report.id, report.adminNote ?? ""])),
+      );
+    }
+
+    setLoading(false);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -38,6 +58,9 @@ function ReportsPage() {
         setRealReports([]);
       } else {
         setRealReports(result.data);
+        setNotes(
+          Object.fromEntries(result.data.map((report) => [report.id, report.adminNote ?? ""])),
+        );
       }
 
       setLoading(false);
@@ -49,6 +72,25 @@ function ReportsPage() {
       cancelled = true;
     };
   }, [auth.canAccessOwnerControls]);
+
+  async function moderate(report: ListingReport, status: ListingReportStatus) {
+    setMessage("");
+    const result = await adminModerateReport(auth.canAccessOwnerControls, {
+      reportId: report.id,
+      status,
+      assignedTo: auth.profile?.id ?? null,
+      adminNote: notes[report.id] ?? null,
+      resolvedAt: status === "resolved" || status === "rejected" ? new Date().toISOString() : null,
+    });
+
+    if (!result.ok) {
+      setMessage(result.error.message);
+      return;
+    }
+
+    setMessage("تم تحديث البلاغ.");
+    await loadReports();
+  }
 
   return (
     <div className="space-y-6">
@@ -77,6 +119,9 @@ function ReportsPage() {
           <Flag className="h-4 w-4 text-destructive" />
           بلاغات حقيقية من Supabase
         </h2>
+        {message && (
+          <p className="mb-2 rounded-xl bg-muted-surface p-2 text-xs font-semibold">{message}</p>
+        )}
         {loading ? (
           <p className="text-xs text-muted-foreground">جارٍ تحميل البلاغات.</p>
         ) : error ? (
@@ -92,8 +137,39 @@ function ReportsPage() {
                   <Badge>{report.status}</Badge>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">Report ID: {report.id}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Listing: {report.listingId} · Reporter: {report.reporterId}
+                </p>
                 <p className="mt-2 text-xs">{report.reason}</p>
-                <ActionRow actions={["تغيير الحالة", "طلب مراجعة المالك", "إضافة ملاحظة"]} />
+                <textarea
+                  value={notes[report.id] ?? ""}
+                  onChange={(event) =>
+                    setNotes((current) => ({ ...current, [report.id]: event.target.value }))
+                  }
+                  placeholder="ملاحظة إدارية"
+                  rows={2}
+                  className="mt-3 w-full rounded-xl bg-card px-3 py-2 text-xs outline-none hairline"
+                />
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => void moderate(report, "under_review")}
+                    className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+                  >
+                    قيد المراجعة
+                  </button>
+                  <button
+                    onClick={() => void moderate(report, "resolved")}
+                    className="rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground"
+                  >
+                    تم الحل
+                  </button>
+                  <button
+                    onClick={() => void moderate(report, "rejected")}
+                    className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground"
+                  >
+                    رفض البلاغ
+                  </button>
+                </div>
               </article>
             ))}
           </div>
