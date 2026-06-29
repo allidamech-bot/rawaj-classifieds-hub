@@ -114,13 +114,20 @@ function AddListingPage() {
               <Card title="صور الإعلان">
                 <div className="grid grid-cols-3 gap-2">
                   {[0,1,2,3,4,5].map((i) => (
-                    <button key={i} className="flex aspect-square flex-col items-center justify-center rounded-xl bg-muted-surface text-muted-foreground transition hover:bg-secondary">
+                    <button key={i} disabled title="غير مفعّل" className="flex aspect-square flex-col items-center justify-center rounded-xl bg-muted-surface text-muted-foreground opacity-80 cursor-not-allowed">
                       <Camera className="h-6 w-6" />
                       <span className="mt-1 text-[10px]">إضافة</span>
                     </button>
                   ))}
                 </div>
-                <p className="mt-3 text-[11px] text-muted-foreground">سيتم تفعيل رفع الصور الحقيقي لاحقاً.</p>
+                <p className="mt-3 text-[11px] text-muted-foreground">
+                  رفع الصور غير مفعّل حالياً — نموذج تجريبي. لاحقاً يمكنك إضافة من ٣ إلى ٨ صور بصيغ JPG / PNG / WebP.
+                </p>
+                <ul className="mt-2 space-y-1 text-[11px] text-foreground/80">
+                  <li>• صور واضحة وإضاءة جيدة.</li>
+                  <li>• زوايا متعددة للسلعة.</li>
+                  <li>• لا تستخدم صوراً مضللة أو من الإنترنت.</li>
+                </ul>
               </Card>
             )}
 
