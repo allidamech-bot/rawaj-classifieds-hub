@@ -1,1 +1,1 @@
-export type AuthStatus = "loading" | "signedOut" | "signedIn" | "authUnavailable";
+export type AuthStatus = "loading" | "signedOut" | "signedIn" | "authUnavailable" | "authError";

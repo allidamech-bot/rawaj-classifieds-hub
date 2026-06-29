@@ -49,6 +49,22 @@ function AdminLayout() {
     );
   }
 
+  if (auth.status === "signedOut") {
+    return (
+      <>
+        <PageHeader title="لوحة الإدارة" />
+        <main className="container-wide pt-4 pb-8">
+          <AdminStateCard
+            title="تسجيل الدخول مطلوب"
+            message="يجب تسجيل الدخول أولاً، ثم يتم التحقق من دور المالك من جدول الأدوار في Supabase."
+            actionTo="/login"
+            actionLabel="تسجيل الدخول"
+          />
+        </main>
+      </>
+    );
+  }
+
   if (!auth.canAccessOwnerControls) {
     return (
       <>
@@ -99,17 +115,27 @@ function AdminLayout() {
   );
 }
 
-function AdminStateCard({ title, message }: { title: string; message: string }) {
+function AdminStateCard({
+  title,
+  message,
+  actionTo = "/",
+  actionLabel = "العودة للرئيسية",
+}: {
+  title: string;
+  message: string;
+  actionTo?: "/" | "/login";
+  actionLabel?: string;
+}) {
   return (
     <section className="rounded-2xl bg-card p-5 text-center hairline shadow-soft">
       <Lock className="mx-auto h-7 w-7 text-warning" />
       <h2 className="mt-3 text-base font-extrabold">{title}</h2>
       <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">{message}</p>
       <Link
-        to="/"
+        to={actionTo}
         className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
       >
-        العودة للرئيسية
+        {actionLabel}
       </Link>
     </section>
   );
