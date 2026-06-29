@@ -65,7 +65,7 @@ function LoginPage() {
 
           {auth.status === "authUnavailable" ? (
             <div className="rounded-xl bg-warning/10 p-3 text-xs text-foreground/90 hairline">
-              الحسابات غير مهيأة حالياً. التصفح العام لا يزال متاحاً.
+              {auth.reason ?? "الحسابات غير مهيأة حالياً. التصفح العام لا يزال متاحاً."}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">

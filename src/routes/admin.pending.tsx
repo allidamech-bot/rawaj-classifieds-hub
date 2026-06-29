@@ -62,10 +62,15 @@ function PendingPage() {
 
   async function moderate(listing: ClassifiedListing, status: "approved" | "rejected") {
     setMessage("");
+    if (!auth.profile?.id) {
+      setMessage("تعذر تحديد حساب المراجع الحالي. أعد تسجيل الدخول ثم حاول مجدداً.");
+      return;
+    }
+
     const result = await adminModerateListing(auth.canAccessOwnerControls, {
       listingId: listing.id,
       status,
-      reviewerId: auth.profile?.id ?? "",
+      reviewerId: auth.profile.id,
       rejectionReason:
         status === "rejected" ? rejectReasons[listing.id] || "مرفوض من لوحة المالك" : null,
     });

@@ -75,10 +75,15 @@ function ReportsPage() {
 
   async function moderate(report: ListingReport, status: ListingReportStatus) {
     setMessage("");
+    if (!auth.profile?.id) {
+      setMessage("تعذر تحديد حساب المراجع الحالي. أعد تسجيل الدخول ثم حاول مجدداً.");
+      return;
+    }
+
     const result = await adminModerateReport(auth.canAccessOwnerControls, {
       reportId: report.id,
       status,
-      assignedTo: auth.profile?.id ?? null,
+      assignedTo: auth.profile.id,
       adminNote: notes[report.id] ?? null,
       resolvedAt: status === "resolved" || status === "rejected" ? new Date().toISOString() : null,
     });

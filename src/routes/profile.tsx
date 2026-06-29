@@ -35,7 +35,7 @@ export const Route = createFileRoute("/profile")({
 });
 
 const accountMenu = [
-  { to: "/listings", label: "إعلاناتي", icon: FileSpreadsheet, badge: "تجريبي" },
+  { to: "/profile", label: "إعلاناتي", icon: FileSpreadsheet },
   { to: "/add-listing", label: "إضافة إعلان", icon: Plus },
   { to: "/favorites", label: "المفضلة", icon: Heart },
   { to: "/saved-searches", label: "عمليات البحث المحفوظة", icon: Bookmark },
