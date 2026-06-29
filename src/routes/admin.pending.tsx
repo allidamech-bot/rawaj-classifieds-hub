@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Clock, FileCheck, ShieldAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import { demoNotice, pendingListings } from "@/data/adminMockData";
-import { adminFetchPendingListings } from "@/lib/classifieds-api";
+import { adminFetchPendingListings, adminModerateListing } from "@/lib/classifieds-api";
 import type { ClassifiedListing, ClassifiedsError } from "@/lib/classifieds-types";
 import { useAuth } from "@/lib/use-auth";
 
@@ -15,6 +15,23 @@ function PendingPage() {
   const [realListings, setRealListings] = useState<ClassifiedListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
+  const [message, setMessage] = useState("");
+  const [rejectReasons, setRejectReasons] = useState<Record<string, string>>({});
+
+  async function loadPending() {
+    setLoading(true);
+    setError(null);
+    const result = await adminFetchPendingListings(auth.canAccessOwnerControls);
+
+    if (!result.ok) {
+      setError(result.error);
+      setRealListings([]);
+    } else {
+      setRealListings(result.data);
+    }
+
+    setLoading(false);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -43,6 +60,25 @@ function PendingPage() {
     };
   }, [auth.canAccessOwnerControls]);
 
+  async function moderate(listing: ClassifiedListing, status: "approved" | "rejected") {
+    setMessage("");
+    const result = await adminModerateListing(auth.canAccessOwnerControls, {
+      listingId: listing.id,
+      status,
+      reviewerId: auth.profile?.id ?? "",
+      rejectionReason:
+        status === "rejected" ? rejectReasons[listing.id] || "مرفوض من لوحة المالك" : null,
+    });
+
+    if (!result.ok) {
+      setMessage(result.error.message);
+      return;
+    }
+
+    setMessage(status === "approved" ? "تم اعتماد الإعلان." : "تم رفض الإعلان.");
+    await loadPending();
+  }
+
   return (
     <div className="space-y-5">
       <div className="rounded-2xl bg-warning/10 p-3 hairline text-xs text-foreground/90">
@@ -52,6 +88,9 @@ function PendingPage() {
 
       <section className="rounded-2xl bg-card p-4 hairline">
         <h2 className="text-base font-extrabold">إعلانات حقيقية قيد المراجعة</h2>
+        {message && (
+          <p className="mt-2 rounded-xl bg-muted-surface p-2 text-xs font-semibold">{message}</p>
+        )}
         {loading ? (
           <p className="mt-2 text-xs text-muted-foreground">
             جارٍ تحميل طابور المراجعة من Supabase.
@@ -73,10 +112,40 @@ function PendingPage() {
                       {listing.id} · {listing.categoryNameAr ?? "قسم غير محدد"} ·{" "}
                       {listing.governorateNameAr ?? "سوريا"}
                     </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      صاحب الإعلان: {listing.ownerId} · تاريخ الإرسال:{" "}
+                      {formatDate(listing.createdAt)}
+                    </p>
                   </div>
                   <Badge>{listing.status}</Badge>
                 </div>
-                <ActionRow actions={["قبول", "رفض", "أرشفة/إخفاء", "إضافة ملاحظة"]} />
+                <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+                  <input
+                    value={rejectReasons[listing.id] ?? ""}
+                    onChange={(event) =>
+                      setRejectReasons((current) => ({
+                        ...current,
+                        [listing.id]: event.target.value,
+                      }))
+                    }
+                    placeholder="سبب الرفض عند الحاجة"
+                    className="rounded-xl bg-card px-3 py-2 text-xs outline-none hairline"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => void moderate(listing, "approved")}
+                      className="rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground"
+                    >
+                      اعتماد
+                    </button>
+                    <button
+                      onClick={() => void moderate(listing, "rejected")}
+                      className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground"
+                    >
+                      رفض
+                    </button>
+                  </div>
+                </div>
               </article>
             ))}
           </div>
@@ -138,6 +207,11 @@ function PendingPage() {
       </div>
     </div>
   );
+}
+
+function formatDate(value: string) {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat("ar-SY", { dateStyle: "medium" }).format(new Date(value));
 }
 
 function Badge({ children }: { children: React.ReactNode }) {

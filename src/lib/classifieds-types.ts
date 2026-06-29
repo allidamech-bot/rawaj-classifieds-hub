@@ -3,6 +3,7 @@ import type { PlaceholderType, PriceType } from "@/types";
 export type ClassifiedsErrorCode =
   | "supabase_unconfigured"
   | "schema_missing"
+  | "storage_unconfigured"
   | "auth_required"
   | "permission_denied"
   | "not_found"
@@ -86,6 +87,7 @@ export interface ListingImage {
   id: string;
   listingId: string;
   storagePath: string | null;
+  publicUrl: string | null;
   altAr: string | null;
   sortOrder: number;
   createdAt: string;
@@ -147,4 +149,20 @@ export interface ModerateListingPayload {
   status: Extract<ListingStatus, "approved" | "rejected" | "archived">;
   reviewerId: string;
   rejectionReason?: string | null;
+}
+
+export interface ListingImageUploadPayload {
+  userId: string | null;
+  listing: ClassifiedListing;
+  file: File;
+  sortOrder: number;
+  altAr?: string | null;
+}
+
+export interface ModerateReportPayload {
+  reportId: string;
+  status: ListingReportStatus;
+  assignedTo?: string | null;
+  adminNote?: string | null;
+  resolvedAt?: string | null;
 }

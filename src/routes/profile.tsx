@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BadgeCheck,
   Bell,
@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { demoNotice } from "@/data/adminMockData";
+import { fetchCurrentUserListings } from "@/lib/classifieds-api";
+import type { ClassifiedListing, ClassifiedsError, ListingStatus } from "@/lib/classifieds-types";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/profile")({
@@ -74,6 +76,10 @@ const settings = [
 function ProfilePage() {
   const auth = useAuth();
   const [logoutError, setLogoutError] = useState("");
+  const [myListings, setMyListings] = useState<ClassifiedListing[]>([]);
+  const [myListingsError, setMyListingsError] = useState<ClassifiedsError | null>(null);
+  const [myListingsLoading, setMyListingsLoading] = useState(false);
+  const profileId = auth.profile?.id;
   const displayName = auth.profile?.displayName || auth.profile?.email || "زائر";
   const authNote =
     auth.status === "authUnavailable"
@@ -91,6 +97,36 @@ function ProfilePage() {
     const result = await auth.signOut();
     if (result.error) setLogoutError(result.error);
   }
+
+  useEffect(() => {
+    if (auth.status !== "signedIn" || !profileId) return;
+    const currentProfileId = profileId;
+
+    let cancelled = false;
+
+    async function loadListings() {
+      setMyListingsLoading(true);
+      setMyListingsError(null);
+      const result = await fetchCurrentUserListings(currentProfileId);
+
+      if (cancelled) return;
+
+      if (!result.ok) {
+        setMyListings([]);
+        setMyListingsError(result.error);
+      } else {
+        setMyListings(result.data);
+      }
+
+      setMyListingsLoading(false);
+    }
+
+    void loadListings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.status, profileId]);
 
   return (
     <>
@@ -208,6 +244,46 @@ function ProfilePage() {
           </nav>
         </section>
 
+        {auth.status === "signedIn" && (
+          <section className="rounded-2xl bg-card p-4 hairline">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h3 className="text-sm font-extrabold">إعلاناتي</h3>
+              <Link to="/add-listing" className="text-xs font-bold text-primary">
+                إضافة إعلان
+              </Link>
+            </div>
+            {myListingsLoading ? (
+              <p className="text-xs text-muted-foreground">جارٍ تحميل إعلاناتك من Supabase.</p>
+            ) : myListingsError ? (
+              <p className="text-xs text-muted-foreground">{myListingsError.message}</p>
+            ) : myListings.length === 0 ? (
+              <p className="text-xs text-muted-foreground">لا توجد إعلانات مرتبطة بحسابك حالياً.</p>
+            ) : (
+              <div className="space-y-2">
+                {myListings.slice(0, 8).map((listing) => (
+                  <Link
+                    key={listing.id}
+                    to="/listings/$id"
+                    params={{ id: listing.id }}
+                    className="block rounded-xl bg-muted-surface p-3 transition hover:bg-secondary"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-sm font-bold">{listing.title}</span>
+                      <span className="rounded-md bg-card px-2 py-0.5 text-[10px] font-bold hairline">
+                        {statusLabel(listing.status)}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      {listing.categoryNameAr ?? "قسم غير محدد"} ·{" "}
+                      {listing.governorateNameAr ?? "سوريا"}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
         <section>
           <div className="mb-2 flex items-center justify-between">
             <h3 className="text-sm font-extrabold">إعدادات الحساب</h3>
@@ -251,4 +327,23 @@ function ProfilePage() {
       </main>
     </>
   );
+}
+
+function statusLabel(status: ListingStatus) {
+  switch (status) {
+    case "draft":
+      return "مسودة";
+    case "pending_review":
+      return "قيد المراجعة";
+    case "approved":
+      return "معتمد";
+    case "rejected":
+      return "مرفوض";
+    case "archived":
+      return "مؤرشف";
+    case "expired":
+      return "منتهي";
+    default:
+      return status;
+  }
 }

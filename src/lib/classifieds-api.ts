@@ -8,9 +8,12 @@ import type {
   ClassifiedsResult,
   CreateListingPayload,
   Favorite,
+  ListingImage,
+  ListingImageUploadPayload,
   ListingFilters,
   ListingReport,
   ListingReportType,
+  ModerateReportPayload,
   ModerateListingPayload,
   SavedSearch,
 } from "@/lib/classifieds-types";
@@ -20,6 +23,11 @@ type Row = Record<string, unknown>;
 
 const setupRequiredMessage =
   "جداول الإعلانات الحقيقية غير جاهزة بعد. يجب تنفيذ SQL الخاص بأساس الإعلانات يدوياً من Supabase Dashboard.";
+const storageSetupRequiredMessage =
+  "تخزين صور الإعلانات غير مهيأ بعد. يجب إعداد bucket وسياسات listing-images يدوياً من Supabase Dashboard.";
+const listingImagesBucket = "listing-images";
+const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
+const maxImageSizeBytes = 5 * 1024 * 1024;
 
 function getClient(): ClassifiedsResult<SupabaseClient> {
   if (!supabase) {
@@ -61,6 +69,29 @@ function mapError(error: { code?: string; message?: string; details?: string }):
   }
 
   return { code: "unknown", message, details: error.details };
+}
+
+function mapStorageError(error: {
+  statusCode?: string | number;
+  message?: string;
+}): ClassifiedsError {
+  const message = error.message ?? "تعذر تنفيذ عملية التخزين.";
+  const isMissingStorage =
+    message.includes("Bucket not found") ||
+    message.includes("bucket not found") ||
+    message.includes("The resource was not found") ||
+    error.statusCode === 404 ||
+    error.statusCode === "404";
+
+  if (isMissingStorage) {
+    return {
+      code: "storage_unconfigured",
+      message: storageSetupRequiredMessage,
+      details: message,
+    };
+  }
+
+  return { code: "unknown", message };
 }
 
 function rowString(row: Row, key: string, fallback = ""): string {
@@ -202,6 +233,23 @@ function mapListing(
   };
 }
 
+function mapImage(row: Row, client: SupabaseClient): ListingImage {
+  const storagePath = rowNullableString(row, "storage_path");
+  const publicUrl = storagePath
+    ? client.storage.from(listingImagesBucket).getPublicUrl(storagePath).data.publicUrl
+    : null;
+
+  return {
+    id: rowString(row, "id"),
+    listingId: rowString(row, "listing_id"),
+    storagePath,
+    publicUrl,
+    altAr: rowNullableString(row, "alt_ar"),
+    sortOrder: rowNumber(row, "sort_order"),
+    createdAt: rowString(row, "created_at"),
+  };
+}
+
 async function readReferences(client: SupabaseClient) {
   const [categoriesResult, governoratesResult] = await Promise.all([
     client.from("categories").select("*").eq("is_active", true).order("sort_order"),
@@ -309,7 +357,6 @@ export async function fetchListingDetail(
     .from("listings")
     .select("*")
     .eq("id", id)
-    .eq("status", "approved")
     .maybeSingle();
 
   if (error) return { ok: false, error: mapError(error) };
@@ -324,6 +371,22 @@ export async function fetchListingDetail(
     ok: true,
     data: mapListing(data as Row, references.categories, references.governorates),
   };
+}
+
+export async function fetchListingImages(
+  listingId: string,
+): Promise<ClassifiedsResult<ListingImage[]>> {
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("listing_images")
+    .select("*")
+    .eq("listing_id", listingId)
+    .order("sort_order");
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Row[]).map((row) => mapImage(row, clientResult.data)) };
 }
 
 export async function fetchCurrentUserListings(
@@ -388,6 +451,111 @@ export async function createListing(
 
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: mapListing(data as Row) };
+}
+
+export async function uploadListingImage({
+  userId,
+  listing,
+  file,
+  sortOrder,
+  altAr,
+}: ListingImageUploadPayload): Promise<ClassifiedsResult<ListingImage>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لرفع صور الإعلان." },
+    };
+  }
+
+  if (listing.ownerId !== userId) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "لا يمكنك رفع صور لإعلان لا تملكه." },
+    };
+  }
+
+  if (!["draft", "pending_review", "rejected"].includes(listing.status)) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "لا يمكن تعديل صور إعلان بعد اعتماده." },
+    };
+  }
+
+  if (!allowedImageTypes.includes(file.type)) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "الصيغ المسموحة للصور: JPG أو PNG أو WebP." },
+    };
+  }
+
+  if (file.size > maxImageSizeBytes) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "حجم الصورة يجب ألا يتجاوز 5MB." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  const safeExtension =
+    extension && ["jpg", "jpeg", "png", "webp"].includes(extension) ? extension : "jpg";
+  const storagePath = `${userId}/${listing.id}/${crypto.randomUUID()}.${safeExtension}`;
+
+  const uploadResult = await clientResult.data.storage
+    .from(listingImagesBucket)
+    .upload(storagePath, file, {
+      cacheControl: "3600",
+      contentType: file.type,
+      upsert: false,
+    });
+
+  if (uploadResult.error) return { ok: false, error: mapStorageError(uploadResult.error) };
+
+  const { data, error } = await clientResult.data
+    .from("listing_images")
+    .insert({
+      listing_id: listing.id,
+      storage_path: storagePath,
+      alt_ar: altAr ?? listing.title,
+      sort_order: sortOrder,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    await clientResult.data.storage.from(listingImagesBucket).remove([storagePath]);
+    return { ok: false, error: mapError(error) };
+  }
+
+  return { ok: true, data: mapImage(data as Row, clientResult.data) };
+}
+
+export async function deleteListingImage(
+  userId: string | null,
+  image: ListingImage,
+): Promise<ClassifiedsResult<null>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لحذف صورة الإعلان." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  if (image.storagePath) {
+    const storageResult = await clientResult.data.storage
+      .from(listingImagesBucket)
+      .remove([image.storagePath]);
+    if (storageResult.error) return { ok: false, error: mapStorageError(storageResult.error) };
+  }
+
+  const { error } = await clientResult.data.from("listing_images").delete().eq("id", image.id);
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: null };
 }
 
 export async function fetchFavorites(
@@ -580,6 +748,35 @@ export async function adminFetchReports(
 
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: ((data ?? []) as Row[]).map(mapReport) };
+}
+
+export async function adminModerateReport(
+  canUseOwnerControls: boolean,
+  payload: ModerateReportPayload,
+): Promise<ClassifiedsResult<null>> {
+  if (!canUseOwnerControls) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "إدارة البلاغات متاحة للمالك فقط." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { error } = await clientResult.data
+    .from("listing_reports")
+    .update({
+      status: payload.status,
+      assigned_to: payload.assignedTo ?? null,
+      admin_note: payload.adminNote ?? null,
+      resolved_at:
+        payload.resolvedAt ?? (payload.status === "resolved" ? new Date().toISOString() : null),
+    })
+    .eq("id", payload.reportId);
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: null };
 }
 
 export async function adminModerateListing(

@@ -17,10 +17,16 @@ import { PlaceholderArt } from "@/components/PlaceholderArt";
 import {
   createListingReport,
   favoriteListing,
+  fetchListingImages,
   fetchListingDetail,
   unfavoriteListing,
 } from "@/lib/classifieds-api";
-import type { ClassifiedListing, ClassifiedsError } from "@/lib/classifieds-types";
+import type {
+  ClassifiedListing,
+  ClassifiedsError,
+  ListingImage,
+  ListingStatus,
+} from "@/lib/classifieds-types";
 import { useAuth } from "@/lib/use-auth";
 import { formatPrice, priceLabel, priceTypeLabel } from "@/utils/format";
 
@@ -38,6 +44,7 @@ function ListingDetailsPage() {
   const { id } = Route.useParams();
   const auth = useAuth();
   const [listing, setListing] = useState<ClassifiedListing | null>(null);
+  const [images, setImages] = useState<ListingImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [fav, setFav] = useState(false);
@@ -55,9 +62,12 @@ function ListingDetailsPage() {
 
       if (!result.ok) {
         setListing(null);
+        setImages([]);
         setError(result.error);
       } else {
         setListing(result.data);
+        const imageResult = await fetchListingImages(id);
+        if (!cancelled && imageResult.ok) setImages(imageResult.data);
       }
 
       setLoading(false);
@@ -72,6 +82,10 @@ function ListingDetailsPage() {
 
   async function toggleFavorite() {
     setActionMessage(null);
+    if (auth.status !== "signedIn") {
+      setActionMessage("يجب تسجيل الدخول لحفظ الإعلان في المفضلة.");
+      return;
+    }
     const userId = auth.profile?.id ?? null;
     const result = fav ? await unfavoriteListing(userId, id) : await favoriteListing(userId, id);
 
@@ -86,6 +100,10 @@ function ListingDetailsPage() {
 
   async function reportListing() {
     setActionMessage(null);
+    if (auth.status !== "signedIn") {
+      setActionMessage("يجب تسجيل الدخول لإرسال بلاغ.");
+      return;
+    }
     const result = await createListingReport(
       auth.profile?.id ?? null,
       id,
@@ -134,10 +152,31 @@ function ListingDetailsPage() {
       <PageHeader title={listing.categoryNameAr ?? "إعلان"} />
       <main className="container-wide pt-3 pb-8">
         <div className="overflow-hidden rounded-2xl bg-card hairline shadow-soft">
-          <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
+          {images[0]?.publicUrl ? (
+            <img
+              src={images[0].publicUrl}
+              alt={images[0].altAr ?? listing.title}
+              className="aspect-[16/9] w-full object-cover"
+            />
+          ) : (
+            <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
+          )}
           <div className="flex items-center justify-between gap-2 p-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-muted-surface px-2 py-1 text-[10px] font-medium text-muted-foreground">
-              <Camera className="h-3 w-3" /> صور الإعلان تحتاج Supabase Storage لاحقاً
+            {images.length > 1 ? (
+              <div className="flex gap-2 overflow-x-auto">
+                {images.slice(1, 5).map((image) => (
+                  <img
+                    key={image.id}
+                    src={image.publicUrl ?? ""}
+                    alt={image.altAr ?? listing.title}
+                    className="h-14 w-16 rounded-lg object-cover hairline"
+                  />
+                ))}
+              </div>
+            ) : null}
+            <span className="ms-auto inline-flex items-center gap-1 rounded-full bg-muted-surface px-2 py-1 text-[10px] font-medium text-muted-foreground">
+              <Camera className="h-3 w-3" />{" "}
+              {images.length ? `${images.length} صورة` : "لا توجد صور بعد"}
             </span>
           </div>
         </div>
@@ -150,8 +189,13 @@ function ListingDetailsPage() {
               </span>
             )}
             <span className="rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold text-emerald-trust-foreground">
-              إعلان معتمد
+              {statusLabel(listing.status)}
             </span>
+            {listing.status !== "approved" && (
+              <span className="rounded-md bg-warning/15 px-2 py-0.5 text-[11px] font-bold text-warning">
+                يظهر للمالك أو صاحب الإعلان فقط
+              </span>
+            )}
             <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[11px] font-semibold text-foreground">
               سوريا فقط
             </span>
@@ -320,4 +364,23 @@ function StateCard({
 function formatDate(value: string) {
   if (!value) return "تاريخ غير متاح";
   return new Intl.DateTimeFormat("ar-SY", { dateStyle: "medium" }).format(new Date(value));
+}
+
+function statusLabel(status: ListingStatus) {
+  switch (status) {
+    case "draft":
+      return "مسودة";
+    case "pending_review":
+      return "قيد المراجعة";
+    case "approved":
+      return "إعلان معتمد";
+    case "rejected":
+      return "مرفوض";
+    case "archived":
+      return "مؤرشف";
+    case "expired":
+      return "منتهي";
+    default:
+      return status;
+  }
 }
