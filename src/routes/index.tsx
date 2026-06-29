@@ -97,6 +97,10 @@ function HomePage() {
           <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
             بيع واشتري داخل سوريا بسهولة: إعلانات محلية حسب المحافظة، بدون عمولات وبدون تعقيد.
           </p>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            بعض بطاقات الصفحة الرئيسية نموذج عرض. نتائج الإعلانات الحقيقية تُقرأ من Supabase عند فتح
+            صفحة التصفح.
+          </p>
         </section>
 
         {/* Search */}

@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, LayoutGrid, Plus, MessageCircle, User } from "lucide-react";
+import { useAuth } from "@/lib/use-auth";
 
 type NavItem = {
   to: string;
@@ -19,6 +20,7 @@ const items: NavItem[] = [
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const auth = useAuth();
 
   return (
     <nav
@@ -28,13 +30,14 @@ export function BottomNav() {
     >
       <div className="container-wide mx-auto grid grid-cols-5 items-end">
         {items.map((it) => {
+          const target = it.to === "/profile" && auth.status !== "signedIn" ? "/login" : it.to;
           const active = it.exact ? pathname === it.to : pathname.startsWith(it.to);
           const Icon = it.icon;
           if (it.primary) {
             return (
               <Link
                 key={it.to}
-                to={it.to as "/"}
+                to={target as "/"}
                 className="flex flex-col items-center gap-1 pt-1 pb-2"
                 aria-label={it.label}
               >
@@ -48,7 +51,7 @@ export function BottomNav() {
           return (
             <Link
               key={it.to}
-              to={it.to as "/"}
+              to={target as "/"}
               className={`flex flex-col items-center gap-1 py-2 transition ${
                 active ? "text-primary" : "text-muted-foreground"
               }`}

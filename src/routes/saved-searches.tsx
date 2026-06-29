@@ -1,103 +1,124 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bookmark, Bell, Pencil, Trash2, Search } from "lucide-react";
+import { Bell, Bookmark, Search } from "lucide-react";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { fetchSavedSearches } from "@/lib/classifieds-api";
+import type { ClassifiedsError, SavedSearch } from "@/lib/classifieds-types";
+import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/saved-searches")({
   head: () => ({ meta: [{ title: "عمليات البحث المحفوظة | رَوَاج" }] }),
   component: SavedSearchesPage,
 });
 
-const mockSearches = [
-  {
-    id: "s1",
-    q: "سيارة كيا",
-    category: "سيارات ومركبات",
-    governorate: "دمشق",
-    priceMin: 0,
-    priceMax: 200000000,
-    sort: "الأحدث",
-  },
-  {
-    id: "s2",
-    q: "شقة للإيجار",
-    category: "عقارات",
-    governorate: "حلب",
-    priceMin: 0,
-    priceMax: 0,
-    sort: "الأرخص",
-  },
-];
-
 function SavedSearchesPage() {
+  const auth = useAuth();
+  const [items, setItems] = useState<SavedSearch[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<ClassifiedsError | null>(null);
+
+  useEffect(() => {
+    if (auth.status !== "signedIn") return;
+
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      const result = await fetchSavedSearches(auth.profile?.id ?? null);
+
+      if (cancelled) return;
+
+      if (!result.ok) {
+        setError(result.error);
+        setItems([]);
+      } else {
+        setItems(result.data);
+      }
+
+      setLoading(false);
+    }
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.status, auth.profile?.id]);
+
+  if (auth.status === "loading") {
+    return <State heading="جارٍ التحقق من الجلسة" body="يتم التأكد من تسجيل الدخول." />;
+  }
+
+  if (auth.status === "signedOut") {
+    return (
+      <State
+        heading="تسجيل الدخول مطلوب"
+        body="عمليات البحث المحفوظة مرتبطة بحسابك فقط ولا توجد بيانات تجريبية بديلة."
+        actionLabel="تسجيل الدخول"
+        actionTo="/login"
+      />
+    );
+  }
+
+  if (auth.status === "authUnavailable") {
+    return (
+      <State
+        heading="Supabase غير مهيأ"
+        body="عرض البحث المحفوظ يحتاج ضبط متغيرات Supabase العامة أولاً."
+      />
+    );
+  }
+
   return (
     <>
       <PageHeader title="عمليات البحث المحفوظة" />
-      <main className="container-wide pt-4 pb-8 space-y-4">
+      <main className="container-wide space-y-4 pt-4 pb-8">
         <div className="rounded-2xl bg-card p-4 hairline">
           <h2 className="text-sm font-extrabold">عمليات البحث المحفوظة</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            احفظ بحثك لتعود إليه بسرعة لاحقاً. تنبيهات البحث سيتم تفعيلها لاحقاً.
+            تعرض هذه الصفحة عمليات البحث المحفوظة للحساب الحالي من Supabase فقط.
           </p>
         </div>
 
-        {mockSearches.length === 0 ? (
-          <div className="rounded-2xl bg-card p-10 text-center hairline">
-            <span className="grid h-14 w-14 mx-auto place-items-center rounded-full bg-muted-surface">
-              <Bookmark className="h-6 w-6 text-muted-foreground" />
-            </span>
-            <p className="mt-3 text-sm font-bold">لا توجد عمليات بحث محفوظة</p>
-            <Link
-              to="/listings"
-              className="mt-5 inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground"
-            >
-              ابدأ البحث
-            </Link>
-          </div>
+        {loading ? (
+          <Panel title="جارٍ تحميل عمليات البحث" />
+        ) : error ? (
+          <Panel title={error.message} />
+        ) : items.length === 0 ? (
+          <Panel
+            title="لا توجد عمليات بحث محفوظة"
+            body="يمكن إضافة زر حفظ البحث لاحقاً بعد اعتماد تجربة البحث النهائية."
+            actionLabel="ابدأ البحث"
+            actionTo="/listings"
+          />
         ) : (
           <ul className="space-y-2">
-            {mockSearches.map((s) => (
-              <li key={s.id} className="rounded-2xl bg-card p-4 hairline">
+            {items.map((item) => (
+              <li key={item.id} className="rounded-2xl bg-card p-4 hairline">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <Search className="h-4 w-4 text-gold" />
-                      <span className="truncate text-sm font-bold">{s.q || "بحث بدون كلمة"}</span>
+                      <span className="truncate text-sm font-bold">{item.nameAr}</span>
                     </div>
                     <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                      <span>القسم: {s.category}</span>
-                      <span>المحافظة: {s.governorate}</span>
-                      <span>
-                        السعر:{" "}
-                        {s.priceMax ? `حتى ${s.priceMax.toLocaleString("ar-SY")} ل.س` : "غير محدد"}
-                      </span>
-                      <span>الترتيب: {s.sort}</span>
+                      <span>{formatDate(item.createdAt)}</span>
+                      <span>مرتبطة بالحساب الحالي فقط</span>
                     </div>
                   </div>
                   <span className="inline-flex items-center gap-1 rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
                     <Bell className="h-3 w-3" /> تنبيهات قريباً
                   </span>
                 </div>
-                <div className="mt-3 flex items-center gap-2">
+                <div className="mt-3">
                   <Link
                     to="/listings"
+                    search={item.filters}
                     className="rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
                   >
                     فتح البحث
                   </Link>
-                  <button
-                    disabled
-                    title="قريباً"
-                    className="inline-flex items-center gap-1 rounded-xl bg-card px-3 py-1.5 text-xs font-bold text-muted-foreground hairline cursor-not-allowed"
-                  >
-                    <Pencil className="h-3.5 w-3.5" /> تعديل · قريباً
-                  </button>
-                  <button
-                    disabled
-                    title="قريباً"
-                    className="inline-flex items-center gap-1 rounded-xl bg-card px-3 py-1.5 text-xs font-bold text-destructive hairline cursor-not-allowed"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" /> حذف · قريباً
-                  </button>
                 </div>
               </li>
             ))}
@@ -106,4 +127,59 @@ function SavedSearchesPage() {
       </main>
     </>
   );
+}
+
+function State({
+  heading,
+  body,
+  actionLabel,
+  actionTo,
+}: {
+  heading: string;
+  body: string;
+  actionLabel?: string;
+  actionTo?: string;
+}) {
+  return (
+    <>
+      <PageHeader title="عمليات البحث المحفوظة" />
+      <main className="container-wide pt-10">
+        <Panel title={heading} body={body} actionLabel={actionLabel} actionTo={actionTo} />
+      </main>
+    </>
+  );
+}
+
+function Panel({
+  title,
+  body,
+  actionLabel,
+  actionTo,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  actionTo?: string;
+}) {
+  return (
+    <div className="rounded-2xl bg-card p-10 text-center hairline">
+      <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-muted-surface">
+        <Bookmark className="h-6 w-6 text-muted-foreground" />
+      </span>
+      <p className="mt-3 text-sm font-bold">{title}</p>
+      {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
+      {actionLabel && actionTo && (
+        <Link
+          to={actionTo}
+          className="mt-5 inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground"
+        >
+          {actionLabel}
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("ar-SY", { dateStyle: "medium" }).format(new Date(value));
 }

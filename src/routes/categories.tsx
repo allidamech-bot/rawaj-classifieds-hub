@@ -28,6 +28,10 @@ function CategoriesPage() {
             اختر القسم المناسب لتصفح الإعلانات المنظّمة داخل سوريا. كل قسم يحوي أقساماً فرعية تساعدك
             في الوصول بسرعة.
           </p>
+          <p className="mt-2 text-[11px] text-primary-foreground/70">
+            الأعداد والأقسام الفرعية هنا نموذج استكشاف UI؛ قائمة الإعلانات الحقيقية تُقرأ من
+            Supabase عند فتح نتائج البحث.
+          </p>
         </section>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
