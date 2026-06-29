@@ -1,5 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search, Sparkles, MapPin, Clock, Plus, ShieldAlert, BadgeCheck, Star } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState, type FormEvent } from "react";
+import {
+  Search,
+  Sparkles,
+  MapPin,
+  Clock,
+  Plus,
+  ShieldAlert,
+  BadgeCheck,
+  Star,
+  type LucideIcon,
+} from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { CategoryCard } from "@/components/CategoryCard";
 import { ListingCard } from "@/components/ListingCard";
@@ -14,35 +25,64 @@ import {
   verifiedSellers,
 } from "@/data/mockData";
 
+const HOME_TITLE = "رَوَاج | سوق سوريا المجاني للإعلانات";
+const HOME_DESCRIPTION =
+  "سوق إعلانات مبوبة مجاني لسوريا. بيع واشترِ سيارات، عقارات، موبايلات، وظائف وخدمات حسب المحافظة بسهولة وبدون تعقيد.";
+
+type QuickFilter =
+  | {
+      id: string;
+      label: string;
+      icon: LucideIcon;
+      search: { sort?: "latest" | "featured" };
+      disabled?: false;
+    }
+  | {
+      id: string;
+      label: string;
+      icon: LucideIcon;
+      disabled: true;
+    };
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "رَوَاج | RAWAJ — السوق القريب بثقة" },
+      { title: HOME_TITLE },
       {
         name: "description",
-        content: "تصفح إعلانات سوريا المجانية: سيارات، عقارات، موبايلات، خدمات وأكثر على رَوَاج.",
+        content: HOME_DESCRIPTION,
       },
-      { property: "og:title", content: "رَوَاج | RAWAJ — السوق القريب بثقة" },
-      { property: "og:description", content: "السوق السوري للإعلانات المجانية." },
+      { property: "og:title", content: HOME_TITLE },
+      { property: "og:description", content: HOME_DESCRIPTION },
+      { name: "twitter:title", content: HOME_TITLE },
+      { name: "twitter:description", content: HOME_DESCRIPTION },
     ],
   }),
   component: HomePage,
 });
 
-const quickFilters = [
-  { id: "latest", label: "الأحدث", icon: Clock, disabled: false },
-  { id: "featured", label: "المميز", icon: Sparkles, disabled: false },
-  { id: "gov", label: "حسب المحافظة", icon: MapPin, disabled: false },
+const quickFilters: QuickFilter[] = [
+  { id: "latest", label: "الأحدث", icon: Clock, search: { sort: "latest" as const } },
+  { id: "featured", label: "المميز", icon: Sparkles, search: { sort: "featured" as const } },
+  { id: "gov", label: "حسب المحافظة", icon: MapPin, search: {} },
   { id: "nearby", label: "الأقرب · قريباً", icon: MapPin, disabled: true },
 ];
 
 function HomePage() {
+  const navigate = useNavigate();
+  const [searchValue, setSearchValue] = useState("");
   const counts: Record<string, number> = {};
   for (const l of listings) counts[l.categoryId] = (counts[l.categoryId] ?? 0) + 1;
 
   const quickCats = homeQuickCategoryIds
     .map((id) => categories.find((c) => c.id === id))
     .filter(Boolean) as typeof categories;
+
+  const handleSearch = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const q = searchValue.trim();
+    navigate({ to: "/listings", search: q ? { q } : {} });
+  };
 
   return (
     <>
@@ -60,33 +100,45 @@ function HomePage() {
         </section>
 
         {/* Search */}
-        <div className="rounded-2xl bg-card p-2 shadow-soft hairline">
+        <form onSubmit={handleSearch} className="rounded-2xl bg-card p-2 shadow-soft hairline">
           <div className="flex items-center gap-2 rounded-xl bg-muted-surface px-3 py-2.5">
             <Search className="h-4 w-4 text-muted-foreground" />
             <input
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
               type="search"
               aria-label="ابحث في رَوَاج"
               placeholder="ابحث عن سيارة، منزل، هاتف، وظيفة…"
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>
-        </div>
+        </form>
 
         {/* Quick filters */}
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          {quickFilters.map((f) => (
-            <button
-              key={f.id}
-              disabled={f.disabled}
-              title={f.disabled ? "قريباً" : undefined}
-              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold hairline transition ${
-                f.disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-muted-surface"
-              }`}
-            >
-              <f.icon className="h-3.5 w-3.5 text-gold" />
-              {f.label}
-            </button>
-          ))}
+        <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
+          {quickFilters.map((f) =>
+            f.disabled ? (
+              <button
+                key={f.id}
+                disabled
+                title="قريباً"
+                className="inline-flex shrink-0 cursor-not-allowed items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold opacity-60 hairline"
+              >
+                <f.icon className="h-3.5 w-3.5 text-gold" />
+                {f.label}
+              </button>
+            ) : (
+              <Link
+                key={f.id}
+                to="/listings"
+                search={f.search}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold transition hairline hover:bg-muted-surface"
+              >
+                <f.icon className="h-3.5 w-3.5 text-gold" />
+                {f.label}
+              </Link>
+            ),
+          )}
         </div>
 
         {/* Categories grid */}
@@ -131,7 +183,7 @@ function HomePage() {
         {/* Featured */}
         <section className="mt-7">
           <SectionHeader title="إعلانات مميزة" action={{ label: "عرض الكل" }} />
-          <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+          <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
             {featuredListings.map((l) => (
               <ListingCard key={l.id} listing={l} variant="horizontal" />
             ))}
@@ -173,7 +225,7 @@ function HomePage() {
         {/* Verified sellers */}
         <section className="mt-7">
           <SectionHeader title="بائعون موثّقون" />
-          <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+          <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
             {verifiedSellers.map((s) => (
               <Link
                 key={s.id}
@@ -219,28 +271,6 @@ function HomePage() {
             </li>
           </ul>
         </section>
-
-        {/* Footer links */}
-        <footer className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-border pt-6 pb-2 text-xs text-muted-foreground">
-          <Link to="/safety" className="hover:text-foreground">
-            نصائح الأمان
-          </Link>
-          <Link to="/terms" className="hover:text-foreground">
-            شروط الاستخدام
-          </Link>
-          <Link to="/privacy" className="hover:text-foreground">
-            سياسة الخصوصية
-          </Link>
-          <Link to="/support" className="hover:text-foreground">
-            الدعم
-          </Link>
-          <Link to="/prohibited" className="hover:text-foreground">
-            إعلانات ممنوعة
-          </Link>
-          <Link to="/admin" className="hover:text-foreground opacity-50">
-            لوحة الإدارة
-          </Link>
-        </footer>
       </main>
     </>
   );

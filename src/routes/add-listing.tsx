@@ -34,6 +34,22 @@ function AddListingPage() {
 
   const category = categories.find((c) => c.id === categoryId);
   const govObj = governorates.find((g) => g.nameAr === gov);
+  const requiresNumericPrice = priceType === "fixed" || priceType === "negotiable";
+  const canContinue =
+    (step === 0 && !!categoryId) ||
+    step === 1 ||
+    (step === 2 &&
+      title.length >= 4 &&
+      !!gov &&
+      !!district &&
+      (!requiresNumericPrice || !!price)) ||
+    step === 3;
+  const disabledReason =
+    step === 0 && !categoryId
+      ? "اختر القسم للمتابعة"
+      : step === 2 && (title.length < 4 || !gov || !district || (requiresNumericPrice && !price))
+        ? "أكمل العنوان والسعر والموقع للمتابعة"
+        : "";
 
   // Quality score
   const score =
@@ -51,7 +67,7 @@ function AddListingPage() {
 
       <main className="container-wide pt-4 pb-8">
         {/* Stepper */}
-        <ol className="mb-5 flex items-center gap-2 overflow-x-auto pb-2">
+        <ol className="no-scrollbar mb-5 flex items-center gap-2 overflow-x-auto pb-2">
           {steps.map((s, i) => {
             const done = i < step;
             const active = i === step;
@@ -252,9 +268,10 @@ function AddListingPage() {
                     />
                   </div>
                 )}
-                {(title.length < 4 || !gov || !district || (priceType === "fixed" && !price)) && (
+                {(title.length < 4 || !gov || !district || (requiresNumericPrice && !price)) && (
                   <p className="mt-2 text-[11px] text-destructive">
-                    أكمل الحقول المطلوبة للمتابعة.
+                    أكمل العنوان والسعر والموقع للمتابعة. إذا كان السعر عند التواصل أو مجاناً أو
+                    للمبادلة فلا يلزم رقم للسعر.
                   </p>
                 )}
               </Card>
@@ -386,10 +403,8 @@ function AddListingPage() {
               </button>
               {step < steps.length - 1 ? (
                 <button
-                  disabled={
-                    (step === 0 && !categoryId) ||
-                    (step === 2 && (title.length < 4 || !gov || !district))
-                  }
+                  disabled={!canContinue}
+                  title={disabledReason || undefined}
                   onClick={() => setStep((s) => Math.min(steps.length - 1, s + 1))}
                   className="rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
                 >
@@ -405,6 +420,11 @@ function AddListingPage() {
                 </button>
               )}
             </div>
+            {disabledReason && (
+              <p className="text-end text-[11px] font-semibold text-destructive">
+                {disabledReason}
+              </p>
+            )}
           </div>
 
           {/* Sidebar */}

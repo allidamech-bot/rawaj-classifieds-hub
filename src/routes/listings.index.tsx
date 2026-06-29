@@ -116,7 +116,7 @@ function ListingsPage() {
         )}
 
         {/* Sort chips */}
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
           {sortChips.map((c) => (
             <button
               key={c.id}
@@ -141,7 +141,7 @@ function ListingsPage() {
 
         {/* Subcategories */}
         {category && (
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
             {category.subcategories.map((s) => (
               <span
                 key={s.id}

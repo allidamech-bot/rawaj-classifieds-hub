@@ -1,18 +1,22 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  Outlet,
+  HeadContent,
   Link,
+  Outlet,
+  Scripts,
   createRootRouteWithContext,
   useRouter,
-  HeadContent,
-  Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
-import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BottomNav } from "@/components/BottomNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { reportLovableError } from "@/lib/lovable-error-reporting";
+import appCss from "../styles.css?url";
+
+const ROOT_TITLE = "رَوَاج | سوق سوريا المجاني للإعلانات";
+const ROOT_DESCRIPTION =
+  "سوق إعلانات مبوبة مجاني لسوريا. بيع واشتري سيارات، عقارات، موبايلات، وظائف وخدمات حسب المحافظة بسهولة وبدون تعقيد.";
 
 function NotFoundComponent() {
   return (
@@ -39,6 +43,7 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
@@ -76,22 +81,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#101722" },
-      { title: "رَوَاج | RAWAJ" },
-      {
-        name: "description",
-        content:
-          "رَوَاج: السوق السوري للإعلانات المجانية. سيارات، عقارات، موبايلات، خدمات وأكثر — منظّم وموثوق.",
-      },
+      { title: ROOT_TITLE },
+      { name: "description", content: ROOT_DESCRIPTION },
       { name: "author", content: "RAWAJ" },
-      { property: "og:title", content: "رَوَاج | RAWAJ" },
-      { property: "og:description", content: "سوق إعلانات مبوبة مجاني لسوريا. بيع واشتري سيارات، عقارات، موبايلات، وظائف وخدمات حسب المحافظة بسهولة وبدون تعقيد." },
+      { property: "og:title", content: ROOT_TITLE },
+      { property: "og:description", content: ROOT_DESCRIPTION },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "رَوَاج | RAWAJ" },
-      { name: "description", content: "سوق إعلانات مبوبة مجاني لسوريا. بيع واشتري سيارات، عقارات، موبايلات، وظائف وخدمات حسب المحافظة بسهولة وبدون تعقيد." },
-      { name: "twitter:description", content: "سوق إعلانات مبوبة مجاني لسوريا. بيع واشتري سيارات، عقارات، موبايلات، وظائف وخدمات حسب المحافظة بسهولة وبدون تعقيد." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/zIwkXClYffUK7hi3aEKhqqdn3Nh1/social-images/social-1782706568346-ChatGPT_Image_29_يونيو_2026،_07_15_42_ص.webp" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/zIwkXClYffUK7hi3aEKhqqdn3Nh1/social-images/social-1782706568346-ChatGPT_Image_29_يونيو_2026،_07_15_42_ص.webp" },
+      { name: "twitter:title", content: ROOT_TITLE },
+      { name: "twitter:description", content: ROOT_DESCRIPTION },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

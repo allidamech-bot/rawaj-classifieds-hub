@@ -44,40 +44,40 @@
   --radius: 0.875rem;
 
   /* RAWAJ Atlas Design tokens */
-  --background: #F8F4EA;        /* ivory */
-  --foreground: #1B1B1D;        /* charcoal */
-  --card: #FFFFFF;
-  --card-foreground: #1B1B1D;
-  --card-warm: #FFFDF7;
-  --muted-surface: #EEE7D8;
-  --popover: #FFFFFF;
-  --popover-foreground: #1B1B1D;
+  --background: #f8f4ea; /* ivory */
+  --foreground: #1b1b1d; /* charcoal */
+  --card: #ffffff;
+  --card-foreground: #1b1b1d;
+  --card-warm: #fffdf7;
+  --muted-surface: #eee7d8;
+  --popover: #ffffff;
+  --popover-foreground: #1b1b1d;
 
-  --primary: #101722;           /* premium navy */
-  --primary-foreground: #F8F4EA;
+  --primary: #101722; /* premium navy */
+  --primary-foreground: #f8f4ea;
 
-  --secondary: #EEE7D8;
-  --secondary-foreground: #1B1B1D;
+  --secondary: #eee7d8;
+  --secondary-foreground: #1b1b1d;
 
-  --muted: #EEE7D8;
-  --muted-foreground: #5D625F;
+  --muted: #eee7d8;
+  --muted-foreground: #5d625f;
 
-  --accent: #B88A44;            /* gold */
+  --accent: #b88a44; /* gold */
   --accent-foreground: #101722;
 
-  --gold: #B88A44;
+  --gold: #b88a44;
   --gold-foreground: #101722;
 
-  --emerald-trust: #166B52;
-  --emerald-trust-foreground: #FFFFFF;
+  --emerald-trust: #166b52;
+  --emerald-trust-foreground: #ffffff;
 
-  --destructive: #B6423C;
-  --destructive-foreground: #FFFFFF;
-  --warning: #C9822B;
+  --destructive: #b6423c;
+  --destructive-foreground: #ffffff;
+  --warning: #c9822b;
 
   --border: rgba(16, 23, 34, 0.08);
   --input: rgba(16, 23, 34, 0.12);
-  --ring: #B88A44;
+  --ring: #b88a44;
 }
 
 @layer base {
@@ -95,12 +95,16 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
     letter-spacing: 0;
   }
   /* Tap targets */
-  button, a {
+  button,
+  a {
     -webkit-tap-highlight-color: transparent;
   }
 }
@@ -120,13 +124,26 @@
 }
 
 @utility shadow-soft {
-  box-shadow: 0 1px 2px rgba(16, 23, 34, 0.04), 0 4px 14px rgba(16, 23, 34, 0.06);
+  box-shadow:
+    0 1px 2px rgba(16, 23, 34, 0.04),
+    0 4px 14px rgba(16, 23, 34, 0.06);
 }
 
 @utility shadow-premium {
-  box-shadow: 0 2px 6px rgba(16, 23, 34, 0.05), 0 16px 40px rgba(16, 23, 34, 0.08);
+  box-shadow:
+    0 2px 6px rgba(16, 23, 34, 0.05),
+    0 16px 40px rgba(16, 23, 34, 0.08);
 }
 
 @utility hairline {
   border: 1px solid var(--color-border);
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
