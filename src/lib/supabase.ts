@@ -25,12 +25,12 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
 export function getSupabaseAuthUnavailableReason() {
   if (isSupabaseConfigured) return null;
   if (!hasSupabaseUrl && !hasSupabaseAnonKey) {
-    return "Supabase غير مهيأ حالياً. يلزم ضبط VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY.";
+    return "الحسابات والبيانات الحقيقية قيد التفعيل حالياً. يمكنك متابعة تصفح الواجهة، وسيتم تفعيل الدخول والإعلانات قريباً.";
   }
 
   if (!hasSupabaseUrl) {
-    return "Supabase غير مهيأ حالياً. يلزم ضبط VITE_SUPABASE_URL بقيمة المشروع العامة.";
+    return "الاتصال التشغيلي قيد التفعيل حالياً. التصفح العام متاح، وسيتم تفعيل الحسابات قريباً.";
   }
 
-  return "Supabase غير مهيأ حالياً. يلزم ضبط VITE_SUPABASE_ANON_KEY بالمفتاح العام anon.";
+  return "الدخول إلى الحسابات قيد التفعيل حالياً. يمكنك تصفح رَوَاج الآن والعودة لتسجيل الدخول قريباً.";
 }

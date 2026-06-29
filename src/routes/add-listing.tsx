@@ -170,7 +170,7 @@ function AddListingPage() {
       <PageState
         title="أضف إعلاناً"
         heading="تسجيل الدخول مطلوب"
-        body="لا يمكن إرسال إعلان حقيقي بدون حساب Supabase. سجّل الدخول ثم عد لإضافة الإعلان."
+        body="لا يمكن إرسال إعلان حقيقي بدون حساب. سجّل الدخول ثم عد لإضافة الإعلان."
         actionLabel="تسجيل الدخول"
         actionTo="/login"
       />
@@ -181,8 +181,8 @@ function AddListingPage() {
     return (
       <PageState
         title="أضف إعلاناً"
-        heading="Supabase غير مهيأ"
-        body="إرسال الإعلانات الحقيقي يحتاج ضبط متغيرات Supabase العامة أولاً."
+        heading="إرسال الإعلانات قيد التفعيل"
+        body="يمكنك تصفح الواجهة حالياً، وسيتم تفعيل إرسال الإعلانات الحقيقية قريباً بعد اكتمال ربط الحسابات."
       />
     );
   }
@@ -231,10 +231,12 @@ function AddListingPage() {
 
         {loading ? (
           <Card title="جارٍ تحميل بيانات النشر">
-            <p className="text-sm text-muted-foreground">يتم جلب الأقسام والمحافظات من Supabase.</p>
+            <p className="text-sm text-muted-foreground">
+              يتم تجهيز الأقسام والمحافظات المتاحة للنشر.
+            </p>
           </Card>
         ) : setupError ? (
-          <Card title="إعداد قاعدة البيانات مطلوب">
+          <Card title="إرسال الإعلانات قيد التفعيل">
             <p className="text-sm text-muted-foreground">{setupError.message}</p>
           </Card>
         ) : (
@@ -291,8 +293,8 @@ function AddListingPage() {
                     ))}
                   </div>
                   <p className="mt-3 text-[11px] text-muted-foreground">
-                    إذا لم تكن bucket التخزين وسياساتها مطبقة بعد، سيتم إنشاء الإعلان نصياً وتظهر
-                    رسالة خطأ واضحة للصور فقط.
+                    رفع الصور قيد التفعيل حالياً. إذا لم تكن الصور جاهزة بعد، يمكنك متابعة تجهيز
+                    الإعلان النصي وستظهر رسالة واضحة للصور فقط.
                   </p>
                 </Card>
               )}
@@ -507,7 +509,7 @@ function AddListingPage() {
               <Card title="تنبيه">
                 <p className="flex items-start gap-2 text-xs text-foreground/80">
                   <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold" />
-                  الصور اختيارية وتتطلب إعداد bucket التخزين يدوياً. الرسائل والدفع غير مفعّلة.
+                  الصور اختيارية وقيد التفعيل. الرسائل والدفع غير مفعّلة حالياً.
                 </p>
               </Card>
             </aside>

@@ -100,8 +100,8 @@ function ReportsPage() {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl bg-warning/10 p-3 hairline text-xs text-foreground/90">
-        البلاغات الحقيقية تُقرأ من Supabase للمالك فقط. أي إجراء لاحق يجب أن يبقى محمياً بـ RLS وسجل
-        نشاط. {demoNotice}
+        البلاغات الحقيقية تُقرأ من مصدر البيانات للمالك فقط. أي إجراء لاحق يجب أن يبقى محمياً
+        بالصلاحيات وسجل النشاط. {demoNotice}
       </div>
 
       <section>
@@ -122,7 +122,7 @@ function ReportsPage() {
       <section className="rounded-2xl bg-card p-4 hairline">
         <h2 className="mb-2 flex items-center gap-2 text-base font-extrabold">
           <Flag className="h-4 w-4 text-destructive" />
-          بلاغات حقيقية من Supabase
+          بلاغات حقيقية
         </h2>
         {message && (
           <p className="mb-2 rounded-xl bg-muted-surface p-2 text-xs font-semibold">{message}</p>
@@ -130,7 +130,9 @@ function ReportsPage() {
         {loading ? (
           <p className="text-xs text-muted-foreground">جارٍ تحميل البلاغات.</p>
         ) : error ? (
-          <p className="text-xs text-muted-foreground">{error.message}</p>
+          <p className="text-xs text-muted-foreground">
+            البلاغات الحقيقية قيد التفعيل حالياً. ستظهر البلاغات هنا عند اكتمال الربط التشغيلي.
+          </p>
         ) : realReports.length === 0 ? (
           <p className="text-xs text-muted-foreground">لا توجد بلاغات حقيقية حالياً.</p>
         ) : (

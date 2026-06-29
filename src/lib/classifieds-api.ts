@@ -22,9 +22,9 @@ import type { PlaceholderType, PriceType } from "@/types";
 type Row = Record<string, unknown>;
 
 const setupRequiredMessage =
-  "جداول الإعلانات الحقيقية غير جاهزة بعد. يجب تنفيذ SQL الخاص بأساس الإعلانات يدوياً من Supabase Dashboard.";
+  "قسم الإعلانات الحقيقية قيد التفعيل حالياً. ستظهر الإعلانات هنا بعد اكتمال الربط التشغيلي.";
 const storageSetupRequiredMessage =
-  "تخزين صور الإعلانات غير مهيأ بعد. يجب إعداد bucket وسياسات listing-images يدوياً من Supabase Dashboard.";
+  "رفع الصور قيد التفعيل حالياً. يمكنك متابعة تجهيز الإعلان، وسيتم تفعيل الصور قريباً.";
 const listingImagesBucket = "listing-images";
 const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxImageSizeBytes = 5 * 1024 * 1024;
@@ -35,7 +35,9 @@ function getClient(): ClassifiedsResult<SupabaseClient> {
       ok: false,
       error: {
         code: "supabase_unconfigured",
-        message: getSupabaseAuthUnavailableReason() ?? "Supabase غير مهيأ حالياً.",
+        message:
+          getSupabaseAuthUnavailableReason() ??
+          "الخدمة قيد التفعيل حالياً. يمكنك متابعة تصفح رَوَاج، وسيتم تفعيل البيانات قريباً.",
       },
     };
   }

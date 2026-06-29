@@ -119,7 +119,7 @@ function ListingDetailsPage() {
       <>
         <PageHeader title="تفاصيل الإعلان" />
         <main className="container-wide pt-10">
-          <StateCard title="جارٍ تحميل الإعلان" body="يتم جلب الإعلان المعتمد من Supabase." />
+          <StateCard title="جارٍ تحميل الإعلان" body="نجهّز تفاصيل الإعلان المعتمد للعرض." />
         </main>
       </>
     );
@@ -132,9 +132,15 @@ function ListingDetailsPage() {
         <main className="container-wide pt-10">
           <StateCard
             title={
-              error?.code === "schema_missing" ? "إعداد قاعدة البيانات مطلوب" : "الإعلان غير متاح"
+              error?.code === "schema_missing" || error?.code === "supabase_unconfigured"
+                ? "الإعلانات الحقيقية قيد التفعيل"
+                : "الإعلان غير متاح"
             }
-            body={error?.message ?? "هذا الإعلان غير متاح أو لم تتم الموافقة عليه بعد."}
+            body={
+              error?.code === "schema_missing" || error?.code === "supabase_unconfigured"
+                ? "ستظهر تفاصيل الإعلانات هنا بعد اكتمال الربط التشغيلي. لا نعرض بيانات تجريبية كإعلان حقيقي."
+                : (error?.message ?? "هذا الإعلان غير متاح أو لم تتم الموافقة عليه بعد.")
+            }
             actionLabel="تصفح الإعلانات"
             actionTo="/listings"
           />

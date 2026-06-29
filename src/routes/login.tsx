@@ -26,7 +26,7 @@ function LoginPage() {
 
     const client = supabase;
     if (!client) {
-      setError("تسجيل الدخول غير متاح حالياً. يلزم ضبط Supabase أولاً.");
+      setError("الحسابات قيد التفعيل حالياً. التصفح العام متاح، وسيتم تفعيل الدخول قريباً.");
       return;
     }
 
@@ -58,14 +58,16 @@ function LoginPage() {
             <div>
               <h1 className="text-base font-extrabold">دخول الحساب</h1>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                استخدم بريدك وكلمة المرور المسجلة في Supabase. لا يوجد إنشاء حساب من الواجهة حالياً.
+                استخدم بريدك وكلمة المرور عند تفعيل الحسابات. إنشاء الحساب من الواجهة غير متاح
+                حالياً.
               </p>
             </div>
           </div>
 
           {auth.status === "authUnavailable" ? (
             <div className="rounded-xl bg-warning/10 p-3 text-xs text-foreground/90 hairline">
-              {auth.reason ?? "الحسابات غير مهيأة حالياً. التصفح العام لا يزال متاحاً."}
+              {auth.reason ??
+                "الحسابات قيد التفعيل حالياً. التصفح العام متاح، وسيتم تفعيل الدخول قريباً."}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
@@ -131,8 +133,8 @@ function LoginPage() {
 
           <div className="mt-4 rounded-xl bg-muted-surface p-3 text-[11px] leading-6 text-muted-foreground">
             <ShieldCheck className="me-1 inline h-3.5 w-3.5 text-emerald-trust" />
-            صلاحيات المالك والمشرفين تُقرأ من جدول الأدوار في Supabase فقط، ولا تعتمد على البريد
-            داخل الواجهة.
+            صلاحيات المالك والمشرفين تُقرأ من جدول الأدوار فقط، ولا تُمنح من الواجهة أو من البريد
+            داخل المتصفح.
           </div>
 
           <Link to="/" className="mt-4 inline-flex text-xs font-bold text-primary">

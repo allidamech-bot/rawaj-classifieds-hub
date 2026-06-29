@@ -225,22 +225,29 @@ function ListingsPage() {
         </div>
 
         {loading ? (
-          <StateCard title="جارٍ تحميل الإعلانات" body="يتم جلب الإعلانات المعتمدة من Supabase." />
+          <StateCard
+            title="جارٍ تحميل الإعلانات"
+            body="نبحث عن الإعلانات المعتمدة المتاحة للتصفح داخل سوريا."
+          />
         ) : error ? (
           <StateCard
             title={
-              error.code === "schema_missing"
-                ? "إعداد قاعدة البيانات مطلوب"
+              error.code === "schema_missing" || error.code === "supabase_unconfigured"
+                ? "الإعلانات الحقيقية قيد التفعيل"
                 : "تعذر تحميل الإعلانات"
             }
-            body={error.message}
+            body={
+              error.code === "schema_missing" || error.code === "supabase_unconfigured"
+                ? "ستظهر الإعلانات هنا بعد اكتمال الربط التشغيلي. يمكنك حالياً تصفح بنية رَوَاج وتجهيز إعلانك."
+                : error.message
+            }
             actionLabel="العودة للرئيسية"
             actionTo="/"
           />
         ) : items.length === 0 ? (
           <StateCard
-            title="لا توجد إعلانات معتمدة حالياً"
-            body="عند نشر الإعلانات ومراجعتها ستظهر هنا دون استخدام بيانات تجريبية كبيانات إنتاجية."
+            title="لا توجد إعلانات مطابقة حالياً"
+            body="كن أول من يضيف إعلاناً في هذا القسم. تظهر هنا الإعلانات المعتمدة فقط بعد المراجعة."
             actionLabel="أضف إعلانك"
             actionTo="/add-listing"
           />

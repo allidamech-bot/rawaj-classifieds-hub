@@ -87,8 +87,8 @@ function PendingPage() {
   return (
     <div className="space-y-5">
       <div className="rounded-2xl bg-warning/10 p-3 hairline text-xs text-foreground/90">
-        طابور المراجعة الحقيقي يُقرأ من Supabase للمالك فقط. إجراءات القبول/الرفض الحقيقية يجب أن
-        تبقى محمية بسياسات RLS ولا تعتمد على البريد.
+        طابور المراجعة الحقيقي يُقرأ من مصدر البيانات للمالك فقط. إجراءات القبول/الرفض الحقيقية يجب
+        أن تبقى محمية بسياسات RLS ولا تعتمد على البريد.
       </div>
 
       <section className="rounded-2xl bg-card p-4 hairline">
@@ -97,11 +97,12 @@ function PendingPage() {
           <p className="mt-2 rounded-xl bg-muted-surface p-2 text-xs font-semibold">{message}</p>
         )}
         {loading ? (
-          <p className="mt-2 text-xs text-muted-foreground">
-            جارٍ تحميل طابور المراجعة من Supabase.
-          </p>
+          <p className="mt-2 text-xs text-muted-foreground">جارٍ تحميل طابور المراجعة الحقيقي.</p>
         ) : error ? (
-          <p className="mt-2 text-xs text-muted-foreground">{error.message}</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            طابور المراجعة قيد التفعيل حالياً. ستظهر الإعلانات المرسلة للمراجعة هنا عند اكتمال
+            الربط.
+          </p>
         ) : realListings.length === 0 ? (
           <p className="mt-2 text-xs text-muted-foreground">
             لا توجد إعلانات حقيقية قيد المراجعة حالياً.
@@ -207,8 +208,8 @@ function PendingPage() {
 
       <div className="rounded-2xl bg-card p-3 text-xs text-muted-foreground hairline">
         <ShieldAlert className="me-1 inline h-3.5 w-3.5 text-warning" />
-        المشرفون يمكنهم مراجعة الطابور حسب صلاحياتهم فقط. قبول/رفض الإعلانات الحقيقي يتطلب Backend
-        وصلاحيات وربط حسابات.
+        المشرفون يمكنهم مراجعة الطابور حسب صلاحياتهم فقط. قبول/رفض الإعلانات الحقيقي يتطلب ربطاً
+        تشغيلياً وصلاحيات وربط حسابات.
       </div>
     </div>
   );
