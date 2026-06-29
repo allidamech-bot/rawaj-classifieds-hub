@@ -9,38 +9,415 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SupportRouteImport } from './routes/support'
+import { Route as SavedSearchesRouteImport } from './routes/saved-searches'
+import { Route as SafetyRouteImport } from './routes/safety'
+import { Route as PromotionRouteImport } from './routes/promotion'
+import { Route as ProhibitedRouteImport } from './routes/prohibited'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ListingsRouteImport } from './routes/listings'
+import { Route as FavoritesRouteImport } from './routes/favorites'
+import { Route as ChatsRouteImport } from './routes/chats'
+import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AddListingRouteImport } from './routes/add-listing'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ListingsIndexRouteImport } from './routes/listings.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as SellerIdRouteImport } from './routes/seller.$id'
+import { Route as ListingsIdRouteImport } from './routes/listings.$id'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminPromotionsRouteImport } from './routes/admin.promotions'
+import { Route as AdminPendingRouteImport } from './routes/admin.pending'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SavedSearchesRoute = SavedSearchesRouteImport.update({
+  id: '/saved-searches',
+  path: '/saved-searches',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SafetyRoute = SafetyRouteImport.update({
+  id: '/safety',
+  path: '/safety',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PromotionRoute = PromotionRouteImport.update({
+  id: '/promotion',
+  path: '/promotion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProhibitedRoute = ProhibitedRouteImport.update({
+  id: '/prohibited',
+  path: '/prohibited',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListingsRoute = ListingsRouteImport.update({
+  id: '/listings',
+  path: '/listings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FavoritesRoute = FavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatsRoute = ChatsRouteImport.update({
+  id: '/chats',
+  path: '/chats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategoriesRoute = CategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AddListingRoute = AddListingRouteImport.update({
+  id: '/add-listing',
+  path: '/add-listing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ListingsIndexRoute = ListingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ListingsRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const SellerIdRoute = SellerIdRouteImport.update({
+  id: '/seller/$id',
+  path: '/seller/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListingsIdRoute = ListingsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ListingsRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPromotionsRoute = AdminPromotionsRouteImport.update({
+  id: '/promotions',
+  path: '/promotions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPendingRoute = AdminPendingRouteImport.update({
+  id: '/pending',
+  path: '/pending',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/add-listing': typeof AddListingRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/categories': typeof CategoriesRoute
+  '/chats': typeof ChatsRoute
+  '/favorites': typeof FavoritesRoute
+  '/listings': typeof ListingsRouteWithChildren
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/prohibited': typeof ProhibitedRoute
+  '/promotion': typeof PromotionRoute
+  '/safety': typeof SafetyRoute
+  '/saved-searches': typeof SavedSearchesRoute
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
+  '/admin/pending': typeof AdminPendingRoute
+  '/admin/promotions': typeof AdminPromotionsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/listings/$id': typeof ListingsIdRoute
+  '/seller/$id': typeof SellerIdRoute
+  '/admin/': typeof AdminIndexRoute
+  '/listings/': typeof ListingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/add-listing': typeof AddListingRoute
+  '/categories': typeof CategoriesRoute
+  '/chats': typeof ChatsRoute
+  '/favorites': typeof FavoritesRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/prohibited': typeof ProhibitedRoute
+  '/promotion': typeof PromotionRoute
+  '/safety': typeof SafetyRoute
+  '/saved-searches': typeof SavedSearchesRoute
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
+  '/admin/pending': typeof AdminPendingRoute
+  '/admin/promotions': typeof AdminPromotionsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/listings/$id': typeof ListingsIdRoute
+  '/seller/$id': typeof SellerIdRoute
+  '/admin': typeof AdminIndexRoute
+  '/listings': typeof ListingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/add-listing': typeof AddListingRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/categories': typeof CategoriesRoute
+  '/chats': typeof ChatsRoute
+  '/favorites': typeof FavoritesRoute
+  '/listings': typeof ListingsRouteWithChildren
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/prohibited': typeof ProhibitedRoute
+  '/promotion': typeof PromotionRoute
+  '/safety': typeof SafetyRoute
+  '/saved-searches': typeof SavedSearchesRoute
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
+  '/admin/pending': typeof AdminPendingRoute
+  '/admin/promotions': typeof AdminPromotionsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/listings/$id': typeof ListingsIdRoute
+  '/seller/$id': typeof SellerIdRoute
+  '/admin/': typeof AdminIndexRoute
+  '/listings/': typeof ListingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/add-listing'
+    | '/admin'
+    | '/categories'
+    | '/chats'
+    | '/favorites'
+    | '/listings'
+    | '/privacy'
+    | '/profile'
+    | '/prohibited'
+    | '/promotion'
+    | '/safety'
+    | '/saved-searches'
+    | '/support'
+    | '/terms'
+    | '/admin/pending'
+    | '/admin/promotions'
+    | '/admin/reports'
+    | '/admin/users'
+    | '/listings/$id'
+    | '/seller/$id'
+    | '/admin/'
+    | '/listings/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/add-listing'
+    | '/categories'
+    | '/chats'
+    | '/favorites'
+    | '/privacy'
+    | '/profile'
+    | '/prohibited'
+    | '/promotion'
+    | '/safety'
+    | '/saved-searches'
+    | '/support'
+    | '/terms'
+    | '/admin/pending'
+    | '/admin/promotions'
+    | '/admin/reports'
+    | '/admin/users'
+    | '/listings/$id'
+    | '/seller/$id'
+    | '/admin'
+    | '/listings'
+  id:
+    | '__root__'
+    | '/'
+    | '/add-listing'
+    | '/admin'
+    | '/categories'
+    | '/chats'
+    | '/favorites'
+    | '/listings'
+    | '/privacy'
+    | '/profile'
+    | '/prohibited'
+    | '/promotion'
+    | '/safety'
+    | '/saved-searches'
+    | '/support'
+    | '/terms'
+    | '/admin/pending'
+    | '/admin/promotions'
+    | '/admin/reports'
+    | '/admin/users'
+    | '/listings/$id'
+    | '/seller/$id'
+    | '/admin/'
+    | '/listings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AddListingRoute: typeof AddListingRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  CategoriesRoute: typeof CategoriesRoute
+  ChatsRoute: typeof ChatsRoute
+  FavoritesRoute: typeof FavoritesRoute
+  ListingsRoute: typeof ListingsRouteWithChildren
+  PrivacyRoute: typeof PrivacyRoute
+  ProfileRoute: typeof ProfileRoute
+  ProhibitedRoute: typeof ProhibitedRoute
+  PromotionRoute: typeof PromotionRoute
+  SafetyRoute: typeof SafetyRoute
+  SavedSearchesRoute: typeof SavedSearchesRoute
+  SupportRoute: typeof SupportRoute
+  TermsRoute: typeof TermsRoute
+  SellerIdRoute: typeof SellerIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/saved-searches': {
+      id: '/saved-searches'
+      path: '/saved-searches'
+      fullPath: '/saved-searches'
+      preLoaderRoute: typeof SavedSearchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/safety': {
+      id: '/safety'
+      path: '/safety'
+      fullPath: '/safety'
+      preLoaderRoute: typeof SafetyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/promotion': {
+      id: '/promotion'
+      path: '/promotion'
+      fullPath: '/promotion'
+      preLoaderRoute: typeof PromotionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prohibited': {
+      id: '/prohibited'
+      path: '/prohibited'
+      fullPath: '/prohibited'
+      preLoaderRoute: typeof ProhibitedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/listings': {
+      id: '/listings'
+      path: '/listings'
+      fullPath: '/listings'
+      preLoaderRoute: typeof ListingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/favorites': {
+      id: '/favorites'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof FavoritesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chats': {
+      id: '/chats'
+      path: '/chats'
+      fullPath: '/chats'
+      preLoaderRoute: typeof ChatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/categories': {
+      id: '/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof CategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/add-listing': {
+      id: '/add-listing'
+      path: '/add-listing'
+      fullPath: '/add-listing'
+      preLoaderRoute: typeof AddListingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +425,115 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/listings/': {
+      id: '/listings/'
+      path: '/'
+      fullPath: '/listings/'
+      preLoaderRoute: typeof ListingsIndexRouteImport
+      parentRoute: typeof ListingsRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/seller/$id': {
+      id: '/seller/$id'
+      path: '/seller/$id'
+      fullPath: '/seller/$id'
+      preLoaderRoute: typeof SellerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/listings/$id': {
+      id: '/listings/$id'
+      path: '/$id'
+      fullPath: '/listings/$id'
+      preLoaderRoute: typeof ListingsIdRouteImport
+      parentRoute: typeof ListingsRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/promotions': {
+      id: '/admin/promotions'
+      path: '/promotions'
+      fullPath: '/admin/promotions'
+      preLoaderRoute: typeof AdminPromotionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/pending': {
+      id: '/admin/pending'
+      path: '/pending'
+      fullPath: '/admin/pending'
+      preLoaderRoute: typeof AdminPendingRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminPendingRoute: typeof AdminPendingRoute
+  AdminPromotionsRoute: typeof AdminPromotionsRoute
+  AdminReportsRoute: typeof AdminReportsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminPendingRoute: AdminPendingRoute,
+  AdminPromotionsRoute: AdminPromotionsRoute,
+  AdminReportsRoute: AdminReportsRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface ListingsRouteChildren {
+  ListingsIdRoute: typeof ListingsIdRoute
+  ListingsIndexRoute: typeof ListingsIndexRoute
+}
+
+const ListingsRouteChildren: ListingsRouteChildren = {
+  ListingsIdRoute: ListingsIdRoute,
+  ListingsIndexRoute: ListingsIndexRoute,
+}
+
+const ListingsRouteWithChildren = ListingsRoute._addFileChildren(
+  ListingsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AddListingRoute: AddListingRoute,
+  AdminRoute: AdminRouteWithChildren,
+  CategoriesRoute: CategoriesRoute,
+  ChatsRoute: ChatsRoute,
+  FavoritesRoute: FavoritesRoute,
+  ListingsRoute: ListingsRouteWithChildren,
+  PrivacyRoute: PrivacyRoute,
+  ProfileRoute: ProfileRoute,
+  ProhibitedRoute: ProhibitedRoute,
+  PromotionRoute: PromotionRoute,
+  SafetyRoute: SafetyRoute,
+  SavedSearchesRoute: SavedSearchesRoute,
+  SupportRoute: SupportRoute,
+  TermsRoute: TermsRoute,
+  SellerIdRoute: SellerIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
