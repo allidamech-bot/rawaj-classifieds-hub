@@ -12,7 +12,7 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
-const accountMenu = [
+const accountMenu: { to: string; label: string; icon: typeof User; badge?: string }[] = [
   { to: "/listings", label: "إعلاناتي", icon: FileSpreadsheet, badge: "تجريبي" },
   { to: "/add-listing", label: "إضافة إعلان", icon: Plus },
   { to: "/favorites", label: "المفضلة", icon: Heart },
@@ -23,7 +23,7 @@ const accountMenu = [
   { to: "/safety", label: "نصائح الأمان", icon: ShieldAlert },
   { to: "/terms", label: "شروط الاستخدام", icon: FileText },
   { to: "/privacy", label: "سياسة الخصوصية", icon: ShieldCheck },
-] as const;
+];
 
 const identityFields = [
   { label: "اسم المستخدم", value: "—", icon: User },
