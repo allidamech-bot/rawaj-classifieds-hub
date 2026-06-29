@@ -9,16 +9,41 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SavedSearchesRouteImport } from './routes/saved-searches'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ListingsRouteImport } from './routes/listings'
+import { Route as FavoritesRouteImport } from './routes/favorites'
+import { Route as ChatsRouteImport } from './routes/chats'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as AddListingRouteImport } from './routes/add-listing'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ListingsIndexRouteImport } from './routes/listings.index'
+import { Route as SellerIdRouteImport } from './routes/seller.$id'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
 
+const SavedSearchesRoute = SavedSearchesRouteImport.update({
+  id: '/saved-searches',
+  path: '/saved-searches',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ListingsRoute = ListingsRouteImport.update({
   id: '/listings',
   path: '/listings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FavoritesRoute = FavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatsRoute = ChatsRouteImport.update({
+  id: '/chats',
+  path: '/chats',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategoriesRoute = CategoriesRouteImport.update({
@@ -41,6 +66,11 @@ const ListingsIndexRoute = ListingsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ListingsRoute,
 } as any)
+const SellerIdRoute = SellerIdRouteImport.update({
+  id: '/seller/$id',
+  path: '/seller/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ListingsIdRoute = ListingsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -51,15 +81,25 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/add-listing': typeof AddListingRoute
   '/categories': typeof CategoriesRoute
+  '/chats': typeof ChatsRoute
+  '/favorites': typeof FavoritesRoute
   '/listings': typeof ListingsRouteWithChildren
+  '/profile': typeof ProfileRoute
+  '/saved-searches': typeof SavedSearchesRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/seller/$id': typeof SellerIdRoute
   '/listings/': typeof ListingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/add-listing': typeof AddListingRoute
   '/categories': typeof CategoriesRoute
+  '/chats': typeof ChatsRoute
+  '/favorites': typeof FavoritesRoute
+  '/profile': typeof ProfileRoute
+  '/saved-searches': typeof SavedSearchesRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/seller/$id': typeof SellerIdRoute
   '/listings': typeof ListingsIndexRoute
 }
 export interface FileRoutesById {
@@ -67,8 +107,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/add-listing': typeof AddListingRoute
   '/categories': typeof CategoriesRoute
+  '/chats': typeof ChatsRoute
+  '/favorites': typeof FavoritesRoute
   '/listings': typeof ListingsRouteWithChildren
+  '/profile': typeof ProfileRoute
+  '/saved-searches': typeof SavedSearchesRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/seller/$id': typeof SellerIdRoute
   '/listings/': typeof ListingsIndexRoute
 }
 export interface FileRouteTypes {
@@ -77,18 +122,38 @@ export interface FileRouteTypes {
     | '/'
     | '/add-listing'
     | '/categories'
+    | '/chats'
+    | '/favorites'
     | '/listings'
+    | '/profile'
+    | '/saved-searches'
     | '/listings/$id'
+    | '/seller/$id'
     | '/listings/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/add-listing' | '/categories' | '/listings/$id' | '/listings'
+  to:
+    | '/'
+    | '/add-listing'
+    | '/categories'
+    | '/chats'
+    | '/favorites'
+    | '/profile'
+    | '/saved-searches'
+    | '/listings/$id'
+    | '/seller/$id'
+    | '/listings'
   id:
     | '__root__'
     | '/'
     | '/add-listing'
     | '/categories'
+    | '/chats'
+    | '/favorites'
     | '/listings'
+    | '/profile'
+    | '/saved-searches'
     | '/listings/$id'
+    | '/seller/$id'
     | '/listings/'
   fileRoutesById: FileRoutesById
 }
@@ -96,16 +161,49 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AddListingRoute: typeof AddListingRoute
   CategoriesRoute: typeof CategoriesRoute
+  ChatsRoute: typeof ChatsRoute
+  FavoritesRoute: typeof FavoritesRoute
   ListingsRoute: typeof ListingsRouteWithChildren
+  ProfileRoute: typeof ProfileRoute
+  SavedSearchesRoute: typeof SavedSearchesRoute
+  SellerIdRoute: typeof SellerIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/saved-searches': {
+      id: '/saved-searches'
+      path: '/saved-searches'
+      fullPath: '/saved-searches'
+      preLoaderRoute: typeof SavedSearchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/listings': {
       id: '/listings'
       path: '/listings'
       fullPath: '/listings'
       preLoaderRoute: typeof ListingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/favorites': {
+      id: '/favorites'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof FavoritesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chats': {
+      id: '/chats'
+      path: '/chats'
+      fullPath: '/chats'
+      preLoaderRoute: typeof ChatsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/categories': {
@@ -136,6 +234,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ListingsIndexRouteImport
       parentRoute: typeof ListingsRoute
     }
+    '/seller/$id': {
+      id: '/seller/$id'
+      path: '/seller/$id'
+      fullPath: '/seller/$id'
+      preLoaderRoute: typeof SellerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/listings/$id': {
       id: '/listings/$id'
       path: '/$id'
@@ -164,7 +269,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddListingRoute: AddListingRoute,
   CategoriesRoute: CategoriesRoute,
+  ChatsRoute: ChatsRoute,
+  FavoritesRoute: FavoritesRoute,
   ListingsRoute: ListingsRouteWithChildren,
+  ProfileRoute: ProfileRoute,
+  SavedSearchesRoute: SavedSearchesRoute,
+  SellerIdRoute: SellerIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
