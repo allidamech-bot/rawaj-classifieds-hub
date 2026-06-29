@@ -72,7 +72,7 @@ function SellerPage() {
             <span className="inline-block border-b-2 border-gold pb-0.5">الإعلانات النشطة</span>
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {sellerListings.map((l) => (
+            {sellerListings.map((l: typeof listings[number]) => (
               <ListingCard key={l.id} listing={l} />
             ))}
           </div>
