@@ -24,11 +24,17 @@ export function priceLabel(price: number, type: string, currency: "SYP" | "USD" 
 
 export function priceTypeLabel(type: string) {
   switch (type) {
-    case "fixed": return "ثابت";
-    case "negotiable": return "قابل للتفاوض";
-    case "contact": return "عند التواصل";
-    case "free": return "مجاناً";
-    case "exchange": return "للمبادلة";
-    default: return type;
+    case "fixed":
+      return "ثابت";
+    case "negotiable":
+      return "قابل للتفاوض";
+    case "contact":
+      return "عند التواصل";
+    case "free":
+      return "مجاناً";
+    case "exchange":
+      return "للمبادلة";
+    default:
+      return type;
   }
 }

@@ -9,19 +9,36 @@ export const Route = createFileRoute("/seller/$id")({
     const sellerListings = listings.filter((l) => l.sellerId === params.id);
     if (sellerListings.length === 0) throw notFound();
     const s = sellerListings[0];
-    return { sellerListings, seller: { id: s.sellerId, name: s.sellerName, type: s.sellerType, verified: s.isVerifiedSeller, rating: s.sellerRating, joinedAt: s.sellerJoinedAt } };
+    return {
+      sellerListings,
+      seller: {
+        id: s.sellerId,
+        name: s.sellerName,
+        type: s.sellerType,
+        verified: s.isVerifiedSeller,
+        rating: s.sellerRating,
+        joinedAt: s.sellerJoinedAt,
+      },
+    };
   },
   notFoundComponent: () => (
     <>
       <PageHeader title="بائع" />
-      <main className="container-wide pt-10 text-center text-sm text-muted-foreground">هذا البائع غير متاح حالياً.</main>
+      <main className="container-wide pt-10 text-center text-sm text-muted-foreground">
+        هذا البائع غير متاح حالياً.
+      </main>
     </>
   ),
   errorComponent: ({ reset }) => (
     <>
       <PageHeader title="خطأ" />
       <main className="container-wide pt-10 text-center">
-        <button onClick={reset} className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">إعادة المحاولة</button>
+        <button
+          onClick={reset}
+          className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+        >
+          إعادة المحاولة
+        </button>
       </main>
     </>
   ),
@@ -54,16 +71,36 @@ function SellerPage() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-primary-foreground/80">
                 <span>{labelType(seller.type)}</span>
-                <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-gold text-gold" /> {seller.rating.toFixed(1)}</span>
+                <span className="inline-flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-gold text-gold" /> {seller.rating.toFixed(1)}
+                </span>
                 <span>منذ {new Date(seller.joinedAt).getFullYear()}</span>
                 <span>{sellerListings.length} إعلان</span>
               </div>
             </div>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2">
-            <button disabled title="غير مفعّل" className="rounded-xl bg-gold py-2 text-xs font-bold text-gold-foreground opacity-70 cursor-not-allowed">رسالة · قريباً</button>
-            <button disabled title="غير مفعّل" className="inline-flex items-center justify-center gap-1 rounded-xl bg-primary-foreground/10 py-2 text-xs font-bold opacity-70 cursor-not-allowed"><Phone className="h-3.5 w-3.5"/> اتصال · قريباً</button>
-            <button disabled title="غير مفعّل" className="rounded-xl bg-primary-foreground/10 py-2 text-xs font-bold opacity-70 cursor-not-allowed">واتساب · قريباً</button>
+            <button
+              disabled
+              title="غير مفعّل"
+              className="rounded-xl bg-gold py-2 text-xs font-bold text-gold-foreground opacity-70 cursor-not-allowed"
+            >
+              رسالة · قريباً
+            </button>
+            <button
+              disabled
+              title="غير مفعّل"
+              className="inline-flex items-center justify-center gap-1 rounded-xl bg-primary-foreground/10 py-2 text-xs font-bold opacity-70 cursor-not-allowed"
+            >
+              <Phone className="h-3.5 w-3.5" /> اتصال · قريباً
+            </button>
+            <button
+              disabled
+              title="غير مفعّل"
+              className="rounded-xl bg-primary-foreground/10 py-2 text-xs font-bold opacity-70 cursor-not-allowed"
+            >
+              واتساب · قريباً
+            </button>
           </div>
           <p className="mt-2 text-[11px] text-primary-foreground/70">
             وسائل التواصل ستظهر فقط حسب إعدادات البائع بعد تفعيل الحسابات.
@@ -76,14 +113,20 @@ function SellerPage() {
             لم يضف البائع نبذة بعد. ستظهر هنا معلومات النشاط، ساعات التوفر، ومدة الاستجابة لاحقاً.
           </p>
           <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
-            <div>وقت الاستجابة: <span className="font-bold text-foreground">—</span></div>
-            <div>الموقع: <span className="font-bold text-foreground">سوريا</span></div>
+            <div>
+              وقت الاستجابة: <span className="font-bold text-foreground">—</span>
+            </div>
+            <div>
+              الموقع: <span className="font-bold text-foreground">سوريا</span>
+            </div>
           </div>
         </section>
 
         <section className="mt-5">
           <h2 className="mb-3 text-lg font-extrabold">
-            <span className="inline-block border-b-2 border-gold pb-0.5">الإعلانات النشطة ({sellerListings.length})</span>
+            <span className="inline-block border-b-2 border-gold pb-0.5">
+              الإعلانات النشطة ({sellerListings.length})
+            </span>
           </h2>
           {sellerListings.length === 0 ? (
             <div className="rounded-2xl bg-card p-8 text-center hairline text-sm text-muted-foreground">
@@ -91,7 +134,7 @@ function SellerPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {sellerListings.map((l: typeof listings[number]) => (
+              {sellerListings.map((l: (typeof listings)[number]) => (
                 <ListingCard key={l.id} listing={l} />
               ))}
             </div>
@@ -100,14 +143,24 @@ function SellerPage() {
 
         <section className="mt-4 rounded-2xl bg-card p-4 hairline text-xs text-muted-foreground">
           <p className="font-bold text-foreground">تنبيه أمان</p>
-          <p className="mt-1">قابل البائع في مكان عام وآمن، وافحص السلعة قبل الدفع. لا تحوّل المال قبل التأكد.</p>
+          <p className="mt-1">
+            قابل البائع في مكان عام وآمن، وافحص السلعة قبل الدفع. لا تحوّل المال قبل التأكد.
+          </p>
         </section>
 
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <button disabled title="غير مفعّل" className="inline-flex items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold text-destructive hairline opacity-70 cursor-not-allowed">
+          <button
+            disabled
+            title="غير مفعّل"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold text-destructive hairline opacity-70 cursor-not-allowed"
+          >
             <Flag className="h-4 w-4" /> إبلاغ · قريباً
           </button>
-          <button disabled title="غير مفعّل" className="inline-flex items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold hairline opacity-70 cursor-not-allowed">
+          <button
+            disabled
+            title="غير مفعّل"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold hairline opacity-70 cursor-not-allowed"
+          >
             <Ban className="h-4 w-4" /> حظر · قريباً
           </button>
         </div>
@@ -118,9 +171,13 @@ function SellerPage() {
 
 function labelType(t: string) {
   switch (t) {
-    case "verified": return "بائع موثّق";
-    case "store":    return "متجر";
-    case "business": return "حساب أعمال";
-    default:         return "مستخدم";
+    case "verified":
+      return "بائع موثّق";
+    case "store":
+      return "متجر";
+    case "business":
+      return "حساب أعمال";
+    default:
+      return "مستخدم";
   }
 }

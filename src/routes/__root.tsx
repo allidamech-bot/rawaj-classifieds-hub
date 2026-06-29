@@ -47,9 +47,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-bold text-foreground">حدث خطأ غير متوقع</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          حاول تحديث الصفحة أو العودة للرئيسية.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">حاول تحديث الصفحة أو العودة للرئيسية.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
@@ -79,7 +77,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#101722" },
       { title: "رَوَاج | RAWAJ — السوق القريب بثقة" },
-      { name: "description", content: "رَوَاج: السوق السوري للإعلانات المجانية. سيارات، عقارات، موبايلات، خدمات وأكثر — منظّم وموثوق." },
+      {
+        name: "description",
+        content:
+          "رَوَاج: السوق السوري للإعلانات المجانية. سيارات، عقارات، موبايلات، خدمات وأكثر — منظّم وموثوق.",
+      },
       { name: "author", content: "RAWAJ" },
       { property: "og:title", content: "رَوَاج | RAWAJ" },
       { property: "og:description", content: "السوق السوري للإعلانات المجانية — منظّم وموثوق." },

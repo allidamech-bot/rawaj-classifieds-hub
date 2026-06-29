@@ -36,8 +36,8 @@ function ProhibitedPage() {
             <div>
               <p className="text-sm font-bold text-destructive">إعلانات ممنوعة على رَوَاج</p>
               <p className="mt-1 text-xs text-foreground/80">
-                ستتم لاحقاً إزالة أي إعلان يخالف هذه القائمة بعد المراجعة، مع إمكانية إيقاف الحساب المخالف.
-                ميزة الإشراف الفعلية قيد التطوير وستُفعَّل عند ربط لوحة الإدارة.
+                ستتم لاحقاً إزالة أي إعلان يخالف هذه القائمة بعد المراجعة، مع إمكانية إيقاف الحساب
+                المخالف. ميزة الإشراف الفعلية قيد التطوير وستُفعَّل عند ربط لوحة الإدارة.
               </p>
             </div>
           </div>
@@ -57,9 +57,15 @@ function ProhibitedPage() {
         <div className="rounded-2xl bg-card p-4 hairline text-xs text-muted-foreground">
           <p className="font-bold text-foreground mb-1">كيف تبلّغ عن إعلان مخالف؟</p>
           <p>
-            من صفحة الإعلان، اضغط على زر (إبلاغ عن الإعلان). ميزة التبليغ تحت التطوير وستُفعَّل قريباً.
-            في الحالات العاجلة، يمكنك التواصل عبر{" "}
-            <Link to="/support" className="font-bold text-primary underline-offset-2 hover:underline">صفحة الدعم</Link>.
+            من صفحة الإعلان، اضغط على زر (إبلاغ عن الإعلان). ميزة التبليغ تحت التطوير وستُفعَّل
+            قريباً. في الحالات العاجلة، يمكنك التواصل عبر{" "}
+            <Link
+              to="/support"
+              className="font-bold text-primary underline-offset-2 hover:underline"
+            >
+              صفحة الدعم
+            </Link>
+            .
           </p>
         </div>
       </main>

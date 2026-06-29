@@ -40,7 +40,10 @@ export function SiteFooter() {
             <ul className="space-y-1.5">
               {g.links.map((l) => (
                 <li key={l.to}>
-                  <Link to={l.to as "/"} className="text-xs text-muted-foreground transition hover:text-primary">
+                  <Link
+                    to={l.to as "/"}
+                    className="text-xs text-muted-foreground transition hover:text-primary"
+                  >
                     {l.label}
                   </Link>
                 </li>

@@ -60,7 +60,9 @@ function PrivacyPage() {
         <div className="space-y-3">
           {sections.map((s, i) => (
             <section key={i} className="rounded-2xl bg-card p-4 hairline">
-              <h2 className="mb-2 text-base font-extrabold text-foreground">{i + 1}. {s.h}</h2>
+              <h2 className="mb-2 text-base font-extrabold text-foreground">
+                {i + 1}. {s.h}
+              </h2>
               <p className="text-sm leading-7 text-foreground/90">{s.p}</p>
             </section>
           ))}

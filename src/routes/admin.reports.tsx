@@ -1,66 +1,137 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Flag, UserX, ListX } from "lucide-react";
+import { Flag, ShieldAlert } from "lucide-react";
+import { demoNotice, reports } from "@/data/adminMockData";
 
 export const Route = createFileRoute("/admin/reports")({
   component: ReportsPage,
 });
 
-const listingReports = [
-  { r: "محتوى مضلل", listing: "آيفون 13 برو 256GB", listingId: "L-1042", by: "user_812", status: "جديد" },
-  { r: "سعر مشبوه", listing: "شقة للإيجار في المزة", listingId: "L-1018", by: "user_341", status: "قيد المراجعة" },
-  { r: "إعلان مكرر", listing: "بلايستيشن 5 مع يدين", listingId: "L-1099", by: "user_215", status: "جديد" },
-];
-
-const sellerReports = [
-  { r: "محاولة احتيال", seller: "بائع غير معروف", sellerId: "U-77", by: "user_402", status: "جديد" },
-  { r: "إساءة في الرسائل", seller: "متجر النجمة", sellerId: "U-31", by: "user_115", status: "قيد المراجعة" },
+const summary = [
+  ["بلاغات جديدة", "12"],
+  ["قيد المراجعة", "9"],
+  ["مرتفعة الخطورة", "4"],
+  ["تم الحل", "31"],
 ];
 
 function ReportsPage() {
   return (
-    <div className="space-y-5">
-      <Section title="بلاغات على إعلانات" icon={ListX} items={listingReports.map((x) => ({
-        title: x.r,
-        sub: `إعلان: ${x.listing} · #${x.listingId} · من: ${x.by}`,
-        status: x.status,
-      }))} />
-      <Section title="بلاغات على بائعين" icon={UserX} items={sellerReports.map((x) => ({
-        title: x.r,
-        sub: `بائع: ${x.seller} · #${x.sellerId} · من: ${x.by}`,
-        status: x.status,
-      }))} />
-      <p className="text-center text-[11px] text-muted-foreground">
-        إجراءات المراجعة/الإغلاق/التصعيد ستُفعَّل عند ربط لوحة الإدارة بالخادم.
-      </p>
+    <div className="space-y-6">
+      <div className="rounded-2xl bg-warning/10 p-3 hairline text-xs text-foreground/90">
+        إجراءات البلاغات تحتاج Backend وصلاحيات حقيقية عند التفعيل. {demoNotice}
+      </div>
+
+      <section>
+        <h2 className="mb-3 flex items-center gap-2 text-base font-extrabold">
+          <Flag className="h-4 w-4 text-destructive" />
+          ملخص البلاغات
+        </h2>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {summary.map(([label, value]) => (
+            <div key={label} className="rounded-xl bg-card p-3 hairline">
+              <div className="text-xl font-extrabold">{value}</div>
+              <p className="text-xs text-muted-foreground">{label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+        {reports.map((report) => (
+          <article key={report.id} className="rounded-2xl bg-card p-4 hairline">
+            <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-sm font-extrabold">{report.type}</h3>
+                  <Badge>{report.severity}</Badge>
+                  <Badge>{report.status}</Badge>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{report.id}</p>
+              </div>
+              <ShieldAlert className="h-4 w-4 text-destructive" />
+            </div>
+            <Info
+              rows={[
+                ["Reported listing/user", report.target],
+                ["Reporter placeholder", report.reporter],
+                ["Reason", report.reason],
+                ["Created time", report.created],
+                ["Status", report.status],
+                ["Severity", report.severity],
+                ["Assigned admin", report.admin],
+                ["Internal note", report.note],
+              ]}
+            />
+            <ActionRow
+              actions={[
+                "فتح البلاغ",
+                "تغيير الحالة",
+                "إخفاء الإعلان",
+                "تجميد المستخدم",
+                "طلب مراجعة المالك",
+                "إضافة ملاحظة",
+              ]}
+            />
+            <InternalNote />
+          </article>
+        ))}
+      </section>
     </div>
   );
 }
 
-function Section({ title, icon: Icon, items }: { title: string; icon: typeof Flag; items: { title: string; sub: string; status: string }[] }) {
+function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <section>
-      <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-extrabold">
-        <Icon className="h-4 w-4 text-destructive" /> {title}
-      </h3>
-      <div className="space-y-2">
-        {items.map((r, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-2xl bg-card p-3 hairline">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-destructive/10 text-destructive">
-              <Flag className="h-4 w-4" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-bold">{r.title}</div>
-              <div className="truncate text-xs text-muted-foreground">{r.sub}</div>
-            </div>
-            <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-              {r.status}
-            </span>
-            <button disabled title="غير مفعّل" className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground opacity-70 cursor-not-allowed">
-              مراجعة · قريباً
-            </button>
-          </div>
-        ))}
-      </div>
-    </section>
+    <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+      {children}
+    </span>
+  );
+}
+
+function Info({ rows }: { rows: string[][] }) {
+  return (
+    <dl className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
+      {rows.map(([label, value]) => (
+        <div key={label} className="rounded-xl bg-muted-surface p-3">
+          <dt className="text-muted-foreground">{label}</dt>
+          <dd className="mt-1 font-bold">{value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function ActionRow({ actions }: { actions: string[] }) {
+  return (
+    <div className="mt-3 flex flex-wrap gap-1.5">
+      {actions.map((action) => (
+        <button
+          key={action}
+          disabled
+          className="rounded-md bg-destructive px-2 py-1 text-[10px] font-bold text-destructive-foreground opacity-70 cursor-not-allowed"
+        >
+          {action} · نموذج تجريبي
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function InternalNote() {
+  return (
+    <div className="mt-3 rounded-xl bg-muted-surface p-3 text-xs">
+      <b>ملاحظة داخلية</b>
+      <p className="mt-1 text-muted-foreground">
+        أضيفت بواسطة: مشرف تجريبي · التاريخ: placeholder · الحالة: غير مفعّلة
+      </p>
+      <button
+        disabled
+        className="mt-2 rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline cursor-not-allowed"
+      >
+        إضافة ملاحظة · قريباً
+      </button>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        الملاحظات الداخلية لا تظهر للمستخدمين.
+      </p>
+    </div>
   );
 }

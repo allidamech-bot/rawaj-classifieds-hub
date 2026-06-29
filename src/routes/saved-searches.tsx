@@ -8,8 +8,24 @@ export const Route = createFileRoute("/saved-searches")({
 });
 
 const mockSearches = [
-  { id: "s1", q: "سيارة كيا", category: "سيارات ومركبات", governorate: "دمشق", priceMin: 0, priceMax: 200000000, sort: "الأحدث" },
-  { id: "s2", q: "شقة للإيجار", category: "عقارات", governorate: "حلب", priceMin: 0, priceMax: 0, sort: "الأرخص" },
+  {
+    id: "s1",
+    q: "سيارة كيا",
+    category: "سيارات ومركبات",
+    governorate: "دمشق",
+    priceMin: 0,
+    priceMax: 200000000,
+    sort: "الأحدث",
+  },
+  {
+    id: "s2",
+    q: "شقة للإيجار",
+    category: "عقارات",
+    governorate: "حلب",
+    priceMin: 0,
+    priceMax: 0,
+    sort: "الأرخص",
+  },
 ];
 
 function SavedSearchesPage() {
@@ -30,7 +46,10 @@ function SavedSearchesPage() {
               <Bookmark className="h-6 w-6 text-muted-foreground" />
             </span>
             <p className="mt-3 text-sm font-bold">لا توجد عمليات بحث محفوظة</p>
-            <Link to="/listings" className="mt-5 inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">
+            <Link
+              to="/listings"
+              className="mt-5 inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground"
+            >
               ابدأ البحث
             </Link>
           </div>
@@ -65,10 +84,18 @@ function SavedSearchesPage() {
                   >
                     فتح البحث
                   </Link>
-                  <button disabled title="قريباً" className="inline-flex items-center gap-1 rounded-xl bg-card px-3 py-1.5 text-xs font-bold text-muted-foreground hairline cursor-not-allowed">
+                  <button
+                    disabled
+                    title="قريباً"
+                    className="inline-flex items-center gap-1 rounded-xl bg-card px-3 py-1.5 text-xs font-bold text-muted-foreground hairline cursor-not-allowed"
+                  >
                     <Pencil className="h-3.5 w-3.5" /> تعديل · قريباً
                   </button>
-                  <button disabled title="قريباً" className="inline-flex items-center gap-1 rounded-xl bg-card px-3 py-1.5 text-xs font-bold text-destructive hairline cursor-not-allowed">
+                  <button
+                    disabled
+                    title="قريباً"
+                    className="inline-flex items-center gap-1 rounded-xl bg-card px-3 py-1.5 text-xs font-bold text-destructive hairline cursor-not-allowed"
+                  >
                     <Trash2 className="h-3.5 w-3.5" /> حذف · قريباً
                   </button>
                 </div>

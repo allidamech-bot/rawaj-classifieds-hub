@@ -28,12 +28,27 @@ const helpTopics = [
 ];
 
 const faqs = [
-  { q: "كيف أضيف إعلان؟", a: "من الصفحة الرئيسية أو القائمة السفلية، اضغط (أضف إعلان) واتبع الخطوات الخمس." },
-  { q: "هل رَوَاج مجاني؟", a: "نعم، النشر والتصفح مجانيان بالكامل. الترويج المميز سيكون اختيارياً لاحقاً." },
-  { q: "كيف أتواصل مع البائع؟", a: "من صفحة الإعلان عبر أزرار التواصل. سيتم تفعيلها بعد إطلاق الحسابات." },
-  { q: "كيف أحذف إعلاناً؟", a: "ستتوفر إدارة الإعلانات من قائمة (إعلاناتي) بعد تفعيل تسجيل الدخول." },
+  {
+    q: "كيف أضيف إعلان؟",
+    a: "من الصفحة الرئيسية أو القائمة السفلية، اضغط (أضف إعلان) واتبع الخطوات الخمس.",
+  },
+  {
+    q: "هل رَوَاج مجاني؟",
+    a: "نعم، النشر والتصفح مجانيان بالكامل. الترويج المميز سيكون اختيارياً لاحقاً.",
+  },
+  {
+    q: "كيف أتواصل مع البائع؟",
+    a: "من صفحة الإعلان عبر أزرار التواصل. سيتم تفعيلها بعد إطلاق الحسابات.",
+  },
+  {
+    q: "كيف أحذف إعلاناً؟",
+    a: "ستتوفر إدارة الإعلانات من قائمة (إعلاناتي) بعد تفعيل تسجيل الدخول.",
+  },
   { q: "كيف أبلّغ عن إعلان؟", a: "من صفحة الإعلان عبر زر (إبلاغ). الميزة قيد التطوير." },
-  { q: "كيف أطلب توثيق حسابي؟", a: "من صفحة الحساب → توثيق الحساب. يتطلب لاحقاً وثائق هوية أو سجل تجاري." },
+  {
+    q: "كيف أطلب توثيق حسابي؟",
+    a: "من صفحة الحساب → توثيق الحساب. يتطلب لاحقاً وثائق هوية أو سجل تجاري.",
+  },
 ];
 
 function SupportPage() {
@@ -52,7 +67,9 @@ function SupportPage() {
             <LifeBuoy className="h-6 w-6 text-gold" />
             <div>
               <h2 className="text-lg font-extrabold">كيف يمكننا مساعدتك؟</h2>
-              <p className="text-xs text-primary-foreground/80">فريق رَوَاج موجود لدعمك. ابحث في الأسئلة الشائعة أو راسلنا عبر النموذج.</p>
+              <p className="text-xs text-primary-foreground/80">
+                فريق رَوَاج موجود لدعمك. ابحث في الأسئلة الشائعة أو راسلنا عبر النموذج.
+              </p>
             </div>
           </div>
         </section>
@@ -73,31 +90,66 @@ function SupportPage() {
         {/* Support form */}
         <section>
           <h3 className="mb-3 text-sm font-extrabold">تواصل معنا</h3>
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-3 rounded-2xl bg-card p-4 hairline">
+          <form
+            onSubmit={(e) => e.preventDefault()}
+            className="space-y-3 rounded-2xl bg-card p-4 hairline"
+          >
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">الاسم</label>
-                <input value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm" placeholder="اسمك" />
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                  الاسم
+                </label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+                  placeholder="اسمك"
+                />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">البريد الإلكتروني</label>
-                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm" placeholder="example@email.com" />
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                  البريد الإلكتروني
+                </label>
+                <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  type="email"
+                  className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+                  placeholder="example@email.com"
+                />
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">نوع المشكلة</label>
-                <select value={type} onChange={(e) => setType(e.target.value)} className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm">
-                  {types.map((t) => <option key={t}>{t}</option>)}
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                  نوع المشكلة
+                </label>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+                >
+                  {types.map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">رقم الإعلان (اختياري)</label>
-                <input value={listingId} onChange={(e) => setListingId(e.target.value)} className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm" placeholder="مثال: 12" />
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                  رقم الإعلان (اختياري)
+                </label>
+                <input
+                  value={listingId}
+                  onChange={(e) => setListingId(e.target.value)}
+                  className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+                  placeholder="مثال: 12"
+                />
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">رسالتك</label>
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                رسالتك
+              </label>
               <textarea
                 value={msg}
                 onChange={(e) => setMsg(e.target.value)}
@@ -106,7 +158,11 @@ function SupportPage() {
                 className="w-full resize-none rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
               />
             </div>
-            <button type="button" disabled className="inline-flex items-center gap-2 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold text-muted-foreground cursor-not-allowed">
+            <button
+              type="button"
+              disabled
+              className="inline-flex items-center gap-2 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold text-muted-foreground cursor-not-allowed"
+            >
               <Paperclip className="h-3.5 w-3.5" /> إرفاق صورة · قريباً
             </button>
             <button
@@ -143,8 +199,13 @@ function SupportPage() {
           <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
           <p className="text-xs">
             إذا كنت ضحية احتيال أو لاحظت نشاطاً مشبوهاً، راجع{" "}
-            <Link to="/safety" className="font-bold text-primary underline-offset-2 hover:underline">نصائح الأمان</Link>
-            {" "}قبل إرسال البلاغ.
+            <Link
+              to="/safety"
+              className="font-bold text-primary underline-offset-2 hover:underline"
+            >
+              نصائح الأمان
+            </Link>{" "}
+            قبل إرسال البلاغ.
           </p>
         </section>
       </main>

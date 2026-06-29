@@ -98,9 +98,14 @@ function ListingsPage() {
               {["كل سوريا", ...governorates.map((g) => g.nameAr)].map((g) => (
                 <button
                   key={g}
-                  onClick={() => { setGov(g); setOpen(false); }}
+                  onClick={() => {
+                    setGov(g);
+                    setOpen(false);
+                  }}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    gov === g ? "bg-primary text-primary-foreground" : "bg-muted-surface text-foreground hover:bg-secondary"
+                    gov === g
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted-surface text-foreground hover:bg-secondary"
                   }`}
                 >
                   {g}
@@ -162,10 +167,22 @@ function ListingsPage() {
         {filtered.length === 0 ? (
           <div className="mt-10 rounded-2xl bg-card p-10 text-center hairline">
             <p className="text-sm font-semibold text-foreground">لا توجد إعلانات مطابقة حالياً</p>
-            <p className="mt-1 text-xs text-muted-foreground">جرّب تغيير المحافظة أو القسم، أو اعرض كل الإعلانات.</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              جرّب تغيير المحافظة أو القسم، أو اعرض كل الإعلانات.
+            </p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <Link to="/listings" className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">عرض كل الإعلانات</Link>
-              <Link to="/add-listing" className="rounded-xl bg-gold px-4 py-2 text-xs font-bold text-gold-foreground">أضف إعلانك</Link>
+              <Link
+                to="/listings"
+                className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+              >
+                عرض كل الإعلانات
+              </Link>
+              <Link
+                to="/add-listing"
+                className="rounded-xl bg-gold px-4 py-2 text-xs font-bold text-gold-foreground"
+              >
+                أضف إعلانك
+              </Link>
             </div>
           </div>
         ) : (

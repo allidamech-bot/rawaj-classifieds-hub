@@ -1,8 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  MapPin, Clock, Eye, Heart, BadgeCheck, Star, Phone, MessageCircle,
-  Send, ShieldAlert, Flag, Ban, ChevronRight, Hash, Camera, Map as MapIcon,
-  Lock, AlertTriangle,
+  MapPin,
+  Clock,
+  Eye,
+  Heart,
+  BadgeCheck,
+  Star,
+  Phone,
+  MessageCircle,
+  Send,
+  ShieldAlert,
+  Flag,
+  Ban,
+  ChevronRight,
+  Hash,
+  Camera,
+  Map as MapIcon,
+  Lock,
+  AlertTriangle,
 } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
@@ -32,7 +47,9 @@ export const Route = createFileRoute("/listings/$id")({
       <PageHeader title="غير موجود" />
       <main className="container-wide pt-10 text-center">
         <p className="text-sm text-muted-foreground">هذا الإعلان غير متاح أو تمت إزالته.</p>
-        <Link to="/" className="mt-4 inline-block text-sm font-bold text-primary">العودة للرئيسية</Link>
+        <Link to="/" className="mt-4 inline-block text-sm font-bold text-primary">
+          العودة للرئيسية
+        </Link>
       </main>
     </>
   ),
@@ -41,7 +58,10 @@ export const Route = createFileRoute("/listings/$id")({
       <PageHeader title="خطأ" />
       <main className="container-wide pt-10 text-center">
         <p className="text-sm text-muted-foreground">حدث خطأ أثناء عرض الإعلان.</p>
-        <button onClick={reset} className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
+        <button
+          onClick={reset}
+          className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+        >
           إعادة المحاولة
         </button>
       </main>
@@ -56,8 +76,12 @@ function ListingDetailsPage() {
   const { listing } = Route.useLoaderData();
   const [fav, setFav] = useState(false);
 
-  const similar = listings.filter((l) => l.id !== listing.id && l.categoryId === listing.categoryId).slice(0, 4);
-  const detailsEntries = Object.entries(listing.details).filter(([, v]) => v !== undefined && v !== "");
+  const similar = listings
+    .filter((l) => l.id !== listing.id && l.categoryId === listing.categoryId)
+    .slice(0, 4);
+  const detailsEntries = Object.entries(listing.details).filter(
+    ([, v]) => v !== undefined && v !== "",
+  );
 
   return (
     <>
@@ -85,7 +109,9 @@ function ListingDetailsPage() {
         <div className="mt-4">
           <div className="flex flex-wrap items-center gap-2">
             {listing.isFeatured && (
-              <span className="rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">مميز</span>
+              <span className="rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">
+                مميز
+              </span>
             )}
             {listing.isVerifiedSeller && (
               <span className="inline-flex items-center gap-1 rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold text-emerald-trust-foreground">
@@ -97,13 +123,23 @@ function ListingDetailsPage() {
             </span>
           </div>
 
-          <h1 className="mt-2 text-xl font-extrabold leading-tight text-foreground">{listing.title}</h1>
+          <h1 className="mt-2 text-xl font-extrabold leading-tight text-foreground">
+            {listing.title}
+          </h1>
 
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><Hash className="h-3.5 w-3.5" /> رقم الإعلان: {listing.id}</span>
-            <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {listing.timeSincePosted}</span>
-            <span className="inline-flex items-center gap-1"><Eye className="h-3.5 w-3.5" /> {listing.viewsCount} مشاهدة</span>
-            <span className="inline-flex items-center gap-1"><Heart className="h-3.5 w-3.5" /> {listing.favoritesCount} حفظ</span>
+            <span className="inline-flex items-center gap-1">
+              <Hash className="h-3.5 w-3.5" /> رقم الإعلان: {listing.id}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" /> {listing.timeSincePosted}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Eye className="h-3.5 w-3.5" /> {listing.viewsCount} مشاهدة
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Heart className="h-3.5 w-3.5" /> {listing.favoritesCount} حفظ
+            </span>
           </div>
         </div>
 
@@ -113,20 +149,28 @@ function ListingDetailsPage() {
             <div>
               <div className="text-[11px] font-semibold text-muted-foreground">السعر</div>
               <div className="mt-0.5 text-2xl font-extrabold text-foreground">
-                {listing.price ? formatPrice(listing.price, listing.currency) : priceLabel(0, listing.priceType)}
+                {listing.price
+                  ? formatPrice(listing.price, listing.currency)
+                  : priceLabel(0, listing.priceType)}
               </div>
-              <div className="mt-1 text-xs text-gold font-semibold">{priceTypeLabel(listing.priceType)}</div>
+              <div className="mt-1 text-xs text-gold font-semibold">
+                {priceTypeLabel(listing.priceType)}
+              </div>
             </div>
             <button
               onClick={() => setFav((v) => !v)}
               aria-label="حفظ في المفضلة"
               className="grid h-11 w-11 place-items-center rounded-full bg-muted-surface transition hover:bg-secondary"
             >
-              <Heart className={`h-5 w-5 ${fav ? "fill-destructive text-destructive" : "text-foreground"}`} />
+              <Heart
+                className={`h-5 w-5 ${fav ? "fill-destructive text-destructive" : "text-foreground"}`}
+              />
             </button>
           </div>
           {listing.priceType === "negotiable" && (
-            <p className="mt-2 text-[11px] text-muted-foreground">السعر قابل للتفاوض ضمن المعقول.</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              السعر قابل للتفاوض ضمن المعقول.
+            </p>
           )}
         </section>
 
@@ -160,7 +204,10 @@ function ListingDetailsPage() {
             <h2 className="mb-3 text-sm font-extrabold text-foreground">تفاصيل الإعلان</h2>
             <div className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
               {detailsEntries.map(([k, v]) => (
-                <div key={k} className="flex items-center justify-between border-b border-border/60 py-1.5 text-sm last:border-b-0">
+                <div
+                  key={k}
+                  className="flex items-center justify-between border-b border-border/60 py-1.5 text-sm last:border-b-0"
+                >
                   <span className="text-muted-foreground">{k}</span>
                   <span className="font-semibold text-foreground">{String(v)}</span>
                 </div>
@@ -187,7 +234,9 @@ function ListingDetailsPage() {
               </div>
               <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[11px] text-muted-foreground">
                 <span>{sellerTypeLabel(listing.sellerType)}</span>
-                <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-gold text-gold" /> {listing.sellerRating.toFixed(1)}</span>
+                <span className="inline-flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-gold text-gold" /> {listing.sellerRating.toFixed(1)}
+                </span>
                 <span>عضو منذ {new Date(listing.sellerJoinedAt).getFullYear()}</span>
                 <span>{listing.governorate}</span>
               </div>
@@ -195,8 +244,8 @@ function ListingDetailsPage() {
             <ChevronRight className="h-5 w-5 rtl:rotate-180" />
           </Link>
           <p className="mt-3 text-[11px] text-muted-foreground">
-            حالة التوثيق: {listing.isVerifiedSeller ? "موثّق" : "غير موثّق"} ·
-            نظام التقييم تجريبي وسيُفعَّل لاحقاً بعد تسجيل الدخول.
+            حالة التوثيق: {listing.isVerifiedSeller ? "موثّق" : "غير موثّق"} · نظام التقييم تجريبي
+            وسيُفعَّل لاحقاً بعد تسجيل الدخول.
           </p>
         </section>
 
@@ -207,18 +256,21 @@ function ListingDetailsPage() {
             {listing.contactOptions.message && (
               <ContactBtn icon={Send} label="رسالة" tone="primary" />
             )}
-            {listing.contactOptions.phone && (
-              <ContactBtn icon={Phone} label="اتصال" tone="gold" />
-            )}
+            {listing.contactOptions.phone && <ContactBtn icon={Phone} label="اتصال" tone="gold" />}
             {listing.contactOptions.whatsapp && (
               <ContactBtn icon={MessageCircle} label="واتساب" tone="trust" />
             )}
           </div>
           <div className="mt-3 space-y-1.5 text-[11px] text-muted-foreground">
-            <p className="inline-flex items-center gap-1"><Lock className="h-3 w-3" /> أزرار التواصل غير مفعّلة حالياً — سيتم تفعيلها لاحقاً.</p>
+            <p className="inline-flex items-center gap-1">
+              <Lock className="h-3 w-3" /> أزرار التواصل غير مفعّلة حالياً — سيتم تفعيلها لاحقاً.
+            </p>
             <p>لا نعرض أرقاماً حقيقية في النسخة التجريبية حفاظاً على الخصوصية.</p>
             <p>وقت التواصل المفضل: حسب توفر البائع.</p>
-            <p className="inline-flex items-center gap-1 text-warning"><AlertTriangle className="h-3 w-3" /> لا تشارك بيانات حساسة أو تحويلات قبل التأكد من السلعة.</p>
+            <p className="inline-flex items-center gap-1 text-warning">
+              <AlertTriangle className="h-3 w-3" /> لا تشارك بيانات حساسة أو تحويلات قبل التأكد من
+              السلعة.
+            </p>
           </div>
         </section>
 
@@ -241,10 +293,16 @@ function ListingDetailsPage() {
 
         {/* Report / block */}
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <button title="غير مفعّل حالياً — سيُفعَّل لاحقاً" className="inline-flex items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold text-destructive hairline transition hover:bg-destructive/5">
+          <button
+            title="غير مفعّل حالياً — سيُفعَّل لاحقاً"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold text-destructive hairline transition hover:bg-destructive/5"
+          >
             <Flag className="h-4 w-4" /> إبلاغ عن الإعلان · قريباً
           </button>
-          <button title="غير مفعّل حالياً — سيُفعَّل لاحقاً" className="inline-flex items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold text-foreground hairline transition hover:bg-muted-surface">
+          <button
+            title="غير مفعّل حالياً — سيُفعَّل لاحقاً"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold text-foreground hairline transition hover:bg-muted-surface"
+          >
             <Ban className="h-4 w-4" /> حظر البائع · قريباً
           </button>
         </div>
@@ -267,12 +325,21 @@ function ListingDetailsPage() {
   );
 }
 
-function ContactBtn({ icon: Icon, label, tone }: { icon: typeof Send; label: string; tone: "primary" | "gold" | "trust" }) {
-  const cls = tone === "primary"
-    ? "bg-primary text-primary-foreground"
-    : tone === "gold"
-    ? "bg-gold text-gold-foreground"
-    : "bg-emerald-trust text-emerald-trust-foreground";
+function ContactBtn({
+  icon: Icon,
+  label,
+  tone,
+}: {
+  icon: typeof Send;
+  label: string;
+  tone: "primary" | "gold" | "trust";
+}) {
+  const cls =
+    tone === "primary"
+      ? "bg-primary text-primary-foreground"
+      : tone === "gold"
+        ? "bg-gold text-gold-foreground"
+        : "bg-emerald-trust text-emerald-trust-foreground";
   return (
     <button
       disabled
@@ -288,9 +355,13 @@ function ContactBtn({ icon: Icon, label, tone }: { icon: typeof Send; label: str
 
 function sellerTypeLabel(t: string) {
   switch (t) {
-    case "verified": return "بائع موثّق";
-    case "store":    return "متجر";
-    case "business": return "حساب أعمال";
-    default:         return "مستخدم";
+    case "verified":
+      return "بائع موثّق";
+    case "store":
+      return "متجر";
+    case "business":
+      return "حساب أعمال";
+    default:
+      return "مستخدم";
   }
 }

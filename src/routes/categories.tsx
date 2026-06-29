@@ -25,7 +25,8 @@ function CategoriesPage() {
         <section className="mb-4 rounded-2xl bg-primary p-5 text-primary-foreground shadow-soft">
           <h2 className="text-lg font-extrabold">أطلس الأقسام</h2>
           <p className="mt-1 text-xs text-primary-foreground/80">
-            اختر القسم المناسب لتصفح الإعلانات المنظّمة داخل سوريا. كل قسم يحوي أقساماً فرعية تساعدك في الوصول بسرعة.
+            اختر القسم المناسب لتصفح الإعلانات المنظّمة داخل سوريا. كل قسم يحوي أقساماً فرعية تساعدك
+            في الوصول بسرعة.
           </p>
         </section>
 
@@ -52,14 +53,19 @@ function CategoriesPage() {
                     <div className="mt-1 flex items-center gap-2 text-[11px]">
                       <span className="font-bold text-gold">{count} إعلان</span>
                       <span className="text-muted-foreground">·</span>
-                      <span className="text-muted-foreground">{c.subcategories.length} قسم فرعي</span>
+                      <span className="text-muted-foreground">
+                        {c.subcategories.length} قسم فرعي
+                      </span>
                     </div>
                   </div>
                 </div>
                 {c.subcategories.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {c.subcategories.slice(0, 6).map((s) => (
-                      <span key={s.id} className="rounded-full bg-muted-surface px-2 py-0.5 text-[10px] font-medium text-foreground/80">
+                      <span
+                        key={s.id}
+                        className="rounded-full bg-muted-surface px-2 py-0.5 text-[10px] font-medium text-foreground/80"
+                      >
                         {s.nameAr}
                       </span>
                     ))}

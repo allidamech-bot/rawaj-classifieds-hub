@@ -18,7 +18,10 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "رَوَاج | RAWAJ — السوق القريب بثقة" },
-      { name: "description", content: "تصفح إعلانات سوريا المجانية: سيارات، عقارات، موبايلات، خدمات وأكثر على رَوَاج." },
+      {
+        name: "description",
+        content: "تصفح إعلانات سوريا المجانية: سيارات، عقارات، موبايلات، خدمات وأكثر على رَوَاج.",
+      },
       { property: "og:title", content: "رَوَاج | RAWAJ — السوق القريب بثقة" },
       { property: "og:description", content: "السوق السوري للإعلانات المجانية." },
     ],
@@ -207,18 +210,36 @@ function HomePage() {
             <li>• لا تحوّل المال قبل معاينة السلعة.</li>
             <li>• قابل البائع في مكان عام وآمن.</li>
             <li>• احذر الأسعار غير المنطقية.</li>
-            <li>• بلّغ عن أي إعلان مشبوه عبر <Link to="/support" className="font-bold text-primary">الدعم</Link>.</li>
+            <li>
+              • بلّغ عن أي إعلان مشبوه عبر{" "}
+              <Link to="/support" className="font-bold text-primary">
+                الدعم
+              </Link>
+              .
+            </li>
           </ul>
         </section>
 
         {/* Footer links */}
         <footer className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-border pt-6 pb-2 text-xs text-muted-foreground">
-          <Link to="/safety" className="hover:text-foreground">نصائح الأمان</Link>
-          <Link to="/terms" className="hover:text-foreground">شروط الاستخدام</Link>
-          <Link to="/privacy" className="hover:text-foreground">سياسة الخصوصية</Link>
-          <Link to="/support" className="hover:text-foreground">الدعم</Link>
-          <Link to="/prohibited" className="hover:text-foreground">إعلانات ممنوعة</Link>
-          <Link to="/admin" className="hover:text-foreground opacity-50">لوحة الإدارة</Link>
+          <Link to="/safety" className="hover:text-foreground">
+            نصائح الأمان
+          </Link>
+          <Link to="/terms" className="hover:text-foreground">
+            شروط الاستخدام
+          </Link>
+          <Link to="/privacy" className="hover:text-foreground">
+            سياسة الخصوصية
+          </Link>
+          <Link to="/support" className="hover:text-foreground">
+            الدعم
+          </Link>
+          <Link to="/prohibited" className="hover:text-foreground">
+            إعلانات ممنوعة
+          </Link>
+          <Link to="/admin" className="hover:text-foreground opacity-50">
+            لوحة الإدارة
+          </Link>
         </footer>
       </main>
     </>

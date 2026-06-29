@@ -25,9 +25,7 @@ export function AppHeader({ compact = false, title }: Props) {
           )}
         </Link>
 
-        {compact && title && (
-          <h1 className="ms-1 flex-1 truncate text-base font-bold">{title}</h1>
-        )}
+        {compact && title && <h1 className="ms-1 flex-1 truncate text-base font-bold">{title}</h1>}
 
         <div className="ms-auto flex shrink-0 items-center gap-2">
           {!compact && (
@@ -68,7 +66,10 @@ export function AppHeader({ compact = false, title }: Props) {
         <div className="container-wide pb-3">
           <div className="max-h-[60vh] overflow-y-auto rounded-xl bg-card p-2 text-foreground shadow-premium">
             <button
-              onClick={() => { setGov("كل سوريا"); setOpen(false); }}
+              onClick={() => {
+                setGov("كل سوريا");
+                setOpen(false);
+              }}
               className="block w-full rounded-lg px-3 py-2 text-start text-sm font-medium hover:bg-muted-surface"
             >
               كل سوريا
@@ -76,7 +77,10 @@ export function AppHeader({ compact = false, title }: Props) {
             {governorates.map((g) => (
               <button
                 key={g.id}
-                onClick={() => { setGov(g.nameAr); setOpen(false); }}
+                onClick={() => {
+                  setGov(g.nameAr);
+                  setOpen(false);
+                }}
                 className="block w-full rounded-lg px-3 py-2 text-start text-sm hover:bg-muted-surface"
               >
                 {g.nameAr}
@@ -94,7 +98,15 @@ function Logo() {
     <span className="flex items-center gap-2">
       <span className="grid h-9 w-9 place-items-center rounded-xl bg-gold text-gold-foreground shadow-soft">
         {/* Arabic ر inspired arch mark — atlas dome */}
-        <svg viewBox="0 0 32 32" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          viewBox="0 0 32 32"
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M5 23 Q5 9 16 9 Q27 9 27 23" />
           <path d="M9 23 V26" />
           <path d="M23 23 V26" />

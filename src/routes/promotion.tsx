@@ -1,6 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Sparkles, TrendingUp, Home as HomeIcon, LayoutTemplate, Lock, Upload, AlertTriangle } from "lucide-react";
+import {
+  Sparkles,
+  TrendingUp,
+  Home as HomeIcon,
+  LayoutTemplate,
+  Lock,
+  Upload,
+  AlertTriangle,
+} from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 
 export const Route = createFileRoute("/promotion")({
@@ -12,7 +20,11 @@ const benefits = [
   { icon: Sparkles, t: "شارة (مميز)", d: "إطار ذهبي وشارة مميزة على بطاقة إعلانك." },
   { icon: TrendingUp, t: "ظهور أعلى النتائج", d: "تثبيت إعلانك أعلى نتائج القسم أو المحافظة." },
   { icon: HomeIcon, t: "ظهور في الرئيسية", d: "عرض إعلانك ضمن قسم الإعلانات المميزة." },
-  { icon: LayoutTemplate, t: "إعادة رفع تلقائي", d: "رفع إعلانك إلى الأعلى دورياً خلال فترة الترويج." },
+  {
+    icon: LayoutTemplate,
+    t: "إعادة رفع تلقائي",
+    d: "رفع إعلانك إلى الأعلى دورياً خلال فترة الترويج.",
+  },
 ];
 
 const plans = [
@@ -83,15 +95,32 @@ function PromotionPage() {
         {/* Request form */}
         <section>
           <h3 className="mb-3 text-sm font-extrabold">تفاصيل طلب الترويج</h3>
-          <form onSubmit={(e) => e.preventDefault()} className="grid grid-cols-1 gap-3 rounded-2xl bg-card p-4 hairline sm:grid-cols-2">
+          <form
+            onSubmit={(e) => e.preventDefault()}
+            className="grid grid-cols-1 gap-3 rounded-2xl bg-card p-4 hairline sm:grid-cols-2"
+          >
             <Field label="رقم الإعلان">
-              <input value={listingId} onChange={(e) => setListingId(e.target.value)} placeholder="مثال: 12" className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm" />
+              <input
+                value={listingId}
+                onChange={(e) => setListingId(e.target.value)}
+                placeholder="مثال: 12"
+                className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+              />
             </Field>
             <Field label="عنوان الإعلان">
-              <input value={listingTitle} onChange={(e) => setListingTitle(e.target.value)} placeholder="عنوان مختصر" className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm" />
+              <input
+                value={listingTitle}
+                onChange={(e) => setListingTitle(e.target.value)}
+                placeholder="عنوان مختصر"
+                className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+              />
             </Field>
             <Field label="نوع الترويج">
-              <select value={promoType} onChange={(e) => setPromoType(e.target.value)} className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm">
+              <select
+                value={promoType}
+                onChange={(e) => setPromoType(e.target.value)}
+                className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+              >
                 <option>شارة (مميز)</option>
                 <option>ظهور أعلى النتائج</option>
                 <option>ظهور في الرئيسية</option>
@@ -99,20 +128,41 @@ function PromotionPage() {
               </select>
             </Field>
             <Field label="مدة الترويج">
-              <input readOnly value={`${plan} يوم`} className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm" />
+              <input
+                readOnly
+                value={`${plan} يوم`}
+                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm"
+              />
             </Field>
             <Field label="المبلغ">
-              <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" inputMode="numeric" placeholder="0" className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm" />
+              <input
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                type="number"
+                inputMode="numeric"
+                placeholder="0"
+                className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+              />
             </Field>
             <Field label="العملة">
-              <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm">
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+              >
                 <option value="SYP">ل.س</option>
                 <option value="USD">USD</option>
               </select>
             </Field>
             <div className="sm:col-span-2">
               <Field label="ملاحظات للطلب">
-                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full resize-none rounded-xl border border-input bg-card px-3 py-2.5 text-sm" placeholder="أي ملاحظات تخص طلب الترويج" />
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={3}
+                  className="w-full resize-none rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+                  placeholder="أي ملاحظات تخص طلب الترويج"
+                />
               </Field>
             </div>
           </form>
@@ -125,26 +175,70 @@ function PromotionPage() {
             <div>
               <p className="text-sm font-bold">تفاصيل الدفع البنكي — نموذج تجريبي غير مفعّل</p>
               <p className="mt-0.5 text-[11px] text-muted-foreground">
-                لا يوجد حساب بنكي فعلي للتحويل حالياً. هذه الحقول لعرض الشكل المستقبلي فقط، ولن يتم حفظ أو إرسال أي بيانات.
+                لا يوجد حساب بنكي فعلي للتحويل حالياً. هذه الحقول لعرض الشكل المستقبلي فقط، ولن يتم
+                حفظ أو إرسال أي بيانات.
               </p>
             </div>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field label="اسم صاحب الحساب"><input disabled placeholder="—" className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed" /></Field>
-            <Field label="اسم البنك"><input disabled placeholder="—" className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed" /></Field>
-            <Field label="رقم العملية / مرجع التحويل"><input disabled placeholder="—" className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed" /></Field>
-            <Field label="المبلغ المحوّل"><input disabled placeholder="—" className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed" /></Field>
-            <Field label="العملة"><input disabled placeholder="—" className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed" /></Field>
-            <Field label="تاريخ التحويل"><input disabled placeholder="—" className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed" /></Field>
+            <Field label="اسم صاحب الحساب">
+              <input
+                disabled
+                placeholder="—"
+                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed"
+              />
+            </Field>
+            <Field label="اسم البنك">
+              <input
+                disabled
+                placeholder="—"
+                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed"
+              />
+            </Field>
+            <Field label="رقم العملية / مرجع التحويل">
+              <input
+                disabled
+                placeholder="—"
+                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed"
+              />
+            </Field>
+            <Field label="المبلغ المحوّل">
+              <input
+                disabled
+                placeholder="—"
+                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed"
+              />
+            </Field>
+            <Field label="العملة">
+              <input
+                disabled
+                placeholder="—"
+                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed"
+              />
+            </Field>
+            <Field label="تاريخ التحويل">
+              <input
+                disabled
+                placeholder="—"
+                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed"
+              />
+            </Field>
             <div className="sm:col-span-2">
               <Field label="إثبات التحويل">
-                <button disabled className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card-warm py-4 text-xs text-muted-foreground cursor-not-allowed">
+                <button
+                  disabled
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card-warm py-4 text-xs text-muted-foreground cursor-not-allowed"
+                >
                   <Upload className="h-4 w-4" /> رفع صورة الإيصال · قريباً
                 </button>
               </Field>
             </div>
             <Field label="حالة الطلب">
-              <input disabled value="بانتظار التفعيل" className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed" />
+              <input
+                disabled
+                value="بانتظار التفعيل"
+                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed"
+              />
             </Field>
           </div>
         </section>

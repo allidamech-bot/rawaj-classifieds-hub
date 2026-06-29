@@ -21,13 +21,16 @@ function ChatsPage() {
         <div className="rounded-2xl bg-warning/10 p-4 hairline">
           <p className="text-xs font-bold mb-1">المحادثات غير مفعّلة حالياً — نموذج تجريبي</p>
           <p className="text-[11px] text-muted-foreground">
-            سيتم تفعيل الرسائل بين البائع والمشتري لاحقاً مع ربط المحادثة بالإعلان، تنبيهات أمان، وإمكانية الحظر والتبليغ.
+            سيتم تفعيل الرسائل بين البائع والمشتري لاحقاً مع ربط المحادثة بالإعلان، تنبيهات أمان،
+            وإمكانية الحظر والتبليغ.
           </p>
         </div>
 
         <div className="flex items-start gap-3 rounded-2xl bg-card p-4 hairline">
           <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
-          <p className="text-xs font-medium">حافظ على تواصلك ضمن التطبيق، ولا تحوّل المال قبل الاطلاع على السلعة.</p>
+          <p className="text-xs font-medium">
+            حافظ على تواصلك ضمن التطبيق، ولا تحوّل المال قبل الاطلاع على السلعة.
+          </p>
         </div>
 
         {mockChats.length === 0 ? (
@@ -39,14 +42,21 @@ function ChatsPage() {
               if (!l) return null;
               return (
                 <li key={c.id}>
-                  <Link to="/listings/$id" params={{ id: l.id }} className="flex items-center gap-3 rounded-2xl bg-card p-3 hairline transition hover:shadow-soft">
+                  <Link
+                    to="/listings/$id"
+                    params={{ id: l.id }}
+                    className="flex items-center gap-3 rounded-2xl bg-card p-3 hairline transition hover:shadow-soft"
+                  >
                     <div className="grid h-12 w-12 place-items-center rounded-full bg-primary text-base font-bold text-primary-foreground">
                       {l.sellerName.slice(0, 1)}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <span className="truncate text-sm font-bold">{l.sellerName}</span>
-                        <span className="shrink-0 text-[11px] text-muted-foreground"><Clock className="me-1 inline h-3 w-3" />{c.time}</span>
+                        <span className="shrink-0 text-[11px] text-muted-foreground">
+                          <Clock className="me-1 inline h-3 w-3" />
+                          {c.time}
+                        </span>
                       </div>
                       <div className="truncate text-xs text-muted-foreground">{l.title}</div>
                       <div className="mt-1 flex items-center justify-between gap-2">
@@ -67,14 +77,19 @@ function ChatsPage() {
 
         {/* Disabled composer preview */}
         <div className="rounded-2xl bg-card p-3 hairline">
-          <p className="mb-2 text-[11px] font-bold text-muted-foreground">معاينة شريط الرسائل (غير مفعّل)</p>
+          <p className="mb-2 text-[11px] font-bold text-muted-foreground">
+            معاينة شريط الرسائل (غير مفعّل)
+          </p>
           <div className="flex items-center gap-2 rounded-xl bg-muted-surface p-2 opacity-70">
             <input
               disabled
               placeholder="اكتب رسالتك… — قريباً"
               className="flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground cursor-not-allowed"
             />
-            <button disabled className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground cursor-not-allowed">
+            <button
+              disabled
+              className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground cursor-not-allowed"
+            >
               <Send className="h-4 w-4" />
             </button>
           </div>
@@ -94,8 +109,13 @@ function EmptyState() {
         <MessageCircle className="h-6 w-6" />
       </span>
       <p className="mt-3 text-sm font-bold">لا توجد رسائل حالياً</p>
-      <p className="mt-1 text-xs text-muted-foreground">عندما تتواصل مع بائع ستظهر المحادثات هنا.</p>
-      <Link to="/listings" className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">
+      <p className="mt-1 text-xs text-muted-foreground">
+        عندما تتواصل مع بائع ستظهر المحادثات هنا.
+      </p>
+      <Link
+        to="/listings"
+        className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+      >
         تصفّح الإعلانات
       </Link>
     </div>

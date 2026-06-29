@@ -27,11 +27,19 @@ export function ListingCard({ listing, variant = "vertical" }: Props) {
               مميز
             </span>
           )}
-          <FavBtn fav={fav} onClick={(e) => { e.preventDefault(); setFav((v) => !v); }} />
+          <FavBtn
+            fav={fav}
+            onClick={(e) => {
+              e.preventDefault();
+              setFav((v) => !v);
+            }}
+          />
         </div>
         <div className="space-y-1.5 p-3">
           <h3 className="line-clamp-2 text-sm font-bold text-foreground">{listing.title}</h3>
-          <div className="text-base font-extrabold text-foreground">{priceLabel(listing.price, listing.priceType)}</div>
+          <div className="text-base font-extrabold text-foreground">
+            {priceLabel(listing.price, listing.priceType)}
+          </div>
           <MetaRow listing={listing} />
         </div>
       </Link>
@@ -50,7 +58,9 @@ export function ListingCard({ listing, variant = "vertical" }: Props) {
         </div>
         <div className="min-w-0 flex-1 space-y-1">
           <h3 className="line-clamp-2 text-sm font-bold text-foreground">{listing.title}</h3>
-          <div className="text-sm font-extrabold">{priceLabel(listing.price, listing.priceType)}</div>
+          <div className="text-sm font-extrabold">
+            {priceLabel(listing.price, listing.priceType)}
+          </div>
           <MetaRow listing={listing} small />
         </div>
       </Link>
@@ -67,7 +77,9 @@ export function ListingCard({ listing, variant = "vertical" }: Props) {
         <PlaceholderArt type={listing.placeholderType} aspect="wide" />
         <div className="absolute top-2 start-2 flex flex-wrap gap-1">
           {listing.isFeatured && (
-            <span className="rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">مميز</span>
+            <span className="rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">
+              مميز
+            </span>
           )}
           {listing.isVerifiedSeller && (
             <span className="inline-flex items-center gap-1 rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold text-emerald-trust-foreground">
@@ -75,14 +87,24 @@ export function ListingCard({ listing, variant = "vertical" }: Props) {
             </span>
           )}
         </div>
-        <FavBtn fav={fav} onClick={(e) => { e.preventDefault(); setFav((v) => !v); }} />
+        <FavBtn
+          fav={fav}
+          onClick={(e) => {
+            e.preventDefault();
+            setFav((v) => !v);
+          }}
+        />
         <span className="absolute bottom-2 end-2 rounded-md bg-primary/85 px-2 py-0.5 text-[11px] font-medium text-primary-foreground">
           {listing.categoryName}
         </span>
       </div>
       <div className="space-y-1.5 p-3">
-        <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-foreground">{listing.title}</h3>
-        <div className="text-lg font-extrabold text-foreground">{priceLabel(listing.price, listing.priceType)}</div>
+        <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-foreground">
+          {listing.title}
+        </h3>
+        <div className="text-lg font-extrabold text-foreground">
+          {priceLabel(listing.price, listing.priceType)}
+        </div>
         <MetaRow listing={listing} />
       </div>
     </Link>
@@ -96,14 +118,18 @@ function FavBtn({ fav, onClick }: { fav: boolean; onClick: (e: React.MouseEvent)
       aria-label="حفظ"
       className="absolute top-2 end-2 grid h-8 w-8 place-items-center rounded-full bg-card/90 backdrop-blur transition hover:bg-card"
     >
-      <Heart className={`h-4 w-4 ${fav ? "fill-destructive text-destructive" : "text-foreground"}`} />
+      <Heart
+        className={`h-4 w-4 ${fav ? "fill-destructive text-destructive" : "text-foreground"}`}
+      />
     </button>
   );
 }
 
 function MetaRow({ listing, small }: { listing: Listing; small?: boolean }) {
   return (
-    <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${small ? "text-[11px]" : "text-xs"} text-muted-foreground`}>
+    <div
+      className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${small ? "text-[11px]" : "text-xs"} text-muted-foreground`}
+    >
       <span className="inline-flex items-center gap-1">
         <MapPin className="h-3 w-3" /> {listing.governorate} · {listing.district}
       </span>

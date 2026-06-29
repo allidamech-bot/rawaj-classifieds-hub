@@ -1,18 +1,19 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, FileCheck, Flag, Users, Sparkles, Lock } from "lucide-react";
+import { FileCheck, Flag, LayoutDashboard, Lock, Sparkles, Users } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { demoNotice } from "@/data/adminMockData";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "لوحة الإدارة | رَوَاج" }] }),
   component: AdminLayout,
 });
 
-const tabs: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
-  { to: "/admin", label: "نظرة عامة", icon: LayoutDashboard, exact: true },
+const tabs = [
+  { to: "/admin", label: "مركز المالك", icon: LayoutDashboard, exact: true },
   { to: "/admin/pending", label: "إعلانات للمراجعة", icon: FileCheck },
   { to: "/admin/reports", label: "البلاغات", icon: Flag },
-  { to: "/admin/users", label: "المستخدمون", icon: Users },
-  { to: "/admin/promotions", label: "طلبات التمييز", icon: Sparkles },
+  { to: "/admin/users", label: "المستخدمون والصلاحيات", icon: Users },
+  { to: "/admin/promotions", label: "طلبات الترويج", icon: Sparkles },
 ];
 
 function AdminLayout() {
@@ -24,21 +25,25 @@ function AdminLayout() {
         <div className="mb-4 flex items-start gap-2 rounded-2xl bg-warning/10 p-3 hairline">
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <p className="text-xs text-foreground/90">
-            لوحة الإدارة مستقبلية وتتطلب تسجيل دخول وصلاحيات. جميع الإجراءات الظاهرة هنا للعرض فقط وغير مفعّلة.
+            لوحة إدارة مستقبلية لصاحب التطبيق والمشرفين. {demoNotice}. لا يوجد Auth أو Backend أو
+            صلاحيات حقيقية أو تنفيذ إجراءات.
           </p>
         </div>
         <nav className="mb-4 flex gap-2 overflow-x-auto pb-1">
-          {tabs.map((t) => {
-            const active = t.exact ? pathname === t.to : pathname.startsWith(t.to);
+          {tabs.map((tab) => {
+            const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
             return (
               <Link
-                key={t.to}
-                to={t.to as "/admin"}
+                key={tab.to}
+                to={tab.to as "/admin"}
                 className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${
-                  active ? "bg-primary text-primary-foreground" : "bg-card hairline hover:bg-muted-surface"
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card hairline hover:bg-muted-surface"
                 }`}
               >
-                <t.icon className="h-4 w-4" /> {t.label}
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
               </Link>
             );
           })}

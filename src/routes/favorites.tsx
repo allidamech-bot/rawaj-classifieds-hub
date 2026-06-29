@@ -22,7 +22,8 @@ function FavoritesPage() {
         <div className="rounded-2xl bg-card p-4 hairline">
           <h2 className="text-sm font-extrabold">المفضلة</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            احفظ الإعلانات التي تريد الرجوع إليها لاحقاً. سيتم حفظ المفضلة على حسابك بعد تفعيل تسجيل الدخول.
+            احفظ الإعلانات التي تريد الرجوع إليها لاحقاً. سيتم حفظ المفضلة على حسابك بعد تفعيل تسجيل
+            الدخول.
           </p>
         </div>
 
@@ -32,8 +33,13 @@ function FavoritesPage() {
               <Heart className="h-6 w-6 text-muted-foreground" />
             </span>
             <p className="mt-3 text-sm font-bold">لا توجد إعلانات في المفضلة</p>
-            <p className="mt-1 text-xs text-muted-foreground">احفظ الإعلانات التي تهمك لتعود إليها لاحقاً.</p>
-            <Link to="/listings" className="mt-5 inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
+              احفظ الإعلانات التي تهمك لتعود إليها لاحقاً.
+            </p>
+            <Link
+              to="/listings"
+              className="mt-5 inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground"
+            >
               تصفح الإعلانات
             </Link>
           </div>

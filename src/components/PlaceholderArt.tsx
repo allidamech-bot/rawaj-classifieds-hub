@@ -1,19 +1,19 @@
 import type { PlaceholderType } from "@/types";
 
 const palette: Record<PlaceholderType, { bg: string; fg: string; accent: string }> = {
-  car:         { bg: "#EEE7D8", fg: "#101722", accent: "#B88A44" },
-  realestate:  { bg: "#E7EDE9", fg: "#166B52", accent: "#166B52" },
-  phone:       { bg: "#E8EAF0", fg: "#101722", accent: "#B88A44" },
+  car: { bg: "#EEE7D8", fg: "#101722", accent: "#B88A44" },
+  realestate: { bg: "#E7EDE9", fg: "#166B52", accent: "#166B52" },
+  phone: { bg: "#E8EAF0", fg: "#101722", accent: "#B88A44" },
   electronics: { bg: "#EEE7D8", fg: "#101722", accent: "#5D625F" },
-  furniture:   { bg: "#F2EAD8", fg: "#101722", accent: "#B88A44" },
-  job:         { bg: "#E7EDE9", fg: "#166B52", accent: "#166B52" },
-  service:     { bg: "#EEE7D8", fg: "#101722", accent: "#C9822B" },
-  fashion:     { bg: "#F2E5DC", fg: "#101722", accent: "#B88A44" },
-  food:        { bg: "#EEE7D8", fg: "#166B52", accent: "#166B52" },
-  animals:     { bg: "#E8E4D6", fg: "#5D625F", accent: "#B88A44" },
-  education:   { bg: "#E8EAF0", fg: "#101722", accent: "#166B52" },
-  business:    { bg: "#EEE7D8", fg: "#101722", accent: "#B88A44" },
-  misc:        { bg: "#EEE7D8", fg: "#5D625F", accent: "#B88A44" },
+  furniture: { bg: "#F2EAD8", fg: "#101722", accent: "#B88A44" },
+  job: { bg: "#E7EDE9", fg: "#166B52", accent: "#166B52" },
+  service: { bg: "#EEE7D8", fg: "#101722", accent: "#C9822B" },
+  fashion: { bg: "#F2E5DC", fg: "#101722", accent: "#B88A44" },
+  food: { bg: "#EEE7D8", fg: "#166B52", accent: "#166B52" },
+  animals: { bg: "#E8E4D6", fg: "#5D625F", accent: "#B88A44" },
+  education: { bg: "#E8EAF0", fg: "#101722", accent: "#166B52" },
+  business: { bg: "#EEE7D8", fg: "#101722", accent: "#B88A44" },
+  misc: { bg: "#EEE7D8", fg: "#5D625F", accent: "#B88A44" },
 };
 
 interface Props {
@@ -26,7 +26,8 @@ interface Props {
 // Symbolic SVG placeholders per category – no emoji, no broken images.
 export function PlaceholderArt({ type, label, className = "", aspect = "wide" }: Props) {
   const c = palette[type];
-  const ratio = aspect === "square" ? "aspect-square" : aspect === "tall" ? "aspect-[4/5]" : "aspect-[16/10]";
+  const ratio =
+    aspect === "square" ? "aspect-square" : aspect === "tall" ? "aspect-[4/5]" : "aspect-[16/10]";
 
   return (
     <div
@@ -34,10 +35,20 @@ export function PlaceholderArt({ type, label, className = "", aspect = "wide" }:
       style={{ backgroundColor: c.bg }}
       aria-hidden="true"
     >
-      <svg viewBox="0 0 200 120" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid slice">
+      <svg
+        viewBox="0 0 200 120"
+        className="absolute inset-0 h-full w-full"
+        preserveAspectRatio="xMidYMid slice"
+      >
         <defs>
           <pattern id={`grid-${type}`} width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke={c.fg} strokeOpacity="0.05" strokeWidth="1" />
+            <path
+              d="M 20 0 L 0 0 0 20"
+              fill="none"
+              stroke={c.fg}
+              strokeOpacity="0.05"
+              strokeWidth="1"
+            />
           </pattern>
         </defs>
         <rect width="200" height="120" fill={`url(#grid-${type})`} />
@@ -56,7 +67,13 @@ export function PlaceholderArt({ type, label, className = "", aspect = "wide" }:
 }
 
 function Glyph({ type, color, accent }: { type: PlaceholderType; color: string; accent: string }) {
-  const s = { stroke: color, strokeWidth: 2.5, fill: "none", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  const s = {
+    stroke: color,
+    strokeWidth: 2.5,
+    fill: "none",
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
   switch (type) {
     case "car":
       return (
@@ -111,13 +128,23 @@ function Glyph({ type, color, accent }: { type: PlaceholderType; color: string; 
     case "service":
       return (
         <g transform="translate(75,30)">
-          <path d="M10 50 L40 20 M30 10 L50 30 L40 40 L20 20 Z" {...s} fill={accent} fillOpacity="0.2" />
+          <path
+            d="M10 50 L40 20 M30 10 L50 30 L40 40 L20 20 Z"
+            {...s}
+            fill={accent}
+            fillOpacity="0.2"
+          />
         </g>
       );
     case "fashion":
       return (
         <g transform="translate(70,25)">
-          <path d="M20 5 L30 15 L40 5 L60 15 L50 25 V55 H10 V25 L0 15 Z" {...s} fill={accent} fillOpacity="0.15" />
+          <path
+            d="M20 5 L30 15 L40 5 L60 15 L50 25 V55 H10 V25 L0 15 Z"
+            {...s}
+            fill={accent}
+            fillOpacity="0.15"
+          />
         </g>
       );
     case "food":

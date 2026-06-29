@@ -20,7 +20,9 @@ function AddListingPage() {
   const [subcat, setSubcat] = useState("");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
-  const [priceType, setPriceType] = useState<"fixed" | "negotiable" | "contact" | "free" | "exchange">("fixed");
+  const [priceType, setPriceType] = useState<
+    "fixed" | "negotiable" | "contact" | "free" | "exchange"
+  >("fixed");
   const [gov, setGov] = useState("");
   const [district, setDistrict] = useState("");
   const [description, setDescription] = useState("");
@@ -34,13 +36,14 @@ function AddListingPage() {
   const govObj = governorates.find((g) => g.nameAr === gov);
 
   // Quality score
-  const score = [
-    title.length >= 8,
-    description.length >= 30,
-    !!price || priceType !== "fixed",
-    !!gov && !!district,
-    !!categoryId,
-  ].filter(Boolean).length * 20;
+  const score =
+    [
+      title.length >= 8,
+      description.length >= 30,
+      !!price || priceType !== "fixed",
+      !!gov && !!district,
+      !!categoryId,
+    ].filter(Boolean).length * 20;
 
   return (
     <>
@@ -54,14 +57,22 @@ function AddListingPage() {
             const active = i === step;
             return (
               <li key={s} className="flex items-center gap-2">
-                <div className={`grid h-7 w-7 place-items-center rounded-full text-xs font-bold ${
-                  done ? "bg-emerald-trust text-emerald-trust-foreground" :
-                  active ? "bg-primary text-primary-foreground" :
-                  "bg-muted-surface text-muted-foreground"
-                }`}>
+                <div
+                  className={`grid h-7 w-7 place-items-center rounded-full text-xs font-bold ${
+                    done
+                      ? "bg-emerald-trust text-emerald-trust-foreground"
+                      : active
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted-surface text-muted-foreground"
+                  }`}
+                >
                   {done ? <Check className="h-3.5 w-3.5" /> : i + 1}
                 </div>
-                <span className={`text-xs font-semibold ${active ? "text-foreground" : "text-muted-foreground"}`}>{s}</span>
+                <span
+                  className={`text-xs font-semibold ${active ? "text-foreground" : "text-muted-foreground"}`}
+                >
+                  {s}
+                </span>
                 {i < steps.length - 1 && <span className="h-px w-6 bg-border" />}
               </li>
             );
@@ -89,7 +100,9 @@ function AddListingPage() {
                 </div>
                 {category && (
                   <>
-                    <h3 className="mt-4 mb-2 text-xs font-bold text-muted-foreground">القسم الفرعي</h3>
+                    <h3 className="mt-4 mb-2 text-xs font-bold text-muted-foreground">
+                      القسم الفرعي
+                    </h3>
                     <div className="flex flex-wrap gap-2">
                       {category.subcategories.map((s) => (
                         <button
@@ -113,15 +126,21 @@ function AddListingPage() {
             {step === 1 && (
               <Card title="صور الإعلان">
                 <div className="grid grid-cols-3 gap-2">
-                  {[0,1,2,3,4,5].map((i) => (
-                    <button key={i} disabled title="غير مفعّل" className="flex aspect-square flex-col items-center justify-center rounded-xl bg-muted-surface text-muted-foreground opacity-80 cursor-not-allowed">
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <button
+                      key={i}
+                      disabled
+                      title="غير مفعّل"
+                      className="flex aspect-square flex-col items-center justify-center rounded-xl bg-muted-surface text-muted-foreground opacity-80 cursor-not-allowed"
+                    >
                       <Camera className="h-6 w-6" />
                       <span className="mt-1 text-[10px]">إضافة</span>
                     </button>
                   ))}
                 </div>
                 <p className="mt-3 text-[11px] text-muted-foreground">
-                  رفع الصور غير مفعّل حالياً — نموذج تجريبي. لاحقاً يمكنك إضافة من ٣ إلى ٨ صور بصيغ JPG / PNG / WebP.
+                  رفع الصور غير مفعّل حالياً — نموذج تجريبي. لاحقاً يمكنك إضافة من ٣ إلى ٨ صور بصيغ
+                  JPG / PNG / WebP.
                 </p>
                 <ul className="mt-2 space-y-1 text-[11px] text-foreground/80">
                   <li>• صور واضحة وإضاءة جيدة.</li>
@@ -134,17 +153,38 @@ function AddListingPage() {
             {step === 2 && (
               <Card title="تفاصيل الإعلان">
                 <Field label="عنوان الإعلان">
-                  <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثال: تويوتا كورولا 2018 بحالة ممتازة" className="input" />
+                  <input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="مثال: تويوتا كورولا 2018 بحالة ممتازة"
+                    className="input"
+                  />
                 </Field>
                 <Field label="الوصف">
-                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} placeholder="اكتب وصفاً واضحاً ومفصّلاً." className="input resize-none" />
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={4}
+                    placeholder="اكتب وصفاً واضحاً ومفصّلاً."
+                    className="input resize-none"
+                  />
                 </Field>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="السعر">
-                    <input value={price} onChange={(e) => setPrice(e.target.value)} type="number" placeholder="0" className="input" />
+                    <input
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      type="number"
+                      placeholder="0"
+                      className="input"
+                    />
                   </Field>
                   <Field label="نوع السعر">
-                    <select value={priceType} onChange={(e) => setPriceType(e.target.value as typeof priceType)} className="input">
+                    <select
+                      value={priceType}
+                      onChange={(e) => setPriceType(e.target.value as typeof priceType)}
+                      className="input"
+                    >
                       <option value="fixed">ثابت</option>
                       <option value="negotiable">قابل للتفاوض</option>
                       <option value="contact">عند التواصل</option>
@@ -155,20 +195,44 @@ function AddListingPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="المحافظة">
-                    <select value={gov} onChange={(e) => { setGov(e.target.value); setDistrict(""); }} className="input">
+                    <select
+                      value={gov}
+                      onChange={(e) => {
+                        setGov(e.target.value);
+                        setDistrict("");
+                      }}
+                      className="input"
+                    >
                       <option value="">اختر</option>
-                      {governorates.map((g) => <option key={g.id} value={g.nameAr}>{g.nameAr}</option>)}
+                      {governorates.map((g) => (
+                        <option key={g.id} value={g.nameAr}>
+                          {g.nameAr}
+                        </option>
+                      ))}
                     </select>
                   </Field>
                   <Field label="المنطقة">
-                    <select value={district} onChange={(e) => setDistrict(e.target.value)} disabled={!govObj} className="input disabled:opacity-50">
+                    <select
+                      value={district}
+                      onChange={(e) => setDistrict(e.target.value)}
+                      disabled={!govObj}
+                      className="input disabled:opacity-50"
+                    >
                       <option value="">اختر</option>
-                      {govObj?.districts.map((d) => <option key={d} value={d}>{d}</option>)}
+                      {govObj?.districts.map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
                     </select>
                   </Field>
                 </div>
                 <Field label="الحالة">
-                  <select value={condition} onChange={(e) => setCondition(e.target.value)} className="input">
+                  <select
+                    value={condition}
+                    onChange={(e) => setCondition(e.target.value)}
+                    className="input"
+                  >
                     <option value="">اختر</option>
                     <option value="new">جديد</option>
                     <option value="like-new">شبه جديد</option>
@@ -178,12 +242,20 @@ function AddListingPage() {
                 </Field>
                 {categoryId && (
                   <div className="rounded-xl bg-muted-surface p-3">
-                    <h4 className="mb-2 text-[11px] font-bold text-muted-foreground">حقول خاصة بالقسم</h4>
-                    <CategorySpecificFields categoryId={categoryId} extra={extra} setExtra={setExtra} />
+                    <h4 className="mb-2 text-[11px] font-bold text-muted-foreground">
+                      حقول خاصة بالقسم
+                    </h4>
+                    <CategorySpecificFields
+                      categoryId={categoryId}
+                      extra={extra}
+                      setExtra={setExtra}
+                    />
                   </div>
                 )}
                 {(title.length < 4 || !gov || !district || (priceType === "fixed" && !price)) && (
-                  <p className="mt-2 text-[11px] text-destructive">أكمل الحقول المطلوبة للمتابعة.</p>
+                  <p className="mt-2 text-[11px] text-destructive">
+                    أكمل الحقول المطلوبة للمتابعة.
+                  </p>
                 )}
               </Card>
             )}
@@ -191,7 +263,12 @@ function AddListingPage() {
             {step === 3 && (
               <Card title="طريقة التواصل">
                 <Field label="اسم التواصل (يظهر في الإعلان)">
-                  <input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="مثال: أبو محمد" className="input" />
+                  <input
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                    placeholder="مثال: أبو محمد"
+                    className="input"
+                  />
                 </Field>
                 <p className="mb-2 text-xs text-muted-foreground">طرق التواصل المتاحة لاحقاً:</p>
                 <div className="space-y-2">
@@ -200,7 +277,10 @@ function AddListingPage() {
                     { k: "phone", label: "اتصال هاتفي", hint: "يظهر بعد تفعيل الحساب" },
                     { k: "whatsapp", label: "واتساب", hint: "يظهر بعد تفعيل الحساب" },
                   ].map((o) => (
-                    <label key={o.k} className="flex items-center justify-between rounded-xl bg-card p-3 hairline">
+                    <label
+                      key={o.k}
+                      className="flex items-center justify-between rounded-xl bg-card p-3 hairline"
+                    >
                       <div>
                         <div className="text-sm font-semibold">{o.label}</div>
                         <div className="text-[10px] text-muted-foreground">{o.hint}</div>
@@ -215,7 +295,11 @@ function AddListingPage() {
                   ))}
                 </div>
                 <Field label="وقت التواصل المفضّل">
-                  <select value={contactTime} onChange={(e) => setContactTime(e.target.value)} className="input mt-3">
+                  <select
+                    value={contactTime}
+                    onChange={(e) => setContactTime(e.target.value)}
+                    className="input mt-3"
+                  >
                     <option value="any">أي وقت</option>
                     <option value="morning">صباحاً</option>
                     <option value="evening">مساءً</option>
@@ -223,7 +307,8 @@ function AddListingPage() {
                   </select>
                 </Field>
                 <p className="mt-2 rounded-xl bg-muted-surface p-2 text-[11px] text-muted-foreground">
-                  لن تظهر بيانات التواصل إلا حسب الخيارات التي تختارها لاحقاً عند تفعيل النظام الحقيقي. لا تشارك معلومات حساسة داخل الإعلان.
+                  لن تظهر بيانات التواصل إلا حسب الخيارات التي تختارها لاحقاً عند تفعيل النظام
+                  الحقيقي. لا تشارك معلومات حساسة داخل الإعلان.
                 </p>
               </Card>
             )}
@@ -234,37 +319,59 @@ function AddListingPage() {
                   <PlaceholderArt type={category?.placeholder ?? "misc"} aspect="wide" />
                 </div>
                 <div className="mt-3 space-y-1">
-                  <div className="text-xs text-muted-foreground">{category?.nameAr ?? "—"} · {subcat || "—"}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {category?.nameAr ?? "—"} · {subcat || "—"}
+                  </div>
                   <h3 className="text-lg font-extrabold">{title || "عنوان الإعلان"}</h3>
                   <div className="text-base font-bold">
-                    {priceType === "free" ? "مجاناً" :
-                     priceType === "contact" ? "السعر عند التواصل" :
-                     priceType === "exchange" ? "للمبادلة" :
-                     price ? `${Number(price).toLocaleString("ar-SY")} ل.س${priceType === "negotiable" ? " · قابل للتفاوض" : ""}` : "—"}
+                    {priceType === "free"
+                      ? "مجاناً"
+                      : priceType === "contact"
+                        ? "السعر عند التواصل"
+                        : priceType === "exchange"
+                          ? "للمبادلة"
+                          : price
+                            ? `${Number(price).toLocaleString("ar-SY")} ل.س${priceType === "negotiable" ? " · قابل للتفاوض" : ""}`
+                            : "—"}
                   </div>
                   <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                     <MapPin className="h-3 w-3" /> {gov || "—"} {district && `· ${district}`}
                   </div>
-                  <p className="pt-2 text-sm text-foreground/90">{description || "لا يوجد وصف بعد."}</p>
+                  <p className="pt-2 text-sm text-foreground/90">
+                    {description || "لا يوجد وصف بعد."}
+                  </p>
                 </div>
                 {Object.keys(extra).length > 0 && (
                   <div className="mt-3 rounded-xl bg-muted-surface p-3 text-xs">
                     <h4 className="mb-1 font-bold">تفاصيل إضافية</h4>
                     <dl className="grid grid-cols-2 gap-1">
-                      {Object.entries(extra).filter(([,v]) => v).map(([k,v]) => (
-                        <div key={k} className="flex justify-between gap-2"><dt className="text-muted-foreground">{k}</dt><dd className="font-semibold">{v}</dd></div>
-                      ))}
+                      {Object.entries(extra)
+                        .filter(([, v]) => v)
+                        .map(([k, v]) => (
+                          <div key={k} className="flex justify-between gap-2">
+                            <dt className="text-muted-foreground">{k}</dt>
+                            <dd className="font-semibold">{v}</dd>
+                          </div>
+                        ))}
                     </dl>
                   </div>
                 )}
                 <div className="mt-3 rounded-xl bg-card p-3 text-xs hairline">
                   <h4 className="mb-1 font-bold">التواصل</h4>
                   <p className="text-muted-foreground">
-                    {contactName || "—"} · {[contact.message && "رسائل", contact.phone && "هاتف", contact.whatsapp && "واتساب"].filter(Boolean).join(" / ") || "—"}
+                    {contactName || "—"} ·{" "}
+                    {[
+                      contact.message && "رسائل",
+                      contact.phone && "هاتف",
+                      contact.whatsapp && "واتساب",
+                    ]
+                      .filter(Boolean)
+                      .join(" / ") || "—"}
                   </p>
                 </div>
                 <div className="mt-3 rounded-xl bg-emerald-trust/10 p-3 text-[11px] font-medium text-emerald-trust">
-                  هذا النموذج للمعاينة فقط. سيتم تفعيل النشر الحقيقي لاحقاً. تذكير أمان: قابل المشتري في مكان عام وآمن.
+                  هذا النموذج للمعاينة فقط. سيتم تفعيل النشر الحقيقي لاحقاً. تذكير أمان: قابل
+                  المشتري في مكان عام وآمن.
                 </div>
               </Card>
             )}
@@ -353,7 +460,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function ScoreItem({ ok, label }: { ok: boolean; label: string }) {
   return (
     <li className="flex items-center gap-2">
-      <span className={`grid h-4 w-4 place-items-center rounded-full ${ok ? "bg-emerald-trust text-emerald-trust-foreground" : "bg-muted-surface text-muted-foreground"}`}>
+      <span
+        className={`grid h-4 w-4 place-items-center rounded-full ${ok ? "bg-emerald-trust text-emerald-trust-foreground" : "bg-muted-surface text-muted-foreground"}`}
+      >
         {ok && <Check className="h-3 w-3" />}
       </span>
       <span className={ok ? "text-foreground" : "text-muted-foreground"}>{label}</span>
@@ -370,8 +479,24 @@ function Tip({ children }: { children: React.ReactNode }) {
 }
 
 const CATEGORY_FIELDS: Record<string, string[]> = {
-  cars: ["الماركة", "الموديل", "سنة الصنع", "المسافة المقطوعة", "نوع الوقود", "ناقل الحركة", "اللون"],
-  "real-estate": ["نوع العقار", "للبيع/للإيجار", "المساحة (م²)", "عدد الغرف", "عدد الحمامات", "الطابق", "مفروش"],
+  cars: [
+    "الماركة",
+    "الموديل",
+    "سنة الصنع",
+    "المسافة المقطوعة",
+    "نوع الوقود",
+    "ناقل الحركة",
+    "اللون",
+  ],
+  "real-estate": [
+    "نوع العقار",
+    "للبيع/للإيجار",
+    "المساحة (م²)",
+    "عدد الغرف",
+    "عدد الحمامات",
+    "الطابق",
+    "مفروش",
+  ],
   mobiles: ["الماركة", "الموديل", "السعة", "الرام", "الضمان", "الملحقات"],
   electronics: ["النوع", "الماركة", "الموديل", "الضمان", "المواصفات"],
   furniture: ["النوع", "المادة", "الأبعاد", "مناسب لـ"],

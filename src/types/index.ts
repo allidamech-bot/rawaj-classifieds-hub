@@ -11,14 +11,38 @@ export type SellerType = "user" | "verified" | "store" | "business";
 
 export type UserRole =
   | "guest"
+  | "owner"
   | "user"
   | "seller"
   | "verified_seller"
   | "store_seller"
   | "business_seller"
   | "moderator"
-  | "admin"
-  | "super_admin";
+  | "admin";
+
+export interface AdminPermissions {
+  canViewAdminDashboard: boolean;
+  canManageAdmins: boolean;
+  canReviewListings: boolean;
+  canApproveListings: boolean;
+  canRejectListings: boolean;
+  canManageReports: boolean;
+  canFreezeUsers: boolean;
+  canUnfreezeUsers: boolean;
+  canDisableUsers: boolean;
+  canDeleteUsers: boolean;
+  canVerifySellers: boolean;
+  canRevokeSellerVerification: boolean;
+  canFeatureSellers: boolean;
+  canUnfeatureSellers: boolean;
+  canFeatureListings: boolean;
+  canUnfeatureListings: boolean;
+  canReviewPromotions: boolean;
+  canReviewPaymentProof: boolean;
+  canManageCategories: boolean;
+  canViewAuditLog: boolean;
+  canManagePlatformSettings: boolean;
+}
 
 export type PlaceholderType =
   | "car"

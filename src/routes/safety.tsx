@@ -69,19 +69,26 @@ function SafetyPage() {
         </section>
 
         {sections.map((s) => (
-          <section key={s.title} className={`rounded-2xl p-4 hairline ${s.tone === "warn" ? "bg-warning/10" : "bg-card"}`}>
+          <section
+            key={s.title}
+            className={`rounded-2xl p-4 hairline ${s.tone === "warn" ? "bg-warning/10" : "bg-card"}`}
+          >
             <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-extrabold">
               <s.icon className="h-4 w-4 text-gold" /> {s.title}
             </h3>
             <ul className="list-disc ps-5 space-y-1.5 text-sm text-foreground/90">
-              {s.items.map((t) => (<li key={t}>{t}</li>))}
+              {s.items.map((t) => (
+                <li key={t}>{t}</li>
+              ))}
             </ul>
           </section>
         ))}
 
         <p className="text-center text-xs text-muted-foreground">
           هل تحتاج مساعدة فورية؟{" "}
-          <Link to="/support" className="font-bold text-primary underline-offset-2 hover:underline">تواصل مع الدعم</Link>
+          <Link to="/support" className="font-bold text-primary underline-offset-2 hover:underline">
+            تواصل مع الدعم
+          </Link>
         </p>
       </main>
     </>
