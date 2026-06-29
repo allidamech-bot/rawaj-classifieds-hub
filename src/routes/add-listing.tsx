@@ -24,7 +24,11 @@ function AddListingPage() {
   const [gov, setGov] = useState("");
   const [district, setDistrict] = useState("");
   const [description, setDescription] = useState("");
+  const [condition, setCondition] = useState("");
+  const [extra, setExtra] = useState<Record<string, string>>({});
   const [contact, setContact] = useState({ message: true, phone: true, whatsapp: false });
+  const [contactName, setContactName] = useState("");
+  const [contactTime, setContactTime] = useState("any");
 
   const category = categories.find((c) => c.id === categoryId);
   const govObj = governorates.find((g) => g.nameAr === gov);
@@ -110,13 +114,20 @@ function AddListingPage() {
               <Card title="صور الإعلان">
                 <div className="grid grid-cols-3 gap-2">
                   {[0,1,2,3,4,5].map((i) => (
-                    <button key={i} className="flex aspect-square flex-col items-center justify-center rounded-xl bg-muted-surface text-muted-foreground transition hover:bg-secondary">
+                    <button key={i} disabled title="غير مفعّل" className="flex aspect-square flex-col items-center justify-center rounded-xl bg-muted-surface text-muted-foreground opacity-80 cursor-not-allowed">
                       <Camera className="h-6 w-6" />
                       <span className="mt-1 text-[10px]">إضافة</span>
                     </button>
                   ))}
                 </div>
-                <p className="mt-3 text-[11px] text-muted-foreground">سيتم تفعيل رفع الصور الحقيقي لاحقاً.</p>
+                <p className="mt-3 text-[11px] text-muted-foreground">
+                  رفع الصور غير مفعّل حالياً — نموذج تجريبي. لاحقاً يمكنك إضافة من ٣ إلى ٨ صور بصيغ JPG / PNG / WebP.
+                </p>
+                <ul className="mt-2 space-y-1 text-[11px] text-foreground/80">
+                  <li>• صور واضحة وإضاءة جيدة.</li>
+                  <li>• زوايا متعددة للسلعة.</li>
+                  <li>• لا تستخدم صوراً مضللة أو من الإنترنت.</li>
+                </ul>
               </Card>
             )}
 
@@ -156,27 +167,64 @@ function AddListingPage() {
                     </select>
                   </Field>
                 </div>
+                <Field label="الحالة">
+                  <select value={condition} onChange={(e) => setCondition(e.target.value)} className="input">
+                    <option value="">اختر</option>
+                    <option value="new">جديد</option>
+                    <option value="like-new">شبه جديد</option>
+                    <option value="used">مستعمل</option>
+                    <option value="for-parts">للقطع</option>
+                  </select>
+                </Field>
+                {categoryId && (
+                  <div className="rounded-xl bg-muted-surface p-3">
+                    <h4 className="mb-2 text-[11px] font-bold text-muted-foreground">حقول خاصة بالقسم</h4>
+                    <CategorySpecificFields categoryId={categoryId} extra={extra} setExtra={setExtra} />
+                  </div>
+                )}
+                {(title.length < 4 || !gov || !district || (priceType === "fixed" && !price)) && (
+                  <p className="mt-2 text-[11px] text-destructive">أكمل الحقول المطلوبة للمتابعة.</p>
+                )}
               </Card>
             )}
 
             {step === 3 && (
               <Card title="طريقة التواصل">
-                <p className="mb-3 text-xs text-muted-foreground">اختر طرق تواصل المشترين معك:</p>
-                {[
-                  { k: "message", label: "رسائل داخل التطبيق" },
-                  { k: "phone", label: "اتصال هاتفي" },
-                  { k: "whatsapp", label: "واتساب" },
-                ].map((o) => (
-                  <label key={o.k} className="flex items-center justify-between rounded-xl bg-card p-3 hairline">
-                    <span className="text-sm font-semibold">{o.label}</span>
-                    <input
-                      type="checkbox"
-                      checked={contact[o.k as keyof typeof contact]}
-                      onChange={(e) => setContact((c) => ({ ...c, [o.k]: e.target.checked }))}
-                      className="h-4 w-4 accent-primary"
-                    />
-                  </label>
-                ))}
+                <Field label="اسم التواصل (يظهر في الإعلان)">
+                  <input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="مثال: أبو محمد" className="input" />
+                </Field>
+                <p className="mb-2 text-xs text-muted-foreground">طرق التواصل المتاحة لاحقاً:</p>
+                <div className="space-y-2">
+                  {[
+                    { k: "message", label: "رسائل داخل التطبيق", hint: "قريباً" },
+                    { k: "phone", label: "اتصال هاتفي", hint: "يظهر بعد تفعيل الحساب" },
+                    { k: "whatsapp", label: "واتساب", hint: "يظهر بعد تفعيل الحساب" },
+                  ].map((o) => (
+                    <label key={o.k} className="flex items-center justify-between rounded-xl bg-card p-3 hairline">
+                      <div>
+                        <div className="text-sm font-semibold">{o.label}</div>
+                        <div className="text-[10px] text-muted-foreground">{o.hint}</div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={contact[o.k as keyof typeof contact]}
+                        onChange={(e) => setContact((c) => ({ ...c, [o.k]: e.target.checked }))}
+                        className="h-4 w-4 accent-primary"
+                      />
+                    </label>
+                  ))}
+                </div>
+                <Field label="وقت التواصل المفضّل">
+                  <select value={contactTime} onChange={(e) => setContactTime(e.target.value)} className="input mt-3">
+                    <option value="any">أي وقت</option>
+                    <option value="morning">صباحاً</option>
+                    <option value="evening">مساءً</option>
+                    <option value="agree">حسب الاتفاق</option>
+                  </select>
+                </Field>
+                <p className="mt-2 rounded-xl bg-muted-surface p-2 text-[11px] text-muted-foreground">
+                  لن تظهر بيانات التواصل إلا حسب الخيارات التي تختارها لاحقاً عند تفعيل النظام الحقيقي. لا تشارك معلومات حساسة داخل الإعلان.
+                </p>
               </Card>
             )}
 
@@ -188,14 +236,35 @@ function AddListingPage() {
                 <div className="mt-3 space-y-1">
                   <div className="text-xs text-muted-foreground">{category?.nameAr ?? "—"} · {subcat || "—"}</div>
                   <h3 className="text-lg font-extrabold">{title || "عنوان الإعلان"}</h3>
-                  <div className="text-base font-bold">{price ? `${price} ل.س` : "—"}</div>
+                  <div className="text-base font-bold">
+                    {priceType === "free" ? "مجاناً" :
+                     priceType === "contact" ? "السعر عند التواصل" :
+                     priceType === "exchange" ? "للمبادلة" :
+                     price ? `${Number(price).toLocaleString("ar-SY")} ل.س${priceType === "negotiable" ? " · قابل للتفاوض" : ""}` : "—"}
+                  </div>
                   <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                     <MapPin className="h-3 w-3" /> {gov || "—"} {district && `· ${district}`}
                   </div>
                   <p className="pt-2 text-sm text-foreground/90">{description || "لا يوجد وصف بعد."}</p>
                 </div>
-                <div className="mt-4 rounded-xl bg-emerald-trust/10 p-3 text-xs font-medium text-emerald-trust">
-                  سيتم ربط إنشاء الإعلانات الحقيقي لاحقاً.
+                {Object.keys(extra).length > 0 && (
+                  <div className="mt-3 rounded-xl bg-muted-surface p-3 text-xs">
+                    <h4 className="mb-1 font-bold">تفاصيل إضافية</h4>
+                    <dl className="grid grid-cols-2 gap-1">
+                      {Object.entries(extra).filter(([,v]) => v).map(([k,v]) => (
+                        <div key={k} className="flex justify-between gap-2"><dt className="text-muted-foreground">{k}</dt><dd className="font-semibold">{v}</dd></div>
+                      ))}
+                    </dl>
+                  </div>
+                )}
+                <div className="mt-3 rounded-xl bg-card p-3 text-xs hairline">
+                  <h4 className="mb-1 font-bold">التواصل</h4>
+                  <p className="text-muted-foreground">
+                    {contactName || "—"} · {[contact.message && "رسائل", contact.phone && "هاتف", contact.whatsapp && "واتساب"].filter(Boolean).join(" / ") || "—"}
+                  </p>
+                </div>
+                <div className="mt-3 rounded-xl bg-emerald-trust/10 p-3 text-[11px] font-medium text-emerald-trust">
+                  هذا النموذج للمعاينة فقط. سيتم تفعيل النشر الحقيقي لاحقاً. تذكير أمان: قابل المشتري في مكان عام وآمن.
                 </div>
               </Card>
             )}
@@ -297,5 +366,47 @@ function Tip({ children }: { children: React.ReactNode }) {
       <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold" />
       <span>{children}</span>
     </li>
+  );
+}
+
+const CATEGORY_FIELDS: Record<string, string[]> = {
+  cars: ["الماركة", "الموديل", "سنة الصنع", "المسافة المقطوعة", "نوع الوقود", "ناقل الحركة", "اللون"],
+  "real-estate": ["نوع العقار", "للبيع/للإيجار", "المساحة (م²)", "عدد الغرف", "عدد الحمامات", "الطابق", "مفروش"],
+  mobiles: ["الماركة", "الموديل", "السعة", "الرام", "الضمان", "الملحقات"],
+  electronics: ["النوع", "الماركة", "الموديل", "الضمان", "المواصفات"],
+  furniture: ["النوع", "المادة", "الأبعاد", "مناسب لـ"],
+  jobs: ["نوع العمل", "الدوام", "مكان العمل", "الراتب", "الخبرة المطلوبة", "المؤهل"],
+  services: ["نوع الخدمة", "منطقة التغطية", "وقت التوفر", "طريقة التسعير", "الخبرة"],
+  fashion: ["النوع", "المقاس", "الجنس/الفئة", "الماركة"],
+  food: ["نوع المنتج", "الكمية/التغليف", "تاريخ الإنتاج", "منطقة التوصيل"],
+  animals: ["النوع", "العمر", "الجنس", "الحالة الصحية", "اللقاحات"],
+  education: ["المادة/الدورة", "المستوى", "طريقة التعليم", "المدة", "الشهادة"],
+  business: ["النوع", "الكمية", "الاستخدام", "الضمان/الصيانة"],
+  misc: ["النوع", "ملاحظات"],
+};
+
+function CategorySpecificFields({
+  categoryId,
+  extra,
+  setExtra,
+}: {
+  categoryId: string;
+  extra: Record<string, string>;
+  setExtra: (u: Record<string, string>) => void;
+}) {
+  const fields = CATEGORY_FIELDS[categoryId] ?? CATEGORY_FIELDS.misc;
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {fields.map((f) => (
+        <label key={f} className="block">
+          <span className="mb-1 block text-[10px] font-semibold text-muted-foreground">{f}</span>
+          <input
+            value={extra[f] ?? ""}
+            onChange={(e) => setExtra({ ...extra, [f]: e.target.value })}
+            className="input"
+          />
+        </label>
+      ))}
+    </div>
   );
 }

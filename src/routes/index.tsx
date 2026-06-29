@@ -27,10 +27,10 @@ export const Route = createFileRoute("/")({
 });
 
 const quickFilters = [
-  { id: "latest", label: "الأحدث", icon: Clock },
-  { id: "featured", label: "المميز", icon: Sparkles },
-  { id: "nearby", label: "الأقرب", icon: MapPin },
-  { id: "gov", label: "حسب المحافظة", icon: MapPin },
+  { id: "latest", label: "الأحدث", icon: Clock, disabled: false },
+  { id: "featured", label: "المميز", icon: Sparkles, disabled: false },
+  { id: "gov", label: "حسب المحافظة", icon: MapPin, disabled: false },
+  { id: "nearby", label: "الأقرب · قريباً", icon: MapPin, disabled: true },
 ];
 
 function HomePage() {
@@ -74,7 +74,11 @@ function HomePage() {
           {quickFilters.map((f) => (
             <button
               key={f.id}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold hairline transition hover:bg-muted-surface"
+              disabled={f.disabled}
+              title={f.disabled ? "قريباً" : undefined}
+              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold hairline transition ${
+                f.disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-muted-surface"
+              }`}
             >
               <f.icon className="h-3.5 w-3.5 text-gold" />
               {f.label}
@@ -194,11 +198,17 @@ function HomePage() {
         </section>
 
         {/* Safety strip */}
-        <section className="mt-7 flex items-start gap-3 rounded-2xl bg-warning/10 p-4 hairline">
-          <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
-          <p className="text-sm font-medium text-foreground">
-            لا تحول المال قبل التأكد من السلعة والبائع.
-          </p>
+        <section className="mt-7 rounded-2xl bg-warning/10 p-4 hairline">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="h-5 w-5 shrink-0 text-warning" />
+            <h3 className="text-sm font-extrabold">تعامل بأمان</h3>
+          </div>
+          <ul className="mt-2 grid gap-1 text-xs text-foreground sm:grid-cols-2">
+            <li>• لا تحوّل المال قبل معاينة السلعة.</li>
+            <li>• قابل البائع في مكان عام وآمن.</li>
+            <li>• احذر الأسعار غير المنطقية.</li>
+            <li>• بلّغ عن أي إعلان مشبوه عبر <Link to="/support" className="font-bold text-primary">الدعم</Link>.</li>
+          </ul>
         </section>
 
         {/* Footer links */}
