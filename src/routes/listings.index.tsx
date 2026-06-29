@@ -13,7 +13,7 @@ const searchSchema = z.object({
   sort: z.enum(["latest", "cheapest", "expensive", "featured"]).optional(),
 });
 
-export const Route = createFileRoute("/listings")({
+export const Route = createFileRoute("/listings/")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
