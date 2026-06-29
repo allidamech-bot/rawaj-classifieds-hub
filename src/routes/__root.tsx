@@ -123,6 +123,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-background pb-24 lg:pb-8">
         <Outlet />
+        <SiteFooter />
       </div>
       <BottomNav />
     </QueryClientProvider>
