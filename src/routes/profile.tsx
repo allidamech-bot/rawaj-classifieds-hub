@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { demoNotice } from "@/data/adminMockData";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "حسابي | رَوَاج" }] }),
@@ -146,36 +146,40 @@ function ProfilePage() {
               {auth.canAccessAdmin ? "مسموح حسب الدور" : "غير مسموح"}
             </p>
           )}
-          <Link
-            to="/admin"
-            className="mt-3 inline-flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-xs font-bold hairline"
-          >
-            عرض نموذج لوحة الإدارة
-            <ChevronLeft className="h-4 w-4" />
-          </Link>
+          {auth.canAccessOwnerControls && (
+            <Link
+              to="/admin"
+              className="mt-3 inline-flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-xs font-bold hairline"
+            >
+              عرض لوحة المالك
+              <ChevronLeft className="h-4 w-4" />
+            </Link>
+          )}
         </section>
 
         <section>
           <h3 className="mb-2 text-sm font-extrabold">قائمة الحساب</h3>
           <nav className="overflow-hidden rounded-2xl bg-card hairline">
-            {accountMenu.map((it, i) => (
-              <Link
-                key={it.to}
-                to={it.to as "/"}
-                className={`flex items-center gap-3 p-4 transition hover:bg-muted-surface ${i !== 0 ? "border-t border-border" : ""}`}
-              >
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-muted-surface text-primary">
-                  <it.icon className="h-4 w-4" />
-                </span>
-                <span className="flex-1 text-sm font-semibold">{it.label}</span>
-                {it.badge && (
-                  <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-                    {it.badge}
+            {accountMenu
+              .filter((it) => it.to !== "/admin" || auth.canAccessOwnerControls)
+              .map((it, i) => (
+                <Link
+                  key={it.to}
+                  to={it.to as "/"}
+                  className={`flex items-center gap-3 p-4 transition hover:bg-muted-surface ${i !== 0 ? "border-t border-border" : ""}`}
+                >
+                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-muted-surface text-primary">
+                    <it.icon className="h-4 w-4" />
                   </span>
-                )}
-                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-              </Link>
-            ))}
+                  <span className="flex-1 text-sm font-semibold">{it.label}</span>
+                  {it.badge && (
+                    <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                      {it.badge}
+                    </span>
+                  )}
+                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                </Link>
+              ))}
           </nav>
         </section>
 

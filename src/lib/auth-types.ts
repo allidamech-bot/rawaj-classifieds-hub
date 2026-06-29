@@ -9,6 +9,7 @@ export interface UserProfile {
   email: string | null;
   displayName: string | null;
   role: UserRole;
+  roles: UserRole[];
   accountStatus: AccountStatus;
   verificationStatus: VerificationStatus;
   governorate: string | null;
@@ -76,10 +77,10 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
 
 export function canAccessAdmin(profile: UserProfile | null): boolean {
   if (!profile || profile.accountStatus !== "active") return false;
-  return rolePermissions[profile.role].canViewAdminDashboard;
+  return profile.roles.includes("owner") && rolePermissions.owner.canViewAdminDashboard;
 }
 
 export function canAccessOwnerControls(profile: UserProfile | null): boolean {
   if (!profile || profile.accountStatus !== "active") return false;
-  return rolePermissions[profile.role].canManageOwnerControls;
+  return profile.roles.includes("owner") && rolePermissions.owner.canManageOwnerControls;
 }

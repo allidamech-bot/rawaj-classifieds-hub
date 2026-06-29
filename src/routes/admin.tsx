@@ -2,6 +2,7 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { FileCheck, Flag, LayoutDashboard, Lock, Sparkles, Users } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { demoNotice } from "@/data/adminMockData";
+import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "لوحة الإدارة | رَوَاج" }] }),
@@ -18,6 +19,50 @@ const tabs = [
 
 function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const auth = useAuth();
+
+  if (auth.status === "loading") {
+    return (
+      <>
+        <PageHeader title="لوحة الإدارة" />
+        <main className="container-wide pt-4 pb-8">
+          <AdminStateCard
+            title="جاري التحقق من الصلاحيات"
+            message="يتم تحميل جلسة Supabase وقراءة الدور من قاعدة البيانات."
+          />
+        </main>
+      </>
+    );
+  }
+
+  if (auth.status === "authUnavailable") {
+    return (
+      <>
+        <PageHeader title="لوحة الإدارة" />
+        <main className="container-wide pt-4 pb-8">
+          <AdminStateCard
+            title="المصادقة غير مهيأة"
+            message="لا يمكن عرض لوحة المالك قبل ضبط Supabase URL و anon key. التصفح العام يبقى متاحاً."
+          />
+        </main>
+      </>
+    );
+  }
+
+  if (!auth.canAccessOwnerControls) {
+    return (
+      <>
+        <PageHeader title="لوحة الإدارة" />
+        <main className="container-wide pt-4 pb-8">
+          <AdminStateCard
+            title="غير مخوّل"
+            message="هذه المساحة مخصّصة لمالك المنصة فقط. الصلاحية تُقرأ من جدول الأدوار في Supabase ولا تُمنح من الواجهة."
+          />
+        </main>
+      </>
+    );
+  }
+
   return (
     <>
       <PageHeader title="لوحة الإدارة" />
@@ -51,5 +96,21 @@ function AdminLayout() {
         <Outlet />
       </main>
     </>
+  );
+}
+
+function AdminStateCard({ title, message }: { title: string; message: string }) {
+  return (
+    <section className="rounded-2xl bg-card p-5 text-center hairline shadow-soft">
+      <Lock className="mx-auto h-7 w-7 text-warning" />
+      <h2 className="mt-3 text-base font-extrabold">{title}</h2>
+      <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">{message}</p>
+      <Link
+        to="/"
+        className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+      >
+        العودة للرئيسية
+      </Link>
+    </section>
   );
 }
