@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, FileCheck, Flag, Users, Sparkles } from "lucide-react";
+import { LayoutDashboard, FileCheck, Flag, Users, Sparkles, Lock } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 
 export const Route = createFileRoute("/admin")({
@@ -21,6 +21,12 @@ function AdminLayout() {
     <>
       <PageHeader title="لوحة الإدارة" />
       <main className="container-wide pt-4 pb-8">
+        <div className="mb-4 flex items-start gap-2 rounded-2xl bg-warning/10 p-3 hairline">
+          <Lock className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+          <p className="text-xs text-foreground/90">
+            لوحة الإدارة مستقبلية وتتطلب تسجيل دخول وصلاحيات. جميع الإجراءات الظاهرة هنا للعرض فقط وغير مفعّلة.
+          </p>
+        </div>
         <nav className="mb-4 flex gap-2 overflow-x-auto pb-1">
           {tabs.map((t) => {
             const active = t.exact ? pathname === t.to : pathname.startsWith(t.to);
