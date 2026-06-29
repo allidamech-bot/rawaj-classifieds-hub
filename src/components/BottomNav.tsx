@@ -1,13 +1,21 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, LayoutGrid, Plus, MessageCircle, User } from "lucide-react";
 
-const items = [
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof Home;
+  exact?: boolean;
+  primary?: boolean;
+};
+
+const items: NavItem[] = [
   { to: "/", label: "الرئيسية", icon: Home, exact: true },
   { to: "/categories", label: "الأقسام", icon: LayoutGrid },
   { to: "/add-listing", label: "أضف إعلان", icon: Plus, primary: true },
   { to: "/chats", label: "الرسائل", icon: MessageCircle },
   { to: "/profile", label: "حسابي", icon: User },
-] as const;
+];
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
