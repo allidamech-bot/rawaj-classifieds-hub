@@ -24,7 +24,11 @@ function AddListingPage() {
   const [gov, setGov] = useState("");
   const [district, setDistrict] = useState("");
   const [description, setDescription] = useState("");
+  const [condition, setCondition] = useState("");
+  const [extra, setExtra] = useState<Record<string, string>>({});
   const [contact, setContact] = useState({ message: true, phone: true, whatsapp: false });
+  const [contactName, setContactName] = useState("");
+  const [contactTime, setContactTime] = useState("any");
 
   const category = categories.find((c) => c.id === categoryId);
   const govObj = governorates.find((g) => g.nameAr === gov);
