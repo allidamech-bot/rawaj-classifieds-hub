@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { demoNotice } from "@/data/adminMockData";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "حسابي | رَوَاج" }] }),
@@ -69,6 +70,15 @@ const settings = [
 ];
 
 function ProfilePage() {
+  const auth = useAuth();
+  const displayName = auth.profile?.displayName || auth.profile?.email || "زائر";
+  const authNote =
+    auth.status === "authUnavailable"
+      ? "Supabase غير مهيأ حالياً — يبقى RAWAJ قابلاً للتصفح كنموذج تجريبي."
+      : auth.status === "signedIn"
+        ? "تم تحميل جلسة Supabase. الصلاحيات تظهر فقط إذا كانت محفوظة في قاعدة البيانات."
+        : "تسجيل الدخول غير مفعّل للمستخدم الحالي — صلاحيات الإدارة ستُربط بالحسابات لاحقاً.";
+
   return (
     <>
       <PageHeader title="حسابي" back={false} />
@@ -79,11 +89,8 @@ function ProfilePage() {
               <User className="h-6 w-6 text-gold" />
             </span>
             <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-extrabold">زائر</h2>
-              <p className="text-xs text-primary-foreground/80">
-                تسجيل الدخول غير مفعّل حالياً — صلاحيات الإدارة ستُربط بالحسابات عند تفعيل تسجيل
-                الدخول.
-              </p>
+              <h2 className="text-lg font-extrabold">{displayName}</h2>
+              <p className="text-xs text-primary-foreground/80">{authNote}</p>
             </div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
@@ -125,9 +132,20 @@ function ProfilePage() {
             لوحة الإدارة
           </h3>
           <p className="text-xs text-foreground/90">
-            لوحة الإدارة — تظهر فقط للحسابات المخوّلة لاحقاً. لا يوجد Auth حقيقي الآن، ولا يتم منح
-            أي مستخدم صلاحيات فعلية من الملف الشخصي.
+            لوحة الإدارة — تظهر فقط للحسابات المخوّلة لاحقاً. لا يتم منح أي مستخدم صلاحيات من
+            الواجهة؛ الصلاحيات يجب أن تأتي من role محفوظ في قاعدة البيانات.
           </p>
+          {auth.status === "authUnavailable" && (
+            <p className="mt-2 rounded-xl bg-card p-2 text-[11px] text-muted-foreground hairline">
+              Supabase غير مهيأ حالياً، لذلك تبقى لوحة الإدارة المعروضة نموذجاً تجريبياً فقط.
+            </p>
+          )}
+          {auth.status === "signedIn" && (
+            <p className="mt-2 rounded-xl bg-card p-2 text-[11px] text-muted-foreground hairline">
+              الدور الحالي من قاعدة البيانات: {auth.profile?.role ?? "غير محدد"} · الوصول الإداري:{" "}
+              {auth.canAccessAdmin ? "مسموح حسب الدور" : "غير مسموح"}
+            </p>
+          )}
           <Link
             to="/admin"
             className="mt-3 inline-flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-xs font-bold hairline"
