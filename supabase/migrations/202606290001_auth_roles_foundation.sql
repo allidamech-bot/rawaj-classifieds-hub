@@ -101,10 +101,19 @@ security definer
 set search_path = public
 as $$
 begin
-  if old.role = 'owner' then
-    raise exception 'Owner role cannot be removed or demoted by this operation.';
+  if tg_op = 'DELETE' then
+    if old.role = 'owner' then
+      raise exception 'Owner role cannot be deleted.';
+    end if;
+    return old;
   end if;
-  return old;
+
+  -- TG_OP = 'UPDATE' from here
+  if old.role = 'owner' and (new.role is distinct from 'owner' or new.user_id is distinct from old.user_id) then
+    raise exception 'Owner role cannot be removed, reassigned, or demoted by this operation.';
+  end if;
+
+  return new;
 end;
 $$;
 
@@ -113,9 +122,24 @@ create trigger protect_owner_role_delete
 before delete on public.user_roles
 for each row execute function public.prevent_owner_demote_or_delete();
 
+drop trigger if exists protect_owner_role_update on public.user_roles;
+create trigger protect_owner_role_update
+before update on public.user_roles
+for each row execute function public.prevent_owner_demote_or_delete();
+
 alter table public.profiles enable row level security;
 alter table public.user_roles enable row level security;
 alter table public.audit_logs enable row level security;
+
+drop policy if exists "profiles_insert_own_limited" on public.profiles;
+create policy "profiles_insert_own_limited"
+on public.profiles
+for insert
+with check (
+  id = auth.uid()
+  and account_status = 'pending_review'
+  and verification_status = 'unverified'
+);
 
 drop policy if exists "profiles_select_own_or_admin" on public.profiles;
 create policy "profiles_select_own_or_admin"
