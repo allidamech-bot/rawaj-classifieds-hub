@@ -146,23 +146,28 @@ function ListingDetailsPage() {
           </Link>
         </section>
 
-        {/* Contact actions */}
-        <section className="mt-3 grid grid-cols-3 gap-2">
-          {listing.contactOptions.message && (
-            <button className="flex flex-col items-center gap-1 rounded-xl bg-primary py-3 text-primary-foreground transition hover:opacity-90">
-              <Send className="h-5 w-5" /> <span className="text-xs font-bold">رسالة</span>
-            </button>
-          )}
-          {listing.contactOptions.phone && (
-            <button className="flex flex-col items-center gap-1 rounded-xl bg-gold py-3 text-gold-foreground transition hover:opacity-90">
-              <Phone className="h-5 w-5" /> <span className="text-xs font-bold">اتصال</span>
-            </button>
-          )}
-          {listing.contactOptions.whatsapp && (
-            <button className="flex flex-col items-center gap-1 rounded-xl bg-emerald-trust py-3 text-emerald-trust-foreground transition hover:opacity-90">
-              <MessageCircle className="h-5 w-5" /> <span className="text-xs font-bold">واتساب</span>
-            </button>
-          )}
+        {/* Contact actions — demo only */}
+        <section className="mt-3">
+          <div className="grid grid-cols-3 gap-2">
+            {listing.contactOptions.message && (
+              <button title="عرض فقط — سيُفعَّل لاحقاً" className="flex flex-col items-center gap-1 rounded-xl bg-primary py-3 text-primary-foreground transition hover:opacity-90">
+                <Send className="h-5 w-5" /> <span className="text-xs font-bold">رسالة</span>
+              </button>
+            )}
+            {listing.contactOptions.phone && (
+              <button title="عرض فقط — سيُفعَّل لاحقاً" className="flex flex-col items-center gap-1 rounded-xl bg-gold py-3 text-gold-foreground transition hover:opacity-90">
+                <Phone className="h-5 w-5" /> <span className="text-xs font-bold">اتصال</span>
+              </button>
+            )}
+            {listing.contactOptions.whatsapp && (
+              <button title="عرض فقط — سيُفعَّل لاحقاً" className="flex flex-col items-center gap-1 rounded-xl bg-emerald-trust py-3 text-emerald-trust-foreground transition hover:opacity-90">
+                <MessageCircle className="h-5 w-5" /> <span className="text-xs font-bold">واتساب</span>
+              </button>
+            )}
+          </div>
+          <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
+            أزرار التواصل للعرض فقط في هذه النسخة التجريبية.
+          </p>
         </section>
 
         {/* Safety */}
