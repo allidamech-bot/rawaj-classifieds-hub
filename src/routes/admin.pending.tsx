@@ -1,20 +1,92 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Clock, FileCheck, ShieldAlert } from "lucide-react";
+import { useEffect, useState } from "react";
 import { demoNotice, pendingListings } from "@/data/adminMockData";
+import { adminFetchPendingListings } from "@/lib/classifieds-api";
+import type { ClassifiedListing, ClassifiedsError } from "@/lib/classifieds-types";
+import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin/pending")({
   component: PendingPage,
 });
 
 function PendingPage() {
+  const auth = useAuth();
+  const [realListings, setRealListings] = useState<ClassifiedListing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<ClassifiedsError | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      const result = await adminFetchPendingListings(auth.canAccessOwnerControls);
+
+      if (cancelled) return;
+
+      if (!result.ok) {
+        setError(result.error);
+        setRealListings([]);
+      } else {
+        setRealListings(result.data);
+      }
+
+      setLoading(false);
+    }
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.canAccessOwnerControls]);
+
   return (
     <div className="space-y-5">
       <div className="rounded-2xl bg-warning/10 p-3 hairline text-xs text-foreground/90">
-        {pendingListings.length} إعلان بانتظار المراجعة. كل إجراءات القبول/الرفض/طلب التعديل غير
-        مفعّلة حالياً. {demoNotice}
+        طابور المراجعة الحقيقي يُقرأ من Supabase للمالك فقط. إجراءات القبول/الرفض الحقيقية يجب أن
+        تبقى محمية بسياسات RLS ولا تعتمد على البريد.
       </div>
 
+      <section className="rounded-2xl bg-card p-4 hairline">
+        <h2 className="text-base font-extrabold">إعلانات حقيقية قيد المراجعة</h2>
+        {loading ? (
+          <p className="mt-2 text-xs text-muted-foreground">
+            جارٍ تحميل طابور المراجعة من Supabase.
+          </p>
+        ) : error ? (
+          <p className="mt-2 text-xs text-muted-foreground">{error.message}</p>
+        ) : realListings.length === 0 ? (
+          <p className="mt-2 text-xs text-muted-foreground">
+            لا توجد إعلانات حقيقية قيد المراجعة حالياً.
+          </p>
+        ) : (
+          <div className="mt-3 grid grid-cols-1 gap-3">
+            {realListings.map((listing) => (
+              <article key={listing.id} className="rounded-xl bg-muted-surface p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-extrabold">{listing.title}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {listing.id} · {listing.categoryNameAr ?? "قسم غير محدد"} ·{" "}
+                      {listing.governorateNameAr ?? "سوريا"}
+                    </p>
+                  </div>
+                  <Badge>{listing.status}</Badge>
+                </div>
+                <ActionRow actions={["قبول", "رفض", "أرشفة/إخفاء", "إضافة ملاحظة"]} />
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
       <div className="grid grid-cols-1 gap-3">
+        <p className="rounded-2xl bg-card p-3 text-xs text-muted-foreground hairline">
+          القائمة التالية نموذج UI تجريبي فقط وليست طابور إنتاج. {demoNotice}
+        </p>
         {pendingListings.map((listing) => (
           <article key={listing.id} className="rounded-2xl bg-card p-4 hairline">
             <div className="mb-3 flex flex-wrap items-start justify-between gap-3">

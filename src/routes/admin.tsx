@@ -86,8 +86,8 @@ function AdminLayout() {
         <div className="mb-4 flex items-start gap-2 rounded-2xl bg-warning/10 p-3 hairline">
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <p className="text-xs text-foreground/90">
-            لوحة إدارة مستقبلية لصاحب التطبيق والمشرفين. {demoNotice}. لا يوجد Auth أو Backend أو
-            صلاحيات حقيقية أو تنفيذ إجراءات.
+            لوحة إدارة مستقبلية لصاحب التطبيق والمشرفين. Auth والأدوار تُقرأ من Supabase، ومعظم
+            إجراءات الإدارة ما زالت غير مفعّلة أو بانتظار ربط جداول الإنتاج. {demoNotice}.
           </p>
         </div>
         <nav className="mb-4 flex gap-2 overflow-x-auto pb-1">
