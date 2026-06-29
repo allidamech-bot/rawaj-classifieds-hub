@@ -172,7 +172,7 @@ function ProfilePage() {
             {accountMenu.map((it, i) => (
               <Link
                 key={it.to}
-                to={it.to}
+                to={it.to as "/"}
                 className={`flex items-center gap-3 p-4 transition hover:bg-muted-surface ${i !== 0 ? "border-t border-border" : ""}`}
               >
                 <span className="grid h-9 w-9 place-items-center rounded-xl bg-muted-surface text-primary">
