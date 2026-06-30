@@ -128,7 +128,9 @@ function FavoritesPage() {
               >
                 <div>
                   <p className="text-sm font-bold">إعلان محفوظ</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Listing ID: {item.listingId}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    رقم الإعلان: {item.listingId}
+                  </p>
                   <p className="mt-1 text-[11px] text-muted-foreground">
                     {formatDate(item.createdAt)}
                   </p>

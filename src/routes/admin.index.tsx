@@ -59,7 +59,7 @@ function AdminOverview() {
               <Crown className="h-6 w-6" />
             </span>
             <div>
-              <p className="text-xs font-bold text-primary-foreground/75">Owner Control Center</p>
+              <p className="text-xs font-bold text-primary-foreground/75">مركز تحكم المالك</p>
               <h2 className="text-xl font-extrabold">صاحب التطبيق</h2>
               <p className="mt-1 max-w-2xl text-xs text-primary-foreground/80">
                 هذه لوحة المالك كنموذج تجريبي — سيتم تفعيل الصلاحيات عند اكتمال ربط الحسابات
@@ -68,7 +68,7 @@ function AdminOverview() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Badge tone="gold">Full control</Badge>
+            <Badge tone="gold">صلاحيات كاملة</Badge>
             <Badge>كل الصلاحيات</Badge>
             <Badge>{demoNotice}</Badge>
           </div>
