@@ -42,11 +42,7 @@ function ChatsPage() {
               if (!l) return null;
               return (
                 <li key={c.id}>
-                  <Link
-                    to="/listings/$id"
-                    params={{ id: l.id }}
-                    className="flex items-center gap-3 rounded-2xl bg-card p-3 hairline transition hover:shadow-soft"
-                  >
+                  <div className="flex items-center gap-3 rounded-2xl bg-card p-3 hairline">
                     <div className="grid h-12 w-12 place-items-center rounded-full bg-primary text-base font-bold text-primary-foreground">
                       {l.sellerName.slice(0, 1)}
                     </div>
@@ -61,19 +57,38 @@ function ChatsPage() {
                       <div className="truncate text-xs text-muted-foreground">{l.title}</div>
                       <div className="mt-1 flex items-center justify-between gap-2">
                         <span className="truncate text-sm">{c.last}</span>
-                        {c.unread > 0 && (
-                          <span className="shrink-0 rounded-full bg-gold px-2 py-0.5 text-[10px] font-bold text-gold-foreground">
-                            {c.unread}
-                          </span>
-                        )}
+                        <span className="shrink-0 rounded-full bg-muted-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                          معاينة تجريبية
+                        </span>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 </li>
               );
             })}
           </ul>
         )}
+
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <Link
+            to="/listings"
+            className="rounded-xl bg-primary px-4 py-2.5 text-center text-xs font-bold text-primary-foreground"
+          >
+            تصفح الإعلانات
+          </Link>
+          <Link
+            to="/safety"
+            className="rounded-xl bg-card px-4 py-2.5 text-center text-xs font-bold hairline"
+          >
+            نصائح الأمان
+          </Link>
+          <Link
+            to="/support"
+            className="rounded-xl bg-card px-4 py-2.5 text-center text-xs font-bold hairline"
+          >
+            الدعم
+          </Link>
+        </div>
 
         {/* Disabled composer preview */}
         <div className="rounded-2xl bg-card p-3 hairline">

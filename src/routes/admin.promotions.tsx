@@ -178,7 +178,7 @@ function InternalNote() {
     <div className="mt-3 rounded-xl bg-muted-surface p-3 text-xs">
       <b>ملاحظة داخلية</b>
       <p className="mt-1 text-muted-foreground">
-        أضيفت بواسطة: مشرف تجريبي · التاريخ: placeholder · الحالة: قيد المراجعة
+        أضيفت بواسطة: مشرف تجريبي · التاريخ: قيد التجهيز · الحالة: قيد المراجعة
       </p>
       <button
         disabled

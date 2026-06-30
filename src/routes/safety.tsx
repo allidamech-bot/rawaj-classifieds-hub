@@ -90,6 +90,21 @@ function SafetyPage() {
             تواصل مع الدعم
           </Link>
         </p>
+
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <Link
+            to="/prohibited"
+            className="rounded-xl bg-card px-4 py-2.5 text-center text-xs font-bold hairline"
+          >
+            راجع الإعلانات الممنوعة
+          </Link>
+          <Link
+            to="/listings"
+            className="rounded-xl bg-primary px-4 py-2.5 text-center text-xs font-bold text-primary-foreground"
+          >
+            تصفح بإرشادات الأمان
+          </Link>
+        </div>
       </main>
     </>
   );

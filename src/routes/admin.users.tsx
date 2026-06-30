@@ -158,7 +158,7 @@ function UsersPage() {
                 ]}
               />
               <p className="mt-2 text-[11px] text-muted-foreground">
-                لا يوجد رفع ملفات حقيقي. المستندات labels placeholder فقط.
+                لا يوجد رفع ملفات حقيقي. تسميات المستندات تجريبية فقط.
               </p>
             </article>
           ))}
@@ -258,7 +258,7 @@ function InternalNote() {
     <div className="mt-3 rounded-xl bg-muted-surface p-3 text-xs">
       <div className="font-extrabold">ملاحظة داخلية</div>
       <p className="mt-1 text-muted-foreground">
-        أضيفت بواسطة: مشرف تجريبي · التاريخ: placeholder · الحالة: غير مفعّلة
+        أضيفت بواسطة: مشرف تجريبي · التاريخ: قيد التجهيز · الحالة: غير مفعّلة
       </p>
       <button
         disabled

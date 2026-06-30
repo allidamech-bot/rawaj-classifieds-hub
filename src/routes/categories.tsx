@@ -88,6 +88,21 @@ function CategoriesPage() {
         <p className="mt-5 text-center text-[11px] text-muted-foreground">
           هل قسمك غير موجود؟ سيتم إضافة المزيد من الأقسام لاحقاً حسب احتياجات المستخدمين.
         </p>
+
+        <section className="mt-5 grid grid-cols-1 gap-2 rounded-2xl bg-card p-4 hairline sm:grid-cols-2">
+          <Link
+            to="/listings"
+            className="rounded-xl bg-primary px-4 py-2.5 text-center text-sm font-bold text-primary-foreground"
+          >
+            تصفح كل الإعلانات
+          </Link>
+          <Link
+            to="/add-listing"
+            className="rounded-xl bg-muted-surface px-4 py-2.5 text-center text-sm font-bold text-foreground"
+          >
+            أضف إعلاناً في قسمك
+          </Link>
+        </section>
       </main>
     </>
   );
