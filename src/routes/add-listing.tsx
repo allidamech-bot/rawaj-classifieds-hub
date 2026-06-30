@@ -3,6 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Camera, Check, Info } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  checkListingContentSafety,
+  isSafePhoneValue,
+  normalizeContactValue,
+} from "@/lib/content-safety";
+import {
   createListing,
   fetchPublicCategories,
   fetchPublicGovernorates,
@@ -46,7 +51,9 @@ function AddListingPage() {
   const [description, setDescription] = useState("");
   const [condition, setCondition] = useState<ListingCondition>("not_applicable");
   const [contactName, setContactName] = useState("");
-  const [contact, setContact] = useState({ message: true, phone: false, whatsapp: false });
+  const [contact, setContact] = useState({ phone: false, whatsapp: false });
+  const [phone, setPhone] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
 
   const category = categories.find((item) => item.id === categoryId);
   const governorate = governorates.find((item) => item.id === governorateId);
@@ -59,7 +66,7 @@ function AddListingPage() {
       !!governorateId &&
       !!district &&
       (!requiresNumericPrice || !!price)) ||
-    step === 3;
+    (step === 3 && (!contact.phone || !!phone.trim()) && (!contact.whatsapp || !!whatsapp.trim()));
   const canSubmit = step === 4 && title.trim().length >= 4 && !!categoryId && !!governorateId;
   const score = useMemo(
     () =>
@@ -109,6 +116,42 @@ function AddListingPage() {
     setSubmitting(true);
     setSubmitMessage(null);
 
+    const normalizedPhone = normalizeContactValue(phone);
+    const normalizedWhatsapp = normalizeContactValue(whatsapp);
+    if (contact.phone && !isSafePhoneValue(normalizedPhone)) {
+      setSubmitting(false);
+      setSubmitMessage(
+        text(
+          "أدخل رقم هاتف صالحا قبل إرسال الإعلان.",
+          "Enter a valid phone number before submitting.",
+        ),
+      );
+      return;
+    }
+    if (contact.whatsapp && !isSafePhoneValue(normalizedWhatsapp)) {
+      setSubmitting(false);
+      setSubmitMessage(
+        text(
+          "أدخل رقم واتساب صالحا قبل إرسال الإعلان.",
+          "Enter a valid WhatsApp number before submitting.",
+        ),
+      );
+      return;
+    }
+
+    const contentCheck = checkListingContentSafety([title, description, contactName]);
+    if (contentCheck.blocked) {
+      setSubmitting(false);
+      setSubmitMessage(contentCheck.messageAr);
+      return;
+    }
+
+    const details: Record<string, unknown> = {
+      ...(contact.phone ? { phone: normalizedPhone } : {}),
+      ...(contact.whatsapp ? { whatsapp: normalizedWhatsapp } : {}),
+      ...(contentCheck.flags.length > 0 ? { content_flags: contentCheck.flags } : {}),
+    };
+
     const result = await createListing(auth.profile?.id ?? null, {
       categoryId,
       governorateId,
@@ -120,7 +163,7 @@ function AddListingPage() {
       districtAr: district,
       contactName: contactName.trim() || null,
       contactOptions: contact,
-      details: {},
+      details,
     });
 
     if (!result.ok) {
@@ -406,11 +449,34 @@ function AddListingPage() {
                       className="input"
                     />
                   </Field>
+                  {contact.phone && (
+                    <Field label={text("رقم الهاتف", "Phone number")}>
+                      <input
+                        value={phone}
+                        onChange={(event) => setPhone(event.target.value)}
+                        inputMode="tel"
+                        autoComplete="tel"
+                        className="input"
+                        placeholder="+963 ..."
+                      />
+                    </Field>
+                  )}
+                  {contact.whatsapp && (
+                    <Field label={text("رقم واتساب", "WhatsApp number")}>
+                      <input
+                        value={whatsapp}
+                        onChange={(event) => setWhatsapp(event.target.value)}
+                        inputMode="tel"
+                        autoComplete="tel"
+                        className="input"
+                        placeholder="+963 ..."
+                      />
+                    </Field>
+                  )}
                   <div className="space-y-2">
                     {[
-                      { key: "message", label: text("رسائل داخل التطبيق", "In-app messages") },
-                      { key: "phone", label: text("اتصال هاتفي", "Phone call") },
-                      { key: "whatsapp", label: text("واتساب", "WhatsApp") },
+                      { key: "phone" as const, label: text("اتصال هاتفي", "Phone call") },
+                      { key: "whatsapp" as const, label: text("واتساب", "WhatsApp") },
                     ].map((item) => (
                       <label
                         key={item.key}
@@ -427,9 +493,13 @@ function AddListingPage() {
                         </div>
                         <input
                           type="checkbox"
-                          checked={contact[item.key as keyof typeof contact]}
+                          checked={contact[item.key]}
                           onChange={(event) =>
-                            setContact((value) => ({ ...value, [item.key]: event.target.checked }))
+                            setContact((value) => {
+                              if (item.key === "phone" && !event.target.checked) setPhone("");
+                              if (item.key === "whatsapp" && !event.target.checked) setWhatsapp("");
+                              return { ...value, [item.key]: event.target.checked };
+                            })
                           }
                           className="h-4 w-4 accent-primary"
                         />
@@ -470,6 +540,18 @@ function AddListingPage() {
                         "Will be submitted as pending review",
                       )}
                     />
+                    {contact.phone && (
+                      <ReviewRow
+                        label={text("رقم الهاتف", "Phone number")}
+                        value={normalizeContactValue(phone) || "-"}
+                      />
+                    )}
+                    {contact.whatsapp && (
+                      <ReviewRow
+                        label={text("رقم واتساب", "WhatsApp number")}
+                        value={normalizeContactValue(whatsapp) || "-"}
+                      />
+                    )}
                   </div>
                   <div className="mt-3 rounded-xl bg-emerald-trust/10 p-3 text-[11px] font-medium text-emerald-trust">
                     {text(

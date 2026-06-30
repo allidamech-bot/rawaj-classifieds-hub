@@ -697,6 +697,7 @@ export async function updateOwnerListing(
   if (payload.districtAr !== undefined) updateData.district_ar = payload.districtAr;
   if (payload.contactName !== undefined) updateData.contact_name = payload.contactName;
   if (payload.contactOptions) updateData.contact_options = payload.contactOptions;
+  if (payload.details !== undefined) updateData.details = payload.details;
 
   const { data, error } = await clientResult.data
     .from("listings")
@@ -782,6 +783,7 @@ export async function resubmitOwnerListing(
   if (payload.districtAr !== undefined) updateData.district_ar = payload.districtAr;
   if (payload.contactName !== undefined) updateData.contact_name = payload.contactName;
   if (payload.contactOptions) updateData.contact_options = payload.contactOptions;
+  if (payload.details !== undefined) updateData.details = payload.details;
 
   const { data, error } = await clientResult.data
     .from("listings")

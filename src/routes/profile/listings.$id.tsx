@@ -3,6 +3,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Camera, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  checkListingContentSafety,
+  isSafePhoneValue,
+  normalizeContactValue,
+} from "@/lib/content-safety";
+import {
   deleteListingImage,
   deleteOwnerListing,
   fetchListingImages,
@@ -66,7 +71,9 @@ function ManageListingPage() {
   const [priceType, setPriceType] = useState<PriceType>("fixed");
   const [condition, setCondition] = useState<ListingCondition>("not_applicable");
   const [contactName, setContactName] = useState("");
-  const [contact, setContact] = useState({ message: true, phone: true, whatsapp: false });
+  const [contact, setContact] = useState({ phone: true, whatsapp: false });
+  const [phone, setPhone] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
 
   const category = categories.find((item) => item.id === categoryId);
   const governorate = governorates.find((item) => item.id === governorateId);
@@ -138,14 +145,15 @@ function ManageListingPage() {
       setPriceType(listingResult.data.priceType);
       setCondition(listingResult.data.condition);
       setContactName(listingResult.data.contactName ?? "");
+      setPhone(readDetailString(listingResult.data.details, "phone"));
+      setWhatsapp(readDetailString(listingResult.data.details, "whatsapp"));
       setContact(
         Object.keys(listingResult.data.contactOptions || {}).length > 0
           ? {
-              message: Boolean(listingResult.data.contactOptions.message),
               phone: Boolean(listingResult.data.contactOptions.phone),
               whatsapp: Boolean(listingResult.data.contactOptions.whatsapp),
             }
-          : { message: true, phone: true, whatsapp: false },
+          : { phone: true, whatsapp: false },
       );
 
       setLoading(false);
@@ -171,6 +179,22 @@ function ManageListingPage() {
     setSavingError(null);
     setSavingSuccess(null);
 
+    const validation = validateContactAndContent({
+      title,
+      description,
+      contactName,
+      contact,
+      phone,
+      whatsapp,
+      existingDetails: listing.details,
+      text,
+    });
+    if (!validation.ok) {
+      setSaving(false);
+      setSavingError(validation.message);
+      return;
+    }
+
     const result = await updateOwnerListing(auth.profile?.id ?? null, listing.id, {
       categoryId: categoryId || undefined,
       subcategoryId: subcategoryId ?? null,
@@ -183,6 +207,7 @@ function ManageListingPage() {
       districtAr: district || undefined,
       contactName: contactName.trim() || undefined,
       contactOptions: contact,
+      details: validation.details,
     });
 
     setSaving(false);
@@ -207,6 +232,8 @@ function ManageListingPage() {
     district,
     contactName,
     contact,
+    phone,
+    whatsapp,
     text,
   ]);
 
@@ -215,6 +242,22 @@ function ManageListingPage() {
     setResubmitting(true);
     setSavingError(null);
     setSavingSuccess(null);
+
+    const validation = validateContactAndContent({
+      title,
+      description,
+      contactName,
+      contact,
+      phone,
+      whatsapp,
+      existingDetails: listing.details,
+      text,
+    });
+    if (!validation.ok) {
+      setResubmitting(false);
+      setSavingError(validation.message);
+      return;
+    }
 
     const result = await resubmitOwnerListing(auth.profile?.id ?? null, listing.id, {
       categoryId: categoryId || undefined,
@@ -228,6 +271,7 @@ function ManageListingPage() {
       districtAr: district || undefined,
       contactName: contactName.trim() || undefined,
       contactOptions: contact,
+      details: validation.details,
     });
 
     setResubmitting(false);
@@ -252,6 +296,8 @@ function ManageListingPage() {
     district,
     contactName,
     contact,
+    phone,
+    whatsapp,
     text,
   ]);
 
@@ -545,11 +591,36 @@ function ManageListingPage() {
                   disabled={!isEditable}
                 />
               </Field>
+              {contact.phone && (
+                <Field label={text("رقم الهاتف", "Phone number")}>
+                  <input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    inputMode="tel"
+                    autoComplete="tel"
+                    className="input"
+                    disabled={!isEditable}
+                    placeholder="+963 ..."
+                  />
+                </Field>
+              )}
+              {contact.whatsapp && (
+                <Field label={text("رقم واتساب", "WhatsApp number")}>
+                  <input
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
+                    inputMode="tel"
+                    autoComplete="tel"
+                    className="input"
+                    disabled={!isEditable}
+                    placeholder="+963 ..."
+                  />
+                </Field>
+              )}
               <div className="mt-3 space-y-2">
                 {[
-                  { key: "message", label: text("رسائل داخل التطبيق", "In-app messages") },
-                  { key: "phone", label: text("اتصال هاتفي", "Phone call") },
-                  { key: "whatsapp", label: text("واتساب", "WhatsApp") },
+                  { key: "phone" as const, label: text("اتصال هاتفي", "Phone call") },
+                  { key: "whatsapp" as const, label: text("واتساب", "WhatsApp") },
                 ].map((item) => (
                   <label
                     key={item.key}
@@ -566,9 +637,13 @@ function ManageListingPage() {
                     </div>
                     <input
                       type="checkbox"
-                      checked={contact[item.key as keyof typeof contact]}
+                      checked={contact[item.key]}
                       onChange={(e) =>
-                        setContact((value) => ({ ...value, [item.key]: e.target.checked }))
+                        setContact((value) => {
+                          if (item.key === "phone" && !e.target.checked) setPhone("");
+                          if (item.key === "whatsapp" && !e.target.checked) setWhatsapp("");
+                          return { ...value, [item.key]: e.target.checked };
+                        })
                       }
                       disabled={!isEditable}
                       className="h-4 w-4 accent-primary"
@@ -764,6 +839,80 @@ function Field({
       {children}
     </label>
   );
+}
+
+function readDetailString(details: Record<string, unknown>, key: string) {
+  const value = details[key];
+  return typeof value === "string" ? value : "";
+}
+
+function validateContactAndContent({
+  title,
+  description,
+  contactName,
+  contact,
+  phone,
+  whatsapp,
+  existingDetails,
+  text,
+}: {
+  title: string;
+  description: string;
+  contactName: string;
+  contact: Record<"phone" | "whatsapp", boolean>;
+  phone: string;
+  whatsapp: string;
+  existingDetails: Record<string, unknown>;
+  text: (ar: string, en: string) => string;
+}): { ok: true; details: Record<string, unknown> } | { ok: false; message: string } {
+  const normalizedPhone = normalizeContactValue(phone);
+  const normalizedWhatsapp = normalizeContactValue(whatsapp);
+
+  if (contact.phone && !isSafePhoneValue(normalizedPhone)) {
+    return {
+      ok: false,
+      message: text(
+        "أدخل رقم هاتف صالحا قبل حفظ الإعلان.",
+        "Enter a valid phone number before saving.",
+      ),
+    };
+  }
+
+  if (contact.whatsapp && !isSafePhoneValue(normalizedWhatsapp)) {
+    return {
+      ok: false,
+      message: text(
+        "أدخل رقم واتساب صالحا قبل حفظ الإعلان.",
+        "Enter a valid WhatsApp number before saving.",
+      ),
+    };
+  }
+
+  const contentCheck = checkListingContentSafety([
+    title,
+    description,
+    contactName,
+    existingDetails,
+  ]);
+  if (contentCheck.blocked) {
+    return {
+      ok: false,
+      message:
+        contentCheck.messageAr ??
+        text("راجع نص الإعلان قبل الحفظ.", "Review the listing text before saving."),
+    };
+  }
+
+  const details = { ...existingDetails };
+  delete details.phone;
+  delete details.whatsapp;
+  delete details.content_flags;
+
+  if (contact.phone) details.phone = normalizedPhone;
+  if (contact.whatsapp) details.whatsapp = normalizedWhatsapp;
+  if (contentCheck.flags.length > 0) details.content_flags = contentCheck.flags;
+
+  return { ok: true, details };
 }
 
 function statusLabel(status: ListingStatus, language: Language) {

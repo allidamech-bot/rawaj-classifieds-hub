@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronDown, LifeBuoy, Mail, ShieldAlert } from "lucide-react";
+import { ChevronDown, LifeBuoy, ShieldAlert } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { useUiPreferences, type Language } from "@/lib/ui-preferences";
+import { useUiPreferences } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/support")({
   head: () => ({ meta: [{ title: "الدعم | رواج" }] }),
@@ -72,8 +72,8 @@ function SupportPage() {
               </h2>
               <p className="mt-1 text-xs leading-6 text-primary-foreground/80">
                 {text(
-                  "لا يتم إنشاء تذكرة محفوظة من هذه الصفحة. اجمع التفاصيل المهمة ثم استخدم قناة التواصل الرسمية التي يعتمدها فريق رواج.",
-                  "This page does not create a stored ticket. Gather the important details, then use the official contact channel approved by RAWAJ.",
+                  "لا يتم إنشاء تذكرة محفوظة من هذه الصفحة. اجمع التفاصيل المهمة ثم استخدم البلاغ من صفحة الإعلان عند ارتباط الطلب بإعلان محدد.",
+                  "This page does not create a stored ticket. Gather the important details, then use the report action on the listing page when the request is tied to a specific listing.",
                 )}
               </p>
             </div>
@@ -140,13 +140,12 @@ function SupportPage() {
           >
             {text("تصفح الإعلانات", "Browse listings")}
           </Link>
-          <a
-            href="mailto:support@rawaj.example"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground"
+          <Link
+            to="/safety"
+            className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground"
           >
-            <Mail className="h-4 w-4" />
-            {text("إرسال التفاصيل بالبريد", "Send details by email")}
-          </a>
+            {text("نصائح الأمان والبلاغات", "Safety and reports")}
+          </Link>
         </div>
       </main>
     </>

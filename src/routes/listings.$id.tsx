@@ -177,8 +177,10 @@ function ListingDetailsPage() {
     "واتساب",
     "رقم واتساب",
   ]);
-  const canCall = Boolean(listing.contactOptions.phone && phone);
-  const canWhatsapp = Boolean(listing.contactOptions.whatsapp && whatsapp);
+  const cleanPhone = phone || detailString(listing, ["رقم الهاتف", "الهاتف"]);
+  const cleanWhatsapp = whatsapp || detailString(listing, ["واتساب", "رقم واتساب"]);
+  const canCall = Boolean(listing.contactOptions.phone && cleanPhone);
+  const canWhatsapp = Boolean(listing.contactOptions.whatsapp && cleanWhatsapp);
 
   return (
     <>
@@ -343,7 +345,7 @@ function ListingDetailsPage() {
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {canCall ? (
               <a
-                href={`tel:${phone}`}
+                href={`tel:${cleanPhone}`}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-xs font-bold text-primary-foreground"
               >
                 <Phone className="h-4 w-4" />
@@ -354,7 +356,7 @@ function ListingDetailsPage() {
             )}
             {canWhatsapp ? (
               <a
-                href={`https://wa.me/${normalizePhoneForWhatsapp(whatsapp)}`}
+                href={`https://wa.me/${normalizePhoneForWhatsapp(cleanWhatsapp)}`}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center justify-center rounded-xl bg-emerald-trust py-3 text-xs font-bold text-emerald-trust-foreground"
@@ -423,13 +425,18 @@ function Badge({ children }: { children: React.ReactNode }) {
 }
 
 function UnavailableContact({ label }: { label: string }) {
+  const { text } = useUiPreferences();
+
   return (
     <button
       type="button"
       disabled
-      className="rounded-xl bg-muted-surface py-3 text-xs font-bold text-muted-foreground opacity-70"
+      className="rounded-xl bg-muted-surface px-3 py-3 text-xs font-bold text-muted-foreground opacity-70"
     >
-      {label}
+      <span className="block">{label}</span>
+      <span className="mt-1 block text-[10px] font-medium leading-4">
+        {text("لم يوفر البائع هذه الطريقة", "Seller did not provide this method")}
+      </span>
     </button>
   );
 }
