@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { demoNotice, pendingListings } from "@/data/adminMockData";
 import { adminFetchPendingListings, adminModerateListing } from "@/lib/classifieds-api";
 import type { ClassifiedListing, ClassifiedsError } from "@/lib/classifieds-types";
+import { categoryName, governorateName, uiLabel } from "@/lib/i18n";
+import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin/pending")({
@@ -12,6 +14,7 @@ export const Route = createFileRoute("/admin/pending")({
 
 function PendingPage() {
   const auth = useAuth();
+  const { language, text } = useUiPreferences();
   const [realListings, setRealListings] = useState<ClassifiedListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
@@ -63,7 +66,12 @@ function PendingPage() {
   async function moderate(listing: ClassifiedListing, status: "approved" | "rejected") {
     setMessage("");
     if (!auth.profile?.id) {
-      setMessage("تعذر تحديد حساب المراجع الحالي. أعد تسجيل الدخول ثم حاول مجدداً.");
+      setMessage(
+        text(
+          "تعذر تحديد حساب المراجع الحالي. أعد تسجيل الدخول ثم حاول مجدداً.",
+          "Could not identify the current reviewer account. Log in again and try once more.",
+        ),
+      );
       return;
     }
 
@@ -80,32 +88,44 @@ function PendingPage() {
       return;
     }
 
-    setMessage(status === "approved" ? "تم اعتماد الإعلان." : "تم رفض الإعلان.");
+    setMessage(
+      status === "approved"
+        ? text("تم اعتماد الإعلان.", "Listing approved.")
+        : text("تم رفض الإعلان.", "Listing rejected."),
+    );
     await loadPending();
   }
 
   return (
     <div className="space-y-5">
       <div className="rounded-2xl bg-warning/10 p-3 hairline text-xs text-foreground/90">
-        طابور المراجعة الحقيقي يُقرأ من مصدر البيانات للمالك فقط. إجراءات القبول/الرفض الحقيقية يجب
-        أن تبقى محمية بسياسات RLS ولا تعتمد على البريد.
+        {text(
+          "طابور المراجعة الحقيقي يُقرأ من مصدر البيانات للمالك فقط. إجراءات القبول/الرفض الحقيقية يجب أن تبقى محمية بسياسات RLS ولا تعتمد على البريد.",
+          "The real review queue is read from the data source for the owner only. Real approve/reject actions must remain protected by RLS policies and must not rely on email.",
+        )}
       </div>
 
       <section className="rounded-2xl bg-card p-4 hairline">
-        <h2 className="text-base font-extrabold">إعلانات حقيقية قيد المراجعة</h2>
+        <h2 className="text-base font-extrabold">
+          {uiLabel("إعلانات حقيقية قيد المراجعة", language)}
+        </h2>
         {message && (
           <p className="mt-2 rounded-xl bg-muted-surface p-2 text-xs font-semibold">{message}</p>
         )}
         {loading ? (
-          <p className="mt-2 text-xs text-muted-foreground">جارٍ تحميل طابور المراجعة الحقيقي.</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {uiLabel("جارٍ تحميل طابور المراجعة الحقيقي.", language)}
+          </p>
         ) : error ? (
           <p className="mt-2 text-xs text-muted-foreground">
-            طابور المراجعة قيد التفعيل حالياً. ستظهر الإعلانات المرسلة للمراجعة هنا عند اكتمال
-            الربط.
+            {uiLabel(
+              "طابور المراجعة قيد التفعيل حالياً. ستظهر الإعلانات المرسلة للمراجعة هنا عند اكتمال الربط.",
+              language,
+            )}
           </p>
         ) : realListings.length === 0 ? (
           <p className="mt-2 text-xs text-muted-foreground">
-            لا توجد إعلانات حقيقية قيد المراجعة حالياً.
+            {uiLabel("لا توجد إعلانات حقيقية قيد المراجعة حالياً.", language)}
           </p>
         ) : (
           <div className="mt-3 grid grid-cols-1 gap-3">
@@ -115,15 +135,26 @@ function PendingPage() {
                   <div>
                     <h3 className="text-sm font-extrabold">{listing.title}</h3>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {listing.id} · {listing.categoryNameAr ?? "قسم غير محدد"} ·{" "}
-                      {listing.governorateNameAr ?? "سوريا"}
+                      {listing.id} ·{" "}
+                      {categoryName(
+                        listing.categoryId,
+                        listing.categoryNameAr ?? undefined,
+                        language,
+                      )}{" "}
+                      ·{" "}
+                      {governorateName(
+                        listing.governorateId,
+                        listing.governorateNameAr ?? undefined,
+                        language,
+                      )}
                     </p>
                     <p className="mt-1 text-[11px] text-muted-foreground">
-                      صاحب الإعلان: {listing.ownerId} · تاريخ الإرسال:{" "}
-                      {formatDate(listing.createdAt)}
+                      {text("صاحب الإعلان:", "Listing owner:")} {listing.ownerId} ·{" "}
+                      {text("تاريخ الإرسال:", "Submitted:")}{" "}
+                      {formatDate(listing.createdAt, language)}
                     </p>
                   </div>
-                  <Badge>{listing.status}</Badge>
+                  <Badge>{uiLabel(listing.status, language)}</Badge>
                 </div>
                 <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
                   <input
@@ -134,7 +165,7 @@ function PendingPage() {
                         [listing.id]: event.target.value,
                       }))
                     }
-                    placeholder="سبب الرفض عند الحاجة"
+                    placeholder={uiLabel("سبب الرفض عند الحاجة", language)}
                     className="rounded-xl bg-card px-3 py-2 text-xs outline-none hairline"
                   />
                   <div className="flex gap-2">
@@ -142,13 +173,13 @@ function PendingPage() {
                       onClick={() => void moderate(listing, "approved")}
                       className="rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground"
                     >
-                      اعتماد
+                      {uiLabel("اعتماد", language)}
                     </button>
                     <button
                       onClick={() => void moderate(listing, "rejected")}
                       className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground"
                     >
-                      رفض
+                      {uiLabel("رفض", language)}
                     </button>
                   </div>
                 </div>
@@ -160,7 +191,8 @@ function PendingPage() {
 
       <div className="grid grid-cols-1 gap-3">
         <p className="rounded-2xl bg-card p-3 text-xs text-muted-foreground hairline">
-          القائمة التالية نموذج UI تجريبي فقط وليست طابور إنتاج. {demoNotice}
+          {uiLabel("القائمة التالية نموذج UI تجريبي فقط وليست طابور إنتاج.", language)}{" "}
+          {uiLabel(demoNotice, language)}
         </p>
         {pendingListings.map((listing) => (
           <article key={listing.id} className="rounded-2xl bg-card p-4 hairline">
@@ -168,7 +200,7 @@ function PendingPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-base font-extrabold">{listing.title}</h2>
-                  <Badge>{listing.status}</Badge>
+                  <Badge>{uiLabel(listing.status, language)}</Badge>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {listing.id} · {listing.seller} · {listing.type}
@@ -176,20 +208,21 @@ function PendingPage() {
               </div>
               <span className="inline-flex items-center gap-1 rounded-md bg-warning/15 px-2 py-1 text-[10px] font-bold text-warning">
                 <Clock className="h-3 w-3" />
-                قيد المراجعة
+                {uiLabel("قيد المراجعة", language)}
               </span>
             </div>
             <Info
               rows={[
-                ["القسم", listing.category],
-                ["المحافظة", listing.governorate],
+                ["القسم", uiLabel(listing.category, language)],
+                ["المحافظة", uiLabel(listing.governorate, language)],
                 ["تاريخ الإرسال", listing.submitted],
-                ["مستوى المخاطر", listing.risk],
-                ["حالة المراجعة", listing.status],
-                ["السبب/الملاحظة", listing.reason],
-                ["المشرف المعيّن", listing.admin],
-                ["ملاحظة داخلية قيد التجهيز", listing.note],
+                ["مستوى المخاطر", uiLabel(listing.risk, language)],
+                ["حالة المراجعة", uiLabel(listing.status, language)],
+                ["السبب/الملاحظة", uiLabel(listing.reason, language)],
+                ["المشرف المعيّن", uiLabel(listing.admin, language)],
+                ["ملاحظة داخلية قيد التجهيز", uiLabel(listing.note, language)],
               ]}
+              language={language}
             />
             <ActionRow
               actions={[
@@ -200,24 +233,29 @@ function PendingPage() {
                 "إضافة ملاحظة",
                 "طلب مراجعة المالك",
               ]}
+              language={language}
             />
-            <InternalNote />
+            <InternalNote language={language} />
           </article>
         ))}
       </div>
 
       <div className="rounded-2xl bg-card p-3 text-xs text-muted-foreground hairline">
         <ShieldAlert className="me-1 inline h-3.5 w-3.5 text-warning" />
-        المشرفون يمكنهم مراجعة الطابور حسب صلاحياتهم فقط. قبول/رفض الإعلانات الحقيقي يتطلب ربطاً
-        تشغيلياً وصلاحيات وربط حسابات.
+        {text(
+          "المشرفون يمكنهم مراجعة الطابور حسب صلاحياتهم فقط. قبول/رفض الإعلانات الحقيقي يتطلب ربطاً تشغيلياً وصلاحيات وربط حسابات.",
+          "Moderators can review the queue only within their permissions. Real approve/reject actions require operational integration, permissions, and accounts.",
+        )}
       </div>
     </div>
   );
 }
 
-function formatDate(value: string) {
+function formatDate(value: string, language: Language) {
   if (!value) return "—";
-  return new Intl.DateTimeFormat("ar-SY", { dateStyle: "medium" }).format(new Date(value));
+  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+    dateStyle: "medium",
+  }).format(new Date(value));
 }
 
 function Badge({ children }: { children: React.ReactNode }) {
@@ -228,12 +266,12 @@ function Badge({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Info({ rows }: { rows: string[][] }) {
+function Info({ rows, language }: { rows: string[][]; language: Language }) {
   return (
     <dl className="grid grid-cols-1 gap-2 text-xs md:grid-cols-4">
       {rows.map(([label, value]) => (
         <div key={label} className="rounded-xl bg-muted-surface p-3">
-          <dt className="text-muted-foreground">{label}</dt>
+          <dt className="text-muted-foreground">{uiLabel(label, language)}</dt>
           <dd className="mt-1 font-bold">{value}</dd>
         </div>
       ))}
@@ -241,7 +279,7 @@ function Info({ rows }: { rows: string[][] }) {
   );
 }
 
-function ActionRow({ actions }: { actions: string[] }) {
+function ActionRow({ actions, language }: { actions: string[]; language: Language }) {
   return (
     <div className="mt-3 flex flex-wrap gap-1.5">
       {actions.map((action) => (
@@ -251,28 +289,28 @@ function ActionRow({ actions }: { actions: string[] }) {
           className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground opacity-70 cursor-not-allowed"
         >
           <FileCheck className="h-3 w-3" />
-          {action} · نموذج تجريبي
+          {uiLabel(action, language)} · {uiLabel("نموذج تجريبي", language)}
         </button>
       ))}
     </div>
   );
 }
 
-function InternalNote() {
+function InternalNote({ language }: { language: Language }) {
   return (
     <div className="mt-3 rounded-xl bg-muted-surface p-3 text-xs">
-      <b>ملاحظة داخلية</b>
+      <b>{uiLabel("ملاحظة داخلية", language)}</b>
       <p className="mt-1 text-muted-foreground">
-        أضيفت بواسطة: مشرف تجريبي · التاريخ: قيد التجهيز · الحالة: غير مفعّلة
+        {uiLabel("أضيفت بواسطة: مشرف تجريبي · التاريخ: قيد التجهيز · الحالة: غير مفعّلة", language)}
       </p>
       <button
         disabled
         className="mt-2 rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline cursor-not-allowed"
       >
-        إضافة ملاحظة · قريباً
+        {uiLabel("إضافة ملاحظة · قريباً", language)}
       </button>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        الملاحظات الداخلية لا تظهر للمستخدمين.
+        {uiLabel("الملاحظات الداخلية لا تظهر للمستخدمين.", language)}
       </p>
     </div>
   );

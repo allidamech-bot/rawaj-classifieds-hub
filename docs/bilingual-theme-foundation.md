@@ -1,6 +1,6 @@
 # RAWAJ bilingual and theme foundation
 
-This pass adds a frontend-only language and theme foundation for RAWAJ.
+This document tracks the frontend-only language and theme foundation for RAWAJ.
 
 ## Language
 
@@ -29,14 +29,25 @@ This pass adds a frontend-only language and theme foundation for RAWAJ.
 
 ## Route Coverage
 
-The pass covers visible UI copy and state boundaries across:
+The foundation pass covers visible UI copy and state boundaries across:
 
 - Home, categories, listings, listing details.
 - Add listing, login, profile.
 - Chats and promotion demo/future surfaces.
 - Safety, support, prohibited, terms, and privacy.
 
+The follow-up hardening pass completed remaining route-level polish for:
+
+- Favorites and saved searches, including auth-required, auth-unavailable, loading, error, empty, and CTA states.
+- Seller profile route, including not-found/error states, demo seller boundaries, disabled contact actions, safety note, and active listing section labels.
+- Admin shell, owner overview, pending listings, reports, users, and promotions pages, limited to display text, badges, helper text, disabled action labels, and demo/readiness warnings.
+
 Listing/user data from Supabase or mock records remains data-driven and is not rewritten as fake translated production content. Demo, future, and beta labels remain visible in Arabic and English.
+
+## Known Gaps
+
+- Some user/listing names, free-form listing titles, user-entered report reasons, and mock/demo entity names remain data strings rather than translated UI copy.
+- Browser screenshot QA was not run in this pass; validation was code/build based.
 
 ## Intentionally Not Changed
 
@@ -46,6 +57,7 @@ Listing/user data from Supabase or mock records remains data-driven and is not r
 - No admin permission changes, owner checks, role logic changes, or RLS assumption changes.
 - No route renames.
 - No messaging, payment, notifications, ticket submission, moderation execution, or admin destructive actions.
+- No backend/Supabase/auth/schema/env/admin permission behavior was touched in the hardening pass.
 
 ## Validation
 
@@ -56,3 +68,9 @@ npm run typecheck
 npm run lint
 npm run build
 ```
+
+Hardening pass validation run:
+
+- `npm run typecheck`
+- `npm run lint`
+- `npm run build`

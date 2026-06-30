@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { fetchSavedSearches } from "@/lib/classifieds-api";
 import type { ClassifiedsError, SavedSearch } from "@/lib/classifieds-types";
+import { uiLabel } from "@/lib/i18n";
+import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/saved-searches")({
@@ -13,6 +15,7 @@ export const Route = createFileRoute("/saved-searches")({
 
 function SavedSearchesPage() {
   const auth = useAuth();
+  const { language, text } = useUiPreferences();
   const [items, setItems] = useState<SavedSearch[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ClassifiedsError | null>(null);
@@ -47,15 +50,23 @@ function SavedSearchesPage() {
   }, [auth.status, auth.profile?.id]);
 
   if (auth.status === "loading") {
-    return <State heading="جارٍ التحقق من الجلسة" body="يتم التأكد من تسجيل الدخول." />;
+    return (
+      <State
+        heading={text("جارٍ التحقق من الجلسة", "Checking session")}
+        body={text("يتم التأكد من تسجيل الدخول.", "Checking sign-in status.")}
+      />
+    );
   }
 
   if (auth.status === "signedOut") {
     return (
       <State
-        heading="تسجيل الدخول مطلوب"
-        body="عمليات البحث المحفوظة مرتبطة بحسابك فقط ولا توجد بيانات تجريبية بديلة."
-        actionLabel="تسجيل الدخول"
+        heading={text("تسجيل الدخول مطلوب", "Login required")}
+        body={text(
+          "عمليات البحث المحفوظة مرتبطة بحسابك فقط ولا توجد بيانات تجريبية بديلة.",
+          "Saved searches are linked only to your account. No demo data is used as a substitute.",
+        )}
+        actionLabel={text("تسجيل الدخول", "Log in")}
         actionTo="/login"
       />
     );
@@ -64,9 +75,12 @@ function SavedSearchesPage() {
   if (auth.status === "authUnavailable") {
     return (
       <State
-        heading="البحث المحفوظ قيد التفعيل"
-        body="حفظ عمليات البحث سيعمل مع الحسابات بعد اكتمال التفعيل. يمكنك استخدام فلاتر التصفح حالياً."
-        actionLabel="ابدأ البحث"
+        heading={text("البحث المحفوظ قيد التفعيل", "Saved search is being activated")}
+        body={text(
+          "حفظ عمليات البحث سيعمل مع الحسابات بعد اكتمال التفعيل. يمكنك استخدام فلاتر التصفح حالياً.",
+          "Saving searches will work with accounts after activation. You can use browse filters now.",
+        )}
+        actionLabel={text("ابدأ البحث", "Start searching")}
         actionTo="/listings"
       />
     );
@@ -74,30 +88,40 @@ function SavedSearchesPage() {
 
   return (
     <>
-      <PageHeader title="عمليات البحث المحفوظة" />
+      <PageHeader title={text("عمليات البحث المحفوظة", "Saved searches")} />
       <main className="container-wide space-y-4 pt-4 pb-8">
         <div className="rounded-2xl bg-card p-4 hairline">
-          <h2 className="text-sm font-extrabold">عمليات البحث المحفوظة</h2>
+          <h2 className="text-sm font-extrabold">
+            {text("عمليات البحث المحفوظة", "Saved searches")}
+          </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            تعرض هذه الصفحة عمليات البحث المحفوظة للحساب الحالي فقط، ولا تستخدم بيانات تجريبية
-            كبديل.
+            {text(
+              "تعرض هذه الصفحة عمليات البحث المحفوظة للحساب الحالي فقط، ولا تستخدم بيانات تجريبية كبديل.",
+              "This page shows saved searches for the current account only and does not use demo data as a substitute.",
+            )}
           </p>
         </div>
 
         {loading ? (
-          <Panel title="جارٍ تحميل عمليات البحث" />
+          <Panel title={text("جارٍ تحميل عمليات البحث", "Loading saved searches")} />
         ) : error ? (
           <Panel
-            title="تعذر تحميل عمليات البحث"
-            body="البحث المحفوظ قيد التفعيل حالياً. استخدم صفحة التصفح للبحث مباشرة."
-            actionLabel="تصفح الإعلانات"
+            title={text("تعذر تحميل عمليات البحث", "Could not load saved searches")}
+            body={text(
+              "البحث المحفوظ قيد التفعيل حالياً. استخدم صفحة التصفح للبحث مباشرة.",
+              "Saved search is being activated. Use the browse page to search directly.",
+            )}
+            actionLabel={text("تصفح الإعلانات", "Browse listings")}
             actionTo="/listings"
           />
         ) : items.length === 0 ? (
           <Panel
-            title="لا توجد عمليات بحث محفوظة"
-            body="يمكن إضافة زر حفظ البحث لاحقاً بعد اعتماد تجربة البحث النهائية."
-            actionLabel="ابدأ البحث"
+            title={text("لا توجد عمليات بحث محفوظة", "No saved searches yet")}
+            body={text(
+              "يمكن إضافة زر حفظ البحث لاحقاً بعد اعتماد تجربة البحث النهائية.",
+              "A save-search button can be added later after the final search experience is approved.",
+            )}
+            actionLabel={text("ابدأ البحث", "Start searching")}
             actionTo="/listings"
           />
         ) : (
@@ -111,12 +135,14 @@ function SavedSearchesPage() {
                       <span className="truncate text-sm font-bold">{item.nameAr}</span>
                     </div>
                     <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                      <span>{formatDate(item.createdAt)}</span>
-                      <span>مرتبطة بالحساب الحالي فقط</span>
+                      <span>{formatDate(item.createdAt, language)}</span>
+                      <span>
+                        {text("مرتبطة بالحساب الحالي فقط", "Linked only to the current account")}
+                      </span>
                     </div>
                   </div>
                   <span className="inline-flex items-center gap-1 rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-                    <Bell className="h-3 w-3" /> تنبيهات قريباً
+                    <Bell className="h-3 w-3" /> {text("تنبيهات قريباً", "Alerts soon")}
                   </span>
                 </div>
                 <div className="mt-3">
@@ -125,7 +151,7 @@ function SavedSearchesPage() {
                     search={item.filters}
                     className="rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
                   >
-                    فتح البحث
+                    {text("فتح البحث", "Open search")}
                   </Link>
                 </div>
               </li>
@@ -148,9 +174,11 @@ function State({
   actionLabel?: string;
   actionTo?: string;
 }) {
+  const { text } = useUiPreferences();
+
   return (
     <>
-      <PageHeader title="عمليات البحث المحفوظة" />
+      <PageHeader title={text("عمليات البحث المحفوظة", "Saved searches")} />
       <main className="container-wide pt-10">
         <Panel title={heading} body={body} actionLabel={actionLabel} actionTo={actionTo} />
       </main>
@@ -169,6 +197,8 @@ function Panel({
   actionLabel?: string;
   actionTo?: string;
 }) {
+  const { language } = useUiPreferences();
+
   return (
     <div className="rounded-2xl bg-card p-10 text-center hairline">
       <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-muted-surface">
@@ -188,7 +218,7 @@ function Panel({
             to="/categories"
             className="inline-block rounded-xl bg-muted-surface px-5 py-2 text-sm font-bold text-foreground"
           >
-            تصفح الأقسام
+            {uiLabel("تصفح الأقسام", language)}
           </Link>
         </div>
       )}
@@ -196,6 +226,8 @@ function Panel({
   );
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("ar-SY", { dateStyle: "medium" }).format(new Date(value));
+function formatDate(value: string, language: Language) {
+  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+    dateStyle: "medium",
+  }).format(new Date(value));
 }

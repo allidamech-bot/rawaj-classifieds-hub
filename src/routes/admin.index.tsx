@@ -21,6 +21,8 @@ import {
   permissionMatrix,
   platformSettings,
 } from "@/data/adminMockData";
+import { uiLabel } from "@/lib/i18n";
+import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminOverview,
@@ -50,6 +52,8 @@ const ownerOnly = [
 ];
 
 function AdminOverview() {
+  const { language, text } = useUiPreferences();
+
   return (
     <div className="space-y-6">
       <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-premium">
@@ -59,36 +63,40 @@ function AdminOverview() {
               <Crown className="h-6 w-6" />
             </span>
             <div>
-              <p className="text-xs font-bold text-primary-foreground/75">مركز تحكم المالك</p>
-              <h2 className="text-xl font-extrabold">صاحب التطبيق</h2>
+              <p className="text-xs font-bold text-primary-foreground/75">
+                {text("مركز تحكم المالك", "Owner control center")}
+              </p>
+              <h2 className="text-xl font-extrabold">{text("صاحب التطبيق", "App owner")}</h2>
               <p className="mt-1 max-w-2xl text-xs text-primary-foreground/80">
-                هذه لوحة المالك كنموذج تجريبي — سيتم تفعيل الصلاحيات عند اكتمال ربط الحسابات
-                والأنظمة التشغيلية.
+                {text(
+                  "هذه لوحة المالك كنموذج تجريبي — سيتم تفعيل الصلاحيات عند اكتمال ربط الحسابات والأنظمة التشغيلية.",
+                  "This owner dashboard is a demo model. Permissions will be activated when accounts and operational systems are complete.",
+                )}
               </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Badge tone="gold">صلاحيات كاملة</Badge>
-            <Badge>كل الصلاحيات</Badge>
-            <Badge>{demoNotice}</Badge>
+            <Badge tone="gold">{uiLabel("صلاحيات كاملة", language)}</Badge>
+            <Badge>{uiLabel("كل الصلاحيات", language)}</Badge>
+            <Badge>{uiLabel(demoNotice, language)}</Badge>
           </div>
         </div>
       </section>
 
       <section>
-        <SectionTitle icon={Activity} title="مؤشرات المالك" />
+        <SectionTitle icon={Activity} title={uiLabel("مؤشرات المالك", language)} />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           {ownerMetrics.map(([label, value]) => (
             <div key={label} className="rounded-xl bg-card p-3 hairline">
               <div className="text-xl font-extrabold">{value}</div>
-              <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{uiLabel(label, language)}</p>
             </div>
           ))}
         </div>
       </section>
 
       <section>
-        <SectionTitle icon={Crown} title="إجراءات المالك فقط" />
+        <SectionTitle icon={Crown} title={uiLabel("إجراءات المالك فقط", language)} />
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {ownerActions.map((action) => (
             <button
@@ -96,9 +104,9 @@ function AdminOverview() {
               disabled
               className="rounded-xl bg-card p-3 text-start text-xs font-bold hairline opacity-70 cursor-not-allowed"
             >
-              {action}
+              {uiLabel(action, language)}
               <span className="mt-1 block text-[10px] font-semibold text-muted-foreground">
-                {demoNotice}
+                {uiLabel(demoNotice, language)}
               </span>
             </button>
           ))}
@@ -106,12 +114,12 @@ function AdminOverview() {
       </section>
 
       <section>
-        <SectionTitle icon={ShieldCheck} title="مصفوفة الصلاحيات" />
+        <SectionTitle icon={ShieldCheck} title={uiLabel("مصفوفة الصلاحيات", language)} />
         <div className="overflow-x-auto rounded-2xl bg-card hairline">
           <table className="w-full min-w-[720px] text-sm">
             <thead className="bg-muted-surface text-xs text-muted-foreground">
               <tr>
-                <th className="p-3 text-start">الصلاحية</th>
+                <th className="p-3 text-start">{uiLabel("الصلاحية", language)}</th>
                 <th className="p-3 text-start">Owner</th>
                 <th className="p-3 text-start">Admin</th>
                 <th className="p-3 text-start">Moderator</th>
@@ -120,15 +128,15 @@ function AdminOverview() {
             <tbody>
               {permissionMatrix.map(([label, owner, admin, moderator]) => (
                 <tr key={label} className="border-t border-border">
-                  <td className="p-3 font-bold">{label}</td>
+                  <td className="p-3 font-bold">{uiLabel(label, language)}</td>
                   <td className="p-3">
-                    <Permission value={owner} />
+                    <Permission value={owner} language={language} />
                   </td>
                   <td className="p-3">
-                    <Permission value={admin} />
+                    <Permission value={admin} language={language} />
                   </td>
                   <td className="p-3">
-                    <Permission value={moderator} />
+                    <Permission value={moderator} language={language} />
                   </td>
                 </tr>
               ))}
@@ -139,23 +147,34 @@ function AdminOverview() {
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="rounded-2xl bg-card p-4 hairline">
-          <SectionTitle icon={UserCog} title="مساحة عمل المشرف" compact />
+          <SectionTitle icon={UserCog} title={uiLabel("مساحة عمل المشرف", language)} compact />
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <Badge>مشرف</Badge>
-            <Badge>{demoNotice}</Badge>
+            <Badge>{uiLabel("مشرف", language)}</Badge>
+            <Badge>{uiLabel(demoNotice, language)}</Badge>
           </div>
           <p className="mb-4 text-xs text-muted-foreground">
-            صلاحيات المشرف يحددها صاحب التطبيق. لا يمكن للمشرف إدارة المالك أو تجاوز صلاحياته.
+            {text(
+              "صلاحيات المشرف يحددها صاحب التطبيق. لا يمكن للمشرف إدارة المالك أو تجاوز صلاحياته.",
+              "Moderator permissions are set by the app owner. Moderators cannot manage the owner or exceed their permissions.",
+            )}
           </p>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <ListBlock title="ما يمكن للمشرف فعله" items={adminCan} />
-            <ListBlock title="ما يتطلب صلاحية المالك" items={ownerOnly} />
+            <ListBlock
+              title={uiLabel("ما يمكن للمشرف فعله", language)}
+              items={adminCan}
+              language={language}
+            />
+            <ListBlock
+              title={uiLabel("ما يتطلب صلاحية المالك", language)}
+              items={ownerOnly}
+              language={language}
+            />
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
             {adminQueues.map(([label, value]) => (
               <div key={label} className="rounded-xl bg-muted-surface p-3">
                 <div className="text-lg font-extrabold">{value}</div>
-                <div className="text-xs text-muted-foreground">{label}</div>
+                <div className="text-xs text-muted-foreground">{uiLabel(label, language)}</div>
               </div>
             ))}
           </div>
@@ -171,16 +190,19 @@ function AdminOverview() {
                 disabled
                 className="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground opacity-70 cursor-not-allowed"
               >
-                {label}
+                {uiLabel(label, language)}
               </button>
             ))}
           </div>
         </div>
 
         <div className="rounded-2xl bg-card p-4 hairline">
-          <SectionTitle icon={Users} title="إدارة المشرفين" compact />
+          <SectionTitle icon={Users} title={uiLabel("إدارة المشرفين", language)} compact />
           <p className="mb-3 text-xs text-muted-foreground">
-            إدارة المشرفين متاحة للمالك فقط عند تفعيل الحسابات والصلاحيات.
+            {text(
+              "إدارة المشرفين متاحة للمالك فقط عند تفعيل الحسابات والصلاحيات.",
+              "Admin management is available only to the owner after accounts and permissions are enabled.",
+            )}
           </p>
           <div className="space-y-2">
             {adminTeam.map((admin) => (
@@ -192,10 +214,11 @@ function AdminOverview() {
                       {admin.id} · {admin.role} · {admin.last}
                     </div>
                   </div>
-                  <Badge>{admin.status}</Badge>
+                  <Badge>{uiLabel(admin.status, language)}</Badge>
                 </div>
                 <div className="mt-2 text-xs text-muted-foreground">
-                  {admin.count} إجراء · {admin.perms} · {admin.note}
+                  {admin.count} {text("إجراء", "actions")} · {uiLabel(admin.perms, language)} ·{" "}
+                  {uiLabel(admin.note, language)}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {[
@@ -211,7 +234,7 @@ function AdminOverview() {
                       disabled
                       className="rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline opacity-70 cursor-not-allowed"
                     >
-                      {action}
+                      {uiLabel(action, language)}
                     </button>
                   ))}
                 </div>
@@ -222,7 +245,7 @@ function AdminOverview() {
       </section>
 
       <section>
-        <SectionTitle icon={Sparkles} title="إدارة تمييز الإعلانات" />
+        <SectionTitle icon={Sparkles} title={uiLabel("إدارة تمييز الإعلانات", language)} />
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
           {featuredListingQueue.map((item) => (
             <div key={item.listingId} className="rounded-2xl bg-card p-4 hairline">
@@ -233,20 +256,21 @@ function AdminOverview() {
                     {item.listingId} · {item.seller}
                   </p>
                 </div>
-                <Badge>{item.featured}</Badge>
+                <Badge>{uiLabel(item.featured, language)}</Badge>
               </div>
               <InfoGrid
                 rows={[
-                  ["القسم", item.category],
-                  ["المحافظة", item.governorate],
-                  ["حالة الإعلان", item.status],
-                  ["مدة الترويج", item.duration],
-                  ["تاريخ البداية/النهاية", item.dates],
-                  ["حالة الدفع", item.payment],
-                  ["المراجع", item.reviewer],
-                  ["موافقة المالك مطلوبة", item.owner],
-                  ["ملاحظة", item.note],
+                  ["القسم", uiLabel(item.category, language)],
+                  ["المحافظة", uiLabel(item.governorate, language)],
+                  ["حالة الإعلان", uiLabel(item.status, language)],
+                  ["مدة الترويج", uiLabel(item.duration, language)],
+                  ["تاريخ البداية/النهاية", uiLabel(item.dates, language)],
+                  ["حالة الدفع", uiLabel(item.payment, language)],
+                  ["المراجع", uiLabel(item.reviewer, language)],
+                  ["موافقة المالك مطلوبة", uiLabel(item.owner, language)],
+                  ["ملاحظة", uiLabel(item.note, language)],
                 ]}
+                language={language}
               />
               <ActionRow
                 actions={[
@@ -257,6 +281,7 @@ function AdminOverview() {
                   "طلب مراجعة المالك",
                   "إضافة ملاحظة",
                 ]}
+                language={language}
               />
             </div>
           ))}
@@ -265,30 +290,38 @@ function AdminOverview() {
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-2xl bg-card p-4 hairline">
-          <SectionTitle icon={Activity} title="سجل نشاط المالك" compact />
+          <SectionTitle icon={Activity} title={uiLabel("سجل نشاط المالك", language)} compact />
           <p className="mb-3 text-xs text-muted-foreground">
-            سجل النشاط تجريبي — سيتم تسجيل كل إجراء إداري لاحقاً في قاعدة البيانات.
+            {text(
+              "سجل النشاط تجريبي — سيتم تسجيل كل إجراء إداري لاحقاً في قاعدة البيانات.",
+              "The activity log is demo-only. Each admin action will later be recorded in the database.",
+            )}
           </p>
           <div className="space-y-2">
             {auditLog.map(([time, actor, role, action, target, status, note]) => (
               <div key={`${time}-${action}`} className="rounded-xl bg-muted-surface p-3 text-xs">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <b>{action}</b>
-                  <Badge>{status}</Badge>
+                  <b>{uiLabel(action, language)}</b>
+                  <Badge>{uiLabel(status, language)}</Badge>
                 </div>
                 <div className="mt-1 text-muted-foreground">
-                  الوقت: {time} · من قام بالإجراء: {actor} · الدور: {role} · العنصر المتأثر:{" "}
-                  {target}
+                  {text("الوقت:", "Time:")} {time} · {text("من قام بالإجراء:", "Actor:")}{" "}
+                  {uiLabel(actor, language)} · {text("الدور:", "Role:")} {uiLabel(role, language)} ·{" "}
+                  {text("العنصر المتأثر:", "Target:")} {target}
                 </div>
-                <div className="mt-1 text-muted-foreground">ملاحظة: {note}</div>
+                <div className="mt-1 text-muted-foreground">
+                  {text("ملاحظة:", "Note:")} {uiLabel(note, language)}
+                </div>
               </div>
             ))}
           </div>
         </div>
 
         <div className="rounded-2xl bg-card p-4 hairline">
-          <SectionTitle icon={Settings} title="إعدادات المالك" compact />
-          <p className="mb-3 text-xs text-muted-foreground">إعدادات المالك — غير مفعّلة حالياً</p>
+          <SectionTitle icon={Settings} title={uiLabel("إعدادات المالك", language)} compact />
+          <p className="mb-3 text-xs text-muted-foreground">
+            {uiLabel("إعدادات المالك — غير مفعّلة حالياً", language)}
+          </p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1">
             {platformSettings.map((setting) => (
               <button
@@ -296,8 +329,10 @@ function AdminOverview() {
                 disabled
                 className="flex items-center justify-between rounded-xl bg-muted-surface p-3 text-xs font-bold opacity-70 cursor-not-allowed"
               >
-                <span>{setting}</span>
-                <span className="text-[10px] text-muted-foreground">غير مفعّل حالياً</span>
+                <span>{uiLabel(setting, language)}</span>
+                <span className="text-[10px] text-muted-foreground">
+                  {uiLabel("غير مفعّل حالياً", language)}
+                </span>
               </button>
             ))}
           </div>
@@ -305,10 +340,12 @@ function AdminOverview() {
       </section>
 
       <div className="rounded-2xl bg-warning/10 p-3 text-xs text-foreground/90 hairline">
-        كل الأزرار والإجراءات داخل لوحة المالك/الإدارة معطّلة ومعلّمة كنموذج تجريبي. المستخدمون
-        العاديون لا يظهر لهم وصول إداري حقيقي الآن.
+        {text(
+          "كل الأزرار والإجراءات داخل لوحة المالك/الإدارة معطّلة ومعلّمة كنموذج تجريبي. المستخدمون العاديون لا يظهر لهم وصول إداري حقيقي الآن.",
+          "All buttons and actions in the owner/admin dashboard are disabled and marked as demo. Regular users do not receive real admin access now.",
+        )}
         <Link to="/profile" className="ms-1 font-bold text-primary">
-          عرض ربط الحسابات في الملف الشخصي
+          {uiLabel("عرض ربط الحسابات في الملف الشخصي", language)}
         </Link>
       </div>
     </div>
@@ -344,30 +381,38 @@ function Badge({ children, tone }: { children: React.ReactNode; tone?: "gold" })
   );
 }
 
-function Permission({ value }: { value: string }) {
+function Permission({ value, language }: { value: string; language: Language }) {
   const tone =
     value === "مسموح"
       ? "text-emerald-trust"
       : value === "حسب الصلاحية"
         ? "text-warning"
         : "text-muted-foreground";
-  return <span className={`text-xs font-extrabold ${tone}`}>{value}</span>;
+  return <span className={`text-xs font-extrabold ${tone}`}>{uiLabel(value, language)}</span>;
 }
 
-function ListBlock({ title, items }: { title: string; items: string[] }) {
+function ListBlock({
+  title,
+  items,
+  language,
+}: {
+  title: string;
+  items: string[];
+  language: Language;
+}) {
   return (
     <div className="rounded-xl bg-muted-surface p-3">
       <h3 className="mb-2 text-xs font-extrabold">{title}</h3>
       <ul className="space-y-1 text-xs text-muted-foreground">
         {items.map((item) => (
-          <li key={item}>• {item}</li>
+          <li key={item}>• {uiLabel(item, language)}</li>
         ))}
       </ul>
     </div>
   );
 }
 
-function InfoGrid({ rows }: { rows: string[][] }) {
+function InfoGrid({ rows, language }: { rows: string[][]; language: Language }) {
   return (
     <dl className="grid grid-cols-1 gap-1 text-xs">
       {rows.map(([label, value]) => (
@@ -375,7 +420,7 @@ function InfoGrid({ rows }: { rows: string[][] }) {
           key={label}
           className="flex justify-between gap-3 border-b border-border/60 py-1 last:border-b-0"
         >
-          <dt className="text-muted-foreground">{label}</dt>
+          <dt className="text-muted-foreground">{uiLabel(label, language)}</dt>
           <dd className="text-start font-semibold">{value}</dd>
         </div>
       ))}
@@ -383,7 +428,7 @@ function InfoGrid({ rows }: { rows: string[][] }) {
   );
 }
 
-function ActionRow({ actions }: { actions: string[] }) {
+function ActionRow({ actions, language }: { actions: string[]; language: Language }) {
   return (
     <div className="mt-3 flex flex-wrap gap-1.5">
       {actions.map((action) => (
@@ -392,7 +437,7 @@ function ActionRow({ actions }: { actions: string[] }) {
           disabled
           className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground cursor-not-allowed"
         >
-          {action} · نموذج تجريبي
+          {uiLabel(action, language)} · {uiLabel("نموذج تجريبي", language)}
         </button>
       ))}
     </div>
