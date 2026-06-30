@@ -458,6 +458,14 @@ export async function fetchPublicListings(
 export async function fetchListingDetail(
   id: string,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
+  const listingId = id.trim();
+  if (!listingId) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+    };
+  }
+
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
@@ -467,7 +475,8 @@ export async function fetchListingDetail(
   const { data, error } = await clientResult.data
     .from("listings")
     .select("*")
-    .eq("id", id)
+    .eq("id", listingId)
+    .eq("status", "approved")
     .maybeSingle();
 
   if (error) return { ok: false, error: mapError(error) };
@@ -542,6 +551,13 @@ export async function fetchPublicSellerProfile(
 export async function fetchListingImages(
   listingId: string,
 ): Promise<ClassifiedsResult<ListingImage[]>> {
+  if (!listingId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد صور الإعلان." },
+    };
+  }
+
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
@@ -559,6 +575,13 @@ export async function fetchListingImages(
 export async function fetchCurrentUserListings(
   userId: string,
 ): Promise<ClassifiedsResult<ClassifiedListing[]>> {
+  if (!userId.trim()) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض إعلاناتك." },
+    };
+  }
+
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
@@ -631,6 +654,13 @@ export async function updateOwnerListing(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
+  if (!listingId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+    };
+  }
+
   const references = await readReferences(clientResult.data);
   if (!references.ok) return { ok: false, error: references.error };
 
@@ -639,7 +669,7 @@ export async function updateOwnerListing(
     .select("*")
     .eq("id", listingId)
     .eq("owner_id", userId)
-    .in("status", ["draft", "pending_review"])
+    .in("status", ["draft", "pending_review", "rejected"])
     .maybeSingle();
 
   if (existingError) return { ok: false, error: mapError(existingError) };
@@ -673,7 +703,7 @@ export async function updateOwnerListing(
     .update(updateData)
     .eq("id", listingId)
     .eq("owner_id", userId)
-    .in("status", ["draft", "pending_review"])
+    .in("status", ["draft", "pending_review", "rejected"])
     .select("*");
 
   if (error) return { ok: false, error: mapError(error) };
@@ -704,6 +734,13 @@ export async function resubmitOwnerListing(
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
+
+  if (!listingId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+    };
+  }
 
   const references = await readReferences(clientResult.data);
   if (!references.ok) return { ok: false, error: references.error };
@@ -782,6 +819,13 @@ export async function deleteOwnerListing(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
+  if (!listingId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+    };
+  }
+
   const { data: existing, error: existingError } = await clientResult.data
     .from("listings")
     .select("id, owner_id, status")
@@ -845,18 +889,40 @@ export async function createListing(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
+  const title = payload.title.trim();
+  const description = payload.description.trim();
+  const districtAr = payload.districtAr?.trim() || null;
+  const contactName = payload.contactName?.trim() || null;
+
+  if (!payload.categoryId.trim() || !payload.governorateId.trim() || title.length < 4) {
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: "أكمل القسم والمحافظة والعنوان قبل إرسال الإعلان.",
+      },
+    };
+  }
+
+  if (payload.price !== null && (!Number.isFinite(payload.price) || payload.price < 0)) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "أدخل سعراً صحيحاً أو اترك السعر فارغاً." },
+    };
+  }
+
   const insertPayload = {
     owner_id: userId,
     category_id: payload.categoryId,
     governorate_id: payload.governorateId,
-    title: payload.title,
-    description: payload.description,
+    title,
+    description,
     price: payload.price,
     price_type: payload.priceType,
     listing_condition: payload.condition,
     status: "pending_review",
-    district_ar: payload.districtAr,
-    contact_name: payload.contactName,
+    district_ar: districtAr,
+    contact_name: contactName,
     contact_options: payload.contactOptions,
     details: payload.details,
   };
@@ -916,6 +982,22 @@ export async function uploadListingImage({
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
+  const { data: existingListing, error: existingListingError } = await clientResult.data
+    .from("listings")
+    .select("id, owner_id, status")
+    .eq("id", listing.id)
+    .eq("owner_id", userId)
+    .in("status", ["draft", "pending_review", "rejected"])
+    .maybeSingle();
+
+  if (existingListingError) return { ok: false, error: mapError(existingListingError) };
+  if (!existingListing) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "لا يمكن تعديل صور هذا الإعلان." },
+    };
+  }
+
   const extension = file.name.split(".").pop()?.toLowerCase();
   const safeExtension =
     extension && ["jpg", "jpeg", "png", "webp"].includes(extension) ? extension : "jpg";
@@ -966,12 +1048,13 @@ export async function deleteListingImage(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data: existing } = await clientResult.data
+  const { data: existing, error: existingError } = await clientResult.data
     .from("listings")
     .select("owner_id, status")
     .eq("id", listingId)
     .maybeSingle();
 
+  if (existingError) return { ok: false, error: mapError(existingError) };
   if (!existing || existing.owner_id !== userId) {
     return {
       ok: false,
@@ -990,14 +1073,34 @@ export async function deleteListingImage(
     };
   }
 
-  if (image.storagePath) {
+  const { data: storedImage, error: imageError } = await clientResult.data
+    .from("listing_images")
+    .select("id, listing_id, storage_path")
+    .eq("id", image.id)
+    .eq("listing_id", listingId)
+    .maybeSingle();
+
+  if (imageError) return { ok: false, error: mapError(imageError) };
+  if (!storedImage) {
+    return {
+      ok: false,
+      error: { code: "not_found", message: "تعذر تحديد صورة الإعلان." },
+    };
+  }
+
+  const storagePath = rowNullableString(storedImage as Row, "storage_path");
+  if (storagePath) {
     const storageResult = await clientResult.data.storage
       .from(listingImagesBucket)
-      .remove([image.storagePath]);
+      .remove([storagePath]);
     if (storageResult.error) return { ok: false, error: mapStorageError(storageResult.error) };
   }
 
-  const { error } = await clientResult.data.from("listing_images").delete().eq("id", image.id);
+  const { error } = await clientResult.data
+    .from("listing_images")
+    .delete()
+    .eq("id", image.id)
+    .eq("listing_id", listingId);
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: null };
 }
@@ -1073,6 +1176,28 @@ export async function favoriteListing(
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
+
+  if (!listingId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+    };
+  }
+
+  const { data: listing, error: listingError } = await clientResult.data
+    .from("listings")
+    .select("id")
+    .eq("id", listingId)
+    .eq("status", "approved")
+    .maybeSingle();
+
+  if (listingError) return { ok: false, error: mapError(listingError) };
+  if (!listing) {
+    return {
+      ok: false,
+      error: { code: "not_found", message: "لا يمكن حفظ إعلان غير متاح." },
+    };
+  }
 
   const { error } = await clientResult.data
     .from("favorites")
@@ -1231,13 +1356,47 @@ export async function createListingReport(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
+  const reportReason = reason.trim();
+  if (!listingId.trim() || reportReason.length < 4) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "أدخل سبب البلاغ وحدد الإعلان." },
+    };
+  }
+
+  const { data: listing, error: listingError } = await clientResult.data
+    .from("listings")
+    .select("id")
+    .eq("id", listingId)
+    .eq("status", "approved")
+    .maybeSingle();
+
+  if (listingError) return { ok: false, error: mapError(listingError) };
+  if (!listing) {
+    return {
+      ok: false,
+      error: { code: "not_found", message: "لا يمكن إرسال بلاغ على إعلان غير متاح." },
+    };
+  }
+
+  const { data: existingReport, error: existingReportError } = await clientResult.data
+    .from("listing_reports")
+    .select("*")
+    .eq("listing_id", listingId)
+    .eq("reporter_id", userId)
+    .in("status", ["new", "under_review"])
+    .maybeSingle();
+
+  if (existingReportError) return { ok: false, error: mapError(existingReportError) };
+  if (existingReport) return { ok: true, data: mapReport(existingReport as Row) };
+
   const { data, error } = await clientResult.data
     .from("listing_reports")
     .insert({
       listing_id: listingId,
       reporter_id: userId,
       report_type: reportType,
-      reason,
+      reason: reportReason,
       status: "new",
     })
     .select("*")
@@ -1266,7 +1425,7 @@ export async function adminFetchPendingListings(
   const { data, error } = await clientResult.data
     .from("listings")
     .select("*")
-    .in("status", ["pending_review", "rejected"])
+    .eq("status", "pending_review")
     .order("created_at", { ascending: false });
 
   if (error) return { ok: false, error: mapError(error) };
@@ -1368,6 +1527,21 @@ export async function adminModerateListing(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
+  const { data: existing, error: existingError } = await clientResult.data
+    .from("listings")
+    .select("id, status")
+    .eq("id", payload.listingId)
+    .eq("status", "pending_review")
+    .maybeSingle();
+
+  if (existingError) return { ok: false, error: mapError(existingError) };
+  if (!existing) {
+    return {
+      ok: false,
+      error: { code: "not_found", message: "هذا الإعلان ليس ضمن طابور المراجعة." },
+    };
+  }
+
   const updatePayload = {
     status: payload.status,
     reviewed_by: payload.reviewerId,
@@ -1381,7 +1555,8 @@ export async function adminModerateListing(
   const { error } = await clientResult.data
     .from("listings")
     .update(updatePayload)
-    .eq("id", payload.listingId);
+    .eq("id", payload.listingId)
+    .eq("status", "pending_review");
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: null };
 }

@@ -75,7 +75,10 @@ function ManageListingPage() {
     [subcategories, categoryId],
   );
 
-  const isEditable = listing?.status === "draft" || listing?.status === "pending_review";
+  const isEditable =
+    listing?.status === "draft" ||
+    listing?.status === "pending_review" ||
+    listing?.status === "rejected";
   const isResubmittable = listing?.status === "draft" || listing?.status === "rejected";
   const isDeletable = listing?.status === "draft" || listing?.status === "rejected";
 
@@ -214,6 +217,9 @@ function ManageListingPage() {
     setSavingSuccess(null);
 
     const result = await resubmitOwnerListing(auth.profile?.id ?? null, listing.id, {
+      categoryId: categoryId || undefined,
+      subcategoryId: subcategoryId ?? null,
+      governorateId: governorateId || undefined,
       title: title.trim() || undefined,
       description: description.trim() || undefined,
       price: price ? Number(price) : null,
@@ -235,6 +241,9 @@ function ManageListingPage() {
     listing,
     isResubmittable,
     auth.profile?.id,
+    categoryId,
+    subcategoryId,
+    governorateId,
     title,
     description,
     price,
