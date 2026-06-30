@@ -14,6 +14,8 @@ import type {
   ClassifiedsError,
   ListingCondition,
 } from "@/lib/classifieds-types";
+import { categoryName, governorateName } from "@/lib/i18n";
+import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 import type { PriceType } from "@/types";
 
@@ -24,10 +26,9 @@ export const Route = createFileRoute("/add-listing")({
   component: AddListingPage,
 });
 
-const steps = ["القسم", "الصور", "التفاصيل", "التواصل", "المراجعة"];
-
 function AddListingPage() {
   const auth = useAuth();
+  const { language, text } = useUiPreferences();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
@@ -74,6 +75,13 @@ function AddListingPage() {
       ].filter(Boolean).length * 20,
     [categoryId, title, description, price, priceType, governorateId, district],
   );
+  const steps = [
+    text("القسم", "Category"),
+    text("الصور", "Photos"),
+    text("التفاصيل", "Details"),
+    text("التواصل", "Contact"),
+    text("المراجعة", "Review"),
+  ];
 
   useEffect(() => {
     let cancelled = false;
@@ -150,17 +158,23 @@ function AddListingPage() {
     setCreatedListingId(result.data.id);
     setSubmitMessage(
       imageErrors.length > 0
-        ? `تم إرسال الإعلان للمراجعة، لكن تعذر رفع بعض الصور: ${imageErrors[0]}`
-        : "تم إرسال الإعلان للمراجعة. لن يظهر للعموم قبل موافقة المالك/الإدارة.",
+        ? text(
+            `تم إرسال الإعلان للمراجعة، لكن تعذر رفع بعض الصور: ${imageErrors[0]}`,
+            `Listing sent for review, but some photos could not upload: ${imageErrors[0]}`,
+          )
+        : text(
+            "تم إرسال الإعلان للمراجعة. لن يظهر للعموم قبل موافقة المالك/الإدارة.",
+            "Listing sent for review. It will not be public until owner/admin approval.",
+          ),
     );
   }
 
   if (auth.status === "loading") {
     return (
       <PageState
-        title="أضف إعلاناً"
-        heading="جارٍ التحقق من الجلسة"
-        body="يتم التأكد من حالة تسجيل الدخول."
+        title={text("أضف إعلاناً", "Post a listing")}
+        heading={text("جارٍ التحقق من الجلسة", "Checking session")}
+        body={text("يتم التأكد من حالة تسجيل الدخول.", "Checking your sign-in status.")}
       />
     );
   }
@@ -168,10 +182,13 @@ function AddListingPage() {
   if (auth.status === "signedOut") {
     return (
       <PageState
-        title="أضف إعلاناً"
-        heading="تسجيل الدخول مطلوب"
-        body="لا يمكن إرسال إعلان حقيقي بدون حساب. سجّل الدخول ثم عد لإضافة الإعلان."
-        actionLabel="تسجيل الدخول"
+        title={text("أضف إعلاناً", "Post a listing")}
+        heading={text("تسجيل الدخول مطلوب", "Login required")}
+        body={text(
+          "لا يمكن إرسال إعلان حقيقي بدون حساب. سجّل الدخول ثم عد لإضافة الإعلان.",
+          "You cannot submit a real listing without an account. Log in, then return to post.",
+        )}
+        actionLabel={text("تسجيل الدخول", "Log in")}
         actionTo="/login"
       />
     );
@@ -180,9 +197,12 @@ function AddListingPage() {
   if (auth.status === "authUnavailable") {
     return (
       <PageState
-        title="أضف إعلاناً"
-        heading="إرسال الإعلانات قيد التفعيل"
-        body="يمكنك تصفح الواجهة حالياً، وسيتم تفعيل إرسال الإعلانات الحقيقية قريباً بعد اكتمال ربط الحسابات."
+        title={text("أضف إعلاناً", "Post a listing")}
+        heading={text("إرسال الإعلانات قيد التفعيل", "Listing submission is being activated")}
+        body={text(
+          "يمكنك تصفح الواجهة حالياً، وسيتم تفعيل إرسال الإعلانات الحقيقية قريباً بعد اكتمال ربط الحسابات.",
+          "You can browse the interface now. Real listing submission will be enabled after account integration is complete.",
+        )}
       />
     );
   }
@@ -190,16 +210,19 @@ function AddListingPage() {
   if (auth.profile?.accountStatus !== "active") {
     return (
       <PageState
-        title="أضف إعلاناً"
-        heading="الحساب غير جاهز للنشر"
-        body="يجب أن تكون حالة الحساب نشطة قبل إرسال إعلان حقيقي."
+        title={text("أضف إعلاناً", "Post a listing")}
+        heading={text("الحساب غير جاهز للنشر", "Account is not ready to publish")}
+        body={text(
+          "يجب أن تكون حالة الحساب نشطة قبل إرسال إعلان حقيقي.",
+          "Your account must be active before submitting a real listing.",
+        )}
       />
     );
   }
 
   return (
     <>
-      <PageHeader title="أضف إعلاناً" />
+      <PageHeader title={text("أضف إعلاناً", "Post a listing")} />
       <main className="container-wide pt-4 pb-8">
         <ol className="no-scrollbar mb-5 flex items-center gap-2 overflow-x-auto pb-2">
           {steps.map((label, index) => {
@@ -230,20 +253,25 @@ function AddListingPage() {
         </ol>
 
         {loading ? (
-          <Card title="جارٍ تحميل بيانات النشر">
+          <Card title={text("جارٍ تحميل بيانات النشر", "Loading posting data")}>
             <p className="text-sm text-muted-foreground">
-              يتم تجهيز الأقسام والمحافظات المتاحة للنشر.
+              {text(
+                "يتم تجهيز الأقسام والمحافظات المتاحة للنشر.",
+                "Preparing available categories and governorates.",
+              )}
             </p>
           </Card>
         ) : setupError ? (
-          <Card title="إرسال الإعلانات قيد التفعيل">
+          <Card
+            title={text("إرسال الإعلانات قيد التفعيل", "Listing submission is being activated")}
+          >
             <p className="text-sm text-muted-foreground">{setupError.message}</p>
           </Card>
         ) : (
           <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
             <div className="space-y-4">
               {step === 0 && (
-                <Card title="اختر القسم">
+                <Card title={text("اختر القسم", "Choose category")}>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {categories.map((item) => (
                       <button
@@ -255,7 +283,7 @@ function AddListingPage() {
                             : "bg-card hairline hover:bg-muted-surface"
                         }`}
                       >
-                        {item.nameAr}
+                        {categoryName(item.id, item.nameAr, language)}
                       </button>
                     ))}
                   </div>
@@ -263,11 +291,18 @@ function AddListingPage() {
               )}
 
               {step === 1 && (
-                <Card title="صور الإعلان">
+                <Card title={text("صور الإعلان", "Listing photos")}>
                   <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl bg-muted-surface p-6 text-center text-muted-foreground">
                     <Camera className="h-8 w-8" />
-                    <span className="mt-2 text-sm font-bold">اختر صور الإعلان</span>
-                    <span className="mt-1 text-[11px]">اختياري · حتى 6 صور · 5MB للصورة</span>
+                    <span className="mt-2 text-sm font-bold">
+                      {text("اختر صور الإعلان", "Choose listing photos")}
+                    </span>
+                    <span className="mt-1 text-[11px]">
+                      {text(
+                        "اختياري · حتى 6 صور · 5MB للصورة",
+                        "Optional · up to 6 photos · 5MB each",
+                      )}
+                    </span>
                     <input
                       type="file"
                       multiple
@@ -293,22 +328,24 @@ function AddListingPage() {
                     ))}
                   </div>
                   <p className="mt-3 text-[11px] text-muted-foreground">
-                    رفع الصور قيد التفعيل حالياً. إذا لم تكن الصور جاهزة بعد، يمكنك متابعة تجهيز
-                    الإعلان النصي وستظهر رسالة واضحة للصور فقط.
+                    {text(
+                      "رفع الصور قيد التفعيل حالياً. إذا لم تكن الصور جاهزة بعد، يمكنك متابعة تجهيز الإعلان النصي وستظهر رسالة واضحة للصور فقط.",
+                      "Photo uploads are still being activated. You can continue preparing the text listing, and any photo issue will be shown clearly.",
+                    )}
                   </p>
                 </Card>
               )}
 
               {step === 2 && (
-                <Card title="تفاصيل الإعلان">
-                  <Field label="عنوان الإعلان">
+                <Card title={text("تفاصيل الإعلان", "Listing details")}>
+                  <Field label={text("عنوان الإعلان", "Listing title")}>
                     <input
                       value={title}
                       onChange={(event) => setTitle(event.target.value)}
                       className="input"
                     />
                   </Field>
-                  <Field label="الوصف">
+                  <Field label={text("الوصف", "Description")}>
                     <textarea
                       value={description}
                       onChange={(event) => setDescription(event.target.value)}
@@ -317,7 +354,7 @@ function AddListingPage() {
                     />
                   </Field>
                   <div className="grid grid-cols-2 gap-3">
-                    <Field label="السعر">
+                    <Field label={text("السعر", "Price")}>
                       <input
                         value={price}
                         onChange={(event) => setPrice(event.target.value)}
@@ -325,22 +362,22 @@ function AddListingPage() {
                         className="input"
                       />
                     </Field>
-                    <Field label="نوع السعر">
+                    <Field label={text("نوع السعر", "Price type")}>
                       <select
                         value={priceType}
                         onChange={(event) => setPriceType(event.target.value as PriceType)}
                         className="input"
                       >
-                        <option value="fixed">ثابت</option>
-                        <option value="negotiable">قابل للتفاوض</option>
-                        <option value="contact">عند التواصل</option>
-                        <option value="free">مجاناً</option>
-                        <option value="exchange">للمبادلة</option>
+                        <option value="fixed">{text("ثابت", "Fixed")}</option>
+                        <option value="negotiable">{text("قابل للتفاوض", "Negotiable")}</option>
+                        <option value="contact">{text("عند التواصل", "On contact")}</option>
+                        <option value="free">{text("مجاناً", "Free")}</option>
+                        <option value="exchange">{text("للمبادلة", "Exchange")}</option>
                       </select>
                     </Field>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <Field label="المحافظة">
+                    <Field label={text("المحافظة", "Governorate")}>
                       <select
                         value={governorateId}
                         onChange={(event) => {
@@ -349,22 +386,22 @@ function AddListingPage() {
                         }}
                         className="input"
                       >
-                        <option value="">اختر</option>
+                        <option value="">{text("اختر", "Choose")}</option>
                         {governorates.map((item) => (
                           <option key={item.id} value={item.id}>
-                            {item.nameAr}
+                            {governorateName(item.id, item.nameAr, language)}
                           </option>
                         ))}
                       </select>
                     </Field>
-                    <Field label="المنطقة">
+                    <Field label={text("المنطقة", "District")}>
                       <select
                         value={district}
                         onChange={(event) => setDistrict(event.target.value)}
                         disabled={!governorate}
                         className="input disabled:opacity-50"
                       >
-                        <option value="">اختر</option>
+                        <option value="">{text("اختر", "Choose")}</option>
                         {governorate?.districtsAr.map((item) => (
                           <option key={item} value={item}>
                             {item}
@@ -373,25 +410,25 @@ function AddListingPage() {
                       </select>
                     </Field>
                   </div>
-                  <Field label="الحالة">
+                  <Field label={text("الحالة", "Condition")}>
                     <select
                       value={condition}
                       onChange={(event) => setCondition(event.target.value as ListingCondition)}
                       className="input"
                     >
-                      <option value="not_applicable">غير محدد</option>
-                      <option value="new">جديد</option>
-                      <option value="like_new">شبه جديد</option>
-                      <option value="used">مستعمل</option>
-                      <option value="for_parts">للقطع</option>
+                      <option value="not_applicable">{text("غير محدد", "Not specified")}</option>
+                      <option value="new">{text("جديد", "New")}</option>
+                      <option value="like_new">{text("شبه جديد", "Like new")}</option>
+                      <option value="used">{text("مستعمل", "Used")}</option>
+                      <option value="for_parts">{text("للقطع", "For parts")}</option>
                     </select>
                   </Field>
                 </Card>
               )}
 
               {step === 3 && (
-                <Card title="طريقة التواصل">
-                  <Field label="اسم التواصل">
+                <Card title={text("طريقة التواصل", "Contact method")}>
+                  <Field label={text("اسم التواصل", "Contact name")}>
                     <input
                       value={contactName}
                       onChange={(event) => setContactName(event.target.value)}
@@ -400,9 +437,13 @@ function AddListingPage() {
                   </Field>
                   <div className="space-y-2">
                     {[
-                      { key: "message", label: "رسائل داخل التطبيق", disabled: true },
-                      { key: "phone", label: "اتصال هاتفي", disabled: false },
-                      { key: "whatsapp", label: "واتساب", disabled: false },
+                      {
+                        key: "message",
+                        label: text("رسائل داخل التطبيق", "In-app messages"),
+                        disabled: true,
+                      },
+                      { key: "phone", label: text("اتصال هاتفي", "Phone call"), disabled: false },
+                      { key: "whatsapp", label: text("واتساب", "WhatsApp"), disabled: false },
                     ].map((item) => (
                       <label
                         key={item.key}
@@ -412,8 +453,11 @@ function AddListingPage() {
                           <div className="text-sm font-semibold">{item.label}</div>
                           <div className="text-[10px] text-muted-foreground">
                             {item.disabled
-                              ? "غير مفعّل حالياً"
-                              : "لن تظهر بيانات حساسة قبل تفعيل سياسات التواصل"}
+                              ? text("غير مفعّل حالياً", "Not enabled yet")
+                              : text(
+                                  "لن تظهر بيانات حساسة قبل تفعيل سياسات التواصل",
+                                  "Sensitive contact data will not appear before contact rules are enabled",
+                                )}
                           </div>
                         </div>
                         <input
@@ -431,18 +475,42 @@ function AddListingPage() {
               )}
 
               {step === 4 && (
-                <Card title="المراجعة قبل الإرسال">
+                <Card title={text("المراجعة قبل الإرسال", "Review before submission")}>
                   <div className="space-y-2 text-sm">
-                    <PreviewRow label="القسم" value={category?.nameAr ?? "—"} />
-                    <PreviewRow label="العنوان" value={title || "—"} />
-                    <PreviewRow label="المحافظة" value={governorate?.nameAr ?? "—"} />
-                    <PreviewRow label="المنطقة" value={district || "—"} />
-                    <PreviewRow label="الصور" value={`${selectedImages.length} صورة مختارة`} />
-                    <PreviewRow label="حالة النشر" value="سيُرسل كإعلان قيد المراجعة" />
+                    <PreviewRow
+                      label={text("القسم", "Category")}
+                      value={category ? categoryName(category.id, category.nameAr, language) : "—"}
+                    />
+                    <PreviewRow label={text("العنوان", "Title")} value={title || "—"} />
+                    <PreviewRow
+                      label={text("المحافظة", "Governorate")}
+                      value={
+                        governorate
+                          ? governorateName(governorate.id, governorate.nameAr, language)
+                          : "—"
+                      }
+                    />
+                    <PreviewRow label={text("المنطقة", "District")} value={district || "—"} />
+                    <PreviewRow
+                      label={text("الصور", "Photos")}
+                      value={text(
+                        `${selectedImages.length} صورة مختارة`,
+                        `${selectedImages.length} selected photos`,
+                      )}
+                    />
+                    <PreviewRow
+                      label={text("حالة النشر", "Publish status")}
+                      value={text(
+                        "سيُرسل كإعلان قيد المراجعة",
+                        "Will be submitted as pending review",
+                      )}
+                    />
                   </div>
                   <div className="mt-3 rounded-xl bg-emerald-trust/10 p-3 text-[11px] font-medium text-emerald-trust">
-                    لا يستطيع المستخدم العادي اعتماد الإعلان أو تعديل حقول المراجعة. الاعتماد يتم
-                    لاحقاً من لوحة المالك.
+                    {text(
+                      "لا يستطيع المستخدم العادي اعتماد الإعلان أو تعديل حقول المراجعة. الاعتماد يتم لاحقاً من لوحة المالك.",
+                      "Regular users cannot approve listings or edit review fields. Approval happens later from the owner dashboard.",
+                    )}
                   </div>
                 </Card>
               )}
@@ -453,7 +521,7 @@ function AddListingPage() {
                   onClick={() => setStep((value) => Math.max(0, value - 1))}
                   className="rounded-xl bg-card px-5 py-2.5 text-sm font-bold hairline disabled:opacity-40"
                 >
-                  السابق
+                  {text("السابق", "Back")}
                 </button>
                 {step < steps.length - 1 ? (
                   <button
@@ -461,7 +529,7 @@ function AddListingPage() {
                     onClick={() => setStep((value) => Math.min(steps.length - 1, value + 1))}
                     className="rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
                   >
-                    متابعة
+                    {text("متابعة", "Continue")}
                   </button>
                 ) : (
                   <button
@@ -469,7 +537,9 @@ function AddListingPage() {
                     onClick={() => void submitListing()}
                     className="rounded-xl bg-emerald-trust px-6 py-2.5 text-sm font-bold text-emerald-trust-foreground disabled:opacity-50"
                   >
-                    {submitting ? "جارٍ الإرسال..." : "إرسال للمراجعة"}
+                    {submitting
+                      ? text("جارٍ الإرسال...", "Submitting...")
+                      : text("إرسال للمراجعة", "Submit for review")}
                   </button>
                 )}
               </div>
@@ -485,13 +555,13 @@ function AddListingPage() {
                         }
                         className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
                       >
-                        عرض الإعلان
+                        {text("عرض الإعلان", "View listing")}
                       </button>
                       <Link
                         to="/profile"
                         className="rounded-xl bg-card px-3 py-2 text-xs font-bold hairline"
                       >
-                        إعلاناتي
+                        {text("إعلاناتي", "My listings")}
                       </Link>
                     </div>
                   )}
@@ -500,16 +570,19 @@ function AddListingPage() {
             </div>
 
             <aside className="space-y-3">
-              <Card title="جودة الإعلان">
+              <Card title={text("جودة الإعلان", "Listing quality")}>
                 <div className="text-2xl font-extrabold text-foreground">{score}%</div>
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted-surface">
                   <div className="h-full bg-gold transition-all" style={{ width: `${score}%` }} />
                 </div>
               </Card>
-              <Card title="تنبيه">
+              <Card title={text("تنبيه", "Note")}>
                 <p className="flex items-start gap-2 text-xs text-foreground/80">
                   <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold" />
-                  الصور اختيارية وقيد التفعيل. الرسائل والدفع غير مفعّلة حالياً.
+                  {text(
+                    "الصور اختيارية وقيد التفعيل. الرسائل والدفع غير مفعّلة حالياً.",
+                    "Photos are optional and still being activated. Messaging and payment are not enabled yet.",
+                  )}
                 </p>
               </Card>
             </aside>

@@ -2,8 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { Heart, MapPin, Clock, BadgeCheck, Star } from "lucide-react";
 import type { Listing } from "@/types";
 import { PlaceholderArt } from "./PlaceholderArt";
-import { priceLabel } from "@/utils/format";
 import { useState } from "react";
+import { categoryName, formatPriceLocalized } from "@/lib/i18n";
+import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface Props {
   listing: Listing;
@@ -12,6 +13,9 @@ interface Props {
 
 export function ListingCard({ listing, variant = "vertical" }: Props) {
   const [fav, setFav] = useState(false);
+  const { language, text } = useUiPreferences();
+  const price = formatPriceLocalized(listing.price, listing.priceType, language, listing.currency);
+  const category = categoryName(listing.categoryId, listing.categoryName, language);
 
   if (variant === "horizontal") {
     return (
@@ -24,7 +28,7 @@ export function ListingCard({ listing, variant = "vertical" }: Props) {
           <PlaceholderArt type={listing.placeholderType} aspect="wide" />
           {listing.isFeatured && (
             <span className="absolute top-2 start-2 rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">
-              مميز
+              {text("مميز", "Featured")}
             </span>
           )}
           <FavBtn
@@ -37,9 +41,7 @@ export function ListingCard({ listing, variant = "vertical" }: Props) {
         </div>
         <div className="space-y-1.5 p-3">
           <h3 className="line-clamp-2 text-sm font-bold text-foreground">{listing.title}</h3>
-          <div className="text-base font-extrabold text-foreground">
-            {priceLabel(listing.price, listing.priceType)}
-          </div>
+          <div className="text-base font-extrabold text-foreground">{price}</div>
           <MetaRow listing={listing} />
         </div>
       </Link>
@@ -58,9 +60,7 @@ export function ListingCard({ listing, variant = "vertical" }: Props) {
         </div>
         <div className="min-w-0 flex-1 space-y-1">
           <h3 className="line-clamp-2 text-sm font-bold text-foreground">{listing.title}</h3>
-          <div className="text-sm font-extrabold">
-            {priceLabel(listing.price, listing.priceType)}
-          </div>
+          <div className="text-sm font-extrabold">{price}</div>
           <MetaRow listing={listing} small />
         </div>
       </Link>
@@ -78,12 +78,12 @@ export function ListingCard({ listing, variant = "vertical" }: Props) {
         <div className="absolute top-2 start-2 flex flex-wrap gap-1">
           {listing.isFeatured && (
             <span className="rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">
-              مميز
+              {text("مميز", "Featured")}
             </span>
           )}
           {listing.isVerifiedSeller && (
             <span className="inline-flex items-center gap-1 rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold text-emerald-trust-foreground">
-              <BadgeCheck className="h-3 w-3" /> بائع موثّق
+              <BadgeCheck className="h-3 w-3" /> {text("بائع موثّق", "Verified seller")}
             </span>
           )}
         </div>
@@ -95,16 +95,14 @@ export function ListingCard({ listing, variant = "vertical" }: Props) {
           }}
         />
         <span className="absolute bottom-2 end-2 rounded-md bg-primary/85 px-2 py-0.5 text-[11px] font-medium text-primary-foreground">
-          {listing.categoryName}
+          {category}
         </span>
       </div>
       <div className="space-y-1.5 p-3">
         <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-foreground">
           {listing.title}
         </h3>
-        <div className="text-lg font-extrabold text-foreground">
-          {priceLabel(listing.price, listing.priceType)}
-        </div>
+        <div className="text-lg font-extrabold text-foreground">{price}</div>
         <MetaRow listing={listing} />
       </div>
     </Link>
@@ -112,10 +110,12 @@ export function ListingCard({ listing, variant = "vertical" }: Props) {
 }
 
 function FavBtn({ fav, onClick }: { fav: boolean; onClick: (e: React.MouseEvent) => void }) {
+  const { text } = useUiPreferences();
+
   return (
     <button
       onClick={onClick}
-      aria-label="حفظ"
+      aria-label={text("حفظ", "Save")}
       className="absolute top-2 end-2 grid h-8 w-8 place-items-center rounded-full bg-card/90 backdrop-blur transition hover:bg-card"
     >
       <Heart
@@ -126,6 +126,8 @@ function FavBtn({ fav, onClick }: { fav: boolean; onClick: (e: React.MouseEvent)
 }
 
 function MetaRow({ listing, small }: { listing: Listing; small?: boolean }) {
+  const { text } = useUiPreferences();
+
   return (
     <div
       className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${small ? "text-[11px]" : "text-xs"} text-muted-foreground`}
@@ -134,7 +136,7 @@ function MetaRow({ listing, small }: { listing: Listing; small?: boolean }) {
         <MapPin className="h-3 w-3" /> {listing.governorate} · {listing.district}
       </span>
       <span className="inline-flex items-center gap-1">
-        <Clock className="h-3 w-3" /> {listing.timeSincePosted}
+        <Clock className="h-3 w-3" /> {text(listing.timeSincePosted, "Recently")}
       </span>
       {listing.isVerifiedSeller && !small && (
         <span className="inline-flex items-center gap-1 text-emerald-trust">

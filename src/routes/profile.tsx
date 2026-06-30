@@ -27,6 +27,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { demoNotice } from "@/data/adminMockData";
 import { fetchCurrentUserListings } from "@/lib/classifieds-api";
 import type { ClassifiedListing, ClassifiedsError, ListingStatus } from "@/lib/classifieds-types";
+import { categoryName, governorateName } from "@/lib/i18n";
+import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/profile")({
@@ -75,22 +77,35 @@ const settings = [
 
 function ProfilePage() {
   const auth = useAuth();
+  const { language, text } = useUiPreferences();
   const [logoutError, setLogoutError] = useState("");
   const [myListings, setMyListings] = useState<ClassifiedListing[]>([]);
   const [myListingsError, setMyListingsError] = useState<ClassifiedsError | null>(null);
   const [myListingsLoading, setMyListingsLoading] = useState(false);
   const profileId = auth.profile?.id;
-  const displayName = auth.profile?.displayName || auth.profile?.email || "زائر";
+  const displayName = auth.profile?.displayName || auth.profile?.email || text("زائر", "Guest");
   const authNote =
     auth.status === "authUnavailable"
-      ? "الحسابات قيد التفعيل حالياً — يبقى رَوَاج متاحاً للتصفح كواجهة بيتا."
+      ? text(
+          "الحسابات قيد التفعيل حالياً — يبقى رَوَاج متاحاً للتصفح كواجهة بيتا.",
+          "Accounts are being activated - RAWAJ remains browsable as a beta interface.",
+        )
       : auth.status === "loading"
-        ? "جاري تحميل جلسة الحساب."
+        ? text("جاري تحميل جلسة الحساب.", "Loading account session.")
         : auth.status === "authError"
-          ? "حدث خطأ أثناء قراءة بيانات الحساب أو الصلاحيات."
+          ? text(
+              "حدث خطأ أثناء قراءة بيانات الحساب أو الصلاحيات.",
+              "Could not read account or permission data.",
+            )
           : auth.status === "signedIn"
-            ? "تم تحميل جلسة الحساب. الصلاحيات تظهر فقط إذا كانت محفوظة في جدول الأدوار."
-            : "أنت غير مسجل الدخول حالياً. صلاحيات الإدارة تظهر فقط بعد تسجيل الدخول وقراءة الدور من جدول الأدوار.";
+            ? text(
+                "تم تحميل جلسة الحساب. الصلاحيات تظهر فقط إذا كانت محفوظة في جدول الأدوار.",
+                "Account session loaded. Permissions appear only when stored in the role table.",
+              )
+            : text(
+                "أنت غير مسجل الدخول حالياً. صلاحيات الإدارة تظهر فقط بعد تسجيل الدخول وقراءة الدور من جدول الأدوار.",
+                "You are not logged in. Admin permissions appear only after login and role-table lookup.",
+              );
 
   async function handleLogout() {
     setLogoutError("");
@@ -130,7 +145,7 @@ function ProfilePage() {
 
   return (
     <>
-      <PageHeader title="حسابي" back={false} />
+      <PageHeader title={text("حسابي", "My account")} back={false} />
       <main className="container-wide pt-4 pb-10 space-y-5">
         <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-premium">
           <div className="flex items-center gap-3">
@@ -148,7 +163,7 @@ function ProfilePage() {
                 onClick={handleLogout}
                 className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary-foreground/10 px-3 py-2 text-xs font-bold"
               >
-                <LogOut className="h-4 w-4" /> تسجيل الخروج
+                <LogOut className="h-4 w-4" /> {text("تسجيل الخروج", "Log out")}
               </button>
               {logoutError && <p className="mt-2 text-xs text-gold">{logoutError}</p>}
             </div>
@@ -158,13 +173,14 @@ function ProfilePage() {
                 to="/login"
                 className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gold px-3 py-2 text-xs font-bold text-gold-foreground"
               >
-                <LogIn className="h-4 w-4" /> تسجيل الدخول
+                <LogIn className="h-4 w-4" /> {text("تسجيل الدخول", "Log in")}
               </Link>
               <button
                 disabled
                 className="inline-flex cursor-not-allowed items-center justify-center gap-1.5 rounded-xl bg-primary-foreground/10 px-3 py-2 text-xs font-bold opacity-70"
               >
-                <UserPlus className="h-4 w-4" /> إنشاء حساب · لاحقاً
+                <UserPlus className="h-4 w-4" />{" "}
+                {text("إنشاء حساب · لاحقاً", "Create account · later")}
               </button>
             </div>
           )}
@@ -172,7 +188,9 @@ function ProfilePage() {
 
         <section className="rounded-2xl bg-card p-4 hairline">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-extrabold">مستويات الحساب في RAWAJ</h3>
+            <h3 className="text-sm font-extrabold">
+              {text("مستويات الحساب في RAWAJ", "RAWAJ account levels")}
+            </h3>
             <span className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground">
               {demoNotice}
             </span>
@@ -180,8 +198,8 @@ function ProfilePage() {
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {accountLevels.map(([level, note]) => (
               <div key={level} className="rounded-xl bg-muted-surface p-3">
-                <div className="text-sm font-extrabold">{level}</div>
-                <p className="mt-1 text-xs text-muted-foreground">{note}</p>
+                <div className="text-sm font-extrabold">{profileText(level, language)}</div>
+                <p className="mt-1 text-xs text-muted-foreground">{profileText(note, language)}</p>
               </div>
             ))}
           </div>
@@ -190,22 +208,30 @@ function ProfilePage() {
         <section className="rounded-2xl bg-warning/10 p-4 hairline">
           <h3 className="mb-2 flex items-center gap-2 text-sm font-extrabold">
             <UserCog className="h-4 w-4 text-warning" />
-            لوحة الإدارة
+            {text("لوحة الإدارة", "Admin dashboard")}
           </h3>
           <p className="text-xs text-foreground/90">
-            لوحة الإدارة — تظهر فقط للحسابات المخوّلة لاحقاً. لا يتم منح أي مستخدم صلاحيات من
-            الواجهة؛ الصلاحيات يجب أن تأتي من role محفوظ في قاعدة البيانات.
+            {text(
+              "لوحة الإدارة — تظهر فقط للحسابات المخوّلة لاحقاً. لا يتم منح أي مستخدم صلاحيات من الواجهة؛ الصلاحيات يجب أن تأتي من role محفوظ في قاعدة البيانات.",
+              "The admin dashboard appears only for authorized accounts. No user receives permissions from the frontend; permissions must come from a role stored in the database.",
+            )}
           </p>
           {auth.status === "authUnavailable" && (
             <p className="mt-2 rounded-xl bg-card p-2 text-[11px] text-muted-foreground hairline">
-              الحسابات قيد التفعيل حالياً، لذلك تبقى لوحة الإدارة واجهة تمهيدية فقط حتى اكتمال الربط
-              التشغيلي.
+              {text(
+                "الحسابات قيد التفعيل حالياً، لذلك تبقى لوحة الإدارة واجهة تمهيدية فقط حتى اكتمال الربط التشغيلي.",
+                "Accounts are being activated, so the admin area remains a preparatory interface until operational integration is complete.",
+              )}
             </p>
           )}
           {auth.status === "signedIn" && (
             <p className="mt-2 rounded-xl bg-card p-2 text-[11px] text-muted-foreground hairline">
-              الدور الحالي من جدول الأدوار: {auth.profile?.role ?? "غير محدد"} · الوصول الإداري:{" "}
-              {auth.canAccessAdmin ? "مسموح حسب الدور" : "غير مسموح"}
+              {text("الدور الحالي من جدول الأدوار:", "Current role from role table:")}{" "}
+              {auth.profile?.role ?? text("غير محدد", "Not set")} ·{" "}
+              {text("الوصول الإداري:", "Admin access:")}{" "}
+              {auth.canAccessAdmin
+                ? text("مسموح حسب الدور", "Allowed by role")
+                : text("غير مسموح", "Not allowed")}
             </p>
           )}
           {auth.canAccessOwnerControls && (
@@ -213,14 +239,14 @@ function ProfilePage() {
               to="/admin"
               className="mt-3 inline-flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-xs font-bold hairline"
             >
-              عرض لوحة المالك
+              {text("عرض لوحة المالك", "Open owner dashboard")}
               <ChevronLeft className="h-4 w-4" />
             </Link>
           )}
         </section>
 
         <section>
-          <h3 className="mb-2 text-sm font-extrabold">قائمة الحساب</h3>
+          <h3 className="mb-2 text-sm font-extrabold">{text("قائمة الحساب", "Account menu")}</h3>
           <nav className="overflow-hidden rounded-2xl bg-card hairline">
             {accountMenu
               .filter((it) => it.to !== "/admin" || auth.canAccessOwnerControls)
@@ -233,10 +259,12 @@ function ProfilePage() {
                   <span className="grid h-9 w-9 place-items-center rounded-xl bg-muted-surface text-primary">
                     <it.icon className="h-4 w-4" />
                   </span>
-                  <span className="flex-1 text-sm font-semibold">{it.label}</span>
+                  <span className="flex-1 text-sm font-semibold">
+                    {profileText(it.label, language)}
+                  </span>
                   {it.badge && (
                     <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-                      {it.badge}
+                      {profileText(it.badge, language)}
                     </span>
                   )}
                   <ChevronLeft className="h-4 w-4 text-muted-foreground" />
@@ -248,17 +276,27 @@ function ProfilePage() {
         {auth.status === "signedIn" && (
           <section className="rounded-2xl bg-card p-4 hairline">
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h3 className="text-sm font-extrabold">إعلاناتي</h3>
+              <h3 className="text-sm font-extrabold">{text("إعلاناتي", "My listings")}</h3>
               <Link to="/add-listing" className="text-xs font-bold text-primary">
-                إضافة إعلان
+                {text("إضافة إعلان", "Post listing")}
               </Link>
             </div>
             {myListingsLoading ? (
-              <p className="text-xs text-muted-foreground">جارٍ تحميل إعلاناتك المرتبطة بالحساب.</p>
+              <p className="text-xs text-muted-foreground">
+                {text(
+                  "جارٍ تحميل إعلاناتك المرتبطة بالحساب.",
+                  "Loading listings linked to your account.",
+                )}
+              </p>
             ) : myListingsError ? (
               <p className="text-xs text-muted-foreground">{myListingsError.message}</p>
             ) : myListings.length === 0 ? (
-              <p className="text-xs text-muted-foreground">لا توجد إعلانات مرتبطة بحسابك حالياً.</p>
+              <p className="text-xs text-muted-foreground">
+                {text(
+                  "لا توجد إعلانات مرتبطة بحسابك حالياً.",
+                  "No listings are linked to your account yet.",
+                )}
+              </p>
             ) : (
               <div className="space-y-2">
                 {myListings.slice(0, 8).map((listing) => (
@@ -271,12 +309,21 @@ function ProfilePage() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-sm font-bold">{listing.title}</span>
                       <span className="rounded-md bg-card px-2 py-0.5 text-[10px] font-bold hairline">
-                        {statusLabel(listing.status)}
+                        {statusLabel(listing.status, language)}
                       </span>
                     </div>
                     <p className="mt-1 text-[11px] text-muted-foreground">
-                      {listing.categoryNameAr ?? "قسم غير محدد"} ·{" "}
-                      {listing.governorateNameAr ?? "سوريا"}
+                      {categoryName(
+                        listing.categoryId,
+                        listing.categoryNameAr ?? undefined,
+                        language,
+                      )}{" "}
+                      ·{" "}
+                      {governorateName(
+                        listing.governorateId,
+                        listing.governorateNameAr ?? undefined,
+                        language,
+                      )}
                     </p>
                   </Link>
                 ))}
@@ -287,8 +334,10 @@ function ProfilePage() {
 
         <section>
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-sm font-extrabold">إعدادات الحساب</h3>
-            <span className="text-[10px] text-muted-foreground">جميع الخيارات قريباً</span>
+            <h3 className="text-sm font-extrabold">{text("إعدادات الحساب", "Account settings")}</h3>
+            <span className="text-[10px] text-muted-foreground">
+              {text("جميع الخيارات قريباً", "All options coming soon")}
+            </span>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {settings.map(([label, Icon]) => (
@@ -299,10 +348,10 @@ function ProfilePage() {
               >
                 <span className="inline-flex items-center gap-2 text-sm font-bold">
                   <Icon className="h-4 w-4 text-primary" />
-                  {label as string}
+                  {profileText(label as string, language)}
                 </span>
                 <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-                  قريباً
+                  {text("قريباً", "Soon")}
                 </span>
               </button>
             ))}
@@ -312,17 +361,19 @@ function ProfilePage() {
         <section className="rounded-2xl bg-card-warm p-4 hairline">
           <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-extrabold">
             <BadgeCheck className="h-4 w-4 text-emerald-trust" />
-            توثيق الحساب
+            {text("توثيق الحساب", "Account verification")}
           </h3>
           <p className="text-xs text-muted-foreground">
-            التوثيق وميزات المتاجر وإدارة المشرفين غير مفعّلة حالياً. سيتم ربطها لاحقاً بالحسابات،
-            الحسابات والصلاحيات وقيود الأمان التشغيلية.
+            {text(
+              "التوثيق وميزات المتاجر وإدارة المشرفين غير مفعّلة حالياً. سيتم ربطها لاحقاً بالحسابات، الحسابات والصلاحيات وقيود الأمان التشغيلية.",
+              "Verification, store features, and moderator management are not enabled yet. They will be connected later to accounts, permissions, and operational safety controls.",
+            )}
           </p>
           <button
             disabled
             className="mt-3 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold text-muted-foreground cursor-not-allowed"
           >
-            طلب التوثيق · قريباً
+            {text("طلب التوثيق · قريباً", "Request verification · soon")}
           </button>
         </section>
       </main>
@@ -330,21 +381,64 @@ function ProfilePage() {
   );
 }
 
-function statusLabel(status: ListingStatus) {
+function statusLabel(status: ListingStatus, language: Language) {
   switch (status) {
     case "draft":
-      return "مسودة";
+      return language === "ar" ? "مسودة" : "Draft";
     case "pending_review":
-      return "قيد المراجعة";
+      return language === "ar" ? "قيد المراجعة" : "Pending review";
     case "approved":
-      return "معتمد";
+      return language === "ar" ? "معتمد" : "Approved";
     case "rejected":
-      return "مرفوض";
+      return language === "ar" ? "مرفوض" : "Rejected";
     case "archived":
-      return "مؤرشف";
+      return language === "ar" ? "مؤرشف" : "Archived";
     case "expired":
-      return "منتهي";
+      return language === "ar" ? "منتهي" : "Expired";
     default:
       return status;
   }
+}
+
+function profileText(value: string | undefined, language: Language) {
+  if (!value || language === "ar") return value ?? "";
+  const labels: Record<string, string> = {
+    إعلاناتي: "My listings",
+    "إضافة إعلان": "Post listing",
+    المفضلة: "Favorites",
+    "عمليات البحث المحفوظة": "Saved searches",
+    الرسائل: "Chats",
+    "الترويج والتمييز": "Promotion and featuring",
+    "لوحة الإدارة — تظهر فقط للحسابات المخوّلة لاحقاً":
+      "Admin dashboard - only for authorized accounts later",
+    "الدعم والمساعدة": "Support and help",
+    "نصائح الأمان": "Safety tips",
+    "شروط الاستخدام": "Terms of use",
+    "سياسة الخصوصية": "Privacy policy",
+    قريباً: "Soon",
+    "نموذج تجريبي": "Demo",
+    "مستخدم عادي": "Regular user",
+    "تصفح وحفظ وإضافة إعلانات لاحقاً": "Browse, save, and post listings later",
+    بائع: "Seller",
+    "حساب يملك إعلانات منشورة": "Account with published listings",
+    "بائع موثّق": "Verified seller",
+    "توثيق تجريبي يحتاج ربطاً تشغيلياً لاحقاً":
+      "Demo verification that needs operational integration later",
+    متجر: "Store",
+    "واجهة بائع تجارية ضمن سوريا": "Commercial seller profile within Syria",
+    "نشاط تجاري": "Business account",
+    "حساب أعمال قيد التجهيز": "Business account in preparation",
+    مشرف: "Moderator",
+    "صلاحيات إدارية يحددها المالك لاحقاً": "Admin permissions defined by the owner later",
+    "مالك المنصة": "Platform owner",
+    "أعلى مستوى صلاحيات في RAWAJ": "Highest RAWAJ permission level",
+    "المعلومات الشخصية": "Personal information",
+    "بيانات التواصل": "Contact details",
+    الخصوصية: "Privacy",
+    الإشعارات: "Notifications",
+    "إعدادات البائع/المتجر": "Seller/store settings",
+    "توثيق الحساب": "Account verification",
+    "إعدادات الحساب": "Account settings",
+  };
+  return labels[value] ?? value;
 }

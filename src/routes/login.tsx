@@ -3,6 +3,7 @@ import { Lock, LogIn, ShieldCheck } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
+import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/login")({
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const auth = useAuth();
+  const { text } = useUiPreferences();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,7 +28,12 @@ function LoginPage() {
 
     const client = supabase;
     if (!client) {
-      setError("الحسابات قيد التفعيل حالياً. التصفح العام متاح، وسيتم تفعيل الدخول قريباً.");
+      setError(
+        text(
+          "الحسابات قيد التفعيل حالياً. التصفح العام متاح، وسيتم تفعيل الدخول قريباً.",
+          "Accounts are being activated. Public browsing is available, and login will be enabled soon.",
+        ),
+      );
       return;
     }
 
@@ -38,17 +45,17 @@ function LoginPage() {
     setSubmitting(false);
 
     if (error) {
-      setError("خطأ في البريد أو كلمة المرور");
+      setError(text("خطأ في البريد أو كلمة المرور", "Incorrect email or password"));
       return;
     }
 
-    setMessage("تم تسجيل الدخول");
+    setMessage(text("تم تسجيل الدخول", "Logged in"));
     navigate({ to: "/profile" });
   }
 
   return (
     <>
-      <PageHeader title="تسجيل الدخول" />
+      <PageHeader title={text("تسجيل الدخول", "Log in")} />
       <main className="container-wide pt-4 pb-10">
         <section className="mx-auto max-w-md rounded-2xl bg-card p-5 hairline shadow-soft">
           <div className="mb-4 flex items-start gap-3">
@@ -56,10 +63,12 @@ function LoginPage() {
               <Lock className="h-5 w-5 text-gold" />
             </span>
             <div>
-              <h1 className="text-base font-extrabold">دخول الحساب</h1>
+              <h1 className="text-base font-extrabold">{text("دخول الحساب", "Account login")}</h1>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                استخدم بريدك وكلمة المرور عند تفعيل الحسابات. إنشاء الحساب من الواجهة غير متاح
-                حالياً.
+                {text(
+                  "استخدم بريدك وكلمة المرور عند تفعيل الحسابات. إنشاء الحساب من الواجهة غير متاح حالياً.",
+                  "Use your email and password when accounts are enabled. In-app signup is not available yet.",
+                )}
               </p>
             </div>
           </div>
@@ -67,13 +76,16 @@ function LoginPage() {
           {auth.status === "authUnavailable" ? (
             <div className="rounded-xl bg-warning/10 p-3 text-xs text-foreground/90 hairline">
               {auth.reason ??
-                "الحسابات قيد التفعيل حالياً. التصفح العام متاح، وسيتم تفعيل الدخول قريباً."}
+                text(
+                  "الحسابات قيد التفعيل حالياً. التصفح العام متاح، وسيتم تفعيل الدخول قريباً.",
+                  "Accounts are being activated. Public browsing is available, and login will be enabled soon.",
+                )}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
               <label className="block">
                 <span className="mb-1 block text-xs font-bold text-muted-foreground">
-                  البريد الإلكتروني
+                  {text("البريد الإلكتروني", "Email")}
                 </span>
                 <input
                   value={email}
@@ -87,7 +99,7 @@ function LoginPage() {
 
               <label className="block">
                 <span className="mb-1 block text-xs font-bold text-muted-foreground">
-                  كلمة المرور
+                  {text("كلمة المرور", "Password")}
                 </span>
                 <input
                   value={password}
@@ -101,7 +113,7 @@ function LoginPage() {
 
               {submitting && (
                 <p className="rounded-xl bg-muted-surface p-2 text-xs font-bold text-muted-foreground">
-                  جارٍ تسجيل الدخول
+                  {text("جارٍ تسجيل الدخول", "Logging in")}
                 </p>
               )}
               {message && (
@@ -116,7 +128,7 @@ function LoginPage() {
               )}
               {auth.status === "authError" && (
                 <p className="rounded-xl bg-warning/10 p-2 text-xs font-bold text-warning">
-                  الحساب غير جاهز أو غير مصرح
+                  {text("الحساب غير جاهز أو غير مصرح", "Account is not ready or not authorized")}
                 </p>
               )}
 
@@ -126,19 +138,21 @@ function LoginPage() {
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"
               >
                 <LogIn className="h-4 w-4" />
-                تسجيل الدخول
+                {text("تسجيل الدخول", "Log in")}
               </button>
             </form>
           )}
 
           <div className="mt-4 rounded-xl bg-muted-surface p-3 text-[11px] leading-6 text-muted-foreground">
             <ShieldCheck className="me-1 inline h-3.5 w-3.5 text-emerald-trust" />
-            صلاحيات المالك والمشرفين تُقرأ من جدول الأدوار فقط، ولا تُمنح من الواجهة أو من البريد
-            داخل المتصفح.
+            {text(
+              "صلاحيات المالك والمشرفين تُقرأ من جدول الأدوار فقط، ولا تُمنح من الواجهة أو من البريد داخل المتصفح.",
+              "Owner and moderator permissions are read only from role tables, not granted in the frontend or by browser email checks.",
+            )}
           </div>
 
           <Link to="/" className="mt-4 inline-flex text-xs font-bold text-primary">
-            العودة للرئيسية
+            {text("العودة للرئيسية", "Back to home")}
           </Link>
         </section>
       </main>

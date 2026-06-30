@@ -15,7 +15,8 @@ import type {
   ClassifiedListing,
   ClassifiedsError,
 } from "@/lib/classifieds-types";
-import { priceLabel } from "@/utils/format";
+import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import { useUiPreferences } from "@/lib/ui-preferences";
 
 const searchSchema = z.object({
   category: z.string().optional(),
@@ -37,6 +38,7 @@ export const Route = createFileRoute("/listings/")({
 
 function ListingsPage() {
   const search = Route.useSearch();
+  const { language, text } = useUiPreferences();
   const [sort, setSort] = useState<"latest" | "cheapest" | "expensive" | "featured">(
     search.sort ?? "latest",
   );
@@ -136,12 +138,14 @@ function ListingsPage() {
     };
   }, [categories.length, governorates.length, selectedCategory?.id, govId, q, sort]);
 
-  const title = selectedCategory ? selectedCategory.nameAr : "كل الإعلانات";
+  const title = selectedCategory
+    ? categoryName(selectedCategory.id, selectedCategory.nameAr, language)
+    : text("كل الإعلانات", "All listings");
   const sortChips = [
-    { id: "latest", label: "الأحدث" },
-    { id: "cheapest", label: "الأرخص" },
-    { id: "expensive", label: "الأعلى سعراً" },
-    { id: "featured", label: "المميز" },
+    { id: "latest", label: text("الأحدث", "Latest") },
+    { id: "cheapest", label: text("الأرخص", "Lowest price") },
+    { id: "expensive", label: text("الأعلى سعراً", "Highest price") },
+    { id: "featured", label: text("المميز", "Featured") },
   ] as const;
 
   return (
@@ -154,7 +158,7 @@ function ListingsPage() {
             <input
               value={q}
               onChange={(event) => setQ(event.target.value)}
-              placeholder="ابحث ضمن الإعلانات المعتمدة..."
+              placeholder={text("ابحث ضمن الإعلانات المعتمدة...", "Search approved listings...")}
               className="w-full bg-transparent text-sm outline-none"
             />
           </div>
@@ -162,7 +166,10 @@ function ListingsPage() {
             onClick={() => setOpen((value) => !value)}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground"
           >
-            <MapPin className="h-4 w-4 text-gold" /> {selectedGovernorate?.nameAr ?? "كل سوريا"}
+            <MapPin className="h-4 w-4 text-gold" />{" "}
+            {selectedGovernorate
+              ? governorateName(selectedGovernorate.id, selectedGovernorate.nameAr, language)
+              : text("كل سوريا", "All Syria")}
           </button>
         </div>
 
@@ -171,7 +178,7 @@ function ListingsPage() {
             <div className="flex flex-wrap gap-2">
               <GovernorateChip
                 active={!govId}
-                label="كل سوريا"
+                label={text("كل سوريا", "All Syria")}
                 onClick={() => {
                   setGovId("");
                   setOpen(false);
@@ -181,7 +188,7 @@ function ListingsPage() {
                 <GovernorateChip
                   key={governorate.id}
                   active={govId === governorate.id}
-                  label={governorate.nameAr}
+                  label={governorateName(governorate.id, governorate.nameAr, language)}
                   onClick={() => {
                     setGovId(governorate.id);
                     setOpen(false);
@@ -208,18 +215,23 @@ function ListingsPage() {
           ))}
           <button
             disabled
-            title="قريباً"
+            title={text("قريباً", "Coming soon")}
             className="inline-flex shrink-0 cursor-not-allowed items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground hairline opacity-70"
           >
-            <SlidersHorizontal className="h-3.5 w-3.5" /> فلاتر أخرى · قريباً
+            <SlidersHorizontal className="h-3.5 w-3.5" />{" "}
+            {text("فلاتر أخرى · قريباً", "More filters · soon")}
           </button>
         </div>
 
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-          <span>{loading ? "جارٍ تحميل الإعلانات..." : `${items.length} إعلان معتمد`}</span>
+          <span>
+            {loading
+              ? text("جارٍ تحميل الإعلانات...", "Loading listings...")
+              : text(`${items.length} إعلان معتمد`, `${items.length} approved listings`)}
+          </span>
           {selectedCategory && (
             <Link to="/listings" className="font-semibold text-primary">
-              مسح الفلتر
+              {text("مسح الفلتر", "Clear filter")}
             </Link>
           )}
         </div>
@@ -229,43 +241,52 @@ function ListingsPage() {
             to="/categories"
             className="rounded-full bg-card px-3 py-1.5 text-xs font-bold text-foreground hairline"
           >
-            تصفح الأقسام
+            {text("تصفح الأقسام", "Browse categories")}
           </Link>
           {(q || govId || selectedCategory) && (
             <Link
               to="/listings"
               className="rounded-full bg-muted-surface px-3 py-1.5 text-xs font-bold text-muted-foreground"
             >
-              إعادة ضبط الفلاتر
+              {text("إعادة ضبط الفلاتر", "Reset filters")}
             </Link>
           )}
         </div>
 
         {loading ? (
           <StateCard
-            title="جارٍ تحميل الإعلانات"
-            body="نبحث عن الإعلانات المعتمدة المتاحة للتصفح داخل سوريا."
+            title={text("جارٍ تحميل الإعلانات", "Loading listings")}
+            body={text(
+              "نبحث عن الإعلانات المعتمدة المتاحة للتصفح داخل سوريا.",
+              "Looking for approved listings available across Syria.",
+            )}
           />
         ) : error ? (
           <StateCard
             title={
               error.code === "schema_missing" || error.code === "supabase_unconfigured"
-                ? "الإعلانات الحقيقية قيد التفعيل"
-                : "تعذر تحميل الإعلانات"
+                ? text("الإعلانات الحقيقية قيد التفعيل", "Real listings are being activated")
+                : text("تعذر تحميل الإعلانات", "Could not load listings")
             }
             body={
               error.code === "schema_missing" || error.code === "supabase_unconfigured"
-                ? "ستظهر الإعلانات هنا بعد اكتمال الربط التشغيلي. يمكنك حالياً تصفح بنية رَوَاج وتجهيز إعلانك."
+                ? text(
+                    "ستظهر الإعلانات هنا بعد اكتمال الربط التشغيلي. يمكنك حالياً تصفح بنية رَوَاج وتجهيز إعلانك.",
+                    "Real listings will appear here after the operational connection is complete. For now, you can browse RAWAJ's structure and prepare your listing.",
+                  )
                 : error.message
             }
-            actionLabel="العودة للرئيسية"
+            actionLabel={text("العودة للرئيسية", "Back to home")}
             actionTo="/"
           />
         ) : items.length === 0 ? (
           <StateCard
-            title="لا توجد إعلانات مطابقة حالياً"
-            body="كن أول من يضيف إعلاناً في هذا القسم. تظهر هنا الإعلانات المعتمدة فقط بعد المراجعة."
-            actionLabel="أضف إعلانك"
+            title={text("لا توجد إعلانات مطابقة حالياً", "No matching listings yet")}
+            body={text(
+              "كن أول من يضيف إعلاناً في هذا القسم. تظهر هنا الإعلانات المعتمدة فقط بعد المراجعة.",
+              "Be the first to post in this category. Only approved listings appear here after review.",
+            )}
+            actionLabel={text("أضف إعلانك", "Post your listing")}
             actionTo="/add-listing"
           />
         ) : (
@@ -304,6 +325,8 @@ function GovernorateChip({
 }
 
 function RealListingCard({ listing }: { listing: ClassifiedListing }) {
+  const { language, text } = useUiPreferences();
+
   return (
     <Link
       to="/listings/$id"
@@ -315,15 +338,15 @@ function RealListingCard({ listing }: { listing: ClassifiedListing }) {
         <div className="absolute top-2 start-2 flex flex-wrap gap-1">
           {listing.isFeatured && (
             <span className="rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">
-              مميز
+              {text("مميز", "Featured")}
             </span>
           )}
           <span className="rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold text-emerald-trust-foreground">
-            معتمد
+            {text("معتمد", "Approved")}
           </span>
         </div>
         <span className="absolute bottom-2 end-2 rounded-md bg-primary/85 px-2 py-0.5 text-[11px] font-medium text-primary-foreground">
-          {listing.categoryNameAr ?? "إعلان"}
+          {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
         </span>
       </div>
       <div className="space-y-1.5 p-3">
@@ -331,15 +354,20 @@ function RealListingCard({ listing }: { listing: ClassifiedListing }) {
           {listing.title}
         </h3>
         <div className="text-lg font-extrabold text-foreground">
-          {priceLabel(listing.price ?? 0, listing.priceType)}
+          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language)}
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
-            <MapPin className="h-3 w-3" /> {listing.governorateNameAr ?? "سوريا"}
+            <MapPin className="h-3 w-3" />{" "}
+            {governorateName(
+              listing.governorateId,
+              listing.governorateNameAr ?? undefined,
+              language,
+            )}
             {listing.districtAr ? ` · ${listing.districtAr}` : ""}
           </span>
           <span className="inline-flex items-center gap-1">
-            <Clock className="h-3 w-3" /> {formatDate(listing.createdAt)}
+            <Clock className="h-3 w-3" /> {formatDate(listing.createdAt, language)}
           </span>
         </div>
       </div>
@@ -374,7 +402,9 @@ function StateCard({
   );
 }
 
-function formatDate(value: string) {
-  if (!value) return "تاريخ غير متاح";
-  return new Intl.DateTimeFormat("ar-SY", { dateStyle: "medium" }).format(new Date(value));
+function formatDate(value: string, language: "ar" | "en") {
+  if (!value) return language === "ar" ? "تاريخ غير متاح" : "Date unavailable";
+  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+    dateStyle: "medium",
+  }).format(new Date(value));
 }

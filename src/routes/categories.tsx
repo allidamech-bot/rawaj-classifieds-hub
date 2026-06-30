@@ -6,8 +6,9 @@ import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { fetchPublicCategories } from "@/lib/classifieds-api";
 import type { ClassifiedCategory, ClassifiedsError } from "@/lib/classifieds-types";
 import type { PlaceholderType, Subcategory } from "@/types";
-import { useAuth } from "@/lib/use-auth";
 import { categories as mockCategories, listings } from "@/data/mockData";
+import { categoryHint, categoryName } from "@/lib/i18n";
+import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface DisplayCategory {
   id: string;
@@ -48,7 +49,7 @@ export const Route = createFileRoute("/categories")({
 });
 
 function CategoriesPage() {
-  const auth = useAuth();
+  const { language, text } = useUiPreferences();
   const [realCategories, setRealCategories] = useState<ClassifiedCategory[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<ClassifiedsError | null>(null);
@@ -83,10 +84,12 @@ function CategoriesPage() {
   if (loading) {
     return (
       <>
-        <PageHeader title="جميع الأقسام" />
+        <PageHeader title={text("جميع الأقسام", "All categories")} />
         <main className="container-wide pt-4 pb-8">
           <div className="rounded-2xl bg-card p-10 text-center hairline">
-            <p className="text-sm font-semibold">جارٍ تحميل الأقسام...</p>
+            <p className="text-sm font-semibold">
+              {text("جارٍ تحميل الأقسام...", "Loading categories...")}
+            </p>
           </div>
         </main>
       </>
@@ -96,16 +99,18 @@ function CategoriesPage() {
   if (fetchError && realCategories === null) {
     return (
       <>
-        <PageHeader title="جميع الأقسام" />
+        <PageHeader title={text("جميع الأقسام", "All categories")} />
         <main className="container-wide pt-4 pb-8">
           <div className="rounded-2xl bg-card p-10 text-center hairline">
-            <p className="text-sm font-semibold">تعذر تحميل الأقسام</p>
+            <p className="text-sm font-semibold">
+              {text("تعذر تحميل الأقسام", "Could not load categories")}
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">{fetchError.message}</p>
             <Link
               to="/listings"
               className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
             >
-              تصفّح الإعلانات
+              {text("تصفّح الإعلانات", "Browse listings")}
             </Link>
           </div>
         </main>
@@ -115,32 +120,39 @@ function CategoriesPage() {
 
   return (
     <>
-      <PageHeader title="جميع الأقسام" />
+      <PageHeader title={text("جميع الأقسام", "All categories")} />
       <main className="container-wide pt-4 pb-8">
         {useFallback ? (
           <div className="mb-4 rounded-2xl bg-warning/10 p-3 text-xs text-foreground/90 hairline">
-            الأقسام والأعداد حالياً نموذج تجريبي للاطلاع على التصميم. ستظهر الأقسام الحقيقية بعد
-            اكتمال ربط البيانات التشغيلية.
+            {text(
+              "الأقسام والأعداد حالياً نموذج تجريبي للاطلاع على التصميم. ستظهر الأقسام الحقيقية بعد اكتمال ربط البيانات التشغيلية.",
+              "Categories and counts are currently demo previews for the design. Real categories will appear after the operational data connection is complete.",
+            )}
           </div>
         ) : (
           <section className="mb-4 rounded-2xl bg-primary p-5 text-primary-foreground shadow-soft">
-            <h2 className="text-lg font-extrabold">أطلس الأقسام</h2>
+            <h2 className="text-lg font-extrabold">{text("أطلس الأقسام", "Category atlas")}</h2>
             <p className="mt-1 text-xs text-primary-foreground/80">
-              اختر القسم المناسب لتصفح الإعلانات المنظّمة داخل سوريا. كل قسم يحوي أقساماً فرعية
-              تساعدك في الوصول بسرعة.
+              {text(
+                "اختر القسم المناسب لتصفح الإعلانات المنظّمة داخل سوريا. كل قسم يحوي أقساماً فرعية تساعدك في الوصول بسرعة.",
+                "Choose a category to browse organized listings in Syria. Subcategories help you get there faster.",
+              )}
             </p>
           </section>
         )}
 
         {categories.length === 0 ? (
           <div className="rounded-2xl bg-card p-8 text-center hairline text-sm text-muted-foreground">
-            لا توجد أقسام متاحة حالياً. يمكنك تصفح الإعلانات مباشرة.
+            {text(
+              "لا توجد أقسام متاحة حالياً. يمكنك تصفح الإعلانات مباشرة.",
+              "No categories are available right now. You can browse listings directly.",
+            )}
             <div className="mt-3">
               <Link
                 to="/listings"
                 className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
               >
-                تصفّح الإعلانات
+                {text("تصفّح الإعلانات", "Browse listings")}
               </Link>
             </div>
           </div>
@@ -161,15 +173,24 @@ function CategoriesPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <h3 className="text-base font-extrabold">{c.nameAr}</h3>
+                        <h3 className="text-base font-extrabold">
+                          {categoryName(c.id, c.nameAr, language)}
+                        </h3>
                         <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground rtl:rotate-180 transition group-hover:text-foreground" />
                       </div>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{c.hintAr}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {categoryHint(c.id, c.hintAr, language)}
+                      </p>
                       <div className="mt-1 flex items-center gap-2 text-[11px]">
-                        <span className="font-bold text-gold">{count} إعلان</span>
+                        <span className="font-bold text-gold">
+                          {text(`${count} إعلان`, `${count} listings`)}
+                        </span>
                         <span className="text-muted-foreground">·</span>
                         <span className="text-muted-foreground">
-                          {c.subcategories.length} قسم فرعي
+                          {text(
+                            `${c.subcategories.length} قسم فرعي`,
+                            `${c.subcategories.length} subcategories`,
+                          )}
                         </span>
                       </div>
                     </div>
@@ -181,7 +202,7 @@ function CategoriesPage() {
                           key={s.id}
                           className="rounded-full bg-muted-surface px-2 py-0.5 text-[10px] font-medium text-foreground/80"
                         >
-                          {s.nameAr}
+                          {language === "ar" ? s.nameAr : s.nameAr}
                         </span>
                       ))}
                       {c.subcategories.length > 6 && (
@@ -199,7 +220,10 @@ function CategoriesPage() {
 
         {categories.length > 0 && (
           <p className="mt-5 text-center text-[11px] text-muted-foreground">
-            هل قسمك غير موجود؟ سيتم إضافة المزيد من الأقسام لاحقاً حسب احتياجات المستخدمين.
+            {text(
+              "هل قسمك غير موجود؟ سيتم إضافة المزيد من الأقسام لاحقاً حسب احتياجات المستخدمين.",
+              "Missing a category? More categories will be added later based on user needs.",
+            )}
           </p>
         )}
 
@@ -208,13 +232,13 @@ function CategoriesPage() {
             to="/listings"
             className="rounded-xl bg-primary px-4 py-2.5 text-center text-sm font-bold text-primary-foreground"
           >
-            تصفح كل الإعلانات
+            {text("تصفح كل الإعلانات", "Browse all listings")}
           </Link>
           <Link
             to="/add-listing"
             className="rounded-xl bg-muted-surface px-4 py-2.5 text-center text-sm font-bold text-foreground"
           >
-            أضف إعلاناً في قسمك
+            {text("أضف إعلاناً في قسمك", "Post in your category")}
           </Link>
         </section>
       </main>
