@@ -203,14 +203,17 @@ function ListingDetailsPage() {
           <div className="flex items-center justify-between gap-2 p-2">
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto">
-                {images.slice(1, 5).map((image) => (
-                  <img
-                    key={image.id}
-                    src={image.publicUrl ?? ""}
-                    alt={image.altAr ?? listing.title}
-                    className="h-14 w-16 rounded-lg object-cover hairline"
-                  />
-                ))}
+                {images
+                  .slice(1, 5)
+                  .filter((image) => image.publicUrl)
+                  .map((image) => (
+                    <img
+                      key={image.id}
+                      src={image.publicUrl ?? ""}
+                      alt={image.altAr ?? listing.title}
+                      className="h-14 w-16 rounded-lg object-cover hairline"
+                    />
+                  ))}
               </div>
             )}
             <span className="ms-auto inline-flex items-center gap-1 rounded-full bg-muted-surface px-2 py-1 text-[10px] font-medium text-muted-foreground">

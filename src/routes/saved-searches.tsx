@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, Bookmark, Search, Trash2 } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { fetchSavedSearches } from "@/lib/classifieds-api";
+import { createSavedSearch, deleteSavedSearch, fetchSavedSearches } from "@/lib/classifieds-api";
 import type { ClassifiedsError, SavedSearch } from "@/lib/classifieds-types";
 import { uiLabel } from "@/lib/i18n";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
@@ -31,6 +31,7 @@ function SavedSearchesPage() {
   const [name, setName] = useState("");
   const [keyword, setKeyword] = useState("");
   const [frequency, setFrequency] = useState<LocalSearch["frequency"]>("weekly");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (auth.status !== "signedIn") return;
@@ -55,21 +56,53 @@ function SavedSearchesPage() {
     };
   }, [auth.status, auth.profile?.id]);
 
-  function addLocalSearch(event: FormEvent) {
+  async function addSavedSearch(event: FormEvent) {
     event.preventDefault();
+    setMessage("");
     const label = name.trim() || text("بحث محفوظ", "Saved search");
-    setLocalItems((current) => [
-      {
-        id: `local-${Date.now()}`,
-        nameAr: label,
-        filters: keyword.trim() ? { q: keyword.trim() } : {},
-        createdAt: new Date().toISOString(),
-        frequency,
-      },
-      ...current,
-    ]);
+    const filters = keyword.trim() ? { query: keyword.trim() } : {};
+    const result = await createSavedSearch(auth.profile?.id ?? null, {
+      nameAr: label,
+      filters,
+    });
+
+    if (result.ok) {
+      setItems((current) => [result.data, ...current]);
+      setMessage(text("تم حفظ البحث في حسابك.", "Search saved to your account."));
+    } else {
+      setLocalItems((current) => [
+        {
+          id: `local-${Date.now()}`,
+          nameAr: label,
+          filters: keyword.trim() ? { q: keyword.trim() } : {},
+          createdAt: new Date().toISOString(),
+          frequency,
+        },
+        ...current,
+      ]);
+      setMessage(
+        text(
+          "تعذر حفظ البحث في الحساب، فتم حفظه لهذه الجلسة فقط.",
+          "Could not save this search to the account, so it was saved for this session only.",
+        ),
+      );
+      setError(result.error);
+    }
     setName("");
     setKeyword("");
+  }
+
+  async function removeSavedSearch(id: string) {
+    setMessage("");
+    const result = await deleteSavedSearch(auth.profile?.id ?? null, id);
+    if (!result.ok) {
+      setError(result.error);
+      setMessage(result.error.message);
+      return;
+    }
+
+    setItems((current) => current.filter((item) => item.id !== id));
+    setMessage(text("تم حذف البحث المحفوظ.", "Saved search removed."));
   }
 
   if (auth.status === "loading") {
@@ -126,7 +159,7 @@ function SavedSearchesPage() {
         </section>
 
         <form
-          onSubmit={addLocalSearch}
+          onSubmit={addSavedSearch}
           className="grid grid-cols-1 gap-3 rounded-2xl bg-card p-4 hairline md:grid-cols-[1fr_1fr_180px_auto]"
         >
           <input
@@ -157,6 +190,12 @@ function SavedSearchesPage() {
             {text("حفظ البحث", "Save search")}
           </button>
         </form>
+
+        {message && (
+          <p className="rounded-xl bg-muted-surface p-3 text-xs font-semibold text-foreground hairline">
+            {message}
+          </p>
+        )}
 
         {loading ? (
           <Panel title={text("جارٍ تحميل عمليات البحث", "Loading saved searches")} />
@@ -201,6 +240,7 @@ function SavedSearchesPage() {
                 createdAt={item.createdAt}
                 filters={item.filters as Record<string, unknown>}
                 frequency="weekly"
+                onRemove={() => void removeSavedSearch(item.id)}
               />
             ))}
           </ul>
@@ -259,7 +299,7 @@ function SearchRow({
       <div className="mt-3">
         <Link
           to="/listings"
-          search={filters}
+          search={toListingSearch(filters)}
           className="rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
         >
           {text("فتح البحث", "Open search")}
@@ -267,6 +307,25 @@ function SearchRow({
       </div>
     </li>
   );
+}
+
+function toListingSearch(filters: Record<string, unknown>) {
+  return {
+    q: stringFilter(filters.query) || stringFilter(filters.q) || undefined,
+    category: stringFilter(filters.categoryId) || stringFilter(filters.category) || undefined,
+    gov: stringFilter(filters.governorateId) || stringFilter(filters.gov) || undefined,
+    sort: sortFilter(filters.sort),
+  };
+}
+
+function stringFilter(value: unknown) {
+  return typeof value === "string" && value.trim() ? value : undefined;
+}
+
+function sortFilter(value: unknown): "latest" | "cheapest" | "expensive" | "featured" | undefined {
+  return value === "latest" || value === "cheapest" || value === "expensive" || value === "featured"
+    ? value
+    : undefined;
 }
 
 function State({

@@ -6,6 +6,7 @@ import type {
   ClassifiedListing,
   ClassifiedsError,
   ClassifiedsResult,
+  CreateSavedSearchPayload,
   ClassifiedSubcategory,
   CreateListingPayload,
   Favorite,
@@ -16,6 +17,7 @@ import type {
   ListingReportType,
   ModerateReportPayload,
   ModerateListingPayload,
+  PublicSellerProfile,
   SavedSearch,
 } from "@/lib/classifieds-types";
 import type { PlaceholderType, PriceType } from "@/types";
@@ -26,6 +28,7 @@ const setupRequiredMessage = "تعذر تحميل البيانات الآن. ح�
 const storageSetupRequiredMessage =
   "تعذر رفع الصور الآن. يمكنك إرسال الإعلان بدون صور والمحاولة مرة أخرى بعد حفظه.";
 const listingImagesBucket = "listing-images";
+const signedImageUrlExpiresInSeconds = 900;
 const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxImageSizeBytes = 5 * 1024 * 1024;
 
@@ -248,19 +251,90 @@ function mapListing(
   };
 }
 
-function mapImage(row: Row, client: SupabaseClient): ListingImage {
+function mapImage(row: Row): ListingImage {
   const storagePath = rowNullableString(row, "storage_path");
-  void client;
 
   return {
     id: rowString(row, "id"),
     listingId: rowString(row, "listing_id"),
     storagePath,
     publicUrl: null,
+    signedUrlExpiresIn: null,
     altAr: rowNullableString(row, "alt_ar"),
     sortOrder: rowNumber(row, "sort_order"),
     createdAt: rowString(row, "created_at"),
   };
+}
+
+async function signListingImages(
+  client: SupabaseClient,
+  images: ListingImage[],
+): Promise<ListingImage[]> {
+  const paths = [...new Set(images.map((image) => image.storagePath).filter(Boolean))] as string[];
+  if (paths.length === 0) return images;
+
+  try {
+    const { data, error } = await client.storage
+      .from(listingImagesBucket)
+      .createSignedUrls(paths, signedImageUrlExpiresInSeconds);
+
+    if (error || !data) return images;
+
+    const urlsByPath = new Map(
+      data.filter((item) => item.signedUrl).map((item) => [item.path, item.signedUrl] as const),
+    );
+
+    return images.map((image) => {
+      const signedUrl = image.storagePath ? urlsByPath.get(image.storagePath) : null;
+      return signedUrl
+        ? { ...image, publicUrl: signedUrl, signedUrlExpiresIn: signedImageUrlExpiresInSeconds }
+        : image;
+    });
+  } catch {
+    return images;
+  }
+}
+
+async function readListingImagesByListingIds(
+  client: SupabaseClient,
+  listingIds: string[],
+): Promise<ListingImage[]> {
+  const ids = [...new Set(listingIds.filter(Boolean))];
+  if (ids.length === 0) return [];
+
+  const { data, error } = await client
+    .from("listing_images")
+    .select("*")
+    .in("listing_id", ids)
+    .order("sort_order");
+
+  if (error) return [];
+  return signListingImages(client, ((data ?? []) as Row[]).map(mapImage));
+}
+
+async function hydrateListingsWithPrimaryImages(
+  client: SupabaseClient,
+  listings: ClassifiedListing[],
+): Promise<ClassifiedListing[]> {
+  if (listings.length === 0) return listings;
+
+  const images = await readListingImagesByListingIds(
+    client,
+    listings.map((listing) => listing.id),
+  );
+  if (images.length === 0) return listings;
+
+  const firstImageByListing = new Map<string, ListingImage>();
+  for (const image of images) {
+    if (!firstImageByListing.has(image.listingId)) {
+      firstImageByListing.set(image.listingId, image);
+    }
+  }
+
+  return listings.map((listing) => ({
+    ...listing,
+    primaryImageUrl: firstImageByListing.get(listing.id)?.publicUrl ?? null,
+  }));
 }
 
 function mapSubcategory(row: Row): ClassifiedSubcategory {
@@ -373,12 +447,11 @@ export async function fetchPublicListings(
   const { data, error } = await query.limit(60);
   if (error) return { ok: false, error: mapError(error) };
 
-  return {
-    ok: true,
-    data: ((data ?? []) as Row[]).map((row) =>
-      mapListing(row, references.categories, references.governorates),
-    ),
-  };
+  const listings = ((data ?? []) as Row[]).map((row) =>
+    mapListing(row, references.categories, references.governorates),
+  );
+
+  return { ok: true, data: await hydrateListingsWithPrimaryImages(clientResult.data, listings) };
 }
 
 export async function fetchListingDetail(
@@ -404,9 +477,64 @@ export async function fetchListingDetail(
     };
   }
 
+  const listing = mapListing(data as Row, references.categories, references.governorates);
+  const [hydratedListing] = await hydrateListingsWithPrimaryImages(clientResult.data, [listing]);
+  return { ok: true, data: hydratedListing ?? listing };
+}
+
+export async function fetchPublicSellerProfile(
+  sellerId: string,
+): Promise<ClassifiedsResult<PublicSellerProfile>> {
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  if (!sellerId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد البائع." },
+    };
+  }
+
+  const references = await readReferences(clientResult.data);
+  if (!references.ok) return { ok: false, error: references.error };
+
+  const { data, error } = await clientResult.data
+    .from("listings")
+    .select("*")
+    .eq("owner_id", sellerId)
+    .eq("status", "approved")
+    .order("created_at", { ascending: false })
+    .limit(60);
+
+  if (error) return { ok: false, error: mapError(error) };
+
+  const listings = await hydrateListingsWithPrimaryImages(
+    clientResult.data,
+    ((data ?? []) as Row[]).map((row) =>
+      mapListing(row, references.categories, references.governorates),
+    ),
+  );
+
+  if (listings.length === 0) {
+    return {
+      ok: false,
+      error: { code: "not_found", message: "تعذر عرض ملف هذا البائع الآن." },
+    };
+  }
+
+  const firstListing = listings[0];
+  const contactName = firstListing.contactName?.trim();
+
   return {
     ok: true,
-    data: mapListing(data as Row, references.categories, references.governorates),
+    data: {
+      id: sellerId,
+      displayName: contactName || "بائع رَوَاج",
+      verified: false,
+      joinedAt: listings.at(-1)?.createdAt ?? null,
+      locationAr: firstListing.governorateNameAr ?? null,
+      listings,
+    },
   };
 }
 
@@ -423,7 +551,8 @@ export async function fetchListingImages(
     .order("sort_order");
 
   if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: ((data ?? []) as Row[]).map((row) => mapImage(row, clientResult.data)) };
+  const images = ((data ?? []) as Row[]).map(mapImage);
+  return { ok: true, data: await signListingImages(clientResult.data, images) };
 }
 
 export async function fetchCurrentUserListings(
@@ -442,12 +571,11 @@ export async function fetchCurrentUserListings(
     .order("created_at", { ascending: false });
 
   if (error) return { ok: false, error: mapError(error) };
-  return {
-    ok: true,
-    data: ((data ?? []) as Row[]).map((row) =>
-      mapListing(row, references.categories, references.governorates),
-    ),
-  };
+  const listings = ((data ?? []) as Row[]).map((row) =>
+    mapListing(row, references.categories, references.governorates),
+  );
+
+  return { ok: true, data: await hydrateListingsWithPrimaryImages(clientResult.data, listings) };
 }
 
 export async function createListing(
@@ -566,7 +694,8 @@ export async function uploadListingImage({
     return { ok: false, error: mapError(error) };
   }
 
-  return { ok: true, data: mapImage(data as Row, clientResult.data) };
+  const [image] = await signListingImages(clientResult.data, [mapImage(data as Row)]);
+  return { ok: true, data: image ?? mapImage(data as Row) };
 }
 
 export async function deleteListingImage(
@@ -615,12 +744,40 @@ export async function fetchFavorites(
     .order("created_at", { ascending: false });
 
   if (error) return { ok: false, error: mapError(error) };
+
+  const favorites = ((data ?? []) as Row[]).map((row) => ({
+    userId: rowString(row, "user_id"),
+    listingId: rowString(row, "listing_id"),
+    createdAt: rowString(row, "created_at"),
+  }));
+
+  const listingIds = [...new Set(favorites.map((favorite) => favorite.listingId).filter(Boolean))];
+  if (listingIds.length === 0) return { ok: true, data: favorites };
+
+  const references = await readReferences(clientResult.data);
+  if (!references.ok) return { ok: true, data: favorites };
+
+  const listingsResult = await clientResult.data
+    .from("listings")
+    .select("*")
+    .in("id", listingIds)
+    .eq("status", "approved");
+
+  if (listingsResult.error) return { ok: true, data: favorites };
+
+  const listings = await hydrateListingsWithPrimaryImages(
+    clientResult.data,
+    ((listingsResult.data ?? []) as Row[]).map((row) =>
+      mapListing(row, references.categories, references.governorates),
+    ),
+  );
+  const listingById = new Map(listings.map((listing) => [listing.id, listing]));
+
   return {
     ok: true,
-    data: ((data ?? []) as Row[]).map((row) => ({
-      userId: rowString(row, "user_id"),
-      listingId: rowString(row, "listing_id"),
-      createdAt: rowString(row, "created_at"),
+    data: favorites.map((favorite) => ({
+      ...favorite,
+      listing: listingById.get(favorite.listingId),
     })),
   };
 }
@@ -700,6 +857,84 @@ export async function fetchSavedSearches(
       updatedAt: rowString(row, "updated_at"),
     })),
   };
+}
+
+export async function createSavedSearch(
+  userId: string | null,
+  payload: CreateSavedSearchPayload,
+): Promise<ClassifiedsResult<SavedSearch>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لحفظ البحث." },
+    };
+  }
+
+  const nameAr = payload.nameAr.trim();
+  if (!nameAr) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "أدخل اسماً واضحاً للبحث المحفوظ." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("saved_searches")
+    .insert({
+      user_id: userId,
+      name_ar: nameAr,
+      filters: payload.filters,
+    })
+    .select("*")
+    .single();
+
+  if (error) return { ok: false, error: mapError(error) };
+
+  return {
+    ok: true,
+    data: {
+      id: rowString(data as Row, "id"),
+      userId: rowString(data as Row, "user_id"),
+      nameAr: rowString(data as Row, "name_ar"),
+      filters: rowRecord(data as Row, "filters"),
+      createdAt: rowString(data as Row, "created_at"),
+      updatedAt: rowString(data as Row, "updated_at"),
+    },
+  };
+}
+
+export async function deleteSavedSearch(
+  userId: string | null,
+  savedSearchId: string,
+): Promise<ClassifiedsResult<null>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لحذف البحث المحفوظ." },
+    };
+  }
+
+  if (!savedSearchId) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد البحث المحفوظ." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { error } = await clientResult.data
+    .from("saved_searches")
+    .delete()
+    .eq("id", savedSearchId)
+    .eq("user_id", userId);
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: null };
 }
 
 export async function createListingReport(
@@ -798,6 +1033,13 @@ export async function adminModerateReport(
     };
   }
 
+  if (!payload.reportId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد البلاغ." },
+    };
+  }
+
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
@@ -828,6 +1070,20 @@ export async function adminModerateListing(
     return {
       ok: false,
       error: { code: "permission_denied", message: "مراجعة الإعلانات متاحة للمالك فقط." },
+    };
+  }
+
+  if (!payload.listingId.trim() || !payload.reviewerId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان أو حساب المراجع." },
+    };
+  }
+
+  if (payload.status === "rejected" && !payload.rejectionReason?.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "أدخل سبب الرفض قبل تحديث الإعلان." },
     };
   }
 

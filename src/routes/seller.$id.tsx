@@ -1,20 +1,42 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { Ban, BadgeCheck, Flag, MessageCircle, Phone, ShieldAlert, Star } from "lucide-react";
 import { ListingCard } from "@/components/ListingCard";
 import { PageHeader } from "@/components/PageHeader";
+import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { listings } from "@/data/mockData";
-import { uiLabel } from "@/lib/i18n";
+import { fetchPublicSellerProfile } from "@/lib/classifieds-api";
+import type { ClassifiedListing } from "@/lib/classifieds-types";
+import { categoryName, formatPriceLocalized, governorateName, uiLabel } from "@/lib/i18n";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/seller/$id")({
-  loader: ({ params }) => {
-    const sellerListings = listings.filter((listing) => listing.sellerId === params.id);
-    if (sellerListings.length === 0) throw notFound();
-    const first = sellerListings[0];
+  loader: async ({ params }) => {
+    const realSeller = await fetchPublicSellerProfile(params.id);
+    if (realSeller.ok) {
+      return {
+        source: "real" as const,
+        realListings: realSeller.data.listings,
+        localListings: [],
+        seller: {
+          id: realSeller.data.id,
+          name: realSeller.data.displayName,
+          type: "user",
+          verified: realSeller.data.verified,
+          rating: null,
+          joinedAt: realSeller.data.joinedAt,
+        },
+      };
+    }
+
+    const localListings = listings.filter((listing) => listing.sellerId === params.id);
+    if (localListings.length === 0) throw notFound();
+    const first = localListings[0];
     return {
-      sellerListings,
+      source: "local" as const,
+      realListings: [],
+      localListings,
       seller: {
         id: first.sellerId,
         name: first.sellerName,
@@ -43,7 +65,8 @@ export const Route = createFileRoute("/seller/$id")({
 function SellerPage() {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
-  const { seller, sellerListings } = Route.useLoaderData();
+  const { source, seller, realListings, localListings } = Route.useLoaderData();
+  const listingCount = source === "real" ? realListings.length : localListings.length;
   const [notice, setNotice] = useState("");
 
   function setAction(ar: string, en: string) {
@@ -77,16 +100,18 @@ function SellerPage() {
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-primary-foreground/80">
                     <span>{labelType(seller.type, language)}</span>
-                    <span className="inline-flex items-center gap-1">
-                      <Star className="h-3 w-3 fill-gold text-gold" />
-                      {seller.rating.toFixed(1)}
-                    </span>
-                    <span>
-                      {text("منذ", "Since")} {new Date(seller.joinedAt).getFullYear()}
-                    </span>
-                    <span>
-                      {text(`${sellerListings.length} إعلان`, `${sellerListings.length} listings`)}
-                    </span>
+                    {seller.rating !== null && (
+                      <span className="inline-flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-gold text-gold" />
+                        {seller.rating.toFixed(1)}
+                      </span>
+                    )}
+                    {seller.joinedAt && (
+                      <span>
+                        {text("منذ", "Since")} {new Date(seller.joinedAt).getFullYear()}
+                      </span>
+                    )}
+                    <span>{text(`${listingCount} إعلان`, `${listingCount} listings`)}</span>
                   </div>
                 </div>
               </div>
@@ -155,7 +180,7 @@ function SellerPage() {
                   label={text("حالة الحساب", "Account")}
                   value={seller.verified ? text("موثّق", "Verified") : text("نشط", "Active")}
                 />
-                <Metric label={text("الإعلانات", "Listings")} value={`${sellerListings.length}`} />
+                <Metric label={text("الإعلانات", "Listings")} value={`${listingCount}`} />
               </div>
             </section>
 
@@ -164,8 +189,8 @@ function SellerPage() {
                 <h2 className="text-lg font-extrabold">
                   <span className="inline-block border-b-2 border-gold pb-0.5">
                     {text(
-                      `الإعلانات النشطة (${sellerListings.length})`,
-                      `Active listings (${sellerListings.length})`,
+                      `الإعلانات النشطة (${listingCount})`,
+                      `Active listings (${listingCount})`,
                     )}
                   </span>
                 </h2>
@@ -174,9 +199,13 @@ function SellerPage() {
                 </span>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {sellerListings.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
-                ))}
+                {source === "real"
+                  ? realListings.map((listing) => (
+                      <SellerListingCard key={listing.id} listing={listing} />
+                    ))
+                  : localListings.map((listing) => (
+                      <ListingCard key={listing.id} listing={listing} />
+                    ))}
               </div>
             </section>
 
@@ -223,6 +252,53 @@ function SellerPage() {
         )}
       </main>
     </div>
+  );
+}
+
+function SellerListingCard({ listing }: { listing: ClassifiedListing }) {
+  const { language } = useUiPreferences();
+
+  return (
+    <LinkCard listingId={listing.id}>
+      <div className="relative">
+        {listing.primaryImageUrl ? (
+          <img
+            src={listing.primaryImageUrl}
+            alt={listing.title}
+            className="aspect-[16/9] w-full object-cover"
+          />
+        ) : (
+          <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
+        )}
+        <span className="absolute bottom-2 end-2 rounded-md bg-primary/85 px-2 py-0.5 text-[11px] font-medium text-primary-foreground">
+          {categoryName(listing.categoryId, listing.categoryNameAr, language)}
+        </span>
+      </div>
+      <div className="space-y-1.5 p-3">
+        <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-foreground">
+          {listing.title}
+        </h3>
+        <div className="text-lg font-extrabold text-foreground">
+          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
+        </div>
+        <p className="truncate text-xs text-muted-foreground">
+          {governorateName(listing.governorateId, listing.governorateNameAr, language)}
+          {listing.districtAr ? ` · ${listing.districtAr}` : ""}
+        </p>
+      </div>
+    </LinkCard>
+  );
+}
+
+function LinkCard({ listingId, children }: { listingId: string; children: React.ReactNode }) {
+  return (
+    <Link
+      to="/listings/$id"
+      params={{ id: listingId }}
+      className="block overflow-hidden rounded-2xl bg-card hairline shadow-soft transition-shadow hover:shadow-premium"
+    >
+      {children}
+    </Link>
   );
 }
 

@@ -380,7 +380,15 @@ function RealListingCard({ listing }: { listing: ClassifiedListing }) {
       className="group block overflow-hidden rounded-2xl bg-card hairline shadow-soft transition-shadow hover:shadow-premium"
     >
       <div className="relative">
-        <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
+        {listing.primaryImageUrl ? (
+          <img
+            src={listing.primaryImageUrl}
+            alt={listing.title}
+            className="aspect-[16/9] w-full object-cover"
+          />
+        ) : (
+          <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
+        )}
         <div className="absolute top-2 start-2 flex flex-wrap gap-1">
           {listing.isFeatured && (
             <span className="rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">

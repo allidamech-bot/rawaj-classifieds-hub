@@ -88,6 +88,7 @@ export interface ClassifiedListing {
   archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  primaryImageUrl?: string | null;
 }
 
 export interface ListingImage {
@@ -95,6 +96,7 @@ export interface ListingImage {
   listingId: string;
   storagePath: string | null;
   publicUrl: string | null;
+  signedUrlExpiresIn?: number | null;
   altAr: string | null;
   sortOrder: number;
   createdAt: string;
@@ -114,6 +116,20 @@ export interface SavedSearch {
   filters: ListingFilters;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CreateSavedSearchPayload {
+  nameAr: string;
+  filters: ListingFilters;
+}
+
+export interface PublicSellerProfile {
+  id: string;
+  displayName: string;
+  verified: boolean;
+  joinedAt: string | null;
+  locationAr: string | null;
+  listings: ClassifiedListing[];
 }
 
 export interface ListingReport {

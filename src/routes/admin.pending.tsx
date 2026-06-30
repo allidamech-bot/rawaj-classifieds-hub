@@ -44,12 +44,15 @@ function PendingPage() {
       );
       return;
     }
+    if (status === "rejected" && !rejectReasons[listing.id]?.trim()) {
+      setMessage(text("أدخل سبب الرفض قبل تحديث الإعلان.", "Add a rejection reason first."));
+      return;
+    }
     const result = await adminModerateListing(auth.canAccessOwnerControls, {
       listingId: listing.id,
       status,
       reviewerId: auth.profile.id,
-      rejectionReason:
-        status === "rejected" ? rejectReasons[listing.id] || "مرفوض من لوحة المالك" : null,
+      rejectionReason: status === "rejected" ? rejectReasons[listing.id] : null,
     });
     if (!result.ok) {
       setMessage(result.error.message);

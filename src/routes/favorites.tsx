@@ -2,9 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heart, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { fetchFavorites, unfavoriteListing } from "@/lib/classifieds-api";
 import type { ClassifiedsError, Favorite } from "@/lib/classifieds-types";
-import { uiLabel } from "@/lib/i18n";
+import { categoryName, formatPriceLocalized, governorateName, uiLabel } from "@/lib/i18n";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -128,19 +129,65 @@ function FavoritesPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {items.map((item) => (
               <article key={item.listingId} className="rounded-2xl bg-card p-4 hairline">
-                <div className="flex items-start justify-between gap-3">
+                <div className="grid grid-cols-[96px_1fr] gap-3">
+                  <Link to="/listings/$id" params={{ id: item.listingId }} className="block">
+                    {item.listing?.primaryImageUrl ? (
+                      <img
+                        src={item.listing.primaryImageUrl}
+                        alt={item.listing.title}
+                        className="aspect-square w-full rounded-xl object-cover hairline"
+                      />
+                    ) : (
+                      <PlaceholderArt
+                        type={item.listing?.categoryPlaceholder ?? "misc"}
+                        aspect="square"
+                      />
+                    )}
+                  </Link>
                   <div className="min-w-0">
-                    <p className="text-sm font-extrabold">{text("إعلان محفوظ", "Saved listing")}</p>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">
-                      {text("رقم الإعلان:", "Listing ID:")} {item.listingId}
-                    </p>
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      {formatDate(item.createdAt, language)}
-                    </p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-extrabold">
+                          {item.listing?.title ?? text("إعلان محفوظ", "Saved listing")}
+                        </p>
+                        {item.listing ? (
+                          <>
+                            <p className="mt-1 text-xs font-bold text-foreground">
+                              {formatPriceLocalized(
+                                item.listing.price ?? 0,
+                                item.listing.priceType,
+                                language,
+                                item.listing.currency,
+                              )}
+                            </p>
+                            <p className="mt-1 truncate text-[11px] text-muted-foreground">
+                              {categoryName(
+                                item.listing.categoryId,
+                                item.listing.categoryNameAr,
+                                language,
+                              )}{" "}
+                              ·{" "}
+                              {governorateName(
+                                item.listing.governorateId,
+                                item.listing.governorateNameAr,
+                                language,
+                              )}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="mt-1 truncate text-xs text-muted-foreground">
+                            {text("رقم الإعلان:", "Listing ID:")} {item.listingId}
+                          </p>
+                        )}
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                          {formatDate(item.createdAt, language)}
+                        </p>
+                      </div>
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted-surface text-destructive">
+                        <Heart className="h-4 w-4 fill-current" />
+                      </span>
+                    </div>
                   </div>
-                  <span className="grid h-10 w-10 place-items-center rounded-full bg-muted-surface text-destructive">
-                    <Heart className="h-4 w-4 fill-current" />
-                  </span>
                 </div>
                 <div className="mt-4 flex items-center gap-2">
                   <Link
