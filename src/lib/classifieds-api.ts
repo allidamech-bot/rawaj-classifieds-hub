@@ -19,6 +19,7 @@ import type {
   ModerateListingPayload,
   PublicSellerProfile,
   SavedSearch,
+  UpdateListingPayload,
 } from "@/lib/classifieds-types";
 import type { PlaceholderType, PriceType } from "@/types";
 
@@ -578,6 +579,258 @@ export async function fetchCurrentUserListings(
   return { ok: true, data: await hydrateListingsWithPrimaryImages(clientResult.data, listings) };
 }
 
+export async function fetchOwnerListingDetail(
+  userId: string | null,
+  listingId: string,
+): Promise<ClassifiedsResult<ClassifiedListing>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض تفاصيل الإعلان." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const references = await readReferences(clientResult.data);
+  if (!references.ok) return { ok: false, error: references.error };
+
+  const { data, error } = await clientResult.data
+    .from("listings")
+    .select("*")
+    .eq("id", listingId)
+    .eq("owner_id", userId)
+    .maybeSingle();
+
+  if (error) return { ok: false, error: mapError(error) };
+  if (!data) {
+    return {
+      ok: false,
+      error: { code: "not_found", message: "هذا الإعلان غير متاح." },
+    };
+  }
+
+  const listing = mapListing(data as Row, references.categories, references.governorates);
+  const [hydratedListing] = await hydrateListingsWithPrimaryImages(clientResult.data, [listing]);
+  return { ok: true, data: hydratedListing ?? listing };
+}
+
+export async function updateOwnerListing(
+  userId: string | null,
+  listingId: string,
+  payload: UpdateListingPayload,
+): Promise<ClassifiedsResult<ClassifiedListing>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لتعديل الإعلان." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const references = await readReferences(clientResult.data);
+  if (!references.ok) return { ok: false, error: references.error };
+
+  const { data: existing, error: existingError } = await clientResult.data
+    .from("listings")
+    .select("*")
+    .eq("id", listingId)
+    .eq("owner_id", userId)
+    .in("status", ["draft", "pending_review"])
+    .maybeSingle();
+
+  if (existingError) return { ok: false, error: mapError(existingError) };
+  if (!existing) {
+    return {
+      ok: false,
+      error: {
+        code: "permission_denied",
+        message: "لا يمكن تعديل هذا الإعلان حالياً. أعد إرساله للمراجعة إذا كان مرفوضاً.",
+      },
+    };
+  }
+
+  const updateData: Record<string, unknown> = {};
+  if (payload.categoryId) updateData.category_id = payload.categoryId;
+  if (payload.governorateId) updateData.governorate_id = payload.governorateId;
+  if (payload.subcategoryId !== undefined) updateData.subcategory_id = payload.subcategoryId;
+  if (payload.title?.trim()) updateData.title = payload.title.trim();
+  if (payload.description !== undefined) {
+    updateData.description = payload.description?.trim() ?? null;
+  }
+  if (payload.price !== undefined) updateData.price = payload.price;
+  if (payload.priceType) updateData.price_type = payload.priceType;
+  if (payload.condition) updateData.listing_condition = payload.condition;
+  if (payload.districtAr !== undefined) updateData.district_ar = payload.districtAr;
+  if (payload.contactName !== undefined) updateData.contact_name = payload.contactName;
+  if (payload.contactOptions) updateData.contact_options = payload.contactOptions;
+
+  const { data, error } = await clientResult.data
+    .from("listings")
+    .update(updateData)
+    .eq("id", listingId)
+    .eq("owner_id", userId)
+    .in("status", ["draft", "pending_review"])
+    .select("*");
+
+  if (error) return { ok: false, error: mapError(error) };
+  if (!data || data.length === 0) {
+    return {
+      ok: false,
+      error: { code: "not_found", message: "تعذر تحديث الإعلان." },
+    };
+  }
+
+  return {
+    ok: true,
+    data: mapListing(data[0] as Row, references.categories, references.governorates),
+  };
+}
+
+export async function resubmitOwnerListing(
+  userId: string | null,
+  listingId: string,
+  payload: UpdateListingPayload = {},
+): Promise<ClassifiedsResult<ClassifiedListing>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لإعادة إرسال الإعلان." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const references = await readReferences(clientResult.data);
+  if (!references.ok) return { ok: false, error: references.error };
+
+  const { data: existing, error: existingError } = await clientResult.data
+    .from("listings")
+    .select("*")
+    .eq("id", listingId)
+    .eq("owner_id", userId)
+    .in("status", ["draft", "rejected"])
+    .maybeSingle();
+
+  if (existingError) return { ok: false, error: mapError(existingError) };
+  if (!existing) {
+    return {
+      ok: false,
+      error: {
+        code: "permission_denied",
+        message: "لا يمكن إعادة إرسال هذا الإعلان حالياً.",
+      },
+    };
+  }
+
+  const updateData: Record<string, unknown> = {
+    status: "pending_review",
+    rejection_reason: null,
+  };
+
+  if (payload.categoryId) updateData.category_id = payload.categoryId;
+  if (payload.governorateId) updateData.governorate_id = payload.governorateId;
+  if (payload.subcategoryId !== undefined) updateData.subcategory_id = payload.subcategoryId;
+  if (payload.title?.trim()) updateData.title = payload.title.trim();
+  if (payload.description !== undefined) {
+    updateData.description = payload.description?.trim() ?? null;
+  }
+  if (payload.price !== undefined) updateData.price = payload.price;
+  if (payload.priceType) updateData.price_type = payload.priceType;
+  if (payload.condition) updateData.listing_condition = payload.condition;
+  if (payload.districtAr !== undefined) updateData.district_ar = payload.districtAr;
+  if (payload.contactName !== undefined) updateData.contact_name = payload.contactName;
+  if (payload.contactOptions) updateData.contact_options = payload.contactOptions;
+
+  const { data, error } = await clientResult.data
+    .from("listings")
+    .update(updateData)
+    .eq("id", listingId)
+    .eq("owner_id", userId)
+    .in("status", ["draft", "rejected"])
+    .select("*");
+
+  if (error) return { ok: false, error: mapError(error) };
+  if (!data || data.length === 0) {
+    return {
+      ok: false,
+      error: { code: "not_found", message: "تعذر إعادة إرسال الإعلان." },
+    };
+  }
+
+  return {
+    ok: true,
+    data: mapListing(data[0] as Row, references.categories, references.governorates),
+  };
+}
+
+export async function deleteOwnerListing(
+  userId: string | null,
+  listingId: string,
+): Promise<ClassifiedsResult<null>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لحذف الإعلان." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data: existing, error: existingError } = await clientResult.data
+    .from("listings")
+    .select("id, owner_id, status")
+    .eq("id", listingId)
+    .eq("owner_id", userId)
+    .in("status", ["draft", "rejected"])
+    .maybeSingle();
+
+  if (existingError) return { ok: false, error: mapError(existingError) };
+  if (!existing) {
+    return {
+      ok: false,
+      error: {
+        code: "permission_denied",
+        message: "لا يمكن حذف هذا الإعلان حالياً.",
+      },
+    };
+  }
+
+  const { data: images, error: imagesError } = await clientResult.data
+    .from("listing_images")
+    .select("storage_path")
+    .eq("listing_id", listingId);
+
+  if (imagesError) return { ok: false, error: mapError(imagesError) };
+
+  const paths = ((images ?? []) as Row[])
+    .map((row) => rowString(row, "storage_path"))
+    .filter((path): path is string => Boolean(path));
+
+  if (paths.length > 0) {
+    const storageResult = await clientResult.data.storage.from(listingImagesBucket).remove(paths);
+
+    if (storageResult.error) {
+      return { ok: false, error: mapStorageError(storageResult.error) };
+    }
+  }
+
+  const { error } = await clientResult.data
+    .from("listings")
+    .delete()
+    .eq("id", listingId)
+    .eq("owner_id", userId)
+    .in("status", ["draft", "rejected"]);
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: null };
+}
+
 export async function createListing(
   userId: string | null,
   payload: CreateListingPayload,
@@ -700,6 +953,7 @@ export async function uploadListingImage({
 
 export async function deleteListingImage(
   userId: string | null,
+  listingId: string,
   image: ListingImage,
 ): Promise<ClassifiedsResult<null>> {
   if (!userId) {
@@ -711,6 +965,30 @@ export async function deleteListingImage(
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
+
+  const { data: existing } = await clientResult.data
+    .from("listings")
+    .select("owner_id, status")
+    .eq("id", listingId)
+    .maybeSingle();
+
+  if (!existing || existing.owner_id !== userId) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "لا يمكنك حذف صور إعلان لا تملكه." },
+    };
+  }
+
+  if (
+    existing.status !== "draft" &&
+    existing.status !== "pending_review" &&
+    existing.status !== "rejected"
+  ) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "لا يمكن تعديل صور إعلان بعد اعتماده." },
+    };
+  }
 
   if (image.storagePath) {
     const storageResult = await clientResult.data.storage

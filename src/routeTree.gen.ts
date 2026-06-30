@@ -33,6 +33,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminPromotionsRouteImport } from './routes/admin.promotions'
 import { Route as AdminPendingRouteImport } from './routes/admin.pending'
+import { Route as ProfileListingsIdRouteImport } from './routes/profile/listings.$id'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -154,6 +155,11 @@ const AdminPendingRoute = AdminPendingRouteImport.update({
   path: '/pending',
   getParentRoute: () => AdminRoute,
 } as any)
+const ProfileListingsIdRoute = ProfileListingsIdRouteImport.update({
+  id: '/listings/$id',
+  path: '/listings/$id',
+  getParentRoute: () => ProfileRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -165,7 +171,7 @@ export interface FileRoutesByFullPath {
   '/listings': typeof ListingsRouteWithChildren
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
-  '/profile': typeof ProfileRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/prohibited': typeof ProhibitedRoute
   '/promotion': typeof PromotionRoute
   '/safety': typeof SafetyRoute
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/seller/$id': typeof SellerIdRoute
   '/admin/': typeof AdminIndexRoute
   '/listings/': typeof ListingsIndexRoute
+  '/profile/listings/$id': typeof ProfileListingsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -189,7 +196,7 @@ export interface FileRoutesByTo {
   '/favorites': typeof FavoritesRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
-  '/profile': typeof ProfileRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/prohibited': typeof ProhibitedRoute
   '/promotion': typeof PromotionRoute
   '/safety': typeof SafetyRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/seller/$id': typeof SellerIdRoute
   '/admin': typeof AdminIndexRoute
   '/listings': typeof ListingsIndexRoute
+  '/profile/listings/$id': typeof ProfileListingsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -216,7 +224,7 @@ export interface FileRoutesById {
   '/listings': typeof ListingsRouteWithChildren
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
-  '/profile': typeof ProfileRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/prohibited': typeof ProhibitedRoute
   '/promotion': typeof PromotionRoute
   '/safety': typeof SafetyRoute
@@ -231,6 +239,7 @@ export interface FileRoutesById {
   '/seller/$id': typeof SellerIdRoute
   '/admin/': typeof AdminIndexRoute
   '/listings/': typeof ListingsIndexRoute
+  '/profile/listings/$id': typeof ProfileListingsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -259,6 +268,7 @@ export interface FileRouteTypes {
     | '/seller/$id'
     | '/admin/'
     | '/listings/'
+    | '/profile/listings/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -283,6 +293,7 @@ export interface FileRouteTypes {
     | '/seller/$id'
     | '/admin'
     | '/listings'
+    | '/profile/listings/$id'
   id:
     | '__root__'
     | '/'
@@ -309,6 +320,7 @@ export interface FileRouteTypes {
     | '/seller/$id'
     | '/admin/'
     | '/listings/'
+    | '/profile/listings/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -321,7 +333,7 @@ export interface RootRouteChildren {
   ListingsRoute: typeof ListingsRouteWithChildren
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
-  ProfileRoute: typeof ProfileRoute
+  ProfileRoute: typeof ProfileRouteWithChildren
   ProhibitedRoute: typeof ProhibitedRoute
   PromotionRoute: typeof PromotionRoute
   SafetyRoute: typeof SafetyRoute
@@ -501,6 +513,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPendingRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/profile/listings/$id': {
+      id: '/profile/listings/$id'
+      path: '/listings/$id'
+      fullPath: '/profile/listings/$id'
+      preLoaderRoute: typeof ProfileListingsIdRouteImport
+      parentRoute: typeof ProfileRoute
+    }
   }
 }
 
@@ -536,6 +555,17 @@ const ListingsRouteWithChildren = ListingsRoute._addFileChildren(
   ListingsRouteChildren,
 )
 
+interface ProfileRouteChildren {
+  ProfileListingsIdRoute: typeof ProfileListingsIdRoute
+}
+
+const ProfileRouteChildren: ProfileRouteChildren = {
+  ProfileListingsIdRoute: ProfileListingsIdRoute,
+}
+
+const ProfileRouteWithChildren =
+  ProfileRoute._addFileChildren(ProfileRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddListingRoute: AddListingRoute,
@@ -546,7 +576,7 @@ const rootRouteChildren: RootRouteChildren = {
   ListingsRoute: ListingsRouteWithChildren,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
-  ProfileRoute: ProfileRoute,
+  ProfileRoute: ProfileRouteWithChildren,
   ProhibitedRoute: ProhibitedRoute,
   PromotionRoute: PromotionRoute,
   SafetyRoute: SafetyRoute,

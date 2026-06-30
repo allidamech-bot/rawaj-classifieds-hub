@@ -14,17 +14,25 @@ import {
   LogOut,
   MessageCircle,
   Plus,
+  RefreshCcw,
   Settings,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
   Store,
+  Trash2,
   User,
   UserCog,
   UserPlus,
+  Eye,
+  Pencil,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { fetchCurrentUserListings } from "@/lib/classifieds-api";
+import {
+  deleteOwnerListing,
+  fetchCurrentUserListings,
+  resubmitOwnerListing,
+} from "@/lib/classifieds-api";
 import type { ClassifiedListing, ClassifiedsError, ListingStatus } from "@/lib/classifieds-types";
 import { categoryName, governorateName } from "@/lib/i18n";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
@@ -89,13 +97,54 @@ function ProfilePage() {
   const [myListingsError, setMyListingsError] = useState<ClassifiedsError | null>(null);
   const [myListingsLoading, setMyListingsLoading] = useState(false);
   const [notice, setNotice] = useState("");
+  const [listingActionLoading, setListingActionLoading] = useState<string | null>(null);
+  const [listingActionNotice, setListingActionNotice] = useState("");
   const profileId = auth.profile?.id;
   const displayName = auth.profile?.displayName || auth.profile?.email || text("زائر", "Guest");
+
+  async function reloadListings() {
+    if (!profileId) return;
+    const result = await fetchCurrentUserListings(profileId);
+    if (result.ok) setMyListings(result.data);
+    else {
+      setMyListings([]);
+      setMyListingsError(result.error);
+    }
+  }
 
   async function handleLogout() {
     setLogoutError("");
     const result = await auth.signOut();
     if (result.error) setLogoutError(result.error);
+  }
+
+  async function handleResubmit(listingId: string) {
+    setListingActionLoading(listingId);
+    setListingActionNotice("");
+    const result = await resubmitOwnerListing(profileId ?? null, listingId);
+    setListingActionLoading(null);
+    if (result.ok) {
+      setListingActionNotice(
+        text("تم إعادة إرسال الإعلان للمراجعة.", "Listing resubmitted for review."),
+      );
+      void reloadListings();
+    } else {
+      setListingActionNotice(result.error.message);
+    }
+  }
+
+  async function handleDelete(listingId: string) {
+    if (!confirm(text("حذف الإعلان نهائياً؟", "Delete this listing permanently?"))) return;
+    setListingActionLoading(listingId);
+    setListingActionNotice("");
+    const result = await deleteOwnerListing(profileId ?? null, listingId);
+    setListingActionLoading(null);
+    if (result.ok) {
+      setListingActionNotice(text("تم حذف الإعلان.", "Listing deleted."));
+      void reloadListings();
+    } else {
+      setListingActionNotice(result.error.message);
+    }
   }
 
   useEffect(() => {
@@ -105,13 +154,8 @@ function ProfilePage() {
     async function loadListings() {
       setMyListingsLoading(true);
       setMyListingsError(null);
-      const result = await fetchCurrentUserListings(currentProfileId);
+      await reloadListings();
       if (cancelled) return;
-      if (result.ok) setMyListings(result.data);
-      else {
-        setMyListings([]);
-        setMyListingsError(result.error);
-      }
       setMyListingsLoading(false);
     }
     void loadListings();
@@ -255,35 +299,141 @@ function ProfilePage() {
               </p>
             ) : (
               <div className="space-y-2">
-                {myListings.slice(0, 8).map((listing) => (
-                  <Link
-                    key={listing.id}
-                    to="/listings/$id"
-                    params={{ id: listing.id }}
-                    className="block rounded-xl bg-muted-surface p-3 transition hover:bg-secondary"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-sm font-bold">{listing.title}</span>
-                      <span className="rounded-md bg-card px-2 py-0.5 text-[10px] font-bold hairline">
-                        {statusLabel(listing.status, language)}
-                      </span>
+                {myListings.slice(0, 8).map((listing) => {
+                  const busy = listingActionLoading === listing.id;
+                  const canModify =
+                    listing.status === "draft" ||
+                    listing.status === "pending_review" ||
+                    listing.status === "rejected";
+
+                  return (
+                    <div
+                      key={listing.id}
+                      className="rounded-xl bg-muted-surface p-3 transition hover:bg-secondary"
+                    >
+                      <div className="flex items-start gap-3">
+                        {listing.primaryImageUrl ? (
+                          <img
+                            src={listing.primaryImageUrl}
+                            alt={listing.title}
+                            className="h-16 w-20 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-16 w-20 items-center justify-center rounded-lg bg-card text-[9px] text-muted-foreground">
+                            {text("بدون صورة", "No photo")}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-sm font-bold">{listing.title}</span>
+                            <span className="rounded-md bg-card px-2 py-0.5 text-[10px] font-bold hairline">
+                              {statusLabel(listing.status, language)}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            {categoryName(
+                              listing.categoryId,
+                              listing.categoryNameAr ?? undefined,
+                              language,
+                            )}{" "}
+                            ·{" "}
+                            {governorateName(
+                              listing.governorateId,
+                              listing.governorateNameAr ?? undefined,
+                              language,
+                            )}
+                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
+                            {listing.price !== null && (
+                              <span className="font-semibold text-foreground">
+                                {listing.price} {listing.currency}
+                              </span>
+                            )}
+                            <span>
+                              {text("أنشئ", "Created")}{" "}
+                              {new Date(listing.createdAt).toLocaleDateString(
+                                language === "ar" ? "ar-SY" : "en-US",
+                                {
+                                  dateStyle: "short",
+                                },
+                              )}
+                            </span>
+                            {listing.updatedAt !== listing.createdAt && (
+                              <span>
+                                {text("محدث", "Updated")}{" "}
+                                {new Date(listing.updatedAt).toLocaleDateString(
+                                  language === "ar" ? "ar-SY" : "en-US",
+                                  {
+                                    dateStyle: "short",
+                                  },
+                                )}
+                              </span>
+                            )}
+                          </div>
+                          {listing.rejectionReason && (
+                            <p className="mt-1 text-[10px] text-destructive">
+                              {listing.rejectionReason}
+                            </p>
+                          )}
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            <Link
+                              to="/listings/$id"
+                              params={{ id: listing.id }}
+                              className="inline-flex items-center gap-1 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline transition hover:bg-secondary"
+                            >
+                              <Eye className="h-3 w-3" />
+                              {text("عرض", "View")}
+                            </Link>
+                            <Link
+                              to="/profile/listings/$id"
+                              params={{ id: listing.id }}
+                              className="inline-flex items-center gap-1 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline transition hover:bg-secondary"
+                            >
+                              <Pencil className="h-3 w-3" />
+                              {text("تعديل", "Edit")}
+                            </Link>
+                            {(listing.status === "draft" || listing.status === "rejected") && (
+                              <>
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => handleResubmit(listing.id)}
+                                  className="inline-flex items-center gap-1 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline transition hover:bg-secondary disabled:opacity-50"
+                                >
+                                  <RefreshCcw className="h-3 w-3" />
+                                  {text("إعادة إرسال", "Resubmit")}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => handleDelete(listing.id)}
+                                  className="inline-flex items-center gap-1 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline transition hover:bg-destructive/5 hover:text-destructive disabled:opacity-50"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  {text("حذف", "Delete")}
+                                </button>
+                              </>
+                            )}
+                            {listing.status === "approved" && (
+                              <span className="inline-flex items-center gap-1 rounded-lg bg-muted-surface px-2 py-1 text-[10px] text-muted-foreground">
+                                {text(
+                                  "لا يمكن تعديل إعلان معتمد حالياً",
+                                  "Approved listings cannot be edited currently",
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      {categoryName(
-                        listing.categoryId,
-                        listing.categoryNameAr ?? undefined,
-                        language,
-                      )}{" "}
-                      ·{" "}
-                      {governorateName(
-                        listing.governorateId,
-                        listing.governorateNameAr ?? undefined,
-                        language,
-                      )}
-                    </p>
-                  </Link>
-                ))}
+                  );
+                })}
               </div>
+            )}
+            {listingActionNotice && (
+              <p className="mt-3 rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground">
+                {listingActionNotice}
+              </p>
             )}
           </section>
         )}

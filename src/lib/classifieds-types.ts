@@ -160,6 +160,21 @@ export interface CreateListingPayload {
   details: Record<string, unknown>;
 }
 
+export interface UpdateListingPayload {
+  categoryId?: string;
+  subcategoryId?: string | null;
+  governorateId?: string;
+  title?: string;
+  description?: string;
+  price?: number | null;
+  priceType?: PriceType;
+  condition?: ListingCondition;
+  districtAr?: string | null;
+  contactName?: string | null;
+  contactOptions?: Record<string, boolean>;
+  details?: Record<string, unknown>;
+}
+
 export interface ListingFilters {
   categoryId?: string;
   governorateId?: string;
