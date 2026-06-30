@@ -167,6 +167,21 @@ function normalizePlaceholder(value: string): PlaceholderType {
   return allowed.includes(value as PlaceholderType) ? (value as PlaceholderType) : "misc";
 }
 
+function fromDbReportStatus(status: string): ListingReport["status"] {
+  if (status === "in_review") return "under_review";
+  if (status === "dismissed") return "rejected";
+  if (["new", "under_review", "resolved", "rejected"].includes(status)) {
+    return status as ListingReport["status"];
+  }
+  return "new";
+}
+
+function toDbReportStatus(status: ListingReport["status"]): string {
+  if (status === "under_review") return "in_review";
+  if (status === "rejected") return "dismissed";
+  return status;
+}
+
 function mapCategory(row: Row): ClassifiedCategory {
   return {
     id: rowString(row, "id"),
@@ -766,14 +781,18 @@ export async function adminModerateReport(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
+  const dbStatus = toDbReportStatus(payload.status);
   const { error } = await clientResult.data
     .from("listing_reports")
     .update({
-      status: payload.status,
+      status: dbStatus,
       assigned_to: payload.assignedTo ?? null,
       admin_note: payload.adminNote ?? null,
       resolved_at:
-        payload.resolvedAt ?? (payload.status === "resolved" ? new Date().toISOString() : null),
+        payload.resolvedAt ??
+        (payload.status === "resolved" || payload.status === "rejected"
+          ? new Date().toISOString()
+          : null),
     })
     .eq("id", payload.reportId);
 
@@ -820,7 +839,7 @@ function mapReport(row: Row): ListingReport {
     reporterId: rowString(row, "reporter_id"),
     reportType: rowString(row, "report_type", "other") as ListingReport["reportType"],
     reason: rowString(row, "reason"),
-    status: rowString(row, "status", "new") as ListingReport["status"],
+    status: fromDbReportStatus(rowString(row, "status", "new")),
     assignedTo: rowNullableString(row, "assigned_to"),
     adminNote: rowNullableString(row, "admin_note"),
     resolvedAt: rowNullableString(row, "resolved_at"),
