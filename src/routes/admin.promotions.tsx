@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, FileCheck, Sparkles } from "lucide-react";
 import { demoNotice, featuredListingQueue, promotions } from "@/data/adminMockData";
+import { uiLabel } from "@/lib/i18n";
+import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/admin/promotions")({
   component: PromotionsPage,
@@ -16,26 +18,32 @@ const summary = [
 ];
 
 function PromotionsPage() {
+  const { language, text } = useUiPreferences();
+
   return (
     <div className="space-y-6">
       <div className="rounded-2xl bg-warning/10 p-3 hairline text-xs text-foreground/90">
-        لا توجد معالجة دفع حقيقية حالياً. تفاصيل التحويل وإثبات الدفع حقول تجريبية فقط. {demoNotice}
+        {uiLabel(
+          "لا توجد معالجة دفع حقيقية حالياً. تفاصيل التحويل وإثبات الدفع حقول تجريبية فقط.",
+          language,
+        )}{" "}
+        {uiLabel(demoNotice, language)}
       </div>
 
       <section>
-        <Title icon={Sparkles} text="ملخص طلبات الترويج" />
+        <Title icon={Sparkles} text={uiLabel("ملخص طلبات الترويج", language)} />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           {summary.map(([label, value]) => (
             <div key={label} className="rounded-xl bg-card p-3 hairline">
               <div className="text-xl font-extrabold">{value}</div>
-              <p className="text-xs text-muted-foreground">{label}</p>
+              <p className="text-xs text-muted-foreground">{uiLabel(label, language)}</p>
             </div>
           ))}
         </div>
       </section>
 
       <section>
-        <Title icon={CreditCard} text="مراجعة طلبات الترويج وإثبات الدفع" />
+        <Title icon={CreditCard} text={uiLabel("مراجعة طلبات الترويج وإثبات الدفع", language)} />
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
           {promotions.map((request) => (
             <article key={request.requestId} className="rounded-2xl bg-card p-4 hairline">
@@ -46,22 +54,23 @@ function PromotionsPage() {
                     {request.requestId} · {request.listingId}
                   </p>
                 </div>
-                <Badge>{request.status}</Badge>
+                <Badge>{uiLabel(request.status, language)}</Badge>
               </div>
               <Info
                 rows={[
                   ["البائع", request.seller],
-                  ["نوع حساب البائع", request.type],
-                  ["الخطة المطلوبة", request.plan],
-                  ["المدة", request.duration],
-                  ["المبلغ", `${request.amount} ${request.currency}`],
-                  ["حالة الدفع", request.payment],
-                  ["مرجع التحويل", request.ref],
-                  ["حالة إثبات الدفع", request.proof],
-                  ["المراجع", request.reviewer],
-                  ["تحتاج موافقة المالك", request.owner],
-                  ["ملاحظات", request.notes],
+                  ["نوع حساب البائع", uiLabel(request.type, language)],
+                  ["الخطة المطلوبة", uiLabel(request.plan, language)],
+                  ["المدة", uiLabel(request.duration, language)],
+                  ["المبلغ", `${request.amount} ${language === "ar" ? request.currency : "SYP"}`],
+                  ["حالة الدفع", uiLabel(request.payment, language)],
+                  ["مرجع التحويل", uiLabel(request.ref, language)],
+                  ["حالة إثبات الدفع", uiLabel(request.proof, language)],
+                  ["المراجع", uiLabel(request.reviewer, language)],
+                  ["تحتاج موافقة المالك", uiLabel(request.owner, language)],
+                  ["ملاحظات", uiLabel(request.notes, language)],
                 ]}
+                language={language}
               />
               <ActionRow
                 actions={[
@@ -72,15 +81,16 @@ function PromotionsPage() {
                   "طلب مراجعة المالك",
                   "إضافة ملاحظة داخلية",
                 ]}
+                language={language}
               />
-              <InternalNote />
+              <InternalNote language={language} />
             </article>
           ))}
         </div>
       </section>
 
       <section>
-        <Title icon={FileCheck} text="إدارة حالة تمييز الإعلانات" />
+        <Title icon={FileCheck} text={uiLabel("إدارة حالة تمييز الإعلانات", language)} />
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
           {featuredListingQueue.map((item) => (
             <article key={item.listingId} className="rounded-2xl bg-card p-4 hairline">
@@ -91,20 +101,21 @@ function PromotionsPage() {
                     {item.listingId} · {item.seller}
                   </p>
                 </div>
-                <Badge>{item.featured}</Badge>
+                <Badge>{uiLabel(item.featured, language)}</Badge>
               </div>
               <Info
                 rows={[
-                  ["القسم", item.category],
-                  ["المحافظة", item.governorate],
-                  ["حالة الإعلان", item.status],
-                  ["مدة الترويج", item.duration],
-                  ["تاريخ البداية/النهاية", item.dates],
-                  ["حالة الدفع", item.payment],
-                  ["المراجع الإداري", item.reviewer],
-                  ["موافقة المالك مطلوبة", item.owner],
-                  ["ملاحظة المشرف", item.note],
+                  ["القسم", uiLabel(item.category, language)],
+                  ["المحافظة", uiLabel(item.governorate, language)],
+                  ["حالة الإعلان", uiLabel(item.status, language)],
+                  ["مدة الترويج", uiLabel(item.duration, language)],
+                  ["تاريخ البداية/النهاية", uiLabel(item.dates, language)],
+                  ["حالة الدفع", uiLabel(item.payment, language)],
+                  ["المراجع الإداري", uiLabel(item.reviewer, language)],
+                  ["موافقة المالك مطلوبة", uiLabel(item.owner, language)],
+                  ["ملاحظة المشرف", uiLabel(item.note, language)],
                 ]}
+                language={language}
               />
               <ActionRow
                 actions={[
@@ -115,6 +126,7 @@ function PromotionsPage() {
                   "طلب مراجعة المالك",
                   "إضافة ملاحظة",
                 ]}
+                language={language}
               />
             </article>
           ))}
@@ -141,7 +153,7 @@ function Badge({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Info({ rows }: { rows: string[][] }) {
+function Info({ rows, language }: { rows: string[][]; language: Language }) {
   return (
     <dl className="grid grid-cols-1 gap-1 text-xs">
       {rows.map(([label, value]) => (
@@ -149,7 +161,7 @@ function Info({ rows }: { rows: string[][] }) {
           key={label}
           className="flex justify-between gap-3 rounded-lg bg-muted-surface px-2 py-1.5"
         >
-          <dt className="text-muted-foreground">{label}</dt>
+          <dt className="text-muted-foreground">{uiLabel(label, language)}</dt>
           <dd className="text-start font-bold">{value}</dd>
         </div>
       ))}
@@ -157,7 +169,7 @@ function Info({ rows }: { rows: string[][] }) {
   );
 }
 
-function ActionRow({ actions }: { actions: string[] }) {
+function ActionRow({ actions, language }: { actions: string[]; language: Language }) {
   return (
     <div className="mt-3 flex flex-wrap gap-1.5">
       {actions.map((action) => (
@@ -166,29 +178,33 @@ function ActionRow({ actions }: { actions: string[] }) {
           disabled
           className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground cursor-not-allowed"
         >
-          {action} · نموذج تجريبي
+          {uiLabel(action, language)} · {uiLabel("نموذج تجريبي", language)}
         </button>
       ))}
     </div>
   );
 }
 
-function InternalNote() {
+function InternalNote({ language }: { language: Language }) {
   return (
     <div className="mt-3 rounded-xl bg-muted-surface p-3 text-xs">
-      <b>ملاحظة داخلية</b>
-      <p className="mt-1 text-muted-foreground">
-        أضيفت بواسطة: مشرف تجريبي · التاريخ: قيد التجهيز · الحالة: قيد المراجعة
-      </p>
+      <b>{uiLabel("ملاحظة داخلية", language)}</b>
+      <p className="mt-1 text-muted-foreground">{textForInternal(language)}</p>
       <button
         disabled
         className="mt-2 rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline cursor-not-allowed"
       >
-        إضافة ملاحظة · قريباً
+        {uiLabel("إضافة ملاحظة · قريباً", language)}
       </button>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        الملاحظات الداخلية لا تظهر للمستخدمين.
+        {uiLabel("الملاحظات الداخلية لا تظهر للمستخدمين.", language)}
       </p>
     </div>
   );
+}
+
+function textForInternal(language: Language) {
+  return language === "ar"
+    ? "أضيفت بواسطة: مشرف تجريبي · التاريخ: قيد التجهيز · الحالة: قيد المراجعة"
+    : "Added by: demo moderator · date: in preparation · status: under review";
 }

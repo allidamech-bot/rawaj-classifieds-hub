@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { demoNotice, reports } from "@/data/adminMockData";
 import { adminFetchReports, adminModerateReport } from "@/lib/classifieds-api";
 import type { ClassifiedsError, ListingReport, ListingReportStatus } from "@/lib/classifieds-types";
+import { uiLabel } from "@/lib/i18n";
+import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin/reports")({
@@ -19,6 +21,7 @@ const summary = [
 
 function ReportsPage() {
   const auth = useAuth();
+  const { language, text } = useUiPreferences();
   const [realReports, setRealReports] = useState<ListingReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
@@ -76,7 +79,12 @@ function ReportsPage() {
   async function moderate(report: ListingReport, status: ListingReportStatus) {
     setMessage("");
     if (!auth.profile?.id) {
-      setMessage("تعذر تحديد حساب المراجع الحالي. أعد تسجيل الدخول ثم حاول مجدداً.");
+      setMessage(
+        text(
+          "تعذر تحديد حساب المراجع الحالي. أعد تسجيل الدخول ثم حاول مجدداً.",
+          "Could not identify the current reviewer account. Log in again and try once more.",
+        ),
+      );
       return;
     }
 
@@ -93,27 +101,30 @@ function ReportsPage() {
       return;
     }
 
-    setMessage("تم تحديث البلاغ.");
+    setMessage(text("تم تحديث البلاغ.", "Report updated."));
     await loadReports();
   }
 
   return (
     <div className="space-y-6">
       <div className="rounded-2xl bg-warning/10 p-3 hairline text-xs text-foreground/90">
-        البلاغات الحقيقية تُقرأ من مصدر البيانات للمالك فقط. أي إجراء لاحق يجب أن يبقى محمياً
-        بالصلاحيات وسجل النشاط. {demoNotice}
+        {text(
+          "البلاغات الحقيقية تُقرأ من مصدر البيانات للمالك فقط. أي إجراء لاحق يجب أن يبقى محمياً بالصلاحيات وسجل النشاط.",
+          "Real reports are read from the data source for the owner only. Any future action must remain protected by permissions and activity logs.",
+        )}{" "}
+        {uiLabel(demoNotice, language)}
       </div>
 
       <section>
         <h2 className="mb-3 flex items-center gap-2 text-base font-extrabold">
           <Flag className="h-4 w-4 text-destructive" />
-          ملخص البلاغات
+          {uiLabel("ملخص البلاغات", language)}
         </h2>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {summary.map(([label, value]) => (
             <div key={label} className="rounded-xl bg-card p-3 hairline">
               <div className="text-xl font-extrabold">{value}</div>
-              <p className="text-xs text-muted-foreground">{label}</p>
+              <p className="text-xs text-muted-foreground">{uiLabel(label, language)}</p>
             </div>
           ))}
         </div>
@@ -122,30 +133,40 @@ function ReportsPage() {
       <section className="rounded-2xl bg-card p-4 hairline">
         <h2 className="mb-2 flex items-center gap-2 text-base font-extrabold">
           <Flag className="h-4 w-4 text-destructive" />
-          بلاغات حقيقية
+          {uiLabel("بلاغات حقيقية", language)}
         </h2>
         {message && (
           <p className="mb-2 rounded-xl bg-muted-surface p-2 text-xs font-semibold">{message}</p>
         )}
         {loading ? (
-          <p className="text-xs text-muted-foreground">جارٍ تحميل البلاغات.</p>
+          <p className="text-xs text-muted-foreground">
+            {uiLabel("جارٍ تحميل البلاغات.", language)}
+          </p>
         ) : error ? (
           <p className="text-xs text-muted-foreground">
-            البلاغات الحقيقية قيد التفعيل حالياً. ستظهر البلاغات هنا عند اكتمال الربط التشغيلي.
+            {uiLabel(
+              "البلاغات الحقيقية قيد التفعيل حالياً. ستظهر البلاغات هنا عند اكتمال الربط التشغيلي.",
+              language,
+            )}
           </p>
         ) : realReports.length === 0 ? (
-          <p className="text-xs text-muted-foreground">لا توجد بلاغات حقيقية حالياً.</p>
+          <p className="text-xs text-muted-foreground">
+            {uiLabel("لا توجد بلاغات حقيقية حالياً.", language)}
+          </p>
         ) : (
           <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
             {realReports.map((report) => (
               <article key={report.id} className="rounded-xl bg-muted-surface p-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-sm font-extrabold">{report.reportType}</h3>
-                  <Badge>{report.status}</Badge>
+                  <Badge>{uiLabel(report.status, language)}</Badge>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">رقم البلاغ: {report.id}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  الإعلان: {report.listingId} · المبلّغ: {report.reporterId}
+                  {text("رقم البلاغ:", "Report ID:")} {report.id}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {text("الإعلان:", "Listing:")} {report.listingId} ·{" "}
+                  {text("المبلّغ:", "Reporter:")} {report.reporterId}
                 </p>
                 <p className="mt-2 text-xs">{report.reason}</p>
                 <textarea
@@ -153,7 +174,7 @@ function ReportsPage() {
                   onChange={(event) =>
                     setNotes((current) => ({ ...current, [report.id]: event.target.value }))
                   }
-                  placeholder="ملاحظة إدارية"
+                  placeholder={text("ملاحظة إدارية", "Admin note")}
                   rows={2}
                   className="mt-3 w-full rounded-xl bg-card px-3 py-2 text-xs outline-none hairline"
                 />
@@ -162,19 +183,19 @@ function ReportsPage() {
                     onClick={() => void moderate(report, "under_review")}
                     className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
                   >
-                    قيد المراجعة
+                    {uiLabel("قيد المراجعة", language)}
                   </button>
                   <button
                     onClick={() => void moderate(report, "resolved")}
                     className="rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground"
                   >
-                    تم الحل
+                    {uiLabel("تم الحل", language)}
                   </button>
                   <button
                     onClick={() => void moderate(report, "rejected")}
                     className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground"
                   >
-                    رفض البلاغ
+                    {uiLabel("رفض البلاغ", language)}
                   </button>
                 </div>
               </article>
@@ -185,7 +206,8 @@ function ReportsPage() {
 
       <section className="grid grid-cols-1 gap-3 xl:grid-cols-2">
         <p className="xl:col-span-2 rounded-2xl bg-card p-3 text-xs text-muted-foreground hairline">
-          القائمة التالية نموذج UI تجريبي فقط وليست بلاغات إنتاج. {demoNotice}
+          {uiLabel("القائمة التالية نموذج UI تجريبي فقط وليست بلاغات إنتاج.", language)}{" "}
+          {uiLabel(demoNotice, language)}
         </p>
         {reports.map((report) => (
           <article key={report.id} className="rounded-2xl bg-card p-4 hairline">
@@ -193,8 +215,8 @@ function ReportsPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-sm font-extrabold">{report.type}</h3>
-                  <Badge>{report.severity}</Badge>
-                  <Badge>{report.status}</Badge>
+                  <Badge>{uiLabel(report.severity, language)}</Badge>
+                  <Badge>{uiLabel(report.status, language)}</Badge>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">{report.id}</p>
               </div>
@@ -204,13 +226,14 @@ function ReportsPage() {
               rows={[
                 ["الإعلان/المستخدم المبلّغ", report.target],
                 ["مبلّغ تجريبي", report.reporter],
-                ["السبب", report.reason],
-                ["وقت الإنشاء", report.created],
-                ["الحالة", report.status],
-                ["الخطورة", report.severity],
-                ["المشرف المعيّن", report.admin],
-                ["ملاحظة داخلية", report.note],
+                ["السبب", uiLabel(report.reason, language)],
+                ["وقت الإنشاء", uiLabel(report.created, language)],
+                ["الحالة", uiLabel(report.status, language)],
+                ["الخطورة", uiLabel(report.severity, language)],
+                ["المشرف المعيّن", uiLabel(report.admin, language)],
+                ["ملاحظة داخلية", uiLabel(report.note, language)],
               ]}
+              language={language}
             />
             <ActionRow
               actions={[
@@ -221,8 +244,9 @@ function ReportsPage() {
                 "طلب مراجعة المالك",
                 "إضافة ملاحظة",
               ]}
+              language={language}
             />
-            <InternalNote />
+            <InternalNote language={language} />
           </article>
         ))}
       </section>
@@ -238,12 +262,12 @@ function Badge({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Info({ rows }: { rows: string[][] }) {
+function Info({ rows, language }: { rows: string[][]; language: Language }) {
   return (
     <dl className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
       {rows.map(([label, value]) => (
         <div key={label} className="rounded-xl bg-muted-surface p-3">
-          <dt className="text-muted-foreground">{label}</dt>
+          <dt className="text-muted-foreground">{uiLabel(label, language)}</dt>
           <dd className="mt-1 font-bold">{value}</dd>
         </div>
       ))}
@@ -251,7 +275,7 @@ function Info({ rows }: { rows: string[][] }) {
   );
 }
 
-function ActionRow({ actions }: { actions: string[] }) {
+function ActionRow({ actions, language }: { actions: string[]; language: Language }) {
   return (
     <div className="mt-3 flex flex-wrap gap-1.5">
       {actions.map((action) => (
@@ -260,28 +284,28 @@ function ActionRow({ actions }: { actions: string[] }) {
           disabled
           className="rounded-md bg-destructive px-2 py-1 text-[10px] font-bold text-destructive-foreground opacity-70 cursor-not-allowed"
         >
-          {action} · نموذج تجريبي
+          {uiLabel(action, language)} · {uiLabel("نموذج تجريبي", language)}
         </button>
       ))}
     </div>
   );
 }
 
-function InternalNote() {
+function InternalNote({ language }: { language: Language }) {
   return (
     <div className="mt-3 rounded-xl bg-muted-surface p-3 text-xs">
-      <b>ملاحظة داخلية</b>
+      <b>{uiLabel("ملاحظة داخلية", language)}</b>
       <p className="mt-1 text-muted-foreground">
-        أضيفت بواسطة: مشرف تجريبي · التاريخ: قيد التجهيز · الحالة: غير مفعّلة
+        {uiLabel("أضيفت بواسطة: مشرف تجريبي · التاريخ: قيد التجهيز · الحالة: غير مفعّلة", language)}
       </p>
       <button
         disabled
         className="mt-2 rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline cursor-not-allowed"
       >
-        إضافة ملاحظة · قريباً
+        {uiLabel("إضافة ملاحظة · قريباً", language)}
       </button>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        الملاحظات الداخلية لا تظهر للمستخدمين.
+        {uiLabel("الملاحظات الداخلية لا تظهر للمستخدمين.", language)}
       </p>
     </div>
   );
