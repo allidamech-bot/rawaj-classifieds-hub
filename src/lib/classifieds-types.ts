@@ -44,6 +44,13 @@ export interface ClassifiedCategory {
   isActive: boolean;
 }
 
+export interface ClassifiedSubcategory {
+  id: string;
+  categoryId: string;
+  nameAr: string;
+  sortOrder: number;
+}
+
 export interface ClassifiedGovernorate {
   id: string;
   slug: string;

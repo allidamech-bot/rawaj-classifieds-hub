@@ -3,10 +3,19 @@ import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
-import { fetchPublicCategories } from "@/lib/classifieds-api";
-import type { ClassifiedCategory, ClassifiedsError } from "@/lib/classifieds-types";
+import {
+  fetchPublicCategories,
+  fetchPublicListings,
+  fetchPublicSubcategories,
+} from "@/lib/classifieds-api";
+import type {
+  ClassifiedCategory,
+  ClassifiedListing,
+  ClassifiedsError,
+  ClassifiedSubcategory,
+} from "@/lib/classifieds-types";
 import type { PlaceholderType, Subcategory } from "@/types";
-import { categories as mockCategories, listings } from "@/data/mockData";
+import { categories as mockCategories } from "@/data/mockData";
 import { categoryHint, categoryName } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
@@ -18,13 +27,18 @@ interface DisplayCategory {
   subcategories: Subcategory[];
 }
 
-function toDisplayCategory(c: ClassifiedCategory): DisplayCategory {
+function toDisplayCategory(
+  c: ClassifiedCategory,
+  subcategories: ClassifiedSubcategory[],
+): DisplayCategory {
   return {
     id: c.id,
     nameAr: c.nameAr,
     hintAr: c.hintAr ?? "",
     placeholder: c.placeholder,
-    subcategories: [],
+    subcategories: subcategories
+      .filter((subcategory) => subcategory.categoryId === c.id)
+      .map((subcategory) => ({ id: subcategory.id, nameAr: subcategory.nameAr })),
   };
 }
 
@@ -51,6 +65,8 @@ export const Route = createFileRoute("/categories")({
 function CategoriesPage() {
   const { language, text } = useUiPreferences();
   const [realCategories, setRealCategories] = useState<ClassifiedCategory[] | null>(null);
+  const [realSubcategories, setRealSubcategories] = useState<ClassifiedSubcategory[]>([]);
+  const [realListings, setRealListings] = useState<ClassifiedListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<ClassifiedsError | null>(null);
 
@@ -59,12 +75,20 @@ function CategoriesPage() {
     async function load() {
       setLoading(true);
       setFetchError(null);
-      const result = await fetchPublicCategories();
+      const [categoriesResult, subcategoriesResult, listingsResult] = await Promise.all([
+        fetchPublicCategories(),
+        fetchPublicSubcategories(),
+        fetchPublicListings(),
+      ]);
       if (cancelled) return;
-      if (!result.ok) {
-        setFetchError(result.error);
+      if (!categoriesResult.ok) {
+        setFetchError(categoriesResult.error);
+      } else if (!subcategoriesResult.ok) {
+        setFetchError(subcategoriesResult.error);
       } else {
-        setRealCategories(result.data);
+        setRealCategories(categoriesResult.data);
+        setRealSubcategories(subcategoriesResult.data);
+        setRealListings(listingsResult.ok ? listingsResult.data : []);
       }
       setLoading(false);
     }
@@ -75,11 +99,11 @@ function CategoriesPage() {
   }, []);
 
   const categories: DisplayCategory[] = realCategories
-    ? realCategories.map(toDisplayCategory)
+    ? realCategories.map((category) => toDisplayCategory(category, realSubcategories))
     : mockCategories.map(toDisplayCategoryFromMock);
   const useFallback = !loading && realCategories === null && !fetchError;
   const counts: Record<string, number> = {};
-  for (const l of listings) counts[l.categoryId] = (counts[l.categoryId] ?? 0) + 1;
+  for (const l of realListings) counts[l.categoryId] = (counts[l.categoryId] ?? 0) + 1;
 
   if (loading) {
     return (

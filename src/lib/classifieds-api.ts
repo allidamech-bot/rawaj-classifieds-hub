@@ -6,6 +6,7 @@ import type {
   ClassifiedListing,
   ClassifiedsError,
   ClassifiedsResult,
+  ClassifiedSubcategory,
   CreateListingPayload,
   Favorite,
   ListingImage,
@@ -252,18 +253,25 @@ function mapListing(
 
 function mapImage(row: Row, client: SupabaseClient): ListingImage {
   const storagePath = rowNullableString(row, "storage_path");
-  const publicUrl = storagePath
-    ? client.storage.from(listingImagesBucket).getPublicUrl(storagePath).data.publicUrl
-    : null;
+  void client;
 
   return {
     id: rowString(row, "id"),
     listingId: rowString(row, "listing_id"),
     storagePath,
-    publicUrl,
+    publicUrl: null,
     altAr: rowNullableString(row, "alt_ar"),
     sortOrder: rowNumber(row, "sort_order"),
     createdAt: rowString(row, "created_at"),
+  };
+}
+
+function mapSubcategory(row: Row): ClassifiedSubcategory {
+  return {
+    id: rowString(row, "id"),
+    categoryId: rowString(row, "category_id"),
+    nameAr: rowString(row, "name_ar"),
+    sortOrder: rowNumber(row, "sort_order"),
   };
 }
 
@@ -297,6 +305,21 @@ export async function fetchPublicCategories(): Promise<ClassifiedsResult<Classif
 
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: ((data ?? []) as Row[]).map(mapCategory) };
+}
+
+export async function fetchPublicSubcategories(): Promise<
+  ClassifiedsResult<ClassifiedSubcategory[]>
+> {
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("subcategories")
+    .select("*")
+    .order("sort_order");
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Row[]).map(mapSubcategory) };
 }
 
 export async function fetchPublicGovernorates(): Promise<
