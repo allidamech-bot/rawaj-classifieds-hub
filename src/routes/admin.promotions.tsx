@@ -1,183 +1,81 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { CreditCard, FileCheck, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { CreditCard, ShieldAlert, Sparkles, UserCog } from "lucide-react";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/admin/promotions")({
   component: PromotionsPage,
 });
 
-const requests = [
-  {
-    id: "PR-1007",
-    listing: "سيارة كيا",
-    seller: "أحمد",
-    planAr: "7 أيام",
-    planEn: "7 days",
-    statusAr: "بانتظار المراجعة",
-    statusEn: "Awaiting review",
-    amount: "50,000 ل.س",
-  },
-  {
-    id: "PR-1008",
-    listing: "شقة للإيجار",
-    seller: "مكتب الشام",
-    planAr: "14 يوم",
-    planEn: "14 days",
-    statusAr: "إثبات دفع مرفق",
-    statusEn: "Proof attached",
-    amount: "90,000 ل.س",
-  },
-  {
-    id: "PR-1009",
-    listing: "هاتف سامسونج",
-    seller: "متجر الساحل",
-    planAr: "3 أيام",
-    planEn: "3 days",
-    statusAr: "قيد المراجعة",
-    statusEn: "Under review",
-    amount: "25,000 ل.س",
-  },
-];
-
 function PromotionsPage() {
-  const { language, text } = useUiPreferences();
-  const [notice, setNotice] = useState("");
-
-  function localAction(ar: string, en: string) {
-    setNotice(text(ar, en));
-  }
+  const { text } = useUiPreferences();
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl bg-card p-4 hairline">
-        <h2 className="flex items-center gap-2 text-base font-extrabold">
-          <Sparkles className="h-4 w-4 text-gold" />
-          {text("إدارة طلبات الترويج", "Promotion request management")}
-        </h2>
-        <p className="mt-1 text-xs leading-6 text-muted-foreground">
-          {text(
-            "راجع طلبات التمييز والدفع اليدوي كواجهة إدارية كاملة. لا تنفذ هذه الصفحة دفعاً أو تفعيل تمييز حقيقي من الخادم.",
-            "Review featuring and manual-payment requests in a complete admin interface. This page does not execute payment or server-side featuring activation.",
-          )}
-        </p>
-      </section>
-
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {[
-          [text("طلبات", "Requests"), requests.length],
-          [text("قيد المراجعة", "Under review"), 2],
-          [text("إثبات دفع", "Payment proof"), 1],
-          [text("نشط محلياً", "Local active"), 0],
-        ].map(([label, value]) => (
-          <div key={label} className="rounded-xl bg-card p-3 hairline">
-            <div className="text-xl font-extrabold">{value}</div>
-            <p className="text-xs text-muted-foreground">{label}</p>
+      <section className="rounded-2xl bg-card p-5 hairline">
+        <div className="flex items-start gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gold/15 text-gold">
+            <Sparkles className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="text-base font-extrabold">
+              {text("إدارة الترويج", "Promotion management")}
+            </h2>
+            <p className="mt-2 text-xs leading-6 text-muted-foreground">
+              {text(
+                "إدارة طلبات الترويج والدفع تحتاج واجهات خادم آمنة قبل عرض الطلبات أو المبالغ أو إثباتات الدفع أو تنفيذ الموافقة.",
+                "Promotion and payment management requires safe server APIs before requests, amounts, payment proof, or approval actions are shown.",
+              )}
+            </p>
           </div>
-        ))}
+        </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-3 xl:grid-cols-3">
-        {requests.map((request) => (
-          <article key={request.id} className="rounded-2xl bg-card p-4 hairline">
-            <div className="mb-3 flex items-start justify-between gap-2">
-              <div>
-                <h3 className="text-sm font-extrabold">{request.listing}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {request.id} · {request.seller}
-                </p>
-              </div>
-              <Badge>{language === "ar" ? request.statusAr : request.statusEn}</Badge>
-            </div>
-            <dl className="grid grid-cols-1 gap-1 text-xs">
-              <Metric
-                label={text("الخطة", "Plan")}
-                value={language === "ar" ? request.planAr : request.planEn}
-              />
-              <Metric label={text("المبلغ", "Amount")} value={request.amount} />
-              <Metric
-                label={text("طريقة الدفع", "Payment method")}
-                value={text("مراجعة يدوية", "Manual review")}
-              />
-              <Metric
-                label={text("حالة الطلب", "Request status")}
-                value={language === "ar" ? request.statusAr : request.statusEn}
-              />
-            </dl>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {[
-                [text("مراجعة الإثبات", "Review proof"), "proof"],
-                [text("قبول", "Approve"), "approve"],
-                [text("رفض", "Reject"), "reject"],
-                [text("تمييز محلي", "Local feature"), "feature"],
-              ].map(([label, value]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() =>
-                    localAction(
-                      "تم تسجيل قرار الترويج في الواجهة فقط.",
-                      "Promotion decision recorded in the interface only.",
-                    )
-                  }
-                  className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </article>
-        ))}
-      </section>
-
-      <section className="rounded-2xl bg-card p-4 hairline">
-        <h3 className="mb-2 flex items-center gap-2 text-sm font-extrabold">
-          <CreditCard className="h-4 w-4 text-primary" />
-          {text("الدفع اليدوي", "Manual payment")}
-        </h3>
-        <p className="text-xs leading-6 text-muted-foreground">
-          {text(
-            "أي تحويل أو إثبات دفع يحتاج مراجعة خارجية واضحة قبل تفعيل الترويج الحقيقي.",
-            "Any transfer or proof of payment requires clear external review before real featuring is activated.",
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <InfoCard
+          icon={<CreditCard className="h-4 w-4" />}
+          title={text("الدفع", "Payment")}
+          body={text(
+            "لا تعرض اللوحة مبالغ أو إثباتات دفع دون مصدر محمي يربط الطلب بالإعلان والبائع.",
+            "The dashboard does not show amounts or payment proof without a protected source tied to the listing and seller.",
           )}
-        </p>
-      </section>
-
-      <section className="rounded-2xl bg-card p-4 hairline">
-        <h3 className="mb-2 flex items-center gap-2 text-sm font-extrabold">
-          <FileCheck className="h-4 w-4 text-primary" />
-          {text("حالة التمييز", "Featured status")}
-        </h3>
-        <p className="text-xs leading-6 text-muted-foreground">
-          {text(
-            "تظهر قرارات التمييز هنا كحالة واجهة ولا تعني تفعيل إعلان مميز على الخادم.",
-            "Featuring decisions appear here as interface state and do not activate server-side featuring.",
+        />
+        <InfoCard
+          icon={<Sparkles className="h-4 w-4" />}
+          title={text("تمييز الإعلانات", "Featuring")}
+          body={text(
+            "تفعيل التمييز يحتاج مسار مراجعة محفوظ وصلاحيات إدارية قبل تعديل أي إعلان.",
+            "Featuring requires a stored review flow and admin permissions before any listing is changed.",
           )}
-        </p>
+        />
       </section>
 
-      {notice && (
-        <p className="rounded-2xl bg-emerald-trust/10 p-3 text-center text-xs font-bold text-emerald-trust hairline">
-          {notice}
-        </p>
-      )}
+      <section className="rounded-2xl bg-warning/10 p-4 text-xs leading-6 hairline">
+        <ShieldAlert className="me-1 inline h-4 w-4 text-warning" />
+        {text(
+          "لا توجد في هذه الصفحة موافقة أو رفض أو تفعيل دفع من الواجهة. كل إجراء فعلي يجب أن يبقى خلف واجهة خادم محمية.",
+          "This page does not approve, reject, or activate payment from the interface. Every real action must stay behind a protected server API.",
+        )}
+      </section>
+
+      <Link
+        to="/admin"
+        className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+      >
+        <UserCog className="h-4 w-4" />
+        {text("العودة للوحة الإدارة", "Back to admin dashboard")}
+      </Link>
     </div>
   );
 }
 
-function Badge({ children }: { children: React.ReactNode }) {
+function InfoCard({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
   return (
-    <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-      {children}
-    </span>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between gap-3 rounded-lg bg-muted-surface px-2 py-1.5">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="text-start font-bold">{value}</dd>
+    <div className="rounded-2xl bg-card p-4 hairline">
+      <h3 className="inline-flex items-center gap-2 text-sm font-extrabold text-foreground">
+        <span className="text-primary">{icon}</span>
+        {title}
+      </h3>
+      <p className="mt-2 text-xs leading-6 text-muted-foreground">{body}</p>
     </div>
   );
 }

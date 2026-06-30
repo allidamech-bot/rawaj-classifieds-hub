@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, LayoutGrid, Plus, MessageCircle, User } from "lucide-react";
+import { Home, LayoutGrid, Plus, User } from "lucide-react";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -16,7 +16,6 @@ const items: NavItem[] = [
   { to: "/", labelAr: "الرئيسية", labelEn: "Home", icon: Home, exact: true },
   { to: "/categories", labelAr: "الأقسام", labelEn: "Categories", icon: LayoutGrid },
   { to: "/add-listing", labelAr: "أضف إعلان", labelEn: "Post", icon: Plus, primary: true },
-  { to: "/chats", labelAr: "الرسائل", labelEn: "Chats", icon: MessageCircle },
   { to: "/profile", labelAr: "حسابي", labelEn: "Account", icon: User },
 ];
 
@@ -31,16 +30,16 @@ export function BottomNav() {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label={text("التنقل السفلي", "Bottom navigation")}
     >
-      <div className="container-wide mx-auto grid grid-cols-5 items-end">
-        {items.map((it) => {
-          const target = it.to === "/profile" && auth.status !== "signedIn" ? "/login" : it.to;
-          const active = it.exact ? pathname === it.to : pathname.startsWith(it.to);
-          const Icon = it.icon;
-          const label = text(it.labelAr, it.labelEn);
-          if (it.primary) {
+      <div className="container-wide mx-auto grid grid-cols-4 items-end">
+        {items.map((item) => {
+          const target = item.to === "/profile" && auth.status !== "signedIn" ? "/login" : item.to;
+          const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+          const Icon = item.icon;
+          const label = text(item.labelAr, item.labelEn);
+          if (item.primary) {
             return (
               <Link
-                key={it.to}
+                key={item.to}
                 to={target as "/"}
                 className="flex flex-col items-center gap-1 pt-1 pb-2"
                 aria-label={label}
@@ -54,7 +53,7 @@ export function BottomNav() {
           }
           return (
             <Link
-              key={it.to}
+              key={item.to}
               to={target as "/"}
               className={`flex flex-col items-center gap-1 py-2 transition ${
                 active ? "text-primary" : "text-muted-foreground"

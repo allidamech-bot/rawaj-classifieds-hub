@@ -7,7 +7,7 @@ import {
   Heart,
   Map as MapIcon,
   MapPin,
-  Send,
+  Phone,
   ShieldAlert,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -33,8 +33,8 @@ import { useAuth } from "@/lib/use-auth";
 export const Route = createFileRoute("/listings/$id")({
   head: () => ({
     meta: [
-      { title: "تفاصيل الإعلان | رَوَاج" },
-      { name: "description", content: "تفاصيل إعلان معتمد على رَوَاج." },
+      { title: "تفاصيل الإعلان | رواج" },
+      { name: "description", content: "تفاصيل إعلان معتمد على رواج." },
     ],
   }),
   component: ListingDetailsPage,
@@ -50,8 +50,6 @@ function ListingDetailsPage() {
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [fav, setFav] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const [contactOpen, setContactOpen] = useState(false);
-  const [messageDraft, setMessageDraft] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -127,26 +125,14 @@ function ListingDetailsPage() {
     );
   }
 
-  function sendLocalMessage() {
-    const body = messageDraft.trim();
-    if (!body) return;
-    setActionMessage(
-      text(
-        "تم تجهيز الرسالة داخل الواجهة لهذه الجلسة دون إرسالها إلى خادم محادثات.",
-        "Message prepared locally for this session without sending it to a chat server.",
-      ),
-    );
-    setMessageDraft("");
-  }
-
   if (loading) {
     return (
       <>
         <PageHeader title={text("تفاصيل الإعلان", "Listing details")} />
         <main className="container-wide pt-10">
           <StateCard
-            title={text("جارٍ تحميل الإعلان", "Loading listing")}
-            body={text("نجهّز تفاصيل الإعلان للعرض.", "Preparing listing details.")}
+            title={text("جاري تحميل الإعلان", "Loading listing")}
+            body={text("نجهز تفاصيل الإعلان للعرض.", "Preparing listing details.")}
           />
         </main>
       </>
@@ -159,12 +145,12 @@ function ListingDetailsPage() {
         <PageHeader title={text("تفاصيل الإعلان", "Listing details")} />
         <main className="container-wide pt-10">
           <StateCard
-            title={text("الإعلان غير متاح", "Listing unavailable")}
+            title={text("لا يمكن عرض هذا الإعلان", "Listing cannot be shown")}
             body={
               error?.message ??
               text(
-                "هذا الإعلان غير متاح أو لم تتم الموافقة عليه.",
-                "This listing is unavailable or not approved.",
+                "قد يكون الإعلان خارج العرض العام أو لم تتم الموافقة عليه.",
+                "The listing may be outside public display or not approved.",
               )
             }
             actionLabel={text("تصفح الإعلانات", "Browse listings")}
@@ -183,6 +169,16 @@ function ListingDetailsPage() {
     listing.governorateNameAr ?? undefined,
     language,
   );
+  const phone = detailString(listing, ["phone", "mobile", "contact_phone", "رقم الهاتف", "الهاتف"]);
+  const whatsapp = detailString(listing, [
+    "whatsapp",
+    "whatsApp",
+    "contact_whatsapp",
+    "واتساب",
+    "رقم واتساب",
+  ]);
+  const canCall = Boolean(listing.contactOptions.phone && phone);
+  const canWhatsapp = Boolean(listing.contactOptions.whatsapp && whatsapp);
 
   return (
     <>
@@ -220,7 +216,7 @@ function ListingDetailsPage() {
               <Camera className="h-3 w-3" />
               {images.length
                 ? text(`${images.length} صورة`, `${images.length} photos`)
-                : text("معرض صور الإعلان", "Listing image area")}
+                : text("منطقة صور الإعلان", "Listing image area")}
             </span>
           </div>
         </div>
@@ -267,6 +263,7 @@ function ListingDetailsPage() {
               </div>
             </div>
             <button
+              type="button"
               onClick={() => void toggleFavorite()}
               aria-label={text("حفظ في المفضلة", "Save to favorites")}
               className="grid h-11 w-11 place-items-center rounded-full bg-muted-surface transition hover:bg-secondary"
@@ -316,10 +313,7 @@ function ListingDetailsPage() {
           </h2>
           <p className="whitespace-pre-line text-sm leading-7 text-foreground/90">
             {listing.description?.trim() ||
-              text(
-                "لم يضف البائع وصفاً مفصلاً.",
-                "The seller has not added a detailed description.",
-              )}
+              text("لم يضف البائع وصفا مفصلا.", "The seller has not added a detailed description.")}
           </p>
         </section>
 
@@ -346,69 +340,41 @@ function ListingDetailsPage() {
           <h2 className="mb-3 text-sm font-extrabold text-foreground">
             {text("التواصل مع البائع", "Contact seller")}
           </h2>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <button
-              type="button"
-              onClick={() => setContactOpen((value) => !value)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-xs font-bold text-primary-foreground"
-            >
-              <Send className="h-4 w-4" />
-              {text("رسالة", "Message")}
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                setActionMessage(
-                  text(
-                    "تظهر أرقام الهاتف فقط عندما يختار البائع إظهارها.",
-                    "Phone numbers appear only when the seller chooses to show them.",
-                  ),
-                )
-              }
-              className="rounded-xl bg-muted-surface py-3 text-xs font-bold"
-            >
-              {text("اتصال", "Call")}
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                setActionMessage(
-                  text(
-                    "تم تجهيز الانتقال إلى واتساب وفق إعدادات الإعلان.",
-                    "WhatsApp handoff was prepared based on listing settings.",
-                  ),
-                )
-              }
-              className="rounded-xl bg-muted-surface py-3 text-xs font-bold"
-            >
-              {text("واتساب", "WhatsApp")}
-            </button>
-          </div>
-          {contactOpen && (
-            <div className="mt-3 rounded-xl bg-muted-surface p-3">
-              <textarea
-                value={messageDraft}
-                onChange={(event) => setMessageDraft(event.target.value)}
-                rows={3}
-                placeholder={text(
-                  "اكتب رسالة قصيرة للبائع...",
-                  "Write a short message to the seller...",
-                )}
-                className="w-full resize-none rounded-xl border border-input bg-card px-3 py-2 text-sm outline-none"
-              />
-              <button
-                type="button"
-                onClick={sendLocalMessage}
-                className="mt-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {canCall ? (
+              <a
+                href={`tel:${phone}`}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-xs font-bold text-primary-foreground"
               >
-                {text("تجهيز الرسالة", "Prepare message")}
-              </button>
-            </div>
-          )}
+                <Phone className="h-4 w-4" />
+                {text("اتصال", "Call")}
+              </a>
+            ) : (
+              <UnavailableContact label={text("اتصال", "Call")} />
+            )}
+            {canWhatsapp ? (
+              <a
+                href={`https://wa.me/${normalizePhoneForWhatsapp(whatsapp)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-xl bg-emerald-trust py-3 text-xs font-bold text-emerald-trust-foreground"
+              >
+                {text("واتساب", "WhatsApp")}
+              </a>
+            ) : (
+              <UnavailableContact label={text("واتساب", "WhatsApp")} />
+            )}
+          </div>
+          <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
+            {text(
+              "تظهر طرق التواصل النشطة فقط عندما يختار البائع عرضها داخل بيانات الإعلان.",
+              "Active contact methods appear only when the seller provides them in listing details.",
+            )}
+          </p>
           <p className="mt-3 inline-flex items-start gap-1 text-[11px] text-warning">
             <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
             {text(
-              "لا تشارك بيانات حساسة أو تحوّل المال قبل التأكد من السلعة.",
+              "لا تشارك بيانات حساسة أو تحول المال قبل التأكد من السلعة.",
               "Do not share sensitive data or transfer money before verifying the item.",
             )}
           </p>
@@ -424,13 +390,14 @@ function ListingDetailsPage() {
               <ul className="list-disc space-y-1 ps-5">
                 <li>{text("قابل البائع في مكان عام وآمن.", "Meet in a public, safe place.")}</li>
                 <li>{text("افحص السلعة قبل الدفع.", "Inspect the item before paying.")}</li>
-                <li>{text("بلّغ عن أي إعلان مشبوه.", "Report suspicious listings.")}</li>
+                <li>{text("بلغ عن أي إعلان مشبوه.", "Report suspicious listings.")}</li>
               </ul>
             </div>
           </div>
         </section>
 
         <button
+          type="button"
           onClick={() => void reportListing()}
           className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold text-destructive hairline transition hover:bg-destructive/5"
         >
@@ -452,6 +419,18 @@ function Badge({ children }: { children: React.ReactNode }) {
     <span className="rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">
       {children}
     </span>
+  );
+}
+
+function UnavailableContact({ label }: { label: string }) {
+  return (
+    <button
+      type="button"
+      disabled
+      className="rounded-xl bg-muted-surface py-3 text-xs font-bold text-muted-foreground opacity-70"
+    >
+      {label}
+    </button>
   );
 }
 
@@ -482,8 +461,21 @@ function StateCard({
   );
 }
 
+function detailString(listing: ClassifiedListing, keys: string[]) {
+  for (const key of keys) {
+    const value = listing.details[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number") return String(value);
+  }
+  return "";
+}
+
+function normalizePhoneForWhatsapp(value: string) {
+  return value.replace(/[^\d]/g, "");
+}
+
 function formatDate(value: string, language: Language) {
-  if (!value) return language === "ar" ? "تاريخ غير متاح" : "Date unavailable";
+  if (!value) return language === "ar" ? "تاريخ غير محدد" : "Date unavailable";
   return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
     dateStyle: "medium",
   }).format(new Date(value));

@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Bell,
   Languages,
@@ -23,16 +23,12 @@ interface Props {
 }
 
 export function AppHeader({ compact = false, title }: Props) {
-  const [gov, setGov] = useState("");
   const [open, setOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
+  const navigate = useNavigate();
   const auth = useAuth();
   const { language, text, theme, toggleLanguage, toggleTheme } = useUiPreferences();
-  const selectedGovernorate = governorates.find((item) => item.id === gov);
-  const govLabel = selectedGovernorate
-    ? governorateName(selectedGovernorate.id, selectedGovernorate.nameAr, language)
-    : text("كل سوريا", "All Syria");
 
   useEffect(() => {
     let cancelled = false;
@@ -45,6 +41,15 @@ export function AppHeader({ compact = false, title }: Props) {
       cancelled = true;
     };
   }, []);
+
+  function goToGovernorate(governorateId?: string) {
+    setOpen(false);
+    if (governorateId) {
+      void navigate({ to: "/listings", search: { gov: governorateId } });
+      return;
+    }
+    void navigate({ to: "/listings" });
+  }
 
   return (
     <header className="sticky top-0 z-30 bg-primary text-primary-foreground shadow-soft">
@@ -88,8 +93,8 @@ export function AppHeader({ compact = false, title }: Props) {
           <button
             type="button"
             onClick={() => setNotificationsOpen((value) => !value)}
-            aria-label={text("الإشعارات", "Notifications")}
-            title={text("الإشعارات", "Notifications")}
+            aria-label={text("التنبيهات", "Notifications")}
+            title={text("التنبيهات", "Notifications")}
             className="relative grid h-9 w-9 place-items-center rounded-full bg-primary-foreground/10 text-primary-foreground/70 transition hover:bg-primary-foreground/20"
           >
             <Bell className="h-4 w-4" />
@@ -130,12 +135,13 @@ export function AppHeader({ compact = false, title }: Props) {
       {!compact && (
         <div className="container-wide flex flex-wrap items-center justify-between gap-2 pb-3">
           <button
+            type="button"
             onClick={() => setOpen((value) => !value)}
             aria-expanded={open}
             className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/10 px-3 py-1.5 text-sm font-medium transition hover:bg-primary-foreground/20"
           >
             <MapPin className="h-4 w-4 text-gold" />
-            {govLabel}
+            {text("اختر المحافظة", "Choose governorate")}
           </button>
           <span className="inline-flex items-center gap-1 text-[11px] text-primary-foreground/60 sm:hidden">
             <ShieldCheck className="h-3 w-3 text-gold" /> {text("سوريا فقط", "Syria only")}
@@ -153,10 +159,8 @@ export function AppHeader({ compact = false, title }: Props) {
         <div className="container-wide pb-3">
           <div className="max-h-[60vh] overflow-y-auto rounded-xl bg-card p-2 text-foreground shadow-premium">
             <button
-              onClick={() => {
-                setGov("");
-                setOpen(false);
-              }}
+              type="button"
+              onClick={() => goToGovernorate()}
               className="block w-full rounded-lg px-3 py-2 text-start text-sm font-medium hover:bg-muted-surface"
             >
               {text("كل سوريا", "All Syria")}
@@ -164,10 +168,8 @@ export function AppHeader({ compact = false, title }: Props) {
             {governorates.map((governorate) => (
               <button
                 key={governorate.id}
-                onClick={() => {
-                  setGov(governorate.id);
-                  setOpen(false);
-                }}
+                type="button"
+                onClick={() => goToGovernorate(governorate.id)}
                 className="block w-full rounded-lg px-3 py-2 text-start text-sm hover:bg-muted-surface"
               >
                 {governorateName(governorate.id, governorate.nameAr, language)}
@@ -181,7 +183,7 @@ export function AppHeader({ compact = false, title }: Props) {
         <div className="container-wide pb-3">
           <div className="ms-auto max-w-sm rounded-xl bg-card p-3 text-foreground shadow-premium hairline">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-extrabold">{text("الإشعارات", "Notifications")}</p>
+              <p className="text-sm font-extrabold">{text("التنبيهات", "Notifications")}</p>
               <button
                 type="button"
                 onClick={() => setNotificationsOpen(false)}

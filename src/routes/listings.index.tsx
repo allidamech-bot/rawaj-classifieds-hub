@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import { Clock, MapPin, Search, SlidersHorizontal } from "lucide-react";
+import { Clock, MapPin, Search } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import {
@@ -29,8 +29,11 @@ export const Route = createFileRoute("/listings/")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "تصفّح الإعلانات | رَوَاج" },
-      { name: "description", content: "نتائج البحث والإعلانات على رَوَاج، السوق السوري المجاني." },
+      { title: "تصفح الإعلانات | رواج" },
+      {
+        name: "description",
+        content: "نتائج البحث والإعلانات المعتمدة على رواج، السوق السوري المجاني.",
+      },
     ],
   }),
   component: ListingsPage,
@@ -42,7 +45,7 @@ function ListingsPage() {
   const [sort, setSort] = useState<"latest" | "cheapest" | "expensive" | "featured">(
     search.sort ?? "latest",
   );
-  const [govId, setGovId] = useState<string>("");
+  const [govId, setGovId] = useState("");
   const [q, setQ] = useState(search.q ?? "");
   const [open, setOpen] = useState(false);
   const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
@@ -50,8 +53,6 @@ function ListingsPage() {
   const [items, setItems] = useState<ClassifiedListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
-  const [savedSearchMessage, setSavedSearchMessage] = useState("");
-  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const selectedCategory = useMemo(
     () =>
@@ -146,7 +147,7 @@ function ListingsPage() {
   const sortChips = [
     { id: "latest", label: text("الأحدث", "Latest") },
     { id: "cheapest", label: text("الأرخص", "Lowest price") },
-    { id: "expensive", label: text("الأعلى سعراً", "Highest price") },
+    { id: "expensive", label: text("الأعلى سعرا", "Highest price") },
     { id: "featured", label: text("المميز", "Featured") },
   ] as const;
 
@@ -165,6 +166,7 @@ function ListingsPage() {
             />
           </div>
           <button
+            type="button"
             onClick={() => setOpen((value) => !value)}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground"
           >
@@ -205,6 +207,7 @@ function ListingsPage() {
           {sortChips.map((chip) => (
             <button
               key={chip.id}
+              type="button"
               onClick={() => setSort(chip.id)}
               className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
                 sort === chip.id
@@ -215,44 +218,12 @@ function ListingsPage() {
               {chip.label}
             </button>
           ))}
-          <button
-            type="button"
-            onClick={() => setAdvancedOpen((value) => !value)}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hairline transition hover:bg-muted-surface"
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" /> {text("خيارات البحث", "Search options")}
-          </button>
         </div>
-
-        {advancedOpen && (
-          <div className="mt-2 rounded-2xl bg-card p-3 hairline">
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              {[
-                text("إعلانات بسعر محدد", "Priced listings"),
-                text("إعلانات مميزة", "Featured listings"),
-                text("الأحدث خلال الأسبوع", "Newest this week"),
-              ].map((label) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() =>
-                    setSavedSearchMessage(
-                      text(`تم تطبيق خيار البحث: ${label}`, `Search option applied: ${label}`),
-                    )
-                  }
-                  className="rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold text-foreground"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
           <span>
             {loading
-              ? text("جارٍ تحميل الإعلانات...", "Loading listings...")
+              ? text("جاري تحميل الإعلانات...", "Loading listings...")
               : text(`${items.length} إعلان معتمد`, `${items.length} approved listings`)}
           </span>
           {selectedCategory && (
@@ -277,31 +248,11 @@ function ListingsPage() {
               {text("إعادة ضبط الفلاتر", "Reset filters")}
             </Link>
           )}
-          <button
-            type="button"
-            onClick={() =>
-              setSavedSearchMessage(
-                text(
-                  "تم حفظ إعدادات البحث في هذه الجلسة. ستجدها في صفحة عمليات البحث المحفوظة.",
-                  "Search settings saved for this session. You can review them on Saved searches.",
-                ),
-              )
-            }
-            className="rounded-full bg-gold px-3 py-1.5 text-xs font-bold text-gold-foreground"
-          >
-            {text("حفظ البحث", "Save search")}
-          </button>
         </div>
-
-        {savedSearchMessage && (
-          <p className="mt-3 rounded-xl bg-emerald-trust/10 p-3 text-xs font-semibold text-foreground hairline">
-            {savedSearchMessage}
-          </p>
-        )}
 
         {loading ? (
           <StateCard
-            title={text("جارٍ تحميل الإعلانات", "Loading listings")}
+            title={text("جاري تحميل الإعلانات", "Loading listings")}
             body={text(
               "نبحث عن الإعلانات المعتمدة المتاحة للتصفح داخل سوريا.",
               "Looking for approved listings available across Syria.",
@@ -309,11 +260,7 @@ function ListingsPage() {
           />
         ) : error ? (
           <StateCard
-            title={
-              error.code === "schema_missing" || error.code === "supabase_unconfigured"
-                ? text("تعذر تحميل الإعلانات", "Could not load listings")
-                : text("تعذر تحميل الإعلانات", "Could not load listings")
-            }
+            title={text("تعذر تحميل الإعلانات", "Could not load listings")}
             body={
               error.code === "schema_missing" || error.code === "supabase_unconfigured"
                 ? text(
@@ -327,10 +274,10 @@ function ListingsPage() {
           />
         ) : items.length === 0 ? (
           <StateCard
-            title={text("لا توجد إعلانات مطابقة حالياً", "No matching listings yet")}
+            title={text("لا توجد إعلانات مطابقة الآن", "No matching listings now")}
             body={text(
-              "كن أول من يضيف إعلاناً في هذا القسم. تظهر هنا الإعلانات المعتمدة فقط بعد المراجعة.",
-              "Be the first to post in this category. Only approved listings appear here after review.",
+              "تظهر هنا الإعلانات المعتمدة فقط بعد المراجعة.",
+              "Only approved listings appear here after review.",
             )}
             actionLabel={text("أضف إعلانك", "Post your listing")}
             actionTo="/add-listing"
@@ -358,6 +305,7 @@ function GovernorateChip({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
         active
@@ -457,7 +405,7 @@ function StateCard({
 }
 
 function formatDate(value: string, language: "ar" | "en") {
-  if (!value) return language === "ar" ? "تاريخ غير متاح" : "Date unavailable";
+  if (!value) return language === "ar" ? "تاريخ غير محدد" : "Date unavailable";
   return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
     dateStyle: "medium",
   }).format(new Date(value));

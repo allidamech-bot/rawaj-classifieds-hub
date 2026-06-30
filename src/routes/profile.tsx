@@ -2,30 +2,25 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   BadgeCheck,
-  Bell,
   Bookmark,
   ChevronLeft,
+  Eye,
   FileSpreadsheet,
   FileText,
   Heart,
   LifeBuoy,
-  Lock,
   LogIn,
   LogOut,
-  MessageCircle,
+  Pencil,
   Plus,
   RefreshCcw,
-  Settings,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
-  Store,
   Trash2,
   User,
   UserCog,
   UserPlus,
-  Eye,
-  Pencil,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -39,7 +34,7 @@ import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({ meta: [{ title: "حسابي | رَوَاج" }] }),
+  head: () => ({ meta: [{ title: "حسابي | رواج" }] }),
   component: ProfilePage,
 });
 
@@ -53,7 +48,6 @@ const accountMenu = [
     labelEn: "Saved searches",
     icon: Bookmark,
   },
-  { to: "/chats", labelAr: "الرسائل", labelEn: "Chats", icon: MessageCircle },
   {
     to: "/promotion",
     labelAr: "الترويج والتمييز",
@@ -78,16 +72,6 @@ const accountMenu = [
   icon: typeof User;
   ownerOnly?: boolean;
 }>;
-
-const settings = [
-  { labelAr: "المعلومات الشخصية", labelEn: "Personal information", icon: User },
-  { labelAr: "بيانات التواصل", labelEn: "Contact details", icon: MessageCircle },
-  { labelAr: "الخصوصية", labelEn: "Privacy", icon: Lock },
-  { labelAr: "الإشعارات", labelEn: "Notifications", icon: Bell },
-  { labelAr: "إعدادات البائع/المتجر", labelEn: "Seller/store settings", icon: Store },
-  { labelAr: "توثيق الحساب", labelEn: "Account verification", icon: BadgeCheck },
-  { labelAr: "إعدادات الحساب", labelEn: "Account settings", icon: Settings },
-] as const;
 
 function ProfilePage() {
   const auth = useAuth();
@@ -125,7 +109,7 @@ function ProfilePage() {
     setListingActionLoading(null);
     if (result.ok) {
       setListingActionNotice(
-        text("تم إعادة إرسال الإعلان للمراجعة.", "Listing resubmitted for review."),
+        text("تمت إعادة إرسال الإعلان للمراجعة.", "Listing resubmitted for review."),
       );
       void reloadListings();
     } else {
@@ -134,7 +118,7 @@ function ProfilePage() {
   }
 
   async function handleDelete(listingId: string) {
-    if (!confirm(text("حذف الإعلان نهائياً؟", "Delete this listing permanently?"))) return;
+    if (!confirm(text("حذف الإعلان نهائيا؟", "Delete this listing permanently?"))) return;
     setListingActionLoading(listingId);
     setListingActionNotice("");
     const result = await deleteOwnerListing(profileId ?? null, listingId);
@@ -149,14 +133,12 @@ function ProfilePage() {
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) return;
-    const currentProfileId = profileId;
     let cancelled = false;
     async function loadListings() {
       setMyListingsLoading(true);
       setMyListingsError(null);
       await reloadListings();
-      if (cancelled) return;
-      setMyListingsLoading(false);
+      if (!cancelled) setMyListingsLoading(false);
     }
     void loadListings();
     return () => {
@@ -166,26 +148,26 @@ function ProfilePage() {
 
   const authNote =
     auth.status === "loading"
-      ? text("جارٍ تحميل جلسة الحساب.", "Loading account session.")
+      ? text("جاري تحميل جلسة الحساب.", "Loading account session.")
       : auth.status === "authError"
         ? text(
-            "تعذر قراءة بيانات الحساب أو الصلاحيات.",
+            "تعذرت قراءة بيانات الحساب أو الصلاحيات.",
             "Could not read account or permission data.",
           )
         : auth.status === "signedIn"
           ? text(
-              "جلسة الحساب جاهزة، والصلاحيات تُقرأ من مصدر الأدوار.",
+              "جلسة الحساب جاهزة والصلاحيات تقرأ من مصدر الأدوار.",
               "Account session is ready, and permissions are read from the role source.",
             )
           : text(
-              "تصفح رَوَاج متاح، وسجّل الدخول لإدارة إعلاناتك وحفظ تفضيلاتك.",
+              "تصفح رواج متاح، وسجل الدخول لإدارة إعلاناتك وحفظ تفضيلاتك.",
               "RAWAJ browsing is available; log in to manage listings and saved preferences.",
             );
 
   return (
     <>
       <PageHeader title={text("حسابي", "My account")} back={false} />
-      <main className="container-wide pt-4 pb-10 space-y-5">
+      <main className="container-wide space-y-5 pt-4 pb-10">
         <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-premium">
           <div className="flex items-center gap-3">
             <span className="grid h-14 w-14 place-items-center rounded-full bg-primary-foreground/10">
@@ -199,6 +181,7 @@ function ProfilePage() {
           {auth.status === "signedIn" ? (
             <div className="mt-4">
               <button
+                type="button"
                 onClick={handleLogout}
                 className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary-foreground/10 px-3 py-2 text-xs font-bold"
               >
@@ -246,9 +229,7 @@ function ProfilePage() {
             />
             <Metric
               label={text("الوصول الإداري", "Admin access")}
-              value={
-                auth.canAccessAdmin ? text("مسموح", "Allowed") : text("غير متاح", "Unavailable")
-              }
+              value={auth.canAccessAdmin ? text("مسموح", "Allowed") : text("لا يوجد", "None")}
             />
           </div>
         </section>
@@ -286,15 +267,15 @@ function ProfilePage() {
             </div>
             {myListingsLoading ? (
               <p className="text-xs text-muted-foreground">
-                {text("جارٍ تحميل إعلاناتك.", "Loading your listings.")}
+                {text("جاري تحميل إعلاناتك.", "Loading your listings.")}
               </p>
             ) : myListingsError ? (
               <p className="text-xs text-muted-foreground">{myListingsError.message}</p>
             ) : myListings.length === 0 ? (
               <p className="text-xs text-muted-foreground">
                 {text(
-                  "لا توجد إعلانات مرتبطة بحسابك حالياً.",
-                  "No listings are linked to your account yet.",
+                  "لا توجد إعلانات مرتبطة بحسابك الآن.",
+                  "No listings are linked to your account now.",
                 )}
               </p>
             ) : (
@@ -323,7 +304,7 @@ function ProfilePage() {
                             {text("بدون صورة", "No photo")}
                           </div>
                         )}
-                        <div className="flex-1 min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <span className="text-sm font-bold">{listing.title}</span>
                             <span className="rounded-md bg-card px-2 py-0.5 text-[10px] font-bold hairline">
@@ -358,17 +339,6 @@ function ProfilePage() {
                                 },
                               )}
                             </span>
-                            {listing.updatedAt !== listing.createdAt && (
-                              <span>
-                                {text("محدث", "Updated")}{" "}
-                                {new Date(listing.updatedAt).toLocaleDateString(
-                                  language === "ar" ? "ar-SY" : "en-US",
-                                  {
-                                    dateStyle: "short",
-                                  },
-                                )}
-                              </span>
-                            )}
                           </div>
                           {listing.rejectionReason && (
                             <p className="mt-1 text-[10px] text-destructive">
@@ -384,14 +354,16 @@ function ProfilePage() {
                               <Eye className="h-3 w-3" />
                               {text("عرض", "View")}
                             </Link>
-                            <Link
-                              to="/profile/listings/$id"
-                              params={{ id: listing.id }}
-                              className="inline-flex items-center gap-1 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline transition hover:bg-secondary"
-                            >
-                              <Pencil className="h-3 w-3" />
-                              {text("تعديل", "Edit")}
-                            </Link>
+                            {canModify && (
+                              <Link
+                                to="/profile/listings/$id"
+                                params={{ id: listing.id }}
+                                className="inline-flex items-center gap-1 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline transition hover:bg-secondary"
+                              >
+                                <Pencil className="h-3 w-3" />
+                                {text("تعديل", "Edit")}
+                              </Link>
+                            )}
                             {(listing.status === "draft" || listing.status === "rejected") && (
                               <>
                                 <button
@@ -415,10 +387,10 @@ function ProfilePage() {
                               </>
                             )}
                             {listing.status === "approved" && (
-                              <span className="inline-flex items-center gap-1 rounded-lg bg-muted-surface px-2 py-1 text-[10px] text-muted-foreground">
+                              <span className="inline-flex items-center gap-1 rounded-lg bg-card px-2 py-1 text-[10px] text-muted-foreground hairline">
                                 {text(
-                                  "لا يمكن تعديل إعلان معتمد حالياً",
-                                  "Approved listings cannot be edited currently",
+                                  "الإعلان المعتمد يظهر للزوار ولا يتم تعديله من هذه القائمة.",
+                                  "Approved listings are visible to visitors and are not edited from this list.",
                                 )}
                               </span>
                             )}
@@ -438,35 +410,16 @@ function ProfilePage() {
           </section>
         )}
 
-        <section>
+        <section className="rounded-2xl bg-card p-4 hairline">
           <h3 className="mb-2 text-sm font-extrabold">
             {text("إعدادات الحساب", "Account settings")}
           </h3>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {settings.map((item) => (
-              <button
-                key={item.labelAr}
-                type="button"
-                onClick={() =>
-                  setNotice(
-                    text(
-                      "تم حفظ تفضيل الواجهة لهذه الجلسة.",
-                      "Interface preference saved for this session.",
-                    ),
-                  )
-                }
-                className="flex items-center justify-between rounded-2xl bg-card p-4 hairline"
-              >
-                <span className="inline-flex items-center gap-2 text-sm font-bold">
-                  <item.icon className="h-4 w-4 text-primary" />
-                  {language === "ar" ? item.labelAr : item.labelEn}
-                </span>
-                <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-                  {text("تعديل", "Edit")}
-                </span>
-              </button>
-            ))}
-          </div>
+          <p className="text-xs leading-6 text-muted-foreground">
+            {text(
+              "تغييرات الحساب الحساسة تحتاج مسارات محفوظة وصلاحيات واضحة قبل عرض أزرار تعديل مباشرة.",
+              "Sensitive account changes require stored flows and clear permissions before direct edit actions are shown.",
+            )}
+          </p>
         </section>
 
         <section className="rounded-2xl bg-card-warm p-4 hairline">
@@ -476,24 +429,10 @@ function ProfilePage() {
           </h3>
           <p className="text-xs leading-6 text-muted-foreground">
             {text(
-              "يمكن تجهيز طلب توثيق من الواجهة، وتبقى أي موافقة فعلية خاضعة لمراجعة المالك والصلاحيات.",
-              "You can prepare a verification request in the interface; any real approval remains subject to owner review and permissions.",
+              "أي موافقة فعلية على التوثيق تبقى خاضعة لمراجعة المالك والصلاحيات المحمية.",
+              "Any real verification approval remains subject to owner review and protected permissions.",
             )}
           </p>
-          <button
-            type="button"
-            onClick={() =>
-              setNotice(
-                text(
-                  "تم تجهيز طلب التوثيق لهذه الجلسة.",
-                  "Verification request prepared for this session.",
-                ),
-              )
-            }
-            className="mt-3 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold"
-          >
-            {text("طلب التوثيق", "Request verification")}
-          </button>
         </section>
 
         {notice && (
