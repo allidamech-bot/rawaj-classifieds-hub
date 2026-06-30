@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Sparkles,
@@ -253,6 +253,20 @@ function PromotionPage() {
         <p className="text-center text-[11px] text-muted-foreground">
           لن يتم تنفيذ أي عملية دفع أو تحويل بنكي ضمن النسخة التجريبية الحالية.
         </p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <Link
+            to="/add-listing"
+            className="rounded-xl bg-gold px-4 py-2.5 text-center text-sm font-bold text-gold-foreground"
+          >
+            أضف إعلاناً أولاً
+          </Link>
+          <Link
+            to="/listings"
+            className="rounded-xl bg-card px-4 py-2.5 text-center text-sm font-bold hairline"
+          >
+            تصفح الإعلانات
+          </Link>
+        </div>
       </main>
     </>
   );

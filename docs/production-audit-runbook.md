@@ -68,3 +68,5 @@ from Supabase Dashboard SQL Editor only.
 This frontend stabilization batch freezes backend/Supabase changes temporarily. The next backend pass should
 handle production deploy env wiring, final listing lifecycle QA, real signup/onboarding, public seller profile
 fields, messaging, notifications, promotion/payment review, and production support workflows.
+
+See `docs/frontend-route-completion.md` for the frontend route map, user-flow checklist, and coming-soon boundaries.

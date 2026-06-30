@@ -186,7 +186,7 @@ function HomePage() {
 
         {/* Featured */}
         <section className="mt-7">
-          <SectionHeader title="إعلانات مميزة" action={{ label: "عرض الكل" }} />
+          <SectionHeader title="إعلانات مميزة" action={{ label: "عرض الكل", to: "/listings" }} />
           <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
             {featuredListings.map((l) => (
               <ListingCard key={l.id} listing={l} variant="horizontal" />
@@ -196,7 +196,7 @@ function HomePage() {
 
         {/* Latest */}
         <section className="mt-7">
-          <SectionHeader title="أحدث الإعلانات" action={{ label: "عرض الكل" }} />
+          <SectionHeader title="أحدث الإعلانات" action={{ label: "عرض الكل", to: "/listings" }} />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {latestListings.slice(0, 9).map((l) => (
               <ListingCard key={l.id} listing={l} />

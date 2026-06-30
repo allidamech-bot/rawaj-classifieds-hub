@@ -203,7 +203,7 @@ function ReportsPage() {
             <Info
               rows={[
                 ["Reported listing/user", report.target],
-                ["Reporter placeholder", report.reporter],
+                ["مبلّغ تجريبي", report.reporter],
                 ["Reason", report.reason],
                 ["Created time", report.created],
                 ["Status", report.status],
@@ -272,7 +272,7 @@ function InternalNote() {
     <div className="mt-3 rounded-xl bg-muted-surface p-3 text-xs">
       <b>ملاحظة داخلية</b>
       <p className="mt-1 text-muted-foreground">
-        أضيفت بواسطة: مشرف تجريبي · التاريخ: placeholder · الحالة: غير مفعّلة
+        أضيفت بواسطة: مشرف تجريبي · التاريخ: قيد التجهيز · الحالة: غير مفعّلة
       </p>
       <button
         disabled

@@ -77,7 +77,8 @@ function SellerPage() {
               <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-primary-foreground/80">
                 <span>{labelType(seller.type)}</span>
                 <span className="inline-flex items-center gap-1">
-                  <Star className="h-3 w-3 fill-gold text-gold" /> {seller.rating.toFixed(1)}
+                  <Star className="h-3 w-3 fill-gold text-gold" /> تقييم تجريبي{" "}
+                  {seller.rating.toFixed(1)}
                 </span>
                 <span>منذ {new Date(seller.joinedAt).getFullYear()}</span>
                 <span>{sellerListings.length} إعلان</span>
@@ -128,11 +129,16 @@ function SellerPage() {
         </section>
 
         <section className="mt-5">
-          <h2 className="mb-3 text-lg font-extrabold">
-            <span className="inline-block border-b-2 border-gold pb-0.5">
-              الإعلانات النشطة ({sellerListings.length})
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-extrabold">
+              <span className="inline-block border-b-2 border-gold pb-0.5">
+                الإعلانات النشطة ({sellerListings.length})
+              </span>
+            </h2>
+            <span className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground">
+              نموذج عرض · ليست بيانات إنتاجية
             </span>
-          </h2>
+          </div>
           {sellerListings.length === 0 ? (
             <div className="rounded-2xl bg-card p-8 text-center hairline text-sm text-muted-foreground">
               لا توجد إعلانات نشطة لهذا البائع حالياً.

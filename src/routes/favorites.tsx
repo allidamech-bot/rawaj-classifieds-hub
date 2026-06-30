@@ -208,12 +208,20 @@ function Panel({
       <p className="mt-3 text-sm font-bold">{title}</p>
       {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
       {actionLabel && actionTo && (
-        <Link
-          to={actionTo}
-          className="mt-5 inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground"
-        >
-          {actionLabel}
-        </Link>
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          <Link
+            to={actionTo}
+            className="inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground"
+          >
+            {actionLabel}
+          </Link>
+          <Link
+            to="/add-listing"
+            className="inline-block rounded-xl bg-muted-surface px-5 py-2 text-sm font-bold text-foreground"
+          >
+            أضف إعلاناً
+          </Link>
+        </div>
       )}
     </div>
   );

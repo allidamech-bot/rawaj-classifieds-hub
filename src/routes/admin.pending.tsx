@@ -188,7 +188,7 @@ function PendingPage() {
                 ["حالة المراجعة", listing.status],
                 ["السبب/الملاحظة", listing.reason],
                 ["المشرف المعيّن", listing.admin],
-                ["ملاحظة داخلية placeholder", listing.note],
+                ["ملاحظة داخلية قيد التجهيز", listing.note],
               ]}
             />
             <ActionRow
@@ -263,7 +263,7 @@ function InternalNote() {
     <div className="mt-3 rounded-xl bg-muted-surface p-3 text-xs">
       <b>ملاحظة داخلية</b>
       <p className="mt-1 text-muted-foreground">
-        أضيفت بواسطة: مشرف تجريبي · التاريخ: placeholder · الحالة: غير مفعّلة
+        أضيفت بواسطة: مشرف تجريبي · التاريخ: قيد التجهيز · الحالة: غير مفعّلة
       </p>
       <button
         disabled

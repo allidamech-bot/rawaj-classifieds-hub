@@ -224,6 +224,23 @@ function ListingsPage() {
           )}
         </div>
 
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Link
+            to="/categories"
+            className="rounded-full bg-card px-3 py-1.5 text-xs font-bold text-foreground hairline"
+          >
+            تصفح الأقسام
+          </Link>
+          {(q || govId || selectedCategory) && (
+            <Link
+              to="/listings"
+              className="rounded-full bg-muted-surface px-3 py-1.5 text-xs font-bold text-muted-foreground"
+            >
+              إعادة ضبط الفلاتر
+            </Link>
+          )}
+        </div>
+
         {loading ? (
           <StateCard
             title="جارٍ تحميل الإعلانات"
