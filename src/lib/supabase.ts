@@ -25,12 +25,12 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
 export function getSupabaseAuthUnavailableReason() {
   if (isSupabaseConfigured) return null;
   if (!hasSupabaseUrl && !hasSupabaseAnonKey) {
-    return "الحسابات والبيانات الحقيقية قيد التفعيل حالياً. يمكنك متابعة تصفح الواجهة، وسيتم تفعيل الدخول والإعلانات قريباً.";
+    return "تعذر الوصول إلى خدمة الحسابات والبيانات الآن. التصفح العام متاح ويمكنك المحاولة مرة أخرى.";
   }
 
   if (!hasSupabaseUrl) {
-    return "الاتصال التشغيلي قيد التفعيل حالياً. التصفح العام متاح، وسيتم تفعيل الحسابات قريباً.";
+    return "تعذر الوصول إلى اتصال Supabase الآن. التصفح العام متاح ويمكنك المحاولة مرة أخرى.";
   }
 
-  return "الدخول إلى الحسابات قيد التفعيل حالياً. يمكنك تصفح رَوَاج الآن والعودة لتسجيل الدخول قريباً.";
+  return "تعذر الوصول إلى خدمة الحسابات الآن. يمكنك تصفح رَوَاج والمحاولة مرة أخرى.";
 }

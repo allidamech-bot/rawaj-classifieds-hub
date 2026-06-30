@@ -1,147 +1,167 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, FileCheck, Sparkles } from "lucide-react";
-import { demoNotice, featuredListingQueue, promotions } from "@/data/adminMockData";
-import { uiLabel } from "@/lib/i18n";
-import { useUiPreferences, type Language } from "@/lib/ui-preferences";
+import { useState } from "react";
+import { useUiPreferences } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/admin/promotions")({
   component: PromotionsPage,
 });
 
-const summary = [
-  ["طلبات جديدة", "18"],
-  ["بانتظار إثبات الدفع", "9"],
-  ["قيد المراجعة", "11"],
-  ["مفعّلة", "24"],
-  ["مرفوضة", "4"],
-  ["منتهية", "17"],
+const requests = [
+  {
+    id: "PR-1007",
+    listing: "سيارة كيا",
+    seller: "أحمد",
+    planAr: "7 أيام",
+    planEn: "7 days",
+    statusAr: "بانتظار المراجعة",
+    statusEn: "Awaiting review",
+    amount: "50,000 ل.س",
+  },
+  {
+    id: "PR-1008",
+    listing: "شقة للإيجار",
+    seller: "مكتب الشام",
+    planAr: "14 يوم",
+    planEn: "14 days",
+    statusAr: "إثبات دفع مرفق",
+    statusEn: "Proof attached",
+    amount: "90,000 ل.س",
+  },
+  {
+    id: "PR-1009",
+    listing: "هاتف سامسونج",
+    seller: "متجر الساحل",
+    planAr: "3 أيام",
+    planEn: "3 days",
+    statusAr: "قيد المراجعة",
+    statusEn: "Under review",
+    amount: "25,000 ل.س",
+  },
 ];
 
 function PromotionsPage() {
   const { language, text } = useUiPreferences();
+  const [notice, setNotice] = useState("");
+
+  function localAction(ar: string, en: string) {
+    setNotice(text(ar, en));
+  }
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-warning/10 p-3 hairline text-xs text-foreground/90">
-        {uiLabel(
-          "لا توجد معالجة دفع حقيقية حالياً. تفاصيل التحويل وإثبات الدفع حقول تجريبية فقط.",
-          language,
-        )}{" "}
-        {uiLabel(demoNotice, language)}
-      </div>
+      <section className="rounded-2xl bg-card p-4 hairline">
+        <h2 className="flex items-center gap-2 text-base font-extrabold">
+          <Sparkles className="h-4 w-4 text-gold" />
+          {text("إدارة طلبات الترويج", "Promotion request management")}
+        </h2>
+        <p className="mt-1 text-xs leading-6 text-muted-foreground">
+          {text(
+            "راجع طلبات التمييز والدفع اليدوي كواجهة إدارية كاملة. لا تنفذ هذه الصفحة دفعاً أو تفعيل تمييز حقيقي من الخادم.",
+            "Review featuring and manual-payment requests in a complete admin interface. This page does not execute payment or server-side featuring activation.",
+          )}
+        </p>
+      </section>
 
-      <section>
-        <Title icon={Sparkles} text={uiLabel("ملخص طلبات الترويج", language)} />
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          {summary.map(([label, value]) => (
-            <div key={label} className="rounded-xl bg-card p-3 hairline">
-              <div className="text-xl font-extrabold">{value}</div>
-              <p className="text-xs text-muted-foreground">{uiLabel(label, language)}</p>
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {[
+          [text("طلبات", "Requests"), requests.length],
+          [text("قيد المراجعة", "Under review"), 2],
+          [text("إثبات دفع", "Payment proof"), 1],
+          [text("نشط محلياً", "Local active"), 0],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-xl bg-card p-3 hairline">
+            <div className="text-xl font-extrabold">{value}</div>
+            <p className="text-xs text-muted-foreground">{label}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="grid grid-cols-1 gap-3 xl:grid-cols-3">
+        {requests.map((request) => (
+          <article key={request.id} className="rounded-2xl bg-card p-4 hairline">
+            <div className="mb-3 flex items-start justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-extrabold">{request.listing}</h3>
+                <p className="text-xs text-muted-foreground">
+                  {request.id} · {request.seller}
+                </p>
+              </div>
+              <Badge>{language === "ar" ? request.statusAr : request.statusEn}</Badge>
             </div>
-          ))}
-        </div>
+            <dl className="grid grid-cols-1 gap-1 text-xs">
+              <Metric
+                label={text("الخطة", "Plan")}
+                value={language === "ar" ? request.planAr : request.planEn}
+              />
+              <Metric label={text("المبلغ", "Amount")} value={request.amount} />
+              <Metric
+                label={text("طريقة الدفع", "Payment method")}
+                value={text("مراجعة يدوية", "Manual review")}
+              />
+              <Metric
+                label={text("حالة الطلب", "Request status")}
+                value={language === "ar" ? request.statusAr : request.statusEn}
+              />
+            </dl>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {[
+                [text("مراجعة الإثبات", "Review proof"), "proof"],
+                [text("قبول", "Approve"), "approve"],
+                [text("رفض", "Reject"), "reject"],
+                [text("تمييز محلي", "Local feature"), "feature"],
+              ].map(([label, value]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() =>
+                    localAction(
+                      "تم تسجيل قرار الترويج في الواجهة فقط.",
+                      "Promotion decision recorded in the interface only.",
+                    )
+                  }
+                  className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </article>
+        ))}
       </section>
 
-      <section>
-        <Title icon={CreditCard} text={uiLabel("مراجعة طلبات الترويج وإثبات الدفع", language)} />
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
-          {promotions.map((request) => (
-            <article key={request.requestId} className="rounded-2xl bg-card p-4 hairline">
-              <div className="mb-3 flex items-start justify-between gap-2">
-                <div>
-                  <h3 className="text-sm font-extrabold">{request.title}</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {request.requestId} · {request.listingId}
-                  </p>
-                </div>
-                <Badge>{uiLabel(request.status, language)}</Badge>
-              </div>
-              <Info
-                rows={[
-                  ["البائع", request.seller],
-                  ["نوع حساب البائع", uiLabel(request.type, language)],
-                  ["الخطة المطلوبة", uiLabel(request.plan, language)],
-                  ["المدة", uiLabel(request.duration, language)],
-                  ["المبلغ", `${request.amount} ${language === "ar" ? request.currency : "SYP"}`],
-                  ["حالة الدفع", uiLabel(request.payment, language)],
-                  ["مرجع التحويل", uiLabel(request.ref, language)],
-                  ["حالة إثبات الدفع", uiLabel(request.proof, language)],
-                  ["المراجع", uiLabel(request.reviewer, language)],
-                  ["تحتاج موافقة المالك", uiLabel(request.owner, language)],
-                  ["ملاحظات", uiLabel(request.notes, language)],
-                ]}
-                language={language}
-              />
-              <ActionRow
-                actions={[
-                  "مراجعة الإثبات",
-                  "قبول الترويج",
-                  "رفض الترويج",
-                  "تفعيل التمييز",
-                  "طلب مراجعة المالك",
-                  "إضافة ملاحظة داخلية",
-                ]}
-                language={language}
-              />
-              <InternalNote language={language} />
-            </article>
-          ))}
-        </div>
+      <section className="rounded-2xl bg-card p-4 hairline">
+        <h3 className="mb-2 flex items-center gap-2 text-sm font-extrabold">
+          <CreditCard className="h-4 w-4 text-primary" />
+          {text("الدفع اليدوي", "Manual payment")}
+        </h3>
+        <p className="text-xs leading-6 text-muted-foreground">
+          {text(
+            "أي تحويل أو إثبات دفع يحتاج مراجعة خارجية واضحة قبل تفعيل الترويج الحقيقي.",
+            "Any transfer or proof of payment requires clear external review before real featuring is activated.",
+          )}
+        </p>
       </section>
 
-      <section>
-        <Title icon={FileCheck} text={uiLabel("إدارة حالة تمييز الإعلانات", language)} />
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-          {featuredListingQueue.map((item) => (
-            <article key={item.listingId} className="rounded-2xl bg-card p-4 hairline">
-              <div className="mb-3 flex items-start justify-between gap-2">
-                <div>
-                  <h3 className="text-sm font-extrabold">{item.title}</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {item.listingId} · {item.seller}
-                  </p>
-                </div>
-                <Badge>{uiLabel(item.featured, language)}</Badge>
-              </div>
-              <Info
-                rows={[
-                  ["القسم", uiLabel(item.category, language)],
-                  ["المحافظة", uiLabel(item.governorate, language)],
-                  ["حالة الإعلان", uiLabel(item.status, language)],
-                  ["مدة الترويج", uiLabel(item.duration, language)],
-                  ["تاريخ البداية/النهاية", uiLabel(item.dates, language)],
-                  ["حالة الدفع", uiLabel(item.payment, language)],
-                  ["المراجع الإداري", uiLabel(item.reviewer, language)],
-                  ["موافقة المالك مطلوبة", uiLabel(item.owner, language)],
-                  ["ملاحظة المشرف", uiLabel(item.note, language)],
-                ]}
-                language={language}
-              />
-              <ActionRow
-                actions={[
-                  "تمييز الإعلان",
-                  "إزالة التمييز",
-                  "تمديد التمييز",
-                  "رفض طلب التمييز",
-                  "طلب مراجعة المالك",
-                  "إضافة ملاحظة",
-                ]}
-                language={language}
-              />
-            </article>
-          ))}
-        </div>
+      <section className="rounded-2xl bg-card p-4 hairline">
+        <h3 className="mb-2 flex items-center gap-2 text-sm font-extrabold">
+          <FileCheck className="h-4 w-4 text-primary" />
+          {text("حالة التمييز", "Featured status")}
+        </h3>
+        <p className="text-xs leading-6 text-muted-foreground">
+          {text(
+            "تظهر قرارات التمييز هنا كحالة واجهة ولا تعني تفعيل إعلان مميز على الخادم.",
+            "Featuring decisions appear here as interface state and do not activate server-side featuring.",
+          )}
+        </p>
       </section>
+
+      {notice && (
+        <p className="rounded-2xl bg-emerald-trust/10 p-3 text-center text-xs font-bold text-emerald-trust hairline">
+          {notice}
+        </p>
+      )}
     </div>
-  );
-}
-
-function Title({ icon: Icon, text }: { icon: typeof Sparkles; text: string }) {
-  return (
-    <h2 className="mb-3 flex items-center gap-2 text-base font-extrabold">
-      <Icon className="h-4 w-4 text-primary" />
-      {text}
-    </h2>
   );
 }
 
@@ -153,58 +173,11 @@ function Badge({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Info({ rows, language }: { rows: string[][]; language: Language }) {
+function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <dl className="grid grid-cols-1 gap-1 text-xs">
-      {rows.map(([label, value]) => (
-        <div
-          key={label}
-          className="flex justify-between gap-3 rounded-lg bg-muted-surface px-2 py-1.5"
-        >
-          <dt className="text-muted-foreground">{uiLabel(label, language)}</dt>
-          <dd className="text-start font-bold">{value}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-function ActionRow({ actions, language }: { actions: string[]; language: Language }) {
-  return (
-    <div className="mt-3 flex flex-wrap gap-1.5">
-      {actions.map((action) => (
-        <button
-          key={action}
-          disabled
-          className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground cursor-not-allowed"
-        >
-          {uiLabel(action, language)} · {uiLabel("نموذج تجريبي", language)}
-        </button>
-      ))}
+    <div className="flex justify-between gap-3 rounded-lg bg-muted-surface px-2 py-1.5">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="text-start font-bold">{value}</dd>
     </div>
   );
-}
-
-function InternalNote({ language }: { language: Language }) {
-  return (
-    <div className="mt-3 rounded-xl bg-muted-surface p-3 text-xs">
-      <b>{uiLabel("ملاحظة داخلية", language)}</b>
-      <p className="mt-1 text-muted-foreground">{textForInternal(language)}</p>
-      <button
-        disabled
-        className="mt-2 rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline cursor-not-allowed"
-      >
-        {uiLabel("إضافة ملاحظة · قريباً", language)}
-      </button>
-      <p className="mt-1 text-[11px] text-muted-foreground">
-        {uiLabel("الملاحظات الداخلية لا تظهر للمستخدمين.", language)}
-      </p>
-    </div>
-  );
-}
-
-function textForInternal(language: Language) {
-  return language === "ar"
-    ? "أضيفت بواسطة: مشرف تجريبي · التاريخ: قيد التجهيز · الحالة: قيد المراجعة"
-    : "Added by: demo moderator · date: in preparation · status: under review";
 }

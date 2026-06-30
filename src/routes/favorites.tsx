@@ -22,28 +22,22 @@ function FavoritesPage() {
 
   useEffect(() => {
     if (auth.status !== "signedIn") return;
-
     let cancelled = false;
 
     async function load() {
       setLoading(true);
       setError(null);
       const result = await fetchFavorites(auth.profile?.id ?? null);
-
       if (cancelled) return;
-
-      if (!result.ok) {
+      if (result.ok) setItems(result.data);
+      else {
         setError(result.error);
         setItems([]);
-      } else {
-        setItems(result.data);
       }
-
       setLoading(false);
     }
 
     void load();
-
     return () => {
       cancelled = true;
     };
@@ -55,16 +49,14 @@ function FavoritesPage() {
       setError(result.error);
       return;
     }
-
     setItems((current) => current.filter((item) => item.listingId !== listingId));
   }
 
   if (auth.status === "loading") {
     return (
       <State
-        title={text("المفضلة", "Favorites")}
         heading={text("جارٍ التحقق من الجلسة", "Checking session")}
-        body={text("يتم التأكد من تسجيل الدخول.", "Checking sign-in status.")}
+        body={text("نجهّز مفضلتك الشخصية.", "Preparing your saved listings.")}
       />
     );
   }
@@ -72,11 +64,10 @@ function FavoritesPage() {
   if (auth.status === "signedOut") {
     return (
       <State
-        title={text("المفضلة", "Favorites")}
         heading={text("تسجيل الدخول مطلوب", "Login required")}
         body={text(
-          "المفضلة الحقيقية مرتبطة بحسابك فقط ولا توجد مفضلة تجريبية كبديل.",
-          "Real favorites are linked only to your account. No demo favorites are used as a substitute.",
+          "سجّل الدخول لعرض الإعلانات التي حفظتها وإدارتها من مكان واحد.",
+          "Log in to view and manage your saved listings in one place.",
         )}
         actionLabel={text("تسجيل الدخول", "Log in")}
         actionTo="/login"
@@ -87,11 +78,10 @@ function FavoritesPage() {
   if (auth.status === "authUnavailable") {
     return (
       <State
-        title={text("المفضلة", "Favorites")}
-        heading={text("المفضلة قيد التفعيل", "Favorites are being activated")}
+        heading={text("المفضلة مرتبطة بالحساب", "Favorites are account based")}
         body={text(
-          "حفظ الإعلانات سيعمل مع الحسابات بعد اكتمال التفعيل. يمكنك تصفح الإعلانات حالياً والعودة للمفضلة قريباً.",
-          "Saving listings will work with accounts after activation. You can browse listings now and return to favorites soon.",
+          "تصفح الإعلانات الآن، وعند توفر جلسة الحساب ستظهر العناصر المحفوظة هنا.",
+          "Browse listings now; when account session is available, saved items appear here.",
         )}
         actionLabel={text("تصفح الإعلانات", "Browse listings")}
         actionTo="/listings"
@@ -103,66 +93,62 @@ function FavoritesPage() {
     <>
       <PageHeader title={text("المفضلة", "Favorites")} />
       <main className="container-wide space-y-4 pt-4 pb-8">
-        <div className="rounded-2xl bg-card p-4 hairline">
-          <h2 className="text-sm font-extrabold">{text("المفضلة", "Favorites")}</h2>
+        <section className="rounded-2xl bg-card p-4 hairline">
+          <h2 className="text-sm font-extrabold">
+            {text("إعلاناتك المحفوظة", "Your saved listings")}
+          </h2>
           <p className="mt-1 text-xs text-muted-foreground">
             {text(
-              "هذه الصفحة تعرض الإعلانات التي يحفظها الحساب الحالي فقط، ولا تستخدم بيانات تجريبية كبديل.",
-              "This page shows listings saved by the current account only and does not use demo data as a substitute.",
+              "احفظ الإعلانات التي تهمك وارجع إليها بسرعة عند المقارنة أو التواصل.",
+              "Save listings you care about and return quickly when comparing or contacting sellers.",
             )}
           </p>
-        </div>
+        </section>
 
         {loading ? (
-          <Panel
-            icon={<Heart className="h-6 w-6 text-muted-foreground" />}
-            title={text("جارٍ تحميل المفضلة", "Loading favorites")}
-          />
+          <Panel title={text("جارٍ تحميل المفضلة", "Loading favorites")} />
         ) : error ? (
           <Panel
-            icon={<Heart className="h-6 w-6 text-muted-foreground" />}
             title={text("تعذر تحميل المفضلة", "Could not load favorites")}
-            body={text(
-              "المفضلة قيد التفعيل حالياً. حاول لاحقاً أو تابع تصفح الإعلانات.",
-              "Favorites are being activated. Try again later or keep browsing listings.",
-            )}
+            body={error.message}
             actionLabel={text("تصفح الإعلانات", "Browse listings")}
             actionTo="/listings"
           />
         ) : items.length === 0 ? (
           <Panel
-            icon={<Heart className="h-6 w-6 text-muted-foreground" />}
-            title={text("لا توجد إعلانات في المفضلة", "No favorite listings yet")}
+            title={text("لا توجد إعلانات محفوظة", "No saved listings")}
             body={text(
-              "احفظ الإعلانات المعتمدة التي تهمك لتعود إليها لاحقاً.",
-              "Save approved listings you care about so you can return to them later.",
+              "ابدأ من صفحة الإعلانات واضغط القلب على أي إعلان تريد متابعته.",
+              "Start from listings and tap the heart on any listing you want to track.",
             )}
             actionLabel={text("تصفح الإعلانات", "Browse listings")}
             actionTo="/listings"
           />
         ) : (
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {items.map((item) => (
-              <div
-                key={item.listingId}
-                className="flex items-center justify-between gap-3 rounded-2xl bg-card p-4 hairline"
-              >
-                <div>
-                  <p className="text-sm font-bold">{text("إعلان محفوظ", "Saved listing")}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {text("رقم الإعلان:", "Listing ID:")} {item.listingId}
-                  </p>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    {formatDate(item.createdAt, language)}
-                  </p>
+              <article key={item.listingId} className="rounded-2xl bg-card p-4 hairline">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-extrabold">{text("إعلان محفوظ", "Saved listing")}</p>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {text("رقم الإعلان:", "Listing ID:")} {item.listingId}
+                    </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      {formatDate(item.createdAt, language)}
+                    </p>
+                  </div>
+                  <span className="grid h-10 w-10 place-items-center rounded-full bg-muted-surface text-destructive">
+                    <Heart className="h-4 w-4 fill-current" />
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="mt-4 flex items-center gap-2">
                   <Link
                     to="/listings/$id"
                     params={{ id: item.listingId }}
-                    className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+                    className="flex-1 rounded-xl bg-primary px-3 py-2 text-center text-xs font-bold text-primary-foreground"
                   >
-                    {text("فتح", "Open")}
+                    {text("فتح الإعلان", "Open listing")}
                   </Link>
                   <button
                     onClick={() => void remove(item.listingId)}
@@ -172,7 +158,7 @@ function FavoritesPage() {
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
@@ -182,56 +168,46 @@ function FavoritesPage() {
 }
 
 function State({
-  title,
   heading,
   body,
   actionLabel,
   actionTo,
 }: {
-  title: string;
   heading: string;
   body: string;
   actionLabel?: string;
   actionTo?: string;
 }) {
+  const { text } = useUiPreferences();
   return (
     <>
-      <PageHeader title={title} />
+      <PageHeader title={text("المفضلة", "Favorites")} />
       <main className="container-wide pt-10">
-        <Panel
-          icon={<Heart className="h-6 w-6 text-muted-foreground" />}
-          title={heading}
-          body={body}
-          actionLabel={actionLabel}
-          actionTo={actionTo}
-        />
+        <Panel title={heading} body={body} actionLabel={actionLabel} actionTo={actionTo} />
       </main>
     </>
   );
 }
 
 function Panel({
-  icon,
   title,
   body,
   actionLabel,
   actionTo,
 }: {
-  icon: React.ReactNode;
   title: string;
   body?: string;
   actionLabel?: string;
   actionTo?: string;
 }) {
   const { language } = useUiPreferences();
-
   return (
     <div className="rounded-2xl bg-card p-10 text-center hairline">
       <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-muted-surface">
-        {icon}
+        <Heart className="h-6 w-6 text-muted-foreground" />
       </span>
       <p className="mt-3 text-sm font-bold">{title}</p>
-      {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
+      {body && <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p>}
       {actionLabel && actionTo && (
         <div className="mt-5 flex flex-wrap justify-center gap-2">
           <Link

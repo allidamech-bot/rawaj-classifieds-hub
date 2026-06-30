@@ -1,13 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 import {
-  Sparkles,
-  TrendingUp,
+  AlertTriangle,
+  CheckCircle,
   Home as HomeIcon,
   LayoutTemplate,
-  Lock,
+  Sparkles,
+  TrendingUp,
   Upload,
-  AlertTriangle,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
@@ -18,21 +18,25 @@ export const Route = createFileRoute("/promotion")({
 });
 
 const benefits = [
-  { icon: Sparkles, t: "شارة (مميز)", d: "إطار ذهبي وشارة مميزة على بطاقة إعلانك." },
-  { icon: TrendingUp, t: "ظهور أعلى النتائج", d: "تثبيت إعلانك أعلى نتائج القسم أو المحافظة." },
-  { icon: HomeIcon, t: "ظهور في الرئيسية", d: "عرض إعلانك ضمن قسم الإعلانات المميزة." },
+  { icon: Sparkles, t: "شارة مميز", d: "إطار ذهبي وشارة واضحة على بطاقة إعلانك." },
   {
-    icon: LayoutTemplate,
-    t: "إعادة رفع تلقائي",
-    d: "رفع إعلانك إلى الأعلى دورياً خلال فترة الترويج.",
+    icon: TrendingUp,
+    t: "ظهور أعلى النتائج",
+    d: "إبراز الإعلان ضمن نتائج القسم أو المحافظة المختارة.",
   },
+  {
+    icon: HomeIcon,
+    t: "ظهور في الرئيسية",
+    d: "عرض الإعلان ضمن مساحة الإعلانات المميزة في الواجهة.",
+  },
+  { icon: LayoutTemplate, t: "إعادة رفع دورية", d: "تحسين إيقاع ظهور الإعلان خلال مدة الترويج." },
 ];
 
 const plans = [
-  { days: 3, label: "3 أيام", desc: "تجربة سريعة" },
-  { days: 7, label: "7 أيام", desc: "الأكثر شيوعاً" },
-  { days: 14, label: "14 يوم", desc: "ظهور موسّع" },
-  { days: 30, label: "30 يوم", desc: "حملة كاملة" },
+  { days: 3, label: "3 أيام", desc: "تجربة سريعة", price: "25,000 ل.س" },
+  { days: 7, label: "7 أيام", desc: "الأكثر شيوعاً", price: "50,000 ل.س" },
+  { days: 14, label: "14 يوم", desc: "ظهور موسّع", price: "90,000 ل.س" },
+  { days: 30, label: "30 يوم", desc: "حملة كاملة", price: "160,000 ل.س" },
 ];
 
 function PromotionPage() {
@@ -40,10 +44,19 @@ function PromotionPage() {
   const [plan, setPlan] = useState(7);
   const [listingId, setListingId] = useState("");
   const [listingTitle, setListingTitle] = useState("");
-  const [promoType, setPromoType] = useState("شارة (مميز)");
+  const [promoType, setPromoType] = useState("شارة مميز");
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("SYP");
   const [notes, setNotes] = useState("");
+  const [receiptReady, setReceiptReady] = useState(false);
+  const [requestRef, setRequestRef] = useState("");
+
+  const selectedPlan = useMemo(() => plans.find((item) => item.days === plan) ?? plans[1], [plan]);
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    setRequestRef(`PR-${Date.now().toString().slice(-6)}`);
+  }
 
   return (
     <>
@@ -52,238 +65,209 @@ function PromotionPage() {
         <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-soft">
           <h2 className="text-lg font-extrabold">
             {text(
-              "روّج إعلانك ليصل لأكبر عدد من المشترين",
+              "روّج إعلانك ليصل إلى عدد أكبر من المشترين",
               "Promote your listing to reach more buyers",
             )}
           </h2>
-          <p className="mt-1 text-xs text-primary-foreground/80">
+          <p className="mt-1 text-xs leading-6 text-primary-foreground/80">
             {text(
-              "خدمات الترويج اختيارية ومدفوعة. حالياً النظام في وضع المعاينة فقط ولم يتم تفعيل أي دفع.",
-              "Promotion services are optional and paid. The system is preview-only now, with no payment enabled.",
+              "اختر نوع الظهور والمدة، ثم جهّز طلب الترويج للمراجعة اليدوية. لا تتم أي عملية دفع تلقائية داخل رَوَاج.",
+              "Choose placement and duration, then prepare the request for manual review. RAWAJ does not execute automatic payments.",
             )}
           </p>
         </section>
 
-        {/* Benefits */}
         <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {benefits.map((b) => (
-            <div key={b.t} className="rounded-2xl bg-card p-4 hairline shadow-soft">
+          {benefits.map((benefit) => (
+            <div key={benefit.t} className="rounded-2xl bg-card p-4 hairline shadow-soft">
               <div className="flex items-start gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-gold/15 text-gold">
-                  <b.icon className="h-5 w-5" />
+                  <benefit.icon className="h-5 w-5" />
                 </span>
                 <div>
-                  <h3 className="text-sm font-extrabold">{promoText(b.t, language)}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">{promoText(b.d, language)}</p>
+                  <h3 className="text-sm font-extrabold">{promoText(benefit.t, language)}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {promoText(benefit.d, language)}
+                  </p>
                 </div>
               </div>
             </div>
           ))}
         </section>
 
-        {/* Plans */}
         <section>
           <h3 className="mb-3 text-sm font-extrabold">
             {text("اختر مدة الترويج", "Choose promotion duration")}
           </h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {plans.map((p) => {
-              const active = plan === p.days;
+            {plans.map((item) => {
+              const active = plan === item.days;
               return (
                 <button
-                  key={p.days}
-                  onClick={() => setPlan(p.days)}
-                  className={`rounded-2xl p-4 text-center hairline transition ${active ? "bg-gold text-gold-foreground shadow-premium" : "bg-card hover:bg-muted-surface"}`}
+                  key={item.days}
+                  type="button"
+                  onClick={() => setPlan(item.days)}
+                  className={`rounded-2xl p-4 text-center hairline transition ${
+                    active
+                      ? "bg-gold text-gold-foreground shadow-premium"
+                      : "bg-card hover:bg-muted-surface"
+                  }`}
                 >
-                  <div className="text-base font-extrabold">{promoText(p.label, language)}</div>
-                  <div className="mt-1 text-[11px] opacity-80">{promoText(p.desc, language)}</div>
-                  <div className="mt-2 text-[10px] font-bold">
-                    {text("السعر: قريباً", "Price: soon")}
+                  <div className="text-base font-extrabold">{promoText(item.label, language)}</div>
+                  <div className="mt-1 text-[11px] opacity-80">
+                    {promoText(item.desc, language)}
                   </div>
+                  <div className="mt-2 text-[11px] font-bold">{item.price}</div>
                 </button>
               );
             })}
           </div>
         </section>
 
-        {/* Request form */}
-        <section>
-          <h3 className="mb-3 text-sm font-extrabold">
-            {text("تفاصيل طلب الترويج", "Promotion request details")}
-          </h3>
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className="grid grid-cols-1 gap-3 rounded-2xl bg-card p-4 hairline sm:grid-cols-2"
-          >
-            <Field label={text("رقم الإعلان", "Listing ID")}>
-              <input
-                value={listingId}
-                onChange={(e) => setListingId(e.target.value)}
-                placeholder={text("مثال: 12", "Example: 12")}
-                className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
-              />
-            </Field>
-            <Field label={text("عنوان الإعلان", "Listing title")}>
-              <input
-                value={listingTitle}
-                onChange={(e) => setListingTitle(e.target.value)}
-                placeholder={text("عنوان مختصر", "Short title")}
-                className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
-              />
-            </Field>
-            <Field label={text("نوع الترويج", "Promotion type")}>
-              <select
-                value={promoType}
-                onChange={(e) => setPromoType(e.target.value)}
-                className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
-              >
-                <option>شارة (مميز)</option>
-                <option>ظهور أعلى النتائج</option>
-                <option>ظهور في الرئيسية</option>
-                <option>إعادة رفع تلقائي</option>
-              </select>
-            </Field>
-            <Field label={text("مدة الترويج", "Promotion duration")}>
-              <input
-                readOnly
-                value={text(`${plan} يوم`, `${plan} days`)}
-                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm"
-              />
-            </Field>
-            <Field label={text("المبلغ", "Amount")}>
-              <input
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                type="number"
-                inputMode="numeric"
-                placeholder="0"
-                className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
-              />
-            </Field>
-            <Field label={text("العملة", "Currency")}>
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
-              >
-                <option value="SYP">ل.س</option>
-                <option value="USD">USD</option>
-              </select>
-            </Field>
-            <div className="sm:col-span-2">
-              <Field label={text("ملاحظات للطلب", "Request notes")}>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={3}
-                  className="w-full resize-none rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
-                  placeholder={text(
-                    "أي ملاحظات تخص طلب الترويج",
-                    "Any notes about this promotion request",
-                  )}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <section>
+            <h3 className="mb-3 text-sm font-extrabold">
+              {text("تفاصيل طلب الترويج", "Promotion request details")}
+            </h3>
+            <div className="grid grid-cols-1 gap-3 rounded-2xl bg-card p-4 hairline sm:grid-cols-2">
+              <Field label={text("رقم الإعلان", "Listing ID")}>
+                <input
+                  value={listingId}
+                  onChange={(event) => setListingId(event.target.value)}
+                  placeholder={text("مثال: 12", "Example: 12")}
+                  className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
                 />
               </Field>
-            </div>
-          </form>
-        </section>
-
-        {/* Bank/payment placeholder */}
-        <section className="rounded-2xl bg-warning/10 p-4 hairline">
-          <div className="mb-2 flex items-start gap-2">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
-            <div>
-              <p className="text-sm font-bold">
-                {text(
-                  "تفاصيل الدفع البنكي — نموذج تجريبي غير مفعّل",
-                  "Bank payment details - disabled demo",
-                )}
-              </p>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
-                {text(
-                  "لا يوجد حساب بنكي فعلي للتحويل حالياً. هذه الحقول لعرض الشكل المستقبلي فقط، ولن يتم حفظ أو إرسال أي بيانات.",
-                  "There is no active bank account for transfer now. These fields preview the future shape only, and no data is saved or sent.",
-                )}
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field label={text("اسم صاحب الحساب", "Account holder")}>
-              <input
-                disabled
-                placeholder="—"
-                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed"
-              />
-            </Field>
-            <Field label={text("اسم البنك", "Bank name")}>
-              <input
-                disabled
-                placeholder="—"
-                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed"
-              />
-            </Field>
-            <Field label={text("رقم العملية / مرجع التحويل", "Transaction/reference number")}>
-              <input
-                disabled
-                placeholder="—"
-                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed"
-              />
-            </Field>
-            <Field label={text("المبلغ المحوّل", "Transferred amount")}>
-              <input
-                disabled
-                placeholder="—"
-                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed"
-              />
-            </Field>
-            <Field label={text("العملة", "Currency")}>
-              <input
-                disabled
-                placeholder="—"
-                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed"
-              />
-            </Field>
-            <Field label={text("تاريخ التحويل", "Transfer date")}>
-              <input
-                disabled
-                placeholder="—"
-                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed"
-              />
-            </Field>
-            <div className="sm:col-span-2">
-              <Field label={text("إثبات التحويل", "Transfer proof")}>
-                <button
-                  disabled
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card-warm py-4 text-xs text-muted-foreground cursor-not-allowed"
-                >
-                  <Upload className="h-4 w-4" />{" "}
-                  {text("رفع صورة الإيصال · قريباً", "Upload receipt · soon")}
-                </button>
+              <Field label={text("عنوان الإعلان", "Listing title")}>
+                <input
+                  value={listingTitle}
+                  onChange={(event) => setListingTitle(event.target.value)}
+                  placeholder={text("عنوان مختصر", "Short title")}
+                  className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+                />
               </Field>
+              <Field label={text("نوع الترويج", "Promotion type")}>
+                <select
+                  value={promoType}
+                  onChange={(event) => setPromoType(event.target.value)}
+                  className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+                >
+                  {benefits.map((item) => (
+                    <option key={item.t} value={item.t}>
+                      {promoText(item.t, language)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label={text("مدة الترويج", "Promotion duration")}>
+                <input
+                  readOnly
+                  value={language === "ar" ? selectedPlan.label : `${selectedPlan.days} days`}
+                  className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm"
+                />
+              </Field>
+              <Field label={text("المبلغ المتوقع", "Expected amount")}>
+                <input
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value)}
+                  inputMode="numeric"
+                  placeholder={selectedPlan.price}
+                  className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+                />
+              </Field>
+              <Field label={text("العملة", "Currency")}>
+                <select
+                  value={currency}
+                  onChange={(event) => setCurrency(event.target.value)}
+                  className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+                >
+                  <option value="SYP">ل.س</option>
+                  <option value="USD">USD</option>
+                </select>
+              </Field>
+              <div className="sm:col-span-2">
+                <Field label={text("ملاحظات للطلب", "Request notes")}>
+                  <textarea
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
+                    rows={3}
+                    className="w-full resize-none rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+                    placeholder={text(
+                      "أي ملاحظات تخص طلب الترويج",
+                      "Any notes about this promotion request",
+                    )}
+                  />
+                </Field>
+              </div>
             </div>
-            <Field label={text("حالة الطلب", "Request status")}>
-              <input
-                disabled
-                value={text("بانتظار التفعيل", "Awaiting activation")}
-                className="w-full rounded-xl border border-input bg-muted-surface px-3 py-2.5 text-sm cursor-not-allowed"
-              />
-            </Field>
-          </div>
-        </section>
+          </section>
 
-        <button
-          disabled
-          title={text("سيُفعَّل لاحقاً", "Will be enabled later")}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground opacity-80 cursor-not-allowed"
-        >
-          <Lock className="h-4 w-4" />{" "}
-          {text("إرسال طلب الترويج · قريباً", "Submit promotion request · soon")}
-        </button>
-        <p className="text-center text-[11px] text-muted-foreground">
-          {text(
-            "لن يتم تنفيذ أي عملية دفع أو تحويل بنكي ضمن النسخة التجريبية الحالية.",
-            "No payment or bank transfer will be executed in the current beta.",
+          <section className="rounded-2xl bg-warning/10 p-4 hairline">
+            <div className="mb-3 flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+              <div>
+                <p className="text-sm font-bold">
+                  {text("الدفع والمراجعة اليدوية", "Payment and manual review")}
+                </p>
+                <p className="mt-0.5 text-[11px] leading-5 text-muted-foreground">
+                  {text(
+                    "لا يوجد دفع تلقائي داخل هذه الصفحة. يمكنك تجهيز طلب الترويج، وسيتم تأكيد أي تحويل أو إثبات دفع خارجياً قبل تفعيل الإعلان المميز.",
+                    "There is no automatic payment on this page. You can prepare the request, and any transfer or proof of payment must be confirmed externally before featuring is activated.",
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field label={text("اسم صاحب الحساب", "Account holder")}>
+                <input
+                  placeholder={text("يُحدَّد عند المراجعة", "Provided during review")}
+                  className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+                />
+              </Field>
+              <Field label={text("مرجع التحويل", "Transfer reference")}>
+                <input
+                  placeholder={text("اختياري", "Optional")}
+                  className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+                />
+              </Field>
+              <div className="sm:col-span-2">
+                <button
+                  type="button"
+                  onClick={() => setReceiptReady(true)}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card-warm py-4 text-xs font-bold text-muted-foreground"
+                >
+                  <Upload className="h-4 w-4" />
+                  {text("إضافة ملاحظة لإثبات الدفع", "Add proof-of-payment note")}
+                </button>
+                {receiptReady && (
+                  <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-trust">
+                    <CheckCircle className="h-3 w-3" />
+                    {text("تم تجهيز ملاحظة الإثبات للمراجعة", "Proof note prepared for review")}
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <button
+            type="submit"
+            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground"
+          >
+            {text("إرسال طلب الترويج للمراجعة", "Submit promotion request for review")}
+          </button>
+          {requestRef && (
+            <div className="rounded-xl bg-emerald-trust/10 p-3 text-center text-xs leading-6 text-emerald-trust">
+              <strong>{text("تم تجهيز طلب الترويج", "Promotion request prepared")}</strong>
+              <span className="mx-1">·</span>
+              {text("رقم المتابعة", "Reference")} {requestRef}.{" "}
+              {text(
+                "هذه حالة واجهة محلية ولا تعني تنفيذ دفع أو تفعيل إعلان مميز.",
+                "This is a local interface state and does not mean payment was executed or featuring was activated.",
+              )}
+            </div>
           )}
-        </p>
+        </form>
+
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <Link
             to="/add-listing"
@@ -306,22 +290,23 @@ function PromotionPage() {
 function promoText(value: string, language: Language) {
   if (language === "ar") return value;
   const labels: Record<string, string> = {
-    "شارة (مميز)": "Featured badge",
-    "إطار ذهبي وشارة مميزة على بطاقة إعلانك.":
-      "Gold treatment and a featured badge on your listing card.",
+    "شارة مميز": "Featured badge",
+    "إطار ذهبي وشارة واضحة على بطاقة إعلانك.":
+      "Gold treatment and a clear featured badge on your listing card.",
     "ظهور أعلى النتائج": "Top results placement",
-    "تثبيت إعلانك أعلى نتائج القسم أو المحافظة.":
-      "Pin your listing near the top of category or governorate results.",
+    "إبراز الإعلان ضمن نتائج القسم أو المحافظة المختارة.":
+      "Highlight the listing in selected category or governorate results.",
     "ظهور في الرئيسية": "Home page placement",
-    "عرض إعلانك ضمن قسم الإعلانات المميزة.": "Show your listing in the featured listings area.",
-    "إعادة رفع تلقائي": "Automatic bump",
-    "رفع إعلانك إلى الأعلى دورياً خلال فترة الترويج.":
-      "Move your listing upward periodically during the promotion period.",
+    "عرض الإعلان ضمن مساحة الإعلانات المميزة في الواجهة.":
+      "Show the listing in the featured area on the home page.",
+    "إعادة رفع دورية": "Periodic bump",
+    "تحسين إيقاع ظهور الإعلان خلال مدة الترويج.":
+      "Improve listing visibility rhythm during the promotion period.",
     "3 أيام": "3 days",
     "7 أيام": "7 days",
     "14 يوم": "14 days",
     "30 يوم": "30 days",
-    "تجربة سريعة": "Quick trial",
+    "تجربة سريعة": "Quick run",
     "الأكثر شيوعاً": "Most common",
     "ظهور موسّع": "Extended visibility",
     "حملة كاملة": "Full campaign",

@@ -22,10 +22,9 @@ import type { PlaceholderType, PriceType } from "@/types";
 
 type Row = Record<string, unknown>;
 
-const setupRequiredMessage =
-  "قسم الإعلانات الحقيقية قيد التفعيل حالياً. ستظهر الإعلانات هنا بعد اكتمال الربط التشغيلي.";
+const setupRequiredMessage = "تعذر تحميل البيانات الآن. حاول مرة أخرى.";
 const storageSetupRequiredMessage =
-  "رفع الصور قيد التفعيل حالياً. يمكنك متابعة تجهيز الإعلان، وسيتم تفعيل الصور قريباً.";
+  "تعذر رفع الصور الآن. يمكنك إرسال الإعلان بدون صور والمحاولة مرة أخرى بعد حفظه.";
 const listingImagesBucket = "listing-images";
 const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxImageSizeBytes = 5 * 1024 * 1024;
@@ -36,9 +35,7 @@ function getClient(): ClassifiedsResult<SupabaseClient> {
       ok: false,
       error: {
         code: "supabase_unconfigured",
-        message:
-          getSupabaseAuthUnavailableReason() ??
-          "الخدمة قيد التفعيل حالياً. يمكنك متابعة تصفح رَوَاج، وسيتم تفعيل البيانات قريباً.",
+        message: getSupabaseAuthUnavailableReason() ?? "تعذر الاتصال بالخدمة الآن. حاول مرة أخرى.",
       },
     };
   }

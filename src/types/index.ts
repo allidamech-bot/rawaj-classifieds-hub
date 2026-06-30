@@ -1,4 +1,4 @@
-// RAWAJ — domain types. These mirror future Supabase tables.
+// RAWAJ — domain types. These mirror planned Supabase tables.
 // Tables planned: users, listings, categories, subcategories, listing_images,
 // favorites, saved_searches, chats, messages, reports, blocks, reviews,
 // promotions, support_tickets, admin_audit_logs, app_config.
@@ -128,5 +128,5 @@ export interface Listing {
   listingStatus?: ListingStatus;
   promotionStatus?: PromotionStatus;
   verificationStatus?: VerificationStatus;
-  isDemo?: boolean;
+  isSample?: boolean;
 }

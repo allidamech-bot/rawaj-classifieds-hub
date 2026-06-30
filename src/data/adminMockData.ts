@@ -1,7 +1,7 @@
 import type { AdminPermissions, UserRole } from "@/types";
 
-export const demoNotice =
-  "نموذج تجريبي · غير مفعّل حالياً · يتطلب ربطاً تشغيلياً وصلاحيات حقيقية لاحقاً";
+export const workflowNotice =
+  "نموذج محلي · محمي بالصلاحيات · يتطلب ربطاً تشغيلياً وصلاحيات حقيقية ضمن سير العمل";
 
 export const roleLabels: Record<UserRole, string> = {
   guest: "زائر",
@@ -114,7 +114,7 @@ export const permissionMatrix = [
 export const adminTeam = [
   {
     name: "ليان الخطيب",
-    id: "admin-demo-01",
+    id: "admin-sample-01",
     role: "مشرف",
     status: "نشط",
     last: "منذ 18 دقيقة",
@@ -124,7 +124,7 @@ export const adminTeam = [
   },
   {
     name: "سامي مراد",
-    id: "admin-demo-02",
+    id: "admin-sample-02",
     role: "مشرف",
     status: "نشط",
     last: "اليوم",
@@ -134,49 +134,57 @@ export const adminTeam = [
   },
   {
     name: "رنا الحمصي",
-    id: "mod-demo-01",
+    id: "mod-sample-01",
     role: "مراقب",
     status: "قيد الدعوة",
     last: "لم يبدأ",
     count: 0,
     perms: "بلاغات أولية",
-    note: "بانتظار قبول الدعوة لاحقاً.",
+    note: "بانتظار قبول الدعوة ضمن سير العمل.",
   },
   {
-    name: "فريق دعم تجريبي",
-    id: "admin-demo-03",
+    name: "فريق دعم محلي",
+    id: "admin-sample-03",
     role: "مشرف",
     status: "موقوف",
     last: "قبل 9 أيام",
     count: 8,
     perms: "موقوفة",
-    note: "الإيقاف تجريبي فقط.",
+    note: "الإيقاف محلي فقط.",
   },
 ];
 
 export const auditLog = [
-  ["09:40", "صاحب التطبيق", "مالك", "منح توثيق لبائع", "seller-demo-21", "مكتمل", "نموذج تجريبي"],
+  ["09:40", "صاحب التطبيق", "مالك", "منح توثيق لبائع", "seller-sample-21", "مكتمل", "نموذج محلي"],
   [
     "10:15",
     "ليان الخطيب",
     "مشرف",
     "سحب تمييز إعلان",
-    "listing-demo-88",
+    "listing-sample-88",
     "بانتظار المالك",
-    "يتطلب صلاحية أعلى لاحقاً",
+    "يتطلب صلاحية أعلى ضمن سير العمل",
   ],
-  ["11:05", "صاحب التطبيق", "مالك", "تجميد مستخدم", "user-demo-44", "مكتمل", "لا يوجد تنفيذ حقيقي"],
-  ["12:20", "سامي مراد", "مشرف", "رفض إعلان", "listing-demo-51", "مسجل", "سبب الرفض تجريبي"],
+  [
+    "11:05",
+    "صاحب التطبيق",
+    "مالك",
+    "تجميد مستخدم",
+    "user-sample-44",
+    "مكتمل",
+    "لا يوجد تنفيذ حقيقي",
+  ],
+  ["12:20", "سامي مراد", "مشرف", "رفض إعلان", "listing-sample-51", "مسجل", "سبب الرفض محلي"],
   [
     "13:10",
     "ليان الخطيب",
     "مشرف",
     "مراجعة طلب ترويج",
-    "promo-demo-15",
+    "promo-sample-15",
     "قيد المراجعة",
     "لا توجد معالجة دفع",
   ],
-  ["14:00", "صاحب التطبيق", "مالك", "تعديل صلاحيات مشرف", "admin-demo-02", "مكتمل", "واجهة فقط"],
+  ["14:00", "صاحب التطبيق", "مالك", "تعديل صلاحيات مشرف", "admin-sample-02", "مكتمل", "واجهة فقط"],
 ];
 
 export const adminQueues = [
@@ -189,7 +197,7 @@ export const adminQueues = [
 export const managedUsers = [
   {
     name: "محمد عبد القادر",
-    id: "user-demo-101",
+    id: "user-sample-101",
     type: "بائع موثّق",
     status: "نشط",
     verification: "موثّق",
@@ -204,7 +212,7 @@ export const managedUsers = [
   },
   {
     name: "متجر الذكي",
-    id: "user-demo-102",
+    id: "user-sample-102",
     type: "متجر",
     status: "نشط",
     verification: "قيد المراجعة",
@@ -215,11 +223,11 @@ export const managedUsers = [
     listings: 38,
     reports: 1,
     rating: "4.6",
-    note: "طلب توثيق تجريبي.",
+    note: "طلب توثيق محلي.",
   },
   {
     name: "مكتب الأمل العقاري",
-    id: "user-demo-103",
+    id: "user-sample-103",
     type: "نشاط تجاري",
     status: "قيد المراجعة",
     verification: "غير موثّق",
@@ -230,11 +238,11 @@ export const managedUsers = [
     listings: 24,
     reports: 2,
     rating: "4.9",
-    note: "يحتاج مراجعة مستندات لاحقاً.",
+    note: "يحتاج مراجعة مستندات ضمن سير العمل.",
   },
   {
     name: "أبو خالد",
-    id: "user-demo-104",
+    id: "user-sample-104",
     type: "مستخدم",
     status: "مجمّد",
     verification: "مرفوض",
@@ -245,11 +253,11 @@ export const managedUsers = [
     listings: 3,
     reports: 4,
     rating: "3.9",
-    note: "التجميد تجريبي وغير منفّذ.",
+    note: "التجميد محلي وغير منفّذ.",
   },
   {
     name: "ليان الخطيب",
-    id: "admin-demo-01",
+    id: "admin-sample-01",
     type: "مشرف",
     status: "نشط",
     verification: "غير موثّق",
@@ -260,11 +268,11 @@ export const managedUsers = [
     listings: 0,
     reports: 0,
     rating: "—",
-    note: "حساب إداري تجريبي.",
+    note: "حساب إداري محلي.",
   },
   {
     name: "رنا الحمصي",
-    id: "mod-demo-01",
+    id: "mod-sample-01",
     type: "مراقب",
     status: "قيد المراجعة",
     verification: "تم سحب التوثيق",
@@ -275,7 +283,7 @@ export const managedUsers = [
     listings: 0,
     reports: 0,
     rating: "—",
-    note: "دعوة مراقب تجريبية.",
+    note: "دعوة مراقب محلية.",
   },
 ];
 
@@ -298,7 +306,7 @@ export const sellerVerificationQueue = [
     docs: "سجل تجاري قيد التجهيز",
     date: "2026-06-20",
     review: "لم تتم المراجعة",
-    note: "يحتاج مستندات إضافية لاحقاً.",
+    note: "يحتاج مستندات إضافية ضمن سير العمل.",
   },
   {
     seller: "محمد عبد القادر",
@@ -308,13 +316,13 @@ export const sellerVerificationQueue = [
     docs: "ملف تحقق قيد التجهيز",
     date: "2026-05-11",
     review: "2026-06-01",
-    note: "إجراءات السحب والمنح تجريبية.",
+    note: "إجراءات السحب والمنح محلية.",
   },
 ];
 
 export const featuredListingQueue = [
   {
-    listingId: "L-demo-201",
+    listingId: "L-sample-201",
     title: "تويوتا كورولا 2018",
     seller: "محمد عبد القادر",
     category: "سيارات ومركبات",
@@ -323,13 +331,13 @@ export const featuredListingQueue = [
     featured: "مميز",
     duration: "7 أيام",
     dates: "بداية/نهاية قيد التجهيز",
-    payment: "حالة دفع تجريبية",
+    payment: "حالة دفع محلية",
     reviewer: "ليان الخطيب",
     owner: "لا",
     note: "تمييز قائم ضمن النموذج.",
   },
   {
-    listingId: "L-demo-202",
+    listingId: "L-sample-202",
     title: "شقة للإيجار في المزة",
     seller: "مكتب الأمل العقاري",
     category: "عقارات",
@@ -341,10 +349,10 @@ export const featuredListingQueue = [
     payment: "بانتظار الإثبات",
     reviewer: "سامي مراد",
     owner: "نعم",
-    note: "يتطلب موافقة المالك لاحقاً.",
+    note: "يتطلب موافقة المالك ضمن سير العمل.",
   },
   {
-    listingId: "L-demo-203",
+    listingId: "L-sample-203",
     title: "آيفون 13 برو",
     seller: "متجر الذكي",
     category: "موبايلات",
@@ -352,8 +360,8 @@ export const featuredListingQueue = [
     status: "نشط",
     featured: "منتهي",
     duration: "3 أيام",
-    dates: "منتهي · نموذج تجريبي",
-    payment: "مرفوض · نموذج تجريبي",
+    dates: "منتهي · نموذج محلي",
+    payment: "مرفوض · نموذج محلي",
     reviewer: "—",
     owner: "نعم",
     note: "لا توجد معالجة دفع حقيقية.",
@@ -362,8 +370,8 @@ export const featuredListingQueue = [
 
 export const promotions = [
   {
-    requestId: "PR-demo-501",
-    listingId: "L-demo-201",
+    requestId: "PR-sample-501",
+    listingId: "L-sample-201",
     title: "تويوتا كورولا 2018",
     seller: "محمد عبد القادر",
     type: "بائع موثّق",
@@ -372,16 +380,16 @@ export const promotions = [
     amount: "150,000",
     currency: "ل.س",
     payment: "بانتظار الإثبات",
-    ref: "مرجع تحويل تجريبي",
+    ref: "مرجع تحويل محلي",
     proof: "لم يتم رفع إثبات حقيقي",
     status: "جديد",
     reviewer: "ليان الخطيب",
     owner: "لا",
-    notes: "حقول دفع تجريبية فقط.",
+    notes: "حقول دفع محلية فقط.",
   },
   {
-    requestId: "PR-demo-502",
-    listingId: "L-demo-202",
+    requestId: "PR-sample-502",
+    listingId: "L-sample-202",
     title: "شقة للإيجار في المزة",
     seller: "مكتب الأمل العقاري",
     type: "نشاط تجاري",
@@ -390,16 +398,16 @@ export const promotions = [
     amount: "300,000",
     currency: "ل.س",
     payment: "قيد المراجعة",
-    ref: "مرجع تجريبي",
-    proof: "إثبات تجريبي",
+    ref: "مرجع محلي",
+    proof: "إثبات محلي",
     status: "قيد المراجعة",
     reviewer: "سامي مراد",
     owner: "نعم",
-    notes: "تفعيل التمييز يحتاج مالك لاحقاً.",
+    notes: "تفعيل التمييز يحتاج مالك ضمن سير العمل.",
   },
   {
-    requestId: "PR-demo-503",
-    listingId: "L-demo-203",
+    requestId: "PR-sample-503",
+    listingId: "L-sample-203",
     title: "آيفون 13 برو",
     seller: "متجر الذكي",
     type: "متجر",
@@ -413,7 +421,7 @@ export const promotions = [
     status: "جديد",
     reviewer: "—",
     owner: "لا",
-    notes: "بانتظار إثبات دفع تجريبي.",
+    notes: "بانتظار إثبات دفع محلي.",
   },
 ];
 
@@ -442,9 +450,9 @@ export const pendingListings = [
     submitted: "2026-06-27",
     risk: "منخفض",
     status: "يحتاج تعديل",
-    reason: "صور غير مكتملة لاحقاً.",
+    reason: "صور غير مكتملة ضمن سير العمل.",
     admin: "سامي مراد",
-    note: "طلب تعديل تجريبي.",
+    note: "طلب تعديل محلي.",
   },
   {
     id: "L-pending-03",
@@ -464,22 +472,22 @@ export const pendingListings = [
 
 export const reports = [
   {
-    id: "R-demo-301",
+    id: "R-sample-301",
     type: "إعلان مشبوه",
-    target: "L-demo-203 · آيفون 13 برو",
-    reporter: "reporter-demo-11",
+    target: "L-sample-203 · آيفون 13 برو",
+    reporter: "reporter-sample-11",
     reason: "سعر مضلل",
     created: "منذ 30 دقيقة",
     status: "جديد",
     severity: "مرتفع",
     admin: "ليان الخطيب",
-    note: "إجراءات البلاغات تجريبية.",
+    note: "إجراءات البلاغات محلية.",
   },
   {
-    id: "R-demo-302",
+    id: "R-sample-302",
     type: "احتيال",
-    target: "user-demo-104 · أبو خالد",
-    reporter: "reporter-demo-22",
+    target: "user-sample-104 · أبو خالد",
+    reporter: "reporter-sample-22",
     reason: "طلب تحويل خارج المنصة",
     created: "اليوم",
     status: "قيد المراجعة",
@@ -488,10 +496,10 @@ export const reports = [
     note: "تجميد المستخدم يحتاج صلاحية حقيقية.",
   },
   {
-    id: "R-demo-303",
+    id: "R-sample-303",
     type: "محتوى ممنوع",
-    target: "L-demo-202 · شقة للإيجار",
-    reporter: "reporter-demo-31",
+    target: "L-sample-202 · شقة للإيجار",
+    reporter: "reporter-sample-31",
     reason: "معلومات خاطئة",
     created: "أمس",
     status: "تم الحل",
@@ -500,16 +508,16 @@ export const reports = [
     note: "لا يوجد إخفاء إعلان حقيقي.",
   },
   {
-    id: "R-demo-304",
+    id: "R-sample-304",
     type: "مستخدم مسيء",
-    target: "user-demo-102 · متجر الذكي",
-    reporter: "reporter-demo-44",
+    target: "user-sample-102 · متجر الذكي",
+    reporter: "reporter-sample-44",
     reason: "رسائل مزعجة",
     created: "قبل يومين",
     status: "قيد المراجعة",
     severity: "منخفض",
     admin: "—",
-    note: "تعيين مشرف لاحقاً.",
+    note: "تعيين مشرف ضمن سير العمل.",
   },
 ];
 
@@ -523,6 +531,6 @@ export const platformSettings = [
   "إعدادات البلاغات",
   "إعدادات الرسائل",
   "إعدادات الإشعارات",
-  "إعدادات الدفع لاحقاً",
+  "إعدادات الدفع ضمن سير العمل",
   "إعدادات الحسابات والصلاحيات",
 ];

@@ -1,7 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { FileCheck, Flag, LayoutDashboard, Lock, Sparkles, Users } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { demoNotice } from "@/data/adminMockData";
 import { uiLabel } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -20,77 +19,57 @@ const tabs = [
 ];
 
 function AdminLayout() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const auth = useAuth();
   const { language, text } = useUiPreferences();
 
   if (auth.status === "loading") {
     return (
-      <>
-        <PageHeader title={text("لوحة الإدارة", "Admin dashboard")} />
-        <main className="container-wide pt-4 pb-8">
-          <AdminStateCard
-            title={text("جاري التحقق من الصلاحيات", "Checking permissions")}
-            message={text(
-              "يتم تحميل جلسة الحساب وقراءة الدور من جدول الأدوار.",
-              "Loading the account session and reading the role from the role table.",
-            )}
-          />
-        </main>
-      </>
+      <AdminShellState
+        title={text("جارٍ التحقق من الصلاحيات", "Checking permissions")}
+        message={text(
+          "نقرأ جلسة الحساب والدور المحفوظ في مصدر الصلاحيات.",
+          "Reading the account session and stored role from the permission source.",
+        )}
+      />
     );
   }
 
   if (auth.status === "authUnavailable") {
     return (
-      <>
-        <PageHeader title={text("لوحة الإدارة", "Admin dashboard")} />
-        <main className="container-wide pt-4 pb-8">
-          <AdminStateCard
-            title={text("لوحة الإدارة قيد التفعيل", "Admin dashboard is being activated")}
-            message={text(
-              "لا يمكن عرض لوحة المالك التشغيلية قبل اكتمال ربط الحسابات. التصفح العام يبقى متاحاً.",
-              "The operational owner dashboard cannot be shown before account integration is complete. Public browsing remains available.",
-            )}
-          />
-        </main>
-      </>
+      <AdminShellState
+        title={text("لوحة الإدارة تتطلب جلسة حساب", "Admin dashboard requires an account session")}
+        message={text(
+          "تبقى صفحات الإدارة محمية ولا تُعرض إلا بعد توفر حساب بصلاحية مناسبة.",
+          "Admin pages remain protected and are shown only with a suitable authorized account.",
+        )}
+      />
     );
   }
 
   if (auth.status === "signedOut") {
     return (
-      <>
-        <PageHeader title={text("لوحة الإدارة", "Admin dashboard")} />
-        <main className="container-wide pt-4 pb-8">
-          <AdminStateCard
-            title={text("تسجيل الدخول مطلوب", "Login required")}
-            message={text(
-              "يجب تسجيل الدخول أولاً، ثم يتم التحقق من دور المالك من جدول الأدوار.",
-              "Log in first, then the owner role is checked from the role table.",
-            )}
-            actionTo="/login"
-            actionLabel={text("تسجيل الدخول", "Log in")}
-          />
-        </main>
-      </>
+      <AdminShellState
+        title={text("تسجيل الدخول مطلوب", "Login required")}
+        message={text(
+          "سجّل الدخول أولاً، ثم يتم التحقق من دور المالك من مصدر الصلاحيات.",
+          "Log in first, then the owner role is checked from the permission source.",
+        )}
+        actionTo="/login"
+        actionLabel={text("تسجيل الدخول", "Log in")}
+      />
     );
   }
 
   if (!auth.canAccessOwnerControls) {
     return (
-      <>
-        <PageHeader title={text("لوحة الإدارة", "Admin dashboard")} />
-        <main className="container-wide pt-4 pb-8">
-          <AdminStateCard
-            title={text("غير مخوّل", "Not authorized")}
-            message={text(
-              "هذه المساحة مخصّصة لمالك المنصة فقط. الصلاحية تُقرأ من جدول الأدوار ولا تُمنح من الواجهة.",
-              "This area is only for the platform owner. Permission is read from the role table and is not granted by the frontend.",
-            )}
-          />
-        </main>
-      </>
+      <AdminShellState
+        title={text("غير مخوّل", "Not authorized")}
+        message={text(
+          "هذه المساحة مخصصة للمالك فقط. الصلاحية لا تُمنح من الواجهة.",
+          "This area is for the owner only. Permission is not granted by the frontend.",
+        )}
+      />
     );
   }
 
@@ -100,17 +79,18 @@ function AdminLayout() {
       <main className="container-wide pt-4 pb-8">
         <div className="mb-4 flex items-start gap-2 rounded-2xl bg-warning/10 p-3 hairline">
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
-          <p className="text-xs text-foreground/90">
+          <p className="text-xs leading-6 text-foreground/90">
             {text(
-              "لوحة إدارة مستقبلية لصاحب التطبيق والمشرفين. الحسابات والأدوار تُقرأ من مصدر الصلاحيات، ومعظم إجراءات الإدارة ما زالت غير مفعّلة أو بانتظار اكتمال الربط التشغيلي.",
-              "A future admin dashboard for the app owner and moderators. Accounts and roles are read from the permission source, and most admin actions remain disabled or awaiting operational integration.",
-            )}{" "}
-            {uiLabel(demoNotice, language)}.
+              "لوحة الإدارة تعرض مساحة تحكم للمالك مع مراجعة الإعلانات والبلاغات وطلبات الترويج. كل وصول إداري يبقى محكوماً بالصلاحيات المخزنة خارج الواجهة.",
+              "The admin dashboard provides owner controls for listings, reports, and promotion requests. Administrative access remains governed by permissions stored outside the frontend.",
+            )}
           </p>
         </div>
         <nav className="mb-4 flex gap-2 overflow-x-auto pb-1">
           {tabs.map((tab) => {
-            const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
+            const active = tab.exact
+              ? pathname === tab.to || pathname === "/admin/"
+              : pathname.startsWith(tab.to);
             return (
               <Link
                 key={tab.to}
@@ -133,7 +113,7 @@ function AdminLayout() {
   );
 }
 
-function AdminStateCard({
+function AdminShellState({
   title,
   message,
   actionTo = "/",
@@ -145,18 +125,22 @@ function AdminStateCard({
   actionLabel?: string;
 }) {
   const { text } = useUiPreferences();
-
   return (
-    <section className="rounded-2xl bg-card p-5 text-center hairline shadow-soft">
-      <Lock className="mx-auto h-7 w-7 text-warning" />
-      <h2 className="mt-3 text-base font-extrabold">{title}</h2>
-      <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">{message}</p>
-      <Link
-        to={actionTo}
-        className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-      >
-        {actionLabel ?? text("العودة للرئيسية", "Back to home")}
-      </Link>
-    </section>
+    <>
+      <PageHeader title={text("لوحة الإدارة", "Admin dashboard")} />
+      <main className="container-wide pt-4 pb-8">
+        <section className="rounded-2xl bg-card p-5 text-center hairline shadow-soft">
+          <Lock className="mx-auto h-7 w-7 text-warning" />
+          <h2 className="mt-3 text-base font-extrabold">{title}</h2>
+          <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">{message}</p>
+          <Link
+            to={actionTo}
+            className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+          >
+            {actionLabel ?? text("العودة للرئيسية", "Back to home")}
+          </Link>
+        </section>
+      </main>
+    </>
   );
 }

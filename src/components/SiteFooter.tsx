@@ -71,7 +71,7 @@ export function SiteFooter() {
           </p>
           <span className="inline-flex items-center gap-1 rounded-full bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground">
             <ShieldCheck className="h-3 w-3 text-gold" />{" "}
-            {text("سوريا فقط · نسخة تجريبية", "Syria only · Beta")}
+            {text("سوريا فقط · تصفح آمن", "Syria only · Safe browsing")}
           </span>
         </div>
       </div>

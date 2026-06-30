@@ -42,8 +42,8 @@ function ProhibitedPage() {
               </p>
               <p className="mt-1 text-xs text-foreground/80">
                 {text(
-                  "ستتم لاحقاً إزالة أي إعلان يخالف هذه القائمة بعد المراجعة، مع إمكانية إيقاف الحساب المخالف. ميزة الإشراف الفعلية قيد التطوير وستُفعَّل عند ربط لوحة الإدارة.",
-                  "Listings that violate this list may later be removed after review, with possible account action. Real moderation is in development and will be enabled with the admin dashboard.",
+                  "قد تتم إزالة أي إعلان يخالف هذه القائمة بعد المراجعة، مع إمكانية اتخاذ إجراء مناسب على الحساب المخالف وفق الصلاحيات.",
+                  "Listings that violate this list may be removed after review, with suitable account action under the applicable permissions.",
                 )}
               </p>
             </div>
@@ -67,8 +67,8 @@ function ProhibitedPage() {
           </p>
           <p>
             {text(
-              "من صفحة الإعلان، اضغط على زر (إبلاغ عن الإعلان). ميزة التبليغ تحت التطوير وستُفعَّل قريباً. في الحالات العاجلة، يمكنك التواصل عبر",
-              "From the listing page, choose Report listing. Reporting is in development and will be enabled soon. For urgent cases, contact",
+              "من صفحة الإعلان، اضغط على زر (إبلاغ عن الإعلان). في الحالات العاجلة، يمكنك التواصل عبر",
+              "From the listing page, choose Report listing. For urgent cases, contact",
             )}{" "}
             <Link
               to="/support"

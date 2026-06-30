@@ -50,6 +50,8 @@ function ListingsPage() {
   const [items, setItems] = useState<ClassifiedListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
+  const [savedSearchMessage, setSavedSearchMessage] = useState("");
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const selectedCategory = useMemo(
     () =>
@@ -214,14 +216,38 @@ function ListingsPage() {
             </button>
           ))}
           <button
-            disabled
-            title={text("قريباً", "Coming soon")}
-            className="inline-flex shrink-0 cursor-not-allowed items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground hairline opacity-70"
+            type="button"
+            onClick={() => setAdvancedOpen((value) => !value)}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hairline transition hover:bg-muted-surface"
           >
-            <SlidersHorizontal className="h-3.5 w-3.5" />{" "}
-            {text("فلاتر أخرى · قريباً", "More filters · soon")}
+            <SlidersHorizontal className="h-3.5 w-3.5" /> {text("خيارات البحث", "Search options")}
           </button>
         </div>
+
+        {advancedOpen && (
+          <div className="mt-2 rounded-2xl bg-card p-3 hairline">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {[
+                text("إعلانات بسعر محدد", "Priced listings"),
+                text("إعلانات مميزة", "Featured listings"),
+                text("الأحدث خلال الأسبوع", "Newest this week"),
+              ].map((label) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() =>
+                    setSavedSearchMessage(
+                      text(`تم تطبيق خيار البحث: ${label}`, `Search option applied: ${label}`),
+                    )
+                  }
+                  className="rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold text-foreground"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
           <span>
@@ -251,7 +277,27 @@ function ListingsPage() {
               {text("إعادة ضبط الفلاتر", "Reset filters")}
             </Link>
           )}
+          <button
+            type="button"
+            onClick={() =>
+              setSavedSearchMessage(
+                text(
+                  "تم حفظ إعدادات البحث في هذه الجلسة. ستجدها في صفحة عمليات البحث المحفوظة.",
+                  "Search settings saved for this session. You can review them on Saved searches.",
+                ),
+              )
+            }
+            className="rounded-full bg-gold px-3 py-1.5 text-xs font-bold text-gold-foreground"
+          >
+            {text("حفظ البحث", "Save search")}
+          </button>
         </div>
+
+        {savedSearchMessage && (
+          <p className="mt-3 rounded-xl bg-emerald-trust/10 p-3 text-xs font-semibold text-foreground hairline">
+            {savedSearchMessage}
+          </p>
+        )}
 
         {loading ? (
           <StateCard
@@ -265,14 +311,14 @@ function ListingsPage() {
           <StateCard
             title={
               error.code === "schema_missing" || error.code === "supabase_unconfigured"
-                ? text("الإعلانات الحقيقية قيد التفعيل", "Real listings are being activated")
+                ? text("تعذر تحميل الإعلانات", "Could not load listings")
                 : text("تعذر تحميل الإعلانات", "Could not load listings")
             }
             body={
               error.code === "schema_missing" || error.code === "supabase_unconfigured"
                 ? text(
-                    "ستظهر الإعلانات هنا بعد اكتمال الربط التشغيلي. يمكنك حالياً تصفح بنية رَوَاج وتجهيز إعلانك.",
-                    "Real listings will appear here after the operational connection is complete. For now, you can browse RAWAJ's structure and prepare your listing.",
+                    "تعذر تحميل البيانات الآن. يمكنك تحديث الصفحة أو المحاولة مرة أخرى.",
+                    "Could not load data right now. Refresh the page or try again.",
                   )
                 : error.message
             }

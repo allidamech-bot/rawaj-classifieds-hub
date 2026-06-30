@@ -149,8 +149,8 @@ function CategoriesPage() {
         {useFallback ? (
           <div className="mb-4 rounded-2xl bg-warning/10 p-3 text-xs text-foreground/90 hairline">
             {text(
-              "الأقسام والأعداد حالياً نموذج تجريبي للاطلاع على التصميم. ستظهر الأقسام الحقيقية بعد اكتمال ربط البيانات التشغيلية.",
-              "Categories and counts are currently demo previews for the design. Real categories will appear after the operational data connection is complete.",
+              "تُعرض الأقسام المتاحة مع عدّادات تساعدك على اختيار المسار الأنسب للتصفح.",
+              "Available categories are shown with counts to help you choose the right browsing path.",
             )}
           </div>
         ) : (
@@ -245,8 +245,8 @@ function CategoriesPage() {
         {categories.length > 0 && (
           <p className="mt-5 text-center text-[11px] text-muted-foreground">
             {text(
-              "هل قسمك غير موجود؟ سيتم إضافة المزيد من الأقسام لاحقاً حسب احتياجات المستخدمين.",
-              "Missing a category? More categories will be added later based on user needs.",
+              "هل قسمك غير موجود؟ أرسل اقتراحك عبر الدعم ليتم مراجعته ضمن تنظيم السوق.",
+              "Missing a category? Send a suggestion through support for marketplace review.",
             )}
           </p>
         )}

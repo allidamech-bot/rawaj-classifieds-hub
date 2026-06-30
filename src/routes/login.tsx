@@ -30,8 +30,8 @@ function LoginPage() {
     if (!client) {
       setError(
         text(
-          "الحسابات قيد التفعيل حالياً. التصفح العام متاح، وسيتم تفعيل الدخول قريباً.",
-          "Accounts are being activated. Public browsing is available, and login will be enabled soon.",
+          "تعذر الوصول إلى خدمة الحسابات الآن. التصفح العام متاح ويمكنك المحاولة مرة أخرى.",
+          "Account service is unavailable right now. Public browsing is available and you can try again.",
         ),
       );
       return;
@@ -66,8 +66,8 @@ function LoginPage() {
               <h1 className="text-base font-extrabold">{text("دخول الحساب", "Account login")}</h1>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
                 {text(
-                  "استخدم بريدك وكلمة المرور عند تفعيل الحسابات. إنشاء الحساب من الواجهة غير متاح حالياً.",
-                  "Use your email and password when accounts are enabled. In-app signup is not available yet.",
+                  "سجّل الدخول ببريدك وكلمة المرور. لإنشاء حساب أو استعادة الوصول، تواصل مع فريق الدعم.",
+                  "Log in with your email and password. To create an account or restore access, contact support.",
                 )}
               </p>
             </div>
@@ -77,8 +77,8 @@ function LoginPage() {
             <div className="rounded-xl bg-warning/10 p-3 text-xs text-foreground/90 hairline">
               {auth.reason ??
                 text(
-                  "الحسابات قيد التفعيل حالياً. التصفح العام متاح، وسيتم تفعيل الدخول قريباً.",
-                  "Accounts are being activated. Public browsing is available, and login will be enabled soon.",
+                  "تعذر الوصول إلى خدمة الحسابات الآن. التصفح العام متاح ويمكنك المحاولة مرة أخرى.",
+                  "Account service is unavailable right now. Public browsing is available and you can try again.",
                 )}
             </div>
           ) : (

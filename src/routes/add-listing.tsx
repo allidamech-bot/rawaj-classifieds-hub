@@ -20,9 +20,7 @@ import { useAuth } from "@/lib/use-auth";
 import type { PriceType } from "@/types";
 
 export const Route = createFileRoute("/add-listing")({
-  head: () => ({
-    meta: [{ title: "أضف إعلاناً | رَوَاج" }],
-  }),
+  head: () => ({ meta: [{ title: "أضف إعلاناً | رَوَاج" }] }),
   component: AddListingPage,
 });
 
@@ -39,7 +37,6 @@ function AddListingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [createdListingId, setCreatedListingId] = useState<string | null>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
-
   const [categoryId, setCategoryId] = useState("");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
@@ -85,7 +82,6 @@ function AddListingPage() {
 
   useEffect(() => {
     let cancelled = false;
-
     async function load() {
       setLoading(true);
       setSetupError(null);
@@ -93,23 +89,16 @@ function AddListingPage() {
         fetchPublicCategories(),
         fetchPublicGovernorates(),
       ]);
-
       if (cancelled) return;
-
-      if (!categoriesResult.ok) {
-        setSetupError(categoriesResult.error);
-      } else if (!governoratesResult.ok) {
-        setSetupError(governoratesResult.error);
-      } else {
+      if (!categoriesResult.ok) setSetupError(categoriesResult.error);
+      else if (!governoratesResult.ok) setSetupError(governoratesResult.error);
+      else {
         setCategories(categoriesResult.data);
         setGovernorates(governoratesResult.data);
       }
-
       setLoading(false);
     }
-
     void load();
-
     return () => {
       cancelled = true;
     };
@@ -117,7 +106,6 @@ function AddListingPage() {
 
   async function submitListing() {
     if (!canSubmit || submitting) return;
-
     setSubmitting(true);
     setSubmitMessage(null);
 
@@ -135,9 +123,8 @@ function AddListingPage() {
       details: {},
     });
 
-    setSubmitting(false);
-
     if (!result.ok) {
+      setSubmitting(false);
       setSubmitMessage(result.error.message);
       return;
     }
@@ -151,20 +138,20 @@ function AddListingPage() {
         sortOrder: index,
         altAr: title.trim(),
       });
-
       if (!uploadResult.ok) imageErrors.push(uploadResult.error.message);
     }
 
+    setSubmitting(false);
     setCreatedListingId(result.data.id);
     setSubmitMessage(
       imageErrors.length > 0
         ? text(
-            `تم إرسال الإعلان للمراجعة، لكن تعذر رفع بعض الصور: ${imageErrors[0]}`,
-            `Listing sent for review, but some photos could not upload: ${imageErrors[0]}`,
+            `تم إرسال الإعلان للمراجعة، وتعذر رفع بعض الصور: ${imageErrors[0]}`,
+            `Listing was sent for review, and some photos could not upload: ${imageErrors[0]}`,
           )
         : text(
-            "تم إرسال الإعلان للمراجعة. لن يظهر للعموم قبل موافقة المالك/الإدارة.",
-            "Listing sent for review. It will not be public until owner/admin approval.",
+            "تم إرسال الإعلان للمراجعة. سيظهر للعامة بعد الموافقة.",
+            "Listing sent for review. It will be public after approval.",
           ),
     );
   }
@@ -174,7 +161,7 @@ function AddListingPage() {
       <PageState
         title={text("أضف إعلاناً", "Post a listing")}
         heading={text("جارٍ التحقق من الجلسة", "Checking session")}
-        body={text("يتم التأكد من حالة تسجيل الدخول.", "Checking your sign-in status.")}
+        body={text("نجهّز حالة حسابك قبل النشر.", "Preparing your account status before posting.")}
       />
     );
   }
@@ -185,8 +172,8 @@ function AddListingPage() {
         title={text("أضف إعلاناً", "Post a listing")}
         heading={text("تسجيل الدخول مطلوب", "Login required")}
         body={text(
-          "لا يمكن إرسال إعلان حقيقي بدون حساب. سجّل الدخول ثم عد لإضافة الإعلان.",
-          "You cannot submit a real listing without an account. Log in, then return to post.",
+          "سجّل الدخول لإرسال إعلان حقيقي وربطه بحسابك.",
+          "Log in to submit a real listing and connect it to your account.",
         )}
         actionLabel={text("تسجيل الدخول", "Log in")}
         actionTo="/login"
@@ -198,11 +185,13 @@ function AddListingPage() {
     return (
       <PageState
         title={text("أضف إعلاناً", "Post a listing")}
-        heading={text("إرسال الإعلانات قيد التفعيل", "Listing submission is being activated")}
+        heading={text("النشر يحتاج جلسة حساب", "Posting requires an account session")}
         body={text(
-          "يمكنك تصفح الواجهة حالياً، وسيتم تفعيل إرسال الإعلانات الحقيقية قريباً بعد اكتمال ربط الحسابات.",
-          "You can browse the interface now. Real listing submission will be enabled after account integration is complete.",
+          "تصفح الإعلانات الآن، واستخدم هذه الصفحة عند توفر جلسة الحساب لإرسال إعلان للمراجعة.",
+          "Browse listings now, and use this page with an account session to submit a listing for review.",
         )}
+        actionLabel={text("تصفح الإعلانات", "Browse listings")}
+        actionTo="/listings"
       />
     );
   }
@@ -213,8 +202,8 @@ function AddListingPage() {
         title={text("أضف إعلاناً", "Post a listing")}
         heading={text("الحساب غير جاهز للنشر", "Account is not ready to publish")}
         body={text(
-          "يجب أن تكون حالة الحساب نشطة قبل إرسال إعلان حقيقي.",
-          "Your account must be active before submitting a real listing.",
+          "يجب أن تكون حالة الحساب نشطة قبل إرسال إعلان.",
+          "Your account must be active before submitting a listing.",
         )}
       />
     );
@@ -231,13 +220,7 @@ function AddListingPage() {
             return (
               <li key={label} className="flex items-center gap-2">
                 <div
-                  className={`grid h-7 w-7 place-items-center rounded-full text-xs font-bold ${
-                    done
-                      ? "bg-emerald-trust text-emerald-trust-foreground"
-                      : active
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted-surface text-muted-foreground"
-                  }`}
+                  className={`grid h-7 w-7 place-items-center rounded-full text-xs font-bold ${done ? "bg-emerald-trust text-emerald-trust-foreground" : active ? "bg-primary text-primary-foreground" : "bg-muted-surface text-muted-foreground"}`}
                 >
                   {done ? <Check className="h-3.5 w-3.5" /> : index + 1}
                 </div>
@@ -256,15 +239,13 @@ function AddListingPage() {
           <Card title={text("جارٍ تحميل بيانات النشر", "Loading posting data")}>
             <p className="text-sm text-muted-foreground">
               {text(
-                "يتم تجهيز الأقسام والمحافظات المتاحة للنشر.",
+                "نجهّز الأقسام والمحافظات المتاحة.",
                 "Preparing available categories and governorates.",
               )}
             </p>
           </Card>
         ) : setupError ? (
-          <Card
-            title={text("إرسال الإعلانات قيد التفعيل", "Listing submission is being activated")}
-          >
+          <Card title={text("تعذر تجهيز نموذج النشر", "Could not prepare posting form")}>
             <p className="text-sm text-muted-foreground">{setupError.message}</p>
           </Card>
         ) : (
@@ -276,12 +257,9 @@ function AddListingPage() {
                     {categories.map((item) => (
                       <button
                         key={item.id}
+                        type="button"
                         onClick={() => setCategoryId(item.id)}
-                        className={`rounded-xl p-3 text-start text-sm font-semibold transition ${
-                          categoryId === item.id
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card hairline hover:bg-muted-surface"
-                        }`}
+                        className={`rounded-xl p-3 text-start text-sm font-semibold transition ${categoryId === item.id ? "bg-primary text-primary-foreground" : "bg-card hairline hover:bg-muted-surface"}`}
                       >
                         {categoryName(item.id, item.nameAr, language)}
                       </button>
@@ -308,10 +286,9 @@ function AddListingPage() {
                       multiple
                       accept="image/jpeg,image/png,image/webp"
                       className="sr-only"
-                      onChange={(event) => {
-                        const files = Array.from(event.target.files ?? []).slice(0, 6);
-                        setSelectedImages(files);
-                      }}
+                      onChange={(event) =>
+                        setSelectedImages(Array.from(event.target.files ?? []).slice(0, 6))
+                      }
                     />
                   </label>
                   <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -327,12 +304,6 @@ function AddListingPage() {
                       </div>
                     ))}
                   </div>
-                  <p className="mt-3 text-[11px] text-muted-foreground">
-                    {text(
-                      "رفع الصور قيد التفعيل حالياً. إذا لم تكن الصور جاهزة بعد، يمكنك متابعة تجهيز الإعلان النصي وستظهر رسالة واضحة للصور فقط.",
-                      "Photo uploads are still being activated. You can continue preparing the text listing, and any photo issue will be shown clearly.",
-                    )}
-                  </p>
                 </Card>
               )}
 
@@ -353,7 +324,7 @@ function AddListingPage() {
                       className="input resize-none"
                     />
                   </Field>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <Field label={text("السعر", "Price")}>
                       <input
                         value={price}
@@ -371,12 +342,12 @@ function AddListingPage() {
                         <option value="fixed">{text("ثابت", "Fixed")}</option>
                         <option value="negotiable">{text("قابل للتفاوض", "Negotiable")}</option>
                         <option value="contact">{text("عند التواصل", "On contact")}</option>
-                        <option value="free">{text("مجاناً", "Free")}</option>
+                        <option value="free">{text("مجاني", "Free")}</option>
                         <option value="exchange">{text("للمبادلة", "Exchange")}</option>
                       </select>
                     </Field>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <Field label={text("المحافظة", "Governorate")}>
                       <select
                         value={governorateId}
@@ -437,13 +408,9 @@ function AddListingPage() {
                   </Field>
                   <div className="space-y-2">
                     {[
-                      {
-                        key: "message",
-                        label: text("رسائل داخل التطبيق", "In-app messages"),
-                        disabled: true,
-                      },
-                      { key: "phone", label: text("اتصال هاتفي", "Phone call"), disabled: false },
-                      { key: "whatsapp", label: text("واتساب", "WhatsApp"), disabled: false },
+                      { key: "message", label: text("رسائل داخل التطبيق", "In-app messages") },
+                      { key: "phone", label: text("اتصال هاتفي", "Phone call") },
+                      { key: "whatsapp", label: text("واتساب", "WhatsApp") },
                     ].map((item) => (
                       <label
                         key={item.key}
@@ -452,12 +419,10 @@ function AddListingPage() {
                         <div>
                           <div className="text-sm font-semibold">{item.label}</div>
                           <div className="text-[10px] text-muted-foreground">
-                            {item.disabled
-                              ? text("غير مفعّل حالياً", "Not enabled yet")
-                              : text(
-                                  "لن تظهر بيانات حساسة قبل تفعيل سياسات التواصل",
-                                  "Sensitive contact data will not appear before contact rules are enabled",
-                                )}
+                            {text(
+                              "تُستخدم وفق إعدادات الخصوصية والمراجعة.",
+                              "Used according to privacy and review settings.",
+                            )}
                           </div>
                         </div>
                         <input
@@ -477,28 +442,28 @@ function AddListingPage() {
               {step === 4 && (
                 <Card title={text("المراجعة قبل الإرسال", "Review before submission")}>
                   <div className="space-y-2 text-sm">
-                    <PreviewRow
+                    <ReviewRow
                       label={text("القسم", "Category")}
-                      value={category ? categoryName(category.id, category.nameAr, language) : "—"}
+                      value={category ? categoryName(category.id, category.nameAr, language) : "-"}
                     />
-                    <PreviewRow label={text("العنوان", "Title")} value={title || "—"} />
-                    <PreviewRow
+                    <ReviewRow label={text("العنوان", "Title")} value={title || "-"} />
+                    <ReviewRow
                       label={text("المحافظة", "Governorate")}
                       value={
                         governorate
                           ? governorateName(governorate.id, governorate.nameAr, language)
-                          : "—"
+                          : "-"
                       }
                     />
-                    <PreviewRow label={text("المنطقة", "District")} value={district || "—"} />
-                    <PreviewRow
+                    <ReviewRow label={text("المنطقة", "District")} value={district || "-"} />
+                    <ReviewRow
                       label={text("الصور", "Photos")}
                       value={text(
                         `${selectedImages.length} صورة مختارة`,
                         `${selectedImages.length} selected photos`,
                       )}
                     />
-                    <PreviewRow
+                    <ReviewRow
                       label={text("حالة النشر", "Publish status")}
                       value={text(
                         "سيُرسل كإعلان قيد المراجعة",
@@ -508,8 +473,8 @@ function AddListingPage() {
                   </div>
                   <div className="mt-3 rounded-xl bg-emerald-trust/10 p-3 text-[11px] font-medium text-emerald-trust">
                     {text(
-                      "لا يستطيع المستخدم العادي اعتماد الإعلان أو تعديل حقول المراجعة. الاعتماد يتم لاحقاً من لوحة المالك.",
-                      "Regular users cannot approve listings or edit review fields. Approval happens later from the owner dashboard.",
+                      "يتم نشر الإعلان للعامة بعد المراجعة والموافقة.",
+                      "The listing becomes public after review and approval.",
                     )}
                   </div>
                 </Card>
@@ -580,8 +545,8 @@ function AddListingPage() {
                 <p className="flex items-start gap-2 text-xs text-foreground/80">
                   <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold" />
                   {text(
-                    "الصور اختيارية وقيد التفعيل. الرسائل والدفع غير مفعّلة حالياً.",
-                    "Photos are optional and still being activated. Messaging and payment are not enabled yet.",
+                    "املأ بيانات واضحة وصوراً مناسبة ليتمكن فريق المراجعة من اعتماد الإعلان بسرعة.",
+                    "Add clear details and suitable photos so the review team can approve the listing quickly.",
                   )}
                 </p>
               </Card>
@@ -613,7 +578,7 @@ function PageState({
       <main className="container-wide pt-10">
         <div className="rounded-2xl bg-card p-10 text-center hairline">
           <p className="text-sm font-bold text-foreground">{heading}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{body}</p>
+          <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p>
           {actionLabel && actionTo && (
             <Link
               to={actionTo}
@@ -646,7 +611,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function PreviewRow({ label, value }: { label: string; value: string }) {
+function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between border-b border-border/60 pb-2 last:border-b-0">
       <span className="text-muted-foreground">{label}</span>

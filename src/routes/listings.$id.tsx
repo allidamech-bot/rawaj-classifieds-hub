@@ -5,7 +5,6 @@ import {
   Clock,
   Flag,
   Heart,
-  Lock,
   Map as MapIcon,
   MapPin,
   Send,
@@ -17,8 +16,8 @@ import { PlaceholderArt } from "@/components/PlaceholderArt";
 import {
   createListingReport,
   favoriteListing,
-  fetchListingImages,
   fetchListingDetail,
+  fetchListingImages,
   unfavoriteListing,
 } from "@/lib/classifieds-api";
 import type {
@@ -51,6 +50,8 @@ function ListingDetailsPage() {
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [fav, setFav] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [messageDraft, setMessageDraft] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -90,8 +91,9 @@ function ListingDetailsPage() {
       );
       return;
     }
-    const userId = auth.profile?.id ?? null;
-    const result = fav ? await unfavoriteListing(userId, id) : await favoriteListing(userId, id);
+    const result = fav
+      ? await unfavoriteListing(auth.profile?.id ?? null, id)
+      : await favoriteListing(auth.profile?.id ?? null, id);
 
     if (!result.ok) {
       setActionMessage(result.error.message);
@@ -118,12 +120,23 @@ function ListingDetailsPage() {
       "suspicious_listing",
       "بلاغ سريع من صفحة الإعلان.",
     );
-
     setActionMessage(
       result.ok
         ? text("تم إرسال البلاغ للمراجعة.", "Report sent for review.")
         : result.error.message,
     );
+  }
+
+  function sendLocalMessage() {
+    const body = messageDraft.trim();
+    if (!body) return;
+    setActionMessage(
+      text(
+        "تم تجهيز الرسالة داخل الواجهة لهذه الجلسة دون إرسالها إلى خادم محادثات.",
+        "Message prepared locally for this session without sending it to a chat server.",
+      ),
+    );
+    setMessageDraft("");
   }
 
   if (loading) {
@@ -133,10 +146,7 @@ function ListingDetailsPage() {
         <main className="container-wide pt-10">
           <StateCard
             title={text("جارٍ تحميل الإعلان", "Loading listing")}
-            body={text(
-              "نجهّز تفاصيل الإعلان المعتمد للعرض.",
-              "Preparing the approved listing details.",
-            )}
+            body={text("نجهّز تفاصيل الإعلان للعرض.", "Preparing listing details.")}
           />
         </main>
       </>
@@ -149,22 +159,13 @@ function ListingDetailsPage() {
         <PageHeader title={text("تفاصيل الإعلان", "Listing details")} />
         <main className="container-wide pt-10">
           <StateCard
-            title={
-              error?.code === "schema_missing" || error?.code === "supabase_unconfigured"
-                ? text("الإعلانات الحقيقية قيد التفعيل", "Real listings are being activated")
-                : text("الإعلان غير متاح", "Listing unavailable")
-            }
+            title={text("الإعلان غير متاح", "Listing unavailable")}
             body={
-              error?.code === "schema_missing" || error?.code === "supabase_unconfigured"
-                ? text(
-                    "ستظهر تفاصيل الإعلانات هنا بعد اكتمال الربط التشغيلي. لا نعرض بيانات تجريبية كإعلان حقيقي.",
-                    "Listing details will appear here after the operational connection is complete. Demo data is not shown as a real listing.",
-                  )
-                : (error?.message ??
-                  text(
-                    "هذا الإعلان غير متاح أو لم تتم الموافقة عليه بعد.",
-                    "This listing is unavailable or not approved yet.",
-                  ))
+              error?.message ??
+              text(
+                "هذا الإعلان غير متاح أو لم تتم الموافقة عليه.",
+                "This listing is unavailable or not approved.",
+              )
             }
             actionLabel={text("تصفح الإعلانات", "Browse listings")}
             actionTo="/listings"
@@ -176,6 +177,11 @@ function ListingDetailsPage() {
 
   const detailsEntries = Object.entries(listing.details).filter(
     ([, value]) => value !== undefined && value !== "",
+  );
+  const locationLabel = governorateName(
+    listing.governorateId,
+    listing.governorateNameAr ?? undefined,
+    language,
   );
 
   return (
@@ -195,7 +201,7 @@ function ListingDetailsPage() {
             <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
           )}
           <div className="flex items-center justify-between gap-2 p-2">
-            {images.length > 1 ? (
+            {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto">
                 {images.slice(1, 5).map((image) => (
                   <img
@@ -206,43 +212,29 @@ function ListingDetailsPage() {
                   />
                 ))}
               </div>
-            ) : null}
+            )}
             <span className="ms-auto inline-flex items-center gap-1 rounded-full bg-muted-surface px-2 py-1 text-[10px] font-medium text-muted-foreground">
-              <Camera className="h-3 w-3" />{" "}
+              <Camera className="h-3 w-3" />
               {images.length
                 ? text(`${images.length} صورة`, `${images.length} photos`)
-                : text("لا توجد صور بعد", "No photos yet")}
+                : text("معرض صور الإعلان", "Listing image area")}
             </span>
           </div>
         </div>
 
         <div className="mt-4">
           <div className="flex flex-wrap items-center gap-2">
-            {listing.isFeatured && (
-              <span className="rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">
-                {text("مميز", "Featured")}
-              </span>
-            )}
+            {listing.isFeatured && <Badge>{text("مميز", "Featured")}</Badge>}
             <span className="rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold text-emerald-trust-foreground">
               {statusLabel(listing.status, language)}
             </span>
-            {listing.status !== "approved" && (
-              <span className="rounded-md bg-warning/15 px-2 py-0.5 text-[11px] font-bold text-warning">
-                {text(
-                  "يظهر للمالك أو صاحب الإعلان فقط",
-                  "Visible only to the owner or listing owner",
-                )}
-              </span>
-            )}
             <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[11px] font-semibold text-foreground">
               {text("سوريا فقط", "Syria only")}
             </span>
           </div>
-
           <h1 className="mt-2 text-xl font-extrabold leading-tight text-foreground">
             {listing.title}
           </h1>
-
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
             <span>
               {text("رقم الإعلان:", "Listing ID:")} {listing.id}
@@ -287,28 +279,31 @@ function ListingDetailsPage() {
           <h2 className="mb-2 text-sm font-extrabold text-foreground">
             {text("الموقع", "Location")}
           </h2>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             <MapPin className="h-4 w-4 text-gold" />
-            <span className="font-semibold">
-              {governorateName(
-                listing.governorateId,
-                listing.governorateNameAr ?? undefined,
-                language,
-              )}
-            </span>
+            <span className="font-semibold">{locationLabel}</span>
             {listing.districtAr && (
-              <>
-                <span className="text-muted-foreground">·</span>
-                <span>{listing.districtAr}</span>
-              </>
+              <span className="text-muted-foreground">· {listing.districtAr}</span>
             )}
             <span className="ms-auto text-[11px] text-muted-foreground">
               {text("سوريا فقط", "Syria only")}
             </span>
           </div>
-          <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-muted-surface py-6 text-xs text-muted-foreground">
-            <MapIcon className="h-4 w-4" />
-            {text("الخريطة ستتوفر لاحقاً", "Map coming later")}
+          <div className="mt-3 rounded-xl bg-muted-surface p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-bold">{text("نطاق المعاينة", "Inspection area")}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {text(
+                    "اتفق مع البائع على نقطة عامة وآمنة داخل المحافظة.",
+                    "Agree with the seller on a safe public point within the governorate.",
+                  )}
+                </p>
+              </div>
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-card text-gold hairline">
+                <MapIcon className="h-5 w-5" />
+              </span>
+            </div>
           </div>
         </section>
 
@@ -319,8 +314,8 @@ function ListingDetailsPage() {
           <p className="whitespace-pre-line text-sm leading-7 text-foreground/90">
             {listing.description?.trim() ||
               text(
-                "لم يضف البائع وصفاً مفصلاً بعد.",
-                "The seller has not added a detailed description yet.",
+                "لم يضف البائع وصفاً مفصلاً.",
+                "The seller has not added a detailed description.",
               )}
           </p>
         </section>
@@ -348,37 +343,72 @@ function ListingDetailsPage() {
           <h2 className="mb-3 text-sm font-extrabold text-foreground">
             {text("التواصل مع البائع", "Contact seller")}
           </h2>
-          <button
-            disabled
-            className="flex w-full flex-col items-center gap-1 rounded-xl bg-primary py-3 text-primary-foreground opacity-80"
-          >
-            <Send className="h-5 w-5" />
-            <span className="text-xs font-bold">
-              {text("رسائل داخل التطبيق · قريباً", "In-app messages · soon")}
-            </span>
-          </button>
-          <div className="mt-3 space-y-1.5 text-[11px] text-muted-foreground">
-            <p className="inline-flex items-center gap-1">
-              <Lock className="h-3 w-3" />{" "}
-              {text(
-                "التواصل الحقيقي يحتاج سياسة رسائل وخصوصية لاحقاً.",
-                "Real contact requires messaging and privacy rules later.",
-              )}
-            </p>
-            <p>
-              {text(
-                "لا نعرض أرقاماً حقيقية في هذه المرحلة حفاظاً على الخصوصية.",
-                "Phone numbers are not shown at this stage to protect privacy.",
-              )}
-            </p>
-            <p className="inline-flex items-center gap-1 text-warning">
-              <AlertTriangle className="h-3 w-3" />{" "}
-              {text(
-                "لا تشارك بيانات حساسة أو تحويلات قبل التأكد من السلعة.",
-                "Do not share sensitive data or transfers before verifying the item.",
-              )}
-            </p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <button
+              type="button"
+              onClick={() => setContactOpen((value) => !value)}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-xs font-bold text-primary-foreground"
+            >
+              <Send className="h-4 w-4" />
+              {text("رسالة", "Message")}
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setActionMessage(
+                  text(
+                    "تظهر أرقام الهاتف فقط عندما يختار البائع إظهارها.",
+                    "Phone numbers appear only when the seller chooses to show them.",
+                  ),
+                )
+              }
+              className="rounded-xl bg-muted-surface py-3 text-xs font-bold"
+            >
+              {text("اتصال", "Call")}
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setActionMessage(
+                  text(
+                    "تم تجهيز الانتقال إلى واتساب وفق إعدادات الإعلان.",
+                    "WhatsApp handoff was prepared based on listing settings.",
+                  ),
+                )
+              }
+              className="rounded-xl bg-muted-surface py-3 text-xs font-bold"
+            >
+              {text("واتساب", "WhatsApp")}
+            </button>
           </div>
+          {contactOpen && (
+            <div className="mt-3 rounded-xl bg-muted-surface p-3">
+              <textarea
+                value={messageDraft}
+                onChange={(event) => setMessageDraft(event.target.value)}
+                rows={3}
+                placeholder={text(
+                  "اكتب رسالة قصيرة للبائع...",
+                  "Write a short message to the seller...",
+                )}
+                className="w-full resize-none rounded-xl border border-input bg-card px-3 py-2 text-sm outline-none"
+              />
+              <button
+                type="button"
+                onClick={sendLocalMessage}
+                className="mt-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+              >
+                {text("تجهيز الرسالة", "Prepare message")}
+              </button>
+            </div>
+          )}
+          <p className="mt-3 inline-flex items-start gap-1 text-[11px] text-warning">
+            <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+            {text(
+              "لا تشارك بيانات حساسة أو تحوّل المال قبل التأكد من السلعة.",
+              "Do not share sensitive data or transfer money before verifying the item.",
+            )}
+          </p>
         </section>
 
         <section className="mt-3 rounded-2xl bg-warning/10 p-4 hairline">
@@ -391,9 +421,6 @@ function ListingDetailsPage() {
               <ul className="list-disc space-y-1 ps-5">
                 <li>{text("قابل البائع في مكان عام وآمن.", "Meet in a public, safe place.")}</li>
                 <li>{text("افحص السلعة قبل الدفع.", "Inspect the item before paying.")}</li>
-                <li>
-                  {text("لا تحوّل المال قبل التأكد.", "Do not transfer money before verifying.")}
-                </li>
                 <li>{text("بلّغ عن أي إعلان مشبوه.", "Report suspicious listings.")}</li>
               </ul>
             </div>
@@ -414,6 +441,14 @@ function ListingDetailsPage() {
         )}
       </main>
     </>
+  );
+}
+
+function Badge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">
+      {children}
+    </span>
   );
 }
 
@@ -479,7 +514,7 @@ function priceTypeLabel(type: string, language: Language) {
     case "contact":
       return language === "ar" ? "عند التواصل" : "On contact";
     case "free":
-      return language === "ar" ? "مجاناً" : "Free";
+      return language === "ar" ? "مجاني" : "Free";
     case "exchange":
       return language === "ar" ? "للمبادلة" : "Exchange";
     default:

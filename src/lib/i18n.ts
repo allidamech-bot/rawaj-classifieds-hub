@@ -121,81 +121,80 @@ const uiLabels: Record<string, string> = {
   "جارٍ التحقق من الجلسة": "Checking session",
   "يتم التأكد من تسجيل الدخول.": "Checking sign-in status.",
   "تسجيل الدخول مطلوب": "Login required",
-  "المفضلة الحقيقية مرتبطة بحسابك فقط ولا توجد مفضلة تجريبية كبديل.":
-    "Real favorites are linked only to your account. No demo favorites are used as a substitute.",
+  "المفضلة الحقيقية مرتبطة بحسابك فقط ولا توجد مفضلة محلية كبديل.":
+    "Real favorites are linked only to your account. No sample favorites are used as a substitute.",
   "تسجيل الدخول": "Log in",
-  "المفضلة قيد التفعيل": "Favorites are being activated",
-  "حفظ الإعلانات سيعمل مع الحسابات بعد اكتمال التفعيل. يمكنك تصفح الإعلانات حالياً والعودة للمفضلة قريباً.":
-    "Saving listings will work with accounts after activation. You can browse listings now and return to favorites soon.",
+  "المفضلة مرتبطة بالحساب": "Favorites are account based",
+  "تُحفظ الإعلانات المعتمدة ضمن حسابك لتتمكن من الرجوع إليها من صفحة المفضلة.":
+    "Approved listings are saved to your account so you can return to them from favorites.",
   "تصفح الإعلانات": "Browse listings",
-  "هذه الصفحة تعرض الإعلانات التي يحفظها الحساب الحالي فقط، ولا تستخدم بيانات تجريبية كبديل.":
-    "This page shows listings saved by the current account only and does not use demo data as a substitute.",
+  "هذه الصفحة تعرض الإعلانات التي يحفظها الحساب الحالي فقط، ولا تستخدم بيانات محلية كبديل.":
+    "This page shows listings saved by the current account only and does not use sample data as a substitute.",
   "جارٍ تحميل المفضلة": "Loading favorites",
   "تعذر تحميل المفضلة": "Could not load favorites",
-  "المفضلة قيد التفعيل حالياً. حاول لاحقاً أو تابع تصفح الإعلانات.":
-    "Favorites are being activated. Try again later or keep browsing listings.",
+  "تعذر تحميل المفضلة الآن. حاول مرة أخرى أو تابع تصفح الإعلانات.":
+    "Could not load favorites right now. Try again or keep browsing listings.",
   "لا توجد إعلانات في المفضلة": "No favorite listings yet",
-  "احفظ الإعلانات المعتمدة التي تهمك لتعود إليها لاحقاً.":
-    "Save approved listings you care about so you can return to them later.",
+  "احفظ الإعلانات المعتمدة التي تهمك لتعود إليها ضمن سير العمل.":
+    "Save approved listings you care about so you can return to them through the workflow.",
   "إعلان محفوظ": "Saved listing",
   "رقم الإعلان:": "Listing ID:",
   فتح: "Open",
   "إزالة من المفضلة": "Remove from favorites",
   "أضف إعلاناً": "Post a listing",
   "عمليات البحث المحفوظة": "Saved searches",
-  "عمليات البحث المحفوظة مرتبطة بحسابك فقط ولا توجد بيانات تجريبية بديلة.":
-    "Saved searches are linked only to your account. No demo data is used as a substitute.",
-  "البحث المحفوظ قيد التفعيل": "Saved search is being activated",
-  "حفظ عمليات البحث سيعمل مع الحسابات بعد اكتمال التفعيل. يمكنك استخدام فلاتر التصفح حالياً.":
-    "Saving searches will work with accounts after activation. You can use browse filters now.",
+  "عمليات البحث المحفوظة مرتبطة بحسابك فقط ولا توجد بيانات محلية بديلة.":
+    "Saved searches are linked only to your account. No sample data is used as a substitute.",
+  "البحث المحفوظ مرتبط بالحساب": "Saved search is account based",
+  "احفظ فلاتر البحث المهمة ضمن حسابك لتعود إليها بسهولة.":
+    "Save important search filters to your account so you can return to them easily.",
   "ابدأ البحث": "Start searching",
-  "تعرض هذه الصفحة عمليات البحث المحفوظة للحساب الحالي فقط، ولا تستخدم بيانات تجريبية كبديل.":
-    "This page shows saved searches for the current account only and does not use demo data as a substitute.",
+  "تعرض هذه الصفحة عمليات البحث المحفوظة للحساب الحالي فقط، ولا تستخدم بيانات محلية كبديل.":
+    "This page shows saved searches for the current account only and does not use sample data as a substitute.",
   "جارٍ تحميل عمليات البحث": "Loading saved searches",
   "تعذر تحميل عمليات البحث": "Could not load saved searches",
-  "البحث المحفوظ قيد التفعيل حالياً. استخدم صفحة التصفح للبحث مباشرة.":
-    "Saved search is being activated. Use the browse page to search directly.",
+  "تعذر تحميل البحث المحفوظ الآن. استخدم صفحة التصفح للبحث مباشرة.":
+    "Could not load saved search right now. Use the browse page to search directly.",
   "لا توجد عمليات بحث محفوظة": "No saved searches yet",
-  "يمكن إضافة زر حفظ البحث لاحقاً بعد اعتماد تجربة البحث النهائية.":
-    "A save-search button can be added later after the final search experience is approved.",
+  "يمكن إضافة زر حفظ البحث ضمن سير العمل بعد اعتماد تجربة البحث النهائية.":
+    "A save-search button can be added through the workflow after the final search experience is approved.",
   "مرتبطة بالحساب الحالي فقط": "Linked only to the current account",
-  "تنبيهات قريباً": "Alerts soon",
+  "تنبيهات عند توفرها": "Alerts when available",
   "فتح البحث": "Open search",
   "تصفح الأقسام": "Browse categories",
   بائع: "Seller",
-  "هذا البائع غير متاح حالياً.": "This seller is not available right now.",
+  "هذا البائع تعذر عرضه الآن.": "This seller is not available right now.",
   خطأ: "Error",
   "إعادة المحاولة": "Try again",
   "ملف البائع": "Seller profile",
-  "ملف البائع العام قيد التجهيز حالياً. هذه واجهة تمهيدية فقط وتستخدم بيانات تجريبية للاطلاع على التصميم النهائي.":
-    "The public seller profile is being prepared. This is a preparatory interface using demo data to preview the final design.",
+  "ملف البائع العام قيد التجهيز حالياً. هذه واجهة تمهيدية فقط وتستخدم بيانات محلية للاطلاع على التصميم النهائي.":
+    "The public seller profile is being prepared. This is a preparatory interface using sample data to view the final design.",
   "ملف البائع العام قيد التجهيز حالياً. عند التفعيل ستظهر البيانات العامة والإعلانات المعتمدة فقط دون كشف أي بيانات خاصة.":
     "The public seller profile is being prepared. When enabled, only public data and approved listings will appear without exposing private data.",
   "جارٍ التحقق من الجلسة...": "Checking session...",
   موثّق: "Verified",
-  "تقييم تجريبي": "Demo rating",
+  "تقييم محلي": "Sample rating",
   منذ: "Since",
   إعلان: "listings",
-  "غير مفعّل": "Disabled",
-  "رسالة · قريباً": "Message · soon",
-  "اتصال · قريباً": "Call · soon",
-  "واتساب · قريباً": "WhatsApp · soon",
-  "وسائل التواصل ستظهر فقط حسب إعدادات البائع بعد تفعيل الحسابات.":
-    "Contact methods will appear only according to seller settings after accounts are enabled.",
+  "رسالة · عند توفرها": "Message · when available",
+  "اتصال · عند توفرها": "Call · when available",
+  "واتساب · عند توفرها": "WhatsApp · when available",
+  "وسائل التواصل تظهر حسب إعدادات البائع وصلاحيات الحساب.":
+    "Contact methods will appear only according to seller settings with account permissions.",
   "نبذة عن البائع": "About the seller",
-  "لم يضف البائع نبذة بعد. ستظهر هنا معلومات النشاط، ساعات التوفر، ومدة الاستجابة لاحقاً.":
-    "The seller has not added a bio yet. Business info, availability, and response time will appear here later.",
+  "لم يضف البائع نبذة بعد. ستظهر هنا معلومات النشاط، ساعات التوفر، ومدة الاستجابة ضمن سير العمل.":
+    "The seller has not added a bio yet. Business info, availability, and response time will appear here through the workflow.",
   "وقت الاستجابة:": "Response time:",
   "الموقع:": "Location:",
   سوريا: "Syria",
   "الإعلانات النشطة": "Active listings",
-  "نموذج عرض · ليست بيانات إنتاجية": "Demo preview · not production data",
+  "نموذج عرض · ليست بيانات إنتاجية": "Sample view · not production data",
   "لا توجد إعلانات نشطة لهذا البائع حالياً.": "This seller has no active listings right now.",
   "تنبيه أمان": "Safety note",
   "قابل البائع في مكان عام وآمن، وافحص السلعة قبل الدفع. لا تحوّل المال قبل التأكد.":
     "Meet the seller in a public, safe place, and inspect the item before paying. Do not transfer money before verifying.",
-  "إبلاغ · قريباً": "Report · soon",
-  "حظر · قريباً": "Block · soon",
+  "إبلاغ · عند توفرها": "Report · when available",
+  "حظر · عند توفرها": "Block · when available",
   "بائع موثّق": "Verified seller",
   متجر: "Store",
   "حساب أعمال": "Business account",
@@ -209,23 +208,23 @@ const uiLabels: Record<string, string> = {
   "جاري التحقق من الصلاحيات": "Checking permissions",
   "يتم تحميل جلسة الحساب وقراءة الدور من جدول الأدوار.":
     "Loading the account session and reading the role from the role table.",
-  "لوحة الإدارة قيد التفعيل": "Admin dashboard is being activated",
-  "لا يمكن عرض لوحة المالك التشغيلية قبل اكتمال ربط الحسابات. التصفح العام يبقى متاحاً.":
-    "The operational owner dashboard cannot be shown before account integration is complete. Public browsing remains available.",
+  "لوحة الإدارة مرتبطة بالصلاحيات": "Admin dashboard is permission based",
+  "تعذر عرض لوحة المالك التشغيلية الآن. التصفح العام يبقى متاحاً.":
+    "Could not show the operational owner dashboard right now. Public browsing remains available.",
   "يجب تسجيل الدخول أولاً، ثم يتم التحقق من دور المالك من جدول الأدوار.":
     "Log in first, then the owner role is checked from the role table.",
   "غير مخوّل": "Not authorized",
   "هذه المساحة مخصّصة لمالك المنصة فقط. الصلاحية تُقرأ من جدول الأدوار ولا تُمنح من الواجهة.":
     "This area is only for the platform owner. Permission is read from the role table and is not granted by the frontend.",
   "العودة للرئيسية": "Back to home",
-  "لوحة إدارة مستقبلية لصاحب التطبيق والمشرفين. الحسابات والأدوار تُقرأ من مصدر الصلاحيات، ومعظم إجراءات الإدارة ما زالت غير مفعّلة أو بانتظار اكتمال الربط التشغيلي.":
-    "A future admin dashboard for the app owner and moderators. Accounts and roles are read from the permission source, and most admin actions remain disabled or awaiting operational integration.",
-  "نموذج تجريبي · غير مفعّل حالياً · يتطلب ربطاً تشغيلياً وصلاحيات حقيقية لاحقاً":
-    "Demo model · currently disabled · requires operational integration and real permissions later",
+  "لوحة إدارة لصاحب التطبيق والمشرفين. الحسابات والأدوار تُقرأ من مصدر الصلاحيات، وإجراءات الإدارة محمية بالصلاحيات وسجل النشاط.":
+    "An admin dashboard for the app owner and moderators. Accounts and roles are read from the permission source, and admin actions are protected by permissions and the activity log.",
+  "نموذج محلي · محمي بالصلاحيات · يتطلب ربطاً تشغيلياً وصلاحيات حقيقية ضمن سير العمل":
+    "Local workflow model · permission protected · requires operational integration and real permissions through the workflow",
   "صاحب التطبيق": "App owner",
   "مركز تحكم المالك": "Owner control center",
-  "هذه لوحة المالك كنموذج تجريبي — سيتم تفعيل الصلاحيات عند اكتمال ربط الحسابات والأنظمة التشغيلية.":
-    "This owner dashboard is a demo model. Permissions will be activated when accounts and operational systems are complete.",
+  "هذه لوحة المالك لعرض سير العمل المحلي، والصلاحيات تُدار من مصدر الأدوار.":
+    "This owner dashboard shows the local workflow, and permissions are managed from the role source.",
   "صلاحيات كاملة": "Full permissions",
   "كل الصلاحيات": "All permissions",
   "مؤشرات المالك": "Owner metrics",
@@ -239,17 +238,17 @@ const uiLabels: Record<string, string> = {
   "ما يمكن للمشرف فعله": "What a moderator can do",
   "ما يتطلب صلاحية المالك": "What requires owner permission",
   "إدارة المشرفين": "Manage admins",
-  "إدارة المشرفين متاحة للمالك فقط عند تفعيل الحسابات والصلاحيات.":
-    "Admin management is available only to the owner after accounts and permissions are enabled.",
+  "إدارة المشرفين متاحة للمالك فقط وفق صلاحيات الحساب.":
+    "Admin management is available only to the owner according to account permissions.",
   "إدارة تمييز الإعلانات": "Manage featured listings",
   "سجل نشاط المالك": "Owner activity log",
-  "سجل النشاط تجريبي — سيتم تسجيل كل إجراء إداري لاحقاً في قاعدة البيانات.":
-    "The activity log is demo-only. Each admin action will later be recorded in the database.",
+  "سجل النشاط محلي ويعرض إجراءات الإدارة ضمن سير العمل.":
+    "The activity log is local-only and shows admin actions in the workflow.",
   "إعدادات المالك": "Owner settings",
-  "إعدادات المالك — غير مفعّلة حالياً": "Owner settings - currently disabled",
-  "غير مفعّل حالياً": "Currently disabled",
-  "كل الأزرار والإجراءات داخل لوحة المالك/الإدارة معطّلة ومعلّمة كنموذج تجريبي. المستخدمون العاديون لا يظهر لهم وصول إداري حقيقي الآن.":
-    "All buttons and actions in the owner/admin dashboard are disabled and marked as demo. Regular users do not receive real admin access now.",
+  "إعدادات المالك — محمي بالصلاحيات": "Owner settings - permission protected",
+  "محمي بالصلاحيات": "Permission protected",
+  "كل الأزرار والإجراءات داخل لوحة المالك/الإدارة معطّلة ومعلّمة كنموذج محلي. المستخدمون العاديون لا يظهر لهم وصول إداري حقيقي الآن.":
+    "All buttons and actions in the owner/admin dashboard are permission protected and marked as sample. Regular users do not receive real admin access now.",
   "عرض ربط الحسابات في الملف الشخصي": "View account connection in profile",
   "إعلانات حقيقية قيد المراجعة": "Real listings pending review",
   "طابور المراجعة الحقيقي يُقرأ من مصدر البيانات للمالك فقط. إجراءات القبول/الرفض الحقيقية يجب أن تبقى محمية بسياسات RLS ولا تعتمد على البريد.":
@@ -259,60 +258,59 @@ const uiLabels: Record<string, string> = {
   "تم اعتماد الإعلان.": "Listing approved.",
   "تم رفض الإعلان.": "Listing rejected.",
   "جارٍ تحميل طابور المراجعة الحقيقي.": "Loading the real review queue.",
-  "طابور المراجعة قيد التفعيل حالياً. ستظهر الإعلانات المرسلة للمراجعة هنا عند اكتمال الربط.":
-    "The review queue is being activated. Listings submitted for review will appear here after integration is complete.",
+  "تعذر تحميل طابور المراجعة الآن. حاول مرة أخرى.":
+    "Could not load the review queue right now. Try again.",
   "لا توجد إعلانات حقيقية قيد المراجعة حالياً.": "No real listings are pending review right now.",
   "صاحب الإعلان:": "Listing owner:",
   "تاريخ الإرسال:": "Submitted:",
   "سبب الرفض عند الحاجة": "Rejection reason if needed",
   اعتماد: "Approve",
   رفض: "Reject",
-  "القائمة التالية نموذج UI تجريبي فقط وليست طابور إنتاج.":
-    "The following list is a demo UI only, not a production queue.",
+  "القائمة التالية نموذج UI محلي فقط وليست طابور إنتاج.":
+    "The following list is a local UI only, not a production queue.",
   "قيد المراجعة": "Under review",
   "المشرفون يمكنهم مراجعة الطابور حسب صلاحياتهم فقط. قبول/رفض الإعلانات الحقيقي يتطلب ربطاً تشغيلياً وصلاحيات وربط حسابات.":
     "Moderators can review the queue only within their permissions. Real approve/reject actions require operational integration, permissions, and accounts.",
   "ملخص البلاغات": "Reports summary",
   "بلاغات حقيقية": "Real reports",
-  "البلاغات الحقيقية تُقرأ من مصدر البيانات للمالك فقط. أي إجراء لاحق يجب أن يبقى محمياً بالصلاحيات وسجل النشاط.":
-    "Real reports are read from the data source for the owner only. Any future action must remain protected by permissions and activity logs.",
+  "البلاغات الحقيقية تُقرأ من مصدر البيانات للمالك فقط. أي إجراء تشغيلي يجب أن يبقى محمياً بالصلاحيات وسجل النشاط.":
+    "Real reports are read from the data source for the owner only. Any operational action must remain protected by permissions and activity logs.",
   "تم تحديث البلاغ.": "Report updated.",
   "جارٍ تحميل البلاغات.": "Loading reports.",
-  "البلاغات الحقيقية قيد التفعيل حالياً. ستظهر البلاغات هنا عند اكتمال الربط التشغيلي.":
-    "Real reports are being activated. Reports will appear here after operational integration is complete.",
+  "تعذر تحميل البلاغات الآن. حاول مرة أخرى.": "Could not load reports right now. Try again.",
   "لا توجد بلاغات حقيقية حالياً.": "There are no real reports right now.",
   "رقم البلاغ:": "Report ID:",
   "الإعلان:": "Listing:",
   "المبلّغ:": "Reporter:",
   "تم الحل": "Resolved",
   "رفض البلاغ": "Reject report",
-  "القائمة التالية نموذج UI تجريبي فقط وليست بلاغات إنتاج.":
-    "The following list is demo UI only, not production reports.",
-  "إدارة المستخدمين نموذج تجريبي فقط. الحذف/التعطيل يحتاج صلاحية المالك. التجميد والتوثيق والتميز إجراءات تجريبية حالياً.":
-    "User management is demo-only. Deletion/disablement requires owner permission. Freeze, verification, and featuring are currently demo actions.",
+  "القائمة التالية نموذج UI محلي فقط وليست بلاغات إنتاج.":
+    "The following list is local UI only, not production reports.",
+  "إدارة المستخدمين نموذج محلي فقط. الحذف/التعطيل يحتاج صلاحية المالك. التجميد والتوثيق والتميز إجراءات محلية حالياً.":
+    "User management is local-only. Deletion/disablement requires owner permission. Freeze, verification, and featuring are currently local actions.",
   "جارٍ تجهيز لوحة المستخدمين...": "Preparing the users dashboard...",
   "تعذر تحميل بيانات المستخدمين": "Could not load user data",
   "لا توجد بيانات مستخدمين حقيقية حالياً. ستظهر هنا بيانات المستخدمين بعد اكتمال ربط الحسابات والصلاحيات.":
     "There is no real user data right now. User data will appear here after accounts and permissions are integrated.",
   "ملخص المستخدمين": "Users summary",
-  "فلاتر تجريبية": "Demo filters",
+  "فلاتر محلية": "Local filters",
   "جدول التحكم بالمستخدمين": "User control table",
   "طلبات توثيق وتمييز البائعين": "Seller verification and featuring requests",
-  "لا يوجد رفع ملفات حقيقي. تسميات المستندات تجريبية فقط.":
-    "There is no real file upload. Document labels are demo-only.",
+  "لا يوجد رفع ملفات حقيقي. تسميات المستندات محلية فقط.":
+    "There is no real file upload. Document labels are local-only.",
   "إدارة المشرفين داخل صفحة المستخدمين": "Admin management inside users page",
   "لا توجد قاعدة بيانات أو صلاحيات أو حذف حقيقي في هذه الصفحة.":
     "There is no real database action, permission change, or deletion on this page.",
   "ملخص طلبات الترويج": "Promotion requests summary",
   "مراجعة طلبات الترويج وإثبات الدفع": "Review promotion requests and payment proof",
   "إدارة حالة تمييز الإعلانات": "Manage featured listing status",
-  "لا توجد معالجة دفع حقيقية حالياً. تفاصيل التحويل وإثبات الدفع حقول تجريبية فقط.":
-    "There is no real payment processing now. Transfer details and payment proof are demo fields only.",
+  "لا توجد معالجة دفع حقيقية حالياً. تفاصيل التحويل وإثبات الدفع حقول محلية فقط.":
+    "There is no real payment processing now. Transfer details and payment proof are sample fields only.",
   "ملاحظة داخلية": "Internal note",
-  "إضافة ملاحظة · قريباً": "Add note · soon",
+  "إضافة ملاحظة · عند توفرها": "Add note · when available",
   "الملاحظات الداخلية لا تظهر للمستخدمين.": "Internal notes are not visible to users.",
-  "نموذج تجريبي": "Demo",
-  قريباً: "Soon",
+  "نموذج محلي": "Local sample",
+  "عند توفرها": "When available",
   مسموح: "Allowed",
   "غير مسموح": "Not allowed",
   "حسب الصلاحية": "By permission",

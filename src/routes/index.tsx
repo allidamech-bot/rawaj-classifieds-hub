@@ -31,22 +31,13 @@ const HOME_TITLE = "رَوَاج | سوق سوريا المجاني للإعلا
 const HOME_DESCRIPTION =
   "سوق إعلانات مبوبة مجاني لسوريا. بيع واشترِ سيارات، عقارات، موبايلات، وظائف وخدمات حسب المحافظة بسهولة وبدون تعقيد.";
 
-type QuickFilter =
-  | {
-      id: string;
-      labelAr: string;
-      labelEn: string;
-      icon: LucideIcon;
-      search: { sort?: "latest" | "featured" };
-      disabled?: false;
-    }
-  | {
-      id: string;
-      labelAr: string;
-      labelEn: string;
-      icon: LucideIcon;
-      disabled: true;
-    };
+type QuickFilter = {
+  id: string;
+  labelAr: string;
+  labelEn: string;
+  icon: LucideIcon;
+  search: { sort?: "latest" | "featured" };
+};
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -81,13 +72,7 @@ const quickFilters: QuickFilter[] = [
     search: { sort: "featured" as const },
   },
   { id: "gov", labelAr: "حسب المحافظة", labelEn: "By governorate", icon: MapPin, search: {} },
-  {
-    id: "nearby",
-    labelAr: "الأقرب · قريباً",
-    labelEn: "Nearby · soon",
-    icon: MapPin,
-    disabled: true,
-  },
+  { id: "nearby", labelAr: "حسب المنطقة", labelEn: "By area", icon: MapPin, search: {} },
 ];
 
 function HomePage() {
@@ -126,12 +111,6 @@ function HomePage() {
               "Buy and sell across Syria with clear local listings by governorate, no commissions, and no clutter.",
             )}
           </p>
-          <p className="mt-2 text-[11px] text-muted-foreground">
-            {text(
-              "بعض بطاقات الصفحة الرئيسية نموذج عرض. نتائج الإعلانات الحقيقية تظهر عند فتح صفحة التصفح بعد اكتمال الربط التشغيلي.",
-              "Some home cards are demo previews. Real listing results appear in browse once the operational data connection is complete.",
-            )}
-          </p>
         </section>
 
         {/* Search */}
@@ -154,29 +133,17 @@ function HomePage() {
 
         {/* Quick filters */}
         <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
-          {quickFilters.map((f) =>
-            f.disabled ? (
-              <button
-                key={f.id}
-                disabled
-                title={text("قريباً", "Coming soon")}
-                className="inline-flex shrink-0 cursor-not-allowed items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold opacity-60 hairline"
-              >
-                <f.icon className="h-3.5 w-3.5 text-gold" />
-                {text(f.labelAr, f.labelEn)}
-              </button>
-            ) : (
-              <Link
-                key={f.id}
-                to="/listings"
-                search={f.search}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold transition hairline hover:bg-muted-surface"
-              >
-                <f.icon className="h-3.5 w-3.5 text-gold" />
-                {text(f.labelAr, f.labelEn)}
-              </Link>
-            ),
-          )}
+          {quickFilters.map((f) => (
+            <Link
+              key={f.id}
+              to="/listings"
+              search={f.search}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold transition hairline hover:bg-muted-surface"
+            >
+              <f.icon className="h-3.5 w-3.5 text-gold" />
+              {text(f.labelAr, f.labelEn)}
+            </Link>
+          ))}
         </div>
 
         {/* Categories grid */}

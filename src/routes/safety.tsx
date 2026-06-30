@@ -27,7 +27,7 @@ const sections: { icon: typeof ShoppingCart; title: string; items: string[]; ton
       "لا تشارك بيانات حساسة (هوية، حسابات بنكية، رموز).",
       "تأكد من جدية المشتري قبل تحديد موعد المعاينة.",
       "استخدم أماكن آمنة للتسليم.",
-      "احتفظ بسجل المحادثة (سيتم تفعيله لاحقاً عند ربط الرسائل).",
+      "احتفظ بسجل المحادثة وأي اتفاق واضح بين الطرفين.",
     ],
   },
   {
@@ -37,7 +37,7 @@ const sections: { icon: typeof ShoppingCart; title: string; items: string[]; ton
     items: [
       "لا يوجد نظام دفع داخل رَوَاج حالياً.",
       "أي تحويل خارج المنصة هو على مسؤولية المستخدم.",
-      "سيتم توضيح أي نظام دفع رسمي لاحقاً عند تفعيله.",
+      "لا تعتمد أي طريقة دفع غير موثقة أو غير واضحة.",
       "لا تشارك أرقام بطاقات أو كلمات مرور مع أي طرف.",
     ],
   },
@@ -47,7 +47,7 @@ const sections: { icon: typeof ShoppingCart; title: string; items: string[]; ton
     items: [
       "بلّغ عن الإعلانات المشبوهة أو المضللة.",
       "بلّغ عن المستخدمين المسيئين أو الذين يحاولون الاحتيال.",
-      "ميزة التبليغ قيد التطوير وستُفعَّل لاحقاً مع لوحة الإدارة.",
+      "استخدم زر الإبلاغ أو صفحة الدعم عند وجود خطر أو مخالفة.",
     ],
   },
 ];
@@ -127,29 +127,29 @@ function safetyText(value: string, language: Language) {
     "لا تحوّل المال قبل التأكد.": "Do not transfer money before verifying.",
     "احذر الأسعار غير المنطقية.": "Be cautious with unrealistic prices.",
     "اطلب صوراً إضافية أو معاينة فيديو عند الشك.":
-      "Ask for more photos or a video preview when unsure.",
+      "Ask for more photos or a short video when unsure.",
     "أمان البائع": "Seller safety",
     "لا تشارك بيانات حساسة (هوية، حسابات بنكية، رموز).":
       "Do not share sensitive data such as ID, bank details, or codes.",
     "تأكد من جدية المشتري قبل تحديد موعد المعاينة.":
       "Confirm buyer seriousness before setting a viewing time.",
     "استخدم أماكن آمنة للتسليم.": "Use safe places for handover.",
-    "احتفظ بسجل المحادثة (سيتم تفعيله لاحقاً عند ربط الرسائل).":
-      "Keep a conversation record once messaging is enabled.",
+    "احتفظ بسجل المحادثة وأي اتفاق واضح بين الطرفين.":
+      "Keep a record of the conversation and any clear agreement between both sides.",
     "أمان الدفع والتحويل": "Payment and transfer safety",
     "لا يوجد نظام دفع داخل رَوَاج حالياً.": "RAWAJ does not currently provide in-app payment.",
     "أي تحويل خارج المنصة هو على مسؤولية المستخدم.":
       "Any transfer outside the platform is the user's responsibility.",
-    "سيتم توضيح أي نظام دفع رسمي لاحقاً عند تفعيله.":
-      "Any official payment system will be clearly announced if enabled later.",
+    "لا تعتمد أي طريقة دفع غير موثقة أو غير واضحة.":
+      "Do not rely on unclear or unverified payment methods.",
     "لا تشارك أرقام بطاقات أو كلمات مرور مع أي طرف.":
       "Do not share card numbers or passwords with anyone.",
     "التبليغ والإبلاغ": "Reporting",
     "بلّغ عن الإعلانات المشبوهة أو المضللة.": "Report suspicious or misleading listings.",
     "بلّغ عن المستخدمين المسيئين أو الذين يحاولون الاحتيال.":
       "Report abusive users or suspected scams.",
-    "ميزة التبليغ قيد التطوير وستُفعَّل لاحقاً مع لوحة الإدارة.":
-      "Reporting is in development and will be enabled later with the admin dashboard.",
+    "استخدم زر الإبلاغ أو صفحة الدعم عند وجود خطر أو مخالفة.":
+      "Use the report button or support page when there is risk or a violation.",
   };
   return labels[value] ?? value;
 }
