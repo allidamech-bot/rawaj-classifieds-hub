@@ -7,7 +7,7 @@ This document tracks the frontend-only product shell. Backend/Supabase work is i
 | Route               | Frontend status                    | Boundary                                                                                              |
 | ------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `/`                 | Complete shell                     | Homepage includes search, categories, governorates, demo listings, safety, and add-listing handoff.   |
-| `/categories`       | Complete shell                     | Category counts are a UI/demo indicator; listing results open through `/listings`.                    |
+| `/categories`       | Backend-dependent route            | Real fetch attempted with mock fallback; empty, error, and browse/add CTAs present.                   |
 | `/listings`         | Backend-dependent route            | Search, filters, sort, reset, empty, unavailable, and browse/add CTAs are present.                    |
 | `/listings/$id`     | Backend-dependent route            | Detail, contact readiness, favorite/report handling, unavailable, and not-found states are present.   |
 | `/add-listing`      | Backend-dependent route            | Multi-step form, signed-out, unavailable, images, review, and pending-review explanation are present. |
@@ -15,7 +15,7 @@ This document tracks the frontend-only product shell. Backend/Supabase work is i
 | `/profile`          | Backend-dependent route            | Signed-out/signed-in shell, account levels, my listings, and quick actions are present.               |
 | `/favorites`        | Backend-dependent route            | Signed-out, empty, unavailable, browse, and add-listing handoffs are present.                         |
 | `/saved-searches`   | Backend-dependent route            | Signed-out, empty, unavailable, browse, and category handoffs are present.                            |
-| `/seller/$id`       | Demo/reference route               | Public seller shell is labeled as a display model until public seller schema is finalized.            |
+| `/seller/$id`       | Demo/reference route               | Public seller shell with auth-aware banner; labeled as a display model until schema is finalized.     |
 | `/chats`            | Future route                       | Messaging is clearly marked as coming soon with a disabled composer and safety handoffs.              |
 | `/promotion`        | Future route                       | Promotion packages and payment proof UI are coming soon; no live checkout is implied.                 |
 | `/support`          | Future/support shell               | Help topics, FAQ, and disabled support form are present.                                              |
@@ -23,10 +23,10 @@ This document tracks the frontend-only product shell. Backend/Supabase work is i
 | `/prohibited`       | Complete content route             | Prohibited categories and report/support handoffs are present.                                        |
 | `/terms`            | Complete content route             | Beta-appropriate terms, moderation, and transaction boundaries are present.                           |
 | `/privacy`          | Complete content route             | Beta-appropriate privacy/data explanation is present.                                                 |
-| `/admin`            | Owner-only shell                   | Guarded owner/admin control center remains demo/readiness where actions are not backed.               |
+| `/admin`            | Owner/admin shell                  | Guarded owner/admin control center; admin/moderator roles now reach dashboard.                        |
 | `/admin/pending`    | Owner-only backend-dependent route | Real queue area plus demo reference section are present.                                              |
-| `/admin/reports`    | Owner-only backend-dependent route | Real reports area plus demo reference section are present.                                            |
-| `/admin/users`      | Owner-only demo/reference route    | User/admin management is labeled demo/future.                                                         |
+| `/admin/reports`    | Owner-only backend-dependent route | Real reports area plus demo reference section are present; labels fully localized.                     |
+| `/admin/users`      | Owner-only demo/reference route    | User/admin management is labeled demo/future; loading, error, and empty states present.               |
 | `/admin/promotions` | Owner-only demo/reference route    | Promotion/payment review is labeled demo/future.                                                      |
 
 ## Primary user flows
@@ -35,7 +35,7 @@ This document tracks the frontend-only product shell. Backend/Supabase work is i
 2. Visitor opens listing details, then sees safe contact/favorite/report readiness states.
 3. Visitor tries account-bound actions and is handed to `/login` or a clear readiness state.
 4. Signed-in user can open `/profile`, `/add-listing`, `/favorites`, and `/saved-searches`.
-5. Owner opens `/admin`, then pending listings and reports through guarded admin navigation.
+5. Owner/admin opens `/admin`, then pending listings and reports through guarded admin navigation.
 6. Future features such as chats, promotions, support submission, payments, and seller verification are marked clearly.
 
 ## Coming-soon surfaces

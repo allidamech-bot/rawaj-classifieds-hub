@@ -143,9 +143,9 @@ function ReportsPage() {
                   <h3 className="text-sm font-extrabold">{report.reportType}</h3>
                   <Badge>{report.status}</Badge>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">Report ID: {report.id}</p>
+                <p className="mt-1 text-xs text-muted-foreground">رقم البلاغ: {report.id}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Listing: {report.listingId} · Reporter: {report.reporterId}
+                  الإعلان: {report.listingId} · المبلّغ: {report.reporterId}
                 </p>
                 <p className="mt-2 text-xs">{report.reason}</p>
                 <textarea
@@ -202,14 +202,14 @@ function ReportsPage() {
             </div>
             <Info
               rows={[
-                ["Reported listing/user", report.target],
+                ["الإعلان/المستخدم المبلّغ", report.target],
                 ["مبلّغ تجريبي", report.reporter],
-                ["Reason", report.reason],
-                ["Created time", report.created],
-                ["Status", report.status],
-                ["Severity", report.severity],
-                ["Assigned admin", report.admin],
-                ["Internal note", report.note],
+                ["السبب", report.reason],
+                ["وقت الإنشاء", report.created],
+                ["الحالة", report.status],
+                ["الخطورة", report.severity],
+                ["المشرف المعيّن", report.admin],
+                ["ملاحظة داخلية", report.note],
               ]}
             />
             <ActionRow
