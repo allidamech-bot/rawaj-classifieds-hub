@@ -80,12 +80,52 @@
   --ring: #b88a44;
 }
 
+.dark {
+  --background: #11100d;
+  --foreground: #f6efe0;
+  --card: #191714;
+  --card-foreground: #f6efe0;
+  --card-warm: #171512;
+  --muted-surface: #262119;
+  --popover: #191714;
+  --popover-foreground: #f6efe0;
+
+  --primary: #f6efe0;
+  --primary-foreground: #11100d;
+
+  --secondary: #262119;
+  --secondary-foreground: #f6efe0;
+
+  --muted: #262119;
+  --muted-foreground: #b8ad9b;
+
+  --accent: #d2a95c;
+  --accent-foreground: #11100d;
+
+  --gold: #d2a95c;
+  --gold-foreground: #11100d;
+
+  --emerald-trust: #34a67d;
+  --emerald-trust-foreground: #07130f;
+
+  --destructive: #e26c62;
+  --destructive-foreground: #150706;
+  --warning: #e0a04b;
+
+  --border: rgba(246, 239, 224, 0.12);
+  --input: rgba(246, 239, 224, 0.18);
+  --ring: #d2a95c;
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
   }
   html {
     direction: rtl;
+  }
+  html[dir="ltr"] {
+    direction: ltr;
   }
   body {
     background-color: var(--color-background);
@@ -94,6 +134,15 @@
     font-feature-settings: "kern", "liga";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+  input,
+  select,
+  textarea {
+    color: var(--color-foreground);
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-muted-foreground);
   }
   h1,
   h2,

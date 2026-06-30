@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import { PlaceholderArt } from "./PlaceholderArt";
+import { categoryHint, categoryName } from "@/lib/i18n";
+import { useUiPreferences } from "@/lib/ui-preferences";
 import type { Category } from "@/types";
 
 interface Props {
@@ -9,6 +11,8 @@ interface Props {
 }
 
 export function CategoryCard({ category, count }: Props) {
+  const { language, text } = useUiPreferences();
+
   return (
     <Link
       to="/listings"
@@ -19,11 +23,17 @@ export function CategoryCard({ category, count }: Props) {
         <PlaceholderArt type={category.placeholder} aspect="square" />
       </div>
       <div className="min-w-0 flex-1">
-        <h3 className="truncate text-[15px] font-bold text-foreground">{category.nameAr}</h3>
-        <p className="truncate text-xs text-muted-foreground">{category.hintAr}</p>
-        <p className="mt-0.5 text-[11px] text-gold">{count} إعلان</p>
+        <h3 className="truncate text-[15px] font-bold text-foreground">
+          {categoryName(category.id, category.nameAr, language)}
+        </h3>
+        <p className="truncate text-xs text-muted-foreground">
+          {categoryHint(category.id, category.hintAr, language)}
+        </p>
+        <p className="mt-0.5 text-[11px] text-gold">
+          {text(`${count} إعلان`, `${count} listings`)}
+        </p>
       </div>
-      <ChevronLeft className="h-5 w-5 shrink-0 text-muted-foreground transition group-hover:text-foreground" />
+      <ChevronLeft className="h-5 w-5 shrink-0 text-muted-foreground transition group-hover:text-foreground rtl:rotate-180" />
     </Link>
   );
 }

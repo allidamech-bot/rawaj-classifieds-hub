@@ -13,6 +13,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AuthProvider } from "@/lib/auth";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
+import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
 import appCss from "../styles.css?url";
 
 const ROOT_TITLE = "رَوَاج | سوق سوريا المجاني للإعلانات";
@@ -20,20 +21,27 @@ const ROOT_DESCRIPTION =
   "سوق إعلانات مبوبة مجاني لسوريا. بيع واشتري سيارات، عقارات، موبايلات، وظائف وخدمات حسب المحافظة بسهولة وبدون تعقيد.";
 
 function NotFoundComponent() {
+  const { text } = useUiPreferences();
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-extrabold text-primary">404</h1>
-        <h2 className="mt-4 text-xl font-bold text-foreground">الصفحة غير موجودة</h2>
+        <h2 className="mt-4 text-xl font-bold text-foreground">
+          {text("الصفحة غير موجودة", "Page not found")}
+        </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          الصفحة التي تبحث عنها غير متاحة أو تم نقلها.
+          {text(
+            "الصفحة التي تبحث عنها غير متاحة أو تم نقلها.",
+            "The page you are looking for is unavailable or has moved.",
+          )}
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            العودة للرئيسية
+            {text("العودة للرئيسية", "Back to home")}
           </Link>
         </div>
       </div>
@@ -44,6 +52,7 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const { text } = useUiPreferences();
 
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
@@ -52,8 +61,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-bold text-foreground">حدث خطأ غير متوقع</h1>
-        <p className="mt-2 text-sm text-muted-foreground">حاول تحديث الصفحة أو العودة للرئيسية.</p>
+        <h1 className="text-xl font-bold text-foreground">
+          {text("حدث خطأ غير متوقع", "Something went wrong")}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {text("حاول تحديث الصفحة أو العودة للرئيسية.", "Refresh the page or return home.")}
+        </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
@@ -62,13 +75,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             }}
             className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground"
           >
-            إعادة المحاولة
+            {text("إعادة المحاولة", "Try again")}
           </button>
           <a
             href="/"
             className="rounded-xl border border-input bg-card px-5 py-2.5 text-sm font-bold text-foreground"
           >
-            الرئيسية
+            {text("الرئيسية", "Home")}
           </a>
         </div>
       </div>
@@ -127,13 +140,15 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <div className="min-h-screen bg-background pb-24 lg:pb-8">
-          <Outlet />
-          <SiteFooter />
-        </div>
-        <BottomNav />
-      </AuthProvider>
+      <UiPreferencesProvider>
+        <AuthProvider>
+          <div className="min-h-screen bg-background pb-24 text-foreground lg:pb-8">
+            <Outlet />
+            <SiteFooter />
+          </div>
+          <BottomNav />
+        </AuthProvider>
+      </UiPreferencesProvider>
     </QueryClientProvider>
   );
 }

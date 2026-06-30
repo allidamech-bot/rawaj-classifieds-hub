@@ -1,7 +1,19 @@
 import { Link } from "@tanstack/react-router";
-import { Bell, LogIn, MapPin, ShieldCheck, User, UserCog } from "lucide-react";
+import {
+  Bell,
+  Languages,
+  LogIn,
+  MapPin,
+  Moon,
+  ShieldCheck,
+  Sun,
+  User,
+  UserCog,
+} from "lucide-react";
 import { useState } from "react";
 import { governorates } from "@/data/mockData";
+import { governorateName } from "@/lib/i18n";
+import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 interface Props {
@@ -11,9 +23,11 @@ interface Props {
 }
 
 export function AppHeader({ compact = false, title }: Props) {
-  const [gov, setGov] = useState("كل سوريا");
+  const [gov, setGov] = useState("");
   const [open, setOpen] = useState(false);
   const auth = useAuth();
+  const { language, text, theme, toggleLanguage, toggleTheme } = useUiPreferences();
+  const govLabel = gov ? governorateName(gov, undefined, language) : text("كل سوريا", "All Syria");
 
   return (
     <header className="sticky top-0 z-30 bg-primary text-primary-foreground shadow-soft">
@@ -22,7 +36,7 @@ export function AppHeader({ compact = false, title }: Props) {
           <Logo />
           {!compact && (
             <span className="hidden text-[11px] font-medium text-primary-foreground/70 sm:inline">
-              · سوق سوريا المجاني للإعلانات
+              {text("· سوق سوريا المجاني للإعلانات", "· Syria classifieds marketplace")}
             </span>
           )}
         </Link>
@@ -32,12 +46,31 @@ export function AppHeader({ compact = false, title }: Props) {
         <div className="ms-auto flex shrink-0 items-center gap-2">
           {!compact && (
             <span className="hidden items-center gap-1 rounded-full bg-primary-foreground/10 px-2.5 py-1 text-[11px] font-medium sm:inline-flex">
-              <ShieldCheck className="h-3.5 w-3.5 text-gold" /> سوريا فقط
+              <ShieldCheck className="h-3.5 w-3.5 text-gold" /> {text("سوريا فقط", "Syria only")}
             </span>
           )}
           <button
-            aria-label="الإشعارات (قريباً)"
-            title="الإشعارات — قريباً"
+            type="button"
+            onClick={toggleLanguage}
+            aria-label={text("تبديل اللغة", "Switch language")}
+            title={text("العربية / English", "English / العربية")}
+            className="inline-flex h-9 items-center gap-1 rounded-full bg-primary-foreground/10 px-2.5 text-[11px] font-bold text-primary-foreground/85 transition hover:bg-primary-foreground/20"
+          >
+            <Languages className="h-4 w-4" />
+            <span>{language === "ar" ? "English" : "العربية"}</span>
+          </button>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={text("تبديل النمط", "Switch theme")}
+            title={theme === "light" ? text("داكن", "Dark") : text("فاتح", "Light")}
+            className="grid h-9 w-9 place-items-center rounded-full bg-primary-foreground/10 text-primary-foreground/85 transition hover:bg-primary-foreground/20"
+          >
+            {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          </button>
+          <button
+            aria-label={text("الإشعارات (قريباً)", "Notifications (coming soon)")}
+            title={text("الإشعارات — قريباً", "Notifications - coming soon")}
             className="relative grid h-9 w-9 place-items-center rounded-full bg-primary-foreground/10 text-primary-foreground/70 transition hover:bg-primary-foreground/20"
           >
             <Bell className="h-4 w-4" />
@@ -45,8 +78,8 @@ export function AppHeader({ compact = false, title }: Props) {
           {auth.canAccessOwnerControls && (
             <Link
               to="/admin"
-              aria-label="لوحة المالك"
-              title="لوحة المالك"
+              aria-label={text("لوحة المالك", "Owner dashboard")}
+              title={text("لوحة المالك", "Owner dashboard")}
               className="grid h-9 w-9 place-items-center rounded-full bg-gold text-gold-foreground transition hover:opacity-90"
             >
               <UserCog className="h-4 w-4" />
@@ -54,8 +87,16 @@ export function AppHeader({ compact = false, title }: Props) {
           )}
           <Link
             to={auth.status === "signedIn" ? "/profile" : "/login"}
-            aria-label={auth.status === "signedIn" ? "حسابي" : "تسجيل الدخول"}
-            title={auth.status === "signedIn" ? "حسابي" : "تسجيل الدخول"}
+            aria-label={
+              auth.status === "signedIn"
+                ? text("حسابي", "My account")
+                : text("تسجيل الدخول", "Log in")
+            }
+            title={
+              auth.status === "signedIn"
+                ? text("حسابي", "My account")
+                : text("تسجيل الدخول", "Log in")
+            }
             className="grid h-9 w-9 place-items-center rounded-full bg-primary-foreground/10 text-primary-foreground/80 transition hover:bg-primary-foreground/20"
           >
             {auth.status === "signedIn" ? (
@@ -75,13 +116,16 @@ export function AppHeader({ compact = false, title }: Props) {
             className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/10 px-3 py-1.5 text-sm font-medium transition hover:bg-primary-foreground/20"
           >
             <MapPin className="h-4 w-4 text-gold" />
-            {gov}
+            {govLabel}
           </button>
           <span className="inline-flex items-center gap-1 text-[11px] text-primary-foreground/60 sm:hidden">
-            <ShieldCheck className="h-3 w-3 text-gold" /> سوريا فقط
+            <ShieldCheck className="h-3 w-3 text-gold" /> {text("سوريا فقط", "Syria only")}
           </span>
           <span className="hidden text-[11px] text-primary-foreground/60 sm:inline">
-            إعلانات محلية حسب المحافظة — بدون تعقيد
+            {text(
+              "إعلانات محلية حسب المحافظة — بدون تعقيد",
+              "Local listings by governorate - simple and clear",
+            )}
           </span>
         </div>
       )}
@@ -91,23 +135,23 @@ export function AppHeader({ compact = false, title }: Props) {
           <div className="max-h-[60vh] overflow-y-auto rounded-xl bg-card p-2 text-foreground shadow-premium">
             <button
               onClick={() => {
-                setGov("كل سوريا");
+                setGov("");
                 setOpen(false);
               }}
               className="block w-full rounded-lg px-3 py-2 text-start text-sm font-medium hover:bg-muted-surface"
             >
-              كل سوريا
+              {text("كل سوريا", "All Syria")}
             </button>
             {governorates.map((g) => (
               <button
                 key={g.id}
                 onClick={() => {
-                  setGov(g.nameAr);
+                  setGov(g.id);
                   setOpen(false);
                 }}
                 className="block w-full rounded-lg px-3 py-2 text-start text-sm hover:bg-muted-surface"
               >
-                {g.nameAr}
+                {governorateName(g.id, g.nameAr, language)}
               </button>
             ))}
           </div>

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Ban, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/prohibited")({
   head: () => ({ meta: [{ title: "الإعلانات الممنوعة | رَوَاج" }] }),
@@ -26,18 +27,24 @@ const items = [
 ];
 
 function ProhibitedPage() {
+  const { language, text } = useUiPreferences();
+
   return (
     <>
-      <PageHeader title="الإعلانات الممنوعة" />
+      <PageHeader title={text("الإعلانات الممنوعة", "Prohibited listings")} />
       <main className="container-wide pt-4 pb-8 space-y-4">
         <div className="rounded-2xl bg-destructive/10 p-4 hairline">
           <div className="flex items-start gap-2">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
             <div>
-              <p className="text-sm font-bold text-destructive">إعلانات ممنوعة على رَوَاج</p>
+              <p className="text-sm font-bold text-destructive">
+                {text("إعلانات ممنوعة على رَوَاج", "Listings prohibited on RAWAJ")}
+              </p>
               <p className="mt-1 text-xs text-foreground/80">
-                ستتم لاحقاً إزالة أي إعلان يخالف هذه القائمة بعد المراجعة، مع إمكانية إيقاف الحساب
-                المخالف. ميزة الإشراف الفعلية قيد التطوير وستُفعَّل عند ربط لوحة الإدارة.
+                {text(
+                  "ستتم لاحقاً إزالة أي إعلان يخالف هذه القائمة بعد المراجعة، مع إمكانية إيقاف الحساب المخالف. ميزة الإشراف الفعلية قيد التطوير وستُفعَّل عند ربط لوحة الإدارة.",
+                  "Listings that violate this list may later be removed after review, with possible account action. Real moderation is in development and will be enabled with the admin dashboard.",
+                )}
               </p>
             </div>
           </div>
@@ -49,21 +56,25 @@ function ProhibitedPage() {
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-destructive/10 text-destructive">
                 <Ban className="h-4 w-4" />
               </span>
-              <span className="pt-1 text-sm font-medium">{t}</span>
+              <span className="pt-1 text-sm font-medium">{prohibitedText(t, language)}</span>
             </div>
           ))}
         </div>
 
         <div className="rounded-2xl bg-card p-4 hairline text-xs text-muted-foreground">
-          <p className="font-bold text-foreground mb-1">كيف تبلّغ عن إعلان مخالف؟</p>
+          <p className="font-bold text-foreground mb-1">
+            {text("كيف تبلّغ عن إعلان مخالف؟", "How do you report a prohibited listing?")}
+          </p>
           <p>
-            من صفحة الإعلان، اضغط على زر (إبلاغ عن الإعلان). ميزة التبليغ تحت التطوير وستُفعَّل
-            قريباً. في الحالات العاجلة، يمكنك التواصل عبر{" "}
+            {text(
+              "من صفحة الإعلان، اضغط على زر (إبلاغ عن الإعلان). ميزة التبليغ تحت التطوير وستُفعَّل قريباً. في الحالات العاجلة، يمكنك التواصل عبر",
+              "From the listing page, choose Report listing. Reporting is in development and will be enabled soon. For urgent cases, contact",
+            )}{" "}
             <Link
               to="/support"
               className="font-bold text-primary underline-offset-2 hover:underline"
             >
-              صفحة الدعم
+              {text("صفحة الدعم", "support")}
             </Link>
             .
           </p>
@@ -74,16 +85,43 @@ function ProhibitedPage() {
             to="/safety"
             className="rounded-xl bg-card px-4 py-2.5 text-center text-xs font-bold hairline"
           >
-            نصائح التعامل الآمن
+            {text("نصائح التعامل الآمن", "Safe trading tips")}
           </Link>
           <Link
             to="/support"
             className="rounded-xl bg-primary px-4 py-2.5 text-center text-xs font-bold text-primary-foreground"
           >
-            تواصل مع الدعم
+            {text("تواصل مع الدعم", "Contact support")}
           </Link>
         </div>
       </main>
     </>
   );
+}
+
+function prohibitedText(value: string, language: Language) {
+  if (language === "ar") return value;
+  const labels: Record<string, string> = {
+    "الأسلحة والذخائر والمتفجرات بكافة أنواعها": "Weapons, ammunition, and explosives of all kinds",
+    "المواد المخدرة والمواد غير القانونية": "Drugs and illegal substances",
+    "الأدوية المقيدة دون وصفة وأي مواد طبية ممنوعة":
+      "Restricted medicines without prescription and prohibited medical materials",
+    "البضائع المسروقة أو مجهولة المصدر": "Stolen goods or goods of unknown origin",
+    "العروض الاحتيالية والعمليات الوهمية": "Fraudulent offers and fake transactions",
+    "الوثائق المزوّرة (هويات، شهادات، عملات)":
+      "Forged documents such as IDs, certificates, or currency",
+    "محتوى مسيء، عنصري، أو محرّض على الكراهية": "Abusive, racist, or hate-inciting content",
+    "خدمات غير قانونية أو مخالفة للنظام العام": "Illegal services or services against public order",
+    "الاتجار بالبشر أو أي شكل من أشكال الاستغلال": "Human trafficking or any form of exploitation",
+    "المنتجات الخطرة على السلامة العامة": "Products dangerous to public safety",
+    "المنتجات المقلّدة والعلامات التجارية المسروقة": "Counterfeit products or stolen trademarks",
+    "العروض المالية المشبوهة (احتيال، عمولات وهمية، استثمار وهمي)":
+      "Suspicious financial offers, fraud, fake commissions, or fake investments",
+    "محتوى جنسي صريح أو مخالف للقانون": "Explicit sexual or unlawful content",
+    "أي محتوى مضلّل أو معلومات إعلان غير صحيحة":
+      "Misleading content or incorrect listing information",
+    "كل ما يخالف القوانين السورية أو أنظمة المنصة":
+      "Anything that violates Syrian law or platform rules",
+  };
+  return labels[value] ?? value;
 }

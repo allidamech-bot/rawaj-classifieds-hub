@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ShieldAlert, ShoppingCart, Store, CreditCard, Flag } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/safety")({
   head: () => ({ meta: [{ title: "نصائح الأمان | رَوَاج" }] }),
@@ -52,17 +53,24 @@ const sections: { icon: typeof ShoppingCart; title: string; items: string[]; ton
 ];
 
 function SafetyPage() {
+  const { language, text } = useUiPreferences();
+
   return (
     <>
-      <PageHeader title="نصائح الأمان" />
+      <PageHeader title={text("نصائح الأمان", "Safety tips")} />
       <main className="container-wide pt-4 pb-8 space-y-4">
         <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-soft">
           <div className="flex items-center gap-3">
             <ShieldAlert className="h-6 w-6 text-gold" />
             <div>
-              <h2 className="text-lg font-extrabold">سلامتك أولويتنا</h2>
+              <h2 className="text-lg font-extrabold">
+                {text("سلامتك أولويتنا", "Your safety comes first")}
+              </h2>
               <p className="text-xs text-primary-foreground/80">
-                رَوَاج منصة وساطة بين الأفراد، ولا نتدخل في عمليات البيع والشراء بشكل مباشر.
+                {text(
+                  "رَوَاج منصة وساطة بين الأفراد، ولا نتدخل في عمليات البيع والشراء بشكل مباشر.",
+                  "RAWAJ connects people through classifieds and does not directly handle buying, selling, or payments.",
+                )}
               </p>
             </div>
           </div>
@@ -74,20 +82,20 @@ function SafetyPage() {
             className={`rounded-2xl p-4 hairline ${s.tone === "warn" ? "bg-warning/10" : "bg-card"}`}
           >
             <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-extrabold">
-              <s.icon className="h-4 w-4 text-gold" /> {s.title}
+              <s.icon className="h-4 w-4 text-gold" /> {safetyText(s.title, language)}
             </h3>
             <ul className="list-disc ps-5 space-y-1.5 text-sm text-foreground/90">
               {s.items.map((t) => (
-                <li key={t}>{t}</li>
+                <li key={t}>{safetyText(t, language)}</li>
               ))}
             </ul>
           </section>
         ))}
 
         <p className="text-center text-xs text-muted-foreground">
-          هل تحتاج مساعدة فورية؟{" "}
+          {text("هل تحتاج مساعدة فورية؟", "Need help?")}{" "}
           <Link to="/support" className="font-bold text-primary underline-offset-2 hover:underline">
-            تواصل مع الدعم
+            {text("تواصل مع الدعم", "Contact support")}
           </Link>
         </p>
 
@@ -96,16 +104,52 @@ function SafetyPage() {
             to="/prohibited"
             className="rounded-xl bg-card px-4 py-2.5 text-center text-xs font-bold hairline"
           >
-            راجع الإعلانات الممنوعة
+            {text("راجع الإعلانات الممنوعة", "Review prohibited listings")}
           </Link>
           <Link
             to="/listings"
             className="rounded-xl bg-primary px-4 py-2.5 text-center text-xs font-bold text-primary-foreground"
           >
-            تصفح بإرشادات الأمان
+            {text("تصفح بإرشادات الأمان", "Browse with safety tips")}
           </Link>
         </div>
       </main>
     </>
   );
+}
+
+function safetyText(value: string, language: Language) {
+  if (language === "ar") return value;
+  const labels: Record<string, string> = {
+    "أمان المشتري": "Buyer safety",
+    "افحص السلعة قبل الدفع.": "Inspect the item before paying.",
+    "قابل البائع في مكان عام وآمن.": "Meet the seller in a public, safe place.",
+    "لا تحوّل المال قبل التأكد.": "Do not transfer money before verifying.",
+    "احذر الأسعار غير المنطقية.": "Be cautious with unrealistic prices.",
+    "اطلب صوراً إضافية أو معاينة فيديو عند الشك.":
+      "Ask for more photos or a video preview when unsure.",
+    "أمان البائع": "Seller safety",
+    "لا تشارك بيانات حساسة (هوية، حسابات بنكية، رموز).":
+      "Do not share sensitive data such as ID, bank details, or codes.",
+    "تأكد من جدية المشتري قبل تحديد موعد المعاينة.":
+      "Confirm buyer seriousness before setting a viewing time.",
+    "استخدم أماكن آمنة للتسليم.": "Use safe places for handover.",
+    "احتفظ بسجل المحادثة (سيتم تفعيله لاحقاً عند ربط الرسائل).":
+      "Keep a conversation record once messaging is enabled.",
+    "أمان الدفع والتحويل": "Payment and transfer safety",
+    "لا يوجد نظام دفع داخل رَوَاج حالياً.": "RAWAJ does not currently provide in-app payment.",
+    "أي تحويل خارج المنصة هو على مسؤولية المستخدم.":
+      "Any transfer outside the platform is the user's responsibility.",
+    "سيتم توضيح أي نظام دفع رسمي لاحقاً عند تفعيله.":
+      "Any official payment system will be clearly announced if enabled later.",
+    "لا تشارك أرقام بطاقات أو كلمات مرور مع أي طرف.":
+      "Do not share card numbers or passwords with anyone.",
+    "التبليغ والإبلاغ": "Reporting",
+    "بلّغ عن الإعلانات المشبوهة أو المضللة.": "Report suspicious or misleading listings.",
+    "بلّغ عن المستخدمين المسيئين أو الذين يحاولون الاحتيال.":
+      "Report abusive users or suspected scams.",
+    "ميزة التبليغ قيد التطوير وستُفعَّل لاحقاً مع لوحة الإدارة.":
+      "Reporting is in development and will be enabled later with the admin dashboard.",
+  };
+  return labels[value] ?? value;
 }

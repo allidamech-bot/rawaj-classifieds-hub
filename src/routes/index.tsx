@@ -15,6 +15,8 @@ import { AppHeader } from "@/components/AppHeader";
 import { CategoryCard } from "@/components/CategoryCard";
 import { ListingCard } from "@/components/ListingCard";
 import { SectionHeader } from "@/components/SectionHeader";
+import { governorateName } from "@/lib/i18n";
+import { useUiPreferences } from "@/lib/ui-preferences";
 import {
   categories,
   featuredListings,
@@ -32,14 +34,16 @@ const HOME_DESCRIPTION =
 type QuickFilter =
   | {
       id: string;
-      label: string;
+      labelAr: string;
+      labelEn: string;
       icon: LucideIcon;
       search: { sort?: "latest" | "featured" };
       disabled?: false;
     }
   | {
       id: string;
-      label: string;
+      labelAr: string;
+      labelEn: string;
       icon: LucideIcon;
       disabled: true;
     };
@@ -62,14 +66,33 @@ export const Route = createFileRoute("/")({
 });
 
 const quickFilters: QuickFilter[] = [
-  { id: "latest", label: "الأحدث", icon: Clock, search: { sort: "latest" as const } },
-  { id: "featured", label: "المميز", icon: Sparkles, search: { sort: "featured" as const } },
-  { id: "gov", label: "حسب المحافظة", icon: MapPin, search: {} },
-  { id: "nearby", label: "الأقرب · قريباً", icon: MapPin, disabled: true },
+  {
+    id: "latest",
+    labelAr: "الأحدث",
+    labelEn: "Latest",
+    icon: Clock,
+    search: { sort: "latest" as const },
+  },
+  {
+    id: "featured",
+    labelAr: "المميز",
+    labelEn: "Featured",
+    icon: Sparkles,
+    search: { sort: "featured" as const },
+  },
+  { id: "gov", labelAr: "حسب المحافظة", labelEn: "By governorate", icon: MapPin, search: {} },
+  {
+    id: "nearby",
+    labelAr: "الأقرب · قريباً",
+    labelEn: "Nearby · soon",
+    icon: MapPin,
+    disabled: true,
+  },
 ];
 
 function HomePage() {
   const navigate = useNavigate();
+  const { language, text } = useUiPreferences();
   const [searchValue, setSearchValue] = useState("");
   const counts: Record<string, number> = {};
   for (const l of listings) counts[l.categoryId] = (counts[l.categoryId] ?? 0) + 1;
@@ -92,14 +115,22 @@ function HomePage() {
         {/* Hero / value proposition */}
         <section className="mb-4 rounded-2xl bg-gradient-to-bl from-card to-muted-surface p-4 sm:p-5 hairline shadow-soft">
           <h1 className="text-lg font-extrabold leading-tight text-foreground sm:text-xl">
-            رَوَاج — سوق سوريا المجاني للإعلانات
+            {text(
+              "رَوَاج — سوق سوريا المجاني للإعلانات",
+              "RAWAJ - Syria's classifieds marketplace",
+            )}
           </h1>
           <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-            بيع واشتري داخل سوريا بسهولة: إعلانات محلية حسب المحافظة، بدون عمولات وبدون تعقيد.
+            {text(
+              "بيع واشتري داخل سوريا بسهولة: إعلانات محلية حسب المحافظة، بدون عمولات وبدون تعقيد.",
+              "Buy and sell across Syria with clear local listings by governorate, no commissions, and no clutter.",
+            )}
           </p>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            بعض بطاقات الصفحة الرئيسية نموذج عرض. نتائج الإعلانات الحقيقية تظهر عند فتح صفحة التصفح
-            بعد اكتمال الربط التشغيلي.
+            {text(
+              "بعض بطاقات الصفحة الرئيسية نموذج عرض. نتائج الإعلانات الحقيقية تظهر عند فتح صفحة التصفح بعد اكتمال الربط التشغيلي.",
+              "Some home cards are demo previews. Real listing results appear in browse once the operational data connection is complete.",
+            )}
           </p>
         </section>
 
@@ -111,8 +142,11 @@ function HomePage() {
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               type="search"
-              aria-label="ابحث في رَوَاج"
-              placeholder="ابحث عن سيارة، منزل، هاتف، وظيفة…"
+              aria-label={text("ابحث في رَوَاج", "Search RAWAJ")}
+              placeholder={text(
+                "ابحث عن سيارة، منزل، هاتف، وظيفة...",
+                "Search for a car, home, phone, job...",
+              )}
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>
@@ -125,11 +159,11 @@ function HomePage() {
               <button
                 key={f.id}
                 disabled
-                title="قريباً"
+                title={text("قريباً", "Coming soon")}
                 className="inline-flex shrink-0 cursor-not-allowed items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold opacity-60 hairline"
               >
                 <f.icon className="h-3.5 w-3.5 text-gold" />
-                {f.label}
+                {text(f.labelAr, f.labelEn)}
               </button>
             ) : (
               <Link
@@ -139,7 +173,7 @@ function HomePage() {
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold transition hairline hover:bg-muted-surface"
               >
                 <f.icon className="h-3.5 w-3.5 text-gold" />
-                {f.label}
+                {text(f.labelAr, f.labelEn)}
               </Link>
             ),
           )}
@@ -147,7 +181,7 @@ function HomePage() {
 
         {/* Categories grid */}
         <section className="mt-6">
-          <SectionHeader title="تصفح الأقسام" />
+          <SectionHeader title={text("تصفح الأقسام", "Browse categories")} />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {quickCats.map((c) => (
               <CategoryCard key={c.id} category={c} count={counts[c.id] ?? 0} />
@@ -156,7 +190,7 @@ function HomePage() {
               to="/categories"
               className="flex items-center justify-center gap-2 rounded-2xl bg-muted-surface p-4 text-sm font-bold text-primary hairline transition hover:bg-card"
             >
-              عرض كل الأقسام
+              {text("عرض كل الأقسام", "View all categories")}
             </Link>
           </div>
         </section>
@@ -165,15 +199,20 @@ function HomePage() {
         <section className="mt-6 overflow-hidden rounded-2xl bg-primary p-5 text-primary-foreground shadow-premium">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <h3 className="text-lg font-extrabold">انشر إعلانك مجاناً</h3>
+              <h3 className="text-lg font-extrabold">
+                {text("انشر إعلانك مجاناً", "Post your listing free")}
+              </h3>
               <p className="mt-1 text-sm text-primary-foreground/80">
-                إعلانك يظهر للمشترين داخل سوريا خلال دقائق.
+                {text(
+                  "إعلانك يظهر للمشترين داخل سوريا خلال دقائق.",
+                  "Prepare a clear listing for buyers across Syria.",
+                )}
               </p>
               <Link
                 to="/add-listing"
                 className="mt-3 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-bold text-gold-foreground transition hover:opacity-90"
               >
-                <Plus className="h-4 w-4" /> أضف إعلان
+                <Plus className="h-4 w-4" /> {text("أضف إعلان", "Post a listing")}
               </Link>
             </div>
             <div className="hidden sm:block">
@@ -186,7 +225,10 @@ function HomePage() {
 
         {/* Featured */}
         <section className="mt-7">
-          <SectionHeader title="إعلانات مميزة" action={{ label: "عرض الكل", to: "/listings" }} />
+          <SectionHeader
+            title={text("إعلانات مميزة", "Featured listings")}
+            action={{ label: text("عرض الكل", "View all"), to: "/listings" }}
+          />
           <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
             {featuredListings.map((l) => (
               <ListingCard key={l.id} listing={l} variant="horizontal" />
@@ -196,7 +238,10 @@ function HomePage() {
 
         {/* Latest */}
         <section className="mt-7">
-          <SectionHeader title="أحدث الإعلانات" action={{ label: "عرض الكل", to: "/listings" }} />
+          <SectionHeader
+            title={text("أحدث الإعلانات", "Latest listings")}
+            action={{ label: text("عرض الكل", "View all"), to: "/listings" }}
+          />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {latestListings.slice(0, 9).map((l) => (
               <ListingCard key={l.id} listing={l} />
@@ -206,13 +251,13 @@ function HomePage() {
 
         {/* Governorates */}
         <section className="mt-7">
-          <SectionHeader title="تصفح حسب المحافظة" />
+          <SectionHeader title={text("تصفح حسب المحافظة", "Browse by governorate")} />
           <div className="flex flex-wrap gap-2">
             <Link
               to="/listings"
               className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground"
             >
-              كل سوريا
+              {text("كل سوريا", "All Syria")}
             </Link>
             {governorates.map((g) => (
               <Link
@@ -220,7 +265,7 @@ function HomePage() {
                 to="/listings"
                 className="rounded-full bg-card px-4 py-1.5 text-xs font-semibold text-foreground hairline transition hover:bg-muted-surface"
               >
-                {g.nameAr}
+                {governorateName(g.id, g.nameAr, language)}
               </Link>
             ))}
           </div>
@@ -228,7 +273,7 @@ function HomePage() {
 
         {/* Verified sellers */}
         <section className="mt-7">
-          <SectionHeader title="بائعون موثّقون" />
+          <SectionHeader title={text("بائعون موثّقون", "Verified sellers")} />
           <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
             {verifiedSellers.map((s) => (
               <Link
@@ -260,16 +305,23 @@ function HomePage() {
         <section className="mt-7 rounded-2xl bg-warning/10 p-4 hairline">
           <div className="flex items-center gap-2">
             <ShieldAlert className="h-5 w-5 shrink-0 text-warning" />
-            <h3 className="text-sm font-extrabold">تعامل بأمان</h3>
+            <h3 className="text-sm font-extrabold">{text("تعامل بأمان", "Trade safely")}</h3>
           </div>
           <ul className="mt-2 grid gap-1 text-xs text-foreground sm:grid-cols-2">
-            <li>• لا تحوّل المال قبل معاينة السلعة.</li>
-            <li>• قابل البائع في مكان عام وآمن.</li>
-            <li>• احذر الأسعار غير المنطقية.</li>
             <li>
-              • بلّغ عن أي إعلان مشبوه عبر{" "}
+              {text(
+                "• لا تحوّل المال قبل معاينة السلعة.",
+                "• Do not transfer money before inspecting the item.",
+              )}
+            </li>
+            <li>{text("• قابل البائع في مكان عام وآمن.", "• Meet in a public, safe place.")}</li>
+            <li>
+              {text("• احذر الأسعار غير المنطقية.", "• Be cautious with unrealistic prices.")}
+            </li>
+            <li>
+              {text("• بلّغ عن أي إعلان مشبوه عبر", "• Report suspicious listings through")}{" "}
               <Link to="/support" className="font-bold text-primary">
-                الدعم
+                {text("الدعم", "support")}
               </Link>
               .
             </li>

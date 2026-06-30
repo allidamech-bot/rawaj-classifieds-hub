@@ -1,49 +1,61 @@
 import { Link } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
+import { useUiPreferences } from "@/lib/ui-preferences";
 
-const groups: { title: string; links: { to: string; label: string }[] }[] = [
+const groups: {
+  titleAr: string;
+  titleEn: string;
+  links: { to: string; labelAr: string; labelEn: string }[];
+}[] = [
   {
-    title: "المنصة",
+    titleAr: "المنصة",
+    titleEn: "Platform",
     links: [
-      { to: "/", label: "الرئيسية" },
-      { to: "/categories", label: "الأقسام" },
-      { to: "/listings", label: "كل الإعلانات" },
-      { to: "/add-listing", label: "أضف إعلان" },
+      { to: "/", labelAr: "الرئيسية", labelEn: "Home" },
+      { to: "/categories", labelAr: "الأقسام", labelEn: "Categories" },
+      { to: "/listings", labelAr: "كل الإعلانات", labelEn: "All listings" },
+      { to: "/add-listing", labelAr: "أضف إعلان", labelEn: "Post a listing" },
     ],
   },
   {
-    title: "المساعدة",
+    titleAr: "المساعدة",
+    titleEn: "Help",
     links: [
-      { to: "/support", label: "الدعم" },
-      { to: "/safety", label: "نصائح الأمان" },
-      { to: "/promotion", label: "ترويج إعلان" },
-      { to: "/prohibited", label: "الإعلانات الممنوعة" },
+      { to: "/support", labelAr: "الدعم", labelEn: "Support" },
+      { to: "/safety", labelAr: "نصائح الأمان", labelEn: "Safety" },
+      { to: "/promotion", labelAr: "ترويج إعلان", labelEn: "Promotion" },
+      { to: "/prohibited", labelAr: "الإعلانات الممنوعة", labelEn: "Prohibited" },
     ],
   },
   {
-    title: "المعلومات",
+    titleAr: "المعلومات",
+    titleEn: "Information",
     links: [
-      { to: "/terms", label: "شروط الاستخدام" },
-      { to: "/privacy", label: "سياسة الخصوصية" },
+      { to: "/terms", labelAr: "شروط الاستخدام", labelEn: "Terms" },
+      { to: "/privacy", labelAr: "سياسة الخصوصية", labelEn: "Privacy" },
     ],
   },
 ];
 
 export function SiteFooter() {
+  const { text } = useUiPreferences();
+
   return (
     <footer className="mt-10 border-t border-border bg-card-warm">
       <div className="container-wide grid grid-cols-2 gap-6 py-8 sm:grid-cols-3">
-        {groups.map((g) => (
-          <div key={g.title}>
-            <h4 className="mb-2 text-xs font-extrabold text-foreground">{g.title}</h4>
+        {groups.map((group) => (
+          <div key={group.titleAr}>
+            <h4 className="mb-2 text-xs font-extrabold text-foreground">
+              {text(group.titleAr, group.titleEn)}
+            </h4>
             <ul className="space-y-1.5">
-              {g.links.map((l) => (
-                <li key={l.to}>
+              {group.links.map((link) => (
+                <li key={link.to}>
                   <Link
-                    to={l.to as "/"}
+                    to={link.to as "/"}
                     className="text-xs text-muted-foreground transition hover:text-primary"
                   >
-                    {l.label}
+                    {text(link.labelAr, link.labelEn)}
                   </Link>
                 </li>
               ))}
@@ -54,10 +66,12 @@ export function SiteFooter() {
       <div className="border-t border-border">
         <div className="container-wide flex flex-wrap items-center justify-between gap-2 py-4">
           <p className="text-[11px] text-muted-foreground">
-            © {new Date().getFullYear()} رَوَاج · سوق سوريا المجاني للإعلانات
+            © {new Date().getFullYear()}{" "}
+            {text("رَوَاج · سوق سوريا المجاني للإعلانات", "RAWAJ · Syria classifieds marketplace")}
           </p>
           <span className="inline-flex items-center gap-1 rounded-full bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground">
-            <ShieldCheck className="h-3 w-3 text-gold" /> سوريا فقط · نسخة تجريبية
+            <ShieldCheck className="h-3 w-3 text-gold" />{" "}
+            {text("سوريا فقط · نسخة تجريبية", "Syria only · Beta")}
           </span>
         </div>
       </div>
