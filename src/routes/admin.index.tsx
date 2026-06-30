@@ -9,10 +9,12 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import { useState } from "react";
-import { ownerMetrics } from "@/data/adminMockData";
+import { useEffect, useState } from "react";
+import { adminFetchPendingListings, adminFetchReports } from "@/lib/classifieds-api";
+import type { ClassifiedsError } from "@/lib/classifieds-types";
 import { uiLabel } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
+import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminOverview,
@@ -26,12 +28,71 @@ const actions = [
 ] as const;
 
 function AdminOverview() {
+  const auth = useAuth();
   const { language, text } = useUiPreferences();
-  const [notice, setNotice] = useState("");
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
+  const [reportCount, setReportCount] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<ClassifiedsError | null>(null);
 
-  function acknowledge(ar: string, en: string) {
-    setNotice(text(ar, en));
-  }
+  useEffect(() => {
+    let cancelled = false;
+    async function loadOverview() {
+      setLoading(true);
+      setError(null);
+      const [pendingResult, reportsResult] = await Promise.all([
+        adminFetchPendingListings(auth.canAccessOwnerControls),
+        adminFetchReports(auth.canAccessOwnerControls),
+      ]);
+      if (cancelled) return;
+
+      if (pendingResult.ok) setPendingCount(pendingResult.data.length);
+      else setError(pendingResult.error);
+
+      if (reportsResult.ok) setReportCount(reportsResult.data.length);
+      else if (!pendingResult.ok) setError(reportsResult.error);
+      else setError(reportsResult.error);
+
+      setLoading(false);
+    }
+    void loadOverview();
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.canAccessOwnerControls]);
+
+  const metrics = [
+    {
+      label: text("إعلانات قيد المراجعة", "Listings pending review"),
+      value: formatMetric(pendingCount, loading),
+      supported: true,
+    },
+    {
+      label: text("بلاغات مسجلة", "Recorded reports"),
+      value: formatMetric(reportCount, loading),
+      supported: true,
+    },
+    {
+      label: text("المستخدمون", "Users"),
+      value: "—",
+      supported: false,
+    },
+    {
+      label: text("طلبات الترويج", "Promotion requests"),
+      value: "—",
+      supported: false,
+    },
+    {
+      label: text("الإيرادات", "Revenue"),
+      value: "—",
+      supported: false,
+    },
+    {
+      label: text("نشاط اليوم", "Today activity"),
+      value: "—",
+      supported: false,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -45,11 +106,11 @@ function AdminOverview() {
               <p className="text-xs font-bold text-primary-foreground/75">
                 {text("مركز تحكم المالك", "Owner control center")}
               </p>
-              <h2 className="text-xl font-extrabold">{text("إدارة رَوَاج", "RAWAJ management")}</h2>
+              <h2 className="text-xl font-extrabold">{text("إدارة رواج", "RAWAJ management")}</h2>
               <p className="mt-1 max-w-2xl text-xs leading-6 text-primary-foreground/80">
                 {text(
-                  "راقب طوابير المراجعة، البلاغات، المستخدمين، وطلبات الترويج من مساحة واحدة واضحة.",
-                  "Monitor review queues, reports, users, and promotion requests from one clear workspace.",
+                  "تابع طوابير المراجعة والبلاغات من البيانات المدعومة حالياً، واترك المؤشرات الأخرى محايدة حتى تتوفر لها واجهات آمنة.",
+                  "Track review queues and reports from supported data, while other indicators stay neutral until safe APIs exist.",
                 )}
               </p>
             </div>
@@ -60,11 +121,21 @@ function AdminOverview() {
 
       <section>
         <SectionTitle icon={Activity} title={text("مؤشرات التشغيل", "Operational indicators")} />
+        {error && (
+          <p className="mb-3 rounded-xl bg-muted-surface p-3 text-xs font-semibold text-muted-foreground hairline">
+            {error.message}
+          </p>
+        )}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          {ownerMetrics.map(([label, value]) => (
-            <div key={label} className="rounded-xl bg-card p-3 hairline">
-              <div className="text-xl font-extrabold">{value}</div>
-              <p className="mt-1 text-xs text-muted-foreground">{uiLabel(label, language)}</p>
+          {metrics.map((metric) => (
+            <div key={metric.label} className="rounded-xl bg-card p-3 hairline">
+              <div className="text-xl font-extrabold">{metric.value}</div>
+              <p className="mt-1 text-xs text-muted-foreground">{metric.label}</p>
+              {!metric.supported && (
+                <p className="mt-2 text-[10px] font-semibold text-muted-foreground">
+                  {text("يتطلب واجهة بيانات آمنة", "Needs a safe data API")}
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -77,7 +148,7 @@ function AdminOverview() {
             <Link
               key={action.to}
               to={action.to}
-              className="rounded-2xl bg-card p-4 hairline transition hover:bg-muted-surface"
+              className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface"
             >
               <div className="text-sm font-extrabold">{uiLabel(action.labelAr, language)}</div>
               <p className="mt-1 text-xs text-muted-foreground">
@@ -92,104 +163,60 @@ function AdminOverview() {
         <AdminCard icon={FileCheck} title={text("مراجعة الإعلانات", "Listing review")}>
           <p className="text-xs leading-6 text-muted-foreground">
             {text(
-              "راجع الإعلانات المرسلة، أسباب الرفض، وملاحظات المالك من صفحة المراجعة.",
-              "Review submitted listings, rejection reasons, and owner notes from the review page.",
+              "تعرض صفحة المراجعة الإعلانات المرسلة بانتظار قرار المالك فقط.",
+              "The review page shows submitted listings waiting for an owner decision only.",
             )}
           </p>
-          <button
-            type="button"
-            onClick={() =>
-              acknowledge("تم تسجيل إجراء مراجعة محلياً.", "Review action recorded locally.")
-            }
-            className="mt-3 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
-          >
-            {text("تسجيل مراجعة", "Record review")}
-          </button>
+          <AdminLink to="/admin/pending" label={text("فتح المراجعة", "Open review")} />
         </AdminCard>
         <AdminCard icon={Flag} title={text("البلاغات والسلامة", "Reports and safety")}>
           <p className="text-xs leading-6 text-muted-foreground">
             {text(
-              "تابع البلاغات حسب الحالة والأولوية مع الحفاظ على سجل واضح للمراجعة.",
-              "Track reports by status and priority while keeping a clear review trail.",
+              "تعرض صفحة البلاغات السجلات المدعومة بقاعدة البيانات وتحديثات حالتها.",
+              "The reports page shows database-backed reports and status updates.",
             )}
           </p>
-          <button
-            type="button"
-            onClick={() =>
-              acknowledge(
-                "تم تجهيز ملاحظة بلاغ لهذه الجلسة.",
-                "Report note prepared for this session.",
-              )
-            }
-            className="mt-3 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
-          >
-            {text("إضافة ملاحظة", "Add note")}
-          </button>
+          <AdminLink to="/admin/reports" label={text("فتح البلاغات", "Open reports")} />
         </AdminCard>
         <AdminCard icon={Users} title={text("المستخدمون", "Users")}>
           <p className="text-xs leading-6 text-muted-foreground">
             {text(
-              "اعرض الحسابات، حالات التوثيق، وإشارات السلامة بدون تغيير صلاحيات من الواجهة.",
-              "Review accounts, verification status, and safety markers without granting permissions from the frontend.",
+              "لا توجد واجهة آمنة لملخص المستخدمين ضمن هذا الإصدار، لذلك لا تعرض اللوحة أرقاماً تقديرية.",
+              "There is no safe user summary API in this release, so the dashboard does not show estimated counts.",
             )}
           </p>
-          <button
-            type="button"
-            onClick={() =>
-              acknowledge("تم تحديث معاينة المستخدم محلياً.", "User view updated locally.")
-            }
-            className="mt-3 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
-          >
-            {text("تحديث المعاينة", "Update view")}
-          </button>
+          <AdminLink to="/admin/users" label={text("فتح صفحة المستخدمين", "Open users page")} />
         </AdminCard>
         <AdminCard icon={Sparkles} title={text("الترويج", "Promotion")}>
           <p className="text-xs leading-6 text-muted-foreground">
             {text(
-              "تابع طلبات التمييز والدفع اليدوي بدون تنفيذ دفع أو تفعيل تلقائي.",
-              "Track featuring and manual-payment requests without executing payment or automatic activation.",
+              "لا تعرض اللوحة أرقام ترويج أو دفع ما لم تكن مدعومة بواجهة بيانات آمنة.",
+              "The dashboard does not show promotion or payment counts unless backed by a safe data API.",
             )}
           </p>
-          <button
-            type="button"
-            onClick={() =>
-              acknowledge("تم تسجيل قرار ترويج محلياً.", "Promotion decision recorded locally.")
-            }
-            className="mt-3 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
-          >
-            {text("تسجيل قرار", "Record decision")}
-          </button>
+          <AdminLink
+            to="/admin/promotions"
+            label={text("فتح طلبات الترويج", "Open promotion requests")}
+          />
         </AdminCard>
       </section>
 
       <section className="rounded-2xl bg-card p-4 hairline">
         <SectionTitle icon={Settings} title={text("إعدادات المالك", "Owner settings")} compact />
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          {["سياسة المراجعة", "إرشادات السلامة", "قوالب الردود"].map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() =>
-                acknowledge(
-                  "تم حفظ تفضيل الواجهة لهذه الجلسة.",
-                  "Interface preference saved for this session.",
-                )
-              }
-              className="rounded-xl bg-muted-surface p-3 text-start text-xs font-bold"
-            >
-              {uiLabel(item, language)}
-            </button>
-          ))}
-        </div>
+        <p className="text-xs leading-6 text-muted-foreground">
+          {text(
+            "إعدادات المنصة تحتاج واجهات محمية قبل عرض مؤشرات أو تغييرات تنفيذية من هذه اللوحة.",
+            "Platform settings need protected APIs before this dashboard shows indicators or operational changes.",
+          )}
+        </p>
       </section>
-
-      {notice && (
-        <div className="rounded-2xl bg-emerald-trust/10 p-3 text-center text-xs font-bold text-emerald-trust hairline">
-          {notice}
-        </div>
-      )}
     </div>
   );
+}
+
+function formatMetric(value: number | null, loading: boolean) {
+  if (loading) return "…";
+  return value === null ? "—" : value.toLocaleString();
 }
 
 function SectionTitle({
@@ -228,10 +255,23 @@ function AdminCard({
   );
 }
 
+function AdminLink({ to, label }: { to: string; label: string }) {
+  return (
+    <Link
+      to={to as "/"}
+      className="mt-3 inline-block rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+    >
+      {label}
+    </Link>
+  );
+}
+
 function Badge({ children, tone }: { children: React.ReactNode; tone?: "gold" }) {
   return (
     <span
-      className={`rounded-md px-2 py-1 text-[10px] font-bold ${tone === "gold" ? "bg-gold text-gold-foreground" : "bg-muted-surface text-foreground"}`}
+      className={`rounded-md px-2 py-1 text-[10px] font-bold ${
+        tone === "gold" ? "bg-gold text-gold-foreground" : "bg-muted-surface text-foreground"
+      }`}
     >
       {children}
     </span>
