@@ -1,35 +1,35 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
-  Search,
-  Sparkles,
-  MapPin,
-  Clock,
-  Plus,
-  ShieldAlert,
   BadgeCheck,
-  Star,
+  Clock,
+  MapPin,
+  Plus,
+  Search,
+  ShieldAlert,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
-import { CategoryCard } from "@/components/CategoryCard";
-import { ListingCard } from "@/components/ListingCard";
+import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { SectionHeader } from "@/components/SectionHeader";
-import { governorateName } from "@/lib/i18n";
-import { useUiPreferences } from "@/lib/ui-preferences";
 import {
-  categories,
-  featuredListings,
-  governorates,
-  homeQuickCategoryIds,
-  latestListings,
-  listings,
-  verifiedSellers,
-} from "@/data/mockData";
+  fetchPublicCategories,
+  fetchPublicGovernorates,
+  fetchPublicListings,
+} from "@/lib/classifieds-api";
+import type {
+  ClassifiedCategory,
+  ClassifiedGovernorate,
+  ClassifiedListing,
+  ClassifiedsError,
+} from "@/lib/classifieds-types";
+import { categoryHint, categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import { useUiPreferences } from "@/lib/ui-preferences";
 
-const HOME_TITLE = "رَوَاج | سوق سوريا المجاني للإعلانات";
+const HOME_TITLE = "رواج | سوق سوريا المجاني للإعلانات";
 const HOME_DESCRIPTION =
-  "سوق إعلانات مبوبة مجاني لسوريا. بيع واشترِ سيارات، عقارات، موبايلات، وظائف وخدمات حسب المحافظة بسهولة وبدون تعقيد.";
+  "سوق إعلانات مبوبة مجاني لسوريا. بيع واشتر سيارات، عقارات، موبايلات، وظائف وخدمات حسب المحافظة بسهولة وبدون تعقيد.";
 
 type QuickFilter = {
   id: string;
@@ -43,10 +43,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: HOME_TITLE },
-      {
-        name: "description",
-        content: HOME_DESCRIPTION,
-      },
+      { name: "description", content: HOME_DESCRIPTION },
       { property: "og:title", content: HOME_TITLE },
       { property: "og:description", content: HOME_DESCRIPTION },
       { name: "twitter:title", content: HOME_TITLE },
@@ -57,71 +54,107 @@ export const Route = createFileRoute("/")({
 });
 
 const quickFilters: QuickFilter[] = [
-  {
-    id: "latest",
-    labelAr: "الأحدث",
-    labelEn: "Latest",
-    icon: Clock,
-    search: { sort: "latest" as const },
-  },
+  { id: "latest", labelAr: "الأحدث", labelEn: "Latest", icon: Clock, search: { sort: "latest" } },
   {
     id: "featured",
     labelAr: "المميز",
     labelEn: "Featured",
     icon: Sparkles,
-    search: { sort: "featured" as const },
+    search: { sort: "featured" },
   },
   { id: "gov", labelAr: "حسب المحافظة", labelEn: "By governorate", icon: MapPin, search: {} },
-  { id: "nearby", labelAr: "حسب المنطقة", labelEn: "By area", icon: MapPin, search: {} },
+  { id: "area", labelAr: "حسب المنطقة", labelEn: "By area", icon: MapPin, search: {} },
 ];
 
 function HomePage() {
   const navigate = useNavigate();
   const { language, text } = useUiPreferences();
   const [searchValue, setSearchValue] = useState("");
-  const counts: Record<string, number> = {};
-  for (const l of listings) counts[l.categoryId] = (counts[l.categoryId] ?? 0) + 1;
+  const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
+  const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
+  const [listings, setListings] = useState<ClassifiedListing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<ClassifiedsError | null>(null);
 
-  const quickCats = homeQuickCategoryIds
-    .map((id) => categories.find((c) => c.id === id))
-    .filter(Boolean) as typeof categories;
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      const [categoriesResult, governoratesResult, listingsResult] = await Promise.all([
+        fetchPublicCategories(),
+        fetchPublicGovernorates(),
+        fetchPublicListings(),
+      ]);
+      if (cancelled) return;
+      if (!categoriesResult.ok) setError(categoriesResult.error);
+      else if (!governoratesResult.ok) setError(governoratesResult.error);
+      else if (!listingsResult.ok) setError(listingsResult.error);
+      else {
+        setCategories(categoriesResult.data);
+        setGovernorates(governoratesResult.data);
+        setListings(listingsResult.data);
+      }
+      setLoading(false);
+    }
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const handleSearch = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const counts = useMemo(() => {
+    const result: Record<string, number> = {};
+    for (const listing of listings)
+      result[listing.categoryId] = (result[listing.categoryId] ?? 0) + 1;
+    return result;
+  }, [listings]);
+  const featuredListings = listings.filter((listing) => listing.isFeatured).slice(0, 8);
+  const latestListings = listings.slice(0, 9);
+  const sellerSummaries = useMemo(() => {
+    const byOwner = new Map<string, { id: string; name: string; count: number }>();
+    for (const listing of listings) {
+      const name = listing.contactName?.trim() || text("بائع رواج", "RAWAJ seller");
+      const current = byOwner.get(listing.ownerId);
+      byOwner.set(listing.ownerId, {
+        id: listing.ownerId,
+        name: current?.name ?? name,
+        count: (current?.count ?? 0) + 1,
+      });
+    }
+    return [...byOwner.values()].slice(0, 8);
+  }, [listings, text]);
+
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const q = searchValue.trim();
-    navigate({ to: "/listings", search: q ? { q } : {} });
+    void navigate({ to: "/listings", search: q ? { q } : {} });
   };
 
   return (
     <>
       <AppHeader />
-
       <main className="container-wide pt-4">
-        {/* Hero / value proposition */}
-        <section className="mb-4 rounded-2xl bg-gradient-to-bl from-card to-muted-surface p-4 sm:p-5 hairline shadow-soft">
+        <section className="mb-4 rounded-2xl bg-gradient-to-bl from-card to-muted-surface p-4 shadow-soft hairline sm:p-5">
           <h1 className="text-lg font-extrabold leading-tight text-foreground sm:text-xl">
-            {text(
-              "رَوَاج — سوق سوريا المجاني للإعلانات",
-              "RAWAJ - Syria's classifieds marketplace",
-            )}
+            {text("رواج - سوق سوريا المجاني للإعلانات", "RAWAJ - Syria's classifieds marketplace")}
           </h1>
           <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
             {text(
-              "بيع واشتري داخل سوريا بسهولة: إعلانات محلية حسب المحافظة، بدون عمولات وبدون تعقيد.",
+              "بيع واشتر داخل سوريا بسهولة: إعلانات محلية حسب المحافظة، بدون عمولات وبدون تعقيد.",
               "Buy and sell across Syria with clear local listings by governorate, no commissions, and no clutter.",
             )}
           </p>
         </section>
 
-        {/* Search */}
         <form onSubmit={handleSearch} className="rounded-2xl bg-card p-2 shadow-soft hairline">
           <div className="flex items-center gap-2 rounded-xl bg-muted-surface px-3 py-2.5">
             <Search className="h-4 w-4 text-muted-foreground" />
             <input
               value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
+              onChange={(event) => setSearchValue(event.target.value)}
               type="search"
-              aria-label={text("ابحث في رَوَاج", "Search RAWAJ")}
+              aria-label={text("ابحث في رواج", "Search RAWAJ")}
               placeholder={text(
                 "ابحث عن سيارة، منزل، هاتف، وظيفة...",
                 "Search for a car, home, phone, job...",
@@ -131,144 +164,152 @@ function HomePage() {
           </div>
         </form>
 
-        {/* Quick filters */}
         <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
-          {quickFilters.map((f) => (
+          {quickFilters.map((filter) => (
             <Link
-              key={f.id}
+              key={filter.id}
               to="/listings"
-              search={f.search}
+              search={filter.search}
               className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold transition hairline hover:bg-muted-surface"
             >
-              <f.icon className="h-3.5 w-3.5 text-gold" />
-              {text(f.labelAr, f.labelEn)}
+              <filter.icon className="h-3.5 w-3.5 text-gold" />
+              {text(filter.labelAr, filter.labelEn)}
             </Link>
           ))}
         </div>
 
-        {/* Categories grid */}
-        <section className="mt-6">
-          <SectionHeader title={text("تصفح الأقسام", "Browse categories")} />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {quickCats.map((c) => (
-              <CategoryCard key={c.id} category={c} count={counts[c.id] ?? 0} />
-            ))}
-            <Link
-              to="/categories"
-              className="flex items-center justify-center gap-2 rounded-2xl bg-muted-surface p-4 text-sm font-bold text-primary hairline transition hover:bg-card"
-            >
-              {text("عرض كل الأقسام", "View all categories")}
-            </Link>
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="mt-6 overflow-hidden rounded-2xl bg-primary p-5 text-primary-foreground shadow-premium">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <h3 className="text-lg font-extrabold">
-                {text("انشر إعلانك مجاناً", "Post your listing free")}
-              </h3>
-              <p className="mt-1 text-sm text-primary-foreground/80">
-                {text(
-                  "إعلانك يظهر للمشترين داخل سوريا خلال دقائق.",
-                  "Prepare a clear listing for buyers across Syria.",
-                )}
-              </p>
-              <Link
-                to="/add-listing"
-                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-bold text-gold-foreground transition hover:opacity-90"
-              >
-                <Plus className="h-4 w-4" /> {text("أضف إعلان", "Post a listing")}
-              </Link>
-            </div>
-            <div className="hidden sm:block">
-              <span className="grid h-20 w-20 place-items-center rounded-2xl bg-primary-foreground/10">
-                <Sparkles className="h-8 w-8 text-gold" />
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {/* Featured */}
-        <section className="mt-7">
-          <SectionHeader
-            title={text("إعلانات مميزة", "Featured listings")}
-            action={{ label: text("عرض الكل", "View all"), to: "/listings" }}
+        {loading ? (
+          <HomeState title={text("جاري تحميل الإعلانات", "Loading listings")} />
+        ) : error ? (
+          <HomeState
+            title={text("تعذر تحميل بيانات السوق", "Could not load marketplace data")}
+            body={error.message}
           />
-          <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
-            {featuredListings.map((l) => (
-              <ListingCard key={l.id} listing={l} variant="horizontal" />
-            ))}
-          </div>
-        </section>
-
-        {/* Latest */}
-        <section className="mt-7">
-          <SectionHeader
-            title={text("أحدث الإعلانات", "Latest listings")}
-            action={{ label: text("عرض الكل", "View all"), to: "/listings" }}
-          />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {latestListings.slice(0, 9).map((l) => (
-              <ListingCard key={l.id} listing={l} />
-            ))}
-          </div>
-        </section>
-
-        {/* Governorates */}
-        <section className="mt-7">
-          <SectionHeader title={text("تصفح حسب المحافظة", "Browse by governorate")} />
-          <div className="flex flex-wrap gap-2">
-            <Link
-              to="/listings"
-              className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground"
-            >
-              {text("كل سوريا", "All Syria")}
-            </Link>
-            {governorates.map((g) => (
-              <Link
-                key={g.id}
-                to="/listings"
-                className="rounded-full bg-card px-4 py-1.5 text-xs font-semibold text-foreground hairline transition hover:bg-muted-surface"
-              >
-                {governorateName(g.id, g.nameAr, language)}
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* Verified sellers */}
-        <section className="mt-7">
-          <SectionHeader title={text("بائعون موثّقون", "Verified sellers")} />
-          <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
-            {verifiedSellers.map((s) => (
-              <Link
-                key={s.id}
-                to="/seller/$id"
-                params={{ id: s.id }}
-                className="w-[200px] shrink-0 rounded-2xl bg-card p-3 hairline shadow-soft transition hover:shadow-premium"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="grid h-12 w-12 place-items-center rounded-full bg-muted-surface text-base font-bold text-primary">
-                    {s.name.slice(0, 1)}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1">
-                      <span className="truncate text-sm font-bold">{s.name}</span>
-                      <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-emerald-trust" />
-                    </div>
-                    <div className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <Star className="h-3 w-3 fill-gold text-gold" /> {s.rating.toFixed(1)}
-                    </div>
-                  </div>
+        ) : (
+          <>
+            <section className="mt-6">
+              <SectionHeader title={text("تصفح الأقسام", "Browse categories")} />
+              {categories.length === 0 ? (
+                <HomeState
+                  title={text("لا توجد أقسام للعرض", "No categories to show")}
+                  body={text(
+                    "يمكنك تصفح الإعلانات المعتمدة مباشرة.",
+                    "You can browse approved listings directly.",
+                  )}
+                  compact
+                />
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {categories.slice(0, 8).map((category) => (
+                    <HomeCategoryCard
+                      key={category.id}
+                      category={category}
+                      count={counts[category.id] ?? 0}
+                    />
+                  ))}
+                  <Link
+                    to="/categories"
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-muted-surface p-4 text-sm font-bold text-primary transition hairline hover:bg-card"
+                  >
+                    {text("عرض كل الأقسام", "View all categories")}
+                  </Link>
                 </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+              )}
+            </section>
 
-        {/* Safety strip */}
+            <section className="mt-6 overflow-hidden rounded-2xl bg-primary p-5 text-primary-foreground shadow-premium">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg font-extrabold">
+                    {text("انشر إعلانك مجاناً", "Post your listing free")}
+                  </h3>
+                  <p className="mt-1 text-sm text-primary-foreground/80">
+                    {text(
+                      "إعلانك يظهر للمشترين داخل سوريا بعد المراجعة.",
+                      "Your listing appears to buyers across Syria after review.",
+                    )}
+                  </p>
+                  <Link
+                    to="/add-listing"
+                    className="mt-3 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-bold text-gold-foreground transition hover:opacity-90"
+                  >
+                    <Plus className="h-4 w-4" /> {text("أضف إعلان", "Post a listing")}
+                  </Link>
+                </div>
+                <span className="hidden h-20 w-20 place-items-center rounded-2xl bg-primary-foreground/10 sm:grid">
+                  <Sparkles className="h-8 w-8 text-gold" />
+                </span>
+              </div>
+            </section>
+
+            <ListingsSection
+              title={text("إعلانات مميزة", "Featured listings")}
+              listings={featuredListings}
+              empty={text("لا توجد إعلانات مميزة للعرض.", "No featured listings to show.")}
+            />
+            <ListingsSection
+              title={text("أحدث الإعلانات", "Latest listings")}
+              listings={latestListings}
+              empty={text("لا توجد إعلانات معتمدة للعرض.", "No approved listings to show.")}
+            />
+
+            <section className="mt-7">
+              <SectionHeader title={text("تصفح حسب المحافظة", "Browse by governorate")} />
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to="/listings"
+                  className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground"
+                >
+                  {text("كل سوريا", "All Syria")}
+                </Link>
+                {governorates.map((governorate) => (
+                  <Link
+                    key={governorate.id}
+                    to="/listings"
+                    search={{ gov: governorate.id }}
+                    className="rounded-full bg-card px-4 py-1.5 text-xs font-semibold text-foreground transition hairline hover:bg-muted-surface"
+                  >
+                    {governorateName(governorate.id, governorate.nameAr, language)}
+                  </Link>
+                ))}
+              </div>
+            </section>
+
+            {sellerSummaries.length > 0 && (
+              <section className="mt-7">
+                <SectionHeader
+                  title={text("بائعون لديهم إعلانات معتمدة", "Sellers with approved listings")}
+                />
+                <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+                  {sellerSummaries.map((seller) => (
+                    <Link
+                      key={seller.id}
+                      to="/seller/$id"
+                      params={{ id: seller.id }}
+                      className="w-[200px] shrink-0 rounded-2xl bg-card p-3 shadow-soft transition hairline hover:shadow-premium"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="grid h-12 w-12 place-items-center rounded-full bg-muted-surface text-base font-bold text-primary">
+                          {seller.name.slice(0, 1)}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1">
+                            <span className="truncate text-sm font-bold">{seller.name}</span>
+                            <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-emerald-trust" />
+                          </div>
+                          <div className="mt-0.5 text-[11px] text-muted-foreground">
+                            {text(`${seller.count} إعلان`, `${seller.count} listings`)}
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
+        )}
+
         <section className="mt-7 rounded-2xl bg-warning/10 p-4 hairline">
           <div className="flex items-center gap-2">
             <ShieldAlert className="h-5 w-5 shrink-0 text-warning" />
@@ -277,16 +318,14 @@ function HomePage() {
           <ul className="mt-2 grid gap-1 text-xs text-foreground sm:grid-cols-2">
             <li>
               {text(
-                "• لا تحوّل المال قبل معاينة السلعة.",
-                "• Do not transfer money before inspecting the item.",
+                "لا تحوّل المال قبل معاينة السلعة.",
+                "Do not transfer money before inspecting the item.",
               )}
             </li>
-            <li>{text("• قابل البائع في مكان عام وآمن.", "• Meet in a public, safe place.")}</li>
+            <li>{text("قابل البائع في مكان عام وآمن.", "Meet in a public, safe place.")}</li>
+            <li>{text("احذر الأسعار غير المنطقية.", "Be cautious with unrealistic prices.")}</li>
             <li>
-              {text("• احذر الأسعار غير المنطقية.", "• Be cautious with unrealistic prices.")}
-            </li>
-            <li>
-              {text("• بلّغ عن أي إعلان مشبوه عبر", "• Report suspicious listings through")}{" "}
+              {text("بلّغ عن أي إعلان مشبوه عبر", "Report suspicious listings through")}{" "}
               <Link to="/support" className="font-bold text-primary">
                 {text("الدعم", "support")}
               </Link>
@@ -296,5 +335,110 @@ function HomePage() {
         </section>
       </main>
     </>
+  );
+}
+
+function HomeCategoryCard({ category, count }: { category: ClassifiedCategory; count: number }) {
+  const { language, text } = useUiPreferences();
+  return (
+    <Link
+      to="/listings"
+      search={{ category: category.id }}
+      className="group flex items-center gap-3 rounded-2xl bg-card p-3 shadow-soft transition hairline hover:shadow-premium"
+    >
+      <div className="w-16 shrink-0">
+        <PlaceholderArt type={category.placeholder} aspect="square" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <h3 className="truncate text-[15px] font-bold text-foreground">
+          {categoryName(category.id, category.nameAr, language)}
+        </h3>
+        <p className="truncate text-xs text-muted-foreground">
+          {categoryHint(category.id, category.hintAr ?? "", language)}
+        </p>
+        <p className="mt-0.5 text-[11px] text-gold">
+          {text(`${count} إعلان`, `${count} listings`)}
+        </p>
+      </div>
+    </Link>
+  );
+}
+
+function ListingsSection({
+  title,
+  listings,
+  empty,
+}: {
+  title: string;
+  listings: ClassifiedListing[];
+  empty: string;
+}) {
+  const { text } = useUiPreferences();
+  return (
+    <section className="mt-7">
+      <SectionHeader
+        title={title}
+        action={{ label: text("عرض الكل", "View all"), to: "/listings" }}
+      />
+      {listings.length === 0 ? (
+        <HomeState title={empty} compact />
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {listings.map((listing) => (
+            <HomeListingCard key={listing.id} listing={listing} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function HomeListingCard({ listing }: { listing: ClassifiedListing }) {
+  const { language } = useUiPreferences();
+  return (
+    <Link
+      to="/listings/$id"
+      params={{ id: listing.id }}
+      className="block overflow-hidden rounded-2xl bg-card shadow-soft transition hairline hover:shadow-premium"
+    >
+      {listing.primaryImageUrl ? (
+        <img
+          src={listing.primaryImageUrl}
+          alt={listing.title}
+          className="aspect-[16/9] w-full object-cover"
+        />
+      ) : (
+        <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
+      )}
+      <div className="space-y-1.5 p-3">
+        <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-foreground">
+          {listing.title}
+        </h3>
+        <div className="text-lg font-extrabold text-foreground">
+          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
+        </div>
+        <p className="truncate text-xs text-muted-foreground">
+          {categoryName(listing.categoryId, listing.categoryNameAr, language)} ·{" "}
+          {governorateName(listing.governorateId, listing.governorateNameAr, language)}
+        </p>
+      </div>
+    </Link>
+  );
+}
+
+function HomeState({
+  title,
+  body,
+  compact = false,
+}: {
+  title: string;
+  body?: string;
+  compact?: boolean;
+}) {
+  return (
+    <div className={`rounded-2xl bg-card text-center hairline ${compact ? "p-5" : "mt-6 p-10"}`}>
+      <p className="text-sm font-bold text-foreground">{title}</p>
+      {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
+    </div>
   );
 }

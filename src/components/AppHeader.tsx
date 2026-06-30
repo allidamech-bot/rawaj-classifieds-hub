@@ -10,14 +10,14 @@ import {
   User,
   UserCog,
 } from "lucide-react";
-import { useState } from "react";
-import { governorates } from "@/data/mockData";
+import { useEffect, useState } from "react";
+import { fetchPublicGovernorates } from "@/lib/classifieds-api";
+import type { ClassifiedGovernorate } from "@/lib/classifieds-types";
 import { governorateName } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 interface Props {
-  /** Compact header (used on inner pages). */
   compact?: boolean;
   title?: string;
 }
@@ -26,14 +26,30 @@ export function AppHeader({ compact = false, title }: Props) {
   const [gov, setGov] = useState("");
   const [open, setOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
   const auth = useAuth();
   const { language, text, theme, toggleLanguage, toggleTheme } = useUiPreferences();
-  const govLabel = gov ? governorateName(gov, undefined, language) : text("كل سوريا", "All Syria");
+  const selectedGovernorate = governorates.find((item) => item.id === gov);
+  const govLabel = selectedGovernorate
+    ? governorateName(selectedGovernorate.id, selectedGovernorate.nameAr, language)
+    : text("كل سوريا", "All Syria");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadGovernorates() {
+      const result = await fetchPublicGovernorates();
+      if (!cancelled && result.ok) setGovernorates(result.data);
+    }
+    void loadGovernorates();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <header className="sticky top-0 z-30 bg-primary text-primary-foreground shadow-soft">
       <div className="container-wide flex items-center gap-3 py-3">
-        <Link to="/" className="flex items-center gap-2 min-w-0">
+        <Link to="/" className="flex min-w-0 items-center gap-2">
           <Logo />
           {!compact && (
             <span className="hidden text-[11px] font-medium text-primary-foreground/70 sm:inline">
@@ -77,7 +93,6 @@ export function AppHeader({ compact = false, title }: Props) {
             className="relative grid h-9 w-9 place-items-center rounded-full bg-primary-foreground/10 text-primary-foreground/70 transition hover:bg-primary-foreground/20"
           >
             <Bell className="h-4 w-4" />
-            <span className="absolute end-2 top-2 h-1.5 w-1.5 rounded-full bg-gold" />
           </button>
           {auth.canAccessOwnerControls && (
             <Link
@@ -115,7 +130,7 @@ export function AppHeader({ compact = false, title }: Props) {
       {!compact && (
         <div className="container-wide flex flex-wrap items-center justify-between gap-2 pb-3">
           <button
-            onClick={() => setOpen((v) => !v)}
+            onClick={() => setOpen((value) => !value)}
             aria-expanded={open}
             className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/10 px-3 py-1.5 text-sm font-medium transition hover:bg-primary-foreground/20"
           >
@@ -127,7 +142,7 @@ export function AppHeader({ compact = false, title }: Props) {
           </span>
           <span className="hidden text-[11px] text-primary-foreground/60 sm:inline">
             {text(
-              "إعلانات محلية حسب المحافظة — بدون تعقيد",
+              "إعلانات محلية حسب المحافظة - بسيطة وواضحة",
               "Local listings by governorate - simple and clear",
             )}
           </span>
@@ -146,16 +161,16 @@ export function AppHeader({ compact = false, title }: Props) {
             >
               {text("كل سوريا", "All Syria")}
             </button>
-            {governorates.map((g) => (
+            {governorates.map((governorate) => (
               <button
-                key={g.id}
+                key={governorate.id}
                 onClick={() => {
-                  setGov(g.id);
+                  setGov(governorate.id);
                   setOpen(false);
                 }}
                 className="block w-full rounded-lg px-3 py-2 text-start text-sm hover:bg-muted-surface"
               >
-                {governorateName(g.id, g.nameAr, language)}
+                {governorateName(governorate.id, governorate.nameAr, language)}
               </button>
             ))}
           </div>
@@ -181,8 +196,8 @@ export function AppHeader({ compact = false, title }: Props) {
               </p>
               <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
                 {text(
-                  "ستظهر هنا تحديثات الإعلانات والمفضلة والحساب عند توفرها.",
-                  "Listing, favorite, and account updates will appear here when available.",
+                  "تظهر هنا تحديثات الإعلانات والمفضلة والحساب عند توفرها.",
+                  "Listing, favorite, and account updates appear here when available.",
                 )}
               </p>
             </div>
@@ -197,7 +212,6 @@ function Logo() {
   return (
     <span className="flex items-center gap-2">
       <span className="grid h-9 w-9 place-items-center rounded-xl bg-gold text-gold-foreground shadow-soft">
-        {/* Arabic ر inspired arch mark — atlas dome */}
         <svg
           viewBox="0 0 32 32"
           className="h-6 w-6"
@@ -215,7 +229,7 @@ function Logo() {
         </svg>
       </span>
       <span className="flex flex-col leading-none">
-        <span className="text-base font-extrabold tracking-tight">رَوَاج</span>
+        <span className="text-base font-extrabold tracking-tight">رواج</span>
         <span className="text-[10px] font-semibold tracking-[0.18em] text-gold">RAWAJ · SY</span>
       </span>
     </span>
