@@ -27,13 +27,20 @@ import {
 import { PageHeader } from "@/components/PageHeader";
 import {
   deleteOwnerListing,
+  createSellerVerificationRequest,
   fetchCurrentUserListings,
+  fetchMyVerificationRequests,
   removeProfileMedia,
   resubmitOwnerListing,
   updateOwnProfileBasics,
   uploadProfileMedia,
 } from "@/lib/classifieds-api";
-import type { ClassifiedListing, ClassifiedsError } from "@/lib/classifieds-types";
+import type {
+  ClassifiedListing,
+  ClassifiedsError,
+  SellerVerificationRequest,
+  VerificationRequestType,
+} from "@/lib/classifieds-types";
 import { categoryName, governorateName } from "@/lib/i18n";
 import { listingStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
@@ -112,6 +119,14 @@ function ProfilePage() {
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsNotice, setSettingsNotice] = useState("");
   const [mediaSaving, setMediaSaving] = useState<"avatar" | "cover" | null>(null);
+  const [verificationRequests, setVerificationRequests] = useState<SellerVerificationRequest[]>([]);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [verificationType, setVerificationType] = useState<VerificationRequestType>("personal");
+  const [verificationLegalName, setVerificationLegalName] = useState("");
+  const [verificationBusinessName, setVerificationBusinessName] = useState("");
+  const [verificationDocumentType, setVerificationDocumentType] = useState("");
+  const [verificationSaving, setVerificationSaving] = useState(false);
+  const [verificationNotice, setVerificationNotice] = useState("");
   const profileId = auth.profile?.id;
   const displayName = auth.profile?.displayName || auth.profile?.email || text("زائر", "Guest");
 
@@ -221,6 +236,40 @@ function ProfilePage() {
     );
   }
 
+  async function loadVerificationRequests() {
+    if (!profileId) return;
+    setVerificationLoading(true);
+    const result = await fetchMyVerificationRequests(profileId);
+    if (result.ok) setVerificationRequests(result.data);
+    else setVerificationNotice(result.error.message);
+    setVerificationLoading(false);
+  }
+
+  async function handleVerificationRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setVerificationNotice("");
+    setVerificationSaving(true);
+    const result = await createSellerVerificationRequest({
+      userId: profileId ?? null,
+      requestType: verificationType,
+      legalName: verificationLegalName,
+      businessName: verificationBusinessName || null,
+      documentType: verificationDocumentType || null,
+    });
+    setVerificationSaving(false);
+    if (result.ok) {
+      setVerificationLegalName("");
+      setVerificationBusinessName("");
+      setVerificationDocumentType("");
+      setVerificationNotice(
+        text("تم إرسال طلب التوثيق للمراجعة.", "Verification request sent for review."),
+      );
+      await loadVerificationRequests();
+    } else {
+      setVerificationNotice(result.error.message);
+    }
+  }
+
   useEffect(() => {
     if (auth.status !== "signedIn") return;
     setSettingsDisplayName(auth.profile?.displayName ?? "");
@@ -254,6 +303,11 @@ function ProfilePage() {
     return () => {
       cancelled = true;
     };
+  }, [auth.status, profileId]);
+
+  useEffect(() => {
+    if (auth.status !== "signedIn" || !profileId) return;
+    void loadVerificationRequests();
   }, [auth.status, profileId]);
 
   const authNote =
@@ -678,12 +732,102 @@ function ProfilePage() {
             <BadgeCheck className="h-4 w-4 text-emerald-trust" />
             {text("توثيق الحساب", "Account verification")}
           </h3>
-          <p className="text-xs leading-6 text-muted-foreground">
-            {text(
-              "أي موافقة فعلية على التوثيق تبقى خاضعة لمراجعة المالك والصلاحيات المحمية.",
-              "Any real verification approval remains subject to owner review and protected permissions.",
-            )}
-          </p>
+          {auth.status === "signedIn" ? (
+            <div className="space-y-3">
+              <p className="text-xs leading-6 text-muted-foreground">
+                {text(
+                  "يظهر شارة التوثيق فقط بعد موافقة إدارية حقيقية. رفع الوثائق الخاصة مؤجل حتى اعتماد bucket خاص وآمن.",
+                  "Verified status appears only after real admin approval. Private document upload is deferred until a reviewed private bucket is available.",
+                )}
+              </p>
+              <div className="rounded-xl bg-card p-3 text-xs hairline">
+                <p className="font-bold">
+                  {text("حالة التوثيق الحالية", "Current verification status")}
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  {auth.profile?.verificationStatus ?? "unverified"}
+                </p>
+              </div>
+              <form
+                onSubmit={(event) => void handleVerificationRequest(event)}
+                className="grid gap-3"
+              >
+                <label className="block">
+                  <span className="text-xs font-bold text-muted-foreground">
+                    {text("نوع الطلب", "Request type")}
+                  </span>
+                  <select
+                    value={verificationType}
+                    onChange={(event) =>
+                      setVerificationType(event.target.value as VerificationRequestType)
+                    }
+                    className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
+                  >
+                    <option value="personal">{text("شخصي", "Personal")}</option>
+                    <option value="business">{text("نشاط تجاري", "Business")}</option>
+                  </select>
+                </label>
+                <SettingsInput
+                  label={text("الاسم القانوني", "Legal name")}
+                  value={verificationLegalName}
+                  onChange={setVerificationLegalName}
+                  maxLength={120}
+                />
+                <SettingsInput
+                  label={text("اسم النشاط إن وجد", "Business name if any")}
+                  value={verificationBusinessName}
+                  onChange={setVerificationBusinessName}
+                  maxLength={120}
+                />
+                <SettingsInput
+                  label={text("نوع المستند بدون رفع ملف", "Document type without upload")}
+                  value={verificationDocumentType}
+                  onChange={setVerificationDocumentType}
+                  maxLength={80}
+                />
+                <button
+                  type="submit"
+                  disabled={verificationSaving || verificationLegalName.trim().length < 3}
+                  className="rounded-xl bg-emerald-trust px-4 py-2 text-xs font-bold text-emerald-trust-foreground disabled:opacity-60"
+                >
+                  {verificationSaving
+                    ? text("جارٍ الإرسال", "Sending")
+                    : text("إرسال طلب توثيق", "Request verification")}
+                </button>
+              </form>
+              <div className="rounded-xl bg-muted-surface p-3 text-xs leading-6">
+                <p className="font-bold">{text("طلباتك", "Your requests")}</p>
+                {verificationLoading ? (
+                  <p className="text-muted-foreground">{text("جارٍ التحميل", "Loading")}</p>
+                ) : verificationRequests.length === 0 ? (
+                  <p className="text-muted-foreground">
+                    {text("لا توجد طلبات توثيق بعد.", "No verification requests yet.")}
+                  </p>
+                ) : (
+                  <div className="mt-2 space-y-2">
+                    {verificationRequests.slice(0, 3).map((request) => (
+                      <div key={request.id} className="rounded-lg bg-card p-2 hairline">
+                        <p className="font-bold">{request.legalName}</p>
+                        <p className="text-muted-foreground">{request.status}</p>
+                        {request.adminNote && (
+                          <p className="text-muted-foreground">{request.adminNote}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {verificationNotice && (
+                <p className="rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold">
+                  {verificationNotice}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs leading-6 text-muted-foreground">
+              {text("سجل الدخول لطلب توثيق الحساب.", "Log in to request account verification.")}
+            </p>
+          )}
         </section>
 
         {notice && (

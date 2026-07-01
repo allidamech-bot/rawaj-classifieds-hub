@@ -3,6 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Camera, Check, Info } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  detectCategoryFieldKind,
+  mergeCategoryDetails,
+  type CategorySpecificDetails,
+} from "@/lib/category-fields";
+import {
   checkListingContentSafety,
   isSafePhoneValue,
   normalizeContactValue,
@@ -54,8 +59,10 @@ function AddListingPage() {
   const [contact, setContact] = useState({ phone: false, whatsapp: false });
   const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [categoryDetails, setCategoryDetails] = useState<CategorySpecificDetails>({});
 
   const category = categories.find((item) => item.id === categoryId);
+  const categoryFieldKind = detectCategoryFieldKind(category);
   const governorate = governorates.find((item) => item.id === governorateId);
   const requiresNumericPrice = priceType === "fixed" || priceType === "negotiable";
   const canContinue =
@@ -146,11 +153,15 @@ function AddListingPage() {
       return;
     }
 
-    const details: Record<string, unknown> = {
-      ...(contact.phone ? { phone: normalizedPhone } : {}),
-      ...(contact.whatsapp ? { whatsapp: normalizedWhatsapp } : {}),
-      ...(contentCheck.flags.length > 0 ? { content_flags: contentCheck.flags } : {}),
-    };
+    const details = mergeCategoryDetails(
+      {
+        ...(contact.phone ? { phone: normalizedPhone } : {}),
+        ...(contact.whatsapp ? { whatsapp: normalizedWhatsapp } : {}),
+        ...(contentCheck.flags.length > 0 ? { content_flags: contentCheck.flags } : {}),
+      },
+      categoryFieldKind,
+      categoryDetails,
+    );
 
     const result = await createListing(auth.profile?.id ?? null, {
       categoryId,
@@ -452,6 +463,12 @@ function AddListingPage() {
                       <option value="for_parts">{text("للقطع", "For parts")}</option>
                     </select>
                   </Field>
+                  <CategorySpecificFields
+                    kind={categoryFieldKind}
+                    values={categoryDetails}
+                    onChange={setCategoryDetails}
+                    text={text}
+                  />
                 </Card>
               )}
 
@@ -687,6 +704,233 @@ function PageState({
         </div>
       </main>
     </>
+  );
+}
+
+function CategorySpecificFields({
+  kind,
+  values,
+  onChange,
+  text,
+}: {
+  kind: "real_estate" | "vehicles" | "general";
+  values: CategorySpecificDetails;
+  onChange: (value: CategorySpecificDetails) => void;
+  text: (ar: string, en: string) => string;
+}) {
+  const patch = (next: Partial<CategorySpecificDetails>) => onChange({ ...values, ...next });
+
+  if (kind === "real_estate") {
+    return (
+      <div className="mt-3 rounded-xl bg-muted-surface p-3">
+        <h4 className="mb-3 text-xs font-extrabold">
+          {text("تفاصيل العقار", "Real estate details")}
+        </h4>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label={text("نوع العقار", "Property type")}>
+            <select
+              value={values.property_type ?? ""}
+              onChange={(event) => patch({ property_type: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="apartment">{text("شقة", "Apartment")}</option>
+              <option value="house">{text("منزل", "House")}</option>
+              <option value="villa">{text("فيلا", "Villa")}</option>
+              <option value="land">{text("أرض", "Land")}</option>
+              <option value="shop">{text("محل", "Shop")}</option>
+              <option value="office">{text("مكتب", "Office")}</option>
+              <option value="warehouse">{text("مستودع", "Warehouse")}</option>
+              <option value="other">{text("أخرى", "Other")}</option>
+            </select>
+          </Field>
+          <Field label={text("الغرض", "Purpose")}>
+            <select
+              value={values.listing_purpose ?? ""}
+              onChange={(event) => patch({ listing_purpose: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="sale">{text("بيع", "Sale")}</option>
+              <option value="rent">{text("إيجار", "Rent")}</option>
+            </select>
+          </Field>
+          <NumberField
+            label={text("غرف النوم", "Bedrooms")}
+            value={values.bedrooms}
+            onChange={(bedrooms) => patch({ bedrooms })}
+            min={0}
+            max={30}
+          />
+          <NumberField
+            label={text("الحمامات", "Bathrooms")}
+            value={values.bathrooms}
+            onChange={(bathrooms) => patch({ bathrooms })}
+            min={0}
+            max={30}
+          />
+          <NumberField
+            label={text("المساحة م²", "Area sqm")}
+            value={values.area_sqm}
+            onChange={(area_sqm) => patch({ area_sqm })}
+            min={1}
+            max={100000}
+          />
+          <NumberField
+            label={text("الطابق", "Floor")}
+            value={values.floor}
+            onChange={(floor) => patch({ floor })}
+            min={-5}
+            max={200}
+          />
+          <CheckboxField
+            label={text("مفروش", "Furnished")}
+            checked={values.furnished ?? false}
+            onChange={(furnished) => patch({ furnished })}
+          />
+          <CheckboxField
+            label={text("موقف سيارة", "Parking")}
+            checked={values.parking ?? false}
+            onChange={(parking) => patch({ parking })}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (kind === "vehicles") {
+    return (
+      <div className="mt-3 rounded-xl bg-muted-surface p-3">
+        <h4 className="mb-3 text-xs font-extrabold">{text("تفاصيل السيارة", "Vehicle details")}</h4>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label={text("الشركة", "Make")}>
+            <input
+              value={values.make ?? ""}
+              onChange={(event) => patch({ make: event.target.value })}
+              maxLength={60}
+              className="input"
+            />
+          </Field>
+          <Field label={text("الطراز", "Model")}>
+            <input
+              value={values.model ?? ""}
+              onChange={(event) => patch({ model: event.target.value })}
+              maxLength={60}
+              className="input"
+            />
+          </Field>
+          <NumberField
+            label={text("السنة", "Year")}
+            value={values.year}
+            onChange={(year) => patch({ year })}
+            min={1900}
+            max={new Date().getFullYear() + 1}
+          />
+          <NumberField
+            label={text("المسافة كم", "Mileage km")}
+            value={values.mileage_km}
+            onChange={(mileage_km) => patch({ mileage_km })}
+            min={0}
+            max={2000000}
+          />
+          <Field label={text("الوقود", "Fuel")}>
+            <select
+              value={values.fuel_type ?? ""}
+              onChange={(event) => patch({ fuel_type: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="gasoline">{text("بنزين", "Gasoline")}</option>
+              <option value="diesel">{text("ديزل", "Diesel")}</option>
+              <option value="hybrid">{text("هايبرد", "Hybrid")}</option>
+              <option value="electric">{text("كهرباء", "Electric")}</option>
+              <option value="other">{text("أخرى", "Other")}</option>
+            </select>
+          </Field>
+          <Field label={text("ناقل الحركة", "Transmission")}>
+            <select
+              value={values.transmission ?? ""}
+              onChange={(event) => patch({ transmission: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="automatic">{text("أوتوماتيك", "Automatic")}</option>
+              <option value="manual">{text("يدوي", "Manual")}</option>
+            </select>
+          </Field>
+          <Field label={text("حالة السيارة", "Vehicle condition")}>
+            <select
+              value={values.vehicle_condition ?? ""}
+              onChange={(event) => patch({ vehicle_condition: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="new">{text("جديدة", "New")}</option>
+              <option value="used">{text("مستعملة", "Used")}</option>
+            </select>
+          </Field>
+          <Field label={text("اللون", "Color")}>
+            <input
+              value={values.color ?? ""}
+              onChange={(event) => patch({ color: event.target.value })}
+              maxLength={40}
+              className="input"
+            />
+          </Field>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+function NumberField({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+}: {
+  label: string;
+  value?: number;
+  onChange: (value: number | undefined) => void;
+  min: number;
+  max: number;
+}) {
+  return (
+    <Field label={label}>
+      <input
+        value={value ?? ""}
+        onChange={(event) => onChange(event.target.value ? Number(event.target.value) : undefined)}
+        type="number"
+        min={min}
+        max={max}
+        className="input"
+      />
+    </Field>
+  );
+}
+
+function CheckboxField({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center justify-between rounded-xl bg-card px-3 py-2 text-xs font-bold hairline">
+      {label}
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="h-4 w-4 accent-primary"
+      />
+    </label>
   );
 }
 

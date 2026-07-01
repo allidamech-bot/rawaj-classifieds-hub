@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { MessageSquare, ShieldAlert, Star } from "lucide-react";
+import { BadgeCheck, MessageSquare, ShieldAlert, Star } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
@@ -145,6 +145,12 @@ function SellerHeader({ seller }: { seller: PublicSellerProfile }) {
             {seller.businessName && (
               <span className="rounded-md bg-primary-foreground/10 px-2 py-0.5 text-[11px] font-bold">
                 {seller.businessName}
+              </span>
+            )}
+            {seller.verified && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold text-emerald-trust-foreground">
+                <BadgeCheck className="h-3 w-3" />
+                {text("موثق", "Verified")}
               </span>
             )}
           </div>

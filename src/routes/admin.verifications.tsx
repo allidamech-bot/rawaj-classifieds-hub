@@ -1,19 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
 import { useEffect, useState } from "react";
-import { adminFetchPromotionRequests, adminModeratePromotionRequest } from "@/lib/classifieds-api";
-import type { ClassifiedsError, ListingPromotionRequest } from "@/lib/classifieds-types";
+import {
+  adminFetchVerificationRequests,
+  adminModerateVerificationRequest,
+} from "@/lib/classifieds-api";
+import type { ClassifiedsError, SellerVerificationRequest } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
-export const Route = createFileRoute("/admin/promotions")({
-  component: PromotionsPage,
+export const Route = createFileRoute("/admin/verifications")({
+  component: AdminVerificationsPage,
 });
 
-function PromotionsPage() {
+function AdminVerificationsPage() {
   const auth = useAuth();
   const { text } = useUiPreferences();
-  const [requests, setRequests] = useState<ListingPromotionRequest[]>([]);
+  const [requests, setRequests] = useState<SellerVerificationRequest[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
@@ -22,7 +25,7 @@ function PromotionsPage() {
   async function load() {
     setLoading(true);
     setError(null);
-    const result = await adminFetchPromotionRequests(auth.canAccessAdmin);
+    const result = await adminFetchVerificationRequests(auth.canAccessAdmin);
     if (result.ok) {
       setRequests(result.data);
       setNotes(Object.fromEntries(result.data.map((item) => [item.id, item.adminNote ?? ""])));
@@ -37,9 +40,9 @@ function PromotionsPage() {
     void load();
   }, [auth.canAccessAdmin]);
 
-  async function moderate(request: ListingPromotionRequest, status: "approved" | "rejected") {
+  async function moderate(request: SellerVerificationRequest, status: "approved" | "rejected") {
     setNotice("");
-    const result = await adminModeratePromotionRequest(auth.canAccessAdmin, {
+    const result = await adminModerateVerificationRequest(auth.canAccessAdmin, {
       requestId: request.id,
       status,
       adminNote: notes[request.id] ?? null,
@@ -47,8 +50,8 @@ function PromotionsPage() {
     if (result.ok) {
       setNotice(
         status === "approved"
-          ? text("تم اعتماد الترويج.", "Promotion approved.")
-          : text("تم رفض الترويج.", "Promotion rejected."),
+          ? text("تم توثيق الحساب.", "Account verified.")
+          : text("تم رفض طلب التوثيق.", "Verification rejected."),
       );
       await load();
     } else {
@@ -60,13 +63,13 @@ function PromotionsPage() {
     <div className="space-y-5">
       <section className="rounded-2xl bg-card p-4 hairline">
         <h2 className="flex items-center gap-2 text-base font-extrabold">
-          <Sparkles className="h-4 w-4 text-gold" />
-          {text("طلبات الترويج", "Promotion requests")}
+          <BadgeCheck className="h-4 w-4 text-emerald-trust" />
+          {text("طلبات توثيق البائعين", "Seller verification requests")}
         </h2>
         <p className="mt-1 text-xs leading-6 text-muted-foreground">
           {text(
-            "الموافقة تجعل الإعلان مميزاً لمدة الطلب عبر trigger قاعدة البيانات. لا توجد معالجة دفع في هذا السبرنت.",
-            "Approval marks the listing featured for the requested period through the database trigger. No payment processing is implemented in this sprint.",
+            "تظهر هنا طلبات التوثيق الحقيقية فقط. الشارة العامة لا تظهر إلا بعد الموافقة.",
+            "Only real verification requests appear here. Public verified status appears after approval only.",
           )}
         </p>
         {notice && (
@@ -75,30 +78,28 @@ function PromotionsPage() {
       </section>
 
       {loading ? (
-        <Panel title={text("جارٍ تحميل طلبات الترويج", "Loading promotion requests")} />
+        <Panel title={text("جارٍ تحميل طلبات التوثيق", "Loading verification requests")} />
       ) : error ? (
         <Panel
-          title={text("تعذر تحميل طلبات الترويج", "Could not load promotion requests")}
+          title={text("تعذر تحميل طلبات التوثيق", "Could not load verification requests")}
           body={error.message}
         />
       ) : requests.length === 0 ? (
-        <Panel title={text("لا توجد طلبات ترويج حالياً", "No promotion requests right now")} />
+        <Panel title={text("لا توجد طلبات توثيق حالياً", "No verification requests right now")} />
       ) : (
         <div className="grid gap-3">
           {requests.map((request) => (
             <article key={request.id} className="rounded-2xl bg-card p-4 hairline">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-extrabold">
-                    {request.listingTitle ?? request.listingId}
-                  </h3>
+                  <h3 className="text-sm font-extrabold">{request.legalName}</h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {request.promotionType} · {request.requestedDays} {text("يوم", "days")}
+                    {request.requestType} · {request.userId}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">{request.requesterUserId}</p>
-                  {(request.paymentMethod || request.paymentReference) && (
-                    <p className="mt-1 text-xs">
-                      {request.paymentMethod ?? ""} {request.paymentReference ?? ""}
+                  {request.businessName && <p className="mt-1 text-xs">{request.businessName}</p>}
+                  {request.documentType && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {text("نوع المستند:", "Document type:")} {request.documentType}
                     </p>
                   )}
                 </div>

@@ -3,6 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Camera, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  detectCategoryFieldKind,
+  mergeCategoryDetails,
+  readCategoryDetails,
+  type CategorySpecificDetails,
+} from "@/lib/category-fields";
+import {
   checkListingContentSafety,
   isSafePhoneValue,
   normalizeContactValue,
@@ -74,8 +80,10 @@ function ManageListingPage() {
   const [contact, setContact] = useState({ phone: true, whatsapp: false });
   const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [categoryDetails, setCategoryDetails] = useState<CategorySpecificDetails>({});
 
   const category = categories.find((item) => item.id === categoryId);
+  const categoryFieldKind = detectCategoryFieldKind(category, listing);
   const governorate = governorates.find((item) => item.id === governorateId);
   const currentSubcategories = useMemo(
     () => subcategories.filter((item) => item.categoryId === categoryId),
@@ -147,6 +155,7 @@ function ManageListingPage() {
       setContactName(listingResult.data.contactName ?? "");
       setPhone(readDetailString(listingResult.data.details, "phone"));
       setWhatsapp(readDetailString(listingResult.data.details, "whatsapp"));
+      setCategoryDetails(readCategoryDetails(listingResult.data.details));
       setContact(
         Object.keys(listingResult.data.contactOptions || {}).length > 0
           ? {
@@ -186,6 +195,8 @@ function ManageListingPage() {
       contact,
       phone,
       whatsapp,
+      categoryKind: categoryFieldKind,
+      categoryDetails,
       existingDetails: listing.details,
       text,
     });
@@ -234,6 +245,8 @@ function ManageListingPage() {
     contact,
     phone,
     whatsapp,
+    categoryFieldKind,
+    categoryDetails,
     text,
   ]);
 
@@ -250,6 +263,8 @@ function ManageListingPage() {
       contact,
       phone,
       whatsapp,
+      categoryKind: categoryFieldKind,
+      categoryDetails,
       existingDetails: listing.details,
       text,
     });
@@ -298,6 +313,8 @@ function ManageListingPage() {
     contact,
     phone,
     whatsapp,
+    categoryFieldKind,
+    categoryDetails,
     text,
   ]);
 
@@ -478,6 +495,13 @@ function ManageListingPage() {
                   disabled={!isEditable}
                 />
               </Field>
+              <CategorySpecificFields
+                kind={categoryFieldKind}
+                values={categoryDetails}
+                disabled={!isEditable}
+                onChange={setCategoryDetails}
+                text={text}
+              />
               <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Field label={text("السعر", "Price")}>
                   <input
@@ -843,6 +867,257 @@ function Field({
   );
 }
 
+function CategorySpecificFields({
+  kind,
+  values,
+  disabled,
+  onChange,
+  text,
+}: {
+  kind: "real_estate" | "vehicles" | "general";
+  values: CategorySpecificDetails;
+  disabled: boolean;
+  onChange: (value: CategorySpecificDetails) => void;
+  text: (ar: string, en: string) => string;
+}) {
+  const patch = (next: Partial<CategorySpecificDetails>) => onChange({ ...values, ...next });
+
+  if (kind === "real_estate") {
+    return (
+      <div className="mt-3 rounded-xl bg-muted-surface p-3">
+        <h4 className="mb-3 text-xs font-extrabold">
+          {text("تفاصيل العقار", "Real estate details")}
+        </h4>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label={text("نوع العقار", "Property type")}>
+            <select
+              disabled={disabled}
+              value={values.property_type ?? ""}
+              onChange={(event) => patch({ property_type: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="apartment">{text("شقة", "Apartment")}</option>
+              <option value="house">{text("منزل", "House")}</option>
+              <option value="villa">{text("فيلا", "Villa")}</option>
+              <option value="land">{text("أرض", "Land")}</option>
+              <option value="shop">{text("محل", "Shop")}</option>
+              <option value="office">{text("مكتب", "Office")}</option>
+              <option value="warehouse">{text("مستودع", "Warehouse")}</option>
+              <option value="other">{text("أخرى", "Other")}</option>
+            </select>
+          </Field>
+          <Field label={text("الغرض", "Purpose")}>
+            <select
+              disabled={disabled}
+              value={values.listing_purpose ?? ""}
+              onChange={(event) => patch({ listing_purpose: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="sale">{text("بيع", "Sale")}</option>
+              <option value="rent">{text("إيجار", "Rent")}</option>
+            </select>
+          </Field>
+          <NumberField
+            label={text("غرف النوم", "Bedrooms")}
+            value={values.bedrooms}
+            disabled={disabled}
+            onChange={(bedrooms) => patch({ bedrooms })}
+            min={0}
+            max={30}
+          />
+          <NumberField
+            label={text("الحمامات", "Bathrooms")}
+            value={values.bathrooms}
+            disabled={disabled}
+            onChange={(bathrooms) => patch({ bathrooms })}
+            min={0}
+            max={30}
+          />
+          <NumberField
+            label={text("المساحة م²", "Area sqm")}
+            value={values.area_sqm}
+            disabled={disabled}
+            onChange={(area_sqm) => patch({ area_sqm })}
+            min={1}
+            max={100000}
+          />
+          <NumberField
+            label={text("الطابق", "Floor")}
+            value={values.floor}
+            disabled={disabled}
+            onChange={(floor) => patch({ floor })}
+            min={-5}
+            max={200}
+          />
+          <CheckboxField
+            label={text("مفروش", "Furnished")}
+            checked={values.furnished ?? false}
+            disabled={disabled}
+            onChange={(furnished) => patch({ furnished })}
+          />
+          <CheckboxField
+            label={text("موقف سيارة", "Parking")}
+            checked={values.parking ?? false}
+            disabled={disabled}
+            onChange={(parking) => patch({ parking })}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (kind === "vehicles") {
+    return (
+      <div className="mt-3 rounded-xl bg-muted-surface p-3">
+        <h4 className="mb-3 text-xs font-extrabold">{text("تفاصيل السيارة", "Vehicle details")}</h4>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label={text("الشركة", "Make")}>
+            <input
+              disabled={disabled}
+              value={values.make ?? ""}
+              onChange={(event) => patch({ make: event.target.value })}
+              maxLength={60}
+              className="input"
+            />
+          </Field>
+          <Field label={text("الطراز", "Model")}>
+            <input
+              disabled={disabled}
+              value={values.model ?? ""}
+              onChange={(event) => patch({ model: event.target.value })}
+              maxLength={60}
+              className="input"
+            />
+          </Field>
+          <NumberField
+            label={text("السنة", "Year")}
+            value={values.year}
+            disabled={disabled}
+            onChange={(year) => patch({ year })}
+            min={1900}
+            max={new Date().getFullYear() + 1}
+          />
+          <NumberField
+            label={text("المسافة كم", "Mileage km")}
+            value={values.mileage_km}
+            disabled={disabled}
+            onChange={(mileage_km) => patch({ mileage_km })}
+            min={0}
+            max={2000000}
+          />
+          <Field label={text("الوقود", "Fuel")}>
+            <select
+              disabled={disabled}
+              value={values.fuel_type ?? ""}
+              onChange={(event) => patch({ fuel_type: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="gasoline">{text("بنزين", "Gasoline")}</option>
+              <option value="diesel">{text("ديزل", "Diesel")}</option>
+              <option value="hybrid">{text("هايبرد", "Hybrid")}</option>
+              <option value="electric">{text("كهرباء", "Electric")}</option>
+              <option value="other">{text("أخرى", "Other")}</option>
+            </select>
+          </Field>
+          <Field label={text("ناقل الحركة", "Transmission")}>
+            <select
+              disabled={disabled}
+              value={values.transmission ?? ""}
+              onChange={(event) => patch({ transmission: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="automatic">{text("أوتوماتيك", "Automatic")}</option>
+              <option value="manual">{text("يدوي", "Manual")}</option>
+            </select>
+          </Field>
+          <Field label={text("حالة السيارة", "Vehicle condition")}>
+            <select
+              disabled={disabled}
+              value={values.vehicle_condition ?? ""}
+              onChange={(event) => patch({ vehicle_condition: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="new">{text("جديدة", "New")}</option>
+              <option value="used">{text("مستعملة", "Used")}</option>
+            </select>
+          </Field>
+          <Field label={text("اللون", "Color")}>
+            <input
+              disabled={disabled}
+              value={values.color ?? ""}
+              onChange={(event) => patch({ color: event.target.value })}
+              maxLength={40}
+              className="input"
+            />
+          </Field>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+function NumberField({
+  label,
+  value,
+  disabled,
+  onChange,
+  min,
+  max,
+}: {
+  label: string;
+  value?: number;
+  disabled: boolean;
+  onChange: (value: number | undefined) => void;
+  min: number;
+  max: number;
+}) {
+  return (
+    <Field label={label}>
+      <input
+        value={value ?? ""}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value ? Number(event.target.value) : undefined)}
+        type="number"
+        min={min}
+        max={max}
+        className="input"
+      />
+    </Field>
+  );
+}
+
+function CheckboxField({
+  label,
+  checked,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  disabled: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center justify-between rounded-xl bg-card px-3 py-2 text-xs font-bold hairline">
+      {label}
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.checked)}
+        className="h-4 w-4 accent-primary"
+      />
+    </label>
+  );
+}
+
 function readDetailString(details: Record<string, unknown>, key: string) {
   const value = details[key];
   return typeof value === "string" ? value : "";
@@ -855,6 +1130,8 @@ function validateContactAndContent({
   contact,
   phone,
   whatsapp,
+  categoryKind,
+  categoryDetails,
   existingDetails,
   text,
 }: {
@@ -864,6 +1141,8 @@ function validateContactAndContent({
   contact: Record<"phone" | "whatsapp", boolean>;
   phone: string;
   whatsapp: string;
+  categoryKind: "real_estate" | "vehicles" | "general";
+  categoryDetails: CategorySpecificDetails;
   existingDetails: Record<string, unknown>;
   text: (ar: string, en: string) => string;
 }): { ok: true; details: Record<string, unknown> } | { ok: false; message: string } {
@@ -914,5 +1193,5 @@ function validateContactAndContent({
   if (contact.whatsapp) details.whatsapp = normalizedWhatsapp;
   if (contentCheck.flags.length > 0) details.content_flags = contentCheck.flags;
 
-  return { ok: true, details };
+  return { ok: true, details: mergeCategoryDetails(details, categoryKind, categoryDetails) };
 }

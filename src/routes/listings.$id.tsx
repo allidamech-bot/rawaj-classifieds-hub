@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   AlertTriangle,
   Camera,
@@ -7,18 +7,21 @@ import {
   Heart,
   Map as MapIcon,
   MapPin,
+  MessageCircle,
   Phone,
   ShieldAlert,
   User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { categoryDetailDisplayRows, detectCategoryFieldKind } from "@/lib/category-fields";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import {
   createListingReport,
   favoriteListing,
   fetchListingDetail,
   fetchListingImages,
+  startListingConversation,
   unfavoriteListing,
 } from "@/lib/classifieds-api";
 import type { ClassifiedListing, ClassifiedsError, ListingImage } from "@/lib/classifieds-types";
@@ -39,6 +42,7 @@ export const Route = createFileRoute("/listings/$id")({
 
 function ListingDetailsPage() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const auth = useAuth();
   const { language, text } = useUiPreferences();
   const [listing, setListing] = useState<ClassifiedListing | null>(null);
@@ -122,6 +126,37 @@ function ListingDetailsPage() {
     );
   }
 
+  async function messageSeller() {
+    setActionMessage(null);
+    if (auth.status !== "signedIn") {
+      setActionMessage(text("يجب تسجيل الدخول لبدء محادثة.", "Log in to start a conversation."));
+      return;
+    }
+
+    if (listing?.ownerId === auth.profile?.id) {
+      setActionMessage(text("لا يمكنك بدء محادثة مع نفسك.", "You cannot message yourself."));
+      return;
+    }
+
+    if (!listing || listing.status !== "approved") {
+      setActionMessage(
+        text(
+          "المحادثات متاحة للإعلانات المعتمدة فقط.",
+          "Messages are available for approved listings only.",
+        ),
+      );
+      return;
+    }
+
+    const result = await startListingConversation(auth.profile?.id ?? null, listing.id);
+    if (!result.ok) {
+      setActionMessage(result.error.message);
+      return;
+    }
+
+    void navigate({ to: "/chats", search: { conversation: result.data } });
+  }
+
   if (loading) {
     return (
       <>
@@ -169,7 +204,25 @@ function ListingDetailsPage() {
     "الهاتف",
     "واتساب",
     "رقم واتساب",
+    "property_type",
+    "listing_purpose",
+    "bedrooms",
+    "bathrooms",
+    "area_sqm",
+    "floor",
+    "furnished",
+    "parking",
+    "make",
+    "model",
+    "year",
+    "mileage_km",
+    "fuel_type",
+    "transmission",
+    "vehicle_condition",
+    "color",
   ]);
+  const categoryFieldKind = detectCategoryFieldKind(null, listing);
+  const categoryRows = categoryDetailDisplayRows(categoryFieldKind, listing.details, text);
   const detailsEntries = Object.entries(listing.details).filter(
     ([key, value]) =>
       !hiddenPublicDetailKeys.has(key.toLowerCase()) &&
@@ -379,14 +432,31 @@ function ListingDetailsPage() {
           >
             {text("عرض كل إعلانات المعلن", "View all advertiser listings")}
           </Link>
+          <button
+            type="button"
+            onClick={() => void messageSeller()}
+            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground"
+          >
+            <MessageCircle className="h-4 w-4" />
+            {text("راسل المعلن", "Message seller")}
+          </button>
         </section>
 
-        {detailsEntries.length > 0 && (
+        {(categoryRows.length > 0 || detailsEntries.length > 0) && (
           <section className="mt-3 rounded-2xl bg-card p-4 hairline">
             <h2 className="mb-3 text-sm font-extrabold text-foreground">
               {text("تفاصيل الإعلان", "Listing details")}
             </h2>
             <div className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
+              {categoryRows.map(([label, value]) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-between border-b border-border/60 py-1.5 text-sm last:border-b-0"
+                >
+                  <span className="text-muted-foreground">{label}</span>
+                  <span className="font-semibold text-foreground">{value}</span>
+                </div>
+              ))}
               {detailsEntries.map(([key, value]) => (
                 <div
                   key={key}

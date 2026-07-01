@@ -23,6 +23,8 @@ export const Route = createFileRoute("/admin/")({
 const actions = [
   { labelAr: "مراجعة الإعلانات", to: "/admin/pending" },
   { labelAr: "مراجعة البلاغات", to: "/admin/reports" },
+  { labelAr: "بلاغات الرسائل", to: "/admin/message-reports" },
+  { labelAr: "طلبات التوثيق", to: "/admin/verifications" },
   { labelAr: "إدارة المستخدمين", to: "/admin/users" },
   { labelAr: "طلبات الترويج", to: "/admin/promotions" },
 ] as const;

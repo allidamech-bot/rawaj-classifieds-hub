@@ -6,23 +6,36 @@ import type {
   ClassifiedListing,
   ClassifiedsError,
   ClassifiedsResult,
+  Conversation,
+  ConversationMessage,
+  CreateListingPromotionRequestPayload,
   CreateSavedSearchPayload,
+  CreateMessageReportPayload,
   ClassifiedSubcategory,
   CreateListingPayload,
+  CreateSellerVerificationRequestPayload,
   Favorite,
+  ListingPromotionRequest,
   ListingImage,
   ListingImageUploadPayload,
   ListingFilters,
+  MessageReport,
   ListingReport,
   ListingReportType,
+  ModerateListingPromotionRequestPayload,
+  ModerateMessageReportPayload,
   ModerateReportPayload,
   CreateSupportRequestPayload,
   ModerateListingPayload,
   ModerateSupportRequestPayload,
   ModerateSellerReviewPayload,
+  ModerateSellerVerificationRequestPayload,
   NotificationItem,
   ProfileMediaKind,
   ProfileMediaUploadPayload,
+  SellerVerificationRequest,
+  BlockConversationPayload,
+  PublicSellerSearchResult,
   PublicSellerProfile,
   SavedSearch,
   SellerRatingSummary,
@@ -300,6 +313,133 @@ function mapReview(row: Row): SellerReview {
     reviewedAt: rowNullableString(row, "reviewed_at"),
     createdAt: rowString(row, "created_at"),
     updatedAt: rowString(row, "updated_at"),
+  };
+}
+
+function mapConversation(row: Row): Conversation {
+  return {
+    id: rowString(row, "id"),
+    listingId: rowString(row, "listing_id"),
+    listingTitle: rowString(row, "listing_title", "إعلان على رواجا"),
+    buyerUserId: rowString(row, "buyer_user_id"),
+    sellerUserId: rowString(row, "seller_user_id"),
+    status: rowString(row, "status", "active") as Conversation["status"],
+    otherParticipant: {
+      userId: rowString(row, "other_user_id"),
+      displayName: rowString(row, "other_display_name", "مستخدم رواجا"),
+      avatarUrl: rowNullableString(row, "other_avatar_url"),
+      governorate: rowNullableString(row, "other_governorate"),
+    },
+    lastMessageAt: rowNullableString(row, "last_message_at"),
+    lastMessagePreview: rowNullableString(row, "last_message_preview"),
+    unreadCount: rowNumber(row, "unread_count"),
+    createdAt: rowString(row, "created_at"),
+    updatedAt: rowString(row, "updated_at"),
+  };
+}
+
+function mapMessage(row: Row): ConversationMessage {
+  return {
+    id: rowString(row, "id"),
+    conversationId: rowString(row, "conversation_id"),
+    senderUserId: rowString(row, "sender_user_id"),
+    body: rowString(row, "body"),
+    createdAt: rowString(row, "created_at"),
+    editedAt: rowNullableString(row, "edited_at"),
+    deletedAt: rowNullableString(row, "deleted_at"),
+  };
+}
+
+function mapMessageReport(row: Row): MessageReport {
+  return {
+    id: rowString(row, "id"),
+    messageId: rowString(row, "message_id"),
+    conversationId: rowString(row, "conversation_id"),
+    reporterUserId: rowString(row, "reporter_user_id"),
+    reportedUserId: rowString(row, "reported_user_id"),
+    reason: rowString(row, "reason"),
+    details: rowNullableString(row, "details"),
+    status: rowString(row, "status", "new") as MessageReport["status"],
+    adminNote: rowNullableString(row, "admin_note"),
+    reviewedBy: rowNullableString(row, "reviewed_by"),
+    reviewedAt: rowNullableString(row, "reviewed_at"),
+    createdAt: rowString(row, "created_at"),
+    updatedAt: rowString(row, "updated_at"),
+    messageBody: rowNullableString(row, "message_body"),
+    listingId: rowNullableString(row, "listing_id"),
+    listingTitle: rowNullableString(row, "listing_title"),
+    reporterDisplayName: rowNullableString(row, "reporter_display_name"),
+    reportedDisplayName: rowNullableString(row, "reported_display_name"),
+  };
+}
+
+function mapVerificationRequest(row: Row): SellerVerificationRequest {
+  return {
+    id: rowString(row, "id"),
+    userId: rowString(row, "user_id"),
+    status: rowString(row, "status", "pending_review") as SellerVerificationRequest["status"],
+    requestType: rowString(
+      row,
+      "request_type",
+      "personal",
+    ) as SellerVerificationRequest["requestType"],
+    legalName: rowString(row, "legal_name"),
+    businessName: rowNullableString(row, "business_name"),
+    documentType: rowNullableString(row, "document_type"),
+    documentPath: rowNullableString(row, "document_path"),
+    adminNote: rowNullableString(row, "admin_note"),
+    reviewedBy: rowNullableString(row, "reviewed_by"),
+    reviewedAt: rowNullableString(row, "reviewed_at"),
+    createdAt: rowString(row, "created_at"),
+    updatedAt: rowString(row, "updated_at"),
+  };
+}
+
+function mapPromotionRequest(row: Row): ListingPromotionRequest {
+  return {
+    id: rowString(row, "id"),
+    listingId: rowString(row, "listing_id"),
+    requesterUserId: rowString(row, "requester_user_id"),
+    promotionType: rowString(
+      row,
+      "promotion_type",
+      "featured_home",
+    ) as ListingPromotionRequest["promotionType"],
+    status: rowString(row, "status", "pending_review") as ListingPromotionRequest["status"],
+    requestedDays: rowNumber(row, "requested_days", 7),
+    startsAt: rowNullableString(row, "starts_at"),
+    endsAt: rowNullableString(row, "ends_at"),
+    paymentMethod: rowNullableString(row, "payment_method"),
+    paymentReference: rowNullableString(row, "payment_reference"),
+    proofPath: rowNullableString(row, "proof_path"),
+    adminNote: rowNullableString(row, "admin_note"),
+    reviewedBy: rowNullableString(row, "reviewed_by"),
+    reviewedAt: rowNullableString(row, "reviewed_at"),
+    createdAt: rowString(row, "created_at"),
+    updatedAt: rowString(row, "updated_at"),
+    listingTitle: rowNullableString(row, "listing_title"),
+  };
+}
+
+function mapPublicSellerSearchResult(row: Row): PublicSellerSearchResult {
+  const firstName = rowNullableString(row, "first_name");
+  const lastName = rowNullableString(row, "last_name");
+  const displayName =
+    rowNullableString(row, "display_name") ||
+    [firstName, lastName].filter(Boolean).join(" ").trim() ||
+    rowNullableString(row, "business_name") ||
+    "معلن على رواجا";
+
+  return {
+    id: rowString(row, "id"),
+    displayName,
+    firstName,
+    lastName,
+    businessName: rowNullableString(row, "business_name"),
+    governorate: rowNullableString(row, "governorate"),
+    bio: rowNullableString(row, "bio"),
+    avatarUrl: rowNullableString(row, "avatar_url"),
+    approvedListingCount: rowNumber(row, "approved_listing_count"),
   };
 }
 
@@ -695,7 +835,7 @@ export async function fetchPublicSellerProfile(
       firstName,
       lastName,
       displayName,
-      verified: false,
+      verified: rowBoolean(profile, "verified", false),
       joinedAt: rowNullableString(profile, "created_at") ?? listings.at(-1)?.createdAt ?? null,
       locationAr:
         rowNullableString(profile, "governorate") ?? firstListing?.governorateNameAr ?? null,
@@ -1376,6 +1516,553 @@ export async function deleteListingImage(
     .delete()
     .eq("id", image.id)
     .eq("listing_id", listingId);
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: null };
+}
+
+export async function startListingConversation(
+  userId: string | null,
+  listingId: string,
+): Promise<ClassifiedsResult<string>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لبدء محادثة." },
+    };
+  }
+
+  if (!listingId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان لبدء المحادثة." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data.rpc("rawaj_start_listing_conversation", {
+    p_listing_id: listingId,
+  });
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: typeof data === "string" ? data : String(data) };
+}
+
+export async function fetchMyConversations(
+  userId: string | null,
+): Promise<ClassifiedsResult<Conversation[]>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض المحادثات." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data.rpc("rawaj_fetch_my_conversations");
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Row[]).map(mapConversation) };
+}
+
+export async function fetchConversationMessages(
+  userId: string | null,
+  conversationId: string,
+): Promise<ClassifiedsResult<ConversationMessage[]>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض الرسائل." },
+    };
+  }
+
+  if (!conversationId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد المحادثة." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("conversation_messages")
+    .select("*")
+    .eq("conversation_id", conversationId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true })
+    .limit(200);
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Row[]).map(mapMessage) };
+}
+
+export async function sendConversationMessage(
+  userId: string | null,
+  conversationId: string,
+  body: string,
+): Promise<ClassifiedsResult<ConversationMessage>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال رسالة." },
+    };
+  }
+
+  const cleanBody = body.trim();
+  if (!conversationId.trim() || cleanBody.length < 1 || cleanBody.length > 2000) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "اكتب رسالة بين 1 و2000 حرف." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("conversation_messages")
+    .insert({
+      conversation_id: conversationId,
+      sender_user_id: userId,
+      body: cleanBody,
+    })
+    .select("*")
+    .single();
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: mapMessage(data as Row) };
+}
+
+export async function markConversationRead(
+  userId: string | null,
+  conversationId: string,
+): Promise<ClassifiedsResult<null>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث المحادثة." },
+    };
+  }
+
+  if (!conversationId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد المحادثة." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { error } = await clientResult.data.rpc("rawaj_mark_conversation_read", {
+    p_conversation_id: conversationId,
+  });
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: null };
+}
+
+export async function searchPublicSellers(
+  query: string,
+  limit = 8,
+): Promise<ClassifiedsResult<PublicSellerSearchResult[]>> {
+  const cleanQuery = query.trim();
+  if (cleanQuery.length < 2) return { ok: true, data: [] };
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data.rpc("search_public_sellers", {
+    p_query: cleanQuery,
+    p_limit: limit,
+  });
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Row[]).map(mapPublicSellerSearchResult) };
+}
+
+export async function createMessageReport(
+  payload: CreateMessageReportPayload,
+): Promise<ClassifiedsResult<MessageReport>> {
+  if (!payload.reporterUserId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول للإبلاغ عن رسالة." },
+    };
+  }
+
+  const reason = payload.reason.trim();
+  const details = cleanOptionalText(payload.details, 1000);
+  if (!payload.messageId.trim() || !payload.conversationId.trim() || reason.length < 3) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "اختر سبباً واضحاً للبلاغ." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("message_reports")
+    .insert({
+      message_id: payload.messageId,
+      conversation_id: payload.conversationId,
+      reporter_user_id: payload.reporterUserId,
+      reported_user_id: payload.reporterUserId,
+      reason,
+      details,
+      status: "new",
+    })
+    .select("*")
+    .single();
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: mapMessageReport(data as Row) };
+}
+
+export async function blockConversationParticipant(
+  payload: BlockConversationPayload,
+): Promise<ClassifiedsResult<null>> {
+  if (!payload.blockerUserId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لحظر مستخدم." },
+    };
+  }
+
+  if (
+    !payload.conversationId.trim() ||
+    !payload.blockedUserId.trim() ||
+    payload.blockedUserId === payload.blockerUserId
+  ) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد المستخدم المطلوب حظره." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { error } = await clientResult.data.from("user_blocks").insert({
+    conversation_id: payload.conversationId,
+    blocker_user_id: payload.blockerUserId,
+    blocked_user_id: payload.blockedUserId,
+    reason: cleanOptionalText(payload.reason, 300),
+  });
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: null };
+}
+
+export async function createSellerVerificationRequest(
+  payload: CreateSellerVerificationRequestPayload,
+): Promise<ClassifiedsResult<SellerVerificationRequest>> {
+  if (!payload.userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لطلب التوثيق." },
+    };
+  }
+
+  const legalName = payload.legalName.trim();
+  if (legalName.length < 3 || legalName.length > 120) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "اكتب الاسم القانوني بين 3 و120 حرفاً." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("seller_verification_requests")
+    .insert({
+      user_id: payload.userId,
+      request_type: payload.requestType,
+      legal_name: legalName,
+      business_name: cleanOptionalText(payload.businessName, 120),
+      document_type: cleanOptionalText(payload.documentType, 80),
+      status: "pending_review",
+    })
+    .select("*")
+    .single();
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: mapVerificationRequest(data as Row) };
+}
+
+export async function fetchMyVerificationRequests(
+  userId: string | null,
+): Promise<ClassifiedsResult<SellerVerificationRequest[]>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض طلبات التوثيق." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("seller_verification_requests")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Row[]).map(mapVerificationRequest) };
+}
+
+export async function adminFetchVerificationRequests(
+  canUseAdminAccess: boolean,
+): Promise<ClassifiedsResult<SellerVerificationRequest[]>> {
+  if (!canUseAdminAccess) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "مراجعة التوثيق متاحة لحساب إداري مخول فقط." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("seller_verification_requests")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Row[]).map(mapVerificationRequest) };
+}
+
+export async function adminModerateVerificationRequest(
+  canUseAdminAccess: boolean,
+  payload: ModerateSellerVerificationRequestPayload,
+): Promise<ClassifiedsResult<null>> {
+  if (!canUseAdminAccess) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "مراجعة التوثيق متاحة لحساب إداري مخول فقط." },
+    };
+  }
+
+  if (!payload.requestId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد طلب التوثيق." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { error } = await clientResult.data
+    .from("seller_verification_requests")
+    .update({
+      status: payload.status,
+      admin_note: cleanOptionalText(payload.adminNote, 1000),
+    })
+    .eq("id", payload.requestId);
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: null };
+}
+
+export async function createListingPromotionRequest(
+  payload: CreateListingPromotionRequestPayload,
+): Promise<ClassifiedsResult<ListingPromotionRequest>> {
+  if (!payload.requesterUserId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لطلب الترويج." },
+    };
+  }
+
+  if (!payload.listingId.trim() || payload.requestedDays < 1 || payload.requestedDays > 90) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "اختر إعلاناً معتمداً ومدة بين 1 و90 يوماً." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("listing_promotion_requests")
+    .insert({
+      listing_id: payload.listingId,
+      requester_user_id: payload.requesterUserId,
+      promotion_type: payload.promotionType,
+      requested_days: payload.requestedDays,
+      payment_method: cleanOptionalText(payload.paymentMethod, 80),
+      payment_reference: cleanOptionalText(payload.paymentReference, 160),
+      status: "pending_review",
+    })
+    .select("*")
+    .single();
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: mapPromotionRequest(data as Row) };
+}
+
+export async function fetchMyPromotionRequests(
+  userId: string | null,
+): Promise<ClassifiedsResult<ListingPromotionRequest[]>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض طلبات الترويج." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("listing_promotion_requests")
+    .select("*, listings(title)")
+    .eq("requester_user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) return { ok: false, error: mapError(error) };
+  return {
+    ok: true,
+    data: ((data ?? []) as Row[]).map((row) =>
+      mapPromotionRequest({
+        ...row,
+        listing_title: rowRecord(row, "listings").title,
+      }),
+    ),
+  };
+}
+
+export async function adminFetchPromotionRequests(
+  canUseAdminAccess: boolean,
+): Promise<ClassifiedsResult<ListingPromotionRequest[]>> {
+  if (!canUseAdminAccess) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "مراجعة الترويج متاحة لحساب إداري مخول فقط." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("listing_promotion_requests")
+    .select("*, listings(title)")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) return { ok: false, error: mapError(error) };
+  return {
+    ok: true,
+    data: ((data ?? []) as Row[]).map((row) =>
+      mapPromotionRequest({
+        ...row,
+        listing_title: rowRecord(row, "listings").title,
+      }),
+    ),
+  };
+}
+
+export async function adminModeratePromotionRequest(
+  canUseAdminAccess: boolean,
+  payload: ModerateListingPromotionRequestPayload,
+): Promise<ClassifiedsResult<null>> {
+  if (!canUseAdminAccess) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "مراجعة الترويج متاحة لحساب إداري مخول فقط." },
+    };
+  }
+
+  if (!payload.requestId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد طلب الترويج." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { error } = await clientResult.data
+    .from("listing_promotion_requests")
+    .update({
+      status: payload.status,
+      admin_note: cleanOptionalText(payload.adminNote, 1000),
+    })
+    .eq("id", payload.requestId);
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: null };
+}
+
+export async function adminFetchMessageReports(
+  canUseAdminAccess: boolean,
+): Promise<ClassifiedsResult<MessageReport[]>> {
+  if (!canUseAdminAccess) {
+    return {
+      ok: false,
+      error: {
+        code: "permission_denied",
+        message: "مراجعة بلاغات الرسائل متاحة لحساب إداري مخول فقط.",
+      },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data.rpc("rawaj_fetch_message_reports_for_admin");
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Row[]).map(mapMessageReport) };
+}
+
+export async function adminModerateMessageReport(
+  canUseAdminAccess: boolean,
+  payload: ModerateMessageReportPayload,
+): Promise<ClassifiedsResult<null>> {
+  if (!canUseAdminAccess) {
+    return {
+      ok: false,
+      error: {
+        code: "permission_denied",
+        message: "مراجعة بلاغات الرسائل متاحة لحساب إداري مخول فقط.",
+      },
+    };
+  }
+
+  if (!payload.reportId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد بلاغ الرسالة." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { error } = await clientResult.data
+    .from("message_reports")
+    .update({
+      status: payload.status,
+      admin_note: cleanOptionalText(payload.adminNote, 1000),
+    })
+    .eq("id", payload.reportId);
+
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: null };
 }

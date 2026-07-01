@@ -206,6 +206,169 @@ export interface ModerateSellerReviewPayload {
   adminNote?: string | null;
 }
 
+export interface ConversationParticipantSummary {
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  governorate: string | null;
+}
+
+export interface Conversation {
+  id: string;
+  listingId: string;
+  listingTitle: string;
+  buyerUserId: string;
+  sellerUserId: string;
+  status: ConversationStatus;
+  otherParticipant: ConversationParticipantSummary;
+  lastMessageAt: string | null;
+  lastMessagePreview: string | null;
+  unreadCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConversationMessage {
+  id: string;
+  conversationId: string;
+  senderUserId: string;
+  body: string;
+  createdAt: string;
+  editedAt: string | null;
+  deletedAt: string | null;
+}
+
+export interface PublicSellerSearchResult {
+  id: string;
+  displayName: string;
+  firstName: string | null;
+  lastName: string | null;
+  businessName: string | null;
+  governorate: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
+  approvedListingCount: number;
+}
+
+export type ConversationStatus = "active" | "archived" | "blocked";
+
+export type MessageReportStatus = "new" | "under_review" | "resolved" | "rejected";
+
+export interface MessageReport {
+  id: string;
+  messageId: string;
+  conversationId: string;
+  reporterUserId: string;
+  reportedUserId: string;
+  reason: string;
+  details: string | null;
+  status: MessageReportStatus;
+  adminNote: string | null;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  messageBody?: string | null;
+  listingId?: string | null;
+  listingTitle?: string | null;
+  reporterDisplayName?: string | null;
+  reportedDisplayName?: string | null;
+}
+
+export interface CreateMessageReportPayload {
+  messageId: string;
+  conversationId: string;
+  reporterUserId: string | null;
+  reason: string;
+  details?: string | null;
+}
+
+export interface ModerateMessageReportPayload {
+  reportId: string;
+  status: MessageReportStatus;
+  adminNote?: string | null;
+}
+
+export interface BlockConversationPayload {
+  conversationId: string;
+  blockerUserId: string | null;
+  blockedUserId: string;
+  reason?: string | null;
+}
+
+export type VerificationRequestStatus = "pending_review" | "approved" | "rejected";
+export type VerificationRequestType = "personal" | "business";
+
+export interface SellerVerificationRequest {
+  id: string;
+  userId: string;
+  status: VerificationRequestStatus;
+  requestType: VerificationRequestType;
+  legalName: string;
+  businessName: string | null;
+  documentType: string | null;
+  documentPath: string | null;
+  adminNote: string | null;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSellerVerificationRequestPayload {
+  userId: string | null;
+  requestType: VerificationRequestType;
+  legalName: string;
+  businessName?: string | null;
+  documentType?: string | null;
+}
+
+export interface ModerateSellerVerificationRequestPayload {
+  requestId: string;
+  status: Extract<VerificationRequestStatus, "approved" | "rejected">;
+  adminNote?: string | null;
+}
+
+export type PromotionRequestStatus =
+  "pending_review" | "approved" | "rejected" | "expired" | "cancelled";
+
+export type PromotionType = "featured_home" | "highlighted" | "urgent" | "top_category";
+
+export interface ListingPromotionRequest {
+  id: string;
+  listingId: string;
+  requesterUserId: string;
+  promotionType: PromotionType;
+  status: PromotionRequestStatus;
+  requestedDays: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  paymentMethod: string | null;
+  paymentReference: string | null;
+  proofPath: string | null;
+  adminNote: string | null;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  listingTitle?: string | null;
+}
+
+export interface CreateListingPromotionRequestPayload {
+  listingId: string;
+  requesterUserId: string | null;
+  promotionType: PromotionType;
+  requestedDays: number;
+  paymentMethod?: string | null;
+  paymentReference?: string | null;
+}
+
+export interface ModerateListingPromotionRequestPayload {
+  requestId: string;
+  status: Extract<PromotionRequestStatus, "approved" | "rejected">;
+  adminNote?: string | null;
+}
+
 export interface ListingReport {
   id: string;
   listingId: string;

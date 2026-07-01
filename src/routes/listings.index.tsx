@@ -8,12 +8,14 @@ import {
   fetchPublicCategories,
   fetchPublicGovernorates,
   fetchPublicListings,
+  searchPublicSellers,
 } from "@/lib/classifieds-api";
 import type {
   ClassifiedCategory,
   ClassifiedGovernorate,
   ClassifiedListing,
   ClassifiedsError,
+  PublicSellerSearchResult,
 } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -51,8 +53,10 @@ function ListingsPage() {
   const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
   const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
   const [items, setItems] = useState<ClassifiedListing[]>([]);
+  const [sellerResults, setSellerResults] = useState<PublicSellerSearchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
+  const [sellerSearchError, setSellerSearchError] = useState<ClassifiedsError | null>(null);
 
   const selectedCategory = useMemo(
     () =>
@@ -115,12 +119,15 @@ function ListingsPage() {
       setLoading(true);
       setError(null);
 
-      const result = await fetchPublicListings({
-        categoryId: selectedCategory?.id,
-        governorateId: govId || undefined,
-        query: q,
-        sort,
-      });
+      const [result, sellerResult] = await Promise.all([
+        fetchPublicListings({
+          categoryId: selectedCategory?.id,
+          governorateId: govId || undefined,
+          query: q,
+          sort,
+        }),
+        searchPublicSellers(q),
+      ]);
 
       if (cancelled) return;
 
@@ -129,6 +136,14 @@ function ListingsPage() {
         setItems([]);
       } else {
         setItems(result.data);
+      }
+
+      if (sellerResult.ok) {
+        setSellerResults(sellerResult.data);
+        setSellerSearchError(null);
+      } else {
+        setSellerResults([]);
+        setSellerSearchError(sellerResult.error);
       }
 
       setLoading(false);
@@ -249,6 +264,28 @@ function ListingsPage() {
             </Link>
           )}
         </div>
+
+        {!loading && (sellerResults.length > 0 || sellerSearchError) && (
+          <section className="mt-5">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h2 className="text-sm font-extrabold">{text("المعلنون", "Advertisers")}</h2>
+              <span className="text-[11px] text-muted-foreground">
+                {text("نتائج عامة آمنة", "Safe public results")}
+              </span>
+            </div>
+            {sellerSearchError ? (
+              <p className="rounded-xl bg-muted-surface p-3 text-xs text-muted-foreground">
+                {sellerSearchError.message}
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {sellerResults.map((seller) => (
+                  <SellerSearchCard key={seller.id} seller={seller} />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         {loading ? (
           <StateCard
@@ -375,6 +412,49 @@ function RealListingCard({ listing }: { listing: ClassifiedListing }) {
           </span>
         </div>
       </div>
+    </Link>
+  );
+}
+
+function SellerSearchCard({ seller }: { seller: PublicSellerSearchResult }) {
+  const { text } = useUiPreferences();
+  const title = seller.businessName || seller.displayName;
+
+  return (
+    <Link
+      to="/seller/$id"
+      params={{ id: seller.id }}
+      className="flex items-center gap-3 rounded-2xl bg-card p-3 transition hairline hover:bg-muted-surface"
+    >
+      <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-muted-surface text-sm font-bold text-primary">
+        {seller.avatarUrl ? (
+          <img
+            src={seller.avatarUrl}
+            alt={title}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          title.slice(0, 1)
+        )}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-extrabold">{title}</span>
+        {seller.businessName && seller.displayName !== seller.businessName && (
+          <span className="block truncate text-[11px] text-muted-foreground">
+            {seller.displayName}
+          </span>
+        )}
+        <span className="mt-1 block truncate text-[11px] text-muted-foreground">
+          {[
+            seller.governorate,
+            text(`${seller.approvedListingCount} إعلان`, `${seller.approvedListingCount} listings`),
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </span>
+      </span>
     </Link>
   );
 }

@@ -6,6 +6,7 @@ import {
   adminModerateListing,
   fetchListingImages,
 } from "@/lib/classifieds-api";
+import { categoryDetailDisplayRows, detectCategoryFieldKind } from "@/lib/category-fields";
 import type { ClassifiedListing, ClassifiedsError, ListingImage } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName, uiLabel } from "@/lib/i18n";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
@@ -225,9 +226,36 @@ function PendingListingDetails({
 }) {
   const { language, text } = useUiPreferences();
   const hiddenDetailKeys = new Set(["phone", "whatsapp", "content_flags"]);
+  const categoryRows = categoryDetailDisplayRows(
+    detectCategoryFieldKind(null, listing),
+    listing.details,
+    text,
+  );
   const detailsEntries = Object.entries(listing.details).filter(
     ([key, value]) =>
-      !hiddenDetailKeys.has(key) && value !== undefined && value !== null && value !== "",
+      !hiddenDetailKeys.has(key) &&
+      !categoryRows.some(([label]) => label === key) &&
+      ![
+        "property_type",
+        "listing_purpose",
+        "bedrooms",
+        "bathrooms",
+        "area_sqm",
+        "floor",
+        "furnished",
+        "parking",
+        "make",
+        "model",
+        "year",
+        "mileage_km",
+        "fuel_type",
+        "transmission",
+        "vehicle_condition",
+        "color",
+      ].includes(key) &&
+      value !== undefined &&
+      value !== null &&
+      value !== "",
   );
   const phone = detailString(listing.details, "phone");
   const whatsapp = detailString(listing.details, "whatsapp");
@@ -297,10 +325,13 @@ function PendingListingDetails({
       )}
       <div className="mt-3">
         <p className="mb-1 text-xs font-bold">{text("تفاصيل إضافية", "Additional details")}</p>
-        {detailsEntries.length === 0 ? (
+        {categoryRows.length === 0 && detailsEntries.length === 0 ? (
           <p className="rounded-lg bg-card p-3 text-xs text-muted-foreground">-</p>
         ) : (
           <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {categoryRows.map(([label, value]) => (
+              <DetailItem key={label} label={label} value={value} />
+            ))}
             {detailsEntries.map(([key, value]) => (
               <DetailItem key={key} label={key} value={safeDetailValue(value)} />
             ))}

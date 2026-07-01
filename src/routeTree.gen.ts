@@ -30,11 +30,13 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SellerIdRouteImport } from './routes/seller.$id'
 import { Route as ProfileListingsRouteImport } from './routes/profile/listings'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
+import { Route as AdminVerificationsRouteImport } from './routes/admin.verifications'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminReviewsRouteImport } from './routes/admin.reviews'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminPromotionsRouteImport } from './routes/admin.promotions'
 import { Route as AdminPendingRouteImport } from './routes/admin.pending'
+import { Route as AdminMessageReportsRouteImport } from './routes/admin.message-reports'
 import { Route as ProfileListingsIdRouteImport } from './routes/profile/listings.$id'
 
 const TermsRoute = TermsRouteImport.update({
@@ -142,6 +144,11 @@ const ListingsIdRoute = ListingsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ListingsRoute,
 } as any)
+const AdminVerificationsRoute = AdminVerificationsRouteImport.update({
+  id: '/verifications',
+  path: '/verifications',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -167,6 +174,11 @@ const AdminPendingRoute = AdminPendingRouteImport.update({
   path: '/pending',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMessageReportsRoute = AdminMessageReportsRouteImport.update({
+  id: '/message-reports',
+  path: '/message-reports',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ProfileListingsIdRoute = ProfileListingsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -190,11 +202,13 @@ export interface FileRoutesByFullPath {
   '/saved-searches': typeof SavedSearchesRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/verifications': typeof AdminVerificationsRoute
   '/listings/$id': typeof ListingsIdRoute
   '/profile/listings': typeof ProfileListingsRouteWithChildren
   '/seller/$id': typeof SellerIdRoute
@@ -217,11 +231,13 @@ export interface FileRoutesByTo {
   '/saved-searches': typeof SavedSearchesRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/verifications': typeof AdminVerificationsRoute
   '/listings/$id': typeof ListingsIdRoute
   '/profile/listings': typeof ProfileListingsRouteWithChildren
   '/seller/$id': typeof SellerIdRoute
@@ -247,11 +263,13 @@ export interface FileRoutesById {
   '/saved-searches': typeof SavedSearchesRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/verifications': typeof AdminVerificationsRoute
   '/listings/$id': typeof ListingsIdRoute
   '/profile/listings': typeof ProfileListingsRouteWithChildren
   '/seller/$id': typeof SellerIdRoute
@@ -278,11 +296,13 @@ export interface FileRouteTypes {
     | '/saved-searches'
     | '/support'
     | '/terms'
+    | '/admin/message-reports'
     | '/admin/pending'
     | '/admin/promotions'
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/users'
+    | '/admin/verifications'
     | '/listings/$id'
     | '/profile/listings'
     | '/seller/$id'
@@ -305,11 +325,13 @@ export interface FileRouteTypes {
     | '/saved-searches'
     | '/support'
     | '/terms'
+    | '/admin/message-reports'
     | '/admin/pending'
     | '/admin/promotions'
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/users'
+    | '/admin/verifications'
     | '/listings/$id'
     | '/profile/listings'
     | '/seller/$id'
@@ -334,11 +356,13 @@ export interface FileRouteTypes {
     | '/saved-searches'
     | '/support'
     | '/terms'
+    | '/admin/message-reports'
     | '/admin/pending'
     | '/admin/promotions'
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/users'
+    | '/admin/verifications'
     | '/listings/$id'
     | '/profile/listings'
     | '/seller/$id'
@@ -516,6 +540,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ListingsIdRouteImport
       parentRoute: typeof ListingsRoute
     }
+    '/admin/verifications': {
+      id: '/admin/verifications'
+      path: '/verifications'
+      fullPath: '/admin/verifications'
+      preLoaderRoute: typeof AdminVerificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/users'
@@ -551,6 +582,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPendingRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/message-reports': {
+      id: '/admin/message-reports'
+      path: '/message-reports'
+      fullPath: '/admin/message-reports'
+      preLoaderRoute: typeof AdminMessageReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/profile/listings/$id': {
       id: '/profile/listings/$id'
       path: '/$id'
@@ -562,20 +600,24 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminMessageReportsRoute: typeof AdminMessageReportsRoute
   AdminPendingRoute: typeof AdminPendingRoute
   AdminPromotionsRoute: typeof AdminPromotionsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReviewsRoute: typeof AdminReviewsRoute
   AdminUsersRoute: typeof AdminUsersRoute
+  AdminVerificationsRoute: typeof AdminVerificationsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminMessageReportsRoute: AdminMessageReportsRoute,
   AdminPendingRoute: AdminPendingRoute,
   AdminPromotionsRoute: AdminPromotionsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminReviewsRoute: AdminReviewsRoute,
   AdminUsersRoute: AdminUsersRoute,
+  AdminVerificationsRoute: AdminVerificationsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

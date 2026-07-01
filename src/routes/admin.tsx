@@ -1,5 +1,15 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { FileCheck, Flag, LayoutDashboard, Lock, Sparkles, Star, Users } from "lucide-react";
+import {
+  BadgeCheck,
+  FileCheck,
+  Flag,
+  LayoutDashboard,
+  Lock,
+  MessageSquareWarning,
+  Sparkles,
+  Star,
+  Users,
+} from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { uiLabel } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -15,6 +25,8 @@ const tabs = [
   { to: "/admin/pending", labelAr: "إعلانات للمراجعة", icon: FileCheck },
   { to: "/admin/reviews", labelAr: "تقييمات البائعين", icon: Star },
   { to: "/admin/reports", labelAr: "البلاغات", icon: Flag },
+  { to: "/admin/message-reports", labelAr: "بلاغات الرسائل", icon: MessageSquareWarning },
+  { to: "/admin/verifications", labelAr: "طلبات التوثيق", icon: BadgeCheck },
   { to: "/admin/users", labelAr: "المستخدمون والصلاحيات", icon: Users },
   { to: "/admin/promotions", labelAr: "طلبات الترويج", icon: Sparkles },
 ];
