@@ -1,7 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronDown, LifeBuoy, ShieldAlert } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { createSupportRequest, fetchMySupportRequests } from "@/lib/classifieds-api";
+import type { ClassifiedsError, SupportRequest, SupportRequestType } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
+import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/support")({
   head: () => ({ meta: [{ title: "الدعم | رواج" }] }),
@@ -58,6 +62,61 @@ const faqs = [
 
 function SupportPage() {
   const { language, text } = useUiPreferences();
+  const auth = useAuth();
+  const [requestType, setRequestType] = useState<SupportRequestType>("technical_issue");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [relatedListingId, setRelatedListingId] = useState("");
+  const [requests, setRequests] = useState<SupportRequest[]>([]);
+  const [requestsError, setRequestsError] = useState<ClassifiedsError | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (auth.status !== "signedIn") return;
+    let cancelled = false;
+
+    async function loadRequests() {
+      setRequestsError(null);
+      const result = await fetchMySupportRequests(auth.profile?.id ?? null);
+      if (cancelled) return;
+      if (result.ok) setRequests(result.data);
+      else {
+        setRequests([]);
+        setRequestsError(result.error);
+      }
+    }
+
+    void loadRequests();
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.profile?.id, auth.status]);
+
+  async function submitRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setNotice("");
+    setSubmitting(true);
+    const result = await createSupportRequest(auth.profile?.id ?? null, {
+      type: requestType,
+      subject,
+      message,
+      relatedListingId: relatedListingId || null,
+    });
+    setSubmitting(false);
+
+    if (!result.ok) {
+      setNotice(result.error.message);
+      return;
+    }
+
+    setRequests((current) => [result.data, ...current]);
+    setSubject("");
+    setMessage("");
+    setRelatedListingId("");
+    setRequestType("technical_issue");
+    setNotice(text("تم إرسال طلب الدعم للمراجعة.", "Support request submitted for review."));
+  }
 
   return (
     <>
@@ -72,13 +131,127 @@ function SupportPage() {
               </h2>
               <p className="mt-1 text-xs leading-6 text-primary-foreground/80">
                 {text(
-                  "لا يتم إنشاء تذكرة محفوظة من هذه الصفحة. اجمع التفاصيل المهمة ثم استخدم البلاغ من صفحة الإعلان عند ارتباط الطلب بإعلان محدد.",
-                  "This page does not create a stored ticket. Gather the important details, then use the report action on the listing page when the request is tied to a specific listing.",
+                  "يمكن للمستخدم المسجل إرسال طلب دعم محفوظ من هذه الصفحة. عند ارتباط المشكلة بإعلان محدد، أضف رقم الإعلان أو استخدم زر البلاغ داخل صفحة الإعلان.",
+                  "Signed-in users can submit a stored support request from this page. When the issue is tied to a specific listing, add the listing ID or use the report button on the listing page.",
                 )}
               </p>
             </div>
           </div>
         </section>
+
+        <section className="rounded-2xl bg-card p-4 hairline">
+          <h3 className="text-sm font-extrabold">
+            {text("إرسال طلب دعم حقيقي", "Submit a real support request")}
+          </h3>
+          {auth.status === "signedIn" ? (
+            <form onSubmit={(event) => void submitRequest(event)} className="mt-3 space-y-3">
+              <label className="block">
+                <span className="text-xs font-bold text-muted-foreground">
+                  {text("نوع الطلب", "Request type")}
+                </span>
+                <select
+                  value={requestType}
+                  onChange={(event) => setRequestType(event.target.value as SupportRequestType)}
+                  className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
+                >
+                  <option value="complaint">{text("شكوى", "Complaint")}</option>
+                  <option value="suggestion">{text("اقتراح", "Suggestion")}</option>
+                  <option value="technical_issue">{text("مشكلة تقنية", "Technical issue")}</option>
+                  <option value="abuse_report">{text("إساءة أو مخالفة", "Abuse report")}</option>
+                  <option value="other">{text("أخرى", "Other")}</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-xs font-bold text-muted-foreground">
+                  {text("العنوان", "Subject")}
+                </span>
+                <input
+                  value={subject}
+                  onChange={(event) => setSubject(event.target.value)}
+                  maxLength={160}
+                  className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-bold text-muted-foreground">
+                  {text("رقم الإعلان المرتبط اختياري", "Related listing ID, optional")}
+                </span>
+                <input
+                  value={relatedListingId}
+                  onChange={(event) => setRelatedListingId(event.target.value)}
+                  className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-bold text-muted-foreground">
+                  {text("الرسالة", "Message")}
+                </span>
+                <textarea
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                  maxLength={3000}
+                  rows={5}
+                  className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground disabled:opacity-60"
+              >
+                {submitting
+                  ? text("جار الإرسال", "Submitting")
+                  : text("إرسال الطلب", "Submit request")}
+              </button>
+              {notice && (
+                <p className="rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground">
+                  {notice}
+                </p>
+              )}
+            </form>
+          ) : (
+            <p className="mt-2 text-xs leading-6 text-muted-foreground">
+              {text(
+                "سجل الدخول لإرسال طلب دعم محفوظ ومتابعة حالته.",
+                "Log in to submit a stored support request and track its status.",
+              )}
+            </p>
+          )}
+        </section>
+
+        {auth.status === "signedIn" && (
+          <section className="rounded-2xl bg-card p-4 hairline">
+            <h3 className="text-sm font-extrabold">{text("طلباتي", "My requests")}</h3>
+            {requestsError ? (
+              <p className="mt-2 text-xs text-muted-foreground">{requestsError.message}</p>
+            ) : requests.length === 0 ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {text("لا توجد طلبات دعم محفوظة حتى الآن.", "No stored support requests yet.")}
+              </p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {requests.slice(0, 5).map((request) => (
+                  <article key={request.id} className="rounded-xl bg-muted-surface p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h4 className="text-xs font-extrabold">{request.subject}</h4>
+                      <span className="rounded-md bg-card px-2 py-0.5 text-[10px] font-bold hairline">
+                        {supportStatusLabel(request.status, language)}
+                      </span>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
+                      {request.message}
+                    </p>
+                    {request.adminNote && (
+                      <p className="mt-2 rounded-lg bg-card p-2 text-[11px] leading-5 text-foreground hairline">
+                        {request.adminNote}
+                      </p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         <section>
           <h3 className="mb-3 text-sm font-extrabold">{text("مواضيع المساعدة", "Help topics")}</h3>
@@ -154,4 +327,19 @@ function SupportPage() {
 
 function SupportDetail({ label }: { label: string }) {
   return <div className="rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold">{label}</div>;
+}
+
+function supportStatusLabel(status: SupportRequest["status"], language: "ar" | "en") {
+  switch (status) {
+    case "new":
+      return language === "ar" ? "جديد" : "New";
+    case "under_review":
+      return language === "ar" ? "قيد المراجعة" : "Under review";
+    case "resolved":
+      return language === "ar" ? "تم الحل" : "Resolved";
+    case "rejected":
+      return language === "ar" ? "مرفوض" : "Rejected";
+    default:
+      return status;
+  }
 }

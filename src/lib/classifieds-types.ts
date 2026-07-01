@@ -34,6 +34,11 @@ export type ListingReportType =
 
 export type ListingReportStatus = "new" | "under_review" | "resolved" | "rejected";
 
+export type SupportRequestType =
+  "complaint" | "suggestion" | "technical_issue" | "abuse_report" | "other";
+
+export type SupportRequestStatus = "new" | "under_review" | "resolved" | "rejected";
+
 export interface ClassifiedCategory {
   id: string;
   slug: string;
@@ -149,6 +154,36 @@ export interface ListingReport {
   resolvedAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface SupportRequest {
+  id: string;
+  userId: string;
+  type: SupportRequestType;
+  status: SupportRequestStatus;
+  subject: string;
+  message: string;
+  relatedListingId: string | null;
+  relatedReportId: string | null;
+  adminNote: string | null;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSupportRequestPayload {
+  type: SupportRequestType;
+  subject: string;
+  message: string;
+  relatedListingId?: string | null;
+  relatedReportId?: string | null;
+}
+
+export interface ModerateSupportRequestPayload {
+  requestId: string;
+  status: SupportRequestStatus;
+  adminNote?: string | null;
 }
 
 export interface NotificationItem {
