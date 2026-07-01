@@ -13,6 +13,7 @@ import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin/pending")({
+  head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
   component: PendingPage,
 });
 

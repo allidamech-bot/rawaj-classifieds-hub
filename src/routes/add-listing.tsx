@@ -265,21 +265,6 @@ function AddListingPage() {
     );
   }
 
-  if (!auth.emailConfirmed) {
-    return (
-      <PageState
-        title={text("أضف إعلاناً", "Post a listing")}
-        heading={text("تأكيد البريد مطلوب", "Email confirmation required")}
-        body={text(
-          "يجب تأكيد بريدك الإلكتروني قبل إرسال إعلان.",
-          "Please confirm your email before submitting a listing.",
-        )}
-        actionLabel={text("العودة للرئيسية", "Back to home")}
-        actionTo="/"
-      />
-    );
-  }
-
   return (
     <>
       <PageHeader title={text("أضف إعلاناً", "Post a listing")} />

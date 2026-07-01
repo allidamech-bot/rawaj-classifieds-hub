@@ -3,6 +3,7 @@ import { ShieldAlert, UserCog, Users } from "lucide-react";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/admin/users")({
+  head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
   component: UsersPage,
 });
 

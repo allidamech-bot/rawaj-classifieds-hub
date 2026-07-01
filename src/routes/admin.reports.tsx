@@ -8,6 +8,7 @@ import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin/reports")({
+  head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
   component: ReportsPage,
 });
 
