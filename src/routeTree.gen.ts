@@ -28,6 +28,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ListingsIndexRouteImport } from './routes/listings.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SellerIdRouteImport } from './routes/seller.$id'
+import { Route as ProfileListingsRouteImport } from './routes/profile/listings'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
@@ -130,6 +131,11 @@ const SellerIdRoute = SellerIdRouteImport.update({
   path: '/seller/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileListingsRoute = ProfileListingsRouteImport.update({
+  id: '/listings',
+  path: '/listings',
+  getParentRoute: () => ProfileRoute,
+} as any)
 const ListingsIdRoute = ListingsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -156,9 +162,9 @@ const AdminPendingRoute = AdminPendingRouteImport.update({
   getParentRoute: () => AdminRoute,
 } as any)
 const ProfileListingsIdRoute = ProfileListingsIdRouteImport.update({
-  id: '/listings/$id',
-  path: '/listings/$id',
-  getParentRoute: () => ProfileRoute,
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ProfileListingsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -183,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/admin/reports': typeof AdminReportsRoute
   '/admin/users': typeof AdminUsersRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/profile/listings': typeof ProfileListingsRouteWithChildren
   '/seller/$id': typeof SellerIdRoute
   '/admin/': typeof AdminIndexRoute
   '/listings/': typeof ListingsIndexRoute
@@ -208,6 +215,7 @@ export interface FileRoutesByTo {
   '/admin/reports': typeof AdminReportsRoute
   '/admin/users': typeof AdminUsersRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/profile/listings': typeof ProfileListingsRouteWithChildren
   '/seller/$id': typeof SellerIdRoute
   '/admin': typeof AdminIndexRoute
   '/listings': typeof ListingsIndexRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/admin/reports': typeof AdminReportsRoute
   '/admin/users': typeof AdminUsersRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/profile/listings': typeof ProfileListingsRouteWithChildren
   '/seller/$id': typeof SellerIdRoute
   '/admin/': typeof AdminIndexRoute
   '/listings/': typeof ListingsIndexRoute
@@ -265,6 +274,7 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/users'
     | '/listings/$id'
+    | '/profile/listings'
     | '/seller/$id'
     | '/admin/'
     | '/listings/'
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/users'
     | '/listings/$id'
+    | '/profile/listings'
     | '/seller/$id'
     | '/admin'
     | '/listings'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/users'
     | '/listings/$id'
+    | '/profile/listings'
     | '/seller/$id'
     | '/admin/'
     | '/listings/'
@@ -478,6 +490,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SellerIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile/listings': {
+      id: '/profile/listings'
+      path: '/listings'
+      fullPath: '/profile/listings'
+      preLoaderRoute: typeof ProfileListingsRouteImport
+      parentRoute: typeof ProfileRoute
+    }
     '/listings/$id': {
       id: '/listings/$id'
       path: '/$id'
@@ -515,10 +534,10 @@ declare module '@tanstack/react-router' {
     }
     '/profile/listings/$id': {
       id: '/profile/listings/$id'
-      path: '/listings/$id'
+      path: '/$id'
       fullPath: '/profile/listings/$id'
       preLoaderRoute: typeof ProfileListingsIdRouteImport
-      parentRoute: typeof ProfileRoute
+      parentRoute: typeof ProfileListingsRoute
     }
   }
 }
@@ -555,12 +574,24 @@ const ListingsRouteWithChildren = ListingsRoute._addFileChildren(
   ListingsRouteChildren,
 )
 
-interface ProfileRouteChildren {
+interface ProfileListingsRouteChildren {
   ProfileListingsIdRoute: typeof ProfileListingsIdRoute
 }
 
-const ProfileRouteChildren: ProfileRouteChildren = {
+const ProfileListingsRouteChildren: ProfileListingsRouteChildren = {
   ProfileListingsIdRoute: ProfileListingsIdRoute,
+}
+
+const ProfileListingsRouteWithChildren = ProfileListingsRoute._addFileChildren(
+  ProfileListingsRouteChildren,
+)
+
+interface ProfileRouteChildren {
+  ProfileListingsRoute: typeof ProfileListingsRouteWithChildren
+}
+
+const ProfileRouteChildren: ProfileRouteChildren = {
+  ProfileListingsRoute: ProfileListingsRouteWithChildren,
 }
 
 const ProfileRouteWithChildren =

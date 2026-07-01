@@ -39,7 +39,7 @@ export const Route = createFileRoute("/profile")({
 });
 
 const accountMenu = [
-  { to: "/profile", labelAr: "إعلاناتي", labelEn: "My listings", icon: FileSpreadsheet },
+  { to: "/profile/listings", labelAr: "إعلاناتي", labelEn: "My listings", icon: FileSpreadsheet },
   { to: "/add-listing", labelAr: "إضافة إعلان", labelEn: "Post listing", icon: Plus },
   { to: "/favorites", labelAr: "المفضلة", labelEn: "Favorites", icon: Heart },
   {
