@@ -13,11 +13,18 @@ import type {
   ListingPromotionRequest,
   PromotionType,
 } from "@/lib/classifieds-types";
+import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/promotion")({
-  head: () => ({ meta: [{ title: "ترويج إعلان | رواج" }] }),
+  head: () =>
+    createSeo({
+      title: "طلب ترويج إعلان | RAWAJ / رواج",
+      description:
+        "اطلب ترويج إعلان معتمد تملكه على رواج. طلبات الترويج تحفظ كطلبات قيد المراجعة ولا توجد معالجة دفع آلية داخل المنصة.",
+      path: "/promotion",
+    }),
   component: PromotionPage,
 });
 

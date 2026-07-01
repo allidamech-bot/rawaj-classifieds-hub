@@ -1,15 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import {
-  BadgeCheck,
-  Clock,
-  MapPin,
-  Plus,
-  Search,
-  ShieldAlert,
-  Sparkles,
-  type LucideIcon,
-} from "lucide-react";
+import { Clock, MapPin, Plus, Search, ShieldAlert, Sparkles, type LucideIcon } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -25,11 +16,12 @@ import type {
   ClassifiedsError,
 } from "@/lib/classifieds-types";
 import { categoryHint, categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
-const HOME_TITLE = "رواج | سوق سوريا المجاني للإعلانات";
+const HOME_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
 const HOME_DESCRIPTION =
-  "سوق إعلانات مبوبة مجاني لسوريا. بيع واشتر سيارات، عقارات، موبايلات، وظائف وخدمات حسب المحافظة بسهولة وبدون تعقيد.";
+  "سوق إعلانات مبوبة في سوريا لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة آمنة ومنظمة.";
 
 type QuickFilter = {
   id: string;
@@ -40,16 +32,7 @@ type QuickFilter = {
 };
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: HOME_TITLE },
-      { name: "description", content: HOME_DESCRIPTION },
-      { property: "og:title", content: HOME_TITLE },
-      { property: "og:description", content: HOME_DESCRIPTION },
-      { name: "twitter:title", content: HOME_TITLE },
-      { name: "twitter:description", content: HOME_DESCRIPTION },
-    ],
-  }),
+  head: () => createSeo({ title: HOME_TITLE, description: HOME_DESCRIPTION, path: "/" }),
   component: HomePage,
 });
 
@@ -295,7 +278,6 @@ function HomePage() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-1">
                             <span className="truncate text-sm font-bold">{seller.name}</span>
-                            <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-emerald-trust" />
                           </div>
                           <div className="mt-0.5 text-[11px] text-muted-foreground">
                             {text(`${seller.count} إعلان`, `${seller.count} listings`)}

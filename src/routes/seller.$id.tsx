@@ -6,6 +6,7 @@ import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { createSellerReview, fetchPublicSellerProfile } from "@/lib/classifieds-api";
 import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import { absoluteUrl, createSeo, jsonLdScript, plainText } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -24,9 +25,19 @@ export const Route = createFileRoute("/seller/$id")({
     />
   ),
   errorComponent: ({ reset }) => <SellerError reset={reset} />,
-  head: ({ loaderData }) => ({
-    meta: [{ title: loaderData ? `${loaderData.displayName} | رواج` : "بائع | رواج" }],
-  }),
+  head: ({ loaderData }) =>
+    createSeo({
+      title: loaderData
+        ? `${loaderData.businessName || loaderData.displayName} | RAWAJ / رواج`
+        : "بائع غير متاح | RAWAJ / رواج",
+      description: loaderData
+        ? sellerSeoDescription(loaderData)
+        : "ملف البائع غير متاح للعرض العام على رواج.",
+      path: loaderData ? `/seller/${loaderData.id}` : "/listings",
+      type: "profile",
+      image: loaderData?.avatarUrl ?? loaderData?.coverUrl ?? null,
+      noindex: !loaderData,
+    }),
   component: SellerPage,
 });
 
@@ -112,10 +123,39 @@ function SellerPage() {
               )}
             </p>
           </section>
+          <script {...jsonLdScript(buildSellerStructuredData(seller))} />
         </div>
       </main>
     </div>
   );
+}
+
+function sellerSeoDescription(seller: PublicSellerProfile) {
+  const parts = [
+    plainText(seller.bio, 100),
+    seller.locationAr ? `الموقع: ${seller.locationAr}` : null,
+    `${seller.approvedListingCount} إعلان معتمد`,
+    seller.verified ? "بائع موثق بعد مراجعة الإدارة" : null,
+  ].filter(Boolean);
+
+  return plainText(parts.join("، "), 160);
+}
+
+function buildSellerStructuredData(seller: PublicSellerProfile) {
+  const data: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": seller.businessName ? "Organization" : "Person",
+    name: seller.businessName || seller.displayName,
+    url: absoluteUrl(`/seller/${seller.id}`),
+    description: sellerSeoDescription(seller),
+    areaServed: seller.locationAr ?? "سوريا",
+  };
+
+  if (seller.avatarUrl || seller.coverUrl) {
+    data.image = absoluteUrl(seller.avatarUrl ?? seller.coverUrl ?? "");
+  }
+
+  return data;
 }
 
 function SellerHeader({ seller }: { seller: PublicSellerProfile }) {

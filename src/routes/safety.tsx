@@ -1,10 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ShieldAlert, ShoppingCart, Store, CreditCard, Flag } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { createSeo } from "@/lib/seo";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/safety")({
-  head: () => ({ meta: [{ title: "نصائح الأمان | رَوَاج" }] }),
+  head: () =>
+    createSeo({
+      title: "نصائح الأمان والتعامل الآمن | RAWAJ / رواج",
+      description:
+        "إرشادات رواج للتعامل الآمن عند بيع وشراء الإعلانات المبوبة في سوريا، مع نصائح للمعاينة والدفع والتبليغ عن المخالفات.",
+      path: "/safety",
+    }),
   component: SafetyPage,
 });
 
@@ -93,7 +100,7 @@ function SafetyPage() {
         ))}
 
         <p className="text-center text-xs text-muted-foreground">
-          {text("هل تحتاج مساعدة فورية؟", "Need help?")}{" "}
+          {text("هل تحتاج مساعدة؟", "Need help?")}{" "}
           <Link to="/support" className="font-bold text-primary underline-offset-2 hover:underline">
             {text("تواصل مع الدعم", "Contact support")}
           </Link>

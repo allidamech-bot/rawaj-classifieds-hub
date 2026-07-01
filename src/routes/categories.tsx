@@ -15,15 +15,17 @@ import type {
   ClassifiedSubcategory,
 } from "@/lib/classifieds-types";
 import { categoryHint, categoryName } from "@/lib/i18n";
+import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/categories")({
-  head: () => ({
-    meta: [
-      { title: "الأقسام | رواج" },
-      { name: "description", content: "تصفح جميع أقسام السوق السوري على رواج." },
-    ],
-  }),
+  head: () =>
+    createSeo({
+      title: "أقسام الإعلانات | RAWAJ / رواج",
+      description:
+        "تصفح أقسام رواج للإعلانات المبوبة في سوريا، من العقارات والسيارات إلى الإلكترونيات والخدمات والوظائف.",
+      path: "/categories",
+    }),
   component: CategoriesPage,
 });
 

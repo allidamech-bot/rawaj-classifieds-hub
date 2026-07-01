@@ -13,12 +13,13 @@ import { BottomNav } from "@/components/BottomNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AuthProvider } from "@/lib/auth";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
+import { createSeo } from "@/lib/seo";
 import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
 import appCss from "../styles.css?url";
 
-const ROOT_TITLE = "رَوَاج | سوق سوريا المجاني للإعلانات";
+const ROOT_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
 const ROOT_DESCRIPTION =
-  "سوق إعلانات مبوبة مجاني لسوريا. بيع واشتري سيارات، عقارات، موبايلات، وظائف وخدمات حسب المحافظة بسهولة وبدون تعقيد.";
+  "سوق إعلانات مبوبة في سوريا لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة آمنة ومنظمة.";
 
 function NotFoundComponent() {
   const { text } = useUiPreferences();
@@ -95,18 +96,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#101722" },
-      { title: ROOT_TITLE },
-      { name: "description", content: ROOT_DESCRIPTION },
       { name: "author", content: "RAWAJ" },
-      { property: "og:title", content: ROOT_TITLE },
-      { property: "og:description", content: ROOT_DESCRIPTION },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: ROOT_TITLE },
-      { name: "twitter:description", content: ROOT_DESCRIPTION },
+      ...createSeo({ title: ROOT_TITLE, description: ROOT_DESCRIPTION }).meta,
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/favicon.ico" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {

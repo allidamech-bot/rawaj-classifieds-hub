@@ -18,6 +18,7 @@ import type {
   PublicSellerSearchResult,
 } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 const searchSchema = z.object({
@@ -29,15 +30,13 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/listings/")({
   validateSearch: searchSchema,
-  head: () => ({
-    meta: [
-      { title: "تصفح الإعلانات | رواج" },
-      {
-        name: "description",
-        content: "نتائج البحث والإعلانات المعتمدة على رواج، السوق السوري المجاني.",
-      },
-    ],
-  }),
+  head: () =>
+    createSeo({
+      title: "تصفح الإعلانات المعتمدة | RAWAJ / رواج",
+      description:
+        "تصفح الإعلانات المعتمدة على رواج في سوريا، وابحث في العقارات والسيارات والمنتجات والخدمات حسب القسم أو المحافظة.",
+      path: "/listings",
+    }),
   component: ListingsPage,
 });
 

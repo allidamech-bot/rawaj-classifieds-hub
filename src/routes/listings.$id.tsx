@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import {
   AlertTriangle,
   Camera,
@@ -26,28 +26,48 @@ import {
 } from "@/lib/classifieds-api";
 import type { ClassifiedListing, ClassifiedsError, ListingImage } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import { absoluteUrl, createSeo, jsonLdScript, plainText } from "@/lib/seo";
 import { listingStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/listings/$id")({
-  head: () => ({
-    meta: [
-      { title: "تفاصيل الإعلان | رواج" },
-      { name: "description", content: "تفاصيل إعلان معتمد على رواج." },
-    ],
-  }),
+  loader: async ({ params }) => {
+    const listing = await fetchListingDetail(params.id);
+    if (!listing.ok) throw notFound();
+    return listing.data;
+  },
+  notFoundComponent: () => (
+    <ListingState
+      titleAr="تفاصيل الإعلان"
+      titleEn="Listing details"
+      bodyAr="هذا الإعلان غير متاح للعرض العام أو لم تتم الموافقة عليه."
+      bodyEn="This listing is unavailable publicly or has not been approved."
+    />
+  ),
+  head: ({ loaderData }) =>
+    createSeo({
+      title: loaderData ? `${loaderData.title} | RAWAJ / رواج` : "إعلان غير متاح | RAWAJ / رواج",
+      description: loaderData
+        ? plainText(loaderData.description || "تفاصيل إعلان معتمد على رواج.", 160)
+        : "هذا الإعلان غير متاح للعرض العام على رواج.",
+      path: loaderData ? `/listings/${loaderData.id}` : "/listings",
+      type: "article",
+      image: loaderData?.primaryImageUrl ?? null,
+      noindex: !loaderData,
+    }),
   component: ListingDetailsPage,
 });
 
 function ListingDetailsPage() {
   const { id } = Route.useParams();
+  const initialListing = Route.useLoaderData();
   const navigate = useNavigate();
   const auth = useAuth();
   const { language, text } = useUiPreferences();
-  const [listing, setListing] = useState<ClassifiedListing | null>(null);
+  const [listing, setListing] = useState<ClassifiedListing | null>(initialListing);
   const [images, setImages] = useState<ListingImage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialListing);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [fav, setFav] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -543,9 +563,34 @@ function ListingDetailsPage() {
             {actionMessage}
           </p>
         )}
+        <script {...jsonLdScript(buildListingStructuredData(listing))} />
       </main>
     </>
   );
+}
+
+function buildListingStructuredData(listing: ClassifiedListing) {
+  const data: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: listing.title,
+    description: plainText(listing.description, 300),
+    url: absoluteUrl(`/listings/${listing.id}`),
+    category: listing.categoryNameAr,
+    areaServed: listing.governorateNameAr,
+  };
+
+  if (listing.primaryImageUrl) data.image = [absoluteUrl(listing.primaryImageUrl)];
+  if (listing.price !== null) {
+    data.offers = {
+      "@type": "Offer",
+      price: listing.price,
+      priceCurrency: listing.currency,
+      url: absoluteUrl(`/listings/${listing.id}`),
+    };
+  }
+
+  return data;
 }
 
 function Badge({ children }: { children: React.ReactNode }) {
@@ -597,6 +642,34 @@ function StateCard({
         </Link>
       )}
     </div>
+  );
+}
+
+function ListingState({
+  titleAr,
+  titleEn,
+  bodyAr,
+  bodyEn,
+}: {
+  titleAr: string;
+  titleEn: string;
+  bodyAr: string;
+  bodyEn: string;
+}) {
+  const { text } = useUiPreferences();
+
+  return (
+    <>
+      <PageHeader title={text(titleAr, titleEn)} />
+      <main className="container-wide pt-10">
+        <StateCard
+          title={text("لا يمكن عرض هذا الإعلان", "Listing cannot be shown")}
+          body={text(bodyAr, bodyEn)}
+          actionLabel={text("تصفح الإعلانات", "Browse listings")}
+          actionTo="/listings"
+        />
+      </main>
+    </>
   );
 }
 

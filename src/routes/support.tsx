@@ -4,12 +4,19 @@ import { useEffect, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { createSupportRequest, fetchMySupportRequests } from "@/lib/classifieds-api";
 import type { ClassifiedsError, SupportRequest, SupportRequestType } from "@/lib/classifieds-types";
+import { createSeo } from "@/lib/seo";
 import { supportStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/support")({
-  head: () => ({ meta: [{ title: "الدعم | رواج" }] }),
+  head: () =>
+    createSeo({
+      title: "الدعم والمساعدة | RAWAJ / رواج",
+      description:
+        "أرسل طلب دعم محفوظ على رواج للمشكلات التقنية أو البلاغات أو أسئلة الإعلانات، مع مراجعة الطلبات من الفريق دون وعد برد فوري.",
+      path: "/support",
+    }),
   component: SupportPage,
 });
 

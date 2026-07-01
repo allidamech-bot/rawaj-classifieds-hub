@@ -1,9 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
+import { createSeo } from "@/lib/seo";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/privacy")({
-  head: () => ({ meta: [{ title: "سياسة الخصوصية | رَوَاج" }] }),
+  head: () =>
+    createSeo({
+      title: "سياسة الخصوصية | RAWAJ / رواج",
+      description:
+        "تعرف على كيفية تعامل رواج مع بيانات الحسابات والإعلانات والرسائل والبلاغات وطلبات الدعم ضمن تجربة السوق المبوب.",
+      path: "/privacy",
+    }),
   component: PrivacyPage,
 });
 

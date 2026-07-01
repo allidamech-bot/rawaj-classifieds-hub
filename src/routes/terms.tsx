@@ -1,9 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
+import { createSeo } from "@/lib/seo";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/terms")({
-  head: () => ({ meta: [{ title: "شروط الاستخدام | رَوَاج" }] }),
+  head: () =>
+    createSeo({
+      title: "شروط الاستخدام | RAWAJ / رواج",
+      description:
+        "شروط استخدام رواج للإعلانات المبوبة في سوريا، بما يشمل مسؤولية المستخدمين، الإعلانات، التواصل، البلاغات، وحدود الخدمة.",
+      path: "/terms",
+    }),
   component: TermsPage,
 });
 

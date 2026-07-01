@@ -1,10 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Ban, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { createSeo } from "@/lib/seo";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/prohibited")({
-  head: () => ({ meta: [{ title: "الإعلانات الممنوعة | رَوَاج" }] }),
+  head: () =>
+    createSeo({
+      title: "الإعلانات الممنوعة | RAWAJ / رواج",
+      description:
+        "قائمة الإعلانات والمحتوى الممنوع على رواج، مع توضيح كيفية الإبلاغ عن إعلان مخالف لمسار المراجعة.",
+      path: "/prohibited",
+    }),
   component: ProhibitedPage,
 });
 

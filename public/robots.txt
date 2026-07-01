@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /admin/
+Disallow: /chats
+Disallow: /profile
+Disallow: /profile/
+Disallow: /add-listing
+Disallow: /login
+Disallow: /favorites
+Disallow: /saved-searches
