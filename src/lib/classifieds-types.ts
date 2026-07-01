@@ -146,6 +146,20 @@ export interface ListingReport {
   updatedAt: string;
 }
 
+export interface NotificationItem {
+  id: string;
+  recipientId: string;
+  actorId: string | null;
+  type: string;
+  titleAr: string;
+  bodyAr: string | null;
+  targetType: string | null;
+  targetId: string | null;
+  metadata: Record<string, unknown>;
+  readAt: string | null;
+  createdAt: string;
+}
+
 export interface CreateListingPayload {
   categoryId: string;
   governorateId: string;
