@@ -31,6 +31,7 @@ import { Route as SellerIdRouteImport } from './routes/seller.$id'
 import { Route as ProfileListingsRouteImport } from './routes/profile/listings'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminReviewsRouteImport } from './routes/admin.reviews'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminPromotionsRouteImport } from './routes/admin.promotions'
 import { Route as AdminPendingRouteImport } from './routes/admin.pending'
@@ -146,6 +147,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminReviewsRoute = AdminReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminReportsRoute = AdminReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
+  '/admin/reviews': typeof AdminReviewsRoute
   '/admin/users': typeof AdminUsersRoute
   '/listings/$id': typeof ListingsIdRoute
   '/profile/listings': typeof ProfileListingsRouteWithChildren
@@ -213,6 +220,7 @@ export interface FileRoutesByTo {
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
+  '/admin/reviews': typeof AdminReviewsRoute
   '/admin/users': typeof AdminUsersRoute
   '/listings/$id': typeof ListingsIdRoute
   '/profile/listings': typeof ProfileListingsRouteWithChildren
@@ -242,6 +250,7 @@ export interface FileRoutesById {
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
+  '/admin/reviews': typeof AdminReviewsRoute
   '/admin/users': typeof AdminUsersRoute
   '/listings/$id': typeof ListingsIdRoute
   '/profile/listings': typeof ProfileListingsRouteWithChildren
@@ -272,6 +281,7 @@ export interface FileRouteTypes {
     | '/admin/pending'
     | '/admin/promotions'
     | '/admin/reports'
+    | '/admin/reviews'
     | '/admin/users'
     | '/listings/$id'
     | '/profile/listings'
@@ -298,6 +308,7 @@ export interface FileRouteTypes {
     | '/admin/pending'
     | '/admin/promotions'
     | '/admin/reports'
+    | '/admin/reviews'
     | '/admin/users'
     | '/listings/$id'
     | '/profile/listings'
@@ -326,6 +337,7 @@ export interface FileRouteTypes {
     | '/admin/pending'
     | '/admin/promotions'
     | '/admin/reports'
+    | '/admin/reviews'
     | '/admin/users'
     | '/listings/$id'
     | '/profile/listings'
@@ -511,6 +523,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/reviews': {
+      id: '/admin/reviews'
+      path: '/reviews'
+      fullPath: '/admin/reviews'
+      preLoaderRoute: typeof AdminReviewsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/reports': {
       id: '/admin/reports'
       path: '/reports'
@@ -546,6 +565,7 @@ interface AdminRouteChildren {
   AdminPendingRoute: typeof AdminPendingRoute
   AdminPromotionsRoute: typeof AdminPromotionsRoute
   AdminReportsRoute: typeof AdminReportsRoute
+  AdminReviewsRoute: typeof AdminReviewsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -554,6 +574,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPendingRoute: AdminPendingRoute,
   AdminPromotionsRoute: AdminPromotionsRoute,
   AdminReportsRoute: AdminReportsRoute,
+  AdminReviewsRoute: AdminReviewsRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }

@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import {
   BadgeCheck,
   Bookmark,
+  Camera,
   ChevronLeft,
   Eye,
   FileSpreadsheet,
@@ -21,13 +22,16 @@ import {
   User,
   UserCog,
   UserPlus,
+  XCircle,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   deleteOwnerListing,
   fetchCurrentUserListings,
+  removeProfileMedia,
   resubmitOwnerListing,
   updateOwnProfileBasics,
+  uploadProfileMedia,
 } from "@/lib/classifieds-api";
 import type { ClassifiedListing, ClassifiedsError, ListingStatus } from "@/lib/classifieds-types";
 import { categoryName, governorateName } from "@/lib/i18n";
@@ -95,9 +99,18 @@ function ProfilePage() {
   const [listingActionLoading, setListingActionLoading] = useState<string | null>(null);
   const [listingActionNotice, setListingActionNotice] = useState("");
   const [settingsDisplayName, setSettingsDisplayName] = useState("");
+  const [settingsFirstName, setSettingsFirstName] = useState("");
+  const [settingsLastName, setSettingsLastName] = useState("");
   const [settingsGovernorate, setSettingsGovernorate] = useState("");
+  const [settingsCityArea, setSettingsCityArea] = useState("");
+  const [settingsBio, setSettingsBio] = useState("");
+  const [settingsBusinessName, setSettingsBusinessName] = useState("");
+  const [settingsPhone, setSettingsPhone] = useState("");
+  const [settingsWhatsapp, setSettingsWhatsapp] = useState("");
+  const [settingsPreferredContact, setSettingsPreferredContact] = useState("");
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsNotice, setSettingsNotice] = useState("");
+  const [mediaSaving, setMediaSaving] = useState<"avatar" | "cover" | null>(null);
   const profileId = auth.profile?.id;
   const displayName = auth.profile?.displayName || auth.profile?.email || text("زائر", "Guest");
 
@@ -151,8 +164,16 @@ function ProfilePage() {
     setSettingsNotice("");
     setSettingsSaving(true);
     const result = await updateOwnProfileBasics(profileId ?? null, {
-      displayName: settingsDisplayName,
+      firstName: settingsFirstName,
+      lastName: settingsLastName,
+      displayName: settingsDisplayName || null,
       governorate: settingsGovernorate || null,
+      cityArea: settingsCityArea || null,
+      bio: settingsBio || null,
+      businessName: settingsBusinessName || null,
+      phone: settingsPhone || null,
+      whatsapp: settingsWhatsapp || null,
+      preferredContactMethod: settingsPreferredContact || null,
     });
     setSettingsSaving(false);
     setSettingsNotice(
@@ -162,11 +183,62 @@ function ProfilePage() {
     );
   }
 
+  async function handleProfileMedia(kind: "avatar" | "cover", file: File | undefined) {
+    if (!file) return;
+    setSettingsNotice("");
+    setMediaSaving(kind);
+    const result = await uploadProfileMedia({
+      userId: profileId ?? null,
+      kind,
+      file,
+      oldPath: kind === "avatar" ? auth.profile?.avatarPath : auth.profile?.coverPath,
+    });
+    setMediaSaving(null);
+    setSettingsNotice(
+      result.ok
+        ? text(
+            "تم حفظ الصورة. أعد تحميل الصفحة إذا لم تظهر فورا.",
+            "Image saved. Refresh if it does not appear immediately.",
+          )
+        : result.error.message,
+    );
+  }
+
+  async function handleRemoveProfileMedia(kind: "avatar" | "cover") {
+    setSettingsNotice("");
+    setMediaSaving(kind);
+    const result = await removeProfileMedia(
+      profileId ?? null,
+      kind,
+      kind === "avatar" ? auth.profile?.avatarPath : auth.profile?.coverPath,
+    );
+    setMediaSaving(null);
+    setSettingsNotice(
+      result.ok
+        ? text("تمت إزالة الصورة من الملف.", "Image removed from profile.")
+        : result.error.message,
+    );
+  }
+
   useEffect(() => {
     if (auth.status !== "signedIn") return;
     setSettingsDisplayName(auth.profile?.displayName ?? "");
+    setSettingsFirstName(
+      auth.profile?.firstName ?? auth.profile?.displayName?.split(" ").filter(Boolean).at(0) ?? "",
+    );
+    setSettingsLastName(
+      auth.profile?.lastName ??
+        auth.profile?.displayName?.split(" ").filter(Boolean).slice(1).join(" ") ??
+        "",
+    );
     setSettingsGovernorate(auth.profile?.governorate ?? "");
-  }, [auth.profile?.displayName, auth.profile?.governorate, auth.status]);
+    setSettingsCityArea(auth.profile?.cityArea ?? "");
+    setSettingsBio(auth.profile?.bio ?? "");
+    setSettingsBusinessName(auth.profile?.businessName ?? "");
+    setSettingsPhone(auth.profile?.phone ?? "");
+    setSettingsWhatsapp(auth.profile?.whatsapp ?? "");
+    setSettingsPreferredContact(auth.profile?.preferredContactMethod ?? "");
+  }, [auth.profile, auth.status]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) return;
@@ -217,6 +289,52 @@ function ProfilePage() {
           </div>
           {auth.status === "signedIn" ? (
             <div className="mt-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <SettingsInput
+                  label={text("المدينة / المنطقة", "City / area")}
+                  value={settingsCityArea}
+                  onChange={setSettingsCityArea}
+                  maxLength={80}
+                />
+                <SettingsInput
+                  label={text("اسم النشاط التجاري", "Business name")}
+                  value={settingsBusinessName}
+                  onChange={setSettingsBusinessName}
+                  maxLength={120}
+                />
+              </div>
+              <label className="block">
+                <span className="text-xs font-bold text-muted-foreground">
+                  {text("نبذة عنك", "Bio")}
+                </span>
+                <textarea
+                  value={settingsBio}
+                  onChange={(event) => setSettingsBio(event.target.value)}
+                  maxLength={600}
+                  rows={4}
+                  className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
+                />
+              </label>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <SettingsInput
+                  label={text("الهاتف", "Phone")}
+                  value={settingsPhone}
+                  onChange={setSettingsPhone}
+                  maxLength={40}
+                />
+                <SettingsInput
+                  label={text("واتساب", "WhatsApp")}
+                  value={settingsWhatsapp}
+                  onChange={setSettingsWhatsapp}
+                  maxLength={40}
+                />
+                <SettingsInput
+                  label={text("طريقة التواصل المفضلة", "Preferred contact")}
+                  value={settingsPreferredContact}
+                  onChange={setSettingsPreferredContact}
+                  maxLength={40}
+                />
+              </div>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -252,7 +370,7 @@ function ProfilePage() {
           )}
         </section>
 
-        <section className="rounded-2xl bg-card p-4 hairline">
+        <section id="settings" className="rounded-2xl bg-card p-4 hairline">
           <h3 className="mb-3 text-sm font-extrabold">{text("ملخص الحساب", "Account summary")}</h3>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Metric label={text("الإعلانات", "Listings")} value={String(myListings.length)} />
@@ -453,6 +571,37 @@ function ProfilePage() {
           </h3>
           {auth.status === "signedIn" ? (
             <form onSubmit={(event) => void handleSaveProfileBasics(event)} className="space-y-3">
+              <div className="grid gap-3 lg:grid-cols-2">
+                <MediaField
+                  title={text("الصورة الشخصية", "Profile image")}
+                  imageUrl={auth.profile?.avatarUrl}
+                  busy={mediaSaving === "avatar"}
+                  onUpload={(file) => void handleProfileMedia("avatar", file)}
+                  onRemove={() => void handleRemoveProfileMedia("avatar")}
+                />
+                <MediaField
+                  title={text("صورة الغلاف", "Cover image")}
+                  imageUrl={auth.profile?.coverUrl}
+                  busy={mediaSaving === "cover"}
+                  wide
+                  onUpload={(file) => void handleProfileMedia("cover", file)}
+                  onRemove={() => void handleRemoveProfileMedia("cover")}
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <SettingsInput
+                  label={text("الاسم الأول", "First name")}
+                  value={settingsFirstName}
+                  onChange={setSettingsFirstName}
+                  maxLength={40}
+                />
+                <SettingsInput
+                  label={text("اسم العائلة", "Last name")}
+                  value={settingsLastName}
+                  onChange={setSettingsLastName}
+                  maxLength={40}
+                />
+              </div>
               <label className="block">
                 <span className="text-xs font-bold text-muted-foreground">
                   {text("اسم العرض", "Display name")}
@@ -493,6 +642,23 @@ function ProfilePage() {
                   {settingsNotice}
                 </p>
               )}
+              <div className="rounded-xl bg-destructive/5 p-3 text-xs leading-6 text-muted-foreground hairline">
+                <p className="font-bold text-foreground">
+                  {text("حذف الحساب", "Account deletion")}
+                </p>
+                <p>
+                  {text(
+                    "الحذف النهائي غير مفعل من الواجهة لأنه يحتاج مسار Auth وقاعدة بيانات وتنظيف ملفات آمن. يمكن إرسال طلب مراجعة عبر الدعم.",
+                    "Permanent deletion is not enabled here because it needs a safe Auth, database, and media cleanup process. You can request review through support.",
+                  )}
+                </p>
+                <Link
+                  to="/support"
+                  className="mt-2 inline-flex rounded-lg bg-card px-3 py-1.5 font-bold hairline"
+                >
+                  {text("طلب حذف الحساب", "Request deletion")}
+                </Link>
+              </div>
             </form>
           ) : (
             <p className="text-xs leading-6 text-muted-foreground">
@@ -532,6 +698,90 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="rounded-xl bg-muted-surface p-3">
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className="mt-1 text-sm font-bold">{value}</div>
+    </div>
+  );
+}
+
+function SettingsInput({
+  label,
+  value,
+  onChange,
+  maxLength,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  maxLength: number;
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs font-bold text-muted-foreground">{label}</span>
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        maxLength={maxLength}
+        className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
+      />
+    </label>
+  );
+}
+
+function MediaField({
+  title,
+  imageUrl,
+  busy,
+  wide = false,
+  onUpload,
+  onRemove,
+}: {
+  title: string;
+  imageUrl?: string | null;
+  busy: boolean;
+  wide?: boolean;
+  onUpload: (file: File | undefined) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="rounded-xl bg-muted-surface p-3 hairline">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-xs font-bold text-muted-foreground">{title}</span>
+        {busy && <span className="text-[10px] font-bold text-primary">Saving</span>}
+      </div>
+      <div
+        className={`grid place-items-center overflow-hidden rounded-xl bg-card ${
+          wide ? "aspect-[5/2]" : "aspect-square"
+        }`}
+      >
+        {imageUrl ? (
+          <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
+        ) : (
+          <Camera className="h-6 w-6 text-muted-foreground" />
+        )}
+      </div>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <label className="inline-flex cursor-pointer items-center gap-1 rounded-lg bg-card px-3 py-1.5 text-[11px] font-bold hairline">
+          <Camera className="h-3.5 w-3.5" />
+          Upload
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            disabled={busy}
+            onChange={(event) => onUpload(event.target.files?.[0])}
+          />
+        </label>
+        {imageUrl && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={onRemove}
+            className="inline-flex items-center gap-1 rounded-lg bg-card px-3 py-1.5 text-[11px] font-bold text-destructive hairline disabled:opacity-50"
+          >
+            <XCircle className="h-3.5 w-3.5" />
+            Remove
+          </button>
+        )}
+      </div>
     </div>
   );
 }

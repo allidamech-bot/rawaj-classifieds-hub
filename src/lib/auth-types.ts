@@ -7,12 +7,24 @@ export type VerificationStatus = "unverified" | "pending" | "verified" | "reject
 export interface UserProfile {
   id: string;
   email: string | null;
+  firstName: string | null;
+  lastName: string | null;
   displayName: string | null;
   role: UserRole;
   roles: UserRole[];
   accountStatus: AccountStatus;
   verificationStatus: VerificationStatus;
   governorate: string | null;
+  cityArea: string | null;
+  bio: string | null;
+  businessName: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  preferredContactMethod: string | null;
+  avatarPath: string | null;
+  avatarUrl: string | null;
+  coverPath: string | null;
+  coverUrl: string | null;
   createdAt: string | null;
   updatedAt: string | null;
 }

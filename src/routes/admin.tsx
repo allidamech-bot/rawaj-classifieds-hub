@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { FileCheck, Flag, LayoutDashboard, Lock, Sparkles, Users } from "lucide-react";
+import { FileCheck, Flag, LayoutDashboard, Lock, Sparkles, Star, Users } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { uiLabel } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -13,6 +13,7 @@ export const Route = createFileRoute("/admin")({
 const tabs = [
   { to: "/admin", labelAr: "مركز المالك", icon: LayoutDashboard, exact: true },
   { to: "/admin/pending", labelAr: "إعلانات للمراجعة", icon: FileCheck },
+  { to: "/admin/reviews", labelAr: "تقييمات البائعين", icon: Star },
   { to: "/admin/reports", labelAr: "البلاغات", icon: Flag },
   { to: "/admin/users", labelAr: "المستخدمون والصلاحيات", icon: Users },
   { to: "/admin/promotions", labelAr: "طلبات الترويج", icon: Sparkles },

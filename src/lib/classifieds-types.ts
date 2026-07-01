@@ -130,16 +130,80 @@ export interface CreateSavedSearchPayload {
 
 export interface PublicSellerProfile {
   id: string;
+  firstName: string | null;
+  lastName: string | null;
   displayName: string;
   verified: boolean;
   joinedAt: string | null;
   locationAr: string | null;
+  bio: string | null;
+  businessName: string | null;
+  avatarUrl: string | null;
+  coverUrl: string | null;
+  approvedListingCount: number;
+  ratingSummary: SellerRatingSummary;
+  reviews: SellerReview[];
   listings: ClassifiedListing[];
 }
 
 export interface UpdateProfileBasicsPayload {
-  displayName: string;
+  firstName: string;
+  lastName: string;
+  displayName?: string | null;
   governorate: string | null;
+  cityArea?: string | null;
+  bio?: string | null;
+  businessName?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  preferredContactMethod?: string | null;
+}
+
+export type ProfileMediaKind = "avatar" | "cover";
+
+export interface ProfileMediaUploadPayload {
+  userId: string | null;
+  kind: ProfileMediaKind;
+  file: File;
+  oldPath?: string | null;
+}
+
+export type SellerReviewStatus = "pending_review" | "approved" | "rejected";
+
+export interface SellerReview {
+  id: string;
+  sellerUserId: string;
+  reviewerUserId: string;
+  relatedListingId: string | null;
+  rating: number;
+  comment: string;
+  status: SellerReviewStatus;
+  adminNote: string | null;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SellerRatingSummary {
+  average: number | null;
+  count: number;
+  distribution: Record<1 | 2 | 3 | 4 | 5, number>;
+}
+
+export interface CreateSellerReviewPayload {
+  sellerUserId: string;
+  reviewerUserId: string | null;
+  relatedListingId?: string | null;
+  rating: number;
+  comment: string;
+}
+
+export interface ModerateSellerReviewPayload {
+  reviewId: string;
+  status: Extract<SellerReviewStatus, "approved" | "rejected">;
+  reviewerId: string;
+  adminNote?: string | null;
 }
 
 export interface ListingReport {

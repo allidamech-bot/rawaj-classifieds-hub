@@ -19,10 +19,16 @@ import type {
   CreateSupportRequestPayload,
   ModerateListingPayload,
   ModerateSupportRequestPayload,
+  ModerateSellerReviewPayload,
   NotificationItem,
+  ProfileMediaKind,
+  ProfileMediaUploadPayload,
   PublicSellerProfile,
   SavedSearch,
+  SellerRatingSummary,
+  SellerReview,
   SupportRequest,
+  CreateSellerReviewPayload,
   UpdateProfileBasicsPayload,
   UpdateListingPayload,
 } from "@/lib/classifieds-types";
@@ -34,9 +40,11 @@ const setupRequiredMessage = "تعذر تحميل البيانات الآن. ح�
 const storageSetupRequiredMessage =
   "تعذر رفع الصور الآن. يمكنك إرسال الإعلان بدون صور والمحاولة مرة أخرى بعد حفظه.";
 const listingImagesBucket = "listing-images";
+const profileMediaBucket = "profile-media";
 const signedImageUrlExpiresInSeconds = 900;
 const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxImageSizeBytes = 5 * 1024 * 1024;
+const maxProfileImageSizeBytes = 3 * 1024 * 1024;
 
 function getClient(): ClassifiedsResult<SupabaseClient> {
   if (!supabase) {
@@ -272,6 +280,61 @@ function mapImage(row: Row): ListingImage {
   };
 }
 
+function publicProfileMediaUrl(client: SupabaseClient, path: string | null): string | null {
+  if (!path) return null;
+  const { data } = client.storage.from(profileMediaBucket).getPublicUrl(path);
+  return data.publicUrl ?? null;
+}
+
+function mapReview(row: Row): SellerReview {
+  return {
+    id: rowString(row, "id"),
+    sellerUserId: rowString(row, "seller_user_id"),
+    reviewerUserId: rowString(row, "reviewer_user_id"),
+    relatedListingId: rowNullableString(row, "related_listing_id"),
+    rating: rowNumber(row, "rating"),
+    comment: rowString(row, "comment"),
+    status: rowString(row, "status", "pending_review") as SellerReview["status"],
+    adminNote: rowNullableString(row, "admin_note"),
+    reviewedBy: rowNullableString(row, "reviewed_by"),
+    reviewedAt: rowNullableString(row, "reviewed_at"),
+    createdAt: rowString(row, "created_at"),
+    updatedAt: rowString(row, "updated_at"),
+  };
+}
+
+function emptyRatingSummary(): SellerRatingSummary {
+  return {
+    average: null,
+    count: 0,
+    distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+  };
+}
+
+function buildRatingSummary(reviews: SellerReview[]): SellerRatingSummary {
+  const approved = reviews.filter((review) => review.status === "approved");
+  if (approved.length === 0) return emptyRatingSummary();
+
+  const distribution: SellerRatingSummary["distribution"] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  let total = 0;
+  for (const review of approved) {
+    const rating = Math.min(5, Math.max(1, Math.round(review.rating))) as 1 | 2 | 3 | 4 | 5;
+    distribution[rating] += 1;
+    total += rating;
+  }
+
+  return {
+    average: Number((total / approved.length).toFixed(1)),
+    count: approved.length,
+    distribution,
+  };
+}
+
+function cleanOptionalText(value: string | null | undefined, maxLength: number): string | null {
+  const clean = value?.trim() ?? "";
+  return clean ? clean.slice(0, maxLength) : null;
+}
+
 async function signListingImages(
   client: SupabaseClient,
   images: ListingImage[],
@@ -497,9 +560,9 @@ export async function fetchListingDetail(
   return { ok: true, data: hydratedListing ?? listing };
 }
 
-export async function fetchPublicSellerProfile(
+async function fetchPublicSellerProfileLegacy(
   sellerId: string,
-): Promise<ClassifiedsResult<PublicSellerProfile>> {
+): Promise<ClassifiedsResult<unknown>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
@@ -548,6 +611,105 @@ export async function fetchPublicSellerProfile(
       verified: false,
       joinedAt: listings.at(-1)?.createdAt ?? null,
       locationAr: firstListing.governorateNameAr ?? null,
+      listings,
+    },
+  };
+}
+
+export async function fetchPublicSellerProfile(
+  sellerId: string,
+): Promise<ClassifiedsResult<PublicSellerProfile>> {
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const cleanSellerId = sellerId.trim();
+  if (!cleanSellerId) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد البائع." },
+    };
+  }
+
+  const references = await readReferences(clientResult.data);
+  if (!references.ok) return { ok: false, error: references.error };
+
+  const { data: listingData, error: listingError } = await clientResult.data
+    .from("listings")
+    .select("*")
+    .eq("owner_id", cleanSellerId)
+    .eq("status", "approved")
+    .order("created_at", { ascending: false })
+    .limit(60);
+
+  if (listingError) return { ok: false, error: mapError(listingError) };
+
+  const listings = await hydrateListingsWithPrimaryImages(
+    clientResult.data,
+    ((listingData ?? []) as Row[]).map((row) =>
+      mapListing(row, references.categories, references.governorates),
+    ),
+  );
+
+  const { data: profileData, error: profileError } = await clientResult.data
+    .rpc("get_public_seller_profile", { p_seller_id: cleanSellerId })
+    .maybeSingle();
+
+  if (profileError && profileError.code !== "42P01" && profileError.code !== "42703") {
+    return { ok: false, error: mapError(profileError) };
+  }
+
+  if (listings.length === 0 && !profileData) {
+    return {
+      ok: false,
+      error: { code: "not_found", message: "تعذر عرض ملف هذا البائع الآن." },
+    };
+  }
+
+  const { data: reviewData, error: reviewError } = await clientResult.data
+    .from("seller_reviews")
+    .select("*")
+    .eq("seller_user_id", cleanSellerId)
+    .eq("status", "approved")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (reviewError && reviewError.code !== "42P01" && reviewError.code !== "42703") {
+    return { ok: false, error: mapError(reviewError) };
+  }
+
+  const profile = (profileData ?? {}) as Row;
+  const firstListing = listings[0];
+  const firstName = rowNullableString(profile, "first_name");
+  const lastName = rowNullableString(profile, "last_name");
+  const displayName =
+    rowNullableString(profile, "display_name") ||
+    [firstName, lastName].filter(Boolean).join(" ").trim() ||
+    firstListing?.contactName?.trim() ||
+    "بائع رواجا";
+  const reviews = ((reviewData ?? []) as Row[]).map(mapReview);
+
+  return {
+    ok: true,
+    data: {
+      id: cleanSellerId,
+      firstName,
+      lastName,
+      displayName,
+      verified: false,
+      joinedAt: rowNullableString(profile, "created_at") ?? listings.at(-1)?.createdAt ?? null,
+      locationAr:
+        rowNullableString(profile, "governorate") ?? firstListing?.governorateNameAr ?? null,
+      bio: rowNullableString(profile, "bio"),
+      businessName: rowNullableString(profile, "business_name"),
+      avatarUrl:
+        rowNullableString(profile, "avatar_url") ??
+        publicProfileMediaUrl(clientResult.data, rowNullableString(profile, "avatar_path")),
+      coverUrl:
+        rowNullableString(profile, "cover_url") ??
+        publicProfileMediaUrl(clientResult.data, rowNullableString(profile, "cover_path")),
+      approvedListingCount: listings.length,
+      ratingSummary: buildRatingSummary(reviews),
+      reviews,
       listings,
     },
   };
@@ -607,9 +769,9 @@ export async function fetchCurrentUserListings(
   return { ok: true, data: await hydrateListingsWithPrimaryImages(clientResult.data, listings) };
 }
 
-export async function updateOwnProfileBasics(
+async function updateOwnProfileBasicsLegacy(
   userId: string | null,
-  payload: UpdateProfileBasicsPayload,
+  payload: { displayName: string; governorate: string | null },
 ): Promise<ClassifiedsResult<null>> {
   if (!userId) {
     return {
@@ -643,6 +805,69 @@ export async function updateOwnProfileBasics(
     .update({
       display_name: displayName,
       governorate,
+    })
+    .eq("id", userId);
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: null };
+}
+
+export async function updateOwnProfileBasics(
+  userId: string | null,
+  payload: UpdateProfileBasicsPayload,
+): Promise<ClassifiedsResult<null>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث الحساب." },
+    };
+  }
+
+  const firstName = payload.firstName.trim();
+  const lastName = payload.lastName.trim();
+  const computedDisplayName = [firstName, lastName].filter(Boolean).join(" ").trim();
+  const displayName =
+    payload.displayName && payload.displayName.trim().length > 0
+      ? payload.displayName.trim()
+      : computedDisplayName || null;
+  const governorate = cleanOptionalText(payload.governorate, 80);
+  const cityArea = cleanOptionalText(payload.cityArea, 80);
+  const bio = cleanOptionalText(payload.bio, 600);
+  const businessName = cleanOptionalText(payload.businessName, 120);
+  const phone = cleanOptionalText(payload.phone, 40);
+  const whatsapp = cleanOptionalText(payload.whatsapp, 40);
+  const preferredContactMethod = cleanOptionalText(payload.preferredContactMethod, 40);
+
+  if (firstName.length < 2 || firstName.length > 40 || lastName.length > 40) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "أدخل الاسم الأول بين 2 و40 حرفا." },
+    };
+  }
+
+  if (bio && bio.length > 600) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "النبذة يجب ألا تتجاوز 600 حرف." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { error } = await clientResult.data
+    .from("profiles")
+    .update({
+      first_name: firstName,
+      last_name: lastName || null,
+      display_name: displayName,
+      governorate,
+      city_area: cityArea,
+      bio,
+      business_name: businessName,
+      phone,
+      whatsapp,
+      preferred_contact_method: preferredContactMethod,
     })
     .eq("id", userId);
 
@@ -1151,6 +1376,215 @@ export async function deleteListingImage(
     .delete()
     .eq("id", image.id)
     .eq("listing_id", listingId);
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: null };
+}
+
+export async function uploadProfileMedia({
+  userId,
+  kind,
+  file,
+  oldPath,
+}: ProfileMediaUploadPayload): Promise<ClassifiedsResult<string>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث صورة الحساب." },
+    };
+  }
+
+  if (!allowedImageTypes.includes(file.type)) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "الصيغ المسموحة للصور: JPG أو PNG أو WebP." },
+    };
+  }
+
+  if (file.size > maxProfileImageSizeBytes) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "حجم صورة الملف يجب ألا يتجاوز 3MB." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  const safeExtension =
+    extension && ["jpg", "jpeg", "png", "webp"].includes(extension) ? extension : "jpg";
+  const storagePath = `${userId}/${kind}/${crypto.randomUUID()}.${safeExtension}`;
+
+  const uploadResult = await clientResult.data.storage
+    .from(profileMediaBucket)
+    .upload(storagePath, file, {
+      cacheControl: "3600",
+      contentType: file.type,
+      upsert: false,
+    });
+
+  if (uploadResult.error) return { ok: false, error: mapStorageError(uploadResult.error) };
+
+  const publicUrl = publicProfileMediaUrl(clientResult.data, storagePath);
+  const updatePayload =
+    kind === "avatar"
+      ? { avatar_path: storagePath, avatar_url: publicUrl }
+      : { cover_path: storagePath, cover_url: publicUrl };
+
+  const { error } = await clientResult.data.from("profiles").update(updatePayload).eq("id", userId);
+  if (error) {
+    await clientResult.data.storage.from(profileMediaBucket).remove([storagePath]);
+    return { ok: false, error: mapError(error) };
+  }
+
+  if (oldPath && oldPath.startsWith(`${userId}/${kind}/`)) {
+    await clientResult.data.storage.from(profileMediaBucket).remove([oldPath]);
+  }
+
+  return { ok: true, data: publicUrl ?? "" };
+}
+
+export async function removeProfileMedia(
+  userId: string | null,
+  kind: ProfileMediaKind,
+  path: string | null | undefined,
+): Promise<ClassifiedsResult<null>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث صورة الحساب." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  if (path && path.startsWith(`${userId}/${kind}/`)) {
+    const storageResult = await clientResult.data.storage.from(profileMediaBucket).remove([path]);
+    if (storageResult.error) return { ok: false, error: mapStorageError(storageResult.error) };
+  }
+
+  const updatePayload =
+    kind === "avatar"
+      ? { avatar_path: null, avatar_url: null }
+      : { cover_path: null, cover_url: null };
+
+  const { error } = await clientResult.data.from("profiles").update(updatePayload).eq("id", userId);
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: null };
+}
+
+export async function createSellerReview(
+  payload: CreateSellerReviewPayload,
+): Promise<ClassifiedsResult<SellerReview>> {
+  if (!payload.reviewerUserId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال تقييم." },
+    };
+  }
+
+  const sellerUserId = payload.sellerUserId.trim();
+  const reviewerUserId = payload.reviewerUserId.trim();
+  const comment = payload.comment.trim();
+
+  if (!sellerUserId || sellerUserId === reviewerUserId) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "لا يمكن للمستخدم تقييم نفسه." },
+    };
+  }
+
+  if (!Number.isInteger(payload.rating) || payload.rating < 1 || payload.rating > 5) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "اختر تقييما من 1 إلى 5." },
+    };
+  }
+
+  if (comment.length < 10 || comment.length > 1200) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "اكتب مراجعة بين 10 و1200 حرف." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("seller_reviews")
+    .insert({
+      seller_user_id: sellerUserId,
+      reviewer_user_id: reviewerUserId,
+      related_listing_id: payload.relatedListingId?.trim() || null,
+      rating: payload.rating,
+      comment,
+      status: "pending_review",
+    })
+    .select("*")
+    .single();
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: mapReview(data as Row) };
+}
+
+export async function adminFetchSellerReviews(
+  canUseAdminAccess: boolean,
+): Promise<ClassifiedsResult<SellerReview[]>> {
+  if (!canUseAdminAccess) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "مراجعة التقييمات متاحة لحساب إداري مخول فقط." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("seller_reviews")
+    .select("*")
+    .eq("status", "pending_review")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Row[]).map(mapReview) };
+}
+
+export async function adminModerateSellerReview(
+  canUseAdminAccess: boolean,
+  payload: ModerateSellerReviewPayload,
+): Promise<ClassifiedsResult<null>> {
+  if (!canUseAdminAccess) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "مراجعة التقييمات متاحة لحساب إداري مخول فقط." },
+    };
+  }
+
+  if (!payload.reviewId.trim() || !payload.reviewerId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد التقييم أو المراجع." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { error } = await clientResult.data
+    .from("seller_reviews")
+    .update({
+      status: payload.status,
+      admin_note: payload.adminNote?.trim() || null,
+      reviewed_by: payload.reviewerId,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq("id", payload.reviewId)
+    .eq("status", "pending_review");
+
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: null };
 }

@@ -1,11 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { BadgeCheck, ShieldAlert } from "lucide-react";
+import { MessageSquare, ShieldAlert, Star } from "lucide-react";
+import { useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
-import { fetchPublicSellerProfile } from "@/lib/classifieds-api";
+import { createSellerReview, fetchPublicSellerProfile } from "@/lib/classifieds-api";
 import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
+import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/seller/$id")({
   loader: async ({ params }) => {
@@ -53,16 +55,25 @@ function SellerPage() {
                 value={seller.locationAr ?? text("سوريا", "Syria")}
               />
               <Metric
-                label={text("الحساب", "Account")}
-                value={seller.verified ? text("موثق", "Verified") : text("نشط", "Active")}
+                label={text("التقييم", "Rating")}
+                value={
+                  seller.ratingSummary.count > 0
+                    ? `${seller.ratingSummary.average} / 5`
+                    : text("لا يوجد", "None")
+                }
               />
-              <Metric label={text("الإعلانات", "Listings")} value={`${seller.listings.length}`} />
+              <Metric
+                label={text("الإعلانات", "Listings")}
+                value={`${seller.approvedListingCount}`}
+              />
               <Metric
                 label={text("منذ", "Since")}
                 value={seller.joinedAt ? new Date(seller.joinedAt).getFullYear().toString() : "-"}
               />
             </div>
           </section>
+
+          <ReviewsPanel seller={seller} />
 
           <section>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -110,40 +121,188 @@ function SellerPage() {
 function SellerHeader({ seller }: { seller: PublicSellerProfile }) {
   const { text } = useUiPreferences();
   return (
-    <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-premium">
-      <div className="flex items-center gap-4">
-        <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-primary-foreground/10 text-xl font-bold text-gold">
-          {seller.displayName.slice(0, 1)}
+    <section className="overflow-hidden rounded-2xl bg-primary text-primary-foreground shadow-premium">
+      <div className="h-36 bg-primary-foreground/10">
+        {seller.coverUrl && (
+          <img src={seller.coverUrl} alt="" className="h-full w-full object-cover" />
+        )}
+      </div>
+      <div className="-mt-10 flex items-end gap-4 px-5 pb-5">
+        <span className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-primary text-xl font-bold text-gold ring-4 ring-primary">
+          {seller.avatarUrl ? (
+            <img
+              src={seller.avatarUrl}
+              alt={seller.displayName}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            seller.displayName.slice(0, 1)
+          )}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-lg font-extrabold">{seller.displayName}</h1>
-            {seller.verified && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold">
-                <BadgeCheck className="h-3 w-3" />
-                {text("موثق", "Verified")}
+            {seller.businessName && (
+              <span className="rounded-md bg-primary-foreground/10 px-2 py-0.5 text-[11px] font-bold">
+                {seller.businessName}
               </span>
             )}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-primary-foreground/80">
-            <span>{text("مستخدم", "User")}</span>
+            <span>
+              {seller.locationAr
+                ? text(seller.locationAr, seller.locationAr)
+                : text("سوريا", "Syria")}
+            </span>
             {seller.joinedAt && (
               <span>
                 {text("منذ", "Since")} {new Date(seller.joinedAt).getFullYear()}
               </span>
             )}
             <span>
-              {text(`${seller.listings.length} إعلان`, `${seller.listings.length} listings`)}
+              {text(
+                `${seller.approvedListingCount} إعلان`,
+                `${seller.approvedListingCount} listings`,
+              )}
             </span>
           </div>
         </div>
       </div>
-      <p className="mt-4 rounded-xl bg-primary-foreground/10 p-3 text-xs leading-6 text-primary-foreground/85">
-        {text(
-          "افتح أحد إعلانات المعلن المعتمدة لعرض طرق التواصل التي فعّلها داخل ذلك الإعلان.",
-          "Open one of the seller's approved listings to view the contact methods enabled there.",
+      {seller.bio && (
+        <p className="mx-5 mb-5 rounded-xl bg-primary-foreground/10 p-3 text-xs leading-6 text-primary-foreground/85">
+          {seller.bio}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
+  const auth = useAuth();
+  const { language, text } = useUiPreferences();
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [notice, setNotice] = useState("");
+  const [saving, setSaving] = useState(false);
+  const canReview = auth.status === "signedIn" && auth.profile?.id !== seller.id;
+
+  async function submitReview(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setNotice("");
+    setSaving(true);
+    const result = await createSellerReview({
+      sellerUserId: seller.id,
+      reviewerUserId: auth.profile?.id ?? null,
+      rating,
+      comment,
+    });
+    setSaving(false);
+    if (result.ok) {
+      setComment("");
+      setRating(5);
+      setNotice(
+        text(
+          "تم إرسال التقييم للمراجعة قبل ظهوره للعامة.",
+          "Review submitted for moderation before public display.",
+        ),
+      );
+    } else {
+      setNotice(result.error.message);
+    }
+  }
+
+  return (
+    <section className="rounded-2xl bg-card p-4 hairline">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="flex items-center gap-2 text-sm font-extrabold">
+            <Star className="h-4 w-4 text-gold" />
+            {text("تقييمات المعلن", "Seller ratings")}
+          </h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {seller.ratingSummary.count > 0
+              ? text(
+                  `${seller.ratingSummary.average} من 5 بناء على ${seller.ratingSummary.count} تقييم معتمد`,
+                  `${seller.ratingSummary.average} of 5 from ${seller.ratingSummary.count} approved reviews`,
+                )
+              : text("لا توجد تقييمات معتمدة بعد.", "No approved reviews yet.")}
+          </p>
+        </div>
+        {seller.ratingSummary.count > 0 && (
+          <span className="rounded-xl bg-muted-surface px-3 py-2 text-sm font-extrabold">
+            {seller.ratingSummary.average} ★
+          </span>
         )}
-      </p>
+      </div>
+      {seller.ratingSummary.count > 0 && (
+        <div className="mt-3 grid grid-cols-5 gap-2 text-center text-[11px] text-muted-foreground">
+          {[5, 4, 3, 2, 1].map((star) => (
+            <div key={star} className="rounded-lg bg-muted-surface p-2">
+              <div className="font-bold text-foreground">
+                {seller.ratingSummary.distribution[star as 1 | 2 | 3 | 4 | 5]}
+              </div>
+              <div>{star} ★</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {seller.reviews.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {seller.reviews.slice(0, 3).map((review) => (
+            <article key={review.id} className="rounded-xl bg-muted-surface p-3">
+              <div className="text-xs font-bold text-gold">{"★".repeat(review.rating)}</div>
+              <p className="mt-1 whitespace-pre-line text-xs leading-6">{review.comment}</p>
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                {new Date(review.createdAt).toLocaleDateString(
+                  language === "ar" ? "ar-SY" : "en-US",
+                )}
+              </p>
+            </article>
+          ))}
+        </div>
+      )}
+      <form onSubmit={(event) => void submitReview(event)} className="mt-4 space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {[1, 2, 3, 4, 5].map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setRating(value)}
+              className={`rounded-lg px-2 py-1 text-xs font-bold hairline ${
+                rating >= value ? "bg-gold text-gold-foreground" : "bg-muted-surface"
+              }`}
+            >
+              {value} ★
+            </button>
+          ))}
+        </div>
+        <textarea
+          value={comment}
+          onChange={(event) => setComment(event.target.value)}
+          maxLength={1200}
+          rows={3}
+          disabled={!canReview || saving}
+          placeholder={
+            canReview
+              ? text("اكتب تجربتك مع هذا المعلن", "Write your experience with this seller")
+              : text("سجل الدخول بتقييم حساب آخر", "Log in with another account to review")
+          }
+          className="w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline disabled:opacity-60"
+        />
+        <button
+          type="submit"
+          disabled={!canReview || saving}
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
+        >
+          <MessageSquare className="h-4 w-4" />
+          {saving
+            ? text("جاري الإرسال", "Submitting")
+            : text("إرسال للمراجعة", "Submit for review")}
+        </button>
+        {notice && (
+          <p className="rounded-xl bg-muted-surface p-2 text-xs font-semibold">{notice}</p>
+        )}
+      </form>
     </section>
   );
 }

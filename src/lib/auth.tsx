@@ -43,7 +43,7 @@ async function fetchProfile(client: SupabaseClient, user: User): Promise<UserPro
   const { data: profileData, error: profileError } = await client
     .from("profiles")
     .select(
-      "id,email,display_name,account_status,verification_status,governorate,created_at,updated_at",
+      "id,email,first_name,last_name,display_name,account_status,verification_status,governorate,city_area,bio,business_name,phone,whatsapp,preferred_contact_method,avatar_path,avatar_url,cover_path,cover_url,created_at,updated_at",
     )
     .eq("id", user.id)
     .maybeSingle();
@@ -67,12 +67,24 @@ async function fetchProfile(client: SupabaseClient, user: User): Promise<UserPro
   return {
     id: user.id,
     email: profileData?.email ?? user.email ?? null,
+    firstName: profileData?.first_name ?? null,
+    lastName: profileData?.last_name ?? null,
     displayName: profileData?.display_name ?? null,
     role,
     roles,
     accountStatus: profileData?.account_status ?? "pending_review",
     verificationStatus: profileData?.verification_status ?? "unverified",
     governorate: profileData?.governorate ?? null,
+    cityArea: profileData?.city_area ?? null,
+    bio: profileData?.bio ?? null,
+    businessName: profileData?.business_name ?? null,
+    phone: profileData?.phone ?? null,
+    whatsapp: profileData?.whatsapp ?? null,
+    preferredContactMethod: profileData?.preferred_contact_method ?? null,
+    avatarPath: profileData?.avatar_path ?? null,
+    avatarUrl: profileData?.avatar_url ?? null,
+    coverPath: profileData?.cover_path ?? null,
+    coverUrl: profileData?.cover_url ?? null,
     createdAt: profileData?.created_at ?? null,
     updatedAt: profileData?.updated_at ?? null,
   };
