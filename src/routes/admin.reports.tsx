@@ -23,7 +23,7 @@ function ReportsPage() {
   async function loadReports() {
     setLoading(true);
     setError(null);
-    const result = await adminFetchReports(auth.canAccessOwnerControls);
+    const result = await adminFetchReports(auth.canAccessAdmin);
     if (result.ok) {
       setReports(result.data);
       setNotes(
@@ -38,7 +38,7 @@ function ReportsPage() {
 
   useEffect(() => {
     void loadReports();
-  }, [auth.canAccessOwnerControls]);
+  }, [auth.canAccessAdmin]);
 
   async function moderate(report: ListingReport, status: ListingReportStatus) {
     setMessage("");
@@ -48,7 +48,7 @@ function ReportsPage() {
       );
       return;
     }
-    const result = await adminModerateReport(auth.canAccessOwnerControls, {
+    const result = await adminModerateReport(auth.canAccessAdmin, {
       reportId: report.id,
       status,
       assignedTo: auth.profile.id,

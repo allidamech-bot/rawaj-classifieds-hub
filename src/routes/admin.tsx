@@ -61,13 +61,13 @@ function AdminLayout() {
     );
   }
 
-  if (!auth.canAccessOwnerControls) {
+  if (!auth.canAccessAdmin) {
     return (
       <AdminShellState
         title={text("غير مخوّل", "Not authorized")}
         message={text(
-          "هذه المساحة مخصصة للمالك فقط. الصلاحية لا تُمنح من الواجهة.",
-          "This area is for the owner only. Permission is not granted by the frontend.",
+          "هذه المساحة مخصصة لحساب إداري مخول. الصلاحية لا تُمنح من الواجهة.",
+          "This area is for an authorized admin account. Permission is not granted by the frontend.",
         )}
       />
     );
@@ -81,8 +81,8 @@ function AdminLayout() {
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <p className="text-xs leading-6 text-foreground/90">
             {text(
-              "لوحة الإدارة تعرض مساحة تحكم للمالك مع مراجعة الإعلانات والبلاغات وطلبات الترويج. كل وصول إداري يبقى محكوماً بالصلاحيات المخزنة خارج الواجهة.",
-              "The admin dashboard provides owner controls for listings, reports, and promotion requests. Administrative access remains governed by permissions stored outside the frontend.",
+              "لوحة الإدارة تعرض مساحات مراجعة للإعلانات والبلاغات حسب الدور المخزن. كل وصول إداري يبقى محكوماً بالصلاحيات المخزنة خارج الواجهة.",
+              "The admin dashboard shows listing and report review spaces based on the stored role. Administrative access remains governed by permissions stored outside the frontend.",
             )}
           </p>
         </div>

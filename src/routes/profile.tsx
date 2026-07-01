@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   BadgeCheck,
   Bookmark,
@@ -27,6 +27,7 @@ import {
   deleteOwnerListing,
   fetchCurrentUserListings,
   resubmitOwnerListing,
+  updateOwnProfileBasics,
 } from "@/lib/classifieds-api";
 import type { ClassifiedListing, ClassifiedsError, ListingStatus } from "@/lib/classifieds-types";
 import { categoryName, governorateName } from "@/lib/i18n";
@@ -93,6 +94,10 @@ function ProfilePage() {
   const [notice, setNotice] = useState("");
   const [listingActionLoading, setListingActionLoading] = useState<string | null>(null);
   const [listingActionNotice, setListingActionNotice] = useState("");
+  const [settingsDisplayName, setSettingsDisplayName] = useState("");
+  const [settingsGovernorate, setSettingsGovernorate] = useState("");
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsNotice, setSettingsNotice] = useState("");
   const profileId = auth.profile?.id;
   const displayName = auth.profile?.displayName || auth.profile?.email || text("زائر", "Guest");
 
@@ -140,6 +145,28 @@ function ProfilePage() {
       setListingActionNotice(result.error.message);
     }
   }
+
+  async function handleSaveProfileBasics(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSettingsNotice("");
+    setSettingsSaving(true);
+    const result = await updateOwnProfileBasics(profileId ?? null, {
+      displayName: settingsDisplayName,
+      governorate: settingsGovernorate || null,
+    });
+    setSettingsSaving(false);
+    setSettingsNotice(
+      result.ok
+        ? text("تم حفظ بيانات الحساب الأساسية.", "Account basics saved.")
+        : result.error.message,
+    );
+  }
+
+  useEffect(() => {
+    if (auth.status !== "signedIn") return;
+    setSettingsDisplayName(auth.profile?.displayName ?? "");
+    setSettingsGovernorate(auth.profile?.governorate ?? "");
+  }, [auth.profile?.displayName, auth.profile?.governorate, auth.status]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) return;
@@ -248,7 +275,7 @@ function ProfilePage() {
           <h3 className="mb-2 text-sm font-extrabold">{text("قائمة الحساب", "Account menu")}</h3>
           <nav className="overflow-hidden rounded-2xl bg-card hairline">
             {accountMenu
-              .filter((item) => !item.ownerOnly || auth.canAccessOwnerControls)
+              .filter((item) => !item.ownerOnly || auth.canAccessAdmin)
               .map((item, index) => (
                 <Link
                   key={item.to}
@@ -424,12 +451,57 @@ function ProfilePage() {
           <h3 className="mb-2 text-sm font-extrabold">
             {text("إعدادات الحساب", "Account settings")}
           </h3>
-          <p className="text-xs leading-6 text-muted-foreground">
-            {text(
-              "تغييرات الحساب الحساسة تحتاج مسارات محفوظة وصلاحيات واضحة قبل عرض أزرار تعديل مباشرة.",
-              "Sensitive account changes require stored flows and clear permissions before direct edit actions are shown.",
-            )}
-          </p>
+          {auth.status === "signedIn" ? (
+            <form onSubmit={(event) => void handleSaveProfileBasics(event)} className="space-y-3">
+              <label className="block">
+                <span className="text-xs font-bold text-muted-foreground">
+                  {text("اسم العرض", "Display name")}
+                </span>
+                <input
+                  value={settingsDisplayName}
+                  onChange={(event) => setSettingsDisplayName(event.target.value)}
+                  maxLength={80}
+                  className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-bold text-muted-foreground">
+                  {text("المحافظة", "Governorate")}
+                </span>
+                <input
+                  value={settingsGovernorate}
+                  onChange={(event) => setSettingsGovernorate(event.target.value)}
+                  maxLength={80}
+                  className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
+                />
+              </label>
+              <p className="text-[11px] leading-5 text-muted-foreground">
+                {text(
+                  "لا يتم تعديل البريد أو حالة الحساب أو التوثيق من هذه المساحة.",
+                  "Email, account status, and verification are not changed here.",
+                )}
+              </p>
+              <button
+                type="submit"
+                disabled={settingsSaving}
+                className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
+              >
+                {settingsSaving ? text("جار الحفظ", "Saving") : text("حفظ البيانات", "Save basics")}
+              </button>
+              {settingsNotice && (
+                <p className="rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground">
+                  {settingsNotice}
+                </p>
+              )}
+            </form>
+          ) : (
+            <p className="text-xs leading-6 text-muted-foreground">
+              {text(
+                "سجل الدخول لتحديث بيانات الحساب الأساسية المخزنة في ملفك.",
+                "Log in to update the account basics stored on your profile.",
+              )}
+            </p>
+          )}
         </section>
 
         <section className="rounded-2xl bg-card-warm p-4 hairline">

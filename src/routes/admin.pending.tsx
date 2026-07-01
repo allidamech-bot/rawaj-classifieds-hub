@@ -30,7 +30,7 @@ function PendingPage() {
   async function loadPending() {
     setLoading(true);
     setError(null);
-    const result = await adminFetchPendingListings(auth.canAccessOwnerControls);
+    const result = await adminFetchPendingListings(auth.canAccessAdmin);
     if (result.ok) setListings(result.data);
     else {
       setError(result.error);
@@ -41,7 +41,7 @@ function PendingPage() {
 
   useEffect(() => {
     void loadPending();
-  }, [auth.canAccessOwnerControls]);
+  }, [auth.canAccessAdmin]);
 
   async function moderate(listing: ClassifiedListing, status: "approved" | "rejected") {
     setMessage("");
@@ -55,7 +55,7 @@ function PendingPage() {
       setMessage(text("أدخل سبب الرفض قبل تحديث الإعلان.", "Add a rejection reason first."));
       return;
     }
-    const result = await adminModerateListing(auth.canAccessOwnerControls, {
+    const result = await adminModerateListing(auth.canAccessAdmin, {
       listingId: listing.id,
       status,
       reviewerId: auth.profile.id,
@@ -96,8 +96,8 @@ function PendingPage() {
             </h2>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">
               {text(
-                "يعرض هذا الطابور الإعلانات الحقيقية التي تنتظر قرار المالك.",
-                "This queue shows real listings waiting for an owner decision.",
+                "يعرض هذا الطابور الإعلانات الحقيقية التي تنتظر قرارا إداريا.",
+                "This queue shows real listings waiting for an admin decision.",
               )}
             </p>
           </div>
@@ -231,6 +231,7 @@ function PendingListingDetails({
   );
   const phone = detailString(listing.details, "phone");
   const whatsapp = detailString(listing.details, "whatsapp");
+  const contentFlags = detailStringArray(listing.details, "content_flags");
 
   return (
     <section className="mt-3 rounded-xl bg-muted-surface p-3 hairline">
@@ -279,6 +280,21 @@ function PendingListingDetails({
           {listing.description || "-"}
         </p>
       </div>
+      {contentFlags.length > 0 && (
+        <div className="mt-3 rounded-lg bg-warning/10 p-3 text-xs leading-6 text-foreground hairline">
+          <p className="mb-1 font-bold">{text("أعلام السلامة", "Safety flags")}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {contentFlags.map((flag) => (
+              <span
+                key={flag}
+                className="rounded-md bg-card px-2 py-1 text-[10px] font-bold text-warning hairline"
+              >
+                {flag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="mt-3">
         <p className="mb-1 text-xs font-bold">{text("تفاصيل إضافية", "Additional details")}</p>
         {detailsEntries.length === 0 ? (
@@ -338,6 +354,13 @@ function Badge({ children }: { children: React.ReactNode }) {
 function detailString(details: Record<string, unknown>, key: string) {
   const value = details[key];
   return typeof value === "string" ? value : "";
+}
+
+function detailStringArray(details: Record<string, unknown>, key: string) {
+  const value = details[key];
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
 }
 
 function safeDetailValue(value: unknown) {

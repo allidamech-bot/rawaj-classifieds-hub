@@ -20,6 +20,7 @@ import type {
   NotificationItem,
   PublicSellerProfile,
   SavedSearch,
+  UpdateProfileBasicsPayload,
   UpdateListingPayload,
 } from "@/lib/classifieds-types";
 import type { PlaceholderType, PriceType } from "@/types";
@@ -601,6 +602,49 @@ export async function fetchCurrentUserListings(
   );
 
   return { ok: true, data: await hydrateListingsWithPrimaryImages(clientResult.data, listings) };
+}
+
+export async function updateOwnProfileBasics(
+  userId: string | null,
+  payload: UpdateProfileBasicsPayload,
+): Promise<ClassifiedsResult<null>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث الحساب." },
+    };
+  }
+
+  const displayName = payload.displayName.trim();
+  const governorate = payload.governorate?.trim() || null;
+
+  if (displayName.length < 2 || displayName.length > 80) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "أدخل اسما بين 2 و80 حرفا." },
+    };
+  }
+
+  if (governorate && governorate.length > 80) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "اسم المحافظة طويل جدا." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { error } = await clientResult.data
+    .from("profiles")
+    .update({
+      display_name: displayName,
+      governorate,
+    })
+    .eq("id", userId);
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: null };
 }
 
 export async function fetchOwnerListingDetail(
@@ -1387,7 +1431,7 @@ export async function createListingReport(
     .select("*")
     .eq("listing_id", listingId)
     .eq("reporter_id", userId)
-    .in("status", ["new", "under_review"])
+    .in("status", ["new", "under_review", "in_review"])
     .maybeSingle();
 
   if (existingReportError) return { ok: false, error: mapError(existingReportError) };
@@ -1410,12 +1454,12 @@ export async function createListingReport(
 }
 
 export async function adminFetchPendingListings(
-  canUseOwnerControls: boolean,
+  canUseAdminAccess: boolean,
 ): Promise<ClassifiedsResult<ClassifiedListing[]>> {
-  if (!canUseOwnerControls) {
+  if (!canUseAdminAccess) {
     return {
       ok: false,
-      error: { code: "permission_denied", message: "هذه البيانات متاحة للمالك فقط." },
+      error: { code: "permission_denied", message: "هذه البيانات متاحة لحساب إداري مخول فقط." },
     };
   }
 
@@ -1441,12 +1485,12 @@ export async function adminFetchPendingListings(
 }
 
 export async function adminFetchReports(
-  canUseOwnerControls: boolean,
+  canUseAdminAccess: boolean,
 ): Promise<ClassifiedsResult<ListingReport[]>> {
-  if (!canUseOwnerControls) {
+  if (!canUseAdminAccess) {
     return {
       ok: false,
-      error: { code: "permission_denied", message: "إدارة البلاغات متاحة للمالك فقط." },
+      error: { code: "permission_denied", message: "إدارة البلاغات متاحة لحساب إداري مخول فقط." },
     };
   }
 
@@ -1463,13 +1507,13 @@ export async function adminFetchReports(
 }
 
 export async function adminModerateReport(
-  canUseOwnerControls: boolean,
+  canUseAdminAccess: boolean,
   payload: ModerateReportPayload,
 ): Promise<ClassifiedsResult<null>> {
-  if (!canUseOwnerControls) {
+  if (!canUseAdminAccess) {
     return {
       ok: false,
-      error: { code: "permission_denied", message: "إدارة البلاغات متاحة للمالك فقط." },
+      error: { code: "permission_denied", message: "إدارة البلاغات متاحة لحساب إداري مخول فقط." },
     };
   }
 
@@ -1503,13 +1547,13 @@ export async function adminModerateReport(
 }
 
 export async function adminModerateListing(
-  canUseOwnerControls: boolean,
+  canUseAdminAccess: boolean,
   payload: ModerateListingPayload,
 ): Promise<ClassifiedsResult<null>> {
-  if (!canUseOwnerControls) {
+  if (!canUseAdminAccess) {
     return {
       ok: false,
-      error: { code: "permission_denied", message: "مراجعة الإعلانات متاحة للمالك فقط." },
+      error: { code: "permission_denied", message: "مراجعة الإعلانات متاحة لحساب إداري مخول فقط." },
     };
   }
 

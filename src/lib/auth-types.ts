@@ -77,7 +77,7 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
 
 export function canAccessAdmin(profile: UserProfile | null): boolean {
   if (!profile || profile.accountStatus !== "active") return false;
-  return profile.roles.includes("owner") && rolePermissions.owner.canViewAdminDashboard;
+  return profile.roles.some((role) => rolePermissions[role].canViewAdminDashboard);
 }
 
 export function canAccessOwnerControls(profile: UserProfile | null): boolean {

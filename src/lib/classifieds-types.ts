@@ -132,6 +132,11 @@ export interface PublicSellerProfile {
   listings: ClassifiedListing[];
 }
 
+export interface UpdateProfileBasicsPayload {
+  displayName: string;
+  governorate: string | null;
+}
+
 export interface ListingReport {
   id: string;
   listingId: string;

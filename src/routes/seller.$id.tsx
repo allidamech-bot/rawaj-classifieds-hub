@@ -1,13 +1,11 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
-import { BadgeCheck, Ban, Flag, MessageCircle, Phone, ShieldAlert } from "lucide-react";
+import { BadgeCheck, ShieldAlert } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { fetchPublicSellerProfile } from "@/lib/classifieds-api";
 import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
-import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/seller/$id")({
   loader: async ({ params }) => {
@@ -31,139 +29,85 @@ export const Route = createFileRoute("/seller/$id")({
 });
 
 function SellerPage() {
-  const auth = useAuth();
-  const { language, text } = useUiPreferences();
+  const { text } = useUiPreferences();
   const seller = Route.useLoaderData();
-  const [notice, setNotice] = useState("");
-
-  function setAction(ar: string, en: string) {
-    setNotice(text(ar, en));
-  }
 
   return (
     <div>
       <PageHeader title={text("ملف البائع", "Seller profile")} />
       <main className="container-wide pt-4 pb-8">
-        {auth.status === "loading" ? (
-          <div className="rounded-2xl bg-card p-10 text-center text-sm text-muted-foreground hairline">
-            {text("جاري التحقق من الجلسة", "Checking session")}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <SellerHeader seller={seller} setAction={setAction} />
-            {notice && (
-              <p className="rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground hairline">
-                {notice}
-              </p>
-            )}
+        <div className="space-y-4">
+          <SellerHeader seller={seller} />
 
-            <section className="rounded-2xl bg-card p-4 hairline">
-              <h3 className="text-sm font-extrabold">
-                {text("نبذة عن البائع", "About the seller")}
-              </h3>
-              <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                {text(
-                  "يعرض هذا الملف الإعلانات العامة المعتمدة لهذا البائع فقط. لا تظهر أي بيانات خاصة من حسابه.",
-                  "This profile shows only this seller's public approved listings. Private account data is not shown.",
-                )}
-              </p>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-muted-foreground sm:grid-cols-4">
-                <Metric
-                  label={text("الموقع", "Location")}
-                  value={seller.locationAr ?? text("سوريا", "Syria")}
-                />
-                <Metric
-                  label={text("الحساب", "Account")}
-                  value={seller.verified ? text("موثق", "Verified") : text("نشط", "Active")}
-                />
-                <Metric label={text("الإعلانات", "Listings")} value={`${seller.listings.length}`} />
-                <Metric
-                  label={text("منذ", "Since")}
-                  value={seller.joinedAt ? new Date(seller.joinedAt).getFullYear().toString() : "-"}
-                />
-              </div>
-            </section>
-
-            <section>
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-extrabold">
-                  <span className="inline-block border-b-2 border-gold pb-0.5">
-                    {text(
-                      `الإعلانات المعتمدة (${seller.listings.length})`,
-                      `Approved listings (${seller.listings.length})`,
-                    )}
-                  </span>
-                </h2>
-                <span className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground">
-                  {text("إعلانات البائع", "Seller listings")}
-                </span>
-              </div>
-              {seller.listings.length === 0 ? (
-                <div className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground hairline">
-                  {text("لا توجد إعلانات عامة لهذا البائع.", "This seller has no public listings.")}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {seller.listings.map((listing) => (
-                    <SellerListingCard key={listing.id} listing={listing} />
-                  ))}
-                </div>
+          <section className="rounded-2xl bg-card p-4 hairline">
+            <h3 className="text-sm font-extrabold">{text("نبذة عن البائع", "About the seller")}</h3>
+            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              {text(
+                "يعرض هذا الملف الإعلانات العامة المعتمدة لهذا البائع فقط. لا تظهر أي بيانات خاصة من حسابه.",
+                "This profile shows only this seller's public approved listings. Private account data is not shown.",
               )}
-            </section>
-
-            <section className="flex items-start gap-3 rounded-2xl bg-card p-4 text-xs text-muted-foreground hairline">
-              <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
-              <p className="leading-6">
-                <strong className="text-foreground">{text("تنبيه أمان", "Safety note")}: </strong>
-                {text(
-                  "قابل البائع في مكان عام وآمن، وافحص السلعة قبل الدفع. لا تحوّل المال قبل التأكد.",
-                  "Meet in a safe public place, inspect the item before paying, and do not transfer money before verifying.",
-                )}
-              </p>
-            </section>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  setAction(
-                    "استخدم صفحة الدعم للحالات التي تحتاج مراجعة من فريق رواج.",
-                    "Use Support for cases that need RAWAJ team review.",
-                  )
-                }
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold text-destructive hairline"
-              >
-                <Flag className="h-4 w-4" />
-                {text("إبلاغ", "Report")}
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  setAction(
-                    "تم تحديث تفضيل الحظر لهذه الجلسة داخل الواجهة.",
-                    "Block preference was updated in this browser session.",
-                  )
-                }
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold hairline"
-              >
-                <Ban className="h-4 w-4" />
-                {text("حظر", "Block")}
-              </button>
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-muted-foreground sm:grid-cols-4">
+              <Metric
+                label={text("الموقع", "Location")}
+                value={seller.locationAr ?? text("سوريا", "Syria")}
+              />
+              <Metric
+                label={text("الحساب", "Account")}
+                value={seller.verified ? text("موثق", "Verified") : text("نشط", "Active")}
+              />
+              <Metric label={text("الإعلانات", "Listings")} value={`${seller.listings.length}`} />
+              <Metric
+                label={text("منذ", "Since")}
+                value={seller.joinedAt ? new Date(seller.joinedAt).getFullYear().toString() : "-"}
+              />
             </div>
-          </div>
-        )}
+          </section>
+
+          <section>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-extrabold">
+                <span className="inline-block border-b-2 border-gold pb-0.5">
+                  {text(
+                    `الإعلانات المعتمدة (${seller.listings.length})`,
+                    `Approved listings (${seller.listings.length})`,
+                  )}
+                </span>
+              </h2>
+              <span className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground">
+                {text("إعلانات البائع", "Seller listings")}
+              </span>
+            </div>
+            {seller.listings.length === 0 ? (
+              <div className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground hairline">
+                {text("لا توجد إعلانات عامة لهذا البائع.", "This seller has no public listings.")}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {seller.listings.map((listing) => (
+                  <SellerListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="flex items-start gap-3 rounded-2xl bg-card p-4 text-xs text-muted-foreground hairline">
+            <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+            <p className="leading-6">
+              <strong className="text-foreground">{text("تنبيه أمان", "Safety note")}: </strong>
+              {text(
+                "قابل البائع في مكان عام وآمن، وافحص السلعة قبل الدفع. لا تحوّل المال قبل التأكد.",
+                "Meet in a safe public place, inspect the item before paying, and do not transfer money before verifying.",
+              )}
+            </p>
+          </section>
+        </div>
       </main>
     </div>
   );
 }
 
-function SellerHeader({
-  seller,
-  setAction,
-}: {
-  seller: PublicSellerProfile;
-  setAction: (ar: string, en: string) => void;
-}) {
+function SellerHeader({ seller }: { seller: PublicSellerProfile }) {
   const { text } = useUiPreferences();
   return (
     <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-premium">
@@ -194,46 +138,12 @@ function SellerHeader({
           </div>
         </div>
       </div>
-      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <button
-          type="button"
-          onClick={() =>
-            setAction(
-              "يمكن بدء التواصل من صفحة إعلان معتمد للبائع.",
-              "Start contact from one of the seller's approved listing pages.",
-            )
-          }
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold py-2 text-xs font-bold text-gold-foreground"
-        >
-          <MessageCircle className="h-3.5 w-3.5" />
-          {text("مراسلة", "Message")}
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            setAction(
-              "تظهر أرقام الهاتف فقط عندما يختارها البائع ضمن الإعلان.",
-              "Phone numbers appear only when the seller enables them on a listing.",
-            )
-          }
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-foreground/10 py-2 text-xs font-bold"
-        >
-          <Phone className="h-3.5 w-3.5" />
-          {text("اتصال", "Call")}
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            setAction(
-              "استخدم خيارات التواصل الظاهرة داخل الإعلان المعتمد.",
-              "Use the contact options shown inside the approved listing.",
-            )
-          }
-          className="rounded-xl bg-primary-foreground/10 py-2 text-xs font-bold"
-        >
-          {text("واتساب", "WhatsApp")}
-        </button>
-      </div>
+      <p className="mt-4 rounded-xl bg-primary-foreground/10 p-3 text-xs leading-6 text-primary-foreground/85">
+        {text(
+          "افتح أحد إعلانات المعلن المعتمدة لعرض طرق التواصل التي فعّلها داخل ذلك الإعلان.",
+          "Open one of the seller's approved listings to view the contact methods enabled there.",
+        )}
+      </p>
     </section>
   );
 }

@@ -9,6 +9,7 @@ import {
   MapPin,
   Phone,
   ShieldAlert,
+  User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
@@ -161,8 +162,24 @@ function ListingDetailsPage() {
     );
   }
 
+  const hiddenPublicDetailKeys = new Set([
+    "phone",
+    "mobile",
+    "contact_phone",
+    "whatsapp",
+    "contact_whatsapp",
+    "content_flags",
+    "رقم الهاتف",
+    "الهاتف",
+    "واتساب",
+    "رقم واتساب",
+  ]);
   const detailsEntries = Object.entries(listing.details).filter(
-    ([, value]) => value !== undefined && value !== "",
+    ([key, value]) =>
+      !hiddenPublicDetailKeys.has(key.toLowerCase()) &&
+      value !== undefined &&
+      value !== null &&
+      value !== "",
   );
   const locationLabel = governorateName(
     listing.governorateId,
@@ -181,6 +198,7 @@ function ListingDetailsPage() {
   const cleanWhatsapp = whatsapp || detailString(listing, ["واتساب", "رقم واتساب"]);
   const canCall = Boolean(listing.contactOptions.phone && cleanPhone);
   const canWhatsapp = Boolean(listing.contactOptions.whatsapp && cleanWhatsapp);
+  const sellerName = listing.contactName?.trim() || text("معلن على رواج", "RAWAJ advertiser");
 
   return (
     <>
@@ -317,6 +335,52 @@ function ListingDetailsPage() {
             {listing.description?.trim() ||
               text("لم يضف البائع وصفا مفصلا.", "The seller has not added a detailed description.")}
           </p>
+        </section>
+
+        <section className="mt-3 rounded-2xl bg-card p-4 hairline">
+          <div className="flex items-start gap-3">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-muted-surface text-primary">
+              <User className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-semibold text-muted-foreground">
+                {text("المعلن", "Advertiser")}
+              </p>
+              <h2 className="mt-0.5 truncate text-sm font-extrabold text-foreground">
+                {sellerName}
+              </h2>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                {canCall || canWhatsapp
+                  ? text(
+                      "طرق التواصل المتاحة تظهر من بيانات هذا الإعلان فقط.",
+                      "Available contact methods are shown from this listing only.",
+                    )
+                  : text(
+                      "لم يفعّل المعلن طريقة تواصل مباشرة في هذا الإعلان.",
+                      "The advertiser did not enable a direct contact method on this listing.",
+                    )}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {canCall && (
+                  <span className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground">
+                    {text("هاتف متاح", "Phone available")}
+                  </span>
+                )}
+                {canWhatsapp && (
+                  <span className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground">
+                    {text("واتساب متاح", "WhatsApp available")}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <Link
+            to="/seller/$id"
+            params={{ id: listing.ownerId }}
+            className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground"
+          >
+            {text("عرض كل إعلانات المعلن", "View all advertiser listings")}
+          </Link>
         </section>
 
         {detailsEntries.length > 0 && (

@@ -41,8 +41,8 @@ function AdminOverview() {
       setLoading(true);
       setError(null);
       const [pendingResult, reportsResult] = await Promise.all([
-        adminFetchPendingListings(auth.canAccessOwnerControls),
-        adminFetchReports(auth.canAccessOwnerControls),
+        adminFetchPendingListings(auth.canAccessAdmin),
+        adminFetchReports(auth.canAccessAdmin),
       ]);
       if (cancelled) return;
 
@@ -59,7 +59,7 @@ function AdminOverview() {
     return () => {
       cancelled = true;
     };
-  }, [auth.canAccessOwnerControls]);
+  }, [auth.canAccessAdmin]);
 
   const metrics = [
     {
@@ -104,7 +104,7 @@ function AdminOverview() {
             </span>
             <div>
               <p className="text-xs font-bold text-primary-foreground/75">
-                {text("مركز تحكم المالك", "Owner control center")}
+                {text("مركز الإدارة", "Admin control center")}
               </p>
               <h2 className="text-xl font-extrabold">{text("إدارة رواج", "RAWAJ management")}</h2>
               <p className="mt-1 max-w-2xl text-xs leading-6 text-primary-foreground/80">
@@ -115,7 +115,7 @@ function AdminOverview() {
               </p>
             </div>
           </div>
-          <Badge tone="gold">{text("صلاحية المالك", "Owner access")}</Badge>
+          <Badge tone="gold">{text("صلاحية إدارية", "Admin access")}</Badge>
         </div>
       </section>
 
@@ -163,8 +163,8 @@ function AdminOverview() {
         <AdminCard icon={FileCheck} title={text("مراجعة الإعلانات", "Listing review")}>
           <p className="text-xs leading-6 text-muted-foreground">
             {text(
-              "تعرض صفحة المراجعة الإعلانات المرسلة بانتظار قرار المالك فقط.",
-              "The review page shows submitted listings waiting for an owner decision only.",
+              "تعرض صفحة المراجعة الإعلانات المرسلة بانتظار قرار إداري فقط.",
+              "The review page shows submitted listings waiting for an admin decision only.",
             )}
           </p>
           <AdminLink to="/admin/pending" label={text("فتح المراجعة", "Open review")} />
@@ -202,7 +202,7 @@ function AdminOverview() {
       </section>
 
       <section className="rounded-2xl bg-card p-4 hairline">
-        <SectionTitle icon={Settings} title={text("إعدادات المالك", "Owner settings")} compact />
+        <SectionTitle icon={Settings} title={text("إعدادات الإدارة", "Admin settings")} compact />
         <p className="text-xs leading-6 text-muted-foreground">
           {text(
             "إعدادات المنصة تحتاج واجهات محمية قبل عرض مؤشرات أو تغييرات تنفيذية من هذه اللوحة.",
