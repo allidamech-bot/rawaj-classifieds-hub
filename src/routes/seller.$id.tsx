@@ -162,9 +162,20 @@ function SellerHeader({ seller }: { seller: PublicSellerProfile }) {
   const { text } = useUiPreferences();
   return (
     <section className="overflow-hidden rounded-2xl bg-primary text-primary-foreground shadow-premium">
-      <div className="h-36 bg-primary-foreground/10">
+      <div className="relative h-40 overflow-hidden bg-primary-foreground/10">
         {seller.coverUrl && (
-          <img src={seller.coverUrl} alt="" className="h-full w-full object-cover" />
+          <>
+            <img
+              src={seller.coverUrl}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover opacity-25 blur-md"
+            />
+            <img
+              src={seller.coverUrl}
+              alt=""
+              className="relative z-10 h-full w-full object-contain"
+            />
+          </>
         )}
       </div>
       <div className="-mt-10 flex items-end gap-4 px-5 pb-5">
@@ -231,6 +242,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
   const canReview = auth.status === "signedIn" && auth.profile?.id !== seller.id;
+  const isOwnProfile = auth.status === "signedIn" && auth.profile?.id === seller.id;
 
   async function submitReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -307,48 +319,69 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
           ))}
         </div>
       )}
-      <form onSubmit={(event) => void submitReview(event)} className="mt-4 space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          {[1, 2, 3, 4, 5].map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setRating(value)}
-              className={`rounded-lg px-2 py-1 text-xs font-bold hairline ${
-                rating >= value ? "bg-gold text-gold-foreground" : "bg-muted-surface"
-              }`}
-            >
-              {value} ★
-            </button>
-          ))}
+      {auth.status !== "signedIn" ? (
+        <div className="mt-4 rounded-xl bg-muted-surface p-3 text-xs leading-6 hairline">
+          <p className="font-bold">{text("سجل الدخول لإرسال تقييم", "Log in to write a review")}</p>
+          <p className="mt-1 text-muted-foreground">
+            {text(
+              "تظهر التقييمات للعامة بعد المراجعة فقط.",
+              "Reviews become public only after moderation.",
+            )}
+          </p>
+          <Link
+            to="/login"
+            className="mt-3 inline-flex rounded-lg bg-primary px-3 py-2 font-bold text-primary-foreground"
+          >
+            {text("تسجيل الدخول", "Log in")}
+          </Link>
         </div>
-        <textarea
-          value={comment}
-          onChange={(event) => setComment(event.target.value)}
-          maxLength={1200}
-          rows={3}
-          disabled={!canReview || saving}
-          placeholder={
-            canReview
-              ? text("اكتب تجربتك مع هذا المعلن", "Write your experience with this seller")
-              : text("سجل الدخول بتقييم حساب آخر", "Log in with another account to review")
-          }
-          className="w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline disabled:opacity-60"
-        />
-        <button
-          type="submit"
-          disabled={!canReview || saving}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
-        >
-          <MessageSquare className="h-4 w-4" />
-          {saving
-            ? text("جاري الإرسال", "Submitting")
-            : text("إرسال للمراجعة", "Submit for review")}
-        </button>
-        {notice && (
-          <p className="rounded-xl bg-muted-surface p-2 text-xs font-semibold">{notice}</p>
-        )}
-      </form>
+      ) : isOwnProfile ? (
+        <p className="mt-4 rounded-xl bg-muted-surface p-3 text-xs font-semibold hairline">
+          {text("لا يمكنك تقييم حسابك.", "You cannot review your own account.")}
+        </p>
+      ) : (
+        <form onSubmit={(event) => void submitReview(event)} className="mt-4 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {[1, 2, 3, 4, 5].map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setRating(value)}
+                className={`rounded-lg px-2 py-1 text-xs font-bold hairline ${
+                  rating >= value ? "bg-gold text-gold-foreground" : "bg-muted-surface"
+                }`}
+              >
+                {value} ★
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={comment}
+            onChange={(event) => setComment(event.target.value)}
+            maxLength={1200}
+            rows={3}
+            disabled={saving}
+            placeholder={text(
+              "اكتب تجربتك مع هذا المعلن",
+              "Write your experience with this seller",
+            )}
+            className="w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline disabled:opacity-60"
+          />
+          <button
+            type="submit"
+            disabled={!canReview || saving}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
+          >
+            <MessageSquare className="h-4 w-4" />
+            {saving
+              ? text("جاري الإرسال", "Submitting")
+              : text("إرسال للمراجعة", "Submit for review")}
+          </button>
+          {notice && (
+            <p className="rounded-xl bg-muted-surface p-2 text-xs font-semibold">{notice}</p>
+          )}
+        </form>
+      )}
     </section>
   );
 }

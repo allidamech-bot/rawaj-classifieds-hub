@@ -9,15 +9,19 @@ import {
   FileSpreadsheet,
   FileText,
   Heart,
+  Home,
   LifeBuoy,
   LogIn,
   LogOut,
+  MessageCircle,
   Pencil,
   Plus,
   RefreshCcw,
+  Search,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
+  Star,
   Trash2,
   User,
   UserCog,
@@ -27,7 +31,6 @@ import {
 import { PageHeader } from "@/components/PageHeader";
 import {
   deleteOwnerListing,
-  createSellerVerificationRequest,
   fetchCurrentUserListings,
   fetchMyVerificationRequests,
   removeProfileMedia,
@@ -39,7 +42,6 @@ import type {
   ClassifiedListing,
   ClassifiedsError,
   SellerVerificationRequest,
-  VerificationRequestType,
 } from "@/lib/classifieds-types";
 import { categoryName, governorateName } from "@/lib/i18n";
 import { listingStatusLabel } from "@/lib/status-labels";
@@ -54,8 +56,18 @@ export const Route = createFileRoute("/profile")({
 });
 
 const accountMenu = [
-  { to: "/profile/listings", labelAr: "إعلاناتي", labelEn: "My listings", icon: FileSpreadsheet },
+  { to: "/", labelAr: "الرئيسية", labelEn: "Home", icon: Home },
+  { to: "/listings", labelAr: "تصفح الإعلانات", labelEn: "Browse listings", icon: Search },
+  { to: "/profile", labelAr: "معلومات الحساب", labelEn: "Account information", icon: User },
+  {
+    to: "/profile/listings",
+    labelAr: "إعلاناتي / متجري",
+    labelEn: "My listings / store",
+    icon: FileSpreadsheet,
+  },
   { to: "/add-listing", labelAr: "إضافة إعلان", labelEn: "Post listing", icon: Plus },
+  { to: "/profile/listings", labelAr: "التقييمات", labelEn: "Reviews", icon: Star },
+  { to: "/profile", labelAr: "التوثيق", labelEn: "Verification", icon: BadgeCheck },
   { to: "/favorites", labelAr: "المفضلة", labelEn: "Favorites", icon: Heart },
   {
     to: "/saved-searches",
@@ -69,6 +81,7 @@ const accountMenu = [
     labelEn: "Promotion and featuring",
     icon: Sparkles,
   },
+  { to: "/chats", labelAr: "المحادثات", labelEn: "Chats", icon: MessageCircle },
   {
     to: "/admin",
     labelAr: "لوحة الإدارة",
@@ -123,11 +136,6 @@ function ProfilePage() {
   const [mediaSaving, setMediaSaving] = useState<"avatar" | "cover" | null>(null);
   const [verificationRequests, setVerificationRequests] = useState<SellerVerificationRequest[]>([]);
   const [verificationLoading, setVerificationLoading] = useState(false);
-  const [verificationType, setVerificationType] = useState<VerificationRequestType>("personal");
-  const [verificationLegalName, setVerificationLegalName] = useState("");
-  const [verificationBusinessName, setVerificationBusinessName] = useState("");
-  const [verificationDocumentType, setVerificationDocumentType] = useState("");
-  const [verificationSaving, setVerificationSaving] = useState(false);
   const [verificationNotice, setVerificationNotice] = useState("");
   const profileId = auth.profile?.id;
   const displayName = auth.profile?.displayName || auth.profile?.email || text("زائر", "Guest");
@@ -247,31 +255,6 @@ function ProfilePage() {
     setVerificationLoading(false);
   }
 
-  async function handleVerificationRequest(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setVerificationNotice("");
-    setVerificationSaving(true);
-    const result = await createSellerVerificationRequest({
-      userId: profileId ?? null,
-      requestType: verificationType,
-      legalName: verificationLegalName,
-      businessName: verificationBusinessName || null,
-      documentType: verificationDocumentType || null,
-    });
-    setVerificationSaving(false);
-    if (result.ok) {
-      setVerificationLegalName("");
-      setVerificationBusinessName("");
-      setVerificationDocumentType("");
-      setVerificationNotice(
-        text("تم إرسال طلب التوثيق للمراجعة.", "Verification request sent for review."),
-      );
-      await loadVerificationRequests();
-    } else {
-      setVerificationNotice(result.error.message);
-    }
-  }
-
   useEffect(() => {
     if (auth.status !== "signedIn") return;
     setSettingsDisplayName(auth.profile?.displayName ?? "");
@@ -345,57 +328,17 @@ function ProfilePage() {
             </div>
           </div>
           {auth.status === "signedIn" ? (
-            <div className="mt-4">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <SettingsInput
-                  label={text("المدينة / المنطقة", "City / area")}
-                  value={settingsCityArea}
-                  onChange={setSettingsCityArea}
-                  maxLength={80}
-                />
-                <SettingsInput
-                  label={text("اسم النشاط التجاري", "Business name")}
-                  value={settingsBusinessName}
-                  onChange={setSettingsBusinessName}
-                  maxLength={120}
-                />
-              </div>
-              <label className="block">
-                <span className="text-xs font-bold text-muted-foreground">
-                  {text("نبذة عنك", "Bio")}
-                </span>
-                <textarea
-                  value={settingsBio}
-                  onChange={(event) => setSettingsBio(event.target.value)}
-                  maxLength={600}
-                  rows={4}
-                  className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
-                />
-              </label>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <SettingsInput
-                  label={text("الهاتف", "Phone")}
-                  value={settingsPhone}
-                  onChange={setSettingsPhone}
-                  maxLength={40}
-                />
-                <SettingsInput
-                  label={text("واتساب", "WhatsApp")}
-                  value={settingsWhatsapp}
-                  onChange={setSettingsWhatsapp}
-                  maxLength={40}
-                />
-                <SettingsInput
-                  label={text("طريقة التواصل المفضلة", "Preferred contact")}
-                  value={settingsPreferredContact}
-                  onChange={setSettingsPreferredContact}
-                  maxLength={40}
-                />
+            <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+              <div className="rounded-xl bg-primary-foreground/10 p-3 text-xs leading-6 text-primary-foreground/85">
+                {text(
+                  "إدارة الحساب والملف الشخصي والإعلانات أصبحت مقسمة بوضوح. عدّل معلوماتك من قسم معلومات الحساب، وافتح واجهة متجرك لإدارة الإعلانات والتقييمات.",
+                  "Account, profile, and listing management are split clearly. Edit your information in account details, and open your store page for listings and reviews.",
+                )}
               </div>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary-foreground/10 px-3 py-2 text-xs font-bold"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-foreground/10 px-3 py-2 text-xs font-bold"
               >
                 <LogOut className="h-4 w-4" /> {text("تسجيل الخروج", "Log out")}
               </button>
@@ -425,6 +368,42 @@ function ProfilePage() {
               </button>
             </div>
           )}
+        </section>
+
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <Link
+            to="/"
+            className="rounded-2xl bg-card p-4 text-sm font-extrabold hairline transition hover:bg-muted-surface"
+          >
+            {text("الرئيسية", "Home")}
+            <p className="mt-1 text-xs font-normal leading-6 text-muted-foreground">
+              {text("العودة إلى واجهة رواج.", "Return to the RAWAJ home page.")}
+            </p>
+          </Link>
+          <Link
+            to="/listings"
+            className="rounded-2xl bg-card p-4 text-sm font-extrabold hairline transition hover:bg-muted-surface"
+          >
+            {text("تصفح الإعلانات", "Browse listings")}
+            <p className="mt-1 text-xs font-normal leading-6 text-muted-foreground">
+              {text(
+                "استكشف الإعلانات العامة المعتمدة فقط.",
+                "Explore approved public listings only.",
+              )}
+            </p>
+          </Link>
+          <Link
+            to="/profile/listings"
+            className="rounded-2xl bg-card p-4 text-sm font-extrabold hairline transition hover:bg-muted-surface"
+          >
+            {text("إعلاناتي / متجري", "My listings / store")}
+            <p className="mt-1 text-xs font-normal leading-6 text-muted-foreground">
+              {text(
+                "واجهة إعلاناتك وحالاتها والتقييمات المعتمدة المرتبطة بك.",
+                "Your storefront, listing statuses, and approved reviews.",
+              )}
+            </p>
+          </Link>
         </section>
 
         <section id="settings" className="rounded-2xl bg-card p-4 hairline">
@@ -750,53 +729,17 @@ function ProfilePage() {
                   {auth.profile?.verificationStatus ?? "unverified"}
                 </p>
               </div>
-              <form
-                onSubmit={(event) => void handleVerificationRequest(event)}
-                className="grid gap-3"
-              >
-                <label className="block">
-                  <span className="text-xs font-bold text-muted-foreground">
-                    {text("نوع الطلب", "Request type")}
-                  </span>
-                  <select
-                    value={verificationType}
-                    onChange={(event) =>
-                      setVerificationType(event.target.value as VerificationRequestType)
-                    }
-                    className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
-                  >
-                    <option value="personal">{text("شخصي", "Personal")}</option>
-                    <option value="business">{text("نشاط تجاري", "Business")}</option>
-                  </select>
-                </label>
-                <SettingsInput
-                  label={text("الاسم القانوني", "Legal name")}
-                  value={verificationLegalName}
-                  onChange={setVerificationLegalName}
-                  maxLength={120}
-                />
-                <SettingsInput
-                  label={text("اسم النشاط إن وجد", "Business name if any")}
-                  value={verificationBusinessName}
-                  onChange={setVerificationBusinessName}
-                  maxLength={120}
-                />
-                <SettingsInput
-                  label={text("نوع المستند بدون رفع ملف", "Document type without upload")}
-                  value={verificationDocumentType}
-                  onChange={setVerificationDocumentType}
-                  maxLength={80}
-                />
-                <button
-                  type="submit"
-                  disabled={verificationSaving || verificationLegalName.trim().length < 3}
-                  className="rounded-xl bg-emerald-trust px-4 py-2 text-xs font-bold text-emerald-trust-foreground disabled:opacity-60"
-                >
-                  {verificationSaving
-                    ? text("جارٍ الإرسال", "Sending")
-                    : text("إرسال طلب توثيق", "Request verification")}
-                </button>
-              </form>
+              <div className="rounded-xl bg-muted-surface p-4 text-xs leading-6 hairline">
+                <p className="font-extrabold text-foreground">
+                  {text("التوثيق قيد التجهيز", "Verification is being prepared")}
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  {text(
+                    "قريباً سيتم فتح التوثيق بعد تجهيز رفع الوثائق والمراجعة اليدوية الآمنة. لا نمنح شارة توثيق من نموذج نصي فقط.",
+                    "Coming soon after secure document upload and manual review are ready. A text-only form does not grant verification.",
+                  )}
+                </p>
+              </div>
               <div className="rounded-xl bg-muted-surface p-3 text-xs leading-6">
                 <p className="font-bold">{text("طلباتك", "Your requests")}</p>
                 {verificationLoading ? (
