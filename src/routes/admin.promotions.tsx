@@ -7,6 +7,9 @@ import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin/promotions")({
+  head: () => ({
+    meta: [{ title: "طلبات الترويج | رواج" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: PromotionsPage,
 });
 

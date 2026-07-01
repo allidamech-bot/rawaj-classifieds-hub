@@ -121,15 +121,11 @@ const uiLabels: Record<string, string> = {
   "جارٍ التحقق من الجلسة": "Checking session",
   "يتم التأكد من تسجيل الدخول.": "Checking sign-in status.",
   "تسجيل الدخول مطلوب": "Login required",
-  "المفضلة الحقيقية مرتبطة بحسابك فقط ولا توجد مفضلة محلية كبديل.":
-    "Real favorites are linked only to your account. No sample favorites are used as a substitute.",
   "تسجيل الدخول": "Log in",
   "المفضلة مرتبطة بالحساب": "Favorites are account based",
   "تُحفظ الإعلانات المعتمدة ضمن حسابك لتتمكن من الرجوع إليها من صفحة المفضلة.":
     "Approved listings are saved to your account so you can return to them from favorites.",
   "تصفح الإعلانات": "Browse listings",
-  "هذه الصفحة تعرض الإعلانات التي يحفظها الحساب الحالي فقط، ولا تستخدم بيانات محلية كبديل.":
-    "This page shows listings saved by the current account only and does not use sample data as a substitute.",
   "جارٍ تحميل المفضلة": "Loading favorites",
   "تعذر تحميل المفضلة": "Could not load favorites",
   "تعذر تحميل المفضلة الآن. حاول مرة أخرى أو تابع تصفح الإعلانات.":
@@ -143,21 +139,10 @@ const uiLabels: Record<string, string> = {
   "إزالة من المفضلة": "Remove from favorites",
   "أضف إعلاناً": "Post a listing",
   "عمليات البحث المحفوظة": "Saved searches",
-  "عمليات البحث المحفوظة مرتبطة بحسابك فقط ولا توجد بيانات محلية بديلة.":
-    "Saved searches are linked only to your account. No sample data is used as a substitute.",
   "البحث المحفوظ مرتبط بالحساب": "Saved search is account based",
   "احفظ فلاتر البحث المهمة ضمن حسابك لتعود إليها بسهولة.":
     "Save important search filters to your account so you can return to them easily.",
   "ابدأ البحث": "Start searching",
-  "تعرض هذه الصفحة عمليات البحث المحفوظة للحساب الحالي فقط، ولا تستخدم بيانات محلية كبديل.":
-    "This page shows saved searches for the current account only and does not use sample data as a substitute.",
-  "جارٍ تحميل عمليات البحث": "Loading saved searches",
-  "تعذر تحميل عمليات البحث": "Could not load saved searches",
-  "تعذر تحميل البحث المحفوظ الآن. استخدم صفحة التصفح للبحث مباشرة.":
-    "Could not load saved search right now. Use the browse page to search directly.",
-  "لا توجد عمليات بحث محفوظة": "No saved searches yet",
-  "يمكن إضافة زر حفظ البحث ضمن سير العمل بعد اعتماد تجربة البحث النهائية.":
-    "A save-search button can be added through the workflow after the final search experience is approved.",
   "مرتبطة بالحساب الحالي فقط": "Linked only to the current account",
   "تنبيهات عند توفرها": "Alerts when available",
   "فتح البحث": "Open search",
@@ -167,13 +152,10 @@ const uiLabels: Record<string, string> = {
   خطأ: "Error",
   "إعادة المحاولة": "Try again",
   "ملف البائع": "Seller profile",
-  "ملف البائع العام قيد التجهيز حالياً. هذه واجهة تمهيدية فقط وتستخدم بيانات محلية للاطلاع على التصميم النهائي.":
-    "The public seller profile is being prepared. This is a preparatory interface using sample data to view the final design.",
   "ملف البائع العام قيد التجهيز حالياً. عند التفعيل ستظهر البيانات العامة والإعلانات المعتمدة فقط دون كشف أي بيانات خاصة.":
     "The public seller profile is being prepared. When enabled, only public data and approved listings will appear without exposing private data.",
   "جارٍ التحقق من الجلسة...": "Checking session...",
   موثّق: "Verified",
-  "تقييم محلي": "Sample rating",
   منذ: "Since",
   إعلان: "listings",
   "رسالة · عند توفرها": "Message · when available",
@@ -188,7 +170,6 @@ const uiLabels: Record<string, string> = {
   "الموقع:": "Location:",
   سوريا: "Syria",
   "الإعلانات النشطة": "Active listings",
-  "نموذج عرض · ليست بيانات إنتاجية": "Sample view · not production data",
   "لا توجد إعلانات نشطة لهذا البائع حالياً.": "This seller has no active listings right now.",
   "تنبيه أمان": "Safety note",
   "قابل البائع في مكان عام وآمن، وافحص السلعة قبل الدفع. لا تحوّل المال قبل التأكد.":
@@ -219,8 +200,6 @@ const uiLabels: Record<string, string> = {
   "العودة للرئيسية": "Back to home",
   "لوحة إدارة لصاحب التطبيق والمشرفين. الحسابات والأدوار تُقرأ من مصدر الصلاحيات، وإجراءات الإدارة محمية بالصلاحيات وسجل النشاط.":
     "An admin dashboard for the app owner and moderators. Accounts and roles are read from the permission source, and admin actions are protected by permissions and the activity log.",
-  "نموذج محلي · محمي بالصلاحيات · يتطلب ربطاً تشغيلياً وصلاحيات حقيقية ضمن سير العمل":
-    "Local workflow model · permission protected · requires operational integration and real permissions through the workflow",
   "صاحب التطبيق": "App owner",
   "مركز تحكم المالك": "Owner control center",
   "هذه لوحة المالك لعرض سير العمل المحلي، والصلاحيات تُدار من مصدر الأدوار.":
@@ -242,13 +221,9 @@ const uiLabels: Record<string, string> = {
     "Admin management is available only to the owner according to account permissions.",
   "إدارة تمييز الإعلانات": "Manage featured listings",
   "سجل نشاط المالك": "Owner activity log",
-  "سجل النشاط محلي ويعرض إجراءات الإدارة ضمن سير العمل.":
-    "The activity log is local-only and shows admin actions in the workflow.",
   "إعدادات المالك": "Owner settings",
   "إعدادات المالك — محمي بالصلاحيات": "Owner settings - permission protected",
   "محمي بالصلاحيات": "Permission protected",
-  "كل الأزرار والإجراءات داخل لوحة المالك/الإدارة معطّلة ومعلّمة كنموذج محلي. المستخدمون العاديون لا يظهر لهم وصول إداري حقيقي الآن.":
-    "All buttons and actions in the owner/admin dashboard are permission protected and marked as sample. Regular users do not receive real admin access now.",
   "عرض ربط الحسابات في الملف الشخصي": "View account connection in profile",
   "إعلانات حقيقية قيد المراجعة": "Real listings pending review",
   "طابور المراجعة الحقيقي يُقرأ من مصدر البيانات للمالك فقط. إجراءات القبول/الرفض الحقيقية يجب أن تبقى محمية بسياسات RLS ولا تعتمد على البريد.":
@@ -257,22 +232,9 @@ const uiLabels: Record<string, string> = {
     "Could not identify the current reviewer account. Log in again and try once more.",
   "تم اعتماد الإعلان.": "Listing approved.",
   "تم رفض الإعلان.": "Listing rejected.",
-  "جارٍ تحميل طابور المراجعة الحقيقي.": "Loading the real review queue.",
-  "تعذر تحميل طابور المراجعة الآن. حاول مرة أخرى.":
-    "Could not load the review queue right now. Try again.",
-  "لا توجد إعلانات حقيقية قيد المراجعة حالياً.": "No real listings are pending review right now.",
-  "صاحب الإعلان:": "Listing owner:",
-  "تاريخ الإرسال:": "Submitted:",
-  "سبب الرفض عند الحاجة": "Rejection reason if needed",
-  اعتماد: "Approve",
-  رفض: "Reject",
-  "القائمة التالية نموذج UI محلي فقط وليست طابور إنتاج.":
-    "The following list is a local UI only, not a production queue.",
-  "قيد المراجعة": "Under review",
   "المشرفون يمكنهم مراجعة الطابور حسب صلاحياتهم فقط. قبول/رفض الإعلانات الحقيقي يتطلب ربطاً تشغيلياً وصلاحيات وربط حسابات.":
     "Moderators can review the queue only within their permissions. Real approve/reject actions require operational integration, permissions, and accounts.",
   "ملخص البلاغات": "Reports summary",
-  "بلاغات حقيقية": "Real reports",
   "البلاغات الحقيقية تُقرأ من مصدر البيانات للمالك فقط. أي إجراء تشغيلي يجب أن يبقى محمياً بالصلاحيات وسجل النشاط.":
     "Real reports are read from the data source for the owner only. Any operational action must remain protected by permissions and activity logs.",
   "تم تحديث البلاغ.": "Report updated.",
@@ -284,33 +246,19 @@ const uiLabels: Record<string, string> = {
   "المبلّغ:": "Reporter:",
   "تم الحل": "Resolved",
   "رفض البلاغ": "Reject report",
-  "القائمة التالية نموذج UI محلي فقط وليست بلاغات إنتاج.":
-    "The following list is local UI only, not production reports.",
-  "إدارة المستخدمين نموذج محلي فقط. الحذف/التعطيل يحتاج صلاحية المالك. التجميد والتوثيق والتميز إجراءات محلية حالياً.":
-    "User management is local-only. Deletion/disablement requires owner permission. Freeze, verification, and featuring are currently local actions.",
   "جارٍ تجهيز لوحة المستخدمين...": "Preparing the users dashboard...",
   "تعذر تحميل بيانات المستخدمين": "Could not load user data",
   "لا توجد بيانات مستخدمين حقيقية حالياً. ستظهر هنا بيانات المستخدمين بعد اكتمال ربط الحسابات والصلاحيات.":
     "There is no real user data right now. User data will appear here after accounts and permissions are integrated.",
   "ملخص المستخدمين": "Users summary",
-  "فلاتر محلية": "Local filters",
   "جدول التحكم بالمستخدمين": "User control table",
   "طلبات توثيق وتمييز البائعين": "Seller verification and featuring requests",
-  "لا يوجد رفع ملفات حقيقي. تسميات المستندات محلية فقط.":
-    "There is no real file upload. Document labels are local-only.",
   "إدارة المشرفين داخل صفحة المستخدمين": "Admin management inside users page",
-  "لا توجد قاعدة بيانات أو صلاحيات أو حذف حقيقي في هذه الصفحة.":
-    "There is no real database action, permission change, or deletion on this page.",
   "ملخص طلبات الترويج": "Promotion requests summary",
   "مراجعة طلبات الترويج وإثبات الدفع": "Review promotion requests and payment proof",
   "إدارة حالة تمييز الإعلانات": "Manage featured listing status",
-  "لا توجد معالجة دفع حقيقية حالياً. تفاصيل التحويل وإثبات الدفع حقول محلية فقط.":
-    "There is no real payment processing now. Transfer details and payment proof are sample fields only.",
   "ملاحظة داخلية": "Internal note",
   "إضافة ملاحظة · عند توفرها": "Add note · when available",
-  "الملاحظات الداخلية لا تظهر للمستخدمين.": "Internal notes are not visible to users.",
-  "نموذج محلي": "Local sample",
-  "عند توفرها": "When available",
   مسموح: "Allowed",
   "غير مسموح": "Not allowed",
   "حسب الصلاحية": "By permission",
