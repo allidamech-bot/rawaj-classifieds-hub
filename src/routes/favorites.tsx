@@ -135,6 +135,8 @@ function FavoritesPage() {
                       <img
                         src={item.listing.primaryImageUrl}
                         alt={item.listing.title}
+                        loading="lazy"
+                        decoding="async"
                         className="aspect-square w-full rounded-xl object-cover hairline"
                       />
                     ) : (

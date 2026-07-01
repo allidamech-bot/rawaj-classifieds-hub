@@ -27,9 +27,9 @@ import type {
   ClassifiedSubcategory,
   ListingCondition,
   ListingImage,
-  ListingStatus,
 } from "@/lib/classifieds-types";
 import { categoryName, governorateName } from "@/lib/i18n";
+import { listingStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 import type { PriceType } from "@/types";
@@ -399,7 +399,7 @@ function ManageListingPage() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline">
-              {statusLabel(listing.status, language)}
+              {listingStatusLabel(listing.status, language, true)}
             </span>
             <span className="text-[11px] text-muted-foreground">
               {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
@@ -664,6 +664,8 @@ function ManageListingPage() {
                       <img
                         src={image.publicUrl}
                         alt={image.altAr ?? listing.title}
+                        loading="lazy"
+                        decoding="async"
                         className="aspect-[4/3] w-full rounded-lg object-cover"
                       />
                     ) : (
@@ -913,23 +915,4 @@ function validateContactAndContent({
   if (contentCheck.flags.length > 0) details.content_flags = contentCheck.flags;
 
   return { ok: true, details };
-}
-
-function statusLabel(status: ListingStatus, language: Language) {
-  switch (status) {
-    case "draft":
-      return language === "ar" ? "مسودة" : "Draft";
-    case "pending_review":
-      return language === "ar" ? "قيد المراجعة" : "Pending review";
-    case "approved":
-      return language === "ar" ? "إعلان معتمد" : "Approved listing";
-    case "rejected":
-      return language === "ar" ? "مرفوض" : "Rejected";
-    case "archived":
-      return language === "ar" ? "مؤرشف" : "Archived";
-    case "expired":
-      return language === "ar" ? "منتهي" : "Expired";
-    default:
-      return status;
-  }
 }

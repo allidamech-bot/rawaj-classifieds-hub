@@ -324,6 +324,8 @@ function PendingListingDetails({
                   key={image.id}
                   src={image.publicUrl ?? ""}
                   alt={image.altAr ?? listing.title}
+                  loading="lazy"
+                  decoding="async"
                   className="aspect-[4/3] rounded-lg object-cover hairline"
                 />
               ))}

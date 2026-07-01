@@ -332,6 +332,8 @@ function RealListingCard({ listing }: { listing: ClassifiedListing }) {
           <img
             src={listing.primaryImageUrl}
             alt={listing.title}
+            loading="lazy"
+            decoding="async"
             className="aspect-[16/9] w-full object-cover"
           />
         ) : (

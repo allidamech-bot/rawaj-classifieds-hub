@@ -21,13 +21,9 @@ import {
   fetchListingImages,
   unfavoriteListing,
 } from "@/lib/classifieds-api";
-import type {
-  ClassifiedListing,
-  ClassifiedsError,
-  ListingImage,
-  ListingStatus,
-} from "@/lib/classifieds-types";
+import type { ClassifiedListing, ClassifiedsError, ListingImage } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import { listingStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -227,6 +223,8 @@ function ListingDetailsPage() {
                       key={image.id}
                       src={image.publicUrl ?? ""}
                       alt={image.altAr ?? listing.title}
+                      loading="lazy"
+                      decoding="async"
                       className="h-14 w-16 rounded-lg object-cover hairline"
                     />
                   ))}
@@ -245,7 +243,7 @@ function ListingDetailsPage() {
           <div className="flex flex-wrap items-center gap-2">
             {listing.isFeatured && <Badge>{text("مميز", "Featured")}</Badge>}
             <span className="rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold text-emerald-trust-foreground">
-              {statusLabel(listing.status, language)}
+              {listingStatusLabel(listing.status, language, true)}
             </span>
             <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[11px] font-semibold text-foreground">
               {text("سوريا فقط", "Syria only")}
@@ -550,25 +548,6 @@ function formatDate(value: string, language: Language) {
   return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
     dateStyle: "medium",
   }).format(new Date(value));
-}
-
-function statusLabel(status: ListingStatus, language: Language) {
-  switch (status) {
-    case "draft":
-      return language === "ar" ? "مسودة" : "Draft";
-    case "pending_review":
-      return language === "ar" ? "قيد المراجعة" : "Pending review";
-    case "approved":
-      return language === "ar" ? "إعلان معتمد" : "Approved listing";
-    case "rejected":
-      return language === "ar" ? "مرفوض" : "Rejected";
-    case "archived":
-      return language === "ar" ? "مؤرشف" : "Archived";
-    case "expired":
-      return language === "ar" ? "منتهي" : "Expired";
-    default:
-      return status;
-  }
 }
 
 function priceTypeLabel(type: string, language: Language) {

@@ -3,8 +3,9 @@ import { Eye, Pencil } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { fetchCurrentUserListings } from "@/lib/classifieds-api";
-import type { ClassifiedListing, ClassifiedsError, ListingStatus } from "@/lib/classifieds-types";
+import type { ClassifiedListing, ClassifiedsError } from "@/lib/classifieds-types";
 import { categoryName, governorateName } from "@/lib/i18n";
+import { listingStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -108,6 +109,8 @@ function ListingRow({ listing, language }: { listing: ClassifiedListing; languag
           <img
             src={listing.primaryImageUrl}
             alt={listing.title}
+            loading="lazy"
+            decoding="async"
             className="h-16 w-20 rounded-lg object-cover"
           />
         ) : (
@@ -119,7 +122,7 @@ function ListingRow({ listing, language }: { listing: ClassifiedListing; languag
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-bold">{listing.title}</h2>
             <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold">
-              {statusLabel(listing.status, language)}
+              {listingStatusLabel(listing.status, language)}
             </span>
           </div>
           <p className="mt-1 text-[11px] text-muted-foreground">
@@ -173,23 +176,4 @@ function Panel({ title, body }: { title: string; body?: string }) {
       {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
     </section>
   );
-}
-
-function statusLabel(status: ListingStatus, language: Language) {
-  switch (status) {
-    case "draft":
-      return language === "ar" ? "مسودة" : "Draft";
-    case "pending_review":
-      return language === "ar" ? "قيد المراجعة" : "Pending review";
-    case "approved":
-      return language === "ar" ? "معتمد" : "Approved";
-    case "rejected":
-      return language === "ar" ? "مرفوض" : "Rejected";
-    case "archived":
-      return language === "ar" ? "مؤرشف" : "Archived";
-    case "expired":
-      return language === "ar" ? "منتهي" : "Expired";
-    default:
-      return status;
-  }
 }

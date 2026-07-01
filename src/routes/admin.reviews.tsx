@@ -3,6 +3,7 @@ import { Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { adminFetchSellerReviews, adminModerateSellerReview } from "@/lib/classifieds-api";
 import type { ClassifiedsError, SellerReview } from "@/lib/classifieds-types";
+import { sellerReviewStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/admin/reviews")({
 
 function ReviewsModerationPage() {
   const auth = useAuth();
-  const { text } = useUiPreferences();
+  const { language, text } = useUiPreferences();
   const [reviews, setReviews] = useState<SellerReview[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -108,7 +109,7 @@ function ReviewsModerationPage() {
             <article key={review.id} className="rounded-2xl bg-card p-4 hairline">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-extrabold">{"★".repeat(review.rating)}</h3>
-                <Badge>{review.status}</Badge>
+                <Badge>{sellerReviewStatusLabel(review.status, language)}</Badge>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
                 {text("البائع:", "Seller:")} {review.sellerUserId}

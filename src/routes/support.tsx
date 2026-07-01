@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { createSupportRequest, fetchMySupportRequests } from "@/lib/classifieds-api";
 import type { ClassifiedsError, SupportRequest, SupportRequestType } from "@/lib/classifieds-types";
+import { supportStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -327,19 +328,4 @@ function SupportPage() {
 
 function SupportDetail({ label }: { label: string }) {
   return <div className="rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold">{label}</div>;
-}
-
-function supportStatusLabel(status: SupportRequest["status"], language: "ar" | "en") {
-  switch (status) {
-    case "new":
-      return language === "ar" ? "جديد" : "New";
-    case "under_review":
-      return language === "ar" ? "قيد المراجعة" : "Under review";
-    case "resolved":
-      return language === "ar" ? "تم الحل" : "Resolved";
-    case "rejected":
-      return language === "ar" ? "مرفوض" : "Rejected";
-    default:
-      return status;
-  }
 }
