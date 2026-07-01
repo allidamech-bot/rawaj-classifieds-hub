@@ -31,18 +31,9 @@ Starting HEAD: `0047152 Complete RAWAJ core marketplace messaging and seller sys
   - `/login`
   - `/favorites`
   - `/saved-searches`
-- `robots.txt` does not include a sitemap reference yet because the production base URL is not confirmed.
-- Added `public/sitemap.xml` as a static sitemap foundation.
-- Static sitemap currently includes:
-  - `/`
-  - `/listings`
-  - `/categories`
-  - `/safety`
-  - `/support`
-  - `/terms`
-  - `/privacy`
-  - `/prohibited`
   - `/promotion`
+- `robots.txt` does not include a `Sitemap:` reference because the production base URL is not confirmed.
+- Static `sitemap.xml` is deferred until the real production domain is known. Once confirmed, add a static sitemap with absolute production URLs and add the matching `Sitemap:` reference in `robots.txt`.
 - Dynamic listing and seller sitemap URLs are deferred until a safe server-side sitemap route can query approved public data without service-role secrets or client-side live database crawling.
 
 ## Page metadata
@@ -67,6 +58,7 @@ Starting HEAD: `0047152 Complete RAWAJ core marketplace messaging and seller sys
 
 ## Deferred
 
+- Static `sitemap.xml` creation with absolute production URLs, and adding the matching `Sitemap:` reference in `robots.txt`, until the launch domain is confirmed.
 - Dynamic sitemap entries for approved listing detail URLs.
 - Dynamic sitemap entries for public seller URLs with at least one approved listing.
 - Production-domain replacement for static `sitemap.xml`, and adding the matching absolute sitemap reference in `robots.txt`, once the launch domain is confirmed.

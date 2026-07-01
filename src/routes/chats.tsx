@@ -21,7 +21,9 @@ const chatsSearchSchema = z.object({
 
 export const Route = createFileRoute("/chats")({
   validateSearch: chatsSearchSchema,
-  head: () => ({ meta: [{ title: "المحادثات | رواجا" }] }),
+  head: () => ({
+    meta: [{ title: "المحادثات | رواجا" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: ChatsPage,
 });
 

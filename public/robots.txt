@@ -10,3 +10,4 @@ Disallow: /add-listing
 Disallow: /login
 Disallow: /favorites
 Disallow: /saved-searches
+Disallow: /promotion

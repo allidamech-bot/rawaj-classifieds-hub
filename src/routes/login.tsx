@@ -8,7 +8,9 @@ import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "تسجيل الدخول | رواج" }] }),
+  head: () => ({
+    meta: [{ title: "تسجيل الدخول | رواج" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: LoginPage,
 });
 

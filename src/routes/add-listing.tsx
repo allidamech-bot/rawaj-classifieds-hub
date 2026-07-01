@@ -30,7 +30,9 @@ import { useAuth } from "@/lib/use-auth";
 import type { PriceType } from "@/types";
 
 export const Route = createFileRoute("/add-listing")({
-  head: () => ({ meta: [{ title: "أضف إعلاناً | رَوَاج" }] }),
+  head: () => ({
+    meta: [{ title: "أضف إعلاناً | رَوَاج" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: AddListingPage,
 });
 

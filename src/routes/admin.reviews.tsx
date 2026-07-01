@@ -8,7 +8,12 @@ import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin/reviews")({
-  head: () => ({ meta: [{ title: "مراجعة تقييمات البائعين | رواج" }] }),
+  head: () => ({
+    meta: [
+      { title: "مراجعة تقييمات البائعين | رواج" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: ReviewsModerationPage,
 });
 

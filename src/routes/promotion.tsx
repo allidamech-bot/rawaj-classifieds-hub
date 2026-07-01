@@ -24,6 +24,7 @@ export const Route = createFileRoute("/promotion")({
       description:
         "اطلب ترويج إعلان معتمد تملكه على رواج. طلبات الترويج تحفظ كطلبات قيد المراجعة ولا توجد معالجة دفع آلية داخل المنصة.",
       path: "/promotion",
+      noindex: true,
     }),
   component: PromotionPage,
 });

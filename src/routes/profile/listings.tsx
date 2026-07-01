@@ -10,7 +10,9 @@ import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/profile/listings")({
-  head: () => ({ meta: [{ title: "إعلاناتي | رواج" }] }),
+  head: () => ({
+    meta: [{ title: "إعلاناتي | رواج" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: MyListingsPage,
 });
 

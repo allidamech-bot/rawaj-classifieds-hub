@@ -9,7 +9,12 @@ import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/saved-searches")({
-  head: () => ({ meta: [{ title: "عمليات البحث المحفوظة | رَوَاج" }] }),
+  head: () => ({
+    meta: [
+      { title: "عمليات البحث المحفوظة | رَوَاج" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: SavedSearchesPage,
 });
 

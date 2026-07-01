@@ -10,7 +10,9 @@ import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/favorites")({
-  head: () => ({ meta: [{ title: "المفضلة | رَوَاج" }] }),
+  head: () => ({
+    meta: [{ title: "المفضلة | رَوَاج" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: FavoritesPage,
 });
 

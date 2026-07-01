@@ -11,12 +11,13 @@ import {
   Users,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { createSeo } from "@/lib/seo";
 import { uiLabel } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "لوحة الإدارة | رَوَاج" }] }),
+  head: () => createSeo({ title: "لوحة الإدارة | رَوَاج", noindex: true }),
   component: AdminLayout,
 });
 

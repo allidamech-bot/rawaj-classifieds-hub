@@ -47,7 +47,9 @@ import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({ meta: [{ title: "حسابي | رواج" }] }),
+  head: () => ({
+    meta: [{ title: "حسابي | رواج" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: ProfileRoute,
 });
 
