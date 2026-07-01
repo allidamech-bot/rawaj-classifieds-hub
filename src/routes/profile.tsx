@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   BadgeCheck,
@@ -35,7 +35,7 @@ import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "حسابي | رواج" }] }),
-  component: ProfilePage,
+  component: ProfileRoute,
 });
 
 const accountMenu = [
@@ -72,6 +72,16 @@ const accountMenu = [
   icon: typeof User;
   ownerOnly?: boolean;
 }>;
+
+function ProfileRoute() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  if (pathname !== "/profile" && pathname !== "/profile/") {
+    return <Outlet />;
+  }
+
+  return <ProfilePage />;
+}
 
 function ProfilePage() {
   const auth = useAuth();
