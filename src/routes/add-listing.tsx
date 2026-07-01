@@ -239,15 +239,30 @@ function AddListingPage() {
     );
   }
 
-  if (auth.profile?.accountStatus !== "active") {
+  if (auth.profile?.accountStatus === "disabled" || auth.profile?.accountStatus === "frozen") {
     return (
       <PageState
         title={text("أضف إعلاناً", "Post a listing")}
-        heading={text("الحساب غير جاهز للنشر", "Account is not ready to publish")}
+        heading={text("الحساب مقيّد من النشر", "Account restricted from publishing")}
         body={text(
-          "يجب أن تكون حالة الحساب نشطة قبل إرسال إعلان.",
-          "Your account must be active before submitting a listing.",
+          "حسابك محجوز أو معطل. يرجى التواصل مع الدعم.",
+          "Your account is suspended or disabled. Contact support.",
         )}
+      />
+    );
+  }
+
+  if (!auth.emailConfirmed) {
+    return (
+      <PageState
+        title={text("أضف إعلاناً", "Post a listing")}
+        heading={text("تأكيد البريد مطلوب", "Email confirmation required")}
+        body={text(
+          "يجب تأكيد بريدك الإلكتروني قبل إرسال إعلان.",
+          "Please confirm your email before submitting a listing.",
+        )}
+        actionLabel={text("العودة للرئيسية", "Back to home")}
+        actionTo="/"
       />
     );
   }

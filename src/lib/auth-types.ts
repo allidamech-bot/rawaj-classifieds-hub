@@ -84,3 +84,9 @@ export function canAccessOwnerControls(profile: UserProfile | null): boolean {
   if (!profile || profile.accountStatus !== "active") return false;
   return profile.roles.includes("owner") && rolePermissions.owner.canManageOwnerControls;
 }
+
+export function canPost(profile: UserProfile | null, emailConfirmed: boolean): boolean {
+  if (!profile) return false;
+  if (profile.accountStatus === "disabled" || profile.accountStatus === "frozen") return false;
+  return emailConfirmed;
+}

@@ -22,6 +22,7 @@ const signedOutState: AuthContextValue = {
   reason: null,
   canAccessAdmin: false,
   canAccessOwnerControls: false,
+  emailConfirmed: false,
   signOut: async () => ({ error: null }),
 };
 
@@ -173,6 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...signedOutState,
         status: "authUnavailable",
         reason: unavailableReason,
+        emailConfirmed: false,
         signOut,
       };
     }
@@ -185,6 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       reason,
       canAccessAdmin: canAccessAdmin(profile),
       canAccessOwnerControls: canAccessOwnerControls(profile),
+      emailConfirmed: Boolean(session?.user?.email_confirmed_at),
       signOut,
     };
   }, [profile, reason, session, status]);

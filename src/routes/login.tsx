@@ -275,6 +275,16 @@ async function ensureOwnProfile(
 ): Promise<string | null> {
   const metadataName =
     typeof user.user_metadata.display_name === "string" ? user.user_metadata.display_name : null;
+
+  const { data: existingProfile, error: readError } = await client
+    .from("profiles")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (readError) return readError.message;
+  if (existingProfile) return null;
+
   const { error } = await client.from("profiles").insert({
     id: user.id,
     email: user.email ?? null,
