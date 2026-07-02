@@ -378,7 +378,7 @@ function ManageListingPage() {
     return (
       <>
         <PageHeader title={text("تعديل الإعلان", "Edit listing")} />
-        <main className="container-wide pt-10">
+        <main className="container-wide mobile-page-bottom pt-10">
           <div className="rounded-2xl bg-card p-10 text-center text-sm text-muted-foreground hairline">
             {text("جارٍ تحميل بيانات الإعلان.", "Loading listing data.")}
           </div>
@@ -391,7 +391,7 @@ function ManageListingPage() {
     return (
       <>
         <PageHeader title={text("تعديل الإعلان", "Edit listing")} />
-        <main className="container-wide pt-10">
+        <main className="container-wide mobile-page-bottom pt-10">
           <div className="rounded-2xl bg-card p-10 text-center hairline">
             <p className="text-sm font-semibold text-foreground">
               {text("الإعلان غير متاح", "Listing unavailable")}
@@ -415,7 +415,7 @@ function ManageListingPage() {
   return (
     <>
       <PageHeader title={text("تعديل الإعلان", "Edit listing")} back to="/profile" />
-      <main className="container-wide pt-4 pb-8">
+      <main className="container-wide mobile-page-bottom pt-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline">

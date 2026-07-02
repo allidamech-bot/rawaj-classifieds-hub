@@ -63,7 +63,7 @@ function PrivacyPage() {
   return (
     <>
       <PageHeader title={text("سياسة الخصوصية", "Privacy policy")} />
-      <main className="container-wide pt-4 pb-8">
+      <main className="container-wide mobile-page-bottom pt-4">
         <p className="mb-4 text-xs text-muted-foreground">
           {text(
             "هذه السياسة توضّح طريقة تعامل رَوَاج مع البيانات ضمن تجربة الاستخدام الحالية.",

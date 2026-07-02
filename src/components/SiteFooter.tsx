@@ -41,7 +41,7 @@ export function SiteFooter() {
   const { text } = useUiPreferences();
 
   return (
-    <footer className="mt-10 border-t border-border bg-card-warm">
+    <footer className="mt-10 hidden border-t border-border bg-card-warm lg:block">
       <div className="container-wide grid grid-cols-2 gap-6 py-8 sm:grid-cols-3">
         {groups.map((group) => (
           <div key={group.titleAr}>

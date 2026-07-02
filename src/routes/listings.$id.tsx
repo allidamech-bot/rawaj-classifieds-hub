@@ -197,7 +197,7 @@ function ListingDetailsPage() {
     return (
       <>
         <PageHeader title={text("تفاصيل الإعلان", "Listing details")} />
-        <main className="container-wide pt-10">
+        <main className="container-wide mobile-page-bottom pt-10">
           <StateCard
             title={text("جاري تحميل الإعلان", "Loading listing")}
             body={text("نجهز تفاصيل الإعلان للعرض.", "Preparing listing details.")}
@@ -211,7 +211,7 @@ function ListingDetailsPage() {
     return (
       <>
         <PageHeader title={text("تفاصيل الإعلان", "Listing details")} />
-        <main className="container-wide pt-10">
+        <main className="container-wide mobile-page-bottom pt-10">
           <StateCard
             title={text("لا يمكن عرض هذا الإعلان", "Listing cannot be shown")}
             body={
@@ -256,7 +256,7 @@ function ListingDetailsPage() {
         title={categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
         to="/listings"
       />
-      <main className="container-wide pt-3 pb-28 lg:pb-8">
+      <main className="container-wide mobile-page-bottom pt-3">
         <div className="overflow-hidden rounded-2xl bg-card hairline shadow-soft">
           {images[0]?.publicUrl ? (
             <img
@@ -688,7 +688,7 @@ function ListingState({
   return (
     <>
       <PageHeader title={text(titleAr, titleEn)} />
-      <main className="container-wide pt-10">
+      <main className="container-wide mobile-page-bottom pt-10">
         <StateCard
           title={text("لا يمكن عرض هذا الإعلان", "Listing cannot be shown")}
           body={text(bodyAr, bodyEn)}

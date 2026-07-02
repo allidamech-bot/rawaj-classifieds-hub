@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
-  ArrowUpDown,
   Clock,
   Filter,
   MapPin,
@@ -117,17 +116,17 @@ function HomePage() {
   return (
     <>
       <AppHeader />
-      <main className="container-wide pt-4 pb-8">
-        <section className="rounded-2xl bg-card p-4 shadow-soft hairline sm:p-5">
+      <main className="container-wide mobile-page-bottom pt-3 sm:pt-4">
+        <section className="rounded-2xl bg-card p-3 shadow-soft hairline sm:p-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div className="max-w-2xl">
-              <p className="text-[11px] font-extrabold text-gold">
+              <p className="text-xs font-bold text-primary">
                 {text("سوق إعلانات مبوبة في سوريا", "Classifieds marketplace in Syria")}
               </p>
-              <h1 className="mt-1 text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
+              <h1 className="mt-1 text-xl font-extrabold leading-tight text-foreground sm:text-3xl">
                 {text("ابحث. قارن. تواصل مباشرة.", "Search. Compare. Contact directly.")}
               </h1>
-              <p className="mt-2 text-sm leading-7 text-muted-foreground">
+              <p className="mt-1 text-xs leading-6 text-muted-foreground">
                 {text(
                   "رواج يضع الإعلانات المعتمدة أمامك بسرعة، مع بحث واضح وأقسام مرتبة حسب الحاجة.",
                   "RAWAJ puts reviewed listings first, with clear search and practical browsing.",
@@ -136,7 +135,7 @@ function HomePage() {
             </div>
             <Link
               to="/add-listing"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-sm font-extrabold text-gold-foreground shadow-soft"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-sm font-bold text-gold-foreground shadow-soft transition active:scale-[0.98]"
             >
               <Plus className="h-4 w-4" />
               {text("أضف إعلان", "Post listing")}
@@ -144,9 +143,9 @@ function HomePage() {
           </div>
         </section>
 
-        <section className="mt-3 rounded-2xl bg-card p-3 shadow-premium hairline">
+        <section className="mt-3 rounded-2xl bg-card p-3 shadow-soft hairline">
           <form onSubmit={handleSearch} className="grid gap-2 lg:grid-cols-[1fr_auto_auto]">
-            <label className="flex items-center gap-2 rounded-xl bg-muted-surface px-3 py-3 hairline">
+            <label className="flex items-center gap-2 rounded-xl bg-muted-surface px-3 py-3 hairline focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
               <Search className="h-5 w-5 text-muted-foreground" />
               <input
                 value={searchValue}
@@ -163,19 +162,18 @@ function HomePage() {
             <Link
               to="/listings"
               search={listingSearch({ open_filters: true })}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-3 text-xs font-extrabold text-foreground hairline"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-3 text-xs font-bold text-foreground hairline transition active:scale-[0.98]"
             >
               <Filter className="h-4 w-4" />
               {text("فلترة", "Filters")}
             </Link>
-            <Link
-              to="/listings"
-              search={listingSearch({ sort: "latest" })}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-extrabold text-primary-foreground"
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-bold text-primary-foreground transition active:scale-[0.98]"
             >
-              <ArrowUpDown className="h-4 w-4" />
-              {text("الأحدث", "Latest")}
-            </Link>
+              <Search className="h-4 w-4" />
+              {text("بحث", "Search")}
+            </button>
           </form>
           <div className="mt-2 grid grid-cols-4 gap-2 sm:flex sm:flex-wrap">
             {sortChips.map((sort) => (
@@ -183,7 +181,7 @@ function HomePage() {
                 key={sort.id}
                 to="/listings"
                 search={listingSearch({ sort: sort.id })}
-                className="rounded-xl bg-muted-surface px-2 py-2 text-center text-[11px] font-bold text-foreground"
+                className="rounded-xl bg-muted-surface px-2 py-2 text-center text-xs font-semibold text-foreground"
               >
                 {text(sort.labelAr, sort.labelEn)}
               </Link>
@@ -368,7 +366,7 @@ function HomeListingCard({ listing }: { listing: ClassifiedListing }) {
     <Link
       to="/listings/$id"
       params={{ id: listing.id }}
-      className="block overflow-hidden rounded-2xl bg-card shadow-soft transition hairline hover:shadow-premium"
+      className="block overflow-hidden rounded-2xl bg-card shadow-soft hairline tap-card"
     >
       <div className="relative">
         {listing.primaryImageUrl ? (
@@ -388,7 +386,7 @@ function HomeListingCard({ listing }: { listing: ClassifiedListing }) {
               {text("مميز", "Featured")}
             </span>
           )}
-          <span className="rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold text-emerald-trust-foreground">
+          <span className="rounded-md bg-muted-surface/95 px-2 py-0.5 text-[11px] font-semibold text-foreground">
             {text("إعلان مُراجع", "Reviewed listing")}
           </span>
         </div>
@@ -397,7 +395,7 @@ function HomeListingCard({ listing }: { listing: ClassifiedListing }) {
         <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-foreground">
           {listing.title}
         </h3>
-        <div className="text-xl font-extrabold text-foreground">
+        <div className="text-lg font-extrabold text-foreground">
           {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">

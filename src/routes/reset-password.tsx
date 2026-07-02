@@ -73,7 +73,7 @@ function ResetPasswordPage() {
 
   return (
     <>
-      <PageHeader title={text("تعيين كلمة مرور جديدة", "Set a new password")} to="/login" />
+      <PageHeader title={text("تعيين كلمة مرور جديدة", "Set a new password")} to="/login" backMode="history" />
       <main className="container-wide pt-4 pb-24">
         <section className="mx-auto max-w-md rounded-2xl bg-card p-5 shadow-soft hairline">
           <div className="mb-4 flex items-start gap-3">

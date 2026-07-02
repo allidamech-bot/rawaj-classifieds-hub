@@ -605,7 +605,7 @@ function ListingsPage() {
   return (
     <>
       <PageHeader title={title} />
-      <main className="container-wide pt-4">
+      <main className="container-wide mobile-page-bottom pt-4">
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
           <div className="flex items-center gap-2 rounded-xl bg-card px-3 py-2.5 hairline">
             <Search className="h-4 w-4 text-muted-foreground" />
@@ -852,7 +852,7 @@ function ListingsPage() {
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <div className="space-y-4 overflow-y-auto p-4">
+              <div className="mobile-page-bottom space-y-4 overflow-y-auto p-4 lg:pb-4">
                 <div>
                   <h3 className="mb-2 text-xs font-extrabold text-muted-foreground">
                     {text("القسم", "Category")}
@@ -1154,7 +1154,7 @@ function ListingsPage() {
         <div className="mt-3 flex flex-wrap gap-2">
           <Link
             to="/categories"
-            className="rounded-full bg-card px-3 py-1.5 text-xs font-bold text-foreground hairline"
+              className="rounded-full bg-card px-3 py-1.5 text-xs font-bold text-foreground hairline transition active:scale-[0.98]"
           >
             {text("تصفح الأقسام", "Browse categories")}
           </Link>
@@ -1163,7 +1163,7 @@ function ListingsPage() {
               key={filter.key}
               type="button"
               onClick={filter.clear}
-              className="inline-flex items-center gap-1 rounded-full bg-muted-surface px-3 py-1.5 text-xs font-bold text-foreground hairline"
+              className="inline-flex items-center gap-1 rounded-full bg-muted-surface px-3 py-1.5 text-xs font-bold text-foreground hairline transition active:scale-[0.98]"
             >
               {filter.label}
               <X className="h-3 w-3" />
@@ -1508,7 +1508,7 @@ function RealListingCard({ listing }: { listing: ClassifiedListing }) {
     <Link
       to="/listings/$id"
       params={{ id: listing.id }}
-      className="group block overflow-hidden rounded-2xl bg-card hairline shadow-soft transition-shadow hover:shadow-premium"
+      className="group block overflow-hidden rounded-2xl bg-card hairline shadow-soft tap-card"
     >
       <div className="relative">
         {listing.primaryImageUrl ? (
@@ -1528,7 +1528,7 @@ function RealListingCard({ listing }: { listing: ClassifiedListing }) {
               {text("مميز", "Featured")}
             </span>
           )}
-          <span className="rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold text-emerald-trust-foreground">
+          <span className="rounded-md bg-muted-surface/95 px-2 py-0.5 text-[11px] font-semibold text-foreground">
             {text("إعلان مُراجع", "Reviewed listing")}
           </span>
         </div>
@@ -1540,7 +1540,7 @@ function RealListingCard({ listing }: { listing: ClassifiedListing }) {
         <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-foreground">
           {listing.title}
         </h3>
-        <div className="text-xl font-extrabold text-foreground">
+        <div className="text-lg font-extrabold text-foreground">
           {formatPriceLocalized(listing.price ?? 0, listing.priceType, language)}
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -1570,7 +1570,7 @@ function SellerSearchCard({ seller }: { seller: PublicSellerSearchResult }) {
     <Link
       to="/seller/$id"
       params={{ id: seller.id }}
-      className="flex items-center gap-3 rounded-2xl bg-card p-3 transition hairline hover:bg-muted-surface"
+      className="flex items-center gap-3 rounded-2xl bg-card p-3 hairline tap-card hover:bg-muted-surface"
     >
       <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-muted-surface text-sm font-bold text-primary">
         {seller.avatarUrl ? (
@@ -1617,7 +1617,7 @@ function StateCard({
   actionTo?: string;
 }) {
   return (
-    <div className="mt-10 rounded-2xl bg-card p-10 text-center hairline">
+    <div className="mt-6 rounded-2xl bg-card p-6 text-center hairline">
       <p className="text-sm font-semibold text-foreground">{title}</p>
       <p className="mt-1 text-xs text-muted-foreground">{body}</p>
       {actionLabel && actionTo && (

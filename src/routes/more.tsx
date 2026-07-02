@@ -197,20 +197,20 @@ function MorePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-24" dir={isArabic ? "rtl" : "ltr"}>
+    <div className="min-h-screen bg-background" dir={isArabic ? "rtl" : "ltr"}>
       <AppHeader />
 
-      <main className="mx-auto max-w-5xl px-4 py-5 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-[28px] border border-border bg-primary text-primary-foreground shadow-sm">
-          <div className="grid gap-5 p-5 sm:p-7 md:grid-cols-[1fr_auto] md:items-center">
+      <main className="mobile-page-bottom mx-auto max-w-5xl px-4 py-4 sm:px-6 lg:px-8">
+        <section className="overflow-hidden rounded-2xl border border-border bg-primary text-primary-foreground shadow-sm">
+          <div className="grid gap-4 p-4 sm:p-6 md:grid-cols-[1fr_auto] md:items-center">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary-foreground/70">
+              <p className="text-xs font-bold uppercase tracking-normal text-primary-foreground/70">
                 {text("المزيد", "More")}
               </p>
-              <h1 className="mt-2 text-2xl font-black md:text-3xl">
+              <h1 className="mt-1 text-xl font-extrabold md:text-2xl">
                 {text("حسابك وخدمات RAWAJ في مكان واحد", "Your RAWAJ account and services in one place")}
               </h1>
-<p className="mt-2 max-w-2xl text-sm leading-7 text-primary-foreground/78">
+<p className="mt-1 max-w-2xl text-xs leading-6 text-primary-foreground/78 sm:text-sm">
                  {text(
                    "إدارة الإعلانات، الرسائل، الأمان، وخدمات المعلنين من مكان واحد.",
                    "Manage listings, messages, safety, and advertiser services in one place.",
@@ -218,7 +218,7 @@ function MorePage() {
                </p>
             </div>
 
-            <div className="rounded-2xl border border-white/15 bg-white/10 p-4">
+            <div className="rounded-2xl border border-white/15 bg-white/10 p-3">
               {user ? (
                 <div>
                   <div className="flex items-center gap-3">
@@ -226,7 +226,7 @@ function MorePage() {
                       <User className="h-5 w-5" />
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-black">{user.email}</p>
+                      <p className="truncate text-sm font-bold">{user.email}</p>
                       <p className="text-xs text-primary-foreground/70">{text("حساب مسجّل", "Signed-in account")}</p>
                     </div>
                   </div>
@@ -241,7 +241,7 @@ function MorePage() {
                       <LogIn className="h-5 w-5" />
                     </span>
                     <div>
-                      <p className="text-sm font-black">{text("تصفح كزائر", "Browsing as guest")}</p>
+                      <p className="text-sm font-bold">{text("تصفح كزائر", "Browsing as guest")}</p>
                       <p className="text-xs text-primary-foreground/70">{text("سجّل الدخول لإدارة نشاطك", "Sign in to manage your activity")}</p>
                     </div>
                   </div>
@@ -254,17 +254,17 @@ function MorePage() {
           </div>
         </section>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
           <Link
             to="/add-listing"
-            className="flex items-center justify-between rounded-2xl border border-border bg-white p-4 shadow-sm transition hover:border-accent/60 hover:shadow-md"
+            className="flex items-center justify-between rounded-2xl border border-border bg-card p-3 shadow-sm tap-card hover:border-accent/60"
           >
             <span className="flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
                 <Plus className="h-5 w-5" />
               </span>
               <span>
-                <span className="block text-sm font-black text-foreground">{text("أضف إعلاناً جديداً", "Post a new listing")}</span>
+                <span className="block text-sm font-bold text-foreground">{text("أضف إعلاناً جديداً", "Post a new listing")}</span>
                 <span className="block text-xs text-muted-foreground">{text("ابدأ إعلانك بخطوات بسيطة", "Start with a simple listing flow")}</span>
               </span>
             </span>
@@ -273,14 +273,14 @@ function MorePage() {
 
           <Link
             to="/promotion"
-            className="flex items-center justify-between rounded-2xl border border-border bg-white p-4 shadow-sm transition hover:border-accent/60 hover:shadow-md"
+            className="flex items-center justify-between rounded-2xl border border-border bg-card p-3 shadow-sm tap-card hover:border-accent/60"
           >
             <span className="flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
                 <Sparkles className="h-5 w-5" />
               </span>
               <span>
-                <span className="block text-sm font-black text-foreground">{text("ترويج الإعلانات", "Promote listings")}</span>
+                <span className="block text-sm font-bold text-foreground">{text("ترويج الإعلانات", "Promote listings")}</span>
                 <span className="block text-xs text-muted-foreground">{text("طلبات يراجعها فريق الإدارة", "Requests reviewed by admins")}</span>
               </span>
             </span>
@@ -288,10 +288,10 @@ function MorePage() {
           </Link>
         </div>
 
-        <div className="mt-6 space-y-4">
+        <div className="mt-5 space-y-3">
           {groups.map((group) => (
-            <section key={group.titleEn} className="rounded-2xl border border-border bg-white p-3 shadow-sm">
-              <h2 className="px-2 pb-2 text-sm font-black text-foreground">
+            <section key={group.titleEn} className="rounded-2xl border border-border bg-card p-3 shadow-sm">
+              <h2 className="px-2 pb-2 text-sm font-bold text-foreground">
                 {text(group.titleAr, group.titleEn)}
               </h2>
               <div className="divide-y divide-border/70">
@@ -309,7 +309,7 @@ function MorePage() {
               <Lock className="h-5 w-5" />
             </span>
             <div>
-              <h2 className="text-sm font-black text-foreground">{text("تذكير أمان", "Safety reminder")}</h2>
+              <h2 className="text-sm font-bold text-foreground">{text("تذكير أمان", "Safety reminder")}</h2>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
                 {text(
                   "لا تشارك رمز التحقق، ولا ترسل عربوناً قبل التأكد من الإعلان والبائع.",
@@ -350,7 +350,7 @@ function MoreItem({ row, text }: { row: MoreRow; text: (ar: string, en: string) 
       <button
         type="button"
         onClick={row.onClick}
-        className="flex w-full items-center justify-between gap-3 rounded-xl px-2 py-3 text-start transition hover:bg-muted/70"
+        className="flex w-full items-center justify-between gap-3 rounded-xl px-2 py-2.5 text-start transition hover:bg-muted/70 active:scale-[0.98]"
       >
         {content}
       </button>
@@ -361,7 +361,7 @@ function MoreItem({ row, text }: { row: MoreRow; text: (ar: string, en: string) 
     return (
       <a
         href={row.href}
-        className="flex items-center justify-between gap-3 rounded-xl px-2 py-3 transition hover:bg-muted/70"
+        className="flex items-center justify-between gap-3 rounded-xl px-2 py-2.5 transition hover:bg-muted/70 active:scale-[0.98]"
       >
         {content}
       </a>
@@ -370,7 +370,7 @@ function MoreItem({ row, text }: { row: MoreRow; text: (ar: string, en: string) 
 
   if (!row.to || row.disabled) {
     return (
-      <div className="flex items-center justify-between gap-3 px-2 py-3 opacity-80" aria-disabled="true">
+      <div className="flex items-center justify-between gap-3 px-2 py-2.5 opacity-80" aria-disabled="true">
         {content}
       </div>
     );
@@ -379,7 +379,7 @@ function MoreItem({ row, text }: { row: MoreRow; text: (ar: string, en: string) 
   return (
     <Link
       to={row.to}
-      className="flex items-center justify-between gap-3 rounded-xl px-2 py-3 transition hover:bg-muted/70"
+      className="flex items-center justify-between gap-3 rounded-xl px-2 py-2.5 transition hover:bg-muted/70 active:scale-[0.98]"
     >
       {content}
     </Link>

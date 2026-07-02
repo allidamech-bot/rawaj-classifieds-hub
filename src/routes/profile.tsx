@@ -205,8 +205,8 @@ function ProfilePage() {
 
   return (
     <>
-      <PageHeader title={text("حسابي", "My account")} back={false} />
-      <main className="container-wide space-y-5 pt-4 pb-24">
+      <PageHeader title={text("حسابي", "My account")} to="/more" backMode="history" />
+      <main className="container-wide mobile-page-bottom space-y-5 pt-4">
         <section className="rounded-2xl bg-card p-4 shadow-soft hairline">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3">
@@ -303,7 +303,7 @@ function ProfilePage() {
             <form onSubmit={(event) => void handleSaveProfileBasics(event)} className="space-y-4">
               <div className="rounded-2xl bg-muted-surface p-3 hairline">
                 <h3 className="mb-3 text-sm font-extrabold">{text("صور الحساب", "Account photos")}</h3>
-                <div className="grid gap-3 lg:grid-cols-2">
+                <div className="grid gap-3 md:grid-cols-[minmax(180px,0.8fr)_minmax(0,1.2fr)]">
                   <MediaField
                     title={text("الصورة الشخصية", "Profile image")}
                     helper={text("يمكنك اختيار صورة من الجهاز.", "Choose an image from your device.")}
@@ -549,9 +549,9 @@ function MediaField({
     <div className="rounded-xl bg-card p-3 hairline">
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="text-xs font-bold text-muted-foreground">{title}</span>
-        {busy && <span className="text-[10px] font-bold text-primary">{text("جارٍ الحفظ", "Saving")}</span>}
+        {busy && <span className="text-xs font-bold text-primary">{text("جارٍ الحفظ", "Saving")}</span>}
       </div>
-      <div className={`grid place-items-center overflow-hidden rounded-xl bg-muted-surface ${wide ? "aspect-[5/2]" : "aspect-square"}`}>
+      <div className={`grid place-items-center overflow-hidden rounded-xl bg-muted-surface ${wide ? "h-36 sm:h-44 lg:h-48" : "h-40 sm:h-44 lg:h-48"}`}>
         {imageUrl ? (
           <img src={imageUrl} alt={title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
         ) : (

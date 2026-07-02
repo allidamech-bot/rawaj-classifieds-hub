@@ -59,7 +59,7 @@ function OffersPage() {
   return (
     <>
       <PageHeader title={text("العروض والإعلانات المميزة", "Offers and featured listings")} />
-      <main className="container-wide pt-4 pb-8">
+      <main className="container-wide mobile-page-bottom pt-4">
         <section className="rounded-2xl bg-card p-4 shadow-soft hairline">
           <div className="flex items-start gap-3">
             <span className="grid h-11 w-11 place-items-center rounded-xl bg-gold/15 text-gold">
@@ -83,7 +83,7 @@ function OffersPage() {
                 key={chip.labelAr}
                 to={chip.q ? "/listings" : "/offers"}
                 search={chip.q ? { q: chip.q } : undefined}
-                className="shrink-0 rounded-full bg-muted-surface px-3 py-1.5 text-xs font-bold text-foreground hairline"
+                className="shrink-0 rounded-full bg-muted-surface px-3 py-1.5 text-xs font-bold text-foreground hairline transition active:scale-[0.98]"
               >
                 {text(chip.labelAr, chip.labelEn)}
               </Link>
@@ -114,7 +114,7 @@ function OffersPage() {
               </div>
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-5">
                 {featuredOffers.map((listing, index) => (
-                  <OfferCard key={listing.id} listing={listing} index={index} large={index === 0} />
+                  <OfferCard key={listing.id} listing={listing} large={index === 0} />
                 ))}
               </div>
             </section>
@@ -125,8 +125,8 @@ function OffersPage() {
                   {text("إعلانات مميزة أخرى", "More featured listings")}
                 </h2>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {regularOffers.map((listing, index) => (
-                    <OfferCard key={listing.id} listing={listing} index={index + 5} />
+                  {regularOffers.map((listing) => (
+                    <OfferCard key={listing.id} listing={listing} />
                   ))}
                 </div>
               </section>
@@ -140,11 +140,9 @@ function OffersPage() {
 
 function OfferCard({
   listing,
-  index,
   large = false,
 }: {
   listing: ClassifiedListing;
-  index: number;
   large?: boolean;
 }) {
   const { language, text } = useUiPreferences();
@@ -152,7 +150,7 @@ function OfferCard({
     <Link
       to="/listings/$id"
       params={{ id: listing.id }}
-      className={`overflow-hidden rounded-2xl bg-card shadow-soft hairline ${
+      className={`overflow-hidden rounded-2xl bg-card shadow-soft hairline tap-card ${
         large ? "lg:col-span-2 lg:row-span-2" : ""
       }`}
     >
@@ -161,17 +159,15 @@ function OfferCard({
           <img
             src={listing.primaryImageUrl}
             alt={listing.title}
-            className="aspect-[16/9] w-full object-cover"
+            className="aspect-[16/9] max-h-52 w-full object-cover lg:max-h-none"
             loading="lazy"
+            decoding="async"
           />
         ) : (
           <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
         )}
-        <span className="absolute top-2 start-2 rounded-md bg-gold px-2 py-0.5 text-[11px] font-extrabold text-gold-foreground">
+        <span className="absolute top-2 start-2 rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">
           {text("إعلان مميز", "Featured listing")}
-        </span>
-        <span className="absolute bottom-2 start-2 rounded-md bg-primary/90 px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
-          {text(`ترتيب العرض ${index + 1}`, `Display ${index + 1}`)}
         </span>
       </div>
       <div className="p-3">
@@ -179,8 +175,8 @@ function OfferCard({
           <Building2 className="h-3 w-3" />
           {categoryName(listing.categoryId, listing.categoryNameAr, language)}
         </div>
-        <h3 className="line-clamp-2 text-sm font-extrabold">{listing.title}</h3>
-        <p className="mt-1 text-lg font-extrabold">
+        <h3 className="line-clamp-2 text-sm font-bold">{listing.title}</h3>
+        <p className="mt-1 text-base font-extrabold">
           {formatPriceLocalized(listing.price ?? 0, listing.priceType, language)}
         </p>
         <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -198,7 +194,7 @@ function OfferCard({
 function EmptyOffer({ title, body }: { title: string; body?: string }) {
   const { text } = useUiPreferences();
   return (
-    <section className="mt-5 rounded-2xl bg-card p-8 text-center shadow-soft hairline">
+    <section className="mt-5 rounded-2xl bg-card p-6 text-center shadow-soft hairline">
       <Search className="mx-auto h-7 w-7 text-gold" />
       <h2 className="mt-3 text-base font-extrabold">{title}</h2>
       {body && <p className="mx-auto mt-1 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p>}

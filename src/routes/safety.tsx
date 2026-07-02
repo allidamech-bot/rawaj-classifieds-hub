@@ -65,7 +65,7 @@ function SafetyPage() {
   return (
     <>
       <PageHeader title={text("نصائح الأمان", "Safety tips")} />
-      <main className="container-wide pt-4 pb-8 space-y-4">
+      <main className="container-wide mobile-page-bottom space-y-4 pt-4">
         <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-soft">
           <div className="flex items-center gap-3">
             <ShieldAlert className="h-6 w-6 text-gold" />

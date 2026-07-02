@@ -75,8 +75,8 @@ function NotificationsPage() {
 
   return (
     <>
-      <PageHeader title={text("التنبيهات", "Notifications")} to="/more" />
-      <main className="container-wide space-y-5 pt-4 pb-24">
+      <PageHeader title={text("التنبيهات", "Notifications")} to="/more" backMode="history" />
+      <main className="container-wide mobile-page-bottom space-y-5 pt-4">
         {auth.status !== "signedIn" ? (
           <section className="rounded-2xl bg-card p-8 text-center shadow-soft hairline">
             <LogIn className="mx-auto h-8 w-8 text-gold" />

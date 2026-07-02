@@ -83,8 +83,8 @@ function MyListingsPage() {
   if (auth.status !== "signedIn") {
     return (
       <>
-        <PageHeader title={text("إعلاناتي / متجري", "My listings / store")} to="/profile" />
-        <main className="container-wide pt-4 pb-8">
+        <PageHeader title={text("إعلاناتي / متجري", "My listings / store")} to="/profile" backMode="history" />
+        <main className="container-wide mobile-page-bottom pt-4">
           <Panel
             title={text("تسجيل الدخول مطلوب", "Login required")}
             body={text(
@@ -108,8 +108,8 @@ function MyListingsPage() {
 
   return (
     <>
-      <PageHeader title={text("إعلاناتي / متجري", "My listings / store")} to="/profile" />
-      <main className="container-wide space-y-5 pt-4 pb-8">
+      <PageHeader title={text("إعلاناتي / متجري", "My listings / store")} to="/profile" backMode="history" />
+      <main className="container-wide mobile-page-bottom space-y-5 pt-4">
         <StoreHeader
           displayName={displayName}
           avatarUrl={auth.profile?.avatarUrl}

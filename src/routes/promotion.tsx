@@ -160,8 +160,8 @@ function PromotionPage() {
   if (auth.status !== "signedIn") {
     return (
       <>
-        <PageHeader title={text("ترويج إعلان", "Promote listing")} />
-        <main className="container-wide pt-4 pb-8">
+        <PageHeader title={text("ترويج إعلان", "Promote listing")} to="/more" backMode="history" />
+        <main className="container-wide mobile-page-bottom pt-4">
           <section className="rounded-2xl bg-card p-8 text-center hairline">
             <Sparkles className="mx-auto h-7 w-7 text-gold" />
             <h2 className="mt-3 text-base font-extrabold">
@@ -187,8 +187,8 @@ function PromotionPage() {
 
   return (
     <>
-      <PageHeader title={text("ترويج إعلان", "Promote listing")} />
-      <main className="container-wide space-y-5 pt-4 pb-8">
+      <PageHeader title={text("ترويج إعلان", "Promote listing")} to="/more" backMode="history" />
+      <main className="container-wide mobile-page-bottom space-y-5 pt-4">
         <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-soft">
           <h2 className="text-lg font-extrabold">
             {text("طلب ترويج حقيقي", "Real promotion request")}

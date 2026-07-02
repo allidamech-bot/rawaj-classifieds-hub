@@ -129,7 +129,7 @@ function SupportPage() {
   return (
     <>
       <PageHeader title={text("الدعم والمساعدة", "Support and help")} />
-      <main className="container-wide space-y-5 pt-4 pb-8">
+      <main className="container-wide mobile-page-bottom space-y-5 pt-4">
         <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-soft">
           <div className="flex items-center gap-3">
             <LifeBuoy className="h-6 w-6 text-gold" />

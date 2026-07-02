@@ -71,7 +71,7 @@ function TermsPage() {
   return (
     <>
       <PageHeader title={text("شروط الاستخدام", "Terms of use")} />
-      <main className="container-wide pt-4 pb-8">
+      <main className="container-wide mobile-page-bottom pt-4">
         <p className="mb-4 text-xs text-muted-foreground">
           {text(
             "آخر تحديث: تنطبق هذه الشروط على استخدام رَوَاج الحالي.",

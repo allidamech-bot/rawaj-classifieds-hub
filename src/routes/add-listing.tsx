@@ -336,7 +336,7 @@ function AddListingPage() {
   return (
     <>
       <PageHeader title={text("أضف إعلاناً", "Post a listing")} />
-      <main className="container-wide pt-4 pb-8">
+      <main className="container-wide mobile-page-bottom pt-4">
         <div className="mb-4 flex flex-wrap gap-2">
           <Link
             to="/"
@@ -351,7 +351,7 @@ function AddListingPage() {
             {text("تصفح الإعلانات", "Browse listings")}
           </Link>
         </div>
-        <ol className="no-scrollbar mb-5 flex items-center gap-2 overflow-x-auto pb-2">
+        <ol className="no-scrollbar mb-4 flex items-center gap-2 overflow-x-auto pb-2">
           {steps.map((label, index) => {
             const done = index < step;
             const active = index === step;
@@ -363,7 +363,7 @@ function AddListingPage() {
                   {done ? <Check className="h-3.5 w-3.5" /> : index + 1}
                 </div>
                 <span
-                  className={`text-xs font-semibold ${active ? "text-foreground" : "text-muted-foreground"}`}
+                  className={`whitespace-nowrap text-xs font-semibold ${active ? "text-foreground" : "text-muted-foreground"}`}
                 >
                   {label}
                 </span>
@@ -814,7 +814,7 @@ function PageState({
   return (
     <>
       <PageHeader title={title} />
-      <main className="container-wide pt-10">
+      <main className="container-wide mobile-page-bottom pt-10">
         <div className="rounded-2xl bg-card p-10 text-center hairline">
           <p className="text-sm font-bold text-foreground">{heading}</p>
           <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p>

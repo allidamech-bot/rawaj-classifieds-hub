@@ -39,7 +39,7 @@ function ProhibitedPage() {
   return (
     <>
       <PageHeader title={text("الإعلانات الممنوعة", "Prohibited listings")} />
-      <main className="container-wide pt-4 pb-8 space-y-4">
+      <main className="container-wide mobile-page-bottom space-y-4 pt-4">
         <div className="rounded-2xl bg-destructive/10 p-4 hairline">
           <div className="flex items-start gap-2">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />

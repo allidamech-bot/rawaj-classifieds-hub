@@ -162,7 +162,7 @@ function ChatsPage() {
     return (
       <>
         <PageHeader title={text("المحادثات", "Messages")} />
-        <main className="container-wide pt-4 pb-8">
+        <main className="container-wide mobile-page-bottom pt-4">
           <StatePanel
             title={text("تسجيل الدخول مطلوب", "Login required")}
             body={text(
@@ -180,7 +180,7 @@ function ChatsPage() {
   return (
     <>
       <PageHeader title={text("المحادثات", "Messages")} />
-      <main className="container-wide space-y-4 pt-4 pb-8">
+      <main className="container-wide mobile-page-bottom space-y-4 pt-4">
         <div className="flex flex-wrap gap-2">
           <Link
             to="/"

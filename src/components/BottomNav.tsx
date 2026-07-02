@@ -22,6 +22,17 @@ const items: NavItem[] = [
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { text } = useUiPreferences();
+  const activePath =
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/notifications") ||
+    pathname.startsWith("/verification") ||
+    pathname.startsWith("/saved-searches") ||
+    pathname.startsWith("/favorites") ||
+    pathname.startsWith("/chats")
+      ? "/more"
+      : pathname.startsWith("/promotion")
+        ? "/offers"
+        : pathname;
   const hidden =
     pathname === "/login" ||
     pathname === "/auth/callback" ||
@@ -38,7 +49,7 @@ export function BottomNav() {
     >
       <div className="container-wide mx-auto grid grid-cols-5 items-end">
         {items.map((item) => {
-          const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+          const active = item.exact ? activePath === item.to : activePath.startsWith(item.to);
           const Icon = item.icon;
           const label = text(item.labelAr, item.labelEn);
           if (item.primary) {
@@ -46,7 +57,7 @@ export function BottomNav() {
               <Link
                 key={item.to}
                 to={item.to}
-                className="flex flex-col items-center gap-1 pt-1 pb-2"
+                className="flex flex-col items-center gap-1 pt-1 pb-2 transition active:scale-[0.98]"
                 aria-label={label}
               >
                 <span className="grid h-12 w-12 -translate-y-3 place-items-center rounded-full bg-gold text-gold-foreground shadow-premium">
@@ -60,7 +71,7 @@ export function BottomNav() {
             <Link
               key={item.to}
               to={item.to}
-              className={`flex flex-col items-center gap-1 py-2 transition ${
+                className={`flex flex-col items-center gap-1 py-2 transition active:scale-[0.98] ${
                 active ? "text-primary" : "text-muted-foreground"
               }`}
               aria-current={active ? "page" : undefined}

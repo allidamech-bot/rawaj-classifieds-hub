@@ -48,7 +48,7 @@ function SellerPage() {
   return (
     <div>
       <PageHeader title={text("ملف البائع", "Seller profile")} />
-      <main className="container-wide pt-4 pb-8">
+      <main className="container-wide mobile-page-bottom pt-4">
         <div className="space-y-4">
           <SellerHeader seller={seller} />
 
@@ -442,7 +442,7 @@ function SellerState({
   return (
     <div>
       <PageHeader title={text(titleAr, titleEn)} />
-      <main className="container-wide pt-10 text-center text-sm text-muted-foreground">
+      <main className="container-wide mobile-page-bottom pt-10 text-center text-sm text-muted-foreground">
         {text(bodyAr, bodyEn)}
       </main>
     </div>
@@ -454,7 +454,7 @@ function SellerError({ reset }: { reset: () => void }) {
   return (
     <div>
       <PageHeader title={text("خطأ", "Error")} />
-      <main className="container-wide pt-10 text-center">
+      <main className="container-wide mobile-page-bottom pt-10 text-center">
         <button
           onClick={reset}
           className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"

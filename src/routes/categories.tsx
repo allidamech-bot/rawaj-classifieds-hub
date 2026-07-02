@@ -95,7 +95,7 @@ function CategoriesPage() {
   return (
     <>
       <PageHeader title={text("الأقسام", "Categories")} />
-      <main className="container-wide pt-4 pb-8">
+      <main className="container-wide mobile-page-bottom pt-4">
         <section className="rounded-2xl bg-card p-4 shadow-soft hairline">
           <p className="text-[11px] font-extrabold text-gold">
             {text("دليل السوق", "Marketplace directory")}
@@ -131,15 +131,15 @@ function CategoriesPage() {
                     key={category.id}
                     to="/listings"
                     search={{ category: category.id }}
-                    className="group rounded-2xl bg-card p-4 shadow-soft transition hairline hover:shadow-premium"
+                    className="group rounded-2xl bg-card p-3 shadow-soft hairline tap-card sm:p-4"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl">
+                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl sm:h-14 sm:w-14">
                         <PlaceholderArt type={category.placeholder} aspect="square" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <h2 className="truncate text-base font-extrabold">
+                          <h2 className="truncate text-sm font-bold sm:text-base">
                             {categoryName(category.id, category.nameAr, language)}
                           </h2>
                           <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-foreground rtl:rotate-180" />
@@ -147,7 +147,7 @@ function CategoriesPage() {
                         <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
                           {categoryHint(category.id, category.hintAr ?? "", language)}
                         </p>
-                        <p className="mt-1 text-[11px] font-bold text-gold">
+                        <p className={`mt-1 text-[11px] font-semibold ${(counts[category.id] ?? 0) > 0 ? "text-primary" : "text-muted-foreground"}`}>
                           {text(
                             `${counts[category.id] ?? 0} إعلان`,
                             `${counts[category.id] ?? 0} listings`,
@@ -157,10 +157,10 @@ function CategoriesPage() {
                     </div>
                     {children.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-1.5">
-                        {children.slice(0, 5).map((subcategory) => (
+                        {children.slice(0, 3).map((subcategory) => (
                           <span
                             key={subcategory.id}
-                            className="rounded-full bg-muted-surface px-2 py-0.5 text-[10px] font-medium text-foreground/80"
+                            className="rounded-full bg-muted-surface px-2 py-0.5 text-[11px] font-medium text-foreground/80"
                           >
                             {subcategory.nameAr}
                           </span>
@@ -173,7 +173,7 @@ function CategoriesPage() {
             </section>
 
             <section className="mt-5 rounded-2xl bg-card p-4 shadow-soft hairline">
-              <span className="inline-flex rounded-full bg-gold/15 px-2.5 py-1 text-[10px] font-extrabold text-gold hairline">
+              <span className="inline-flex rounded-full bg-muted-surface px-2.5 py-1 text-xs font-bold text-primary hairline">
                 {text("روابط مفيدة", "Helpful links")}
               </span>
               <h2 className="mt-2 text-base font-extrabold">
@@ -237,7 +237,7 @@ function CategoryListings({ title, listings }: { title: string; listings: Classi
             key={listing.id}
             to="/listings/$id"
             params={{ id: listing.id }}
-            className="overflow-hidden rounded-2xl bg-card shadow-soft hairline"
+          className="overflow-hidden rounded-2xl bg-card shadow-soft hairline tap-card"
           >
             {listing.primaryImageUrl ? (
               <img
@@ -245,6 +245,7 @@ function CategoryListings({ title, listings }: { title: string; listings: Classi
                 alt={listing.title}
                 className="aspect-[16/9] w-full object-cover"
                 loading="lazy"
+                decoding="async"
               />
             ) : (
               <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
