@@ -34,8 +34,7 @@ function readStoredLanguage(): Language {
 }
 
 function readStoredTheme(): Theme {
-  if (typeof window === "undefined") return "light";
-  return window.localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
+  return "light";
 }
 
 export function UiPreferencesProvider({ children }: { children: ReactNode }) {
@@ -58,17 +57,17 @@ export function UiPreferencesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    document.documentElement.classList.toggle("dark", theme === "dark");
-    document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem(THEME_KEY, theme);
+    document.documentElement.classList.remove("dark");
+    document.documentElement.dataset.theme = "light";
+    window.localStorage.setItem(THEME_KEY, "light");
   }, [theme]);
 
   const setLanguage = useCallback((nextLanguage: Language) => {
     setLanguageState(nextLanguage);
   }, []);
 
-  const setTheme = useCallback((nextTheme: Theme) => {
-    setThemeState(nextTheme);
+  const setTheme = useCallback((_nextTheme: Theme) => {
+    setThemeState("light");
   }, []);
 
   const value = useMemo<UiPreferencesContextValue>(() => {
@@ -81,7 +80,7 @@ export function UiPreferencesProvider({ children }: { children: ReactNode }) {
       setLanguage,
       toggleLanguage: () => setLanguageState((current) => (current === "ar" ? "en" : "ar")),
       setTheme,
-      toggleTheme: () => setThemeState((current) => (current === "light" ? "dark" : "light")),
+      toggleTheme: () => setThemeState("light"),
       text: (ar, en) => (isArabic ? ar : en),
     };
   }, [language, setLanguage, setTheme, theme]);

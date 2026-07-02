@@ -109,6 +109,11 @@ function HomePage() {
     void navigate({ to: "/listings", search: q ? { q } : {} });
   }
 
+  const currentSearchQuery = searchValue.trim();
+  const listingSearch = (
+    extra: { sort?: "latest" | "cheapest" | "expensive" | "featured" } = {},
+  ) => (currentSearchQuery ? { q: currentSearchQuery, ...extra } : extra);
+
   return (
     <>
       <AppHeader />
@@ -157,6 +162,7 @@ function HomePage() {
             </label>
             <Link
               to="/listings"
+              search={listingSearch()}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-3 text-xs font-extrabold text-foreground hairline"
             >
               <Filter className="h-4 w-4" />
@@ -164,7 +170,7 @@ function HomePage() {
             </Link>
             <Link
               to="/listings"
-              search={{ sort: "latest" }}
+              search={listingSearch({ sort: "latest" })}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-extrabold text-primary-foreground"
             >
               <ArrowUpDown className="h-4 w-4" />
@@ -176,7 +182,7 @@ function HomePage() {
               <Link
                 key={sort.id}
                 to="/listings"
-                search={{ sort: sort.id }}
+                search={listingSearch({ sort: sort.id })}
                 className="rounded-xl bg-muted-surface px-2 py-2 text-center text-[11px] font-bold text-foreground"
               >
                 {text(sort.labelAr, sort.labelEn)}

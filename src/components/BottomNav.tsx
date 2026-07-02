@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Grid3X3, Home, MoreHorizontal, Plus, Sparkles } from "lucide-react";
+import { useUiPreferences } from "@/lib/ui-preferences";
 
 type NavItem = {
   to: "/" | "/categories" | "/add-listing" | "/offers" | "/more";
@@ -20,6 +21,7 @@ const items: NavItem[] = [
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { text } = useUiPreferences();
 
   return (
     <nav
@@ -31,7 +33,7 @@ export function BottomNav() {
         {items.map((item) => {
           const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
           const Icon = item.icon;
-          const label = item.labelAr;
+          const label = text(item.labelAr, item.labelEn);
           if (item.primary) {
             return (
               <Link

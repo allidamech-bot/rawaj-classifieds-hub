@@ -35,13 +35,14 @@ type MoreRow = {
   titleEn: string;
   hintAr?: string;
   hintEn?: string;
-  to?: "/" | "/add-listing" | "/admin" | "/chats" | "/favorites" | "/login" | "/profile" | "/profile/listings" | "/prohibited" | "/promotion" | "/saved-searches" | "/safety" | "/support" | "/terms";
+  to?: "/" | "/add-listing" | "/admin" | "/chats" | "/favorites" | "/login" | "/notifications" | "/profile" | "/profile/listings" | "/prohibited" | "/promotion" | "/saved-searches" | "/safety" | "/support" | "/terms" | "/verification";
+  onClick?: () => void;
   icon: ComponentType<{ className?: string }>;
   disabled?: boolean;
 };
 
 function MorePage() {
-  const { language } = useUiPreferences();
+  const { language, toggleLanguage } = useUiPreferences();
   const { user } = useAuth();
   const isArabic = language === "ar";
   const text = (ar: string, en: string) => (isArabic ? ar : en);
@@ -77,7 +78,7 @@ function MorePage() {
           hintAr: "العربية / English",
           hintEn: "Arabic / English",
           icon: Languages,
-          disabled: true,
+          onClick: toggleLanguage,
         },
       ],
     },
@@ -126,10 +127,10 @@ function MorePage() {
         {
           titleAr: "التنبيهات",
           titleEn: "Notifications",
-          hintAr: "قريباً داخل تجربة الحساب",
-          hintEn: "Coming soon in the account area",
+          hintAr: "مركز التنبيهات وروابط المتابعة",
+          hintEn: "Notification center and follow-up links",
+          to: "/notifications",
           icon: Bell,
-          disabled: true,
         },
         {
           titleAr: "الدعم والمساعدة",
@@ -186,18 +187,18 @@ function MorePage() {
         {
           titleAr: "حساب منشأة",
           titleEn: "Business account",
-          hintAr: "تجهيزات قادمة للشركات",
-          hintEn: "Future business tools",
+          hintAr: "حدّث اسم المنشأة ووسائل التواصل",
+          hintEn: "Update business name and contact details",
+          to: "/profile",
           icon: Building2,
-          disabled: true,
         },
         {
           titleAr: "طلب توثيق",
           titleEn: "Verification request",
-          hintAr: "قريباً بعد تجهيز مراجعة آمنة",
-          hintEn: "Coming after safe review support",
+          hintAr: "إرسال طلب توثيق للمراجعة اليدوية",
+          hintEn: "Submit a verification request for manual review",
+          to: "/verification",
           icon: BadgeCheck,
-          disabled: true,
         },
       ],
     },
@@ -350,15 +351,21 @@ function MoreItem({ row, text }: { row: MoreRow; text: (ar: string, en: string) 
           )}
         </span>
       </span>
-      {row.disabled ? (
-        <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground">
-          {text("قريباً", "Soon")}
-        </span>
-      ) : (
-        <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
-      )}
+      <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
     </>
   );
+
+  if (row.onClick && !row.disabled) {
+    return (
+      <button
+        type="button"
+        onClick={row.onClick}
+        className="flex w-full items-center justify-between gap-3 rounded-xl px-2 py-3 text-start transition hover:bg-muted/70"
+      >
+        {content}
+      </button>
+    );
+  }
 
   if (!row.to || row.disabled) {
     return (

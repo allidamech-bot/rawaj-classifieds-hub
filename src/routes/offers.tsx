@@ -14,15 +14,15 @@ export const Route = createFileRoute("/offers")({
     createSeo({
       title: "العروض | RAWAJ / رواج",
       description:
-        "مساحة مخصصة للإعلانات البارزة داخل الأقسام. تظهر الإعلانات البارزة بعد مراجعة الإدارة.",
+        "مساحة مخصصة للإعلانات المميزة داخل الأقسام. تظهر الإعلانات المميزة من البيانات المتاحة بعد مراجعة الإدارة.",
       path: "/offers",
     }),
   component: OffersPage,
 });
 
 const offerChips = [
-  { labelAr: "عروض اليوم", labelEn: "Today" },
-  { labelAr: "عروض الشركات", labelEn: "Companies" },
+  { labelAr: "الإعلانات المميزة", labelEn: "Featured listings" },
+  { labelAr: "كل العروض", labelEn: "All offers" },
   { labelAr: "السيارات", labelEn: "Vehicles", q: "سيارات" },
   { labelAr: "العقارات", labelEn: "Real estate", q: "عقارات" },
   { labelAr: "الجوالات والإلكترونيات", labelEn: "Electronics", q: "جوالات" },
@@ -58,7 +58,7 @@ function OffersPage() {
 
   return (
     <>
-      <PageHeader title={text("العروض", "Offers")} />
+      <PageHeader title={text("العروض والإعلانات المميزة", "Offers and featured listings")} />
       <main className="container-wide pt-4 pb-8">
         <section className="rounded-2xl bg-card p-4 shadow-soft hairline">
           <div className="flex items-start gap-3">
@@ -67,12 +67,12 @@ function OffersPage() {
             </span>
             <div>
               <h1 className="text-xl font-extrabold">
-                {text("الإعلانات المميزة", "Featured listings")}
+                {text("العروض والإعلانات المميزة", "Offers and featured listings")}
               </h1>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
                 {text(
-                  "تظهر الإعلانات المميزة بعد مراجعة الإدارة والموافقة على الترويج.",
-                  "Featured listings appear after admin review and promotion approval.",
+                  "تعرض هذه الصفحة الإعلانات المميزة المتاحة حالياً من بيانات السوق، دون افتراض خصومات أو عروض شركات غير مؤكدة.",
+                  "This page shows currently available featured marketplace listings without assuming discounts or company-only offers.",
                 )}
               </p>
             </div>
@@ -97,7 +97,7 @@ function OffersPage() {
           <EmptyOffer title={text("تعذر تحميل العروض", "Could not load offers")} body={error.message} />
         ) : featuredOffers.length === 0 ? (
           <EmptyOffer
-            title={text("لا توجد عروض متاحة حالياً", "No offers available right now")}
+            title={text("لا توجد إعلانات مميزة حالياً", "No featured listings right now")}
             body={text(
               "يمكنك إضافة إعلانك أو طلب ترويج يدوي ليظهر ضمن المساحات المناسبة بعد المراجعة.",
               "You can post a listing or request manual promotion for suitable spaces after review.",
@@ -107,7 +107,7 @@ function OffersPage() {
           <>
             <section className="mt-5">
               <div className="mb-3 flex items-center justify-between gap-2">
-                <h2 className="text-sm font-extrabold">{text("عروض مميزة", "Featured offers")}</h2>
+                <h2 className="text-sm font-extrabold">{text("إعلانات مميزة", "Featured listings")}</h2>
                 <Link to="/promotion" className="text-xs font-bold text-primary">
                   {text("طلب ترويج", "Request promotion")}
                 </Link>
@@ -122,7 +122,7 @@ function OffersPage() {
             {regularOffers.length > 0 && (
               <section className="mt-7">
                 <h2 className="mb-3 text-sm font-extrabold">
-                  {text("عروض أخرى", "More offers")}
+                  {text("إعلانات مميزة أخرى", "More featured listings")}
                 </h2>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {regularOffers.map((listing, index) => (
@@ -168,10 +168,10 @@ function OfferCard({
           <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
         )}
         <span className="absolute top-2 start-2 rounded-md bg-gold px-2 py-0.5 text-[11px] font-extrabold text-gold-foreground">
-          {text("عرض مميز", "Featured offer")}
+          {text("إعلان مميز", "Featured listing")}
         </span>
         <span className="absolute bottom-2 start-2 rounded-md bg-primary/90 px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
-          {text(`المركز ${index + 1}`, `Slot ${index + 1}`)}
+          {text(`ترتيب العرض ${index + 1}`, `Display ${index + 1}`)}
         </span>
       </div>
       <div className="p-3">
@@ -188,7 +188,7 @@ function OfferCard({
           {governorateName(listing.governorateId, listing.governorateNameAr, language)}
         </p>
         <span className="mt-3 inline-flex rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
-          {text("شاهد العرض", "View offer")}
+          {text("شاهد الإعلان", "View listing")}
         </span>
       </div>
     </Link>

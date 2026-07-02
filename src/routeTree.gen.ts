@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerificationRouteImport } from './routes/verification'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SavedSearchesRouteImport } from './routes/saved-searches'
@@ -18,6 +19,7 @@ import { Route as ProhibitedRouteImport } from './routes/prohibited'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OffersRouteImport } from './routes/offers'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MoreRouteImport } from './routes/more'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ListingsRouteImport } from './routes/listings'
@@ -42,6 +44,11 @@ import { Route as AdminPendingRouteImport } from './routes/admin.pending'
 import { Route as AdminMessageReportsRouteImport } from './routes/admin.message-reports'
 import { Route as ProfileListingsIdRouteImport } from './routes/profile/listings.$id'
 
+const VerificationRoute = VerificationRouteImport.update({
+  id: '/verification',
+  path: '/verification',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -85,6 +92,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const OffersRoute = OffersRouteImport.update({
   id: '/offers',
   path: '/offers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MoreRoute = MoreRouteImport.update({
@@ -213,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/listings': typeof ListingsRouteWithChildren
   '/login': typeof LoginRoute
   '/more': typeof MoreRoute
+  '/notifications': typeof NotificationsRoute
   '/offers': typeof OffersRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRouteWithChildren
@@ -222,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/saved-searches': typeof SavedSearchesRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/verification': typeof VerificationRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
@@ -245,6 +259,7 @@ export interface FileRoutesByTo {
   '/favorites': typeof FavoritesRoute
   '/login': typeof LoginRoute
   '/more': typeof MoreRoute
+  '/notifications': typeof NotificationsRoute
   '/offers': typeof OffersRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRouteWithChildren
@@ -254,6 +269,7 @@ export interface FileRoutesByTo {
   '/saved-searches': typeof SavedSearchesRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/verification': typeof VerificationRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
@@ -280,6 +296,7 @@ export interface FileRoutesById {
   '/listings': typeof ListingsRouteWithChildren
   '/login': typeof LoginRoute
   '/more': typeof MoreRoute
+  '/notifications': typeof NotificationsRoute
   '/offers': typeof OffersRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRouteWithChildren
@@ -289,6 +306,7 @@ export interface FileRoutesById {
   '/saved-searches': typeof SavedSearchesRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/verification': typeof VerificationRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
@@ -316,6 +334,7 @@ export interface FileRouteTypes {
     | '/listings'
     | '/login'
     | '/more'
+    | '/notifications'
     | '/offers'
     | '/privacy'
     | '/profile'
@@ -325,6 +344,7 @@ export interface FileRouteTypes {
     | '/saved-searches'
     | '/support'
     | '/terms'
+    | '/verification'
     | '/admin/message-reports'
     | '/admin/pending'
     | '/admin/promotions'
@@ -348,6 +368,7 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/login'
     | '/more'
+    | '/notifications'
     | '/offers'
     | '/privacy'
     | '/profile'
@@ -357,6 +378,7 @@ export interface FileRouteTypes {
     | '/saved-searches'
     | '/support'
     | '/terms'
+    | '/verification'
     | '/admin/message-reports'
     | '/admin/pending'
     | '/admin/promotions'
@@ -382,6 +404,7 @@ export interface FileRouteTypes {
     | '/listings'
     | '/login'
     | '/more'
+    | '/notifications'
     | '/offers'
     | '/privacy'
     | '/profile'
@@ -391,6 +414,7 @@ export interface FileRouteTypes {
     | '/saved-searches'
     | '/support'
     | '/terms'
+    | '/verification'
     | '/admin/message-reports'
     | '/admin/pending'
     | '/admin/promotions'
@@ -417,6 +441,7 @@ export interface RootRouteChildren {
   ListingsRoute: typeof ListingsRouteWithChildren
   LoginRoute: typeof LoginRoute
   MoreRoute: typeof MoreRoute
+  NotificationsRoute: typeof NotificationsRoute
   OffersRoute: typeof OffersRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRouteWithChildren
@@ -426,12 +451,20 @@ export interface RootRouteChildren {
   SavedSearchesRoute: typeof SavedSearchesRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
+  VerificationRoute: typeof VerificationRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   SellerIdRoute: typeof SellerIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verification': {
+      id: '/verification'
+      path: '/verification'
+      fullPath: '/verification'
+      preLoaderRoute: typeof VerificationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -493,6 +526,13 @@ declare module '@tanstack/react-router' {
       path: '/offers'
       fullPath: '/offers'
       preLoaderRoute: typeof OffersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/more': {
@@ -730,6 +770,7 @@ const rootRouteChildren: RootRouteChildren = {
   ListingsRoute: ListingsRouteWithChildren,
   LoginRoute: LoginRoute,
   MoreRoute: MoreRoute,
+  NotificationsRoute: NotificationsRoute,
   OffersRoute: OffersRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRouteWithChildren,
@@ -739,6 +780,7 @@ const rootRouteChildren: RootRouteChildren = {
   SavedSearchesRoute: SavedSearchesRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
+  VerificationRoute: VerificationRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   SellerIdRoute: SellerIdRoute,
 }

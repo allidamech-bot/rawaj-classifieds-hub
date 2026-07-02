@@ -98,8 +98,8 @@ function PromotionsPage() {
         </h2>
         <p className="mt-1 text-xs leading-6 text-muted-foreground">
           {text(
-            "الموافقة تجعل الإعلان مميزاً لمدة الطلب عبر trigger قاعدة البيانات. لا توجد معالجة دفع في هذا السبرنت.",
-            "Approval marks the listing featured for the requested period through the database trigger. No payment processing is implemented in this sprint.",
+            "الموافقة تجعل الإعلان مميزاً لمدة الطلب بعد المراجعة اليدوية. راجع الملاحظات والإيصالات قبل اتخاذ القرار.",
+            "Approval marks the listing featured for the requested period after manual review. Review notes and receipts before deciding.",
           )}
         </p>
         {notice && (

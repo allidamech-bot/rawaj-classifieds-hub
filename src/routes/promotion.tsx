@@ -23,7 +23,7 @@ export const Route = createFileRoute("/promotion")({
     createSeo({
       title: "طلب ترويج إعلان | RAWAJ / رواج",
       description:
-        "اطلب ترويج إعلان معتمد تملكه على رواج. طلبات الترويج تحفظ كطلبات قيد المراجعة ولا توجد معالجة دفع آلية داخل المنصة.",
+        "اطلب ترويج إعلان معتمد تملكه على رواج. تتم مراجعة طلبات الترويج يدوياً قبل التفعيل.",
       path: "/promotion",
       noindex: true,
     }),
@@ -79,8 +79,8 @@ function PromotionPage() {
       value: "urgent",
       label: text("موضع مميز", "Priority placement"),
       description: text(
-        "طلب أولوية يراجع يدويا ولا يعني تفعيل الدفع تلقائيا.",
-        "Priority request reviewed manually; no automatic payment activation.",
+        "طلب أولوية يراجع يدوياً قبل التفعيل.",
+        "Priority request reviewed manually before activation.",
       ),
     },
   ];
@@ -195,8 +195,8 @@ function PromotionPage() {
           </h2>
           <p className="mt-2 text-xs leading-6 text-primary-foreground/80">
             {text(
-              "يُنشأ الطلب كقيد مراجعة. لا توجد معالجة دفع آلية أو نجاح دفع وهمي في هذه المرحلة.",
-              "The request is stored as pending review. There is no automatic payment processing or fake payment success in this stage.",
+              "يتم مراجعة طلبات الترويج يدوياً قبل التفعيل. سيتم التواصل معك بخصوص طريقة الدفع المناسبة عند الحاجة.",
+              "Promotion requests are reviewed manually before activation. We will contact you about the suitable payment method when needed.",
             )}
           </p>
         </section>
@@ -297,8 +297,8 @@ function PromotionPage() {
             </div>
             <div className="mt-4 rounded-xl bg-muted-surface p-3 text-xs leading-6 text-foreground hairline">
               {text(
-                "الترويج يدوي بالكامل: لا توجد بوابة دفع ولا تفعيل تلقائي. سيتم تزويدك ببيانات التحويل المعتمدة بعد إرسال الطلب أو عبر التواصل مع الإدارة، ويصبح الإعلان مروجا فقط بعد موافقة الإدارة.",
-                "Promotion is fully manual: there is no payment gateway and no automatic activation. Approved transfer instructions will be provided after submitting the request or through admin contact, and the listing is promoted only after admin approval.",
+                "يتم مراجعة طلبات الترويج يدوياً قبل التفعيل. سيتم التواصل معك بخصوص طريقة الدفع المناسبة عند الحاجة، ويصبح الإعلان مميزاً بعد موافقة الإدارة.",
+                "Promotion requests are reviewed manually before activation. We will contact you about the suitable payment method when needed, and the listing becomes featured after admin approval.",
               )}
             </div>
             <button

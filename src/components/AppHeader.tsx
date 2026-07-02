@@ -4,9 +4,7 @@ import {
   Languages,
   LogIn,
   MapPin,
-  Moon,
   ShieldCheck,
-  Sun,
   User,
   UserCog,
 } from "lucide-react";
@@ -28,7 +26,7 @@ export function AppHeader({ compact = false, title }: Props) {
   const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
   const navigate = useNavigate();
   const auth = useAuth();
-  const { language, text, theme, toggleLanguage, toggleTheme } = useUiPreferences();
+  const { language, text, toggleLanguage } = useUiPreferences();
 
   useEffect(() => {
     let cancelled = false;
@@ -80,15 +78,6 @@ export function AppHeader({ compact = false, title }: Props) {
           >
             <Languages className="h-4 w-4" />
             <span>{language === "ar" ? "English" : "العربية"}</span>
-          </button>
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label={text("تبديل النمط", "Switch theme")}
-            title={theme === "light" ? text("داكن", "Dark") : text("فاتح", "Light")}
-            className="grid h-9 w-9 place-items-center rounded-full bg-primary-foreground/10 text-primary-foreground/85 transition hover:bg-primary-foreground/20"
-          >
-            {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </button>
           <button
             type="button"

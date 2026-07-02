@@ -10,7 +10,12 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { adminFetchPendingListings, adminFetchReports } from "@/lib/classifieds-api";
+import {
+  adminFetchPendingListings,
+  adminFetchPromotionRequests,
+  adminFetchReports,
+  adminFetchVerificationRequests,
+} from "@/lib/classifieds-api";
 import type { ClassifiedsError } from "@/lib/classifieds-types";
 import { uiLabel } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -35,6 +40,8 @@ function AdminOverview() {
   const { language, text } = useUiPreferences();
   const [pendingCount, setPendingCount] = useState<number | null>(null);
   const [reportCount, setReportCount] = useState<number | null>(null);
+  const [promotionCount, setPromotionCount] = useState<number | null>(null);
+  const [verificationCount, setVerificationCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
 
@@ -43,9 +50,11 @@ function AdminOverview() {
     async function loadOverview() {
       setLoading(true);
       setError(null);
-      const [pendingResult, reportsResult] = await Promise.all([
+      const [pendingResult, reportsResult, promotionsResult, verificationsResult] = await Promise.all([
         adminFetchPendingListings(auth.canAccessAdmin),
         adminFetchReports(auth.canAccessAdmin),
+        adminFetchPromotionRequests(auth.canAccessAdmin),
+        adminFetchVerificationRequests(auth.canAccessAdmin),
       ]);
       if (cancelled) return;
 
@@ -55,6 +64,12 @@ function AdminOverview() {
       if (reportsResult.ok) setReportCount(reportsResult.data.length);
       else if (!pendingResult.ok) setError(reportsResult.error);
       else setError(reportsResult.error);
+
+      if (promotionsResult.ok) setPromotionCount(promotionsResult.data.length);
+      else setError(promotionsResult.error);
+
+      if (verificationsResult.ok) setVerificationCount(verificationsResult.data.length);
+      else setError(verificationsResult.error);
 
       setLoading(false);
     }
@@ -76,24 +91,14 @@ function AdminOverview() {
       supported: true,
     },
     {
-      label: text("المستخدمون", "Users"),
-      value: "—",
-      supported: false,
-    },
-    {
       label: text("طلبات الترويج", "Promotion requests"),
-      value: "—",
-      supported: false,
+      value: formatMetric(promotionCount, loading),
+      supported: true,
     },
     {
-      label: text("الإيرادات", "Revenue"),
-      value: "—",
-      supported: false,
-    },
-    {
-      label: text("نشاط اليوم", "Today activity"),
-      value: "—",
-      supported: false,
+      label: text("طلبات التوثيق", "Verification requests"),
+      value: formatMetric(verificationCount, loading),
+      supported: true,
     },
   ];
 
@@ -112,8 +117,8 @@ function AdminOverview() {
               <h2 className="text-xl font-extrabold">{text("إدارة رواج", "RAWAJ management")}</h2>
               <p className="mt-1 max-w-2xl text-xs leading-6 text-primary-foreground/80">
                 {text(
-                  "تابع طوابير المراجعة والبلاغات من البيانات المدعومة حالياً، واترك المؤشرات الأخرى محايدة حتى تتوفر لها واجهات آمنة.",
-                  "Track review queues and reports from supported data, while other indicators stay neutral until safe APIs exist.",
+                  "تابع طوابير المراجعة والبلاغات وطلبات الترويج والتوثيق من البيانات المدعومة حالياً.",
+                  "Track review queues, reports, promotion requests, and verification requests from currently supported data.",
                 )}
               </p>
             </div>
@@ -129,16 +134,11 @@ function AdminOverview() {
             {error.message}
           </p>
         )}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {metrics.map((metric) => (
             <div key={metric.label} className="rounded-xl bg-card p-3 hairline">
               <div className="text-xl font-extrabold">{metric.value}</div>
               <p className="mt-1 text-xs text-muted-foreground">{metric.label}</p>
-              {!metric.supported && (
-                <p className="mt-2 text-[10px] font-semibold text-muted-foreground">
-                  {text("يتطلب واجهة بيانات آمنة", "Needs a safe data API")}
-                </p>
-              )}
             </div>
           ))}
         </div>
@@ -193,8 +193,8 @@ function AdminOverview() {
         <AdminCard icon={Sparkles} title={text("الترويج", "Promotion")}>
           <p className="text-xs leading-6 text-muted-foreground">
             {text(
-              "لا تعرض اللوحة أرقام ترويج أو دفع ما لم تكن مدعومة بواجهة بيانات آمنة.",
-              "The dashboard does not show promotion or payment counts unless backed by a safe data API.",
+              "تعرض صفحة الترويج الطلبات المدعومة بالبيانات الحالية، مع بقاء أي تفاصيل دفع ضمن المراجعة اليدوية.",
+              "The promotion page shows requests backed by current data, while payment details remain part of manual review.",
             )}
           </p>
           <AdminLink

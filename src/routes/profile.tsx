@@ -731,14 +731,20 @@ function ProfilePage() {
               </div>
               <div className="rounded-xl bg-muted-surface p-4 text-xs leading-6 hairline">
                 <p className="font-extrabold text-foreground">
-                  {text("التوثيق قيد التجهيز", "Verification is being prepared")}
+                  {text("طلب التوثيق", "Verification request")}
                 </p>
                 <p className="mt-1 text-muted-foreground">
                   {text(
-                    "قريباً سيتم فتح التوثيق بعد تجهيز رفع الوثائق والمراجعة اليدوية الآمنة. لا نمنح شارة توثيق من نموذج نصي فقط.",
-                    "Coming soon after secure document upload and manual review are ready. A text-only form does not grant verification.",
+                    "يمكنك إرسال طلب توثيق للمراجعة اليدوية. سيتم طلب المستندات من الإدارة عند الحاجة، ولا تظهر شارة التوثيق إلا بعد الموافقة.",
+                    "You can submit a verification request for manual review. Admins will request documents when needed, and verified status appears only after approval.",
                   )}
                 </p>
+                <Link
+                  to="/verification"
+                  className="mt-3 inline-flex rounded-xl bg-primary px-3 py-2 text-[11px] font-bold text-primary-foreground"
+                >
+                  {text("فتح طلب التوثيق", "Open verification request")}
+                </Link>
               </div>
               <div className="rounded-xl bg-muted-surface p-3 text-xs leading-6">
                 <p className="font-bold">{text("طلباتك", "Your requests")}</p>
