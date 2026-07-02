@@ -1,8 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
+import { ExternalLink, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
-import { adminFetchPromotionRequests, adminModeratePromotionRequest } from "@/lib/classifieds-api";
-import type { ClassifiedsError, ListingPromotionRequest } from "@/lib/classifieds-types";
+import {
+  adminFetchPromotionRequests,
+  adminModeratePromotionRequest,
+  createPromotionReceiptSignedUrl,
+} from "@/lib/classifieds-api";
+import type {
+  ClassifiedsError,
+  ListingPromotionRequest,
+  PromotionType,
+} from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -18,9 +26,16 @@ function PromotionsPage() {
   const { text } = useUiPreferences();
   const [requests, setRequests] = useState<ListingPromotionRequest[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [receiptUrls, setReceiptUrls] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [notice, setNotice] = useState("");
+  const promotionLabels: Record<PromotionType, string> = {
+    featured_home: text("الصفحة الرئيسية", "Home page"),
+    highlighted: text("إبراز داخل النتائج", "Highlighted in results"),
+    urgent: text("موضع مميز", "Priority placement"),
+    top_category: text("أعلى القسم", "Top category"),
+  };
 
   async function load() {
     setLoading(true);
@@ -29,8 +44,17 @@ function PromotionsPage() {
     if (result.ok) {
       setRequests(result.data);
       setNotes(Object.fromEntries(result.data.map((item) => [item.id, item.adminNote ?? ""])));
+      const signedEntries = await Promise.all(
+        result.data.map(async (item) => {
+          if (!item.proofPath) return [item.id, null] as const;
+          const signed = await createPromotionReceiptSignedUrl(item.proofPath);
+          return [item.id, signed.ok ? signed.data : null] as const;
+        }),
+      );
+      setReceiptUrls(Object.fromEntries(signedEntries));
     } else {
       setRequests([]);
+      setReceiptUrls({});
       setError(result.error);
     }
     setLoading(false);
@@ -96,7 +120,8 @@ function PromotionsPage() {
                     {request.listingTitle ?? request.listingId}
                   </h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {request.promotionType} · {request.requestedDays} {text("يوم", "days")}
+                    {promotionLabels[request.promotionType]} · {request.requestedDays}{" "}
+                    {text("يوم", "days")}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">{request.requesterUserId}</p>
                   {(request.paymentMethod || request.paymentReference) && (
@@ -104,6 +129,32 @@ function PromotionsPage() {
                       {request.paymentMethod ?? ""} {request.paymentReference ?? ""}
                     </p>
                   )}
+                  <div className="mt-2 text-xs">
+                    {request.proofPath ? (
+                      receiptUrls[request.id] ? (
+                        <a
+                          href={receiptUrls[request.id] ?? undefined}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 rounded-lg bg-muted-surface px-2 py-1 font-bold text-primary hairline"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          {text("عرض الإيصال", "View receipt")}
+                        </a>
+                      ) : (
+                        <span className="rounded-lg bg-muted-surface px-2 py-1 font-bold text-muted-foreground hairline">
+                          {text(
+                            "إيصال مرفوع - رابط العرض غير متاح",
+                            "Receipt uploaded - view link unavailable",
+                          )}
+                        </span>
+                      )
+                    ) : (
+                      <span className="rounded-lg bg-muted-surface px-2 py-1 font-bold text-muted-foreground hairline">
+                        {text("لا يوجد إيصال", "No receipt")}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <span className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold hairline">
                   {request.status}

@@ -181,6 +181,20 @@ function ChatsPage() {
     <>
       <PageHeader title={text("المحادثات", "Messages")} />
       <main className="container-wide space-y-4 pt-4 pb-8">
+        <div className="flex flex-wrap gap-2">
+          <Link
+            to="/"
+            className="rounded-xl bg-card px-3 py-2 text-xs font-bold text-foreground hairline"
+          >
+            {text("الرئيسية", "Home")}
+          </Link>
+          <Link
+            to="/listings"
+            className="rounded-xl bg-card px-3 py-2 text-xs font-bold text-foreground hairline"
+          >
+            {text("تصفح الإعلانات", "Browse listings")}
+          </Link>
+        </div>
         <section className="flex items-start gap-3 rounded-2xl bg-warning/10 p-4 hairline">
           <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
           <p className="text-xs leading-6">

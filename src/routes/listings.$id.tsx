@@ -273,6 +273,7 @@ function ListingDetailsPage() {
     <>
       <PageHeader
         title={categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
+        to="/listings"
       />
       <main className="container-wide pt-3 pb-8">
         <div className="overflow-hidden rounded-2xl bg-card hairline shadow-soft">

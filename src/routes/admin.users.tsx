@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ShieldAlert, UserCog, Users } from "lucide-react";
 import { useUiPreferences } from "@/lib/ui-preferences";
+import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin/users")({
   head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
@@ -9,6 +10,24 @@ export const Route = createFileRoute("/admin/users")({
 
 function UsersPage() {
   const { text } = useUiPreferences();
+  const auth = useAuth();
+
+  if (!auth.canAccessOwnerControls) {
+    return (
+      <section className="rounded-2xl bg-card p-5 text-center hairline">
+        <ShieldAlert className="mx-auto h-7 w-7 text-warning" />
+        <h2 className="mt-3 text-base font-extrabold">
+          {text("تحكم المالك فقط", "Owner control only")}
+        </h2>
+        <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">
+          {text(
+            "هذه المساحة مخصصة لحساب المالك. يمكن للمديرين والمشرفين استخدام صفحات المراجعة دون صلاحيات إدارة الأدوار أو حسابات المالك.",
+            "This area is reserved for the owner account. Admins and moderators can use moderation pages without role management or owner-account powers.",
+          )}
+        </p>
+      </section>
+    );
+  }
 
   return (
     <div className="space-y-6">

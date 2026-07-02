@@ -22,6 +22,7 @@ import type {
   MessageReport,
   ListingReport,
   ListingReportType,
+  PromotionReceiptUploadPayload,
   ModerateListingPromotionRequestPayload,
   ModerateMessageReportPayload,
   ModerateReportPayload,
@@ -54,10 +55,13 @@ const storageSetupRequiredMessage =
   "تعذر رفع الصور الآن. يمكنك إرسال الإعلان بدون صور والمحاولة مرة أخرى بعد حفظه.";
 const listingImagesBucket = "listing-images";
 const profileMediaBucket = "profile-media";
+const promotionReceiptsBucket = "promotion-receipts";
 const signedImageUrlExpiresInSeconds = 900;
 const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
+const allowedReceiptTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const maxImageSizeBytes = 5 * 1024 * 1024;
 const maxProfileImageSizeBytes = 3 * 1024 * 1024;
+const maxReceiptSizeBytes = 8 * 1024 * 1024;
 
 function getClient(): ClassifiedsResult<SupabaseClient> {
   if (!supabase) {
@@ -247,6 +251,7 @@ function mapListing(
     id: rowString(row, "id"),
     ownerId: rowString(row, "owner_id"),
     categoryId,
+    subcategoryId: rowNullableString(row, "subcategory_id"),
     categoryNameAr: category?.nameAr,
     categoryPlaceholder: category?.placeholder,
     governorateId,
@@ -630,7 +635,11 @@ export async function fetchPublicListings(
   let query = clientResult.data.from("listings").select("*").eq("status", "approved");
 
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
+  if (filters.subcategoryId) query = query.eq("subcategory_id", filters.subcategoryId);
   if (filters.governorateId) query = query.eq("governorate_id", filters.governorateId);
+  if (filters.districtAr?.trim()) query = query.eq("district_ar", filters.districtAr.trim());
+  if (typeof filters.priceMin === "number") query = query.gte("price", filters.priceMin);
+  if (typeof filters.priceMax === "number") query = query.lte("price", filters.priceMax);
   if (filters.query?.trim()) {
     const term = filters.query.trim();
     query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
@@ -1906,6 +1915,7 @@ export async function createListingPromotionRequest(
       requested_days: payload.requestedDays,
       payment_method: cleanOptionalText(payload.paymentMethod, 80),
       payment_reference: cleanOptionalText(payload.paymentReference, 160),
+      proof_path: cleanOptionalText(payload.proofPath, 500),
       status: "pending_review",
     })
     .select("*")
@@ -1913,6 +1923,108 @@ export async function createListingPromotionRequest(
 
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: mapPromotionRequest(data as Row) };
+}
+
+export async function uploadPromotionReceipt({
+  userId,
+  requestId,
+  file,
+}: PromotionReceiptUploadPayload): Promise<ClassifiedsResult<string>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لرفع إيصال الترويج." },
+    };
+  }
+
+  if (!requestId.trim()) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد طلب الترويج." },
+    };
+  }
+
+  if (!allowedReceiptTypes.includes(file.type)) {
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: "الصيغ المسموحة للإيصال: JPG أو PNG أو WebP أو PDF.",
+      },
+    };
+  }
+
+  if (file.size > maxReceiptSizeBytes) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "حجم الإيصال يجب ألا يتجاوز 8MB." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data: request, error: requestError } = await clientResult.data
+    .from("listing_promotion_requests")
+    .select("id, requester_user_id, status")
+    .eq("id", requestId)
+    .eq("requester_user_id", userId)
+    .eq("status", "pending_review")
+    .maybeSingle();
+
+  if (requestError) return { ok: false, error: mapError(requestError) };
+  if (!request) {
+    return {
+      ok: false,
+      error: {
+        code: "permission_denied",
+        message: "يمكن رفع الإيصال فقط لطلب ترويج قيد المراجعة تملكه.",
+      },
+    };
+  }
+
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  const safeExtension =
+    extension && ["jpg", "jpeg", "png", "webp", "pdf"].includes(extension) ? extension : "jpg";
+  const storagePath = `${userId}/${requestId}/${crypto.randomUUID()}.${safeExtension}`;
+
+  const uploadResult = await clientResult.data.storage
+    .from(promotionReceiptsBucket)
+    .upload(storagePath, file, {
+      cacheControl: "3600",
+      contentType: file.type,
+      upsert: false,
+    });
+
+  if (uploadResult.error) return { ok: false, error: mapStorageError(uploadResult.error) };
+
+  const attachResult = await clientResult.data.rpc("rawaj_attach_promotion_receipt", {
+    request_id: requestId,
+    receipt_path: storagePath,
+  });
+
+  if (attachResult.error) {
+    await clientResult.data.storage.from(promotionReceiptsBucket).remove([storagePath]);
+    return { ok: false, error: mapError(attachResult.error) };
+  }
+
+  return { ok: true, data: storagePath };
+}
+
+export async function createPromotionReceiptSignedUrl(
+  proofPath: string | null,
+): Promise<ClassifiedsResult<string | null>> {
+  if (!proofPath?.trim()) return { ok: true, data: null };
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data.storage
+    .from(promotionReceiptsBucket)
+    .createSignedUrl(proofPath, signedImageUrlExpiresInSeconds);
+
+  if (error) return { ok: false, error: mapStorageError(error) };
+  return { ok: true, data: data.signedUrl };
 }
 
 export async function fetchMyPromotionRequests(

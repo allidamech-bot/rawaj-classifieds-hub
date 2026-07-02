@@ -23,12 +23,12 @@ export const Route = createFileRoute("/admin")({
 
 const tabs = [
   { to: "/admin", labelAr: "مركز المالك", icon: LayoutDashboard, exact: true },
-  { to: "/admin/pending", labelAr: "إعلانات للمراجعة", icon: FileCheck },
-  { to: "/admin/reviews", labelAr: "تقييمات البائعين", icon: Star },
-  { to: "/admin/reports", labelAr: "البلاغات", icon: Flag },
+  { to: "/admin/pending", labelAr: "مراجعة الإعلانات", icon: FileCheck },
+  { to: "/admin/reviews", labelAr: "مراجعة التقييمات", icon: Star },
+  { to: "/admin/reports", labelAr: "بلاغات الإعلانات", icon: Flag },
   { to: "/admin/message-reports", labelAr: "بلاغات الرسائل", icon: MessageSquareWarning },
   { to: "/admin/verifications", labelAr: "طلبات التوثيق", icon: BadgeCheck },
-  { to: "/admin/users", labelAr: "المستخدمون والصلاحيات", icon: Users },
+  { to: "/admin/users", labelAr: "تحكم المالك", icon: Users, ownerOnly: true },
   { to: "/admin/promotions", labelAr: "طلبات الترويج", icon: Sparkles },
 ];
 
@@ -101,25 +101,27 @@ function AdminLayout() {
           </p>
         </div>
         <nav className="mb-4 flex gap-2 overflow-x-auto pb-1">
-          {tabs.map((tab) => {
-            const active = tab.exact
-              ? pathname === tab.to || pathname === "/admin/"
-              : pathname.startsWith(tab.to);
-            return (
-              <Link
-                key={tab.to}
-                to={tab.to as "/admin"}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${
-                  active
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card hairline hover:bg-muted-surface"
-                }`}
-              >
-                <tab.icon className="h-4 w-4" />
-                {uiLabel(tab.labelAr, language)}
-              </Link>
-            );
-          })}
+          {tabs
+            .filter((tab) => !("ownerOnly" in tab) || auth.canAccessOwnerControls)
+            .map((tab) => {
+              const active = tab.exact
+                ? pathname === tab.to || pathname === "/admin/"
+                : pathname.startsWith(tab.to);
+              return (
+                <Link
+                  key={tab.to}
+                  to={tab.to as "/admin"}
+                  className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card hairline hover:bg-muted-surface"
+                  }`}
+                >
+                  <tab.icon className="h-4 w-4" />
+                  {uiLabel(tab.labelAr, language)}
+                </Link>
+              );
+            })}
         </nav>
         <Outlet />
       </main>

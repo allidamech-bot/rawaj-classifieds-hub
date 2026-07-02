@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Camera, Check, Info } from "lucide-react";
+import { Camera, Check, Info, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   detectCategoryFieldKind,
@@ -49,6 +49,7 @@ function AddListingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [createdListingId, setCreatedListingId] = useState<string | null>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imageSelectionMessage, setImageSelectionMessage] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState("");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
@@ -95,6 +96,40 @@ function AddListingPage() {
     text("التواصل", "Contact"),
     text("المراجعة", "Review"),
   ];
+  const selectedImagePreviews = useMemo(
+    () =>
+      selectedImages.map((file, index) => ({
+        file,
+        index,
+        url: URL.createObjectURL(file),
+      })),
+    [selectedImages],
+  );
+
+  useEffect(
+    () => () => {
+      selectedImagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
+    },
+    [selectedImagePreviews],
+  );
+
+  function handleImageSelection(files: FileList | null) {
+    const nextFiles = Array.from(files ?? []);
+    setImageSelectionMessage(
+      nextFiles.length > 6
+        ? text(
+            "تم اختيار أول 6 صور فقط. يمكنك إزالة صورة واختيار غيرها.",
+            "Only the first 6 photos were selected. Remove one to choose another.",
+          )
+        : null,
+    );
+    setSelectedImages(nextFiles.slice(0, 6));
+  }
+
+  function removeSelectedImage(index: number) {
+    setSelectedImages((current) => current.filter((_, currentIndex) => currentIndex !== index));
+    setImageSelectionMessage(null);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -269,6 +304,20 @@ function AddListingPage() {
     <>
       <PageHeader title={text("أضف إعلاناً", "Post a listing")} />
       <main className="container-wide pt-4 pb-8">
+        <div className="mb-4 flex flex-wrap gap-2">
+          <Link
+            to="/"
+            className="rounded-xl bg-card px-3 py-2 text-xs font-bold text-foreground hairline"
+          >
+            {text("الرئيسية", "Home")}
+          </Link>
+          <Link
+            to="/listings"
+            className="rounded-xl bg-card px-3 py-2 text-xs font-bold text-foreground hairline"
+          >
+            {text("تصفح الإعلانات", "Browse listings")}
+          </Link>
+        </div>
         <ol className="no-scrollbar mb-5 flex items-center gap-2 overflow-x-auto pb-2">
           {steps.map((label, index) => {
             const done = index < step;
@@ -342,21 +391,39 @@ function AddListingPage() {
                       multiple
                       accept="image/jpeg,image/png,image/webp"
                       className="sr-only"
-                      onChange={(event) =>
-                        setSelectedImages(Array.from(event.target.files ?? []).slice(0, 6))
-                      }
+                      onChange={(event) => handleImageSelection(event.target.files)}
                     />
                   </label>
+                  {imageSelectionMessage && (
+                    <p className="mt-3 rounded-xl bg-warning/10 p-3 text-xs font-semibold text-foreground hairline">
+                      {imageSelectionMessage}
+                    </p>
+                  )}
                   <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {selectedImages.map((file) => (
+                    {selectedImagePreviews.map((preview) => (
                       <div
-                        key={`${file.name}-${file.size}`}
-                        className="rounded-xl bg-card p-3 text-xs hairline"
+                        key={`${preview.file.name}-${preview.file.size}-${preview.index}`}
+                        className="group relative overflow-hidden rounded-xl bg-card text-xs hairline"
                       >
-                        <p className="truncate font-bold">{file.name}</p>
-                        <p className="mt-1 text-muted-foreground">
-                          {(file.size / 1024 / 1024).toFixed(1)} MB
-                        </p>
+                        <img
+                          src={preview.url}
+                          alt={preview.file.name}
+                          className="aspect-[4/3] w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeSelectedImage(preview.index)}
+                          className="absolute top-2 end-2 grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-soft"
+                          aria-label={text("إزالة الصورة", "Remove photo")}
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                        <div className="p-2">
+                          <p className="truncate font-bold">{preview.file.name}</p>
+                          <p className="mt-1 text-muted-foreground">
+                            {(preview.file.size / 1024 / 1024).toFixed(1)} MB
+                          </p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -468,6 +535,12 @@ function AddListingPage() {
                       className="input"
                     />
                   </Field>
+                  <div className="mb-3 rounded-xl bg-muted-surface p-3 text-xs leading-6 text-foreground hairline">
+                    {text(
+                      "رقم الهاتف وواتساب اختياريان. عند تفعيل أي خيار وإرسال الإعلان للمراجعة قد يظهر الرقم للعامة على الإعلان بعد الموافقة. هذه الأرقام غير موثقة داخل رواج.",
+                      "Phone and WhatsApp are optional. If enabled, they may appear publicly on the approved listing after review. RAWAJ does not verify these numbers.",
+                    )}
+                  </div>
                   {contact.phone && (
                     <Field label={text("رقم الهاتف", "Phone number")}>
                       <input
@@ -655,7 +728,6 @@ function AddListingPage() {
           </div>
         )}
       </main>
-      <style>{`.input{width:100%;border-radius:.75rem;background:var(--card);border:1px solid var(--border);padding:.625rem .75rem;font-size:.875rem;color:var(--foreground);outline:none}.input:focus{border-color:var(--ring)}`}</style>
     </>
   );
 }

@@ -69,6 +69,7 @@ export interface ClassifiedListing {
   id: string;
   ownerId: string;
   categoryId: string;
+  subcategoryId: string | null;
   categoryNameAr?: string;
   categoryPlaceholder?: PlaceholderType;
   governorateId: string;
@@ -361,6 +362,13 @@ export interface CreateListingPromotionRequestPayload {
   requestedDays: number;
   paymentMethod?: string | null;
   paymentReference?: string | null;
+  proofPath?: string | null;
+}
+
+export interface PromotionReceiptUploadPayload {
+  userId: string | null;
+  requestId: string;
+  file: File;
 }
 
 export interface ModerateListingPromotionRequestPayload {
@@ -458,7 +466,11 @@ export interface UpdateListingPayload {
 
 export interface ListingFilters {
   categoryId?: string;
+  subcategoryId?: string;
   governorateId?: string;
+  districtAr?: string;
+  priceMin?: number;
+  priceMax?: number;
   query?: string;
   sort?: "latest" | "cheapest" | "expensive" | "featured";
 }

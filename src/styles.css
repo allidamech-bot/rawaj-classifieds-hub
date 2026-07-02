@@ -75,8 +75,8 @@
   --destructive-foreground: #ffffff;
   --warning: #c9822b;
 
-  --border: rgba(16, 23, 34, 0.08);
-  --input: rgba(16, 23, 34, 0.12);
+  --border: rgba(16, 23, 34, 0.14);
+  --input: rgba(16, 23, 34, 0.22);
   --ring: #b88a44;
 }
 
@@ -112,8 +112,8 @@
   --destructive-foreground: #150706;
   --warning: #e0a04b;
 
-  --border: rgba(246, 239, 224, 0.12);
-  --input: rgba(246, 239, 224, 0.18);
+  --border: rgba(246, 239, 224, 0.18);
+  --input: rgba(246, 239, 224, 0.28);
   --ring: #d2a95c;
 }
 
@@ -139,6 +139,8 @@
   select,
   textarea {
     color: var(--color-foreground);
+    background-color: var(--color-card);
+    border-color: var(--color-input);
   }
   input::placeholder,
   textarea::placeholder {
@@ -155,6 +157,55 @@
   button,
   a {
     -webkit-tap-highlight-color: transparent;
+  }
+  button:not(:disabled),
+  a[href] {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.58;
+  }
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .input {
+    width: 100%;
+    border-radius: 0.75rem;
+    background: var(--color-card);
+    border: 1px solid var(--color-input);
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-foreground);
+    outline: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease,
+      background-color 150ms ease;
+  }
+
+  .input:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--color-input) 55%, var(--color-foreground));
+  }
+
+  .input:focus {
+    border-color: var(--color-ring);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ring) 28%, transparent);
+  }
+
+  .input:disabled {
+    background: var(--color-muted-surface);
+    color: var(--color-muted-foreground);
   }
 }
 
@@ -185,7 +236,7 @@
 }
 
 @utility hairline {
-  border: 1px solid var(--color-border);
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, var(--color-foreground));
 }
 
 @utility no-scrollbar {

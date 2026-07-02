@@ -6,6 +6,7 @@ import {
   createListingPromotionRequest,
   fetchCurrentUserListings,
   fetchMyPromotionRequests,
+  uploadPromotionReceipt,
 } from "@/lib/classifieds-api";
 import type {
   ClassifiedListing,
@@ -41,6 +42,7 @@ function PromotionPage() {
   const [requestedDays, setRequestedDays] = useState(7);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
 
@@ -48,6 +50,41 @@ function PromotionPage() {
     () => listings.filter((listing) => listing.status === "approved"),
     [listings],
   );
+  const promotionOptions: Array<{ value: PromotionType; label: string; description: string }> = [
+    {
+      value: "featured_home",
+      label: text("الصفحة الرئيسية", "Home page"),
+      description: text(
+        "مراجعة يدوية للظهور ضمن المساحات المميزة في الرئيسية.",
+        "Manual review for featured home placement.",
+      ),
+    },
+    {
+      value: "top_category",
+      label: text("أعلى القسم", "Top category"),
+      description: text(
+        "مراجعة يدوية للظهور أعلى نتائج القسم عند توفر المساحة.",
+        "Manual review for top category visibility when space is available.",
+      ),
+    },
+    {
+      value: "highlighted",
+      label: text("إبراز داخل النتائج", "Highlighted in results"),
+      description: text(
+        "تمييز بصري للإعلان بعد موافقة الإدارة.",
+        "Visual highlighting after admin approval.",
+      ),
+    },
+    {
+      value: "urgent",
+      label: text("موضع مميز", "Priority placement"),
+      description: text(
+        "طلب أولوية يراجع يدويا ولا يعني تفعيل الدفع تلقائيا.",
+        "Priority request reviewed manually; no automatic payment activation.",
+      ),
+    },
+  ];
+  const durationOptions = [3, 7, 14, 30];
 
   async function load() {
     if (!auth.profile?.id) return;
@@ -88,15 +125,36 @@ function PromotionPage() {
       paymentMethod: paymentMethod || null,
       paymentReference: paymentReference || null,
     });
-    setSaving(false);
     if (result.ok) {
-      setNotice(text("تم إرسال طلب الترويج للمراجعة.", "Promotion request sent for review."));
+      if (receiptFile) {
+        const receiptResult = await uploadPromotionReceipt({
+          userId: auth.profile?.id ?? null,
+          requestId: result.data.id,
+          file: receiptFile,
+        });
+        if (!receiptResult.ok) {
+          setSaving(false);
+          setNotice(
+            text(
+              `تم إرسال طلب الترويج للمراجعة، لكن تعذر رفع الإيصال: ${receiptResult.error.message}`,
+              `Promotion request was sent for review, but receipt upload failed: ${receiptResult.error.message}`,
+            ),
+          );
+          await load();
+          return;
+        }
+      }
+      setNotice(
+        text("تم إرسال طلب الترويج للمراجعة اليدوية.", "Promotion request sent for manual review."),
+      );
       setPaymentMethod("");
       setPaymentReference("");
+      setReceiptFile(null);
       await load();
     } else {
       setNotice(result.error.message);
     }
+    setSaving(false);
   }
 
   if (auth.status !== "signedIn") {
@@ -180,27 +238,34 @@ function PromotionPage() {
                   ))}
                 </select>
               </Field>
-              <Field label={text("نوع الترويج", "Promotion type")}>
+              <Field label={text("موضع الترويج", "Promotion placement")}>
                 <select
                   value={promotionType}
                   onChange={(event) => setPromotionType(event.target.value as PromotionType)}
                   className="input"
                 >
-                  <option value="featured_home">{text("تمييز رئيسي", "Featured home")}</option>
-                  <option value="highlighted">{text("إبراز", "Highlighted")}</option>
-                  <option value="urgent">{text("عاجل", "Urgent")}</option>
-                  <option value="top_category">{text("أعلى القسم", "Top category")}</option>
+                  {promotionOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
+                <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                  {promotionOptions.find((option) => option.value === promotionType)?.description}
+                </p>
               </Field>
-              <Field label={text("المدة بالأيام", "Duration in days")}>
-                <input
+              <Field label={text("المدة", "Duration")}>
+                <select
                   value={requestedDays}
                   onChange={(event) => setRequestedDays(Number(event.target.value))}
-                  type="number"
-                  min={1}
-                  max={90}
                   className="input"
-                />
+                >
+                  {durationOptions.map((days) => (
+                    <option key={days} value={days}>
+                      {text(`${days} أيام`, `${days} days`)}
+                    </option>
+                  ))}
+                </select>
               </Field>
               <Field label={text("طريقة دفع مرجعية اختيارية", "Optional payment method note")}>
                 <input
@@ -218,6 +283,23 @@ function PromotionPage() {
                   className="input"
                 />
               </Field>
+              <Field label={text("إيصال التحويل", "Transfer receipt")}>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  onChange={(event) => setReceiptFile(event.target.files?.[0] ?? null)}
+                  className="input"
+                />
+                {receiptFile && (
+                  <p className="mt-1 text-[11px] text-muted-foreground">{receiptFile.name}</p>
+                )}
+              </Field>
+            </div>
+            <div className="mt-4 rounded-xl bg-muted-surface p-3 text-xs leading-6 text-foreground hairline">
+              {text(
+                "الترويج يدوي بالكامل: لا توجد بوابة دفع ولا تفعيل تلقائي. سيتم تزويدك ببيانات التحويل المعتمدة بعد إرسال الطلب أو عبر التواصل مع الإدارة، ويصبح الإعلان مروجا فقط بعد موافقة الإدارة.",
+                "Promotion is fully manual: there is no payment gateway and no automatic activation. Approved transfer instructions will be provided after submitting the request or through admin contact, and the listing is promoted only after admin approval.",
+              )}
             </div>
             <button
               disabled={saving || !selectedListingId}
@@ -265,7 +347,6 @@ function PromotionPage() {
           {text("الدعم والمساعدة", "Support")}
         </Link>
       </main>
-      <style>{`.input{width:100%;border-radius:.75rem;background:var(--muted-surface);border:1px solid var(--border);padding:.625rem .75rem;font-size:.875rem;color:var(--foreground);outline:none}.input:focus{border-color:var(--ring)}`}</style>
     </>
   );
 }

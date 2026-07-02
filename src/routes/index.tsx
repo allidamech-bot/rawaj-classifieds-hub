@@ -261,7 +261,7 @@ function HomePage() {
             {sellerSummaries.length > 0 && (
               <section className="mt-7">
                 <SectionHeader
-                  title={text("بائعون لديهم إعلانات معتمدة", "Sellers with approved listings")}
+                  title={text("معلنون من أحدث الإعلانات", "Advertisers from recent listings")}
                 />
                 <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
                   {sellerSummaries.map((seller) => (
