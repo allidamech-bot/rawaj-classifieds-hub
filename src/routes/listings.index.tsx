@@ -1520,7 +1520,7 @@ function RealListingCard({ listing }: { listing: ClassifiedListing }) {
             </span>
           )}
           <span className="rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold text-emerald-trust-foreground">
-            {text("معتمد", "Approved")}
+            {text("إعلان مُراجع", "Reviewed listing")}
           </span>
         </div>
         <span className="absolute bottom-2 end-2 rounded-md bg-primary/85 px-2 py-0.5 text-[11px] font-medium text-primary-foreground">
@@ -1531,7 +1531,7 @@ function RealListingCard({ listing }: { listing: ClassifiedListing }) {
         <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-foreground">
           {listing.title}
         </h3>
-        <div className="text-lg font-extrabold text-foreground">
+        <div className="text-xl font-extrabold text-foreground">
           {formatPriceLocalized(listing.price ?? 0, listing.priceType, language)}
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">

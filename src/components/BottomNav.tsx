@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, LayoutGrid, Plus, User } from "lucide-react";
+import { Home, List, Plus, User } from "lucide-react";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -14,7 +14,7 @@ type NavItem = {
 
 const items: NavItem[] = [
   { to: "/", labelAr: "الرئيسية", labelEn: "Home", icon: Home, exact: true },
-  { to: "/categories", labelAr: "الأقسام", labelEn: "Categories", icon: LayoutGrid },
+  { to: "/listings", labelAr: "الإعلانات", labelEn: "Listings", icon: List },
   { to: "/add-listing", labelAr: "أضف إعلان", labelEn: "Post", icon: Plus, primary: true },
   { to: "/profile", labelAr: "حسابي", labelEn: "Account", icon: User },
 ];
