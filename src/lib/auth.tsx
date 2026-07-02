@@ -24,6 +24,7 @@ const signedOutState: AuthContextValue = {
   canAccessOwnerControls: false,
   emailConfirmed: false,
   signOut: async () => ({ error: null }),
+  signInWithGoogle: async () => ({ error: null }),
 };
 
 function normalizeRoles(roles: string[] | null | undefined): UserRole[] {
@@ -52,6 +53,46 @@ async function fetchProfile(client: SupabaseClient, user: User): Promise<UserPro
     throw new Error(profileError.message);
   }
 
+  // Safe bootstrap: if no profile row exists yet (e.g. first-time OAuth sign-in),
+  // upsert one to avoid duplicate-key / 409 errors.
+  let profile = profileData;
+
+  if (!profileData) {
+    const metadataName =
+      typeof user.user_metadata?.display_name === "string"
+        ? user.user_metadata.display_name
+        : typeof user.user_metadata?.full_name === "string"
+          ? user.user_metadata.full_name
+          : (user.email?.split("@")[0] ?? "user");
+
+    const { error: upsertError } = await client.from("profiles").upsert(
+      {
+        id: user.id,
+        email: user.email ?? null,
+        display_name: metadataName,
+      },
+      { onConflict: "id", ignoreDuplicates: false },
+    );
+
+    if (upsertError && upsertError.code !== "23505") {
+      throw new Error(upsertError.message);
+    }
+
+    const { data: bootstrappedProfile, error: bootstrapReadError } = await client
+      .from("profiles")
+      .select(
+        "id,email,first_name,last_name,display_name,account_status,verification_status,governorate,city_area,bio,business_name,phone,whatsapp,preferred_contact_method,avatar_path,avatar_url,cover_path,cover_url,created_at,updated_at",
+      )
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (bootstrapReadError) {
+      throw new Error(bootstrapReadError.message);
+    }
+
+    profile = bootstrappedProfile;
+  }
+
   const { data: roleData, error: roleError } = await client
     .from("user_roles")
     .select("role")
@@ -66,27 +107,27 @@ async function fetchProfile(client: SupabaseClient, user: User): Promise<UserPro
 
   return {
     id: user.id,
-    email: profileData?.email ?? user.email ?? null,
-    firstName: profileData?.first_name ?? null,
-    lastName: profileData?.last_name ?? null,
-    displayName: profileData?.display_name ?? null,
+    email: profile?.email ?? user.email ?? null,
+    firstName: profile?.first_name ?? null,
+    lastName: profile?.last_name ?? null,
+    displayName: profile?.display_name ?? null,
     role,
     roles,
-    accountStatus: profileData?.account_status ?? "pending_review",
-    verificationStatus: profileData?.verification_status ?? "unverified",
-    governorate: profileData?.governorate ?? null,
-    cityArea: profileData?.city_area ?? null,
-    bio: profileData?.bio ?? null,
-    businessName: profileData?.business_name ?? null,
-    phone: profileData?.phone ?? null,
-    whatsapp: profileData?.whatsapp ?? null,
-    preferredContactMethod: profileData?.preferred_contact_method ?? null,
-    avatarPath: profileData?.avatar_path ?? null,
-    avatarUrl: profileData?.avatar_url ?? null,
-    coverPath: profileData?.cover_path ?? null,
-    coverUrl: profileData?.cover_url ?? null,
-    createdAt: profileData?.created_at ?? null,
-    updatedAt: profileData?.updated_at ?? null,
+    accountStatus: profile?.account_status ?? "pending_review",
+    verificationStatus: profile?.verification_status ?? "unverified",
+    governorate: profile?.governorate ?? null,
+    cityArea: profile?.city_area ?? null,
+    bio: profile?.bio ?? null,
+    businessName: profile?.business_name ?? null,
+    phone: profile?.phone ?? null,
+    whatsapp: profile?.whatsapp ?? null,
+    preferredContactMethod: profile?.preferred_contact_method ?? null,
+    avatarPath: profile?.avatar_path ?? null,
+    avatarUrl: profile?.avatar_url ?? null,
+    coverPath: profile?.cover_path ?? null,
+    coverUrl: profile?.cover_url ?? null,
+    createdAt: profile?.created_at ?? null,
+    updatedAt: profile?.updated_at ?? null,
   };
 }
 
@@ -181,6 +222,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: null };
     };
 
+    const signInWithGoogle = async () => {
+      const client = supabase;
+      if (!client) {
+        return { error: unavailableReason ?? "Auth unavailable" };
+      }
+
+      const { error } = await client.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) return { error: error.message };
+      return { error: null };
+    };
+
     if (!isSupabaseConfigured) {
       return {
         ...signedOutState,
@@ -188,6 +246,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         reason: unavailableReason,
         emailConfirmed: false,
         signOut,
+        signInWithGoogle,
       };
     }
 
@@ -201,6 +260,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       canAccessOwnerControls: canAccessOwnerControls(profile),
       emailConfirmed: Boolean(session?.user?.email_confirmed_at),
       signOut,
+      signInWithGoogle,
     };
   }, [profile, reason, session, status]);
 

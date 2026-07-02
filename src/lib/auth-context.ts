@@ -12,6 +12,7 @@ export interface AuthContextValue {
   canAccessAdmin: boolean;
   canAccessOwnerControls: boolean;
   signOut: () => Promise<{ error: string | null }>;
+  signInWithGoogle: () => Promise<{ error: string | null }>;
   emailConfirmed: boolean;
 }
 

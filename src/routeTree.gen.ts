@@ -30,6 +30,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SellerIdRouteImport } from './routes/seller.$id'
 import { Route as ProfileListingsRouteImport } from './routes/profile/listings'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminVerificationsRouteImport } from './routes/admin.verifications'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminReviewsRouteImport } from './routes/admin.reviews'
@@ -144,6 +145,11 @@ const ListingsIdRoute = ListingsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ListingsRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminVerificationsRoute = AdminVerificationsRouteImport.update({
   id: '/verifications',
   path: '/verifications',
@@ -209,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/listings/$id': typeof ListingsIdRoute
   '/profile/listings': typeof ProfileListingsRouteWithChildren
   '/seller/$id': typeof SellerIdRoute
@@ -238,6 +245,7 @@ export interface FileRoutesByTo {
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/listings/$id': typeof ListingsIdRoute
   '/profile/listings': typeof ProfileListingsRouteWithChildren
   '/seller/$id': typeof SellerIdRoute
@@ -270,6 +278,7 @@ export interface FileRoutesById {
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/listings/$id': typeof ListingsIdRoute
   '/profile/listings': typeof ProfileListingsRouteWithChildren
   '/seller/$id': typeof SellerIdRoute
@@ -303,6 +312,7 @@ export interface FileRouteTypes {
     | '/admin/reviews'
     | '/admin/users'
     | '/admin/verifications'
+    | '/auth/callback'
     | '/listings/$id'
     | '/profile/listings'
     | '/seller/$id'
@@ -332,6 +342,7 @@ export interface FileRouteTypes {
     | '/admin/reviews'
     | '/admin/users'
     | '/admin/verifications'
+    | '/auth/callback'
     | '/listings/$id'
     | '/profile/listings'
     | '/seller/$id'
@@ -363,6 +374,7 @@ export interface FileRouteTypes {
     | '/admin/reviews'
     | '/admin/users'
     | '/admin/verifications'
+    | '/auth/callback'
     | '/listings/$id'
     | '/profile/listings'
     | '/seller/$id'
@@ -388,6 +400,7 @@ export interface RootRouteChildren {
   SavedSearchesRoute: typeof SavedSearchesRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   SellerIdRoute: typeof SellerIdRoute
 }
 
@@ -540,6 +553,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ListingsIdRouteImport
       parentRoute: typeof ListingsRoute
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/verifications': {
       id: '/admin/verifications'
       path: '/verifications'
@@ -677,6 +697,7 @@ const rootRouteChildren: RootRouteChildren = {
   SavedSearchesRoute: SavedSearchesRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   SellerIdRoute: SellerIdRoute,
 }
 export const routeTree = rootRouteImport
