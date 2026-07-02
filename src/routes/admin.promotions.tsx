@@ -27,6 +27,7 @@ function PromotionsPage() {
   const [requests, setRequests] = useState<ListingPromotionRequest[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [receiptUrls, setReceiptUrls] = useState<Record<string, string | null>>({});
+  const [receiptErrors, setReceiptErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [notice, setNotice] = useState("");
@@ -52,9 +53,18 @@ function PromotionsPage() {
         }),
       );
       setReceiptUrls(Object.fromEntries(signedEntries));
+      const errorEntries = await Promise.all(
+        result.data.map(async (item) => {
+          if (!item.proofPath) return [item.id, ""] as const;
+          const signed = await createPromotionReceiptSignedUrl(item.proofPath);
+          return [item.id, signed.ok ? "" : signed.error.message] as const;
+        }),
+      );
+      setReceiptErrors(Object.fromEntries(errorEntries));
     } else {
       setRequests([]);
       setReceiptUrls({});
+      setReceiptErrors({});
       setError(result.error);
     }
     setLoading(false);
@@ -143,10 +153,15 @@ function PromotionsPage() {
                         </a>
                       ) : (
                         <span className="rounded-lg bg-muted-surface px-2 py-1 font-bold text-muted-foreground hairline">
-                          {text(
-                            "إيصال مرفوع - رابط العرض غير متاح",
-                            "Receipt uploaded - view link unavailable",
-                          )}
+                          {receiptErrors[request.id]
+                            ? text(
+                                "تعذر تحميل الإيصال. تحقق من إعدادات التخزين أو الصلاحيات.",
+                                "Could not load receipt. Check storage settings or permissions.",
+                              )
+                            : text(
+                                "إيصال مرفوع - رابط العرض غير متاح",
+                                "Receipt uploaded - view link unavailable",
+                              )}
                         </span>
                       )
                     ) : (

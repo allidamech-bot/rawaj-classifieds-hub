@@ -2343,7 +2343,9 @@ export async function adminFetchSellerReviews(
 
   const { data, error } = await clientResult.data
     .from("seller_reviews")
-    .select("*")
+    .select(
+      "id,seller_user_id,reviewer_user_id,related_listing_id,rating,comment,status,admin_note,reviewed_by,reviewed_at,created_at,updated_at",
+    )
     .eq("status", "pending_review")
     .order("created_at", { ascending: false })
     .limit(100);
