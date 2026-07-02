@@ -1,6 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Clock, MapPin, Plus, Search, ShieldAlert, Sparkles, type LucideIcon } from "lucide-react";
+import {
+  ArrowUpDown,
+  Clock,
+  Filter,
+  MapPin,
+  Plus,
+  Search,
+  ShieldAlert,
+  Sparkles,
+} from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -15,39 +24,35 @@ import type {
   ClassifiedListing,
   ClassifiedsError,
 } from "@/lib/classifieds-types";
-import { categoryHint, categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 const HOME_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
 const HOME_DESCRIPTION =
-  "سوق إعلانات مبوبة في سوريا لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة آمنة ومنظمة.";
-
-type QuickFilter = {
-  id: string;
-  labelAr: string;
-  labelEn: string;
-  icon: LucideIcon;
-  search: { sort?: "latest" | "featured" };
-};
+  "سوق إعلانات مبوبة في سوريا لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة منظمة وواضحة.";
 
 export const Route = createFileRoute("/")({
   head: () => createSeo({ title: HOME_TITLE, description: HOME_DESCRIPTION, path: "/" }),
   component: HomePage,
 });
 
-const quickFilters: QuickFilter[] = [
-  { id: "latest", labelAr: "الأحدث", labelEn: "Latest", icon: Clock, search: { sort: "latest" } },
-  {
-    id: "featured",
-    labelAr: "المميز",
-    labelEn: "Featured",
-    icon: Sparkles,
-    search: { sort: "featured" },
-  },
-];
+const sortChips = [
+  { id: "latest", labelAr: "الأحدث", labelEn: "Latest" },
+  { id: "cheapest", labelAr: "الأرخص", labelEn: "Lowest price" },
+  { id: "expensive", labelAr: "الأعلى سعرًا", labelEn: "Highest price" },
+  { id: "featured", labelAr: "المميز", labelEn: "Featured" },
+] as const;
 
-const searchSuggestions = ["سيارات", "عقارات", "موبايلات"];
+const quickSuggestions = [
+  { label: "سيارات", search: { q: "سيارات" } },
+  { label: "عقارات", search: { q: "عقارات" } },
+  { label: "جوالات", search: { q: "جوالات" } },
+  { label: "وظائف", search: { q: "وظائف" } },
+  { label: "خدمات", search: { q: "خدمات" } },
+  { label: "دمشق", search: { q: "دمشق" } },
+  { label: "حلب", search: { q: "حلب" } },
+];
 
 function HomePage() {
   const navigate = useNavigate();
@@ -86,92 +91,114 @@ function HomePage() {
     };
   }, []);
 
-  const counts = useMemo(() => {
+  const featuredListings = listings.filter((listing) => listing.isFeatured).slice(0, 5);
+  const latestListings = listings.slice(0, 9);
+  const compactCategories = categories.slice(0, 10);
+
+  const categoryCounts = useMemo(() => {
     const result: Record<string, number> = {};
-    for (const listing of listings)
+    for (const listing of listings) {
       result[listing.categoryId] = (result[listing.categoryId] ?? 0) + 1;
+    }
     return result;
   }, [listings]);
-  const featuredListings = listings.filter((listing) => listing.isFeatured).slice(0, 8);
-  const latestListings = listings.slice(0, 9);
-  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const q = searchValue.trim();
     void navigate({ to: "/listings", search: q ? { q } : {} });
-  };
+  }
 
   return (
     <>
       <AppHeader />
-      <main className="container-wide pt-4">
-        <section className="mb-4 overflow-hidden rounded-2xl bg-card p-4 shadow-premium hairline sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <main className="container-wide pt-4 pb-8">
+        <section className="rounded-2xl bg-card p-4 shadow-soft hairline sm:p-5">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div className="max-w-2xl">
-              <span className="inline-flex rounded-full bg-muted-surface px-3 py-1 text-[11px] font-bold text-primary hairline">
-                {text("سوق محلي منظم", "Organized local marketplace")}
-              </span>
-              <h1 className="mt-3 text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
-                {text(
-                  "رواج - سوق سوريا المجاني للإعلانات",
-                  "RAWAJ - Syria's classifieds marketplace",
-                )}
+              <p className="text-[11px] font-extrabold text-gold">
+                {text("سوق إعلانات مبوبة في سوريا", "Classifieds marketplace in Syria")}
+              </p>
+              <h1 className="mt-1 text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
+                {text("ابحث. قارن. تواصل مباشرة.", "Search. Compare. Contact directly.")}
               </h1>
               <p className="mt-2 text-sm leading-7 text-muted-foreground">
                 {text(
-                  "بيع واشتر داخل سوريا بسهولة: إعلانات محلية حسب المحافظة، واجهة واضحة، ومراجعة قبل الظهور.",
-                  "Buy and sell across Syria with clear local listings by governorate, a simple interface, and review before display.",
+                  "رواج يضع الإعلانات المعتمدة أمامك بسرعة، مع بحث واضح وأقسام مرتبة حسب الحاجة.",
+                  "RAWAJ puts reviewed listings first, with clear search and practical browsing.",
                 )}
               </p>
             </div>
             <Link
               to="/add-listing"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-sm font-bold text-gold-foreground transition hover:opacity-90"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-sm font-extrabold text-gold-foreground shadow-soft"
             >
-              <Plus className="h-4 w-4" /> {text("أضف إعلان", "Post a listing")}
+              <Plus className="h-4 w-4" />
+              {text("أضف إعلان", "Post listing")}
             </Link>
           </div>
         </section>
 
-        <form onSubmit={handleSearch} className="rounded-2xl bg-card p-2 shadow-premium hairline">
-          <div className="flex items-center gap-2 rounded-xl bg-muted-surface px-3 py-2.5">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <input
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
-              type="search"
-              aria-label={text("ابحث في رواج", "Search RAWAJ")}
-              placeholder={text(
-                "ابحث عن سيارة، منزل، هاتف، وظيفة...",
-                "Search for a car, home, phone, job...",
-              )}
-              className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            />
+        <section className="mt-3 rounded-2xl bg-card p-3 shadow-premium hairline">
+          <form onSubmit={handleSearch} className="grid gap-2 lg:grid-cols-[1fr_auto_auto]">
+            <label className="flex items-center gap-2 rounded-xl bg-muted-surface px-3 py-3 hairline">
+              <Search className="h-5 w-5 text-muted-foreground" />
+              <input
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+                type="search"
+                aria-label={text("ابحث في رواج", "Search RAWAJ")}
+                placeholder={text(
+                  "ابحث عن سيارة، جوال، عقار، خدمة...",
+                  "Search for a car, phone, property, service...",
+                )}
+                className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              />
+            </label>
+            <Link
+              to="/listings"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-3 text-xs font-extrabold text-foreground hairline"
+            >
+              <Filter className="h-4 w-4" />
+              {text("فلترة", "Filters")}
+            </Link>
+            <Link
+              to="/listings"
+              search={{ sort: "latest" }}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-extrabold text-primary-foreground"
+            >
+              <ArrowUpDown className="h-4 w-4" />
+              {text("الأحدث", "Latest")}
+            </Link>
+          </form>
+          <div className="mt-2 grid grid-cols-4 gap-2 sm:flex sm:flex-wrap">
+            {sortChips.map((sort) => (
+              <Link
+                key={sort.id}
+                to="/listings"
+                search={{ sort: sort.id }}
+                className="rounded-xl bg-muted-surface px-2 py-2 text-center text-[11px] font-bold text-foreground"
+              >
+                {text(sort.labelAr, sort.labelEn)}
+              </Link>
+            ))}
           </div>
-        </form>
+        </section>
 
         <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
-          {quickFilters.map((filter) => (
+          {quickSuggestions.map((chip) => (
             <Link
-              key={filter.id}
+              key={chip.label}
               to="/listings"
-              search={filter.search}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold transition hairline hover:bg-muted-surface"
+              search={chip.search}
+              className="shrink-0 rounded-full bg-card px-3.5 py-1.5 text-xs font-bold text-foreground hairline"
             >
-              <filter.icon className="h-3.5 w-3.5 text-gold" />
-              {text(filter.labelAr, filter.labelEn)}
-            </Link>
-          ))}
-          {searchSuggestions.map((suggestion) => (
-            <Link
-              key={suggestion}
-              to="/listings"
-              search={{ q: suggestion }}
-              className="inline-flex shrink-0 items-center rounded-full bg-muted-surface px-3.5 py-1.5 text-xs font-semibold transition hairline hover:bg-card"
-            >
-              {suggestion}
+              {chip.label}
             </Link>
           ))}
         </div>
+
+        <PromotedPlacement />
 
         {loading ? (
           <HomeState title={text("جاري تحميل الإعلانات", "Loading listings")} />
@@ -182,76 +209,53 @@ function HomePage() {
           />
         ) : (
           <>
-            <section className="mt-6">
-              <SectionHeader title={text("تصفح الأقسام", "Browse categories")} />
-              {categories.length === 0 ? (
-                <HomeState
-                  title={text("لا توجد أقسام للعرض", "No categories to show")}
-                  body={text(
-                    "يمكنك تصفح الإعلانات المعتمدة مباشرة.",
-                    "You can browse approved listings directly.",
-                  )}
-                  compact
-                />
-              ) : (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {categories.slice(0, 8).map((category) => (
-                    <HomeCategoryCard
-                      key={category.id}
-                      category={category}
-                      count={counts[category.id] ?? 0}
-                    />
-                  ))}
-                  <Link
-                    to="/categories"
-                    className="flex items-center justify-center gap-2 rounded-2xl bg-muted-surface p-4 text-sm font-bold text-primary transition hairline hover:bg-card"
-                  >
-                    {text("عرض كل الأقسام", "View all categories")}
-                  </Link>
-                </div>
-              )}
-            </section>
-
-            <PromotedPlacement />
-
-            <section className="mt-6 overflow-hidden rounded-2xl bg-primary p-5 text-primary-foreground shadow-soft">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-lg font-extrabold">
-                    {text("انشر إعلانك مجاناً", "Post your listing free")}
-                  </h3>
-                  <p className="mt-1 text-sm text-primary-foreground/80">
-                    {text(
-                      "إعلانك يظهر للمشترين داخل سوريا بعد المراجعة.",
-                      "Your listing appears to buyers across Syria after review.",
-                    )}
-                  </p>
-                  <Link
-                    to="/add-listing"
-                    className="mt-3 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-bold text-gold-foreground transition hover:opacity-90"
-                  >
-                    <Plus className="h-4 w-4" /> {text("أضف إعلان", "Post a listing")}
-                  </Link>
-                </div>
-                <span className="hidden h-20 w-20 place-items-center rounded-2xl bg-primary-foreground/10 sm:grid">
-                  <Sparkles className="h-8 w-8 text-gold" />
-                </span>
-              </div>
-            </section>
-
             <ListingsSection
-              title={text("إعلانات مميزة", "Featured listings")}
+              title={text("إعلانات بارزة", "Featured listings")}
+              subtitle={text(
+                "تظهر هنا الإعلانات المميزة المتاحة ضمن البيانات الحالية.",
+                "Available featured listings appear here.",
+              )}
               listings={featuredListings}
-              empty={text("لا توجد إعلانات مميزة للعرض.", "No featured listings to show.")}
+              empty={text(
+                "لا توجد إعلانات مميزة حاليًا. يمكنك تصفح أحدث الإعلانات أدناه.",
+                "No featured listings right now. Browse the latest listings below.",
+              )}
             />
+
             <ListingsSection
               title={text("أحدث الإعلانات", "Latest listings")}
+              subtitle={text("إعلانات معتمدة حديثًا من السوق.", "Recently reviewed marketplace listings.")}
               listings={latestListings}
-              empty={text("لا توجد إعلانات معتمدة للعرض.", "No approved listings to show.")}
+              empty={text("لا توجد إعلانات معتمدة للعرض.", "No reviewed listings to show.")}
             />
 
             <section className="mt-7">
-              <SectionHeader title={text("تصفح حسب المحافظة", "Browse by governorate")} />
+              <SectionHeader title={text("تصفح سريع حسب القسم", "Quick browse by category")} />
+              <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+                {compactCategories.map((category) => (
+                  <Link
+                    key={category.id}
+                    to="/listings"
+                    search={{ category: category.id }}
+                    className="shrink-0 rounded-2xl bg-card px-3 py-2 text-xs font-bold text-foreground shadow-soft hairline"
+                  >
+                    {categoryName(category.id, category.nameAr, language)}
+                    <span className="ms-2 text-[10px] text-muted-foreground">
+                      {categoryCounts[category.id] ?? 0}
+                    </span>
+                  </Link>
+                ))}
+                <Link
+                  to="/categories"
+                  className="shrink-0 rounded-2xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+                >
+                  {text("كل الأقسام", "All categories")}
+                </Link>
+              </div>
+            </section>
+
+            <section className="mt-7">
+              <SectionHeader title={text("حسب المحافظة", "By governorate")} />
               <div className="flex flex-wrap gap-2">
                 <Link
                   to="/listings"
@@ -264,7 +268,7 @@ function HomePage() {
                     key={governorate.id}
                     to="/listings"
                     search={{ gov: governorate.id }}
-                    className="rounded-full bg-card px-4 py-1.5 text-xs font-semibold text-foreground transition hairline hover:bg-muted-surface"
+                    className="rounded-full bg-card px-4 py-1.5 text-xs font-semibold text-foreground hairline"
                   >
                     {governorateName(governorate.id, governorate.nameAr, language)}
                   </Link>
@@ -280,14 +284,9 @@ function HomePage() {
             <h3 className="text-sm font-extrabold">{text("تعامل بأمان", "Trade safely")}</h3>
           </div>
           <ul className="mt-2 grid gap-1.5 text-xs leading-6 text-muted-foreground sm:grid-cols-3">
-            <li>{text("كل إعلان يظهر بعد المراجعة.", "Every listing appears after review.")}</li>
-            <li>
-              {text(
-                "لا تحوّل المال قبل معاينة السلعة.",
-                "Do not transfer money before inspecting the item.",
-              )}
-            </li>
-            <li>{text("قابل البائع في مكان عام وآمن.", "Meet in a public, safe place.")}</li>
+            <li>{text("كل إعلان يظهر بعد المراجعة.", "Listings appear after review.")}</li>
+            <li>{text("افحص السلعة قبل الدفع.", "Inspect before paying.")}</li>
+            <li>{text("قابل البائع في مكان عام وآمن.", "Meet in a public place.")}</li>
           </ul>
         </section>
       </main>
@@ -295,56 +294,30 @@ function HomePage() {
   );
 }
 
-function HomeCategoryCard({ category, count }: { category: ClassifiedCategory; count: number }) {
-  const { language, text } = useUiPreferences();
-  return (
-    <Link
-      to="/listings"
-      search={{ category: category.id }}
-      className="group flex items-center gap-3 rounded-2xl bg-card p-3 shadow-soft transition hairline hover:shadow-premium"
-    >
-      <div className="w-16 shrink-0">
-        <PlaceholderArt type={category.placeholder} aspect="square" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <h3 className="truncate text-[15px] font-bold text-foreground">
-          {categoryName(category.id, category.nameAr, language)}
-        </h3>
-        <p className="truncate text-xs text-muted-foreground">
-          {categoryHint(category.id, category.hintAr ?? "", language)}
-        </p>
-        <p className="mt-0.5 text-[11px] text-gold">
-          {text(`${count} إعلان`, `${count} listings`)}
-        </p>
-      </div>
-    </Link>
-  );
-}
-
 function PromotedPlacement() {
   const { text } = useUiPreferences();
   return (
-    <section className="mt-6 rounded-2xl bg-card p-4 shadow-soft hairline sm:p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <section className="mt-4 rounded-2xl bg-card p-4 shadow-soft hairline">
+      <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
         <div>
           <span className="inline-flex rounded-full bg-gold/15 px-2.5 py-1 text-[10px] font-extrabold text-gold hairline">
-            {text("مساحة ترويجية", "Promoted placement")}
+            {text("مساحة مميزة", "Featured space")}
           </span>
           <h2 className="mt-2 text-base font-extrabold text-foreground">
-            {text("مساحة ظهور هادئة داخل رواج", "A calm visibility slot on RAWAJ")}
+            {text("روّج إعلانك ليظهر في مساحات بارزة", "Promote your listing into visible spaces")}
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-6 text-muted-foreground">
             {text(
-              "مساحة مخصصة لظهور الإعلانات المروّجة بعد مراجعة الإدارة، دون أي ادعاء بالتوثيق أو الدفع الآلي.",
-              "A placement for admin-reviewed promoted listings, without implying verification or automatic payment.",
+              "الإعلانات المميزة تخضع للمراجعة الإدارية قبل الظهور في المساحات المخصصة.",
+              "Featured listings are reviewed by admins before appearing in designated spaces.",
             )}
           </p>
         </div>
         <Link
           to="/promotion"
-          className="inline-flex shrink-0 items-center justify-center rounded-xl bg-muted-surface px-4 py-2 text-xs font-bold text-foreground transition hairline hover:bg-card"
+          className="inline-flex items-center justify-center rounded-xl bg-gold px-4 py-2 text-xs font-extrabold text-gold-foreground"
         >
-          {text("اطلب ترويج إعلان", "Request promotion")}
+          {text("طلب ترويج", "Request promotion")}
         </Link>
       </div>
     </section>
@@ -353,10 +326,12 @@ function PromotedPlacement() {
 
 function ListingsSection({
   title,
+  subtitle,
   listings,
   empty,
 }: {
   title: string;
+  subtitle: string;
   listings: ClassifiedListing[];
   empty: string;
 }) {
@@ -367,6 +342,7 @@ function ListingsSection({
         title={title}
         action={{ label: text("عرض الكل", "View all"), to: "/listings" }}
       />
+      <p className="mb-3 text-xs text-muted-foreground">{subtitle}</p>
       {listings.length === 0 ? (
         <HomeState title={empty} compact />
       ) : (
@@ -429,7 +405,9 @@ function HomeListingCard({ listing }: { listing: ClassifiedListing }) {
           </span>
         </div>
         <p className="truncate text-[11px] font-semibold text-gold">
-          {categoryName(listing.categoryId, listing.categoryNameAr, language)}
+          {listing.categoryNameAr
+            ? categoryName(listing.categoryId, listing.categoryNameAr, language)
+            : listing.categoryId}
         </p>
       </div>
     </Link>

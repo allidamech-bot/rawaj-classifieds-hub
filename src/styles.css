@@ -43,30 +43,30 @@
 :root {
   --radius: 0.875rem;
 
-  /* RAWAJ Atlas Design tokens */
-  --background: #f8f4ea; /* ivory */
-  --foreground: #1b1b1d; /* charcoal */
+  /* RAWAJ marketplace identity tokens */
+  --background: #faf6ea;
+  --foreground: #171717;
   --card: #ffffff;
-  --card-foreground: #1b1b1d;
-  --card-warm: #fffdf7;
-  --muted-surface: #eee7d8;
+  --card-foreground: #171717;
+  --card-warm: #fffdf8;
+  --muted-surface: #f1eadc;
   --popover: #ffffff;
-  --popover-foreground: #1b1b1d;
+  --popover-foreground: #171717;
 
-  --primary: #101722; /* premium navy */
-  --primary-foreground: #f8f4ea;
+  --primary: #123a5a;
+  --primary-foreground: #ffffff;
 
-  --secondary: #eee7d8;
-  --secondary-foreground: #1b1b1d;
+  --secondary: #f1eadc;
+  --secondary-foreground: #171717;
 
-  --muted: #eee7d8;
+  --muted: #f1eadc;
   --muted-foreground: #5d625f;
 
-  --accent: #b88a44; /* gold */
-  --accent-foreground: #101722;
+  --accent: #d9a441;
+  --accent-foreground: #171717;
 
-  --gold: #b88a44;
-  --gold-foreground: #101722;
+  --gold: #d9a441;
+  --gold-foreground: #171717;
 
   --emerald-trust: #166b52;
   --emerald-trust-foreground: #ffffff;
@@ -75,9 +75,9 @@
   --destructive-foreground: #ffffff;
   --warning: #c9822b;
 
-  --border: rgba(16, 23, 34, 0.14);
-  --input: rgba(16, 23, 34, 0.22);
-  --ring: #b88a44;
+  --border: #e6dfd2;
+  --input: #d8cebd;
+  --ring: #d9a441;
 }
 
 .dark {

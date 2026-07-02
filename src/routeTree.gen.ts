@@ -17,6 +17,8 @@ import { Route as PromotionRouteImport } from './routes/promotion'
 import { Route as ProhibitedRouteImport } from './routes/prohibited'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as OffersRouteImport } from './routes/offers'
+import { Route as MoreRouteImport } from './routes/more'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ListingsRouteImport } from './routes/listings'
 import { Route as FavoritesRouteImport } from './routes/favorites'
@@ -78,6 +80,16 @@ const ProfileRoute = ProfileRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OffersRoute = OffersRouteImport.update({
+  id: '/offers',
+  path: '/offers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoreRoute = MoreRouteImport.update({
+  id: '/more',
+  path: '/more',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -200,6 +212,8 @@ export interface FileRoutesByFullPath {
   '/favorites': typeof FavoritesRoute
   '/listings': typeof ListingsRouteWithChildren
   '/login': typeof LoginRoute
+  '/more': typeof MoreRoute
+  '/offers': typeof OffersRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRouteWithChildren
   '/prohibited': typeof ProhibitedRoute
@@ -230,6 +244,8 @@ export interface FileRoutesByTo {
   '/chats': typeof ChatsRoute
   '/favorites': typeof FavoritesRoute
   '/login': typeof LoginRoute
+  '/more': typeof MoreRoute
+  '/offers': typeof OffersRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRouteWithChildren
   '/prohibited': typeof ProhibitedRoute
@@ -263,6 +279,8 @@ export interface FileRoutesById {
   '/favorites': typeof FavoritesRoute
   '/listings': typeof ListingsRouteWithChildren
   '/login': typeof LoginRoute
+  '/more': typeof MoreRoute
+  '/offers': typeof OffersRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRouteWithChildren
   '/prohibited': typeof ProhibitedRoute
@@ -297,6 +315,8 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/listings'
     | '/login'
+    | '/more'
+    | '/offers'
     | '/privacy'
     | '/profile'
     | '/prohibited'
@@ -327,6 +347,8 @@ export interface FileRouteTypes {
     | '/chats'
     | '/favorites'
     | '/login'
+    | '/more'
+    | '/offers'
     | '/privacy'
     | '/profile'
     | '/prohibited'
@@ -359,6 +381,8 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/listings'
     | '/login'
+    | '/more'
+    | '/offers'
     | '/privacy'
     | '/profile'
     | '/prohibited'
@@ -392,6 +416,8 @@ export interface RootRouteChildren {
   FavoritesRoute: typeof FavoritesRoute
   ListingsRoute: typeof ListingsRouteWithChildren
   LoginRoute: typeof LoginRoute
+  MoreRoute: typeof MoreRoute
+  OffersRoute: typeof OffersRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRouteWithChildren
   ProhibitedRoute: typeof ProhibitedRoute
@@ -460,6 +486,20 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/offers': {
+      id: '/offers'
+      path: '/offers'
+      fullPath: '/offers'
+      preLoaderRoute: typeof OffersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/more': {
+      id: '/more'
+      path: '/more'
+      fullPath: '/more'
+      preLoaderRoute: typeof MoreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -689,6 +729,8 @@ const rootRouteChildren: RootRouteChildren = {
   FavoritesRoute: FavoritesRoute,
   ListingsRoute: ListingsRouteWithChildren,
   LoginRoute: LoginRoute,
+  MoreRoute: MoreRoute,
+  OffersRoute: OffersRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRouteWithChildren,
   ProhibitedRoute: ProhibitedRoute,

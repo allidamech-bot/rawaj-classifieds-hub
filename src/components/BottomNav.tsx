@@ -1,10 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, List, Plus, User } from "lucide-react";
-import { useUiPreferences } from "@/lib/ui-preferences";
-import { useAuth } from "@/lib/use-auth";
+import { Grid3X3, Home, MoreHorizontal, Plus, Sparkles } from "lucide-react";
 
 type NavItem = {
-  to: string;
+  to: "/" | "/categories" | "/add-listing" | "/offers" | "/more";
   labelAr: string;
   labelEn: string;
   icon: typeof Home;
@@ -14,33 +12,31 @@ type NavItem = {
 
 const items: NavItem[] = [
   { to: "/", labelAr: "الرئيسية", labelEn: "Home", icon: Home, exact: true },
-  { to: "/listings", labelAr: "الإعلانات", labelEn: "Listings", icon: List },
+  { to: "/categories", labelAr: "الأقسام", labelEn: "Categories", icon: Grid3X3 },
   { to: "/add-listing", labelAr: "أضف إعلان", labelEn: "Post", icon: Plus, primary: true },
-  { to: "/profile", labelAr: "حسابي", labelEn: "Account", icon: User },
+  { to: "/offers", labelAr: "العروض", labelEn: "Offers", icon: Sparkles },
+  { to: "/more", labelAr: "المزيد", labelEn: "More", icon: MoreHorizontal },
 ];
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const auth = useAuth();
-  const { text } = useUiPreferences();
 
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur-md lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-      aria-label={text("التنقل السفلي", "Bottom navigation")}
+      aria-label="التنقل السفلي"
     >
-      <div className="container-wide mx-auto grid grid-cols-4 items-end">
+      <div className="container-wide mx-auto grid grid-cols-5 items-end">
         {items.map((item) => {
-          const target = item.to === "/profile" && auth.status !== "signedIn" ? "/login" : item.to;
           const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
           const Icon = item.icon;
-          const label = text(item.labelAr, item.labelEn);
+          const label = item.labelAr;
           if (item.primary) {
             return (
               <Link
                 key={item.to}
-                to={target as "/"}
+                to={item.to}
                 className="flex flex-col items-center gap-1 pt-1 pb-2"
                 aria-label={label}
               >
@@ -54,7 +50,7 @@ export function BottomNav() {
           return (
             <Link
               key={item.to}
-              to={target as "/"}
+              to={item.to}
               className={`flex flex-col items-center gap-1 py-2 transition ${
                 active ? "text-primary" : "text-muted-foreground"
               }`}
