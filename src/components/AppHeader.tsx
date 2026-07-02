@@ -172,23 +172,12 @@ export function AppHeader({ compact = false, title }: Props) {
 function Logo() {
   return (
     <span className="flex items-center gap-2">
-      <span className="grid h-8 w-8 place-items-center rounded-xl bg-gold text-gold-foreground shadow-soft sm:h-9 sm:w-9">
-        <svg
-          viewBox="0 0 32 32"
-          className="h-5 w-5 sm:h-6 sm:w-6"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M5 23 Q5 9 16 9 Q27 9 27 23" />
-          <path d="M9 23 V26" />
-          <path d="M23 23 V26" />
-          <path d="M5 26 H27" strokeWidth="1.6" opacity="0.7" />
-          <circle cx="16" cy="5" r="1.5" fill="currentColor" stroke="none" />
-        </svg>
-      </span>
+      <img
+        src="/brand/rawaj-mark-header.png"
+        alt="RAWAJ"
+        decoding="async"
+        className="h-8 w-8 sm:h-9 sm:w-9 object-contain"
+      />
       <span className="flex flex-col leading-none">
         <span className="text-sm font-extrabold tracking-tight sm:text-base">رواج</span>
         <span className="text-[10px] font-semibold tracking-normal text-gold">RAWAJ · SY</span>
