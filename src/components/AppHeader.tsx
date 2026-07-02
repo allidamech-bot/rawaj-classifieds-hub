@@ -173,10 +173,10 @@ function Logo() {
   return (
     <span className="flex items-center gap-2">
       <img
-        src="/brand/rawaj-mark-header.png"
+        src="/brand/rawaj-mark-transparent-header.png"
         alt="RAWAJ"
         decoding="async"
-        className="h-8 w-8 sm:h-9 sm:w-9 object-contain"
+        className="h-9 w-9 sm:h-10 sm:w-10 object-contain"
       />
       <span className="flex flex-col leading-none">
         <span className="text-sm font-extrabold tracking-tight sm:text-base">رواج</span>
