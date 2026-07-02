@@ -3,8 +3,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Camera, Check, Info, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  carMakeOptions,
   detectCategoryFieldKind,
   mergeCategoryDetails,
+  type CategoryFieldKind,
   type CategorySpecificDetails,
 } from "@/lib/category-fields";
 import {
@@ -46,6 +48,8 @@ function AddListingPage() {
   const [loading, setLoading] = useState(true);
   const [setupError, setSetupError] = useState<ClassifiedsError | null>(null);
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [stepErrors, setStepErrors] = useState<string[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [createdListingId, setCreatedListingId] = useState<string | null>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -67,17 +71,9 @@ function AddListingPage() {
   const category = categories.find((item) => item.id === categoryId);
   const categoryFieldKind = detectCategoryFieldKind(category);
   const governorate = governorates.find((item) => item.id === governorateId);
-  const requiresNumericPrice = priceType === "fixed" || priceType === "negotiable";
-  const canContinue =
-    (step === 0 && !!categoryId) ||
-    step === 1 ||
-    (step === 2 &&
-      title.trim().length >= 4 &&
-      !!governorateId &&
-      !!district &&
-      (!requiresNumericPrice || !!price)) ||
-    (step === 3 && (!contact.phone || !!phone.trim()) && (!contact.whatsapp || !!whatsapp.trim()));
-  const canSubmit = step === 4 && title.trim().length >= 4 && !!categoryId && !!governorateId;
+  const normalizedPrice = normalizeNumericInput(price);
+  const canContinue = true;
+  const canSubmit = step === 4;
   const score = useMemo(
     () =>
       [
@@ -131,6 +127,43 @@ function AddListingPage() {
     setImageSelectionMessage(null);
   }
 
+  function validateCurrentStep(currentStep = step) {
+    const errors = buildStepErrors({
+      step: currentStep,
+      categoryId,
+      title,
+      description,
+      price: normalizedPrice,
+      priceType,
+      governorateId,
+      district,
+      categoryFieldKind,
+      categoryDetails,
+      contact,
+      phone,
+      whatsapp,
+    });
+    setFieldErrors(errors.fields);
+    setStepErrors(errors.summary);
+    if (errors.summary.length > 0) {
+      window.setTimeout(() => {
+        document.querySelector<HTMLElement>("[data-first-invalid='true']")?.focus();
+        document.querySelector<HTMLElement>("[data-error-summary='true']")?.scrollIntoView({
+          block: "center",
+          behavior: "smooth",
+        });
+      }, 0);
+    }
+    return errors.summary.length === 0;
+  }
+
+  function goNext() {
+    if (!validateCurrentStep(step)) return;
+    setStepErrors([]);
+    setFieldErrors({});
+    setStep((value) => Math.min(steps.length - 1, value + 1));
+  }
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -156,7 +189,7 @@ function AddListingPage() {
   }, []);
 
   async function submitListing() {
-    if (!canSubmit || submitting) return;
+    if (!validateCurrentStep(4) || submitting) return;
     setSubmitting(true);
     setSubmitMessage(null);
 
@@ -205,7 +238,7 @@ function AddListingPage() {
       governorateId,
       title: title.trim(),
       description: description.trim(),
-      price: price ? Number(price) : null,
+      price: normalizedPrice ? Number(normalizedPrice) : null,
       priceType,
       condition,
       districtAr: district,
@@ -356,6 +389,25 @@ function AddListingPage() {
         ) : (
           <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
             <div className="space-y-4">
+              {stepErrors.length > 0 && (
+                <div
+                  data-error-summary="true"
+                  className="rounded-2xl bg-destructive/10 p-4 text-sm text-destructive hairline"
+                >
+                  <p className="font-extrabold">
+                    {text(
+                      "أكمل المعلومات التالية قبل المتابعة:",
+                      "Complete the following before continuing:",
+                    )}
+                  </p>
+                  <ul className="mt-2 list-disc space-y-1 ps-5 text-xs leading-6">
+                    {stepErrors.map((error) => (
+                      <li key={error}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               {step === 0 && (
                 <Card title={text("اختر القسم", "Choose category")}>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -432,28 +484,31 @@ function AddListingPage() {
 
               {step === 2 && (
                 <Card title={text("تفاصيل الإعلان", "Listing details")}>
-                  <Field label={text("عنوان الإعلان", "Listing title")}>
+                  <Field label={text("عنوان الإعلان", "Listing title")} error={fieldErrors.title}>
                     <input
                       value={title}
                       onChange={(event) => setTitle(event.target.value)}
                       className="input"
+                      data-first-invalid={Boolean(fieldErrors.title)}
                     />
                   </Field>
-                  <Field label={text("الوصف", "Description")}>
+                  <Field label={text("الوصف", "Description")} error={fieldErrors.description}>
                     <textarea
                       value={description}
                       onChange={(event) => setDescription(event.target.value)}
                       rows={4}
                       className="input resize-none"
+                      data-first-invalid={Boolean(!fieldErrors.title && fieldErrors.description)}
                     />
                   </Field>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <Field label={text("السعر", "Price")}>
+                    <Field label={text("السعر", "Price")} error={fieldErrors.price}>
                       <input
                         value={price}
-                        onChange={(event) => setPrice(event.target.value)}
-                        type="number"
+                        onChange={(event) => setPrice(normalizeNumericInput(event.target.value))}
+                        inputMode="numeric"
                         className="input"
+                        data-first-invalid={Boolean(fieldErrors.price)}
                       />
                     </Field>
                     <Field label={text("نوع السعر", "Price type")}>
@@ -471,7 +526,10 @@ function AddListingPage() {
                     </Field>
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <Field label={text("المحافظة", "Governorate")}>
+                    <Field
+                      label={text("المحافظة", "Governorate")}
+                      error={fieldErrors.governorateId}
+                    >
                       <select
                         value={governorateId}
                         onChange={(event) => {
@@ -479,6 +537,7 @@ function AddListingPage() {
                           setDistrict("");
                         }}
                         className="input"
+                        data-first-invalid={Boolean(fieldErrors.governorateId)}
                       >
                         <option value="">{text("اختر", "Choose")}</option>
                         {governorates.map((item) => (
@@ -488,12 +547,13 @@ function AddListingPage() {
                         ))}
                       </select>
                     </Field>
-                    <Field label={text("المنطقة", "District")}>
+                    <Field label={text("المنطقة", "District")} error={fieldErrors.district}>
                       <select
                         value={district}
                         onChange={(event) => setDistrict(event.target.value)}
                         disabled={!governorate}
                         className="input disabled:opacity-50"
+                        data-first-invalid={Boolean(fieldErrors.district)}
                       >
                         <option value="">{text("اختر", "Choose")}</option>
                         {governorate?.districtsAr.map((item) => (
@@ -522,6 +582,7 @@ function AddListingPage() {
                     values={categoryDetails}
                     onChange={setCategoryDetails}
                     text={text}
+                    errors={fieldErrors}
                   />
                 </Card>
               )}
@@ -542,26 +603,31 @@ function AddListingPage() {
                     )}
                   </div>
                   {contact.phone && (
-                    <Field label={text("رقم الهاتف", "Phone number")}>
+                    <Field label={text("رقم الهاتف", "Phone number")} error={fieldErrors.phone}>
                       <input
                         value={phone}
-                        onChange={(event) => setPhone(event.target.value)}
+                        onChange={(event) => setPhone(normalizeArabicDigits(event.target.value))}
                         inputMode="tel"
                         autoComplete="tel"
                         className="input"
                         placeholder="+963 ..."
+                        data-first-invalid={Boolean(fieldErrors.phone)}
                       />
                     </Field>
                   )}
                   {contact.whatsapp && (
-                    <Field label={text("رقم واتساب", "WhatsApp number")}>
+                    <Field
+                      label={text("رقم واتساب", "WhatsApp number")}
+                      error={fieldErrors.whatsapp}
+                    >
                       <input
                         value={whatsapp}
-                        onChange={(event) => setWhatsapp(event.target.value)}
+                        onChange={(event) => setWhatsapp(normalizeArabicDigits(event.target.value))}
                         inputMode="tel"
                         autoComplete="tel"
                         className="input"
                         placeholder="+963 ..."
+                        data-first-invalid={Boolean(fieldErrors.whatsapp)}
                       />
                     </Field>
                   )}
@@ -665,7 +731,7 @@ function AddListingPage() {
                 {step < steps.length - 1 ? (
                   <button
                     disabled={!canContinue}
-                    onClick={() => setStep((value) => Math.min(steps.length - 1, value + 1))}
+                    onClick={goNext}
                     className="rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
                   >
                     {text("متابعة", "Continue")}
@@ -766,16 +832,139 @@ function PageState({
   );
 }
 
+function normalizeArabicDigits(value: string) {
+  const arabic = "٠١٢٣٤٥٦٧٨٩";
+  const persian = "۰۱۲۳۴۵۶۷۸۹";
+  return value.replace(/[٠-٩۰-۹]/g, (digit) => {
+    const arabicIndex = arabic.indexOf(digit);
+    if (arabicIndex >= 0) return String(arabicIndex);
+    const persianIndex = persian.indexOf(digit);
+    return persianIndex >= 0 ? String(persianIndex) : digit;
+  });
+}
+
+function normalizeNumericInput(value: string) {
+  return normalizeArabicDigits(value).replace(/[^\d.]/g, "");
+}
+
+function validatePhone(value: string) {
+  const normalized = normalizeContactValue(value);
+  return (
+    /^[+\d][\d\s()+-]{6,24}$/.test(normalized) && /[0-9]{7,}/.test(normalized.replace(/\D/g, ""))
+  );
+}
+
+function buildStepErrors({
+  step,
+  categoryId,
+  title,
+  description,
+  price,
+  priceType,
+  governorateId,
+  district,
+  categoryFieldKind,
+  categoryDetails,
+  contact,
+  phone,
+  whatsapp,
+}: {
+  step: number;
+  categoryId: string;
+  title: string;
+  description: string;
+  price: string;
+  priceType: PriceType;
+  governorateId: string;
+  district: string;
+  categoryFieldKind: CategoryFieldKind;
+  categoryDetails: CategorySpecificDetails;
+  contact: { phone: boolean; whatsapp: boolean };
+  phone: string;
+  whatsapp: string;
+}) {
+  const fields: Record<string, string> = {};
+  const summary: string[] = [];
+  const add = (key: string, message: string) => {
+    fields[key] = message;
+    summary.push(message);
+  };
+
+  if (step === 0 && !categoryId) add("categoryId", "اختر القسم.");
+
+  if (step === 2 || step === 4) {
+    if (title.trim().length < 10) add("title", "العنوان يجب أن يكون 10 أحرف على الأقل.");
+    if (description.trim().length < 30) add("description", "الوصف يجب أن يكون 30 حرفًا على الأقل.");
+    if (!governorateId) add("governorateId", "اختر المحافظة.");
+    if (!district) add("district", "اختر المنطقة.");
+    if ((priceType === "fixed" || priceType === "negotiable") && !price) {
+      add("price", "السعر يجب أن يكون رقمًا صحيحًا.");
+    }
+    if (price && (!Number.isFinite(Number(price)) || Number(price) < 0)) {
+      add("price", "السعر يجب أن يكون رقمًا صحيحًا.");
+    }
+
+    if (categoryFieldKind === "vehicles") {
+      if (!categoryDetails.car_make && !categoryDetails.make) add("car_make", "اختر شركة السيارة.");
+      if (!categoryDetails.car_model && !categoryDetails.model)
+        add("car_model", "أدخل طراز السيارة.");
+      if (!categoryDetails.year) add("year", "سنة الصنع غير صحيحة.");
+      if (
+        categoryDetails.year &&
+        (categoryDetails.year < 1900 || categoryDetails.year > new Date().getFullYear() + 1)
+      ) {
+        add("year", "سنة الصنع غير صحيحة.");
+      }
+      if (categoryDetails.mileage_km === undefined) {
+        add("mileage_km", "عدد الكيلومترات يجب أن يكون رقمًا.");
+      }
+    }
+
+    if (categoryFieldKind === "real_estate") {
+      if (!categoryDetails.property_type) add("property_type", "اختر نوع العقار.");
+      if (!categoryDetails.listing_purpose) add("listing_purpose", "اختر الغرض من الإعلان.");
+      if (!categoryDetails.area_sqm) add("area_sqm", "المساحة يجب أن تكون رقمًا صحيحًا.");
+    }
+
+    if (categoryFieldKind === "jobs") {
+      if (!categoryDetails.job_type) add("job_type", "أدخل نوع الوظيفة.");
+      if (!categoryDetails.employment_type) add("employment_type", "اختر نمط العمل.");
+    }
+
+    if (categoryFieldKind === "services" && !categoryDetails.service_type) {
+      add("service_type", "أدخل نوع الخدمة.");
+    }
+
+    if (categoryFieldKind === "electronics") {
+      if (!categoryDetails.electronics_brand) add("electronics_brand", "أدخل الشركة أو العلامة.");
+      if (!categoryDetails.electronics_model) add("electronics_model", "أدخل الموديل.");
+    }
+  }
+
+  if (step === 3 || step === 4) {
+    if (contact.phone && !validatePhone(phone)) {
+      add("phone", "رقم الهاتف يجب أن يحتوي أرقامًا فقط وبصيغة واضحة.");
+    }
+    if (contact.whatsapp && !validatePhone(whatsapp)) {
+      add("whatsapp", "رقم واتساب يجب أن يحتوي أرقامًا فقط وبصيغة واضحة.");
+    }
+  }
+
+  return { fields, summary };
+}
+
 function CategorySpecificFields({
   kind,
   values,
   onChange,
   text,
+  errors,
 }: {
-  kind: "real_estate" | "vehicles" | "general";
+  kind: CategoryFieldKind;
   values: CategorySpecificDetails;
   onChange: (value: CategorySpecificDetails) => void;
   text: (ar: string, en: string) => string;
+  errors: Record<string, string>;
 }) {
   const patch = (next: Partial<CategorySpecificDetails>) => onChange({ ...values, ...next });
 
@@ -862,20 +1051,28 @@ function CategorySpecificFields({
       <div className="mt-3 rounded-xl bg-muted-surface p-3">
         <h4 className="mb-3 text-xs font-extrabold">{text("تفاصيل السيارة", "Vehicle details")}</h4>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field label={text("الشركة", "Make")}>
-            <input
-              value={values.make ?? ""}
-              onChange={(event) => patch({ make: event.target.value })}
-              maxLength={60}
+          <Field label={text("الشركة", "Make")} error={errors.car_make}>
+            <select
+              value={values.car_make ?? values.make ?? ""}
+              onChange={(event) => patch({ car_make: event.target.value || undefined })}
               className="input"
-            />
+              data-first-invalid={Boolean(errors.car_make)}
+            >
+              <option value="">{text("اختر الشركة", "Choose make")}</option>
+              {carMakeOptions.map((make) => (
+                <option key={make} value={make}>
+                  {make === "Other" ? text("أخرى", "Other") : make}
+                </option>
+              ))}
+            </select>
           </Field>
-          <Field label={text("الطراز", "Model")}>
+          <Field label={text("الطراز", "Model")} error={errors.car_model}>
             <input
-              value={values.model ?? ""}
-              onChange={(event) => patch({ model: event.target.value })}
+              value={values.car_model ?? values.model ?? ""}
+              onChange={(event) => patch({ car_model: event.target.value })}
               maxLength={60}
               className="input"
+              data-first-invalid={Boolean(errors.car_model)}
             />
           </Field>
           <NumberField
@@ -884,6 +1081,7 @@ function CategorySpecificFields({
             onChange={(year) => patch({ year })}
             min={1900}
             max={new Date().getFullYear() + 1}
+            error={errors.year}
           />
           <NumberField
             label={text("المسافة كم", "Mileage km")}
@@ -891,6 +1089,7 @@ function CategorySpecificFields({
             onChange={(mileage_km) => patch({ mileage_km })}
             min={0}
             max={2000000}
+            error={errors.mileage_km}
           />
           <Field label={text("الوقود", "Fuel")}>
             <select
@@ -903,6 +1102,7 @@ function CategorySpecificFields({
               <option value="diesel">{text("ديزل", "Diesel")}</option>
               <option value="hybrid">{text("هايبرد", "Hybrid")}</option>
               <option value="electric">{text("كهرباء", "Electric")}</option>
+              <option value="gas">{text("غاز", "Gas")}</option>
               <option value="other">{text("أخرى", "Other")}</option>
             </select>
           </Field>
@@ -915,6 +1115,26 @@ function CategorySpecificFields({
               <option value="">{text("اختياري", "Optional")}</option>
               <option value="automatic">{text("أوتوماتيك", "Automatic")}</option>
               <option value="manual">{text("يدوي", "Manual")}</option>
+              <option value="semi_auto">{text("نصف أوتوماتيك", "Semi-auto")}</option>
+            </select>
+          </Field>
+          <Field label={text("شكل المركبة", "Body type")}>
+            <select
+              value={values.body_type ?? ""}
+              onChange={(event) => patch({ body_type: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="sedan">{text("سيدان", "Sedan")}</option>
+              <option value="hatchback">{text("هاتشباك", "Hatchback")}</option>
+              <option value="suv">SUV</option>
+              <option value="pickup">{text("بيك أب", "Pickup")}</option>
+              <option value="van">{text("فان", "Van")}</option>
+              <option value="coupe">{text("كوبيه", "Coupe")}</option>
+              <option value="bus">{text("باص", "Bus")}</option>
+              <option value="truck">{text("شاحنة", "Truck")}</option>
+              <option value="motorcycle">{text("دراجة نارية", "Motorcycle")}</option>
+              <option value="other">{text("أخرى", "Other")}</option>
             </select>
           </Field>
           <Field label={text("حالة السيارة", "Vehicle condition")}>
@@ -926,6 +1146,9 @@ function CategorySpecificFields({
               <option value="">{text("اختياري", "Optional")}</option>
               <option value="new">{text("جديدة", "New")}</option>
               <option value="used">{text("مستعملة", "Used")}</option>
+              <option value="excellent">{text("ممتازة", "Excellent")}</option>
+              <option value="good">{text("جيدة", "Good")}</option>
+              <option value="needs_work">{text("تحتاج صيانة", "Needs work")}</option>
             </select>
           </Field>
           <Field label={text("اللون", "Color")}>
@@ -937,11 +1160,254 @@ function CategorySpecificFields({
             />
           </Field>
         </div>
+        <LocationDetailsFields values={values} patch={patch} text={text} />
       </div>
     );
   }
 
-  return null;
+  if (kind === "jobs") {
+    return (
+      <div className="mt-3 rounded-xl bg-muted-surface p-3">
+        <h4 className="mb-3 text-xs font-extrabold">{text("تفاصيل الوظيفة", "Job details")}</h4>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label={text("نوع الوظيفة", "Job type")} error={errors.job_type}>
+            <input
+              value={values.job_type ?? ""}
+              onChange={(event) => patch({ job_type: event.target.value })}
+              className="input"
+              data-first-invalid={Boolean(errors.job_type)}
+            />
+          </Field>
+          <Field label={text("نمط العمل", "Employment type")} error={errors.employment_type}>
+            <select
+              value={values.employment_type ?? ""}
+              onChange={(event) => patch({ employment_type: event.target.value || undefined })}
+              className="input"
+              data-first-invalid={Boolean(errors.employment_type)}
+            >
+              <option value="">{text("اختر", "Choose")}</option>
+              <option value="full_time">{text("دوام كامل", "Full-time")}</option>
+              <option value="part_time">{text("دوام جزئي", "Part-time")}</option>
+              <option value="contract">{text("عقد", "Contract")}</option>
+              <option value="temporary">{text("مؤقت", "Temporary")}</option>
+              <option value="internship">{text("تدريب", "Internship")}</option>
+            </select>
+          </Field>
+          <Field label={text("مستوى الخبرة", "Experience level")}>
+            <select
+              value={values.experience_level ?? ""}
+              onChange={(event) => patch({ experience_level: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="not_required">{text("غير مطلوبة", "Not required")}</option>
+              <option value="entry">{text("مبتدئ", "Entry")}</option>
+              <option value="mid">{text("متوسط", "Mid")}</option>
+              <option value="senior">{text("خبير", "Senior")}</option>
+              <option value="manager">{text("إدارة", "Manager")}</option>
+            </select>
+          </Field>
+          <Field label={text("نوع الراتب", "Salary type")}>
+            <select
+              value={values.salary_type ?? ""}
+              onChange={(event) => patch({ salary_type: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="fixed">{text("ثابت", "Fixed")}</option>
+              <option value="range">{text("نطاق", "Range")}</option>
+              <option value="commission">{text("عمولة", "Commission")}</option>
+              <option value="negotiable">{text("قابل للتفاوض", "Negotiable")}</option>
+              <option value="not_listed">{text("غير معلن", "Not listed")}</option>
+            </select>
+          </Field>
+          <NumberField
+            label={text("الراتب من", "Salary from")}
+            value={values.salary_min}
+            onChange={(salary_min) => patch({ salary_min })}
+            min={0}
+            max={1000000000}
+          />
+          <NumberField
+            label={text("الراتب إلى", "Salary to")}
+            value={values.salary_max}
+            onChange={(salary_max) => patch({ salary_max })}
+            min={0}
+            max={1000000000}
+          />
+          <Field label={text("مكان العمل", "Work location")}>
+            <select
+              value={values.work_location ?? ""}
+              onChange={(event) => patch({ work_location: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="onsite">{text("حضوري", "On-site")}</option>
+              <option value="remote">{text("عن بعد", "Remote")}</option>
+              <option value="hybrid">{text("هجين", "Hybrid")}</option>
+              <option value="field">{text("ميداني", "Field")}</option>
+            </select>
+          </Field>
+          <Field label={text("مدة العقد", "Contract duration")}>
+            <select
+              value={values.contract_duration ?? ""}
+              onChange={(event) => patch({ contract_duration: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="permanent">{text("دائم", "Permanent")}</option>
+              <option value="temporary">{text("مؤقت", "Temporary")}</option>
+              <option value="seasonal">{text("موسمي", "Seasonal")}</option>
+              <option value="internship">{text("تدريب", "Internship")}</option>
+            </select>
+          </Field>
+          <Field label={text("طريقة التقديم", "Application method")}>
+            <select
+              value={values.application_method ?? ""}
+              onChange={(event) => patch({ application_method: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="rawaj_message">{text("رسائل رواج", "RAWAJ messages")}</option>
+              <option value="phone">{text("هاتف", "Phone")}</option>
+              <option value="whatsapp">{text("واتساب", "WhatsApp")}</option>
+              <option value="email">{text("بريد إلكتروني", "Email")}</option>
+              <option value="external">{text("رابط خارجي", "External")}</option>
+            </select>
+          </Field>
+        </div>
+        <LocationDetailsFields values={values} patch={patch} text={text} />
+      </div>
+    );
+  }
+
+  if (kind === "services") {
+    return (
+      <div className="mt-3 rounded-xl bg-muted-surface p-3">
+        <h4 className="mb-3 text-xs font-extrabold">{text("تفاصيل الخدمة", "Service details")}</h4>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label={text("نوع الخدمة", "Service type")} error={errors.service_type}>
+            <input
+              value={values.service_type ?? ""}
+              onChange={(event) => patch({ service_type: event.target.value })}
+              className="input"
+              data-first-invalid={Boolean(errors.service_type)}
+            />
+          </Field>
+          <Field label={text("نطاق الخدمة", "Service area")}>
+            <input
+              value={values.service_area ?? ""}
+              onChange={(event) => patch({ service_area: event.target.value })}
+              className="input"
+            />
+          </Field>
+          <Field label={text("وقت التنفيذ", "Delivery time")}>
+            <select
+              value={values.delivery_time ?? ""}
+              onChange={(event) => patch({ delivery_time: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="same_day">{text("نفس اليوم", "Same day")}</option>
+              <option value="two_three_days">{text("2-3 أيام", "2-3 days")}</option>
+              <option value="week">{text("خلال أسبوع", "Within a week")}</option>
+              <option value="negotiable">{text("حسب الاتفاق", "Negotiable")}</option>
+            </select>
+          </Field>
+          <NumberField
+            label={text("السعر يبدأ من", "Starting price")}
+            value={values.starting_price}
+            onChange={(starting_price) => patch({ starting_price })}
+            min={0}
+            max={1000000000}
+          />
+        </div>
+        <LocationDetailsFields values={values} patch={patch} text={text} />
+      </div>
+    );
+  }
+
+  if (kind === "electronics") {
+    return (
+      <div className="mt-3 rounded-xl bg-muted-surface p-3">
+        <h4 className="mb-3 text-xs font-extrabold">{text("تفاصيل الجهاز", "Device details")}</h4>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label={text("الشركة", "Brand")} error={errors.electronics_brand}>
+            <input
+              value={values.electronics_brand ?? ""}
+              onChange={(event) => patch({ electronics_brand: event.target.value })}
+              className="input"
+              data-first-invalid={Boolean(errors.electronics_brand)}
+            />
+          </Field>
+          <Field label={text("الموديل", "Model")} error={errors.electronics_model}>
+            <input
+              value={values.electronics_model ?? ""}
+              onChange={(event) => patch({ electronics_model: event.target.value })}
+              className="input"
+              data-first-invalid={Boolean(errors.electronics_model)}
+            />
+          </Field>
+          <Field label={text("التخزين", "Storage")}>
+            <input
+              value={values.storage ?? ""}
+              onChange={(event) => patch({ storage: event.target.value })}
+              className="input"
+              placeholder="128GB"
+            />
+          </Field>
+          <Field label={text("الذاكرة", "RAM")}>
+            <input
+              value={values.ram ?? ""}
+              onChange={(event) => patch({ ram: event.target.value })}
+              className="input"
+              placeholder="8GB"
+            />
+          </Field>
+          <Field label={text("الحالة", "Condition")}>
+            <select
+              value={values.condition ?? ""}
+              onChange={(event) => patch({ condition: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="new">{text("جديد", "New")}</option>
+              <option value="used">{text("مستعمل", "Used")}</option>
+              <option value="excellent">{text("ممتاز", "Excellent")}</option>
+              <option value="good">{text("جيد", "Good")}</option>
+              <option value="needs_work">{text("يحتاج صيانة", "Needs work")}</option>
+            </select>
+          </Field>
+          <Field label={text("الضمان", "Warranty")}>
+            <select
+              value={values.warranty ?? ""}
+              onChange={(event) => patch({ warranty: event.target.value || undefined })}
+              className="input"
+            >
+              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="yes">{text("يوجد ضمان", "Warranty")}</option>
+              <option value="no">{text("بدون ضمان", "No warranty")}</option>
+              <option value="unknown">{text("غير محدد", "Unknown")}</option>
+            </select>
+          </Field>
+          <Field label={text("الملحقات", "Accessories")}>
+            <input
+              value={values.accessories ?? ""}
+              onChange={(event) => patch({ accessories: event.target.value })}
+              className="input"
+            />
+          </Field>
+        </div>
+        <LocationDetailsFields values={values} patch={patch} text={text} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-xl bg-muted-surface p-3">
+      <LocationDetailsFields values={values} patch={patch} text={text} />
+    </div>
+  );
 }
 
 function NumberField({
@@ -950,24 +1416,63 @@ function NumberField({
   onChange,
   min,
   max,
+  error,
 }: {
   label: string;
   value?: number;
   onChange: (value: number | undefined) => void;
   min: number;
   max: number;
+  error?: string;
 }) {
   return (
-    <Field label={label}>
+    <Field label={label} error={error}>
       <input
         value={value ?? ""}
-        onChange={(event) => onChange(event.target.value ? Number(event.target.value) : undefined)}
-        type="number"
+        onChange={(event) => {
+          const normalized = normalizeNumericInput(event.target.value);
+          onChange(normalized ? Number(normalized) : undefined);
+        }}
+        inputMode="numeric"
         min={min}
         max={max}
         className="input"
+        data-first-invalid={Boolean(error)}
       />
     </Field>
+  );
+}
+
+function LocationDetailsFields({
+  values,
+  patch,
+  text,
+}: {
+  values: CategorySpecificDetails;
+  patch: (next: Partial<CategorySpecificDetails>) => void;
+  text: (ar: string, en: string) => string;
+}) {
+  return (
+    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <Field label={text("الحي / الناحية", "Neighborhood")}>
+        <input
+          value={values.location_neighborhood ?? ""}
+          onChange={(event) => patch({ location_neighborhood: event.target.value })}
+          maxLength={80}
+          className="input"
+          placeholder={text("اختياري", "Optional")}
+        />
+      </Field>
+      <Field label={text("تفاصيل إضافية للمكان", "Extra location details")}>
+        <input
+          value={values.location_details ?? ""}
+          onChange={(event) => patch({ location_details: event.target.value })}
+          maxLength={180}
+          className="input"
+          placeholder={text("مثال: قرب دوار أو شارع معروف", "Example: near a known street")}
+        />
+      </Field>
+    </div>
   );
 }
 
@@ -1002,11 +1507,22 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+  error,
+}: {
+  label: string;
+  children: React.ReactNode;
+  error?: string;
+}) {
   return (
     <label className="mb-3 block">
       <span className="mb-1 block text-xs font-semibold text-muted-foreground">{label}</span>
       {children}
+      {error && (
+        <span className="mt-1 block text-[11px] font-semibold text-destructive">{error}</span>
+      )}
     </label>
   );
 }

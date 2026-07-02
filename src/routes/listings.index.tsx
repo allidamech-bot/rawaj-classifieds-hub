@@ -5,6 +5,11 @@ import { Clock, Filter, MapPin, Search, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import {
+  carMakeOptions,
+  detectCategoryFieldKind,
+  type CategoryFieldKind,
+} from "@/lib/category-fields";
+import {
   fetchPublicCategories,
   fetchPublicGovernorates,
   fetchPublicListings,
@@ -30,6 +35,18 @@ const searchSchema = z.object({
   district: z.string().optional(),
   price_min: z.coerce.number().nonnegative().optional(),
   price_max: z.coerce.number().nonnegative().optional(),
+  car_make: z.string().optional(),
+  car_model: z.string().optional(),
+  fuel: z.string().optional(),
+  transmission: z.string().optional(),
+  property_purpose: z.string().optional(),
+  property_type: z.string().optional(),
+  rooms: z.coerce.number().nonnegative().optional(),
+  rental_duration: z.string().optional(),
+  electronics_brand: z.string().optional(),
+  detail_condition: z.string().optional(),
+  employment_type: z.string().optional(),
+  salary_type: z.string().optional(),
   q: z.string().optional(),
   sort: z.enum(["latest", "cheapest", "expensive", "featured"]).optional(),
 });
@@ -58,6 +75,18 @@ function ListingsPage() {
   const [districtAr, setDistrictAr] = useState(search.district ?? "");
   const [priceMin, setPriceMin] = useState(search.price_min?.toString() ?? "");
   const [priceMax, setPriceMax] = useState(search.price_max?.toString() ?? "");
+  const [carMake, setCarMake] = useState(search.car_make ?? "");
+  const [carModel, setCarModel] = useState(search.car_model ?? "");
+  const [fuelType, setFuelType] = useState(search.fuel ?? "");
+  const [transmission, setTransmission] = useState(search.transmission ?? "");
+  const [propertyPurpose, setPropertyPurpose] = useState(search.property_purpose ?? "");
+  const [propertyType, setPropertyType] = useState(search.property_type ?? "");
+  const [rooms, setRooms] = useState(search.rooms?.toString() ?? "");
+  const [rentalDuration, setRentalDuration] = useState(search.rental_duration ?? "");
+  const [electronicsBrand, setElectronicsBrand] = useState(search.electronics_brand ?? "");
+  const [detailCondition, setDetailCondition] = useState(search.detail_condition ?? "");
+  const [employmentType, setEmploymentType] = useState(search.employment_type ?? "");
+  const [salaryType, setSalaryType] = useState(search.salary_type ?? "");
   const [q, setQ] = useState(search.q ?? "");
   const [debouncedQ, setDebouncedQ] = useState(search.q ?? "");
   const [open, setOpen] = useState(false);
@@ -82,6 +111,7 @@ function ListingsPage() {
   );
   const selectedGovernorate = governorates.find((gov) => gov.id === govId);
   const selectedSubcategory = subcategories.find((subcategory) => subcategory.id === subcategoryId);
+  const categoryFieldKind = detectCategoryFieldKind(selectedCategory);
   const availableSubcategories = useMemo(
     () =>
       selectedCategory
@@ -103,6 +133,18 @@ function ListingsPage() {
     q.trim() ||
     priceMin.trim() ||
     priceMax.trim() ||
+    carMake ||
+    carModel ||
+    fuelType ||
+    transmission ||
+    propertyPurpose ||
+    propertyType ||
+    rooms.trim() ||
+    rentalDuration ||
+    electronicsBrand ||
+    detailCondition ||
+    employmentType ||
+    salaryType ||
     sort !== "latest",
   );
 
@@ -112,14 +154,38 @@ function ListingsPage() {
     setDistrictAr(search.district ?? "");
     setPriceMin(search.price_min?.toString() ?? "");
     setPriceMax(search.price_max?.toString() ?? "");
+    setCarMake(search.car_make ?? "");
+    setCarModel(search.car_model ?? "");
+    setFuelType(search.fuel ?? "");
+    setTransmission(search.transmission ?? "");
+    setPropertyPurpose(search.property_purpose ?? "");
+    setPropertyType(search.property_type ?? "");
+    setRooms(search.rooms?.toString() ?? "");
+    setRentalDuration(search.rental_duration ?? "");
+    setElectronicsBrand(search.electronics_brand ?? "");
+    setDetailCondition(search.detail_condition ?? "");
+    setEmploymentType(search.employment_type ?? "");
+    setSalaryType(search.salary_type ?? "");
     setSort(search.sort ?? "latest");
   }, [
+    search.car_make,
+    search.car_model,
     search.district,
+    search.detail_condition,
+    search.electronics_brand,
+    search.employment_type,
+    search.fuel,
     search.price_max,
     search.price_min,
+    search.property_purpose,
+    search.property_type,
     search.q,
+    search.rental_duration,
+    search.rooms,
+    search.salary_type,
     search.sort,
     search.subcategory,
+    search.transmission,
   ]);
 
   useEffect(() => {
@@ -145,6 +211,57 @@ function ListingsPage() {
       setDistrictAr("");
     }
   }, [availableDistricts, districtAr, selectedGovernorate]);
+
+  useEffect(() => {
+    void navigate({
+      to: "/listings",
+      search: {
+        category: selectedCategory?.id,
+        subcategory: subcategoryId || undefined,
+        gov: govId || undefined,
+        district: districtAr || undefined,
+        price_min: parsedPriceMin,
+        price_max: parsedPriceMax,
+        car_make: carMake || undefined,
+        car_model: carModel || undefined,
+        fuel: fuelType || undefined,
+        transmission: transmission || undefined,
+        property_purpose: propertyPurpose || undefined,
+        property_type: propertyType || undefined,
+        rooms: rooms.trim() ? Number(rooms) : undefined,
+        rental_duration: rentalDuration || undefined,
+        electronics_brand: electronicsBrand || undefined,
+        detail_condition: detailCondition || undefined,
+        employment_type: employmentType || undefined,
+        salary_type: salaryType || undefined,
+        q: debouncedQ || undefined,
+        sort: sort === "latest" ? undefined : sort,
+      },
+      replace: true,
+    });
+  }, [
+    selectedCategory?.id,
+    subcategoryId,
+    govId,
+    districtAr,
+    parsedPriceMin,
+    parsedPriceMax,
+    carMake,
+    carModel,
+    fuelType,
+    transmission,
+    propertyPurpose,
+    propertyType,
+    rooms,
+    rentalDuration,
+    electronicsBrand,
+    detailCondition,
+    employmentType,
+    salaryType,
+    debouncedQ,
+    sort,
+    navigate,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -212,6 +329,18 @@ function ListingsPage() {
           districtAr: districtAr || undefined,
           priceMin: Number.isFinite(parsedPriceMin) ? parsedPriceMin : undefined,
           priceMax: Number.isFinite(parsedPriceMax) ? parsedPriceMax : undefined,
+          carMake: carMake || undefined,
+          carModel: carModel || undefined,
+          fuelType: fuelType || undefined,
+          transmission: transmission || undefined,
+          propertyPurpose: propertyPurpose || undefined,
+          propertyType: propertyType || undefined,
+          rooms: rooms.trim() ? Number(rooms) : undefined,
+          rentalDuration: rentalDuration || undefined,
+          electronicsBrand: electronicsBrand || undefined,
+          detailCondition: detailCondition || undefined,
+          employmentType: employmentType || undefined,
+          salaryType: salaryType || undefined,
           query: debouncedQ,
           sort,
         }),
@@ -252,6 +381,18 @@ function ListingsPage() {
     districtAr,
     parsedPriceMin,
     parsedPriceMax,
+    carMake,
+    carModel,
+    fuelType,
+    transmission,
+    propertyPurpose,
+    propertyType,
+    rooms,
+    rentalDuration,
+    electronicsBrand,
+    detailCondition,
+    employmentType,
+    salaryType,
     debouncedQ,
     sort,
   ]);
@@ -265,6 +406,59 @@ function ListingsPage() {
     { id: "expensive", label: text("الأعلى سعرا", "Highest price") },
     { id: "featured", label: text("المميز", "Featured") },
   ] as const;
+  const fuelTypeLabels: Record<string, string> = {
+    gasoline: text("بنزين", "Gasoline"),
+    diesel: text("ديزل", "Diesel"),
+    hybrid: text("هجين", "Hybrid"),
+    electric: text("كهرباء", "Electric"),
+    gas: text("غاز", "Gas"),
+    other: text("أخرى", "Other"),
+  };
+  const transmissionLabels: Record<string, string> = {
+    automatic: text("أوتوماتيك", "Automatic"),
+    manual: text("يدوي", "Manual"),
+    semi_auto: text("نصف أوتوماتيك", "Semi-auto"),
+  };
+  const propertyPurposeLabels: Record<string, string> = {
+    sale: text("بيع", "Sale"),
+    rent: text("إيجار", "Rent"),
+  };
+  const propertyTypeLabels: Record<string, string> = {
+    apartment: text("شقة", "Apartment"),
+    house: text("منزل", "House"),
+    villa: text("فيلا", "Villa"),
+    land: text("أرض", "Land"),
+    shop: text("محل", "Shop"),
+    office: text("مكتب", "Office"),
+    warehouse: text("مستودع", "Warehouse"),
+  };
+  const rentalDurationLabels: Record<string, string> = {
+    daily: text("يومي", "Daily"),
+    monthly: text("شهري", "Monthly"),
+    yearly: text("سنوي", "Yearly"),
+    negotiable: text("قابل للاتفاق", "Negotiable"),
+  };
+  const detailConditionLabels: Record<string, string> = {
+    new: text("جديد", "New"),
+    used: text("مستعمل", "Used"),
+    excellent: text("ممتاز", "Excellent"),
+    good: text("جيد", "Good"),
+    needs_work: text("يحتاج صيانة", "Needs work"),
+  };
+  const employmentTypeLabels: Record<string, string> = {
+    full_time: text("دوام كامل", "Full-time"),
+    part_time: text("دوام جزئي", "Part-time"),
+    contract: text("عقد", "Contract"),
+    temporary: text("مؤقت", "Temporary"),
+    internship: text("تدريب", "Internship"),
+  };
+  const salaryTypeLabels: Record<string, string> = {
+    fixed: text("ثابت", "Fixed"),
+    range: text("نطاق", "Range"),
+    commission: text("عمولة", "Commission"),
+    negotiable: text("قابل للتفاوض", "Negotiable"),
+    not_listed: text("غير معلن", "Not listed"),
+  };
 
   const activeFilters = [
     selectedCategory
@@ -319,6 +513,66 @@ function ListingsPage() {
           clear: () => setSort("latest"),
         }
       : null,
+    carMake ? { key: "carMake", label: carMake, clear: () => setCarMake("") } : null,
+    carModel ? { key: "carModel", label: carModel, clear: () => setCarModel("") } : null,
+    fuelType
+      ? { key: "fuel", label: fuelTypeLabels[fuelType] ?? fuelType, clear: () => setFuelType("") }
+      : null,
+    transmission
+      ? {
+          key: "transmission",
+          label: transmissionLabels[transmission] ?? transmission,
+          clear: () => setTransmission(""),
+        }
+      : null,
+    propertyPurpose
+      ? {
+          key: "propertyPurpose",
+          label: propertyPurposeLabels[propertyPurpose] ?? propertyPurpose,
+          clear: () => setPropertyPurpose(""),
+        }
+      : null,
+    propertyType
+      ? {
+          key: "propertyType",
+          label: propertyTypeLabels[propertyType] ?? propertyType,
+          clear: () => setPropertyType(""),
+        }
+      : null,
+    rooms.trim()
+      ? { key: "rooms", label: `${text("غرف", "Rooms")} ${rooms}`, clear: () => setRooms("") }
+      : null,
+    rentalDuration
+      ? {
+          key: "rentalDuration",
+          label: rentalDurationLabels[rentalDuration] ?? rentalDuration,
+          clear: () => setRentalDuration(""),
+        }
+      : null,
+    electronicsBrand
+      ? { key: "electronicsBrand", label: electronicsBrand, clear: () => setElectronicsBrand("") }
+      : null,
+    detailCondition
+      ? {
+          key: "detailCondition",
+          label: detailConditionLabels[detailCondition] ?? detailCondition,
+          clear: () => setDetailCondition(""),
+        }
+      : null,
+    employmentType
+      ? {
+          key: "employmentType",
+          label: employmentTypeLabels[employmentType] ?? employmentType,
+          clear: () => setEmploymentType(""),
+        }
+      : null,
+    salaryType
+      ? {
+          key: "salaryType",
+          label: salaryTypeLabels[salaryType] ?? salaryType,
+          clear: () => setSalaryType(""),
+        }
+      : null,
   ].filter(Boolean) as Array<{ key: string; label: string; clear: () => void }>;
 
   function resetFilters() {
@@ -327,6 +581,18 @@ function ListingsPage() {
     setDistrictAr("");
     setPriceMin("");
     setPriceMax("");
+    setCarMake("");
+    setCarModel("");
+    setFuelType("");
+    setTransmission("");
+    setPropertyPurpose("");
+    setPropertyType("");
+    setRooms("");
+    setRentalDuration("");
+    setElectronicsBrand("");
+    setDetailCondition("");
+    setEmploymentType("");
+    setSalaryType("");
     setQ("");
     setSort("latest");
     setFiltersOpen(false);
@@ -520,6 +786,38 @@ function ListingsPage() {
                     />
                   </label>
                 </div>
+                <CategorySpecificFilterFields
+                  kind={categoryFieldKind}
+                  text={text}
+                  values={{
+                    carMake,
+                    carModel,
+                    fuelType,
+                    transmission,
+                    propertyPurpose,
+                    propertyType,
+                    rooms,
+                    rentalDuration,
+                    electronicsBrand,
+                    detailCondition,
+                    employmentType,
+                    salaryType,
+                  }}
+                  setters={{
+                    setCarMake,
+                    setCarModel,
+                    setFuelType,
+                    setTransmission,
+                    setPropertyPurpose,
+                    setPropertyType,
+                    setRooms,
+                    setRentalDuration,
+                    setElectronicsBrand,
+                    setDetailCondition,
+                    setEmploymentType,
+                    setSalaryType,
+                  }}
+                />
                 <div className="mt-3 flex justify-end">
                   <button
                     type="button"
@@ -712,6 +1010,39 @@ function ListingsPage() {
                   </label>
                 </div>
 
+                <CategorySpecificFilterFields
+                  kind={categoryFieldKind}
+                  text={text}
+                  values={{
+                    carMake,
+                    carModel,
+                    fuelType,
+                    transmission,
+                    propertyPurpose,
+                    propertyType,
+                    rooms,
+                    rentalDuration,
+                    electronicsBrand,
+                    detailCondition,
+                    employmentType,
+                    salaryType,
+                  }}
+                  setters={{
+                    setCarMake,
+                    setCarModel,
+                    setFuelType,
+                    setTransmission,
+                    setPropertyPurpose,
+                    setPropertyType,
+                    setRooms,
+                    setRentalDuration,
+                    setElectronicsBrand,
+                    setDetailCondition,
+                    setEmploymentType,
+                    setSalaryType,
+                  }}
+                />
+
                 <div>
                   <h3 className="mb-2 text-xs font-extrabold text-muted-foreground">
                     {text("الترتيب", "Sort")}
@@ -896,6 +1227,244 @@ function ListingsPage() {
         )}
       </main>
     </>
+  );
+}
+
+function CategorySpecificFilterFields({
+  kind,
+  text,
+  values,
+  setters,
+}: {
+  kind: CategoryFieldKind;
+  text: (ar: string, en: string) => string;
+  values: {
+    carMake: string;
+    carModel: string;
+    fuelType: string;
+    transmission: string;
+    propertyPurpose: string;
+    propertyType: string;
+    rooms: string;
+    rentalDuration: string;
+    electronicsBrand: string;
+    detailCondition: string;
+    employmentType: string;
+    salaryType: string;
+  };
+  setters: {
+    setCarMake: (value: string) => void;
+    setCarModel: (value: string) => void;
+    setFuelType: (value: string) => void;
+    setTransmission: (value: string) => void;
+    setPropertyPurpose: (value: string) => void;
+    setPropertyType: (value: string) => void;
+    setRooms: (value: string) => void;
+    setRentalDuration: (value: string) => void;
+    setElectronicsBrand: (value: string) => void;
+    setDetailCondition: (value: string) => void;
+    setEmploymentType: (value: string) => void;
+    setSalaryType: (value: string) => void;
+  };
+}) {
+  if (kind === "vehicles") {
+    return (
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <FilterSelect
+          label={text("الشركة", "Make")}
+          value={values.carMake}
+          onChange={setters.setCarMake}
+        >
+          <option value="">{text("كل الشركات", "All makes")}</option>
+          {carMakeOptions.map((make) => (
+            <option key={make} value={make}>
+              {make === "Other" ? text("أخرى", "Other") : make}
+            </option>
+          ))}
+        </FilterSelect>
+        <FilterInput
+          label={text("الطراز", "Model")}
+          value={values.carModel}
+          onChange={setters.setCarModel}
+        />
+        <FilterSelect
+          label={text("الوقود", "Fuel")}
+          value={values.fuelType}
+          onChange={setters.setFuelType}
+        >
+          <option value="">{text("كل الأنواع", "All fuel types")}</option>
+          <option value="gasoline">{text("بنزين", "Gasoline")}</option>
+          <option value="diesel">{text("ديزل", "Diesel")}</option>
+          <option value="hybrid">{text("هجين", "Hybrid")}</option>
+          <option value="electric">{text("كهرباء", "Electric")}</option>
+          <option value="gas">{text("غاز", "Gas")}</option>
+          <option value="other">{text("أخرى", "Other")}</option>
+        </FilterSelect>
+        <FilterSelect
+          label={text("ناقل الحركة", "Transmission")}
+          value={values.transmission}
+          onChange={setters.setTransmission}
+        >
+          <option value="">{text("كل الأنواع", "All")}</option>
+          <option value="automatic">{text("أوتوماتيك", "Automatic")}</option>
+          <option value="manual">{text("يدوي", "Manual")}</option>
+          <option value="semi_auto">{text("نصف أوتوماتيك", "Semi-auto")}</option>
+        </FilterSelect>
+      </div>
+    );
+  }
+
+  if (kind === "real_estate") {
+    return (
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <FilterSelect
+          label={text("الغرض", "Purpose")}
+          value={values.propertyPurpose}
+          onChange={setters.setPropertyPurpose}
+        >
+          <option value="">{text("بيع أو إيجار", "Sale or rent")}</option>
+          <option value="sale">{text("بيع", "Sale")}</option>
+          <option value="rent">{text("إيجار", "Rent")}</option>
+        </FilterSelect>
+        <FilterSelect
+          label={text("نوع العقار", "Property type")}
+          value={values.propertyType}
+          onChange={setters.setPropertyType}
+        >
+          <option value="">{text("كل الأنواع", "All types")}</option>
+          <option value="apartment">{text("شقة", "Apartment")}</option>
+          <option value="house">{text("منزل", "House")}</option>
+          <option value="villa">{text("فيلا", "Villa")}</option>
+          <option value="land">{text("أرض", "Land")}</option>
+          <option value="shop">{text("محل", "Shop")}</option>
+          <option value="office">{text("مكتب", "Office")}</option>
+          <option value="warehouse">{text("مستودع", "Warehouse")}</option>
+        </FilterSelect>
+        <FilterInput
+          label={text("عدد الغرف", "Rooms")}
+          value={values.rooms}
+          onChange={setters.setRooms}
+          inputMode="numeric"
+        />
+        <FilterSelect
+          label={text("مدة الإيجار", "Rental duration")}
+          value={values.rentalDuration}
+          onChange={setters.setRentalDuration}
+        >
+          <option value="">{text("كل المدد", "All durations")}</option>
+          <option value="daily">{text("يومي", "Daily")}</option>
+          <option value="monthly">{text("شهري", "Monthly")}</option>
+          <option value="yearly">{text("سنوي", "Yearly")}</option>
+          <option value="negotiable">{text("قابل للاتفاق", "Negotiable")}</option>
+        </FilterSelect>
+      </div>
+    );
+  }
+
+  if (kind === "electronics") {
+    return (
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <FilterInput
+          label={text("الشركة", "Brand")}
+          value={values.electronicsBrand}
+          onChange={setters.setElectronicsBrand}
+        />
+        <FilterSelect
+          label={text("الحالة", "Condition")}
+          value={values.detailCondition}
+          onChange={setters.setDetailCondition}
+        >
+          <option value="">{text("كل الحالات", "All conditions")}</option>
+          <option value="new">{text("جديد", "New")}</option>
+          <option value="used">{text("مستعمل", "Used")}</option>
+          <option value="excellent">{text("ممتاز", "Excellent")}</option>
+          <option value="good">{text("جيد", "Good")}</option>
+          <option value="needs_work">{text("يحتاج صيانة", "Needs work")}</option>
+        </FilterSelect>
+      </div>
+    );
+  }
+
+  if (kind === "jobs") {
+    return (
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <FilterSelect
+          label={text("نمط العمل", "Employment type")}
+          value={values.employmentType}
+          onChange={setters.setEmploymentType}
+        >
+          <option value="">{text("كل الأنماط", "All types")}</option>
+          <option value="full_time">{text("دوام كامل", "Full-time")}</option>
+          <option value="part_time">{text("دوام جزئي", "Part-time")}</option>
+          <option value="contract">{text("عقد", "Contract")}</option>
+          <option value="temporary">{text("مؤقت", "Temporary")}</option>
+          <option value="internship">{text("تدريب", "Internship")}</option>
+        </FilterSelect>
+        <FilterSelect
+          label={text("نوع الراتب", "Salary type")}
+          value={values.salaryType}
+          onChange={setters.setSalaryType}
+        >
+          <option value="">{text("كل الأنواع", "All salary types")}</option>
+          <option value="fixed">{text("ثابت", "Fixed")}</option>
+          <option value="range">{text("نطاق", "Range")}</option>
+          <option value="commission">{text("عمولة", "Commission")}</option>
+          <option value="negotiable">{text("قابل للتفاوض", "Negotiable")}</option>
+          <option value="not_listed">{text("غير معلن", "Not listed")}</option>
+        </FilterSelect>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+function FilterInput({
+  label,
+  value,
+  onChange,
+  inputMode,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[11px] font-bold text-muted-foreground">{label}</span>
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        inputMode={inputMode}
+        className="input text-xs"
+      />
+    </label>
+  );
+}
+
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[11px] font-bold text-muted-foreground">{label}</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="input text-xs"
+      >
+        {children}
+      </select>
+    </label>
   );
 }
 

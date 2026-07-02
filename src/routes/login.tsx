@@ -369,11 +369,14 @@ async function ensureOwnProfile(
   if (readError) return readError.message;
   if (existingProfile) return null;
 
-  const { error } = await client.from("profiles").insert({
-    id: user.id,
-    email: user.email ?? null,
-    display_name: displayName.trim() || metadataName,
-  });
+  const { error } = await client.from("profiles").upsert(
+    {
+      id: user.id,
+      email: user.email ?? null,
+      display_name: displayName.trim() || metadataName,
+    },
+    { onConflict: "id", ignoreDuplicates: false },
+  );
 
   if (!error || error.code === "23505") return null;
   return error.message;

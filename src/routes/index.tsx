@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Clock, MapPin, Plus, Search, ShieldAlert, Sparkles, type LucideIcon } from "lucide-react";
+import { Clock, Plus, Search, ShieldAlert, Sparkles, type LucideIcon } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -45,9 +45,9 @@ const quickFilters: QuickFilter[] = [
     icon: Sparkles,
     search: { sort: "featured" },
   },
-  { id: "gov", labelAr: "حسب المحافظة", labelEn: "By governorate", icon: MapPin, search: {} },
-  { id: "area", labelAr: "حسب المنطقة", labelEn: "By area", icon: MapPin, search: {} },
 ];
+
+const searchSuggestions = ["سيارات", "عقارات", "موبايلات", "وظائف"];
 
 function HomePage() {
   const navigate = useNavigate();
@@ -157,6 +157,16 @@ function HomePage() {
             >
               <filter.icon className="h-3.5 w-3.5 text-gold" />
               {text(filter.labelAr, filter.labelEn)}
+            </Link>
+          ))}
+          {searchSuggestions.map((suggestion) => (
+            <Link
+              key={suggestion}
+              to="/listings"
+              search={{ q: suggestion }}
+              className="inline-flex shrink-0 items-center rounded-full bg-muted-surface px-3.5 py-1.5 text-xs font-semibold transition hairline hover:bg-card"
+            >
+              {suggestion}
             </Link>
           ))}
         </div>
@@ -298,6 +308,7 @@ function HomePage() {
             <h3 className="text-sm font-extrabold">{text("تعامل بأمان", "Trade safely")}</h3>
           </div>
           <ul className="mt-2 grid gap-1 text-xs text-foreground sm:grid-cols-2">
+            <li>{text("كل إعلان يظهر بعد المراجعة.", "Every listing appears after review.")}</li>
             <li>
               {text(
                 "لا تحوّل المال قبل معاينة السلعة.",

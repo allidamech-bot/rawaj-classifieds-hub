@@ -45,22 +45,18 @@ function PromotionsPage() {
     if (result.ok) {
       setRequests(result.data);
       setNotes(Object.fromEntries(result.data.map((item) => [item.id, item.adminNote ?? ""])));
-      const signedEntries = await Promise.all(
+      const receiptEntries = await Promise.all(
         result.data.map(async (item) => {
-          if (!item.proofPath) return [item.id, null] as const;
+          if (!item.proofPath) return [item.id, { url: null, error: "" }] as const;
           const signed = await createPromotionReceiptSignedUrl(item.proofPath);
-          return [item.id, signed.ok ? signed.data : null] as const;
+          return [
+            item.id,
+            { url: signed.ok ? signed.data : null, error: signed.ok ? "" : signed.error.message },
+          ] as const;
         }),
       );
-      setReceiptUrls(Object.fromEntries(signedEntries));
-      const errorEntries = await Promise.all(
-        result.data.map(async (item) => {
-          if (!item.proofPath) return [item.id, ""] as const;
-          const signed = await createPromotionReceiptSignedUrl(item.proofPath);
-          return [item.id, signed.ok ? "" : signed.error.message] as const;
-        }),
-      );
-      setReceiptErrors(Object.fromEntries(errorEntries));
+      setReceiptUrls(Object.fromEntries(receiptEntries.map(([id, value]) => [id, value.url])));
+      setReceiptErrors(Object.fromEntries(receiptEntries.map(([id, value]) => [id, value.error])));
     } else {
       setRequests([]);
       setReceiptUrls({});

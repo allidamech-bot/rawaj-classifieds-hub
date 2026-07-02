@@ -36,8 +36,18 @@ function AuthCallbackPage() {
         return;
       }
 
-      // Let Supabase's built-in detectSessionInUrl handle the hash fragment
-      // Then wait for the auth state to propagate
+      const code = new URLSearchParams(window.location.search).get("code");
+      if (code) {
+        const { error: exchangeError } = await client.auth.exchangeCodeForSession(code);
+        if (exchangeError) {
+          setStatus("error");
+          setErrorMsg(exchangeError.message);
+          return;
+        }
+      }
+
+      // Let Supabase's built-in detectSessionInUrl handle hash-based returns,
+      // then wait for the auth state to propagate.
       const { data, error } = await client.auth.getSession();
 
       if (cancelled) return;

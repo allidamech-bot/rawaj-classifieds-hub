@@ -6,6 +6,7 @@ import {
   detectCategoryFieldKind,
   mergeCategoryDetails,
   readCategoryDetails,
+  type CategoryFieldKind,
   type CategorySpecificDetails,
 } from "@/lib/category-fields";
 import {
@@ -876,7 +877,7 @@ function CategorySpecificFields({
   onChange,
   text,
 }: {
-  kind: "real_estate" | "vehicles" | "general";
+  kind: CategoryFieldKind;
   values: CategorySpecificDetails;
   disabled: boolean;
   onChange: (value: CategorySpecificDetails) => void;
@@ -1143,7 +1144,7 @@ function validateContactAndContent({
   contact: Record<"phone" | "whatsapp", boolean>;
   phone: string;
   whatsapp: string;
-  categoryKind: "real_estate" | "vehicles" | "general";
+  categoryKind: CategoryFieldKind;
   categoryDetails: CategorySpecificDetails;
   existingDetails: Record<string, unknown>;
   text: (ar: string, en: string) => string;

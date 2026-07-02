@@ -128,6 +128,17 @@ function mapStorageError(error: {
   return { code: "unknown", message };
 }
 
+function isMissingMessageReportRpc(error: { code?: string; message?: string; details?: string }) {
+  const message = error.message ?? "";
+  const details = error.details ?? "";
+  return (
+    error.code === "PGRST202" ||
+    error.code === "42883" ||
+    message.includes("rawaj_create_message_report") ||
+    details.includes("rawaj_create_message_report")
+  );
+}
+
 function rowString(row: Row, key: string, fallback = ""): string {
   const value = row[key];
   return typeof value === "string" ? value : fallback;
@@ -480,6 +491,10 @@ function cleanOptionalText(value: string | null | undefined, maxLength: number):
   return clean ? clean.slice(0, maxLength) : null;
 }
 
+function escapePostgrestSearchTerm(value: string) {
+  return value.replace(/[\\%_,().:*"]/g, "\\$&");
+}
+
 async function signListingImages(
   client: SupabaseClient,
   images: ListingImage[],
@@ -640,8 +655,26 @@ export async function fetchPublicListings(
   if (filters.districtAr?.trim()) query = query.eq("district_ar", filters.districtAr.trim());
   if (typeof filters.priceMin === "number") query = query.gte("price", filters.priceMin);
   if (typeof filters.priceMax === "number") query = query.lte("price", filters.priceMax);
+  if (filters.carMake) query = query.eq("details->>car_make", filters.carMake);
+  if (filters.carModel)
+    query = query.ilike("details->>car_model", `%${escapePostgrestSearchTerm(filters.carModel)}%`);
+  if (filters.fuelType) query = query.eq("details->>fuel_type", filters.fuelType);
+  if (filters.transmission) query = query.eq("details->>transmission", filters.transmission);
+  if (filters.propertyPurpose)
+    query = query.eq("details->>listing_purpose", filters.propertyPurpose);
+  if (filters.propertyType) query = query.eq("details->>property_type", filters.propertyType);
+  if (typeof filters.rooms === "number") query = query.eq("details->>rooms", String(filters.rooms));
+  if (filters.rentalDuration) query = query.eq("details->>rental_duration", filters.rentalDuration);
+  if (filters.electronicsBrand)
+    query = query.ilike(
+      "details->>electronics_brand",
+      `%${escapePostgrestSearchTerm(filters.electronicsBrand)}%`,
+    );
+  if (filters.detailCondition) query = query.eq("details->>condition", filters.detailCondition);
+  if (filters.employmentType) query = query.eq("details->>employment_type", filters.employmentType);
+  if (filters.salaryType) query = query.eq("details->>salary_type", filters.salaryType);
   if (filters.query?.trim()) {
-    const term = filters.query.trim();
+    const term = escapePostgrestSearchTerm(filters.query.trim());
     query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
   }
 
@@ -1716,22 +1749,29 @@ export async function createMessageReport(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data
-    .from("message_reports")
-    .insert({
-      message_id: payload.messageId,
-      conversation_id: payload.conversationId,
-      reporter_user_id: payload.reporterUserId,
-      reported_user_id: payload.reporterUserId,
-      reason,
-      details,
-      status: "new",
-    })
-    .select("*")
-    .single();
+  const rpcResult = await clientResult.data.rpc("rawaj_create_message_report", {
+    p_message_id: payload.messageId,
+    p_conversation_id: payload.conversationId,
+    p_reason: reason,
+    p_details: details,
+  });
 
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: mapMessageReport(data as Row) };
+  if (!rpcResult.error) {
+    return { ok: true, data: mapMessageReport(rpcResult.data as Row) };
+  }
+
+  if (isMissingMessageReportRpc(rpcResult.error)) {
+    return {
+      ok: false,
+      error: {
+        code: "setup_required",
+        message: "بلاغات الرسائل تحتاج تفعيل إعدادات الحماية من الإدارة قبل استخدامها.",
+        details: rpcResult.error.message,
+      },
+    };
+  }
+
+  return { ok: false, error: mapError(rpcResult.error) };
 }
 
 export async function blockConversationParticipant(

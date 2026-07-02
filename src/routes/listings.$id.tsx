@@ -14,7 +14,11 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { categoryDetailDisplayRows, detectCategoryFieldKind } from "@/lib/category-fields";
+import {
+  categoryDetailDisplayRows,
+  categoryDetailKeys,
+  detectCategoryFieldKind,
+} from "@/lib/category-fields";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import {
   createListingReport,
@@ -224,22 +228,7 @@ function ListingDetailsPage() {
     "الهاتف",
     "واتساب",
     "رقم واتساب",
-    "property_type",
-    "listing_purpose",
-    "bedrooms",
-    "bathrooms",
-    "area_sqm",
-    "floor",
-    "furnished",
-    "parking",
-    "make",
-    "model",
-    "year",
-    "mileage_km",
-    "fuel_type",
-    "transmission",
-    "vehicle_condition",
-    "color",
+    ...categoryDetailKeys,
   ]);
   const categoryFieldKind = detectCategoryFieldKind(null, listing);
   const categoryRows = categoryDetailDisplayRows(categoryFieldKind, listing.details, text);
@@ -317,7 +306,9 @@ function ListingDetailsPage() {
           <div className="flex flex-wrap items-center gap-2">
             {listing.isFeatured && <Badge>{text("مميز", "Featured")}</Badge>}
             <span className="rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold text-emerald-trust-foreground">
-              {listingStatusLabel(listing.status, language, true)}
+              {listing.status === "approved"
+                ? text("إعلان مُراجع", "Reviewed listing")
+                : listingStatusLabel(listing.status, language, true)}
             </span>
             <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[11px] font-semibold text-foreground">
               {text("سوريا فقط", "Syria only")}

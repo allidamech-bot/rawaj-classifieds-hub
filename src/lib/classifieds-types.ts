@@ -2,6 +2,7 @@ import type { PlaceholderType, PriceType } from "@/types";
 
 export type ClassifiedsErrorCode =
   | "supabase_unconfigured"
+  | "setup_required"
   | "schema_missing"
   | "storage_unconfigured"
   | "auth_required"
@@ -471,6 +472,20 @@ export interface ListingFilters {
   districtAr?: string;
   priceMin?: number;
   priceMax?: number;
+  carMake?: string;
+  carModel?: string;
+  yearFrom?: number;
+  yearTo?: number;
+  fuelType?: string;
+  transmission?: string;
+  propertyPurpose?: string;
+  propertyType?: string;
+  rooms?: number;
+  rentalDuration?: string;
+  electronicsBrand?: string;
+  detailCondition?: string;
+  employmentType?: string;
+  salaryType?: string;
   query?: string;
   sort?: "latest" | "cheapest" | "expensive" | "featured";
 }
