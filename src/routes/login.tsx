@@ -167,8 +167,8 @@ function LoginPage() {
               "Account created. If account data does not appear, the project needs Supabase profile bootstrap configuration.",
             )
           : text(
-              "تم إرسال طلب إنشاء الحساب. راجع بريدك إذا كان تأكيد البريد مطلوبا في Supabase.",
-              "Account request sent. Check your email if email confirmation is required in Supabase.",
+              "تم إرسال رابط تفعيل الحساب إلى بريدك الإلكتروني. افتح البريد واضغط على رابط التفعيل لإكمال إنشاء الحساب. إذا لم تجد الرسالة خلال دقائق، تحقق من مجلد الرسائل غير المرغوبة / Spam.",
+              "We sent an account activation link to your email. Open your inbox and click the activation link to complete account setup. If you do not see it within a few minutes, check your Spam or Junk folder.",
             ),
       );
       return;
