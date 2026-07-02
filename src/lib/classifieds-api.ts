@@ -670,7 +670,11 @@ export async function fetchPublicListings(
       "details->>electronics_brand",
       `%${escapePostgrestSearchTerm(filters.electronicsBrand)}%`,
     );
-  if (filters.detailCondition) query = query.eq("details->>condition", filters.detailCondition);
+  if (filters.detailCondition) {
+    query = query.or(
+      `details->>condition.eq.${filters.detailCondition},details->>vehicle_condition.eq.${filters.detailCondition}`,
+    );
+  }
   if (filters.employmentType) query = query.eq("details->>employment_type", filters.employmentType);
   if (filters.salaryType) query = query.eq("details->>salary_type", filters.salaryType);
   if (filters.query?.trim()) {
