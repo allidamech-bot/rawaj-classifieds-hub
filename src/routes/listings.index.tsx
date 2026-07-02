@@ -852,7 +852,7 @@ function ListingsPage() {
               <div className="space-y-4 overflow-y-auto p-4">
                 <div>
                   <h3 className="mb-2 text-xs font-extrabold text-muted-foreground">
-                    {text("الأقسام", "Categories")}
+                    {text("القسم", "Category")}
                   </h3>
                   <div className="grid grid-cols-2 gap-2">
                     <Link
@@ -981,72 +981,38 @@ function ListingsPage() {
                   </select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <label>
-                    <span className="mb-1 block text-xs font-bold text-muted-foreground">
-                      {text("السعر من", "Price from")}
-                    </span>
-                    <input
-                      value={priceMin}
-                      onChange={(event) => setPriceMin(event.target.value)}
-                      type="number"
-                      min={0}
-                      inputMode="numeric"
-                      className="input text-xs"
-                    />
-                  </label>
-                  <label>
-                    <span className="mb-1 block text-xs font-bold text-muted-foreground">
-                      {text("السعر إلى", "Price to")}
-                    </span>
-                    <input
-                      value={priceMax}
-                      onChange={(event) => setPriceMax(event.target.value)}
-                      type="number"
-                      min={0}
-                      inputMode="numeric"
-                      className="input text-xs"
-                    />
-                  </label>
-                </div>
-
-                <CategorySpecificFilterFields
-                  kind={categoryFieldKind}
-                  text={text}
-                  values={{
-                    carMake,
-                    carModel,
-                    fuelType,
-                    transmission,
-                    propertyPurpose,
-                    propertyType,
-                    rooms,
-                    rentalDuration,
-                    electronicsBrand,
-                    detailCondition,
-                    employmentType,
-                    salaryType,
-                  }}
-                  setters={{
-                    setCarMake,
-                    setCarModel,
-                    setFuelType,
-                    setTransmission,
-                    setPropertyPurpose,
-                    setPropertyType,
-                    setRooms,
-                    setRentalDuration,
-                    setElectronicsBrand,
-                    setDetailCondition,
-                    setEmploymentType,
-                    setSalaryType,
-                  }}
-                />
-
                 <div>
                   <h3 className="mb-2 text-xs font-extrabold text-muted-foreground">
-                    {text("الترتيب", "Sort")}
+                    {text("السعر والترتيب", "Price and sort")}
                   </h3>
+                  <div className="mb-3 grid grid-cols-2 gap-3">
+                    <label>
+                      <span className="mb-1 block text-xs font-bold text-muted-foreground">
+                        {text("السعر من", "Price from")}
+                      </span>
+                      <input
+                        value={priceMin}
+                        onChange={(event) => setPriceMin(event.target.value)}
+                        type="number"
+                        min={0}
+                        inputMode="numeric"
+                        className="input text-xs"
+                      />
+                    </label>
+                    <label>
+                      <span className="mb-1 block text-xs font-bold text-muted-foreground">
+                        {text("السعر إلى", "Price to")}
+                      </span>
+                      <input
+                        value={priceMax}
+                        onChange={(event) => setPriceMax(event.target.value)}
+                        type="number"
+                        min={0}
+                        inputMode="numeric"
+                        className="input text-xs"
+                      />
+                    </label>
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     {sortChips.map((chip) => (
                       <button
@@ -1064,6 +1030,46 @@ function ListingsPage() {
                     ))}
                   </div>
                 </div>
+
+                {categoryFieldKind !== "general" && (
+                  <div>
+                    <h3 className="mb-2 text-xs font-extrabold text-muted-foreground">
+                      {text("خيارات متقدمة", "Advanced options")}
+                    </h3>
+                    <CategorySpecificFilterFields
+                      kind={categoryFieldKind}
+                      text={text}
+                      values={{
+                        carMake,
+                        carModel,
+                        fuelType,
+                        transmission,
+                        propertyPurpose,
+                        propertyType,
+                        rooms,
+                        rentalDuration,
+                        electronicsBrand,
+                        detailCondition,
+                        employmentType,
+                        salaryType,
+                      }}
+                      setters={{
+                        setCarMake,
+                        setCarModel,
+                        setFuelType,
+                        setTransmission,
+                        setPropertyPurpose,
+                        setPropertyType,
+                        setRooms,
+                        setRentalDuration,
+                        setElectronicsBrand,
+                        setDetailCondition,
+                        setEmploymentType,
+                        setSalaryType,
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-2 border-t border-border p-4">
                 <button

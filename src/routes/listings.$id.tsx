@@ -1,6 +1,5 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import {
-  AlertTriangle,
   Camera,
   Clock,
   Flag,
@@ -9,16 +8,13 @@ import {
   MapPin,
   MessageCircle,
   Phone,
+  Share2,
   ShieldAlert,
   User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import {
-  categoryDetailDisplayRows,
-  categoryDetailKeys,
-  detectCategoryFieldKind,
-} from "@/lib/category-fields";
+import { categoryDetailDisplayRows, detectCategoryFieldKind } from "@/lib/category-fields";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import {
   createListingReport,
@@ -181,6 +177,22 @@ function ListingDetailsPage() {
     void navigate({ to: "/chats", search: { conversation: result.data } });
   }
 
+  async function shareListing() {
+    if (!listing) return;
+    setActionMessage(null);
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: listing.title, text: listing.title, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setActionMessage(text("تم نسخ رابط الإعلان.", "Listing link copied."));
+    } catch {
+      setActionMessage(text("تعذر مشاركة الإعلان الآن.", "Could not share the listing now."));
+    }
+  }
+
   if (loading) {
     return (
       <>
@@ -217,28 +229,8 @@ function ListingDetailsPage() {
     );
   }
 
-  const hiddenPublicDetailKeys = new Set([
-    "phone",
-    "mobile",
-    "contact_phone",
-    "whatsapp",
-    "contact_whatsapp",
-    "content_flags",
-    "رقم الهاتف",
-    "الهاتف",
-    "واتساب",
-    "رقم واتساب",
-    ...categoryDetailKeys,
-  ]);
   const categoryFieldKind = detectCategoryFieldKind(null, listing);
   const categoryRows = categoryDetailDisplayRows(categoryFieldKind, listing.details, text);
-  const detailsEntries = Object.entries(listing.details).filter(
-    ([key, value]) =>
-      !hiddenPublicDetailKeys.has(key.toLowerCase()) &&
-      value !== undefined &&
-      value !== null &&
-      value !== "",
-  );
   const locationLabel = governorateName(
     listing.governorateId,
     listing.governorateNameAr ?? undefined,
@@ -264,20 +256,22 @@ function ListingDetailsPage() {
         title={categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
         to="/listings"
       />
-      <main className="container-wide pt-3 pb-8">
+      <main className="container-wide pt-3 pb-28 lg:pb-8">
         <div className="overflow-hidden rounded-2xl bg-card hairline shadow-soft">
           {images[0]?.publicUrl ? (
             <img
               src={images[0].publicUrl}
               alt={images[0].altAr ?? listing.title}
-              className="aspect-[16/9] w-full object-cover"
+              className="aspect-[4/3] w-full object-cover sm:aspect-[16/9]"
             />
           ) : (
-            <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
+            <div className="bg-muted-surface p-3">
+              <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
+            </div>
           )}
           <div className="flex items-center justify-between gap-2 p-2">
             {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto">
+              <div className="no-scrollbar flex gap-2 overflow-x-auto">
                 {images
                   .slice(1, 5)
                   .filter((image) => image.publicUrl)
@@ -288,7 +282,7 @@ function ListingDetailsPage() {
                       alt={image.altAr ?? listing.title}
                       loading="lazy"
                       decoding="async"
-                      className="h-14 w-16 rounded-lg object-cover hairline"
+                      className="h-12 w-14 rounded-lg object-cover opacity-80 hairline"
                     />
                   ))}
               </div>
@@ -318,22 +312,22 @@ function ListingDetailsPage() {
             {listing.title}
           </h1>
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
-            <span>
-              {text("رقم الإعلان:", "Listing ID:")} {listing.id}
-            </span>
             <span className="inline-flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" /> {formatDate(listing.createdAt, language)}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <MapPin className="h-3.5 w-3.5" /> {locationLabel}
             </span>
           </div>
         </div>
 
         <section className="mt-4 rounded-2xl bg-card p-4 hairline shadow-soft">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-start justify-between gap-3">
             <div>
               <div className="text-[11px] font-semibold text-muted-foreground">
                 {text("السعر", "Price")}
               </div>
-              <div className="mt-0.5 text-2xl font-extrabold text-foreground">
+              <div className="mt-0.5 text-3xl font-extrabold text-foreground">
                 {formatPriceLocalized(
                   listing.price ?? 0,
                   listing.priceType,
@@ -345,17 +339,35 @@ function ListingDetailsPage() {
                 {priceTypeLabel(listing.priceType, language)}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => void toggleFavorite()}
-              aria-label={text("حفظ في المفضلة", "Save to favorites")}
-              className="grid h-11 w-11 place-items-center rounded-full bg-muted-surface transition hover:bg-secondary"
-            >
-              <Heart
-                className={`h-5 w-5 ${fav ? "fill-destructive text-destructive" : "text-foreground"}`}
-              />
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => void shareListing()}
+                aria-label={text("مشاركة الإعلان", "Share listing")}
+                className="grid h-11 w-11 place-items-center rounded-full bg-muted-surface transition hover:bg-secondary"
+              >
+                <Share2 className="h-5 w-5 text-foreground" />
+              </button>
+              <button
+                type="button"
+                onClick={() => void toggleFavorite()}
+                aria-label={text("حفظ في المفضلة", "Save to favorites")}
+                className="grid h-11 w-11 place-items-center rounded-full bg-muted-surface transition hover:bg-secondary"
+              >
+                <Heart
+                  className={`h-5 w-5 ${fav ? "fill-destructive text-destructive" : "text-foreground"}`}
+                />
+              </button>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() => void messageSeller()}
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-bold text-gold-foreground"
+          >
+            <MessageCircle className="h-4 w-4" />
+            {text("راسل المعلن", "Message seller")}
+          </button>
         </section>
 
         <section className="mt-3 rounded-2xl bg-card p-4 hairline">
@@ -454,28 +466,16 @@ function ListingDetailsPage() {
           </button>
         </section>
 
-        {(categoryRows.length > 0 || detailsEntries.length > 0) && (
+        {categoryRows.length > 0 && (
           <section className="mt-3 rounded-2xl bg-card p-4 hairline">
             <h2 className="mb-3 text-sm font-extrabold text-foreground">
               {text("تفاصيل الإعلان", "Listing details")}
             </h2>
-            <div className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {categoryRows.map(([label, value]) => (
-                <div
-                  key={label}
-                  className="flex items-center justify-between border-b border-border/60 py-1.5 text-sm last:border-b-0"
-                >
-                  <span className="text-muted-foreground">{label}</span>
-                  <span className="font-semibold text-foreground">{value}</span>
-                </div>
-              ))}
-              {detailsEntries.map(([key, value]) => (
-                <div
-                  key={key}
-                  className="flex items-center justify-between border-b border-border/60 py-1.5 text-sm last:border-b-0"
-                >
-                  <span className="text-muted-foreground">{key}</span>
-                  <span className="font-semibold text-foreground">{String(value)}</span>
+                <div key={label} className="rounded-xl bg-muted-surface px-3 py-2 text-sm">
+                  <span className="block text-[11px] font-bold text-muted-foreground">{label}</span>
+                  <span className="mt-0.5 block font-semibold text-foreground">{value}</span>
                 </div>
               ))}
             </div>
@@ -517,13 +517,6 @@ function ListingDetailsPage() {
               "Active contact methods appear only when the seller provides them in listing details.",
             )}
           </p>
-          <p className="mt-3 inline-flex items-start gap-1 text-[11px] text-warning">
-            <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
-            {text(
-              "لا تشارك بيانات حساسة أو تحول المال قبل التأكد من السلعة.",
-              "Do not share sensitive data or transfer money before verifying the item.",
-            )}
-          </p>
         </section>
 
         <section className="mt-3 rounded-2xl bg-warning/10 p-4 hairline">
@@ -533,7 +526,7 @@ function ListingDetailsPage() {
               <p className="font-bold">
                 {text("نصائح أمان قبل التواصل", "Safety tips before contact")}
               </p>
-              <ul className="list-disc space-y-1 ps-5">
+              <ul className="grid gap-1 sm:grid-cols-3">
                 <li>{text("قابل البائع في مكان عام وآمن.", "Meet in a public, safe place.")}</li>
                 <li>{text("افحص السلعة قبل الدفع.", "Inspect the item before paying.")}</li>
                 <li>{text("بلغ عن أي إعلان مشبوه.", "Report suspicious listings.")}</li>
@@ -555,6 +548,48 @@ function ListingDetailsPage() {
             {actionMessage}
           </p>
         )}
+        <p className="mt-3 text-center text-[10px] text-muted-foreground">
+          {text("رقم مرجعي:", "Reference:")} {listing.id}
+        </p>
+        <div className="fixed inset-x-0 bottom-20 z-30 px-3 lg:hidden">
+          <div className="mx-auto grid max-w-md grid-cols-3 gap-2 rounded-2xl bg-card p-2 shadow-premium hairline">
+            <button
+              type="button"
+              onClick={() => void messageSeller()}
+              className="col-span-3 inline-flex items-center justify-center gap-2 rounded-xl bg-gold py-2.5 text-xs font-bold text-gold-foreground"
+            >
+              <MessageCircle className="h-4 w-4" />
+              {text("راسل المعلن", "Message seller")}
+            </button>
+            {canCall && (
+              <a
+                href={`tel:${cleanPhone}`}
+                className="inline-flex items-center justify-center gap-1 rounded-xl bg-primary py-2 text-xs font-bold text-primary-foreground"
+              >
+                <Phone className="h-3.5 w-3.5" />
+                {text("اتصال", "Call")}
+              </a>
+            )}
+            {canWhatsapp && (
+              <a
+                href={`https://wa.me/${normalizePhoneForWhatsapp(cleanWhatsapp)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-xl bg-emerald-trust py-2 text-xs font-bold text-emerald-trust-foreground"
+              >
+                {text("واتساب", "WhatsApp")}
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={() => void shareListing()}
+              className="inline-flex items-center justify-center gap-1 rounded-xl bg-muted-surface py-2 text-xs font-bold text-foreground"
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              {text("مشاركة", "Share")}
+            </button>
+          </div>
+        </div>
         <script {...jsonLdScript(buildListingStructuredData(listing))} />
       </main>
     </>
