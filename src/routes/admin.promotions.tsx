@@ -31,13 +31,6 @@ function PromotionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [notice, setNotice] = useState("");
-  const promotionLabels: Record<PromotionType, string> = {
-    featured_home: text("الصفحة الرئيسية", "Home page"),
-    highlighted: text("إبراز داخل النتائج", "Highlighted in results"),
-    urgent: text("موضع مميز", "Priority placement"),
-    top_category: text("أعلى القسم", "Top category"),
-  };
-
   async function load() {
     setLoading(true);
     setError(null);
@@ -126,7 +119,7 @@ function PromotionsPage() {
                     {request.listingTitle ?? request.listingId}
                   </h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {promotionLabels[request.promotionType]} · {request.requestedDays}{" "}
+                    {promotionTypeLabel(request.promotionType, text)} · {request.requestedDays}{" "}
                     {text("يوم", "days")}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">{request.requesterUserId}</p>
@@ -151,8 +144,8 @@ function PromotionsPage() {
                         <span className="rounded-lg bg-muted-surface px-2 py-1 font-bold text-muted-foreground hairline">
                           {receiptErrors[request.id]
                             ? text(
-                                "تعذر تحميل الإيصال. تحقق من إعدادات التخزين أو الصلاحيات.",
-                                "Could not load receipt. Check storage settings or permissions.",
+                                "تعذر فتح الإيصال حالياً. تحقق من صلاحية الوصول أو أعد المحاولة.",
+                                "Could not open the receipt right now. Check access permission or try again.",
                               )
                             : text(
                                 "إيصال مرفوع - رابط العرض غير متاح",
@@ -168,7 +161,7 @@ function PromotionsPage() {
                   </div>
                 </div>
                 <span className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold hairline">
-                  {request.status}
+                  {promotionStatusLabel(request.status, text)}
                 </span>
               </div>
               <textarea
@@ -211,4 +204,19 @@ function Panel({ title, body }: { title: string; body?: string }) {
       {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
     </section>
   );
+}
+
+function promotionStatusLabel(status: ListingPromotionRequest["status"], text: (ar: string, en: string) => string) {
+  if (status === "approved") return text("معتمد", "Approved");
+  if (status === "rejected") return text("مرفوض", "Rejected");
+  if (status === "expired") return text("منتهي", "Expired");
+  if (status === "cancelled") return text("ملغي", "Cancelled");
+  return text("قيد المراجعة", "Pending review");
+}
+
+function promotionTypeLabel(type: PromotionType, text: (ar: string, en: string) => string) {
+  if (type === "top_category") return text("أعلى القسم", "Top category");
+  if (type === "highlighted") return text("إبراز داخل النتائج", "Highlighted in results");
+  if (type === "urgent") return text("موضع مميز", "Priority placement");
+  return text("الصفحة الرئيسية", "Home page");
 }

@@ -111,7 +111,7 @@ function HomePage() {
 
   const currentSearchQuery = searchValue.trim();
   const listingSearch = (
-    extra: { sort?: "latest" | "cheapest" | "expensive" | "featured" } = {},
+    extra: { sort?: "latest" | "cheapest" | "expensive" | "featured"; open_filters?: boolean } = {},
   ) => (currentSearchQuery ? { q: currentSearchQuery, ...extra } : extra);
 
   return (
@@ -162,7 +162,7 @@ function HomePage() {
             </label>
             <Link
               to="/listings"
-              search={listingSearch()}
+              search={listingSearch({ open_filters: true })}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-3 text-xs font-extrabold text-foreground hairline"
             >
               <Filter className="h-4 w-4" />

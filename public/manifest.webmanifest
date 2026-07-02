@@ -1,0 +1,19 @@
+{
+  "name": "رواج RAWAJ",
+  "short_name": "RAWAJ",
+  "description": "سوق إعلانات مبوبة في سوريا",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "dir": "rtl",
+  "lang": "ar",
+  "theme_color": "#123047",
+  "background_color": "#f7f3ea",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

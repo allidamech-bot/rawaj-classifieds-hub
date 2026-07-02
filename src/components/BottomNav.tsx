@@ -22,6 +22,13 @@ const items: NavItem[] = [
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { text } = useUiPreferences();
+  const hidden =
+    pathname === "/login" ||
+    pathname === "/auth/callback" ||
+    pathname === "/reset-password" ||
+    pathname.startsWith("/admin");
+
+  if (hidden) return null;
 
   return (
     <nav

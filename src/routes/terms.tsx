@@ -45,7 +45,7 @@ const sections = [
   },
   {
     h: "البلاغات والإشراف",
-    p: "يتم تجهيز منظومة بلاغات وإشراف مرتبطة بمصدر البيانات التشغيلي، لكن تنفيذ الإجراءات الإدارية الكاملة يبقى خاضعاً للصلاحيات والسياسات عند التفعيل.",
+    p: "تتم مراجعة البلاغات واتخاذ الإجراءات المناسبة وفق سياسات المنصة وصلاحيات الإدارة.",
   },
   {
     h: "تعليق وإلغاء الحساب",
@@ -118,8 +118,8 @@ function legalText(value: string, language: Language) {
     "يتم التواصل بين البائع والمشتري على مسؤوليتهما. لا يتدخل رَوَاج في تفاصيل المفاوضة أو الدفع أو التسليم.":
       "Buyer-seller communication is their responsibility. RAWAJ does not intervene in negotiation, payment, or delivery details.",
     "البلاغات والإشراف": "Reports and moderation",
-    "يتم تجهيز منظومة بلاغات وإشراف مرتبطة بمصدر البيانات التشغيلي، لكن تنفيذ الإجراءات الإدارية الكاملة يبقى خاضعاً للصلاحيات والسياسات عند التفعيل.":
-      "Reporting and moderation are being prepared against the operational data source, but full admin actions depend on permissions and policies when activated.",
+    "تتم مراجعة البلاغات واتخاذ الإجراءات المناسبة وفق سياسات المنصة وصلاحيات الإدارة.":
+      "Reports are reviewed and suitable actions are taken according to platform policies and admin permissions.",
     "تعليق وإلغاء الحساب": "Account suspension and removal",
     "يحق لرَوَاج تعليق أو إلغاء أي حساب يثبت تكرار مخالفته للشروط، مع الاحتفاظ بالبيانات وفق سياسة الخصوصية.":
       "RAWAJ may suspend or remove accounts with repeated violations, while retaining data according to the privacy policy.",

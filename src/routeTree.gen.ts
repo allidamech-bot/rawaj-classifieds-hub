@@ -14,6 +14,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SavedSearchesRouteImport } from './routes/saved-searches'
 import { Route as SafetyRouteImport } from './routes/safety'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PromotionRouteImport } from './routes/promotion'
 import { Route as ProhibitedRouteImport } from './routes/prohibited'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -67,6 +68,11 @@ const SavedSearchesRoute = SavedSearchesRouteImport.update({
 const SafetyRoute = SafetyRouteImport.update({
   id: '/safety',
   path: '/safety',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PromotionRoute = PromotionRouteImport.update({
@@ -231,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRouteWithChildren
   '/prohibited': typeof ProhibitedRoute
   '/promotion': typeof PromotionRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/safety': typeof SafetyRoute
   '/saved-searches': typeof SavedSearchesRoute
   '/support': typeof SupportRoute
@@ -265,6 +272,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRouteWithChildren
   '/prohibited': typeof ProhibitedRoute
   '/promotion': typeof PromotionRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/safety': typeof SafetyRoute
   '/saved-searches': typeof SavedSearchesRoute
   '/support': typeof SupportRoute
@@ -302,6 +310,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRouteWithChildren
   '/prohibited': typeof ProhibitedRoute
   '/promotion': typeof PromotionRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/safety': typeof SafetyRoute
   '/saved-searches': typeof SavedSearchesRoute
   '/support': typeof SupportRoute
@@ -340,6 +349,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/prohibited'
     | '/promotion'
+    | '/reset-password'
     | '/safety'
     | '/saved-searches'
     | '/support'
@@ -374,6 +384,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/prohibited'
     | '/promotion'
+    | '/reset-password'
     | '/safety'
     | '/saved-searches'
     | '/support'
@@ -410,6 +421,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/prohibited'
     | '/promotion'
+    | '/reset-password'
     | '/safety'
     | '/saved-searches'
     | '/support'
@@ -447,6 +459,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRouteWithChildren
   ProhibitedRoute: typeof ProhibitedRoute
   PromotionRoute: typeof PromotionRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SafetyRoute: typeof SafetyRoute
   SavedSearchesRoute: typeof SavedSearchesRoute
   SupportRoute: typeof SupportRoute
@@ -491,6 +504,13 @@ declare module '@tanstack/react-router' {
       path: '/safety'
       fullPath: '/safety'
       preLoaderRoute: typeof SafetyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/promotion': {
@@ -776,6 +796,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRouteWithChildren,
   ProhibitedRoute: ProhibitedRoute,
   PromotionRoute: PromotionRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SafetyRoute: SafetyRoute,
   SavedSearchesRoute: SavedSearchesRoute,
   SupportRoute: SupportRoute,

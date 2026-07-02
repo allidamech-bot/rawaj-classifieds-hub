@@ -327,7 +327,7 @@ function PromotionPage() {
                 <div key={request.id} className="rounded-xl bg-muted-surface p-3 text-xs hairline">
                   <p className="font-bold">{request.listingTitle ?? request.listingId}</p>
                   <p className="mt-1 text-muted-foreground">
-                    {request.status} · {request.promotionType} · {request.requestedDays}{" "}
+                    {promotionStatusLabel(request.status, text)} · {promotionTypeLabel(request.promotionType, text)} · {request.requestedDays}{" "}
                     {text("يوم", "days")}
                   </p>
                   {request.adminNote && (
@@ -367,4 +367,19 @@ function Panel({ title, body }: { title: string; body?: string }) {
       {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
     </section>
   );
+}
+
+function promotionStatusLabel(status: ListingPromotionRequest["status"], text: (ar: string, en: string) => string) {
+  if (status === "approved") return text("معتمد", "Approved");
+  if (status === "rejected") return text("مرفوض", "Rejected");
+  if (status === "expired") return text("منتهي", "Expired");
+  if (status === "cancelled") return text("ملغي", "Cancelled");
+  return text("قيد المراجعة", "Pending review");
+}
+
+function promotionTypeLabel(type: PromotionType, text: (ar: string, en: string) => string) {
+  if (type === "top_category") return text("أعلى القسم", "Top category");
+  if (type === "highlighted") return text("إبراز داخل النتائج", "Highlighted in results");
+  if (type === "urgent") return text("موضع مميز", "Priority placement");
+  return text("الصفحة الرئيسية", "Home page");
 }

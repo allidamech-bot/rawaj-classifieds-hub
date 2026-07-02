@@ -36,7 +36,9 @@ function AuthCallbackPage() {
         return;
       }
 
-      const code = new URLSearchParams(window.location.search).get("code");
+      const searchParams = new URLSearchParams(window.location.search);
+      const code = searchParams.get("code");
+      const isRecovery = searchParams.get("type") === "recovery";
       if (code) {
         const { error: exchangeError } = await client.auth.exchangeCodeForSession(code);
         if (exchangeError) {
@@ -46,8 +48,6 @@ function AuthCallbackPage() {
         }
       }
 
-      // Let Supabase's built-in detectSessionInUrl handle hash-based returns,
-      // then wait for the auth state to propagate.
       const { data, error } = await client.auth.getSession();
 
       if (cancelled) return;
@@ -60,29 +60,26 @@ function AuthCallbackPage() {
 
       if (data.session) {
         setStatus("success");
-        // Wait a moment for the profile to load via AuthProvider's onAuthStateChange
         await new Promise((resolve) => setTimeout(resolve, 1500));
         if (!cancelled) {
-          void navigate({ to: "/profile" });
+          void navigate({ to: isRecovery ? "/reset-password" : "/profile" });
         }
       } else {
-        // Session not yet available — wait for onAuthStateChange
         const { data: listener } = client.auth.onAuthStateChange((event, session) => {
           if (cancelled) return;
-          if (event === "SIGNED_IN" && session) {
+          if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && session) {
             signedIn = true;
             clearTimeout(timeoutId);
             listener.subscription.unsubscribe();
             setStatus("success");
             setTimeout(() => {
               if (!cancelled) {
-                void navigate({ to: "/profile" });
+                void navigate({ to: event === "PASSWORD_RECOVERY" || isRecovery ? "/reset-password" : "/profile" });
               }
             }, 1500);
           }
         });
 
-        // Timeout fallback
         timeoutId = setTimeout(() => {
           if (cancelled) return;
           listener.subscription.unsubscribe();

@@ -2,39 +2,22 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { useEffect, useState, type FormEvent } from "react";
 import {
   BadgeCheck,
-  Bookmark,
   Camera,
-  ChevronLeft,
-  Eye,
   FileSpreadsheet,
-  FileText,
-  Heart,
-  Home,
   LifeBuoy,
   LogIn,
   LogOut,
-  MessageCircle,
   Pencil,
   Plus,
-  RefreshCcw,
-  Search,
-  ShieldAlert,
   ShieldCheck,
-  Sparkles,
-  Star,
-  Trash2,
   User,
-  UserCog,
-  UserPlus,
   XCircle,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
-  deleteOwnerListing,
   fetchCurrentUserListings,
   fetchMyVerificationRequests,
   removeProfileMedia,
-  resubmitOwnerListing,
   updateOwnProfileBasics,
   uploadProfileMedia,
 } from "@/lib/classifieds-api";
@@ -45,7 +28,7 @@ import type {
 } from "@/lib/classifieds-types";
 import { categoryName, governorateName } from "@/lib/i18n";
 import { listingStatusLabel } from "@/lib/status-labels";
-import { useUiPreferences, type Language } from "@/lib/ui-preferences";
+import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/profile")({
@@ -54,52 +37,6 @@ export const Route = createFileRoute("/profile")({
   }),
   component: ProfileRoute,
 });
-
-const accountMenu = [
-  { to: "/", labelAr: "الرئيسية", labelEn: "Home", icon: Home },
-  { to: "/listings", labelAr: "تصفح الإعلانات", labelEn: "Browse listings", icon: Search },
-  { to: "/profile", labelAr: "معلومات الحساب", labelEn: "Account information", icon: User },
-  {
-    to: "/profile/listings",
-    labelAr: "إعلاناتي / متجري",
-    labelEn: "My listings / store",
-    icon: FileSpreadsheet,
-  },
-  { to: "/add-listing", labelAr: "إضافة إعلان", labelEn: "Post listing", icon: Plus },
-  { to: "/profile/listings", labelAr: "التقييمات", labelEn: "Reviews", icon: Star },
-  { to: "/profile", labelAr: "التوثيق", labelEn: "Verification", icon: BadgeCheck },
-  { to: "/favorites", labelAr: "المفضلة", labelEn: "Favorites", icon: Heart },
-  {
-    to: "/saved-searches",
-    labelAr: "عمليات البحث المحفوظة",
-    labelEn: "Saved searches",
-    icon: Bookmark,
-  },
-  {
-    to: "/promotion",
-    labelAr: "الترويج والتمييز",
-    labelEn: "Promotion and featuring",
-    icon: Sparkles,
-  },
-  { to: "/chats", labelAr: "المحادثات", labelEn: "Chats", icon: MessageCircle },
-  {
-    to: "/admin",
-    labelAr: "لوحة الإدارة",
-    labelEn: "Admin dashboard",
-    icon: UserCog,
-    ownerOnly: true,
-  },
-  { to: "/support", labelAr: "الدعم والمساعدة", labelEn: "Support and help", icon: LifeBuoy },
-  { to: "/safety", labelAr: "نصائح الأمان", labelEn: "Safety tips", icon: ShieldAlert },
-  { to: "/terms", labelAr: "شروط الاستخدام", labelEn: "Terms of use", icon: FileText },
-  { to: "/privacy", labelAr: "سياسة الخصوصية", labelEn: "Privacy policy", icon: ShieldCheck },
-] satisfies Array<{
-  to: string;
-  labelAr: string;
-  labelEn: string;
-  icon: typeof User;
-  ownerOnly?: boolean;
-}>;
 
 function ProfileRoute() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -118,9 +55,6 @@ function ProfilePage() {
   const [myListings, setMyListings] = useState<ClassifiedListing[]>([]);
   const [myListingsError, setMyListingsError] = useState<ClassifiedsError | null>(null);
   const [myListingsLoading, setMyListingsLoading] = useState(false);
-  const [notice, setNotice] = useState("");
-  const [listingActionLoading, setListingActionLoading] = useState<string | null>(null);
-  const [listingActionNotice, setListingActionNotice] = useState("");
   const [settingsDisplayName, setSettingsDisplayName] = useState("");
   const [settingsFirstName, setSettingsFirstName] = useState("");
   const [settingsLastName, setSettingsLastName] = useState("");
@@ -139,6 +73,14 @@ function ProfilePage() {
   const [verificationNotice, setVerificationNotice] = useState("");
   const profileId = auth.profile?.id;
   const displayName = auth.profile?.displayName || auth.profile?.email || text("زائر", "Guest");
+  const recentListings = myListings.slice(0, 3);
+
+  useEffect(() => {
+    if (window.location.hash !== "#account-info") return;
+    window.setTimeout(() => {
+      document.getElementById("account-info")?.scrollIntoView({ block: "start" });
+    }, 80);
+  }, []);
 
   async function reloadListings() {
     if (!profileId) return;
@@ -154,35 +96,6 @@ function ProfilePage() {
     setLogoutError("");
     const result = await auth.signOut();
     if (result.error) setLogoutError(result.error);
-  }
-
-  async function handleResubmit(listingId: string) {
-    setListingActionLoading(listingId);
-    setListingActionNotice("");
-    const result = await resubmitOwnerListing(profileId ?? null, listingId);
-    setListingActionLoading(null);
-    if (result.ok) {
-      setListingActionNotice(
-        text("تمت إعادة إرسال الإعلان للمراجعة.", "Listing resubmitted for review."),
-      );
-      void reloadListings();
-    } else {
-      setListingActionNotice(result.error.message);
-    }
-  }
-
-  async function handleDelete(listingId: string) {
-    if (!confirm(text("حذف الإعلان نهائيا؟", "Delete this listing permanently?"))) return;
-    setListingActionLoading(listingId);
-    setListingActionNotice("");
-    const result = await deleteOwnerListing(profileId ?? null, listingId);
-    setListingActionLoading(null);
-    if (result.ok) {
-      setListingActionNotice(text("تم حذف الإعلان.", "Listing deleted."));
-      void reloadListings();
-    } else {
-      setListingActionNotice(result.error.message);
-    }
   }
 
   async function handleSaveProfileBasics(event: FormEvent<HTMLFormElement>) {
@@ -204,7 +117,7 @@ function ProfilePage() {
     setSettingsSaving(false);
     setSettingsNotice(
       result.ok
-        ? text("تم حفظ بيانات الحساب الأساسية.", "Account basics saved.")
+        ? text("تم حفظ معلومات الحساب.", "Account information saved.")
         : result.error.message,
     );
   }
@@ -222,10 +135,7 @@ function ProfilePage() {
     setMediaSaving(null);
     setSettingsNotice(
       result.ok
-        ? text(
-            "تم حفظ الصورة. أعد تحميل الصفحة إذا لم تظهر فورا.",
-            "Image saved. Refresh if it does not appear immediately.",
-          )
+        ? text("تم حفظ الصورة. قد تحتاج لتحديث الصفحة إذا لم تظهر فوراً.", "Image saved. Refresh if it does not appear immediately.")
         : result.error.message,
     );
   }
@@ -240,9 +150,7 @@ function ProfilePage() {
     );
     setMediaSaving(null);
     setSettingsNotice(
-      result.ok
-        ? text("تمت إزالة الصورة من الملف.", "Image removed from profile.")
-        : result.error.message,
+      result.ok ? text("تمت إزالة الصورة من الحساب.", "Image removed from account.") : result.error.message,
     );
   }
 
@@ -295,508 +203,299 @@ function ProfilePage() {
     void loadVerificationRequests();
   }, [auth.status, profileId]);
 
-  const authNote =
-    auth.status === "loading"
-      ? text("جاري تحميل جلسة الحساب.", "Loading account session.")
-      : auth.status === "authError"
-        ? text(
-            "تعذرت قراءة بيانات الحساب أو الصلاحيات.",
-            "Could not read account or permission data.",
-          )
-        : auth.status === "signedIn"
-          ? text(
-              "جلسة الحساب جاهزة والصلاحيات تقرأ من مصدر الأدوار.",
-              "Account session is ready, and permissions are read from the role source.",
-            )
-          : text(
-              "تصفح رواج متاح، وسجل الدخول لإدارة إعلاناتك وحفظ تفضيلاتك.",
-              "RAWAJ browsing is available; log in to manage listings and saved preferences.",
-            );
-
   return (
     <>
       <PageHeader title={text("حسابي", "My account")} back={false} />
-      <main className="container-wide space-y-5 pt-4 pb-10">
-        <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-premium">
-          <div className="flex items-center gap-3">
-            <span className="grid h-14 w-14 place-items-center rounded-full bg-primary-foreground/10">
-              <User className="h-6 w-6 text-gold" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-extrabold">{displayName}</h2>
-              <p className="text-xs leading-6 text-primary-foreground/80">{authNote}</p>
-            </div>
-          </div>
-          {auth.status === "signedIn" ? (
-            <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
-              <div className="rounded-xl bg-primary-foreground/10 p-3 text-xs leading-6 text-primary-foreground/85">
-                {text(
-                  "إدارة الحساب والملف الشخصي والإعلانات أصبحت مقسمة بوضوح. عدّل معلوماتك من قسم معلومات الحساب، وافتح واجهة متجرك لإدارة الإعلانات والتقييمات.",
-                  "Account, profile, and listing management are split clearly. Edit your information in account details, and open your store page for listings and reviews.",
+      <main className="container-wide space-y-5 pt-4 pb-24">
+        <section className="rounded-2xl bg-card p-4 shadow-soft hairline">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full bg-muted-surface text-primary">
+                {auth.profile?.avatarUrl ? (
+                  <img
+                    src={auth.profile.avatarUrl}
+                    alt={text("صورة الحساب", "Account image")}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <User className="h-6 w-6" />
                 )}
+              </span>
+              <div className="min-w-0">
+                <h1 className="truncate text-lg font-extrabold">{displayName}</h1>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {auth.status === "signedIn"
+                    ? text("مركز الحساب جاهز لإدارة بياناتك وإعلاناتك.", "Your account center is ready.")
+                    : text("سجّل الدخول لإدارة بياناتك وإعلاناتك.", "Log in to manage your information and listings.")}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-bold">
+                  <span className="rounded-full bg-muted-surface px-2 py-1">
+                    {roleLabel(auth.profile?.role, text)}
+                  </span>
+                  <span className="rounded-full bg-muted-surface px-2 py-1">
+                    {accountStatusLabel(auth.profile?.accountStatus, text)}
+                  </span>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-foreground/10 px-3 py-2 text-xs font-bold"
-              >
-                <LogOut className="h-4 w-4" /> {text("تسجيل الخروج", "Log out")}
-              </button>
-              {logoutError && <p className="mt-2 text-xs text-gold">{logoutError}</p>}
             </div>
-          ) : (
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Link
-                to="/login"
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gold px-3 py-2 text-xs font-bold text-gold-foreground"
-              >
-                <LogIn className="h-4 w-4" /> {text("تسجيل الدخول", "Log in")}
-              </Link>
-              <button
-                type="button"
-                onClick={() =>
-                  setNotice(
-                    text(
-                      "تجهيز الحساب يتم عبر مسار تسجيل الدخول المتاح.",
-                      "Account access is handled through the available login flow.",
-                    ),
-                  )
-                }
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-foreground/10 px-3 py-2 text-xs font-bold"
-              >
-                <UserPlus className="h-4 w-4" /> {text("إعداد حساب", "Set up account")}
-              </button>
-            </div>
-          )}
-        </section>
 
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <Link
-            to="/"
-            className="rounded-2xl bg-card p-4 text-sm font-extrabold hairline transition hover:bg-muted-surface"
-          >
-            {text("الرئيسية", "Home")}
-            <p className="mt-1 text-xs font-normal leading-6 text-muted-foreground">
-              {text("العودة إلى واجهة رواج.", "Return to the RAWAJ home page.")}
-            </p>
-          </Link>
-          <Link
-            to="/listings"
-            className="rounded-2xl bg-card p-4 text-sm font-extrabold hairline transition hover:bg-muted-surface"
-          >
-            {text("تصفح الإعلانات", "Browse listings")}
-            <p className="mt-1 text-xs font-normal leading-6 text-muted-foreground">
-              {text(
-                "استكشف الإعلانات العامة المعتمدة فقط.",
-                "Explore approved public listings only.",
-              )}
-            </p>
-          </Link>
-          <Link
-            to="/profile/listings"
-            className="rounded-2xl bg-card p-4 text-sm font-extrabold hairline transition hover:bg-muted-surface"
-          >
-            {text("إعلاناتي / متجري", "My listings / store")}
-            <p className="mt-1 text-xs font-normal leading-6 text-muted-foreground">
-              {text(
-                "واجهة إعلاناتك وحالاتها والتقييمات المعتمدة المرتبطة بك.",
-                "Your storefront, listing statuses, and approved reviews.",
-              )}
-            </p>
-          </Link>
-        </section>
-
-        <section id="settings" className="rounded-2xl bg-card p-4 hairline">
-          <h3 className="mb-3 text-sm font-extrabold">{text("ملخص الحساب", "Account summary")}</h3>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Metric label={text("الإعلانات", "Listings")} value={String(myListings.length)} />
-            <Metric
-              label={text("الدور", "Role")}
-              value={auth.profile?.role ?? text("مستخدم", "User")}
-            />
-            <Metric
-              label={text("الحالة", "Status")}
-              value={auth.profile?.accountStatus ?? text("جاهز للتصفح", "Browse ready")}
-            />
-            <Metric
-              label={text("الوصول الإداري", "Admin access")}
-              value={auth.canAccessAdmin ? text("مسموح", "Allowed") : text("لا يوجد", "None")}
-            />
-          </div>
-        </section>
-
-        <section>
-          <h3 className="mb-2 text-sm font-extrabold">{text("قائمة الحساب", "Account menu")}</h3>
-          <nav className="overflow-hidden rounded-2xl bg-card hairline">
-            {accountMenu
-              .filter((item) => !item.ownerOnly || auth.canAccessAdmin)
-              .map((item, index) => (
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+              {auth.status === "signedIn" ? (
+                <>
+                  <a
+                    href="/profile#account-info"
+                    className="inline-flex items-center justify-center gap-1 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    {text("تعديل معلومات الحساب", "Edit account info")}
+                  </a>
+                  <Link
+                    to="/profile/listings"
+                    className="inline-flex items-center justify-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                    {text("إعلاناتي / متجري", "My listings")}
+                  </Link>
+                  <Link
+                    to="/verification"
+                    className="inline-flex items-center justify-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
+                  >
+                    <BadgeCheck className="h-4 w-4" />
+                    {text("طلب التوثيق", "Verification")}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="inline-flex items-center justify-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {text("تسجيل الخروج", "Log out")}
+                  </button>
+                </>
+              ) : (
                 <Link
-                  key={item.to}
-                  to={item.to as "/"}
-                  className={`flex items-center gap-3 p-4 transition hover:bg-muted-surface ${index !== 0 ? "border-t border-border" : ""}`}
+                  to="/login"
+                  className="col-span-2 inline-flex items-center justify-center gap-1 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
                 >
-                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-muted-surface text-primary">
-                    <item.icon className="h-4 w-4" />
-                  </span>
-                  <span className="flex-1 text-sm font-semibold">
-                    {language === "ar" ? item.labelAr : item.labelEn}
-                  </span>
-                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                  <LogIn className="h-4 w-4" />
+                  {text("تسجيل الدخول", "Log in")}
                 </Link>
-              ))}
-          </nav>
+              )}
+            </div>
+          </div>
+          {logoutError && <p className="mt-3 rounded-xl bg-destructive/10 p-2 text-xs text-destructive">{logoutError}</p>}
         </section>
 
-        {auth.status === "signedIn" && (
-          <section className="rounded-2xl bg-card p-4 hairline">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h3 className="text-sm font-extrabold">{text("إعلاناتي", "My listings")}</h3>
-              <Link to="/add-listing" className="text-xs font-bold text-primary">
-                {text("إضافة إعلان", "Post listing")}
-              </Link>
-            </div>
-            {myListingsLoading ? (
-              <p className="text-xs text-muted-foreground">
-                {text("جاري تحميل إعلاناتك.", "Loading your listings.")}
-              </p>
-            ) : myListingsError ? (
-              <p className="text-xs text-muted-foreground">{myListingsError.message}</p>
-            ) : myListings.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                {text(
-                  "لا توجد إعلانات مرتبطة بحسابك الآن.",
-                  "No listings are linked to your account now.",
-                )}
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {myListings.slice(0, 8).map((listing) => {
-                  const busy = listingActionLoading === listing.id;
-                  const canModify =
-                    listing.status === "draft" ||
-                    listing.status === "pending_review" ||
-                    listing.status === "rejected";
+        <section id="account-info" className="scroll-mt-24 rounded-2xl bg-card p-4 shadow-soft hairline">
+          <div className="mb-4">
+            <h2 className="text-base font-extrabold">{text("معلومات الحساب", "Account information")}</h2>
+            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              {text(
+                "عدّل بيانات التواصل التي تظهر للمستخدمين.",
+                "Edit the contact details shown to users.",
+              )}
+            </p>
+          </div>
 
-                  return (
-                    <div
-                      key={listing.id}
-                      className="rounded-xl bg-muted-surface p-3 transition hover:bg-secondary"
-                    >
-                      <div className="flex items-start gap-3">
-                        {listing.primaryImageUrl ? (
-                          <img
-                            src={listing.primaryImageUrl}
-                            alt={listing.title}
-                            loading="lazy"
-                            decoding="async"
-                            className="h-16 w-20 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-16 w-20 items-center justify-center rounded-lg bg-card text-[9px] text-muted-foreground">
-                            {text("بدون صورة", "No photo")}
-                          </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <span className="text-sm font-bold">{listing.title}</span>
-                            <span className="rounded-md bg-card px-2 py-0.5 text-[10px] font-bold hairline">
-                              {listingStatusLabel(listing.status, language)}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-[11px] text-muted-foreground">
-                            {categoryName(
-                              listing.categoryId,
-                              listing.categoryNameAr ?? undefined,
-                              language,
-                            )}{" "}
-                            ·{" "}
-                            {governorateName(
-                              listing.governorateId,
-                              listing.governorateNameAr ?? undefined,
-                              language,
-                            )}
-                          </p>
-                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
-                            {listing.price !== null && (
-                              <span className="font-semibold text-foreground">
-                                {listing.price} {listing.currency}
-                              </span>
-                            )}
-                            <span>
-                              {text("أنشئ", "Created")}{" "}
-                              {new Date(listing.createdAt).toLocaleDateString(
-                                language === "ar" ? "ar-SY" : "en-US",
-                                {
-                                  dateStyle: "short",
-                                },
-                              )}
-                            </span>
-                          </div>
-                          {listing.rejectionReason && (
-                            <p className="mt-1 text-[10px] text-destructive">
-                              {listing.rejectionReason}
-                            </p>
-                          )}
-                          <div className="mt-2 flex flex-wrap gap-1.5">
-                            <Link
-                              to="/listings/$id"
-                              params={{ id: listing.id }}
-                              className="inline-flex items-center gap-1 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline transition hover:bg-secondary"
-                            >
-                              <Eye className="h-3 w-3" />
-                              {text("عرض", "View")}
-                            </Link>
-                            {canModify && (
-                              <Link
-                                to="/profile/listings/$id"
-                                params={{ id: listing.id }}
-                                className="inline-flex items-center gap-1 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline transition hover:bg-secondary"
-                              >
-                                <Pencil className="h-3 w-3" />
-                                {text("تعديل", "Edit")}
-                              </Link>
-                            )}
-                            {(listing.status === "draft" || listing.status === "rejected") && (
-                              <>
-                                <button
-                                  type="button"
-                                  disabled={busy}
-                                  onClick={() => handleResubmit(listing.id)}
-                                  className="inline-flex items-center gap-1 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline transition hover:bg-secondary disabled:opacity-50"
-                                >
-                                  <RefreshCcw className="h-3 w-3" />
-                                  {text("إعادة إرسال", "Resubmit")}
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={busy}
-                                  onClick={() => handleDelete(listing.id)}
-                                  className="inline-flex items-center gap-1 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline transition hover:bg-destructive/5 hover:text-destructive disabled:opacity-50"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                  {text("حذف", "Delete")}
-                                </button>
-                              </>
-                            )}
-                            {listing.status === "approved" && (
-                              <span className="inline-flex items-center gap-1 rounded-lg bg-card px-2 py-1 text-[10px] text-muted-foreground hairline">
-                                {text(
-                                  "الإعلان المعتمد يظهر للزوار ولا يتم تعديله من هذه القائمة.",
-                                  "Approved listings are visible to visitors and are not edited from this list.",
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            {listingActionNotice && (
-              <p className="mt-3 rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground">
-                {listingActionNotice}
-              </p>
-            )}
-          </section>
-        )}
-
-        <section className="rounded-2xl bg-card p-4 hairline">
-          <h3 className="mb-2 text-sm font-extrabold">
-            {text("إعدادات الحساب", "Account settings")}
-          </h3>
           {auth.status === "signedIn" ? (
-            <form onSubmit={(event) => void handleSaveProfileBasics(event)} className="space-y-3">
-              <div className="grid gap-3 lg:grid-cols-2">
-                <MediaField
-                  title={text("الصورة الشخصية", "Profile image")}
-                  imageUrl={auth.profile?.avatarUrl}
-                  busy={mediaSaving === "avatar"}
-                  onUpload={(file) => void handleProfileMedia("avatar", file)}
-                  onRemove={() => void handleRemoveProfileMedia("avatar")}
-                />
-                <MediaField
-                  title={text("صورة الغلاف", "Cover image")}
-                  imageUrl={auth.profile?.coverUrl}
-                  busy={mediaSaving === "cover"}
-                  wide
-                  onUpload={(file) => void handleProfileMedia("cover", file)}
-                  onRemove={() => void handleRemoveProfileMedia("cover")}
-                />
+            <form onSubmit={(event) => void handleSaveProfileBasics(event)} className="space-y-4">
+              <div className="rounded-2xl bg-muted-surface p-3 hairline">
+                <h3 className="mb-3 text-sm font-extrabold">{text("صور الحساب", "Account photos")}</h3>
+                <div className="grid gap-3 lg:grid-cols-2">
+                  <MediaField
+                    title={text("الصورة الشخصية", "Profile image")}
+                    helper={text("يمكنك اختيار صورة من الجهاز.", "Choose an image from your device.")}
+                    imageUrl={auth.profile?.avatarUrl}
+                    busy={mediaSaving === "avatar"}
+                    text={text}
+                    onUpload={(file) => void handleProfileMedia("avatar", file)}
+                    onRemove={() => void handleRemoveProfileMedia("avatar")}
+                  />
+                  <MediaField
+                    title={text("صورة الغلاف", "Cover image")}
+                    helper={text("يمكنك اختيار صورة من الجهاز.", "Choose an image from your device.")}
+                    imageUrl={auth.profile?.coverUrl}
+                    busy={mediaSaving === "cover"}
+                    text={text}
+                    wide
+                    onUpload={(file) => void handleProfileMedia("cover", file)}
+                    onRemove={() => void handleRemoveProfileMedia("cover")}
+                  />
+                </div>
               </div>
+
               <div className="grid gap-3 sm:grid-cols-2">
-                <SettingsInput
-                  label={text("الاسم الأول", "First name")}
-                  value={settingsFirstName}
-                  onChange={setSettingsFirstName}
-                  maxLength={40}
-                />
-                <SettingsInput
-                  label={text("اسم العائلة", "Last name")}
-                  value={settingsLastName}
-                  onChange={setSettingsLastName}
-                  maxLength={40}
-                />
+                <SettingsInput label={text("الاسم الأول", "First name")} value={settingsFirstName} onChange={setSettingsFirstName} maxLength={40} />
+                <SettingsInput label={text("اسم العائلة", "Last name")} value={settingsLastName} onChange={setSettingsLastName} maxLength={40} />
+                <SettingsInput label={text("اسم العرض", "Display name")} value={settingsDisplayName} onChange={setSettingsDisplayName} maxLength={80} />
+                <SettingsInput label={text("المحافظة", "Governorate")} value={settingsGovernorate} onChange={setSettingsGovernorate} maxLength={80} />
+                <SettingsInput label={text("المدينة / المنطقة", "City / area")} value={settingsCityArea} onChange={setSettingsCityArea} maxLength={120} />
+                <SettingsInput label={text("اسم المنشأة", "Business name")} value={settingsBusinessName} onChange={setSettingsBusinessName} maxLength={120} />
+                <SettingsInput label={text("الهاتف", "Phone")} value={settingsPhone} onChange={setSettingsPhone} maxLength={40} inputMode="tel" />
+                <SettingsInput label={text("واتساب", "WhatsApp")} value={settingsWhatsapp} onChange={setSettingsWhatsapp} maxLength={40} inputMode="tel" />
+                <label className="block sm:col-span-2">
+                  <span className="text-xs font-bold text-muted-foreground">
+                    {text("طريقة التواصل المفضلة", "Preferred contact method")}
+                  </span>
+                  <select
+                    value={settingsPreferredContact}
+                    onChange={(event) => setSettingsPreferredContact(event.target.value)}
+                    className="input mt-1"
+                  >
+                    <option value="">{text("اختر طريقة التواصل", "Choose contact method")}</option>
+                    <option value="phone">{text("الهاتف", "Phone")}</option>
+                    <option value="whatsapp">{text("واتساب", "WhatsApp")}</option>
+                    <option value="messages">{text("رسائل رواج", "RAWAJ messages")}</option>
+                  </select>
+                </label>
+                <label className="block sm:col-span-2">
+                  <span className="text-xs font-bold text-muted-foreground">{text("نبذة قصيرة", "Short bio")}</span>
+                  <textarea
+                    value={settingsBio}
+                    onChange={(event) => setSettingsBio(event.target.value)}
+                    maxLength={500}
+                    rows={4}
+                    className="input mt-1 min-h-28"
+                  />
+                </label>
               </div>
-              <label className="block">
-                <span className="text-xs font-bold text-muted-foreground">
-                  {text("اسم العرض", "Display name")}
-                </span>
-                <input
-                  value={settingsDisplayName}
-                  onChange={(event) => setSettingsDisplayName(event.target.value)}
-                  maxLength={80}
-                  className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs font-bold text-muted-foreground">
-                  {text("المحافظة", "Governorate")}
-                </span>
-                <input
-                  value={settingsGovernorate}
-                  onChange={(event) => setSettingsGovernorate(event.target.value)}
-                  maxLength={80}
-                  className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
-                />
-              </label>
-              <p className="text-[11px] leading-5 text-muted-foreground">
-                {text(
-                  "لا يتم تعديل البريد أو حالة الحساب أو التوثيق من هذه المساحة.",
-                  "Email, account status, and verification are not changed here.",
-                )}
-              </p>
-              <button
-                type="submit"
-                disabled={settingsSaving}
-                className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
-              >
-                {settingsSaving ? text("جار الحفظ", "Saving") : text("حفظ البيانات", "Save basics")}
-              </button>
-              {settingsNotice && (
-                <p className="rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground">
-                  {settingsNotice}
-                </p>
-              )}
-              <div className="rounded-xl bg-destructive/5 p-3 text-xs leading-6 text-muted-foreground hairline">
-                <p className="font-bold text-foreground">
-                  {text("حذف الحساب", "Account deletion")}
-                </p>
-                <p>
-                  {text(
-                    "الحذف النهائي غير مفعل من الواجهة لأنه يحتاج مسار Auth وقاعدة بيانات وتنظيف ملفات آمن. يمكن إرسال طلب مراجعة عبر الدعم.",
-                    "Permanent deletion is not enabled here because it needs a safe Auth, database, and media cleanup process. You can request review through support.",
-                  )}
-                </p>
-                <Link
-                  to="/support"
-                  className="mt-2 inline-flex rounded-lg bg-card px-3 py-1.5 font-bold hairline"
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <button
+                  type="submit"
+                  disabled={settingsSaving}
+                  className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground disabled:opacity-60"
                 >
-                  {text("طلب حذف الحساب", "Request deletion")}
-                </Link>
+                  {settingsSaving ? text("جارٍ الحفظ", "Saving") : text("حفظ معلومات الحساب", "Save account information")}
+                </button>
+                {settingsNotice && (
+                  <p className="rounded-xl bg-muted-surface p-3 text-xs font-semibold text-foreground">
+                    {settingsNotice}
+                  </p>
+                )}
               </div>
             </form>
           ) : (
-            <p className="text-xs leading-6 text-muted-foreground">
-              {text(
-                "سجل الدخول لتحديث بيانات الحساب الأساسية المخزنة في ملفك.",
-                "Log in to update the account basics stored on your profile.",
-              )}
+            <p className="rounded-xl bg-muted-surface p-3 text-xs leading-6 text-muted-foreground">
+              {text("سجّل الدخول لتحديث معلومات الحساب.", "Log in to update account information.")}
             </p>
           )}
         </section>
 
-        <section className="rounded-2xl bg-card-warm p-4 hairline">
-          <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-extrabold">
-            <BadgeCheck className="h-4 w-4 text-emerald-trust" />
-            {text("توثيق الحساب", "Account verification")}
-          </h3>
-          {auth.status === "signedIn" ? (
-            <div className="space-y-3">
-              <p className="text-xs leading-6 text-muted-foreground">
+        <section className="grid gap-4 lg:grid-cols-2">
+          <section className="rounded-2xl bg-card p-4 hairline">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="text-sm font-extrabold">{text("إعلاناتي", "My listings")}</h2>
+              <span className="rounded-full bg-muted-surface px-2.5 py-1 text-[11px] font-bold">
+                {myListingsLoading ? text("تحميل", "Loading") : text(`${myListings.length} إعلان`, `${myListings.length} listings`)}
+              </span>
+            </div>
+            {myListingsError ? (
+              <p className="rounded-xl bg-muted-surface p-3 text-xs text-muted-foreground">{myListingsError.message}</p>
+            ) : recentListings.length === 0 ? (
+              <p className="rounded-xl bg-muted-surface p-3 text-xs text-muted-foreground">
+                {text("لا توجد إعلانات في حسابك بعد.", "No listings in your account yet.")}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {recentListings.map((listing) => (
+                  <article key={listing.id} className="rounded-xl bg-muted-surface p-3 text-xs hairline">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="truncate font-bold">{listing.title}</h3>
+                        <p className="mt-1 text-muted-foreground">
+                          {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)} ·{" "}
+                          {governorateName(listing.governorateId, listing.governorateNameAr ?? undefined, language)}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-md bg-card px-2 py-0.5 text-[10px] font-bold hairline">
+                        {listingStatusLabel(listing.status, language)}
+                      </span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Link to="/profile/listings" className="inline-flex items-center justify-center gap-1 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">
+                <FileSpreadsheet className="h-4 w-4" />
+                {text("فتح إدارة الإعلانات", "Manage listings")}
+              </Link>
+              <Link to="/add-listing" className="inline-flex items-center justify-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline">
+                <Plus className="h-4 w-4" />
+                {text("إضافة إعلان", "Post listing")}
+              </Link>
+            </div>
+          </section>
+
+          <section className="rounded-2xl bg-card p-4 hairline">
+            <h2 className="mb-2 inline-flex items-center gap-2 text-sm font-extrabold">
+              <BadgeCheck className="h-4 w-4 text-emerald-trust" />
+              {text("توثيق الحساب", "Account verification")}
+            </h2>
+            <div className="rounded-xl bg-muted-surface p-3 text-xs leading-6 hairline">
+              <p className="font-bold">{text("حالة التوثيق الحالية", "Current verification status")}</p>
+              <p className="mt-1 text-muted-foreground">
+                {verificationStatusLabel(auth.profile?.verificationStatus, text)}
+              </p>
+            </div>
+            <p className="mt-3 text-xs leading-6 text-muted-foreground">
+              {text(
+                "يتم التوثيق بعد مراجعة الإدارة. قد يتم طلب مستندات إضافية عند الحاجة.",
+                "Verification happens after admin review. Additional documents may be requested when needed.",
+              )}
+            </p>
+            {verificationLoading ? (
+              <p className="mt-3 text-xs text-muted-foreground">{text("جارٍ تحميل طلباتك", "Loading your requests")}</p>
+            ) : verificationRequests.length > 0 ? (
+              <div className="mt-3 space-y-2">
+                {verificationRequests.slice(0, 2).map((request) => (
+                  <div key={request.id} className="rounded-xl bg-muted-surface p-3 text-xs hairline">
+                    <p className="font-bold">{request.legalName}</p>
+                    <p className="mt-1 text-muted-foreground">
+                      {verificationStatusLabel(request.status, text)} · {verificationTypeLabel(request.requestType, text)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            {verificationNotice && <p className="mt-3 text-xs text-muted-foreground">{verificationNotice}</p>}
+            <Link
+              to="/verification"
+              className="mt-3 inline-flex rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+            >
+              {text("فتح طلب التوثيق", "Open verification request")}
+            </Link>
+          </section>
+        </section>
+
+        <section className="rounded-2xl bg-card p-4 hairline">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted-surface text-primary">
+              <ShieldCheck className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="text-sm font-extrabold">{text("مراجعة الحساب أو حذفه", "Account review or deletion")}</h2>
+              <p className="mt-1 text-xs leading-6 text-muted-foreground">
                 {text(
-                  "يظهر شارة التوثيق فقط بعد موافقة إدارية حقيقية. رفع الوثائق الخاصة مؤجل حتى اعتماد bucket خاص وآمن.",
-                  "Verified status appears only after real admin approval. Private document upload is deferred until a reviewed private bucket is available.",
+                  "لحذف الحساب أو مراجعة بياناته، أرسل طلباً عبر الدعم ليتم التعامل معه بطريقة آمنة.",
+                  "To delete the account or review its data, send a support request so it can be handled safely.",
                 )}
               </p>
-              <div className="rounded-xl bg-card p-3 text-xs hairline">
-                <p className="font-bold">
-                  {text("حالة التوثيق الحالية", "Current verification status")}
-                </p>
-                <p className="mt-1 text-muted-foreground">
-                  {auth.profile?.verificationStatus ?? "unverified"}
-                </p>
-              </div>
-              <div className="rounded-xl bg-muted-surface p-4 text-xs leading-6 hairline">
-                <p className="font-extrabold text-foreground">
-                  {text("طلب التوثيق", "Verification request")}
-                </p>
-                <p className="mt-1 text-muted-foreground">
-                  {text(
-                    "يمكنك إرسال طلب توثيق للمراجعة اليدوية. سيتم طلب المستندات من الإدارة عند الحاجة، ولا تظهر شارة التوثيق إلا بعد الموافقة.",
-                    "You can submit a verification request for manual review. Admins will request documents when needed, and verified status appears only after approval.",
-                  )}
-                </p>
-                <Link
-                  to="/verification"
-                  className="mt-3 inline-flex rounded-xl bg-primary px-3 py-2 text-[11px] font-bold text-primary-foreground"
-                >
-                  {text("فتح طلب التوثيق", "Open verification request")}
-                </Link>
-              </div>
-              <div className="rounded-xl bg-muted-surface p-3 text-xs leading-6">
-                <p className="font-bold">{text("طلباتك", "Your requests")}</p>
-                {verificationLoading ? (
-                  <p className="text-muted-foreground">{text("جارٍ التحميل", "Loading")}</p>
-                ) : verificationRequests.length === 0 ? (
-                  <p className="text-muted-foreground">
-                    {text("لا توجد طلبات توثيق بعد.", "No verification requests yet.")}
-                  </p>
-                ) : (
-                  <div className="mt-2 space-y-2">
-                    {verificationRequests.slice(0, 3).map((request) => (
-                      <div key={request.id} className="rounded-lg bg-card p-2 hairline">
-                        <p className="font-bold">{request.legalName}</p>
-                        <p className="text-muted-foreground">{request.status}</p>
-                        {request.adminNote && (
-                          <p className="text-muted-foreground">{request.adminNote}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {verificationNotice && (
-                <p className="rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold">
-                  {verificationNotice}
-                </p>
-              )}
+              <Link
+                to="/support"
+                className="mt-3 inline-flex items-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
+              >
+                <LifeBuoy className="h-4 w-4" />
+                {text("طلب مراجعة الحساب", "Request account review")}
+              </Link>
             </div>
-          ) : (
-            <p className="text-xs leading-6 text-muted-foreground">
-              {text("سجل الدخول لطلب توثيق الحساب.", "Log in to request account verification.")}
-            </p>
-          )}
+          </div>
         </section>
-
-        {notice && (
-          <p className="rounded-2xl bg-emerald-trust/10 p-3 text-center text-xs font-bold text-emerald-trust hairline">
-            {notice}
-          </p>
-        )}
       </main>
     </>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-muted-surface p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="mt-1 text-sm font-bold">{value}</div>
-    </div>
   );
 }
 
@@ -805,11 +504,13 @@ function SettingsInput({
   value,
   onChange,
   maxLength,
+  inputMode,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   maxLength: number;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
 }) {
   return (
     <label className="block">
@@ -818,7 +519,8 @@ function SettingsInput({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         maxLength={maxLength}
-        className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
+        inputMode={inputMode}
+        className="input mt-1"
       />
     </label>
   );
@@ -826,46 +528,41 @@ function SettingsInput({
 
 function MediaField({
   title,
+  helper,
   imageUrl,
   busy,
   wide = false,
+  text,
   onUpload,
   onRemove,
 }: {
   title: string;
+  helper: string;
   imageUrl?: string | null;
   busy: boolean;
   wide?: boolean;
+  text: (ar: string, en: string) => string;
   onUpload: (file: File | undefined) => void;
   onRemove: () => void;
 }) {
   return (
-    <div className="rounded-xl bg-muted-surface p-3 hairline">
+    <div className="rounded-xl bg-card p-3 hairline">
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="text-xs font-bold text-muted-foreground">{title}</span>
-        {busy && <span className="text-[10px] font-bold text-primary">Saving</span>}
+        {busy && <span className="text-[10px] font-bold text-primary">{text("جارٍ الحفظ", "Saving")}</span>}
       </div>
-      <div
-        className={`grid place-items-center overflow-hidden rounded-xl bg-card ${
-          wide ? "aspect-[5/2]" : "aspect-square"
-        }`}
-      >
+      <div className={`grid place-items-center overflow-hidden rounded-xl bg-muted-surface ${wide ? "aspect-[5/2]" : "aspect-square"}`}>
         {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={title}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover"
-          />
+          <img src={imageUrl} alt={title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
         ) : (
           <Camera className="h-6 w-6 text-muted-foreground" />
         )}
       </div>
+      <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{helper}</p>
       <div className="mt-2 flex flex-wrap gap-2">
-        <label className="inline-flex cursor-pointer items-center gap-1 rounded-lg bg-card px-3 py-1.5 text-[11px] font-bold hairline">
+        <label className="inline-flex cursor-pointer items-center gap-1 rounded-lg bg-muted-surface px-3 py-1.5 text-[11px] font-bold hairline">
           <Camera className="h-3.5 w-3.5" />
-          Upload
+          {text("رفع صورة", "Upload image")}
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"
@@ -879,13 +576,37 @@ function MediaField({
             type="button"
             disabled={busy}
             onClick={onRemove}
-            className="inline-flex items-center gap-1 rounded-lg bg-card px-3 py-1.5 text-[11px] font-bold text-destructive hairline disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-lg bg-muted-surface px-3 py-1.5 text-[11px] font-bold text-destructive hairline disabled:opacity-50"
           >
             <XCircle className="h-3.5 w-3.5" />
-            Remove
+            {text("إزالة", "Remove")}
           </button>
         )}
       </div>
     </div>
   );
+}
+
+function roleLabel(role: string | null | undefined, text: (ar: string, en: string) => string) {
+  if (role === "owner") return text("مالك", "Owner");
+  if (role === "admin") return text("إدارة", "Admin");
+  if (role === "moderator") return text("مشرف", "Moderator");
+  return text("مستخدم", "User");
+}
+
+function accountStatusLabel(status: string | null | undefined, text: (ar: string, en: string) => string) {
+  if (status === "suspended") return text("موقوف", "Suspended");
+  if (status === "pending_review") return text("قيد المراجعة", "Pending review");
+  return text("نشط", "Active");
+}
+
+function verificationStatusLabel(status: string | null | undefined, text: (ar: string, en: string) => string) {
+  if (status === "approved") return text("موثق", "Verified");
+  if (status === "rejected") return text("مرفوض", "Rejected");
+  if (status === "pending" || status === "pending_review") return text("قيد المراجعة", "Pending review");
+  return text("غير موثق", "Unverified");
+}
+
+function verificationTypeLabel(type: string, text: (ar: string, en: string) => string) {
+  return type === "business" ? text("منشأة", "Business") : text("فرد", "Individual");
 }

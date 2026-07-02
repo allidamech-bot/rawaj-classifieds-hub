@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Eye, Pencil, Plus, Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { fetchCurrentUserListings, fetchPublicSellerProfile } from "@/lib/classifieds-api";
@@ -15,6 +16,9 @@ import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/profile/listings")({
+  validateSearch: z.object({
+    tab: z.enum(["approved", "pending", "needs_edit", "reviews"]).optional(),
+  }),
   head: () => ({
     meta: [{ title: "إعلاناتي | رواج" }, { name: "robots", content: "noindex, nofollow" }],
   }),
@@ -24,14 +28,19 @@ export const Route = createFileRoute("/profile/listings")({
 type StoreTab = "approved" | "pending" | "needs_edit" | "reviews";
 
 function MyListingsPage() {
+  const search = Route.useSearch();
   const auth = useAuth();
   const { language, text } = useUiPreferences();
   const [listings, setListings] = useState<ClassifiedListing[]>([]);
   const [sellerProfile, setSellerProfile] = useState<PublicSellerProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ClassifiedsError | null>(null);
-  const [activeTab, setActiveTab] = useState<StoreTab>("approved");
+  const [activeTab, setActiveTab] = useState<StoreTab>(search.tab ?? "approved");
   const profileId = auth.profile?.id ?? null;
+
+  useEffect(() => {
+    if (search.tab) setActiveTab(search.tab);
+  }, [search.tab]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) return;
@@ -164,7 +173,7 @@ function MyListingsPage() {
             title={text("لا توجد عناصر في هذا القسم", "Nothing in this section")}
             body={text(
               "ستظهر الإعلانات هنا حسب حالتها الحقيقية من قاعدة البيانات.",
-              "Listings appear here according to their real database status.",
+              "Listings appear here according to their current review status.",
             )}
           />
         ) : (

@@ -14,7 +14,7 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-type AuthMode = "login" | "register";
+type AuthMode = "login" | "register" | "forgot";
 
 function GoogleButton() {
   const auth = useAuth();
@@ -108,8 +108,8 @@ function LoginPage() {
     if (!client) {
       setError(
         text(
-          "تعذر الوصول إلى خدمة الحسابات الآن. التصفح العام متاح ويمكنك المحاولة مرة أخرى.",
-          "Account service is unavailable right now. Public browsing is available and you can try again.",
+          "خدمة الحسابات غير متاحة الآن. يمكنك تصفح الإعلانات والمحاولة لاحقاً.",
+          "Account service is unavailable right now. You can browse listings and try again later.",
         ),
       );
       return;
@@ -117,6 +117,24 @@ function LoginPage() {
 
     const cleanEmail = email.trim();
     const cleanName = displayName.trim();
+
+    if (mode === "forgot") {
+      setSubmitting(true);
+      const redirectTo = `${window.location.origin}/auth/callback?type=recovery`;
+      const { error: resetError } = await client.auth.resetPasswordForEmail(cleanEmail, { redirectTo });
+      setSubmitting(false);
+      if (resetError) {
+        setError(text("تعذر إرسال رابط إعادة التعيين الآن. حاول مرة أخرى.", "Could not send the reset link right now. Try again."));
+        return;
+      }
+      setMessage(
+        text(
+          "إذا كان البريد مسجلاً، ستصلك رسالة لإعادة تعيين كلمة المرور. تحقق من البريد الوارد أو الرسائل غير المرغوب بها.",
+          "If the email is registered, you will receive a password reset message. Check your inbox or spam folder.",
+        ),
+      );
+      return;
+    }
 
     if (mode === "register" && cleanName.length < 2) {
       setError(text("أدخل اسما واضحا للحساب.", "Enter a clear account name."));
@@ -152,8 +170,8 @@ function LoginPage() {
     if (profileError) {
       setError(
         text(
-          "تعذر تحضير بيانات الحساب بعد المصادقة. يحتاج المشرف إلى مراجعة إعدادات Supabase.",
-          "Account authentication worked, but the profile could not be prepared. An administrator must review the Supabase setup.",
+          "تم تسجيل الدخول، لكن تعذر تجهيز بيانات الحساب الآن. حاول مرة أخرى أو تواصل مع الدعم.",
+          "You are signed in, but account details could not be prepared right now. Try again or contact support.",
         ),
       );
       return;
@@ -163,8 +181,8 @@ function LoginPage() {
       setMessage(
         result.data.session
           ? text(
-              "تم إنشاء الحساب. إذا لم تظهر بيانات الحساب، يحتاج المشروع إلى تهيئة إنشاء الملف الشخصي في Supabase.",
-              "Account created. If account data does not appear, the project needs Supabase profile bootstrap configuration.",
+              "تم إنشاء الحساب ويمكنك متابعة إدارة إعلاناتك ورسائلك.",
+              "Account created. You can continue managing your listings and messages.",
             )
           : text(
               "تم إرسال رابط تفعيل الحساب إلى بريدك الإلكتروني. افتح البريد واضغط على رابط التفعيل لإكمال إنشاء الحساب. إذا لم تجد الرسالة خلال دقائق، تحقق من مجلد الرسائل غير المرغوبة / Spam.",
@@ -191,6 +209,8 @@ function LoginPage() {
               <h1 className="text-base font-extrabold">
                 {mode === "login"
                   ? text("دخول الحساب", "Account login")
+                  : mode === "forgot"
+                    ? text("إعادة تعيين كلمة المرور", "Reset password")
                   : text("إنشاء حساب", "Create account")}
               </h1>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
@@ -199,9 +219,14 @@ function LoginPage() {
                       "سجل الدخول ببريدك وكلمة المرور لإدارة إعلاناتك.",
                       "Log in with your email and password to manage your listings.",
                     )
+                  : mode === "forgot"
+                    ? text(
+                        "أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.",
+                        "Enter your email and we will send a password reset link.",
+                      )
                   : text(
-                      "إنشاء الحساب يستخدم Supabase Auth مباشرة. تفعيل الحساب النهائي يعتمد على إعدادات البريد والملف الشخصي في Supabase.",
-                      "Account creation uses Supabase Auth directly. Final activation depends on Supabase email and profile settings.",
+                      "أنشئ حسابك لإدارة إعلاناتك ومتابعة الرسائل والتنبيهات.",
+                      "Create your account to manage listings, messages, and notifications.",
                     )}
               </p>
             </div>
@@ -234,11 +259,10 @@ function LoginPage() {
 
           {auth.status === "authUnavailable" ? (
             <div className="rounded-xl bg-warning/10 p-3 text-xs text-foreground/90 hairline">
-              {auth.reason ??
-                text(
-                  "تعذر الوصول إلى خدمة الحسابات الآن. التصفح العام متاح ويمكنك المحاولة مرة أخرى.",
-                  "Account service is unavailable right now. Public browsing is available and you can try again.",
-                )}
+              {text(
+                "خدمة الحسابات غير متاحة الآن. يمكنك تصفح الإعلانات والمحاولة لاحقاً.",
+                "Account service is unavailable right now. You can browse listings and try again later.",
+              )}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
@@ -271,24 +295,42 @@ function LoginPage() {
                 />
               </label>
 
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-muted-foreground">
-                  {text("كلمة المرور", "Password")}
-                </span>
-                <input
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  type="password"
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  required
-                  minLength={6}
-                  className="w-full rounded-xl border border-input bg-card px-3 py-2 text-sm outline-none focus:border-ring"
-                />
-              </label>
+              {mode !== "forgot" && (
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-muted-foreground">
+                    {text("كلمة المرور", "Password")}
+                  </span>
+                  <input
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    type="password"
+                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    required
+                    minLength={6}
+                    className="w-full rounded-xl border border-input bg-card px-3 py-2 text-sm outline-none focus:border-ring"
+                  />
+                </label>
+              )}
+
+              {mode === "login" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("forgot");
+                    setMessage("");
+                    setError("");
+                  }}
+                  className="text-xs font-bold text-primary"
+                >
+                  {text("نسيت كلمة المرور؟", "Forgot password?")}
+                </button>
+              )}
 
               {submitting && (
                 <p className="rounded-xl bg-muted-surface p-2 text-xs font-bold text-muted-foreground">
-                  {mode === "login"
+                  {mode === "forgot"
+                    ? text("جارٍ إرسال الرابط", "Sending link")
+                    : mode === "login"
                     ? text("جاري تسجيل الدخول", "Logging in")
                     : text("جاري إنشاء الحساب", "Creating account")}
                 </p>
@@ -305,7 +347,7 @@ function LoginPage() {
               )}
               {auth.status === "authError" && (
                 <p className="rounded-xl bg-warning/10 p-2 text-xs font-bold text-warning">
-                  {text("الحساب غير جاهز أو غير مصرح.", "Account is not ready or not authorized.")}
+                  {text("تعذر فتح الحساب الآن. حاول مرة أخرى.", "Could not open the account right now. Try again.")}
                 </p>
               )}
 
@@ -316,11 +358,30 @@ function LoginPage() {
               >
                 {mode === "login" ? (
                   <LogIn className="h-4 w-4" />
+                ) : mode === "forgot" ? (
+                  <Lock className="h-4 w-4" />
                 ) : (
                   <UserPlus className="h-4 w-4" />
                 )}
-                {mode === "login" ? text("تسجيل الدخول", "Log in") : text("إنشاء حساب", "Register")}
+                {mode === "login"
+                  ? text("تسجيل الدخول", "Log in")
+                  : mode === "forgot"
+                    ? text("إرسال رابط إعادة التعيين", "Send reset link")
+                    : text("إنشاء حساب", "Register")}
               </button>
+              {mode === "forgot" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("login");
+                    setMessage("");
+                    setError("");
+                  }}
+                  className="w-full text-center text-xs font-bold text-primary"
+                >
+                  {text("العودة لتسجيل الدخول", "Back to login")}
+                </button>
+              )}
             </form>
           )}
 
@@ -338,8 +399,8 @@ function LoginPage() {
           <div className="mt-4 rounded-xl bg-muted-surface p-3 text-[11px] leading-6 text-muted-foreground">
             <ShieldCheck className="me-1 inline h-3.5 w-3.5 text-emerald-trust" />
             {text(
-              "صلاحيات المالك والمشرفين تقرأ من جدول الأدوار فقط، ولا تمنح من الواجهة أو من البريد داخل المتصفح.",
-              "Owner and moderator permissions are read only from role tables, not granted in the frontend or by browser email checks.",
+              "تتم حماية الحسابات والصلاحيات من خلال إعدادات المنصة المعتمدة.",
+              "Accounts and permissions are protected through the platform's approved settings.",
             )}
           </div>
 

@@ -16,7 +16,6 @@ import {
   adminFetchReports,
   adminFetchVerificationRequests,
 } from "@/lib/classifieds-api";
-import type { ClassifiedsError } from "@/lib/classifieds-types";
 import { uiLabel } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -43,13 +42,13 @@ function AdminOverview() {
   const [promotionCount, setPromotionCount] = useState<number | null>(null);
   const [verificationCount, setVerificationCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<ClassifiedsError | null>(null);
+  const [metricNotice, setMetricNotice] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     async function loadOverview() {
       setLoading(true);
-      setError(null);
+      setMetricNotice(false);
       const [pendingResult, reportsResult, promotionsResult, verificationsResult] = await Promise.all([
         adminFetchPendingListings(auth.canAccessAdmin),
         adminFetchReports(auth.canAccessAdmin),
@@ -59,17 +58,16 @@ function AdminOverview() {
       if (cancelled) return;
 
       if (pendingResult.ok) setPendingCount(pendingResult.data.length);
-      else setError(pendingResult.error);
+      else setMetricNotice(true);
 
       if (reportsResult.ok) setReportCount(reportsResult.data.length);
-      else if (!pendingResult.ok) setError(reportsResult.error);
-      else setError(reportsResult.error);
+      else setMetricNotice(true);
 
       if (promotionsResult.ok) setPromotionCount(promotionsResult.data.length);
-      else setError(promotionsResult.error);
+      else setMetricNotice(true);
 
       if (verificationsResult.ok) setVerificationCount(verificationsResult.data.length);
-      else setError(verificationsResult.error);
+      else setMetricNotice(true);
 
       setLoading(false);
     }
@@ -129,9 +127,9 @@ function AdminOverview() {
 
       <section>
         <SectionTitle icon={Activity} title={text("مؤشرات التشغيل", "Operational indicators")} />
-        {error && (
+        {metricNotice && (
           <p className="mb-3 rounded-xl bg-muted-surface p-3 text-xs font-semibold text-muted-foreground hairline">
-            {error.message}
+            {text("تعذر تحديث بعض المؤشرات حالياً، بينما تبقى الروابط الإدارية متاحة.", "Some indicators could not refresh right now, while admin links remain available.")}
           </p>
         )}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -176,7 +174,7 @@ function AdminOverview() {
           <p className="text-xs leading-6 text-muted-foreground">
             {text(
               "تعرض صفحة البلاغات السجلات المدعومة بقاعدة البيانات وتحديثات حالتها.",
-              "The reports page shows database-backed reports and status updates.",
+              "The reports page shows recorded reports and status updates.",
             )}
           </p>
           <AdminLink to="/admin/reports" label={text("فتح البلاغات", "Open reports")} />

@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import type { ComponentType } from "react";
 import { AppHeader } from "@/components/AppHeader";
-import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/use-auth";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -36,6 +35,7 @@ type MoreRow = {
   hintAr?: string;
   hintEn?: string;
   to?: "/" | "/add-listing" | "/admin" | "/chats" | "/favorites" | "/login" | "/notifications" | "/profile" | "/profile/listings" | "/prohibited" | "/promotion" | "/saved-searches" | "/safety" | "/support" | "/terms" | "/verification";
+  href?: string;
   onClick?: () => void;
   icon: ComponentType<{ className?: string }>;
   disabled?: boolean;
@@ -59,18 +59,10 @@ function MorePage() {
         {
           titleAr: "معلومات الحساب",
           titleEn: "Account details",
-          hintAr: "إدارة بياناتك العامة",
-          hintEn: "Manage your public details",
-          to: "/profile",
+          hintAr: "تعديل بياناتك الأساسية ووسائل التواصل",
+          hintEn: "Edit your basic details and contact methods",
+          href: "/profile#account-info",
           icon: User,
-        },
-        {
-          titleAr: "تعديل الملف الشخصي",
-          titleEn: "Edit profile",
-          hintAr: "الاسم ووسائل التواصل الظاهرة",
-          hintEn: "Name and visible contact details",
-          to: "/profile",
-          icon: FileText,
         },
         {
           titleAr: "اللغة",
@@ -187,9 +179,9 @@ function MorePage() {
         {
           titleAr: "حساب منشأة",
           titleEn: "Business account",
-          hintAr: "حدّث اسم المنشأة ووسائل التواصل",
-          hintEn: "Update business name and contact details",
-          to: "/profile",
+          hintAr: "اسم المنشأة ووسائل التواصل التجارية",
+          hintEn: "Business name and commercial contact details",
+          href: "/profile#account-info",
           icon: Building2,
         },
         {
@@ -328,8 +320,6 @@ function MorePage() {
           </div>
         </section>
       </main>
-
-      <BottomNav />
     </div>
   );
 }
@@ -364,6 +354,17 @@ function MoreItem({ row, text }: { row: MoreRow; text: (ar: string, en: string) 
       >
         {content}
       </button>
+    );
+  }
+
+  if (row.href && !row.disabled) {
+    return (
+      <a
+        href={row.href}
+        className="flex items-center justify-between gap-3 rounded-xl px-2 py-3 transition hover:bg-muted/70"
+      >
+        {content}
+      </a>
     );
   }
 

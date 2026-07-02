@@ -95,7 +95,7 @@ function AdminVerificationsPage() {
                 <div>
                   <h3 className="text-sm font-extrabold">{request.legalName}</h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {request.requestType} · {request.userId}
+                    {verificationTypeLabel(request.requestType, text)} · {request.userId}
                   </p>
                   {request.businessName && <p className="mt-1 text-xs">{request.businessName}</p>}
                   {request.documentType && (
@@ -105,7 +105,7 @@ function AdminVerificationsPage() {
                   )}
                 </div>
                 <span className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold hairline">
-                  {request.status}
+                  {verificationStatusLabel(request.status, text)}
                 </span>
               </div>
               <textarea
@@ -148,4 +148,14 @@ function Panel({ title, body }: { title: string; body?: string }) {
       {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
     </section>
   );
+}
+
+function verificationStatusLabel(status: SellerVerificationRequest["status"], text: (ar: string, en: string) => string) {
+  if (status === "approved") return text("موثق", "Verified");
+  if (status === "rejected") return text("مرفوض", "Rejected");
+  return text("قيد المراجعة", "Pending review");
+}
+
+function verificationTypeLabel(type: SellerVerificationRequest["requestType"], text: (ar: string, en: string) => string) {
+  return type === "business" ? text("منشأة", "Business") : text("فرد", "Individual");
 }

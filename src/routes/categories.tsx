@@ -174,17 +174,25 @@ function CategoriesPage() {
 
             <section className="mt-5 rounded-2xl bg-card p-4 shadow-soft hairline">
               <span className="inline-flex rounded-full bg-gold/15 px-2.5 py-1 text-[10px] font-extrabold text-gold hairline">
-                {text("مساحة ترويجية", "Promoted space")}
+                {text("روابط مفيدة", "Helpful links")}
               </span>
               <h2 className="mt-2 text-base font-extrabold">
-                {text("مساحات الإعلانات البارزة داخل الأقسام", "Featured listing spaces within categories")}
+                {text("تابع الإعلانات المميزة أو اطلب ترويج إعلانك", "Browse featured listings or request promotion")}
               </h2>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
                 {text(
-                  "الإعلانات المميزة تخضع للمراجعة قبل الظهور في المساحات المخصصة.",
-                  "Featured listings are reviewed before appearing in designated spaces.",
+                  "تعرض رواج الإعلانات المميزة المتاحة بعد مراجعة الإدارة، ويمكنك إرسال طلب ترويج لإعلان معتمد تملكه.",
+                  "RAWAJ shows available featured listings after admin review, and you can request promotion for an approved listing you own.",
                 )}
               </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link to="/offers" className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">
+                  {text("الإعلانات المميزة", "Featured listings")}
+                </Link>
+                <Link to="/promotion" className="rounded-xl bg-muted-surface px-4 py-2 text-xs font-bold text-foreground hairline">
+                  {text("طلب ترويج", "Request promotion")}
+                </Link>
+              </div>
             </section>
 
             <CategoryListings title={text("إعلانات مميزة", "Featured listings")} listings={featuredListings} />

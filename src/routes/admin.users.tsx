@@ -70,8 +70,8 @@ function UsersPage() {
       <section className="rounded-2xl bg-warning/10 p-4 text-xs leading-6 hairline">
         <ShieldAlert className="me-1 inline h-4 w-4 text-warning" />
         {text(
-          "أي صلاحية لإدارة المستخدمين يجب أن تأتي من قواعد الأدوار وسياسات الوصول في Supabase، وليس من حالة واجهة فقط.",
-          "Any user-management permission must come from Supabase role rules and access policies, not interface state alone.",
+          "أي صلاحية لإدارة المستخدمين يجب أن تأتي من إعدادات الوصول المعتمدة للمنصة.",
+          "Any user-management permission must come from the platform's approved access settings.",
         )}
       </section>
 

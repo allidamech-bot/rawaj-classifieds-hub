@@ -22,7 +22,7 @@ export const Route = createFileRoute("/offers")({
 
 const offerChips = [
   { labelAr: "الإعلانات المميزة", labelEn: "Featured listings" },
-  { labelAr: "كل العروض", labelEn: "All offers" },
+  { labelAr: "كل الإعلانات المميزة", labelEn: "All featured listings" },
   { labelAr: "السيارات", labelEn: "Vehicles", q: "سيارات" },
   { labelAr: "العقارات", labelEn: "Real estate", q: "عقارات" },
   { labelAr: "الجوالات والإلكترونيات", labelEn: "Electronics", q: "جوالات" },

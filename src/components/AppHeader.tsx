@@ -22,7 +22,6 @@ interface Props {
 
 export function AppHeader({ compact = false, title }: Props) {
   const [open, setOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
   const navigate = useNavigate();
   const auth = useAuth();
@@ -79,15 +78,14 @@ export function AppHeader({ compact = false, title }: Props) {
             <Languages className="h-4 w-4" />
             <span>{language === "ar" ? "English" : "العربية"}</span>
           </button>
-          <button
-            type="button"
-            onClick={() => setNotificationsOpen((value) => !value)}
+          <Link
+            to="/notifications"
             aria-label={text("التنبيهات", "Notifications")}
             title={text("التنبيهات", "Notifications")}
             className="relative grid h-9 w-9 place-items-center rounded-full bg-primary-foreground/10 text-primary-foreground/70 transition hover:bg-primary-foreground/20"
           >
             <Bell className="h-4 w-4" />
-          </button>
+          </Link>
           {auth.canAccessOwnerControls && (
             <Link
               to="/admin"
@@ -164,34 +162,6 @@ export function AppHeader({ compact = false, title }: Props) {
                 {governorateName(governorate.id, governorate.nameAr, language)}
               </button>
             ))}
-          </div>
-        </div>
-      )}
-
-      {notificationsOpen && (
-        <div className="container-wide pb-3">
-          <div className="ms-auto max-w-sm rounded-xl bg-card p-3 text-foreground shadow-premium hairline">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-extrabold">{text("التنبيهات", "Notifications")}</p>
-              <button
-                type="button"
-                onClick={() => setNotificationsOpen(false)}
-                className="rounded-full bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground"
-              >
-                {text("إغلاق", "Close")}
-              </button>
-            </div>
-            <div className="mt-3 rounded-lg bg-muted-surface p-3">
-              <p className="text-xs font-bold">
-                {text("لا توجد تنبيهات جديدة", "No new notifications")}
-              </p>
-              <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-                {text(
-                  "تظهر هنا تحديثات الإعلانات والمفضلة والحساب عند توفرها.",
-                  "Listing, favorite, and account updates appear here when available.",
-                )}
-              </p>
-            </div>
           </div>
         </div>
       )}

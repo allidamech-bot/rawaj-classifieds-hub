@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BadgeCheck, FileText } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
-import { BottomNav } from "@/components/BottomNav";
 import { PageHeader } from "@/components/PageHeader";
 import {
   createSellerVerificationRequest,
@@ -32,6 +31,9 @@ function VerificationPage() {
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [notice, setNotice] = useState("");
   const profileId = auth.profile?.id ?? null;
+  const hasPendingRequest = requests.some(
+    (request) => request.status === "pending_review" || String(request.status) === "pending",
+  );
 
   async function loadRequests() {
     if (!profileId) return;
@@ -51,6 +53,10 @@ function VerificationPage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setNotice("");
+    if (hasPendingRequest) {
+      setNotice(text("لديك طلب توثيق قيد المراجعة.", "You already have a verification request under review."));
+      return;
+    }
     setSaving(true);
     const result = await createSellerVerificationRequest({
       userId: profileId,
@@ -95,7 +101,6 @@ function VerificationPage() {
             </Link>
           </section>
         </main>
-        <BottomNav />
       </>
     );
   }
@@ -160,8 +165,13 @@ function VerificationPage() {
               "Documents will be requested by admins when needed, and this page does not grant a verified badge before approval.",
             )}
           </p>
+          {hasPendingRequest && (
+            <p className="mt-3 rounded-xl bg-gold/10 p-3 text-xs font-bold text-gold-foreground hairline">
+              {text("لديك طلب توثيق قيد المراجعة.", "You already have a verification request under review.")}
+            </p>
+          )}
           <button
-            disabled={saving || legalName.trim().length < 3}
+            disabled={saving || hasPendingRequest || legalName.trim().length < 3}
             className="mt-3 rounded-xl bg-gold px-4 py-2 text-xs font-bold text-gold-foreground disabled:opacity-60"
           >
             {saving ? text("جارٍ الإرسال", "Sending") : text("إرسال الطلب", "Submit request")}
@@ -199,7 +209,6 @@ function VerificationPage() {
           )}
         </section>
       </main>
-      <BottomNav />
     </>
   );
 }

@@ -90,7 +90,7 @@ function privacyText(value: string, language: Language) {
   const labels: Record<string, string> = {
     "خصوصية رَوَاج": "RAWAJ privacy",
     "يعتمد رَوَاج على مصدر بيانات آمن للحسابات والأدوار، ويعرض بيانات المستخدم وفق ما يلزم لتشغيل الإعلانات والمراجعة والسلامة.":
-      "RAWAJ relies on a secure data source for accounts and roles, and shows user data only as needed for listings, review, and safety.",
+      "RAWAJ protects account access and shows user data only as needed for listings, review, and safety.",
     "البيانات التي نعالجها": "Data we process",
     "قد نعالج بيانات الحساب، بيانات التواصل التي تختار إظهارها، بيانات الإعلانات وصورها، الرسائل أو المفضلة أو عمليات البحث عند استخدامها، البلاغات، طلبات الدعم، ومعلومات الجهاز/الجلسة لأغراض الأمان.":
       "We may process account data, contact data you choose to show, listing data and images, messages, favorites or saved searches when used, reports, support requests, and device/session data for safety.",

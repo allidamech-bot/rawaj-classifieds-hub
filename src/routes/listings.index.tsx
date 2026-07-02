@@ -49,6 +49,7 @@ const searchSchema = z.object({
   salary_type: z.string().optional(),
   q: z.string().optional(),
   sort: z.enum(["latest", "cheapest", "expensive", "featured"]).optional(),
+  open_filters: z.coerce.boolean().optional(),
 });
 
 export const Route = createFileRoute("/listings/")({
@@ -90,7 +91,7 @@ function ListingsPage() {
   const [q, setQ] = useState(search.q ?? "");
   const [debouncedQ, setDebouncedQ] = useState(search.q ?? "");
   const [open, setOpen] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(Boolean(search.open_filters));
   const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
   const [subcategories, setSubcategories] = useState<ClassifiedSubcategory[]>([]);
   const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
@@ -149,6 +150,7 @@ function ListingsPage() {
   );
 
   useEffect(() => {
+    if (search.open_filters) setFiltersOpen(true);
     setQ(search.q ?? "");
     setSubcategoryId(search.subcategory ?? "");
     setDistrictAr(search.district ?? "");
@@ -180,6 +182,7 @@ function ListingsPage() {
     search.property_purpose,
     search.property_type,
     search.q,
+    search.open_filters,
     search.rental_duration,
     search.rooms,
     search.salary_type,
