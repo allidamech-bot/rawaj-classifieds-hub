@@ -49,15 +49,16 @@ export function AppHeader({ compact = false, title }: Props) {
   }
 
   return (
-    <header className="sticky top-0 z-30 border-b border-primary-foreground/10 bg-gradient-to-b from-primary via-primary to-primary/95 text-primary-foreground shadow-premium backdrop-blur">
-      <div className="container-wide flex items-center gap-3 py-3 sm:gap-4 sm:py-4">
+    <header className="sticky top-0 z-30 overflow-hidden border-b border-primary-foreground/10 bg-[linear-gradient(180deg,#0f314d_0%,#123a5a_62%,#143f60_100%)] text-primary-foreground shadow-premium backdrop-blur">
+      <div className="container-wide flex items-center gap-3 py-3 sm:gap-6 sm:py-4 lg:py-5">
         <Link to="/" className="flex min-w-0 items-center gap-3 group">
           <Logo />
         </Link>
 
         {compact && title && <h1 className="ms-1 flex-1 truncate text-base font-bold">{title}</h1>}
 
-        <div className="ms-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <div className="ms-auto flex shrink-0 flex-col items-start gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
           {!compact && (
             <span className="hidden items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[11px] font-semibold text-gold sm:inline-flex">
               <ShieldCheck className="h-3.5 w-3.5" /> {text("سوريا فقط", "Syria only")}
@@ -111,28 +112,20 @@ export function AppHeader({ compact = false, title }: Props) {
               <LogIn className="h-4 w-4" />
             )}
           </Link>
+          </div>
+          {!compact && (
+            <button
+              type="button"
+              onClick={() => setOpen((value) => !value)}
+              aria-expanded={open}
+              className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3.5 py-2 text-xs font-semibold text-primary-foreground transition hover:border-gold/60 hover:bg-gold/20 active:scale-[0.98] sm:text-sm"
+            >
+              <MapPin className="h-4 w-4 shrink-0 text-gold" />
+              <span className="whitespace-nowrap leading-5">{text("اختر المحافظة", "Choose governorate")}</span>
+            </button>
+          )}
         </div>
       </div>
-
-      {!compact && (
-        <div className="container-wide flex items-center justify-between gap-2 pb-3 sm:pb-4">
-          <button
-            type="button"
-            onClick={() => setOpen((value) => !value)}
-            aria-expanded={open}
-            className="order-3 ms-auto inline-flex min-w-0 items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:border-gold/60 hover:bg-gold/20 active:scale-[0.98] sm:text-sm"
-          >
-            <MapPin className="h-4 w-4 text-gold" />
-            {text("اختر المحافظة", "Choose governorate")}
-          </button>
-          <span className="hidden text-[11px] text-primary-foreground/60 sm:inline">
-            {text(
-              "إعلانات محلية حسب المحافظة — بسيطة وواضحة",
-              "Local listings by governorate — simple and clear",
-            )}
-          </span>
-        </div>
-      )}
 
       {open && (
         <div className="container-wide pb-3">
@@ -188,4 +181,3 @@ function Logo() {
     </span>
   );
 }
-

@@ -128,7 +128,9 @@
     direction: ltr;
   }
   body {
-    background-color: var(--color-background);
+    background:
+      linear-gradient(180deg, #f6efe0 0, var(--color-background) 18rem),
+      var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     font-feature-settings: "kern", "liga";
@@ -267,8 +269,8 @@
 @utility container-wide {
   width: 100%;
   margin-inline: auto;
-  max-width: 1180px;
-  padding-inline: 1rem;
+  max-width: 1504px;
+  padding-inline: clamp(1rem, 2.5vw, 2rem);
 }
 
 @utility shadow-soft {

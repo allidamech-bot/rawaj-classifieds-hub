@@ -116,17 +116,17 @@ function HomePage() {
   return (
     <>
       <AppHeader />
-      <main className="container-wide mobile-page-bottom pt-3 sm:pt-4">
-        <section className="rounded-2xl bg-card p-3 shadow-soft hairline sm:p-5">
-          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div className="max-w-2xl">
-              <p className="text-xs font-bold text-primary">
+      <main className="container-wide mobile-page-bottom pt-4 sm:pt-6 lg:pt-8">
+        <section className="relative overflow-hidden rounded-2xl bg-card-warm p-4 shadow-premium hairline sm:p-6 lg:p-8">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div className="max-w-3xl">
+              <p className="text-xs font-extrabold text-primary sm:text-sm">
                 {text("سوق إعلانات مبوبة في سوريا", "Classifieds marketplace in Syria")}
               </p>
-              <h1 className="mt-1 text-xl font-extrabold leading-tight text-foreground sm:text-3xl">
+              <h1 className="mt-2 max-w-4xl text-2xl font-extrabold leading-[1.2] text-foreground sm:text-4xl lg:text-5xl">
                 {text("ابحث. قارن. تواصل مباشرة.", "Search. Compare. Contact directly.")}
               </h1>
-              <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
                 {text(
                   "رواج يضع الإعلانات المعتمدة أمامك بسرعة، مع بحث واضح وأقسام مرتبة حسب الحاجة.",
                   "RAWAJ puts reviewed listings first, with clear search and practical browsing.",
@@ -135,7 +135,7 @@ function HomePage() {
             </div>
             <Link
               to="/add-listing"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-sm font-bold text-gold-foreground shadow-soft transition active:scale-[0.98]"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-extrabold text-gold-foreground shadow-soft transition active:scale-[0.98] sm:w-fit"
             >
               <Plus className="h-4 w-4" />
               {text("أضف إعلان", "Post listing")}
@@ -143,9 +143,9 @@ function HomePage() {
           </div>
         </section>
 
-        <section className="mt-3 rounded-2xl bg-card p-3 shadow-soft hairline">
-          <form onSubmit={handleSearch} className="grid gap-2 lg:grid-cols-[1fr_auto_auto]">
-            <label className="flex items-center gap-2 rounded-xl bg-muted-surface px-3 py-3 hairline focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
+        <section className="mt-4 rounded-2xl bg-card p-3 shadow-soft hairline sm:p-4 lg:p-5">
+          <form onSubmit={handleSearch} className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-stretch">
+            <label className="flex min-h-12 items-center gap-2 rounded-xl bg-muted-surface px-3 hairline focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20 sm:px-4">
               <Search className="h-5 w-5 text-muted-foreground" />
               <input
                 value={searchValue}
@@ -156,32 +156,32 @@ function HomePage() {
                   "ابحث عن سيارة، جوال، عقار، خدمة...",
                   "Search for a car, phone, property, service...",
                 )}
-                className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-muted-foreground"
               />
             </label>
             <Link
               to="/listings"
               search={listingSearch({ open_filters: true })}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-3 text-xs font-bold text-foreground hairline transition active:scale-[0.98]"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-card px-4 text-xs font-bold text-foreground hairline transition active:scale-[0.98]"
             >
               <Filter className="h-4 w-4" />
               {text("فلترة", "Filters")}
             </Link>
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-bold text-primary-foreground transition active:scale-[0.98]"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-xs font-extrabold text-primary-foreground transition active:scale-[0.98]"
             >
               <Search className="h-4 w-4" />
               {text("بحث", "Search")}
             </button>
           </form>
-          <div className="mt-2 grid grid-cols-4 gap-2 sm:flex sm:flex-wrap">
+          <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto border-t border-border/70 pt-3">
             {sortChips.map((sort) => (
               <Link
                 key={sort.id}
                 to="/listings"
                 search={listingSearch({ sort: sort.id })}
-                className="rounded-xl bg-muted-surface px-2 py-2 text-center text-xs font-semibold text-foreground"
+                className="shrink-0 rounded-full bg-muted-surface px-3 py-2 text-center text-xs font-semibold text-foreground"
               >
                 {text(sort.labelAr, sort.labelEn)}
               </Link>
@@ -189,13 +189,13 @@ function HomePage() {
           </div>
         </section>
 
-        <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
+        <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto border-b border-border/70 pb-4">
           {quickSuggestions.map((chip) => (
             <Link
               key={chip.label}
               to="/listings"
               search={chip.search}
-              className="shrink-0 rounded-full bg-card px-3.5 py-1.5 text-xs font-bold text-foreground hairline"
+              className="shrink-0 rounded-full bg-card-warm px-3.5 py-1.5 text-xs font-bold text-foreground hairline"
             >
               {chip.label}
             </Link>
@@ -233,7 +233,7 @@ function HomePage() {
               empty={text("لا توجد إعلانات معتمدة للعرض.", "No reviewed listings to show.")}
             />
 
-            <section className="mt-7">
+            <section className="mt-8 lg:mt-10">
               <SectionHeader title={text("تصفح سريع حسب القسم", "Quick browse by category")} />
               <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
                 {compactCategories.map((category) => (
@@ -241,7 +241,7 @@ function HomePage() {
                     key={category.id}
                     to="/listings"
                     search={{ category: category.id }}
-                    className="shrink-0 rounded-2xl bg-card px-3 py-2 text-xs font-bold text-foreground shadow-soft hairline"
+                    className="shrink-0 rounded-xl bg-card px-3 py-2 text-xs font-bold text-foreground shadow-soft hairline"
                   >
                     {categoryName(category.id, category.nameAr, language)}
                     <span className="ms-2 text-[10px] text-muted-foreground">
@@ -258,7 +258,7 @@ function HomePage() {
               </div>
             </section>
 
-            <section className="mt-7">
+            <section className="mt-8 lg:mt-10">
               <SectionHeader title={text("حسب المحافظة", "By governorate")} />
               <div className="flex flex-wrap gap-2">
                 <Link
@@ -282,7 +282,7 @@ function HomePage() {
           </>
         )}
 
-        <section className="mt-7 rounded-2xl bg-card p-4 hairline">
+        <section className="mt-8 rounded-2xl bg-card-warm p-4 hairline lg:mt-10">
           <div className="flex items-center gap-2">
             <ShieldAlert className="h-5 w-5 shrink-0 text-warning" />
             <h3 className="text-sm font-extrabold">{text("تعامل بأمان", "Trade safely")}</h3>
@@ -301,16 +301,16 @@ function HomePage() {
 function PromotedPlacement() {
   const { text } = useUiPreferences();
   return (
-    <section className="mt-4 rounded-2xl bg-card p-4 shadow-soft hairline">
-      <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
+    <section className="mt-6 rounded-2xl bg-primary p-4 text-primary-foreground shadow-soft hairline sm:p-5">
+      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         <div>
-          <span className="inline-flex rounded-full bg-gold/15 px-2.5 py-1 text-[10px] font-extrabold text-gold hairline">
+          <span className="inline-flex rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-[10px] font-extrabold text-gold">
             {text("مساحة مميزة", "Featured space")}
           </span>
-          <h2 className="mt-2 text-base font-extrabold text-foreground">
+          <h2 className="mt-2 text-base font-extrabold text-primary-foreground sm:text-lg">
             {text("روّج إعلانك ليظهر في مساحات بارزة", "Promote your listing into visible spaces")}
           </h2>
-          <p className="mt-1 max-w-2xl text-xs leading-6 text-muted-foreground">
+          <p className="mt-1 max-w-3xl text-xs leading-6 text-primary-foreground/75 sm:text-sm">
             {text(
               "الإعلانات المميزة تخضع للمراجعة الإدارية قبل الظهور في المساحات المخصصة.",
               "Featured listings are reviewed by admins before appearing in designated spaces.",
@@ -319,7 +319,7 @@ function PromotedPlacement() {
         </div>
         <Link
           to="/promotion"
-          className="inline-flex items-center justify-center rounded-xl bg-gold px-4 py-2 text-xs font-extrabold text-gold-foreground"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-gold px-4 py-2 text-xs font-extrabold text-gold-foreground shadow-soft"
         >
           {text("طلب ترويج", "Request promotion")}
         </Link>
@@ -341,16 +341,16 @@ function ListingsSection({
 }) {
   const { text } = useUiPreferences();
   return (
-    <section className="mt-7">
+    <section className="mt-8 lg:mt-10">
       <SectionHeader
         title={title}
         action={{ label: text("عرض الكل", "View all"), to: "/listings" }}
       />
-      <p className="mb-3 text-xs text-muted-foreground">{subtitle}</p>
+      <p className="mb-4 text-sm leading-6 text-muted-foreground">{subtitle}</p>
       {listings.length === 0 ? (
         <HomeState title={empty} compact />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {listings.map((listing) => (
             <HomeListingCard key={listing.id} listing={listing} />
           ))}
