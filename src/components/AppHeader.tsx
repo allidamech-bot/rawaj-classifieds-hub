@@ -53,11 +53,6 @@ export function AppHeader({ compact = false, title }: Props) {
       <div className="container-wide flex items-center gap-2 py-2.5 sm:gap-3 sm:py-3">
         <Link to="/" className="flex min-w-0 items-center gap-2">
           <Logo />
-          {!compact && (
-            <span className="hidden text-[11px] font-medium text-primary-foreground/70 sm:inline">
-              {text("· سوق سوريا المجاني للإعلانات", "· Syria classifieds marketplace")}
-            </span>
-          )}
         </Link>
 
         {compact && title && <h1 className="ms-1 flex-1 truncate text-base font-bold">{title}</h1>}
@@ -180,7 +175,6 @@ function Logo() {
       />
       <span className="flex flex-col leading-none">
         <span className="text-sm font-extrabold tracking-tight sm:text-base">رواج</span>
-        <span className="text-[10px] font-semibold tracking-normal text-gold">RAWAJ · SY</span>
       </span>
     </span>
   );
