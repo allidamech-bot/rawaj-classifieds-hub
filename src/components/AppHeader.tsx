@@ -9,6 +9,7 @@ import {
   UserCog,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import rawajLogo from "@/assets/rawaj-logo.png.asset.json";
 import { fetchPublicGovernorates } from "@/lib/classifieds-api";
 import type { ClassifiedGovernorate } from "@/lib/classifieds-types";
 import { governorateName } from "@/lib/i18n";
