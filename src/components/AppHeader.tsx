@@ -9,7 +9,6 @@ import {
   UserCog,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import rawajLogo from "@/assets/rawaj-logo.png.asset.json";
 import { fetchPublicGovernorates } from "@/lib/classifieds-api";
 import type { ClassifiedGovernorate } from "@/lib/classifieds-types";
 import { governorateName } from "@/lib/i18n";
@@ -121,7 +120,7 @@ export function AppHeader({ compact = false, title }: Props) {
             type="button"
             onClick={() => setOpen((value) => !value)}
             aria-expanded={open}
-            className="inline-flex min-w-0 items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:border-gold/60 hover:bg-gold/20 active:scale-[0.98] sm:text-sm"
+            className="order-3 ms-auto inline-flex min-w-0 items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:border-gold/60 hover:bg-gold/20 active:scale-[0.98] sm:text-sm"
           >
             <MapPin className="h-4 w-4 text-gold" />
             {text("اختر المحافظة", "Choose governorate")}
@@ -164,22 +163,27 @@ export function AppHeader({ compact = false, title }: Props) {
 
 function Logo() {
   return (
-    <span className="flex items-center gap-3">
-      <span className="relative grid place-items-center">
-        <span className="absolute inset-0 rounded-2xl bg-gradient-to-br from-gold/40 via-transparent to-transparent blur-md opacity-70 transition group-hover:opacity-100" />
-        <img
-          src={rawajLogo.url}
-          alt="RAWAJ"
-          decoding="async"
-          className="relative h-12 w-12 sm:h-14 sm:w-14 object-contain drop-shadow-[0_4px_12px_rgba(217,164,65,0.35)]"
-        />
-      </span>
-      <span className="flex items-center gap-2 leading-none">
-        <span className="font-display text-xl font-extrabold tracking-tight text-primary-foreground sm:text-2xl">
+    <span className="flex items-center gap-2.5 sm:gap-3">
+      <img
+        src="/brand/rawaj-mark-transparent-header.png"
+        alt="RAWAJ"
+        decoding="async"
+        className="h-16 w-auto shrink-0 object-contain sm:h-20"
+      />
+
+      <span className="flex items-center gap-2 leading-none sm:gap-2.5">
+        <span className="text-base font-extrabold tracking-normal text-primary-foreground sm:text-xl">
           رواج
         </span>
-        <span className="h-6 w-px bg-gradient-to-b from-transparent via-gold/60 to-transparent sm:h-7" />
-        <span className="text-lg font-black tracking-[0.15em] text-gold sm:text-xl">RAWAJ</span>
+
+        <span
+          className="h-6 w-px bg-gold/80 sm:h-8"
+          aria-hidden="true"
+        />
+
+        <span className="text-xs font-semibold tracking-[0.22em] text-gold sm:text-base">
+          RAWAJ
+        </span>
       </span>
     </span>
   );
