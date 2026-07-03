@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.rawaj.app",
+  appId: "com.rawaj.marketplace",
   appName: "RAWAJ",
   webDir: ".output/public",
   server: {
