@@ -1,10 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   BadgeCheck,
-  Ban,
   Bell,
   Bookmark,
-  Building2,
   ChevronLeft,
   FileText,
   Heart,
@@ -12,72 +10,74 @@ import {
   LifeBuoy,
   Lock,
   LogIn,
+  LogOut,
   MessageCircle,
-  Plus,
   ScrollText,
   ShieldAlert,
-  Sparkles,
   User,
 } from "lucide-react";
 import type { ComponentType } from "react";
+import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/use-auth";
 import { useUiPreferences } from "@/lib/ui-preferences";
+import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/more")({
   component: MorePage,
 });
 
-type MoreRow = {
+type AccountRow = {
   titleAr: string;
   titleEn: string;
   hintAr?: string;
   hintEn?: string;
-  to?: "/" | "/add-listing" | "/admin" | "/chats" | "/favorites" | "/login" | "/notifications" | "/profile" | "/profile/listings" | "/prohibited" | "/promotion" | "/saved-searches" | "/safety" | "/support" | "/terms" | "/verification";
+  to?:
+    | "/chats"
+    | "/favorites"
+    | "/notifications"
+    | "/privacy"
+    | "/profile/listings"
+    | "/saved-searches"
+    | "/safety"
+    | "/support"
+    | "/terms"
+    | "/verification";
   href?: string;
   onClick?: () => void;
   icon: ComponentType<{ className?: string }>;
-  disabled?: boolean;
 };
 
 function MorePage() {
-  const { language, toggleLanguage } = useUiPreferences();
-  const { user } = useAuth();
+  const { language, text, toggleLanguage } = useUiPreferences();
+  const auth = useAuth();
+  const { user } = auth;
+  const [logoutError, setLogoutError] = useState("");
   const isArabic = language === "ar";
-  const text = (ar: string, en: string) => (isArabic ? ar : en);
+
+  async function handleLogout() {
+    setLogoutError("");
+    const result = await auth.signOut();
+    if (result.error) setLogoutError(result.error);
+  }
 
   const groups: Array<{
     titleAr: string;
     titleEn: string;
-    rows: MoreRow[];
+    rows: AccountRow[];
   }> = [
     {
-      titleAr: "الحساب",
-      titleEn: "Account",
+      titleAr: "حسابي",
+      titleEn: "My account",
       rows: [
         {
           titleAr: "معلومات الحساب",
           titleEn: "Account details",
-          hintAr: "تعديل بياناتك الأساسية ووسائل التواصل",
-          hintEn: "Edit your basic details and contact methods",
+          hintAr: "البيانات الأساسية ووسائل التواصل",
+          hintEn: "Basic details and contact methods",
           href: "/profile#account-info",
           icon: User,
         },
-        {
-          titleAr: "اللغة",
-          titleEn: "Language",
-          hintAr: "العربية / English",
-          hintEn: "Arabic / English",
-          icon: Languages,
-          onClick: toggleLanguage,
-        },
-      ],
-    },
-    {
-      titleAr: "نشاطي",
-      titleEn: "My activity",
-      rows: [
         {
           titleAr: "إعلاناتي",
           titleEn: "My listings",
@@ -87,6 +87,20 @@ function MorePage() {
           icon: FileText,
         },
         {
+          titleAr: "التوثيق",
+          titleEn: "Verification",
+          hintAr: "طلبات توثيق تخضع للمراجعة اليدوية",
+          hintEn: "Manual-review verification requests",
+          to: "/verification",
+          icon: BadgeCheck,
+        },
+      ],
+    },
+    {
+      titleAr: "نشاطي",
+      titleEn: "My activity",
+      rows: [
+        {
           titleAr: "المفضلة",
           titleEn: "Favorites",
           hintAr: "الإعلانات التي حفظتها",
@@ -95,7 +109,7 @@ function MorePage() {
           icon: Heart,
         },
         {
-          titleAr: "عمليات البحث المحفوظة",
+          titleAr: "البحث المحفوظ",
           titleEn: "Saved searches",
           hintAr: "متابعة نتائج البحث المهمة",
           hintEn: "Track useful searches",
@@ -109,10 +123,10 @@ function MorePage() {
       titleEn: "Communication",
       rows: [
         {
-          titleAr: "الرسائل والمحادثات",
+          titleAr: "الرسائل",
           titleEn: "Messages",
-          hintAr: "تواصل مع البائعين والمشترين",
-          hintEn: "Contact sellers and buyers",
+          hintAr: "محادثات البيع والشراء",
+          hintEn: "Buyer and seller conversations",
           to: "/chats",
           icon: MessageCircle,
         },
@@ -125,9 +139,9 @@ function MorePage() {
           icon: Bell,
         },
         {
-          titleAr: "الدعم والمساعدة",
-          titleEn: "Help and support",
-          hintAr: "أسئلة ومساعدة المنصة",
+          titleAr: "الدعم",
+          titleEn: "Support",
+          hintAr: "مساعدة وأسئلة المنصة",
           hintEn: "Platform help and questions",
           to: "/support",
           icon: LifeBuoy,
@@ -135,90 +149,80 @@ function MorePage() {
       ],
     },
     {
-      titleAr: "الأمان والقوانين",
-      titleEn: "Safety and rules",
+      titleAr: "الإعدادات",
+      titleEn: "Settings",
       rows: [
         {
-          titleAr: "مركز الأمان",
-          titleEn: "Safety center",
+          titleAr: "اللغة",
+          titleEn: "Language",
+          hintAr: "العربية / English",
+          hintEn: "Arabic / English",
+          icon: Languages,
+          onClick: toggleLanguage,
+        },
+        {
+          titleAr: "الأمان",
+          titleEn: "Safety",
           hintAr: "نصائح للبيع والشراء بأمان",
           hintEn: "Tips for safer buying and selling",
           to: "/safety",
           icon: ShieldAlert,
         },
         {
-          titleAr: "الإعلانات المحظورة",
-          titleEn: "Prohibited listings",
-          hintAr: "ما لا يمكن نشره على RAWAJ",
-          hintEn: "What cannot be posted on RAWAJ",
-          to: "/prohibited",
-          icon: Ban,
+          titleAr: "الخصوصية",
+          titleEn: "Privacy",
+          hintAr: "حماية البيانات واستخدامها",
+          hintEn: "Data protection and usage",
+          to: "/privacy",
+          icon: Lock,
         },
         {
-          titleAr: "الشروط والخصوصية",
-          titleEn: "Terms and privacy",
-          hintAr: "قواعد الاستخدام وحماية البيانات",
-          hintEn: "Usage rules and data privacy",
+          titleAr: "الشروط",
+          titleEn: "Terms",
+          hintAr: "قواعد استخدام RAWAJ",
+          hintEn: "RAWAJ usage rules",
           to: "/terms",
           icon: ScrollText,
         },
-      ],
-    },
-    {
-      titleAr: "للشركات والمعلنين",
-      titleEn: "For businesses",
-      rows: [
-        {
-          titleAr: "باقات الترويج",
-          titleEn: "Promotion packages",
-          hintAr: "طلبات ترويج يراجعها فريق الإدارة",
-          hintEn: "Admin-reviewed promotion requests",
-          to: "/promotion",
-          icon: Sparkles,
-        },
-        {
-          titleAr: "حساب منشأة",
-          titleEn: "Business account",
-          hintAr: "اسم المنشأة ووسائل التواصل التجارية",
-          hintEn: "Business name and commercial contact details",
-          href: "/profile#account-info",
-          icon: Building2,
-        },
-        {
-          titleAr: "طلب توثيق",
-          titleEn: "Verification request",
-          hintAr: "إرسال طلب توثيق للمراجعة اليدوية",
-          hintEn: "Submit a verification request for manual review",
-          to: "/verification",
-          icon: BadgeCheck,
-        },
+        ...(user
+          ? [
+              {
+                titleAr: "تسجيل الخروج",
+                titleEn: "Log out",
+                hintAr: "الخروج من هذا الحساب",
+                hintEn: "Sign out of this account",
+                icon: LogOut,
+                onClick: handleLogout,
+              },
+            ]
+          : []),
       ],
     },
   ];
 
   return (
     <div className="min-h-screen bg-background" dir={isArabic ? "rtl" : "ltr"}>
-      <AppHeader />
+      <AppHeader compact title={text("حسابي", "Account")} />
 
       <main className="mobile-page-bottom mx-auto max-w-5xl px-4 py-4 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-2xl border border-border bg-primary text-primary-foreground shadow-sm">
-          <div className="grid gap-4 p-4 sm:p-6 md:grid-cols-[1fr_auto] md:items-center">
+        <section className="border border-border bg-primary text-primary-foreground">
+          <div className="grid gap-4 p-4 sm:p-5 md:grid-cols-[1fr_auto] md:items-center">
             <div>
-              <p className="text-xs font-bold uppercase tracking-normal text-primary-foreground/70">
-                {text("المزيد", "More")}
+              <p className="text-xs font-bold text-primary-foreground/70">
+                {text("حسابي", "Account")}
               </p>
               <h1 className="mt-1 text-xl font-extrabold md:text-2xl">
-                {text("حسابك وخدمات RAWAJ في مكان واحد", "Your RAWAJ account and services in one place")}
+                {text("إدارة حسابك ونشاطك", "Manage your account and activity")}
               </h1>
-<p className="mt-1 max-w-2xl text-xs leading-6 text-primary-foreground/78 sm:text-sm">
-                 {text(
-                   "إدارة الإعلانات، الرسائل، الأمان، وخدمات المعلنين من مكان واحد.",
-                   "Manage listings, messages, safety, and advertiser services in one place.",
-                 )}
-               </p>
+              <p className="mt-1 max-w-2xl text-xs leading-6 text-primary-foreground/78 sm:text-sm">
+                {text(
+                  "مكان واحد للحساب، الإعلانات، المفضلة، الرسائل، التنبيهات، والإعدادات.",
+                  "One place for account details, listings, favorites, messages, notifications, and settings.",
+                )}
+              </p>
             </div>
 
-            <div className="rounded-2xl border border-white/15 bg-white/10 p-3">
+            <div className="border border-white/15 bg-white/10 p-3">
               {user ? (
                 <div>
                   <div className="flex items-center gap-3">
@@ -227,10 +231,15 @@ function MorePage() {
                     </span>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold">{user.email}</p>
-                      <p className="text-xs text-primary-foreground/70">{text("حساب مسجّل", "Signed-in account")}</p>
+                      <p className="text-xs text-primary-foreground/70">
+                        {text("حساب مسجّل", "Signed-in account")}
+                      </p>
                     </div>
                   </div>
-                  <Button asChild className="mt-4 w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                  <Button
+                    asChild
+                    className="mt-4 w-full bg-accent text-accent-foreground hover:bg-accent/90"
+                  >
                     <Link to="/profile">{text("فتح الحساب", "Open profile")}</Link>
                   </Button>
                 </div>
@@ -242,10 +251,15 @@ function MorePage() {
                     </span>
                     <div>
                       <p className="text-sm font-bold">{text("تصفح كزائر", "Browsing as guest")}</p>
-                      <p className="text-xs text-primary-foreground/70">{text("سجّل الدخول لإدارة نشاطك", "Sign in to manage your activity")}</p>
+                      <p className="text-xs text-primary-foreground/70">
+                        {text("سجّل الدخول لإدارة نشاطك", "Sign in to manage your activity")}
+                      </p>
                     </div>
                   </div>
-                  <Button asChild className="mt-4 w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                  <Button
+                    asChild
+                    className="mt-4 w-full bg-accent text-accent-foreground hover:bg-accent/90"
+                  >
                     <Link to="/login">{text("تسجيل الدخول", "Sign in")}</Link>
                   </Button>
                 </div>
@@ -254,62 +268,35 @@ function MorePage() {
           </div>
         </section>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <Link
-            to="/add-listing"
-            className="flex items-center justify-between rounded-2xl border border-border bg-card p-3 shadow-sm tap-card hover:border-accent/60"
-          >
-            <span className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
-                <Plus className="h-5 w-5" />
-              </span>
-              <span>
-                <span className="block text-sm font-bold text-foreground">{text("أضف إعلاناً جديداً", "Post a new listing")}</span>
-                <span className="block text-xs text-muted-foreground">{text("ابدأ إعلانك بخطوات بسيطة", "Start with a simple listing flow")}</span>
-              </span>
-            </span>
-            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-          </Link>
-
-          <Link
-            to="/promotion"
-            className="flex items-center justify-between rounded-2xl border border-border bg-card p-3 shadow-sm tap-card hover:border-accent/60"
-          >
-            <span className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-                <Sparkles className="h-5 w-5" />
-              </span>
-              <span>
-                <span className="block text-sm font-bold text-foreground">{text("ترويج الإعلانات", "Promote listings")}</span>
-                <span className="block text-xs text-muted-foreground">{text("طلبات يراجعها فريق الإدارة", "Requests reviewed by admins")}</span>
-              </span>
-            </span>
-            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-          </Link>
-        </div>
-
         <div className="mt-5 space-y-3">
+          {logoutError && (
+            <p className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">
+              {logoutError}
+            </p>
+          )}
           {groups.map((group) => (
-            <section key={group.titleEn} className="rounded-2xl border border-border bg-card p-3 shadow-sm">
+            <section key={group.titleEn} className="border border-border bg-card p-3">
               <h2 className="px-2 pb-2 text-sm font-bold text-foreground">
                 {text(group.titleAr, group.titleEn)}
               </h2>
               <div className="divide-y divide-border/70">
                 {group.rows.map((row) => (
-                  <MoreItem key={`${group.titleEn}-${row.titleEn}`} row={row} text={text} />
+                  <AccountItem key={`${group.titleEn}-${row.titleEn}`} row={row} text={text} />
                 ))}
               </div>
             </section>
           ))}
         </div>
 
-        <section className="mt-6 rounded-2xl border border-border bg-card-warm p-4">
+        <section className="mt-6 border border-border bg-card-warm p-4">
           <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Lock className="h-5 w-5" />
             </span>
             <div>
-              <h2 className="text-sm font-bold text-foreground">{text("تذكير أمان", "Safety reminder")}</h2>
+              <h2 className="text-sm font-bold text-foreground">
+                {text("تذكير أمان", "Safety reminder")}
+              </h2>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
                 {text(
                   "لا تشارك رمز التحقق، ولا ترسل عربوناً قبل التأكد من الإعلان والبائع.",
@@ -324,7 +311,7 @@ function MorePage() {
   );
 }
 
-function MoreItem({ row, text }: { row: MoreRow; text: (ar: string, en: string) => string }) {
+function AccountItem({ row, text }: { row: AccountRow; text: (ar: string, en: string) => string }) {
   const Icon = row.icon;
   const content = (
     <>
@@ -333,7 +320,9 @@ function MoreItem({ row, text }: { row: MoreRow; text: (ar: string, en: string) 
           <Icon className="h-4 w-4" />
         </span>
         <span className="min-w-0">
-          <span className="block truncate text-sm font-bold text-foreground">{text(row.titleAr, row.titleEn)}</span>
+          <span className="block truncate text-sm font-bold text-foreground">
+            {text(row.titleAr, row.titleEn)}
+          </span>
           {(row.hintAr || row.hintEn) && (
             <span className="mt-0.5 block truncate text-xs text-muted-foreground">
               {text(row.hintAr ?? row.titleAr, row.hintEn ?? row.titleEn)}
@@ -341,11 +330,11 @@ function MoreItem({ row, text }: { row: MoreRow; text: (ar: string, en: string) 
           )}
         </span>
       </span>
-      <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground rtl:rotate-180" />
     </>
   );
 
-  if (row.onClick && !row.disabled) {
+  if (row.onClick) {
     return (
       <button
         type="button"
@@ -357,7 +346,7 @@ function MoreItem({ row, text }: { row: MoreRow; text: (ar: string, en: string) 
     );
   }
 
-  if (row.href && !row.disabled) {
+  if (row.href) {
     return (
       <a
         href={row.href}
@@ -368,9 +357,12 @@ function MoreItem({ row, text }: { row: MoreRow; text: (ar: string, en: string) 
     );
   }
 
-  if (!row.to || row.disabled) {
+  if (!row.to) {
     return (
-      <div className="flex items-center justify-between gap-3 px-2 py-2.5 opacity-80" aria-disabled="true">
+      <div
+        className="flex items-center justify-between gap-3 px-2 py-2.5 opacity-80"
+        aria-disabled="true"
+      >
         {content}
       </div>
     );

@@ -54,6 +54,7 @@ export interface ClassifiedSubcategory {
   id: string;
   categoryId: string;
   nameAr: string;
+  nameEn: string | null;
   sortOrder: number;
 }
 

@@ -571,6 +571,7 @@ function mapSubcategory(row: Row): ClassifiedSubcategory {
     id: rowString(row, "id"),
     categoryId: rowString(row, "category_id"),
     nameAr: rowString(row, "name_ar"),
+    nameEn: rowNullableString(row, "name_en"),
     sortOrder: rowNumber(row, "sort_order"),
   };
 }

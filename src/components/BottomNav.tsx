@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Grid3X3, Home, MoreHorizontal, Plus, Sparkles } from "lucide-react";
+import { Grid3X3, Home, Plus, Sparkles, User } from "lucide-react";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 type NavItem = {
@@ -16,7 +16,7 @@ const items: NavItem[] = [
   { to: "/categories", labelAr: "الأقسام", labelEn: "Categories", icon: Grid3X3 },
   { to: "/add-listing", labelAr: "أضف إعلان", labelEn: "Post", icon: Plus, primary: true },
   { to: "/offers", labelAr: "العروض", labelEn: "Offers", icon: Sparkles },
-  { to: "/more", labelAr: "المزيد", labelEn: "More", icon: MoreHorizontal },
+  { to: "/more", labelAr: "حسابي", labelEn: "Account", icon: User },
 ];
 
 export function BottomNav() {

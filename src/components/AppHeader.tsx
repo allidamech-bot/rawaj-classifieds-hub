@@ -1,14 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import {
-  Bell,
-  Languages,
-  LogIn,
-  MapPin,
-  ShieldCheck,
-  User,
-  UserCog,
-} from "lucide-react";
+import { Languages, LogIn, MapPin, User, UserCog } from "lucide-react";
 import { useEffect, useState } from "react";
+import { NotificationTrigger } from "@/components/NotificationTrigger";
 import { fetchPublicGovernorates } from "@/lib/classifieds-api";
 import type { ClassifiedGovernorate } from "@/lib/classifieds-types";
 import { governorateName } from "@/lib/i18n";
@@ -59,14 +52,7 @@ export function AppHeader({ compact = false, title }: Props) {
       <div className="container-wide flex items-center gap-3 py-3 sm:gap-6 sm:py-4 lg:py-5">
         {/* Far-left action cluster (visual left in RTL = end) */}
         <div className="order-3 flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <Link
-            to="/notifications"
-            aria-label={text("التنبيهات", "Notifications")}
-            title={text("التنبيهات", "Notifications")}
-            className="relative grid h-9 w-9 place-items-center rounded-full border border-primary-foreground/15 bg-primary-foreground/[0.06] text-primary-foreground/85 backdrop-blur transition hover:border-gold/50 hover:bg-primary-foreground/10 hover:text-gold active:scale-[0.98] sm:h-10 sm:w-10"
-          >
-            <Bell className="h-4 w-4" />
-          </Link>
+          <NotificationTrigger tone="dark" />
           {auth.canAccessOwnerControls && (
             <Link
               to="/admin"
@@ -122,9 +108,6 @@ export function AppHeader({ compact = false, title }: Props) {
           </button>
           {!compact && (
             <>
-              <span className="hidden items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[11px] font-semibold text-gold sm:inline-flex">
-                <ShieldCheck className="h-3.5 w-3.5" /> {text("سوريا فقط", "Syria only")}
-              </span>
               <button
                 type="button"
                 onClick={() => setOpen((value) => !value)}
@@ -140,7 +123,6 @@ export function AppHeader({ compact = false, title }: Props) {
           )}
         </div>
       </div>
-
 
       {open && (
         <div className="container-wide pb-3">
@@ -184,10 +166,7 @@ function Logo() {
           رواج
         </span>
 
-        <span
-          className="h-6 w-px bg-gold/80 sm:h-8"
-          aria-hidden="true"
-        />
+        <span className="h-6 w-px bg-gold/80 sm:h-8" aria-hidden="true" />
 
         <span className="text-xs font-semibold tracking-[0.22em] text-gold sm:text-base">
           RAWAJ

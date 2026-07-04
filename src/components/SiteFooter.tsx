@@ -15,6 +15,7 @@ const groups: {
       { to: "/categories", labelAr: "الأقسام", labelEn: "Categories" },
       { to: "/listings", labelAr: "كل الإعلانات", labelEn: "All listings" },
       { to: "/add-listing", labelAr: "أضف إعلان", labelEn: "Post a listing" },
+      { to: "/offers", labelAr: "العروض", labelEn: "Offers" },
     ],
   },
   {
@@ -23,7 +24,6 @@ const groups: {
     links: [
       { to: "/support", labelAr: "الدعم", labelEn: "Support" },
       { to: "/safety", labelAr: "نصائح الأمان", labelEn: "Safety" },
-      { to: "/promotion", labelAr: "ترويج إعلان", labelEn: "Promotion" },
       { to: "/prohibited", labelAr: "الإعلانات الممنوعة", labelEn: "Prohibited" },
     ],
   },

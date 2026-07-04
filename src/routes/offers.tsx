@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Building2, MapPin, Plus, Search, Sparkles } from "lucide-react";
+import { Building2, MapPin, Search, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
@@ -14,21 +14,11 @@ export const Route = createFileRoute("/offers")({
     createSeo({
       title: "العروض | RAWAJ / رواج",
       description:
-        "مساحة مخصصة للإعلانات المميزة داخل الأقسام. تظهر الإعلانات المميزة من البيانات المتاحة بعد مراجعة الإدارة.",
+        "مساحة مخصصة لعروض المتاجر والشركات على رواج، مع عرض الإعلانات المميزة بشكل منفصل دون افتراض خصومات.",
       path: "/offers",
     }),
   component: OffersPage,
 });
-
-const offerChips = [
-  { labelAr: "الإعلانات المميزة", labelEn: "Featured listings" },
-  { labelAr: "كل الإعلانات المميزة", labelEn: "All featured listings" },
-  { labelAr: "السيارات", labelEn: "Vehicles", q: "سيارات" },
-  { labelAr: "العقارات", labelEn: "Real estate", q: "عقارات" },
-  { labelAr: "الجوالات والإلكترونيات", labelEn: "Electronics", q: "جوالات" },
-  { labelAr: "الخدمات", labelEn: "Services", q: "خدمات" },
-  { labelAr: "حسب المحافظة", labelEn: "By governorate" },
-];
 
 function OffersPage() {
   const { language, text } = useUiPreferences();
@@ -53,113 +43,97 @@ function OffersPage() {
     };
   }, []);
 
-  const featuredOffers = listings.slice(0, 5);
-  const regularOffers = listings.slice(5);
-
   return (
     <>
-      <PageHeader title={text("العروض والإعلانات المميزة", "Offers and featured listings")} />
+      <PageHeader title={text("العروض", "Offers")} />
       <main className="container-wide mobile-page-bottom pt-4">
-        <section className="rounded-2xl bg-card p-4 shadow-soft hairline">
+        <section className="bg-card p-4 hairline sm:p-5">
           <div className="flex items-start gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-gold/15 text-gold">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gold/15 text-gold">
               <Sparkles className="h-5 w-5" />
             </span>
             <div>
-              <h1 className="text-xl font-extrabold">
-                {text("العروض والإعلانات المميزة", "Offers and featured listings")}
-              </h1>
-              <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              <h1 className="mt-1 text-xl font-extrabold">{text("العروض", "Offers")}</h1>
+              <p className="mt-1 text-xs leading-6 text-muted-foreground sm:text-sm">
                 {text(
-                  "تعرض هذه الصفحة الإعلانات المميزة المتاحة حالياً من بيانات السوق، دون افتراض خصومات أو عروض شركات غير مؤكدة.",
-                  "This page shows currently available featured marketplace listings without assuming discounts or company-only offers.",
+                  "مساحة مخصصة لعروض المتاجر والشركات. لا توجد عروض تجارية متاحة حالياً، وتظهر الإعلانات المميزة أدناه كقسم منفصل وليست خصومات.",
+                  "A dedicated space for store and company offers. No commercial offers are available right now; featured listings below are separate and are not discounts.",
                 )}
               </p>
             </div>
           </div>
-          <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1">
-            {offerChips.map((chip) => (
-              <Link
-                key={chip.labelAr}
-                to={chip.q ? "/listings" : "/offers"}
-                search={chip.q ? { q: chip.q } : undefined}
-                className="shrink-0 rounded-full bg-muted-surface px-3 py-1.5 text-xs font-bold text-foreground hairline transition active:scale-[0.98]"
-              >
-                {text(chip.labelAr, chip.labelEn)}
-              </Link>
-            ))}
-          </div>
         </section>
 
-        {loading ? (
-          <EmptyOffer title={text("جاري تحميل العروض", "Loading offers")} />
-        ) : error ? (
-          <EmptyOffer title={text("تعذر تحميل العروض", "Could not load offers")} body={error.message} />
-        ) : featuredOffers.length === 0 ? (
-          <EmptyOffer
-            title={text("لا توجد إعلانات مميزة حالياً", "No featured listings right now")}
-            body={text(
-              "يمكنك إضافة إعلانك أو طلب ترويج يدوي ليظهر ضمن المساحات المناسبة بعد المراجعة.",
-              "You can post a listing or request manual promotion for suitable spaces after review.",
-            )}
-          />
-        ) : (
-          <>
-            <section className="mt-5">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <h2 className="text-sm font-extrabold">{text("إعلانات مميزة", "Featured listings")}</h2>
-                <Link to="/promotion" className="text-xs font-bold text-primary">
-                  {text("طلب ترويج", "Request promotion")}
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-5">
-                {featuredOffers.map((listing, index) => (
-                  <OfferCard key={listing.id} listing={listing} large={index === 0} />
-                ))}
-              </div>
-            </section>
-
-            {regularOffers.length > 0 && (
-              <section className="mt-7">
-                <h2 className="mb-3 text-sm font-extrabold">
-                  {text("إعلانات مميزة أخرى", "More featured listings")}
-                </h2>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {regularOffers.map((listing) => (
-                    <OfferCard key={listing.id} listing={listing} />
-                  ))}
-                </div>
-              </section>
-            )}
-          </>
-        )}
+        <section className="mt-5">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-extrabold">
+                {text("إعلانات مميزة", "Featured listings")}
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {text("ليست خصومات أو عروضاً تجارية.", "Not discounts or business offers.")}
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Link to="/promotion" className="text-xs font-bold text-primary">
+                {text("طلب ترويج إعلان", "Request listing promotion")}
+              </Link>
+              <Link
+                to="/listings"
+                search={{ sort: "featured" }}
+                className="text-xs font-bold text-primary"
+              >
+                {text("عرض في النتائج", "View in results")}
+              </Link>
+            </div>
+          </div>
+          {loading ? (
+            <OffersState
+              title={text("جاري تحميل الإعلانات المميزة", "Loading featured listings")}
+            />
+          ) : error ? (
+            <OffersState
+              title={text("تعذر تحميل الإعلانات المميزة", "Could not load featured listings")}
+              body={error.message}
+            />
+          ) : listings.length === 0 ? (
+            <OffersState
+              title={text(
+                "لا توجد عروض تجارية متاحة حالياً",
+                "No commercial offers available right now",
+              )}
+              body={text(
+                "لا توجد عروض تجارية متاحة حالياً. عند توفر إعلانات مميزة بعد مراجعة الإدارة ستظهر هنا بشكل منفصل.",
+                "No commercial offers are available right now. When admin-reviewed featured listings are available, they will appear here separately.",
+              )}
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {listings.map((listing) => (
+                <FeaturedListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          )}
+        </section>
       </main>
     </>
   );
 }
 
-function OfferCard({
-  listing,
-  large = false,
-}: {
-  listing: ClassifiedListing;
-  large?: boolean;
-}) {
+function FeaturedListingCard({ listing }: { listing: ClassifiedListing }) {
   const { language, text } = useUiPreferences();
   return (
     <Link
       to="/listings/$id"
       params={{ id: listing.id }}
-      className={`overflow-hidden rounded-2xl bg-card shadow-soft hairline tap-card ${
-        large ? "lg:col-span-2 lg:row-span-2" : ""
-      }`}
+      className="overflow-hidden bg-card hairline tap-card"
     >
       <div className="relative">
         {listing.primaryImageUrl ? (
           <img
             src={listing.primaryImageUrl}
             alt={listing.title}
-            className="aspect-[16/9] max-h-52 w-full object-cover lg:max-h-none"
+            className="aspect-[16/9] w-full object-cover"
             loading="lazy"
             decoding="async"
           />
@@ -183,36 +157,19 @@ function OfferCard({
           <MapPin className="h-3 w-3" />
           {governorateName(listing.governorateId, listing.governorateNameAr, language)}
         </p>
-        <span className="mt-3 inline-flex rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
-          {text("شاهد الإعلان", "View listing")}
-        </span>
       </div>
     </Link>
   );
 }
 
-function EmptyOffer({ title, body }: { title: string; body?: string }) {
-  const { text } = useUiPreferences();
+function OffersState({ title, body }: { title: string; body?: string }) {
   return (
-    <section className="mt-5 rounded-2xl bg-card p-6 text-center shadow-soft hairline">
+    <section className="mt-5 bg-card p-6 text-center hairline">
       <Search className="mx-auto h-7 w-7 text-gold" />
       <h2 className="mt-3 text-base font-extrabold">{title}</h2>
-      {body && <p className="mx-auto mt-1 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p>}
-      <div className="mt-4 flex flex-wrap justify-center gap-2">
-        <Link
-          to="/add-listing"
-          className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2 text-xs font-extrabold text-gold-foreground"
-        >
-          <Plus className="h-4 w-4" />
-          {text("أضف إعلانك", "Post your listing")}
-        </Link>
-        <Link
-          to="/promotion"
-          className="rounded-xl bg-muted-surface px-4 py-2 text-xs font-bold text-foreground hairline"
-        >
-          {text("طلب ترويج", "Request promotion")}
-        </Link>
-      </div>
+      {body && (
+        <p className="mx-auto mt-1 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p>
+      )}
     </section>
   );
 }

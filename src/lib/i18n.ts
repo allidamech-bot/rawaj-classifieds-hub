@@ -30,7 +30,7 @@ export const categoryLabels: Record<string, { ar: string; en: string; hintEn?: s
     en: "Business and Industry",
     hintEn: "Equipment, shops, and projects",
   },
-  misc: { ar: "المزيد", en: "More", hintEn: "General listings" },
+  misc: { ar: "متفرقات", en: "Miscellaneous", hintEn: "General listings" },
 };
 
 export const governorateLabels: Record<string, { ar: string; en: string }> = {

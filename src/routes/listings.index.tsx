@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import { Clock, Filter, MapPin, Search, X } from "lucide-react";
+import { ArrowUpDown, Clock, Filter, MapPin, Search, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import {
@@ -92,6 +92,7 @@ function ListingsPage() {
   const [debouncedQ, setDebouncedQ] = useState(search.q ?? "");
   const [open, setOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(Boolean(search.open_filters));
+  const [sortOpen, setSortOpen] = useState(false);
   const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
   const [subcategories, setSubcategories] = useState<ClassifiedSubcategory[]>([]);
   const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
@@ -127,8 +128,6 @@ function ListingsPage() {
   const parsedPriceMin = priceMin.trim() ? Number(priceMin) : undefined;
   const parsedPriceMax = priceMax.trim() ? Number(priceMax) : undefined;
   const hasActiveFilters = Boolean(
-    selectedCategory ||
-    selectedSubcategory ||
     selectedGovernorate ||
     districtAr ||
     q.trim() ||
@@ -145,8 +144,7 @@ function ListingsPage() {
     electronicsBrand ||
     detailCondition ||
     employmentType ||
-    salaryType ||
-    sort !== "latest",
+    salaryType,
   );
 
   useEffect(() => {
@@ -400,9 +398,11 @@ function ListingsPage() {
     sort,
   ]);
 
-  const title = selectedCategory
-    ? categoryName(selectedCategory.id, selectedCategory.nameAr, language)
-    : text("كل الإعلانات", "All listings");
+  const title = selectedSubcategory
+    ? subcategoryName(selectedSubcategory, language)
+    : selectedCategory
+      ? categoryName(selectedCategory.id, selectedCategory.nameAr, language)
+      : text("كل الإعلانات", "All listings");
   const sortChips = [
     { id: "latest", label: text("الأحدث", "Latest") },
     { id: "cheapest", label: text("الأرخص", "Lowest price") },
@@ -464,29 +464,6 @@ function ListingsPage() {
   };
 
   const activeFilters = [
-    selectedCategory
-      ? {
-          key: "category",
-          label: categoryName(selectedCategory.id, selectedCategory.nameAr, language),
-          clear: () => {
-            setSubcategoryId("");
-            void navigate({
-              to: "/listings",
-              search: {
-                gov: govId || undefined,
-                district: districtAr || undefined,
-                price_min: parsedPriceMin,
-                price_max: parsedPriceMax,
-                q: q.trim() || undefined,
-                sort,
-              },
-            });
-          },
-        }
-      : null,
-    selectedSubcategory
-      ? { key: "subcategory", label: selectedSubcategory.nameAr, clear: () => setSubcategoryId("") }
-      : null,
     selectedGovernorate
       ? {
           key: "governorate",
@@ -509,13 +486,6 @@ function ListingsPage() {
       ? { key: "priceMax", label: `${text("إلى", "To")} ${priceMax}`, clear: () => setPriceMax("") }
       : null,
     q.trim() ? { key: "query", label: q.trim(), clear: () => setQ("") } : null,
-    sort !== "latest"
-      ? {
-          key: "sort",
-          label: sortChips.find((chip) => chip.id === sort)?.label ?? sort,
-          clear: () => setSort("latest"),
-        }
-      : null,
     carMake ? { key: "carMake", label: carMake, clear: () => setCarMake("") } : null,
     carModel ? { key: "carModel", label: carModel, clear: () => setCarModel("") } : null,
     fuelType
@@ -577,9 +547,9 @@ function ListingsPage() {
         }
       : null,
   ].filter(Boolean) as Array<{ key: string; label: string; clear: () => void }>;
+  const activeFilterCount = activeFilters.length;
 
   function resetFilters() {
-    setSubcategoryId("");
     setGovId("");
     setDistrictAr("");
     setPriceMin("");
@@ -597,16 +567,102 @@ function ListingsPage() {
     setEmploymentType("");
     setSalaryType("");
     setQ("");
-    setSort("latest");
+    setSortOpen(false);
     setFiltersOpen(false);
-    void navigate({ to: "/listings", search: {} });
+    void navigate({
+      to: "/listings",
+      search: {
+        category: selectedCategory?.id ?? search.category,
+        subcategory: subcategoryId || undefined,
+        sort: sort === "latest" ? undefined : sort,
+      },
+    });
   }
 
   return (
     <>
       <PageHeader title={title} />
       <main className="container-wide mobile-page-bottom pt-4">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
+        <section className="bg-card p-4 hairline">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-[11px] font-extrabold text-gold">
+                {selectedCategory
+                  ? text("نتائج ضمن قسم", "Results in category")
+                  : text("نتائج السوق", "Marketplace results")}
+              </p>
+              <h1 className="mt-1 text-xl font-extrabold">{title}</h1>
+              <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                {loading
+                  ? text("جاري تحميل الإعلانات...", "Loading listings...")
+                  : text(
+                      `${items.length} نتيجة محملة حالياً`,
+                      `${items.length} currently loaded results`,
+                    )}
+              </p>
+            </div>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="text-start text-xs font-bold text-primary"
+              >
+                {text("مسح الفلاتر", "Clear filters")}
+              </button>
+            )}
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setSortOpen(false);
+                setFiltersOpen(true);
+              }}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-3 text-xs font-bold text-primary-foreground"
+            >
+              <Filter className="h-4 w-4" />
+              {activeFilterCount > 0
+                ? text(`فلترة (${activeFilterCount})`, `Filters (${activeFilterCount})`)
+                : text("فلترة", "Filters")}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFiltersOpen(false);
+                setSortOpen((value) => !value);
+              }}
+              aria-expanded={sortOpen}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-muted-surface px-3 text-xs font-bold text-foreground hairline"
+            >
+              <ArrowUpDown className="h-4 w-4" />
+              {sortChips.find((chip) => chip.id === sort)?.label ?? text("ترتيب", "Sort")}
+            </button>
+          </div>
+          {sortOpen && (
+            <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl bg-muted-surface p-2 sm:grid-cols-4">
+              {sortChips.map((chip) => (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => {
+                    setSort(chip.id);
+                    setSortOpen(false);
+                  }}
+                  className={`rounded-lg px-3 py-2 text-xs font-bold transition ${
+                    sort === chip.id
+                      ? "bg-gold text-gold-foreground"
+                      : "bg-card text-foreground hairline hover:bg-secondary"
+                  }`}
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <div className="mt-3 grid grid-cols-1 gap-2">
           <div className="flex items-center gap-2 rounded-xl bg-card px-3 py-2.5 hairline">
             <Search className="h-4 w-4 text-muted-foreground" />
             <input
@@ -616,16 +672,6 @@ function ListingsPage() {
               className="w-full bg-transparent text-sm outline-none"
             />
           </div>
-          <button
-            type="button"
-            onClick={() => setFiltersOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground lg:hidden"
-          >
-            <MapPin className="h-4 w-4 text-gold" />{" "}
-            {selectedGovernorate
-              ? governorateName(selectedGovernorate.id, selectedGovernorate.nameAr, language)
-              : text("كل سوريا", "All Syria")}
-          </button>
         </div>
 
         <section className="mt-3 hidden rounded-2xl bg-card p-3 shadow-soft hairline lg:block">
@@ -694,7 +740,7 @@ function ListingsPage() {
                             : "bg-muted-surface text-foreground hover:bg-secondary"
                         }`}
                       >
-                        {subcategory.nameAr}
+                        {subcategoryName(subcategory, language)}
                       </button>
                     ))}
                   </div>
@@ -703,25 +749,9 @@ function ListingsPage() {
             </div>
             <div>
               <h2 className="mb-2 text-xs font-extrabold text-muted-foreground">
-                {text("الترتيب والمكان", "Sort and location")}
+                {text("المكان والسعر", "Location and price")}
               </h2>
               <div className="rounded-xl bg-muted-surface p-2">
-                <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
-                  {sortChips.map((chip) => (
-                    <button
-                      key={chip.id}
-                      type="button"
-                      onClick={() => setSort(chip.id)}
-                      className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                        sort === chip.id
-                          ? "bg-gold text-gold-foreground"
-                          : "bg-card text-foreground hairline hover:bg-secondary"
-                      }`}
-                    >
-                      {chip.label}
-                    </button>
-                  ))}
-                </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <GovernorateChip
                     active={!govId}
@@ -927,7 +957,7 @@ function ListingsPage() {
                               : "bg-muted-surface text-foreground"
                           }`}
                         >
-                          {subcategory.nameAr}
+                          {subcategoryName(subcategory, language)}
                         </button>
                       ))}
                     </div>
@@ -986,7 +1016,7 @@ function ListingsPage() {
 
                 <div>
                   <h3 className="mb-2 text-xs font-extrabold text-muted-foreground">
-                    {text("السعر والترتيب", "Price and sort")}
+                    {text("السعر", "Price")}
                   </h3>
                   <div className="mb-3 grid grid-cols-2 gap-3">
                     <label>
@@ -1015,22 +1045,6 @@ function ListingsPage() {
                         className="input text-xs"
                       />
                     </label>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {sortChips.map((chip) => (
-                      <button
-                        key={chip.id}
-                        type="button"
-                        onClick={() => setSort(chip.id)}
-                        className={`rounded-xl px-3 py-2 text-xs font-bold ${
-                          sort === chip.id
-                            ? "bg-gold text-gold-foreground"
-                            : "bg-muted-surface text-foreground"
-                        }`}
-                      >
-                        {chip.label}
-                      </button>
-                    ))}
                   </div>
                 </div>
 
@@ -1121,23 +1135,6 @@ function ListingsPage() {
           </div>
         )}
 
-        <div className="no-scrollbar mt-3 hidden gap-2 overflow-x-auto pb-1">
-          {sortChips.map((chip) => (
-            <button
-              key={chip.id}
-              type="button"
-              onClick={() => setSort(chip.id)}
-              className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                sort === chip.id
-                  ? "bg-gold text-gold-foreground"
-                  : "bg-card text-foreground hairline hover:bg-muted-surface"
-              }`}
-            >
-              {chip.label}
-            </button>
-          ))}
-        </div>
-
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
           <span>
             {loading
@@ -1154,7 +1151,7 @@ function ListingsPage() {
         <div className="mt-3 flex flex-wrap gap-2">
           <Link
             to="/categories"
-              className="rounded-full bg-card px-3 py-1.5 text-xs font-bold text-foreground hairline transition active:scale-[0.98]"
+            className="rounded-full bg-card px-3 py-1.5 text-xs font-bold text-foreground hairline transition active:scale-[0.98]"
           >
             {text("تصفح الأقسام", "Browse categories")}
           </Link>
@@ -1499,6 +1496,10 @@ function GovernorateChip({
       {label}
     </button>
   );
+}
+
+function subcategoryName(subcategory: ClassifiedSubcategory, language: "ar" | "en") {
+  return language === "en" ? (subcategory.nameEn ?? subcategory.nameAr) : subcategory.nameAr;
 }
 
 function RealListingCard({ listing }: { listing: ClassifiedListing }) {
