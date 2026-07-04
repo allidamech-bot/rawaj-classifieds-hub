@@ -14,6 +14,7 @@ import {
   fetchPublicGovernorates,
   fetchPublicListings,
   fetchPublicSubcategories,
+  fetchPublicTaxonomyNodes,
   searchPublicSellers,
 } from "@/lib/classifieds-api";
 import type {
@@ -23,12 +24,22 @@ import type {
   ClassifiedSubcategory,
   ClassifiedsError,
   PublicSellerSearchResult,
+  TaxonomyNode,
 } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
+import {
+  buildTaxonomyIndex,
+  findTaxonomyNode,
+  getTaxonomyPath,
+  resolveTaxonomyListingSearch,
+  taxonomyNodeName,
+  taxonomyPathLabel,
+} from "@/lib/taxonomy";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 const searchSchema = z.object({
+  taxonomy: z.string().optional(),
   category: z.string().optional(),
   subcategory: z.string().optional(),
   gov: z.string().optional(),
@@ -96,23 +107,51 @@ function ListingsPage() {
   const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
   const [subcategories, setSubcategories] = useState<ClassifiedSubcategory[]>([]);
   const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
+  const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>([]);
+  const [referencesLoaded, setReferencesLoaded] = useState(false);
   const [items, setItems] = useState<ClassifiedListing[]>([]);
   const [sellerResults, setSellerResults] = useState<PublicSellerSearchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [sellerSearchError, setSellerSearchError] = useState<ClassifiedsError | null>(null);
 
+  const taxonomyIndex = useMemo(() => buildTaxonomyIndex(taxonomyNodes), [taxonomyNodes]);
+  const selectedTaxonomyNode = findTaxonomyNode(taxonomyIndex, search.taxonomy);
+  const selectedTaxonomyPath = getTaxonomyPath(taxonomyIndex, selectedTaxonomyNode);
+  const taxonomyListingSearch = selectedTaxonomyNode
+    ? resolveTaxonomyListingSearch(selectedTaxonomyNode, selectedTaxonomyPath)
+    : undefined;
+  const taxonomyOwnsPropertyPurpose = Boolean(taxonomyListingSearch?.property_purpose);
+  const taxonomyOwnsPropertyType = Boolean(taxonomyListingSearch?.property_type);
+  const categorySearchValue = taxonomyListingSearch?.category ?? search.category;
+  const effectiveSubcategoryId =
+    !taxonomyListingSearch?.taxonomyLegacySubcategoryId && !subcategoryId ? "" : subcategoryId;
+  const effectivePropertyPurpose = taxonomyOwnsPropertyPurpose
+    ? taxonomyListingSearch?.property_purpose
+    : propertyPurpose || undefined;
+  const effectivePropertyType = taxonomyOwnsPropertyType
+    ? taxonomyListingSearch?.property_type
+    : propertyType || undefined;
+  const filterPropertyPurpose = taxonomyOwnsPropertyPurpose
+    ? (taxonomyListingSearch?.property_purpose ?? "")
+    : propertyPurpose;
+  const filterPropertyType = taxonomyOwnsPropertyType
+    ? (taxonomyListingSearch?.property_type ?? "")
+    : propertyType;
   const selectedCategory = useMemo(
     () =>
-      search.category
+      categorySearchValue
         ? categories.find(
-            (category) => category.id === search.category || category.slug === search.category,
+            (category) =>
+              category.id === categorySearchValue || category.slug === categorySearchValue,
           )
         : undefined,
-    [categories, search.category],
+    [categories, categorySearchValue],
   );
   const selectedGovernorate = governorates.find((gov) => gov.id === govId);
-  const selectedSubcategory = subcategories.find((subcategory) => subcategory.id === subcategoryId);
+  const selectedSubcategory = subcategories.find(
+    (subcategory) => subcategory.id === effectiveSubcategoryId,
+  );
   const categoryFieldKind = detectCategoryFieldKind(selectedCategory);
   const availableSubcategories = useMemo(
     () =>
@@ -137,8 +176,8 @@ function ListingsPage() {
     carModel ||
     fuelType ||
     transmission ||
-    propertyPurpose ||
-    propertyType ||
+    (propertyPurpose && !taxonomyOwnsPropertyPurpose) ||
+    (propertyType && !taxonomyOwnsPropertyType) ||
     rooms.trim() ||
     rentalDuration ||
     electronicsBrand ||
@@ -214,11 +253,17 @@ function ListingsPage() {
   }, [availableDistricts, districtAr, selectedGovernorate]);
 
   useEffect(() => {
+    if (!referencesLoaded) return;
+
     void navigate({
       to: "/listings",
       search: {
+        taxonomy: selectedTaxonomyNode?.id,
         category: selectedCategory?.id,
-        subcategory: subcategoryId || undefined,
+        subcategory:
+          !taxonomyListingSearch?.taxonomyLegacySubcategoryId && !subcategoryId
+            ? undefined
+            : subcategoryId || undefined,
         gov: govId || undefined,
         district: districtAr || undefined,
         price_min: parsedPriceMin,
@@ -227,8 +272,12 @@ function ListingsPage() {
         car_model: carModel || undefined,
         fuel: fuelType || undefined,
         transmission: transmission || undefined,
-        property_purpose: propertyPurpose || undefined,
-        property_type: propertyType || undefined,
+        property_purpose: taxonomyOwnsPropertyPurpose
+          ? taxonomyListingSearch?.property_purpose
+          : propertyPurpose || undefined,
+        property_type: taxonomyOwnsPropertyType
+          ? taxonomyListingSearch?.property_type
+          : propertyType || undefined,
         rooms: rooms.trim() ? Number(rooms) : undefined,
         rental_duration: rentalDuration || undefined,
         electronics_brand: electronicsBrand || undefined,
@@ -241,8 +290,17 @@ function ListingsPage() {
       replace: true,
     });
   }, [
+    selectedTaxonomyNode?.id,
+    referencesLoaded,
     selectedCategory?.id,
     subcategoryId,
+    taxonomyListingSearch?.taxonomyLegacySubcategoryId,
+    effectivePropertyPurpose,
+    effectivePropertyType,
+    taxonomyOwnsPropertyPurpose,
+    taxonomyOwnsPropertyType,
+    taxonomyListingSearch?.property_purpose,
+    taxonomyListingSearch?.property_type,
     govId,
     districtAr,
     parsedPriceMin,
@@ -271,11 +329,13 @@ function ListingsPage() {
       setLoading(true);
       setError(null);
 
-      const [categoriesResult, subcategoriesResult, governoratesResult] = await Promise.all([
-        fetchPublicCategories(),
-        fetchPublicSubcategories(),
-        fetchPublicGovernorates(),
-      ]);
+      const [categoriesResult, subcategoriesResult, governoratesResult, taxonomyResult] =
+        await Promise.all([
+          fetchPublicCategories(),
+          fetchPublicSubcategories(),
+          fetchPublicGovernorates(),
+          fetchPublicTaxonomyNodes(),
+        ]);
 
       if (cancelled) return;
 
@@ -297,9 +357,17 @@ function ListingsPage() {
         return;
       }
 
+      if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
+        setError(taxonomyResult.error);
+        setLoading(false);
+        return;
+      }
+
       setCategories(categoriesResult.data);
       setSubcategories(subcategoriesResult.data);
       setGovernorates(governoratesResult.data);
+      setTaxonomyNodes(taxonomyResult.ok ? taxonomyResult.data : []);
+      setReferencesLoaded(true);
       const initialGov = search.gov
         ? governoratesResult.data.find((gov) => gov.id === search.gov || gov.slug === search.gov)
         : undefined;
@@ -314,7 +382,7 @@ function ListingsPage() {
   }, [search.gov]);
 
   useEffect(() => {
-    if (categories.length === 0 && governorates.length === 0) return;
+    if (!referencesLoaded) return;
 
     let cancelled = false;
 
@@ -325,7 +393,14 @@ function ListingsPage() {
       const [result, sellerResult] = await Promise.all([
         fetchPublicListings({
           categoryId: selectedCategory?.id,
-          subcategoryId: subcategoryId || undefined,
+          subcategoryId: effectiveSubcategoryId || undefined,
+          taxonomyLegacySubcategoryId: taxonomyListingSearch?.taxonomyLegacySubcategoryId,
+          taxonomyPropertyPurpose: taxonomyOwnsPropertyPurpose
+            ? taxonomyListingSearch?.property_purpose
+            : undefined,
+          taxonomyPropertyType: taxonomyOwnsPropertyType
+            ? taxonomyListingSearch?.property_type
+            : undefined,
           governorateId: govId || undefined,
           districtAr: districtAr || undefined,
           priceMin: Number.isFinite(parsedPriceMin) ? parsedPriceMin : undefined,
@@ -334,8 +409,8 @@ function ListingsPage() {
           carModel: carModel || undefined,
           fuelType: fuelType || undefined,
           transmission: transmission || undefined,
-          propertyPurpose: propertyPurpose || undefined,
-          propertyType: propertyType || undefined,
+          propertyPurpose: taxonomyOwnsPropertyPurpose ? undefined : propertyPurpose || undefined,
+          propertyType: taxonomyOwnsPropertyType ? undefined : propertyType || undefined,
           rooms: rooms.trim() ? Number(rooms) : undefined,
           rentalDuration: rentalDuration || undefined,
           electronicsBrand: electronicsBrand || undefined,
@@ -376,8 +451,10 @@ function ListingsPage() {
   }, [
     categories.length,
     governorates.length,
+    taxonomyNodes.length,
+    referencesLoaded,
     selectedCategory?.id,
-    subcategoryId,
+    effectiveSubcategoryId,
     govId,
     districtAr,
     parsedPriceMin,
@@ -388,6 +465,11 @@ function ListingsPage() {
     transmission,
     propertyPurpose,
     propertyType,
+    taxonomyOwnsPropertyPurpose,
+    taxonomyOwnsPropertyType,
+    taxonomyListingSearch?.taxonomyLegacySubcategoryId,
+    taxonomyListingSearch?.property_purpose,
+    taxonomyListingSearch?.property_type,
     rooms,
     rentalDuration,
     electronicsBrand,
@@ -398,11 +480,16 @@ function ListingsPage() {
     sort,
   ]);
 
-  const title = selectedSubcategory
-    ? subcategoryName(selectedSubcategory, language)
-    : selectedCategory
-      ? categoryName(selectedCategory.id, selectedCategory.nameAr, language)
-      : text("كل الإعلانات", "All listings");
+  const taxonomyTitle = selectedTaxonomyNode
+    ? taxonomyNodeName(selectedTaxonomyNode, language)
+    : undefined;
+  const title = taxonomyTitle
+    ? taxonomyTitle
+    : selectedSubcategory
+      ? subcategoryName(selectedSubcategory, language)
+      : selectedCategory
+        ? categoryName(selectedCategory.id, selectedCategory.nameAr, language)
+        : text("كل الإعلانات", "All listings");
   const sortChips = [
     { id: "latest", label: text("الأحدث", "Latest") },
     { id: "cheapest", label: text("الأرخص", "Lowest price") },
@@ -498,14 +585,14 @@ function ListingsPage() {
           clear: () => setTransmission(""),
         }
       : null,
-    propertyPurpose
+    propertyPurpose && !taxonomyOwnsPropertyPurpose
       ? {
           key: "propertyPurpose",
           label: propertyPurposeLabels[propertyPurpose] ?? propertyPurpose,
           clear: () => setPropertyPurpose(""),
         }
       : null,
-    propertyType
+    propertyType && !taxonomyOwnsPropertyType
       ? {
           key: "propertyType",
           label: propertyTypeLabels[propertyType] ?? propertyType,
@@ -558,8 +645,6 @@ function ListingsPage() {
     setCarModel("");
     setFuelType("");
     setTransmission("");
-    setPropertyPurpose("");
-    setPropertyType("");
     setRooms("");
     setRentalDuration("");
     setElectronicsBrand("");
@@ -569,13 +654,22 @@ function ListingsPage() {
     setQ("");
     setSortOpen(false);
     setFiltersOpen(false);
+    const taxonomyPurposeVal = taxonomyListingSearch?.property_purpose;
+    const taxonomyTypeVal = taxonomyListingSearch?.property_type;
+    setSubcategoryId(search.taxonomy ? "" : (search.subcategory ?? ""));
+    setPropertyPurpose(taxonomyPurposeVal ?? "");
+    setPropertyType(taxonomyTypeVal ?? "");
     void navigate({
       to: "/listings",
       search: {
+        taxonomy: selectedTaxonomyNode?.id,
         category: selectedCategory?.id ?? search.category,
-        subcategory: subcategoryId || undefined,
+        subcategory: search.taxonomy ? undefined : search.subcategory,
+        property_purpose: taxonomyPurposeVal,
+        property_type: taxonomyTypeVal,
         sort: sort === "latest" ? undefined : sort,
       },
+      replace: true,
     });
   }
 
@@ -592,6 +686,11 @@ function ListingsPage() {
                   : text("نتائج السوق", "Marketplace results")}
               </p>
               <h1 className="mt-1 text-xl font-extrabold">{title}</h1>
+              {selectedTaxonomyPath.length > 1 && (
+                <p className="mt-1 text-[11px] font-bold text-gold">
+                  {taxonomyPathLabel(selectedTaxonomyPath, language)}
+                </p>
+              )}
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
                 {loading
                   ? text("جاري تحميل الإعلانات...", "Loading listings...")
@@ -827,8 +926,8 @@ function ListingsPage() {
                     carModel,
                     fuelType,
                     transmission,
-                    propertyPurpose,
-                    propertyType,
+                    propertyPurpose: filterPropertyPurpose,
+                    propertyType: filterPropertyType,
                     rooms,
                     rentalDuration,
                     electronicsBrand,
@@ -850,6 +949,8 @@ function ListingsPage() {
                     setEmploymentType,
                     setSalaryType,
                   }}
+                  taxonomyOwnsPurpose={taxonomyOwnsPropertyPurpose}
+                  taxonomyOwnsType={taxonomyOwnsPropertyType}
                 />
                 <div className="mt-3 flex justify-end">
                   <button
@@ -1061,8 +1162,8 @@ function ListingsPage() {
                         carModel,
                         fuelType,
                         transmission,
-                        propertyPurpose,
-                        propertyType,
+                        propertyPurpose: filterPropertyPurpose,
+                        propertyType: filterPropertyType,
                         rooms,
                         rentalDuration,
                         electronicsBrand,
@@ -1084,6 +1185,8 @@ function ListingsPage() {
                         setEmploymentType,
                         setSalaryType,
                       }}
+                      taxonomyOwnsPurpose={taxonomyOwnsPropertyPurpose}
+                      taxonomyOwnsType={taxonomyOwnsPropertyType}
                     />
                   </div>
                 )}
@@ -1241,6 +1344,8 @@ function CategorySpecificFilterFields({
   text,
   values,
   setters,
+  taxonomyOwnsPurpose,
+  taxonomyOwnsType,
 }: {
   kind: CategoryFieldKind;
   text: (ar: string, en: string) => string;
@@ -1272,6 +1377,8 @@ function CategorySpecificFilterFields({
     setEmploymentType: (value: string) => void;
     setSalaryType: (value: string) => void;
   };
+  taxonomyOwnsPurpose?: boolean;
+  taxonomyOwnsType?: boolean;
 }) {
   if (kind === "vehicles") {
     return (
@@ -1327,6 +1434,7 @@ function CategorySpecificFilterFields({
           label={text("الغرض", "Purpose")}
           value={values.propertyPurpose}
           onChange={setters.setPropertyPurpose}
+          disabled={taxonomyOwnsPurpose}
         >
           <option value="">{text("بيع أو إيجار", "Sale or rent")}</option>
           <option value="sale">{text("بيع", "Sale")}</option>
@@ -1336,6 +1444,7 @@ function CategorySpecificFilterFields({
           label={text("نوع العقار", "Property type")}
           value={values.propertyType}
           onChange={setters.setPropertyType}
+          disabled={taxonomyOwnsType}
         >
           <option value="">{text("كل الأنواع", "All types")}</option>
           <option value="apartment">{text("شقة", "Apartment")}</option>
@@ -1454,11 +1563,13 @@ function FilterSelect({
   value,
   onChange,
   children,
+  disabled,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   children: React.ReactNode;
+  disabled?: boolean;
 }) {
   return (
     <label className="block">
@@ -1466,7 +1577,8 @@ function FilterSelect({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="input text-xs"
+        className="input text-xs disabled:opacity-60"
+        disabled={disabled}
       >
         {children}
       </select>

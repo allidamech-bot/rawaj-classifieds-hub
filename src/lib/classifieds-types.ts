@@ -58,6 +58,26 @@ export interface ClassifiedSubcategory {
   sortOrder: number;
 }
 
+export interface TaxonomyNode {
+  id: string;
+  parentId: string | null;
+  slug: string;
+  nameAr: string;
+  nameEn: string | null;
+  descriptionAr: string | null;
+  descriptionEn: string | null;
+  iconKey: string | null;
+  sortOrder: number;
+  depth: number;
+  isActive: boolean;
+  isLeaf: boolean;
+  filterSchemaKey: string | null;
+  classificationKey: string | null;
+  classificationValue: string | null;
+  legacyCategoryId: string | null;
+  legacySubcategoryId: string | null;
+}
+
 export interface ClassifiedGovernorate {
   id: string;
   slug: string;
@@ -481,6 +501,9 @@ export interface ListingFilters {
   transmission?: string;
   propertyPurpose?: string;
   propertyType?: string;
+  taxonomyPropertyPurpose?: string;
+  taxonomyPropertyType?: string;
+  taxonomyLegacySubcategoryId?: string;
   rooms?: number;
   rentalDuration?: string;
   electronicsBrand?: string;

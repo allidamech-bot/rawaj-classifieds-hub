@@ -42,6 +42,7 @@ import type {
   SellerRatingSummary,
   SellerReview,
   SupportRequest,
+  TaxonomyNode,
   CreateSellerReviewPayload,
   UpdateProfileBasicsPayload,
   UpdateListingPayload,
@@ -495,6 +496,10 @@ function escapePostgrestSearchTerm(value: string) {
   return value.replace(/[\\%_,().:*"]/g, "\\$&");
 }
 
+function escapePostgrestFilterValue(value: string) {
+  return value.replace(/[\\(),]/g, "\\$&");
+}
+
 async function signListingImages(
   client: SupabaseClient,
   images: ListingImage[],
@@ -576,6 +581,28 @@ function mapSubcategory(row: Row): ClassifiedSubcategory {
   };
 }
 
+function mapTaxonomyNode(row: Row): TaxonomyNode {
+  return {
+    id: rowString(row, "id"),
+    parentId: rowNullableString(row, "parent_id"),
+    slug: rowString(row, "slug"),
+    nameAr: rowString(row, "name_ar"),
+    nameEn: rowNullableString(row, "name_en"),
+    descriptionAr: rowNullableString(row, "description_ar"),
+    descriptionEn: rowNullableString(row, "description_en"),
+    iconKey: rowNullableString(row, "icon_key"),
+    sortOrder: rowNumber(row, "sort_order"),
+    depth: rowNumber(row, "depth"),
+    isActive: rowBoolean(row, "is_active", true),
+    isLeaf: rowBoolean(row, "is_leaf"),
+    filterSchemaKey: rowNullableString(row, "filter_schema_key"),
+    classificationKey: rowNullableString(row, "classification_key"),
+    classificationValue: rowNullableString(row, "classification_value"),
+    legacyCategoryId: rowNullableString(row, "legacy_category_id"),
+    legacySubcategoryId: rowNullableString(row, "legacy_subcategory_id"),
+  };
+}
+
 async function readReferences(client: SupabaseClient) {
   const [categoriesResult, governoratesResult] = await Promise.all([
     client.from("categories").select("*").eq("is_active", true).order("sort_order"),
@@ -623,6 +650,21 @@ export async function fetchPublicSubcategories(): Promise<
   return { ok: true, data: ((data ?? []) as Row[]).map(mapSubcategory) };
 }
 
+export async function fetchPublicTaxonomyNodes(): Promise<ClassifiedsResult<TaxonomyNode[]>> {
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("taxonomy_nodes")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("name_ar", { ascending: true });
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Row[]).map(mapTaxonomyNode) };
+}
+
 export async function fetchPublicGovernorates(): Promise<
   ClassifiedsResult<ClassifiedGovernorate[]>
 > {
@@ -651,7 +693,43 @@ export async function fetchPublicListings(
   let query = clientResult.data.from("listings").select("*").eq("status", "approved");
 
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
+
+  const taxonomyClassifiers = [
+    filters.taxonomyPropertyPurpose
+      ? { key: "listing_purpose", value: filters.taxonomyPropertyPurpose }
+      : null,
+    filters.taxonomyPropertyType
+      ? { key: "property_type", value: filters.taxonomyPropertyType }
+      : null,
+  ].filter((item): item is { key: string; value: string } => item !== null);
+
+  if (filters.taxonomyLegacySubcategoryId && taxonomyClassifiers.length > 0) {
+    const legacySubcategory = escapePostgrestFilterValue(filters.taxonomyLegacySubcategoryId);
+    const explicitBranch = [
+      `subcategory_id.eq.${legacySubcategory}`,
+      ...taxonomyClassifiers.map(({ key, value }) => {
+        const cleanValue = escapePostgrestFilterValue(value);
+        return `or(details->>${key}.is.null,details->>${key}.eq.${cleanValue})`;
+      }),
+    ].join(",");
+    const detailsFallbackBranch = [
+      "subcategory_id.is.null",
+      ...taxonomyClassifiers.map(
+        ({ key, value }) => `details->>${key}.eq.${escapePostgrestFilterValue(value)}`,
+      ),
+    ].join(",");
+
+    query = query.or(`and(${explicitBranch}),and(${detailsFallbackBranch})`);
+  } else if (filters.taxonomyLegacySubcategoryId) {
+    query = query.eq("subcategory_id", filters.taxonomyLegacySubcategoryId);
+  } else {
+    for (const { key, value } of taxonomyClassifiers) {
+      query = query.eq(`details->>${key}`, value);
+    }
+  }
+
   if (filters.subcategoryId) query = query.eq("subcategory_id", filters.subcategoryId);
+
   if (filters.governorateId) query = query.eq("governorate_id", filters.governorateId);
   if (filters.districtAr?.trim()) query = query.eq("district_ar", filters.districtAr.trim());
   if (typeof filters.priceMin === "number") query = query.gte("price", filters.priceMin);
