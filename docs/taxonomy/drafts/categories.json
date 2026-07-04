@@ -1,0 +1,192 @@
+{
+  "status": "draft_for_review",
+  "updatedAt": "2026-07-04",
+  "topLevelCategoryCount": 13,
+  "notes": [
+    "Not implemented in production.",
+    "Arabic labels are primary.",
+    "Food/local products are deferred as a broad category pending policy review.",
+    "Travel/tourism is represented only as a deferred internal branch."
+  ],
+  "deferredVirtualTargets": [
+    {
+      "id": "food_local_products",
+      "labelAr": "طعام ومنتجات محلية",
+      "reason": "Broad food category requires policy review for perishables, expiry, infant food, supplements, medical claims, origin, and refrigeration."
+    },
+    {
+      "id": "travel_tourism",
+      "labelAr": "سفر وسياحة",
+      "reason": "Requires product scope and policy review before lodging/tour/travel service claims."
+    }
+  ],
+  "familyDecisions": [
+    { "familyAr": "عقارات", "decision": "KEEP", "target": "real_estate", "targetType": "actual" },
+    { "familyAr": "مركبات", "decision": "KEEP", "target": "vehicles", "targetType": "actual" },
+    { "familyAr": "موبايلات وأجهزة ذكية", "decision": "KEEP", "target": "phones_smart_devices", "targetType": "actual" },
+    { "familyAr": "إلكترونيات", "decision": "MERGE", "target": "computers_electronics", "targetType": "actual" },
+    { "familyAr": "كمبيوتر ولابتوب", "decision": "SPLIT", "target": "computers_electronics.laptops", "targetType": "actual" },
+    { "familyAr": "منزل وأثاث", "decision": "KEEP", "target": "home_furniture", "targetType": "actual" },
+    { "familyAr": "أزياء ومستلزمات شخصية", "decision": "KEEP", "target": "fashion_personal", "targetType": "actual" },
+    { "familyAr": "أطفال وأمومة", "decision": "SPLIT", "target": "children_maternity", "targetType": "actual" },
+    { "familyAr": "وظائف", "decision": "KEEP", "target": "jobs", "targetType": "actual" },
+    { "familyAr": "خدمات", "decision": "KEEP", "target": "services", "targetType": "actual" },
+    { "familyAr": "أعمال ومعدات", "decision": "MERGE", "target": "business_industry_agriculture", "targetType": "actual" },
+    { "familyAr": "صناعة وتجهيزات", "decision": "MERGE", "target": "business_industry_agriculture.industry", "targetType": "actual" },
+    { "familyAr": "زراعة ومزارع", "decision": "MERGE", "target": "business_industry_agriculture.agriculture_equipment", "targetType": "actual" },
+    { "familyAr": "حيوانات ومستلزماتها", "decision": "KEEP", "target": "animals_supplies", "targetType": "actual" },
+    { "familyAr": "رياضة وهوايات", "decision": "MERGE", "target": "education_hobbies_travel.sports_hobbies", "targetType": "actual" },
+    { "familyAr": "تعليم وتدريب", "decision": "MERGE", "target": "education_hobbies_travel.education_training", "targetType": "actual" },
+    { "familyAr": "سفر وسياحة", "decision": "DEFER", "target": "education_hobbies_travel.travel_deferred", "targetType": "actual_deferred" },
+    { "familyAr": "طعام ومنتجات محلية", "decision": "DEFER", "target": "food_local_products", "targetType": "deferred_virtual" },
+    { "familyAr": "أخرى", "decision": "KEEP_CONTROLLED", "target": "more", "targetType": "actual" }
+  ],
+  "mainCategories": [
+    {
+      "id": "real_estate",
+      "labelAr": "عقارات",
+      "labelEn": "Real estate",
+      "children": [
+        { "id": "real_estate.apartments.sale", "labelAr": "شقق للبيع", "intent": "sale" },
+        { "id": "real_estate.apartments.rent", "labelAr": "شقق للإيجار", "intent": "rent" },
+        { "id": "real_estate.apartments.short_rent", "labelAr": "شقق مفروشة/إيجار قصير", "intent": "short_rent", "rollout": "review" },
+        { "id": "real_estate.houses_villas", "labelAr": "منازل وفيلات", "intent": "sale_or_rent" },
+        { "id": "real_estate.land", "labelAr": "أراضي", "intent": "sale" },
+        { "id": "real_estate.shops_offices", "labelAr": "محلات ومكاتب", "intent": "sale_or_rent" },
+        { "id": "real_estate.warehouses_workshops", "labelAr": "مستودعات وورش", "intent": "sale_or_rent" },
+        { "id": "real_estate.farms", "labelAr": "مزارع", "intent": "sale_or_rent" },
+        { "id": "real_estate.wanted", "labelAr": "عقارات مطلوبة", "intent": "wanted" }
+      ]
+    },
+    {
+      "id": "vehicles",
+      "labelAr": "مركبات",
+      "labelEn": "Vehicles",
+      "children": [
+        { "id": "vehicles.cars.sale", "labelAr": "سيارات للبيع", "intent": "sale" },
+        { "id": "vehicles.cars.rent", "labelAr": "سيارات للإيجار", "intent": "rent" },
+        { "id": "vehicles.cars.wanted", "labelAr": "سيارات مطلوبة", "intent": "wanted" },
+        { "id": "vehicles.motorcycles", "labelAr": "دراجات نارية", "intent": "sale" },
+        { "id": "vehicles.trucks_buses", "labelAr": "شاحنات وباصات", "intent": "sale" },
+        { "id": "vehicles.parts_accessories", "labelAr": "قطع وإكسسوارات", "intent": "sale" }
+      ]
+    },
+    {
+      "id": "phones_smart_devices",
+      "labelAr": "موبايلات وأجهزة ذكية",
+      "labelEn": "Phones and smart devices",
+      "children": [
+        { "id": "phones_smart_devices.phones", "labelAr": "هواتف", "intent": "sale" },
+        { "id": "phones_smart_devices.tablets", "labelAr": "تابلت", "intent": "sale" },
+        { "id": "phones_smart_devices.smartwatches", "labelAr": "ساعات ذكية", "intent": "sale" },
+        { "id": "phones_smart_devices.accessories_parts", "labelAr": "إكسسوارات وقطع", "intent": "sale" }
+      ]
+    },
+    {
+      "id": "computers_electronics",
+      "labelAr": "كمبيوتر وإلكترونيات",
+      "labelEn": "Computers and electronics",
+      "children": [
+        { "id": "computers_electronics.laptops", "labelAr": "لابتوبات", "intent": "sale" },
+        { "id": "computers_electronics.desktops_components", "labelAr": "كمبيوتر وقطع", "intent": "sale" },
+        { "id": "computers_electronics.tvs", "labelAr": "تلفزيونات", "intent": "sale" },
+        { "id": "computers_electronics.audio", "labelAr": "صوتيات", "intent": "sale" },
+        { "id": "computers_electronics.cameras", "labelAr": "كاميرات", "intent": "sale" },
+        { "id": "computers_electronics.gaming", "labelAr": "ألعاب وكونسول", "intent": "sale" },
+        { "id": "computers_electronics.appliances", "labelAr": "أجهزة منزلية كهربائية", "intent": "sale" }
+      ]
+    },
+    {
+      "id": "home_furniture",
+      "labelAr": "منزل وأثاث",
+      "labelEn": "Home and furniture",
+      "children": [
+        { "id": "home_furniture.furniture", "labelAr": "أثاث", "intent": "sale" },
+        { "id": "home_furniture.decor_lighting", "labelAr": "ديكور وإنارة", "intent": "sale" },
+        { "id": "home_furniture.household_items", "labelAr": "أدوات منزلية", "intent": "sale" }
+      ]
+    },
+    {
+      "id": "fashion_personal",
+      "labelAr": "أزياء ومستلزمات شخصية",
+      "labelEn": "Fashion and personal",
+      "children": [
+        { "id": "fashion_personal.clothing", "labelAr": "ملابس", "intent": "sale" },
+        { "id": "fashion_personal.shoes_bags", "labelAr": "أحذية وحقائب", "intent": "sale" },
+        { "id": "fashion_personal.accessories_perfumes", "labelAr": "إكسسوارات وعطور", "intent": "sale" }
+      ]
+    },
+    {
+      "id": "children_maternity",
+      "labelAr": "أطفال وأمومة",
+      "labelEn": "Children and maternity",
+      "children": [
+        { "id": "children_maternity.strollers_car_seats", "labelAr": "عربات ومقاعد أطفال", "intent": "sale" },
+        { "id": "children_maternity.toys", "labelAr": "ألعاب أطفال", "intent": "sale" },
+        { "id": "children_maternity.clothing", "labelAr": "ملابس أطفال", "intent": "sale" },
+        { "id": "children_maternity.maternity", "labelAr": "مستلزمات أمومة", "intent": "sale" }
+      ]
+    },
+    {
+      "id": "jobs",
+      "labelAr": "وظائف",
+      "labelEn": "Jobs",
+      "children": [
+        { "id": "jobs.offers", "labelAr": "وظائف شاغرة", "intent": "job_offer" },
+        { "id": "jobs.seekers", "labelAr": "باحثون عن عمل", "intent": "job_seeker" }
+      ]
+    },
+    {
+      "id": "services",
+      "labelAr": "خدمات",
+      "labelEn": "Services",
+      "children": [
+        { "id": "services.offered", "labelAr": "خدمة مقدمة", "intent": "service_offered" },
+        { "id": "services.requested", "labelAr": "خدمة مطلوبة", "intent": "service_requested" },
+        { "id": "services.vehicle_services", "labelAr": "خدمات سيارات", "intent": "service_offered" }
+      ]
+    },
+    {
+      "id": "business_industry_agriculture",
+      "labelAr": "أعمال ومعدات وزراعة",
+      "labelEn": "Business, industry, and agriculture",
+      "children": [
+        { "id": "business_industry_agriculture.business_equipment", "labelAr": "معدات أعمال ومحلات", "intent": "sale" },
+        { "id": "business_industry_agriculture.industry", "labelAr": "صناعة وتجهيزات", "intent": "sale" },
+        { "id": "business_industry_agriculture.heavy_machinery", "labelAr": "آليات ثقيلة", "intent": "sale_or_rent" },
+        { "id": "business_industry_agriculture.agriculture_equipment", "labelAr": "معدات زراعية", "intent": "sale_or_rent" }
+      ]
+    },
+    {
+      "id": "animals_supplies",
+      "labelAr": "حيوانات ومستلزماتها",
+      "labelEn": "Animals and supplies",
+      "children": [
+        { "id": "animals_supplies.pets", "labelAr": "حيوانات أليفة", "intent": "sale" },
+        { "id": "animals_supplies.livestock", "labelAr": "مواشي", "intent": "sale" },
+        { "id": "animals_supplies.birds", "labelAr": "طيور", "intent": "sale" },
+        { "id": "animals_supplies.supplies_feed", "labelAr": "مستلزمات وأعلاف", "intent": "sale" }
+      ]
+    },
+    {
+      "id": "education_hobbies_travel",
+      "labelAr": "تعليم وهوايات وسفر",
+      "labelEn": "Education, hobbies, and travel",
+      "children": [
+        { "id": "education_hobbies_travel.education_training", "labelAr": "تعليم وتدريب", "intent": "service_offered" },
+        { "id": "education_hobbies_travel.sports_hobbies", "labelAr": "رياضة وهوايات", "intent": "sale_or_service" },
+        { "id": "education_hobbies_travel.travel_deferred", "labelAr": "سفر وسياحة", "intent": "deferred", "rollout": "deferred", "expansion_status": "not_defined", "reason": "Travel/tourism requires product scope and policy review." }
+      ]
+    },
+    {
+      "id": "more",
+      "labelAr": "أخرى",
+      "labelEn": "More",
+      "children": [
+        { "id": "more.books_media", "labelAr": "كتب ووسائط", "intent": "sale" },
+        { "id": "more.gifts_collectibles", "labelAr": "هدايا ومقتنيات", "intent": "sale" },
+        { "id": "more.other_controlled", "labelAr": "أخرى", "intent": "sale", "rollout": "controlled_fallback" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2280 @@
+{
+  "status": "draft_for_review",
+  "updatedAt": "2026-07-04",
+  "fields": [
+    {
+      "field_key": "area_sqm",
+      "label_ar": "المساحة",
+      "label_en": "Area",
+      "type": "number",
+      "unit": "sqm",
+      "required": true,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.apartments.sale",
+        "real_estate.apartments.rent",
+        "real_estate.land",
+        "real_estate.warehouses_workshops"
+      ],
+      "validation": {
+        "min": 1,
+        "max": 1000000
+      }
+    },
+    {
+      "field_key": "rooms",
+      "label_ar": "عدد الغرف",
+      "label_en": "Rooms",
+      "type": "number",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.apartments.sale",
+        "real_estate.apartments.rent",
+        "real_estate.houses_villas"
+      ],
+      "visible_when": {
+        "property_group": [
+          "residential"
+        ]
+      },
+      "hidden_when": {
+        "property_type": [
+          "land",
+          "warehouse",
+          "shop"
+        ]
+      },
+      "validation": {
+        "min": 0,
+        "max": 30
+      }
+    },
+    {
+      "field_key": "rental_period",
+      "label_ar": "مدة الإيجار",
+      "label_en": "Rental period",
+      "type": "enum",
+      "values": [
+        {
+          "key": "daily",
+          "label_ar": "يومي"
+        },
+        {
+          "key": "monthly",
+          "label_ar": "شهري"
+        },
+        {
+          "key": "yearly",
+          "label_ar": "سنوي"
+        },
+        {
+          "key": "negotiable",
+          "label_ar": "حسب الاتفاق"
+        }
+      ],
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.apartments.rent",
+        "real_estate.apartments.short_rent",
+        "vehicles.cars.rent"
+      ],
+      "visible_when": {
+        "transaction_intent": [
+          "rent",
+          "short_rent"
+        ]
+      }
+    },
+    {
+      "field_key": "vehicle_make",
+      "label_ar": "الشركة",
+      "label_en": "Make",
+      "type": "enum_or_text",
+      "required": true,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.cars.sale",
+        "vehicles.cars.rent",
+        "vehicles.motorcycles",
+        "vehicles.trucks_buses"
+      ],
+      "depends_on": [],
+      "values_source": "external_or_dependent",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "vehicle_model",
+      "label_ar": "الطراز",
+      "label_en": "Model",
+      "type": "text",
+      "required": true,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.cars.sale",
+        "vehicles.cars.rent",
+        "vehicles.motorcycles",
+        "vehicles.trucks_buses"
+      ],
+      "depends_on": [
+        "vehicle_make"
+      ]
+    },
+    {
+      "field_key": "body_type",
+      "label_ar": "شكل المركبة",
+      "label_en": "Body type",
+      "type": "enum",
+      "values": [
+        {
+          "key": "sedan",
+          "label_ar": "سيدان"
+        },
+        {
+          "key": "hatchback",
+          "label_ar": "هاتشباك"
+        },
+        {
+          "key": "suv",
+          "label_ar": "دفع رباعي/SUV"
+        },
+        {
+          "key": "pickup",
+          "label_ar": "بيك أب"
+        },
+        {
+          "key": "van",
+          "label_ar": "فان"
+        }
+      ],
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.cars.sale",
+        "vehicles.cars.rent"
+      ],
+      "hidden_when": {
+        "vehicle_leaf": [
+          "motorcycle",
+          "truck",
+          "bus",
+          "part"
+        ]
+      }
+    },
+    {
+      "field_key": "brand",
+      "label_ar": "الشركة",
+      "label_en": "Brand",
+      "type": "enum_or_text",
+      "required": true,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "phones_smart_devices.phones",
+        "phones_smart_devices.tablets",
+        "computers_electronics.laptops",
+        "computers_electronics.tvs",
+        "fashion_personal",
+        "business_industry_agriculture"
+      ],
+      "values_source": "external_or_dependent",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "battery_health_percent",
+      "label_ar": "صحة البطارية",
+      "label_en": "Battery health",
+      "type": "number",
+      "unit": "percent",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "phones_smart_devices.phones",
+        "phones_smart_devices.tablets",
+        "computers_electronics.laptops"
+      ],
+      "validation": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "field_key": "processor",
+      "label_ar": "المعالج",
+      "label_en": "Processor",
+      "type": "text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "computers_electronics.laptops",
+        "computers_electronics.desktops_components"
+      ]
+    },
+    {
+      "field_key": "job_intent",
+      "label_ar": "نوع إعلان الوظيفة",
+      "label_en": "Job intent",
+      "type": "enum",
+      "values": [
+        {
+          "key": "job_offer",
+          "label_ar": "وظيفة شاغرة"
+        },
+        {
+          "key": "job_seeker",
+          "label_ar": "باحث عن عمل"
+        }
+      ],
+      "required": true,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.offers",
+        "jobs.seekers"
+      ]
+    },
+    {
+      "field_key": "service_intent",
+      "label_ar": "نوع إعلان الخدمة",
+      "label_en": "Service intent",
+      "type": "enum",
+      "values": [
+        {
+          "key": "service_offered",
+          "label_ar": "خدمة مقدمة"
+        },
+        {
+          "key": "service_requested",
+          "label_ar": "خدمة مطلوبة"
+        }
+      ],
+      "required": true,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "services.offered",
+        "services.requested"
+      ]
+    },
+    {
+      "field_key": "price_range",
+      "label_ar": "نطاق السعر",
+      "label_en": "Price range",
+      "type": "range",
+      "required": false,
+      "filterable": true,
+      "sortable": true,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": false,
+      "applies_to": [
+        "global"
+      ]
+    },
+    {
+      "field_key": "locality_id",
+      "label_ar": "المنطقة",
+      "label_en": "Locality",
+      "type": "ref",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "global"
+      ]
+    },
+    {
+      "field_key": "furnished",
+      "label_ar": "مفروش",
+      "label_en": "Furnished",
+      "type": "boolean",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.apartments.rent"
+      ]
+    },
+    {
+      "field_key": "floor",
+      "label_ar": "الطابق",
+      "label_en": "Floor",
+      "type": "number",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.apartments.sale",
+        "real_estate.apartments.rent"
+      ]
+    },
+    {
+      "field_key": "elevator",
+      "label_ar": "مصعد",
+      "label_en": "Elevator",
+      "type": "boolean",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.apartments.sale",
+        "real_estate.apartments.rent"
+      ]
+    },
+    {
+      "field_key": "parking",
+      "label_ar": "موقف",
+      "label_en": "Parking",
+      "type": "boolean",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate"
+      ]
+    },
+    {
+      "field_key": "balcony",
+      "label_ar": "شرفة",
+      "label_en": "Balcony",
+      "type": "boolean",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.apartments.sale",
+        "real_estate.apartments.rent"
+      ]
+    },
+    {
+      "field_key": "building_age",
+      "label_ar": "عمر البناء",
+      "label_en": "Building age",
+      "type": "enum_or_number",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate"
+      ],
+      "values_status": "unresolved",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "available_from",
+      "label_ar": "متاح من",
+      "label_en": "Available from",
+      "type": "date",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.apartments.rent"
+      ]
+    },
+    {
+      "field_key": "deposit_amount",
+      "label_ar": "التأمين",
+      "label_en": "Deposit",
+      "type": "number",
+      "unit": "syp",
+      "required": false,
+      "filterable": false,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.apartments.rent"
+      ]
+    },
+    {
+      "field_key": "building_floors",
+      "label_ar": "عدد طوابق البناء",
+      "label_en": "Building floors",
+      "type": "number",
+      "required": false,
+      "filterable": false,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.apartments.sale",
+        "real_estate.apartments.rent"
+      ]
+    },
+    {
+      "field_key": "frontage_m",
+      "label_ar": "الواجهة",
+      "label_en": "Frontage",
+      "type": "number",
+      "unit": "m",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.land"
+      ]
+    },
+    {
+      "field_key": "road_access",
+      "label_ar": "وصول طريق",
+      "label_en": "Road access",
+      "type": "boolean",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.land"
+      ]
+    },
+    {
+      "field_key": "utilities_available",
+      "label_ar": "خدمات متاحة",
+      "label_en": "Utilities available",
+      "type": "multi_enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.land"
+      ],
+      "values": [
+        {
+          "key": "water",
+          "label_ar": "???"
+        },
+        {
+          "key": "electricity",
+          "label_ar": "??????"
+        },
+        {
+          "key": "road",
+          "label_ar": "????"
+        },
+        {
+          "key": "sewer",
+          "label_ar": "??? ???"
+        },
+        {
+          "key": "unknown",
+          "label_ar": "??? ????"
+        }
+      ]
+    },
+    {
+      "field_key": "year",
+      "label_ar": "سنة الصنع",
+      "label_en": "Year",
+      "type": "number",
+      "required": false,
+      "filterable": true,
+      "sortable": true,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles",
+        "business_industry_agriculture"
+      ]
+    },
+    {
+      "field_key": "mileage_km",
+      "label_ar": "المسافة",
+      "label_en": "Mileage",
+      "type": "number",
+      "unit": "km",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles"
+      ]
+    },
+    {
+      "field_key": "fuel_type",
+      "label_ar": "الوقود",
+      "label_en": "Fuel",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.cars.sale",
+        "vehicles.trucks_buses"
+      ],
+      "values": [
+        {
+          "key": "gasoline",
+          "label_ar": "?????"
+        },
+        {
+          "key": "diesel",
+          "label_ar": "????"
+        },
+        {
+          "key": "hybrid",
+          "label_ar": "??????"
+        },
+        {
+          "key": "electric",
+          "label_ar": "??????"
+        },
+        {
+          "key": "gas",
+          "label_ar": "???"
+        },
+        {
+          "key": "other",
+          "label_ar": "????"
+        }
+      ]
+    },
+    {
+      "field_key": "transmission",
+      "label_ar": "ناقل الحركة",
+      "label_en": "Transmission",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.cars.sale",
+        "vehicles.trucks_buses"
+      ],
+      "values": [
+        {
+          "key": "automatic",
+          "label_ar": "?????????"
+        },
+        {
+          "key": "manual",
+          "label_ar": "????"
+        },
+        {
+          "key": "semi_auto",
+          "label_ar": "??? ?????????"
+        }
+      ]
+    },
+    {
+      "field_key": "vehicle_condition",
+      "label_ar": "حالة المركبة",
+      "label_en": "Vehicle condition",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles"
+      ],
+      "values": [
+        {
+          "key": "new",
+          "label_ar": "????"
+        },
+        {
+          "key": "used_excellent",
+          "label_ar": "?????? ?????"
+        },
+        {
+          "key": "used_good",
+          "label_ar": "?????? ???"
+        },
+        {
+          "key": "needs_repair",
+          "label_ar": "????? ?????"
+        },
+        {
+          "key": "damaged",
+          "label_ar": "?????"
+        }
+      ]
+    },
+    {
+      "field_key": "color",
+      "label_ar": "اللون",
+      "label_en": "Color",
+      "type": "text",
+      "required": false,
+      "filterable": false,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles"
+      ]
+    },
+    {
+      "field_key": "vehicle_trim",
+      "label_ar": "الفئة",
+      "label_en": "Trim",
+      "type": "text",
+      "required": false,
+      "filterable": false,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.cars.sale"
+      ]
+    },
+    {
+      "field_key": "engine_size",
+      "label_ar": "سعة المحرك",
+      "label_en": "Engine size",
+      "type": "number",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.cars.sale",
+        "vehicles.motorcycles"
+      ]
+    },
+    {
+      "field_key": "motorcycle_type",
+      "label_ar": "نوع الدراجة",
+      "label_en": "Motorcycle type",
+      "type": "enum_or_text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.motorcycles"
+      ],
+      "values_source": "external_or_dependent",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "part_type",
+      "label_ar": "نوع القطعة",
+      "label_en": "Part type",
+      "type": "enum_or_text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.parts_accessories"
+      ],
+      "values_source": "external_or_dependent",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "compatible_make",
+      "label_ar": "شركة متوافقة",
+      "label_en": "Compatible make",
+      "type": "text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.parts_accessories"
+      ]
+    },
+    {
+      "field_key": "compatible_model",
+      "label_ar": "طراز متوافق",
+      "label_en": "Compatible model",
+      "type": "text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.parts_accessories"
+      ]
+    },
+    {
+      "field_key": "compatible_year_from",
+      "label_ar": "سنة من",
+      "label_en": "Year from",
+      "type": "number",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.parts_accessories"
+      ]
+    },
+    {
+      "field_key": "compatible_year_to",
+      "label_ar": "سنة إلى",
+      "label_en": "Year to",
+      "type": "number",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.parts_accessories"
+      ]
+    },
+    {
+      "field_key": "part_condition",
+      "label_ar": "حالة القطعة",
+      "label_en": "Part condition",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.parts_accessories"
+      ],
+      "values": [
+        {
+          "key": "new",
+          "label_ar": "????"
+        },
+        {
+          "key": "used",
+          "label_ar": "??????"
+        },
+        {
+          "key": "refurbished",
+          "label_ar": "????"
+        },
+        {
+          "key": "for_parts",
+          "label_ar": "?????"
+        }
+      ]
+    },
+    {
+      "field_key": "part_origin",
+      "label_ar": "أصل القطعة",
+      "label_en": "Part origin",
+      "type": "enum",
+      "required": false,
+      "filterable": false,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.parts_accessories"
+      ],
+      "values": [
+        {
+          "key": "original",
+          "label_ar": "????"
+        },
+        {
+          "key": "aftermarket",
+          "label_ar": "????"
+        },
+        {
+          "key": "unknown",
+          "label_ar": "??? ????"
+        }
+      ]
+    },
+    {
+      "field_key": "model",
+      "label_ar": "الموديل",
+      "label_en": "Model",
+      "type": "text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "phones_smart_devices",
+        "computers_electronics"
+      ]
+    },
+    {
+      "field_key": "storage",
+      "label_ar": "التخزين",
+      "label_en": "Storage",
+      "type": "enum_or_text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "phones_smart_devices",
+        "computers_electronics.laptops"
+      ],
+      "values_source": "external_or_dependent",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "ram",
+      "label_ar": "الذاكرة",
+      "label_en": "RAM",
+      "type": "enum_or_text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "phones_smart_devices.phones",
+        "computers_electronics.laptops"
+      ],
+      "values_source": "external_or_dependent",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "device_condition",
+      "label_ar": "حالة الجهاز",
+      "label_en": "Device condition",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "phones_smart_devices",
+        "computers_electronics"
+      ],
+      "values": [
+        {
+          "key": "sealed_new",
+          "label_ar": "???? ????"
+        },
+        {
+          "key": "new_open_box",
+          "label_ar": "???? ?????"
+        },
+        {
+          "key": "used_excellent",
+          "label_ar": "?????? ?????"
+        },
+        {
+          "key": "used_good",
+          "label_ar": "?????? ???"
+        },
+        {
+          "key": "for_parts",
+          "label_ar": "?????"
+        }
+      ]
+    },
+    {
+      "field_key": "warranty",
+      "label_ar": "الضمان",
+      "label_en": "Warranty",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "phones_smart_devices",
+        "computers_electronics"
+      ],
+      "values": [
+        {
+          "key": "yes",
+          "label_ar": "???? ????"
+        },
+        {
+          "key": "no",
+          "label_ar": "???? ????"
+        },
+        {
+          "key": "unknown",
+          "label_ar": "??? ????"
+        }
+      ]
+    },
+    {
+      "field_key": "accessories",
+      "label_ar": "الملحقات",
+      "label_en": "Accessories",
+      "type": "text",
+      "required": false,
+      "filterable": false,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "phones_smart_devices",
+        "computers_electronics"
+      ]
+    },
+    {
+      "field_key": "screen_size_in",
+      "label_ar": "حجم الشاشة",
+      "label_en": "Screen size",
+      "type": "number",
+      "unit": "in",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "phones_smart_devices.tablets",
+        "computers_electronics.laptops",
+        "computers_electronics.tvs"
+      ]
+    },
+    {
+      "field_key": "gpu",
+      "label_ar": "كرت الشاشة",
+      "label_en": "GPU",
+      "type": "text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "computers_electronics.laptops",
+        "computers_electronics.desktops_components"
+      ]
+    },
+    {
+      "field_key": "battery_note",
+      "label_ar": "ملاحظة البطارية",
+      "label_en": "Battery note",
+      "type": "text",
+      "required": false,
+      "filterable": false,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "computers_electronics.laptops"
+      ]
+    },
+    {
+      "field_key": "job_family",
+      "label_ar": "مجال العمل",
+      "label_en": "Job family",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.offers"
+      ],
+      "values_status": "unresolved",
+      "values_reason": "Needs Syria-appropriate job family review before stable enum launch."
+    },
+    {
+      "field_key": "employment_type",
+      "label_ar": "نمط العمل",
+      "label_en": "Employment type",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.offers"
+      ],
+      "values": [
+        {
+          "key": "full_time",
+          "label_ar": "???? ????"
+        },
+        {
+          "key": "part_time",
+          "label_ar": "???? ????"
+        },
+        {
+          "key": "contract",
+          "label_ar": "???"
+        },
+        {
+          "key": "temporary",
+          "label_ar": "????"
+        },
+        {
+          "key": "internship",
+          "label_ar": "?????"
+        },
+        {
+          "key": "freelance",
+          "label_ar": "??? ??"
+        }
+      ]
+    },
+    {
+      "field_key": "work_mode",
+      "label_ar": "مكان/نمط العمل",
+      "label_en": "Work mode",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.offers",
+        "jobs.seekers"
+      ],
+      "values": [
+        {
+          "key": "onsite",
+          "label_ar": "?????"
+        },
+        {
+          "key": "remote",
+          "label_ar": "?? ???"
+        },
+        {
+          "key": "hybrid",
+          "label_ar": "????"
+        },
+        {
+          "key": "field",
+          "label_ar": "??????"
+        }
+      ]
+    },
+    {
+      "field_key": "salary_type",
+      "label_ar": "نوع الراتب",
+      "label_en": "Salary type",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.offers"
+      ],
+      "values": [
+        {
+          "key": "fixed",
+          "label_ar": "????"
+        },
+        {
+          "key": "range",
+          "label_ar": "????"
+        },
+        {
+          "key": "commission",
+          "label_ar": "?????"
+        },
+        {
+          "key": "negotiable",
+          "label_ar": "???? ???????"
+        },
+        {
+          "key": "not_listed",
+          "label_ar": "??? ????"
+        }
+      ]
+    },
+    {
+      "field_key": "salary_range",
+      "label_ar": "نطاق الراتب",
+      "label_en": "Salary range",
+      "type": "range",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.offers"
+      ]
+    },
+    {
+      "field_key": "experience_level",
+      "label_ar": "مستوى الخبرة",
+      "label_en": "Experience level",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.offers"
+      ],
+      "values": [
+        {
+          "key": "not_required",
+          "label_ar": "??? ??????"
+        },
+        {
+          "key": "entry",
+          "label_ar": "?????"
+        },
+        {
+          "key": "mid",
+          "label_ar": "?????"
+        },
+        {
+          "key": "senior",
+          "label_ar": "????"
+        },
+        {
+          "key": "manager",
+          "label_ar": "?????"
+        }
+      ]
+    },
+    {
+      "field_key": "shift_type",
+      "label_ar": "نوع الدوام",
+      "label_en": "Shift type",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.offers"
+      ],
+      "values": [
+        {
+          "key": "morning",
+          "label_ar": "?????"
+        },
+        {
+          "key": "evening",
+          "label_ar": "?????"
+        },
+        {
+          "key": "night",
+          "label_ar": "????"
+        },
+        {
+          "key": "rotating",
+          "label_ar": "???????"
+        },
+        {
+          "key": "flexible",
+          "label_ar": "???"
+        }
+      ]
+    },
+    {
+      "field_key": "application_method",
+      "label_ar": "طريقة التقديم",
+      "label_en": "Application method",
+      "type": "enum",
+      "required": false,
+      "filterable": false,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.offers"
+      ],
+      "values": [
+        {
+          "key": "rawaj_message",
+          "label_ar": "????? ????"
+        },
+        {
+          "key": "phone",
+          "label_ar": "????"
+        },
+        {
+          "key": "whatsapp",
+          "label_ar": "??????"
+        },
+        {
+          "key": "email",
+          "label_ar": "???? ????????"
+        },
+        {
+          "key": "external",
+          "label_ar": "???? ?????"
+        }
+      ]
+    },
+    {
+      "field_key": "desired_role",
+      "label_ar": "الوظيفة المطلوبة",
+      "label_en": "Desired role",
+      "type": "text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.seekers"
+      ]
+    },
+    {
+      "field_key": "experience_years",
+      "label_ar": "سنوات الخبرة",
+      "label_en": "Experience years",
+      "type": "number",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.seekers"
+      ]
+    },
+    {
+      "field_key": "expected_salary",
+      "label_ar": "الراتب المتوقع",
+      "label_en": "Expected salary",
+      "type": "number",
+      "unit": "syp",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.seekers"
+      ]
+    },
+    {
+      "field_key": "skills",
+      "label_ar": "المهارات",
+      "label_en": "Skills",
+      "type": "text",
+      "required": false,
+      "filterable": false,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.seekers"
+      ]
+    },
+    {
+      "field_key": "service_family",
+      "label_ar": "نوع الخدمة",
+      "label_en": "Service family",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "services"
+      ],
+      "values_status": "unresolved",
+      "values_reason": "Needs Syria-appropriate service family review and regulated-service policy."
+    },
+    {
+      "field_key": "availability",
+      "label_ar": "التوفر",
+      "label_en": "Availability",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "services.offered"
+      ],
+      "values": [
+        {
+          "key": "same_day",
+          "label_ar": "??? ?????"
+        },
+        {
+          "key": "scheduled",
+          "label_ar": "?????"
+        },
+        {
+          "key": "weekdays",
+          "label_ar": "???? ???????"
+        },
+        {
+          "key": "weekends",
+          "label_ar": "????? ???????"
+        },
+        {
+          "key": "negotiable",
+          "label_ar": "??? ???????"
+        }
+      ]
+    },
+    {
+      "field_key": "starting_price",
+      "label_ar": "السعر يبدأ من",
+      "label_en": "Starting price",
+      "type": "number",
+      "unit": "syp",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "services.offered"
+      ]
+    },
+    {
+      "field_key": "pricing_unit",
+      "label_ar": "وحدة التسعير",
+      "label_en": "Pricing unit",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "services.offered"
+      ],
+      "values": [
+        {
+          "key": "fixed",
+          "label_ar": "??? ????"
+        },
+        {
+          "key": "hour",
+          "label_ar": "???????"
+        },
+        {
+          "key": "day",
+          "label_ar": "??????"
+        },
+        {
+          "key": "project",
+          "label_ar": "????????"
+        },
+        {
+          "key": "visit",
+          "label_ar": "????????"
+        },
+        {
+          "key": "negotiable",
+          "label_ar": "??? ???????"
+        }
+      ]
+    },
+    {
+      "field_key": "provider_type",
+      "label_ar": "نوع مقدم الخدمة",
+      "label_en": "Provider type",
+      "type": "enum",
+      "required": false,
+      "filterable": false,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "services.offered"
+      ],
+      "values": [
+        {
+          "key": "individual",
+          "label_ar": "???"
+        },
+        {
+          "key": "business",
+          "label_ar": "???/????"
+        },
+        {
+          "key": "team",
+          "label_ar": "????"
+        },
+        {
+          "key": "unknown",
+          "label_ar": "??? ????"
+        }
+      ]
+    },
+    {
+      "field_key": "needed_date",
+      "label_ar": "التاريخ المطلوب",
+      "label_en": "Needed date",
+      "type": "date",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "services.requested"
+      ]
+    },
+    {
+      "field_key": "budget",
+      "label_ar": "الميزانية",
+      "label_en": "Budget",
+      "type": "number",
+      "unit": "syp",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "services.requested"
+      ]
+    },
+    {
+      "field_key": "description",
+      "label_ar": "الوصف",
+      "label_en": "Description",
+      "type": "textarea",
+      "required": false,
+      "filterable": false,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "global"
+      ]
+    },
+    {
+      "field_key": "governorate_id",
+      "label_ar": "????????",
+      "label_en": "Governorate",
+      "type": "ref",
+      "required": true,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "global"
+      ]
+    },
+    {
+      "field_key": "item_type",
+      "label_ar": "??? ??????",
+      "label_en": "Item type",
+      "type": "enum_or_text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "home_furniture",
+        "fashion_personal",
+        "children_maternity"
+      ],
+      "values_source": "category_dependent",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "item_condition",
+      "label_ar": "??????",
+      "label_en": "Condition",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "home_furniture",
+        "fashion_personal",
+        "children_maternity",
+        "business_industry_agriculture"
+      ],
+      "values": [
+        {
+          "key": "new",
+          "label_ar": "????"
+        },
+        {
+          "key": "used_excellent",
+          "label_ar": "?????? ?????"
+        },
+        {
+          "key": "used_good",
+          "label_ar": "?????? ???"
+        },
+        {
+          "key": "needs_repair",
+          "label_ar": "????? ?????"
+        }
+      ]
+    },
+    {
+      "field_key": "material",
+      "label_ar": "??????",
+      "label_en": "Material",
+      "type": "text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "home_furniture",
+        "fashion_personal"
+      ]
+    },
+    {
+      "field_key": "dimensions",
+      "label_ar": "???????",
+      "label_en": "Dimensions",
+      "type": "text",
+      "required": false,
+      "filterable": false,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "home_furniture"
+      ]
+    },
+    {
+      "field_key": "size",
+      "label_ar": "??????",
+      "label_en": "Size",
+      "type": "enum_or_text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "fashion_personal"
+      ],
+      "values_source": "category_dependent",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "audience",
+      "label_ar": "?????",
+      "label_en": "Audience",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "fashion_personal",
+        "children_maternity"
+      ],
+      "values": [
+        {
+          "key": "men",
+          "label_ar": "?????"
+        },
+        {
+          "key": "women",
+          "label_ar": "?????"
+        },
+        {
+          "key": "children",
+          "label_ar": "?????"
+        },
+        {
+          "key": "unisex",
+          "label_ar": "??????"
+        }
+      ]
+    },
+    {
+      "field_key": "age_range",
+      "label_ar": "????? ???????",
+      "label_en": "Age range",
+      "type": "enum_or_text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "children_maternity"
+      ],
+      "values_source": "category_dependent",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "safety_notes",
+      "label_ar": "??????? ???????",
+      "label_en": "Safety notes",
+      "type": "text",
+      "required": false,
+      "filterable": false,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "children_maternity"
+      ]
+    },
+    {
+      "field_key": "equipment_type",
+      "label_ar": "??? ??????",
+      "label_en": "Equipment type",
+      "type": "enum_or_text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "business_industry_agriculture"
+      ],
+      "values_source": "category_dependent",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "capacity",
+      "label_ar": "?????/??????",
+      "label_en": "Capacity",
+      "type": "text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "business_industry_agriculture"
+      ]
+    },
+    {
+      "field_key": "hours_used",
+      "label_ar": "????? ?????????",
+      "label_en": "Hours used",
+      "type": "number",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "business_industry_agriculture.heavy_machinery",
+        "business_industry_agriculture.agriculture_equipment"
+      ]
+    },
+    {
+      "field_key": "species",
+      "label_ar": "?????",
+      "label_en": "Species",
+      "type": "enum_or_text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "animals_supplies"
+      ],
+      "values_source": "category_dependent",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "breed",
+      "label_ar": "???????",
+      "label_en": "Breed",
+      "type": "text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "animals_supplies"
+      ]
+    },
+    {
+      "field_key": "age",
+      "label_ar": "?????",
+      "label_en": "Age",
+      "type": "text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "animals_supplies"
+      ]
+    },
+    {
+      "field_key": "sex",
+      "label_ar": "?????",
+      "label_en": "Sex",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "animals_supplies"
+      ],
+      "values": [
+        {
+          "key": "male",
+          "label_ar": "???"
+        },
+        {
+          "key": "female",
+          "label_ar": "????"
+        },
+        {
+          "key": "unknown",
+          "label_ar": "??? ????"
+        }
+      ]
+    },
+    {
+      "field_key": "quantity",
+      "label_ar": "?????",
+      "label_en": "Quantity",
+      "type": "number",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "animals_supplies"
+      ]
+    },
+    {
+      "field_key": "subject_or_activity",
+      "label_ar": "??????? ?? ??????",
+      "label_en": "Subject or activity",
+      "type": "enum_or_text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "education_hobbies_travel"
+      ],
+      "values_source": "category_dependent",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "level",
+      "label_ar": "???????",
+      "label_en": "Level",
+      "type": "enum_or_text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "education_hobbies_travel"
+      ],
+      "values_status": "unresolved",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "format",
+      "label_ar": "??????",
+      "label_en": "Format",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "education_hobbies_travel"
+      ],
+      "values": [
+        {
+          "key": "in_person",
+          "label_ar": "?????"
+        },
+        {
+          "key": "online",
+          "label_ar": "???????"
+        },
+        {
+          "key": "hybrid",
+          "label_ar": "????"
+        },
+        {
+          "key": "self_study",
+          "label_ar": "????"
+        }
+      ]
+    },
+    {
+      "field_key": "schedule",
+      "label_ar": "??????",
+      "label_en": "Schedule",
+      "type": "text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "education_hobbies_travel"
+      ]
+    },
+    {
+      "field_key": "property_type",
+      "label_ar": "??? ??????",
+      "label_en": "Property type",
+      "type": "enum",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate"
+      ],
+      "values": [
+        {
+          "key": "apartment",
+          "label_ar": "???"
+        },
+        {
+          "key": "house",
+          "label_ar": "????"
+        },
+        {
+          "key": "villa",
+          "label_ar": "????"
+        },
+        {
+          "key": "land",
+          "label_ar": "???"
+        },
+        {
+          "key": "shop",
+          "label_ar": "???"
+        },
+        {
+          "key": "office",
+          "label_ar": "????"
+        },
+        {
+          "key": "clinic",
+          "label_ar": "?????"
+        },
+        {
+          "key": "warehouse",
+          "label_ar": "??????"
+        },
+        {
+          "key": "workshop",
+          "label_ar": "????"
+        },
+        {
+          "key": "farm",
+          "label_ar": "?????"
+        }
+      ]
+    },
+    {
+      "field_key": "ceiling_height_m",
+      "label_ar": "?????? ?????",
+      "label_en": "Ceiling height",
+      "type": "number",
+      "unit": "m",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.warehouses_workshops"
+      ]
+    },
+    {
+      "field_key": "truck_access",
+      "label_ar": "???? ??????",
+      "label_en": "Truck access",
+      "type": "boolean",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.warehouses_workshops"
+      ]
+    },
+    {
+      "field_key": "industrial_electricity",
+      "label_ar": "?????? ??????",
+      "label_en": "Industrial electricity",
+      "type": "boolean",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.warehouses_workshops"
+      ]
+    },
+    {
+      "field_key": "payload_kg",
+      "label_ar": "???????",
+      "label_en": "Payload",
+      "type": "number",
+      "unit": "kg",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.trucks_buses"
+      ]
+    },
+    {
+      "field_key": "seats_count",
+      "label_ar": "??? ???????",
+      "label_en": "Seats",
+      "type": "number",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "vehicles.trucks_buses"
+      ]
+    },
+    {
+      "field_key": "sim_type",
+      "label_ar": "??? ???????",
+      "label_en": "SIM type",
+      "type": "enum_or_text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "phones_smart_devices.phones",
+        "phones_smart_devices.tablets"
+      ],
+      "values_source": "category_dependent",
+      "custom_allowed": true
+    },
+    {
+      "field_key": "smart_tv",
+      "label_ar": "??????? ???",
+      "label_en": "Smart TV",
+      "type": "boolean",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "computers_electronics.tvs"
+      ]
+    },
+    {
+      "field_key": "salary_min",
+      "label_ar": "?????? ??",
+      "label_en": "Salary min",
+      "type": "number",
+      "unit": "syp",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.offers"
+      ]
+    },
+    {
+      "field_key": "salary_max",
+      "label_ar": "?????? ???",
+      "label_en": "Salary max",
+      "type": "number",
+      "unit": "syp",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.offers"
+      ]
+    },
+    {
+      "field_key": "application_link",
+      "label_ar": "???? ???????",
+      "label_en": "Application link",
+      "type": "text",
+      "required": false,
+      "filterable": false,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.offers"
+      ]
+    },
+    {
+      "field_key": "job_role",
+      "label_ar": "?????? ???????",
+      "label_en": "Job role",
+      "type": "text",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": true,
+      "display_on_card": true,
+      "display_on_detail": true,
+      "applies_to": [
+        "jobs.offers"
+      ]
+    },
+    {
+      "field_key": "bathrooms",
+      "label_ar": "????????",
+      "label_en": "Bathrooms",
+      "type": "number",
+      "required": false,
+      "filterable": true,
+      "sortable": false,
+      "searchable": false,
+      "display_on_card": false,
+      "display_on_detail": true,
+      "applies_to": [
+        "real_estate.apartments.sale",
+        "real_estate.apartments.rent",
+        "real_estate.houses_villas",
+        "real_estate.shops_offices"
+      ],
+      "validation": {
+        "min": 0,
+        "max": 20
+      }
+    }
+  ],
+  "fieldTypeContract": {
+    "text": "Stored string; text input; length/pattern validation; searchable only when configured.",
+    "textarea": "Stored string; multiline input; length/content validation; usually searchable, not faceted.",
+    "number": "Stored number; numeric input; min/max/unit validation; exact or range filtering.",
+    "boolean": "Stored boolean; toggle/checkbox; true/false validation; yes/no facet.",
+    "enum": "Stored stable key; select/radio/chips; value must match values array; facet filter.",
+    "multi_enum": "Stored array of stable keys; checklist UI; each key must match values array; multi-select facet if configured.",
+    "enum_or_text": "Stored known key or custom string; select with custom fallback; known values faceted, custom values searchable.",
+    "enum_or_number": "Stored known key or number; select plus numeric fallback; known values faceted or numeric range.",
+    "range": "Search-control range object or paired params; not a listing detail by default.",
+    "date": "Stored ISO date; date input; date/range filtering.",
+    "ref": "Stored referenced ID; picker/search select; reference must resolve when enforced.",
+    "note": "Research/admin metadata only; never user-editable or filterable."
+  },
+  "globalSearchControls": [
+    {
+      "key": "query",
+      "classification": "search_control_pseudo_field",
+      "storedOnListing": false
+    },
+    {
+      "key": "category",
+      "classification": "taxonomy_reference",
+      "storedOnListing": true
+    },
+    {
+      "key": "governorate_id",
+      "classification": "listing_location_reference",
+      "storedOnListing": true
+    },
+    {
+      "key": "locality_id",
+      "classification": "future_listing_location_reference",
+      "storedOnListing": true
+    },
+    {
+      "key": "price_range",
+      "classification": "search_control_pseudo_field",
+      "storedOnListing": false,
+      "mapsTo": "price"
+    },
+    {
+      "key": "sort",
+      "classification": "sort_control",
+      "storedOnListing": false
+    }
+  ]
+}

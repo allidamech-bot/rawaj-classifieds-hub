@@ -1,0 +1,339 @@
+{
+  "status": "draft_for_review",
+  "updatedAt": "2026-07-04",
+  "globalFilters": [
+    "query",
+    "category",
+    "governorate_id",
+    "locality_id",
+    "price_range",
+    "sort"
+  ],
+  "categoryFilters": {
+    "real_estate.apartments.rent": {
+      "primary": [
+        "price_range",
+        "locality_id",
+        "area_sqm",
+        "rooms",
+        "furnished"
+      ],
+      "advanced": [
+        "floor",
+        "elevator",
+        "parking",
+        "balcony",
+        "building_age",
+        "available_from"
+      ],
+      "displayOnly": [
+        "deposit_amount",
+        "building_floors"
+      ]
+    },
+    "real_estate.apartments.sale": {
+      "primary": [
+        "price_range",
+        "locality_id",
+        "area_sqm",
+        "rooms"
+      ],
+      "advanced": [
+        "floor",
+        "elevator",
+        "parking",
+        "balcony",
+        "building_age"
+      ],
+      "displayOnly": [
+        "building_floors"
+      ]
+    },
+    "real_estate.land": {
+      "primary": [
+        "price_range",
+        "locality_id",
+        "area_sqm"
+      ],
+      "advanced": [
+        "frontage_m",
+        "road_access",
+        "utilities_available"
+      ],
+      "displayOnly": []
+    },
+    "vehicles.cars.sale": {
+      "primary": [
+        "price_range",
+        "locality_id",
+        "vehicle_make",
+        "vehicle_model",
+        "year"
+      ],
+      "advanced": [
+        "mileage_km",
+        "fuel_type",
+        "transmission",
+        "body_type",
+        "vehicle_condition"
+      ],
+      "displayOnly": [
+        "color",
+        "vehicle_trim"
+      ]
+    },
+    "vehicles.motorcycles": {
+      "primary": [
+        "price_range",
+        "locality_id",
+        "vehicle_make",
+        "vehicle_model",
+        "year"
+      ],
+      "advanced": [
+        "engine_size",
+        "mileage_km",
+        "motorcycle_type",
+        "vehicle_condition"
+      ],
+      "displayOnly": [
+        "color"
+      ]
+    },
+    "vehicles.parts_accessories": {
+      "primary": [
+        "price_range",
+        "locality_id",
+        "part_type"
+      ],
+      "advanced": [
+        "compatible_make",
+        "compatible_model",
+        "compatible_year_from",
+        "compatible_year_to",
+        "part_condition"
+      ],
+      "displayOnly": [
+        "part_origin"
+      ]
+    },
+    "phones_smart_devices.phones": {
+      "primary": [
+        "price_range",
+        "locality_id",
+        "brand",
+        "model",
+        "storage"
+      ],
+      "advanced": [
+        "ram",
+        "device_condition",
+        "warranty",
+        "battery_health_percent"
+      ],
+      "displayOnly": [
+        "accessories"
+      ]
+    },
+    "computers_electronics.laptops": {
+      "primary": [
+        "price_range",
+        "locality_id",
+        "brand",
+        "processor",
+        "ram"
+      ],
+      "advanced": [
+        "storage",
+        "screen_size_in",
+        "gpu",
+        "device_condition",
+        "warranty"
+      ],
+      "displayOnly": [
+        "battery_note"
+      ]
+    },
+    "jobs.offers": {
+      "primary": [
+        "locality_id",
+        "job_family",
+        "employment_type",
+        "work_mode"
+      ],
+      "advanced": [
+        "salary_type",
+        "salary_range",
+        "experience_level",
+        "shift_type"
+      ],
+      "displayOnly": [
+        "application_method"
+      ]
+    },
+    "jobs.seekers": {
+      "primary": [
+        "locality_id",
+        "desired_role",
+        "work_mode"
+      ],
+      "advanced": [
+        "experience_years",
+        "expected_salary"
+      ],
+      "displayOnly": [
+        "skills"
+      ]
+    },
+    "services.offered": {
+      "primary": [
+        "locality_id",
+        "service_family"
+      ],
+      "advanced": [
+        "availability",
+        "starting_price",
+        "pricing_unit"
+      ],
+      "displayOnly": [
+        "provider_type"
+      ]
+    },
+    "services.requested": {
+      "primary": [
+        "locality_id",
+        "service_family",
+        "needed_date"
+      ],
+      "advanced": [
+        "budget"
+      ],
+      "displayOnly": [
+        "description"
+      ]
+    },
+    "home_furniture.furniture": {
+      "primary": [
+        "price_range",
+        "locality_id",
+        "item_type",
+        "item_condition"
+      ],
+      "advanced": [
+        "material"
+      ],
+      "displayOnly": [
+        "dimensions"
+      ]
+    },
+    "fashion_personal.clothing": {
+      "primary": [
+        "price_range",
+        "locality_id",
+        "item_type",
+        "size",
+        "audience"
+      ],
+      "advanced": [
+        "item_condition",
+        "brand"
+      ],
+      "displayOnly": [
+        "material"
+      ]
+    },
+    "children_maternity.strollers_car_seats": {
+      "primary": [
+        "price_range",
+        "locality_id",
+        "item_type",
+        "age_range",
+        "item_condition"
+      ],
+      "advanced": [
+        "brand"
+      ],
+      "displayOnly": [
+        "safety_notes"
+      ]
+    },
+    "business_industry_agriculture.business_equipment": {
+      "primary": [
+        "price_range",
+        "locality_id",
+        "equipment_type",
+        "brand"
+      ],
+      "advanced": [
+        "year",
+        "capacity",
+        "item_condition"
+      ],
+      "displayOnly": []
+    },
+    "animals_supplies.livestock": {
+      "primary": [
+        "price_range",
+        "locality_id",
+        "species",
+        "quantity"
+      ],
+      "advanced": [
+        "breed",
+        "age",
+        "sex"
+      ],
+      "displayOnly": []
+    },
+    "education_hobbies_travel.education_training": {
+      "primary": [
+        "price_range",
+        "locality_id",
+        "subject_or_activity",
+        "format"
+      ],
+      "advanced": [
+        "level",
+        "schedule"
+      ],
+      "displayOnly": []
+    }
+  },
+  "deferred": {
+    "food_local_products": "Deferred pending food/perishable/regulatory policy review.",
+    "travel_tourism": "Deferred pending product scope and policy review."
+  },
+  "globalSearchControls": [
+    {
+      "key": "query",
+      "classification": "search_control_pseudo_field",
+      "storedOnListing": false
+    },
+    {
+      "key": "category",
+      "classification": "taxonomy_reference",
+      "storedOnListing": true
+    },
+    {
+      "key": "governorate_id",
+      "classification": "listing_location_reference",
+      "storedOnListing": true
+    },
+    {
+      "key": "locality_id",
+      "classification": "future_listing_location_reference",
+      "storedOnListing": true
+    },
+    {
+      "key": "price_range",
+      "classification": "search_control_pseudo_field",
+      "storedOnListing": false,
+      "mapsTo": "price"
+    },
+    {
+      "key": "sort",
+      "classification": "sort_control",
+      "storedOnListing": false
+    }
+  ]
+}
