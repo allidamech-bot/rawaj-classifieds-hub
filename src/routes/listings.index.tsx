@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { ArrowUpDown, Clock, Filter, MapPin, Search, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -86,6 +86,7 @@ function ListingsPage() {
   const [subcategoryId, setSubcategoryId] = useState(search.subcategory ?? "");
   const [districtAr, setDistrictAr] = useState(search.district ?? "");
   const [priceMin, setPriceMin] = useState(search.price_min?.toString() ?? "");
+  const [draftCategoryId, setDraftCategoryId] = useState<string | undefined>(undefined);
   const [priceMax, setPriceMax] = useState(search.price_max?.toString() ?? "");
   const [carMake, setCarMake] = useState(search.car_make ?? "");
   const [carModel, setCarModel] = useState(search.car_model ?? "");
@@ -227,6 +228,16 @@ function ListingsPage() {
     search.subcategory,
     search.transmission,
   ]);
+
+  useEffect(() => {
+    if (filtersOpen) {
+      if (search.taxonomy) {
+        setDraftCategoryId(undefined);
+      } else {
+        setDraftCategoryId(search.category ?? undefined);
+      }
+    }
+  }, [filtersOpen, search.category, search.taxonomy]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -654,6 +665,7 @@ function ListingsPage() {
     setQ("");
     setSortOpen(false);
     setFiltersOpen(false);
+    setDraftCategoryId(undefined);
     const taxonomyPurposeVal = taxonomyListingSearch?.property_purpose;
     const taxonomyTypeVal = taxonomyListingSearch?.property_type;
     setSubcategoryId(search.taxonomy ? "" : (search.subcategory ?? ""));
@@ -663,7 +675,7 @@ function ListingsPage() {
       to: "/listings",
       search: {
         taxonomy: selectedTaxonomyNode?.id,
-        category: selectedCategory?.id ?? search.category,
+        category: search.taxonomy ? search.category : undefined,
         subcategory: search.taxonomy ? undefined : search.subcategory,
         property_purpose: taxonomyPurposeVal,
         property_type: taxonomyTypeVal,
@@ -672,6 +684,118 @@ function ListingsPage() {
       replace: true,
     });
   }
+
+  const draftSelectedCategory = draftCategoryId
+    ? categories.find(
+        (category) => category.id === draftCategoryId || category.slug === draftCategoryId,
+      )
+    : undefined;
+  const mobileAvailableSubcategories = useMemo(
+    () =>
+      draftSelectedCategory
+        ? subcategories.filter((subcategory) => subcategory.categoryId === draftSelectedCategory.id)
+        : [],
+    [draftSelectedCategory, subcategories],
+  );
+  const draftCategoryFieldKind = detectCategoryFieldKind(draftSelectedCategory);
+
+  const prevDraftFieldKindRef = useRef<CategoryFieldKind | undefined>(undefined);
+  useEffect(() => {
+    const prev = prevDraftFieldKindRef.current;
+    const curr = draftCategoryFieldKind;
+    if (prev !== curr) {
+      if (curr !== "vehicles" && prev === "vehicles") {
+        setPropertyPurpose("");
+        setPropertyType("");
+        setRooms("");
+        setRentalDuration("");
+        setElectronicsBrand("");
+        setDetailCondition("");
+        setEmploymentType("");
+        setSalaryType("");
+      }
+      if (curr !== "real_estate" && prev === "real_estate") {
+        setCarMake("");
+        setCarModel("");
+        setFuelType("");
+        setTransmission("");
+        setElectronicsBrand("");
+        setDetailCondition("");
+        setEmploymentType("");
+        setSalaryType("");
+      }
+      if (curr !== "electronics" && prev === "electronics") {
+        setCarMake("");
+        setCarModel("");
+        setFuelType("");
+        setTransmission("");
+        setPropertyPurpose("");
+        setPropertyType("");
+        setRooms("");
+        setRentalDuration("");
+        setEmploymentType("");
+        setSalaryType("");
+      }
+      if (curr !== "jobs" && prev === "jobs") {
+        setCarMake("");
+        setCarModel("");
+        setFuelType("");
+        setTransmission("");
+        setPropertyPurpose("");
+        setPropertyType("");
+        setRooms("");
+        setRentalDuration("");
+        setElectronicsBrand("");
+        setDetailCondition("");
+      }
+      prevDraftFieldKindRef.current = curr;
+    }
+  }, [draftCategoryFieldKind]);
+
+  const applyFilters = () => {
+    setFiltersOpen(false);
+    const isTaxonomy = Boolean(search.taxonomy);
+    const fieldKind = draftCategoryFieldKind;
+    void navigate({
+      to: "/listings",
+      search: {
+        taxonomy: search.taxonomy,
+        category: isTaxonomy ? undefined : draftCategoryId || undefined,
+        subcategory: isTaxonomy ? undefined : subcategoryId || undefined,
+        gov: govId || undefined,
+        district: districtAr || undefined,
+        price_min: parsedPriceMin,
+        price_max: parsedPriceMax,
+        car_make: !isTaxonomy && fieldKind === "vehicles" ? carMake || undefined : undefined,
+        car_model: !isTaxonomy && fieldKind === "vehicles" ? carModel || undefined : undefined,
+        fuel: !isTaxonomy && fieldKind === "vehicles" ? fuelType || undefined : undefined,
+        transmission:
+          !isTaxonomy && fieldKind === "vehicles" ? transmission || undefined : undefined,
+        property_purpose:
+          !isTaxonomy && fieldKind === "real_estate" ? propertyPurpose || undefined : undefined,
+        property_type:
+          !isTaxonomy && fieldKind === "real_estate" ? propertyType || undefined : undefined,
+        rooms:
+          !isTaxonomy && fieldKind === "real_estate"
+            ? rooms.trim()
+              ? Number(rooms)
+              : undefined
+            : undefined,
+        rental_duration:
+          !isTaxonomy && fieldKind === "real_estate" ? rentalDuration || undefined : undefined,
+        electronics_brand:
+          !isTaxonomy && fieldKind === "electronics" ? electronicsBrand || undefined : undefined,
+        detail_condition:
+          !isTaxonomy && fieldKind === "electronics" ? detailCondition || undefined : undefined,
+        employment_type:
+          !isTaxonomy && fieldKind === "jobs" ? employmentType || undefined : undefined,
+        salary_type: !isTaxonomy && fieldKind === "jobs" ? salaryType || undefined : undefined,
+        q: debouncedQ || undefined,
+        sort: sort === "latest" ? undefined : sort,
+      },
+      replace: true,
+    });
+  };
 
   return (
     <>
@@ -989,48 +1113,41 @@ function ListingsPage() {
                     {text("القسم", "Category")}
                   </h3>
                   <div className="grid grid-cols-2 gap-2">
-                    <Link
-                      to="/listings"
-                      search={{ gov: govId || undefined, q: q.trim() || undefined, sort }}
+                    <button
+                      type="button"
                       onClick={() => {
+                        setDraftCategoryId(undefined);
                         setSubcategoryId("");
-                        setFiltersOpen(false);
                       }}
                       className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
-                        !selectedCategory
+                        !draftSelectedCategory
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted-surface text-foreground"
                       }`}
                     >
                       {text("كل الأقسام", "All categories")}
-                    </Link>
+                    </button>
                     {categories.map((category) => (
-                      <Link
+                      <button
                         key={category.id}
-                        to="/listings"
-                        search={{
-                          category: category.id,
-                          gov: govId || undefined,
-                          q: q.trim() || undefined,
-                          sort,
-                        }}
+                        type="button"
                         onClick={() => {
+                          setDraftCategoryId(category.id);
                           setSubcategoryId("");
-                          setFiltersOpen(false);
                         }}
                         className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
-                          selectedCategory?.id === category.id
+                          draftSelectedCategory?.id === category.id
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted-surface text-foreground"
                         }`}
                       >
                         {categoryName(category.id, category.nameAr, language)}
-                      </Link>
+                      </button>
                     ))}
                   </div>
                 </div>
 
-                {selectedCategory && availableSubcategories.length > 0 && (
+                {draftSelectedCategory && mobileAvailableSubcategories.length > 0 && (
                   <div>
                     <h3 className="mb-2 text-xs font-extrabold text-muted-foreground">
                       {text("الأقسام الفرعية", "Subcategories")}
@@ -1047,7 +1164,7 @@ function ListingsPage() {
                       >
                         {text("كل القسم", "All in category")}
                       </button>
-                      {availableSubcategories.map((subcategory) => (
+                      {mobileAvailableSubcategories.map((subcategory) => (
                         <button
                           key={subcategory.id}
                           type="button"
@@ -1149,13 +1266,13 @@ function ListingsPage() {
                   </div>
                 </div>
 
-                {categoryFieldKind !== "general" && (
+                {draftCategoryFieldKind !== "general" && (
                   <div>
                     <h3 className="mb-2 text-xs font-extrabold text-muted-foreground">
                       {text("خيارات متقدمة", "Advanced options")}
                     </h3>
                     <CategorySpecificFilterFields
-                      kind={categoryFieldKind}
+                      kind={draftCategoryFieldKind}
                       text={text}
                       values={{
                         carMake,
@@ -1202,7 +1319,7 @@ function ListingsPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFiltersOpen(false)}
+                  onClick={applyFilters}
                   className="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground"
                 >
                   {text("عرض النتائج", "Show results")}
