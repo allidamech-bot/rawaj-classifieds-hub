@@ -43,42 +43,43 @@
 :root {
   --radius: 0.875rem;
 
-  /* RAWAJ marketplace identity tokens */
-  --background: #faf6ea;
-  --foreground: #171717;
+  /* RAWAJ marketplace identity tokens — modern luxe */
+  --background: #f6f1e3;
+  --foreground: #131720;
   --card: #ffffff;
-  --card-foreground: #171717;
-  --card-warm: #fffdf8;
-  --muted-surface: #f1eadc;
+  --card-foreground: #131720;
+  --card-warm: #fbf6e9;
+  --muted-surface: #ece3ce;
   --popover: #ffffff;
-  --popover-foreground: #171717;
+  --popover-foreground: #131720;
 
-  --primary: #123a5a;
-  --primary-foreground: #ffffff;
+  --primary: #0e2a44;
+  --primary-foreground: #f6efdc;
 
-  --secondary: #f1eadc;
-  --secondary-foreground: #171717;
+  --secondary: #ece3ce;
+  --secondary-foreground: #131720;
 
-  --muted: #f1eadc;
-  --muted-foreground: #5d625f;
+  --muted: #ece3ce;
+  --muted-foreground: #5b6070;
 
-  --accent: #d9a441;
-  --accent-foreground: #171717;
+  --accent: #c99730;
+  --accent-foreground: #131720;
 
-  --gold: #d9a441;
-  --gold-foreground: #171717;
+  --gold: #c99730;
+  --gold-foreground: #131720;
 
-  --emerald-trust: #166b52;
+  --emerald-trust: #0f6b52;
   --emerald-trust-foreground: #ffffff;
 
-  --destructive: #b6423c;
+  --destructive: #a83a34;
   --destructive-foreground: #ffffff;
-  --warning: #c9822b;
+  --warning: #c07a1f;
 
-  --border: #e6dfd2;
-  --input: #d8cebd;
-  --ring: #d9a441;
+  --border: #e1d7c1;
+  --input: #cfc3a8;
+  --ring: #c99730;
 }
+
 
 .dark {
   --background: #11100d;
