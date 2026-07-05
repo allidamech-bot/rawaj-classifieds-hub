@@ -1345,6 +1345,24 @@ export async function resubmitOwnerListing(
   };
 }
 
+// Statuses that an authenticated listing owner may self-delete.
+// Used both in the ownership pre-flight check and in the final DELETE query
+// to prevent any drift between what is shown in the UI and what the API accepts.
+export const OWNER_DELETABLE_STATUSES = [
+  "draft",
+  "pending_review",
+  "approved",
+  "rejected",
+] as const;
+
+type OwnerDeletableStatus = (typeof OWNER_DELETABLE_STATUSES)[number];
+
+// Type-safe predicate — avoids widening OWNER_DELETABLE_STATUSES to string[]
+// and avoids 'as any'. Use this in UI code instead of a raw .includes() call.
+export function isOwnerDeletableStatus(status: string): status is OwnerDeletableStatus {
+  return (OWNER_DELETABLE_STATUSES as readonly string[]).includes(status);
+}
+
 export async function deleteOwnerListing(
   userId: string | null,
   listingId: string,
@@ -1371,7 +1389,7 @@ export async function deleteOwnerListing(
     .select("id, owner_id, status")
     .eq("id", listingId)
     .eq("owner_id", userId)
-    .in("status", ["draft", "rejected"])
+    .in("status", OWNER_DELETABLE_STATUSES)
     .maybeSingle();
 
   if (existingError) return { ok: false, error: mapError(existingError) };
@@ -1396,22 +1414,41 @@ export async function deleteOwnerListing(
     .map((row) => rowString(row, "storage_path"))
     .filter((path): path is string => Boolean(path));
 
-  if (paths.length > 0) {
-    const storageResult = await clientResult.data.storage.from(listingImagesBucket).remove(paths);
-
-    if (storageResult.error) {
-      return { ok: false, error: mapStorageError(storageResult.error) };
-    }
-  }
-
-  const { error } = await clientResult.data
+  const { data: deletedData, error } = await clientResult.data
     .from("listings")
     .delete()
     .eq("id", listingId)
     .eq("owner_id", userId)
-    .in("status", ["draft", "rejected"]);
+    .in("status", OWNER_DELETABLE_STATUSES)
+    .select("id")
+    .maybeSingle();
 
   if (error) return { ok: false, error: mapError(error) };
+  
+  if (!deletedData) {
+    return {
+      ok: false,
+      error: {
+        code: "permission_denied",
+        message: "لم يتم حذف الإعلان. قد تكون الصلاحية مفقودة أو تم تغييره مسبقاً.",
+      },
+    };
+  }
+
+  // Database delete succeeded. Perform best-effort storage cleanup.
+  if (paths.length > 0) {
+    const storageResult = await clientResult.data.storage.from(listingImagesBucket).remove(paths);
+
+    if (storageResult.error) {
+      console.error("Failed to clean up storage images after listing delete", {
+        listingId,
+        error: storageResult.error,
+      });
+      // Do not return an error here. The listing is gone, which is the primary goal.
+      // Orphaned files are preferable to a broken UI state.
+    }
+  }
+
   return { ok: true, data: null };
 }
 

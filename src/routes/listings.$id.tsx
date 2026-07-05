@@ -259,11 +259,13 @@ function ListingDetailsPage() {
       <main className="container-wide mobile-page-bottom pt-3">
         <div className="overflow-hidden rounded-2xl bg-card hairline shadow-soft">
           {images[0]?.publicUrl ? (
-            <img
-              src={images[0].publicUrl}
-              alt={images[0].altAr ?? listing.title}
-              className="aspect-[4/3] w-full object-cover sm:aspect-[16/9]"
-            />
+            <div className="relative aspect-[4/3] w-full overflow-hidden sm:aspect-auto sm:h-auto sm:max-h-[540px] bg-muted-surface flex items-center justify-center">
+              <img
+                src={images[0].publicUrl}
+                alt={images[0].altAr ?? listing.title}
+                className="h-full w-full object-cover sm:h-auto sm:max-h-[540px] sm:w-auto sm:max-w-full sm:object-contain"
+              />
+            </div>
           ) : (
             <div className="bg-muted-surface p-3">
               <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />

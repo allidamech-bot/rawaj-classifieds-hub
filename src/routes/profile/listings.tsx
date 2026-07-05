@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Eye, Pencil, Plus, Star } from "lucide-react";
+import { Eye, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
-import { fetchCurrentUserListings, fetchPublicSellerProfile } from "@/lib/classifieds-api";
+import { deleteOwnerListing, fetchCurrentUserListings, fetchPublicSellerProfile, isOwnerDeletableStatus, OWNER_DELETABLE_STATUSES } from "@/lib/classifieds-api";
 import type {
   ClassifiedListing,
   ClassifiedsError,
@@ -68,6 +68,10 @@ function MyListingsPage() {
       cancelled = true;
     };
   }, [auth.status, profileId]);
+
+  function handleListingDeleted(listingId: string) {
+    setListings((prev) => prev.filter((listing) => listing.id !== listingId));
+  }
 
   const grouped = useMemo(
     () => ({
@@ -179,7 +183,13 @@ function MyListingsPage() {
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {visibleListings.map((listing) => (
-              <StoreListingCard key={listing.id} listing={listing} language={language} />
+              <StoreListingCard
+                key={listing.id}
+                listing={listing}
+                language={language}
+                userId={profileId}
+                onDeleted={handleListingDeleted}
+              />
             ))}
           </div>
         )}
@@ -285,79 +295,156 @@ function TabButton({
 function StoreListingCard({
   listing,
   language,
+  userId,
+  onDeleted,
 }: {
   listing: ClassifiedListing;
   language: Language;
+  userId: string | null;
+  onDeleted: (id: string) => void;
 }) {
   const { text } = useUiPreferences();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
   const canEdit =
     listing.status === "draft" ||
     listing.status === "pending_review" ||
     listing.status === "rejected";
 
+  // Derive canDelete from the canonical API type-safe predicate to avoid UI/API drift.
+  const canDelete = isOwnerDeletableStatus(listing.status);
+
+  async function handleConfirmDelete() {
+    setDeleteError("");
+    setDeleting(true);
+    const result = await deleteOwnerListing(userId, listing.id);
+    setDeleting(false);
+    if (!result.ok) {
+      setDeleteError(result.error.message);
+      return;
+    }
+    setShowDeleteConfirm(false);
+    onDeleted(listing.id);
+  }
+
   return (
-    <article className="overflow-hidden rounded-2xl bg-card shadow-soft hairline">
-      {listing.primaryImageUrl ? (
-        <img
-          src={listing.primaryImageUrl}
-          alt={listing.title}
-          loading="lazy"
-          decoding="async"
-          className="aspect-[16/10] w-full object-cover"
-        />
-      ) : (
-        <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
-      )}
-      <div className="space-y-2 p-3">
-        <div className="flex items-start justify-between gap-2">
-          <h2 className="line-clamp-2 text-sm font-extrabold">{listing.title}</h2>
-          <span className="shrink-0 rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold">
-            {listingStatusLabel(listing.status, language)}
-          </span>
-        </div>
-        <div className="text-base font-extrabold">
-          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
-        </div>
-        <p className="text-[11px] text-muted-foreground">
-          {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)} ·{" "}
-          {governorateName(listing.governorateId, listing.governorateNameAr ?? undefined, language)}
-        </p>
-        {listing.rejectionReason && (
-          <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
-            {listing.rejectionReason}
-          </p>
+    <>
+      <article className="overflow-hidden rounded-2xl bg-card shadow-soft hairline">
+        {listing.primaryImageUrl ? (
+          <img
+            src={listing.primaryImageUrl}
+            alt={listing.title}
+            loading="lazy"
+            decoding="async"
+            className="aspect-[16/10] w-full object-cover"
+          />
+        ) : (
+          <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
         )}
-        <div className="flex flex-wrap gap-2">
-          {listing.status === "approved" && (
-            <Link
-              to="/listings/$id"
-              params={{ id: listing.id }}
-              className="inline-flex items-center gap-1 rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold transition hover:bg-secondary"
-            >
-              <Eye className="h-3 w-3" />
-              {text("عرض", "View")}
-            </Link>
-          )}
-          {canEdit ? (
-            <Link
-              to="/profile/listings/$id"
-              params={{ id: listing.id }}
-              className="inline-flex items-center gap-1 rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold transition hover:bg-secondary"
-            >
-              <Pencil className="h-3 w-3" />
-              {text("تعديل", "Edit")}
-            </Link>
-          ) : (
-            <span className="inline-flex rounded-lg bg-muted-surface px-2 py-1 text-[10px] text-muted-foreground">
-              {text(
-                "الإعلان المعتمد ظاهر للزوار ولا يعدل من هنا.",
-                "Approved listings are public and are not edited here.",
-              )}
+        <div className="space-y-2 p-3">
+          <div className="flex items-start justify-between gap-2">
+            <h2 className="line-clamp-2 text-sm font-extrabold">{listing.title}</h2>
+            <span className="shrink-0 rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold">
+              {listingStatusLabel(listing.status, language)}
             </span>
+          </div>
+          <div className="text-base font-extrabold">
+            {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)} ·{" "}
+            {governorateName(listing.governorateId, listing.governorateNameAr ?? undefined, language)}
+          </p>
+          {listing.rejectionReason && (
+            <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
+              {listing.rejectionReason}
+            </p>
           )}
+          <div className="flex flex-wrap gap-2">
+            {listing.status === "approved" && (
+              <Link
+                to="/listings/$id"
+                params={{ id: listing.id }}
+                className="inline-flex items-center gap-1 rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold transition hover:bg-secondary"
+              >
+                <Eye className="h-3 w-3" />
+                {text("عرض", "View")}
+              </Link>
+            )}
+            {canEdit ? (
+              <Link
+                to="/profile/listings/$id"
+                params={{ id: listing.id }}
+                className="inline-flex items-center gap-1 rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold transition hover:bg-secondary"
+              >
+                <Pencil className="h-3 w-3" />
+                {text("تعديل", "Edit")}
+              </Link>
+            ) : (
+              <span className="inline-flex rounded-lg bg-muted-surface px-2 py-1 text-[10px] text-muted-foreground">
+                {text(
+                  "الإعلان المعتمد ظاهر للزوار ولا يعدل من هنا.",
+                  "Approved listings are public and are not edited here.",
+                )}
+              </span>
+            )}
+            {canDelete && (
+              <button
+                type="button"
+                onClick={() => { setDeleteError(""); setShowDeleteConfirm(true); }}
+                className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-2 py-1 text-[10px] font-bold text-destructive transition hover:bg-destructive/20"
+              >
+                <Trash2 className="h-3 w-3" />
+                {text("حذف", "Delete")}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
-    </article>
+      </article>
+
+      {showDeleteConfirm && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-dialog-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-premium hairline" dir="rtl">
+            <h3 id="delete-dialog-title" className="text-base font-extrabold text-foreground">
+              حذف الإعلان؟
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              سيتم حذف هذا الإعلان نهائيًا. لا يمكن التراجع عن هذا الإجراء.
+            </p>
+            {deleteError && (
+              <p className="mt-3 rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">
+                {deleteError}
+              </p>
+            )}
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => void handleConfirmDelete()}
+                className="flex-1 rounded-xl bg-destructive px-4 py-2.5 text-xs font-bold text-white disabled:opacity-60"
+              >
+                {deleting ? "جارٍ الحذف…" : "حذف الإعلان"}
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => { setShowDeleteConfirm(false); setDeleteError(""); }}
+                className="flex-1 rounded-xl bg-muted-surface px-4 py-2.5 text-xs font-bold hairline disabled:opacity-60"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
