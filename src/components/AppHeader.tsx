@@ -14,12 +14,14 @@ export function AppHeader({ compact = false, title }: Props) {
   const { language, text, toggleLanguage } = useUiPreferences();
 
   return (
-    <header className="sticky top-0 z-30 overflow-hidden border-b border-gold/20 text-primary-foreground shadow-premium backdrop-blur-xl">
-      {/* Luxe layered background */}
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(120%_140%_at_100%_0%,#1b4e78_0%,#0e2740_45%,#08182a_100%)]" />
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(60%_100%_at_0%_100%,rgba(217,164,65,0.22),transparent_60%)]" />
-      <div className="absolute inset-x-0 top-0 -z-10 h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 -z-10 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+    <header className="sticky top-0 z-30 border-b border-gold/20 text-primary-foreground shadow-premium backdrop-blur-xl">
+      {/* Decorative layers clipped to header bounds */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(120%_140%_at_100%_0%,#1b4e78_0%,#0e2740_45%,#08182a_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(60%_100%_at_0%_100%,rgba(217,164,65,0.22),transparent_60%)]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+      </div>
 
       <div className="container-wide flex items-center gap-3 py-3 sm:gap-4 sm:py-4 lg:py-5">
         {/* Logo (right side in RTL) */}
