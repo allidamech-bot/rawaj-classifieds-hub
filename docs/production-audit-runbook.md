@@ -32,8 +32,14 @@ The project expects these foundations to already exist in Supabase:
 - Auth/profile/role tables: `profiles`, `user_roles`, `audit_logs`
 - Classifieds tables: `categories`, `governorates`, `listings`,
   `listing_images`, `favorites`, `saved_searches`, `listing_reports`
-- Storage bucket: `listing-images`
-- Storage policies for public image read and authenticated owner upload/update/delete
+- Storage bucket: `listing-images`, configured as private
+- Scoped storage policies for owner access and canonical moderator/owner privileges
+- Public object reads, where required by the current client flow, restricted to
+  objects whose path resolves to an approved, non-archived listing
+
+The application uses short-lived signed listing-image URLs. Do not restore a
+bucket-wide public SELECT policy and do not configure `listing-images` with
+`public = true`.
 
 Manual SQL files live under:
 
@@ -43,6 +49,11 @@ Manual SQL files live under:
 Agents must not execute SQL or run Supabase CLI. Review and run SQL manually
 from Supabase Dashboard SQL Editor only.
 
+Legacy/deprecated manual SQL must not be executed. In particular,
+`supabase/manual/setup_listing_images_storage.sql` is retained only as a
+non-executable deprecation notice; ordered reconciliation belongs under
+`supabase/migrations/`.
+
 ## Verification checklist
 
 1. Public pages render without blank screens.
@@ -51,9 +62,11 @@ from Supabase Dashboard SQL Editor only.
 4. `/listings` shows approved rows from Supabase only.
 5. `/add-listing` creates `pending_review` listings for signed-in active users.
 6. Image upload stores files under `listing-images/{user_id}/{listing_id}/...`.
-7. `/profile` shows only the signed-in user's own listings.
-8. `/admin/pending` approves/rejects listings only for owner access.
-9. `/admin/reports` moderates reports only for owner access.
+7. Anonymous users cannot read draft, pending-review, rejected, or archived listing objects.
+8. Approved, non-archived listing images render through the current client delivery flow.
+9. `/profile` shows only the signed-in user's own listings.
+10. `/admin/pending` approves/rejects listings only for canonical moderation roles.
+11. `/admin/reports` moderates reports only for canonical moderation roles.
 
 ## Still demo or future
 
