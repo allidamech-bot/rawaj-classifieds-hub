@@ -114,13 +114,19 @@ function HomePage() {
           </p>
         </section>
 
-        <section className="mt-4 bg-card p-3 hairline sm:p-4 lg:p-5">
+        <section className="mt-4 bg-card p-3 hairline sm:p-4">
           <form
             onSubmit={handleSearch}
-            className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-stretch"
+            className="flex items-stretch gap-2"
           >
-            <label className="flex min-h-12 items-center gap-2 rounded-xl bg-muted-surface px-3 hairline focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20 sm:px-4">
-              <Search className="h-5 w-5 text-muted-foreground" />
+            <label className="group flex min-h-11 flex-1 items-center gap-2 rounded-xl bg-muted-surface ps-2 pe-3 hairline focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/25">
+              <button
+                type="submit"
+                aria-label={text("بحث", "Search")}
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition hover:bg-card hover:text-primary focus:outline-none"
+              >
+                <Search className="h-4.5 w-4.5" />
+              </button>
               <input
                 value={searchValue}
                 onChange={(event) => setSearchValue(event.target.value)}
@@ -130,25 +136,20 @@ function HomePage() {
                   "ابحث عن سيارة، جوال، عقار، خدمة...",
                   "Search for a car, phone, property, service...",
                 )}
-                className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-muted-foreground"
+                className="w-full bg-transparent py-2 text-sm font-semibold outline-none placeholder:text-muted-foreground"
               />
             </label>
             <Link
               to="/listings"
               search={listingSearch({ open_filters: true })}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-card px-4 text-xs font-bold text-foreground hairline transition active:scale-[0.98]"
+              aria-label={text("فلترة", "Filters")}
+              title={text("فلترة", "Filters")}
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-card text-foreground hairline transition hover:border-gold/60 hover:text-primary active:scale-[0.98]"
             >
-              <Filter className="h-4 w-4" />
-              {text("فلترة", "Filters")}
+              <Filter className="h-4.5 w-4.5" />
             </Link>
-            <button
-              type="submit"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-xs font-extrabold text-primary-foreground transition active:scale-[0.98]"
-            >
-              <Search className="h-4 w-4" />
-              {text("بحث", "Search")}
-            </button>
           </form>
+
 
           <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto border-t border-border/70 pt-3">
             <Link
