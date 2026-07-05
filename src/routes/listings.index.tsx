@@ -1346,7 +1346,10 @@ function ListingsPage() {
           <span>
             {loading
               ? text("جاري تحميل الإعلانات...", "Loading listings...")
-              : text(`${items.length} إعلان معتمد`, `${items.length} approved listings`)}
+              : text(
+                  `${items.length} نتيجة محملة حاليًا`,
+                  `${items.length} currently loaded results`,
+                )}
           </span>
           {hasActiveFilters && (
             <button type="button" onClick={resetFilters} className="font-semibold text-primary">
