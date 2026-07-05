@@ -4,17 +4,8 @@ import { Clock, Filter, MapPin, Search, ShieldAlert } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { SectionHeader } from "@/components/SectionHeader";
-import {
-  fetchPublicCategories,
-  fetchPublicGovernorates,
-  fetchPublicListings,
-} from "@/lib/classifieds-api";
-import type {
-  ClassifiedCategory,
-  ClassifiedGovernorate,
-  ClassifiedListing,
-  ClassifiedsError,
-} from "@/lib/classifieds-types";
+import { fetchPublicListings } from "@/lib/classifieds-api";
+import type { ClassifiedListing, ClassifiedsError } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -28,28 +19,10 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-type HomeQuickSuggestion = {
-  labelAr: string;
-  labelEn: string;
-  search: { q: string } | { gov: string } | { category: string };
-};
-
-const quickSuggestions: HomeQuickSuggestion[] = [
-  { labelAr: "سيارات", labelEn: "Cars", search: { category: "cars" } },
-  { labelAr: "عقارات", labelEn: "Real estate", search: { category: "realestate" } },
-  { labelAr: "جوالات", labelEn: "Mobiles", search: { category: "mobiles" } },
-  { labelAr: "وظائف", labelEn: "Jobs", search: { category: "jobs" } },
-  { labelAr: "خدمات", labelEn: "Services", search: { category: "services" } },
-  { labelAr: "دمشق", labelEn: "Damascus", search: { gov: "damascus" } },
-  { labelAr: "حلب", labelEn: "Aleppo", search: { gov: "aleppo" } },
-];
-
 function HomePage() {
   const navigate = useNavigate();
-  const { language, text } = useUiPreferences();
+  const { text } = useUiPreferences();
   const [searchValue, setSearchValue] = useState("");
-  const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
-  const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
   const [listings, setListings] = useState<ClassifiedListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
@@ -59,20 +32,10 @@ function HomePage() {
     async function load() {
       setLoading(true);
       setError(null);
-      const [categoriesResult, governoratesResult, listingsResult] = await Promise.all([
-        fetchPublicCategories(),
-        fetchPublicGovernorates(),
-        fetchPublicListings(),
-      ]);
+      const listingsResult = await fetchPublicListings();
       if (cancelled) return;
-      if (!categoriesResult.ok) setError(categoriesResult.error);
-      else if (!governoratesResult.ok) setError(governoratesResult.error);
-      else if (!listingsResult.ok) setError(listingsResult.error);
-      else {
-        setCategories(categoriesResult.data);
-        setGovernorates(governoratesResult.data);
-        setListings(listingsResult.data);
-      }
+      if (!listingsResult.ok) setError(listingsResult.error);
+      else setListings(listingsResult.data);
       setLoading(false);
     }
     void load();
@@ -81,9 +44,8 @@ function HomePage() {
     };
   }, []);
 
-  const featuredListings = listings.filter((listing) => listing.isFeatured).slice(0, 5);
-  const latestListings = listings.slice(0, 9);
-  const compactCategories = categories.slice(0, 8);
+  const featuredListings = listings.filter((listing) => listing.isFeatured).slice(0, 6);
+  const latestListings = listings.slice(0, 12);
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -150,40 +112,7 @@ function HomePage() {
             </Link>
           </form>
 
-
-          <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto border-t border-border/70 pt-3">
-            <Link
-              to="/listings"
-              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
-            >
-              <MapPin className="h-3.5 w-3.5 text-gold" />
-              {text("كل سوريا", "All Syria")}
-            </Link>
-            {governorates.slice(0, 4).map((governorate) => (
-              <Link
-                key={governorate.id}
-                to="/listings"
-                search={{ gov: governorate.id }}
-                className="shrink-0 rounded-full bg-muted-surface px-3 py-2 text-center text-xs font-semibold text-foreground"
-              >
-                {governorateName(governorate.id, governorate.nameAr, language)}
-              </Link>
-            ))}
-          </div>
         </section>
-
-        <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto border-b border-border/70 pb-4">
-          {quickSuggestions.map((chip) => (
-            <Link
-              key={chip.labelAr}
-              to="/listings"
-              search={chip.search}
-              className="shrink-0 rounded-full bg-card-warm px-3.5 py-1.5 text-xs font-bold text-foreground hairline"
-            >
-              {text(chip.labelAr, chip.labelEn)}
-            </Link>
-          ))}
-        </div>
 
         {loading ? (
           <HomeState title={text("جاري تحميل الإعلانات", "Loading listings")} />
@@ -194,35 +123,6 @@ function HomePage() {
           />
         ) : (
           <>
-            <section className="mt-6 lg:mt-8">
-              <SectionHeader
-                title={text("أقسام مهمة", "Important categories")}
-                action={{ label: text("كل الأقسام", "All categories"), to: "/categories" }}
-              />
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
-                {compactCategories.map((category) => (
-                  <Link
-                    key={category.id}
-                    to="/listings"
-                    search={{ category: category.id }}
-                    className="grid min-h-12 place-items-center rounded-xl bg-card px-3 py-2 text-center text-xs font-bold text-foreground hairline transition hover:bg-muted-surface"
-                  >
-                    {categoryName(category.id, category.nameAr, language)}
-                  </Link>
-                ))}
-              </div>
-            </section>
-
-            <ListingsSection
-              title={text("أحدث الإعلانات", "Latest listings")}
-              subtitle={text(
-                "إعلانات معتمدة حديثاً من السوق.",
-                "Recently reviewed marketplace listings.",
-              )}
-              listings={latestListings}
-              empty={text("لا توجد إعلانات معتمدة للعرض.", "No reviewed listings to show.")}
-            />
-
             {featuredListings.length > 0 && (
               <ListingsSection
                 title={text("إعلانات مميزة", "Featured listings")}
@@ -234,6 +134,16 @@ function HomePage() {
                 empty=""
               />
             )}
+
+            <ListingsSection
+              title={text("أحدث الإعلانات", "Latest listings")}
+              subtitle={text(
+                "إعلانات معتمدة حديثاً من السوق.",
+                "Recently reviewed marketplace listings.",
+              )}
+              listings={latestListings}
+              empty={text("لا توجد إعلانات معتمدة للعرض.", "No reviewed listings to show.")}
+            />
           </>
         )}
 
