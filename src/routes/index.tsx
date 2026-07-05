@@ -112,40 +112,7 @@ function HomePage() {
             </Link>
           </form>
 
-
-          <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto border-t border-border/70 pt-3">
-            <Link
-              to="/listings"
-              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
-            >
-              <MapPin className="h-3.5 w-3.5 text-gold" />
-              {text("كل سوريا", "All Syria")}
-            </Link>
-            {governorates.slice(0, 4).map((governorate) => (
-              <Link
-                key={governorate.id}
-                to="/listings"
-                search={{ gov: governorate.id }}
-                className="shrink-0 rounded-full bg-muted-surface px-3 py-2 text-center text-xs font-semibold text-foreground"
-              >
-                {governorateName(governorate.id, governorate.nameAr, language)}
-              </Link>
-            ))}
-          </div>
         </section>
-
-        <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto border-b border-border/70 pb-4">
-          {quickSuggestions.map((chip) => (
-            <Link
-              key={chip.labelAr}
-              to="/listings"
-              search={chip.search}
-              className="shrink-0 rounded-full bg-card-warm px-3.5 py-1.5 text-xs font-bold text-foreground hairline"
-            >
-              {text(chip.labelAr, chip.labelEn)}
-            </Link>
-          ))}
-        </div>
 
         {loading ? (
           <HomeState title={text("جاري تحميل الإعلانات", "Loading listings")} />
@@ -156,24 +123,28 @@ function HomePage() {
           />
         ) : (
           <>
-            <section className="mt-6 lg:mt-8">
-              <SectionHeader
-                title={text("أقسام مهمة", "Important categories")}
-                action={{ label: text("كل الأقسام", "All categories"), to: "/categories" }}
+            {featuredListings.length > 0 && (
+              <ListingsSection
+                title={text("إعلانات مميزة", "Featured listings")}
+                subtitle={text(
+                  "إعلانات مميزة متاحة حالياً بعد مراجعة الإدارة.",
+                  "Currently available featured listings after admin review.",
+                )}
+                listings={featuredListings}
+                empty=""
               />
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
-                {compactCategories.map((category) => (
-                  <Link
-                    key={category.id}
-                    to="/listings"
-                    search={{ category: category.id }}
-                    className="grid min-h-12 place-items-center rounded-xl bg-card px-3 py-2 text-center text-xs font-bold text-foreground hairline transition hover:bg-muted-surface"
-                  >
-                    {categoryName(category.id, category.nameAr, language)}
-                  </Link>
-                ))}
-              </div>
-            </section>
+            )}
+
+            <ListingsSection
+              title={text("أحدث الإعلانات", "Latest listings")}
+              subtitle={text(
+                "إعلانات معتمدة حديثاً من السوق.",
+                "Recently reviewed marketplace listings.",
+              )}
+              listings={latestListings}
+              empty={text("لا توجد إعلانات معتمدة للعرض.", "No reviewed listings to show.")}
+            />
+
 
             <ListingsSection
               title={text("أحدث الإعلانات", "Latest listings")}
