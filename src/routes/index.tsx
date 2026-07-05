@@ -4,17 +4,8 @@ import { Clock, Filter, MapPin, Search, ShieldAlert } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { SectionHeader } from "@/components/SectionHeader";
-import {
-  fetchPublicCategories,
-  fetchPublicGovernorates,
-  fetchPublicListings,
-} from "@/lib/classifieds-api";
-import type {
-  ClassifiedCategory,
-  ClassifiedGovernorate,
-  ClassifiedListing,
-  ClassifiedsError,
-} from "@/lib/classifieds-types";
+import { fetchPublicListings } from "@/lib/classifieds-api";
+import type { ClassifiedListing, ClassifiedsError } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -28,28 +19,10 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-type HomeQuickSuggestion = {
-  labelAr: string;
-  labelEn: string;
-  search: { q: string } | { gov: string } | { category: string };
-};
-
-const quickSuggestions: HomeQuickSuggestion[] = [
-  { labelAr: "سيارات", labelEn: "Cars", search: { category: "cars" } },
-  { labelAr: "عقارات", labelEn: "Real estate", search: { category: "realestate" } },
-  { labelAr: "جوالات", labelEn: "Mobiles", search: { category: "mobiles" } },
-  { labelAr: "وظائف", labelEn: "Jobs", search: { category: "jobs" } },
-  { labelAr: "خدمات", labelEn: "Services", search: { category: "services" } },
-  { labelAr: "دمشق", labelEn: "Damascus", search: { gov: "damascus" } },
-  { labelAr: "حلب", labelEn: "Aleppo", search: { gov: "aleppo" } },
-];
-
 function HomePage() {
   const navigate = useNavigate();
-  const { language, text } = useUiPreferences();
+  const { text } = useUiPreferences();
   const [searchValue, setSearchValue] = useState("");
-  const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
-  const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
   const [listings, setListings] = useState<ClassifiedListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
@@ -59,20 +32,10 @@ function HomePage() {
     async function load() {
       setLoading(true);
       setError(null);
-      const [categoriesResult, governoratesResult, listingsResult] = await Promise.all([
-        fetchPublicCategories(),
-        fetchPublicGovernorates(),
-        fetchPublicListings(),
-      ]);
+      const listingsResult = await fetchPublicListings();
       if (cancelled) return;
-      if (!categoriesResult.ok) setError(categoriesResult.error);
-      else if (!governoratesResult.ok) setError(governoratesResult.error);
-      else if (!listingsResult.ok) setError(listingsResult.error);
-      else {
-        setCategories(categoriesResult.data);
-        setGovernorates(governoratesResult.data);
-        setListings(listingsResult.data);
-      }
+      if (!listingsResult.ok) setError(listingsResult.error);
+      else setListings(listingsResult.data);
       setLoading(false);
     }
     void load();
@@ -81,9 +44,8 @@ function HomePage() {
     };
   }, []);
 
-  const featuredListings = listings.filter((listing) => listing.isFeatured).slice(0, 5);
-  const latestListings = listings.slice(0, 9);
-  const compactCategories = categories.slice(0, 8);
+  const featuredListings = listings.filter((listing) => listing.isFeatured).slice(0, 6);
+  const latestListings = listings.slice(0, 12);
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
