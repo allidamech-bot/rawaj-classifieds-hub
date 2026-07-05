@@ -144,29 +144,6 @@ function HomePage() {
               listings={latestListings}
               empty={text("لا توجد إعلانات معتمدة للعرض.", "No reviewed listings to show.")}
             />
-
-
-            <ListingsSection
-              title={text("أحدث الإعلانات", "Latest listings")}
-              subtitle={text(
-                "إعلانات معتمدة حديثاً من السوق.",
-                "Recently reviewed marketplace listings.",
-              )}
-              listings={latestListings}
-              empty={text("لا توجد إعلانات معتمدة للعرض.", "No reviewed listings to show.")}
-            />
-
-            {featuredListings.length > 0 && (
-              <ListingsSection
-                title={text("إعلانات مميزة", "Featured listings")}
-                subtitle={text(
-                  "إعلانات مميزة متاحة حالياً بعد مراجعة الإدارة.",
-                  "Currently available featured listings after admin review.",
-                )}
-                listings={featuredListings}
-                empty=""
-              />
-            )}
           </>
         )}
 
