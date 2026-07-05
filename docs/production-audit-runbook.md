@@ -41,6 +41,10 @@ The application uses short-lived signed listing-image URLs. Do not restore a
 bucket-wide public SELECT policy and do not configure `listing-images` with
 `public = true`.
 
+Repository migration intent and live-verification status are tracked in
+`docs/database-migration-status.md`. Repository file order alone is not evidence
+that a migration was applied to a live environment.
+
 Manual SQL files live under:
 
 - `supabase/migrations/`
@@ -53,6 +57,10 @@ Legacy/deprecated manual SQL must not be executed. In particular,
 `supabase/manual/setup_listing_images_storage.sql` is retained only as a
 non-executable deprecation notice; ordered reconciliation belongs under
 `supabase/migrations/`.
+
+The historical checklist at `supabase/manual/apply_classifieds_foundation.md`
+references a superseded UUID-based foundation and is not a current execution
+source. See `docs/database-migration-status.md` before any schema work.
 
 ## Verification checklist
 
