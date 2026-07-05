@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { z } from "zod";
 import { ArrowUpDown, Clock, Filter, MapPin, Search, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -15,6 +15,8 @@ import {
   fetchPublicListings,
   fetchPublicSubcategories,
   fetchPublicTaxonomyNodes,
+  decodeListingCursor,
+  encodeListingCursor,
   searchPublicSellers,
 } from "@/lib/classifieds-api";
 import type {
@@ -23,6 +25,8 @@ import type {
   ClassifiedListing,
   ClassifiedSubcategory,
   ClassifiedsError,
+  ListingCursor,
+  PaginatedListingsResponse,
   PublicSellerSearchResult,
   TaxonomyNode,
 } from "@/lib/classifieds-types";
@@ -116,6 +120,10 @@ function ListingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [sellerSearchError, setSellerSearchError] = useState<ClassifiedsError | null>(null);
+  const [nextCursor, setNextCursor] = useState<ListingCursor | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const filterVersionRef = useRef(0);
+  const loadingMoreRef = useRef(false);
 
   const taxonomyIndex = useMemo(() => buildTaxonomyIndex(taxonomyNodes), [taxonomyNodes]);
   const selectedTaxonomyNode = findTaxonomyNode(taxonomyIndex, search.taxonomy);
@@ -154,6 +162,12 @@ function ListingsPage() {
   const selectedSubcategory = subcategories.find(
     (subcategory) => subcategory.id === effectiveSubcategoryId,
   );
+  const hasInvalidCategory =
+    (Boolean(search.category) || Boolean(search.taxonomy)) &&
+    !selectedCategory &&
+    categories.length > 0;
+  const hasInvalidSubcategory =
+    Boolean(search.subcategory) && !selectedSubcategory && subcategories.length > 0;
   const categoryFieldKind = detectCategoryFieldKind(selectedCategory);
   const availableSubcategories = useMemo(
     () =>
@@ -401,53 +415,66 @@ function ListingsPage() {
   useEffect(() => {
     if (!referencesLoaded) return;
     if (taxonomyAvailable && search.taxonomy && !selectedTaxonomyNode) return;
+    if (hasInvalidCategory) return;
+    if (hasInvalidSubcategory) return;
+
+    filterVersionRef.current += 1;
+    const version = filterVersionRef.current;
+    setNextCursor(null);
+    setLoading(true);
+    setError(null);
+    setItems([]);
 
     let cancelled = false;
 
     async function loadListings() {
-      setLoading(true);
-      setError(null);
-
       const [result, sellerResult] = await Promise.all([
-        fetchPublicListings({
-          categoryId: selectedCategory?.id,
-          subcategoryId: effectiveSubcategoryId || undefined,
-          taxonomyLegacySubcategoryId: taxonomyListingSearch?.taxonomyLegacySubcategoryId,
-          taxonomyPropertyPurpose: taxonomyOwnsPropertyPurpose
-            ? taxonomyListingSearch?.property_purpose
-            : undefined,
-          taxonomyPropertyType: taxonomyOwnsPropertyType
-            ? taxonomyListingSearch?.property_type
-            : undefined,
-          governorateId: govId || undefined,
-          districtAr: districtAr || undefined,
-          priceMin: Number.isFinite(parsedPriceMin) ? parsedPriceMin : undefined,
-          priceMax: Number.isFinite(parsedPriceMax) ? parsedPriceMax : undefined,
-          carMake: carMake || undefined,
-          carModel: carModel || undefined,
-          fuelType: fuelType || undefined,
-          transmission: transmission || undefined,
-          propertyPurpose: taxonomyOwnsPropertyPurpose ? undefined : propertyPurpose || undefined,
-          propertyType: taxonomyOwnsPropertyType ? undefined : propertyType || undefined,
-          rooms: rooms.trim() ? Number(rooms) : undefined,
-          rentalDuration: rentalDuration || undefined,
-          electronicsBrand: electronicsBrand || undefined,
-          detailCondition: detailCondition || undefined,
-          employmentType: employmentType || undefined,
-          salaryType: salaryType || undefined,
-          query: debouncedQ,
-          sort,
-        }),
+        fetchPublicListings(
+          {
+            categoryId: selectedCategory?.id,
+            subcategoryId: effectiveSubcategoryId || undefined,
+            taxonomyLegacySubcategoryId: taxonomyListingSearch?.taxonomyLegacySubcategoryId,
+            taxonomyPropertyPurpose: taxonomyOwnsPropertyPurpose
+              ? taxonomyListingSearch?.property_purpose
+              : undefined,
+            taxonomyPropertyType: taxonomyOwnsPropertyType
+              ? taxonomyListingSearch?.property_type
+              : undefined,
+            governorateId: govId || undefined,
+            districtAr: districtAr || undefined,
+            priceMin: Number.isFinite(parsedPriceMin) ? parsedPriceMin : undefined,
+            priceMax: Number.isFinite(parsedPriceMax) ? parsedPriceMax : undefined,
+            carMake: carMake || undefined,
+            carModel: carModel || undefined,
+            fuelType: fuelType || undefined,
+            transmission: transmission || undefined,
+            propertyPurpose: taxonomyOwnsPropertyPurpose ? undefined : propertyPurpose || undefined,
+            propertyType: taxonomyOwnsPropertyType ? undefined : propertyType || undefined,
+            rooms: rooms.trim() ? Number(rooms) : undefined,
+            rentalDuration: rentalDuration || undefined,
+            electronicsBrand: electronicsBrand || undefined,
+            detailCondition: detailCondition || undefined,
+            employmentType: employmentType || undefined,
+            salaryType: salaryType || undefined,
+            query: debouncedQ,
+            sort,
+          },
+          null,
+          30,
+        ),
         searchPublicSellers(debouncedQ),
       ]);
 
       if (cancelled) return;
+      if (version !== filterVersionRef.current) return;
 
       if (!result.ok) {
         setError(result.error);
         setItems([]);
+        setNextCursor(null);
       } else {
-        setItems(result.data);
+        setItems(result.data.items);
+        setNextCursor(result.data.nextCursor);
       }
 
       if (sellerResult.ok) {
@@ -500,6 +527,8 @@ function ListingsPage() {
     salaryType,
     debouncedQ,
     sort,
+    hasInvalidCategory,
+    hasInvalidSubcategory,
   ]);
 
   const taxonomyTitle = selectedTaxonomyNode
@@ -783,6 +812,93 @@ function ListingsPage() {
       replace: true,
     });
   };
+
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || loadingMoreRef.current) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+
+    const activeVersion = filterVersionRef.current;
+
+    const result = await fetchPublicListings(
+      {
+        categoryId: selectedCategory?.id,
+        subcategoryId: effectiveSubcategoryId || undefined,
+        taxonomyLegacySubcategoryId: taxonomyListingSearch?.taxonomyLegacySubcategoryId,
+        taxonomyPropertyPurpose: taxonomyOwnsPropertyPurpose
+          ? taxonomyListingSearch?.property_purpose
+          : undefined,
+        taxonomyPropertyType: taxonomyOwnsPropertyType
+          ? taxonomyListingSearch?.property_type
+          : undefined,
+        governorateId: govId || undefined,
+        districtAr: districtAr || undefined,
+        priceMin: Number.isFinite(parsedPriceMin) ? parsedPriceMin : undefined,
+        priceMax: Number.isFinite(parsedPriceMax) ? parsedPriceMax : undefined,
+        carMake: carMake || undefined,
+        carModel: carModel || undefined,
+        fuelType: fuelType || undefined,
+        transmission: transmission || undefined,
+        propertyPurpose: taxonomyOwnsPropertyPurpose ? undefined : propertyPurpose || undefined,
+        propertyType: taxonomyOwnsPropertyType ? undefined : propertyType || undefined,
+        rooms: rooms.trim() ? Number(rooms) : undefined,
+        rentalDuration: rentalDuration || undefined,
+        electronicsBrand: electronicsBrand || undefined,
+        detailCondition: detailCondition || undefined,
+        employmentType: employmentType || undefined,
+        salaryType: salaryType || undefined,
+        query: debouncedQ,
+        sort,
+      },
+      nextCursor,
+      30,
+    );
+
+    if (activeVersion !== filterVersionRef.current) {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+      return;
+    }
+
+    if (!result.ok) {
+      setError(result.error);
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+      return;
+    }
+
+    setItems((prev) => [...prev, ...result.data.items]);
+    setNextCursor(result.data.nextCursor);
+    loadingMoreRef.current = false;
+    setLoadingMore(false);
+  }, [
+    nextCursor,
+    selectedCategory?.id,
+    effectiveSubcategoryId,
+    taxonomyListingSearch?.taxonomyLegacySubcategoryId,
+    taxonomyOwnsPropertyPurpose,
+    taxonomyListingSearch?.property_purpose,
+    taxonomyOwnsPropertyType,
+    taxonomyListingSearch?.property_type,
+    govId,
+    districtAr,
+    parsedPriceMin,
+    parsedPriceMax,
+    carMake,
+    carModel,
+    fuelType,
+    transmission,
+    propertyPurpose,
+    propertyType,
+    rooms,
+    rentalDuration,
+    electronicsBrand,
+    detailCondition,
+    employmentType,
+    salaryType,
+    debouncedQ,
+    sort,
+  ]);
 
   return (
     <>
@@ -1412,6 +1528,26 @@ function ListingsPage() {
             actionLabel={text("العودة للرئيسية", "Back to home")}
             actionTo="/"
           />
+        ) : hasInvalidCategory ? (
+          <StateCard
+            title={text("قسم غير صالح", "Invalid category")}
+            body={text(
+              "القسم المحدد في الرابط غير موجود أو غير متاح.",
+              "The category specified in the link does not exist or is not available.",
+            )}
+            actionLabel={text("تصفح الأقسام", "Browse categories")}
+            actionTo="/categories"
+          />
+        ) : hasInvalidSubcategory ? (
+          <StateCard
+            title={text("قسم فرعي غير صالح", "Invalid subcategory")}
+            body={text(
+              "القسم الفرعي المحدد في الرابط غير موجود أو غير متاح.",
+              "The subcategory specified in the link does not exist or is not available.",
+            )}
+            actionLabel={text("تصفح الأقسام", "Browse categories")}
+            actionTo="/categories"
+          />
         ) : loading ? (
           <StateCard
             title={text("جاري تحميل الإعلانات", "Loading listings")}
@@ -1445,11 +1581,27 @@ function ListingsPage() {
             actionTo="/add-listing"
           />
         ) : (
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((listing) => (
-              <RealListingCard key={listing.id} listing={listing} />
-            ))}
-          </div>
+          <>
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((listing) => (
+                <RealListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+            {nextCursor && (
+              <div className="mt-4 flex justify-center">
+                <button
+                  type="button"
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="rounded-xl bg-card px-6 py-2.5 text-xs font-bold hairline transition hover:bg-secondary disabled:opacity-50"
+                >
+                  {loadingMore
+                    ? text("جارٍ التحميل...", "Loading...")
+                    : text("عرض المزيد", "Load more")}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </main>
     </>

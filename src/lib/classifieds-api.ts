@@ -46,6 +46,8 @@ import type {
   CreateSellerReviewPayload,
   UpdateProfileBasicsPayload,
   UpdateListingPayload,
+  ListingCursor,
+  PaginatedListingsResponse,
 } from "@/lib/classifieds-types";
 import type { PlaceholderType, PriceType } from "@/types";
 
@@ -500,6 +502,58 @@ function escapePostgrestFilterValue(value: string) {
   return value.replace(/[\\(),]/g, "\\$&");
 }
 
+function validateListingCursor(value: unknown): ListingCursor | null {
+  if (!value || typeof value !== "object") return null;
+  const cursor = value as Record<string, unknown>;
+  const type = cursor.type;
+  if (typeof type !== "string") return null;
+
+  const id = cursor.id;
+  if (typeof id !== "string" || !id.trim()) return null;
+
+  switch (type) {
+    case "latest": {
+      const created_at = cursor.created_at;
+      if (typeof created_at !== "string" || !created_at.trim()) return null;
+      return { type: "latest", created_at, id };
+    }
+    case "cheapest":
+    case "expensive": {
+      const price = cursor.price;
+      if (typeof price !== "number" && price !== null) return null;
+      return { type, price, id };
+    }
+    case "featured": {
+      const is_featured = cursor.is_featured;
+      const created_at = cursor.created_at;
+      if (typeof is_featured !== "boolean" || typeof created_at !== "string" || !created_at.trim())
+        return null;
+      return { type: "featured", is_featured, created_at, id };
+    }
+    default:
+      return null;
+  }
+}
+
+export function encodeListingCursor(cursor: ListingCursor): string {
+  const json = JSON.stringify(cursor);
+  const base64 = Buffer.from(json, "utf-8").toString("base64");
+  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+}
+
+export function decodeListingCursor(value: string | null | undefined): ListingCursor | null {
+  if (!value || typeof value !== "string") return null;
+  try {
+    let base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+    while (base64.length % 4) base64 += "=";
+    const json = Buffer.from(base64, "base64").toString("utf-8");
+    const parsed = JSON.parse(json);
+    return validateListingCursor(parsed);
+  } catch {
+    return null;
+  }
+}
+
 async function signListingImages(
   client: SupabaseClient,
   images: ListingImage[],
@@ -683,7 +737,9 @@ export async function fetchPublicGovernorates(): Promise<
 
 export async function fetchPublicListings(
   filters: ListingFilters = {},
-): Promise<ClassifiedsResult<ClassifiedListing[]>> {
+  cursor: ListingCursor | null = null,
+  pageSize = 30,
+): Promise<ClassifiedsResult<PaginatedListingsResponse<ClassifiedListing>>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
@@ -761,31 +817,96 @@ export async function fetchPublicListings(
     query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
   }
 
-  switch (filters.sort) {
-    case "cheapest":
-      query = query.order("price", { ascending: true, nullsFirst: false });
-      break;
-    case "expensive":
-      query = query.order("price", { ascending: false, nullsFirst: false });
-      break;
-    case "featured":
-      query = query
-        .order("is_featured", { ascending: false })
-        .order("created_at", { ascending: false });
-      break;
-    default:
-      query = query.order("created_at", { ascending: false });
-      break;
+  const sort = filters.sort ?? "latest";
+  if (sort === "cheapest") {
+    query = query
+      .order("price", { ascending: true, nullsFirst: false })
+      .order("id", { ascending: true });
+  } else if (sort === "expensive") {
+    query = query
+      .order("price", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: true });
+  } else if (sort === "featured") {
+    query = query
+      .order("is_featured", { ascending: false })
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
   }
 
-  const { data, error } = await query.limit(60);
+  if (cursor) {
+    if (cursor.type === "latest") {
+      const created_at = escapePostgrestFilterValue(cursor.created_at);
+      const id = escapePostgrestFilterValue(cursor.id);
+      query = query.or(`created_at.lt.${created_at},and(created_at.eq.${created_at},id.lt.${id})`);
+    } else if (cursor.type === "featured") {
+      const created_at = escapePostgrestFilterValue(cursor.created_at);
+      const id = escapePostgrestFilterValue(cursor.id);
+      if (cursor.is_featured) {
+        query = query.or(
+          `is_featured.eq.false,and(is_featured.eq.true,created_at.lt.${created_at}),and(is_featured.eq.true,created_at.eq.${created_at},id.lt.${id})`,
+        );
+      } else {
+        query = query.or(
+          `and(is_featured.eq.false,created_at.lt.${created_at}),and(is_featured.eq.false,created_at.eq.${created_at},id.lt.${id})`,
+        );
+      }
+    } else if (cursor.type === "cheapest" || cursor.type === "expensive") {
+      const id = escapePostgrestFilterValue(cursor.id);
+      if (cursor.price === null) {
+        query = query.or(`and(price.is.null,id.gt.${id})`);
+      } else {
+        const price = escapePostgrestFilterValue(String(cursor.price));
+        const operator = cursor.type === "cheapest" ? "gt" : "lt";
+        query = query.or(
+          `price.${operator}.${price},price.is.null,and(price.eq.${price},id.gt.${id})`,
+        );
+      }
+    } else {
+      return { ok: false, error: { code: "validation_error", message: "Invalid cursor type." } };
+    }
+  }
+
+  const safePageSize = Math.max(1, Math.min(pageSize, 50));
+  const { data, error } = await query.limit(safePageSize + 1);
   if (error) return { ok: false, error: mapError(error) };
 
   const listings = ((data ?? []) as Row[]).map((row) =>
     mapListing(row, references.categories, references.governorates),
   );
 
-  return { ok: true, data: await hydrateListingsWithPrimaryImages(clientResult.data, listings) };
+  const nextCursor =
+    listings.length > safePageSize ? buildNextCursor(sort, listings[safePageSize - 1]) : null;
+  const pagedItems = nextCursor ? listings.slice(0, safePageSize) : listings;
+
+  return {
+    ok: true,
+    data: {
+      items: await hydrateListingsWithPrimaryImages(clientResult.data, pagedItems),
+      nextCursor,
+      pageSize: safePageSize,
+    },
+  };
+}
+
+function buildNextCursor(sort: string, listing: ClassifiedListing): ListingCursor | null {
+  if (!listing?.id) return null;
+  if (sort === "cheapest") {
+    return { type: "cheapest", price: listing.price, id: listing.id };
+  }
+  if (sort === "expensive") {
+    return { type: "expensive", price: listing.price, id: listing.id };
+  }
+  if (sort === "featured") {
+    return {
+      type: "featured",
+      is_featured: listing.isFeatured,
+      created_at: listing.createdAt,
+      id: listing.id,
+    };
+  }
+  return { type: "latest", created_at: listing.createdAt, id: listing.id };
 }
 
 export async function fetchListingDetail(
@@ -1424,7 +1545,7 @@ export async function deleteOwnerListing(
     .maybeSingle();
 
   if (error) return { ok: false, error: mapError(error) };
-  
+
   if (!deletedData) {
     return {
       ok: false,

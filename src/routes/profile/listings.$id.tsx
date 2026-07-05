@@ -149,7 +149,7 @@ function ManageListingPage() {
       setTitle(listingResult.data.title);
       setDescription(listingResult.data.description);
       setCategoryId(listingResult.data.categoryId);
-      setSubcategoryId(null);
+      setSubcategoryId(listingResult.data.subcategoryId);
       setGovernorateId(listingResult.data.governorateId);
       setDistrict(listingResult.data.districtAr ?? "");
       setPrice(listingResult.data.price?.toString() ?? "");
@@ -541,6 +541,7 @@ function ManageListingPage() {
                     onChange={(e) => {
                       setCategoryId(e.target.value);
                       setSubcategoryId(null);
+                      setCategoryDetails({});
                     }}
                     className="input"
                     disabled={!isEditable}

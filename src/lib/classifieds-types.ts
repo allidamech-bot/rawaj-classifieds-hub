@@ -514,6 +514,18 @@ export interface ListingFilters {
   sort?: "latest" | "cheapest" | "expensive" | "featured";
 }
 
+export interface PaginatedListingsResponse<T> {
+  items: T[];
+  nextCursor: ListingCursor | null;
+  pageSize: number;
+}
+
+export type ListingCursor =
+  | { type: "latest"; created_at: string; id: string }
+  | { type: "cheapest"; price: number | null; id: string }
+  | { type: "expensive"; price: number | null; id: string }
+  | { type: "featured"; is_featured: boolean; created_at: string; id: string };
+
 export interface ModerateListingPayload {
   listingId: string;
   status: Extract<ListingStatus, "approved" | "rejected" | "archived">;

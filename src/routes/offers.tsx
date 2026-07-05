@@ -31,9 +31,9 @@ function OffersPage() {
     async function load() {
       setLoading(true);
       setError(null);
-      const result = await fetchPublicListings({ sort: "featured" });
+      const result = await fetchPublicListings({ sort: "featured" }, null, 30);
       if (cancelled) return;
-      if (result.ok) setListings(result.data.filter((listing) => listing.isFeatured));
+      if (result.ok) setListings(result.data.items.filter((listing) => listing.isFeatured));
       else setError(result.error);
       setLoading(false);
     }

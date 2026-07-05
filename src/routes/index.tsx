@@ -32,10 +32,10 @@ function HomePage() {
     async function load() {
       setLoading(true);
       setError(null);
-      const listingsResult = await fetchPublicListings();
+      const listingsResult = await fetchPublicListings({}, null, 30);
       if (cancelled) return;
       if (!listingsResult.ok) setError(listingsResult.error);
-      else setListings(listingsResult.data);
+      else setListings(listingsResult.data.items);
       setLoading(false);
     }
     void load();
