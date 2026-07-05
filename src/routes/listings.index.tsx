@@ -109,6 +109,7 @@ function ListingsPage() {
   const [subcategories, setSubcategories] = useState<ClassifiedSubcategory[]>([]);
   const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
   const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>([]);
+  const [taxonomyAvailable, setTaxonomyAvailable] = useState(false);
   const [referencesLoaded, setReferencesLoaded] = useState(false);
   const [items, setItems] = useState<ClassifiedListing[]>([]);
   const [sellerResults, setSellerResults] = useState<PublicSellerSearchResult[]>([]);
@@ -265,6 +266,7 @@ function ListingsPage() {
 
   useEffect(() => {
     if (!referencesLoaded) return;
+    if (taxonomyAvailable && search.taxonomy && !selectedTaxonomyNode) return;
 
     void navigate({
       to: "/listings",
@@ -301,6 +303,9 @@ function ListingsPage() {
       replace: true,
     });
   }, [
+    taxonomyAvailable,
+    search.taxonomy,
+    selectedTaxonomyNode,
     selectedTaxonomyNode?.id,
     referencesLoaded,
     selectedCategory?.id,
@@ -378,6 +383,7 @@ function ListingsPage() {
       setSubcategories(subcategoriesResult.data);
       setGovernorates(governoratesResult.data);
       setTaxonomyNodes(taxonomyResult.ok ? taxonomyResult.data : []);
+      setTaxonomyAvailable(taxonomyResult.ok);
       setReferencesLoaded(true);
       const initialGov = search.gov
         ? governoratesResult.data.find((gov) => gov.id === search.gov || gov.slug === search.gov)
@@ -394,6 +400,7 @@ function ListingsPage() {
 
   useEffect(() => {
     if (!referencesLoaded) return;
+    if (taxonomyAvailable && search.taxonomy && !selectedTaxonomyNode) return;
 
     let cancelled = false;
 
@@ -463,6 +470,10 @@ function ListingsPage() {
     categories.length,
     governorates.length,
     taxonomyNodes.length,
+    taxonomyAvailable,
+    search.taxonomy,
+    selectedTaxonomyNode,
+    selectedTaxonomyNode?.id,
     referencesLoaded,
     selectedCategory?.id,
     effectiveSubcategoryId,
@@ -704,49 +715,25 @@ function ListingsPage() {
     const prev = prevDraftFieldKindRef.current;
     const curr = draftCategoryFieldKind;
     if (prev !== curr) {
-      if (curr !== "vehicles" && prev === "vehicles") {
-        setPropertyPurpose("");
-        setPropertyType("");
-        setRooms("");
-        setRentalDuration("");
-        setElectronicsBrand("");
-        setDetailCondition("");
-        setEmploymentType("");
-        setSalaryType("");
-      }
-      if (curr !== "real_estate" && prev === "real_estate") {
+      if (prev === "vehicles") {
         setCarMake("");
         setCarModel("");
         setFuelType("");
         setTransmission("");
-        setElectronicsBrand("");
-        setDetailCondition("");
-        setEmploymentType("");
-        setSalaryType("");
       }
-      if (curr !== "electronics" && prev === "electronics") {
-        setCarMake("");
-        setCarModel("");
-        setFuelType("");
-        setTransmission("");
+      if (prev === "real_estate") {
         setPropertyPurpose("");
         setPropertyType("");
         setRooms("");
         setRentalDuration("");
-        setEmploymentType("");
-        setSalaryType("");
       }
-      if (curr !== "jobs" && prev === "jobs") {
-        setCarMake("");
-        setCarModel("");
-        setFuelType("");
-        setTransmission("");
-        setPropertyPurpose("");
-        setPropertyType("");
-        setRooms("");
-        setRentalDuration("");
+      if (prev === "electronics") {
         setElectronicsBrand("");
         setDetailCondition("");
+      }
+      if (prev === "jobs") {
+        setEmploymentType("");
+        setSalaryType("");
       }
       prevDraftFieldKindRef.current = curr;
     }
@@ -1412,7 +1399,17 @@ function ListingsPage() {
           </section>
         )}
 
-        {loading ? (
+        {taxonomyAvailable && search.taxonomy && !selectedTaxonomyNode ? (
+          <StateCard
+            title={text("تصنيف غير صالح", "Invalid taxonomy")}
+            body={text(
+              "التصنيف المحدد في الرابط غير موجود أو غير متاح.",
+              "The taxonomy specified in the link does not exist or is not available.",
+            )}
+            actionLabel={text("العودة للرئيسية", "Back to home")}
+            actionTo="/"
+          />
+        ) : loading ? (
           <StateCard
             title={text("جاري تحميل الإعلانات", "Loading listings")}
             body={text(
