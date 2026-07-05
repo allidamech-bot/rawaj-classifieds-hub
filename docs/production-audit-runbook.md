@@ -76,6 +76,19 @@ source. See `docs/database-migration-status.md` before any schema work.
 10. `/admin/pending` approves/rejects listings only for canonical moderation roles.
 11. `/admin/reports` moderates reports only for canonical moderation roles.
 
+## Authorization reconciliation
+
+Live authorization drift was identified and closed with a narrow reconciliation
+migration:
+
+- `202607050002_reconcile_live_authorization_alignment.sql` was applied to the
+  RAWAJ Supabase project. It replaced old `Admin-like` policies with the
+  intended owner-only hard-delete and `Privileged moderators` moderation paths,
+  and added trigger protections for listing and report moderation updates.
+- `202607020003_owner_admin_moderator_policy_alignment.sql` was **not** replayed
+  on Live. Its intent was achieved instead through the narrower reconciliation
+  above.
+
 ## Still demo or future
 
 - Homepage/category promotional cards still include clearly labeled demo/exploration data.
@@ -83,6 +96,10 @@ source. See `docs/database-migration-status.md` before any schema work.
 - Messages, payments, promotion payment proof, user freezing/deletion, and real seller verification
   remain future/admin-demo areas.
 - Admin audit-log writes for listing/report moderation should be connected in a later backend pass.
+- Full behavioral authorization matrix testing for the new moderation
+  boundaries is still pending: draft/pending/rejected/archived listing fixtures
+  and dedicated moderator test tokens are needed to validate field-protection
+  triggers and role exclusion boundaries end-to-end.
 
 ## Backend work intentionally postponed
 
