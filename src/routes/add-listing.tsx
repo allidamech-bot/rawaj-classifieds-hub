@@ -92,6 +92,7 @@ function AddListingPage() {
   const selectedImagesRef = useRef<UploadImageEntry[]>([]);
   const imageRetryInFlightRef = useRef<Set<string>>(new Set());
   const imageRemovalInFlightRef = useRef<Set<string>>(new Set());
+  const imageUploadOperationRef = useRef<Map<string, number>>(new Map());
 
   const category = categories.find((item) => item.id === categoryId);
   const categoryFieldKind = detectCategoryFieldKind(category);
@@ -140,6 +141,37 @@ function AddListingPage() {
     selectedImagesRef.current = selectedImages;
   }, [selectedImages]);
 
+  function beginImageUploadOperation(id: string) {
+    const operation = (imageUploadOperationRef.current.get(id) ?? 0) + 1;
+    imageUploadOperationRef.current.set(id, operation);
+    selectedImagesRef.current = selectedImagesRef.current.map((entry) =>
+      entry.id === id
+        ? { ...entry, state: "uploading" as const, error: undefined, attempt: operation }
+        : entry,
+    );
+    setSelectedImages((current) =>
+      current.map((entry) =>
+        entry.id === id
+          ? { ...entry, state: "uploading" as const, error: undefined, attempt: operation }
+          : entry,
+      ),
+    );
+    return operation;
+  }
+
+  function isCurrentImageUploadOperation(id: string, operation: number) {
+    return (
+      imageUploadOperationRef.current.get(id) === operation &&
+      selectedImagesRef.current.some((entry) => entry.id === id)
+    );
+  }
+
+  function clearImageUploadOperation(id: string, operation?: number) {
+    if (operation === undefined || imageUploadOperationRef.current.get(id) === operation) {
+      imageUploadOperationRef.current.delete(id);
+    }
+  }
+
   function handleImageSelection(files: FileList | null) {
     const nextFiles = Array.from(files ?? []);
     setImageSelectionMessage(
@@ -174,6 +206,7 @@ function AddListingPage() {
     if (imageRemovalInFlightRef.current.has(id)) return;
     const entry = selectedImagesRef.current.find((item) => item.id === id);
     if (!entry) return;
+    clearImageUploadOperation(id);
 
     if (entry.uploadedImage && draftListing) {
       imageRemovalInFlightRef.current.add(id);
@@ -199,6 +232,7 @@ function AddListingPage() {
     }
 
     URL.revokeObjectURL(entry.url);
+    selectedImagesRef.current = selectedImagesRef.current.filter((item) => item.id !== id);
     setSelectedImages((current) => current.filter((item) => item.id !== id));
     setImageSelectionMessage(null);
   }
@@ -220,16 +254,8 @@ function AddListingPage() {
       return;
     }
     imageRetryInFlightRef.current.add(id);
-    const attempt = currentEntry.attempt + 1;
+    const operation = beginImageUploadOperation(id);
     const sortOrder = selectedImagesRef.current.findIndex((entry) => entry.id === id);
-
-    setSelectedImages((current) =>
-      current.map((entry) =>
-        entry.id === id
-          ? { ...entry, state: "uploading" as const, error: undefined, attempt }
-          : entry,
-      ),
-    );
 
     try {
       const uploadResult = await uploadListingImage({
@@ -240,9 +266,17 @@ function AddListingPage() {
         altAr: title.trim(),
       });
 
+      const isCurrentOperation = isCurrentImageUploadOperation(id, operation);
+      if (!isCurrentOperation) {
+        if (uploadResult.ok) {
+          void deleteListingImage(auth.profile?.id ?? null, draftListing.id, uploadResult.data);
+        }
+        return;
+      }
+
       setSelectedImages((current) => {
         const latest = current.find((entry) => entry.id === id);
-        if (!latest || latest.attempt !== attempt) return current;
+        if (!latest || latest.attempt !== operation) return current;
         if (!uploadResult.ok) {
           return current.map((entry) =>
             entry.id === id
@@ -258,6 +292,7 @@ function AddListingPage() {
       });
     } finally {
       imageRetryInFlightRef.current.delete(id);
+      clearImageUploadOperation(id, operation);
     }
   }
 
@@ -411,19 +446,7 @@ function AddListingPage() {
       for (const [index, entry] of selectedImages.entries()) {
         if (entry.state === "uploaded") continue;
         if (!selectedImagesRef.current.some((item) => item.id === entry.id)) continue;
-        const nextAttempt = entry.attempt + 1;
-        setSelectedImages((current) =>
-          current.map((item) =>
-            item.id === entry.id
-              ? {
-                  ...item,
-                  state: "uploading" as const,
-                  error: undefined,
-                  attempt: nextAttempt,
-                }
-              : item,
-          ),
-        );
+        const operation = beginImageUploadOperation(entry.id);
 
         const uploadResult = await uploadListingImage({
           userId: auth.profile?.id ?? null,
@@ -433,15 +456,21 @@ function AddListingPage() {
           altAr: title.trim(),
         });
 
-        const latestEntry = selectedImagesRef.current.find((item) => item.id === entry.id);
-        const shouldApplyUploadResult = latestEntry && latestEntry.attempt === nextAttempt;
-        if (shouldApplyUploadResult && !uploadResult.ok) {
+        const isCurrentOperation = isCurrentImageUploadOperation(entry.id, operation);
+        if (!isCurrentOperation) {
+          if (uploadResult.ok) {
+            void deleteListingImage(auth.profile?.id ?? null, listingDraft.id, uploadResult.data);
+          }
+          continue;
+        }
+
+        if (!uploadResult.ok) {
           imageErrors.push(uploadResult.error.message);
         }
 
         setSelectedImages((current) => {
           const currentEntry = current.find((item) => item.id === entry.id);
-          if (!currentEntry || currentEntry.attempt !== nextAttempt) {
+          if (!currentEntry || currentEntry.attempt !== operation) {
             return current;
           }
           if (!uploadResult.ok) {
@@ -457,6 +486,7 @@ function AddListingPage() {
               : item,
           );
         });
+        clearImageUploadOperation(entry.id, operation);
       }
 
       if (imageErrors.length > 0) {

@@ -1825,8 +1825,7 @@ export async function deleteListingImage(
       ok: false,
       error: {
         code: "not_found",
-        message:
-          "ظ„ظ… ظٹطھظ… ط­ط°ظپ طµظˆط±ط© ط§ظ„ط¥ط¹ظ„ط§ظ†. ظ‚ط¯ طھظ… طھط؛ظٹظٹط±ظ‡ط§ ظ…ط³ط¨ظ‚ط§ظ‹.",
+        message: "لم يتم حذف صورة الإعلان. قد تكون تغيّرت أو حُذفت مسبقًا.",
       },
     };
   }
