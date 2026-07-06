@@ -1,11 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { Clock, ChevronRight, Filter, MapPin, Search, ShieldAlert } from "lucide-react";
+import { ChevronRight, Clock, Filter, Grid3X3, MapPin, Search, ShieldAlert } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
-import { SectionHeader } from "@/components/SectionHeader";
-import { fetchPublicListings } from "@/lib/classifieds-api";
-import type { ClassifiedListing, ClassifiedsError } from "@/lib/classifieds-types";
+import { fetchPublicCategories, fetchPublicListings } from "@/lib/classifieds-api";
+import type {
+  ClassifiedCategory,
+  ClassifiedListing,
+  ClassifiedsError,
+} from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
