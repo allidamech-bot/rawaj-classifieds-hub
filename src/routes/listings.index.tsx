@@ -84,7 +84,8 @@ function ListingsPage() {
     taxonomyAvailable,
     referencesLoaded,
     setGovId,
-    loading,
+    error: referencesError,
+    loading: referencesLoading,
   } = references;
   const govId = references.govId;
 
@@ -352,14 +353,18 @@ function ListingsPage() {
   const {
     items,
     sellerResults,
-    error,
+    error: resultsError,
     sellerSearchError,
+    loading: resultsLoading,
     nextCursor,
     filterVersionRef,
     setItems,
     setNextCursor,
     setError,
   } = results;
+
+  const error = referencesError ?? resultsError;
+  const loading = referencesLoading || (!referencesError && resultsLoading);
 
   const taxonomyTitle = selectedTaxonomyNode
     ? taxonomyNodeName(selectedTaxonomyNode, language)
