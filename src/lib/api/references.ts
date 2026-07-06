@@ -1,0 +1,153 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type {
+  ClassifiedCategory,
+  ClassifiedGovernorate,
+  ClassifiedsResult,
+  ClassifiedSubcategory,
+  TaxonomyNode,
+} from "@/lib/classifieds-types";
+import {
+  getClient,
+  mapError,
+  rowArray,
+  rowBoolean,
+  rowNullableString,
+  rowNumber,
+  rowString,
+  normalizePlaceholder,
+} from "@/lib/api/shared";
+
+export function mapCategory(row: Record<string, unknown>): ClassifiedCategory {
+  return {
+    id: rowString(row, "id"),
+    slug: rowString(row, "slug"),
+    nameAr: rowString(row, "name_ar"),
+    hintAr: rowNullableString(row, "hint_ar"),
+    placeholder: normalizePlaceholder(rowString(row, "placeholder", "misc")),
+    sortOrder: rowNumber(row, "sort_order"),
+    isActive: rowBoolean(row, "is_active", true),
+  };
+}
+
+export function mapGovernorate(row: Record<string, unknown>): ClassifiedGovernorate {
+  return {
+    id: rowString(row, "id"),
+    slug: rowString(row, "slug"),
+    nameAr: rowString(row, "name_ar"),
+    districtsAr: rowArray(row, "districts_ar"),
+    sortOrder: rowNumber(row, "sort_order"),
+    isActive: rowBoolean(row, "is_active", true),
+  };
+}
+
+export function mapSubcategory(row: Record<string, unknown>): ClassifiedSubcategory {
+  return {
+    id: rowString(row, "id"),
+    categoryId: rowString(row, "category_id"),
+    nameAr: rowString(row, "name_ar"),
+    nameEn: rowNullableString(row, "name_en"),
+    sortOrder: rowNumber(row, "sort_order"),
+  };
+}
+
+export function mapTaxonomyNode(row: Record<string, unknown>): TaxonomyNode {
+  return {
+    id: rowString(row, "id"),
+    parentId: rowNullableString(row, "parent_id"),
+    slug: rowString(row, "slug"),
+    nameAr: rowString(row, "name_ar"),
+    nameEn: rowNullableString(row, "name_en"),
+    descriptionAr: rowNullableString(row, "description_ar"),
+    descriptionEn: rowNullableString(row, "description_en"),
+    iconKey: rowNullableString(row, "icon_key"),
+    sortOrder: rowNumber(row, "sort_order"),
+    depth: rowNumber(row, "depth"),
+    isActive: rowBoolean(row, "is_active", true),
+    isLeaf: rowBoolean(row, "is_leaf"),
+    filterSchemaKey: rowNullableString(row, "filter_schema_key"),
+    classificationKey: rowNullableString(row, "classification_key"),
+    classificationValue: rowNullableString(row, "classification_value"),
+    legacyCategoryId: rowNullableString(row, "legacy_category_id"),
+    legacySubcategoryId: rowNullableString(row, "legacy_subcategory_id"),
+  };
+}
+
+export async function readReferences(client: SupabaseClient) {
+  const [categoriesResult, governoratesResult] = await Promise.all([
+    client.from("categories").select("*").eq("is_active", true).order("sort_order"),
+    client.from("governorates").select("*").eq("is_active", true).order("sort_order"),
+  ]);
+
+  if (categoriesResult.error)
+    return { ok: false as const, error: mapError(categoriesResult.error) };
+  if (governoratesResult.error)
+    return { ok: false as const, error: mapError(governoratesResult.error) };
+
+  return {
+    ok: true as const,
+    categories: ((categoriesResult.data ?? []) as Record<string, unknown>[]).map(mapCategory),
+    governorates: ((governoratesResult.data ?? []) as Record<string, unknown>[]).map(
+      mapGovernorate,
+    ),
+  };
+}
+
+export async function fetchPublicCategories(): Promise<ClassifiedsResult<ClassifiedCategory[]>> {
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("categories")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort_order");
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapCategory) };
+}
+
+export async function fetchPublicSubcategories(): Promise<
+  ClassifiedsResult<ClassifiedSubcategory[]>
+> {
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("subcategories")
+    .select("*")
+    .order("sort_order");
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapSubcategory) };
+}
+
+export async function fetchPublicTaxonomyNodes(): Promise<ClassifiedsResult<TaxonomyNode[]>> {
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("taxonomy_nodes")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("name_ar", { ascending: true });
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapTaxonomyNode) };
+}
+
+export async function fetchPublicGovernorates(): Promise<
+  ClassifiedsResult<ClassifiedGovernorate[]>
+> {
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("governorates")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort_order");
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapGovernorate) };
+}
