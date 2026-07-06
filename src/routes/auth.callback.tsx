@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { sanitizeAuthReturnTo } from "@/lib/auth-return";
 import { supabase } from "@/lib/supabase";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
@@ -39,6 +40,7 @@ function AuthCallbackPage() {
       const searchParams = new URLSearchParams(window.location.search);
       const code = searchParams.get("code");
       const isRecovery = searchParams.get("type") === "recovery";
+      const returnTo = sanitizeAuthReturnTo(searchParams.get("returnTo"), "/more");
       if (code) {
         const { error: exchangeError } = await client.auth.exchangeCodeForSession(code);
         if (exchangeError) {
@@ -62,7 +64,7 @@ function AuthCallbackPage() {
         setStatus("success");
         await new Promise((resolve) => setTimeout(resolve, 1500));
         if (!cancelled) {
-          void navigate({ to: isRecovery ? "/reset-password" : "/profile" });
+          void navigate({ to: isRecovery ? "/reset-password" : returnTo });
         }
       } else {
         const { data: listener } = client.auth.onAuthStateChange((event, session) => {
@@ -74,7 +76,9 @@ function AuthCallbackPage() {
             setStatus("success");
             setTimeout(() => {
               if (!cancelled) {
-                void navigate({ to: event === "PASSWORD_RECOVERY" || isRecovery ? "/reset-password" : "/profile" });
+                void navigate({
+                  to: event === "PASSWORD_RECOVERY" || isRecovery ? "/reset-password" : returnTo,
+                });
               }
             }, 1500);
           }
@@ -129,7 +133,10 @@ function AuthCallbackPage() {
               {text("جاري تسجيل الدخول...", "Signing in...")}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {text("جارٍ التحقق من حساب Google الخاص بك.", "Verifying your Google account.")}
+              {text(
+                "جارٍ تأكيد جلسة الحساب وإعادتك للخطوة المناسبة.",
+                "Verifying your account session and returning you to the right step.",
+              )}
             </p>
           </>
         )}
@@ -153,7 +160,7 @@ function AuthCallbackPage() {
               {text("تم تسجيل الدخول", "Signed in")}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {text("جارٍ تحويلك إلى صفحة الحساب...", "Redirecting to your profile...")}
+              {text("جارٍ تحويلك إلى الصفحة المناسبة...", "Redirecting you to the right page...")}
             </p>
           </>
         )}

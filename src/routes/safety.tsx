@@ -75,8 +75,8 @@ function SafetyPage() {
               </h2>
               <p className="text-xs text-primary-foreground/80">
                 {text(
-                  "رَوَاج منصة وساطة بين الأفراد، ولا نتدخل في عمليات البيع والشراء بشكل مباشر.",
-                  "RAWAJ connects people through classifieds and does not directly handle buying, selling, or payments.",
+                  "رَوَاج منصة إعلانات تربط المستخدمين ولا تتولى الدفع أو الضمان أو حماية المشتري أو الإسكرو.",
+                  "RAWAJ is a classifieds platform that connects users and does not provide payment handling, guarantees, buyer protection, or escrow.",
                 )}
               </p>
             </div>

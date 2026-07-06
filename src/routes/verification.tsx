@@ -54,7 +54,12 @@ function VerificationPage() {
     event.preventDefault();
     setNotice("");
     if (hasPendingRequest) {
-      setNotice(text("لديك طلب توثيق قيد المراجعة.", "You already have a verification request under review."));
+      setNotice(
+        text(
+          "لديك طلب توثيق قيد المراجعة.",
+          "You already have a verification request under review.",
+        ),
+      );
       return;
     }
     setSaving(true);
@@ -67,7 +72,12 @@ function VerificationPage() {
     });
     setSaving(false);
     if (result.ok) {
-      setNotice(text("تم إرسال طلب التوثيق للمراجعة اليدوية.", "Verification request sent for manual review."));
+      setNotice(
+        text(
+          "تم إرسال طلب التوثيق للمراجعة اليدوية.",
+          "Verification request sent for manual review.",
+        ),
+      );
       setLegalName("");
       setBusinessName("");
       setDocumentType("");
@@ -80,7 +90,11 @@ function VerificationPage() {
   if (auth.status !== "signedIn") {
     return (
       <>
-        <PageHeader title={text("طلب توثيق", "Verification request")} to="/more" backMode="history" />
+        <PageHeader
+          title={text("طلب توثيق", "Verification request")}
+          to="/more"
+          backMode="history"
+        />
         <main className="container-wide mobile-page-bottom pt-4">
           <section className="rounded-2xl bg-card p-8 text-center hairline">
             <BadgeCheck className="mx-auto h-8 w-8 text-gold" />
@@ -95,6 +109,7 @@ function VerificationPage() {
             </p>
             <Link
               to="/login"
+              search={{ returnTo: "/verification" }}
               className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
             >
               {text("تسجيل الدخول", "Log in")}
@@ -115,8 +130,8 @@ function VerificationPage() {
           </h1>
           <p className="mt-2 text-xs leading-6 text-primary-foreground/80">
             {text(
-              "يظهر التوثيق العام فقط بعد موافقة الإدارة. لا يوجد تحقق تلقائي أو رفع مستندات داخل هذه الصفحة حالياً.",
-              "Public verified status appears only after admin approval. This page does not provide automatic checks or document upload right now.",
+              "التوثيق هنا طلب مراجعة يدوي فقط. لا يعني ضمان هوية فوري، ولا يتضمن فحصاً تلقائياً أو كشف حضور حي أو حماية مدفوعات.",
+              "Verification here is a manual review request only. It does not mean instant identity proof, automated checks, liveness detection, or payment protection.",
             )}
           </p>
         </section>
@@ -161,13 +176,16 @@ function VerificationPage() {
           </div>
           <p className="mt-3 rounded-xl bg-muted-surface p-3 text-xs leading-6 text-muted-foreground hairline">
             {text(
-              "سيتم طلب المستندات من الإدارة عند الحاجة، ولا تمنح هذه الصفحة شارة توثيق قبل الموافقة.",
-              "Documents will be requested by admins when needed, and this page does not grant a verified badge before approval.",
+              "قد تطلب الإدارة معلومات أو مستندات إضافية عند الحاجة. لا تظهر أي شارة توثيق عامة قبل الموافقة اليدوية.",
+              "Admins may request more information or documents when needed. No public verified badge appears before manual approval.",
             )}
           </p>
           {hasPendingRequest && (
             <p className="mt-3 rounded-xl bg-gold/10 p-3 text-xs font-bold text-gold-foreground hairline">
-              {text("لديك طلب توثيق قيد المراجعة.", "You already have a verification request under review.")}
+              {text(
+                "لديك طلب توثيق قيد المراجعة.",
+                "You already have a verification request under review.",
+              )}
             </p>
           )}
           <button
@@ -176,7 +194,9 @@ function VerificationPage() {
           >
             {saving ? text("جارٍ الإرسال", "Sending") : text("إرسال الطلب", "Submit request")}
           </button>
-          {notice && <p className="mt-3 rounded-xl bg-muted-surface p-3 text-xs font-semibold">{notice}</p>}
+          {notice && (
+            <p className="mt-3 rounded-xl bg-muted-surface p-3 text-xs font-semibold">{notice}</p>
+          )}
         </form>
 
         <section className="rounded-2xl bg-card p-4 hairline">
@@ -195,14 +215,23 @@ function VerificationPage() {
           ) : (
             <div className="mt-3 grid gap-2">
               {requests.map((request) => (
-                <article key={request.id} className="rounded-xl bg-muted-surface p-3 text-xs hairline">
+                <article
+                  key={request.id}
+                  className="rounded-xl bg-muted-surface p-3 text-xs hairline"
+                >
                   <p className="font-bold">{request.legalName}</p>
                   <p className="mt-1 text-muted-foreground">
                     {statusLabel(request.status, text)} · {typeLabel(request.requestType, text)}
                   </p>
-                  {request.businessName && <p className="mt-1 text-muted-foreground">{request.businessName}</p>}
-                  {request.documentType && <p className="mt-1 text-muted-foreground">{request.documentType}</p>}
-                  {request.adminNote && <p className="mt-1 text-muted-foreground">{request.adminNote}</p>}
+                  {request.businessName && (
+                    <p className="mt-1 text-muted-foreground">{request.businessName}</p>
+                  )}
+                  {request.documentType && (
+                    <p className="mt-1 text-muted-foreground">{request.documentType}</p>
+                  )}
+                  {request.adminNote && (
+                    <p className="mt-1 text-muted-foreground">{request.adminNote}</p>
+                  )}
                 </article>
               ))}
             </div>
@@ -222,7 +251,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function statusLabel(status: SellerVerificationRequest["status"], text: (ar: string, en: string) => string) {
+function statusLabel(
+  status: SellerVerificationRequest["status"],
+  text: (ar: string, en: string) => string,
+) {
   if (status === "approved") return text("مقبول", "Approved");
   if (status === "rejected") return text("مرفوض", "Rejected");
   return text("قيد المراجعة", "Pending review");

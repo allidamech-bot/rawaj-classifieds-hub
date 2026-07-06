@@ -776,6 +776,7 @@ function AddListingPage() {
         )}
         actionLabel={text("تسجيل الدخول", "Log in")}
         actionTo="/login"
+        actionSearch={{ returnTo: "/add-listing" }}
       />
     );
   }
@@ -1289,12 +1290,14 @@ function PageState({
   body,
   actionLabel,
   actionTo,
+  actionSearch,
 }: {
   title: string;
   heading: string;
   body: string;
   actionLabel?: string;
   actionTo?: string;
+  actionSearch?: Record<string, string>;
 }) {
   return (
     <>
@@ -1306,6 +1309,7 @@ function PageState({
           {actionLabel && actionTo && (
             <Link
               to={actionTo}
+              search={actionSearch}
               className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
             >
               {actionLabel}

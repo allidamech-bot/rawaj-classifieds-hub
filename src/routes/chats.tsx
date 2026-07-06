@@ -206,6 +206,7 @@ function ChatsPage() {
               "Log in to view your real conversations with buyers and sellers.",
             )}
             actionTo="/login"
+            actionSearch={{ returnTo: "/chats" }}
             actionLabel={text("تسجيل الدخول", "Log in")}
           />
         </main>
@@ -217,6 +218,15 @@ function ChatsPage() {
     <>
       <PageHeader title={text("المحادثات", "Messages")} />
       <main className="container-wide mobile-page-bottom space-y-4 pt-4">
+        <section className="rounded-2xl bg-card p-4 hairline shadow-soft">
+          <h1 className="text-lg font-extrabold">{text("رسائلك", "Your messages")}</h1>
+          <p className="mt-1 text-xs leading-6 text-muted-foreground">
+            {text(
+              "تابع المحادثات المرتبطة بإعلانات حقيقية. لا نعرض حالات اتصال أو قراءة غير مدعومة.",
+              "Follow conversations linked to real listings. Unsupported online or read states are not shown.",
+            )}
+          </p>
+        </section>
         <div className="flex flex-wrap gap-2">
           <Link
             to="/"
@@ -463,11 +473,13 @@ function StatePanel({
   title,
   body,
   actionTo,
+  actionSearch,
   actionLabel,
 }: {
   title: string;
   body: string;
   actionTo?: "/login" | "/listings";
+  actionSearch?: Record<string, string>;
   actionLabel?: string;
 }) {
   return (
@@ -478,6 +490,7 @@ function StatePanel({
       {actionTo && actionLabel && (
         <Link
           to={actionTo}
+          search={actionSearch}
           className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
         >
           {actionLabel}

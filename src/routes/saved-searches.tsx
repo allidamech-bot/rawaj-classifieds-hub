@@ -226,6 +226,7 @@ function SavedSearchesPage() {
         )}
         actionLabel={text("تسجيل الدخول", "Log in")}
         actionTo="/login"
+        actionSearch={{ returnTo: "/saved-searches" }}
       />
     );
   }
@@ -469,18 +470,26 @@ function State({
   body,
   actionLabel,
   actionTo,
+  actionSearch,
 }: {
   heading: string;
   body: string;
   actionLabel?: string;
   actionTo?: string;
+  actionSearch?: Record<string, string>;
 }) {
   const { text } = useUiPreferences();
   return (
     <>
       <PageHeader title={text("عمليات البحث المحفوظة", "Saved searches")} />
       <main className="container-wide mobile-page-bottom pt-10">
-        <Panel title={heading} body={body} actionLabel={actionLabel} actionTo={actionTo} />
+        <Panel
+          title={heading}
+          body={body}
+          actionLabel={actionLabel}
+          actionTo={actionTo}
+          actionSearch={actionSearch}
+        />
       </main>
     </>
   );
@@ -491,11 +500,13 @@ function Panel({
   body,
   actionLabel,
   actionTo,
+  actionSearch,
 }: {
   title: string;
   body?: string;
   actionLabel?: string;
   actionTo?: string;
+  actionSearch?: Record<string, string>;
 }) {
   const { language } = useUiPreferences();
   return (
@@ -509,6 +520,7 @@ function Panel({
         <div className="mt-5 flex flex-wrap justify-center gap-2">
           <Link
             to={actionTo}
+            search={actionSearch}
             className="inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground"
           >
             {actionLabel}

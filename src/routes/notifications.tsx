@@ -21,6 +21,9 @@ import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/notifications")({
+  head: () => ({
+    meta: [{ title: "التنبيهات | رواج" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: NotificationsPage,
 });
 
@@ -169,6 +172,7 @@ function NotificationsPage() {
             </p>
             <Link
               to="/login"
+              search={{ returnTo: "/notifications" }}
               className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
             >
               {text("تسجيل الدخول", "Log in")}
@@ -187,8 +191,8 @@ function NotificationsPage() {
                   </h1>
                   <p className="mt-1 text-xs leading-6 text-muted-foreground">
                     {text(
-                      "تظهر هنا إشعارات الحساب والإعلانات عند توفرها.",
-                      "Account and listing notifications appear here when available.",
+                      "تظهر هنا التنبيهات الحقيقية المرتبطة بحسابك وإعلاناتك عند توفرها.",
+                      "Real notifications linked to your account and listings appear here when available.",
                     )}
                   </p>
                 </div>
@@ -215,8 +219,8 @@ function NotificationsPage() {
               <Panel
                 title={text("لا توجد تنبيهات جديدة حالياً", "No new notifications right now")}
                 body={text(
-                  "يمكنك متابعة الرسائل والإعلانات والطلبات من الروابط السريعة أدناه.",
-                  "Use the quick links below to follow messages, listings, and requests.",
+                  "لا توجد عناصر غير مقروءة أو محفوظة حالياً. استخدم الروابط السريعة لمتابعة الرسائل والإعلانات والطلبات.",
+                  "There are no unread or saved items right now. Use the quick links to follow messages, listings, and requests.",
                 )}
               />
             ) : (

@@ -8,6 +8,7 @@ import {
 } from "./auth-types";
 import { AuthContext, type AuthContextValue } from "./auth-context";
 import type { AuthStatus } from "./auth-status";
+import { sanitizeAuthReturnTo } from "./auth-return";
 import { getSupabaseAuthUnavailableReason, isSupabaseConfigured, supabase } from "./supabase";
 
 const rolePriority: UserRole[] = ["owner", "admin", "moderator", "seller", "user"];
@@ -222,16 +223,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: null };
     };
 
-    const signInWithGoogle = async () => {
+    const signInWithGoogle = async (returnTo?: string) => {
       const client = supabase;
       if (!client) {
         return { error: unavailableReason ?? "Auth unavailable" };
       }
 
+      const safeReturnTo = sanitizeAuthReturnTo(returnTo, "/more");
+      const callbackUrl = new URL("/auth/callback", window.location.origin);
+      callbackUrl.searchParams.set("returnTo", safeReturnTo);
+
       const { error } = await client.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: callbackUrl.toString(),
         },
       });
 
