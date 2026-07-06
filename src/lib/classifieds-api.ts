@@ -813,8 +813,6 @@ export async function fetchPublicListings(
   if (filters.employmentType) query = query.eq("details->>employment_type", filters.employmentType);
   if (filters.salaryType) query = query.eq("details->>salary_type", filters.salaryType);
   if (filters.query?.trim()) {
-    // Legacy search: normalized columns not yet applied via SQL migration
-    // Unapplied future work in supabase/manual/20260706_arabic_search_normalization.sql
     const term = escapePostgrestSearchTerm(filters.query.trim());
     query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
   }

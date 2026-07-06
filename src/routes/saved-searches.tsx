@@ -90,7 +90,13 @@ function SavedSearchesPage() {
   function buildListingFilters(): ListingFilters {
     const filters: ListingFilters = {};
 
-    if (search.q) filters.query = search.q;
+    const keywordValue = keyword.trim();
+    if (keywordValue) {
+      filters.query = keywordValue;
+    } else if (search.q) {
+      filters.query = search.q;
+    }
+
     if (search.category) filters.categoryId = search.category;
     if (search.subcategory) filters.subcategoryId = search.subcategory;
     if (search.gov) filters.governorateId = search.gov;

@@ -532,7 +532,7 @@ export interface ModerateListingPayload {
   status: Extract<ListingStatus, "approved" | "rejected" | "archived">;
   reviewerId: string;
   rejectionReason?: string | null;
-  expectedUpdatedAt?: string;
+  expectedUpdatedAt: string;
 }
 
 export interface ListingImageUploadPayload {
