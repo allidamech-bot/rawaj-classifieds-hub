@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Camera, Check, Info, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -67,6 +67,7 @@ function AddListingPage() {
   const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [categoryDetails, setCategoryDetails] = useState<CategorySpecificDetails>({});
+  const submittingRef = useRef(false);
 
   const category = categories.find((item) => item.id === categoryId);
   const categoryFieldKind = detectCategoryFieldKind(category);
@@ -189,95 +190,108 @@ function AddListingPage() {
   }, []);
 
   async function submitListing() {
-    if (!validateCurrentStep(4) || submitting) return;
+    if (submittingRef.current) return;
+    if (!validateCurrentStep(4)) {
+      submittingRef.current = false;
+      setSubmitting(false);
+      return;
+    }
+    submittingRef.current = true;
     setSubmitting(true);
     setSubmitMessage(null);
 
-    const normalizedPhone = normalizeContactValue(phone);
-    const normalizedWhatsapp = normalizeContactValue(whatsapp);
-    if (contact.phone && !isSafePhoneValue(normalizedPhone)) {
-      setSubmitting(false);
-      setSubmitMessage(
-        text(
-          "أدخل رقم هاتف صالحا قبل إرسال الإعلان.",
-          "Enter a valid phone number before submitting.",
-        ),
-      );
-      return;
-    }
-    if (contact.whatsapp && !isSafePhoneValue(normalizedWhatsapp)) {
-      setSubmitting(false);
-      setSubmitMessage(
-        text(
-          "أدخل رقم واتساب صالحا قبل إرسال الإعلان.",
-          "Enter a valid WhatsApp number before submitting.",
-        ),
-      );
-      return;
-    }
+    const beforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", beforeUnload);
 
-    const contentCheck = checkListingContentSafety([title, description, contactName]);
-    if (contentCheck.blocked) {
-      setSubmitting(false);
-      setSubmitMessage(contentCheck.messageAr);
-      return;
-    }
-
-    const details = mergeCategoryDetails(
-      {
-        ...(contact.phone ? { phone: normalizedPhone } : {}),
-        ...(contact.whatsapp ? { whatsapp: normalizedWhatsapp } : {}),
-        ...(contentCheck.flags.length > 0 ? { content_flags: contentCheck.flags } : {}),
-      },
-      categoryFieldKind,
-      categoryDetails,
-    );
-
-    const result = await createListing(auth.profile?.id ?? null, {
-      categoryId,
-      governorateId,
-      title: title.trim(),
-      description: description.trim(),
-      price: normalizedPrice ? Number(normalizedPrice) : null,
-      priceType,
-      condition,
-      districtAr: district,
-      contactName: contactName.trim() || null,
-      contactOptions: contact,
-      details,
-    });
-
-    if (!result.ok) {
-      setSubmitting(false);
-      setSubmitMessage(result.error.message);
-      return;
-    }
-
-    const imageErrors: string[] = [];
-    for (const [index, file] of selectedImages.entries()) {
-      const uploadResult = await uploadListingImage({
-        userId: auth.profile?.id ?? null,
-        listing: result.data,
-        file,
-        sortOrder: index,
-        altAr: title.trim(),
-      });
-      if (!uploadResult.ok) imageErrors.push(uploadResult.error.message);
-    }
-
-    setSubmitting(false);
-    setCreatedListingId(result.data.id);
-    setSubmitMessage(
-      imageErrors.length > 0
-        ? text(
-            `تم إرسال الإعلان للمراجعة، وتعذر رفع بعض الصور: ${imageErrors[0]}`,
-            `Listing was sent for review, and some photos could not upload: ${imageErrors[0]}`,
-          )
-        : text(
-            "تم إرسال الإعلان للمراجعة. سيظهر للعامة بعد الموافقة.",
-            "Listing sent for review. It will be public after approval.",
+    try {
+      const normalizedPhone = normalizeContactValue(phone);
+      const normalizedWhatsapp = normalizeContactValue(whatsapp);
+      if (contact.phone && !isSafePhoneValue(normalizedPhone)) {
+        setSubmitMessage(
+          text(
+            "أدخل رقم هاتف صالحا قبل إرسال الإعلان.",
+            "Enter a valid phone number before submitting.",
           ),
-    );
+        );
+        return;
+      }
+      if (contact.whatsapp && !isSafePhoneValue(normalizedWhatsapp)) {
+        setSubmitMessage(
+          text(
+            "أدخل رقم واتساب صالحا قبل إرسال الإعلان.",
+            "Enter a valid WhatsApp number before submitting.",
+          ),
+        );
+        return;
+      }
+
+      const contentCheck = checkListingContentSafety([title, description, contactName]);
+      if (contentCheck.blocked) {
+        setSubmitMessage(contentCheck.messageAr);
+        return;
+      }
+
+      const details = mergeCategoryDetails(
+        {
+          ...(contact.phone ? { phone: normalizedPhone } : {}),
+          ...(contact.whatsapp ? { whatsapp: normalizedWhatsapp } : {}),
+          ...(contentCheck.flags.length > 0 ? { content_flags: contentCheck.flags } : {}),
+        },
+        categoryFieldKind,
+        categoryDetails,
+      );
+
+      const result = await createListing(auth.profile?.id ?? null, {
+        categoryId,
+        governorateId,
+        title: title.trim(),
+        description: description.trim(),
+        price: normalizedPrice ? Number(normalizedPrice) : null,
+        priceType,
+        condition,
+        districtAr: district,
+        contactName: contactName.trim() || null,
+        contactOptions: contact,
+        details,
+      });
+
+      if (!result.ok) {
+        setSubmitMessage(result.error.message);
+        return;
+      }
+
+      const imageErrors: string[] = [];
+      for (const [index, file] of selectedImages.entries()) {
+        const uploadResult = await uploadListingImage({
+          userId: auth.profile?.id ?? null,
+          listing: result.data,
+          file,
+          sortOrder: index,
+          altAr: title.trim(),
+        });
+        if (!uploadResult.ok) imageErrors.push(uploadResult.error.message);
+      }
+
+      setCreatedListingId(result.data.id);
+      setSubmitMessage(
+        imageErrors.length > 0
+          ? text(
+              `تم إرسال الإعلان للمراجعة، وتعذر رفع بعض الصور: ${imageErrors[0]}`,
+              `Listing was sent for review, and some photos could not upload: ${imageErrors[0]}`,
+            )
+          : text(
+              "تم إرسال الإعلان للمراجعة. سيظهر للعامة بعد الموافقة.",
+              "Listing sent for review. It will be public after approval.",
+            ),
+      );
+    } finally {
+      window.removeEventListener("beforeunload", beforeUnload);
+      setSubmitting(false);
+      submittingRef.current = false;
+    }
   }
 
   if (auth.status === "loading") {

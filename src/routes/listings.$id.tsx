@@ -12,7 +12,7 @@ import {
   ShieldAlert,
   User,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { categoryDetailDisplayRows, detectCategoryFieldKind } from "@/lib/category-fields";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
@@ -21,6 +21,7 @@ import {
   favoriteListing,
   fetchListingDetail,
   fetchListingImages,
+  fetchFavoriteStatus,
   startListingConversation,
   unfavoriteListing,
 } from "@/lib/classifieds-api";
@@ -71,6 +72,19 @@ function ListingDetailsPage() {
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [fav, setFav] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const favoriteInFlightRef = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadFavorite() {
+      const result = await fetchFavoriteStatus(auth.profile?.id ?? null, id);
+      if (!cancelled && result.ok) setFav(result.data);
+    }
+    if (auth.status === "signedIn") void loadFavorite();
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.status, auth.profile?.id, id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,9 +124,12 @@ function ListingDetailsPage() {
       );
       return;
     }
+    if (favoriteInFlightRef.current) return;
+    favoriteInFlightRef.current = true;
     const result = fav
       ? await unfavoriteListing(auth.profile?.id ?? null, id)
       : await favoriteListing(auth.profile?.id ?? null, id);
+    favoriteInFlightRef.current = false;
 
     if (!result.ok) {
       setActionMessage(result.error.message);

@@ -1,6 +1,15 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bell, Bookmark, CheckCheck, Heart, LogIn, MessageCircle, ScrollText, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import {
+  Bell,
+  Bookmark,
+  CheckCheck,
+  Heart,
+  LogIn,
+  MessageCircle,
+  ScrollText,
+  Sparkles,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   fetchMyNotifications,
@@ -19,17 +28,25 @@ const followUpLinks = [
   { to: "/chats", labelAr: "الرسائل", labelEn: "Messages", icon: MessageCircle },
   { to: "/profile/listings", labelAr: "إعلاناتي", labelEn: "My listings", icon: ScrollText },
   { to: "/favorites", labelAr: "المفضلة", labelEn: "Favorites", icon: Heart },
-  { to: "/saved-searches", labelAr: "عمليات البحث المحفوظة", labelEn: "Saved searches", icon: Bookmark },
+  {
+    to: "/saved-searches",
+    labelAr: "عمليات البحث المحفوظة",
+    labelEn: "Saved searches",
+    icon: Bookmark,
+  },
   { to: "/promotion", labelAr: "طلبات الترويج", labelEn: "Promotion requests", icon: Sparkles },
 ] as const;
 
 function NotificationsPage() {
   const auth = useAuth();
+  const navigate = useNavigate();
   const { language, text } = useUiPreferences();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const profileId = auth.profile?.id ?? null;
+  const markInFlightRef = useRef<Set<string>>(new Set());
+  const markAllInFlightRef = useRef(false);
 
   async function loadNotifications() {
     if (!profileId) return;
@@ -47,8 +64,10 @@ function NotificationsPage() {
   }, [auth.status, profileId]);
 
   async function markOne(notificationId: string) {
-    if (!profileId) return;
+    if (!profileId || markInFlightRef.current.has(notificationId)) return;
+    markInFlightRef.current.add(notificationId);
     const result = await markNotificationRead(profileId, notificationId);
+    markInFlightRef.current.delete(notificationId);
     if (!result.ok) {
       setError(result.error);
       return;
@@ -61,14 +80,28 @@ function NotificationsPage() {
   }
 
   async function markAll() {
-    if (!profileId) return;
+    if (!profileId || markAllInFlightRef.current) return;
+    markAllInFlightRef.current = true;
     const result = await markAllNotificationsRead(profileId);
+    markAllInFlightRef.current = false;
     if (!result.ok) {
       setError(result.error);
       return;
     }
     const readAt = new Date().toISOString();
     setNotifications((current) => current.map((item) => ({ ...item, readAt })));
+  }
+
+  function openNotificationTarget(notification: NotificationItem) {
+    if (!notification.targetType || !notification.targetId) return;
+    const target = notification.targetType.toLowerCase();
+    if (target === "listing") {
+      void navigate({ to: "/listings/$id", params: { id: notification.targetId } });
+    } else if (target === "conversation") {
+      void navigate({ to: "/chats", search: { conversation: notification.targetId } });
+    } else if (target === "seller") {
+      void navigate({ to: "/seller/$id", params: { id: notification.targetId } });
+    }
   }
 
   const unreadCount = notifications.filter((item) => !item.readAt).length;
@@ -104,7 +137,9 @@ function NotificationsPage() {
                   <Bell className="h-6 w-6" />
                 </span>
                 <div>
-                  <h1 className="text-lg font-extrabold">{text("تنبيهات الحساب", "Account notifications")}</h1>
+                  <h1 className="text-lg font-extrabold">
+                    {text("تنبيهات الحساب", "Account notifications")}
+                  </h1>
                   <p className="mt-1 text-xs leading-6 text-muted-foreground">
                     {text(
                       "تظهر هنا إشعارات الحساب والإعلانات عند توفرها.",
@@ -127,7 +162,10 @@ function NotificationsPage() {
             {loading ? (
               <Panel title={text("جارٍ تحميل التنبيهات", "Loading notifications")} />
             ) : error ? (
-              <Panel title={text("تعذر تحميل التنبيهات", "Could not load notifications")} body={error.message} />
+              <Panel
+                title={text("تعذر تحميل التنبيهات", "Could not load notifications")}
+                body={error.message}
+              />
             ) : notifications.length === 0 ? (
               <Panel
                 title={text("لا توجد تنبيهات جديدة حالياً", "No new notifications right now")}
@@ -144,10 +182,15 @@ function NotificationsPage() {
                     className={`rounded-xl p-3 hairline ${notification.readAt ? "bg-card" : "bg-muted-surface"}`}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div>
+                      <div
+                        className="min-w-0 flex-1 cursor-pointer"
+                        onClick={() => openNotificationTarget(notification)}
+                      >
                         <h2 className="text-sm font-bold">{notification.titleAr}</h2>
                         {notification.bodyAr && (
-                          <p className="mt-1 text-xs leading-6 text-muted-foreground">{notification.bodyAr}</p>
+                          <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                            {notification.bodyAr}
+                          </p>
                         )}
                         <p className="mt-2 text-[10px] text-muted-foreground">
                           {formatNotificationDate(notification.createdAt, language)}
@@ -156,7 +199,10 @@ function NotificationsPage() {
                       {!notification.readAt && (
                         <button
                           type="button"
-                          onClick={() => void markOne(notification.id)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void markOne(notification.id);
+                          }}
                           className="shrink-0 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline"
                         >
                           {text("تمت القراءة", "Read")}

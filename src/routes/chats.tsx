@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Ban, Flag, MessageCircle, Send, ShieldAlert } from "lucide-react";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -43,6 +43,7 @@ function ChatsPage() {
   const [notice, setNotice] = useState("");
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
   const [blockReason, setBlockReason] = useState("");
+  const messagesRequestIdRef = useRef(0);
 
   const selectedConversation = useMemo(
     () => conversations.find((item) => item.id === search.conversation) ?? conversations[0] ?? null,
@@ -72,9 +73,11 @@ function ChatsPage() {
 
   async function loadMessages(conversationId: string) {
     if (!auth.profile?.id) return;
+    const requestId = ++messagesRequestIdRef.current;
     setLoadingMessages(true);
     setMessageError(null);
     const result = await fetchConversationMessages(auth.profile.id, conversationId);
+    if (requestId !== messagesRequestIdRef.current) return;
     if (result.ok) {
       setMessages(result.data);
       await markConversationRead(auth.profile.id, conversationId);
@@ -100,7 +103,7 @@ function ChatsPage() {
 
   async function handleSend(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!auth.profile?.id || !selectedConversation) return;
+    if (!auth.profile?.id || !selectedConversation || sending) return;
     setNotice("");
     setMessageError(null);
     setSending(true);

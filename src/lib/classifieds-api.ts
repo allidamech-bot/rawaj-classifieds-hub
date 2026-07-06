@@ -2675,6 +2675,32 @@ export async function adminModerateSellerReview(
   return { ok: true, data: null };
 }
 
+export async function fetchFavoriteStatus(
+  userId: string | null,
+  listingId: string,
+): Promise<ClassifiedsResult<boolean>> {
+  if (!userId) {
+    return { ok: false, error: { code: "auth_required", message: "يجب تسجيل الدخول." } };
+  }
+
+  if (!listingId.trim()) {
+    return { ok: false, error: { code: "validation_error", message: "تعذر تحديد الإعلان." } };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("favorites")
+    .select("user_id")
+    .eq("user_id", userId)
+    .eq("listing_id", listingId)
+    .maybeSingle();
+
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: !!data };
+}
+
 export async function fetchFavorites(
   userId: string | null,
 ): Promise<ClassifiedsResult<Favorite[]>> {

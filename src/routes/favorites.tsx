@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heart, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { fetchFavorites, unfavoriteListing } from "@/lib/classifieds-api";
@@ -22,6 +22,7 @@ function FavoritesPage() {
   const [items, setItems] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ClassifiedsError | null>(null);
+  const removeInFlightRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (auth.status !== "signedIn") return;
@@ -47,7 +48,10 @@ function FavoritesPage() {
   }, [auth.status, auth.profile?.id]);
 
   async function remove(listingId: string) {
+    if (removeInFlightRef.current.has(listingId)) return;
+    removeInFlightRef.current.add(listingId);
     const result = await unfavoriteListing(auth.profile?.id ?? null, listingId);
+    removeInFlightRef.current.delete(listingId);
     if (!result.ok) {
       setError(result.error);
       return;
