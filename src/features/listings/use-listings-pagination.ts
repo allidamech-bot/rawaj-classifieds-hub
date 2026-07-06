@@ -66,6 +66,7 @@ export function useListingsPagination(inputs: ListingsPaginationInputs): Listing
     onError,
     filterInputs.selectedCategoryId,
     filterInputs.effectiveSubcategoryId,
+    filterInputs.taxonomyListingSearch?.taxonomyLegacySubcategoryId,
     filterInputs.govId,
     filterInputs.districtAr,
     filterInputs.parsedPriceMin,
