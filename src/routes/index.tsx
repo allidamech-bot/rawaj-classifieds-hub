@@ -27,6 +27,7 @@ function HomePage() {
   const { text } = useUiPreferences();
   const [searchValue, setSearchValue] = useState("");
   const [listings, setListings] = useState<ClassifiedListing[]>([]);
+  const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
 
@@ -35,10 +36,14 @@ function HomePage() {
     async function load() {
       setLoading(true);
       setError(null);
-      const listingsResult = await fetchPublicListings({}, null, 30);
+      const [listingsResult, categoriesResult] = await Promise.all([
+        fetchPublicListings({}, null, 30),
+        fetchPublicCategories(),
+      ]);
       if (cancelled) return;
       if (!listingsResult.ok) setError(listingsResult.error);
       else setListings(listingsResult.data.items);
+      if (categoriesResult.ok) setCategories(categoriesResult.data);
       setLoading(false);
     }
     void load();
