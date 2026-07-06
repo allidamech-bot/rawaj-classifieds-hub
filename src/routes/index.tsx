@@ -24,7 +24,7 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const navigate = useNavigate();
-  const { text } = useUiPreferences();
+  const { language, text } = useUiPreferences();
   const [searchValue, setSearchValue] = useState("");
   const [listings, setListings] = useState<ClassifiedListing[]>([]);
   const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
