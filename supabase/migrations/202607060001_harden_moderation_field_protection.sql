@@ -1,13 +1,15 @@
 -- RAWAJ moderation field-protection hardening.
 -- Manual review required. Do not apply automatically from frontend tooling.
 --
--- This migration closes two repository-confirmed gaps left by the historical
+-- This migration closes repository-confirmed gaps left by the historical
 -- authorization reconciliation:
 -- 1) ordinary listing owners could still reach moderation-controlled columns
 --    through their legitimate owner UPDATE policy because the trigger returned
 --    immediately for non-moderators;
 -- 2) the 202607050002 reconciliation replaced the earlier listing trigger and
---    dropped the dedicated rawaj.promotion_moderation branch.
+--    dropped the dedicated rawaj.promotion_moderation branch;
+-- 3) owner-level moderation could bypass listing-report origin protection, and
+--    the report trigger used a denylist instead of a narrow moderation allowlist.
 --
 -- No policy broadening is performed here. Existing RLS remains authoritative.
 
@@ -100,14 +102,24 @@ security definer
 set search_path = public
 as $$
 begin
-  -- Report origin/evidence fields are immutable on every moderation path,
-  -- including owner/admin. RLS decides who may update; this trigger decides
-  -- which columns an authorized updater may change.
-  if new.reporter_id is distinct from old.reporter_id
-    or new.report_type is distinct from old.report_type
-    or new.reason is distinct from old.reason
-    or new.listing_id is distinct from old.listing_id
-    or new.created_at is distinct from old.created_at
+  -- Every authorized moderation role, including owner/admin, is constrained to
+  -- the explicit report-moderation column set. Any present or future column
+  -- outside this allowlist remains immutable through this update path.
+  if (to_jsonb(new) - array[
+        'status',
+        'assigned_to',
+        'admin_note',
+        'resolved_at',
+        'updated_at'
+      ])
+     is distinct from
+     (to_jsonb(old) - array[
+        'status',
+        'assigned_to',
+        'admin_note',
+        'resolved_at',
+        'updated_at'
+      ])
   then
     raise exception 'Moderators can only change moderation-safe fields on listing reports.';
   end if;
