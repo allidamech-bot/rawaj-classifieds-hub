@@ -89,6 +89,7 @@ export function useListingsReferences(search: ListingsSearch): ListingsReference
         ? governoratesResult.data.find((gov) => gov.id === search.gov || gov.slug === search.gov)
         : undefined;
       setGovId(initialGov?.id ?? "");
+      setLoading(false);
     }
 
     void loadReferences();
