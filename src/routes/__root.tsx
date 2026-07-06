@@ -6,6 +6,7 @@ import {
   Scripts,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -13,6 +14,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AuthProvider } from "@/lib/auth";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
+import { shouldShowSiteFooter } from "@/lib/primary-navigation";
 import { createSeo } from "@/lib/seo";
 import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
 import appCss from "../styles.css?url";
@@ -134,6 +136,8 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const showFooter = shouldShowSiteFooter(pathname);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -141,7 +145,7 @@ function RootComponent() {
         <AuthProvider>
           <div className="min-h-dvh bg-background pb-24 text-foreground lg:pb-8">
             <Outlet />
-            <SiteFooter />
+            {showFooter && <SiteFooter />}
           </div>
           <BottomNav />
         </AuthProvider>
