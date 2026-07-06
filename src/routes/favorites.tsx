@@ -24,12 +24,10 @@ function FavoritesPage() {
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const removeInFlightRef = useRef<Set<string>>(new Set());
   const loadRequestIdRef = useRef(0);
-  const mutationRequestIdRef = useRef(0);
 
   useEffect(() => {
     if (auth.status !== "signedIn") {
       loadRequestIdRef.current += 1;
-      mutationRequestIdRef.current += 1;
       setItems([]);
       setLoading(false);
       return;
@@ -60,11 +58,10 @@ function FavoritesPage() {
   async function remove(listingId: string) {
     if (removeInFlightRef.current.has(listingId)) return;
     const profileId = auth.profile?.id ?? null;
-    const mutationId = ++mutationRequestIdRef.current;
     removeInFlightRef.current.add(listingId);
     try {
       const result = await unfavoriteListing(profileId, listingId);
-      if (mutationId !== mutationRequestIdRef.current || profileId !== auth.profile?.id) return;
+      if (profileId !== auth.profile?.id) return;
       if (!result.ok) {
         setError(result.error);
         return;

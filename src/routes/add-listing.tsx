@@ -16,9 +16,11 @@ import {
 } from "@/lib/content-safety";
 import {
   createOwnerDraftListing,
+  deleteListingImage,
   fetchPublicCategories,
   fetchPublicGovernorates,
   submitOwnerListingForReview,
+  updateOwnerListing,
   uploadListingImage,
 } from "@/lib/classifieds-api";
 import type {
@@ -71,6 +73,7 @@ function AddListingPage() {
   const [createdListingId, setCreatedListingId] = useState<string | null>(null);
   const [draftListing, setDraftListing] = useState<ClassifiedListing | null>(null);
   const [selectedImages, setSelectedImages] = useState<UploadImageEntry[]>([]);
+  const [removingImageIds, setRemovingImageIds] = useState<Set<string>>(() => new Set());
   const [imageSelectionMessage, setImageSelectionMessage] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState("");
   const [title, setTitle] = useState("");
@@ -88,6 +91,7 @@ function AddListingPage() {
   const submittingRef = useRef(false);
   const selectedImagesRef = useRef<UploadImageEntry[]>([]);
   const imageRetryInFlightRef = useRef<Set<string>>(new Set());
+  const imageRemovalInFlightRef = useRef<Set<string>>(new Set());
 
   const category = categories.find((item) => item.id === categoryId);
   const categoryFieldKind = detectCategoryFieldKind(category);
@@ -166,12 +170,36 @@ function AddListingPage() {
     ]);
   }
 
-  function removeSelectedImage(id: string) {
-    setSelectedImages((current) => {
-      const entry = current.find((item) => item.id === id);
-      if (entry) URL.revokeObjectURL(entry.url);
-      return current.filter((item) => item.id !== id);
-    });
+  async function removeSelectedImage(id: string) {
+    if (imageRemovalInFlightRef.current.has(id)) return;
+    const entry = selectedImagesRef.current.find((item) => item.id === id);
+    if (!entry) return;
+
+    if (entry.uploadedImage && draftListing) {
+      imageRemovalInFlightRef.current.add(id);
+      setRemovingImageIds((current) => new Set(current).add(id));
+      const deleteResult = await deleteListingImage(
+        auth.profile?.id ?? null,
+        draftListing.id,
+        entry.uploadedImage,
+      ).finally(() => {
+        imageRemovalInFlightRef.current.delete(id);
+        setRemovingImageIds((current) => {
+          const next = new Set(current);
+          next.delete(id);
+          return next;
+        });
+      });
+      const latest = selectedImagesRef.current.find((item) => item.id === id);
+      if (!latest || latest.uploadedImage?.id !== entry.uploadedImage.id) return;
+      if (!deleteResult.ok) {
+        setSubmitMessage(deleteResult.error.message);
+        return;
+      }
+    }
+
+    URL.revokeObjectURL(entry.url);
+    setSelectedImages((current) => current.filter((item) => item.id !== id));
     setImageSelectionMessage(null);
   }
 
@@ -270,6 +298,22 @@ function AddListingPage() {
     setStep((value) => Math.min(steps.length - 1, value + 1));
   }
 
+  function buildCurrentListingPayload(details: Record<string, unknown>) {
+    return {
+      categoryId,
+      governorateId,
+      title: title.trim(),
+      description: description.trim(),
+      price: normalizedPrice ? Number(normalizedPrice) : null,
+      priceType,
+      condition,
+      districtAr: district,
+      contactName: contactName.trim() || null,
+      contactOptions: contact,
+      details,
+    };
+  }
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -349,27 +393,16 @@ function AddListingPage() {
         categoryDetails,
       );
 
-      const result =
-        draftListing ??
-        (await createOwnerDraftListing(auth.profile?.id ?? null, {
-          categoryId,
-          governorateId,
-          title: title.trim(),
-          description: description.trim(),
-          price: normalizedPrice ? Number(normalizedPrice) : null,
-          priceType,
-          condition,
-          districtAr: district,
-          contactName: contactName.trim() || null,
-          contactOptions: contact,
-          details,
-        }));
+      const payload = buildCurrentListingPayload(details);
+      const result = draftListing
+        ? await updateOwnerListing(auth.profile?.id ?? null, draftListing.id, payload)
+        : await createOwnerDraftListing(auth.profile?.id ?? null, payload);
 
-      if ("ok" in result && !result.ok) {
+      if (!result.ok) {
         setSubmitMessage(result.error.message);
         return;
       }
-      const listingDraft = "ok" in result ? result.data : result;
+      const listingDraft = result.data;
 
       setDraftListing(listingDraft);
       setCreatedListingId(listingDraft.id);
@@ -377,7 +410,8 @@ function AddListingPage() {
       const imageErrors: string[] = [];
       for (const [index, entry] of selectedImages.entries()) {
         if (entry.state === "uploaded") continue;
-        const { attempt } = entry;
+        if (!selectedImagesRef.current.some((item) => item.id === entry.id)) continue;
+        const nextAttempt = entry.attempt + 1;
         setSelectedImages((current) =>
           current.map((item) =>
             item.id === entry.id
@@ -385,7 +419,7 @@ function AddListingPage() {
                   ...item,
                   state: "uploading" as const,
                   error: undefined,
-                  attempt: item.attempt + 1,
+                  attempt: nextAttempt,
                 }
               : item,
           ),
@@ -399,13 +433,18 @@ function AddListingPage() {
           altAr: title.trim(),
         });
 
+        const latestEntry = selectedImagesRef.current.find((item) => item.id === entry.id);
+        const shouldApplyUploadResult = latestEntry && latestEntry.attempt === nextAttempt;
+        if (shouldApplyUploadResult && !uploadResult.ok) {
+          imageErrors.push(uploadResult.error.message);
+        }
+
         setSelectedImages((current) => {
           const currentEntry = current.find((item) => item.id === entry.id);
-          if (!currentEntry || currentEntry.attempt !== attempt + 1) {
+          if (!currentEntry || currentEntry.attempt !== nextAttempt) {
             return current;
           }
           if (!uploadResult.ok) {
-            imageErrors.push(uploadResult.error.message);
             return current.map((item) =>
               item.id === entry.id
                 ? { ...item, state: "failed" as const, error: uploadResult.error.message }
@@ -666,8 +705,9 @@ function AddListingPage() {
                         )}
                         <button
                           type="button"
-                          onClick={() => removeSelectedImage(preview.id)}
-                          className="absolute top-2 end-2 grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-soft"
+                          disabled={removingImageIds.has(preview.id)}
+                          onClick={() => void removeSelectedImage(preview.id)}
+                          className="absolute top-2 end-2 grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-soft disabled:opacity-60"
                           aria-label={text("إزالة الصورة", "Remove photo")}
                         >
                           <X className="h-4 w-4" />

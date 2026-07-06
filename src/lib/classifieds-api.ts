@@ -1584,12 +1584,20 @@ export async function createListing(
   userId: string | null,
   payload: CreateListingPayload,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
-  return createOwnerDraftListing(userId, payload);
+  return createListingWithStatus(userId, payload, "pending_review");
 }
 
 export async function createOwnerDraftListing(
   userId: string | null,
   payload: CreateListingPayload,
+): Promise<ClassifiedsResult<ClassifiedListing>> {
+  return createListingWithStatus(userId, payload, "draft");
+}
+
+async function createListingWithStatus(
+  userId: string | null,
+  payload: CreateListingPayload,
+  status: "draft" | "pending_review",
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
   if (!userId) {
     return {
@@ -1632,7 +1640,7 @@ export async function createOwnerDraftListing(
     price: payload.price,
     price_type: payload.priceType,
     listing_condition: payload.condition,
-    status: "draft",
+    status,
     district_ar: districtAr,
     contact_name: contactName,
     contact_options: payload.contactOptions,
@@ -1804,19 +1812,38 @@ export async function deleteListingImage(
   }
 
   const storagePath = rowNullableString(storedImage as Row, "storage_path");
+  const { data: deletedImage, error } = await clientResult.data
+    .from("listing_images")
+    .delete()
+    .eq("id", image.id)
+    .eq("listing_id", listingId)
+    .select("id")
+    .maybeSingle();
+  if (error) return { ok: false, error: mapError(error) };
+  if (!deletedImage) {
+    return {
+      ok: false,
+      error: {
+        code: "not_found",
+        message:
+          "ظ„ظ… ظٹطھظ… ط­ط°ظپ طµظˆط±ط© ط§ظ„ط¥ط¹ظ„ط§ظ†. ظ‚ط¯ طھظ… طھط؛ظٹظٹط±ظ‡ط§ ظ…ط³ط¨ظ‚ط§ظ‹.",
+      },
+    };
+  }
+
   if (storagePath) {
     const storageResult = await clientResult.data.storage
       .from(listingImagesBucket)
       .remove([storagePath]);
-    if (storageResult.error) return { ok: false, error: mapStorageError(storageResult.error) };
+    if (storageResult.error) {
+      console.error("Failed to clean up storage image after listing image delete", {
+        listingId,
+        imageId: image.id,
+        error: storageResult.error,
+      });
+    }
   }
 
-  const { error } = await clientResult.data
-    .from("listing_images")
-    .delete()
-    .eq("id", image.id)
-    .eq("listing_id", listingId);
-  if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: null };
 }
 

@@ -9,7 +9,7 @@ import {
   ScrollText,
   Sparkles,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   fetchMyNotifications,
@@ -48,45 +48,57 @@ function NotificationsPage() {
   const markInFlightRef = useRef<Set<string>>(new Set());
   const markAllInFlightRef = useRef(false);
   const notificationsRequestIdRef = useRef(0);
-  const mutationRequestIdRef = useRef(0);
+  const readNotificationIdsRef = useRef<Set<string>>(new Set());
+  const markAllReadAtRef = useRef<string | null>(null);
 
-  async function loadNotifications() {
+  const applyKnownReadState = useCallback((items: NotificationItem[]) => {
+    const markAllReadAt = markAllReadAtRef.current;
+    const readIds = readNotificationIdsRef.current;
+    return items.map((item) => {
+      if (item.readAt) return item;
+      if (markAllReadAt) return { ...item, readAt: markAllReadAt };
+      if (readIds.has(item.id)) return { ...item, readAt: new Date().toISOString() };
+      return item;
+    });
+  }, []);
+
+  const loadNotifications = useCallback(async () => {
     if (!profileId) return;
+    const currentProfileId = profileId;
     const requestId = ++notificationsRequestIdRef.current;
     setLoading(true);
     setError(null);
-    const result = await fetchMyNotifications(profileId);
-    if (requestId !== notificationsRequestIdRef.current || profileId !== auth.profile?.id) return;
-    if (result.ok) setNotifications(result.data);
+    const result = await fetchMyNotifications(currentProfileId);
+    if (requestId !== notificationsRequestIdRef.current || currentProfileId !== profileId) return;
+    if (result.ok) setNotifications(applyKnownReadState(result.data));
     else setError(result.error);
     setLoading(false);
-  }
+  }, [applyKnownReadState, profileId]);
 
   useEffect(() => {
     if (auth.status !== "signedIn") {
       notificationsRequestIdRef.current += 1;
-      mutationRequestIdRef.current += 1;
+      readNotificationIdsRef.current = new Set();
+      markAllReadAtRef.current = null;
       setNotifications([]);
       setLoading(false);
       return;
     }
     void loadNotifications();
-  }, [auth.status, profileId]);
+  }, [auth.status, loadNotifications]);
 
   async function markOne(notificationId: string) {
     if (!profileId || markInFlightRef.current.has(notificationId)) return;
-    const mutationId = ++mutationRequestIdRef.current;
     const currentProfileId = profileId;
     markInFlightRef.current.add(notificationId);
     try {
       const result = await markNotificationRead(currentProfileId, notificationId);
-      if (mutationId !== mutationRequestIdRef.current || currentProfileId !== auth.profile?.id) {
-        return;
-      }
+      if (currentProfileId !== auth.profile?.id) return;
       if (!result.ok) {
         setError(result.error);
         return;
       }
+      readNotificationIdsRef.current.add(notificationId);
       setNotifications((current) =>
         current.map((item) =>
           item.id === notificationId ? { ...item, readAt: new Date().toISOString() } : item,
@@ -99,19 +111,18 @@ function NotificationsPage() {
 
   async function markAll() {
     if (!profileId || markAllInFlightRef.current) return;
-    const mutationId = ++mutationRequestIdRef.current;
     const currentProfileId = profileId;
     markAllInFlightRef.current = true;
     try {
       const result = await markAllNotificationsRead(currentProfileId);
-      if (mutationId !== mutationRequestIdRef.current || currentProfileId !== auth.profile?.id) {
-        return;
-      }
+      if (currentProfileId !== auth.profile?.id) return;
       if (!result.ok) {
         setError(result.error);
         return;
       }
       const readAt = new Date().toISOString();
+      markAllReadAtRef.current = readAt;
+      notifications.forEach((item) => readNotificationIdsRef.current.add(item.id));
       setNotifications((current) => current.map((item) => ({ ...item, readAt })));
     } finally {
       markAllInFlightRef.current = false;
