@@ -8,6 +8,7 @@ export type ClassifiedsErrorCode =
   | "auth_required"
   | "permission_denied"
   | "not_found"
+  | "stale_review"
   | "validation_error"
   | "unknown";
 
@@ -531,6 +532,7 @@ export interface ModerateListingPayload {
   status: Extract<ListingStatus, "approved" | "rejected" | "archived">;
   reviewerId: string;
   rejectionReason?: string | null;
+  expectedUpdatedAt?: string;
 }
 
 export interface ListingImageUploadPayload {

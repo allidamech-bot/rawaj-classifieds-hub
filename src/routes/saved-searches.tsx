@@ -3,12 +3,37 @@ import { Bell, Bookmark, Search, Trash2 } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { createSavedSearch, deleteSavedSearch, fetchSavedSearches } from "@/lib/classifieds-api";
-import type { ClassifiedsError, SavedSearch } from "@/lib/classifieds-types";
+import type { ClassifiedsError, ListingFilters, SavedSearch } from "@/lib/classifieds-types";
 import { uiLabel } from "@/lib/i18n";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/saved-searches")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q : "",
+    category: typeof search.category === "string" ? search.category : "",
+    subcategory: typeof search.subcategory === "string" ? search.subcategory : "",
+    gov: typeof search.gov === "string" ? search.gov : "",
+    district: typeof search.district === "string" ? search.district : "",
+    price_min: typeof search.price_min === "string" ? search.price_min : "",
+    price_max: typeof search.price_max === "string" ? search.price_max : "",
+    car_make: typeof search.car_make === "string" ? search.car_make : "",
+    car_model: typeof search.car_model === "string" ? search.car_model : "",
+    fuel: typeof search.fuel === "string" ? search.fuel : "",
+    transmission: typeof search.transmission === "string" ? search.transmission : "",
+    property_purpose: typeof search.property_purpose === "string" ? search.property_purpose : "",
+    property_type: typeof search.property_type === "string" ? search.property_type : "",
+    rooms: typeof search.rooms === "string" ? search.rooms : "",
+    rental_duration: typeof search.rental_duration === "string" ? search.rental_duration : "",
+    electronics_brand: typeof search.electronics_brand === "string" ? search.electronics_brand : "",
+    detail_condition: typeof search.detail_condition === "string" ? search.detail_condition : "",
+    employment_type: typeof search.employment_type === "string" ? search.employment_type : "",
+    salary_type: typeof search.salary_type === "string" ? search.salary_type : "",
+    sort:
+      search.sort === "cheapest" || search.sort === "expensive" || search.sort === "featured"
+        ? search.sort
+        : "latest",
+  }),
   head: () => ({
     meta: [
       { title: "عمليات البحث المحفوظة | رَوَاج" },
@@ -29,6 +54,7 @@ type LocalSearch = {
 function SavedSearchesPage() {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
+  const search = Route.useSearch();
   const [items, setItems] = useState<SavedSearch[]>([]);
   const [localItems, setLocalItems] = useState<LocalSearch[]>([]);
   const [loading, setLoading] = useState(false);
@@ -61,11 +87,51 @@ function SavedSearchesPage() {
     };
   }, [auth.status, auth.profile?.id]);
 
+  function buildListingFilters(): ListingFilters {
+    const filters: ListingFilters = {};
+
+    if (search.q) filters.query = search.q;
+    if (search.category) filters.categoryId = search.category;
+    if (search.subcategory) filters.subcategoryId = search.subcategory;
+    if (search.gov) filters.governorateId = search.gov;
+    if (search.district) filters.districtAr = search.district;
+
+    if (search.price_min !== "") {
+      const parsed = Number(search.price_min);
+      if (!Number.isNaN(parsed)) filters.priceMin = parsed;
+    }
+    if (search.price_max !== "") {
+      const parsed = Number(search.price_max);
+      if (!Number.isNaN(parsed)) filters.priceMax = parsed;
+    }
+
+    if (search.car_make) filters.carMake = search.car_make;
+    if (search.car_model) filters.carModel = search.car_model;
+    if (search.fuel) filters.fuelType = search.fuel;
+    if (search.transmission) filters.transmission = search.transmission;
+    if (search.property_purpose) filters.propertyPurpose = search.property_purpose;
+    if (search.property_type) filters.propertyType = search.property_type;
+    if (search.rooms !== "") {
+      const parsed = Number(search.rooms);
+      if (!Number.isNaN(parsed)) filters.rooms = parsed;
+    }
+    if (search.rental_duration) filters.rentalDuration = search.rental_duration;
+    if (search.electronics_brand) filters.electronicsBrand = search.electronics_brand;
+    if (search.detail_condition) filters.detailCondition = search.detail_condition;
+    if (search.employment_type) filters.employmentType = search.employment_type;
+    if (search.salary_type) filters.salaryType = search.salary_type;
+
+    if (search.sort !== "latest")
+      filters.sort = search.sort as "cheapest" | "expensive" | "featured";
+
+    return filters;
+  }
+
   async function addSavedSearch(event: FormEvent) {
     event.preventDefault();
     setMessage("");
     const label = name.trim() || text("بحث محفوظ", "Saved search");
-    const filters = keyword.trim() ? { query: keyword.trim() } : {};
+    const filters = buildListingFilters();
     const result = await createSavedSearch(auth.profile?.id ?? null, {
       nameAr: label,
       filters,
@@ -79,7 +145,7 @@ function SavedSearchesPage() {
         {
           id: `local-${Date.now()}`,
           nameAr: label,
-          filters: keyword.trim() ? { q: keyword.trim() } : {},
+          filters: toLocalFilters(filters),
           createdAt: new Date().toISOString(),
           frequency,
         },
@@ -95,6 +161,31 @@ function SavedSearchesPage() {
     }
     setName("");
     setKeyword("");
+  }
+
+  function toLocalFilters(filters: ListingFilters): Record<string, string> {
+    const result: Record<string, string> = {};
+    if (filters.query) result.q = filters.query;
+    if (filters.categoryId) result.category = filters.categoryId;
+    if (filters.subcategoryId) result.subcategory = filters.subcategoryId;
+    if (filters.governorateId) result.gov = filters.governorateId;
+    if (filters.districtAr) result.district = filters.districtAr;
+    if (filters.priceMin !== undefined) result.price_min = String(filters.priceMin);
+    if (filters.priceMax !== undefined) result.price_max = String(filters.priceMax);
+    if (filters.carMake) result.car_make = filters.carMake;
+    if (filters.carModel) result.car_model = filters.carModel;
+    if (filters.fuelType) result.fuel = filters.fuelType;
+    if (filters.transmission) result.transmission = filters.transmission;
+    if (filters.propertyPurpose) result.property_purpose = filters.propertyPurpose;
+    if (filters.propertyType) result.property_type = filters.propertyType;
+    if (filters.rooms !== undefined) result.rooms = String(filters.rooms);
+    if (filters.rentalDuration) result.rental_duration = filters.rentalDuration;
+    if (filters.electronicsBrand) result.electronics_brand = filters.electronicsBrand;
+    if (filters.detailCondition) result.detail_condition = filters.detailCondition;
+    if (filters.employmentType) result.employment_type = filters.employmentType;
+    if (filters.salaryType) result.salary_type = filters.salaryType;
+    if (filters.sort) result.sort = filters.sort;
+    return result;
   }
 
   async function removeSavedSearch(id: string) {
@@ -318,13 +409,47 @@ function toListingSearch(filters: Record<string, unknown>) {
   return {
     q: stringFilter(filters.query) || stringFilter(filters.q) || undefined,
     category: stringFilter(filters.categoryId) || stringFilter(filters.category) || undefined,
+    subcategory:
+      stringFilter(filters.subcategoryId) || stringFilter(filters.subcategory) || undefined,
     gov: stringFilter(filters.governorateId) || stringFilter(filters.gov) || undefined,
+    district: stringFilter(filters.districtAr) || stringFilter(filters.district) || undefined,
+    price_min: numberFilter(filters.priceMin) ?? numberFilter(filters.price_min),
+    price_max: numberFilter(filters.priceMax) ?? numberFilter(filters.price_max),
+    car_make: stringFilter(filters.carMake) || stringFilter(filters.car_make) || undefined,
+    car_model: stringFilter(filters.carModel) || stringFilter(filters.car_model) || undefined,
+    fuel: stringFilter(filters.fuelType) || stringFilter(filters.fuel) || undefined,
+    transmission: stringFilter(filters.transmission) || undefined,
+    property_purpose:
+      stringFilter(filters.propertyPurpose) || stringFilter(filters.property_purpose) || undefined,
+    property_type:
+      stringFilter(filters.propertyType) || stringFilter(filters.property_type) || undefined,
+    rooms: numberFilter(filters.rooms) ?? numberFilter(filters.rooms),
+    rental_duration:
+      stringFilter(filters.rentalDuration) || stringFilter(filters.rental_duration) || undefined,
+    electronics_brand:
+      stringFilter(filters.electronicsBrand) ||
+      stringFilter(filters.electronics_brand) ||
+      undefined,
+    detail_condition:
+      stringFilter(filters.detailCondition) || stringFilter(filters.detail_condition) || undefined,
+    employment_type:
+      stringFilter(filters.employmentType) || stringFilter(filters.employment_type) || undefined,
+    salary_type: stringFilter(filters.salaryType) || stringFilter(filters.salary_type) || undefined,
     sort: sortFilter(filters.sort),
   };
 }
 
-function stringFilter(value: unknown) {
+function stringFilter(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value : undefined;
+}
+
+function numberFilter(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
 }
 
 function sortFilter(value: unknown): "latest" | "cheapest" | "expensive" | "featured" | undefined {

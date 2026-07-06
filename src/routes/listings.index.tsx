@@ -41,6 +41,7 @@ import {
   taxonomyPathLabel,
 } from "@/lib/taxonomy";
 import { useUiPreferences } from "@/lib/ui-preferences";
+import { parseBooleanParam } from "@/lib/boolean-parser";
 
 const searchSchema = z.object({
   taxonomy: z.string().optional(),
@@ -64,7 +65,7 @@ const searchSchema = z.object({
   salary_type: z.string().optional(),
   q: z.string().optional(),
   sort: z.enum(["latest", "cheapest", "expensive", "featured"]).optional(),
-  open_filters: z.coerce.boolean().optional(),
+  open_filters: z.preprocess(parseBooleanParam, z.boolean().optional()),
 });
 
 export const Route = createFileRoute("/listings/")({
@@ -182,6 +183,10 @@ function ListingsPage() {
   );
   const parsedPriceMin = priceMin.trim() ? Number(priceMin) : undefined;
   const parsedPriceMax = priceMax.trim() ? Number(priceMax) : undefined;
+  const hasPriceContradiction =
+    typeof parsedPriceMin === "number" &&
+    typeof parsedPriceMax === "number" &&
+    parsedPriceMin > parsedPriceMax;
   const hasActiveFilters = Boolean(
     selectedGovernorate ||
     districtAr ||
@@ -417,6 +422,7 @@ function ListingsPage() {
     if (taxonomyAvailable && search.taxonomy && !selectedTaxonomyNode) return;
     if (hasInvalidCategory) return;
     if (hasInvalidSubcategory) return;
+    if (hasPriceContradiction) return;
 
     filterVersionRef.current += 1;
     const version = filterVersionRef.current;
@@ -529,6 +535,7 @@ function ListingsPage() {
     sort,
     hasInvalidCategory,
     hasInvalidSubcategory,
+    hasPriceContradiction,
   ]);
 
   const taxonomyTitle = selectedTaxonomyNode
@@ -815,6 +822,7 @@ function ListingsPage() {
 
   const loadMore = useCallback(async () => {
     if (!nextCursor || loadingMoreRef.current) return;
+    if (hasPriceContradiction) return;
     loadingMoreRef.current = true;
     setLoadingMore(true);
 
@@ -898,6 +906,7 @@ function ListingsPage() {
     salaryType,
     debouncedQ,
     sort,
+    hasPriceContradiction,
   ]);
 
   return (
@@ -1547,6 +1556,16 @@ function ListingsPage() {
             )}
             actionLabel={text("تصفح الأقسام", "Browse categories")}
             actionTo="/categories"
+          />
+        ) : hasPriceContradiction ? (
+          <StateCard
+            title={text("نطاق السعر غير صالح", "Invalid price range")}
+            body={text(
+              "لا يمكن أن يكون السعر الأدنى أكبر من السعر الأعلى.",
+              "Minimum price cannot be greater than maximum price.",
+            )}
+            actionLabel={text("مسح الفلاتر", "Clear filters")}
+            actionTo="/listings"
           />
         ) : loading ? (
           <StateCard

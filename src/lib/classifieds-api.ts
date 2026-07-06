@@ -813,6 +813,8 @@ export async function fetchPublicListings(
   if (filters.employmentType) query = query.eq("details->>employment_type", filters.employmentType);
   if (filters.salaryType) query = query.eq("details->>salary_type", filters.salaryType);
   if (filters.query?.trim()) {
+    // Legacy search: normalized columns not yet applied via SQL migration
+    // Unapplied future work in supabase/manual/20260706_arabic_search_normalization.sql
     const term = escapePostgrestSearchTerm(filters.query.trim());
     query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
   }
@@ -1328,7 +1330,7 @@ export async function updateOwnerListing(
     .select("*")
     .eq("id", listingId)
     .eq("owner_id", userId)
-    .in("status", ["draft", "pending_review", "rejected"])
+    .in("status", ["draft", "rejected"])
     .maybeSingle();
 
   if (existingError) return { ok: false, error: mapError(existingError) };
@@ -1363,7 +1365,7 @@ export async function updateOwnerListing(
     .update(updateData)
     .eq("id", listingId)
     .eq("owner_id", userId)
-    .in("status", ["draft", "pending_review", "rejected"])
+    .in("status", ["draft", "rejected"])
     .select("*");
 
   if (error) return { ok: false, error: mapError(error) };
@@ -1656,7 +1658,7 @@ export async function uploadListingImage({
     };
   }
 
-  if (!["draft", "pending_review", "rejected"].includes(listing.status)) {
+  if (!["draft", "rejected"].includes(listing.status)) {
     return {
       ok: false,
       error: { code: "permission_denied", message: "لا يمكن تعديل صور إعلان بعد اعتماده." },
@@ -1685,7 +1687,7 @@ export async function uploadListingImage({
     .select("id, owner_id, status")
     .eq("id", listing.id)
     .eq("owner_id", userId)
-    .in("status", ["draft", "pending_review", "rejected"])
+    .in("status", ["draft", "rejected"])
     .maybeSingle();
 
   if (existingListingError) return { ok: false, error: mapError(existingListingError) };
@@ -1760,14 +1762,10 @@ export async function deleteListingImage(
     };
   }
 
-  if (
-    existing.status !== "draft" &&
-    existing.status !== "pending_review" &&
-    existing.status !== "rejected"
-  ) {
+  if (existing.status !== "draft" && existing.status !== "rejected") {
     return {
       ok: false,
-      error: { code: "permission_denied", message: "لا يمكن تعديل صور إعلان بعد اعتماده." },
+      error: { code: "permission_denied", message: "لا يمكنك حذف صور إعلان لا تملكه." },
     };
   }
 
@@ -1953,6 +1951,7 @@ export async function searchPublicSellers(
   query: string,
   limit = 8,
 ): Promise<ClassifiedsResult<PublicSellerSearchResult[]>> {
+  // Legacy search: normalized columns not yet applied via SQL migration
   const cleanQuery = query.trim();
   if (cleanQuery.length < 2) return { ok: true, data: [] };
 
@@ -3222,18 +3221,14 @@ export async function adminModerateListing(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data: existing, error: existingError } = await clientResult.data
-    .from("listings")
-    .select("id, owner_id, title, status")
-    .eq("id", payload.listingId)
-    .eq("status", "pending_review")
-    .maybeSingle();
-
-  if (existingError) return { ok: false, error: mapError(existingError) };
-  if (!existing) {
+  // Validate caller-supplied expectedUpdatedAt exists
+  if (!payload.expectedUpdatedAt) {
     return {
       ok: false,
-      error: { code: "not_found", message: "هذا الإعلان ليس ضمن طابور المراجعة." },
+      error: {
+        code: "validation_error",
+        message: "يجب توفير توقيت التحديث المتوقع من الإعلان المحمّل.",
+      },
     };
   }
 
@@ -3247,16 +3242,35 @@ export async function adminModerateListing(
     archived_at: payload.status === "archived" ? new Date().toISOString() : null,
   };
 
-  const { error } = await clientResult.data
+  const { data, error } = await clientResult.data
     .from("listings")
     .update(updatePayload)
     .eq("id", payload.listingId)
-    .eq("status", "pending_review");
+    .eq("status", "pending_review")
+    .eq("updated_at", payload.expectedUpdatedAt)
+    .select("id, owner_id, title");
+
   if (error) return { ok: false, error: mapError(error) };
+  if (!data || data.length === 0) {
+    return {
+      ok: false,
+      error: {
+        code: "stale_review",
+        message: "تغيّر الإعلان منذ فتحه للمراجعة. حدّث الصفحة وراجعه من جديد.",
+      },
+    };
+  }
+
+  // Build minimal listing record for notification using returned data
+  const existing: Row = {
+    id: data[0].id,
+    owner_id: data[0].owner_id,
+    title: data[0].title,
+  } as Row;
 
   const notificationResult = await createListingModerationNotification(
     clientResult.data,
-    existing as Row,
+    existing,
     payload,
   );
   if (!notificationResult.ok) {

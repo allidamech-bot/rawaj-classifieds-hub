@@ -93,10 +93,8 @@ function ManageListingPage() {
     [subcategories, categoryId],
   );
 
-  const isEditable =
-    listing?.status === "draft" ||
-    listing?.status === "pending_review" ||
-    listing?.status === "rejected";
+  const isEditable = listing?.status === "draft" || listing?.status === "rejected";
+  const isPendingReview = listing?.status === "pending_review";
   const isResubmittable = listing?.status === "draft" || listing?.status === "rejected";
   const isDeletable = listing?.status === "draft" || listing?.status === "rejected";
 
@@ -441,6 +439,15 @@ function ManageListingPage() {
             </Link>
           </div>
         </div>
+
+        {isPendingReview && (
+          <p className="mb-4 rounded-xl bg-warning/10 px-4 py-3 text-xs font-semibold text-warning hairline">
+            {text(
+              "هذا الإعلان قيد المراجعة ولا يمكن تعديله حتى قرار الإدارة. يمكنك حذفه فقط أو إعادة إرساله بعد الرفض.",
+              "This listing is under review and cannot be edited until the admin decision. You can only delete it or resubmit it if rejected.",
+            )}
+          </p>
+        )}
 
         {listing.rejectionReason && (
           <p className="mb-4 rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">

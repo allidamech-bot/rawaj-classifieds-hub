@@ -62,6 +62,7 @@ function PendingPage() {
       status,
       reviewerId: auth.profile.id,
       rejectionReason: status === "rejected" ? rejectReasons[listing.id] : null,
+      expectedUpdatedAt: listing.updatedAt,
     });
     if (!result.ok) {
       setMessage(result.error.message);
