@@ -34,7 +34,15 @@ jobs:
         run: npm ci
 
       - name: Lint
-        run: npm run lint -- --quiet
+        shell: bash
+        run: |
+          set +e
+          npm run lint -- --quiet > /tmp/eslint.log 2>&1
+          status=$?
+          if [ "$status" -ne 0 ]; then
+            tail -n 80 /tmp/eslint.log
+            exit "$status"
+          fi
 
       - name: Typecheck
         run: npm run typecheck -- --pretty false
