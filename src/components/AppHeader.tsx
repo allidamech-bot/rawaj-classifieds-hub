@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Languages, LogIn, Plus, User, UserCog } from "lucide-react";
 import { NotificationTrigger } from "@/components/NotificationTrigger";
+import { resolvePrimaryNavigationSection } from "@/lib/primary-navigation";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -13,11 +14,16 @@ export function AppHeader({ compact = false, title }: Props) {
   const auth = useAuth();
   const { language, text, toggleLanguage } = useUiPreferences();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const activeSection = resolvePrimaryNavigationSection(pathname);
 
-  const navItems: Array<{ to: "/" | "/categories" | "/offers"; label: string; exact?: boolean }> = [
-    { to: "/", label: text("الرئيسية", "Home"), exact: true },
-    { to: "/categories", label: text("الأقسام", "Categories") },
-    { to: "/offers", label: text("العروض", "Offers") },
+  const navItems = [
+    { to: "/" as const, section: "home" as const, label: text("الرئيسية", "Home") },
+    {
+      to: "/categories" as const,
+      section: "categories" as const,
+      label: text("الأقسام", "Categories"),
+    },
+    { to: "/offers" as const, section: "offers" as const, label: text("العروض", "Offers") },
   ];
 
   return (
@@ -29,22 +35,21 @@ export function AppHeader({ compact = false, title }: Props) {
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
       </div>
 
-      <div className="container-wide flex items-center gap-3 py-3 sm:gap-4 sm:py-4 lg:py-5">
-        <Link to="/" className="order-1 flex min-w-0 items-center gap-2.5 group sm:gap-3">
+      <div className="container-wide flex min-h-14 items-center gap-2.5 py-1.5 sm:min-h-16 sm:gap-4 sm:py-2.5 lg:min-h-20 lg:py-4">
+        <Link to="/" className="group order-1 flex min-w-0 items-center gap-2 sm:gap-3">
           <Logo />
         </Link>
 
         {compact && title && (
-          <h1 className="order-2 ms-1 flex-1 truncate text-base font-bold lg:hidden">{title}</h1>
+          <h1 className="order-2 ms-1 flex-1 truncate text-sm font-bold sm:text-base lg:hidden">{title}</h1>
         )}
 
-        {/* Desktop primary nav */}
         <nav
-          aria-label={text("التنقل الرئيسي", "Primary")}
+          aria-label={text("التنقل الرئيسي", "Primary navigation")}
           className="order-2 ms-6 hidden items-center gap-1 lg:flex"
         >
           {navItems.map((item) => {
-            const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+            const active = activeSection === item.section;
             return (
               <Link
                 key={item.to}
@@ -54,6 +59,7 @@ export function AppHeader({ compact = false, title }: Props) {
                     ? "bg-primary-foreground/10 text-gold"
                     : "text-primary-foreground/85 hover:bg-primary-foreground/[0.06] hover:text-gold"
                 }`}
+                aria-current={active ? "page" : undefined}
               >
                 {item.label}
               </Link>
@@ -63,8 +69,7 @@ export function AppHeader({ compact = false, title }: Props) {
 
         <div className="order-2 ms-auto" />
 
-        <div className="order-3 flex shrink-0 items-center gap-1.5 sm:gap-2">
-          {/* Desktop Add Listing CTA */}
+        <div className="order-3 flex shrink-0 items-center gap-1 sm:gap-2">
           <Link
             to="/add-listing"
             className="hidden h-10 items-center gap-1.5 rounded-full bg-gradient-to-br from-gold via-gold/95 to-gold/70 px-4 text-sm font-extrabold text-gold-foreground shadow-soft ring-1 ring-gold/40 transition hover:brightness-105 lg:inline-flex"
@@ -83,7 +88,9 @@ export function AppHeader({ compact = false, title }: Props) {
             <Languages className="h-4 w-4" />
             <span>{language === "ar" ? "English" : "العربية"}</span>
           </button>
+
           <NotificationTrigger tone="dark" />
+
           {auth.canAccessOwnerControls && (
             <Link
               to="/admin"
@@ -94,8 +101,9 @@ export function AppHeader({ compact = false, title }: Props) {
               <UserCog className="h-4 w-4" />
             </Link>
           )}
+
           <Link
-            to={auth.status === "signedIn" ? "/profile" : "/login"}
+            to={auth.status === "signedIn" ? "/more" : "/login"}
             aria-label={
               auth.status === "signedIn"
                 ? text("حسابي", "My account")
@@ -122,22 +130,22 @@ export function AppHeader({ compact = false, title }: Props) {
 
 function Logo() {
   return (
-    <span className="flex items-center gap-2.5 sm:gap-3">
+    <span className="flex items-center gap-2 sm:gap-3">
       <img
         src="/brand/rawaj-mark-transparent-header.png"
         alt="RAWAJ"
         decoding="async"
-        className="h-16 w-auto shrink-0 object-contain sm:h-20"
+        className="h-11 w-auto shrink-0 object-contain sm:h-14 lg:h-16"
       />
 
-      <span className="flex items-center gap-2 leading-none sm:gap-2.5">
-        <span className="text-base font-extrabold tracking-normal text-primary-foreground sm:text-xl">
+      <span className="hidden items-center gap-2 leading-none min-[430px]:flex sm:gap-2.5">
+        <span className="text-sm font-extrabold tracking-normal text-primary-foreground sm:text-lg lg:text-xl">
           رواج
         </span>
 
-        <span className="h-6 w-px bg-gold/80 sm:h-8" aria-hidden="true" />
+        <span className="h-5 w-px bg-gold/80 sm:h-7 lg:h-8" aria-hidden="true" />
 
-        <span className="text-xs font-semibold tracking-[0.22em] text-gold sm:text-base">
+        <span className="text-[10px] font-semibold tracking-[0.18em] text-gold sm:text-sm lg:text-base">
           RAWAJ
         </span>
       </span>
