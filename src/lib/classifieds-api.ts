@@ -1584,6 +1584,13 @@ export async function createListing(
   userId: string | null,
   payload: CreateListingPayload,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
+  return createOwnerDraftListing(userId, payload);
+}
+
+export async function createOwnerDraftListing(
+  userId: string | null,
+  payload: CreateListingPayload,
+): Promise<ClassifiedsResult<ClassifiedListing>> {
   if (!userId) {
     return {
       ok: false,
@@ -1625,7 +1632,7 @@ export async function createListing(
     price: payload.price,
     price_type: payload.priceType,
     listing_condition: payload.condition,
-    status: "pending_review",
+    status: "draft",
     district_ar: districtAr,
     contact_name: contactName,
     contact_options: payload.contactOptions,
@@ -1640,6 +1647,13 @@ export async function createListing(
 
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: mapListing(data as Row) };
+}
+
+export async function submitOwnerListingForReview(
+  userId: string | null,
+  listingId: string,
+): Promise<ClassifiedsResult<ClassifiedListing>> {
+  return resubmitOwnerListing(userId, listingId);
 }
 
 export async function uploadListingImage({
@@ -2797,7 +2811,7 @@ export async function favoriteListing(
 
   const { error } = await clientResult.data
     .from("favorites")
-    .upsert({ user_id: userId, listing_id: listingId });
+    .upsert({ user_id: userId, listing_id: listingId }, { onConflict: "user_id,listing_id" });
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: null };
 }

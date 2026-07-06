@@ -15,15 +15,18 @@ import {
   normalizeContactValue,
 } from "@/lib/content-safety";
 import {
-  createListing,
+  createOwnerDraftListing,
   fetchPublicCategories,
   fetchPublicGovernorates,
+  submitOwnerListingForReview,
   uploadListingImage,
 } from "@/lib/classifieds-api";
 import type {
   ClassifiedCategory,
   ClassifiedGovernorate,
+  ClassifiedListing,
   ClassifiedsError,
+  ListingImage,
   ListingCondition,
 } from "@/lib/classifieds-types";
 
@@ -36,11 +39,14 @@ interface UploadImageEntry {
   error?: string;
   attempt: number;
   url: string;
+  uploadedImage?: ListingImage;
 }
 import { categoryName, governorateName } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 import type { PriceType } from "@/types";
+
+const MAX_IMAGES = 6;
 
 export const Route = createFileRoute("/add-listing")({
   head: () => ({
@@ -63,6 +69,7 @@ function AddListingPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [createdListingId, setCreatedListingId] = useState<string | null>(null);
+  const [draftListing, setDraftListing] = useState<ClassifiedListing | null>(null);
   const [selectedImages, setSelectedImages] = useState<UploadImageEntry[]>([]);
   const [imageSelectionMessage, setImageSelectionMessage] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState("");
@@ -79,6 +86,8 @@ function AddListingPage() {
   const [whatsapp, setWhatsapp] = useState("");
   const [categoryDetails, setCategoryDetails] = useState<CategorySpecificDetails>({});
   const submittingRef = useRef(false);
+  const selectedImagesRef = useRef<UploadImageEntry[]>([]);
+  const imageRetryInFlightRef = useRef<Set<string>>(new Set());
 
   const category = categories.find((item) => item.id === categoryId);
   const categoryFieldKind = detectCategoryFieldKind(category);
@@ -118,31 +127,37 @@ function AddListingPage() {
 
   useEffect(
     () => () => {
-      selectedImagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
+      selectedImagesRef.current.forEach((entry) => URL.revokeObjectURL(entry.url));
     },
-    [selectedImagePreviews],
+    [],
   );
+
+  useEffect(() => {
+    selectedImagesRef.current = selectedImages;
+  }, [selectedImages]);
 
   function handleImageSelection(files: FileList | null) {
     const nextFiles = Array.from(files ?? []);
     setImageSelectionMessage(
-      nextFiles.length > 6
+      nextFiles.length > MAX_IMAGES || selectedImages.length + nextFiles.length > MAX_IMAGES
         ? text(
             "تم اختيار أول 6 صور فقط. يمكنك إزالة صورة واختيار غيرها.",
-            "Only the first 6 photos were selected. Remove one to choose another.",
+            "Only up to 6 photos can be selected. Remove one to choose another.",
           )
         : null,
     );
-    const existing = new Set(
-      selectedImages.map((entry) => `${entry.file.name}-${entry.file.size}`),
-    );
+    const existing = new Set(selectedImages.map((entry) => fileFingerprint(entry.file)));
     setSelectedImages((current) => [
       ...current,
       ...nextFiles
-        .slice(0, 6)
-        .filter((file) => !existing.has(file.name + file.size))
+        .slice(0, Math.max(0, MAX_IMAGES - selectedImages.length))
+        .filter(
+          (file, index, files) =>
+            !existing.has(fileFingerprint(file)) &&
+            files.findIndex((item) => fileFingerprint(item) === fileFingerprint(file)) === index,
+        )
         .map((file) => ({
-          id: `${file.name}-${file.size}-${crypto.randomUUID()}`,
+          id: `${fileFingerprint(file)}-${crypto.randomUUID()}`,
           file,
           state: "pending" as const,
           url: URL.createObjectURL(file),
@@ -158,6 +173,64 @@ function AddListingPage() {
       return current.filter((item) => item.id !== id);
     });
     setImageSelectionMessage(null);
+  }
+
+  async function retrySelectedImage(id: string) {
+    if (imageRetryInFlightRef.current.has(id)) return;
+    if (!draftListing || submittingRef.current) {
+      setSubmitMessage(
+        text(
+          "احفظ الإعلان كمسودة أولًا عبر زر الإرسال ثم أعد محاولة الصور الفاشلة.",
+          "Save the listing draft first by submitting, then retry failed photos.",
+        ),
+      );
+      return;
+    }
+
+    const currentEntry = selectedImagesRef.current.find((entry) => entry.id === id);
+    if (!currentEntry || currentEntry.state === "uploaded" || currentEntry.state === "uploading") {
+      return;
+    }
+    imageRetryInFlightRef.current.add(id);
+    const attempt = currentEntry.attempt + 1;
+    const sortOrder = selectedImagesRef.current.findIndex((entry) => entry.id === id);
+
+    setSelectedImages((current) =>
+      current.map((entry) =>
+        entry.id === id
+          ? { ...entry, state: "uploading" as const, error: undefined, attempt }
+          : entry,
+      ),
+    );
+
+    try {
+      const uploadResult = await uploadListingImage({
+        userId: auth.profile?.id ?? null,
+        listing: draftListing,
+        file: currentEntry.file,
+        sortOrder,
+        altAr: title.trim(),
+      });
+
+      setSelectedImages((current) => {
+        const latest = current.find((entry) => entry.id === id);
+        if (!latest || latest.attempt !== attempt) return current;
+        if (!uploadResult.ok) {
+          return current.map((entry) =>
+            entry.id === id
+              ? { ...entry, state: "failed" as const, error: uploadResult.error.message }
+              : entry,
+          );
+        }
+        return current.map((entry) =>
+          entry.id === id
+            ? { ...entry, state: "uploaded" as const, uploadedImage: uploadResult.data }
+            : entry,
+        );
+      });
+    } finally {
+      imageRetryInFlightRef.current.delete(id);
+    }
   }
 
   function validateCurrentStep(currentStep = step) {
@@ -276,29 +349,34 @@ function AddListingPage() {
         categoryDetails,
       );
 
-      const result = await createListing(auth.profile?.id ?? null, {
-        categoryId,
-        governorateId,
-        title: title.trim(),
-        description: description.trim(),
-        price: normalizedPrice ? Number(normalizedPrice) : null,
-        priceType,
-        condition,
-        districtAr: district,
-        contactName: contactName.trim() || null,
-        contactOptions: contact,
-        details,
-      });
+      const result =
+        draftListing ??
+        (await createOwnerDraftListing(auth.profile?.id ?? null, {
+          categoryId,
+          governorateId,
+          title: title.trim(),
+          description: description.trim(),
+          price: normalizedPrice ? Number(normalizedPrice) : null,
+          priceType,
+          condition,
+          districtAr: district,
+          contactName: contactName.trim() || null,
+          contactOptions: contact,
+          details,
+        }));
 
-      if (!result.ok) {
+      if ("ok" in result && !result.ok) {
         setSubmitMessage(result.error.message);
         return;
       }
+      const listingDraft = "ok" in result ? result.data : result;
 
-      setCreatedListingId(result.data.id);
+      setDraftListing(listingDraft);
+      setCreatedListingId(listingDraft.id);
 
       const imageErrors: string[] = [];
       for (const [index, entry] of selectedImages.entries()) {
+        if (entry.state === "uploaded") continue;
         const { attempt } = entry;
         setSelectedImages((current) =>
           current.map((item) =>
@@ -315,7 +393,7 @@ function AddListingPage() {
 
         const uploadResult = await uploadListingImage({
           userId: auth.profile?.id ?? null,
-          listing: result.data,
+          listing: listingDraft,
           file: entry.file,
           sortOrder: index,
           altAr: title.trim(),
@@ -335,10 +413,37 @@ function AddListingPage() {
             );
           }
           return current.map((item) =>
-            item.id === entry.id ? { ...item, state: "uploaded" as const } : item,
+            item.id === entry.id
+              ? { ...item, state: "uploaded" as const, uploadedImage: uploadResult.data }
+              : item,
           );
         });
       }
+
+      if (imageErrors.length > 0) {
+        setSubmitMessage(
+          text(
+            `تم حفظ الإعلان كمسودة، وتعذر رفع بعض الصور: ${imageErrors[0]}`,
+            `Listing draft was saved, and some photos could not upload: ${imageErrors[0]}`,
+          ),
+        );
+        return;
+      }
+
+      const submitResult = await submitOwnerListingForReview(
+        auth.profile?.id ?? null,
+        listingDraft.id,
+      );
+      if (!submitResult.ok) {
+        setSubmitMessage(
+          text(
+            `تم حفظ الإعلان كمسودة، لكن تعذر إرساله للمراجعة: ${submitResult.error.message}`,
+            `Listing draft was saved, but review submission failed: ${submitResult.error.message}`,
+          ),
+        );
+        return;
+      }
+      setDraftListing(submitResult.data);
 
       setSubmitMessage(
         imageErrors.length > 0
@@ -573,7 +678,16 @@ function AddListingPage() {
                             {(preview.file.size / 1024 / 1024).toFixed(1)} MB
                           </p>
                           {preview.state === "failed" && preview.error && (
-                            <p className="mt-1 text-destructive">{preview.error}</p>
+                            <>
+                              <p className="mt-1 text-destructive">{preview.error}</p>
+                              <button
+                                type="button"
+                                onClick={() => void retrySelectedImage(preview.id)}
+                                className="mt-2 rounded-lg bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground"
+                              >
+                                {text("إعادة المحاولة", "Retry")}
+                              </button>
+                            </>
                           )}
                         </div>
                       </div>
@@ -941,6 +1055,10 @@ function normalizeArabicDigits(value: string) {
     const persianIndex = persian.indexOf(digit);
     return persianIndex >= 0 ? String(persianIndex) : digit;
   });
+}
+
+function fileFingerprint(file: File) {
+  return [file.name, file.size, file.type, file.lastModified].join(":");
 }
 
 function normalizeNumericInput(value: string) {

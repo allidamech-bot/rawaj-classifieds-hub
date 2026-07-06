@@ -47,49 +47,75 @@ function NotificationsPage() {
   const profileId = auth.profile?.id ?? null;
   const markInFlightRef = useRef<Set<string>>(new Set());
   const markAllInFlightRef = useRef(false);
+  const notificationsRequestIdRef = useRef(0);
+  const mutationRequestIdRef = useRef(0);
 
   async function loadNotifications() {
     if (!profileId) return;
+    const requestId = ++notificationsRequestIdRef.current;
     setLoading(true);
     setError(null);
     const result = await fetchMyNotifications(profileId);
+    if (requestId !== notificationsRequestIdRef.current || profileId !== auth.profile?.id) return;
     if (result.ok) setNotifications(result.data);
     else setError(result.error);
     setLoading(false);
   }
 
   useEffect(() => {
-    if (auth.status !== "signedIn") return;
+    if (auth.status !== "signedIn") {
+      notificationsRequestIdRef.current += 1;
+      mutationRequestIdRef.current += 1;
+      setNotifications([]);
+      setLoading(false);
+      return;
+    }
     void loadNotifications();
   }, [auth.status, profileId]);
 
   async function markOne(notificationId: string) {
     if (!profileId || markInFlightRef.current.has(notificationId)) return;
+    const mutationId = ++mutationRequestIdRef.current;
+    const currentProfileId = profileId;
     markInFlightRef.current.add(notificationId);
-    const result = await markNotificationRead(profileId, notificationId);
-    markInFlightRef.current.delete(notificationId);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await markNotificationRead(currentProfileId, notificationId);
+      if (mutationId !== mutationRequestIdRef.current || currentProfileId !== auth.profile?.id) {
+        return;
+      }
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setNotifications((current) =>
+        current.map((item) =>
+          item.id === notificationId ? { ...item, readAt: new Date().toISOString() } : item,
+        ),
+      );
+    } finally {
+      markInFlightRef.current.delete(notificationId);
     }
-    setNotifications((current) =>
-      current.map((item) =>
-        item.id === notificationId ? { ...item, readAt: new Date().toISOString() } : item,
-      ),
-    );
   }
 
   async function markAll() {
     if (!profileId || markAllInFlightRef.current) return;
+    const mutationId = ++mutationRequestIdRef.current;
+    const currentProfileId = profileId;
     markAllInFlightRef.current = true;
-    const result = await markAllNotificationsRead(profileId);
-    markAllInFlightRef.current = false;
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await markAllNotificationsRead(currentProfileId);
+      if (mutationId !== mutationRequestIdRef.current || currentProfileId !== auth.profile?.id) {
+        return;
+      }
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      const readAt = new Date().toISOString();
+      setNotifications((current) => current.map((item) => ({ ...item, readAt })));
+    } finally {
+      markAllInFlightRef.current = false;
     }
-    const readAt = new Date().toISOString();
-    setNotifications((current) => current.map((item) => ({ ...item, readAt })));
   }
 
   function openNotificationTarget(notification: NotificationItem) {
@@ -102,6 +128,14 @@ function NotificationsPage() {
     } else if (target === "seller") {
       void navigate({ to: "/seller/$id", params: { id: notification.targetId } });
     }
+  }
+
+  function isNavigableNotification(notification: NotificationItem) {
+    const target = notification.targetType?.toLowerCase();
+    return Boolean(
+      notification.targetId &&
+      (target === "listing" || target === "conversation" || target === "seller"),
+    );
   }
 
   const unreadCount = notifications.filter((item) => !item.readAt).length;
@@ -183,8 +217,19 @@ function NotificationsPage() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div
-                        className="min-w-0 flex-1 cursor-pointer"
+                        role={isNavigableNotification(notification) ? "button" : undefined}
+                        tabIndex={isNavigableNotification(notification) ? 0 : undefined}
+                        className={`min-w-0 flex-1 ${
+                          isNavigableNotification(notification) ? "cursor-pointer" : ""
+                        }`}
                         onClick={() => openNotificationTarget(notification)}
+                        onKeyDown={(event) => {
+                          if (!isNavigableNotification(notification)) return;
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            openNotificationTarget(notification);
+                          }
+                        }}
                       >
                         <h2 className="text-sm font-bold">{notification.titleAr}</h2>
                         {notification.bodyAr && (

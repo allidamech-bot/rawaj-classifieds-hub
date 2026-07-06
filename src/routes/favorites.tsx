@@ -23,16 +23,26 @@ function FavoritesPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const removeInFlightRef = useRef<Set<string>>(new Set());
+  const loadRequestIdRef = useRef(0);
+  const mutationRequestIdRef = useRef(0);
 
   useEffect(() => {
-    if (auth.status !== "signedIn") return;
+    if (auth.status !== "signedIn") {
+      loadRequestIdRef.current += 1;
+      mutationRequestIdRef.current += 1;
+      setItems([]);
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
+    const requestId = ++loadRequestIdRef.current;
+    const profileId = auth.profile?.id ?? null;
 
     async function load() {
       setLoading(true);
       setError(null);
-      const result = await fetchFavorites(auth.profile?.id ?? null);
-      if (cancelled) return;
+      const result = await fetchFavorites(profileId);
+      if (cancelled || requestId !== loadRequestIdRef.current) return;
       if (result.ok) setItems(result.data);
       else {
         setError(result.error);
@@ -49,14 +59,20 @@ function FavoritesPage() {
 
   async function remove(listingId: string) {
     if (removeInFlightRef.current.has(listingId)) return;
+    const profileId = auth.profile?.id ?? null;
+    const mutationId = ++mutationRequestIdRef.current;
     removeInFlightRef.current.add(listingId);
-    const result = await unfavoriteListing(auth.profile?.id ?? null, listingId);
-    removeInFlightRef.current.delete(listingId);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await unfavoriteListing(profileId, listingId);
+      if (mutationId !== mutationRequestIdRef.current || profileId !== auth.profile?.id) return;
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setItems((current) => current.filter((item) => item.listingId !== listingId));
+    } finally {
+      removeInFlightRef.current.delete(listingId);
     }
-    setItems((current) => current.filter((item) => item.listingId !== listingId));
   }
 
   if (auth.status === "loading") {

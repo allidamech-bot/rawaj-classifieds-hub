@@ -70,21 +70,57 @@ function ListingDetailsPage() {
   const [images, setImages] = useState<ListingImage[]>([]);
   const [loading, setLoading] = useState(!initialListing);
   const [error, setError] = useState<ClassifiedsError | null>(null);
+  const [imageError, setImageError] = useState<ClassifiedsError | null>(null);
   const [fav, setFav] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const favoriteInFlightRef = useRef(false);
   const favoriteRequestIdRef = useRef(0);
+  const imageRequestIdRef = useRef(0);
+
+  useEffect(() => {
+    setListing(initialListing);
+    setLoading(false);
+    setError(null);
+  }, [initialListing, id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const requestId = ++imageRequestIdRef.current;
+    setImages([]);
+    setImageError(null);
+
+    async function loadImages() {
+      const result = await fetchListingImages(id);
+      if (cancelled || requestId !== imageRequestIdRef.current) return;
+      if (result.ok) setImages(result.data);
+      else setImageError(result.error);
+    }
+
+    void loadImages();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   useEffect(() => {
     let cancelled = false;
     const requestId = ++favoriteRequestIdRef.current;
+    const profileId = auth.profile?.id ?? null;
+    if (auth.status !== "signedIn" || !profileId) {
+      setFav(false);
+      return () => {
+        cancelled = true;
+      };
+    }
     async function loadFavorite() {
-      const result = await fetchFavoriteStatus(auth.profile?.id ?? null, id);
+      const result = await fetchFavoriteStatus(profileId, id);
       if (!cancelled && requestId === favoriteRequestIdRef.current && result.ok) {
         setFav(result.data);
+      } else if (!cancelled && requestId === favoriteRequestIdRef.current && !result.ok) {
+        setActionMessage(result.error.message);
       }
     }
-    if (auth.status === "signedIn") void loadFavorite();
+    void loadFavorite();
     return () => {
       cancelled = true;
     };
@@ -99,26 +135,28 @@ function ListingDetailsPage() {
       return;
     }
     if (favoriteInFlightRef.current) return;
-    favoriteInFlightRef.current = true;
-    const result = fav
-      ? await unfavoriteListing(auth.profile?.id ?? null, id)
-      : await favoriteListing(auth.profile?.id ?? null, id);
+    const profileId = auth.profile?.id ?? null;
+    const desiredFavoriteState = !fav;
     const requestId = ++favoriteRequestIdRef.current;
-    favoriteInFlightRef.current = false;
-
-    if (!result.ok) {
-      setActionMessage(result.error.message);
-      return;
+    favoriteInFlightRef.current = true;
+    try {
+      const result = desiredFavoriteState
+        ? await favoriteListing(profileId, id)
+        : await unfavoriteListing(profileId, id);
+      if (requestId !== favoriteRequestIdRef.current) return;
+      if (!result.ok) {
+        setActionMessage(result.error.message);
+        return;
+      }
+      setFav(desiredFavoriteState);
+      setActionMessage(
+        desiredFavoriteState
+          ? text("تم حفظ الإعلان في المفضلة.", "Saved to favorites.")
+          : text("تمت إزالة الإعلان من المفضلة.", "Removed from favorites."),
+      );
+    } finally {
+      favoriteInFlightRef.current = false;
     }
-
-    if (requestId === favoriteRequestIdRef.current) {
-      setFav((value) => !value);
-    }
-    setActionMessage(
-      fav
-        ? text("تمت إزالة الإعلان من المفضلة.", "Removed from favorites.")
-        : text("تم حفظ الإعلان في المفضلة.", "Saved to favorites."),
-    );
   }
 
   async function reportListing() {
@@ -290,6 +328,11 @@ function ListingDetailsPage() {
                 : text("منطقة صور الإعلان", "Listing image area")}
             </span>
           </div>
+          {imageError && (
+            <p className="mx-2 mb-2 rounded-xl bg-warning/10 p-2 text-[11px] font-semibold text-foreground">
+              {imageError.message}
+            </p>
+          )}
         </div>
 
         <div className="mt-4">

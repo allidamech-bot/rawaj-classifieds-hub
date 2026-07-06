@@ -44,17 +44,26 @@ function ChatsPage() {
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
   const [blockReason, setBlockReason] = useState("");
   const messagesRequestIdRef = useRef(0);
+  const conversationsRequestIdRef = useRef(0);
+  const selectedConversationIdRef = useRef<string | null>(null);
 
   const selectedConversation = useMemo(
     () => conversations.find((item) => item.id === search.conversation) ?? conversations[0] ?? null,
     [conversations, search.conversation],
   );
 
+  useEffect(() => {
+    selectedConversationIdRef.current = selectedConversation?.id ?? null;
+  }, [selectedConversation?.id]);
+
   async function loadConversations() {
-    if (!auth.profile?.id) return;
+    const profileId = auth.profile?.id ?? null;
+    if (!profileId) return;
+    const requestId = ++conversationsRequestIdRef.current;
     setLoadingConversations(true);
     setConversationError(null);
-    const result = await fetchMyConversations(auth.profile.id);
+    const result = await fetchMyConversations(profileId);
+    if (requestId !== conversationsRequestIdRef.current || profileId !== auth.profile?.id) return;
     if (result.ok) {
       setConversations(result.data);
       if (!search.conversation && result.data[0]) {
@@ -72,22 +81,22 @@ function ChatsPage() {
   }
 
   async function loadMessages(conversationId: string) {
-    if (!auth.profile?.id) return;
+    const profileId = auth.profile?.id ?? null;
+    if (!profileId) return;
     const requestId = ++messagesRequestIdRef.current;
     setLoadingMessages(true);
     setMessageError(null);
-    const result = await fetchConversationMessages(auth.profile.id, conversationId);
+    const result = await fetchConversationMessages(profileId, conversationId);
     if (requestId !== messagesRequestIdRef.current) {
-      setLoadingMessages(false);
       return;
     }
     if (result.ok) {
       setMessages(result.data);
-      await markConversationRead(auth.profile.id, conversationId);
+      const markResult = await markConversationRead(profileId, conversationId);
       if (requestId !== messagesRequestIdRef.current) {
-        setLoadingMessages(false);
         return;
       }
+      if (!markResult.ok) setNotice(markResult.error.message);
     } else {
       setMessages([]);
       setMessageError(result.error);
@@ -96,13 +105,24 @@ function ChatsPage() {
   }
 
   useEffect(() => {
-    if (auth.status !== "signedIn") return;
+    if (auth.status !== "signedIn") {
+      conversationsRequestIdRef.current += 1;
+      messagesRequestIdRef.current += 1;
+      setConversations([]);
+      setMessages([]);
+      setLoadingConversations(false);
+      setLoadingMessages(false);
+      return;
+    }
     void loadConversations();
   }, [auth.status, auth.profile?.id]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !selectedConversation) {
+      messagesRequestIdRef.current += 1;
       setMessages([]);
+      setMessageError(null);
+      setLoadingMessages(false);
       return;
     }
     void loadMessages(selectedConversation.id);
@@ -111,11 +131,17 @@ function ChatsPage() {
   async function handleSend(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!auth.profile?.id || !selectedConversation || sending) return;
+    const profileId = auth.profile.id;
+    const conversationId = selectedConversation.id;
+    const cleanBody = body.trim();
+    if (!cleanBody) return;
     setNotice("");
     setMessageError(null);
     setSending(true);
-    const result = await sendConversationMessage(auth.profile.id, selectedConversation.id, body);
+    const result = await sendConversationMessage(profileId, conversationId, cleanBody);
     setSending(false);
+    if (selectedConversationIdRef.current !== conversationId || auth.profile?.id !== profileId)
+      return;
     if (!result.ok) {
       setMessageError(result.error);
       return;
