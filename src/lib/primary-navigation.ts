@@ -1,10 +1,5 @@
 export type PrimaryNavigationSection =
-  | "home"
-  | "categories"
-  | "addListing"
-  | "offers"
-  | "account"
-  | "none";
+  "home" | "categories" | "addListing" | "offers" | "account" | "none";
 
 const ACCOUNT_PATHS = [
   "/more",
@@ -48,6 +43,24 @@ export function shouldShowSiteFooter(pathname: string) {
   if (hiddenPaths.some((path) => matchesPath(pathname, path))) return false;
 
   // Listing management is a focused workflow even though it lives under the profile URL space.
+  if (/^\/profile\/listings\/[^/]+$/.test(pathname)) return false;
+
+  return true;
+}
+
+export function shouldShowBottomNav(pathname: string) {
+  const hiddenPaths = [
+    "/add-listing",
+    "/chats",
+    "/verification",
+    "/login",
+    "/auth/callback",
+    "/reset-password",
+    "/admin",
+  ] as const;
+
+  if (hiddenPaths.some((path) => matchesPath(pathname, path))) return false;
+
   if (/^\/profile\/listings\/[^/]+$/.test(pathname)) return false;
 
   return true;

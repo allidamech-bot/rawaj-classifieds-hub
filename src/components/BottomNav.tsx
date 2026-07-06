@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Grid3X3, Home, Plus, Sparkles, User } from "lucide-react";
 import {
   resolvePrimaryNavigationSection,
+  shouldShowBottomNav,
   type PrimaryNavigationSection,
 } from "@/lib/primary-navigation";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -40,13 +41,8 @@ export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { text } = useUiPreferences();
   const activeSection = resolvePrimaryNavigationSection(pathname);
-  const hidden =
-    pathname === "/login" ||
-    pathname === "/auth/callback" ||
-    pathname === "/reset-password" ||
-    pathname.startsWith("/admin");
 
-  if (hidden) return null;
+  if (!shouldShowBottomNav(pathname)) return null;
 
   return (
     <nav
