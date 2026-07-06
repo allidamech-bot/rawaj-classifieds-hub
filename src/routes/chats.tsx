@@ -48,6 +48,7 @@ function ChatsPage() {
   const messagesRequestIdRef = useRef(0);
   const conversationsRequestIdRef = useRef(0);
   const selectedConversationIdRef = useRef<string | null>(null);
+  const autoOpenedConversationRef = useRef<string | null>(null);
 
   const selectedConversation = useMemo(
     () => conversations.find((item) => item.id === search.conversation) ?? conversations[0] ?? null,
@@ -73,9 +74,16 @@ function ChatsPage() {
   }, []);
 
   useEffect(() => {
+    autoOpenedConversationRef.current = null;
+  }, [search.conversation]);
+
+  useEffect(() => {
     if (!isDesktop && search.conversation && conversations.length > 0) {
       const exists = conversations.some((c) => c.id === search.conversation);
-      if (exists) setViewingConversationOnMobile(true);
+      if (exists && autoOpenedConversationRef.current !== search.conversation) {
+        autoOpenedConversationRef.current = search.conversation;
+        setViewingConversationOnMobile(true);
+      }
     }
   }, [isDesktop, search.conversation, conversations]);
 
