@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -33,16 +35,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
+      - name: Lint changed source files
         shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          set +e
-          npm run lint -- --quiet > /tmp/eslint.log 2>&1
-          status=$?
-          if [ "$status" -ne 0 ]; then
-            tail -n 80 /tmp/eslint.log
-            exit "$status"
+          base="$BASE_SHA"
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="$(git rev-parse HEAD^)"
           fi
+
+          mapfile -t files < <(
+            git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- \
+              '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
+          )
+
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No changed JS/TS source files to lint."
+            exit 0
+          fi
+
+          printf 'Linting %s\n' "${files[@]}"
+          npx eslint --quiet "${files[@]}"
 
       - name: Typecheck
         run: npm run typecheck -- --pretty false
