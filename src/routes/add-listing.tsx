@@ -43,6 +43,20 @@ interface UploadImageEntry {
   url: string;
   uploadedImage?: ListingImage;
 }
+
+interface ImageUploadInFlight {
+  operation: number;
+  promise: Promise<void>;
+}
+
+interface StaleUploadCleanupRecord {
+  draftId: string;
+  imageId: string;
+  userId: string | null;
+  uploadedImage: ListingImage;
+  promise: Promise<string | null> | null;
+  failure: string | null;
+}
 import { categoryName, governorateName } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -93,6 +107,8 @@ function AddListingPage() {
   const imageRetryInFlightRef = useRef<Set<string>>(new Set());
   const imageRemovalInFlightRef = useRef<Set<string>>(new Set());
   const imageUploadOperationRef = useRef<Map<string, number>>(new Map());
+  const imageUploadInFlightRef = useRef<Map<string, ImageUploadInFlight>>(new Map());
+  const staleUploadCleanupRef = useRef<Map<string, StaleUploadCleanupRecord>>(new Map());
 
   const category = categories.find((item) => item.id === categoryId);
   const categoryFieldKind = detectCategoryFieldKind(category);
@@ -170,6 +186,114 @@ function AddListingPage() {
     if (operation === undefined || imageUploadOperationRef.current.get(id) === operation) {
       imageUploadOperationRef.current.delete(id);
     }
+  }
+
+  function updateSelectedImagesFromRef(
+    updater: (current: UploadImageEntry[]) => UploadImageEntry[],
+  ) {
+    const next = updater(selectedImagesRef.current);
+    selectedImagesRef.current = next;
+    setSelectedImages(next);
+    return next;
+  }
+
+  function staleCleanupKey(draftId: string, imageId: string, uploadedImageId: string) {
+    return `${draftId}:${imageId}:${uploadedImageId}`;
+  }
+
+  function staleCleanupFallbackMessage() {
+    return text(
+      "تعذر تنظيف صورة تم رفعها بعد إزالتها. بقي الإعلان كمسودة لتعيد المحاولة.",
+      "A removed photo finished uploading but could not be cleaned up. The listing stayed as a draft so you can retry.",
+    );
+  }
+
+  function uploadFallbackMessage() {
+    return text(
+      "تعذر رفع الصورة. بقي الإعلان كمسودة لتعيد المحاولة.",
+      "Photo upload failed. The listing stayed as a draft so you can retry.",
+    );
+  }
+
+  function runStaleUploadCleanup(record: StaleUploadCleanupRecord) {
+    const cleanup = deleteListingImage(record.userId, record.draftId, record.uploadedImage)
+      .then((result) => {
+        const failure = result.ok ? null : result.error.message;
+        record.failure = failure;
+        if (!failure) {
+          staleUploadCleanupRef.current.delete(
+            staleCleanupKey(record.draftId, record.imageId, record.uploadedImage.id),
+          );
+        }
+        return failure;
+      })
+      .catch((error: unknown) => {
+        const failure = error instanceof Error ? error.message : staleCleanupFallbackMessage();
+        record.failure = failure;
+        return failure;
+      })
+      .finally(() => {
+        record.promise = null;
+      });
+    record.promise = cleanup;
+    return cleanup;
+  }
+
+  function registerStaleUploadCleanup({
+    draftId,
+    imageId,
+    userId,
+    uploadedImage,
+  }: {
+    draftId: string;
+    imageId: string;
+    userId: string | null;
+    uploadedImage: ListingImage;
+  }) {
+    const key = staleCleanupKey(draftId, imageId, uploadedImage.id);
+    const existing = staleUploadCleanupRef.current.get(key);
+    if (existing) {
+      return existing.promise ?? runStaleUploadCleanup(existing);
+    }
+
+    const record: StaleUploadCleanupRecord = {
+      draftId,
+      imageId,
+      userId,
+      uploadedImage,
+      promise: null,
+      failure: null,
+    };
+    staleUploadCleanupRef.current.set(key, record);
+    return runStaleUploadCleanup(record);
+  }
+
+  async function waitForImageUploadInFlight(id: string) {
+    const inFlight = imageUploadInFlightRef.current.get(id);
+    if (!inFlight) return false;
+    await inFlight.promise;
+    return true;
+  }
+
+  async function waitForAllImageUploadsInFlight() {
+    while (imageUploadInFlightRef.current.size > 0) {
+      await Promise.all(
+        Array.from(imageUploadInFlightRef.current.values(), (entry) => entry.promise),
+      );
+      await Promise.resolve();
+    }
+  }
+
+  async function awaitStaleUploadCleanups(draftId: string) {
+    const records = Array.from(staleUploadCleanupRef.current.values()).filter(
+      (record) => record.draftId === draftId,
+    );
+    if (records.length === 0) return null;
+
+    const failures = await Promise.all(
+      records.map((record) => record.promise ?? runStaleUploadCleanup(record)),
+    );
+    return failures.find((failure): failure is string => Boolean(failure)) ?? null;
   }
 
   function handleImageSelection(files: FileList | null) {
@@ -257,41 +381,70 @@ function AddListingPage() {
     const operation = beginImageUploadOperation(id);
     const sortOrder = selectedImagesRef.current.findIndex((entry) => entry.id === id);
 
-    try {
-      const uploadResult = await uploadListingImage({
-        userId: auth.profile?.id ?? null,
-        listing: draftListing,
-        file: currentEntry.file,
-        sortOrder,
-        altAr: title.trim(),
-      });
+    const retryUpload = (async () => {
+      try {
+        const uploadResult = await uploadListingImage({
+          userId: auth.profile?.id ?? null,
+          listing: draftListing,
+          file: currentEntry.file,
+          sortOrder,
+          altAr: title.trim(),
+        });
 
-      const isCurrentOperation = isCurrentImageUploadOperation(id, operation);
-      if (!isCurrentOperation) {
-        if (uploadResult.ok) {
-          void deleteListingImage(auth.profile?.id ?? null, draftListing.id, uploadResult.data);
+        const isCurrentOperation = isCurrentImageUploadOperation(id, operation);
+        if (!isCurrentOperation) {
+          if (uploadResult.ok) {
+            const cleanupFailure = await registerStaleUploadCleanup({
+              draftId: draftListing.id,
+              imageId: id,
+              userId: auth.profile?.id ?? null,
+              uploadedImage: uploadResult.data,
+            });
+            if (cleanupFailure) {
+              setSubmitMessage(cleanupFailure);
+            }
+          }
+          return;
         }
-        return;
-      }
 
-      setSelectedImages((current) => {
-        const latest = current.find((entry) => entry.id === id);
-        if (!latest || latest.attempt !== operation) return current;
-        if (!uploadResult.ok) {
+        updateSelectedImagesFromRef((current) => {
+          const latest = current.find((entry) => entry.id === id);
+          if (!latest || latest.attempt !== operation) return current;
+          if (!uploadResult.ok) {
+            return current.map((entry) =>
+              entry.id === id
+                ? { ...entry, state: "failed" as const, error: uploadResult.error.message }
+                : entry,
+            );
+          }
           return current.map((entry) =>
             entry.id === id
-              ? { ...entry, state: "failed" as const, error: uploadResult.error.message }
+              ? { ...entry, state: "uploaded" as const, uploadedImage: uploadResult.data }
               : entry,
           );
+        });
+      } catch (error: unknown) {
+        const failure = error instanceof Error ? error.message : uploadFallbackMessage();
+        if (isCurrentImageUploadOperation(id, operation)) {
+          updateSelectedImagesFromRef((current) =>
+            current.map((entry) =>
+              entry.id === id ? { ...entry, state: "failed" as const, error: failure } : entry,
+            ),
+          );
         }
-        return current.map((entry) =>
-          entry.id === id
-            ? { ...entry, state: "uploaded" as const, uploadedImage: uploadResult.data }
-            : entry,
-        );
-      });
+      }
+    })();
+
+    imageUploadInFlightRef.current.set(id, { operation, promise: retryUpload });
+
+    try {
+      await retryUpload;
     } finally {
       imageRetryInFlightRef.current.delete(id);
+      const inFlight = imageUploadInFlightRef.current.get(id);
+      if (inFlight?.operation === operation) {
+        imageUploadInFlightRef.current.delete(id);
+      }
       clearImageUploadOperation(id, operation);
     }
   }
@@ -443,24 +596,55 @@ function AddListingPage() {
       setCreatedListingId(listingDraft.id);
 
       const imageErrors: string[] = [];
-      for (const [index, entry] of selectedImages.entries()) {
-        if (entry.state === "uploaded") continue;
-        if (!selectedImagesRef.current.some((item) => item.id === entry.id)) continue;
-        const operation = beginImageUploadOperation(entry.id);
+      const cleanupErrors: string[] = [];
+      const submitUploadAttemptedImageIds = new Set<string>();
+
+      while (true) {
+        await waitForAllImageUploadsInFlight();
+
+        const currentEntry = selectedImagesRef.current.find(
+          (entry) => entry.state !== "uploaded" && !submitUploadAttemptedImageIds.has(entry.id),
+        );
+        if (!currentEntry) break;
+
+        submitUploadAttemptedImageIds.add(currentEntry.id);
+        const operation = beginImageUploadOperation(currentEntry.id);
+
+        const latestBeforeUpload = selectedImagesRef.current.find(
+          (entry) => entry.id === currentEntry.id,
+        );
+        if (!latestBeforeUpload) {
+          clearImageUploadOperation(currentEntry.id, operation);
+          continue;
+        }
 
         const uploadResult = await uploadListingImage({
           userId: auth.profile?.id ?? null,
           listing: listingDraft,
-          file: entry.file,
-          sortOrder: index,
+          file: latestBeforeUpload.file,
+          sortOrder: selectedImagesRef.current.findIndex((entry) => entry.id === currentEntry.id),
           altAr: title.trim(),
         });
 
-        const isCurrentOperation = isCurrentImageUploadOperation(entry.id, operation);
+        const latestAfterUpload = selectedImagesRef.current.find(
+          (entry) => entry.id === currentEntry.id,
+        );
+        const isCurrentOperation =
+          Boolean(latestAfterUpload) && isCurrentImageUploadOperation(currentEntry.id, operation);
+
         if (!isCurrentOperation) {
           if (uploadResult.ok) {
-            void deleteListingImage(auth.profile?.id ?? null, listingDraft.id, uploadResult.data);
+            const cleanupFailure = await registerStaleUploadCleanup({
+              draftId: listingDraft.id,
+              imageId: currentEntry.id,
+              userId: auth.profile?.id ?? null,
+              uploadedImage: uploadResult.data,
+            });
+            if (cleanupFailure) {
+              cleanupErrors.push(cleanupFailure);
+            }
           }
+          clearImageUploadOperation(currentEntry.id, operation);
           continue;
         }
 
@@ -468,25 +652,61 @@ function AddListingPage() {
           imageErrors.push(uploadResult.error.message);
         }
 
-        setSelectedImages((current) => {
-          const currentEntry = current.find((item) => item.id === entry.id);
-          if (!currentEntry || currentEntry.attempt !== operation) {
+        updateSelectedImagesFromRef((current) => {
+          const currentImage = current.find((item) => item.id === currentEntry.id);
+          if (!currentImage || currentImage.attempt !== operation) {
             return current;
           }
+
           if (!uploadResult.ok) {
             return current.map((item) =>
-              item.id === entry.id
-                ? { ...item, state: "failed" as const, error: uploadResult.error.message }
+              item.id === currentEntry.id
+                ? {
+                    ...item,
+                    state: "failed" as const,
+                    error: uploadResult.error.message,
+                  }
                 : item,
             );
           }
+
           return current.map((item) =>
-            item.id === entry.id
-              ? { ...item, state: "uploaded" as const, uploadedImage: uploadResult.data }
+            item.id === currentEntry.id
+              ? {
+                  ...item,
+                  state: "uploaded" as const,
+                  uploadedImage: uploadResult.data,
+                }
               : item,
           );
         });
-        clearImageUploadOperation(entry.id, operation);
+
+        clearImageUploadOperation(currentEntry.id, operation);
+      }
+
+      await waitForAllImageUploadsInFlight();
+
+      const cleanupFailure = cleanupErrors[0] ?? (await awaitStaleUploadCleanups(listingDraft.id));
+      if (cleanupFailure) {
+        setSubmitMessage(
+          text(
+            `تم حفظ الإعلان كمسودة، لكن تعذر تنظيف صورة قديمة قبل إرساله للمراجعة: ${cleanupFailure}`,
+            `Listing draft was saved, but a stale photo could not be cleaned up before review submission: ${cleanupFailure}`,
+          ),
+        );
+        return;
+      }
+
+      const unresolvedImage = selectedImagesRef.current.find((entry) => entry.state !== "uploaded");
+      if (unresolvedImage) {
+        const unresolvedDetail = unresolvedImage.error ? ` ${unresolvedImage.error}` : "";
+        setSubmitMessage(
+          text(
+            `تم حفظ الإعلان كمسودة، وتعذر تأكيد حالة رفع إحدى الصور. بقي الإعلان كمسودة لتعيد المحاولة.${unresolvedDetail}`,
+            `Listing draft was saved, and one photo is not fully uploaded. The listing stayed as a draft so you can retry.${unresolvedDetail}`,
+          ),
+        );
+        return;
       }
 
       if (imageErrors.length > 0) {
