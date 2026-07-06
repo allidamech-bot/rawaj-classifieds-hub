@@ -43,6 +43,8 @@ function ChatsPage() {
   const [notice, setNotice] = useState("");
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
   const [blockReason, setBlockReason] = useState("");
+  const [viewingConversationOnMobile, setViewingConversationOnMobile] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const messagesRequestIdRef = useRef(0);
   const conversationsRequestIdRef = useRef(0);
   const selectedConversationIdRef = useRef<string | null>(null);
@@ -55,6 +57,20 @@ function ChatsPage() {
   useEffect(() => {
     selectedConversationIdRef.current = selectedConversation?.id ?? null;
   }, [selectedConversation?.id]);
+
+  useEffect(() => {
+    if (!selectedConversation) {
+      setViewingConversationOnMobile(false);
+    }
+  }, [selectedConversation]);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1024px)");
+    setIsDesktop(mql.matches);
+    const handler = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
 
   async function loadConversations() {
     const profileId = auth.profile?.id ?? null;
@@ -252,7 +268,11 @@ function ChatsPage() {
         </section>
 
         <div className="grid min-h-[60dvh] grid-cols-1 gap-3 lg:min-h-[560px] lg:grid-cols-[320px_1fr]">
-          <aside className="rounded-2xl bg-card p-3 hairline">
+          <aside
+            className={`rounded-2xl bg-card p-3 hairline ${
+              !isDesktop && viewingConversationOnMobile ? "hidden" : ""
+            }`}
+          >
             <h2 className="mb-3 flex items-center gap-2 text-sm font-extrabold">
               <MessageCircle className="h-4 w-4 text-primary" />
               {text("قائمة المحادثات", "Conversation list")}
@@ -274,17 +294,19 @@ function ChatsPage() {
                   <button
                     key={conversation.id}
                     type="button"
-                    onClick={() =>
+                    onClick={() => {
+                      if (!isDesktop) setViewingConversationOnMobile(true);
                       void navigate({
                         to: "/chats",
                         search: { conversation: conversation.id },
-                      })
-                    }
+                      });
+                    }}
                     className={`w-full rounded-xl p-3 text-start transition hairline ${
                       selectedConversation?.id === conversation.id
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted-surface hover:bg-secondary"
                     }`}
+                    aria-current={selectedConversation?.id === conversation.id ? "true" : undefined}
                   >
                     <div className="flex items-center gap-2">
                       <Avatar
@@ -316,7 +338,11 @@ function ChatsPage() {
             )}
           </aside>
 
-          <section className="flex min-h-[60dvh] flex-col rounded-2xl bg-card hairline lg:min-h-[560px]">
+          <section
+            className={`flex min-h-[60dvh] flex-col rounded-2xl bg-card hairline lg:min-h-[560px] ${
+              !isDesktop && !viewingConversationOnMobile ? "hidden" : ""
+            }`}
+          >
             {!selectedConversation ? (
               <div className="grid flex-1 place-items-center p-6 text-center">
                 <PanelText>{text("اختر محادثة لعرض الرسائل.", "Choose a conversation.")}</PanelText>
@@ -325,6 +351,16 @@ function ChatsPage() {
               <>
                 <header className="border-b border-border p-4">
                   <div className="flex items-center gap-3">
+                    {!isDesktop && viewingConversationOnMobile && (
+                      <button
+                        type="button"
+                        onClick={() => setViewingConversationOnMobile(false)}
+                        className="inline-flex items-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
+                        aria-label={text("المحادثات", "Conversations")}
+                      >
+                        ← {text("المحادثات", "Conversations")}
+                      </button>
+                    )}
                     <Avatar
                       name={selectedConversation.otherParticipant.displayName}
                       url={selectedConversation.otherParticipant.avatarUrl}
@@ -344,6 +380,7 @@ function ChatsPage() {
                     <button
                       type="button"
                       onClick={() => void handleBlock()}
+                      aria-label={text("حظر المستخدم", "Block user")}
                       className="inline-flex items-center gap-1 rounded-xl bg-destructive/10 px-3 py-2 text-[11px] font-bold text-destructive"
                     >
                       <Ban className="h-3.5 w-3.5" />
@@ -393,6 +430,7 @@ function ChatsPage() {
                               type="button"
                               disabled={reportingMessageId === message.id}
                               onClick={() => void handleReport(message)}
+                              aria-label={text("إبلاغ عن هذه الرسالة", "Report this message")}
                               className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold opacity-80"
                             >
                               <Flag className="h-3 w-3" />
@@ -425,6 +463,7 @@ function ChatsPage() {
                       maxLength={2000}
                       rows={2}
                       placeholder={text("اكتب رسالة...", "Write a message...")}
+                      aria-label={text("اكتب رسالة...", "Write a message...")}
                       className="min-h-12 rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
                     />
                     <button

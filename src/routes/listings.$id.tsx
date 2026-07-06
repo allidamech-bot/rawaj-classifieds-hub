@@ -368,7 +368,7 @@ function ListingDetailsPage() {
               <div className="text-[11px] font-semibold text-muted-foreground">
                 {text("السعر", "Price")}
               </div>
-              <div className="mt-0.5 text-3xl font-extrabold text-foreground">
+              <div className="mt-0.5 text-3xl font-extrabold text-foreground text-balance">
                 {formatPriceLocalized(
                   listing.price ?? 0,
                   listing.priceType,

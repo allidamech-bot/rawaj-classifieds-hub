@@ -158,7 +158,7 @@ function ResetPasswordPage() {
                   <button
                     type="button"
                     onClick={() => setPasswordVisible((value) => !value)}
-                    className="absolute inset-y-0 end-0 grid w-11 place-items-center text-muted-foreground"
+                    className="absolute inset-y-0 end-0 grid w-11 place-items-center rounded-lg text-muted-foreground transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
                     aria-label={
                       passwordVisible
                         ? text("إخفاء كلمة المرور", "Hide password")
@@ -186,7 +186,7 @@ function ResetPasswordPage() {
                   <button
                     type="button"
                     onClick={() => setConfirmVisible((value) => !value)}
-                    className="absolute inset-y-0 end-0 grid w-11 place-items-center text-muted-foreground"
+                    className="absolute inset-y-0 end-0 grid w-11 place-items-center rounded-lg text-muted-foreground transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
                     aria-label={
                       confirmVisible
                         ? text("إخفاء تأكيد كلمة المرور", "Hide password confirmation")

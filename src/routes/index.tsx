@@ -120,13 +120,13 @@ function HomePage() {
                 <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
               </Link>
             </div>
-            <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+            <div className="no-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1">
               {categories.slice(0, 8).map((category) => (
                 <Link
                   key={category.id}
                   to="/listings"
                   search={{ category: category.id }}
-                  className="group flex min-h-16 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-xl bg-ivory-subtle p-2 text-center hairline transition hover:border-gold/40 hover:bg-card active:scale-[0.98]"
+                  className="group snap-start flex min-h-16 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-xl bg-ivory-subtle p-2 text-center hairline transition hover:border-gold/40 hover:bg-card active:scale-[0.98]"
                 >
                   <Grid3X3 className="h-4 w-4 text-primary transition group-hover:text-gold" />
                   <span className="line-clamp-2 text-[11px] font-bold leading-tight text-foreground">

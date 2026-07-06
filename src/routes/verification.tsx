@@ -30,6 +30,7 @@ function VerificationPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [notice, setNotice] = useState("");
+  const [noticeKind, setNoticeKind] = useState<"success" | "error" | "">("");
   const profileId = auth.profile?.id ?? null;
   const hasPendingRequest = requests.some(
     (request) => request.status === "pending_review" || String(request.status) === "pending",
@@ -53,6 +54,7 @@ function VerificationPage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setNotice("");
+    setNoticeKind("");
     if (hasPendingRequest) {
       setNotice(
         text(
@@ -60,6 +62,7 @@ function VerificationPage() {
           "You already have a verification request under review.",
         ),
       );
+      setNoticeKind("");
       return;
     }
     setSaving(true);
@@ -78,12 +81,14 @@ function VerificationPage() {
           "Verification request sent for manual review.",
         ),
       );
+      setNoticeKind("success");
       setLegalName("");
       setBusinessName("");
       setDocumentType("");
       await loadRequests();
     } else {
       setNotice(result.error.message);
+      setNoticeKind("error");
     }
   }
 
@@ -195,7 +200,17 @@ function VerificationPage() {
             {saving ? text("جارٍ الإرسال", "Sending") : text("إرسال الطلب", "Submit request")}
           </button>
           {notice && (
-            <p className="mt-3 rounded-xl bg-muted-surface p-3 text-xs font-semibold">{notice}</p>
+            <p
+              className={`mt-3 rounded-xl p-3 text-xs font-semibold ${
+                noticeKind === "success"
+                  ? "bg-emerald-trust/10 text-emerald-trust"
+                  : noticeKind === "error"
+                    ? "bg-destructive/10 text-destructive"
+                    : "bg-muted-surface"
+              }`}
+            >
+              {notice}
+            </p>
           )}
         </form>
 

@@ -231,31 +231,35 @@ function NotificationsPage() {
                     className={`rounded-xl p-3 hairline ${notification.readAt ? "bg-card" : "bg-muted-surface"}`}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div
-                        role={isNavigableNotification(notification) ? "button" : undefined}
-                        tabIndex={isNavigableNotification(notification) ? 0 : undefined}
-                        className={`min-w-0 flex-1 ${
-                          isNavigableNotification(notification) ? "cursor-pointer" : ""
-                        }`}
-                        onClick={() => openNotificationTarget(notification)}
-                        onKeyDown={(event) => {
-                          if (!isNavigableNotification(notification)) return;
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            openNotificationTarget(notification);
-                          }
-                        }}
-                      >
-                        <h2 className="text-sm font-bold">{notification.titleAr}</h2>
-                        {notification.bodyAr && (
-                          <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                            {notification.bodyAr}
+                      {isNavigableNotification(notification) ? (
+                        <button
+                          type="button"
+                          onClick={() => openNotificationTarget(notification)}
+                          className="min-w-0 flex-1 text-start"
+                        >
+                          <h2 className="text-sm font-bold">{notification.titleAr}</h2>
+                          {notification.bodyAr && (
+                            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                              {notification.bodyAr}
+                            </p>
+                          )}
+                          <p className="mt-2 text-[10px] text-muted-foreground">
+                            {formatNotificationDate(notification.createdAt, language)}
                           </p>
-                        )}
-                        <p className="mt-2 text-[10px] text-muted-foreground">
-                          {formatNotificationDate(notification.createdAt, language)}
-                        </p>
-                      </div>
+                        </button>
+                      ) : (
+                        <div className="min-w-0 flex-1">
+                          <h2 className="text-sm font-bold">{notification.titleAr}</h2>
+                          {notification.bodyAr && (
+                            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                              {notification.bodyAr}
+                            </p>
+                          )}
+                          <p className="mt-2 text-[10px] text-muted-foreground">
+                            {formatNotificationDate(notification.createdAt, language)}
+                          </p>
+                        </div>
+                      )}
                       {!notification.readAt && (
                         <button
                           type="button"
@@ -263,7 +267,7 @@ function NotificationsPage() {
                             event.stopPropagation();
                             void markOne(notification.id);
                           }}
-                          className="shrink-0 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline"
+                          className="shrink-0 rounded-xl bg-card px-2 py-1 text-[10px] font-bold hairline"
                         >
                           {text("تمت القراءة", "Read")}
                         </button>

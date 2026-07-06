@@ -134,6 +134,18 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function HtmlAttributes() {
+  const { language } = useUiPreferences();
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.lang = language === "en" ? "en" : "ar";
+    root.dir = language === "en" ? "ltr" : "rtl";
+  }, [language]);
+
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -143,6 +155,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <UiPreferencesProvider>
         <AuthProvider>
+          <HtmlAttributes />
           <div className="min-h-dvh bg-background pb-24 text-foreground lg:pb-8">
             <Outlet />
             {showFooter && <SiteFooter />}

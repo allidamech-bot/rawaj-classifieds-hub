@@ -42,7 +42,7 @@ function GoogleButton({ returnTo }: { returnTo: string }) {
         className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-input bg-card px-4 py-2.5 text-sm font-bold text-foreground transition-colors hover:bg-muted-surface disabled:opacity-60"
       >
         {loading ? (
-          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+          <svg aria-hidden="true" className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
             <circle
               className="opacity-25"
               cx="12"
@@ -58,7 +58,7 @@ function GoogleButton({ returnTo }: { returnTo: string }) {
             />
           </svg>
         ) : (
-          <svg className="h-4 w-4" viewBox="0 0 24 24">
+          <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"

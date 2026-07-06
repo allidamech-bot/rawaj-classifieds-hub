@@ -764,6 +764,7 @@ function ListingsPage() {
               value={q}
               onChange={(event) => setQ(event.target.value)}
               placeholder={text("ابحث ضمن الإعلانات المعتمدة...", "Search approved listings...")}
+              aria-label={text("بحث في الإعلانات", "Search listings")}
               className="w-full bg-transparent text-sm outline-none"
             />
           </div>
@@ -991,6 +992,7 @@ function ListingsPage() {
                         setDraftCategoryId(undefined);
                         setSubcategoryId("");
                       }}
+                      aria-pressed={!draftSelectedCategory}
                       className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
                         !draftSelectedCategory
                           ? "bg-primary text-primary-foreground"
@@ -1007,6 +1009,7 @@ function ListingsPage() {
                           setDraftCategoryId(category.id);
                           setSubcategoryId("");
                         }}
+                        aria-pressed={draftSelectedCategory?.id === category.id}
                         className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
                           draftSelectedCategory?.id === category.id
                             ? "bg-primary text-primary-foreground"
@@ -1028,6 +1031,7 @@ function ListingsPage() {
                       <button
                         type="button"
                         onClick={() => setSubcategoryId("")}
+                        aria-pressed={!subcategoryId}
                         className={`rounded-xl px-3 py-2 text-start text-xs font-bold ${
                           !subcategoryId
                             ? "bg-gold text-gold-foreground"
@@ -1041,6 +1045,7 @@ function ListingsPage() {
                           key={subcategory.id}
                           type="button"
                           onClick={() => setSubcategoryId(subcategory.id)}
+                          aria-pressed={subcategoryId === subcategory.id}
                           className={`rounded-xl px-3 py-2 text-start text-xs font-bold ${
                             subcategoryId === subcategory.id
                               ? "bg-gold text-gold-foreground"
@@ -1065,6 +1070,7 @@ function ListingsPage() {
                         setGovId("");
                         setDistrictAr("");
                       }}
+                      aria-pressed={!govId}
                       className={`rounded-xl px-3 py-2 text-start text-xs font-bold ${
                         !govId ? "bg-primary text-primary-foreground" : "bg-muted-surface"
                       }`}
@@ -1079,6 +1085,7 @@ function ListingsPage() {
                           setGovId(governorate.id);
                           setDistrictAr("");
                         }}
+                        aria-pressed={govId === governorate.id}
                         className={`rounded-xl px-3 py-2 text-start text-xs font-bold ${
                           govId === governorate.id
                             ? "bg-primary text-primary-foreground"
@@ -1180,7 +1187,7 @@ function ListingsPage() {
                   </div>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-2 border-t border-border p-4">
+              <div className="sticky bottom-0 grid grid-cols-2 gap-2 border-t border-border bg-card p-4">
                 <button
                   type="button"
                   onClick={resetFilters}
