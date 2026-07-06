@@ -11,7 +11,9 @@
 --   - public.rawaj_safe_uuid(text) should exist
 --   - storage.objects table should exist
 --   - bucket_id = 'listing-images' should exist
---
+
+BEGIN;
+
 -- Helper: Check if owner can add images to listing (draft or rejected rows only)
 create or replace function public.rawaj_listing_owner_can_add_images(target_listing_id uuid)
 returns boolean
@@ -31,8 +33,6 @@ $$;
 
 comment on function public.rawaj_listing_owner_can_add_images(uuid) is
   'Returns true only if owner can add images (draft or rejected status). Blocks during pending_review.';
-
-BEGIN;
 
 -- listing_images table policies (already idempotent via IF EXISTS)
 drop policy if exists "Listing owners add images before approval" on public.listing_images;
