@@ -1,11 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { Clock, ChevronRight, Filter, MapPin, Search, ShieldAlert } from "lucide-react";
+import { ChevronRight, Clock, Filter, Grid3X3, MapPin, Search, ShieldAlert } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
-import { SectionHeader } from "@/components/SectionHeader";
-import { fetchPublicListings } from "@/lib/classifieds-api";
-import type { ClassifiedListing, ClassifiedsError } from "@/lib/classifieds-types";
+import { fetchPublicCategories, fetchPublicListings } from "@/lib/classifieds-api";
+import type {
+  ClassifiedCategory,
+  ClassifiedListing,
+  ClassifiedsError,
+} from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -21,9 +24,10 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const navigate = useNavigate();
-  const { text } = useUiPreferences();
+  const { language, text } = useUiPreferences();
   const [searchValue, setSearchValue] = useState("");
   const [listings, setListings] = useState<ClassifiedListing[]>([]);
+  const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
 
@@ -32,10 +36,14 @@ function HomePage() {
     async function load() {
       setLoading(true);
       setError(null);
-      const listingsResult = await fetchPublicListings({}, null, 30);
+      const [listingsResult, categoriesResult] = await Promise.all([
+        fetchPublicListings({}, null, 30),
+        fetchPublicCategories(),
+      ]);
       if (cancelled) return;
       if (!listingsResult.ok) setError(listingsResult.error);
       else setListings(listingsResult.data.items);
+      if (categoriesResult.ok) setCategories(categoriesResult.data);
       setLoading(false);
     }
     void load();
@@ -117,6 +125,41 @@ function HomePage() {
             </Link>
           </form>
         </section>
+
+        {categories.length > 0 && (
+          <section className="mt-5 sm:mt-6" aria-label={text("اكتشاف سريع", "Quick discovery")}>
+            <div className="mb-3 flex items-end justify-between gap-3">
+              <h2 className="text-[13px] font-extrabold text-primary">
+                {text("تصفح الأقسام", "Browse categories")}
+              </h2>
+              <Link
+                to="/categories"
+                className="inline-flex items-center gap-1 text-[11px] font-extrabold text-primary transition-colors hover:text-gold"
+              >
+                {text("عرض كل الأقسام", "All categories")}
+                <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+              {categories.slice(0, 6).map((category) => (
+                <Link
+                  key={category.id}
+                  to="/listings"
+                  search={{ category: category.id }}
+                  className="group flex flex-col items-center gap-1.5 rounded-2xl bg-ivory-subtle p-3 text-center hairline transition hover:border-gold/40 hover:bg-card active:scale-[0.98]"
+                >
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-card text-primary transition group-hover:text-gold">
+                    <Grid3X3 className="h-4.5 w-4.5" />
+                  </span>
+                  <span className="line-clamp-2 text-[11px] font-bold leading-tight text-foreground">
+                    {categoryName(category.id, category.nameAr, language)}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
 
         {loading ? (
           <HomeState title={text("جاري تحميل الإعلانات", "Loading listings")} />
