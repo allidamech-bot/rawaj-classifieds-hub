@@ -1427,6 +1427,8 @@ export async function resubmitOwnerListing(
   const updateData: Record<string, unknown> = {
     status: "pending_review",
     rejection_reason: null,
+    reviewed_by: null,
+    reviewed_at: null,
   };
 
   if (payload.categoryId) updateData.category_id = payload.categoryId;

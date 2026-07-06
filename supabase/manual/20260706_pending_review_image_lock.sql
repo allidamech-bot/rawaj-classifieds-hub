@@ -8,9 +8,29 @@
 --
 -- Required Live-state dependencies:
 --   - Migration 202607050002 should be applied first
---   - public.rawaj_safe_uuid(uuid) should exist
+--   - public.rawaj_safe_uuid(text) should exist
 --   - storage.objects table should exist
 --   - bucket_id = 'listing-images' should exist
+--
+-- Helper: Check if owner can add images to listing (draft or rejected rows only)
+create or replace function public.rawaj_listing_owner_can_add_images(target_listing_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.listings l
+    where l.id = target_listing_id
+      and l.owner_id = auth.uid()
+      and l.status in ('draft', 'rejected')
+  );
+$$;
+
+comment on function public.rawaj_listing_owner_can_add_images(uuid) is
+  'Returns true only if owner can add images (draft or rejected status). Blocks during pending_review.';
 
 BEGIN;
 
