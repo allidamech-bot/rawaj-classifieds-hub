@@ -25,7 +25,7 @@ function NotFoundComponent() {
   const { text } = useUiPreferences();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-extrabold text-primary">404</h1>
         <h2 className="mt-4 text-xl font-bold text-foreground">
@@ -60,7 +60,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-bold text-foreground">
           {text("حدث خطأ غير متوقع", "Something went wrong")}
@@ -139,7 +139,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <UiPreferencesProvider>
         <AuthProvider>
-          <div className="min-h-screen bg-background pb-24 text-foreground lg:pb-8">
+          <div className="min-h-dvh bg-background pb-24 text-foreground lg:pb-8">
             <Outlet />
             <SiteFooter />
           </div>
