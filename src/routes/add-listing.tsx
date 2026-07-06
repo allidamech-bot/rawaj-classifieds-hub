@@ -1,7 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Check, Info, X } from "lucide-react";
+import { Camera, Info, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import {
+  ListingStudioMessage,
+  ListingStudioSection,
+  ListingStudioSteps,
+} from "@/features/listing-studio/listing-studio";
 import {
   carMakeOptions,
   detectCategoryFieldKind,
@@ -115,7 +120,7 @@ function AddListingPage() {
   const governorate = governorates.find((item) => item.id === governorateId);
   const normalizedPrice = normalizeNumericInput(price);
   const canContinue = true;
-  const canSubmit = step === 4;
+  const canSubmit = step === 2;
   const score = useMemo(
     () =>
       [
@@ -128,11 +133,9 @@ function AddListingPage() {
     [categoryId, title, description, price, priceType, governorateId, district],
   );
   const steps = [
-    text("القسم", "Category"),
-    text("الصور", "Photos"),
-    text("التفاصيل", "Details"),
-    text("التواصل", "Contact"),
-    text("المراجعة", "Review"),
+    text("ماذا تبيع؟", "What are you selling?"),
+    text("الصور والتفاصيل", "Photos and details"),
+    text("السعر والموقع والتواصل", "Price, location, contact"),
   ];
   const selectedImagePreviews = useMemo(
     () =>
@@ -528,7 +531,7 @@ function AddListingPage() {
 
   async function submitListing() {
     if (submittingRef.current) return;
-    if (!validateCurrentStep(4)) {
+    if (!validateCurrentStep(2)) {
       submittingRef.current = false;
       setSubmitting(false);
       return;
@@ -823,27 +826,7 @@ function AddListingPage() {
             {text("تصفح الإعلانات", "Browse listings")}
           </Link>
         </div>
-        <ol className="no-scrollbar mb-4 flex items-center gap-2 overflow-x-auto pb-2">
-          {steps.map((label, index) => {
-            const done = index < step;
-            const active = index === step;
-            return (
-              <li key={label} className="flex items-center gap-2">
-                <div
-                  className={`grid h-7 w-7 place-items-center rounded-full text-xs font-bold ${done ? "bg-emerald-trust text-emerald-trust-foreground" : active ? "bg-primary text-primary-foreground" : "bg-muted-surface text-muted-foreground"}`}
-                >
-                  {done ? <Check className="h-3.5 w-3.5" /> : index + 1}
-                </div>
-                <span
-                  className={`whitespace-nowrap text-xs font-semibold ${active ? "text-foreground" : "text-muted-foreground"}`}
-                >
-                  {label}
-                </span>
-                {index < steps.length - 1 && <span className="h-px w-6 bg-border" />}
-              </li>
-            );
-          })}
-        </ol>
+        <ListingStudioSteps steps={steps.map((label) => ({ label }))} current={step} />
 
         {loading ? (
           <Card title={text("جارٍ تحميل بيانات النشر", "Loading posting data")}>
@@ -881,347 +864,345 @@ function AddListingPage() {
               )}
 
               {step === 0 && (
-                <Card title={text("اختر القسم", "Choose category")}>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {categories.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setCategoryId(item.id)}
-                        className={`rounded-xl p-3 text-start text-sm font-semibold transition ${categoryId === item.id ? "bg-primary text-primary-foreground" : "bg-card hairline hover:bg-muted-surface"}`}
-                      >
-                        {categoryName(item.id, item.nameAr, language)}
-                      </button>
-                    ))}
-                  </div>
-                </Card>
+                <>
+                  <Card
+                    title={text("اختر القسم", "Choose category")}
+                    description={text(
+                      "ابدأ بالقسم الأقرب لما تبيعه حتى تظهر الحقول المناسبة.",
+                      "Start with the closest category so the right fields appear.",
+                    )}
+                  >
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {categories.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setCategoryId(item.id)}
+                          className={`rounded-xl p-3 text-start text-sm font-semibold transition ${categoryId === item.id ? "bg-primary text-primary-foreground" : "bg-card hairline hover:bg-muted-surface"}`}
+                        >
+                          {categoryName(item.id, item.nameAr, language)}
+                        </button>
+                      ))}
+                    </div>
+                  </Card>
+                  <Card title={text("عنوان الإعلان", "Listing title")}>
+                    <Field
+                      label={text("ماذا تبيع؟", "What are you selling?")}
+                      error={fieldErrors.title}
+                    >
+                      <input
+                        value={title}
+                        onChange={(event) => setTitle(event.target.value)}
+                        className="input"
+                        placeholder={text(
+                          "مثال: سيارة كيا سيراتو 2018",
+                          "Example: Kia Cerato 2018",
+                        )}
+                        data-first-invalid={Boolean(fieldErrors.title)}
+                      />
+                    </Field>
+                  </Card>
+                </>
               )}
 
               {step === 1 && (
-                <Card title={text("صور الإعلان", "Listing photos")}>
-                  <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl bg-muted-surface p-6 text-center text-muted-foreground">
-                    <Camera className="h-8 w-8" />
-                    <span className="mt-2 text-sm font-bold">
-                      {text("اختر صور الإعلان", "Choose listing photos")}
-                    </span>
-                    <span className="mt-1 text-[11px]">
-                      {text(
-                        "اختياري · حتى 6 صور · 5MB للصورة",
-                        "Optional · up to 6 photos · 5MB each",
-                      )}
-                    </span>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/jpeg,image/png,image/webp"
-                      className="sr-only"
-                      onChange={(event) => handleImageSelection(event.target.files)}
-                    />
-                  </label>
-                  {imageSelectionMessage && (
-                    <p className="mt-3 rounded-xl bg-warning/10 p-3 text-xs font-semibold text-foreground hairline">
-                      {imageSelectionMessage}
-                    </p>
-                  )}
-                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {selectedImagePreviews.map((preview) => (
-                      <div
-                        key={preview.id}
-                        className="group relative overflow-hidden rounded-xl bg-card text-xs hairline"
-                      >
-                        <img
-                          src={preview.url}
-                          alt={preview.file.name}
-                          className="aspect-[4/3] w-full object-cover"
-                        />
-                        {preview.state === "uploading" && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-foreground/40 text-primary-foreground">
-                            <span className="text-[10px] font-bold">
-                              {text("جارٍ الرفع", "Uploading")}
-                            </span>
-                          </div>
-                        )}
-                        {preview.state === "uploaded" && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-emerald-trust/70 text-emerald-trust-foreground">
-                            <span className="text-[10px] font-bold">
-                              {text("تم الرفع", "Uploaded")}
-                            </span>
-                          </div>
-                        )}
-                        {preview.state === "failed" && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-destructive/70 text-destructive-foreground">
-                            <span className="text-[10px] font-bold">{text("فشل", "Failed")}</span>
-                          </div>
-                        )}
-                        <button
-                          type="button"
-                          disabled={removingImageIds.has(preview.id)}
-                          onClick={() => void removeSelectedImage(preview.id)}
-                          className="absolute top-2 end-2 grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-soft disabled:opacity-60"
-                          aria-label={text("إزالة الصورة", "Remove photo")}
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                        <div className="p-2">
-                          <p className="truncate font-bold">{preview.file.name}</p>
-                          <p className="mt-1 text-muted-foreground">
-                            {(preview.file.size / 1024 / 1024).toFixed(1)} MB
-                          </p>
-                          {preview.state === "failed" && preview.error && (
-                            <>
-                              <p className="mt-1 text-destructive">{preview.error}</p>
-                              <button
-                                type="button"
-                                onClick={() => void retrySelectedImage(preview.id)}
-                                className="mt-2 rounded-lg bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground"
-                              >
-                                {text("إعادة المحاولة", "Retry")}
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-
-              {step === 2 && (
-                <Card title={text("تفاصيل الإعلان", "Listing details")}>
-                  <Field label={text("عنوان الإعلان", "Listing title")} error={fieldErrors.title}>
-                    <input
-                      value={title}
-                      onChange={(event) => setTitle(event.target.value)}
-                      className="input"
-                      data-first-invalid={Boolean(fieldErrors.title)}
-                    />
-                  </Field>
-                  <Field label={text("الوصف", "Description")} error={fieldErrors.description}>
-                    <textarea
-                      value={description}
-                      onChange={(event) => setDescription(event.target.value)}
-                      rows={4}
-                      className="input resize-none"
-                      data-first-invalid={Boolean(!fieldErrors.title && fieldErrors.description)}
-                    />
-                  </Field>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <Field label={text("السعر", "Price")} error={fieldErrors.price}>
-                      <input
-                        value={price}
-                        onChange={(event) => setPrice(normalizeNumericInput(event.target.value))}
-                        inputMode="numeric"
-                        className="input"
-                        data-first-invalid={Boolean(fieldErrors.price)}
-                      />
-                    </Field>
-                    <Field label={text("نوع السعر", "Price type")}>
-                      <select
-                        value={priceType}
-                        onChange={(event) => setPriceType(event.target.value as PriceType)}
-                        className="input"
-                      >
-                        <option value="fixed">{text("ثابت", "Fixed")}</option>
-                        <option value="negotiable">{text("قابل للتفاوض", "Negotiable")}</option>
-                        <option value="contact">{text("عند التواصل", "On contact")}</option>
-                        <option value="free">{text("مجاني", "Free")}</option>
-                        <option value="exchange">{text("للمبادلة", "Exchange")}</option>
-                      </select>
-                    </Field>
-                  </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <Field
-                      label={text("المحافظة", "Governorate")}
-                      error={fieldErrors.governorateId}
-                    >
-                      <select
-                        value={governorateId}
-                        onChange={(event) => {
-                          setGovernorateId(event.target.value);
-                          setDistrict("");
-                        }}
-                        className="input"
-                        data-first-invalid={Boolean(fieldErrors.governorateId)}
-                      >
-                        <option value="">{text("اختر", "Choose")}</option>
-                        {governorates.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {governorateName(item.id, item.nameAr, language)}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-                    <Field label={text("المنطقة", "District")} error={fieldErrors.district}>
-                      <select
-                        value={district}
-                        onChange={(event) => setDistrict(event.target.value)}
-                        disabled={!governorate}
-                        className="input disabled:opacity-50"
-                        data-first-invalid={Boolean(fieldErrors.district)}
-                      >
-                        <option value="">{text("اختر", "Choose")}</option>
-                        {governorate?.districtsAr.map((item) => (
-                          <option key={item} value={item}>
-                            {item}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-                  </div>
-                  <Field label={text("الحالة", "Condition")}>
-                    <select
-                      value={condition}
-                      onChange={(event) => setCondition(event.target.value as ListingCondition)}
-                      className="input"
-                    >
-                      <option value="not_applicable">{text("غير محدد", "Not specified")}</option>
-                      <option value="new">{text("جديد", "New")}</option>
-                      <option value="like_new">{text("شبه جديد", "Like new")}</option>
-                      <option value="used">{text("مستعمل", "Used")}</option>
-                      <option value="for_parts">{text("للقطع", "For parts")}</option>
-                    </select>
-                  </Field>
-                  <CategorySpecificFields
-                    kind={categoryFieldKind}
-                    values={categoryDetails}
-                    onChange={setCategoryDetails}
-                    text={text}
-                    errors={fieldErrors}
-                  />
-                </Card>
-              )}
-
-              {step === 3 && (
-                <Card title={text("طريقة التواصل", "Contact method")}>
-                  <Field label={text("اسم التواصل", "Contact name")}>
-                    <input
-                      value={contactName}
-                      onChange={(event) => setContactName(event.target.value)}
-                      className="input"
-                    />
-                  </Field>
-                  <div className="mb-3 rounded-xl bg-muted-surface p-3 text-xs leading-6 text-foreground hairline">
-                    {text(
-                      "رقم الهاتف وواتساب اختياريان. عند تفعيل أي خيار وإرسال الإعلان للمراجعة قد يظهر الرقم للعامة على الإعلان بعد الموافقة. هذه الأرقام غير موثقة داخل رواج.",
-                      "Phone and WhatsApp are optional. If enabled, they may appear publicly on the approved listing after review. RAWAJ does not verify these numbers.",
+                <>
+                  <Card
+                    title={text("صور الإعلان", "Listing photos")}
+                    description={text(
+                      "الصور اختيارية لكنها تساعد المشتري على فهم الإعلان بسرعة.",
+                      "Photos are optional, but they help buyers understand the listing quickly.",
                     )}
-                  </div>
-                  {contact.phone && (
-                    <Field label={text("رقم الهاتف", "Phone number")} error={fieldErrors.phone}>
+                  >
+                    <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl bg-muted-surface p-5 text-center text-muted-foreground">
+                      <Camera className="h-7 w-7" />
+                      <span className="mt-2 text-sm font-bold">
+                        {text("اختر صور الإعلان", "Choose listing photos")}
+                      </span>
+                      <span className="mt-1 text-[11px]">
+                        {text("حتى 6 صور · 5MB للصورة", "Up to 6 photos · 5MB each")}
+                      </span>
                       <input
-                        value={phone}
-                        onChange={(event) => setPhone(normalizeArabicDigits(event.target.value))}
-                        inputMode="tel"
-                        autoComplete="tel"
-                        className="input"
-                        placeholder="+963 ..."
-                        data-first-invalid={Boolean(fieldErrors.phone)}
+                        type="file"
+                        multiple
+                        accept="image/jpeg,image/png,image/webp"
+                        className="sr-only"
+                        onChange={(event) => handleImageSelection(event.target.files)}
                       />
-                    </Field>
-                  )}
-                  {contact.whatsapp && (
-                    <Field
-                      label={text("رقم واتساب", "WhatsApp number")}
-                      error={fieldErrors.whatsapp}
-                    >
-                      <input
-                        value={whatsapp}
-                        onChange={(event) => setWhatsapp(normalizeArabicDigits(event.target.value))}
-                        inputMode="tel"
-                        autoComplete="tel"
-                        className="input"
-                        placeholder="+963 ..."
-                        data-first-invalid={Boolean(fieldErrors.whatsapp)}
-                      />
-                    </Field>
-                  )}
-                  <div className="space-y-2">
-                    {[
-                      { key: "phone" as const, label: text("اتصال هاتفي", "Phone call") },
-                      { key: "whatsapp" as const, label: text("واتساب", "WhatsApp") },
-                    ].map((item) => (
-                      <label
-                        key={item.key}
-                        className="flex items-center justify-between rounded-xl bg-card p-3 hairline"
-                      >
-                        <div>
-                          <div className="text-sm font-semibold">{item.label}</div>
-                          <div className="text-[10px] text-muted-foreground">
-                            {text(
-                              "تُستخدم وفق إعدادات الخصوصية والمراجعة.",
-                              "Used according to privacy and review settings.",
+                    </label>
+                    {imageSelectionMessage && (
+                      <ListingStudioMessage tone="warning">
+                        {imageSelectionMessage}
+                      </ListingStudioMessage>
+                    )}
+                    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {selectedImagePreviews.map((preview, index) => (
+                        <div
+                          key={preview.id}
+                          className="group relative overflow-hidden rounded-xl bg-card text-xs hairline"
+                        >
+                          <img
+                            src={preview.url}
+                            alt={preview.file.name}
+                            className="aspect-[4/3] w-full object-cover"
+                          />
+                          {index === 0 && (
+                            <span className="absolute start-2 top-2 rounded-md bg-gold px-2 py-0.5 text-[10px] font-bold text-gold-foreground">
+                              {text("الصورة الرئيسية", "Primary")}
+                            </span>
+                          )}
+                          {preview.state !== "pending" && (
+                            <div className="absolute inset-x-0 bottom-0 bg-primary/85 px-2 py-1 text-center text-[10px] font-bold text-primary-foreground">
+                              {preview.state === "uploading"
+                                ? text("جارٍ الرفع", "Uploading")
+                                : preview.state === "uploaded"
+                                  ? text("تم الرفع", "Uploaded")
+                                  : text("فشل الرفع", "Upload failed")}
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            disabled={
+                              removingImageIds.has(preview.id) || preview.state === "uploading"
+                            }
+                            onClick={() => void removeSelectedImage(preview.id)}
+                            className="absolute top-2 end-2 grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-soft disabled:opacity-60"
+                            aria-label={text("إزالة الصورة", "Remove photo")}
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                          <div className="p-2">
+                            <p className="truncate font-bold">{preview.file.name}</p>
+                            <p className="mt-1 text-muted-foreground">
+                              {(preview.file.size / 1024 / 1024).toFixed(1)} MB
+                            </p>
+                            {preview.state === "failed" && preview.error && (
+                              <>
+                                <p className="mt-1 text-destructive">{preview.error}</p>
+                                <button
+                                  type="button"
+                                  onClick={() => void retrySelectedImage(preview.id)}
+                                  className="mt-2 rounded-lg bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground"
+                                >
+                                  {text("إعادة المحاولة", "Retry")}
+                                </button>
+                              </>
                             )}
                           </div>
                         </div>
-                        <input
-                          type="checkbox"
-                          checked={contact[item.key]}
-                          onChange={(event) =>
-                            setContact((value) => {
-                              if (item.key === "phone" && !event.target.checked) setPhone("");
-                              if (item.key === "whatsapp" && !event.target.checked) setWhatsapp("");
-                              return { ...value, [item.key]: event.target.checked };
-                            })
-                          }
-                          className="h-4 w-4 accent-primary"
-                        />
-                      </label>
-                    ))}
-                  </div>
-                </Card>
+                      ))}
+                    </div>
+                  </Card>
+
+                  <Card title={text("الوصف والتفاصيل", "Description and details")}>
+                    <Field label={text("الوصف", "Description")} error={fieldErrors.description}>
+                      <textarea
+                        value={description}
+                        onChange={(event) => setDescription(event.target.value)}
+                        rows={5}
+                        className="input resize-none"
+                        data-first-invalid={Boolean(fieldErrors.description)}
+                      />
+                    </Field>
+                    <Field label={text("الحالة", "Condition")}>
+                      <select
+                        value={condition}
+                        onChange={(event) => setCondition(event.target.value as ListingCondition)}
+                        className="input"
+                      >
+                        <option value="not_applicable">{text("غير محدد", "Not specified")}</option>
+                        <option value="new">{text("جديد", "New")}</option>
+                        <option value="like_new">{text("شبه جديد", "Like new")}</option>
+                        <option value="used">{text("مستعمل", "Used")}</option>
+                        <option value="for_parts">{text("للقطع", "For parts")}</option>
+                      </select>
+                    </Field>
+                    <CategorySpecificFields
+                      kind={categoryFieldKind}
+                      values={categoryDetails}
+                      onChange={setCategoryDetails}
+                      text={text}
+                      errors={fieldErrors}
+                    />
+                  </Card>
+                </>
               )}
 
-              {step === 4 && (
-                <Card title={text("المراجعة قبل الإرسال", "Review before submission")}>
-                  <div className="space-y-2 text-sm">
-                    <ReviewRow
-                      label={text("القسم", "Category")}
-                      value={category ? categoryName(category.id, category.nameAr, language) : "-"}
-                    />
-                    <ReviewRow label={text("العنوان", "Title")} value={title || "-"} />
-                    <ReviewRow
-                      label={text("المحافظة", "Governorate")}
-                      value={
-                        governorate
-                          ? governorateName(governorate.id, governorate.nameAr, language)
-                          : "-"
-                      }
-                    />
-                    <ReviewRow label={text("المنطقة", "District")} value={district || "-"} />
-                    <ReviewRow
-                      label={text("الصور", "Photos")}
-                      value={text(
-                        `${selectedImages.length} صورة مختارة`,
-                        `${selectedImages.length} selected photos`,
-                      )}
-                    />
-                    <ReviewRow
-                      label={text("حالة النشر", "Publish status")}
-                      value={text(
-                        "سيُرسل كإعلان قيد المراجعة",
-                        "Will be submitted as pending review",
-                      )}
-                    />
-                    {contact.phone && (
-                      <ReviewRow
-                        label={text("رقم الهاتف", "Phone number")}
-                        value={normalizeContactValue(phone) || "-"}
+              {step === 2 && (
+                <>
+                  <Card title={text("السعر والموقع", "Price and location")}>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <Field label={text("السعر", "Price")} error={fieldErrors.price}>
+                        <input
+                          value={price}
+                          onChange={(event) => setPrice(normalizeNumericInput(event.target.value))}
+                          inputMode="numeric"
+                          className="input"
+                          data-first-invalid={Boolean(fieldErrors.price)}
+                        />
+                      </Field>
+                      <Field label={text("نوع السعر", "Price type")}>
+                        <select
+                          value={priceType}
+                          onChange={(event) => setPriceType(event.target.value as PriceType)}
+                          className="input"
+                        >
+                          <option value="fixed">{text("ثابت", "Fixed")}</option>
+                          <option value="negotiable">{text("قابل للتفاوض", "Negotiable")}</option>
+                          <option value="contact">{text("عند التواصل", "On contact")}</option>
+                          <option value="free">{text("مجاني", "Free")}</option>
+                          <option value="exchange">{text("للمبادلة", "Exchange")}</option>
+                        </select>
+                      </Field>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <Field
+                        label={text("المحافظة", "Governorate")}
+                        error={fieldErrors.governorateId}
+                      >
+                        <select
+                          value={governorateId}
+                          onChange={(event) => {
+                            setGovernorateId(event.target.value);
+                            setDistrict("");
+                          }}
+                          className="input"
+                          data-first-invalid={Boolean(fieldErrors.governorateId)}
+                        >
+                          <option value="">{text("اختر", "Choose")}</option>
+                          {governorates.map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {governorateName(item.id, item.nameAr, language)}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field label={text("المنطقة", "District")} error={fieldErrors.district}>
+                        <select
+                          value={district}
+                          onChange={(event) => setDistrict(event.target.value)}
+                          disabled={!governorate}
+                          className="input disabled:opacity-50"
+                          data-first-invalid={Boolean(fieldErrors.district)}
+                        >
+                          <option value="">{text("اختر", "Choose")}</option>
+                          {governorate?.districtsAr.map((item) => (
+                            <option key={item} value={item}>
+                              {item}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                    </div>
+                  </Card>
+
+                  <Card title={text("التواصل", "Contact")}>
+                    <Field label={text("اسم التواصل", "Contact name")}>
+                      <input
+                        value={contactName}
+                        onChange={(event) => setContactName(event.target.value)}
+                        className="input"
                       />
+                    </Field>
+                    <div className="mb-3 rounded-xl bg-muted-surface p-3 text-xs leading-6 text-foreground hairline">
+                      {text(
+                        "رقم الهاتف وواتساب اختياريان. إذا فعّلت أحدهما قد يظهر للعامة بعد الموافقة.",
+                        "Phone and WhatsApp are optional. If enabled, they may appear publicly after approval.",
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      {[
+                        { key: "phone" as const, label: text("اتصال هاتفي", "Phone call") },
+                        { key: "whatsapp" as const, label: text("واتساب", "WhatsApp") },
+                      ].map((item) => (
+                        <label
+                          key={item.key}
+                          className="flex items-center justify-between rounded-xl bg-card p-3 hairline"
+                        >
+                          <span className="text-sm font-semibold">{item.label}</span>
+                          <input
+                            type="checkbox"
+                            checked={contact[item.key]}
+                            onChange={(event) =>
+                              setContact((value) => {
+                                if (item.key === "phone" && !event.target.checked) setPhone("");
+                                if (item.key === "whatsapp" && !event.target.checked)
+                                  setWhatsapp("");
+                                return { ...value, [item.key]: event.target.checked };
+                              })
+                            }
+                            className="h-4 w-4 accent-primary"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                    {contact.phone && (
+                      <Field label={text("رقم الهاتف", "Phone number")} error={fieldErrors.phone}>
+                        <input
+                          value={phone}
+                          onChange={(event) => setPhone(normalizeArabicDigits(event.target.value))}
+                          inputMode="tel"
+                          autoComplete="tel"
+                          className="input"
+                          placeholder="+963 ..."
+                          data-first-invalid={Boolean(fieldErrors.phone)}
+                        />
+                      </Field>
                     )}
                     {contact.whatsapp && (
-                      <ReviewRow
+                      <Field
                         label={text("رقم واتساب", "WhatsApp number")}
-                        value={normalizeContactValue(whatsapp) || "-"}
+                        error={fieldErrors.whatsapp}
+                      >
+                        <input
+                          value={whatsapp}
+                          onChange={(event) =>
+                            setWhatsapp(normalizeArabicDigits(event.target.value))
+                          }
+                          inputMode="tel"
+                          autoComplete="tel"
+                          className="input"
+                          placeholder="+963 ..."
+                          data-first-invalid={Boolean(fieldErrors.whatsapp)}
+                        />
+                      </Field>
+                    )}
+                  </Card>
+
+                  <Card title={text("مراجعة سريعة", "Quick review")}>
+                    <div className="space-y-2 text-sm">
+                      <ReviewRow
+                        label={text("القسم", "Category")}
+                        value={
+                          category ? categoryName(category.id, category.nameAr, language) : "-"
+                        }
                       />
-                    )}
-                  </div>
-                  <div className="mt-3 rounded-xl bg-emerald-trust/10 p-3 text-[11px] font-medium text-emerald-trust">
-                    {text(
-                      "يتم نشر الإعلان للعامة بعد المراجعة والموافقة.",
-                      "The listing becomes public after review and approval.",
-                    )}
-                  </div>
-                </Card>
+                      <ReviewRow label={text("العنوان", "Title")} value={title || "-"} />
+                      <ReviewRow
+                        label={text("المحافظة", "Governorate")}
+                        value={
+                          governorate
+                            ? governorateName(governorate.id, governorate.nameAr, language)
+                            : "-"
+                        }
+                      />
+                      <ReviewRow label={text("المنطقة", "District")} value={district || "-"} />
+                      <ReviewRow
+                        label={text("الصور", "Photos")}
+                        value={text(
+                          String(selectedImages.length) + " صورة مختارة",
+                          String(selectedImages.length) + " selected photos",
+                        )}
+                      />
+                    </div>
+                    <ListingStudioMessage tone="success">
+                      {text(
+                        "سيُرسل الإعلان للمراجعة، ويظهر للعامة بعد الموافقة.",
+                        "The listing will be sent for review and become public after approval.",
+                      )}
+                    </ListingStudioMessage>
+                  </Card>
+                </>
               )}
 
               <div className="flex items-center justify-between gap-2">
@@ -1398,19 +1379,17 @@ function buildStepErrors({
     summary.push(message);
   };
 
-  if (step === 0 && !categoryId) add("categoryId", "اختر القسم.");
+  const validateIdentity = step === 0 || step === 2;
+  const validateDetails = step === 1 || step === 2;
+  const validateFinal = step === 2;
 
-  if (step === 2 || step === 4) {
+  if (validateIdentity) {
+    if (!categoryId) add("categoryId", "اختر القسم.");
     if (title.trim().length < 10) add("title", "العنوان يجب أن يكون 10 أحرف على الأقل.");
+  }
+
+  if (validateDetails) {
     if (description.trim().length < 30) add("description", "الوصف يجب أن يكون 30 حرفًا على الأقل.");
-    if (!governorateId) add("governorateId", "اختر المحافظة.");
-    if (!district) add("district", "اختر المنطقة.");
-    if ((priceType === "fixed" || priceType === "negotiable") && !price) {
-      add("price", "السعر يجب أن يكون رقمًا صحيحًا.");
-    }
-    if (price && (!Number.isFinite(Number(price)) || Number(price) < 0)) {
-      add("price", "السعر يجب أن يكون رقمًا صحيحًا.");
-    }
 
     if (categoryFieldKind === "vehicles") {
       if (!categoryDetails.car_make && !categoryDetails.make) add("car_make", "اختر شركة السيارة.");
@@ -1449,7 +1428,15 @@ function buildStepErrors({
     }
   }
 
-  if (step === 3 || step === 4) {
+  if (validateFinal) {
+    if (!governorateId) add("governorateId", "اختر المحافظة.");
+    if (!district) add("district", "اختر المنطقة.");
+    if ((priceType === "fixed" || priceType === "negotiable") && !price) {
+      add("price", "السعر يجب أن يكون رقمًا صحيحًا.");
+    }
+    if (price && (!Number.isFinite(Number(price)) || Number(price) < 0)) {
+      add("price", "السعر يجب أن يكون رقمًا صحيحًا.");
+    }
     if (contact.phone && !validatePhone(phone)) {
       add("phone", "رقم الهاتف يجب أن يحتوي أرقامًا فقط وبصيغة واضحة.");
     }
@@ -2006,12 +1993,19 @@ function CheckboxField({
   );
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="rounded-2xl bg-card p-4 hairline shadow-soft">
-      <h3 className="mb-3 text-sm font-extrabold text-foreground">{title}</h3>
+    <ListingStudioSection title={title} description={description}>
       {children}
-    </section>
+    </ListingStudioSection>
   );
 }
 

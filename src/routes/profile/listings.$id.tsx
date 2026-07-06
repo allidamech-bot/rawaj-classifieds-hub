@@ -3,6 +3,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Camera, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  ListingStudioMessage,
+  ListingStudioSection,
+} from "@/features/listing-studio/listing-studio";
+import {
   detectCategoryFieldKind,
   mergeCategoryDetails,
   readCategoryDetails,
@@ -92,6 +96,15 @@ function ManageListingPage() {
     () => subcategories.filter((item) => item.categoryId === categoryId),
     [subcategories, categoryId],
   );
+  const selectedImagePreviews = useMemo(
+    () =>
+      selectedImages.map((file, index) => ({
+        id: `${file.name}-${file.size}-${file.lastModified}-${index}`,
+        file,
+        url: URL.createObjectURL(file),
+      })),
+    [selectedImages],
+  );
 
   const isEditable = listing?.status === "draft" || listing?.status === "rejected";
   const isPendingReview = listing?.status === "pending_review";
@@ -174,6 +187,13 @@ function ManageListingPage() {
       cancelled = true;
     };
   }, [auth.status, id, auth.profile?.id]);
+
+  useEffect(
+    () => () => {
+      selectedImagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
+    },
+    [selectedImagePreviews],
+  );
 
   async function loadImages() {
     if (!auth.profile?.id) return;
@@ -343,12 +363,12 @@ function ManageListingPage() {
     setUploading(true);
     setUploadError(null);
     const errors: string[] = [];
-    for (const file of selectedImages) {
+    for (const [index, file] of selectedImages.entries()) {
       const result = await uploadListingImage({
         userId: auth.profile?.id ?? null,
         listing,
         file,
-        sortOrder: images.length,
+        sortOrder: images.length + index,
         altAr: title.trim() || listing.title,
       });
       if (!result.ok) errors.push(result.error.message);
@@ -441,37 +461,36 @@ function ManageListingPage() {
         </div>
 
         {isPendingReview && (
-          <p className="mb-4 rounded-xl bg-warning/10 px-4 py-3 text-xs font-semibold text-warning hairline">
-            {text(
-              "هذا الإعلان قيد المراجعة ولا يمكن تعديله حتى قرار الإدارة. يمكنك حذفه فقط أو إعادة إرساله بعد الرفض.",
-              "This listing is under review and cannot be edited until the admin decision. You can only delete it or resubmit it if rejected.",
-            )}
-          </p>
+          <div className="mb-4">
+            <ListingStudioMessage tone="warning">
+              {text(
+                "هذا الإعلان قيد المراجعة ولا يمكن تعديله حتى قرار الإدارة. يمكنك حذفه فقط أو إعادة إرساله بعد الرفض.",
+                "This listing is under review and cannot be edited until the admin decision. You can only delete it or resubmit it if rejected.",
+              )}
+            </ListingStudioMessage>
+          </div>
         )}
 
         {listing.rejectionReason && (
-          <p className="mb-4 rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">
-            {listing.rejectionReason}
-          </p>
+          <div className="mb-4">
+            <ListingStudioMessage tone="danger">{listing.rejectionReason}</ListingStudioMessage>
+          </div>
         )}
 
         {savingSuccess && (
-          <p className="mb-4 rounded-xl bg-emerald-trust/10 p-3 text-center text-xs font-bold text-emerald-trust hairline">
-            {savingSuccess}
-          </p>
+          <div className="mb-4">
+            <ListingStudioMessage tone="success">{savingSuccess}</ListingStudioMessage>
+          </div>
         )}
         {savingError && (
-          <p className="mb-4 rounded-xl bg-destructive/10 p-3 text-center text-xs font-bold text-destructive hairline">
-            {savingError}
-          </p>
+          <div className="mb-4">
+            <ListingStudioMessage tone="danger">{savingError}</ListingStudioMessage>
+          </div>
         )}
 
         <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
           <div className="space-y-4">
-            <section className="rounded-2xl bg-card p-4 hairline shadow-soft">
-              <h3 className="mb-3 text-sm font-extrabold">
-                {text("تفاصيل الإعلان", "Listing details")}
-              </h3>
+            <ListingStudioSection title={text("ماذا تبيع؟", "What are you selling?")}>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Field label={text("عنوان الإعلان", "Listing title")}>
                   <input
@@ -537,10 +556,9 @@ function ManageListingPage() {
                   </select>
                 </Field>
               </div>
-            </section>
+            </ListingStudioSection>
 
-            <section className="rounded-2xl bg-card p-4 hairline shadow-soft">
-              <h3 className="mb-3 text-sm font-extrabold">{text("الموقع", "Location")}</h3>
+            <ListingStudioSection title={text("القسم والموقع", "Category and location")}>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Field label={text("القسم", "Category")}>
                   <select
@@ -612,12 +630,9 @@ function ManageListingPage() {
                   </select>
                 </Field>
               </div>
-            </section>
+            </ListingStudioSection>
 
-            <section className="rounded-2xl bg-card p-4 hairline shadow-soft">
-              <h3 className="mb-3 text-sm font-extrabold">
-                {text("طريقة التواصل", "Contact method")}
-              </h3>
+            <ListingStudioSection title={text("التواصل", "Contact")}>
               <Field label={text("اسم التواصل", "Contact name")}>
                 <input
                   value={contactName}
@@ -686,15 +701,15 @@ function ManageListingPage() {
                   </label>
                 ))}
               </div>
-            </section>
+            </ListingStudioSection>
 
-            <section className="rounded-2xl bg-card p-4 hairline shadow-soft">
-              <h3 className="mb-3 text-sm font-extrabold">
-                {text("صور الإعلان", "Listing photos")}
-              </h3>
+            <ListingStudioSection title={text("الصور والتفاصيل", "Photos and details")}>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {images.map((image) => (
-                  <div key={image.id} className="relative rounded-xl bg-muted-surface p-1">
+                {images.map((image, index) => (
+                  <div
+                    key={image.id}
+                    className="relative overflow-hidden rounded-xl bg-muted-surface p-1"
+                  >
                     {image.publicUrl ? (
                       <img
                         src={image.publicUrl}
@@ -706,12 +721,18 @@ function ManageListingPage() {
                     ) : (
                       <div className="aspect-[4/3] w-full rounded-lg bg-card" />
                     )}
+                    {index === 0 && (
+                      <span className="absolute start-2 top-2 rounded-md bg-gold px-2 py-0.5 text-[10px] font-bold text-gold-foreground">
+                        {text("الصورة الرئيسية", "Primary")}
+                      </span>
+                    )}
                     {isEditable && (
                       <button
                         type="button"
-                        disabled={imagesLoading}
+                        disabled={imagesLoading || uploading}
                         onClick={() => handleDeleteImage(image)}
                         className="absolute top-1 end-1 grid h-7 w-7 place-items-center rounded-full bg-destructive/90 text-destructive-foreground transition hover:bg-destructive"
+                        aria-label={text("حذف الصورة", "Delete photo")}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -722,13 +743,15 @@ function ManageListingPage() {
                   <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl bg-muted-surface p-4 text-center text-muted-foreground">
                     <Camera className="h-6 w-6" />
                     <span className="mt-1 text-[10px] font-bold">
-                      {text("إضافة صورة", "Add photo")}
+                      {text("إضافة صور", "Add photos")}
                     </span>
                     <span className="text-[9px]">
                       {text("JPG · PNG · WebP · 5MB", "JPG · PNG · WebP · 5MB")}
                     </span>
                     <input
                       type="file"
+                      multiple
+                      disabled={uploading || imagesLoading}
                       accept="image/jpeg,image/png,image/webp"
                       className="sr-only"
                       onChange={(e) =>
@@ -740,24 +763,48 @@ function ManageListingPage() {
               </div>
               {selectedImages.length > 0 && (
                 <div className="mt-3">
-                  <p className="text-[11px] font-semibold">
-                    {text("صور مختارة", "Selected photos")} ({selectedImages.length})
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {selectedImages.map((file, index) => (
-                      <div
-                        key={`${file.name}-${file.size}-${index}`}
-                        className="rounded-lg bg-card p-2 text-[10px]"
-                      >
-                        <p className="truncate font-bold">{file.name}</p>
-                        <p className="text-muted-foreground">
-                          {(file.size / 1024 / 1024).toFixed(1)} MB
-                        </p>
-                      </div>
-                    ))}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-[11px] font-semibold">
+                      {text("صور مختارة", "Selected photos")} ({selectedImages.length})
+                    </p>
                     <button
                       type="button"
                       disabled={uploading}
+                      onClick={() => setSelectedImages([])}
+                      className="rounded-lg bg-card px-3 py-1.5 text-[10px] font-bold text-muted-foreground hairline disabled:opacity-50"
+                    >
+                      {text("تفريغ الاختيار", "Clear selection")}
+                    </button>
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {selectedImagePreviews.map((preview, index) => (
+                      <div
+                        key={preview.id}
+                        className="overflow-hidden rounded-xl bg-card text-[10px] hairline"
+                      >
+                        <img
+                          src={preview.url}
+                          alt={preview.file.name}
+                          className="aspect-[4/3] w-full object-cover"
+                        />
+                        <div className="p-2">
+                          <p className="truncate font-bold">{preview.file.name}</p>
+                          <p className="text-muted-foreground">
+                            {(preview.file.size / 1024 / 1024).toFixed(1)} MB
+                          </p>
+                          {index === 0 && (
+                            <p className="mt-1 font-bold text-gold">
+                              {text("ستظهر أولاً بعد الرفع", "Will appear first after upload")}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      type="button"
+                      disabled={uploading || imagesLoading}
                       onClick={handleUploadImages}
                       className="rounded-lg bg-primary px-3 py-2 text-[10px] font-bold text-primary-foreground disabled:opacity-50"
                     >
@@ -768,13 +815,16 @@ function ManageListingPage() {
                   </div>
                 </div>
               )}
-              {uploadError && <p className="mt-2 text-[10px] text-destructive">{uploadError}</p>}
-            </section>
+              {uploadError && (
+                <div className="mt-2">
+                  <ListingStudioMessage tone="danger">{uploadError}</ListingStudioMessage>
+                </div>
+              )}
+            </ListingStudioSection>
           </div>
 
           <aside className="space-y-3">
-            <section className="rounded-2xl bg-card p-4 hairline shadow-soft">
-              <h3 className="mb-2 text-sm font-extrabold">{text("إجراءات", "Actions")}</h3>
+            <ListingStudioSection title={text("إجراءات", "Actions")}>
               <div className="space-y-2">
                 {isEditable && (
                   <button
@@ -821,9 +871,8 @@ function ManageListingPage() {
                   </p>
                 )}
               </div>
-            </section>
-            <section className="rounded-2xl bg-card p-4 hairline">
-              <h3 className="mb-2 text-sm font-extrabold">{text("معلومات", "Info")}</h3>
+            </ListingStudioSection>
+            <ListingStudioSection title={text("معلومات", "Info")}>
               <dl className="space-y-1.5 text-[11px]">
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">{text("رقم الإعلان", "Listing ID")}</dt>
@@ -852,7 +901,7 @@ function ManageListingPage() {
                   </dd>
                 </div>
               </dl>
-            </section>
+            </ListingStudioSection>
           </aside>
         </div>
       </main>
