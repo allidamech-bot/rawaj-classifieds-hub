@@ -20,14 +20,20 @@ interface Props {
   type: PlaceholderType;
   label?: string;
   className?: string;
-  aspect?: "square" | "wide" | "tall";
+  aspect?: "square" | "standard" | "wide" | "tall";
 }
 
 // Symbolic SVG placeholders per category – no emoji, no broken images.
 export function PlaceholderArt({ type, label, className = "", aspect = "wide" }: Props) {
   const c = palette[type];
   const ratio =
-    aspect === "square" ? "aspect-square" : aspect === "tall" ? "aspect-[4/5]" : "aspect-[16/10]";
+    aspect === "square"
+      ? "aspect-square"
+      : aspect === "standard"
+        ? "aspect-[4/3]"
+        : aspect === "tall"
+          ? "aspect-[4/5]"
+          : "aspect-[16/10]";
 
   return (
     <div

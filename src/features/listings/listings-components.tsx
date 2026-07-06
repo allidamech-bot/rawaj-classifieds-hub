@@ -294,7 +294,7 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
     <Link
       to="/listings/$id"
       params={{ id: listing.id }}
-      className="group block overflow-hidden rounded-2xl bg-card hairline shadow-soft tap-card"
+      className="group block overflow-hidden rounded-xl bg-card hairline shadow-soft tap-card"
     >
       <div className="relative">
         {listing.primaryImageUrl ? (
@@ -303,44 +303,43 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
             alt={listing.title}
             loading="lazy"
             decoding="async"
-            className="aspect-[16/9] w-full object-cover"
+            className="aspect-[4/3] w-full object-cover"
           />
         ) : (
-          <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
+          <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="standard" />
         )}
-        <div className="absolute top-2 start-2 flex flex-wrap gap-1">
+        <div className="absolute top-1.5 start-1.5 flex flex-wrap gap-1">
           {listing.isFeatured && (
-            <span className="rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">
+            <span className="rounded-md bg-gold px-1.5 py-0.5 text-[10px] font-bold text-gold-foreground">
               {text("مميز", "Featured")}
             </span>
           )}
-          <span className="rounded-md bg-muted-surface/95 px-2 py-0.5 text-[11px] font-semibold text-foreground">
-            {text("إعلان مُراجع", "Reviewed listing")}
-          </span>
         </div>
-        <span className="absolute bottom-2 end-2 rounded-md bg-primary/85 px-2 py-0.5 text-[11px] font-medium text-primary-foreground">
+        <span className="absolute bottom-1.5 end-1.5 max-w-[80%] truncate rounded-md bg-primary/85 px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
           {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
         </span>
       </div>
-      <div className="space-y-1.5 p-3">
-        <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-foreground">
+      <div className="space-y-1 p-2.5">
+        <div className="text-[15px] font-extrabold leading-tight text-primary">
+          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
+        </div>
+        <h3 className="line-clamp-2 min-h-[2.35rem] text-[13px] font-bold leading-snug text-foreground">
           {listing.title}
         </h3>
-        <div className="text-lg font-extrabold text-foreground">
-          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language)}
-        </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <MapPin className="h-3 w-3" />{" "}
-            {governorateName(
-              listing.governorateId,
-              listing.governorateNameAr ?? undefined,
-              language,
-            )}
-            {listing.districtAr ? ` · ${listing.districtAr}` : ""}
+        <div className="flex flex-col gap-0.5 text-[11px] leading-5 text-muted-foreground">
+          <span className="inline-flex min-w-0 items-center gap-1">
+            <MapPin className="h-3 w-3 shrink-0" />
+            <span className="truncate">
+              {governorateName(
+                listing.governorateId,
+                listing.governorateNameAr ?? undefined,
+                language,
+              )}
+              {listing.districtAr ? ` · ${listing.districtAr}` : ""}
+            </span>
           </span>
           <span className="inline-flex items-center gap-1">
-            <Clock className="h-3 w-3" /> {formatDate(listing.createdAt, language)}
+            <Clock className="h-3 w-3 shrink-0" /> {formatDate(listing.createdAt, language)}
           </span>
         </div>
       </div>
