@@ -785,6 +785,8 @@ function ManageListingPage() {
                         <img
                           src={preview.url}
                           alt={preview.file.name}
+                          loading="lazy"
+                          decoding="async"
                           className="aspect-[4/3] w-full object-cover"
                         />
                         <div className="p-2">

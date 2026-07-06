@@ -168,11 +168,15 @@ function SellerHeader({ seller }: { seller: PublicSellerProfile }) {
             <img
               src={seller.coverUrl}
               alt=""
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 h-full w-full object-cover opacity-25 blur-md"
             />
             <img
               src={seller.coverUrl}
               alt=""
+              loading="lazy"
+              decoding="async"
               className="relative z-10 h-full w-full object-contain"
             />
           </>
@@ -184,6 +188,8 @@ function SellerHeader({ seller }: { seller: PublicSellerProfile }) {
             <img
               src={seller.avatarUrl}
               alt={seller.displayName}
+              loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover"
             />
           ) : (

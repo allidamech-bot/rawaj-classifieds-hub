@@ -251,7 +251,7 @@ function ChatsPage() {
           </p>
         </section>
 
-        <div className="grid min-h-[560px] grid-cols-1 gap-3 lg:grid-cols-[320px_1fr]">
+        <div className="grid min-h-[60dvh] grid-cols-1 gap-3 lg:min-h-[560px] lg:grid-cols-[320px_1fr]">
           <aside className="rounded-2xl bg-card p-3 hairline">
             <h2 className="mb-3 flex items-center gap-2 text-sm font-extrabold">
               <MessageCircle className="h-4 w-4 text-primary" />
@@ -316,7 +316,7 @@ function ChatsPage() {
             )}
           </aside>
 
-          <section className="flex min-h-[560px] flex-col rounded-2xl bg-card hairline">
+          <section className="flex min-h-[60dvh] flex-col rounded-2xl bg-card hairline lg:min-h-[560px]">
             {!selectedConversation ? (
               <div className="grid flex-1 place-items-center p-6 text-center">
                 <PanelText>{text("اختر محادثة لعرض الرسائل.", "Choose a conversation.")}</PanelText>
@@ -456,7 +456,17 @@ function ChatsPage() {
 function Avatar({ name, url }: { name: string; url: string | null }) {
   return (
     <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-card text-sm font-bold text-primary hairline">
-      {url ? <img src={url} alt={name} className="h-full w-full object-cover" /> : name.slice(0, 1)}
+      {url ? (
+        <img
+          src={url}
+          alt={name}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        name.slice(0, 1)
+      )}
     </span>
   );
 }

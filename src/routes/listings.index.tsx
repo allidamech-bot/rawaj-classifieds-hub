@@ -1361,7 +1361,7 @@ function ListingsPage() {
           />
         ) : (
           <>
-            <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="listing-card-grid mt-3">
               {items.map((listing) => (
                 <RealListingCard key={listing.id} listing={listing} />
               ))}

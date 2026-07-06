@@ -230,9 +230,17 @@ function StoreHeader({
             <img
               src={coverUrl}
               alt=""
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 h-full w-full object-cover opacity-25 blur-md"
             />
-            <img src={coverUrl} alt="" className="relative z-10 h-full w-full object-contain" />
+            <img
+              src={coverUrl}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="relative z-10 h-full w-full object-contain"
+            />
           </>
         )}
       </div>
@@ -240,7 +248,13 @@ function StoreHeader({
         <div className="flex flex-wrap items-end gap-3">
           <span className="relative z-20 grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-muted-surface text-xl font-extrabold text-primary ring-4 ring-card">
             {avatarUrl ? (
-              <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
+              <img
+                src={avatarUrl}
+                alt={displayName}
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover"
+              />
             ) : (
               displayName.slice(0, 1)
             )}

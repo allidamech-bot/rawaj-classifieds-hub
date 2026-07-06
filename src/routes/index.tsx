@@ -203,7 +203,7 @@ function ListingsSection({
       {listings.length === 0 ? (
         <HomeState title={empty} compact />
       ) : (
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="listing-card-grid">
           {listings.map((listing) => (
             <RealListingCard key={listing.id} listing={listing} />
           ))}

@@ -288,13 +288,15 @@ function ListingDetailsPage() {
         title={categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
         to="/listings"
       />
-      <main className="container-wide mobile-page-bottom pt-3">
+      <main className="container-wide listing-detail-mobile-bottom pt-3">
         <div className="overflow-hidden rounded-2xl bg-card hairline shadow-soft">
           {images[0]?.publicUrl ? (
-            <div className="relative aspect-[4/3] w-full overflow-hidden sm:aspect-auto sm:h-auto sm:max-h-[540px] bg-muted-surface flex items-center justify-center">
+            <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-muted-surface sm:aspect-auto sm:h-auto sm:max-h-[540px]">
               <img
                 src={images[0].publicUrl}
                 alt={images[0].altAr ?? listing.title}
+                decoding="async"
+                fetchPriority="high"
                 className="h-full w-full object-cover sm:h-auto sm:max-h-[540px] sm:w-auto sm:max-w-full sm:object-contain"
               />
             </div>
@@ -590,7 +592,7 @@ function ListingDetailsPage() {
         <p className="mt-3 text-center text-[10px] text-muted-foreground">
           {text("رقم مرجعي:", "Reference:")} {listing.id}
         </p>
-        <div className="fixed inset-x-0 bottom-20 z-30 px-3 lg:hidden">
+        <div className="fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 px-3 lg:hidden">
           <div className="mx-auto grid max-w-md grid-cols-3 gap-2 rounded-2xl bg-card p-2 shadow-premium hairline">
             <button
               type="button"

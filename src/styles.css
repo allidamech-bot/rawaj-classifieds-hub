@@ -229,9 +229,33 @@
     padding-bottom: calc(7rem + env(safe-area-inset-bottom));
   }
 
+  .listing-detail-mobile-bottom {
+    padding-bottom: calc(14rem + env(safe-area-inset-bottom));
+  }
+
+  .listing-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(9.5rem, 100%), 1fr));
+    gap: 0.625rem;
+  }
+
   @media (min-width: 1024px) {
     .mobile-page-bottom {
       padding-bottom: 2rem;
+    }
+
+    .listing-detail-mobile-bottom {
+      padding-bottom: 2rem;
+    }
+
+    .listing-card-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .listing-card-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 
