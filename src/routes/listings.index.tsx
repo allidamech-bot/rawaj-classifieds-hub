@@ -1,36 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { z } from "zod";
-import { ArrowUpDown, Clock, Filter, MapPin, Search, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowUpDown, Filter, Search, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { PlaceholderArt } from "@/components/PlaceholderArt";
-import {
-  carMakeOptions,
-  detectCategoryFieldKind,
-  type CategoryFieldKind,
-} from "@/lib/category-fields";
-import {
-  fetchPublicCategories,
-  fetchPublicGovernorates,
-  fetchPublicListings,
-  fetchPublicSubcategories,
-  fetchPublicTaxonomyNodes,
-  decodeListingCursor,
-  encodeListingCursor,
-  searchPublicSellers,
-} from "@/lib/classifieds-api";
-import type {
-  ClassifiedCategory,
-  ClassifiedGovernorate,
-  ClassifiedListing,
-  ClassifiedSubcategory,
-  ClassifiedsError,
-  ListingCursor,
-  PaginatedListingsResponse,
-  PublicSellerSearchResult,
-  TaxonomyNode,
-} from "@/lib/classifieds-types";
-import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import { detectCategoryFieldKind, type CategoryFieldKind } from "@/lib/category-fields";
+import { categoryName, governorateName } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import {
   buildTaxonomyIndex,
@@ -41,35 +14,29 @@ import {
   taxonomyPathLabel,
 } from "@/lib/taxonomy";
 import { useUiPreferences } from "@/lib/ui-preferences";
-import { parseBooleanParam } from "@/lib/boolean-parser";
-
-const searchSchema = z.object({
-  taxonomy: z.string().optional(),
-  category: z.string().optional(),
-  subcategory: z.string().optional(),
-  gov: z.string().optional(),
-  district: z.string().optional(),
-  price_min: z.coerce.number().nonnegative().optional(),
-  price_max: z.coerce.number().nonnegative().optional(),
-  car_make: z.string().optional(),
-  car_model: z.string().optional(),
-  fuel: z.string().optional(),
-  transmission: z.string().optional(),
-  property_purpose: z.string().optional(),
-  property_type: z.string().optional(),
-  rooms: z.coerce.number().nonnegative().optional(),
-  rental_duration: z.string().optional(),
-  electronics_brand: z.string().optional(),
-  detail_condition: z.string().optional(),
-  employment_type: z.string().optional(),
-  salary_type: z.string().optional(),
-  q: z.string().optional(),
-  sort: z.enum(["latest", "cheapest", "expensive", "featured"]).optional(),
-  open_filters: z.preprocess(parseBooleanParam, z.boolean().optional()),
-});
+import {
+  listingsSearchSchema,
+  type ListingsSort,
+} from "@/features/listings/listings-search-schema";
+import {
+  buildListingsMobileApplySearch,
+  buildListingsResetSearch,
+  buildListingsSyncSearch,
+} from "@/features/listings/listings-filters";
+import { useListingsReferences } from "@/features/listings/use-listings-references";
+import { useListingsResults } from "@/features/listings/use-listings-results";
+import { useListingsPagination } from "@/features/listings/use-listings-pagination";
+import {
+  CategorySpecificFilterFields,
+  GovernorateChip,
+  RealListingCard,
+  SellerSearchCard,
+  StateCard,
+  subcategoryName,
+} from "@/features/listings/listings-components";
 
 export const Route = createFileRoute("/listings/")({
-  validateSearch: searchSchema,
+  validateSearch: listingsSearchSchema,
   head: () =>
     createSeo({
       title: "تصفح الإعلانات المعتمدة | RAWAJ / رواج",
@@ -84,10 +51,7 @@ function ListingsPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const { language, text } = useUiPreferences();
-  const [sort, setSort] = useState<"latest" | "cheapest" | "expensive" | "featured">(
-    search.sort ?? "latest",
-  );
-  const [govId, setGovId] = useState("");
+  const [sort, setSort] = useState<ListingsSort>(search.sort ?? "latest");
   const [subcategoryId, setSubcategoryId] = useState(search.subcategory ?? "");
   const [districtAr, setDistrictAr] = useState(search.district ?? "");
   const [priceMin, setPriceMin] = useState(search.price_min?.toString() ?? "");
@@ -110,21 +74,19 @@ function ListingsPage() {
   const [open, setOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(Boolean(search.open_filters));
   const [sortOpen, setSortOpen] = useState(false);
-  const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
-  const [subcategories, setSubcategories] = useState<ClassifiedSubcategory[]>([]);
-  const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
-  const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>([]);
-  const [taxonomyAvailable, setTaxonomyAvailable] = useState(false);
-  const [referencesLoaded, setReferencesLoaded] = useState(false);
-  const [items, setItems] = useState<ClassifiedListing[]>([]);
-  const [sellerResults, setSellerResults] = useState<PublicSellerSearchResult[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<ClassifiedsError | null>(null);
-  const [sellerSearchError, setSellerSearchError] = useState<ClassifiedsError | null>(null);
-  const [nextCursor, setNextCursor] = useState<ListingCursor | null>(null);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const filterVersionRef = useRef(0);
-  const loadingMoreRef = useRef(false);
+
+  const references = useListingsReferences(search);
+  const {
+    categories,
+    subcategories,
+    governorates,
+    taxonomyNodes,
+    taxonomyAvailable,
+    referencesLoaded,
+    setGovId,
+    loading,
+  } = references;
+  const govId = references.govId;
 
   const taxonomyIndex = useMemo(() => buildTaxonomyIndex(taxonomyNodes), [taxonomyNodes]);
   const selectedTaxonomyNode = findTaxonomyNode(taxonomyIndex, search.taxonomy);
@@ -289,36 +251,34 @@ function ListingsPage() {
 
     void navigate({
       to: "/listings",
-      search: {
-        taxonomy: selectedTaxonomyNode?.id,
-        category: selectedCategory?.id,
-        subcategory:
-          !taxonomyListingSearch?.taxonomyLegacySubcategoryId && !subcategoryId
-            ? undefined
-            : subcategoryId || undefined,
-        gov: govId || undefined,
-        district: districtAr || undefined,
-        price_min: parsedPriceMin,
-        price_max: parsedPriceMax,
-        car_make: carMake || undefined,
-        car_model: carModel || undefined,
-        fuel: fuelType || undefined,
-        transmission: transmission || undefined,
-        property_purpose: taxonomyOwnsPropertyPurpose
-          ? taxonomyListingSearch?.property_purpose
-          : propertyPurpose || undefined,
-        property_type: taxonomyOwnsPropertyType
-          ? taxonomyListingSearch?.property_type
-          : propertyType || undefined,
-        rooms: rooms.trim() ? Number(rooms) : undefined,
-        rental_duration: rentalDuration || undefined,
-        electronics_brand: electronicsBrand || undefined,
-        detail_condition: detailCondition || undefined,
-        employment_type: employmentType || undefined,
-        salary_type: salaryType || undefined,
-        q: debouncedQ || undefined,
-        sort: sort === "latest" ? undefined : sort,
-      },
+      search: buildListingsSyncSearch({
+        selectedTaxonomyNodeId: selectedTaxonomyNode?.id,
+        selectedCategoryId: selectedCategory?.id,
+        subcategoryId,
+        taxonomyListingSearch,
+        taxonomyOwnsPropertyPurpose,
+        taxonomyOwnsPropertyPurposeValue: taxonomyListingSearch?.property_purpose,
+        propertyPurpose,
+        taxonomyOwnsPropertyType,
+        taxonomyOwnsPropertyTypeValue: taxonomyListingSearch?.property_type,
+        propertyType,
+        govId,
+        districtAr,
+        parsedPriceMin,
+        parsedPriceMax,
+        carMake,
+        carModel,
+        fuelType,
+        transmission,
+        rooms,
+        rentalDuration,
+        electronicsBrand,
+        detailCondition,
+        employmentType,
+        salaryType,
+        debouncedQ,
+        sort,
+      }),
       replace: true,
     });
   }, [
@@ -357,159 +317,14 @@ function ListingsPage() {
     navigate,
   ]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadReferences() {
-      setLoading(true);
-      setError(null);
-
-      const [categoriesResult, subcategoriesResult, governoratesResult, taxonomyResult] =
-        await Promise.all([
-          fetchPublicCategories(),
-          fetchPublicSubcategories(),
-          fetchPublicGovernorates(),
-          fetchPublicTaxonomyNodes(),
-        ]);
-
-      if (cancelled) return;
-
-      if (!categoriesResult.ok) {
-        setError(categoriesResult.error);
-        setLoading(false);
-        return;
-      }
-
-      if (!subcategoriesResult.ok) {
-        setError(subcategoriesResult.error);
-        setLoading(false);
-        return;
-      }
-
-      if (!governoratesResult.ok) {
-        setError(governoratesResult.error);
-        setLoading(false);
-        return;
-      }
-
-      if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
-        setError(taxonomyResult.error);
-        setLoading(false);
-        return;
-      }
-
-      setCategories(categoriesResult.data);
-      setSubcategories(subcategoriesResult.data);
-      setGovernorates(governoratesResult.data);
-      setTaxonomyNodes(taxonomyResult.ok ? taxonomyResult.data : []);
-      setTaxonomyAvailable(taxonomyResult.ok);
-      setReferencesLoaded(true);
-      const initialGov = search.gov
-        ? governoratesResult.data.find((gov) => gov.id === search.gov || gov.slug === search.gov)
-        : undefined;
-      setGovId(initialGov?.id ?? "");
-    }
-
-    void loadReferences();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [search.gov]);
-
-  useEffect(() => {
-    if (!referencesLoaded) return;
-    if (taxonomyAvailable && search.taxonomy && !selectedTaxonomyNode) return;
-    if (hasInvalidCategory) return;
-    if (hasInvalidSubcategory) return;
-    if (hasPriceContradiction) return;
-
-    filterVersionRef.current += 1;
-    const version = filterVersionRef.current;
-    setNextCursor(null);
-    setLoading(true);
-    setError(null);
-    setItems([]);
-
-    let cancelled = false;
-
-    async function loadListings() {
-      const [result, sellerResult] = await Promise.all([
-        fetchPublicListings(
-          {
-            categoryId: selectedCategory?.id,
-            subcategoryId: effectiveSubcategoryId || undefined,
-            taxonomyLegacySubcategoryId: taxonomyListingSearch?.taxonomyLegacySubcategoryId,
-            taxonomyPropertyPurpose: taxonomyOwnsPropertyPurpose
-              ? taxonomyListingSearch?.property_purpose
-              : undefined,
-            taxonomyPropertyType: taxonomyOwnsPropertyType
-              ? taxonomyListingSearch?.property_type
-              : undefined,
-            governorateId: govId || undefined,
-            districtAr: districtAr || undefined,
-            priceMin: Number.isFinite(parsedPriceMin) ? parsedPriceMin : undefined,
-            priceMax: Number.isFinite(parsedPriceMax) ? parsedPriceMax : undefined,
-            carMake: carMake || undefined,
-            carModel: carModel || undefined,
-            fuelType: fuelType || undefined,
-            transmission: transmission || undefined,
-            propertyPurpose: taxonomyOwnsPropertyPurpose ? undefined : propertyPurpose || undefined,
-            propertyType: taxonomyOwnsPropertyType ? undefined : propertyType || undefined,
-            rooms: rooms.trim() ? Number(rooms) : undefined,
-            rentalDuration: rentalDuration || undefined,
-            electronicsBrand: electronicsBrand || undefined,
-            detailCondition: detailCondition || undefined,
-            employmentType: employmentType || undefined,
-            salaryType: salaryType || undefined,
-            query: debouncedQ,
-            sort,
-          },
-          null,
-          30,
-        ),
-        searchPublicSellers(debouncedQ),
-      ]);
-
-      if (cancelled) return;
-      if (version !== filterVersionRef.current) return;
-
-      if (!result.ok) {
-        setError(result.error);
-        setItems([]);
-        setNextCursor(null);
-      } else {
-        setItems(result.data.items);
-        setNextCursor(result.data.nextCursor);
-      }
-
-      if (sellerResult.ok) {
-        setSellerResults(sellerResult.data);
-        setSellerSearchError(null);
-      } else {
-        setSellerResults([]);
-        setSellerSearchError(sellerResult.error);
-      }
-
-      setLoading(false);
-    }
-
-    void loadListings();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    categories.length,
-    governorates.length,
-    taxonomyNodes.length,
-    taxonomyAvailable,
-    search.taxonomy,
-    selectedTaxonomyNode,
-    selectedTaxonomyNode?.id,
-    referencesLoaded,
-    selectedCategory?.id,
+  const results = useListingsResults({
+    selectedCategoryId: selectedCategory?.id,
     effectiveSubcategoryId,
+    taxonomyListingSearch,
+    taxonomyOwnsPropertyPurpose,
+    taxonomyOwnsPropertyType,
+    propertyPurpose,
+    propertyType,
     govId,
     districtAr,
     parsedPriceMin,
@@ -518,13 +333,6 @@ function ListingsPage() {
     carModel,
     fuelType,
     transmission,
-    propertyPurpose,
-    propertyType,
-    taxonomyOwnsPropertyPurpose,
-    taxonomyOwnsPropertyType,
-    taxonomyListingSearch?.taxonomyLegacySubcategoryId,
-    taxonomyListingSearch?.property_purpose,
-    taxonomyListingSearch?.property_type,
     rooms,
     rentalDuration,
     electronicsBrand,
@@ -533,10 +341,25 @@ function ListingsPage() {
     salaryType,
     debouncedQ,
     sort,
+    referencesLoaded,
+    taxonomyAvailable,
+    selectedTaxonomyNode,
+    searchTaxonomy: search.taxonomy,
     hasInvalidCategory,
     hasInvalidSubcategory,
     hasPriceContradiction,
-  ]);
+  });
+  const {
+    items,
+    sellerResults,
+    error,
+    sellerSearchError,
+    nextCursor,
+    filterVersionRef,
+    setItems,
+    setNextCursor,
+    setError,
+  } = results;
 
   const taxonomyTitle = selectedTaxonomyNode
     ? taxonomyNodeName(selectedTaxonomyNode, language)
@@ -694,44 +517,6 @@ function ListingsPage() {
   ].filter(Boolean) as Array<{ key: string; label: string; clear: () => void }>;
   const activeFilterCount = activeFilters.length;
 
-  function resetFilters() {
-    setGovId("");
-    setDistrictAr("");
-    setPriceMin("");
-    setPriceMax("");
-    setCarMake("");
-    setCarModel("");
-    setFuelType("");
-    setTransmission("");
-    setRooms("");
-    setRentalDuration("");
-    setElectronicsBrand("");
-    setDetailCondition("");
-    setEmploymentType("");
-    setSalaryType("");
-    setQ("");
-    setSortOpen(false);
-    setFiltersOpen(false);
-    setDraftCategoryId(undefined);
-    const taxonomyPurposeVal = taxonomyListingSearch?.property_purpose;
-    const taxonomyTypeVal = taxonomyListingSearch?.property_type;
-    setSubcategoryId(search.taxonomy ? "" : (search.subcategory ?? ""));
-    setPropertyPurpose(taxonomyPurposeVal ?? "");
-    setPropertyType(taxonomyTypeVal ?? "");
-    void navigate({
-      to: "/listings",
-      search: {
-        taxonomy: selectedTaxonomyNode?.id,
-        category: search.taxonomy ? search.category : undefined,
-        subcategory: search.taxonomy ? undefined : search.subcategory,
-        property_purpose: taxonomyPurposeVal,
-        property_type: taxonomyTypeVal,
-        sort: sort === "latest" ? undefined : sort,
-      },
-      replace: true,
-    });
-  }
-
   const draftSelectedCategory = draftCategoryId
     ? categories.find(
         (category) => category.id === draftCategoryId || category.slug === draftCategoryId,
@@ -745,6 +530,39 @@ function ListingsPage() {
     [draftSelectedCategory, subcategories],
   );
   const draftCategoryFieldKind = detectCategoryFieldKind(draftSelectedCategory);
+
+  const pagination = useListingsPagination({
+    selectedCategoryId: selectedCategory?.id,
+    effectiveSubcategoryId,
+    taxonomyListingSearch,
+    taxonomyOwnsPropertyPurpose,
+    taxonomyOwnsPropertyType,
+    propertyPurpose,
+    propertyType,
+    govId,
+    districtAr,
+    parsedPriceMin,
+    parsedPriceMax,
+    carMake,
+    carModel,
+    fuelType,
+    transmission,
+    rooms,
+    rentalDuration,
+    electronicsBrand,
+    detailCondition,
+    employmentType,
+    salaryType,
+    debouncedQ,
+    sort,
+    nextCursor,
+    hasPriceContradiction,
+    filterVersionRef,
+    onItems: (next) => setItems((prev) => [...prev, ...next]),
+    onCursor: (cursor) => setNextCursor(cursor),
+    onError: (err) => setError(err),
+  });
+  const { loadingMore, loadMore } = pagination;
 
   const prevDraftFieldKindRef = useRef<CategoryFieldKind | undefined>(undefined);
   useEffect(() => {
@@ -775,139 +593,76 @@ function ListingsPage() {
     }
   }, [draftCategoryFieldKind]);
 
-  const applyFilters = () => {
+  function resetFilters() {
+    setGovId("");
+    setDistrictAr("");
+    setPriceMin("");
+    setPriceMax("");
+    setCarMake("");
+    setCarModel("");
+    setFuelType("");
+    setTransmission("");
+    setRooms("");
+    setRentalDuration("");
+    setElectronicsBrand("");
+    setDetailCondition("");
+    setEmploymentType("");
+    setSalaryType("");
+    setQ("");
+    setSortOpen(false);
     setFiltersOpen(false);
-    const isTaxonomy = Boolean(search.taxonomy);
-    const fieldKind = draftCategoryFieldKind;
+    setDraftCategoryId(undefined);
+    const taxonomyPurposeVal = taxonomyListingSearch?.property_purpose;
+    const taxonomyTypeVal = taxonomyListingSearch?.property_type;
+    setSubcategoryId(search.taxonomy ? "" : (search.subcategory ?? ""));
+    setPropertyPurpose(taxonomyPurposeVal ?? "");
+    setPropertyType(taxonomyTypeVal ?? "");
     void navigate({
       to: "/listings",
-      search: {
-        taxonomy: search.taxonomy,
-        category: isTaxonomy ? undefined : draftCategoryId || undefined,
-        subcategory: isTaxonomy ? undefined : subcategoryId || undefined,
-        gov: govId || undefined,
-        district: districtAr || undefined,
-        price_min: parsedPriceMin,
-        price_max: parsedPriceMax,
-        car_make: !isTaxonomy && fieldKind === "vehicles" ? carMake || undefined : undefined,
-        car_model: !isTaxonomy && fieldKind === "vehicles" ? carModel || undefined : undefined,
-        fuel: !isTaxonomy && fieldKind === "vehicles" ? fuelType || undefined : undefined,
-        transmission:
-          !isTaxonomy && fieldKind === "vehicles" ? transmission || undefined : undefined,
-        property_purpose:
-          !isTaxonomy && fieldKind === "real_estate" ? propertyPurpose || undefined : undefined,
-        property_type:
-          !isTaxonomy && fieldKind === "real_estate" ? propertyType || undefined : undefined,
-        rooms:
-          !isTaxonomy && fieldKind === "real_estate"
-            ? rooms.trim()
-              ? Number(rooms)
-              : undefined
-            : undefined,
-        rental_duration:
-          !isTaxonomy && fieldKind === "real_estate" ? rentalDuration || undefined : undefined,
-        electronics_brand:
-          !isTaxonomy && fieldKind === "electronics" ? electronicsBrand || undefined : undefined,
-        detail_condition:
-          !isTaxonomy && fieldKind === "electronics" ? detailCondition || undefined : undefined,
-        employment_type:
-          !isTaxonomy && fieldKind === "jobs" ? employmentType || undefined : undefined,
-        salary_type: !isTaxonomy && fieldKind === "jobs" ? salaryType || undefined : undefined,
-        q: debouncedQ || undefined,
-        sort: sort === "latest" ? undefined : sort,
-      },
+      search: buildListingsResetSearch({
+        selectedTaxonomyNodeId: selectedTaxonomyNode?.id,
+        searchTaxonomy: search.taxonomy,
+        searchCategory: search.category,
+        searchSubcategory: search.subcategory,
+        taxonomyPropertyPurpose: taxonomyPurposeVal,
+        taxonomyPropertyType: taxonomyTypeVal,
+        sort,
+      }),
+      replace: true,
+    });
+  }
+
+  const applyFilters = () => {
+    setFiltersOpen(false);
+    void navigate({
+      to: "/listings",
+      search: buildListingsMobileApplySearch({
+        searchTaxonomy: search.taxonomy,
+        draftCategoryId,
+        subcategoryId,
+        govId,
+        districtAr,
+        parsedPriceMin,
+        parsedPriceMax,
+        carMake,
+        carModel,
+        fuelType,
+        transmission,
+        fieldKind: draftCategoryFieldKind,
+        propertyPurpose,
+        propertyType,
+        rooms,
+        rentalDuration,
+        electronicsBrand,
+        detailCondition,
+        employmentType,
+        salaryType,
+        debouncedQ,
+        sort,
+      }),
       replace: true,
     });
   };
-
-  const loadMore = useCallback(async () => {
-    if (!nextCursor || loadingMoreRef.current) return;
-    if (hasPriceContradiction) return;
-    loadingMoreRef.current = true;
-    setLoadingMore(true);
-
-    const activeVersion = filterVersionRef.current;
-
-    const result = await fetchPublicListings(
-      {
-        categoryId: selectedCategory?.id,
-        subcategoryId: effectiveSubcategoryId || undefined,
-        taxonomyLegacySubcategoryId: taxonomyListingSearch?.taxonomyLegacySubcategoryId,
-        taxonomyPropertyPurpose: taxonomyOwnsPropertyPurpose
-          ? taxonomyListingSearch?.property_purpose
-          : undefined,
-        taxonomyPropertyType: taxonomyOwnsPropertyType
-          ? taxonomyListingSearch?.property_type
-          : undefined,
-        governorateId: govId || undefined,
-        districtAr: districtAr || undefined,
-        priceMin: Number.isFinite(parsedPriceMin) ? parsedPriceMin : undefined,
-        priceMax: Number.isFinite(parsedPriceMax) ? parsedPriceMax : undefined,
-        carMake: carMake || undefined,
-        carModel: carModel || undefined,
-        fuelType: fuelType || undefined,
-        transmission: transmission || undefined,
-        propertyPurpose: taxonomyOwnsPropertyPurpose ? undefined : propertyPurpose || undefined,
-        propertyType: taxonomyOwnsPropertyType ? undefined : propertyType || undefined,
-        rooms: rooms.trim() ? Number(rooms) : undefined,
-        rentalDuration: rentalDuration || undefined,
-        electronicsBrand: electronicsBrand || undefined,
-        detailCondition: detailCondition || undefined,
-        employmentType: employmentType || undefined,
-        salaryType: salaryType || undefined,
-        query: debouncedQ,
-        sort,
-      },
-      nextCursor,
-      30,
-    );
-
-    if (activeVersion !== filterVersionRef.current) {
-      loadingMoreRef.current = false;
-      setLoadingMore(false);
-      return;
-    }
-
-    if (!result.ok) {
-      setError(result.error);
-      loadingMoreRef.current = false;
-      setLoadingMore(false);
-      return;
-    }
-
-    setItems((prev) => [...prev, ...result.data.items]);
-    setNextCursor(result.data.nextCursor);
-    loadingMoreRef.current = false;
-    setLoadingMore(false);
-  }, [
-    nextCursor,
-    selectedCategory?.id,
-    effectiveSubcategoryId,
-    taxonomyListingSearch?.taxonomyLegacySubcategoryId,
-    taxonomyOwnsPropertyPurpose,
-    taxonomyListingSearch?.property_purpose,
-    taxonomyOwnsPropertyType,
-    taxonomyListingSearch?.property_type,
-    govId,
-    districtAr,
-    parsedPriceMin,
-    parsedPriceMax,
-    carMake,
-    carModel,
-    fuelType,
-    transmission,
-    propertyPurpose,
-    propertyType,
-    rooms,
-    rentalDuration,
-    electronicsBrand,
-    detailCondition,
-    employmentType,
-    salaryType,
-    debouncedQ,
-    sort,
-    hasPriceContradiction,
-  ]);
 
   return (
     <>
@@ -1625,417 +1380,4 @@ function ListingsPage() {
       </main>
     </>
   );
-}
-
-function CategorySpecificFilterFields({
-  kind,
-  text,
-  values,
-  setters,
-  taxonomyOwnsPurpose,
-  taxonomyOwnsType,
-}: {
-  kind: CategoryFieldKind;
-  text: (ar: string, en: string) => string;
-  values: {
-    carMake: string;
-    carModel: string;
-    fuelType: string;
-    transmission: string;
-    propertyPurpose: string;
-    propertyType: string;
-    rooms: string;
-    rentalDuration: string;
-    electronicsBrand: string;
-    detailCondition: string;
-    employmentType: string;
-    salaryType: string;
-  };
-  setters: {
-    setCarMake: (value: string) => void;
-    setCarModel: (value: string) => void;
-    setFuelType: (value: string) => void;
-    setTransmission: (value: string) => void;
-    setPropertyPurpose: (value: string) => void;
-    setPropertyType: (value: string) => void;
-    setRooms: (value: string) => void;
-    setRentalDuration: (value: string) => void;
-    setElectronicsBrand: (value: string) => void;
-    setDetailCondition: (value: string) => void;
-    setEmploymentType: (value: string) => void;
-    setSalaryType: (value: string) => void;
-  };
-  taxonomyOwnsPurpose?: boolean;
-  taxonomyOwnsType?: boolean;
-}) {
-  if (kind === "vehicles") {
-    return (
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <FilterSelect
-          label={text("الشركة", "Make")}
-          value={values.carMake}
-          onChange={setters.setCarMake}
-        >
-          <option value="">{text("كل الشركات", "All makes")}</option>
-          {carMakeOptions.map((make) => (
-            <option key={make} value={make}>
-              {make === "Other" ? text("أخرى", "Other") : make}
-            </option>
-          ))}
-        </FilterSelect>
-        <FilterInput
-          label={text("الطراز", "Model")}
-          value={values.carModel}
-          onChange={setters.setCarModel}
-        />
-        <FilterSelect
-          label={text("الوقود", "Fuel")}
-          value={values.fuelType}
-          onChange={setters.setFuelType}
-        >
-          <option value="">{text("كل الأنواع", "All fuel types")}</option>
-          <option value="gasoline">{text("بنزين", "Gasoline")}</option>
-          <option value="diesel">{text("ديزل", "Diesel")}</option>
-          <option value="hybrid">{text("هجين", "Hybrid")}</option>
-          <option value="electric">{text("كهرباء", "Electric")}</option>
-          <option value="gas">{text("غاز", "Gas")}</option>
-          <option value="other">{text("أخرى", "Other")}</option>
-        </FilterSelect>
-        <FilterSelect
-          label={text("ناقل الحركة", "Transmission")}
-          value={values.transmission}
-          onChange={setters.setTransmission}
-        >
-          <option value="">{text("كل الأنواع", "All")}</option>
-          <option value="automatic">{text("أوتوماتيك", "Automatic")}</option>
-          <option value="manual">{text("يدوي", "Manual")}</option>
-          <option value="semi_auto">{text("نصف أوتوماتيك", "Semi-auto")}</option>
-        </FilterSelect>
-      </div>
-    );
-  }
-
-  if (kind === "real_estate") {
-    return (
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <FilterSelect
-          label={text("الغرض", "Purpose")}
-          value={values.propertyPurpose}
-          onChange={setters.setPropertyPurpose}
-          disabled={taxonomyOwnsPurpose}
-        >
-          <option value="">{text("بيع أو إيجار", "Sale or rent")}</option>
-          <option value="sale">{text("بيع", "Sale")}</option>
-          <option value="rent">{text("إيجار", "Rent")}</option>
-        </FilterSelect>
-        <FilterSelect
-          label={text("نوع العقار", "Property type")}
-          value={values.propertyType}
-          onChange={setters.setPropertyType}
-          disabled={taxonomyOwnsType}
-        >
-          <option value="">{text("كل الأنواع", "All types")}</option>
-          <option value="apartment">{text("شقة", "Apartment")}</option>
-          <option value="house">{text("منزل", "House")}</option>
-          <option value="villa">{text("فيلا", "Villa")}</option>
-          <option value="land">{text("أرض", "Land")}</option>
-          <option value="shop">{text("محل", "Shop")}</option>
-          <option value="office">{text("مكتب", "Office")}</option>
-          <option value="warehouse">{text("مستودع", "Warehouse")}</option>
-        </FilterSelect>
-        <FilterInput
-          label={text("عدد الغرف", "Rooms")}
-          value={values.rooms}
-          onChange={setters.setRooms}
-          inputMode="numeric"
-        />
-        <FilterSelect
-          label={text("مدة الإيجار", "Rental duration")}
-          value={values.rentalDuration}
-          onChange={setters.setRentalDuration}
-        >
-          <option value="">{text("كل المدد", "All durations")}</option>
-          <option value="daily">{text("يومي", "Daily")}</option>
-          <option value="monthly">{text("شهري", "Monthly")}</option>
-          <option value="yearly">{text("سنوي", "Yearly")}</option>
-          <option value="negotiable">{text("قابل للاتفاق", "Negotiable")}</option>
-        </FilterSelect>
-      </div>
-    );
-  }
-
-  if (kind === "electronics") {
-    return (
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <FilterInput
-          label={text("الشركة", "Brand")}
-          value={values.electronicsBrand}
-          onChange={setters.setElectronicsBrand}
-        />
-        <FilterSelect
-          label={text("الحالة", "Condition")}
-          value={values.detailCondition}
-          onChange={setters.setDetailCondition}
-        >
-          <option value="">{text("كل الحالات", "All conditions")}</option>
-          <option value="new">{text("جديد", "New")}</option>
-          <option value="used">{text("مستعمل", "Used")}</option>
-          <option value="excellent">{text("ممتاز", "Excellent")}</option>
-          <option value="good">{text("جيد", "Good")}</option>
-          <option value="needs_work">{text("يحتاج صيانة", "Needs work")}</option>
-        </FilterSelect>
-      </div>
-    );
-  }
-
-  if (kind === "jobs") {
-    return (
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <FilterSelect
-          label={text("نمط العمل", "Employment type")}
-          value={values.employmentType}
-          onChange={setters.setEmploymentType}
-        >
-          <option value="">{text("كل الأنماط", "All types")}</option>
-          <option value="full_time">{text("دوام كامل", "Full-time")}</option>
-          <option value="part_time">{text("دوام جزئي", "Part-time")}</option>
-          <option value="contract">{text("عقد", "Contract")}</option>
-          <option value="temporary">{text("مؤقت", "Temporary")}</option>
-          <option value="internship">{text("تدريب", "Internship")}</option>
-        </FilterSelect>
-        <FilterSelect
-          label={text("نوع الراتب", "Salary type")}
-          value={values.salaryType}
-          onChange={setters.setSalaryType}
-        >
-          <option value="">{text("كل الأنواع", "All salary types")}</option>
-          <option value="fixed">{text("ثابت", "Fixed")}</option>
-          <option value="range">{text("نطاق", "Range")}</option>
-          <option value="commission">{text("عمولة", "Commission")}</option>
-          <option value="negotiable">{text("قابل للتفاوض", "Negotiable")}</option>
-          <option value="not_listed">{text("غير معلن", "Not listed")}</option>
-        </FilterSelect>
-      </div>
-    );
-  }
-
-  return null;
-}
-
-function FilterInput({
-  label,
-  value,
-  onChange,
-  inputMode,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-[11px] font-bold text-muted-foreground">{label}</span>
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        inputMode={inputMode}
-        className="input text-xs"
-      />
-    </label>
-  );
-}
-
-function FilterSelect({
-  label,
-  value,
-  onChange,
-  children,
-  disabled,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  children: React.ReactNode;
-  disabled?: boolean;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-[11px] font-bold text-muted-foreground">{label}</span>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="input text-xs disabled:opacity-60"
-        disabled={disabled}
-      >
-        {children}
-      </select>
-    </label>
-  );
-}
-
-function GovernorateChip({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-        active
-          ? "bg-primary text-primary-foreground"
-          : "bg-muted-surface text-foreground hover:bg-secondary"
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
-
-function subcategoryName(subcategory: ClassifiedSubcategory, language: "ar" | "en") {
-  return language === "en" ? (subcategory.nameEn ?? subcategory.nameAr) : subcategory.nameAr;
-}
-
-function RealListingCard({ listing }: { listing: ClassifiedListing }) {
-  const { language, text } = useUiPreferences();
-
-  return (
-    <Link
-      to="/listings/$id"
-      params={{ id: listing.id }}
-      className="group block overflow-hidden rounded-2xl bg-card hairline shadow-soft tap-card"
-    >
-      <div className="relative">
-        {listing.primaryImageUrl ? (
-          <img
-            src={listing.primaryImageUrl}
-            alt={listing.title}
-            loading="lazy"
-            decoding="async"
-            className="aspect-[16/9] w-full object-cover"
-          />
-        ) : (
-          <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
-        )}
-        <div className="absolute top-2 start-2 flex flex-wrap gap-1">
-          {listing.isFeatured && (
-            <span className="rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">
-              {text("مميز", "Featured")}
-            </span>
-          )}
-          <span className="rounded-md bg-muted-surface/95 px-2 py-0.5 text-[11px] font-semibold text-foreground">
-            {text("إعلان مُراجع", "Reviewed listing")}
-          </span>
-        </div>
-        <span className="absolute bottom-2 end-2 rounded-md bg-primary/85 px-2 py-0.5 text-[11px] font-medium text-primary-foreground">
-          {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
-        </span>
-      </div>
-      <div className="space-y-1.5 p-3">
-        <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-foreground">
-          {listing.title}
-        </h3>
-        <div className="text-lg font-extrabold text-foreground">
-          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language)}
-        </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <MapPin className="h-3 w-3" />{" "}
-            {governorateName(
-              listing.governorateId,
-              listing.governorateNameAr ?? undefined,
-              language,
-            )}
-            {listing.districtAr ? ` · ${listing.districtAr}` : ""}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-3 w-3" /> {formatDate(listing.createdAt, language)}
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-function SellerSearchCard({ seller }: { seller: PublicSellerSearchResult }) {
-  const { text } = useUiPreferences();
-  const title = seller.businessName || seller.displayName;
-
-  return (
-    <Link
-      to="/seller/$id"
-      params={{ id: seller.id }}
-      className="flex items-center gap-3 rounded-2xl bg-card p-3 hairline tap-card hover:bg-muted-surface"
-    >
-      <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-muted-surface text-sm font-bold text-primary">
-        {seller.avatarUrl ? (
-          <img
-            src={seller.avatarUrl}
-            alt={title}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          title.slice(0, 1)
-        )}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-extrabold">{title}</span>
-        {seller.businessName && seller.displayName !== seller.businessName && (
-          <span className="block truncate text-[11px] text-muted-foreground">
-            {seller.displayName}
-          </span>
-        )}
-        <span className="mt-1 block truncate text-[11px] text-muted-foreground">
-          {[
-            seller.governorate,
-            text(`${seller.approvedListingCount} إعلان`, `${seller.approvedListingCount} listings`),
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </span>
-      </span>
-    </Link>
-  );
-}
-
-function StateCard({
-  title,
-  body,
-  actionLabel,
-  actionTo,
-}: {
-  title: string;
-  body: string;
-  actionLabel?: string;
-  actionTo?: string;
-}) {
-  return (
-    <div className="mt-6 rounded-2xl bg-card p-6 text-center hairline">
-      <p className="text-sm font-semibold text-foreground">{title}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{body}</p>
-      {actionLabel && actionTo && (
-        <Link
-          to={actionTo}
-          className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-        >
-          {actionLabel}
-        </Link>
-      )}
-    </div>
-  );
-}
-
-function formatDate(value: string, language: "ar" | "en") {
-  if (!value) return language === "ar" ? "تاريخ غير محدد" : "Date unavailable";
-  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
-    dateStyle: "medium",
-  }).format(new Date(value));
 }
