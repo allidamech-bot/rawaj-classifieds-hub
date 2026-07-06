@@ -20,8 +20,7 @@ security definer
 set search_path = public
 as $$
 begin
-  -- Promotion moderation is a deliberately narrow internal path. Preserve it
-  -- explicitly and reject any unrelated column mutation in that context.
+  -- Preserve the deliberately narrow internal promotion-moderation path.
   if current_setting('rawaj.promotion_moderation', true) = 'on' then
     if (to_jsonb(new) - array['is_featured', 'featured_until', 'updated_at'])
        is distinct from
@@ -33,10 +32,35 @@ begin
     return new;
   end if;
 
-  -- A listing owner may legitimately edit an unapproved listing through the
-  -- existing owner UPDATE policy, including draft/rejected -> pending_review
-  -- workflow transitions. Moderation/system columns remain immutable to that
-  -- owner path regardless of frontend behavior.
+  -- Privileged moderation-only update. This check intentionally runs before
+  -- ordinary owner self-edit so a privileged actor can moderate a listing they
+  -- also own without being misclassified as a normal owner edit.
+  if public.current_user_can_moderate()
+     and (to_jsonb(new) - array[
+           'status',
+           'reviewed_by',
+           'reviewed_at',
+           'rejection_reason',
+           'published_at',
+           'archived_at',
+           'updated_at'
+         ])
+         is not distinct from
+         (to_jsonb(old) - array[
+           'status',
+           'reviewed_by',
+           'reviewed_at',
+           'rejection_reason',
+           'published_at',
+           'archived_at',
+           'updated_at'
+         ])
+  then
+    return new;
+  end if;
+
+  -- Ordinary owner-edit path. Existing RLS remains authoritative for row
+  -- ownership, editable source states, and allowed destination status.
   if old.owner_id = auth.uid()
      and old.status in ('draft', 'pending_review', 'rejected')
   then
@@ -55,37 +79,13 @@ begin
     return new;
   end if;
 
-  -- All privileged moderation roles, including owner/admin/moderator, are
-  -- constrained to the moderation-safe column set on the moderation path.
+  -- Privileged moderation roles cannot use the broad moderation RLS path to
+  -- rewrite listing content or ownership.
   if public.current_user_can_moderate() then
-    if (to_jsonb(new) - array[
-          'status',
-          'reviewed_by',
-          'reviewed_at',
-          'rejection_reason',
-          'published_at',
-          'archived_at',
-          'updated_at'
-        ])
-       is distinct from
-       (to_jsonb(old) - array[
-          'status',
-          'reviewed_by',
-          'reviewed_at',
-          'rejection_reason',
-          'published_at',
-          'archived_at',
-          'updated_at'
-        ])
-    then
-      raise exception 'Moderators can only change moderation-safe fields on listings.';
-    end if;
-
-    return new;
+    raise exception 'Moderators can only change moderation-safe fields on listings.';
   end if;
 
-  -- No additional privilege is granted by this trigger. Any remaining UPDATE
-  -- attempt still has to satisfy RLS; return NEW so RLS remains the authority.
+  -- No privilege is granted by this trigger; remaining attempts still require RLS.
   return new;
 end;
 $$;
