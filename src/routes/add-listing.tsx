@@ -1476,13 +1476,14 @@ function CategorySpecificFields({
           {text("تفاصيل العقار", "Real estate details")}
         </h4>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field label={text("نوع العقار", "Property type")}>
+          <Field label={text("نوع العقار", "Property type")} error={errors.property_type}>
             <select
               value={values.property_type ?? ""}
               onChange={(event) => patch({ property_type: event.target.value || undefined })}
               className="input"
+              data-first-invalid={Boolean(errors.property_type)}
             >
-              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="">{text("اختر النوع", "Choose type")}</option>
               <option value="apartment">{text("شقة", "Apartment")}</option>
               <option value="house">{text("منزل", "House")}</option>
               <option value="villa">{text("فيلا", "Villa")}</option>
@@ -1493,13 +1494,14 @@ function CategorySpecificFields({
               <option value="other">{text("أخرى", "Other")}</option>
             </select>
           </Field>
-          <Field label={text("الغرض", "Purpose")}>
+          <Field label={text("الغرض", "Purpose")} error={errors.listing_purpose}>
             <select
               value={values.listing_purpose ?? ""}
               onChange={(event) => patch({ listing_purpose: event.target.value || undefined })}
               className="input"
+              data-first-invalid={Boolean(errors.listing_purpose)}
             >
-              <option value="">{text("اختياري", "Optional")}</option>
+              <option value="">{text("اختر الغرض", "Choose purpose")}</option>
               <option value="sale">{text("بيع", "Sale")}</option>
               <option value="rent">{text("إيجار", "Rent")}</option>
             </select>
@@ -1524,6 +1526,7 @@ function CategorySpecificFields({
             onChange={(area_sqm) => patch({ area_sqm })}
             min={1}
             max={100000}
+            error={errors.area_sqm}
           />
           <NumberField
             label={text("الطابق", "Floor")}

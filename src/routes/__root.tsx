@@ -14,7 +14,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AuthProvider } from "@/lib/auth";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
-import { shouldShowSiteFooter } from "@/lib/primary-navigation";
+import { shouldShowSiteFooter, shouldShowBottomNav } from "@/lib/primary-navigation";
 import { createSeo } from "@/lib/seo";
 import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
 import appCss from "../styles.css?url";
@@ -150,13 +150,18 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const showFooter = shouldShowSiteFooter(pathname);
+  const showBottomNav = shouldShowBottomNav(pathname);
 
   return (
     <QueryClientProvider client={queryClient}>
       <UiPreferencesProvider>
         <AuthProvider>
           <HtmlAttributes />
-          <div className="min-h-dvh bg-background pb-24 text-foreground lg:pb-8">
+          <div
+            className={`min-h-dvh bg-background text-foreground lg:pb-8 ${
+              showBottomNav ? "pb-24" : "pb-6"
+            }`}
+          >
             <Outlet />
             {showFooter && <SiteFooter />}
           </div>

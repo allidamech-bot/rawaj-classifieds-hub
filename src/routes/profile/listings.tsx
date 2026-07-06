@@ -4,7 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
-import { deleteOwnerListing, fetchCurrentUserListings, fetchPublicSellerProfile, isOwnerDeletableStatus, OWNER_DELETABLE_STATUSES } from "@/lib/classifieds-api";
+import {
+  deleteOwnerListing,
+  fetchCurrentUserListings,
+  fetchPublicSellerProfile,
+  isOwnerDeletableStatus,
+  OWNER_DELETABLE_STATUSES,
+} from "@/lib/classifieds-api";
 import type {
   ClassifiedListing,
   ClassifiedsError,
@@ -87,7 +93,11 @@ function MyListingsPage() {
   if (auth.status !== "signedIn") {
     return (
       <>
-        <PageHeader title={text("إعلاناتي / متجري", "My listings / store")} to="/profile" backMode="history" />
+        <PageHeader
+          title={text("إعلاناتي / متجري", "My listings / store")}
+          to="/profile"
+          backMode="history"
+        />
         <main className="container-wide mobile-page-bottom pt-4">
           <Panel
             title={text("تسجيل الدخول مطلوب", "Login required")}
@@ -112,7 +122,11 @@ function MyListingsPage() {
 
   return (
     <>
-      <PageHeader title={text("إعلاناتي / متجري", "My listings / store")} to="/profile" backMode="history" />
+      <PageHeader
+        title={text("إعلاناتي / متجري", "My listings / store")}
+        to="/profile"
+        backMode="history"
+      />
       <main className="container-wide mobile-page-bottom space-y-5 pt-4">
         <StoreHeader
           displayName={displayName}
@@ -230,14 +244,12 @@ function StoreHeader({
             <img
               src={coverUrl}
               alt=""
-              loading="lazy"
               decoding="async"
               className="absolute inset-0 h-full w-full object-cover opacity-25 blur-md"
             />
             <img
               src={coverUrl}
               alt=""
-              loading="lazy"
               decoding="async"
               className="relative z-10 h-full w-full object-contain"
             />
@@ -251,7 +263,6 @@ function StoreHeader({
               <img
                 src={avatarUrl}
                 alt={displayName}
-                loading="lazy"
                 decoding="async"
                 className="h-full w-full object-cover"
               />
@@ -365,11 +376,20 @@ function StoreListingCard({
             </span>
           </div>
           <div className="text-base font-extrabold">
-            {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
+            {formatPriceLocalized(
+              listing.price ?? 0,
+              listing.priceType,
+              language,
+              listing.currency,
+            )}
           </div>
           <p className="text-[11px] text-muted-foreground">
             {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)} ·{" "}
-            {governorateName(listing.governorateId, listing.governorateNameAr ?? undefined, language)}
+            {governorateName(
+              listing.governorateId,
+              listing.governorateNameAr ?? undefined,
+              language,
+            )}
           </p>
           {listing.rejectionReason && (
             <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
@@ -407,7 +427,10 @@ function StoreListingCard({
             {canDelete && (
               <button
                 type="button"
-                onClick={() => { setDeleteError(""); setShowDeleteConfirm(true); }}
+                onClick={() => {
+                  setDeleteError("");
+                  setShowDeleteConfirm(true);
+                }}
                 className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-2 py-1 text-[10px] font-bold text-destructive transition hover:bg-destructive/20"
               >
                 <Trash2 className="h-3 w-3" />
@@ -425,7 +448,10 @@ function StoreListingCard({
           aria-labelledby="delete-dialog-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
         >
-          <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-premium hairline" dir="rtl">
+          <div
+            className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-premium hairline"
+            dir="rtl"
+          >
             <h3 id="delete-dialog-title" className="text-base font-extrabold text-foreground">
               حذف الإعلان؟
             </h3>
@@ -449,7 +475,10 @@ function StoreListingCard({
               <button
                 type="button"
                 disabled={deleting}
-                onClick={() => { setShowDeleteConfirm(false); setDeleteError(""); }}
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDeleteError("");
+                }}
                 className="flex-1 rounded-xl bg-muted-surface px-4 py-2.5 text-xs font-bold hairline disabled:opacity-60"
               >
                 إلغاء

@@ -72,6 +72,13 @@ function ChatsPage() {
     return () => mql.removeEventListener("change", handler);
   }, []);
 
+  useEffect(() => {
+    if (!isDesktop && search.conversation && conversations.length > 0) {
+      const exists = conversations.some((c) => c.id === search.conversation);
+      if (exists) setViewingConversationOnMobile(true);
+    }
+  }, [isDesktop, search.conversation, conversations]);
+
   async function loadConversations() {
     const profileId = auth.profile?.id ?? null;
     if (!profileId) return;
