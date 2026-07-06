@@ -48,6 +48,8 @@ to authenticated
 using (public.rawaj_listing_owner_can_add_images(listing_id))
 with check (public.rawaj_listing_owner_can_add_images(listing_id));
 
+drop policy if exists "Listing owners self-delete own listing images" on public.listing_images;
+
 drop policy if exists "Listing owners delete images before approval" on public.listing_images;
 create policy "Listing owners delete images before approval"
 on public.listing_images for delete
