@@ -77,10 +77,17 @@ function ChatsPage() {
     setLoadingMessages(true);
     setMessageError(null);
     const result = await fetchConversationMessages(auth.profile.id, conversationId);
-    if (requestId !== messagesRequestIdRef.current) return;
+    if (requestId !== messagesRequestIdRef.current) {
+      setLoadingMessages(false);
+      return;
+    }
     if (result.ok) {
       setMessages(result.data);
       await markConversationRead(auth.profile.id, conversationId);
+      if (requestId !== messagesRequestIdRef.current) {
+        setLoadingMessages(false);
+        return;
+      }
     } else {
       setMessages([]);
       setMessageError(result.error);

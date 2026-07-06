@@ -73,48 +73,22 @@ function ListingDetailsPage() {
   const [fav, setFav] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const favoriteInFlightRef = useRef(false);
+  const favoriteRequestIdRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
+    const requestId = ++favoriteRequestIdRef.current;
     async function loadFavorite() {
       const result = await fetchFavoriteStatus(auth.profile?.id ?? null, id);
-      if (!cancelled && result.ok) setFav(result.data);
+      if (!cancelled && requestId === favoriteRequestIdRef.current && result.ok) {
+        setFav(result.data);
+      }
     }
     if (auth.status === "signedIn") void loadFavorite();
     return () => {
       cancelled = true;
     };
   }, [auth.status, auth.profile?.id, id]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError(null);
-      const result = await fetchListingDetail(id);
-
-      if (cancelled) return;
-
-      if (!result.ok) {
-        setListing(null);
-        setImages([]);
-        setError(result.error);
-      } else {
-        setListing(result.data);
-        const imageResult = await fetchListingImages(id);
-        if (!cancelled && imageResult.ok) setImages(imageResult.data);
-      }
-
-      setLoading(false);
-    }
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
 
   async function toggleFavorite() {
     setActionMessage(null);
@@ -129,6 +103,7 @@ function ListingDetailsPage() {
     const result = fav
       ? await unfavoriteListing(auth.profile?.id ?? null, id)
       : await favoriteListing(auth.profile?.id ?? null, id);
+    const requestId = ++favoriteRequestIdRef.current;
     favoriteInFlightRef.current = false;
 
     if (!result.ok) {
@@ -136,7 +111,9 @@ function ListingDetailsPage() {
       return;
     }
 
-    setFav((value) => !value);
+    if (requestId === favoriteRequestIdRef.current) {
+      setFav((value) => !value);
+    }
     setActionMessage(
       fav
         ? text("تمت إزالة الإعلان من المفضلة.", "Removed from favorites.")

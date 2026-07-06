@@ -26,6 +26,17 @@ import type {
   ClassifiedsError,
   ListingCondition,
 } from "@/lib/classifieds-types";
+
+type ImageUploadState = "pending" | "uploading" | "uploaded" | "failed";
+
+interface UploadImageEntry {
+  id: string;
+  file: File;
+  state: ImageUploadState;
+  error?: string;
+  attempt: number;
+  url: string;
+}
 import { categoryName, governorateName } from "@/lib/i18n";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -52,7 +63,7 @@ function AddListingPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [createdListingId, setCreatedListingId] = useState<string | null>(null);
-  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [selectedImages, setSelectedImages] = useState<UploadImageEntry[]>([]);
   const [imageSelectionMessage, setImageSelectionMessage] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState("");
   const [title, setTitle] = useState("");
@@ -95,10 +106,12 @@ function AddListingPage() {
   ];
   const selectedImagePreviews = useMemo(
     () =>
-      selectedImages.map((file, index) => ({
-        file,
-        index,
-        url: URL.createObjectURL(file),
+      selectedImages.map((entry) => ({
+        id: entry.id,
+        file: entry.file,
+        url: entry.url,
+        state: entry.state,
+        error: entry.error,
       })),
     [selectedImages],
   );
@@ -120,11 +133,30 @@ function AddListingPage() {
           )
         : null,
     );
-    setSelectedImages(nextFiles.slice(0, 6));
+    const existing = new Set(
+      selectedImages.map((entry) => `${entry.file.name}-${entry.file.size}`),
+    );
+    setSelectedImages((current) => [
+      ...current,
+      ...nextFiles
+        .slice(0, 6)
+        .filter((file) => !existing.has(file.name + file.size))
+        .map((file) => ({
+          id: `${file.name}-${file.size}-${crypto.randomUUID()}`,
+          file,
+          state: "pending" as const,
+          url: URL.createObjectURL(file),
+          attempt: 0,
+        })),
+    ]);
   }
 
-  function removeSelectedImage(index: number) {
-    setSelectedImages((current) => current.filter((_, currentIndex) => currentIndex !== index));
+  function removeSelectedImage(id: string) {
+    setSelectedImages((current) => {
+      const entry = current.find((item) => item.id === id);
+      if (entry) URL.revokeObjectURL(entry.url);
+      return current.filter((item) => item.id !== id);
+    });
     setImageSelectionMessage(null);
   }
 
@@ -263,19 +295,51 @@ function AddListingPage() {
         return;
       }
 
+      setCreatedListingId(result.data.id);
+
       const imageErrors: string[] = [];
-      for (const [index, file] of selectedImages.entries()) {
+      for (const [index, entry] of selectedImages.entries()) {
+        const { attempt } = entry;
+        setSelectedImages((current) =>
+          current.map((item) =>
+            item.id === entry.id
+              ? {
+                  ...item,
+                  state: "uploading" as const,
+                  error: undefined,
+                  attempt: item.attempt + 1,
+                }
+              : item,
+          ),
+        );
+
         const uploadResult = await uploadListingImage({
           userId: auth.profile?.id ?? null,
           listing: result.data,
-          file,
+          file: entry.file,
           sortOrder: index,
           altAr: title.trim(),
         });
-        if (!uploadResult.ok) imageErrors.push(uploadResult.error.message);
+
+        setSelectedImages((current) => {
+          const currentEntry = current.find((item) => item.id === entry.id);
+          if (!currentEntry || currentEntry.attempt !== attempt + 1) {
+            return current;
+          }
+          if (!uploadResult.ok) {
+            imageErrors.push(uploadResult.error.message);
+            return current.map((item) =>
+              item.id === entry.id
+                ? { ...item, state: "failed" as const, error: uploadResult.error.message }
+                : item,
+            );
+          }
+          return current.map((item) =>
+            item.id === entry.id ? { ...item, state: "uploaded" as const } : item,
+          );
+        });
       }
 
-      setCreatedListingId(result.data.id);
       setSubmitMessage(
         imageErrors.length > 0
           ? text(
@@ -468,7 +532,7 @@ function AddListingPage() {
                   <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {selectedImagePreviews.map((preview) => (
                       <div
-                        key={`${preview.file.name}-${preview.file.size}-${preview.index}`}
+                        key={preview.id}
                         className="group relative overflow-hidden rounded-xl bg-card text-xs hairline"
                       >
                         <img
@@ -476,9 +540,28 @@ function AddListingPage() {
                           alt={preview.file.name}
                           className="aspect-[4/3] w-full object-cover"
                         />
+                        {preview.state === "uploading" && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-foreground/40 text-primary-foreground">
+                            <span className="text-[10px] font-bold">
+                              {text("جارٍ الرفع", "Uploading")}
+                            </span>
+                          </div>
+                        )}
+                        {preview.state === "uploaded" && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-emerald-trust/70 text-emerald-trust-foreground">
+                            <span className="text-[10px] font-bold">
+                              {text("تم الرفع", "Uploaded")}
+                            </span>
+                          </div>
+                        )}
+                        {preview.state === "failed" && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-destructive/70 text-destructive-foreground">
+                            <span className="text-[10px] font-bold">{text("فشل", "Failed")}</span>
+                          </div>
+                        )}
                         <button
                           type="button"
-                          onClick={() => removeSelectedImage(preview.index)}
+                          onClick={() => removeSelectedImage(preview.id)}
                           className="absolute top-2 end-2 grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-soft"
                           aria-label={text("إزالة الصورة", "Remove photo")}
                         >
@@ -489,6 +572,9 @@ function AddListingPage() {
                           <p className="mt-1 text-muted-foreground">
                             {(preview.file.size / 1024 / 1024).toFixed(1)} MB
                           </p>
+                          {preview.state === "failed" && preview.error && (
+                            <p className="mt-1 text-destructive">{preview.error}</p>
+                          )}
                         </div>
                       </div>
                     ))}
