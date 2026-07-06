@@ -6,9 +6,7 @@
 -- 1) ordinary listing owners could still reach moderation-controlled columns
 --    through their legitimate owner UPDATE policy because the trigger returned
 --    immediately for non-moderators;
--- 2) the 202607050002 reconciliation replaced the earlier listing trigger and
---    dropped the dedicated rawaj.promotion_moderation branch;
--- 3) owner-level moderation could bypass listing-report origin protection, and
+-- 2) owner-level moderation could bypass listing-report origin protection, and
 --    the report trigger used a denylist instead of a narrow moderation allowlist.
 --
 -- No policy broadening is performed here. Existing RLS remains authoritative.
@@ -20,18 +18,6 @@ security definer
 set search_path = public
 as $$
 begin
-  -- Preserve the deliberately narrow internal promotion-moderation path.
-  if current_setting('rawaj.promotion_moderation', true) = 'on' then
-    if (to_jsonb(new) - array['is_featured', 'featured_until', 'updated_at'])
-       is distinct from
-       (to_jsonb(old) - array['is_featured', 'featured_until', 'updated_at'])
-    then
-      raise exception 'Promotion moderation can only change promotion fields on listings.';
-    end if;
-
-    return new;
-  end if;
-
   -- Privileged moderation-only update. This check intentionally runs before
   -- ordinary owner self-edit so a privileged actor can moderate a listing they
   -- also own without being misclassified as a normal owner edit.
