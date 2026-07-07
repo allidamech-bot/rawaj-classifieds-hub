@@ -109,33 +109,29 @@ function HomePage() {
   return (
     <>
       <AppHeader />
-      <main className="home-container mobile-page-bottom pt-2.5 sm:pt-5 lg:pt-7">
-        <section className="relative overflow-hidden rounded-[1.75rem] bg-card p-3.5 hairline shadow-premium-sm sm:p-5 lg:p-7">
-          <div
-            className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent"
-            aria-hidden="true"
-          />
-          <div className="relative z-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.8fr)] lg:items-end lg:gap-10">
-            <div>
-              <p className="inline-flex items-center gap-1.5 rounded-full bg-primary/7 px-2.5 py-1 text-[10px] font-extrabold text-primary">
-                <Sparkles className="h-3 w-3 text-brand-orange" />
+      <main className="home-container mobile-page-bottom pt-3 sm:pt-5 lg:pt-7">
+        <section className="rawaj-hero-surface rounded-[1.65rem] p-4 sm:rounded-[2rem] sm:p-6 lg:p-8">
+          <div className="relative z-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(25rem,0.82fr)] lg:items-end lg:gap-12">
+            <div className="ps-1 sm:ps-2">
+              <p className="rawaj-eyebrow">
+                <Sparkles className="h-3.5 w-3.5" strokeWidth={1.9} />
                 {text("سوق سوريا الحديث", "Syria's modern marketplace")}
               </p>
-              <h1 className="mt-2 max-w-xl text-[1.35rem] font-extrabold leading-[1.35] text-primary sm:text-3xl lg:text-[2.2rem]">
-                {text("ابحث. قارن. وتواصل بسهولة.", "Search, compare, and connect easily.")}
+              <h1 className="mt-2.5 max-w-xl text-[1.45rem] font-bold leading-[1.42] text-primary sm:text-[2rem] lg:text-[2.45rem] lg:leading-[1.35]">
+                {text("ابحث عمّا يستحق. وتواصل بثقة.", "Find what matters. Connect with confidence.")}
               </h1>
-              <p className="mt-1.5 max-w-xl text-xs leading-6 text-muted-foreground sm:text-sm">
+              <p className="mt-2 max-w-xl text-[12px] leading-6 text-muted-foreground sm:text-sm sm:leading-7">
                 {text(
-                  "إعلانات واضحة، وصول أسرع، وتجربة مصممة للجوال أولًا.",
-                  "Clear listings, faster discovery, and a mobile-first experience.",
+                  "إعلانات أوضح، وصول أسرع، وتجربة هادئة صُممت للجوال أولًا.",
+                  "Clearer listings, faster discovery, and a calm mobile-first experience.",
                 )}
               </p>
             </div>
 
-            <div className="mt-4 lg:mt-0">
+            <div className="mt-5 lg:mt-0">
               <form onSubmit={handleSearch} className="flex items-stretch gap-2">
-                <label className="group flex min-h-13 min-w-0 flex-1 items-center gap-2.5 rounded-2xl border border-border bg-background/70 ps-3.5 pe-4 text-foreground transition focus-within:border-brand-orange focus-within:bg-card focus-within:ring-[3px] focus-within:ring-brand-orange/20">
-                  <Search className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.9} />
+                <label className="group flex min-h-14 min-w-0 flex-1 items-center gap-2.5 rounded-[1.1rem] border border-border/90 bg-card/88 ps-3.5 pe-4 text-foreground shadow-[0_8px_26px_rgba(16,43,70,0.055)] transition focus-within:border-brand-orange/70 focus-within:bg-card focus-within:ring-[3px] focus-within:ring-brand-orange/12">
+                  <Search className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.85} />
                   <input
                     value={searchValue}
                     onChange={(event) => setSearchValue(event.target.value)}
@@ -145,15 +141,15 @@ function HomePage() {
                       "ماذا تبحث عنه؟ سيارة، عقار، جوال...",
                       "What are you looking for?",
                     )}
-                    className="w-full bg-transparent py-3 text-sm font-semibold text-foreground outline-none placeholder:font-medium placeholder:text-muted-foreground"
+                    className="w-full bg-transparent py-3 text-sm font-medium text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground"
                   />
                 </label>
                 <button
                   type="submit"
                   aria-label={text("بحث", "Search")}
-                  className="grid min-h-13 w-13 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-soft transition hover:-translate-y-0.5 active:scale-[0.98]"
+                  className="rawaj-button-primary grid min-h-14 w-14 shrink-0 place-items-center rounded-[1.1rem] p-0"
                 >
-                  <Search className="h-5 w-5" strokeWidth={2.1} />
+                  <Search className="h-5 w-5" strokeWidth={2} />
                 </button>
               </form>
 
@@ -161,11 +157,11 @@ function HomePage() {
                 <Link
                   to="/listings"
                   search={listingSearch({ open_filters: true })}
-                  className="inline-flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-xl bg-background/75 px-3 text-xs font-bold text-primary transition hover:bg-muted-surface"
+                  className="inline-flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-border/70 bg-card/72 px-3 text-[11px] font-semibold text-primary transition hover:bg-card"
                 >
-                  <MapPin className="h-4 w-4 shrink-0 text-brand-orange" strokeWidth={1.9} />
+                  <MapPin className="h-4 w-4 shrink-0 text-brand-orange" strokeWidth={1.85} />
                   <span className="truncate">{text("كل سوريا", "All Syria")}</span>
-                  <span className="ms-auto text-[10px] font-bold text-muted-foreground">
+                  <span className="ms-auto text-[9px] font-semibold text-muted-foreground">
                     {text("تغيير", "Change")}
                   </span>
                 </Link>
@@ -173,9 +169,9 @@ function HomePage() {
                   to="/listings"
                   search={listingSearch({ open_filters: true })}
                   aria-label={text("الفلاتر", "Filters")}
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-background/75 text-primary transition hover:bg-muted-surface"
+                  className="rawaj-icon-button h-10 w-10 shrink-0 rounded-xl"
                 >
-                  <SlidersHorizontal className="h-4 w-4" strokeWidth={1.9} />
+                  <SlidersHorizontal className="h-4 w-4" strokeWidth={1.85} />
                 </Link>
               </div>
             </div>
@@ -183,13 +179,13 @@ function HomePage() {
         </section>
 
         {categories.length > 0 ? (
-          <section className="mt-5" aria-label={text("الأقسام", "Categories")}>
+          <section className="mt-6" aria-label={text("الأقسام", "Categories")}>
             <SectionHeading
               title={text("تصفح الأقسام", "Browse categories")}
               actionLabel={text("عرض الكل", "View all")}
               actionTo="/categories"
             />
-            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-6 lg:gap-3">
+            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-6 lg:gap-3.5">
               {categories.slice(0, 6).map((category) => {
                 const Icon = iconForCategoryPlaceholder(category.placeholder);
                 return (
@@ -197,12 +193,12 @@ function HomePage() {
                     key={category.id}
                     to="/listings"
                     search={{ category: category.id }}
-                    className="group flex min-h-[5.8rem] flex-col items-center justify-center gap-2 rounded-2xl bg-card px-2 py-3 text-center hairline transition hover:-translate-y-0.5 hover:border-gold/60 hover:shadow-soft active:scale-[0.98]"
+                    className="group rawaj-surface tap-card flex min-h-[6.2rem] flex-col items-center justify-center gap-2 rounded-[1.15rem] px-2 py-3.5 text-center hover:-translate-y-0.5 hover:border-gold/50 active:scale-[0.985]"
                   >
-                    <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/7 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
-                      <Icon className="h-5 w-5" strokeWidth={1.8} />
+                    <span className="category-tile h-10 w-10 transition duration-200 group-hover:border-gold/45 group-hover:text-brand-orange sm:h-11 sm:w-11">
+                      <Icon className="h-5 w-5" strokeWidth={1.75} />
                     </span>
-                    <span className="line-clamp-1 text-[11px] font-extrabold leading-tight text-foreground sm:text-xs">
+                    <span className="line-clamp-1 text-[10.5px] font-semibold leading-tight text-foreground sm:text-[11.5px]">
                       {categoryName(category.id, category.nameAr, language)}
                     </span>
                   </Link>
@@ -238,14 +234,16 @@ function HomePage() {
           </>
         )}
 
-        <section className="mt-6 rounded-[1.4rem] bg-primary p-4 text-primary-foreground shadow-premium-sm lg:mt-8 lg:p-5">
-          <div className="flex items-start gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white/10 text-gold ring-1 ring-white/10">
-              <ShieldCheck className="h-5 w-5" strokeWidth={1.8} />
+        <section className="relative mt-7 overflow-hidden rounded-[1.5rem] bg-primary p-4 text-primary-foreground shadow-premium-sm lg:mt-9 lg:p-5">
+          <span className="absolute inset-y-0 start-0 w-1 bg-gradient-to-b from-brand-orange to-gold" />
+          <span className="absolute -end-16 -top-16 h-40 w-40 rounded-full bg-gold/8 blur-2xl" />
+          <div className="relative flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white/8 text-gold ring-1 ring-white/10">
+              <ShieldCheck className="h-5 w-5" strokeWidth={1.75} />
             </span>
             <div>
-              <h3 className="text-sm font-extrabold">{text("تعامل بوعي", "Trade smart")}</h3>
-              <p className="mt-1 text-[11px] leading-5 text-primary-foreground/70 sm:text-xs">
+              <h3 className="text-sm font-bold">{text("تعامل بوعي", "Trade smart")}</h3>
+              <p className="mt-1 text-[11px] leading-5 text-primary-foreground/72 sm:text-xs">
                 {text(
                   "افحص السلعة قبل الدفع، وتواصل بوضوح، واختر مكانًا عامًا للقاء.",
                   "Inspect before paying, communicate clearly, and meet in a public place.",
@@ -272,7 +270,7 @@ function ListingsSection({
 }) {
   const { text } = useUiPreferences();
   return (
-    <section className="mt-6 first:mt-5 lg:mt-8">
+    <section className="mt-7 first:mt-6 lg:mt-9">
       <SectionHeading
         title={title}
         actionLabel={text("عرض الكل", "View all")}
@@ -281,9 +279,9 @@ function ListingsSection({
       {listings.length === 0 ? (
         <HomeState title={empty} compact />
       ) : mobileRail ? (
-        <div className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-1 pb-2 sm:grid sm:grid-cols-3 lg:grid-cols-4">
+        <div className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 sm:grid sm:grid-cols-3 lg:grid-cols-4">
           {listings.map((listing) => (
-            <div key={listing.id} className="w-[10.8rem] shrink-0 snap-start sm:w-auto">
+            <div key={listing.id} className="w-[11rem] shrink-0 snap-start sm:w-auto">
               <RealListingCard listing={listing} />
             </div>
           ))}
@@ -309,14 +307,17 @@ function SectionHeading({
   actionTo: "/categories" | "/listings";
 }) {
   return (
-    <div className="mb-3 flex items-center justify-between gap-3">
-      <h2 className="text-[1rem] font-extrabold text-primary sm:text-lg">{title}</h2>
+    <div className="mb-3.5 flex items-end justify-between gap-3">
+      <div>
+        <span className="mb-1 block h-0.5 w-7 rounded-full bg-gradient-to-r from-brand-orange to-gold" />
+        <h2 className="rawaj-section-title">{title}</h2>
+      </div>
       <Link
         to={actionTo}
-        className="inline-flex items-center gap-1 text-[11px] font-extrabold text-muted-foreground transition-colors hover:text-brand-orange"
+        className="inline-flex items-center gap-1 pb-0.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:text-brand-orange sm:text-[11px]"
       >
         {actionLabel}
-        <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
+        <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" strokeWidth={1.8} />
       </Link>
     </div>
   );
@@ -332,9 +333,11 @@ function HomeState({
   compact?: boolean;
 }) {
   return (
-    <div className={`rounded-2xl bg-card text-center hairline ${compact ? "p-5" : "mt-6 p-8"}`}>
-      <p className="text-sm font-bold text-foreground">{title}</p>
-      {body ? <p className="mt-1 text-xs text-muted-foreground">{body}</p> : null}
+    <div
+      className={`rawaj-surface rounded-[1.25rem] text-center ${compact ? "p-5" : "mt-7 p-8"}`}
+    >
+      <p className="text-sm font-semibold text-foreground">{title}</p>
+      {body ? <p className="mt-1 text-xs leading-5 text-muted-foreground">{body}</p> : null}
     </div>
   );
 }
