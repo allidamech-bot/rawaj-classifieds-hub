@@ -4,12 +4,16 @@ import { useUiPreferences } from "@/lib/ui-preferences";
 import { useLocationLevels } from "./use-location-levels";
 
 export function CanonicalLocationSelector({
+  value,
   onChange,
+  disabled = false,
 }: {
+  value?: string | null;
   onChange: (id: string | null, node: CanonicalLocationNode | null) => void;
+  disabled?: boolean;
 }) {
   const { language, text } = useUiPreferences();
-  const { levels, setLevels, error, setError } = useLocationLevels();
+  const { levels, setLevels, error, setError } = useLocationLevels(value);
 
   async function selectAt(index: number, selectedId: string) {
     const selected = levels[index]?.options.find((option) => option.id === selectedId) ?? null;
@@ -44,7 +48,8 @@ export function CanonicalLocationSelector({
           key={`${level.parentId}-${index}`}
           value={level.selectedId}
           onChange={(event) => void selectAt(index, event.target.value)}
-          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
+          disabled={disabled}
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm disabled:opacity-50"
         >
           <option value="">{text("اختر الموقع", "Choose location")}</option>
           {level.options.map((option) => (
