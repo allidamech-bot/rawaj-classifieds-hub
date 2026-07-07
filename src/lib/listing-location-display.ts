@@ -1,10 +1,7 @@
 import type { ClassifiedListing } from "@/lib/classifieds-types";
 import { governorateName } from "@/lib/i18n";
 
-export function listingLocationDisplay(
-  listing: ClassifiedListing,
-  language: "ar" | "en",
-): string {
+export function listingLocationDisplay(listing: ClassifiedListing, language: "ar" | "en"): string {
   const governorate = governorateName(
     listing.governorateId,
     listing.governorateNameAr ?? undefined,
