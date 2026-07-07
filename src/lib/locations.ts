@@ -1,4 +1,4 @@
-import type { LocationNode } from "@/lib/classifieds-types";
+import type { LocationNode } from "@/lib/location-types";
 
 export type LocationIndex = {
   byId: Map<string, LocationNode>;
