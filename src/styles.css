@@ -28,6 +28,9 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-gold: var(--gold);
   --color-gold-foreground: var(--gold-foreground);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-orange-foreground: var(--brand-orange-foreground);
+  --color-brand-navy: var(--brand-navy);
   --color-emerald-trust: var(--emerald-trust);
   --color-emerald-trust-foreground: var(--emerald-trust-foreground);
   --color-destructive: var(--destructive);
@@ -62,11 +65,15 @@
   --muted: #ece3ce;
   --muted-foreground: #5b6070;
 
-  --accent: #c99730;
-  --accent-foreground: #131720;
+  --accent: #e0762b;
+  --accent-foreground: #ffffff;
 
   --gold: #c99730;
   --gold-foreground: #131720;
+
+  --brand-orange: #e0762b;
+  --brand-orange-foreground: #ffffff;
+  --brand-navy: #0e2a44;
 
   --emerald-trust: #0f6b52;
   --emerald-trust-foreground: #ffffff;
@@ -77,7 +84,7 @@
 
   --border: #e1d7c1;
   --input: #cfc3a8;
-  --ring: #c99730;
+  --ring: #e0762b;
 }
 
 
