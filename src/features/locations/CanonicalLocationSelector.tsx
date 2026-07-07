@@ -119,8 +119,11 @@ export function CanonicalLocationSelector({
                     ? result.node.nameEn || result.node.nameAr
                     : result.node.nameAr}
                 </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  {language === "en" ? result.pathEn : result.pathAr}
+                </span>
                 {result.matchedAlias ? (
-                  <span className="block text-xs text-muted-foreground">
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
                     {text("اسم شائع: ", "Matched alias: ")}
                     {result.matchedAlias}
                   </span>
