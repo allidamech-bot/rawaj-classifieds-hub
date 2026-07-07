@@ -7,6 +7,7 @@ import {
   ListingStudioSection,
   ListingStudioSteps,
 } from "@/features/listing-studio/listing-studio";
+import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
 import {
   carMakeOptions,
   detectCategoryFieldKind,
@@ -100,6 +101,8 @@ function AddListingPage() {
   const [priceType, setPriceType] = useState<PriceType>("fixed");
   const [governorateId, setGovernorateId] = useState("");
   const [district, setDistrict] = useState("");
+  const [locationNodeId, setLocationNodeId] = useState("");
+  const [locationLabel, setLocationLabel] = useState("");
   const [description, setDescription] = useState("");
   const [condition, setCondition] = useState<ListingCondition>("not_applicable");
   const [contactName, setContactName] = useState("");
@@ -128,9 +131,9 @@ function AddListingPage() {
         title.trim().length >= 8,
         description.trim().length >= 30,
         !!price || priceType !== "fixed",
-        !!governorateId && !!district,
+        !!governorateId && (!!locationNodeId || !!district),
       ].filter(Boolean).length * 20,
-    [categoryId, title, description, price, priceType, governorateId, district],
+    [categoryId, title, description, price, priceType, governorateId, district, locationNodeId],
   );
   const steps = [
     text("ماذا تبيع؟", "What are you selling?"),
@@ -461,7 +464,7 @@ function AddListingPage() {
       price: normalizedPrice,
       priceType,
       governorateId,
-      district,
+      district: locationNodeId ? `@${locationNodeId}` : district,
       categoryFieldKind,
       categoryDetails,
       contact,
@@ -498,7 +501,7 @@ function AddListingPage() {
       price: normalizedPrice ? Number(normalizedPrice) : null,
       priceType,
       condition,
-      districtAr: district,
+      districtAr: locationNodeId ? `@${locationNodeId}` : district,
       contactName: contactName.trim() || null,
       contactOptions: contact,
       details,
@@ -1058,45 +1061,32 @@ function AddListingPage() {
                         </select>
                       </Field>
                     </div>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <Field
-                        label={text("المحافظة", "Governorate")}
-                        error={fieldErrors.governorateId}
-                      >
-                        <select
-                          value={governorateId}
-                          onChange={(event) => {
-                            setGovernorateId(event.target.value);
-                            setDistrict("");
-                          }}
-                          className="input"
-                          data-first-invalid={Boolean(fieldErrors.governorateId)}
-                        >
-                          <option value="">{text("اختر", "Choose")}</option>
-                          {governorates.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {governorateName(item.id, item.nameAr, language)}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                      <Field label={text("المنطقة", "District")} error={fieldErrors.district}>
-                        <select
-                          value={district}
-                          onChange={(event) => setDistrict(event.target.value)}
-                          disabled={!governorate}
-                          className="input disabled:opacity-50"
-                          data-first-invalid={Boolean(fieldErrors.district)}
-                        >
-                          <option value="">{text("اختر", "Choose")}</option>
-                          {governorate?.districtsAr.map((item) => (
-                            <option key={item} value={item}>
-                              {item}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                    </div>
+                    <Field
+                      label={text("الموقع", "Location")}
+                      error={fieldErrors.governorateId ?? fieldErrors.district}
+                    >
+                      <CanonicalLocationSelector
+                        onChange={(id, node) => {
+                          setLocationNodeId(id ?? "");
+                          setLocationLabel(
+                            node
+                              ? language === "en"
+                                ? node.nameEn || node.nameAr
+                                : node.nameAr
+                              : "",
+                          );
+                          if (node?.legacyGovernorateId) {
+                            setGovernorateId(node.legacyGovernorateId);
+                          } else if (!id) {
+                            setGovernorateId("");
+                          }
+                          setDistrict(node?.legacyDistrictAr ?? "");
+                        }}
+                      />
+                    </Field>
+                    {locationLabel ? (
+                      <p className="text-xs text-muted-foreground">{locationLabel}</p>
+                    ) : null}
                   </Card>
 
                   <Card title={text("التواصل", "Contact")}>
@@ -1182,14 +1172,15 @@ function AddListingPage() {
                       />
                       <ReviewRow label={text("العنوان", "Title")} value={title || "-"} />
                       <ReviewRow
-                        label={text("المحافظة", "Governorate")}
+                        label={text("الموقع", "Location")}
                         value={
-                          governorate
+                          locationLabel ||
+                          district ||
+                          (governorate
                             ? governorateName(governorate.id, governorate.nameAr, language)
-                            : "-"
+                            : "-")
                         }
                       />
-                      <ReviewRow label={text("المنطقة", "District")} value={district || "-"} />
                       <ReviewRow
                         label={text("الصور", "Photos")}
                         value={text(

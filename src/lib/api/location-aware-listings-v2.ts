@@ -9,7 +9,12 @@ import { resolveCanonicalLocationIds } from "@/lib/api/canonical-location-filter
 import { fetchPublicListingsLocationAware } from "@/lib/api/location-aware-listings";
 import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
 import { readReferences } from "@/lib/api/references";
-import { escapePostgrestSearchTerm, getClient, mapError } from "@/lib/api/shared";
+import {
+  escapePostgrestFilterValue,
+  escapePostgrestSearchTerm,
+  getClient,
+  mapError,
+} from "@/lib/api/shared";
 
 export async function fetchPublicListingsCanonicalAware(
   filters: ListingFilters = {},
@@ -77,6 +82,8 @@ export async function fetchPublicListingsCanonicalAware(
       .order("id", { ascending: false });
   else query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
 
+  query = applyCursor(query, cursor);
+
   const safePageSize = Math.max(1, Math.min(pageSize, 50));
   const { data, error } = await query.limit(safePageSize + 1);
   if (error) return { ok: false, error: mapError(error) };
@@ -96,6 +103,35 @@ export async function fetchPublicListingsCanonicalAware(
       pageSize: safePageSize,
     },
   };
+}
+
+function applyCursor<T extends { or(filters: string): T }>(
+  query: T,
+  cursor: ListingCursor | null,
+): T {
+  if (!cursor) return query;
+  const id = escapePostgrestFilterValue(cursor.id);
+
+  if (cursor.type === "latest") {
+    const created = escapePostgrestFilterValue(cursor.created_at);
+    return query.or(`created_at.lt.${created},and(created_at.eq.${created},id.lt.${id})`);
+  }
+
+  if (cursor.type === "featured") {
+    const created = escapePostgrestFilterValue(cursor.created_at);
+    return cursor.is_featured
+      ? query.or(
+          `is_featured.eq.false,and(is_featured.eq.true,created_at.lt.${created}),and(is_featured.eq.true,created_at.eq.${created},id.lt.${id})`,
+        )
+      : query.or(
+          `and(is_featured.eq.false,created_at.lt.${created}),and(is_featured.eq.false,created_at.eq.${created},id.lt.${id})`,
+        );
+  }
+
+  if (cursor.price === null) return query.or(`and(price.is.null,id.gt.${id})`);
+  const price = escapePostgrestFilterValue(String(cursor.price));
+  const operator = cursor.type === "cheapest" ? "gt" : "lt";
+  return query.or(`price.${operator}.${price},price.is.null,and(price.eq.${price},id.gt.${id})`);
 }
 
 function buildCursor(sort: string, listing: ClassifiedListing): ListingCursor {

@@ -19,9 +19,17 @@ export function CanonicalLocationSelector({
 
     setError(null);
     setLevels(next);
-    onChange(selected?.id ?? null, selected);
-    if (!selected) return;
+    if (!selected) {
+      const previous = next
+        .slice(0, index)
+        .map((level) => level.options.find((option) => option.id === level.selectedId))
+        .filter((node): node is CanonicalLocationNode => Boolean(node))
+        .at(-1);
+      onChange(previous?.id ?? null, previous ?? null);
+      return;
+    }
 
+    onChange(selected.id, selected);
     const children = await fetchLocationChildren(selected.id);
     if (!children.ok) return setError(children.error.message);
     if (children.data.length > 0) {

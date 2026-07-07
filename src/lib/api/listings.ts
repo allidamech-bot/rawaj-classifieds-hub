@@ -38,6 +38,7 @@ import {
   readReferences,
 } from "@/lib/api/references";
 
+import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
 import { buildListingImagePath, listingImagesBucket, validateImageFile } from "@/lib/api/storage";
 
 const signedImageUrlExpiresInSeconds = 900;
@@ -380,7 +381,18 @@ export async function updateOwnerListing(
   if (payload.price !== undefined) updateData.price = payload.price;
   if (payload.priceType) updateData.price_type = payload.priceType;
   if (payload.condition) updateData.listing_condition = payload.condition;
-  if (payload.districtAr !== undefined) updateData.district_ar = payload.districtAr;
+  if (payload.districtAr !== undefined) {
+    const locationWrite = await resolveListingLocationWrite(
+      clientResult.data,
+      payload.governorateId ?? rowString(existing as Record<string, unknown>, "governorate_id"),
+      payload.districtAr,
+    );
+    if (!locationWrite.ok) return locationWrite;
+    updateData.district_ar = locationWrite.data.districtAr;
+    if (locationWrite.data.locationNodeId !== undefined) {
+      updateData.location_node_id = locationWrite.data.locationNodeId;
+    }
+  }
   if (payload.contactName !== undefined) updateData.contact_name = payload.contactName;
   if (payload.contactOptions) updateData.contact_options = payload.contactOptions;
   if (payload.details !== undefined) updateData.details = payload.details;
@@ -477,7 +489,18 @@ export async function resubmitOwnerListing(
   if (payload.price !== undefined) updateData.price = payload.price;
   if (payload.priceType) updateData.price_type = payload.priceType;
   if (payload.condition) updateData.listing_condition = payload.condition;
-  if (payload.districtAr !== undefined) updateData.district_ar = payload.districtAr;
+  if (payload.districtAr !== undefined) {
+    const locationWrite = await resolveListingLocationWrite(
+      clientResult.data,
+      payload.governorateId ?? rowString(existing as Record<string, unknown>, "governorate_id"),
+      payload.districtAr,
+    );
+    if (!locationWrite.ok) return locationWrite;
+    updateData.district_ar = locationWrite.data.districtAr;
+    if (locationWrite.data.locationNodeId !== undefined) {
+      updateData.location_node_id = locationWrite.data.locationNodeId;
+    }
+  }
   if (payload.contactName !== undefined) updateData.contact_name = payload.contactName;
   if (payload.contactOptions) updateData.contact_options = payload.contactOptions;
   if (payload.details !== undefined) updateData.details = payload.details;
@@ -728,7 +751,6 @@ async function createListingWithStatus(
 
   const title = payload.title.trim();
   const description = payload.description.trim();
-  const districtAr = payload.districtAr?.trim() || null;
   const contactName = payload.contactName?.trim() || null;
 
   if (!payload.categoryId.trim() || !payload.governorateId.trim() || title.length < 4) {
@@ -748,6 +770,13 @@ async function createListingWithStatus(
     };
   }
 
+  const locationWrite = await resolveListingLocationWrite(
+    clientResult.data,
+    payload.governorateId,
+    payload.districtAr,
+  );
+  if (!locationWrite.ok) return locationWrite;
+
   const insertPayload = {
     owner_id: userId,
     category_id: payload.categoryId,
@@ -758,7 +787,8 @@ async function createListingWithStatus(
     price_type: payload.priceType,
     listing_condition: payload.condition,
     status,
-    district_ar: districtAr,
+    location_node_id: locationWrite.data.locationNodeId ?? null,
+    district_ar: locationWrite.data.districtAr,
     contact_name: contactName,
     contact_options: payload.contactOptions,
     details: payload.details,
