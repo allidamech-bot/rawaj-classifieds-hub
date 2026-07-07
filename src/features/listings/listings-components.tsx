@@ -6,7 +6,8 @@ import type {
   ClassifiedSubcategory,
   PublicSellerSearchResult,
 } from "@/lib/classifieds-types";
-import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import { categoryName, formatPriceLocalized } from "@/lib/i18n";
+import { listingLocationDisplay } from "@/lib/listing-location-display";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 
@@ -329,14 +330,7 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
         <div className="flex flex-col gap-0.5 text-[11px] leading-5 text-muted-foreground">
           <span className="inline-flex min-w-0 items-center gap-1">
             <MapPin className="h-3 w-3 shrink-0 text-primary/70" />
-            <span className="truncate">
-              {governorateName(
-                listing.governorateId,
-                listing.governorateNameAr ?? undefined,
-                language,
-              )}
-              {listing.districtAr ? ` · ${listing.districtAr}` : ""}
-            </span>
+            <span className="truncate">{listingLocationDisplay(listing, language)}</span>
           </span>
           <span className="inline-flex items-center gap-1">
             <Clock className="h-3 w-3 shrink-0" /> {formatDate(listing.createdAt, language)}
