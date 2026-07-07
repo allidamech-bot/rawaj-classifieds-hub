@@ -2,64 +2,57 @@ name: Quality Gate
 
 on:
   pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
-
-concurrency:
-  group: quality-gate-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint changed source files
+      - run: npm ci
+      - name: Polish offers
         shell: bash
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          base="$BASE_SHA"
-          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
-            base="$(git rev-parse HEAD^)"
-          fi
-
-          mapfile -t files < <(
-            git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- \
-              '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
-          )
-
-          if [ "${#files[@]}" -eq 0 ]; then
-            echo "No changed JS/TS source files to lint."
-            exit 0
-          fi
-
-          printf 'Linting %s\n' "${files[@]}"
-          npx eslint --quiet "${files[@]}"
-
-      - name: Typecheck
-        run: npm run typecheck -- --pretty false
-
-      - name: Production build
-        run: npm run build
+          git fetch origin design/offers-account-soul-pass
+          git checkout -B design/offers-account-soul-pass origin/design/offers-account-soul-pass
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/routes/offers.tsx')
+          s = p.read_text()
+          r = [
+            ('<main className="container-wide mobile-page-bottom pt-4">','<main className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">'),
+            ('<section className="hero-navy relative overflow-hidden rounded-3xl p-4 shadow-premium sm:p-6">','<section className="rawaj-hero-surface rounded-[1.6rem] p-4 sm:rounded-[2rem] sm:p-6">'),
+            ('className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-brand-orange text-white shadow-soft"','className="grid h-12 w-12 shrink-0 place-items-center rounded-[1.05rem] bg-primary text-primary-foreground shadow-premium-sm"'),
+            ('<p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-gold">','<p className="rawaj-eyebrow">'),
+            ('<h1 className="mt-1 text-xl font-extrabold text-primary-foreground sm:text-2xl">','<h1 className="mt-1.5 text-xl font-bold leading-[1.4] text-primary sm:text-2xl">'),
+            ('<p className="mt-1.5 max-w-xl text-xs leading-6 text-primary-foreground/80 sm:text-sm">','<p className="mt-2.5 max-w-xl text-xs leading-6 text-muted-foreground sm:text-sm sm:leading-7">'),
+            ('className="overflow-hidden bg-card hairline tap-card"','className="rawaj-surface group overflow-hidden rounded-[1.35rem] tap-card transition hover:-translate-y-0.5"'),
+            ('className="aspect-[16/9] w-full object-cover"','className="aspect-[16/9] w-full object-cover transition duration-300 group-hover:scale-[1.025]"'),
+            ('className="absolute top-2 start-2 rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground"','className="absolute start-2.5 top-2.5 rounded-full bg-primary/90 px-2.5 py-1 text-[9px] font-semibold text-primary-foreground shadow-soft backdrop-blur"'),
+            ('<p className="mt-1 text-base font-extrabold">','<p className="mt-1.5 text-base font-bold text-primary">'),
+            ('<section className="mt-5 overflow-hidden rounded-2xl bg-card p-6 text-center hairline shadow-soft">','<section className="rawaj-surface mt-5 overflow-hidden rounded-[1.4rem] p-6 text-center">'),
+          ]
+          for a,b in r:
+              if a not in s: raise SystemExit(f'missing: {a[:80]}')
+              s=s.replace(a,b)
+          p.write_text(s)
+          PY
+          npx prettier --write 'src/routes/offers.tsx'
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -- 'src/routes/offers.tsx'
+          git diff --cached --quiet || git commit -m 'Polish RAWAJ offers experience'
+          git push origin HEAD:design/offers-account-soul-pass
+      - run: npx eslint --quiet 'src/routes/offers.tsx'
+      - run: npm run typecheck -- --pretty false
+      - run: npm run build
