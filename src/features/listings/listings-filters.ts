@@ -37,6 +37,7 @@ export interface ListingsUrlSearch {
   subcategory?: string;
   gov?: string;
   district?: string;
+  location?: string;
   price_min?: number;
   price_max?: number;
   car_make?: string;
@@ -176,6 +177,8 @@ export function buildListingsSyncSearch(inputs: ListingsSyncSearchInputs): Listi
     sort,
   } = inputs;
 
+  const canonicalLocation = districtAr.startsWith("@") ? districtAr.slice(1) : undefined;
+
   return {
     taxonomy: selectedTaxonomyNodeId,
     category: selectedCategoryId,
@@ -184,7 +187,8 @@ export function buildListingsSyncSearch(inputs: ListingsSyncSearchInputs): Listi
         ? undefined
         : subcategoryId || undefined,
     gov: govId || undefined,
-    district: districtAr || undefined,
+    location: canonicalLocation,
+    district: canonicalLocation ? undefined : districtAr || undefined,
     price_min: parsedPriceMin,
     price_max: parsedPriceMax,
     car_make: carMake || undefined,
@@ -292,13 +296,15 @@ export function buildListingsMobileApplySearch(
     sort,
   } = inputs;
   const isTaxonomy = Boolean(searchTaxonomy);
+  const canonicalLocation = districtAr.startsWith("@") ? districtAr.slice(1) : undefined;
 
   return {
     taxonomy: searchTaxonomy,
     category: isTaxonomy ? undefined : draftCategoryId || undefined,
     subcategory: isTaxonomy ? undefined : subcategoryId || undefined,
     gov: govId || undefined,
-    district: districtAr || undefined,
+    location: canonicalLocation,
+    district: canonicalLocation ? undefined : districtAr || undefined,
     price_min: parsedPriceMin,
     price_max: parsedPriceMax,
     car_make: !isTaxonomy && fieldKind === "vehicles" ? carMake || undefined : undefined,
