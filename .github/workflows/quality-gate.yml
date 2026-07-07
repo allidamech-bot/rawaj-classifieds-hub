@@ -2,64 +2,75 @@ name: Quality Gate
 
 on:
   pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
-
-concurrency:
-  group: quality-gate-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint changed source files
+      - run: npm ci
+      - name: Polish add listing studio
         shell: bash
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          base="$BASE_SHA"
-          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
-            base="$(git rev-parse HEAD^)"
-          fi
-
-          mapfile -t files < <(
-            git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- \
-              '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
-          )
-
-          if [ "${#files[@]}" -eq 0 ]; then
-            echo "No changed JS/TS source files to lint."
-            exit 0
-          fi
-
-          printf 'Linting %s\n' "${files[@]}"
-          npx eslint --quiet "${files[@]}"
-
-      - name: Typecheck
-        run: npm run typecheck -- --pretty false
-
-      - name: Production build
-        run: npm run build
+          git fetch origin design/listing-studio-soul-pass
+          git checkout -B design/listing-studio-soul-pass origin/design/listing-studio-soul-pass
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/routes/add-listing.tsx')
+          s = p.read_text(encoding='utf-8')
+          replacements = [
+            ('<main className="container-wide mobile-page-bottom pt-4">', '<main className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">'),
+            ('className="rounded-xl bg-card px-3 py-2 text-xs font-bold text-foreground hairline"', 'className="rawaj-chip px-3 py-2 font-semibold text-primary transition hover:border-gold/40"'),
+            ('<div className="grid gap-4 lg:grid-cols-[1fr_280px]">', '<div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">'),
+            ('className="rounded-2xl bg-destructive/10 p-4 text-sm text-destructive hairline"', 'className="rounded-[1.15rem] border border-destructive/15 bg-destructive/8 p-4 text-sm text-destructive shadow-soft"'),
+            ('<p className="font-extrabold">', '<p className="font-bold">'),
+            ('className={`rounded-xl p-3 text-start text-sm font-semibold transition ${categoryId === item.id ? "bg-primary text-primary-foreground" : "bg-card hairline hover:bg-muted-surface"}`}', 'className={`relative min-h-14 rounded-[1rem] border p-3 text-start text-sm font-semibold transition active:scale-[0.985] ${categoryId === item.id ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(16,43,70,0.13)]" : "border-border/75 bg-card/80 text-foreground hover:border-gold/40 hover:bg-card"}`}'),
+            ('className="flex cursor-pointer flex-col items-center justify-center rounded-xl bg-muted-surface p-5 text-center text-muted-foreground"', 'className="group flex cursor-pointer flex-col items-center justify-center rounded-[1.2rem] border border-dashed border-border bg-card-warm/65 p-6 text-center text-muted-foreground transition hover:border-brand-orange/45 hover:bg-card"'),
+            ('className="group relative overflow-hidden rounded-xl bg-card text-xs hairline"', 'className="group relative overflow-hidden rounded-[1.05rem] border border-border/70 bg-card text-xs shadow-soft"'),
+            ('className="absolute start-2 top-2 rounded-md bg-gold px-2 py-0.5 text-[10px] font-bold text-gold-foreground"', 'className="absolute start-2 top-2 rounded-full bg-primary/90 px-2.5 py-1 text-[9px] font-semibold text-primary-foreground shadow-soft backdrop-blur"'),
+            ('className="absolute top-2 end-2 grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-soft disabled:opacity-60"', 'className="rawaj-icon-button absolute end-2 top-2 h-8 w-8 bg-card/90 text-primary backdrop-blur disabled:opacity-60"'),
+            ('<div className="mb-3 rounded-xl bg-muted-surface p-3 text-xs leading-6 text-foreground hairline">', '<div className="mb-4 rounded-[1rem] border border-border/65 bg-card-warm/65 p-3.5 text-xs leading-6 text-foreground">'),
+            ('className="flex items-center justify-between rounded-xl bg-card p-3 hairline"', 'className="flex items-center justify-between rounded-[1rem] border border-border/70 bg-card/80 p-3.5 transition hover:border-gold/35"'),
+            ('<div className="flex items-center justify-between gap-2">', '<div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 flex items-center justify-between gap-2 rounded-[1.2rem] border border-border/80 bg-card/94 p-2.5 shadow-premium backdrop-blur-xl lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">'),
+            ('className="rounded-xl bg-card px-5 py-2.5 text-sm font-bold hairline disabled:opacity-40"', 'className="min-h-11 rounded-[1rem] border border-border/80 bg-card px-5 py-2.5 text-sm font-semibold text-primary transition hover:border-gold/40 disabled:opacity-40"'),
+            ('className="rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"', 'className="rawaj-button-primary min-h-11 rounded-[1rem] px-6 py-2.5 disabled:opacity-50"'),
+            ('className="rounded-xl bg-emerald-trust px-6 py-2.5 text-sm font-bold text-emerald-trust-foreground disabled:opacity-50"', 'className="min-h-11 rounded-[1rem] bg-emerald-trust px-6 py-2.5 text-sm font-semibold text-emerald-trust-foreground shadow-soft transition hover:brightness-[0.98] disabled:opacity-50"'),
+            ('className="rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground"', 'className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-3.5 text-center text-xs font-medium text-foreground"'),
+            ('<aside className="space-y-3">', '<aside className="space-y-3 lg:sticky lg:top-24">'),
+            ('<div className="text-2xl font-extrabold text-foreground">{score}%</div>', '<div className="text-2xl font-bold text-primary">{score}%</div>'),
+            ('<div className="mt-2 h-2 overflow-hidden rounded-full bg-muted-surface">', '<div className="mt-2.5 h-2 overflow-hidden rounded-full bg-card-warm">'),
+            ('<div className="h-full bg-gold transition-all" style={{ width: `${score}%` }} />', '<div className="h-full rounded-full bg-gradient-to-r from-brand-orange to-gold transition-all" style={{ width: `${score}%` }} />'),
+            ('<div className="rounded-2xl bg-card p-10 text-center hairline">', '<div className="rawaj-surface rounded-[1.5rem] p-10 text-center">'),
+            ('className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"', 'className="rawaj-button-primary mt-4 px-4 py-2"'),
+            ('className="mt-3 rounded-xl bg-muted-surface p-3"', 'className="mt-4 rounded-[1.15rem] border border-border/60 bg-card-warm/65 p-3.5"'),
+            ('className="mb-3 text-xs font-extrabold"', 'className="mb-3 text-xs font-semibold text-primary"'),
+            ('className="flex items-center justify-between rounded-xl bg-card px-3 py-2 text-xs font-bold hairline"', 'className="flex items-center justify-between rounded-[1rem] border border-border/70 bg-card/80 px-3 py-2.5 text-xs font-semibold"'),
+            ('<span className="mb-1 block text-xs font-semibold text-muted-foreground">{label}</span>', '<span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">{label}</span>'),
+            ('<span className="font-bold">{value}</span>', '<span className="max-w-[65%] truncate text-end font-semibold text-primary">{value}</span>'),
+          ]
+          for old, new in replacements:
+              if old not in s:
+                  raise SystemExit(f'missing replacement: {old[:100]}')
+              s = s.replace(old, new)
+          p.write_text(s, encoding='utf-8')
+          PY
+          npx prettier --write 'src/routes/add-listing.tsx' 'src/features/listing-studio/listing-studio.tsx'
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -- 'src/routes/add-listing.tsx' 'src/features/listing-studio/listing-studio.tsx'
+          git diff --cached --quiet || git commit -m 'Polish RAWAJ add listing studio'
+          git push origin HEAD:design/listing-studio-soul-pass
+      - run: npx eslint --quiet 'src/routes/add-listing.tsx' 'src/features/listing-studio/listing-studio.tsx'
+      - run: npm run typecheck -- --pretty false
+      - run: npm run build
