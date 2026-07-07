@@ -172,20 +172,20 @@ function MorePage() {
     <div className="min-h-dvh bg-background" dir={isArabic ? "rtl" : "ltr"}>
       <AppHeader compact title={text("حسابي", "My account")} />
 
-      <main className="mobile-page-bottom mx-auto max-w-5xl px-4 py-4 sm:px-6 lg:px-8">
-        <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
+      <main className="mobile-page-bottom mx-auto max-w-5xl px-4 pb-8 pt-3 sm:px-6 sm:pt-5 lg:px-8">
+        <section className="rawaj-hero-surface rounded-[1.55rem] p-4 sm:rounded-[1.9rem] sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.05rem] bg-primary text-primary-foreground shadow-premium-sm">
                 {user ? <User className="h-5 w-5" /> : <LogIn className="h-5 w-5" />}
               </span>
               <div className="min-w-0">
-                <p className="truncate text-sm font-extrabold text-foreground">
+                <p className="truncate text-sm font-bold text-primary">
                   {user
                     ? (user.email ?? text("حساب مسجل", "Signed-in account"))
                     : text("تتصفح كزائر", "Browsing as guest")}
                 </p>
-                <p className="mt-0.5 text-xs font-semibold text-muted-foreground">
+                <p className="mt-1 text-xs font-medium leading-5 text-muted-foreground">
                   {user
                     ? text(
                         "إدارة الحساب والنشاط من مكان واحد",
@@ -199,10 +199,7 @@ function MorePage() {
               </div>
             </div>
 
-            <Button
-              asChild
-              className="w-full bg-gold text-gold-foreground hover:bg-gold/90 sm:w-auto"
-            >
+            <Button asChild className="rawaj-button-primary w-full sm:w-auto">
               <Link to={user ? "/profile" : "/login"}>
                 {user ? text("تعديل الحساب", "Edit account") : text("تسجيل الدخول", "Sign in")}
               </Link>
@@ -222,7 +219,7 @@ function MorePage() {
           ))}
         </section>
 
-        <div className="mt-5 space-y-3">
+        <div className="mt-6 space-y-3.5">
           {logoutError && (
             <p
               role="alert"
@@ -231,7 +228,6 @@ function MorePage() {
               {logoutError}
             </p>
           )}
-
 
           <AccountSection title={text("الإعدادات", "Settings")}>
             {settingsRows.map((row) => (
@@ -283,8 +279,8 @@ function AccountSection({
   quiet?: boolean;
 }) {
   return (
-    <section className={`rounded-xl border border-border bg-card p-3 ${quiet ? "bg-card/80" : ""}`}>
-      <h2 className="px-2 pb-2 text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
+    <section className={`rawaj-surface rounded-[1.3rem] p-3 ${quiet ? "bg-card/78" : ""}`}>
+      <h2 className="px-2 pb-2.5 text-[10px] font-semibold tracking-[0.04em] text-brand-orange">
         {title}
       </h2>
       <div className="divide-y divide-border/70">{children}</div>
@@ -304,22 +300,23 @@ function PrimaryShortcut({
   return (
     <Link
       to={row.to ?? "/more"}
-      className="group relative flex min-h-28 flex-col overflow-hidden rounded-2xl bg-brand-navy p-3 text-primary-foreground shadow-premium transition hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
+      className="rawaj-surface group relative flex min-h-28 flex-col overflow-hidden rounded-[1.25rem] p-3 text-foreground transition hover:-translate-y-0.5 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
     >
       <span
         aria-hidden="true"
         className="pointer-events-none absolute -end-6 -top-6 h-20 w-20 rotate-12 rounded-2xl opacity-40"
         style={{
-          background:
-            "linear-gradient(140deg, rgba(224,118,43,0.55), rgba(224,118,43,0) 70%)",
+          background: "linear-gradient(140deg, rgba(224,118,43,0.55), rgba(224,118,43,0) 70%)",
         }}
       />
-      <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-brand-orange text-white shadow-soft">
+      <span className="category-tile relative h-10 w-10 text-brand-orange">
         <Icon className="h-5 w-5" />
       </span>
-      <span className="relative mt-3 block text-sm font-extrabold">{text(row.titleAr, row.titleEn)}</span>
+      <span className="relative mt-3 block text-sm font-semibold text-primary">
+        {text(row.titleAr, row.titleEn)}
+      </span>
       {(row.hintAr || row.hintEn) && (
-        <span className="relative mt-1 block text-[11px] font-semibold text-primary-foreground/75">
+        <span className="relative mt-1 block text-[11px] font-medium leading-5 text-muted-foreground">
           {text(row.hintAr ?? row.titleAr, row.hintEn ?? row.titleEn)}
         </span>
       )}
@@ -338,12 +335,14 @@ function SecondaryShortcut({
   return (
     <Link
       to={row.to ?? "/more"}
-      className="flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-2xl bg-card p-2 text-center hairline shadow-soft transition hover:-translate-y-0.5 hover:border-brand-orange/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
+      className="rawaj-surface tap-card flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-[1.15rem] p-2 text-center transition hover:-translate-y-0.5 hover:border-gold/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
     >
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-muted-surface text-primary">
+      <span className="category-tile h-9 w-9">
         <Icon className="h-4 w-4" />
       </span>
-      <span className="text-[11px] font-bold text-foreground">{text(row.titleAr, row.titleEn)}</span>
+      <span className="text-[10.5px] font-semibold text-foreground">
+        {text(row.titleAr, row.titleEn)}
+      </span>
     </Link>
   );
 }
@@ -374,7 +373,7 @@ function AccountItem({
         </span>
         <span className="min-w-0">
           <span
-            className={`block truncate text-sm font-bold ${
+            className={`block truncate text-sm font-semibold ${
               row.destructive ? "text-destructive" : "text-foreground"
             }`}
           >
