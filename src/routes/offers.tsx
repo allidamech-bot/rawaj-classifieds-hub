@@ -174,7 +174,10 @@ function OffersPage() {
               />
             ) : error ? (
               <OffersState
-                title={text("تعذر تحميل الإعلانات المميزة", "Could not load featured listings")}
+                title={text(
+                  "تعذر تحميل الإعلانات المميزة",
+                  "Could not load featured listings",
+                )}
                 body={error.message}
               />
             ) : listings.length === 0 ? (
@@ -277,7 +280,12 @@ function FeaturedListingCard({ listing }: { listing: ClassifiedListing }) {
         </div>
         <h3 className="line-clamp-2 text-sm font-bold">{listing.title}</h3>
         <p className="mt-1.5 text-base font-extrabold text-primary">
-          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
+          {formatPriceLocalized(
+            listing.price ?? 0,
+            listing.priceType,
+            language,
+            listing.currency,
+          )}
         </p>
         <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
           <MapPin className="h-3 w-3" />
