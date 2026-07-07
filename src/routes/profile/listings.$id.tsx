@@ -6,6 +6,7 @@ import {
   ListingStudioMessage,
   ListingStudioSection,
 } from "@/features/listing-studio/listing-studio";
+import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
 import {
   detectCategoryFieldKind,
   mergeCategoryDetails,
@@ -40,6 +41,7 @@ import type {
   ListingImage,
 } from "@/lib/classifieds-types";
 import { categoryName, governorateName } from "@/lib/i18n";
+import { fetchListingLocationNodeId } from "@/lib/api/listing-location-read";
 import { listingStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -80,6 +82,7 @@ function ManageListingPage() {
   const [subcategoryId, setSubcategoryId] = useState<string | null>(null);
   const [governorateId, setGovernorateId] = useState("");
   const [district, setDistrict] = useState("");
+  const [locationNodeId, setLocationNodeId] = useState("");
   const [price, setPrice] = useState("");
   const [priceType, setPriceType] = useState<PriceType>("fixed");
   const [condition, setCondition] = useState<ListingCondition>("not_applicable");
@@ -120,8 +123,9 @@ function ManageListingPage() {
       setLoading(true);
       setSetupError(null);
 
-      const [listingResult, refsResult] = await Promise.all([
+      const [listingResult, locationResult, refsResult] = await Promise.all([
         fetchOwnerListingDetail(profileId, id),
+        fetchListingLocationNodeId(profileId, id),
         Promise.all([
           fetchPublicCategories(),
           fetchPublicGovernorates(),
@@ -163,6 +167,7 @@ function ManageListingPage() {
       setSubcategoryId(listingResult.data.subcategoryId);
       setGovernorateId(listingResult.data.governorateId);
       setDistrict(listingResult.data.districtAr ?? "");
+      setLocationNodeId(locationResult.ok ? (locationResult.data ?? "") : "");
       setPrice(listingResult.data.price?.toString() ?? "");
       setPriceType(listingResult.data.priceType);
       setCondition(listingResult.data.condition);
@@ -236,7 +241,7 @@ function ManageListingPage() {
       price: price ? Number(price) : null,
       priceType,
       condition,
-      districtAr: district || undefined,
+      districtAr: locationNodeId ? `@${locationNodeId}` : district || undefined,
       contactName: contactName.trim() || undefined,
       contactOptions: contact,
       details: validation.details,
@@ -262,6 +267,7 @@ function ManageListingPage() {
     priceType,
     condition,
     district,
+    locationNodeId,
     contactName,
     contact,
     phone,
@@ -304,7 +310,7 @@ function ManageListingPage() {
       price: price ? Number(price) : null,
       priceType,
       condition,
-      districtAr: district || undefined,
+      districtAr: locationNodeId ? `@${locationNodeId}` : district || undefined,
       contactName: contactName.trim() || undefined,
       contactOptions: contact,
       details: validation.details,
@@ -330,6 +336,7 @@ function ManageListingPage() {
     priceType,
     condition,
     district,
+    locationNodeId,
     contactName,
     contact,
     phone,
@@ -595,40 +602,26 @@ function ManageListingPage() {
                   </select>
                 </Field>
               </div>
-              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Field label={text("المحافظة", "Governorate")}>
-                  <select
-                    value={governorateId}
-                    onChange={(e) => {
-                      setGovernorateId(e.target.value);
-                      setDistrict("");
-                    }}
-                    className="input"
+              <div className="mt-3">
+                <Field label={text("الموقع", "Location")}>
+                  <CanonicalLocationSelector
+                    value={locationNodeId || null}
                     disabled={!isEditable}
-                  >
-                    <option value="">{text("اختر", "Choose")}</option>
-                    {governorates.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {governorateName(item.id, item.nameAr, language)}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(id, node) => {
+                      setLocationNodeId(id ?? "");
+                      if (node?.legacyGovernorateId) {
+                        setGovernorateId(node.legacyGovernorateId);
+                      }
+                      setDistrict(node?.legacyDistrictAr ?? "");
+                    }}
+                  />
                 </Field>
-                <Field label={text("المنطقة", "District")}>
-                  <select
-                    value={district}
-                    onChange={(e) => setDistrict(e.target.value)}
-                    disabled={!isEditable || !governorate}
-                    className="input disabled:opacity-50"
-                  >
-                    <option value="">{text("اختر", "Choose")}</option>
-                    {governorate?.districtsAr.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
+                {!locationNodeId && district ? (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {text("الموقع القديم المحفوظ: ", "Saved legacy location: ")}
+                    {district}
+                  </p>
+                ) : null}
               </div>
             </ListingStudioSection>
 
