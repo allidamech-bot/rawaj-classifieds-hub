@@ -9,11 +9,11 @@ function patch(path, search, replacement) {
 patch(
   "src/features/listings/listings-components.tsx",
   `export function RealListingCard({ listing }: { listing: ClassifiedListing }) {\n  const { language, text } = useUiPreferences();\n\n  return (\n`,
-  `export function RealListingCard({ listing }: { listing: ClassifiedListing }) {\n  const { language, text } = useUiPreferences();\n  const governorateLabel = governorateName(\n    listing.governorateId,\n    listing.governorateNameAr ?? undefined,\n    language,\n  );\n  const canonicalLocationName =\n    language === "en"\n      ? listing.locationNameEn || listing.locationNameAr\n      : listing.locationNameAr;\n  const locationLabel = canonicalLocationName\n    ? canonicalLocationName === governorateLabel\n      ? canonicalLocationName\n      : \`${governorateLabel} · ${canonicalLocationName}\`\n    : listing.districtAr\n      ? \`${governorateLabel} · ${listing.districtAr}\`\n      : governorateLabel;\n\n  return (\n`,
+  `export function RealListingCard({ listing }: { listing: ClassifiedListing }) {\n  const { language, text } = useUiPreferences();\n  const governorateLabel = governorateName(\n    listing.governorateId,\n    listing.governorateNameAr ?? undefined,\n    language,\n  );\n  const canonicalLocationName =\n    language === "en"\n      ? listing.locationNameEn || listing.locationNameAr\n      : listing.locationNameAr;\n  const locationLabel = canonicalLocationName\n    ? canonicalLocationName === governorateLabel\n      ? canonicalLocationName\n      : \`\${governorateLabel} · \${canonicalLocationName}\`\n    : listing.districtAr\n      ? \`\${governorateLabel} · \${listing.districtAr}\`\n      : governorateLabel;\n\n  return (\n`,
 );
 patch(
   "src/features/listings/listings-components.tsx",
-  `            <span className="truncate">\n              {governorateName(\n                listing.governorateId,\n                listing.governorateNameAr ?? undefined,\n                language,\n              )}\n              {listing.districtAr ? \` · ${listing.districtAr}\` : ""}\n            </span>\n`,
+  `            <span className="truncate">\n              {governorateName(\n                listing.governorateId,\n                listing.governorateNameAr ?? undefined,\n                language,\n              )}\n              {listing.districtAr ? \` · \${listing.districtAr}\` : ""}\n            </span>\n`,
   `            <span className="truncate">{locationLabel}</span>\n`,
 );
 
@@ -35,7 +35,7 @@ patch(
 patch(
   "src/routes/listings.$id.tsx",
   `  const locationLabel = governorateName(\n    listing.governorateId,\n    listing.governorateNameAr ?? undefined,\n    language,\n  );\n`,
-  `  const governorateLabel = governorateName(\n    listing.governorateId,\n    listing.governorateNameAr ?? undefined,\n    language,\n  );\n  const locationLabel =\n    canonicalLocationPath ||\n    (listing.districtAr\n      ? \`${governorateLabel} › ${listing.districtAr}\`\n      : governorateLabel);\n`,
+  `  const governorateLabel = governorateName(\n    listing.governorateId,\n    listing.governorateNameAr ?? undefined,\n    language,\n  );\n  const locationLabel =\n    canonicalLocationPath ||\n    (listing.districtAr\n      ? \`\${governorateLabel} › \${listing.districtAr}\`\n      : governorateLabel);\n`,
 );
 patch(
   "src/routes/listings.$id.tsx",
