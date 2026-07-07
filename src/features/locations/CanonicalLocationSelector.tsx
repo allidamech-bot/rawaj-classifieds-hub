@@ -15,9 +15,7 @@ export function CanonicalLocationSelector({
     const selected = levels[index]?.options.find((option) => option.id === selectedId) ?? null;
     const next = levels
       .slice(0, index + 1)
-      .map((level, currentIndex) =>
-        currentIndex === index ? { ...level, selectedId } : level,
-      );
+      .map((level, currentIndex) => (currentIndex === index ? { ...level, selectedId } : level));
 
     setError(null);
     setLevels(next);
@@ -27,10 +25,7 @@ export function CanonicalLocationSelector({
     const children = await fetchLocationChildren(selected.id);
     if (!children.ok) return setError(children.error.message);
     if (children.data.length > 0) {
-      setLevels([
-        ...next,
-        { parentId: selected.id, options: children.data, selectedId: "" },
-      ]);
+      setLevels([...next, { parentId: selected.id, options: children.data, selectedId: "" }]);
     }
   }
 

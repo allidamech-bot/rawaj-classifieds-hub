@@ -27,7 +27,11 @@ export async function fetchPublicListingsCanonicalAware(
   const references = await readReferences(client);
   if (!references.ok) return { ok: false, error: references.error };
 
-  let query = client.from("listings").select("*").eq("status", "approved").in("location_node_id", idsResult.data);
+  let query = client
+    .from("listings")
+    .select("*")
+    .eq("status", "approved")
+    .in("location_node_id", idsResult.data);
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
   const subcategoryId = filters.taxonomyLegacySubcategoryId ?? filters.subcategoryId;
   if (subcategoryId) query = query.eq("subcategory_id", subcategoryId);
@@ -58,15 +62,27 @@ export async function fetchPublicListingsCanonicalAware(
   }
 
   const sort = filters.sort ?? "latest";
-  if (sort === "cheapest") query = query.order("price", { ascending: true, nullsFirst: false }).order("id", { ascending: true });
-  else if (sort === "expensive") query = query.order("price", { ascending: false, nullsFirst: false }).order("id", { ascending: true });
-  else if (sort === "featured") query = query.order("is_featured", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false });
+  if (sort === "cheapest")
+    query = query
+      .order("price", { ascending: true, nullsFirst: false })
+      .order("id", { ascending: true });
+  else if (sort === "expensive")
+    query = query
+      .order("price", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: true });
+  else if (sort === "featured")
+    query = query
+      .order("is_featured", { ascending: false })
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false });
   else query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
 
   const safePageSize = Math.max(1, Math.min(pageSize, 50));
   const { data, error } = await query.limit(safePageSize + 1);
   if (error) return { ok: false, error: mapError(error) };
-  const listings = ((data ?? []) as Record<string, unknown>[]).map((row) => mapListing(row, references.categories, references.governorates));
+  const listings = ((data ?? []) as Record<string, unknown>[]).map((row) =>
+    mapListing(row, references.categories, references.governorates),
+  );
   const hasMore = listings.length > safePageSize;
   const pageItems = hasMore ? listings.slice(0, safePageSize) : listings;
   const hydrated = await hydrateListingsWithPrimaryImages(client, pageItems);
@@ -85,6 +101,12 @@ export async function fetchPublicListingsCanonicalAware(
 function buildCursor(sort: string, listing: ClassifiedListing): ListingCursor {
   if (sort === "cheapest") return { type: "cheapest", price: listing.price, id: listing.id };
   if (sort === "expensive") return { type: "expensive", price: listing.price, id: listing.id };
-  if (sort === "featured") return { type: "featured", is_featured: listing.isFeatured, created_at: listing.createdAt, id: listing.id };
+  if (sort === "featured")
+    return {
+      type: "featured",
+      is_featured: listing.isFeatured,
+      created_at: listing.createdAt,
+      id: listing.id,
+    };
   return { type: "latest", created_at: listing.createdAt, id: listing.id };
 }
