@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          show-progress: false
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -22,10 +24,21 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
       - name: Build
+        id: build
         shell: bash
         run: |
           set +e
           bun run build > build.log 2>&1
           status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
           tail -n 120 build.log
-          exit $status
+          exit 0
+      - name: Upload build log
+        uses: actions/upload-artifact@v4
+        with:
+          name: bun-build-log
+          path: build.log
+          if-no-files-found: error
+      - name: Fail when build failed
+        if: steps.build.outputs.status != '0'
+        run: exit 1
