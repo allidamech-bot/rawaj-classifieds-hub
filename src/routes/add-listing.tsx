@@ -815,17 +815,17 @@ function AddListingPage() {
   return (
     <>
       <PageHeader title={text("أضف إعلاناً", "Post a listing")} />
-      <main className="container-wide mobile-page-bottom pt-4">
+      <main className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
         <div className="mb-4 flex flex-wrap gap-2">
           <Link
             to="/"
-            className="rounded-xl bg-card px-3 py-2 text-xs font-bold text-foreground hairline"
+            className="rawaj-chip px-3 py-2 font-semibold text-primary transition hover:border-gold/40"
           >
             {text("الرئيسية", "Home")}
           </Link>
           <Link
             to="/listings"
-            className="rounded-xl bg-card px-3 py-2 text-xs font-bold text-foreground hairline"
+            className="rawaj-chip px-3 py-2 font-semibold text-primary transition hover:border-gold/40"
           >
             {text("تصفح الإعلانات", "Browse listings")}
           </Link>
@@ -846,14 +846,14 @@ function AddListingPage() {
             <p className="text-sm text-muted-foreground">{setupError.message}</p>
           </Card>
         ) : (
-          <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
+          <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">
             <div className="space-y-4">
               {stepErrors.length > 0 && (
                 <div
                   data-error-summary="true"
-                  className="rounded-2xl bg-destructive/10 p-4 text-sm text-destructive hairline"
+                  className="rounded-[1.15rem] border border-destructive/15 bg-destructive/8 p-4 text-sm text-destructive shadow-soft"
                 >
-                  <p className="font-extrabold">
+                  <p className="font-bold">
                     {text(
                       "أكمل المعلومات التالية قبل المتابعة:",
                       "Complete the following before continuing:",
@@ -882,7 +882,7 @@ function AddListingPage() {
                           key={item.id}
                           type="button"
                           onClick={() => setCategoryId(item.id)}
-                          className={`rounded-xl p-3 text-start text-sm font-semibold transition ${categoryId === item.id ? "bg-primary text-primary-foreground" : "bg-card hairline hover:bg-muted-surface"}`}
+                          className={`relative min-h-14 rounded-[1rem] border p-3 text-start text-sm font-semibold transition active:scale-[0.985] ${categoryId === item.id ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(16,43,70,0.13)]" : "border-border/75 bg-card/80 text-foreground hover:border-gold/40 hover:bg-card"}`}
                         >
                           {categoryName(item.id, item.nameAr, language)}
                         </button>
@@ -918,7 +918,7 @@ function AddListingPage() {
                       "Photos are optional, but they help buyers understand the listing quickly.",
                     )}
                   >
-                    <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl bg-muted-surface p-5 text-center text-muted-foreground">
+                    <label className="group flex cursor-pointer flex-col items-center justify-center rounded-[1.2rem] border border-dashed border-border bg-card-warm/65 p-6 text-center text-muted-foreground transition hover:border-brand-orange/45 hover:bg-card">
                       <Camera className="h-7 w-7" />
                       <span className="mt-2 text-sm font-bold">
                         {text("اختر صور الإعلان", "Choose listing photos")}
@@ -943,7 +943,7 @@ function AddListingPage() {
                       {selectedImagePreviews.map((preview, index) => (
                         <div
                           key={preview.id}
-                          className="group relative overflow-hidden rounded-xl bg-card text-xs hairline"
+                          className="group relative overflow-hidden rounded-[1.05rem] border border-border/70 bg-card text-xs shadow-soft"
                         >
                           <img
                             src={preview.url}
@@ -953,7 +953,7 @@ function AddListingPage() {
                             className="aspect-[4/3] w-full object-cover"
                           />
                           {index === 0 && (
-                            <span className="absolute start-2 top-2 rounded-md bg-gold px-2 py-0.5 text-[10px] font-bold text-gold-foreground">
+                            <span className="absolute start-2 top-2 rounded-full bg-primary/90 px-2.5 py-1 text-[9px] font-semibold text-primary-foreground shadow-soft backdrop-blur">
                               {text("الصورة الرئيسية", "Primary")}
                             </span>
                           )}
@@ -972,7 +972,7 @@ function AddListingPage() {
                               removingImageIds.has(preview.id) || preview.state === "uploading"
                             }
                             onClick={() => void removeSelectedImage(preview.id)}
-                            className="absolute top-2 end-2 grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-soft disabled:opacity-60"
+                            className="rawaj-icon-button absolute end-2 top-2 h-8 w-8 bg-card/90 text-primary backdrop-blur disabled:opacity-60"
                             aria-label={text("إزالة الصورة", "Remove photo")}
                           >
                             <X className="h-4 w-4" />
@@ -1097,7 +1097,7 @@ function AddListingPage() {
                         className="input"
                       />
                     </Field>
-                    <div className="mb-3 rounded-xl bg-muted-surface p-3 text-xs leading-6 text-foreground hairline">
+                    <div className="mb-4 rounded-[1rem] border border-border/65 bg-card-warm/65 p-3.5 text-xs leading-6 text-foreground">
                       {text(
                         "رقم الهاتف وواتساب اختياريان. إذا فعّلت أحدهما قد يظهر للعامة بعد الموافقة.",
                         "Phone and WhatsApp are optional. If enabled, they may appear publicly after approval.",
@@ -1110,7 +1110,7 @@ function AddListingPage() {
                       ].map((item) => (
                         <label
                           key={item.key}
-                          className="flex items-center justify-between rounded-xl bg-card p-3 hairline"
+                          className="flex items-center justify-between rounded-[1rem] border border-border/70 bg-card/80 p-3.5 transition hover:border-gold/35"
                         >
                           <span className="text-sm font-semibold">{item.label}</span>
                           <input
@@ -1199,11 +1199,11 @@ function AddListingPage() {
                 </>
               )}
 
-              <div className="flex items-center justify-between gap-2">
+              <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 flex items-center justify-between gap-2 rounded-[1.2rem] border border-border/80 bg-card/94 p-2.5 shadow-premium backdrop-blur-xl lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
                 <button
                   disabled={step === 0}
                   onClick={() => setStep((value) => Math.max(0, value - 1))}
-                  className="rounded-xl bg-card px-5 py-2.5 text-sm font-bold hairline disabled:opacity-40"
+                  className="min-h-11 rounded-[1rem] border border-border/80 bg-card px-5 py-2.5 text-sm font-semibold text-primary transition hover:border-gold/40 disabled:opacity-40"
                 >
                   {text("السابق", "Back")}
                 </button>
@@ -1211,7 +1211,7 @@ function AddListingPage() {
                   <button
                     disabled={!canContinue}
                     onClick={goNext}
-                    className="rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
+                    className="rawaj-button-primary min-h-11 rounded-[1rem] px-6 py-2.5 disabled:opacity-50"
                   >
                     {text("متابعة", "Continue")}
                   </button>
@@ -1219,7 +1219,7 @@ function AddListingPage() {
                   <button
                     disabled={!canSubmit || submitting}
                     onClick={() => void submitListing()}
-                    className="rounded-xl bg-emerald-trust px-6 py-2.5 text-sm font-bold text-emerald-trust-foreground disabled:opacity-50"
+                    className="min-h-11 rounded-[1rem] bg-emerald-trust px-6 py-2.5 text-sm font-semibold text-emerald-trust-foreground shadow-soft transition hover:brightness-[0.98] disabled:opacity-50"
                   >
                     {submitting
                       ? text("جارٍ الإرسال...", "Submitting...")
@@ -1229,7 +1229,7 @@ function AddListingPage() {
               </div>
 
               {submitMessage && (
-                <div className="rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground">
+                <div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-3.5 text-center text-xs font-medium text-foreground">
                   <p>{submitMessage}</p>
                   {createdListingId && (
                     <div className="mt-3 flex flex-wrap justify-center gap-2">
@@ -1253,11 +1253,14 @@ function AddListingPage() {
               )}
             </div>
 
-            <aside className="space-y-3">
+            <aside className="space-y-3 lg:sticky lg:top-24">
               <Card title={text("جودة الإعلان", "Listing quality")}>
-                <div className="text-2xl font-extrabold text-foreground">{score}%</div>
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted-surface">
-                  <div className="h-full bg-gold transition-all" style={{ width: `${score}%` }} />
+                <div className="text-2xl font-bold text-primary">{score}%</div>
+                <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-card-warm">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-brand-orange to-gold transition-all"
+                    style={{ width: `${score}%` }}
+                  />
                 </div>
               </Card>
               <Card title={text("تنبيه", "Note")}>
@@ -1296,14 +1299,14 @@ function PageState({
     <>
       <PageHeader title={title} />
       <main className="container-wide mobile-page-bottom pt-10">
-        <div className="rounded-2xl bg-card p-10 text-center hairline">
+        <div className="rawaj-surface rounded-[1.5rem] p-10 text-center">
           <p className="text-sm font-bold text-foreground">{heading}</p>
           <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p>
           {actionLabel && actionTo && (
             <Link
               to={actionTo}
               search={actionSearch}
-              className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+              className="rawaj-button-primary mt-4 px-4 py-2"
             >
               {actionLabel}
             </Link>
@@ -1462,8 +1465,8 @@ function CategorySpecificFields({
 
   if (kind === "real_estate") {
     return (
-      <div className="mt-3 rounded-xl bg-muted-surface p-3">
-        <h4 className="mb-3 text-xs font-extrabold">
+      <div className="mt-4 rounded-[1.15rem] border border-border/60 bg-card-warm/65 p-3.5">
+        <h4 className="mb-3 text-xs font-semibold text-primary">
           {text("تفاصيل العقار", "Real estate details")}
         </h4>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1543,8 +1546,10 @@ function CategorySpecificFields({
 
   if (kind === "vehicles") {
     return (
-      <div className="mt-3 rounded-xl bg-muted-surface p-3">
-        <h4 className="mb-3 text-xs font-extrabold">{text("تفاصيل السيارة", "Vehicle details")}</h4>
+      <div className="mt-4 rounded-[1.15rem] border border-border/60 bg-card-warm/65 p-3.5">
+        <h4 className="mb-3 text-xs font-semibold text-primary">
+          {text("تفاصيل السيارة", "Vehicle details")}
+        </h4>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={text("الشركة", "Make")} error={errors.car_make}>
             <select
@@ -1662,8 +1667,10 @@ function CategorySpecificFields({
 
   if (kind === "jobs") {
     return (
-      <div className="mt-3 rounded-xl bg-muted-surface p-3">
-        <h4 className="mb-3 text-xs font-extrabold">{text("تفاصيل الوظيفة", "Job details")}</h4>
+      <div className="mt-4 rounded-[1.15rem] border border-border/60 bg-card-warm/65 p-3.5">
+        <h4 className="mb-3 text-xs font-semibold text-primary">
+          {text("تفاصيل الوظيفة", "Job details")}
+        </h4>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={text("نوع الوظيفة", "Job type")} error={errors.job_type}>
             <input
@@ -1778,8 +1785,10 @@ function CategorySpecificFields({
 
   if (kind === "services") {
     return (
-      <div className="mt-3 rounded-xl bg-muted-surface p-3">
-        <h4 className="mb-3 text-xs font-extrabold">{text("تفاصيل الخدمة", "Service details")}</h4>
+      <div className="mt-4 rounded-[1.15rem] border border-border/60 bg-card-warm/65 p-3.5">
+        <h4 className="mb-3 text-xs font-semibold text-primary">
+          {text("تفاصيل الخدمة", "Service details")}
+        </h4>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={text("نوع الخدمة", "Service type")} error={errors.service_type}>
             <input
@@ -1824,8 +1833,10 @@ function CategorySpecificFields({
 
   if (kind === "electronics") {
     return (
-      <div className="mt-3 rounded-xl bg-muted-surface p-3">
-        <h4 className="mb-3 text-xs font-extrabold">{text("تفاصيل الجهاز", "Device details")}</h4>
+      <div className="mt-4 rounded-[1.15rem] border border-border/60 bg-card-warm/65 p-3.5">
+        <h4 className="mb-3 text-xs font-semibold text-primary">
+          {text("تفاصيل الجهاز", "Device details")}
+        </h4>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={text("الشركة", "Brand")} error={errors.electronics_brand}>
             <input
@@ -1899,7 +1910,7 @@ function CategorySpecificFields({
   }
 
   return (
-    <div className="mt-3 rounded-xl bg-muted-surface p-3">
+    <div className="mt-4 rounded-[1.15rem] border border-border/60 bg-card-warm/65 p-3.5">
       <LocationDetailsFields values={values} patch={patch} text={text} />
     </div>
   );
@@ -1981,7 +1992,7 @@ function CheckboxField({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex items-center justify-between rounded-xl bg-card px-3 py-2 text-xs font-bold hairline">
+    <label className="flex items-center justify-between rounded-[1rem] border border-border/70 bg-card/80 px-3 py-2.5 text-xs font-semibold">
       {label}
       <input
         type="checkbox"
@@ -2020,7 +2031,7 @@ function Field({
 }) {
   return (
     <label className="mb-3 block">
-      <span className="mb-1 block text-xs font-semibold text-muted-foreground">{label}</span>
+      <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">{label}</span>
       {children}
       {error && (
         <span className="mt-1 block text-[11px] font-semibold text-destructive">{error}</span>
@@ -2033,7 +2044,7 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between border-b border-border/60 pb-2 last:border-b-0">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-bold">{value}</span>
+      <span className="max-w-[65%] truncate text-end font-semibold text-primary">{value}</span>
     </div>
   );
 }

@@ -94,9 +94,7 @@ export function ListingStudioSection({
   return (
     <section
       className={`rounded-[1.4rem] p-4 sm:p-5 ${
-        tone === "muted"
-          ? "border border-border/65 bg-card-warm/65"
-          : "rawaj-surface"
+        tone === "muted" ? "border border-border/65 bg-card-warm/65" : "rawaj-surface"
       }`}
     >
       <div className="mb-4">
