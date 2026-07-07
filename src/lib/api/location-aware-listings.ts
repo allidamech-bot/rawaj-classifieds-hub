@@ -29,11 +29,14 @@ export async function fetchPublicListingsLocationAware(
   let query = client.from("listings").select("*").eq("status", "approved");
 
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
-  if (filters.subcategoryId) query = query.eq("subcategory_id", filters.subcategoryId);
-  if (filters.taxonomyLegacySubcategoryId) {
-    query = query.eq("subcategory_id", filters.taxonomyLegacySubcategoryId);
+  const effectiveSubcategoryId =
+    filters.taxonomyLegacySubcategoryId ?? filters.subcategoryId;
+  if (effectiveSubcategoryId) {
+    query = query.eq("subcategory_id", effectiveSubcategoryId);
   }
-  if (filters.governorateId) query = query.eq("governorate_id", filters.governorateId);
+  if (filters.governorateId) {
+    query = query.eq("governorate_id", filters.governorateId);
+  }
 
   if (filters.districtAr) {
     const subtreeIds = await resolveLocationSubtreeIds(
@@ -49,8 +52,12 @@ export async function fetchPublicListingsLocationAware(
 
   if (filters.priceMin !== undefined) query = query.gte("price", filters.priceMin);
   if (filters.priceMax !== undefined) query = query.lte("price", filters.priceMax);
-  if (filters.yearFrom !== undefined) query = query.gte("details->>year", String(filters.yearFrom));
-  if (filters.yearTo !== undefined) query = query.lte("details->>year", String(filters.yearTo));
+  if (filters.yearFrom !== undefined) {
+    query = query.gte("details->>year", String(filters.yearFrom));
+  }
+  if (filters.yearTo !== undefined) {
+    query = query.lte("details->>year", String(filters.yearTo));
+  }
 
   query = applyDetailFilters(query, filters);
 
