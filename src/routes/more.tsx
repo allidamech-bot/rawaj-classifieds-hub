@@ -14,12 +14,13 @@ import {
   MessageCircle,
   ScrollText,
   ShieldAlert,
+  Sparkles,
+  Store,
   User,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
-import { Button } from "@/components/ui/button";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -52,51 +53,57 @@ type AccountRow = {
   destructive?: boolean;
 };
 
-const primaryShortcuts: AccountRow[] = [
+const primaryShortcuts: (AccountRow & { world: string })[] = [
   {
-    titleAr: "إعلاناتي",
-    titleEn: "My listings",
-    hintAr: "إدارة إعلاناتك",
-    hintEn: "Manage your listings",
+    titleAr: "متجري",
+    titleEn: "My store",
+    hintAr: "إعلاناتك وإدارة واجهتك",
+    hintEn: "Listings and storefront",
     to: "/profile/listings",
-    icon: FileText,
+    icon: Store,
+    world: "rawaj-world-orange",
   },
   {
     titleAr: "الرسائل",
     titleEn: "Messages",
     hintAr: "محادثات البيع والشراء",
-    hintEn: "Buyer & seller chats",
+    hintEn: "Buyer and seller chats",
     to: "/chats",
     icon: MessageCircle,
+    world: "rawaj-world-indigo",
   },
   {
     titleAr: "الإشعارات",
     titleEn: "Notifications",
-    hintAr: "آخر التنبيهات",
-    hintEn: "Recent alerts",
+    hintAr: "آخر ما يحتاج انتباهك",
+    hintEn: "What needs your attention",
     to: "/notifications",
     icon: Bell,
+    world: "rawaj-world-emerald",
   },
 ];
 
-const secondaryShortcuts: AccountRow[] = [
+const secondaryShortcuts: (AccountRow & { world: string })[] = [
   {
     titleAr: "المفضلة",
     titleEn: "Favorites",
     to: "/favorites",
     icon: Heart,
+    world: "rawaj-world-plum",
   },
   {
-    titleAr: "البحث المحفوظ",
+    titleAr: "بحث محفوظ",
     titleEn: "Saved searches",
     to: "/saved-searches",
     icon: Bookmark,
+    world: "rawaj-world-gold",
   },
   {
     titleAr: "التوثيق",
     titleEn: "Verification",
     to: "/verification",
     icon: BadgeCheck,
+    world: "rawaj-world-emerald",
   },
 ];
 
@@ -106,6 +113,13 @@ function MorePage() {
   const { user } = auth;
   const [logoutError, setLogoutError] = useState("");
   const isArabic = language === "ar";
+  const profile = auth.profile;
+  const displayName =
+    profile?.businessName ||
+    profile?.displayName ||
+    user?.email ||
+    text("حساب رواج", "RAWAJ account");
+  const location = profile?.cityArea || profile?.governorate || text("سوريا", "Syria");
 
   async function handleLogout() {
     setLogoutError("");
@@ -113,14 +127,12 @@ function MorePage() {
     if (result.error) setLogoutError(result.error);
   }
 
-  // Messages/Notifications are now elevated into primaryShortcuts, so activityRows is retired.
-
   const settingsRows: AccountRow[] = [
     {
       titleAr: "معلومات الحساب",
       titleEn: "Account information",
-      hintAr: "البيانات الأساسية ووسائل التواصل",
-      hintEn: "Basic details and contact methods",
+      hintAr: "الهوية ووسائل التواصل",
+      hintEn: "Identity and contact details",
       to: "/profile",
       icon: User,
     },
@@ -146,96 +158,141 @@ function MorePage() {
     {
       titleAr: "إرشادات الأمان",
       titleEn: "Safety guidelines",
-      hintAr: "نصائح للبيع والشراء بأمان",
-      hintEn: "Tips for safer buying and selling",
+      hintAr: "بيع وشراء بوعي",
+      hintEn: "Buy and sell with care",
       to: "/safety",
       icon: ShieldAlert,
     },
   ];
 
   const legalRows: AccountRow[] = [
-    {
-      titleAr: "الخصوصية",
-      titleEn: "Privacy",
-      to: "/privacy",
-      icon: Lock,
-    },
-    {
-      titleAr: "الشروط والأحكام",
-      titleEn: "Terms & conditions",
-      to: "/terms",
-      icon: ScrollText,
-    },
+    { titleAr: "الخصوصية", titleEn: "Privacy", to: "/privacy", icon: Lock },
+    { titleAr: "الشروط والأحكام", titleEn: "Terms & conditions", to: "/terms", icon: ScrollText },
   ];
 
   return (
-    <div className="min-h-dvh bg-background" dir={isArabic ? "rtl" : "ltr"}>
-      <AppHeader compact title={text("حسابي", "My account")} />
+    <div className="rawaj-pulse-page min-h-dvh" dir={isArabic ? "rtl" : "ltr"}>
+      <AppHeader compact title={text("مساحتي", "My space")} />
 
-      <main className="mobile-page-bottom mx-auto max-w-5xl px-4 pb-8 pt-3 sm:px-6 sm:pt-5 lg:px-8">
-        <section className="rawaj-hero-surface rounded-[1.55rem] p-4 sm:rounded-[1.9rem] sm:p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.05rem] bg-primary text-primary-foreground shadow-premium-sm">
-                {user ? <User className="h-5 w-5" /> : <LogIn className="h-5 w-5" />}
+      <main className="mobile-page-bottom mx-auto max-w-6xl px-4 pb-8 pt-3 sm:px-6 sm:pt-5 lg:px-8">
+        <section className="rawaj-id-card rounded-[1.7rem] p-5 sm:rounded-[2rem] sm:p-7">
+          <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex min-w-0 items-center gap-4">
+              <span className="rawaj-id-avatar h-20 w-20 shrink-0 rounded-[1.35rem] text-2xl font-bold sm:h-24 sm:w-24">
+                {profile?.avatarUrl ? (
+                  <img
+                    src={profile.avatarUrl}
+                    alt={displayName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : user ? (
+                  displayName.slice(0, 1).toUpperCase()
+                ) : (
+                  <LogIn className="h-7 w-7" />
+                )}
               </span>
+
               <div className="min-w-0">
-                <p className="truncate text-sm font-bold text-primary">
+                <span className="rawaj-signature-kicker text-gold">
                   {user
-                    ? (user.email ?? text("حساب مسجل", "Signed-in account"))
-                    : text("تتصفح كزائر", "Browsing as guest")}
-                </p>
-                <p className="mt-1 text-xs font-medium leading-5 text-muted-foreground">
+                    ? text("RAWAJ ID", "RAWAJ ID")
+                    : text("مساحتك على رواج", "Your RAWAJ space")}
+                </span>
+                <h1 className="mt-2 truncate text-xl font-bold text-[#fffaf0] sm:text-2xl">
+                  {displayName}
+                </h1>
+                <p className="mt-1 text-xs text-[#fffaf0]/70">{location}</p>
+                <p className="mt-2 max-w-xl text-xs leading-6 text-[#fffaf0]/72">
                   {user
                     ? text(
-                        "إدارة الحساب والنشاط من مكان واحد",
-                        "Manage account and activity in one place",
+                        "مساحتك الشخصية لإدارة متجرك ونشاطك ومحادثاتك من مكان واحد.",
+                        "Your personal space for managing your store, activity, and conversations.",
                       )
                     : text(
-                        "سجل الدخول لإدارة إعلاناتك ونشاطك",
-                        "Sign in to manage listings and activity",
+                        "سجل الدخول لتفتح مساحتك الشخصية وتدير إعلاناتك كواجهة متجر.",
+                        "Sign in to unlock your personal space and manage listings like a storefront.",
                       )}
                 </p>
               </div>
             </div>
 
-            <Button asChild className="rawaj-button-primary w-full sm:w-auto">
-              <Link to={user ? "/profile" : "/login"}>
-                {user ? text("تعديل الحساب", "Edit account") : text("تسجيل الدخول", "Sign in")}
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+              {user && profile?.id ? (
+                <Link
+                  to="/seller/$id"
+                  params={{ id: profile.id }}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[1rem] border border-white/15 bg-white/8 px-4 text-xs font-semibold text-[#fffaf0] backdrop-blur transition hover:bg-white/12"
+                >
+                  <Sparkles className="h-4 w-4 text-gold" />
+                  {text("عرض واجهتي", "View storefront")}
+                </Link>
+              ) : null}
+              <Link
+                to={user ? "/profile" : "/login"}
+                className="inline-flex min-h-11 items-center justify-center rounded-[1rem] bg-brand-orange px-4 text-xs font-bold text-white shadow-[0_10px_24px_rgba(232,111,50,0.25)] transition hover:-translate-y-0.5"
+              >
+                {user ? text("تعديل هويتي", "Edit identity") : text("تسجيل الدخول", "Sign in")}
               </Link>
-            </Button>
+            </div>
+          </div>
+
+          <div className="relative z-10 mt-5 grid grid-cols-3 gap-2">
+            {[
+              [text("واجهة", "Storefront"), text("متجر شخصي", "Personal store")],
+              [text("نشاط", "Activity"), text("في مكان واحد", "One place")],
+              [text("هوية", "Identity"), text("خاصة بك", "Yours")],
+            ].map(([label, value]) => (
+              <div key={label} className="rawaj-id-stat rounded-[1rem] p-3">
+                <span className="block text-[9px] font-semibold text-[#fffaf0]/55 sm:text-[10px]">
+                  {label}
+                </span>
+                <strong className="mt-1 block truncate text-[11px] sm:text-xs">{value}</strong>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-7">
+          <div className="mb-3.5 flex items-end justify-between gap-3">
+            <div>
+              <span className="rawaj-signature-kicker">
+                {text("مركز التحكم", "Command center")}
+              </span>
+              <h2 className="mt-1 text-lg font-bold text-primary">
+                {text("أهم ما تحتاجه الآن", "What matters now")}
+              </h2>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {primaryShortcuts.map((row) => (
+              <PrimaryShortcut key={row.titleEn} row={row} text={text} />
+            ))}
           </div>
         </section>
 
         <section className="mt-4 grid grid-cols-3 gap-2.5 sm:gap-3">
-          {primaryShortcuts.map((row) => (
-            <PrimaryShortcut key={row.titleEn} row={row} text={text} />
-          ))}
-        </section>
-
-        <section className="mt-3 grid grid-cols-3 gap-2.5 sm:gap-3">
           {secondaryShortcuts.map((row) => (
             <SecondaryShortcut key={row.titleEn} row={row} text={text} />
           ))}
         </section>
 
-        <div className="mt-6 space-y-3.5">
+        <div className="mt-7 grid gap-4 lg:grid-cols-2">
           {logoutError && (
             <p
               role="alert"
-              className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive"
+              className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive lg:col-span-2"
             >
               {logoutError}
             </p>
           )}
 
-          <AccountSection title={text("الإعدادات", "Settings")}>
+          <AccountSection title={text("الحساب والتفضيلات", "Account & preferences")}>
             {settingsRows.map((row) => (
               <AccountItem key={row.titleEn} row={row} text={text} />
             ))}
           </AccountSection>
 
-          <AccountSection title={text("المساعدة", "Help")}>
+          <AccountSection title={text("المساعدة والأمان", "Help & safety")}>
             {helpRows.map((row) => (
               <AccountItem key={row.titleEn} row={row} text={text} />
             ))}
@@ -279,11 +336,13 @@ function AccountSection({
   quiet?: boolean;
 }) {
   return (
-    <section className={`rawaj-surface rounded-[1.3rem] p-3 ${quiet ? "bg-card/78" : ""}`}>
-      <h2 className="px-2 pb-2.5 text-[10px] font-semibold tracking-[0.04em] text-brand-orange">
+    <section
+      className={`rawaj-color-card rounded-[1.35rem] p-3 ${quiet ? "rawaj-world-gold" : "rawaj-world-indigo"}`}
+    >
+      <h2 className="relative px-2 pb-2.5 text-[10px] font-semibold tracking-[0.04em] text-brand-orange">
         {title}
       </h2>
-      <div className="divide-y divide-border/70">{children}</div>
+      <div className="relative divide-y divide-border/70">{children}</div>
     </section>
   );
 }
@@ -292,34 +351,25 @@ function PrimaryShortcut({
   row,
   text,
 }: {
-  row: AccountRow;
+  row: AccountRow & { world: string };
   text: (ar: string, en: string) => string;
 }) {
   const Icon = row.icon;
-
   return (
     <Link
       to={row.to ?? "/more"}
-      className="rawaj-surface group relative flex min-h-28 flex-col overflow-hidden rounded-[1.25rem] p-3 text-foreground transition hover:-translate-y-0.5 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
+      className={`rawaj-color-card ${row.world} group min-h-36 rounded-[1.35rem] p-4 transition hover:-translate-y-0.5`}
     >
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute -end-6 -top-6 h-20 w-20 rotate-12 rounded-2xl opacity-40"
-        style={{
-          background: "linear-gradient(140deg, rgba(224,118,43,0.55), rgba(224,118,43,0) 70%)",
-        }}
-      />
-      <span className="category-tile relative h-10 w-10 text-brand-orange">
+      <span className="relative grid h-11 w-11 place-items-center rounded-[1rem] bg-primary text-primary-foreground shadow-soft">
         <Icon className="h-5 w-5" />
       </span>
-      <span className="relative mt-3 block text-sm font-semibold text-primary">
+      <span className="relative mt-5 block text-base font-bold text-primary">
         {text(row.titleAr, row.titleEn)}
       </span>
-      {(row.hintAr || row.hintEn) && (
-        <span className="relative mt-1 block text-[11px] font-medium leading-5 text-muted-foreground">
-          {text(row.hintAr ?? row.titleAr, row.hintEn ?? row.titleEn)}
-        </span>
-      )}
+      <span className="relative mt-1.5 block text-[11px] leading-5 text-muted-foreground">
+        {text(row.hintAr ?? row.titleAr, row.hintEn ?? row.titleEn)}
+      </span>
+      <ChevronLeft className="relative mt-4 h-4 w-4 text-brand-orange rtl:rotate-180" />
     </Link>
   );
 }
@@ -328,19 +378,17 @@ function SecondaryShortcut({
   row,
   text,
 }: {
-  row: AccountRow;
+  row: AccountRow & { world: string };
   text: (ar: string, en: string) => string;
 }) {
   const Icon = row.icon;
   return (
     <Link
       to={row.to ?? "/more"}
-      className="rawaj-surface tap-card flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-[1.15rem] p-2 text-center transition hover:-translate-y-0.5 hover:border-gold/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
+      className={`rawaj-color-card ${row.world} flex min-h-20 flex-col items-center justify-center gap-2 rounded-[1.15rem] p-2 text-center transition hover:-translate-y-0.5`}
     >
-      <span className="category-tile h-9 w-9">
-        <Icon className="h-4 w-4" />
-      </span>
-      <span className="text-[10.5px] font-semibold text-foreground">
+      <Icon className="relative h-4.5 w-4.5 text-primary" />
+      <span className="relative text-[10.5px] font-semibold text-foreground">
         {text(row.titleAr, row.titleEn)}
       </span>
     </Link>
@@ -361,26 +409,18 @@ function AccountItem({
     <>
       <span className="flex min-w-0 items-center gap-3">
         <span
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-            row.destructive
-              ? "bg-destructive/10 text-destructive"
-              : quiet
-                ? "bg-muted-surface text-muted-foreground"
-                : "bg-muted text-primary"
-          }`}
+          className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${row.destructive ? "bg-destructive/10 text-destructive" : quiet ? "bg-card-warm text-muted-foreground" : "bg-primary/7 text-primary"}`}
         >
           <Icon className="h-4 w-4" />
         </span>
         <span className="min-w-0">
           <span
-            className={`block truncate text-sm font-semibold ${
-              row.destructive ? "text-destructive" : "text-foreground"
-            }`}
+            className={`block truncate text-sm font-semibold ${row.destructive ? "text-destructive" : "text-foreground"}`}
           >
             {text(row.titleAr, row.titleEn)}
           </span>
           {(row.hintAr || row.hintEn) && (
-            <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+            <span className="mt-0.5 block truncate text-[10px] text-muted-foreground">
               {text(row.hintAr ?? row.titleAr, row.hintEn ?? row.titleEn)}
             </span>
           )}
@@ -390,21 +430,20 @@ function AccountItem({
     </>
   );
 
-  const rowClass = `flex w-full min-h-11 items-center justify-between gap-3 rounded-xl px-2 py-2.5 text-start transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
-    row.destructive ? "hover:bg-destructive/10" : "hover:bg-muted/70"
-  }`;
+  const rowClass =
+    "flex min-h-12 w-full items-center justify-between gap-3 rounded-xl px-2 py-2.5 text-start transition hover:bg-card/65 active:scale-[0.985]";
 
-  if (row.onClick) {
+  if (row.to) {
     return (
-      <button type="button" onClick={row.onClick} className={rowClass}>
+      <Link to={row.to} className={rowClass}>
         {content}
-      </button>
+      </Link>
     );
   }
 
   return (
-    <Link to={row.to ?? "/more"} className={rowClass}>
+    <button type="button" onClick={row.onClick} className={rowClass}>
       {content}
-    </Link>
+    </button>
   );
 }

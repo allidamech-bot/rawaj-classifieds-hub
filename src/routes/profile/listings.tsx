@@ -127,7 +127,7 @@ function MyListingsPage() {
         to="/profile"
         backMode="history"
       />
-      <main className="container-wide mobile-page-bottom space-y-5 pt-4">
+      <main className="rawaj-pulse-page container-wide mobile-page-bottom space-y-5 pb-8 pt-3 sm:pt-5">
         <StoreHeader
           displayName={displayName}
           avatarUrl={auth.profile?.avatarUrl}
@@ -141,7 +141,34 @@ function MyListingsPage() {
           ratingCount={ratingCount}
         />
 
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <section className="rawaj-merchant-rail">
+          <div className="rawaj-rail-approved">
+            <span className="block text-[9px] font-semibold text-muted-foreground">
+              {text("نشط", "Live")}
+            </span>
+            <strong className="mt-1 block text-lg font-bold text-primary">
+              {grouped.approved.length}
+            </strong>
+          </div>
+          <div className="rawaj-rail-pending">
+            <span className="block text-[9px] font-semibold text-muted-foreground">
+              {text("مراجعة", "Review")}
+            </span>
+            <strong className="mt-1 block text-lg font-bold text-primary">
+              {grouped.pending.length}
+            </strong>
+          </div>
+          <div className="rawaj-rail-needs">
+            <span className="block text-[9px] font-semibold text-muted-foreground">
+              {text("تحتاج تدخل", "Action")}
+            </span>
+            <strong className="mt-1 block text-lg font-bold text-primary">
+              {grouped.needs_edit.length}
+            </strong>
+          </div>
+        </section>
+
+        <div className="rawaj-storefront-section flex flex-wrap items-center justify-between gap-3 pt-1">
           <div className="flex gap-2 overflow-x-auto pb-1">
             <TabButton
               active={activeTab === "approved"}
@@ -168,10 +195,7 @@ function MyListingsPage() {
               onClick={() => setActiveTab("reviews")}
             />
           </div>
-          <Link
-            to="/add-listing"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-          >
+          <Link to="/add-listing" className="rawaj-button-primary min-h-11 rounded-[1rem] px-4">
             <Plus className="h-4 w-4" />
             {text("إضافة إعلان", "Post listing")}
           </Link>
@@ -195,7 +219,7 @@ function MyListingsPage() {
             )}
           />
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {visibleListings.map((listing) => (
               <StoreListingCard
                 key={listing.id}
@@ -237,8 +261,8 @@ function StoreHeader({
 }) {
   const { text } = useUiPreferences();
   return (
-    <section className="overflow-hidden rounded-2xl bg-card hairline shadow-soft">
-      <div className="relative aspect-[16/5] min-h-32 bg-primary">
+    <section className="rawaj-merchant-stage rounded-[1.7rem] sm:rounded-[2rem]">
+      <div className="relative h-44 overflow-hidden bg-primary sm:h-52">
         {coverUrl && (
           <>
             <img
@@ -256,9 +280,9 @@ function StoreHeader({
           </>
         )}
       </div>
-      <div className="-mt-10 px-4 pb-4">
+      <div className="relative z-10 -mt-12 px-5 pb-5 sm:px-7 sm:pb-7">
         <div className="flex flex-wrap items-end gap-3">
-          <span className="relative z-20 grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-muted-surface text-xl font-extrabold text-primary ring-4 ring-card">
+          <span className="relative z-20 grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-[1.35rem] bg-card-warm text-xl font-bold text-primary ring-4 ring-[#0d243b]">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
@@ -271,14 +295,14 @@ function StoreHeader({
             )}
           </span>
           <div className="min-w-0 flex-1 pb-1">
-            <h1 className="text-lg font-extrabold">{displayName}</h1>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <h1 className="text-xl font-bold text-[#fffaf0]">{displayName}</h1>
+            <p className="mt-1 text-xs text-[#fffaf0]/70">
               {location || text("الموقع غير محدد", "Location not set")}
             </p>
           </div>
         </div>
         {bio && <p className="mt-3 max-w-3xl text-xs leading-6 text-muted-foreground">{bio}</p>}
-        <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-5">
+        <div className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-5">
           <Metric label={text("معتمدة", "Approved")} value={String(approvedCount)} />
           <Metric label={text("قيد المراجعة", "Pending")} value={String(pendingCount)} />
           <Metric label={text("تحتاج تعديل", "Needs edit")} value={String(needsEditCount)} />
@@ -308,8 +332,10 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold transition hairline ${
-        active ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted-surface"
+      className={`shrink-0 rounded-full px-3.5 py-2 text-[11px] font-semibold transition ${
+        active
+          ? "bg-primary text-primary-foreground shadow-soft"
+          : "border border-border/70 bg-card/80 text-muted-foreground hover:border-gold/40 hover:text-primary"
       }`}
     >
       {label} <span className="opacity-75">({count})</span>
@@ -356,26 +382,30 @@ function StoreListingCard({
 
   return (
     <>
-      <article className="overflow-hidden rounded-2xl bg-card shadow-soft hairline">
-        {listing.primaryImageUrl ? (
-          <img
-            src={listing.primaryImageUrl}
-            alt={listing.title}
-            loading="lazy"
-            decoding="async"
-            className="aspect-[16/10] w-full object-cover"
-          />
-        ) : (
-          <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
-        )}
-        <div className="space-y-2 p-3">
+      <article className="rawaj-product-card group">
+        <div className="rawaj-product-media">
+          <span className="rawaj-status-ribbon" data-status={listing.status}>
+            {listingStatusLabel(listing.status, language)}
+          </span>
+          {listing.primaryImageUrl ? (
+            <img
+              src={listing.primaryImageUrl}
+              alt={listing.title}
+              loading="lazy"
+              decoding="async"
+              className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-[1.025]"
+            />
+          ) : (
+            <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
+          )}
+        </div>
+        <div className="space-y-2 p-4">
           <div className="flex items-start justify-between gap-2">
-            <h2 className="line-clamp-2 text-sm font-extrabold">{listing.title}</h2>
-            <span className="shrink-0 rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold">
-              {listingStatusLabel(listing.status, language)}
-            </span>
+            <h2 className="line-clamp-2 text-sm font-bold leading-5 text-primary">
+              {listing.title}
+            </h2>
           </div>
-          <div className="text-base font-extrabold">
+          <div className="text-lg font-bold text-foreground">
             {formatPriceLocalized(
               listing.price ?? 0,
               listing.priceType,
@@ -446,10 +476,10 @@ function StoreListingCard({
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-dialog-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-primary/45 p-4 backdrop-blur-sm"
         >
           <div
-            className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-premium hairline"
+            className="rawaj-color-card rawaj-world-orange w-full max-w-sm rounded-[1.5rem] p-6"
             dir="rtl"
           >
             <h3 id="delete-dialog-title" className="text-base font-extrabold text-foreground">
@@ -527,9 +557,9 @@ function ReviewsSection({ sellerProfile }: { sellerProfile: PublicSellerProfile 
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-muted-surface p-3">
-      <div className="text-[11px] text-muted-foreground">{label}</div>
-      <div className="mt-1 text-sm font-extrabold">{value}</div>
+    <div className="rounded-[1rem] border border-white/10 bg-white/7 p-3">
+      <div className="text-[10px] text-[#fffaf0]/60">{label}</div>
+      <div className="mt-1 text-sm font-bold text-[#fffaf0]">{value}</div>
     </div>
   );
 }
