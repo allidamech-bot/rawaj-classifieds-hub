@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import {
+  escapePostgrestSearchTerm,
   getClient,
   mapError,
   rowBoolean,
@@ -34,6 +35,11 @@ export interface CanonicalLocationNode {
   legacyDistrictAr: string | null;
 }
 
+export interface LocationSearchResult {
+  node: CanonicalLocationNode;
+  matchedAlias: string | null;
+}
+
 function mapLocationNode(row: Record<string, unknown>): CanonicalLocationNode {
   return {
     id: rowString(row, "id"),
@@ -48,6 +54,16 @@ function mapLocationNode(row: Record<string, unknown>): CanonicalLocationNode {
     legacyGovernorateId: rowNullableString(row, "legacy_governorate_id"),
     legacyDistrictAr: rowNullableString(row, "legacy_district_ar"),
   };
+}
+
+function normalizeLocationSearch(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/\s+/g, " ");
 }
 
 const LOCATION_NODE_SELECT =
@@ -114,6 +130,78 @@ export async function fetchLocationNode(
     ok: true,
     data: data ? mapLocationNode(data as Record<string, unknown>) : null,
   };
+}
+
+export async function searchLocationNodes(
+  query: string,
+  limit = 12,
+): Promise<ClassifiedsResult<LocationSearchResult[]>> {
+  const clean = query.trim();
+  if (clean.length < 2) return { ok: true, data: [] };
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+  const client = clientResult.data;
+  const safeLimit = Math.max(1, Math.min(limit, 20));
+  const escaped = escapePostgrestSearchTerm(clean);
+  const normalized = normalizeLocationSearch(clean);
+  const escapedNormalized = escapePostgrestSearchTerm(normalized);
+
+  const [nodesResult, aliasesResult] = await Promise.all([
+    client
+      .from("location_nodes")
+      .select(LOCATION_NODE_SELECT)
+      .eq("country_code", "SY")
+      .eq("is_active", true)
+      .or(`name_ar.ilike.%${escaped}%,name_en.ilike.%${escaped}%`)
+      .limit(safeLimit),
+    client
+      .from("location_search_aliases")
+      .select("location_node_id,alias,normalized_alias")
+      .ilike("normalized_alias", `%${escapedNormalized}%`)
+      .limit(safeLimit),
+  ]);
+
+  if (nodesResult.error) return { ok: false, error: mapError(nodesResult.error) };
+
+  const directNodes = ((nodesResult.data ?? []) as Record<string, unknown>[]).map(mapLocationNode);
+  const aliases = aliasesResult.error
+    ? []
+    : ((aliasesResult.data ?? []) as Record<string, unknown>[]);
+  const aliasIds = [
+    ...new Set(aliases.map((row) => rowString(row, "location_node_id")).filter(Boolean)),
+  ];
+
+  let aliasNodes: CanonicalLocationNode[] = [];
+  if (aliasIds.length > 0) {
+    const { data, error } = await client
+      .from("location_nodes")
+      .select(LOCATION_NODE_SELECT)
+      .eq("country_code", "SY")
+      .eq("is_active", true)
+      .in("id", aliasIds);
+    if (error) return { ok: false, error: mapError(error) };
+    aliasNodes = ((data ?? []) as Record<string, unknown>[]).map(mapLocationNode);
+  }
+
+  const aliasByNodeId = new Map<string, string>();
+  for (const row of aliases) {
+    const nodeId = rowString(row, "location_node_id");
+    const alias = rowString(row, "alias");
+    if (nodeId && alias && !aliasByNodeId.has(nodeId)) aliasByNodeId.set(nodeId, alias);
+  }
+
+  const directIds = new Set(directNodes.map((node) => node.id));
+  const merged: LocationSearchResult[] = directNodes.map((node) => ({
+    node,
+    matchedAlias: null,
+  }));
+  for (const node of aliasNodes) {
+    if (directIds.has(node.id)) continue;
+    merged.push({ node, matchedAlias: aliasByNodeId.get(node.id) ?? null });
+  }
+
+  return { ok: true, data: merged.slice(0, safeLimit) };
 }
 
 export async function fetchLocationPath(
