@@ -2,8 +2,10 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpDown, Filter, Search, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
 import { detectCategoryFieldKind, type CategoryFieldKind } from "@/lib/category-fields";
 import { categoryName, governorateName } from "@/lib/i18n";
+import { fetchLocationPath, type CanonicalLocationNode } from "@/lib/api/location-taxonomy";
 import { createSeo } from "@/lib/seo";
 import {
   buildTaxonomyIndex,
@@ -54,6 +56,7 @@ function ListingsPage() {
   const [sort, setSort] = useState<ListingsSort>(search.sort ?? "latest");
   const [subcategoryId, setSubcategoryId] = useState(search.subcategory ?? "");
   const [districtAr, setDistrictAr] = useState(search.district ?? "");
+  const [locationLabel, setLocationLabel] = useState("");
   const [priceMin, setPriceMin] = useState(search.price_min?.toString() ?? "");
   const [draftCategoryId, setDraftCategoryId] = useState<string | undefined>(undefined);
   const [priceMax, setPriceMax] = useState(search.price_max?.toString() ?? "");
@@ -88,6 +91,7 @@ function ListingsPage() {
     loading: referencesLoading,
   } = references;
   const govId = references.govId;
+  const canonicalLocationNodeId = districtAr.startsWith("@") ? districtAr.slice(1) : "";
 
   const taxonomyIndex = useMemo(() => buildTaxonomyIndex(taxonomyNodes), [taxonomyNodes]);
   const selectedTaxonomyNode = findTaxonomyNode(taxonomyIndex, search.taxonomy);
@@ -213,6 +217,32 @@ function ListingsPage() {
   ]);
 
   useEffect(() => {
+    if (!canonicalLocationNodeId) {
+      setLocationLabel("");
+      return;
+    }
+
+    let cancelled = false;
+    void fetchLocationPath(canonicalLocationNodeId).then((result) => {
+      if (cancelled) return;
+      if (!result.ok) {
+        setLocationLabel("");
+        return;
+      }
+      setLocationLabel(
+        result.data
+          .filter((node) => node.nodeType !== "country")
+          .map((node) => (language === "en" ? node.nameEn || node.nameAr : node.nameAr))
+          .join(" › "),
+      );
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [canonicalLocationNodeId, language]);
+
+  useEffect(() => {
     if (filtersOpen) {
       if (search.taxonomy) {
         setDraftCategoryId(undefined);
@@ -241,10 +271,15 @@ function ListingsPage() {
   }, [availableSubcategories, selectedCategory, subcategoryId]);
 
   useEffect(() => {
-    if (districtAr && selectedGovernorate && !availableDistricts.includes(districtAr)) {
+    if (
+      districtAr &&
+      !canonicalLocationNodeId &&
+      selectedGovernorate &&
+      !availableDistricts.includes(districtAr)
+    ) {
       setDistrictAr("");
     }
-  }, [availableDistricts, districtAr, selectedGovernorate]);
+  }, [availableDistricts, canonicalLocationNodeId, districtAr, selectedGovernorate]);
 
   useEffect(() => {
     if (!referencesLoaded) return;
@@ -437,7 +472,7 @@ function ListingsPage() {
   };
 
   const activeFilters = [
-    selectedGovernorate
+    selectedGovernorate && !canonicalLocationNodeId
       ? {
           key: "governorate",
           label: governorateName(selectedGovernorate.id, selectedGovernorate.nameAr, language),
@@ -447,7 +482,18 @@ function ListingsPage() {
           },
         }
       : null,
-    districtAr ? { key: "district", label: districtAr, clear: () => setDistrictAr("") } : null,
+    districtAr
+      ? {
+          key: "district",
+          label: canonicalLocationNodeId
+            ? locationLabel || text("موقع محدد", "Selected location")
+            : districtAr,
+          clear: () => {
+            setDistrictAr("");
+            if (canonicalLocationNodeId) setGovId("");
+          },
+        }
+      : null,
     priceMin.trim()
       ? {
           key: "priceMin",
@@ -597,6 +643,16 @@ function ListingsPage() {
       prevDraftFieldKindRef.current = curr;
     }
   }, [draftCategoryFieldKind]);
+
+  function handleCanonicalLocationChange(id: string | null, node: CanonicalLocationNode | null) {
+    setDistrictAr(id ? `@${id}` : "");
+    setLocationLabel(node ? (language === "en" ? node.nameEn || node.nameAr : node.nameAr) : "");
+    if (node?.legacyGovernorateId) {
+      setGovId(node.legacyGovernorateId);
+    } else if (!id) {
+      setGovId("");
+    }
+  }
 
   function resetFilters() {
     setGovId("");
@@ -848,46 +904,36 @@ function ListingsPage() {
                 {text("المكان والسعر", "Location and price")}
               </h2>
               <div className="rounded-xl bg-muted-surface p-2">
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <GovernorateChip
-                    active={!govId}
-                    label={text("كل سوريا", "All Syria")}
-                    onClick={() => {
-                      setGovId("");
-                      setOpen(false);
-                    }}
-                  />
-                  {governorates.map((governorate) => (
-                    <GovernorateChip
-                      key={governorate.id}
-                      active={govId === governorate.id}
-                      label={governorateName(governorate.id, governorate.nameAr, language)}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-bold text-muted-foreground">
+                    {text("الموقع", "Location")}
+                  </span>
+                  {(districtAr || govId) && (
+                    <button
+                      type="button"
                       onClick={() => {
-                        setGovId(governorate.id);
-                        setOpen(false);
+                        setGovId("");
+                        setDistrictAr("");
                       }}
-                    />
-                  ))}
-                </div>
-                <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                  <label className="block">
-                    <span className="mb-1 block text-[11px] font-bold text-muted-foreground">
-                      {text("المنطقة", "District")}
-                    </span>
-                    <select
-                      value={districtAr}
-                      onChange={(event) => setDistrictAr(event.target.value)}
-                      disabled={!selectedGovernorate}
-                      className="input text-xs disabled:opacity-60"
+                      className="text-[11px] font-bold text-primary"
                     >
-                      <option value="">{text("كل المناطق", "All districts")}</option>
-                      {availableDistricts.map((district) => (
-                        <option key={district} value={district}>
-                          {district}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                      {text("كل سوريا", "All Syria")}
+                    </button>
+                  )}
+                </div>
+                <div className="mt-2">
+                  <CanonicalLocationSelector
+                    value={canonicalLocationNodeId || null}
+                    onChange={handleCanonicalLocationChange}
+                  />
+                  {districtAr && !canonicalLocationNodeId ? (
+                    <p className="mt-2 text-[11px] text-muted-foreground">
+                      {text("الموقع القديم المحفوظ: ", "Saved legacy location: ")}
+                      {districtAr}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <label className="block">
                     <span className="mb-1 block text-[11px] font-bold text-muted-foreground">
                       {text("السعر من", "Price from")}
@@ -1060,55 +1106,33 @@ function ListingsPage() {
                 )}
 
                 <div>
-                  <h3 className="mb-2 text-xs font-extrabold text-muted-foreground">
-                    {text("الموقع", "Location")}
-                  </h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setGovId("");
-                        setDistrictAr("");
-                      }}
-                      aria-pressed={!govId}
-                      className={`rounded-xl px-3 py-2 text-start text-xs font-bold ${
-                        !govId ? "bg-primary text-primary-foreground" : "bg-muted-surface"
-                      }`}
-                    >
-                      {text("كل سوريا", "All Syria")}
-                    </button>
-                    {governorates.map((governorate) => (
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h3 className="text-xs font-extrabold text-muted-foreground">
+                      {text("الموقع", "Location")}
+                    </h3>
+                    {(districtAr || govId) && (
                       <button
-                        key={governorate.id}
                         type="button"
                         onClick={() => {
-                          setGovId(governorate.id);
+                          setGovId("");
                           setDistrictAr("");
                         }}
-                        aria-pressed={govId === governorate.id}
-                        className={`rounded-xl px-3 py-2 text-start text-xs font-bold ${
-                          govId === governorate.id
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted-surface"
-                        }`}
+                        className="text-xs font-bold text-primary"
                       >
-                        {governorateName(governorate.id, governorate.nameAr, language)}
+                        {text("كل سوريا", "All Syria")}
                       </button>
-                    ))}
+                    )}
                   </div>
-                  <select
-                    value={districtAr}
-                    onChange={(event) => setDistrictAr(event.target.value)}
-                    disabled={!selectedGovernorate}
-                    className="input mt-3 text-xs disabled:opacity-60"
-                  >
-                    <option value="">{text("كل المناطق", "All districts")}</option>
-                    {availableDistricts.map((district) => (
-                      <option key={district} value={district}>
-                        {district}
-                      </option>
-                    ))}
-                  </select>
+                  <CanonicalLocationSelector
+                    value={canonicalLocationNodeId || null}
+                    onChange={handleCanonicalLocationChange}
+                  />
+                  {districtAr && !canonicalLocationNodeId ? (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {text("الموقع القديم المحفوظ: ", "Saved legacy location: ")}
+                      {districtAr}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div>
