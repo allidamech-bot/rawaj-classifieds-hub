@@ -118,7 +118,10 @@ function HomePage() {
                 {text("سوق سوريا الحديث", "Syria's modern marketplace")}
               </p>
               <h1 className="mt-2.5 max-w-xl text-[1.45rem] font-bold leading-[1.42] text-primary sm:text-[2rem] lg:text-[2.45rem] lg:leading-[1.35]">
-                {text("ابحث عمّا يستحق. وتواصل بثقة.", "Find what matters. Connect with confidence.")}
+                {text(
+                  "ابحث عمّا يستحق. وتواصل بثقة.",
+                  "Find what matters. Connect with confidence.",
+                )}
               </h1>
               <p className="mt-2 max-w-xl text-[12px] leading-6 text-muted-foreground sm:text-sm sm:leading-7">
                 {text(
@@ -333,9 +336,7 @@ function HomeState({
   compact?: boolean;
 }) {
   return (
-    <div
-      className={`rawaj-surface rounded-[1.25rem] text-center ${compact ? "p-5" : "mt-7 p-8"}`}
-    >
+    <div className={`rawaj-surface rounded-[1.25rem] text-center ${compact ? "p-5" : "mt-7 p-8"}`}>
       <p className="text-sm font-semibold text-foreground">{title}</p>
       {body ? <p className="mt-1 text-xs leading-5 text-muted-foreground">{body}</p> : null}
     </div>

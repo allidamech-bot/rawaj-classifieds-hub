@@ -52,7 +52,9 @@ export function PageHeader({ title, to = "/", back = true, backMode = "link" }: 
 
         {title ? (
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-[15px] font-bold leading-tight text-primary sm:text-base">{title}</h1>
+            <h1 className="truncate text-[15px] font-bold leading-tight text-primary sm:text-base">
+              {title}
+            </h1>
             <span className="mt-1 block h-0.5 w-7 rounded-full bg-gradient-to-r from-brand-orange to-gold" />
           </div>
         ) : (
