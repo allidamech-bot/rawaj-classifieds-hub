@@ -6,7 +6,6 @@ import {
   MessageSquare,
   Package,
   ShieldAlert,
-  Sparkles,
   Star,
   Store,
 } from "lucide-react";
