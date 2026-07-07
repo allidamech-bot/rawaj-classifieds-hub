@@ -12,19 +12,9 @@ import {
 import { useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
-import {
-  createSellerReview,
-  fetchPublicSellerProfile,
-} from "@/lib/classifieds-api";
-import type {
-  ClassifiedListing,
-  PublicSellerProfile,
-} from "@/lib/classifieds-types";
-import {
-  categoryName,
-  formatPriceLocalized,
-  governorateName,
-} from "@/lib/i18n";
+import { createSellerReview, fetchPublicSellerProfile } from "@/lib/classifieds-api";
+import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
+import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { absoluteUrl, createSeo, jsonLdScript, plainText } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -65,10 +55,7 @@ function SellerPage() {
   const seller = Route.useLoaderData();
 
   return (
-    <div
-      className="rawaj-pulse-page min-h-dvh"
-      dir={language === "ar" ? "rtl" : "ltr"}
-    >
+    <div className="rawaj-pulse-page min-h-dvh" dir={language === "ar" ? "rtl" : "ltr"}>
       <PageHeader title={text("واجهة البائع", "Seller storefront")} />
       <main className="container-wide mobile-page-bottom pb-10 pt-3 sm:pt-5">
         <div className="space-y-7">
@@ -91,11 +78,7 @@ function SellerPage() {
               icon={CalendarDays}
               world="rawaj-world-indigo"
               label={text("على رواج منذ", "On RAWAJ since")}
-              value={
-                seller.joinedAt
-                  ? new Date(seller.joinedAt).getFullYear().toString()
-                  : "—"
-              }
+              value={seller.joinedAt ? new Date(seller.joinedAt).getFullYear().toString() : "—"}
             />
             {seller.ratingSummary.count > 0 ? (
               <StorefrontMetric
@@ -110,9 +93,7 @@ function SellerPage() {
                 world="rawaj-world-plum"
                 label={text("نوع الواجهة", "Storefront")}
                 value={
-                  seller.businessName
-                    ? text("نشاط تجاري", "Business")
-                    : text("بائع", "Seller")
+                  seller.businessName ? text("نشاط تجاري", "Business") : text("بائع", "Seller")
                 }
               />
             )}
@@ -139,10 +120,7 @@ function SellerPage() {
 
               {seller.listings.length === 0 ? (
                 <div className="rawaj-color-card rawaj-world-orange rounded-[1.4rem] p-8 text-center text-sm text-muted-foreground">
-                  {text(
-                    "لا توجد إعلانات عامة لهذا البائع.",
-                    "This seller has no public listings.",
-                  )}
+                  {text("لا توجد إعلانات عامة لهذا البائع.", "This seller has no public listings.")}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -173,12 +151,7 @@ function StorefrontHero({ seller }: { seller: PublicSellerProfile }) {
   return (
     <section className="rawaj-merchant-stage min-h-[19rem] overflow-hidden rounded-[1.8rem] sm:rounded-[2.1rem]">
       {seller.coverUrl ? (
-        <img
-          src={seller.coverUrl}
-          alt=""
-          decoding="async"
-          className="rawaj-merchant-cover"
-        />
+        <img src={seller.coverUrl} alt="" decoding="async" className="rawaj-merchant-cover" />
       ) : null}
       <div className="rawaj-merchant-scrim" />
 
@@ -213,11 +186,8 @@ function StorefrontHero({ seller }: { seller: PublicSellerProfile }) {
                   </span>
                 ) : null}
               </div>
-              {seller.businessName &&
-              seller.businessName !== seller.displayName ? (
-                <p className="mt-1 text-xs font-semibold text-[#fffaf0]/68">
-                  {seller.displayName}
-                </p>
+              {seller.businessName && seller.businessName !== seller.displayName ? (
+                <p className="mt-1 text-xs font-semibold text-[#fffaf0]/68">{seller.displayName}</p>
               ) : null}
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#fffaf0]/72">
                 <span className="inline-flex items-center gap-1.5">
@@ -227,8 +197,7 @@ function StorefrontHero({ seller }: { seller: PublicSellerProfile }) {
                 {seller.joinedAt ? (
                   <span className="inline-flex items-center gap-1.5">
                     <CalendarDays className="h-3.5 w-3.5 text-gold" />
-                    {text("منذ", "Since")}{" "}
-                    {new Date(seller.joinedAt).getFullYear()}
+                    {text("منذ", "Since")} {new Date(seller.joinedAt).getFullYear()}
                   </span>
                 ) : null}
               </div>
@@ -301,12 +270,8 @@ function StorefrontMetric({
           <Icon className="h-4 w-4" />
         </span>
         <div className="min-w-0">
-          <span className="block text-[10px] font-semibold text-muted-foreground">
-            {label}
-          </span>
-          <strong className="mt-1 block truncate text-sm text-primary">
-            {value}
-          </strong>
+          <span className="block text-[10px] font-semibold text-muted-foreground">{label}</span>
+          <strong className="mt-1 block truncate text-sm text-primary">{value}</strong>
         </div>
       </div>
     </article>
@@ -348,10 +313,8 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   const [comment, setComment] = useState("");
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
-  const canReview =
-    auth.status === "signedIn" && auth.profile?.id !== seller.id;
-  const isOwnProfile =
-    auth.status === "signedIn" && auth.profile?.id === seller.id;
+  const canReview = auth.status === "signedIn" && auth.profile?.id !== seller.id;
+  const isOwnProfile = auth.status === "signedIn" && auth.profile?.id === seller.id;
 
   async function submitReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -381,9 +344,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   return (
     <section className="rawaj-color-card rawaj-world-gold rounded-[1.5rem] p-4 sm:p-5">
       <div className="relative z-10">
-        <span className="rawaj-signature-kicker">
-          {text("صوت العملاء", "Customer voice")}
-        </span>
+        <span className="rawaj-signature-kicker">{text("صوت العملاء", "Customer voice")}</span>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 className="flex items-center gap-2 text-base font-extrabold text-primary">
@@ -396,10 +357,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
                     `${seller.ratingSummary.average} من 5 بناء على ${seller.ratingSummary.count} تقييم معتمد`,
                     `${seller.ratingSummary.average} of 5 from ${seller.ratingSummary.count} approved reviews`,
                   )
-                : text(
-                    "لا توجد تقييمات معتمدة بعد.",
-                    "No approved reviews yet.",
-                  )}
+                : text("لا توجد تقييمات معتمدة بعد.", "No approved reviews yet.")}
             </p>
           </div>
           {seller.ratingSummary.count > 0 ? (
@@ -412,10 +370,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
         {seller.ratingSummary.count > 0 ? (
           <div className="mt-4 grid grid-cols-5 gap-1.5 text-center text-[10px] text-muted-foreground">
             {[5, 4, 3, 2, 1].map((star) => (
-              <div
-                key={star}
-                className="rounded-[0.8rem] bg-white/70 p-2 hairline"
-              >
+              <div key={star} className="rounded-[0.8rem] bg-white/70 p-2 hairline">
                 <div className="font-bold text-foreground">
                   {seller.ratingSummary.distribution[star as 1 | 2 | 3 | 4 | 5]}
                 </div>
@@ -428,16 +383,9 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
         {seller.reviews.length > 0 ? (
           <div className="mt-4 space-y-2">
             {seller.reviews.slice(0, 3).map((review) => (
-              <article
-                key={review.id}
-                className="rounded-[1rem] bg-white/76 p-3 hairline"
-              >
-                <div className="text-xs font-bold text-gold">
-                  {"★".repeat(review.rating)}
-                </div>
-                <p className="mt-1 whitespace-pre-line text-xs leading-6">
-                  {review.comment}
-                </p>
+              <article key={review.id} className="rounded-[1rem] bg-white/76 p-3 hairline">
+                <div className="text-xs font-bold text-gold">{"★".repeat(review.rating)}</div>
+                <p className="mt-1 whitespace-pre-line text-xs leading-6">{review.comment}</p>
                 <p className="mt-1 text-[10px] text-muted-foreground">
                   {new Date(review.createdAt).toLocaleDateString(
                     language === "ar" ? "ar-SY" : "en-US",
@@ -468,16 +416,10 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
           </div>
         ) : isOwnProfile ? (
           <p className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs font-semibold hairline">
-            {text(
-              "لا يمكنك تقييم حسابك.",
-              "You cannot review your own account.",
-            )}
+            {text("لا يمكنك تقييم حسابك.", "You cannot review your own account.")}
           </p>
         ) : (
-          <form
-            onSubmit={(event) => void submitReview(event)}
-            className="mt-4 space-y-2"
-          >
+          <form onSubmit={(event) => void submitReview(event)} className="mt-4 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
@@ -485,9 +427,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
                   type="button"
                   onClick={() => setRating(value)}
                   className={`rounded-lg px-2 py-1 text-xs font-bold hairline ${
-                    rating >= value
-                      ? "bg-gold text-gold-foreground"
-                      : "bg-white/72"
+                    rating >= value ? "bg-gold text-gold-foreground" : "bg-white/72"
                   }`}
                 >
                   {value} ★
@@ -517,9 +457,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
                 : text("إرسال للمراجعة", "Submit for review")}
             </button>
             {notice ? (
-              <p className="rounded-xl bg-white/72 p-2 text-xs font-semibold">
-                {notice}
-              </p>
+              <p className="rounded-xl bg-white/72 p-2 text-xs font-semibold">{notice}</p>
             ) : null}
           </form>
         )}
@@ -560,11 +498,7 @@ function SellerListingCard({ listing }: { listing: ClassifiedListing }) {
   const { language } = useUiPreferences();
 
   return (
-    <Link
-      to="/listings/$id"
-      params={{ id: listing.id }}
-      className="rawaj-product-card block"
-    >
+    <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-product-card block">
       <div className="rawaj-product-media aspect-[4/3]">
         {listing.primaryImageUrl ? (
           <img
@@ -575,10 +509,7 @@ function SellerListingCard({ listing }: { listing: ClassifiedListing }) {
             className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]"
           />
         ) : (
-          <PlaceholderArt
-            type={listing.categoryPlaceholder ?? "misc"}
-            aspect="wide"
-          />
+          <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
         )}
         <span className="absolute bottom-2 end-2 rounded-full bg-primary/88 px-2.5 py-1 text-[10px] font-bold text-primary-foreground backdrop-blur-sm">
           {categoryName(listing.categoryId, listing.categoryNameAr, language)}
@@ -589,19 +520,10 @@ function SellerListingCard({ listing }: { listing: ClassifiedListing }) {
           {listing.title}
         </h3>
         <div className="mt-2 text-lg font-extrabold text-primary">
-          {formatPriceLocalized(
-            listing.price ?? 0,
-            listing.priceType,
-            language,
-            listing.currency,
-          )}
+          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
         </div>
         <p className="mt-1.5 truncate text-xs text-muted-foreground">
-          {governorateName(
-            listing.governorateId,
-            listing.governorateNameAr,
-            language,
-          )}
+          {governorateName(listing.governorateId, listing.governorateNameAr, language)}
           {listing.districtAr ? ` · ${listing.districtAr}` : ""}
         </p>
       </div>
