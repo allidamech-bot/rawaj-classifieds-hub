@@ -1,13 +1,12 @@
 -- RAWAJ location taxonomy legacy-resolution and backfill hardening.
 -- Manual-only migration. Requires 202607070001 through 202607070003.
 
--- Clear stale inherited mapping when a node moves beneath an unmapped parent.
 create or replace function public.rawaj_inherit_location_legacy_governorate()
 returns trigger
 language plpgsql
 as $$
 declare
-  inherited_governorate uuid;
+  inherited_governorate text;
 begin
   if new.parent_id is null then
     return new;
@@ -28,10 +27,8 @@ begin
 end;
 $$;
 
--- Resolve exact canonical path first. If legacy data only stores a leaf name,
--- accept it only when that active Arabic name is unique inside the governorate.
 create or replace function public.rawaj_resolve_location_option(
-  legacy_governorate uuid,
+  legacy_governorate text,
   option_label text
 )
 returns uuid
@@ -76,10 +73,9 @@ begin
 end;
 $$;
 
-revoke all on function public.rawaj_resolve_location_option(uuid, text) from public;
-grant execute on function public.rawaj_resolve_location_option(uuid, text) to anon, authenticated;
+revoke all on function public.rawaj_resolve_location_option(text, text) from public;
+grant execute on function public.rawaj_resolve_location_option(text, text) to anon, authenticated;
 
--- Explicit administrative backfill for old listings. It never guesses ambiguous names.
 create or replace function public.rawaj_backfill_listing_location_nodes()
 returns integer
 language plpgsql
