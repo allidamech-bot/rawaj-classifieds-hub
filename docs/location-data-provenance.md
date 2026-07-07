@@ -4,62 +4,85 @@
 
 RAWAJ needs a deeper hierarchy than the legacy `governorates.districts_ar` arrays. The canonical model is `location_nodes`, an arbitrary-depth tree. Legacy governorate and district fields remain supported during rollout.
 
-## Primary import source
+## Source priority
+
+RAWAJ does not treat one global gazetteer as authoritative for all Syrian location levels.
+
+1. **Formal administrative hierarchy:** OCHA/HDX COD-AB Syria is the preferred primary source for governorate, district, and subdistrict relationships and P-codes where available.
+2. **Locality breadth:** Syria Humanitarian Atlas is the preferred locality/P-code candidate where an exact export, source date, and reuse terms have been captured and reviewed.
+3. **Secondary verification:** ReliefWeb / Whole of Syria datasets and maps may be used for cross-checking source vintages and hierarchy.
+4. **Supplemental aliases and coordinates:** GeoNames may supplement transliterations, alternate names, and coordinates. It must not silently override a reviewed P-code hierarchy.
+5. **Supplemental local detail:** OpenStreetMap or curated marketplace areas may be considered only with separate provenance and license review.
+
+The existing repository audit at `docs/locations/syria-source-audit.md` remains the governing source-selection policy.
+
+## Primary P-code preparation flow
+
+Use a reviewed CSV export with at least:
+
+```text
+pcode,parent_pcode,name_ar,name_en,type,country_code,latitude,longitude,aliases_ar,aliases_en,source_date
+```
+
+Then run:
+
+```bash
+node scripts/prepare-syria-pcode-locations.mjs \
+  --input data/locations/syria-pcodes-source.csv \
+  --source ocha-cod-ab-syria \
+  --source-date YYYY-MM-DD
+```
+
+The script emits deterministic JSON/CSV plus a validation report. It blocks a clean result when it finds duplicate P-codes, orphan parent P-codes, invalid node types, or duplicate parent+slug keys.
+
+## Supplemental GeoNames flow
+
+GeoNames is supplemental, not the primary formal hierarchy.
 
 - Source: GeoNames Syria country dump (`SY.zip`)
 - Download: `https://download.geonames.org/export/dump/SY.zip`
-- Format documentation: `https://download.geonames.org/export/dump/readme.txt`
+- Documentation: `https://download.geonames.org/export/dump/readme.txt`
 - License: Creative Commons Attribution 4.0
-- Attribution requirement: preserve GeoNames attribution anywhere the derived dataset is distributed as data.
 
-The GeoNames documentation states that country files contain all features for the ISO country code, that the data is UTF-8 tab-delimited, and that administrative parentage for toponyms can be derived from admin codes. It also explicitly states that the data is provided without warranty of accuracy, timeliness, or completeness.
+Prepare review artifacts with:
 
-## Import method
+```bash
+node scripts/prepare-syria-geonames-locations.mjs --input data/geonames/SY.txt
+```
 
-1. Download `SY.zip` from GeoNames.
-2. Extract `SY.txt` to `data/geonames/SY.txt`.
-3. Run:
-
-   ```bash
-   node scripts/prepare-syria-geonames-locations.mjs --input data/geonames/SY.txt
-   ```
-
-4. Review the generated report:
-
-   `data/locations/syria-geonames-location-report.json`
-
-5. Reject the import if there are unresolved duplicate parent+slug keys or orphan parent references.
-6. Review Arabic name coverage and spot-check paths before importing to Supabase.
-7. Import the reviewed CSV with an upsert process keyed by `(external_source, external_id)`.
-
-## Coverage policy
-
-The import includes:
-
-- administrative divisions represented by GeoNames `ADM1` through `ADM4` features;
-- populated places in feature class `P`, excluding abandoned/historical populated-place feature codes explicitly filtered by the preparation script;
-- Arabic-script aliases when present in the country dump alternates;
-- coordinates and source IDs for traceability.
-
-The import does **not** claim complete neighborhood coverage. Major urban neighborhoods should only be added from a separately documented, licensed source or through reviewed administrative curation.
+GeoNames-derived data should be reconciled against primary P-code records by source IDs, hierarchy context, aliases, and coordinates. Do not merge solely by matching a name.
 
 ## Hierarchy policy
 
-- Administrative units are linked through their GeoNames admin code prefix.
-- Populated places are attached to the deepest matching administrative feature available in the same source row.
 - The application does not hardcode a fixed number of levels.
-- A locality can therefore resolve through paths such as governorate → district → subdistrict → village when source data supports it.
+- Parent/child relationships define hierarchy.
+- Formal admin records preserve verified P-codes where the source provides them.
+- Populated places and marketplace areas must not be mislabeled as formal districts or subdistricts.
+- Missing P-codes are not fabricated.
+- Ambiguous same-name locations remain separate until resolved by hierarchy/source evidence.
+
+## Import safety
+
+1. Download and archive the exact source file.
+2. Record source URL, source date/version, and license/reuse terms.
+3. Run the preparation script in `--dry-run` mode first.
+4. Review duplicate/orphan reports.
+5. Spot-check Arabic names and parent chains.
+6. Reconcile imported governorates to existing RAWAJ governorate IDs.
+7. Import using upsert semantics keyed by `(external_source, external_id)`.
+8. Do not delete unmatched production nodes automatically.
+9. Do not overwrite legacy listing locations.
 
 ## Mandatory review examples
 
-Before a production cutover, verify that the imported data can represent and search expected Syrian paths, including:
+Before a production cutover, verify that reviewed source data can represent expected Syrian paths, including:
 
 - حمص → الحولة → تلذهب
-- a structurally different path in دمشق or ريف دمشق
-- a path in حلب
-- a path in الحسكة or دير الزور
+- at least one structurally different path in دمشق or ريف دمشق
+- at least one path in حلب
+- at least one path in الحسكة or دير الزور
 
-These examples are validation targets, not hardcoded records. A path must emerge from reviewed source data or approved curation. If a source cannot represent a known path, the gap must be recorded and corrected with documented provenance.
+These are validation targets, not hardcoded records. A path must emerge from reviewed source data or approved curation with provenance.
 
 ## Legacy compatibility
 
@@ -68,9 +91,8 @@ These examples are validation targets, not hardcoded records. A path must emerge
 - `listings.governorate_id` remains required under the current schema.
 - `listings.district_ar` remains a fallback.
 - `listings.location_node_id` is nullable and canonical only when present.
-
-This allows old listings and old URLs to continue working while new listings gain precise location selection.
+- Deep location path labels can be exposed through the compatibility RPC while old values remain selectable.
 
 ## No fake completeness
 
-Do not label RAWAJ location data as “all villages of Syria” until an actual imported dataset has passed automated validation, manual spot checks, and gap review. The schema and importer support Syria-wide depth; completeness is a property of the reviewed imported dataset, not of the code alone.
+Do not label RAWAJ location data as “all villages of Syria” until an actual imported dataset has passed automated validation, source reconciliation, manual spot checks, and gap review. The schema and importers support Syria-wide depth; completeness is a property of the reviewed imported dataset, not of the code alone.
