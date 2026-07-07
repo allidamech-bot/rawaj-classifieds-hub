@@ -374,15 +374,15 @@
   background:
     radial-gradient(120% 140% at 100% 0%, #1b4e78 0%, #0e2740 45%, #08182a 100%);
   color: #f6efdc;
-}
 
-@utility hero-navy::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(60% 100% at 0% 100%, rgba(224, 118, 43, 0.22), transparent 60%);
-  pointer-events: none;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(60% 100% at 0% 100%, rgba(224, 118, 43, 0.22), transparent 60%);
+    pointer-events: none;
+  }
 }
 
 @utility category-tile {
