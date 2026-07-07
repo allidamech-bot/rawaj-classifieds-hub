@@ -1,0 +1,28 @@
+name: Capture Listing Delete Typecheck
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capture typecheck output
+        shell: bash
+        run: |
+          set +e
+          npm run typecheck -- --pretty false > typecheck.log 2>&1
+          status=$?
+          tail -n 120 typecheck.log
+          exit $status
