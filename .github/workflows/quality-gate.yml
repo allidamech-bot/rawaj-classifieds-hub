@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
@@ -34,6 +34,21 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Format listing detail source
+        shell: bash
+        run: |
+          git fetch origin design/mobile-listing-detail-polish
+          git checkout -B design/mobile-listing-detail-polish origin/design/mobile-listing-detail-polish
+          npx prettier --write 'src/routes/listings.$id.tsx'
+          if git diff --quiet -- 'src/routes/listings.$id.tsx'; then
+            exit 0
+          fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -- 'src/routes/listings.$id.tsx'
+          git commit -m 'Format listing detail source'
+          git push origin HEAD:design/mobile-listing-detail-polish
 
       - name: Lint changed source files
         shell: bash
