@@ -50,7 +50,8 @@ export function BottomNav() {
       style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))" }}
       aria-label={text("التنقل الرئيسي", "Primary navigation")}
     >
-      <div className="pointer-events-auto mx-auto grid max-w-[34rem] grid-cols-5 items-end rounded-[1.4rem] border border-border/80 bg-card/96 px-1.5 pt-1 shadow-[0_-8px_32px_rgba(14,42,68,0.10)] backdrop-blur-xl">
+      <div className="pointer-events-auto relative mx-auto grid max-w-[34rem] grid-cols-5 items-end overflow-visible rounded-[1.5rem] border border-border/80 bg-card/94 px-1.5 pt-1 shadow-[0_-10px_36px_rgba(16,43,70,0.11)] backdrop-blur-xl supports-[backdrop-filter]:bg-card/88">
+        <span className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent" />
         {items.map((item) => {
           const active = activeSection === item.section;
           const Icon = item.icon;
@@ -61,16 +62,17 @@ export function BottomNav() {
               <Link
                 key={item.to}
                 to={item.to}
-                className="flex min-h-[4.2rem] flex-col items-center justify-end gap-0.5 pb-1.5 transition active:scale-[0.98]"
+                className="flex min-h-[4.25rem] flex-col items-center justify-end gap-0.5 pb-1.5 transition active:scale-[0.98]"
                 aria-label={label}
                 aria-current={active ? "page" : undefined}
               >
-                <span className="-mt-5 rounded-[1.15rem] bg-gradient-to-br from-brand-orange via-gold to-brand-orange p-[2px] shadow-premium-sm">
-                  <span className="grid h-12 w-12 place-items-center rounded-[1.05rem] bg-primary text-primary-foreground ring-4 ring-card">
-                    <Icon className="h-5.5 w-5.5" strokeWidth={2.2} />
+                <span className="-mt-5 rounded-[1.2rem] border border-gold/45 bg-card p-[3px] shadow-[0_10px_24px_rgba(16,43,70,0.16)]">
+                  <span className="relative grid h-12 w-12 place-items-center rounded-[1.05rem] bg-primary text-primary-foreground ring-2 ring-card">
+                    <Icon className="h-5.5 w-5.5" strokeWidth={2.15} />
+                    <span className="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-brand-orange" />
                   </span>
                 </span>
-                <span className="text-[10px] font-extrabold text-primary">{label}</span>
+                <span className="text-[9px] font-bold text-primary">{label}</span>
               </Link>
             );
           }
@@ -79,23 +81,21 @@ export function BottomNav() {
             <Link
               key={item.to}
               to={item.to}
-              className={`relative flex min-h-[4.2rem] flex-col items-center justify-center gap-1 rounded-2xl py-1.5 transition active:scale-[0.98] ${
+              className={`relative flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-2xl py-1.5 transition active:scale-[0.98] ${
                 active ? "text-primary" : "text-muted-foreground"
               }`}
               aria-current={active ? "page" : undefined}
             >
               <span
                 className={`grid h-8 w-9 place-items-center rounded-xl transition ${
-                  active ? "bg-primary/8 text-primary" : ""
+                  active ? "bg-primary/7 text-primary" : ""
                 }`}
               >
-                <Icon className="h-5 w-5" strokeWidth={active ? 2.25 : 1.8} />
+                <Icon className="h-5 w-5" strokeWidth={active ? 2.15 : 1.75} />
               </span>
-              <span className={`text-[10px] ${active ? "font-extrabold" : "font-semibold"}`}>
-                {label}
-              </span>
+              <span className={`text-[9px] ${active ? "font-bold" : "font-medium"}`}>{label}</span>
               {active ? (
-                <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-brand-orange" />
+                <span className="absolute bottom-0.5 h-1 w-4 rounded-full bg-gradient-to-r from-brand-orange to-gold" />
               ) : null}
             </Link>
           );
