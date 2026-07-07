@@ -1,6 +1,25 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { ChevronRight, Filter, Grid3X3, Search, ShieldAlert } from "lucide-react";
+import {
+  Briefcase,
+  Building2,
+  Car,
+  ChevronRight,
+  Filter,
+  GraduationCap,
+  Grid3X3,
+  Laptop,
+  PawPrint,
+  Search,
+  ShieldAlert,
+  Shirt,
+  Smartphone,
+  Sparkles,
+  Store,
+  Utensils,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { RealListingCard } from "@/features/listings/listings-components";
 import { fetchPublicCategories, fetchPublicListings } from "@/lib/classifieds-api";
@@ -12,6 +31,27 @@ import type {
 import { categoryName } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
+
+const categoryIcons: Record<string, LucideIcon> = {
+  car: Car,
+  realestate: Building2,
+  phone: Smartphone,
+  electronics: Laptop,
+  furniture: Building2,
+  job: Briefcase,
+  service: Wrench,
+  fashion: Shirt,
+  food: Utensils,
+  animals: PawPrint,
+  education: GraduationCap,
+  business: Store,
+  misc: Sparkles,
+};
+
+function iconForCategoryPlaceholder(placeholder: string | null | undefined): LucideIcon {
+  if (placeholder && categoryIcons[placeholder]) return categoryIcons[placeholder];
+  return Grid3X3;
+}
 
 const HOME_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
 const HOME_DESCRIPTION =
