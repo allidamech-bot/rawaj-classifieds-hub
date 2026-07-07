@@ -1,13 +1,12 @@
 -- RAWAJ location taxonomy compatibility helpers.
 -- Manual-only migration. Requires 202607070001_location_taxonomy_foundation.sql.
 
--- Inherit legacy governorate mapping from the parent chain when an imported child omits it.
 create or replace function public.rawaj_inherit_location_legacy_governorate()
 returns trigger
 language plpgsql
 as $$
 declare
-  inherited_governorate uuid;
+  inherited_governorate text;
 begin
   if new.legacy_governorate_id is not null or new.parent_id is null then
     return new;
@@ -31,7 +30,6 @@ create trigger rawaj_inherit_location_legacy_governorate
 before insert or update of parent_id, legacy_governorate_id on public.location_nodes
 for each row execute function public.rawaj_inherit_location_legacy_governorate();
 
--- Backfill inherited legacy governorate ids for already imported descendants.
 with recursive mapped as (
   select id, parent_id, legacy_governorate_id
   from public.location_nodes
@@ -48,12 +46,10 @@ from mapped
 where target.id = mapped.id
   and target.legacy_governorate_id is null;
 
--- Return user-facing deep location options grouped by legacy governorate.
--- The label excludes country and governorate names because those are selected separately by legacy UI.
 create or replace function public.rawaj_location_option_paths(country text default 'SY')
 returns table(
   id uuid,
-  legacy_governorate_id uuid,
+  legacy_governorate_id text,
   label_ar text,
   node_type text,
   depth integer,
@@ -121,10 +117,8 @@ $$;
 revoke all on function public.rawaj_location_option_paths(text) from public;
 grant execute on function public.rawaj_location_option_paths(text) to anon, authenticated;
 
--- Resolve a legacy UI path label to a canonical location node.
--- Exact labels only: ambiguous or invalid values do not silently broaden.
 create or replace function public.rawaj_resolve_location_option(
-  legacy_governorate uuid,
+  legacy_governorate text,
   option_label text
 )
 returns uuid
@@ -140,10 +134,9 @@ as $$
   limit 1;
 $$;
 
-revoke all on function public.rawaj_resolve_location_option(uuid, text) from public;
-grant execute on function public.rawaj_resolve_location_option(uuid, text) to anon, authenticated;
+revoke all on function public.rawaj_resolve_location_option(text, text) from public;
+grant execute on function public.rawaj_resolve_location_option(text, text) to anon, authenticated;
 
--- Keep canonical location_node_id synchronized for legacy create/edit flows.
 create or replace function public.rawaj_sync_listing_location_node()
 returns trigger
 language plpgsql
@@ -151,7 +144,6 @@ as $$
 declare
   resolved_id uuid;
 begin
-  -- Explicit canonical id wins if present.
   if new.location_node_id is not null then
     return new;
   end if;
