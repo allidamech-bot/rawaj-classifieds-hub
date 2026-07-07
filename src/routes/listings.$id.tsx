@@ -14,14 +14,14 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { categoryDetailDisplayRows, detectCategoryFieldKind } from "@/lib/category-fields";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
+import { categoryDetailDisplayRows, detectCategoryFieldKind } from "@/lib/category-fields";
 import {
   createListingReport,
   favoriteListing,
+  fetchFavoriteStatus,
   fetchListingDetail,
   fetchListingImages,
-  fetchFavoriteStatus,
   startListingConversation,
   unfavoriteListing,
 } from "@/lib/classifieds-api";
@@ -69,6 +69,7 @@ function ListingDetailsPage() {
   const { language, text } = useUiPreferences();
   const [listing, setListing] = useState<ClassifiedListing | null>(initialListing);
   const [images, setImages] = useState<ListingImage[]>([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [loading, setLoading] = useState(!initialListing);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [imageError, setImageError] = useState<ClassifiedsError | null>(null);
@@ -88,6 +89,7 @@ function ListingDetailsPage() {
     let cancelled = false;
     const requestId = ++imageRequestIdRef.current;
     setImages([]);
+    setSelectedImageIndex(0);
     setImageError(null);
 
     async function loadImages() {
@@ -113,6 +115,7 @@ function ListingDetailsPage() {
         cancelled = true;
       };
     }
+
     async function loadFavorite() {
       const result = await fetchFavoriteStatus(profileId, id);
       if (!cancelled && requestId === favoriteRequestIdRef.current && result.ok) {
@@ -121,6 +124,7 @@ function ListingDetailsPage() {
         setActionMessage(result.error.message);
       }
     }
+
     void loadFavorite();
     return () => {
       cancelled = true;
@@ -136,10 +140,12 @@ function ListingDetailsPage() {
       return;
     }
     if (favoriteInFlightRef.current) return;
+
     const profileId = auth.profile?.id ?? null;
     const desiredFavoriteState = !fav;
     const requestId = ++favoriteRequestIdRef.current;
     favoriteInFlightRef.current = true;
+
     try {
       const result = desiredFavoriteState
         ? await favoriteListing(profileId, id)
@@ -149,6 +155,7 @@ function ListingDetailsPage() {
         setActionMessage(result.error.message);
         return;
       }
+
       setFav(desiredFavoriteState);
       setActionMessage(
         desiredFavoriteState
@@ -166,6 +173,7 @@ function ListingDetailsPage() {
       setActionMessage(text("يجب تسجيل الدخول لإرسال بلاغ.", "Log in to report a listing."));
       return;
     }
+
     const result = await createListingReport(
       auth.profile?.id ?? null,
       id,
@@ -214,6 +222,7 @@ function ListingDetailsPage() {
     if (!listing) return;
     setActionMessage(null);
     const url = window.location.href;
+
     try {
       if (navigator.share) {
         await navigator.share({ title: listing.title, text: listing.title, url });
@@ -278,331 +287,322 @@ function ListingDetailsPage() {
   const canCall = Boolean(listing.contactOptions.phone && cleanPhone);
   const canWhatsapp = Boolean(listing.contactOptions.whatsapp && cleanWhatsapp);
   const sellerName = listing.contactName?.trim() || text("معلن على رواج", "RAWAJ advertiser");
+  const visibleImages = images.filter((image) => image.publicUrl);
+  const selectedImage = visibleImages[selectedImageIndex] ?? visibleImages[0] ?? null;
+  const listingCategory = categoryName(
+    listing.categoryId,
+    listing.categoryNameAr ?? undefined,
+    language,
+  );
 
   return (
     <>
-      <PageHeader
-        title={categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
-        to="/listings"
-      />
-      <main className="container-wide listing-detail-mobile-bottom pt-3">
-        <div className="overflow-hidden rounded-2xl bg-card hairline shadow-soft">
-          {images[0]?.publicUrl ? (
-            <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-muted-surface sm:aspect-auto sm:h-auto sm:max-h-[540px]">
-              <img
-                src={images[0].publicUrl}
-                alt={images[0].altAr ?? listing.title}
-                decoding="async"
-                fetchPriority="high"
-                className="h-full w-full object-cover sm:h-auto sm:max-h-[540px] sm:w-auto sm:max-w-full sm:object-contain"
-              />
-            </div>
-          ) : (
-            <div className="bg-muted-surface p-3">
-              <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
-            </div>
-          )}
-          <div className="flex items-center justify-between gap-2 p-2">
-            {images.length > 1 && (
-              <div className="no-scrollbar flex gap-2 overflow-x-auto">
-                {images
-                  .slice(1, 5)
-                  .filter((image) => image.publicUrl)
-                  .map((image) => (
+      <PageHeader title={listingCategory} to="/listings" />
+      <main className="container-wide listing-detail-mobile-bottom pb-8 pt-2 sm:pt-4">
+        <div className="grid items-start gap-4 lg:grid-cols-12 lg:gap-6">
+          <div className="min-w-0 lg:col-span-7">
+            <section className="overflow-hidden rounded-[1.35rem] bg-card hairline sm:rounded-3xl">
+              <div className="relative overflow-hidden bg-muted-surface">
+                {selectedImage?.publicUrl ? (
+                  <div className="flex aspect-[4/3] w-full items-center justify-center sm:aspect-[16/10] lg:aspect-[4/3]">
                     <img
-                      key={image.id}
-                      src={image.publicUrl ?? ""}
-                      alt={image.altAr ?? listing.title}
-                      loading="lazy"
+                      src={selectedImage.publicUrl}
+                      alt={selectedImage.altAr ?? listing.title}
                       decoding="async"
-                      className="h-12 w-14 rounded-lg object-cover opacity-80 hairline"
+                      fetchPriority="high"
+                      className="h-full w-full object-cover sm:object-contain"
                     />
-                  ))}
-              </div>
-            )}
-            <span className="ms-auto inline-flex items-center gap-1 rounded-full bg-muted-surface px-2 py-1 text-[10px] font-medium text-muted-foreground">
-              <Camera className="h-3 w-3" />
-              {images.length
-                ? text(`${images.length} صورة`, `${images.length} photos`)
-                : text("منطقة صور الإعلان", "Listing image area")}
-            </span>
-          </div>
-          {imageError && (
-            <p className="mx-2 mb-2 rounded-xl bg-warning/10 p-2 text-[11px] font-semibold text-foreground">
-              {imageError.message}
-            </p>
-          )}
-        </div>
-
-        <div className="mt-4">
-          <div className="flex flex-wrap items-center gap-2">
-            {listing.isFeatured && <Badge>{text("مميز", "Featured")}</Badge>}
-            <span className="rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold text-emerald-trust-foreground">
-              {listing.status === "approved"
-                ? text("إعلان مُراجع", "Reviewed listing")
-                : listingStatusLabel(listing.status, language, true)}
-            </span>
-            <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[11px] font-semibold text-foreground">
-              {text("سوريا فقط", "Syria only")}
-            </span>
-          </div>
-          <h1 className="mt-2 text-xl font-extrabold leading-tight text-foreground">
-            {listing.title}
-          </h1>
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5" /> {formatDate(listing.createdAt, language)}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5" /> {locationLabel}
-            </span>
-          </div>
-        </div>
-
-        <section className="mt-4 rounded-2xl bg-card p-4 hairline shadow-soft">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="text-[11px] font-semibold text-muted-foreground">
-                {text("السعر", "Price")}
-              </div>
-              <div className="mt-0.5 text-3xl font-extrabold text-foreground text-balance">
-                {formatPriceLocalized(
-                  listing.price ?? 0,
-                  listing.priceType,
-                  language,
-                  listing.currency,
+                  </div>
+                ) : (
+                  <div className="p-3 sm:p-4">
+                    <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
+                  </div>
                 )}
-              </div>
-              <div className="mt-1 text-xs font-semibold text-gold">
-                {priceTypeLabel(listing.priceType, language)}
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => void shareListing()}
-                aria-label={text("مشاركة الإعلان", "Share listing")}
-                className="grid h-11 w-11 place-items-center rounded-full bg-muted-surface transition hover:bg-secondary"
-              >
-                <Share2 className="h-5 w-5 text-foreground" />
-              </button>
-              <button
-                type="button"
-                onClick={() => void toggleFavorite()}
-                aria-label={text("حفظ في المفضلة", "Save to favorites")}
-                className="grid h-11 w-11 place-items-center rounded-full bg-muted-surface transition hover:bg-secondary"
-              >
-                <Heart
-                  className={`h-5 w-5 ${fav ? "fill-destructive text-destructive" : "text-foreground"}`}
-                />
-              </button>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => void messageSeller()}
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-bold text-gold-foreground"
-          >
-            <MessageCircle className="h-4 w-4" />
-            {text("راسل المعلن", "Message seller")}
-          </button>
-        </section>
 
-        <section className="mt-3 rounded-2xl bg-card p-4 hairline">
-          <h2 className="mb-2 text-sm font-extrabold text-foreground">
-            {text("الموقع", "Location")}
-          </h2>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-gold" />
-            <span className="font-semibold">{locationLabel}</span>
-            <span className="ms-auto text-[11px] text-muted-foreground">
-              {text("سوريا فقط", "Syria only")}
-            </span>
-          </div>
-          <div className="mt-3 rounded-xl bg-muted-surface p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-bold">{text("نطاق المعاينة", "Inspection area")}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {text(
-                    "اتفق مع البائع على نقطة عامة وآمنة داخل المحافظة.",
-                    "Agree with the seller on a safe public point within the governorate.",
-                  )}
-                </p>
-              </div>
-              <span className="grid h-12 w-12 place-items-center rounded-full bg-card text-gold hairline">
-                <MapIcon className="h-5 w-5" />
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-3 rounded-2xl bg-card p-4 hairline">
-          <h2 className="mb-2 text-sm font-extrabold text-foreground">
-            {text("الوصف", "Description")}
-          </h2>
-          <p className="whitespace-pre-line text-sm leading-7 text-foreground/90">
-            {listing.description?.trim() ||
-              text("لم يضف البائع وصفا مفصلا.", "The seller has not added a detailed description.")}
-          </p>
-        </section>
-
-        <section className="mt-3 rounded-2xl bg-card p-4 hairline">
-          <div className="flex items-start gap-3">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-muted-surface text-primary">
-              <User className="h-5 w-5" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-semibold text-muted-foreground">
-                {text("المعلن", "Advertiser")}
-              </p>
-              <h2 className="mt-0.5 truncate text-sm font-extrabold text-foreground">
-                {sellerName}
-              </h2>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                {canCall || canWhatsapp
-                  ? text(
-                      "طرق التواصل المتاحة تظهر من بيانات هذا الإعلان فقط.",
-                      "Available contact methods are shown from this listing only.",
-                    )
-                  : text(
-                      "لم يفعّل المعلن طريقة تواصل مباشرة في هذا الإعلان.",
-                      "The advertiser did not enable a direct contact method on this listing.",
-                    )}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {canCall && (
-                  <span className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground">
-                    {text("هاتف متاح", "Phone available")}
+                <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3 lg:hidden">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-background/90 px-2.5 py-1.5 text-[11px] font-bold text-foreground shadow-soft backdrop-blur">
+                    <Camera className="h-3.5 w-3.5" />
+                    {visibleImages.length || 0}
                   </span>
-                )}
-                {canWhatsapp && (
-                  <span className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground">
-                    {text("واتساب متاح", "WhatsApp available")}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          <Link
-            to="/seller/$id"
-            params={{ id: listing.ownerId }}
-            className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground"
-          >
-            {text("عرض كل إعلانات المعلن", "View all advertiser listings")}
-          </Link>
-          <button
-            type="button"
-            onClick={() => void messageSeller()}
-            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground"
-          >
-            <MessageCircle className="h-4 w-4" />
-            {text("راسل المعلن", "Message seller")}
-          </button>
-        </section>
-
-        {categoryRows.length > 0 && (
-          <section className="mt-3 rounded-2xl bg-card p-4 hairline">
-            <h2 className="mb-3 text-sm font-extrabold text-foreground">
-              {text("تفاصيل الإعلان", "Listing details")}
-            </h2>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {categoryRows.map(([label, value]) => (
-                <div key={label} className="rounded-xl bg-muted-surface px-3 py-2 text-sm">
-                  <span className="block text-[11px] font-bold text-muted-foreground">{label}</span>
-                  <span className="mt-0.5 block font-semibold text-foreground">{value}</span>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void shareListing()}
+                      aria-label={text("مشاركة الإعلان", "Share listing")}
+                      className="grid h-9 w-9 place-items-center rounded-full bg-background/90 text-foreground shadow-soft backdrop-blur active:scale-[0.98]"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void toggleFavorite()}
+                      aria-label={text("حفظ في المفضلة", "Save to favorites")}
+                      className="grid h-9 w-9 place-items-center rounded-full bg-background/90 text-foreground shadow-soft backdrop-blur active:scale-[0.98]"
+                    >
+                      <Heart
+                        className={`h-4 w-4 ${fav ? "fill-destructive text-destructive" : ""}`}
+                      />
+                    </button>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
+              </div>
 
-        <section className="mt-3 rounded-2xl bg-card p-4 hairline">
-          <h2 className="mb-3 text-sm font-extrabold text-foreground">
-            {text("التواصل مع البائع", "Contact seller")}
-          </h2>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {canCall ? (
-              <a
-                href={`tel:${cleanPhone}`}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-xs font-bold text-primary-foreground"
-              >
-                <Phone className="h-4 w-4" />
-                {text("اتصال", "Call")}
-              </a>
-            ) : (
-              <UnavailableContact label={text("اتصال", "Call")} />
-            )}
-            {canWhatsapp ? (
-              <a
-                href={`https://wa.me/${normalizePhoneForWhatsapp(cleanWhatsapp)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center rounded-xl bg-emerald-trust py-3 text-xs font-bold text-emerald-trust-foreground"
-              >
-                {text("واتساب", "WhatsApp")}
-              </a>
-            ) : (
-              <UnavailableContact label={text("واتساب", "WhatsApp")} />
-            )}
-          </div>
-          <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
-            {text(
-              "تظهر طرق التواصل النشطة فقط عندما يختار البائع عرضها داخل بيانات الإعلان.",
-              "Active contact methods appear only when the seller provides them in listing details.",
-            )}
-          </p>
-        </section>
+              {visibleImages.length > 1 && (
+                <div className="no-scrollbar flex gap-2 overflow-x-auto p-2.5 sm:p-3">
+                  {visibleImages.map((image, index) => (
+                    <button
+                      key={image.id}
+                      type="button"
+                      onClick={() => setSelectedImageIndex(index)}
+                      aria-label={text(`عرض الصورة ${index + 1}`, `View image ${index + 1}`)}
+                      className={`relative h-14 w-[4.5rem] shrink-0 overflow-hidden rounded-xl transition sm:h-16 sm:w-20 ${
+                        index === selectedImageIndex
+                          ? "ring-2 ring-primary ring-offset-2 ring-offset-card"
+                          : "opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      <img
+                        src={image.publicUrl ?? ""}
+                        alt={image.altAr ?? listing.title}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
 
-        <section className="mt-3 rounded-2xl bg-warning/10 p-4 hairline">
-          <div className="flex items-start gap-3">
-            <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
-            <div className="space-y-1.5 text-xs text-foreground/90">
-              <p className="font-bold">
-                {text("نصائح أمان قبل التواصل", "Safety tips before contact")}
+              {imageError && (
+                <p className="mx-3 mb-3 rounded-xl bg-warning/10 p-2.5 text-[11px] font-semibold text-foreground">
+                  {imageError.message}
+                </p>
+              )}
+            </section>
+
+            <section className="mt-4 rounded-[1.35rem] bg-card p-4 hairline sm:rounded-3xl sm:p-5 lg:hidden">
+              <ListingIdentity
+                listing={listing}
+                listingCategory={listingCategory}
+                locationLabel={locationLabel}
+                language={language}
+                text={text}
+              />
+              <div className="mt-4 border-t border-border/70 pt-4">
+                <PriceDisplay listing={listing} language={language} text={text} />
+              </div>
+            </section>
+
+            {categoryRows.length > 0 && (
+              <section className="mt-4 rounded-[1.35rem] bg-card p-4 hairline sm:rounded-3xl sm:p-5">
+                <SectionHeading
+                  title={text("المواصفات", "Specifications")}
+                  subtitle={text(
+                    "أهم تفاصيل الإعلان في مكان واحد",
+                    "Key listing details at a glance",
+                  )}
+                />
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {categoryRows.map(([label, value]) => (
+                    <div key={label} className="rounded-2xl bg-muted-surface px-3 py-3">
+                      <span className="block text-[10px] font-bold text-muted-foreground sm:text-[11px]">
+                        {label}
+                      </span>
+                      <span className="mt-1 block text-sm font-bold leading-5 text-foreground">
+                        {value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <section className="mt-4 rounded-[1.35rem] bg-card p-4 hairline sm:rounded-3xl sm:p-5">
+              <SectionHeading
+                title={text("الوصف", "Description")}
+                subtitle={text(
+                  "تفاصيل يضيفها المعلن عن السلعة",
+                  "Details provided by the advertiser",
+                )}
+              />
+              <p className="mt-4 whitespace-pre-line text-sm leading-7 text-foreground/90 sm:text-[15px] sm:leading-8">
+                {listing.description?.trim() ||
+                  text(
+                    "لم يضف البائع وصفا مفصلا.",
+                    "The seller has not added a detailed description.",
+                  )}
               </p>
-              <ul className="grid gap-1 sm:grid-cols-3">
-                <li>{text("قابل البائع في مكان عام وآمن.", "Meet in a public, safe place.")}</li>
-                <li>{text("افحص السلعة قبل الدفع.", "Inspect the item before paying.")}</li>
-                <li>{text("بلغ عن أي إعلان مشبوه.", "Report suspicious listings.")}</li>
-              </ul>
-            </div>
+            </section>
+
+            <section className="mt-4 rounded-[1.35rem] bg-card p-4 hairline sm:rounded-3xl sm:p-5">
+              <SectionHeading
+                title={text("الموقع", "Location")}
+                subtitle={text("الموقع المعلن للسلعة", "Advertised item location")}
+              />
+              <div className="mt-4 flex items-center gap-3 rounded-2xl bg-muted-surface p-3.5 sm:p-4">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-card text-gold hairline">
+                  <MapPin className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-extrabold text-foreground">{locationLabel}</p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    {text(
+                      "اتفق على نقطة عامة وآمنة للمعاينة",
+                      "Agree on a safe public inspection point",
+                    )}
+                  </p>
+                </div>
+                <MapIcon className="h-5 w-5 shrink-0 text-muted-foreground/70" />
+              </div>
+            </section>
+
+            <section className="mt-4 rounded-[1.35rem] bg-card p-4 hairline sm:rounded-3xl sm:p-5 lg:hidden">
+              <SellerCard
+                listing={listing}
+                sellerName={sellerName}
+                canCall={canCall}
+                canWhatsapp={canWhatsapp}
+                messageSeller={messageSeller}
+                text={text}
+              />
+            </section>
+
+            <section className="mt-4 rounded-[1.35rem] bg-warning/10 p-4 hairline sm:rounded-3xl sm:p-5">
+              <div className="flex items-start gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-background/80 text-warning">
+                  <ShieldAlert className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-sm font-extrabold text-foreground">
+                    {text("تواصل بأمان", "Contact safely")}
+                  </h2>
+                  <ul className="mt-2 grid gap-1.5 text-xs leading-5 text-foreground/85 sm:grid-cols-3">
+                    <li>
+                      {text("قابل البائع في مكان عام وآمن.", "Meet in a public, safe place.")}
+                    </li>
+                    <li>{text("افحص السلعة قبل الدفع.", "Inspect the item before paying.")}</li>
+                    <li>{text("بلغ عن أي إعلان مشبوه.", "Report suspicious listings.")}</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <button
+              type="button"
+              onClick={() => void reportListing()}
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-card py-3 text-xs font-bold text-destructive hairline transition hover:bg-destructive/5"
+            >
+              <Flag className="h-4 w-4" /> {text("إبلاغ عن الإعلان", "Report listing")}
+            </button>
+
+            {actionMessage && (
+              <p className="mt-3 rounded-2xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground">
+                {actionMessage}
+              </p>
+            )}
+
+            <p className="mt-4 text-center text-[10px] text-muted-foreground">
+              {text("رقم مرجعي:", "Reference:")} {listing.id}
+            </p>
           </div>
-        </section>
 
-        <button
-          type="button"
-          onClick={() => void reportListing()}
-          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-card py-2.5 text-xs font-bold text-destructive hairline transition hover:bg-destructive/5"
-        >
-          <Flag className="h-4 w-4" /> {text("إبلاغ عن الإعلان", "Report listing")}
-        </button>
+          <aside className="hidden lg:col-span-5 lg:block">
+            <div className="sticky top-24 space-y-4">
+              <section className="rounded-3xl bg-card p-5 hairline shadow-soft">
+                <ListingIdentity
+                  listing={listing}
+                  listingCategory={listingCategory}
+                  locationLabel={locationLabel}
+                  language={language}
+                  text={text}
+                />
+                <div className="mt-5 border-t border-border/70 pt-5">
+                  <PriceDisplay listing={listing} language={language} text={text} />
+                </div>
+                <div className="mt-5 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void shareListing()}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-muted-surface py-3 text-xs font-bold text-foreground transition hover:bg-secondary"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    {text("مشاركة", "Share")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void toggleFavorite()}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-muted-surface py-3 text-xs font-bold text-foreground transition hover:bg-secondary"
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${fav ? "fill-destructive text-destructive" : ""}`}
+                    />
+                    {fav ? text("محفوظ", "Saved") : text("حفظ", "Save")}
+                  </button>
+                </div>
+              </section>
 
-        {actionMessage && (
-          <p className="mt-2 rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground">
-            {actionMessage}
-          </p>
-        )}
-        <p className="mt-3 text-center text-[10px] text-muted-foreground">
-          {text("رقم مرجعي:", "Reference:")} {listing.id}
-        </p>
+              <section className="rounded-3xl bg-card p-5 hairline">
+                <SellerCard
+                  listing={listing}
+                  sellerName={sellerName}
+                  canCall={canCall}
+                  canWhatsapp={canWhatsapp}
+                  messageSeller={messageSeller}
+                  text={text}
+                />
+              </section>
+
+              <section className="rounded-3xl bg-card p-4 hairline">
+                <h2 className="text-sm font-extrabold text-foreground">
+                  {text("التواصل المباشر", "Direct contact")}
+                </h2>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {canCall ? (
+                    <a
+                      href={`tel:${cleanPhone}`}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-xs font-bold text-primary-foreground"
+                    >
+                      <Phone className="h-4 w-4" />
+                      {text("اتصال", "Call")}
+                    </a>
+                  ) : (
+                    <UnavailableContact label={text("اتصال", "Call")} />
+                  )}
+                  {canWhatsapp ? (
+                    <a
+                      href={`https://wa.me/${normalizePhoneForWhatsapp(cleanWhatsapp)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center rounded-2xl bg-emerald-trust py-3 text-xs font-bold text-emerald-trust-foreground"
+                    >
+                      {text("واتساب", "WhatsApp")}
+                    </a>
+                  ) : (
+                    <UnavailableContact label={text("واتساب", "WhatsApp")} />
+                  )}
+                </div>
+              </section>
+            </div>
+          </aside>
+        </div>
+
         <div className="fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 px-3 lg:hidden">
-          <div className="mx-auto grid max-w-md grid-cols-3 gap-2 rounded-2xl bg-card p-2 shadow-premium hairline">
+          <div className="mx-auto flex max-w-md items-center gap-2 rounded-[1.15rem] bg-card/95 p-2 shadow-premium hairline backdrop-blur">
             <button
               type="button"
               onClick={() => void messageSeller()}
-              className="col-span-3 inline-flex items-center justify-center gap-2 rounded-xl bg-gold py-2.5 text-xs font-bold text-gold-foreground"
+              className="inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-extrabold text-primary-foreground"
             >
               <MessageCircle className="h-4 w-4" />
-              {text("راسل المعلن", "Message seller")}
+              {text("مراسلة", "Message")}
             </button>
             {canCall && (
               <a
                 href={`tel:${cleanPhone}`}
-                className="inline-flex items-center justify-center gap-1 rounded-xl bg-primary py-2 text-xs font-bold text-primary-foreground"
+                aria-label={text("اتصال", "Call")}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted-surface text-foreground"
               >
-                <Phone className="h-3.5 w-3.5" />
-                {text("اتصال", "Call")}
+                <Phone className="h-4 w-4" />
               </a>
             )}
             {canWhatsapp && (
@@ -610,24 +610,154 @@ function ListingDetailsPage() {
                 href={`https://wa.me/${normalizePhoneForWhatsapp(cleanWhatsapp)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center justify-center rounded-xl bg-emerald-trust py-2 text-xs font-bold text-emerald-trust-foreground"
+                className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-emerald-trust px-3 text-[11px] font-extrabold text-emerald-trust-foreground"
               >
                 {text("واتساب", "WhatsApp")}
               </a>
             )}
-            <button
-              type="button"
-              onClick={() => void shareListing()}
-              className="inline-flex items-center justify-center gap-1 rounded-xl bg-muted-surface py-2 text-xs font-bold text-foreground"
-            >
-              <Share2 className="h-3.5 w-3.5" />
-              {text("مشاركة", "Share")}
-            </button>
           </div>
         </div>
+
         <script {...jsonLdScript(buildListingStructuredData(listing))} />
       </main>
     </>
+  );
+}
+
+function ListingIdentity({
+  listing,
+  listingCategory,
+  locationLabel,
+  language,
+  text,
+}: {
+  listing: ClassifiedListing;
+  listingCategory: string;
+  locationLabel: string;
+  language: Language;
+  text: (ar: string, en: string) => string;
+}) {
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {listing.isFeatured && <Badge>{text("مميز", "Featured")}</Badge>}
+        <span className="rounded-full bg-muted-surface px-2.5 py-1 text-[10px] font-bold text-muted-foreground">
+          {listingCategory}
+        </span>
+        <span className="rounded-full bg-muted-surface px-2.5 py-1 text-[10px] font-bold text-muted-foreground">
+          {listing.status === "approved"
+            ? text("متاح", "Available")
+            : listingStatusLabel(listing.status, language, true)}
+        </span>
+      </div>
+      <h1 className="mt-3 text-xl font-extrabold leading-[1.45] text-foreground text-balance sm:text-2xl">
+        {listing.title}
+      </h1>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5 text-gold" />
+          {locationLabel}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5" />
+          {formatDate(listing.createdAt, language)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function PriceDisplay({
+  listing,
+  language,
+  text,
+}: {
+  listing: ClassifiedListing;
+  language: Language;
+  text: (ar: string, en: string) => string;
+}) {
+  return (
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+        {text("السعر", "Price")}
+      </p>
+      <div className="mt-1 text-2xl font-black leading-tight text-foreground text-balance sm:text-3xl">
+        {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
+      </div>
+      <p className="mt-1.5 text-xs font-bold text-gold">
+        {priceTypeLabel(listing.priceType, language)}
+      </p>
+    </div>
+  );
+}
+
+function SellerCard({
+  listing,
+  sellerName,
+  canCall,
+  canWhatsapp,
+  messageSeller,
+  text,
+}: {
+  listing: ClassifiedListing;
+  sellerName: string;
+  canCall: boolean;
+  canWhatsapp: boolean;
+  messageSeller: () => Promise<void>;
+  text: (ar: string, en: string) => string;
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-3">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-muted-surface text-primary">
+          <User className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold text-muted-foreground">
+            {text("المعلن", "Advertiser")}
+          </p>
+          <h2 className="mt-0.5 truncate text-sm font-extrabold text-foreground">{sellerName}</h2>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {canCall && (
+              <span className="rounded-full bg-muted-surface px-2 py-1 text-[9px] font-bold text-muted-foreground">
+                {text("هاتف", "Phone")}
+              </span>
+            )}
+            {canWhatsapp && (
+              <span className="rounded-full bg-muted-surface px-2 py-1 text-[9px] font-bold text-muted-foreground">
+                {text("واتساب", "WhatsApp")}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <Link
+          to="/seller/$id"
+          params={{ id: listing.ownerId }}
+          className="inline-flex items-center justify-center rounded-2xl bg-muted-surface px-3 py-3 text-[11px] font-bold text-foreground"
+        >
+          {text("إعلانات المعلن", "Seller listings")}
+        </Link>
+        <button
+          type="button"
+          onClick={() => void messageSeller()}
+          className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-primary px-3 py-3 text-[11px] font-bold text-primary-foreground"
+        >
+          <MessageCircle className="h-3.5 w-3.5" />
+          {text("مراسلة", "Message")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeading({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div>
+      <h2 className="text-sm font-extrabold text-foreground sm:text-base">{title}</h2>
+      <p className="mt-0.5 text-[11px] text-muted-foreground">{subtitle}</p>
+    </div>
   );
 }
 
@@ -657,7 +787,7 @@ function buildListingStructuredData(listing: ClassifiedListing) {
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">
+    <span className="rounded-full bg-gold px-2.5 py-1 text-[10px] font-bold text-gold-foreground">
       {children}
     </span>
   );
@@ -670,11 +800,11 @@ function UnavailableContact({ label }: { label: string }) {
     <button
       type="button"
       disabled
-      className="rounded-xl bg-muted-surface px-3 py-3 text-xs font-bold text-muted-foreground opacity-70"
+      className="rounded-2xl bg-muted-surface px-3 py-3 text-xs font-bold text-muted-foreground opacity-70"
     >
       <span className="block">{label}</span>
-      <span className="mt-1 block text-[10px] font-medium leading-4">
-        {text("لم يوفر البائع هذه الطريقة", "Seller did not provide this method")}
+      <span className="mt-1 block text-[9px] font-medium leading-4">
+        {text("غير متاح", "Unavailable")}
       </span>
     </button>
   );
@@ -692,7 +822,7 @@ function StateCard({
   actionTo?: string;
 }) {
   return (
-    <div className="rounded-2xl bg-card p-10 text-center hairline">
+    <div className="rounded-3xl bg-card p-10 text-center hairline">
       <p className="text-sm font-semibold text-foreground">{title}</p>
       <p className="mt-1 text-xs text-muted-foreground">{body}</p>
       {actionLabel && actionTo && (
