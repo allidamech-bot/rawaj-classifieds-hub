@@ -134,7 +134,9 @@ function ListingDetailsPage() {
   async function toggleFavorite() {
     setActionMessage(null);
     if (auth.status !== "signedIn") {
-      setActionMessage(text("يجب تسجيل الدخول لحفظ الإعلان في المفضلة.", "Log in to save this listing."));
+      setActionMessage(
+        text("يجب تسجيل الدخول لحفظ الإعلان في المفضلة.", "Log in to save this listing."),
+      );
       return;
     }
     if (favoriteInFlightRef.current) return;
@@ -179,7 +181,9 @@ function ListingDetailsPage() {
       "بلاغ سريع من صفحة الإعلان.",
     );
     setActionMessage(
-      result.ok ? text("تم إرسال البلاغ للمراجعة.", "Report sent for review.") : result.error.message,
+      result.ok
+        ? text("تم إرسال البلاغ للمراجعة.", "Report sent for review.")
+        : result.error.message,
     );
   }
 
@@ -285,7 +289,11 @@ function ListingDetailsPage() {
   const sellerName = listing.contactName?.trim() || text("معلن على رواج", "RAWAJ advertiser");
   const visibleImages = images.filter((image) => image.publicUrl);
   const selectedImage = visibleImages[selectedImageIndex] ?? visibleImages[0] ?? null;
-  const listingCategory = categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language);
+  const listingCategory = categoryName(
+    listing.categoryId,
+    listing.categoryNameAr ?? undefined,
+    language,
+  );
 
   return (
     <>
@@ -331,7 +339,9 @@ function ListingDetailsPage() {
                       aria-label={text("حفظ في المفضلة", "Save to favorites")}
                       className="grid h-9 w-9 place-items-center rounded-full bg-background/90 text-foreground shadow-soft backdrop-blur active:scale-[0.98]"
                     >
-                      <Heart className={`h-4 w-4 ${fav ? "fill-destructive text-destructive" : ""}`} />
+                      <Heart
+                        className={`h-4 w-4 ${fav ? "fill-destructive text-destructive" : ""}`}
+                      />
                     </button>
                   </div>
                 </div>
@@ -387,7 +397,10 @@ function ListingDetailsPage() {
               <section className="mt-4 rounded-[1.35rem] bg-card p-4 hairline sm:rounded-3xl sm:p-5">
                 <SectionHeading
                   title={text("المواصفات", "Specifications")}
-                  subtitle={text("أهم تفاصيل الإعلان في مكان واحد", "Key listing details at a glance")}
+                  subtitle={text(
+                    "أهم تفاصيل الإعلان في مكان واحد",
+                    "Key listing details at a glance",
+                  )}
                 />
                 <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {categoryRows.map(([label, value]) => (
@@ -395,7 +408,9 @@ function ListingDetailsPage() {
                       <span className="block text-[10px] font-bold text-muted-foreground sm:text-[11px]">
                         {label}
                       </span>
-                      <span className="mt-1 block text-sm font-bold leading-5 text-foreground">{value}</span>
+                      <span className="mt-1 block text-sm font-bold leading-5 text-foreground">
+                        {value}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -405,11 +420,17 @@ function ListingDetailsPage() {
             <section className="mt-4 rounded-[1.35rem] bg-card p-4 hairline sm:rounded-3xl sm:p-5">
               <SectionHeading
                 title={text("الوصف", "Description")}
-                subtitle={text("تفاصيل يضيفها المعلن عن السلعة", "Details provided by the advertiser")}
+                subtitle={text(
+                  "تفاصيل يضيفها المعلن عن السلعة",
+                  "Details provided by the advertiser",
+                )}
               />
               <p className="mt-4 whitespace-pre-line text-sm leading-7 text-foreground/90 sm:text-[15px] sm:leading-8">
                 {listing.description?.trim() ||
-                  text("لم يضف البائع وصفا مفصلا.", "The seller has not added a detailed description.")}
+                  text(
+                    "لم يضف البائع وصفا مفصلا.",
+                    "The seller has not added a detailed description.",
+                  )}
               </p>
             </section>
 
@@ -425,7 +446,10 @@ function ListingDetailsPage() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-extrabold text-foreground">{locationLabel}</p>
                   <p className="mt-0.5 text-[11px] text-muted-foreground">
-                    {text("اتفق على نقطة عامة وآمنة للمعاينة", "Agree on a safe public inspection point")}
+                    {text(
+                      "اتفق على نقطة عامة وآمنة للمعاينة",
+                      "Agree on a safe public inspection point",
+                    )}
                   </p>
                 </div>
                 <MapIcon className="h-5 w-5 shrink-0 text-muted-foreground/70" />
@@ -453,7 +477,9 @@ function ListingDetailsPage() {
                     {text("تواصل بأمان", "Contact safely")}
                   </h2>
                   <ul className="mt-2 grid gap-1.5 text-xs leading-5 text-foreground/85 sm:grid-cols-3">
-                    <li>{text("قابل البائع في مكان عام وآمن.", "Meet in a public, safe place.")}</li>
+                    <li>
+                      {text("قابل البائع في مكان عام وآمن.", "Meet in a public, safe place.")}
+                    </li>
                     <li>{text("افحص السلعة قبل الدفع.", "Inspect the item before paying.")}</li>
                     <li>{text("بلغ عن أي إعلان مشبوه.", "Report suspicious listings.")}</li>
                   </ul>
@@ -507,7 +533,9 @@ function ListingDetailsPage() {
                     onClick={() => void toggleFavorite()}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl bg-muted-surface py-3 text-xs font-bold text-foreground transition hover:bg-secondary"
                   >
-                    <Heart className={`h-4 w-4 ${fav ? "fill-destructive text-destructive" : ""}`} />
+                    <Heart
+                      className={`h-4 w-4 ${fav ? "fill-destructive text-destructive" : ""}`}
+                    />
                     {fav ? text("محفوظ", "Saved") : text("حفظ", "Save")}
                   </button>
                 </div>
@@ -654,14 +682,11 @@ function PriceDisplay({
         {text("السعر", "Price")}
       </p>
       <div className="mt-1 text-2xl font-black leading-tight text-foreground text-balance sm:text-3xl">
-        {formatPriceLocalized(
-          listing.price ?? 0,
-          listing.priceType,
-          language,
-          listing.currency,
-        )}
+        {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
       </div>
-      <p className="mt-1.5 text-xs font-bold text-gold">{priceTypeLabel(listing.priceType, language)}</p>
+      <p className="mt-1.5 text-xs font-bold text-gold">
+        {priceTypeLabel(listing.priceType, language)}
+      </p>
     </div>
   );
 }
@@ -688,7 +713,9 @@ function SellerCard({
           <User className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold text-muted-foreground">{text("المعلن", "Advertiser")}</p>
+          <p className="text-[10px] font-bold text-muted-foreground">
+            {text("المعلن", "Advertiser")}
+          </p>
           <h2 className="mt-0.5 truncate text-sm font-extrabold text-foreground">{sellerName}</h2>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {canCall && (
