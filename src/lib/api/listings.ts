@@ -62,6 +62,7 @@ export function mapListing(
     categoryPlaceholder: category?.placeholder,
     governorateId,
     governorateNameAr: governorate?.nameAr,
+    locationNodeId: rowNullableString(row, "location_node_id"),
     title: rowString(row, "title"),
     description: rowString(row, "description"),
     price: rowNullableNumber(row, "price"),
@@ -682,11 +683,21 @@ export async function hydrateListingsWithPrimaryImages(
 ): Promise<ClassifiedListing[]> {
   if (listings.length === 0) return listings;
 
-  const images = await readListingImagesByListingIds(
-    client,
-    listings.map((listing) => listing.id),
-  );
-  if (images.length === 0) return listings;
+  const locationNodeIds = [
+    ...new Set(
+      listings.map((listing) => listing.locationNodeId).filter((id): id is string => Boolean(id)),
+    ),
+  ];
+
+  const [images, locationsResult] = await Promise.all([
+    readListingImagesByListingIds(
+      client,
+      listings.map((listing) => listing.id),
+    ),
+    locationNodeIds.length > 0
+      ? client.from("location_nodes").select("id,name_ar,name_en").in("id", locationNodeIds)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
 
   const firstImageByListing = new Map<string, ListingImage>();
   for (const image of images) {
@@ -695,10 +706,25 @@ export async function hydrateListingsWithPrimaryImages(
     }
   }
 
-  return listings.map((listing) => ({
-    ...listing,
-    primaryImageUrl: firstImageByListing.get(listing.id)?.publicUrl ?? null,
-  }));
+  const locationById = new Map(
+    ((locationsResult.data ?? []) as Record<string, unknown>[]).map((row) => [
+      rowString(row, "id"),
+      {
+        nameAr: rowString(row, "name_ar"),
+        nameEn: rowNullableString(row, "name_en"),
+      },
+    ]),
+  );
+
+  return listings.map((listing) => {
+    const location = listing.locationNodeId ? locationById.get(listing.locationNodeId) : undefined;
+    return {
+      ...listing,
+      primaryImageUrl: firstImageByListing.get(listing.id)?.publicUrl ?? null,
+      locationNameAr: location?.nameAr,
+      locationNameEn: location?.nameEn ?? null,
+    };
+  });
 }
 
 function buildNextCursor(sort: string, listing: ClassifiedListing): ListingCursor | null {
