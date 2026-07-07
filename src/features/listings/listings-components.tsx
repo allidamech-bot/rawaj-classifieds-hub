@@ -295,45 +295,54 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
     <Link
       to="/listings/$id"
       params={{ id: listing.id }}
-      className="group block overflow-hidden rounded-2xl bg-card hairline shadow-soft tap-card transition hover:-translate-y-0.5 hover:border-brand-orange/40"
+      className="group block overflow-hidden rounded-[1.15rem] border border-border/80 bg-card tap-card transition hover:-translate-y-0.5 hover:border-gold/60 hover:shadow-premium-sm"
     >
-      <div className="relative">
+      <div className="relative overflow-hidden bg-muted-surface">
         {listing.primaryImageUrl ? (
           <img
             src={listing.primaryImageUrl}
             alt={listing.title}
             loading="lazy"
             decoding="async"
-            className="aspect-[4/3] w-full object-cover"
+            className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
           />
         ) : (
           <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="standard" />
         )}
-        <div className="absolute top-1.5 start-1.5 flex flex-wrap gap-1">
-          {listing.isFeatured && (
-            <span className="rounded-md bg-brand-orange px-1.5 py-0.5 text-[10px] font-extrabold shadow-soft">
-              {text("مميز", "Featured")}
-            </span>
-          )}
-        </div>
-        <span className="absolute bottom-1.5 end-1.5 max-w-[80%] truncate rounded-md bg-primary/90 px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground backdrop-blur-sm">
-          {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
-        </span>
+        {listing.isFeatured ? (
+          <span className="absolute start-2 top-2 rounded-full bg-primary/92 px-2 py-1 text-[9px] font-extrabold text-primary-foreground shadow-soft backdrop-blur-sm">
+            {text("مميز", "Featured")}
+          </span>
+        ) : null}
       </div>
-      <div className="space-y-1 p-2.5">
-        <div className="text-[15px] font-extrabold leading-tight text-brand-orange">
-          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
+
+      <div className="p-2.5 sm:p-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 text-[14px] font-extrabold leading-tight text-primary sm:text-base">
+            {formatPriceLocalized(
+              listing.price ?? 0,
+              listing.priceType,
+              language,
+              listing.currency,
+            )}
+          </div>
+          <span className="max-w-[45%] shrink-0 truncate rounded-full bg-background px-2 py-1 text-[9px] font-bold text-muted-foreground">
+            {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
+          </span>
         </div>
-        <h3 className="line-clamp-2 min-h-[2.35rem] text-[13px] font-bold leading-snug text-foreground">
+
+        <h3 className="mt-1.5 line-clamp-2 min-h-[2.35rem] text-[12.5px] font-bold leading-snug text-foreground sm:text-[13px]">
           {listing.title}
         </h3>
-        <div className="flex flex-col gap-0.5 text-[11px] leading-5 text-muted-foreground">
+
+        <div className="mt-2 flex items-center justify-between gap-2 border-t border-border/60 pt-2 text-[10px] text-muted-foreground sm:text-[11px]">
           <span className="inline-flex min-w-0 items-center gap-1">
-            <MapPin className="h-3 w-3 shrink-0 text-primary/70" />
+            <MapPin className="h-3 w-3 shrink-0 text-brand-orange" strokeWidth={1.9} />
             <span className="truncate">{listingLocationDisplay(listing, language)}</span>
           </span>
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-3 w-3 shrink-0" /> {formatDate(listing.createdAt, language)}
+          <span className="inline-flex shrink-0 items-center gap-1">
+            <Clock className="h-3 w-3" strokeWidth={1.8} />
+            <span>{formatDate(listing.createdAt, language)}</span>
           </span>
         </div>
       </div>

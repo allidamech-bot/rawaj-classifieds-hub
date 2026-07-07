@@ -332,9 +332,7 @@ function HomeState({
   compact?: boolean;
 }) {
   return (
-    <div
-      className={`rounded-2xl bg-card text-center hairline ${compact ? "p-5" : "mt-6 p-8"}`}
-    >
+    <div className={`rounded-2xl bg-card text-center hairline ${compact ? "p-5" : "mt-6 p-8"}`}>
       <p className="text-sm font-bold text-foreground">{title}</p>
       {body ? <p className="mt-1 text-xs text-muted-foreground">{body}</p> : null}
     </div>
