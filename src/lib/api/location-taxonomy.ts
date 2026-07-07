@@ -38,6 +38,8 @@ export interface CanonicalLocationNode {
 export interface LocationSearchResult {
   node: CanonicalLocationNode;
   matchedAlias: string | null;
+  pathAr: string;
+  pathEn: string;
 }
 
 function mapLocationNode(row: Record<string, unknown>): CanonicalLocationNode {
@@ -64,6 +66,26 @@ function normalizeLocationSearch(value: string) {
     .replace(/ى/g, "ي")
     .replace(/ة/g, "ه")
     .replace(/\s+/g, " ");
+}
+
+function rankLocationResult(
+  result: Pick<LocationSearchResult, "node" | "matchedAlias">,
+  normalizedQuery: string,
+) {
+  const names = [result.node.nameAr, result.node.nameEn]
+    .filter((value): value is string => Boolean(value))
+    .map(normalizeLocationSearch);
+  const alias = result.matchedAlias
+    ? normalizeLocationSearch(result.matchedAlias)
+    : "";
+
+  if (names.includes(normalizedQuery)) return 0;
+  if (alias === normalizedQuery) return 1;
+  if (names.some((name) => name.startsWith(normalizedQuery))) return 2;
+  if (alias.startsWith(normalizedQuery)) return 3;
+  if (names.some((name) => name.includes(normalizedQuery))) return 4;
+  if (alias.includes(normalizedQuery)) return 5;
+  return 6;
 }
 
 const LOCATION_NODE_SELECT =
@@ -162,14 +184,19 @@ export async function searchLocationNodes(
       .limit(safeLimit),
   ]);
 
-  if (nodesResult.error) return { ok: false, error: mapError(nodesResult.error) };
+  if (nodesResult.error)
+    return { ok: false, error: mapError(nodesResult.error) };
 
-  const directNodes = ((nodesResult.data ?? []) as Record<string, unknown>[]).map(mapLocationNode);
+  const directNodes = (
+    (nodesResult.data ?? []) as Record<string, unknown>[]
+  ).map(mapLocationNode);
   const aliases = aliasesResult.error
     ? []
     : ((aliasesResult.data ?? []) as Record<string, unknown>[]);
   const aliasIds = [
-    ...new Set(aliases.map((row) => rowString(row, "location_node_id")).filter(Boolean)),
+    ...new Set(
+      aliases.map((row) => rowString(row, "location_node_id")).filter(Boolean),
+    ),
   ];
 
   let aliasNodes: CanonicalLocationNode[] = [];
@@ -181,27 +208,64 @@ export async function searchLocationNodes(
       .eq("is_active", true)
       .in("id", aliasIds);
     if (error) return { ok: false, error: mapError(error) };
-    aliasNodes = ((data ?? []) as Record<string, unknown>[]).map(mapLocationNode);
+    aliasNodes = ((data ?? []) as Record<string, unknown>[]).map(
+      mapLocationNode,
+    );
   }
 
   const aliasByNodeId = new Map<string, string>();
   for (const row of aliases) {
     const nodeId = rowString(row, "location_node_id");
     const alias = rowString(row, "alias");
-    if (nodeId && alias && !aliasByNodeId.has(nodeId)) aliasByNodeId.set(nodeId, alias);
+    if (nodeId && alias && !aliasByNodeId.has(nodeId))
+      aliasByNodeId.set(nodeId, alias);
   }
 
-  const directIds = new Set(directNodes.map((node) => node.id));
-  const merged: LocationSearchResult[] = directNodes.map((node) => ({
-    node,
-    matchedAlias: null,
-  }));
+  const mergedById = new Map<
+    string,
+    Pick<LocationSearchResult, "node" | "matchedAlias">
+  >();
+  for (const node of directNodes) {
+    mergedById.set(node.id, { node, matchedAlias: null });
+  }
   for (const node of aliasNodes) {
-    if (directIds.has(node.id)) continue;
-    merged.push({ node, matchedAlias: aliasByNodeId.get(node.id) ?? null });
+    const existing = mergedById.get(node.id);
+    mergedById.set(node.id, {
+      node,
+      matchedAlias: existing?.matchedAlias ?? aliasByNodeId.get(node.id) ?? null,
+    });
   }
 
-  return { ok: true, data: merged.slice(0, safeLimit) };
+  const ranked = [...mergedById.values()]
+    .sort((left, right) => {
+      const scoreDelta =
+        rankLocationResult(left, normalized) -
+        rankLocationResult(right, normalized);
+      if (scoreDelta !== 0) return scoreDelta;
+      if (left.node.depth !== right.node.depth)
+        return left.node.depth - right.node.depth;
+      return left.node.nameAr.localeCompare(right.node.nameAr, "ar");
+    })
+    .slice(0, safeLimit);
+
+  const paths = await Promise.all(
+    ranked.map((result) => fetchLocationPathWithClient(client, result.node.id)),
+  );
+
+  const hydrated = ranked.map((result, index): LocationSearchResult => {
+    const pathResult = paths[index];
+    const path = pathResult?.ok ? pathResult.data : [result.node];
+    const visiblePath = path.filter((node) => node.nodeType !== "country");
+    return {
+      ...result,
+      pathAr: visiblePath.map((node) => node.nameAr).join(" › "),
+      pathEn: visiblePath
+        .map((node) => node.nameEn || node.nameAr)
+        .join(" › "),
+    };
+  });
+
+  return { ok: true, data: hydrated };
 }
 
 export async function fetchLocationPath(
@@ -216,7 +280,9 @@ async function fetchLocationPathWithClient(
   client: SupabaseClient,
   nodeId: string,
 ): Promise<ClassifiedsResult<CanonicalLocationNode[]>> {
-  const { data, error } = await client.rpc("rawaj_location_path", { node_id: nodeId });
+  const { data, error } = await client.rpc("rawaj_location_path", {
+    node_id: nodeId,
+  });
   if (error) return { ok: false, error: mapError(error) };
 
   const path = ((data ?? []) as Record<string, unknown>[]).map((row) => ({
@@ -242,9 +308,12 @@ export async function resolveLocationDescendantIds(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data.rpc("rawaj_location_descendant_ids", {
-    root_id: nodeId,
-  });
+  const { data, error } = await clientResult.data.rpc(
+    "rawaj_location_descendant_ids",
+    {
+      root_id: nodeId,
+    },
+  );
   if (error) return { ok: false, error: mapError(error) };
 
   return {
