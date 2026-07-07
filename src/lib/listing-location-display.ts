@@ -7,6 +7,13 @@ export function listingLocationDisplay(listing: ClassifiedListing, language: "ar
     listing.governorateNameAr ?? undefined,
     language,
   );
+  const canonical =
+    language === "en"
+      ? listing.locationNameEn?.trim() || listing.locationNameAr?.trim()
+      : listing.locationNameAr?.trim();
+  if (canonical) {
+    return canonical === governorate ? canonical : [governorate, canonical].join(" / ");
+  }
   const district = listing.districtAr?.trim();
   if (!district) return governorate;
   return [governorate, district].join(" / ");
