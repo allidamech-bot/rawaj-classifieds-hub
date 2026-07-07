@@ -11,6 +11,7 @@ export const listingsSearchSchema = z.object({
   subcategory: z.string().optional(),
   gov: z.string().optional(),
   district: z.string().optional(),
+  location: z.string().uuid().optional(),
   price_min: z.coerce.number().nonnegative().optional(),
   price_max: z.coerce.number().nonnegative().optional(),
   car_make: z.string().optional(),
