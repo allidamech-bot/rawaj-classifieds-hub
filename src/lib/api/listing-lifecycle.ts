@@ -73,12 +73,7 @@ export function closeOwnerListing(
   listingId: string,
   targetStatus: OwnerCloseListingStatus,
 ) {
-  return transitionOwnerListing(
-    userId,
-    listingId,
-    ["approved"],
-    targetStatus,
-  );
+  return transitionOwnerListing(userId, listingId, ["approved"], targetStatus);
 }
 
 export function reactivateOwnerListing(
