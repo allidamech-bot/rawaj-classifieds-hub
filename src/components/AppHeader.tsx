@@ -27,11 +27,9 @@ export function AppHeader({ compact = false, title }: Props) {
   ];
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/70 bg-background/92 text-foreground shadow-[0_6px_24px_rgba(14,42,68,0.05)] backdrop-blur-xl">
-      <div
-        className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-orange via-gold to-brand-orange/70"
-        aria-hidden="true"
-      />
+    <header className="sticky top-0 z-30 border-b border-border/75 bg-background/88 text-foreground shadow-[0_10px_34px_rgba(16,43,70,0.045)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/80">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/80 to-transparent" />
+      <div className="absolute start-0 top-0 h-[2px] w-20 bg-gradient-to-r from-brand-orange to-gold" />
 
       <div className="container-wide flex min-h-14 items-center gap-2 py-1.5 sm:min-h-16 sm:gap-4 sm:py-2 lg:min-h-[4.5rem]">
         <Link to="/" className="group order-1 flex min-w-0 items-center gap-2 sm:gap-3">
@@ -39,14 +37,14 @@ export function AppHeader({ compact = false, title }: Props) {
         </Link>
 
         {compact && title ? (
-          <h1 className="order-2 ms-1 flex-1 truncate text-sm font-extrabold text-primary sm:text-base lg:hidden">
+          <h1 className="order-2 ms-1 flex-1 truncate text-sm font-bold text-primary sm:text-base lg:hidden">
             {title}
           </h1>
         ) : null}
 
         <nav
           aria-label={text("التنقل الرئيسي", "Primary navigation")}
-          className="order-2 ms-6 hidden items-center gap-1 lg:flex"
+          className="order-2 ms-7 hidden items-center gap-1 lg:flex"
         >
           {navItems.map((item) => {
             const active = activeSection === item.section;
@@ -54,14 +52,17 @@ export function AppHeader({ compact = false, title }: Props) {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`rounded-full px-3.5 py-2 text-sm font-bold transition ${
+                className={`relative rounded-full px-3.5 py-2 text-[13px] font-semibold transition duration-200 ${
                   active
-                    ? "bg-primary text-primary-foreground shadow-soft"
-                    : "text-muted-foreground hover:bg-card hover:text-primary"
+                    ? "bg-card text-primary shadow-soft hairline"
+                    : "text-muted-foreground hover:bg-card/70 hover:text-primary"
                 }`}
                 aria-current={active ? "page" : undefined}
               >
                 {item.label}
+                {active ? (
+                  <span className="absolute inset-x-0 -bottom-1 mx-auto h-1 w-1 rounded-full bg-brand-orange" />
+                ) : null}
               </Link>
             );
           })}
@@ -72,9 +73,9 @@ export function AppHeader({ compact = false, title }: Props) {
         <div className="order-3 flex shrink-0 items-center gap-1.5 sm:gap-2">
           <Link
             to="/add-listing"
-            className="hidden h-10 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-extrabold text-primary-foreground shadow-soft transition hover:-translate-y-0.5 hover:bg-brand-navy lg:inline-flex"
+            className="rawaj-button-primary hidden h-10 min-h-0 rounded-full px-4 text-[12px] lg:inline-flex"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" strokeWidth={2.1} />
             {text("أضف إعلان", "Post listing")}
           </Link>
 
@@ -83,9 +84,9 @@ export function AppHeader({ compact = false, title }: Props) {
             onClick={toggleLanguage}
             aria-label={text("تبديل اللغة", "Switch language")}
             title={text("العربية / English", "English / العربية")}
-            className="hidden h-9 shrink-0 items-center gap-1.5 rounded-full bg-card px-3 text-[11px] font-bold text-muted-foreground hairline transition hover:border-gold/60 hover:text-primary sm:inline-flex"
+            className="hidden h-9 shrink-0 items-center gap-1.5 rounded-full bg-card/80 px-3 text-[10px] font-semibold text-muted-foreground hairline transition hover:border-gold/55 hover:text-primary sm:inline-flex"
           >
-            <Languages className="h-4 w-4" />
+            <Languages className="h-3.5 w-3.5" strokeWidth={1.9} />
             <span>{language === "ar" ? "English" : "العربية"}</span>
           </button>
 
@@ -114,12 +115,12 @@ export function AppHeader({ compact = false, title }: Props) {
                 ? text("حسابي", "My account")
                 : text("تسجيل الدخول", "Log in")
             }
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-card text-primary hairline shadow-soft transition hover:bg-muted-surface active:scale-[0.98] sm:h-10 sm:w-10"
+            className="rawaj-icon-button h-9 w-9 shrink-0 sm:h-10 sm:w-10"
           >
             {auth.status === "signedIn" ? (
-              <User className="h-4 w-4" />
+              <User className="h-4 w-4" strokeWidth={1.9} />
             ) : (
-              <LogIn className="h-4 w-4" />
+              <LogIn className="h-4 w-4" strokeWidth={1.9} />
             )}
           </Link>
         </div>
@@ -130,8 +131,9 @@ export function AppHeader({ compact = false, title }: Props) {
 
 function Logo() {
   return (
-    <span className="flex items-center gap-2 sm:gap-3">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary shadow-soft sm:h-10 sm:w-10">
+    <span className="flex items-center gap-2.5 sm:gap-3">
+      <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-[0.95rem] bg-primary shadow-[0_7px_18px_rgba(16,43,70,0.16)] sm:h-10 sm:w-10">
+        <span className="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-brand-orange" />
         <img
           src="/brand/rawaj-mark-transparent-header.png"
           alt="RAWAJ"
@@ -141,9 +143,9 @@ function Logo() {
       </span>
 
       <span className="flex items-center gap-1.5 leading-none sm:gap-2">
-        <span className="text-base font-extrabold text-primary sm:text-lg">رواج</span>
-        <span className="h-4 w-px bg-gold/70 sm:h-5" aria-hidden="true" />
-        <span className="text-[9px] font-extrabold tracking-[0.2em] text-brand-orange sm:text-[10px]">
+        <span className="font-display text-[15px] font-bold text-primary sm:text-[17px]">رواج</span>
+        <span className="h-4 w-px bg-gold/65 sm:h-5" aria-hidden="true" />
+        <span className="text-[8px] font-bold tracking-[0.24em] text-brand-orange sm:text-[9px]">
           RAWAJ
         </span>
       </span>
