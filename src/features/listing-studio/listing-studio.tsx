@@ -14,9 +14,9 @@ export function ListingStudioShell({
   aside?: ReactNode;
 }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-      <div className="space-y-4">{children}</div>
-      {aside && <aside className="space-y-3">{aside}</aside>}
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">
+      <div className="min-w-0 space-y-4">{children}</div>
+      {aside ? <aside className="space-y-3 lg:sticky lg:top-24">{aside}</aside> : null}
     </div>
   );
 }
@@ -29,40 +29,50 @@ export function ListingStudioSteps({
   current: number;
 }) {
   return (
-    <ol className="mb-4 grid grid-cols-3 gap-2">
+    <ol className="rawaj-surface relative mb-5 grid grid-cols-3 gap-1.5 overflow-hidden rounded-[1.35rem] p-2 sm:gap-2 sm:p-2.5">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-gold/65 to-transparent"
+      />
       {steps.map((step, index) => {
         const done = index < current;
         const active = index === current;
         return (
           <li
             key={step.label}
-            className={`rounded-xl border p-2 ${
+            aria-current={active ? "step" : undefined}
+            className={`relative min-w-0 rounded-[1rem] px-2 py-2.5 transition sm:px-3 ${
               active
-                ? "border-primary bg-primary text-primary-foreground"
+                ? "bg-primary text-primary-foreground shadow-[0_8px_22px_rgba(16,43,70,0.14)]"
                 : done
-                  ? "border-emerald-trust/30 bg-emerald-trust/10 text-emerald-trust"
-                  : "border-border bg-card text-muted-foreground"
+                  ? "bg-emerald-trust/8 text-emerald-trust"
+                  : "text-muted-foreground"
             }`}
           >
-            <span className="flex items-center gap-1.5">
+            <span className="flex items-center gap-2">
               <span
-                className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-extrabold ${
+                className={`grid h-7 w-7 shrink-0 place-items-center rounded-[0.7rem] text-[10px] font-bold transition ${
                   active
-                    ? "bg-primary-foreground/15"
+                    ? "bg-white/10 text-gold ring-1 ring-white/10"
                     : done
                       ? "bg-emerald-trust text-emerald-trust-foreground"
-                      : "bg-muted-surface"
+                      : "border border-border/80 bg-card-warm/80 text-primary"
                 }`}
               >
-                {done ? <Check className="h-3.5 w-3.5" /> : index + 1}
+                {done ? <Check className="h-3.5 w-3.5" strokeWidth={2.2} /> : index + 1}
               </span>
-              <span className="min-w-0 text-xs font-extrabold leading-tight">{step.label}</span>
+              <span className="min-w-0 truncate text-[10px] font-semibold leading-tight sm:text-xs">
+                {step.label}
+              </span>
             </span>
-            {step.description && (
-              <span className="mt-1 hidden text-[10px] leading-4 opacity-80 sm:block">
+            {step.description ? (
+              <span className="mt-1.5 hidden ps-9 text-[10px] leading-4 opacity-75 sm:block">
                 {step.description}
               </span>
-            )}
+            ) : null}
+            {active ? (
+              <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-gradient-to-r from-brand-orange to-gold" />
+            ) : null}
           </li>
         );
       })}
@@ -83,15 +93,20 @@ export function ListingStudioSection({
 }) {
   return (
     <section
-      className={`rounded-2xl p-4 hairline shadow-soft ${
-        tone === "muted" ? "bg-muted-surface" : "bg-card"
+      className={`rounded-[1.4rem] p-4 sm:p-5 ${
+        tone === "muted"
+          ? "border border-border/65 bg-card-warm/65"
+          : "rawaj-surface"
       }`}
     >
-      <div className="mb-3">
-        <h3 className="text-sm font-extrabold text-foreground">{title}</h3>
-        {description && (
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
-        )}
+      <div className="mb-4">
+        <span className="mb-1.5 block h-0.5 w-7 rounded-full bg-gradient-to-r from-brand-orange to-gold" />
+        <h3 className="text-sm font-bold leading-tight text-primary sm:text-[15px]">{title}</h3>
+        {description ? (
+          <p className="mt-1.5 max-w-2xl text-[11px] leading-5 text-muted-foreground sm:text-xs sm:leading-6">
+            {description}
+          </p>
+        ) : null}
       </div>
       {children}
     </section>
@@ -107,14 +122,16 @@ export function ListingStudioMessage({
 }) {
   const className =
     tone === "success"
-      ? "bg-emerald-trust/10 text-emerald-trust"
+      ? "border-emerald-trust/15 bg-emerald-trust/8 text-emerald-trust"
       : tone === "warning"
-        ? "bg-warning/10 text-warning"
+        ? "border-warning/15 bg-warning/8 text-warning"
         : tone === "danger"
-          ? "bg-destructive/10 text-destructive"
-          : "bg-muted-surface text-foreground";
+          ? "border-destructive/15 bg-destructive/8 text-destructive"
+          : "border-border/70 bg-card-warm/70 text-foreground";
 
   return (
-    <div className={`rounded-xl p-3 text-xs font-semibold hairline ${className}`}>{children}</div>
+    <div className={`rounded-[1rem] border p-3 text-xs font-medium leading-5 ${className}`}>
+      {children}
+    </div>
   );
 }
