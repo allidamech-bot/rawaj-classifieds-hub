@@ -65,7 +65,7 @@ export function BottomNav() {
                 aria-label={label}
                 aria-current={active ? "page" : undefined}
               >
-                <span className="grid h-12 w-12 -translate-y-3 place-items-center rounded-full bg-gold text-gold-foreground shadow-premium ring-4 ring-background">
+                <span className="grid h-12 w-12 -translate-y-3 place-items-center rounded-2xl bg-brand-orange text-white shadow-premium ring-4 ring-background">
                   <Icon className="h-6 w-6" />
                 </span>
                 <span className="-mt-1 text-[11px] font-bold text-foreground">{label}</span>
@@ -78,13 +78,13 @@ export function BottomNav() {
               key={item.to}
               to={item.to}
               className={`flex min-h-16 flex-col items-center gap-1 py-2 transition active:scale-[0.98] ${
-                active ? "text-primary" : "text-muted-foreground"
+                active ? "text-brand-orange" : "text-muted-foreground"
               }`}
               aria-current={active ? "page" : undefined}
             >
               <Icon className={`h-5 w-5 ${active ? "stroke-[2.2]" : ""}`} />
               <span className="text-[11px] font-medium">{label}</span>
-              {active && <span className="h-1 w-4 rounded-full bg-gold" />}
+              {active && <span className="h-1 w-4 rounded-full bg-brand-orange" />}
             </Link>
           );
         })}
