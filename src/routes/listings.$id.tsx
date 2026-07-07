@@ -26,7 +26,8 @@ import {
   unfavoriteListing,
 } from "@/lib/classifieds-api";
 import type { ClassifiedListing, ClassifiedsError, ListingImage } from "@/lib/classifieds-types";
-import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import { categoryName, formatPriceLocalized } from "@/lib/i18n";
+import { listingLocationDisplay } from "@/lib/listing-location-display";
 import { absoluteUrl, createSeo, jsonLdScript, plainText } from "@/lib/seo";
 import { listingStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
@@ -263,11 +264,7 @@ function ListingDetailsPage() {
 
   const categoryFieldKind = detectCategoryFieldKind(null, listing);
   const categoryRows = categoryDetailDisplayRows(categoryFieldKind, listing.details, text);
-  const locationLabel = governorateName(
-    listing.governorateId,
-    listing.governorateNameAr ?? undefined,
-    language,
-  );
+  const locationLabel = listingLocationDisplay(listing, language);
   const phone = detailString(listing, ["phone", "mobile", "contact_phone", "رقم الهاتف", "الهاتف"]);
   const whatsapp = detailString(listing, [
     "whatsapp",
@@ -418,9 +415,6 @@ function ListingDetailsPage() {
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <MapPin className="h-4 w-4 text-gold" />
             <span className="font-semibold">{locationLabel}</span>
-            {listing.districtAr && (
-              <span className="text-muted-foreground">· {listing.districtAr}</span>
-            )}
             <span className="ms-auto text-[11px] text-muted-foreground">
               {text("سوريا فقط", "Syria only")}
             </span>
