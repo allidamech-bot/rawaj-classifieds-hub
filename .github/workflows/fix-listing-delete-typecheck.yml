@@ -1,0 +1,37 @@
+name: Fix Listing Delete Typecheck
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hotfix/preserve-conversations-on-listing-delete
+          fetch-depth: 0
+      - name: Add foreign key conflict error code
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('src/lib/classifieds-types.ts')
+          text = path.read_text(encoding='utf-8')
+          old = '  | "validation_error"\n  | "unknown";'
+          new = '  | "validation_error"\n  | "foreign_key_conflict"\n  | "unknown";'
+          if old not in text:
+              raise SystemExit('Expected ClassifiedsErrorCode snippet was not found')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+          npx prettier --write 'src/lib/classifieds-types.ts'
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -- 'src/lib/classifieds-types.ts'
+          git diff --cached --quiet || git commit -m 'Add foreign key conflict error code'
+          git push origin HEAD:hotfix/preserve-conversations-on-listing-delete
