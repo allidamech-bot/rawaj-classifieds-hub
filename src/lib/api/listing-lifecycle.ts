@@ -60,7 +60,8 @@ async function transitionOwnerListing(
       ok: false,
       error: {
         code: "permission_denied",
-        message: "تعذر تغيير حالة الإعلان. ربما تغيرت حالته أو لم تعد العملية متاحة.",
+        message:
+          "تعذر تغيير حالة الإعلان. ربما تغيرت حالته أو لم تعد العملية متاحة.",
       },
     };
   }
