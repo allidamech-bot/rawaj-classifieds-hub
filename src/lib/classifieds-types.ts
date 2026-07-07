@@ -97,7 +97,7 @@ export interface ClassifiedListing {
   categoryPlaceholder?: PlaceholderType;
   governorateId: string;
   governorateNameAr?: string;
-  locationNodeId: string | null;
+  locationNodeId?: string | null;
   locationNameAr?: string;
   locationNameEn?: string | null;
   title: string;
