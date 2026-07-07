@@ -1,0 +1,155 @@
+name: Patch location display filter
+
+on:
+  push:
+    branches:
+      - location-display-filter
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[skip patch]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: location-display-filter
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Patch progressive location filters
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('src/features/listings/listings-filters.ts')
+          s = p.read_text()
+          s = s.replace('  district?: string;\n', '  district?: string;\n  location?: string;\n', 1)
+          s = s.replace('    district: districtAr || undefined,\n', '    location: districtAr.startsWith("@") ? districtAr.slice(1) : undefined,\n    district: districtAr.startsWith("@") ? undefined : districtAr || undefined,\n')
+          p.write_text(s)
+
+          p = Path('src/routes/listings.index.tsx')
+          s = p.read_text()
+          s = s.replace(
+              'import { PageHeader } from "@/components/PageHeader";\n',
+              'import { PageHeader } from "@/components/PageHeader";\nimport { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";\n',
+              1,
+          )
+          s = s.replace(
+              '  const govId = references.govId;\n',
+              '  const govId = references.govId;\n  const canonicalLocationId = districtAr.startsWith("@") ? districtAr.slice(1) : "";\n',
+              1,
+          )
+          s = s.replace(
+              '    if (districtAr && selectedGovernorate && !availableDistricts.includes(districtAr)) {\n',
+              '    if (\n      districtAr &&\n      !districtAr.startsWith("@") &&\n      selectedGovernorate &&\n      !availableDistricts.includes(districtAr)\n    ) {\n',
+              1,
+          )
+          s = s.replace(
+              '    districtAr ? { key: "district", label: districtAr, clear: () => setDistrictAr("") } : null,\n',
+              '    districtAr\n      ? {\n          key: "district",\n          label: districtAr.startsWith("@")\n            ? text("موقع محدد", "Selected location")\n            : districtAr,\n          clear: () => setDistrictAr(""),\n        }\n      : null,\n',
+              1,
+          )
+          old = '''                    <select
+                      value={districtAr}
+                      onChange={(event) => setDistrictAr(event.target.value)}
+                      disabled={!selectedGovernorate}
+                      className="input text-xs disabled:opacity-60"
+                    >
+                      <option value="">{text("كل المناطق", "All districts")}</option>
+                      {availableDistricts.map((district) => (
+                        <option key={district} value={district}>
+                          {district}
+                        </option>
+                      ))}
+                    </select>'''
+          new = '''                    <CanonicalLocationSelector
+                      value={canonicalLocationId || null}
+                      onChange={(id, node) => {
+                        setDistrictAr(id ? `@${id}` : "");
+                        if (node?.legacyGovernorateId) setGovId(node.legacyGovernorateId);
+                      }}
+                    />
+                    <select
+                      value={canonicalLocationId ? "" : districtAr}
+                      onChange={(event) => setDistrictAr(event.target.value)}
+                      disabled={!selectedGovernorate || Boolean(canonicalLocationId)}
+                      className="input mt-3 text-xs disabled:opacity-60"
+                    >
+                      <option value="">{text("أو استخدم المنطقة القديمة", "Or use legacy district")}</option>
+                      {availableDistricts.map((district) => (
+                        <option key={district} value={district}>
+                          {district}
+                        </option>
+                      ))}
+                    </select>'''
+          if old not in s:
+              raise SystemExit('desktop district block not found')
+          s = s.replace(old, new, 1)
+
+          old = '''                  <select
+                    value={districtAr}
+                    onChange={(event) => setDistrictAr(event.target.value)}
+                    disabled={!selectedGovernorate}
+                    className="input mt-3 text-xs disabled:opacity-60"
+                  >
+                    <option value="">{text("كل المناطق", "All districts")}</option>
+                    {availableDistricts.map((district) => (
+                      <option key={district} value={district}>
+                        {district}
+                      </option>
+                    ))}
+                  </select>'''
+          new = '''                  <div className="mt-3">
+                    <CanonicalLocationSelector
+                      value={canonicalLocationId || null}
+                      onChange={(id, node) => {
+                        setDistrictAr(id ? `@${id}` : "");
+                        if (node?.legacyGovernorateId) setGovId(node.legacyGovernorateId);
+                      }}
+                    />
+                  </div>
+                  <select
+                    value={canonicalLocationId ? "" : districtAr}
+                    onChange={(event) => setDistrictAr(event.target.value)}
+                    disabled={!selectedGovernorate || Boolean(canonicalLocationId)}
+                    className="input mt-3 text-xs disabled:opacity-60"
+                  >
+                    <option value="">{text("أو استخدم المنطقة القديمة", "Or use legacy district")}</option>
+                    {availableDistricts.map((district) => (
+                      <option key={district} value={district}>
+                        {district}
+                      </option>
+                    ))}
+                  </select>'''
+          if old not in s:
+              raise SystemExit('mobile district block not found')
+          s = s.replace(old, new, 1)
+
+          s = s.replace(
+              '                      setGovId("");\n                      setOpen(false);\n',
+              '                      setGovId("");\n                      setDistrictAr("");\n                      setOpen(false);\n',
+          )
+          s = s.replace(
+              '                        setGovId(governorate.id);\n                        setOpen(false);\n',
+              '                        setGovId(governorate.id);\n                        setDistrictAr("");\n                        setOpen(false);\n',
+          )
+          p.write_text(s)
+          PY
+
+          npx prettier --write \
+            src/features/listings/listings-filters.ts \
+            src/routes/listings.index.tsx
+      - name: Commit patch
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/features/listings/listings-filters.ts src/routes/listings.index.tsx
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Integrate progressive canonical location filters [skip patch]"
+          git push origin HEAD:location-display-filter
