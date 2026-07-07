@@ -130,15 +130,6 @@ jobs:
           if old not in s:
               raise SystemExit('mobile district block not found')
           s = s.replace(old, new, 1)
-
-          s = s.replace(
-              '                      setGovId("");\n                      setOpen(false);\n',
-              '                      setGovId("");\n                      setDistrictAr("");\n                      setOpen(false);\n',
-          )
-          s = s.replace(
-              '                        setGovId(governorate.id);\n                        setOpen(false);\n',
-              '                        setGovId(governorate.id);\n                        setDistrictAr("");\n                        setOpen(false);\n',
-          )
           p.write_text(s)
           PY
 
