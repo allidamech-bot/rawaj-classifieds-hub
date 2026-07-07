@@ -46,20 +46,18 @@ function OffersPage() {
   return (
     <>
       <PageHeader title={text("العروض", "Offers")} />
-      <main className="container-wide mobile-page-bottom pt-4">
-        <section className="hero-navy relative overflow-hidden rounded-3xl p-4 shadow-premium sm:p-6">
+      <main className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+        <section className="rawaj-hero-surface rounded-[1.6rem] p-4 sm:rounded-[2rem] sm:p-6">
           <div className="relative z-10 flex items-start gap-3">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-brand-orange text-white shadow-soft">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[1.05rem] bg-primary text-primary-foreground shadow-premium-sm">
               <Sparkles className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-gold">
-                {text("مساحة العروض", "Offers space")}
-              </p>
-              <h1 className="mt-1 text-xl font-extrabold text-primary-foreground sm:text-2xl">
+              <p className="rawaj-eyebrow">{text("مساحة العروض", "Offers space")}</p>
+              <h1 className="mt-1.5 text-xl font-bold leading-[1.4] text-primary sm:text-2xl">
                 {text("العروض والإعلانات المميزة", "Offers & featured listings")}
               </h1>
-              <p className="mt-1.5 max-w-xl text-xs leading-6 text-primary-foreground/80 sm:text-sm">
+              <p className="mt-2.5 max-w-xl text-xs leading-6 text-muted-foreground sm:text-sm sm:leading-7">
                 {text(
                   "مساحة مخصصة لعروض المتاجر والشركات. لا توجد عروض تجارية متاحة حالياً، وتظهر الإعلانات المميزة أدناه كقسم منفصل وليست خصومات.",
                   "A dedicated space for store and company offers. No commercial offers are available right now; featured listings below are separate and are not discounts.",
@@ -68,7 +66,6 @@ function OffersPage() {
             </div>
           </div>
         </section>
-
 
         <section className="mt-5">
           <div className="mb-3 flex items-center justify-between gap-2">
@@ -132,21 +129,21 @@ function FeaturedListingCard({ listing }: { listing: ClassifiedListing }) {
     <Link
       to="/listings/$id"
       params={{ id: listing.id }}
-      className="overflow-hidden bg-card hairline tap-card"
+      className="rawaj-surface group overflow-hidden rounded-[1.35rem] tap-card transition hover:-translate-y-0.5"
     >
       <div className="relative">
         {listing.primaryImageUrl ? (
           <img
             src={listing.primaryImageUrl}
             alt={listing.title}
-            className="aspect-[16/9] w-full object-cover"
+            className="aspect-[16/9] w-full object-cover transition duration-300 group-hover:scale-[1.025]"
             loading="lazy"
             decoding="async"
           />
         ) : (
           <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
         )}
-        <span className="absolute top-2 start-2 rounded-md bg-gold px-2 py-0.5 text-[11px] font-bold text-gold-foreground">
+        <span className="absolute start-2.5 top-2.5 rounded-full bg-primary/90 px-2.5 py-1 text-[9px] font-semibold text-primary-foreground shadow-soft backdrop-blur">
           {text("إعلان مميز", "Featured listing")}
         </span>
       </div>
@@ -156,7 +153,7 @@ function FeaturedListingCard({ listing }: { listing: ClassifiedListing }) {
           {categoryName(listing.categoryId, listing.categoryNameAr, language)}
         </div>
         <h3 className="line-clamp-2 text-sm font-bold">{listing.title}</h3>
-        <p className="mt-1 text-base font-extrabold">
+        <p className="mt-1.5 text-base font-bold text-primary">
           {formatPriceLocalized(listing.price ?? 0, listing.priceType, language)}
         </p>
         <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -170,7 +167,7 @@ function FeaturedListingCard({ listing }: { listing: ClassifiedListing }) {
 
 function OffersState({ title, body }: { title: string; body?: string }) {
   return (
-    <section className="mt-5 overflow-hidden rounded-2xl bg-card p-6 text-center hairline shadow-soft">
+    <section className="rawaj-surface mt-5 overflow-hidden rounded-[1.4rem] p-6 text-center">
       <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand-orange/12 text-brand-orange">
         <Sparkles className="h-5 w-5" />
       </span>
