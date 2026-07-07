@@ -11,7 +11,10 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "check": "npm run lint && npm run typecheck && npm run build",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "locations:syria:build": "node scripts/prepare-syria-ocha-geojson-locations-v2.mjs",
+    "locations:syria:validate": "node scripts/prepare-syria-ocha-geojson-locations-v2.mjs --dry-run && node scripts/apply-syria-location-bundle.mjs",
+    "locations:syria:apply": "node scripts/apply-syria-location-bundle.mjs --apply"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.1",

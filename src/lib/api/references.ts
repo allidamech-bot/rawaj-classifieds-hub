@@ -72,6 +72,31 @@ export function mapTaxonomyNode(row: Record<string, unknown>): TaxonomyNode {
   };
 }
 
+async function enrichGovernoratesWithLocationPaths(
+  client: SupabaseClient,
+  governorates: ClassifiedGovernorate[],
+): Promise<ClassifiedGovernorate[]> {
+  const { data, error } = await client.rpc("rawaj_location_option_paths", { country: "SY" });
+  if (error || !data) return governorates;
+
+  const labelsByGovernorate = new Map<string, string[]>();
+  for (const row of data as Record<string, unknown>[]) {
+    const governorateId = rowString(row, "legacy_governorate_id");
+    const label = rowString(row, "label_ar").trim();
+    if (!governorateId || !label) continue;
+    const current = labelsByGovernorate.get(governorateId) ?? [];
+    if (!current.includes(label)) current.push(label);
+    labelsByGovernorate.set(governorateId, current);
+  }
+
+  return governorates.map((governorate) => {
+    const canonicalLabels = labelsByGovernorate.get(governorate.id) ?? [];
+    return canonicalLabels.length === 0
+      ? governorate
+      : { ...governorate, districtsAr: [...new Set([...canonicalLabels, ...governorate.districtsAr])] };
+  });
+}
+
 export async function readReferences(client: SupabaseClient) {
   const [categoriesResult, governoratesResult] = await Promise.all([
     client.from("categories").select("*").eq("is_active", true).order("sort_order"),
@@ -83,40 +108,30 @@ export async function readReferences(client: SupabaseClient) {
   if (governoratesResult.error)
     return { ok: false as const, error: mapError(governoratesResult.error) };
 
+  const governorates = ((governoratesResult.data ?? []) as Record<string, unknown>[]).map(mapGovernorate);
   return {
     ok: true as const,
     categories: ((categoriesResult.data ?? []) as Record<string, unknown>[]).map(mapCategory),
-    governorates: ((governoratesResult.data ?? []) as Record<string, unknown>[]).map(
-      mapGovernorate,
-    ),
+    governorates: await enrichGovernoratesWithLocationPaths(client, governorates),
   };
 }
 
 export async function fetchPublicCategories(): Promise<ClassifiedsResult<ClassifiedCategory[]>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
-
   const { data, error } = await clientResult.data
     .from("categories")
     .select("*")
     .eq("is_active", true)
     .order("sort_order");
-
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapCategory) };
 }
 
-export async function fetchPublicSubcategories(): Promise<
-  ClassifiedsResult<ClassifiedSubcategory[]>
-> {
+export async function fetchPublicSubcategories(): Promise<ClassifiedsResult<ClassifiedSubcategory[]>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data
-    .from("subcategories")
-    .select("*")
-    .order("sort_order");
-
+  const { data, error } = await clientResult.data.from("subcategories").select("*").order("sort_order");
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapSubcategory) };
 }
@@ -124,30 +139,25 @@ export async function fetchPublicSubcategories(): Promise<
 export async function fetchPublicTaxonomyNodes(): Promise<ClassifiedsResult<TaxonomyNode[]>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
-
   const { data, error } = await clientResult.data
     .from("taxonomy_nodes")
     .select("*")
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
     .order("name_ar", { ascending: true });
-
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapTaxonomyNode) };
 }
 
-export async function fetchPublicGovernorates(): Promise<
-  ClassifiedsResult<ClassifiedGovernorate[]>
-> {
+export async function fetchPublicGovernorates(): Promise<ClassifiedsResult<ClassifiedGovernorate[]>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
-
   const { data, error } = await clientResult.data
     .from("governorates")
     .select("*")
     .eq("is_active", true)
     .order("sort_order");
-
   if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapGovernorate) };
+  const governorates = ((data ?? []) as Record<string, unknown>[]).map(mapGovernorate);
+  return { ok: true, data: await enrichGovernoratesWithLocationPaths(clientResult.data, governorates) };
 }

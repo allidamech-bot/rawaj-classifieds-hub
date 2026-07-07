@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-07",
+  "policy": {
+    "canonicalHierarchy": "OCHA/HDX remains authoritative for administrative parentage.",
+    "aliases": "Curated overlays add search spellings/local names without changing canonical parents.",
+    "regions": "Non-administrative regions remain incomplete until membership is independently reviewed. Incomplete regions must not drive exhaustive filtering."
+  },
+  "aliases": [
+    {
+      "targetExternalSource": "ocha-hdx-cod-ab-syr",
+      "targetExternalId": "C2547",
+      "alias": "تلذهب",
+      "languageCode": "ar",
+      "aliasType": "spelling",
+      "sourceName": "RAWAJ local user confirmation",
+      "sourceNote": "User identified home locality as حمص → الحولة → تلذهب; mapped to canonical OCHA P-code C2547 after dataset inspection.",
+      "confidence": "high",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "targetExternalSource": "ocha-hdx-cod-ab-syr",
+      "targetExternalId": "C2547",
+      "alias": "تل ذهب",
+      "languageCode": "ar",
+      "aliasType": "spelling",
+      "sourceName": "OCHA/HDX canonical label plus RAWAJ normalization",
+      "sourceNote": "Space-normalized Arabic spelling for canonical locality C2547.",
+      "confidence": "high",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "targetExternalSource": "ocha-hdx-cod-ab-syr",
+      "targetExternalId": "C2547",
+      "alias": "Tal Dahab",
+      "languageCode": "en",
+      "aliasType": "transliteration",
+      "sourceName": "OCHA/HDX canonical locality data",
+      "sourceNote": "Canonical locality C2547 English name contains Tal Dahab (Taldu).",
+      "confidence": "high",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "targetExternalSource": "ocha-hdx-cod-ab-syr",
+      "targetExternalId": "C2547",
+      "alias": "Tall Dahab",
+      "languageCode": "en",
+      "aliasType": "transliteration",
+      "sourceName": "RAWAJ search normalization",
+      "sourceNote": "Common transliteration variant retained for search only.",
+      "confidence": "medium",
+      "reviewStatus": "reviewed"
+    }
+  ],
+  "regions": [
+    {
+      "slug": "al-houla",
+      "countryCode": "SY",
+      "nameAr": "الحولة",
+      "nameEn": "Al Houla",
+      "regionType": "vernacular",
+      "isComplete": false,
+      "sourceName": "RAWAJ local user confirmation",
+      "sourceNote": "Local regional naming confirmed by user. Membership is intentionally incomplete and must not be used for exhaustive filtering until separately reviewed.",
+      "confidence": "medium",
+      "reviewStatus": "needs_review",
+      "members": [
+        {
+          "targetExternalSource": "ocha-hdx-cod-ab-syr",
+          "targetExternalId": "C2547",
+          "relationType": "associated",
+          "sourceName": "RAWAJ local user confirmation",
+          "sourceNote": "User described locality C2547 (تلذهب/تل ذهب) under الحولة in local usage.",
+          "confidence": "high",
+          "reviewStatus": "reviewed"
+        }
+      ]
+    }
+  ]
+}
