@@ -62,26 +62,39 @@ const primaryShortcuts: AccountRow[] = [
     icon: FileText,
   },
   {
+    titleAr: "الرسائل",
+    titleEn: "Messages",
+    hintAr: "محادثات البيع والشراء",
+    hintEn: "Buyer & seller chats",
+    to: "/chats",
+    icon: MessageCircle,
+  },
+  {
+    titleAr: "الإشعارات",
+    titleEn: "Notifications",
+    hintAr: "آخر التنبيهات",
+    hintEn: "Recent alerts",
+    to: "/notifications",
+    icon: Bell,
+  },
+];
+
+const secondaryShortcuts: AccountRow[] = [
+  {
     titleAr: "المفضلة",
     titleEn: "Favorites",
-    hintAr: "الإعلانات المحفوظة",
-    hintEn: "Saved listings",
     to: "/favorites",
     icon: Heart,
   },
   {
     titleAr: "البحث المحفوظ",
     titleEn: "Saved searches",
-    hintAr: "عمليات البحث المحفوظة",
-    hintEn: "Saved search queries",
     to: "/saved-searches",
     icon: Bookmark,
   },
   {
     titleAr: "التوثيق",
     titleEn: "Verification",
-    hintAr: "طلبات التوثيق",
-    hintEn: "Verification requests",
     to: "/verification",
     icon: BadgeCheck,
   },
