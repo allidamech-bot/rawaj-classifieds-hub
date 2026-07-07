@@ -2,9 +2,11 @@ name: Quality Gate
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
   push:
-    branches: [main]
+    branches:
+      - main
 
 concurrency:
   group: quality-gate-${{ github.workflow }}-${{ github.ref }}
@@ -17,21 +19,47 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+
       - name: Install dependencies
         run: npm ci
+
       - name: Lint changed source files
-        run: npx eslint --quiet src/routes/login.tsx src/routes/reset-password.tsx src/routes/auth.callback.tsx
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          base="$BASE_SHA"
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="$(git rev-parse HEAD^)"
+          fi
+
+          mapfile -t files < <(
+            git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- \
+              '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
+          )
+
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No changed JS/TS source files to lint."
+            exit 0
+          fi
+
+          printf 'Linting %s\n' "${files[@]}"
+          npx eslint --quiet "${files[@]}"
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
+
       - name: Production build
         run: npm run build
