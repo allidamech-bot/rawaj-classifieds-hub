@@ -258,6 +258,201 @@
   background: linear-gradient(180deg, var(--brand-orange), var(--gold));
 }
 
+/* Categories identity: scoped to the existing category directory structure. */
+main.container-wide:has(> .rawaj-hero-surface input[type="search"]) {
+  position: relative;
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"]) > .rawaj-hero-surface {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    radial-gradient(23rem 15rem at 108% -12%, rgba(197, 154, 74, 0.28), transparent 62%),
+    radial-gradient(19rem 14rem at -8% 112%, rgba(232, 111, 50, 0.2), transparent 66%),
+    linear-gradient(135deg, #102b46 0%, #0d243b 50%, #173b5b 100%);
+  color: #fffaf0;
+  box-shadow: 0 24px 62px rgba(8, 24, 42, 0.19);
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > .rawaj-hero-surface::before {
+  content: "";
+  position: absolute;
+  inset-inline-end: -3rem;
+  top: -4rem;
+  width: 11rem;
+  height: 11rem;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 42% 58% 67% 33% / 38% 40% 60% 62%;
+  transform: rotate(24deg);
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > .rawaj-hero-surface
+  > div:first-child {
+  position: relative;
+  z-index: 1;
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > .rawaj-hero-surface
+  > div:first-child
+  > div
+  > span:first-child {
+  background: var(--brand-orange);
+  color: white;
+  box-shadow: 0 12px 28px rgba(232, 111, 50, 0.28);
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > .rawaj-hero-surface
+  .rawaj-eyebrow {
+  color: var(--gold);
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > .rawaj-hero-surface
+  h1 {
+  color: #fffaf0;
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > .rawaj-hero-surface
+  p:not(.rawaj-eyebrow) {
+  color: rgba(255, 250, 240, 0.68);
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > .rawaj-hero-surface
+  > div:last-child {
+  position: relative;
+  z-index: 1;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > .rawaj-hero-surface
+  label {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 32px rgba(4, 17, 31, 0.18);
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-5.grid
+  > article,
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-4.grid
+  > article {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--category-accent, var(--brand-orange)) 24%, var(--border));
+  background:
+    radial-gradient(
+      8rem 7rem at 104% -8%,
+      color-mix(in srgb, var(--category-accent, var(--brand-orange)) 16%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.97), rgba(255, 253, 248, 0.84));
+  box-shadow: 0 16px 38px rgba(16, 43, 70, 0.075);
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-5.grid
+  > article:nth-child(5n + 1),
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-4.grid
+  > article:nth-child(5n + 1) {
+  --category-accent: #e86f32;
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-5.grid
+  > article:nth-child(5n + 2),
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-4.grid
+  > article:nth-child(5n + 2) {
+  --category-accent: #5965c7;
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-5.grid
+  > article:nth-child(5n + 3),
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-4.grid
+  > article:nth-child(5n + 3) {
+  --category-accent: #1f7768;
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-5.grid
+  > article:nth-child(5n + 4),
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-4.grid
+  > article:nth-child(5n + 4) {
+  --category-accent: #8e5b79;
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-5.grid
+  > article:nth-child(5n),
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-4.grid
+  > article:nth-child(5n) {
+  --category-accent: #c59a4a;
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-5.grid
+  > article
+  .category-tile {
+  background: color-mix(in srgb, var(--category-accent) 12%, white);
+  color: var(--category-accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--category-accent) 20%, transparent);
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-5.grid
+  > article
+  a,
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-4.grid
+  > article
+  a {
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease;
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-5.grid
+  > article:hover,
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-4.grid
+  > article:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 48px rgba(16, 43, 70, 0.11);
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-4.grid
+  > article
+  > div:last-child {
+  border-color: color-mix(in srgb, var(--category-accent) 16%, var(--border));
+  background: color-mix(in srgb, var(--category-accent) 4%, white);
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-4.grid
+  > article
+  > div:last-child
+  a {
+  border: 1px solid color-mix(in srgb, var(--category-accent) 16%, transparent);
+  background: color-mix(in srgb, var(--category-accent) 8%, white);
+}
+
 @media (max-width: 639px) {
   .rawaj-merchant-stage {
     min-height: 18rem;
@@ -273,10 +468,28 @@
   .rawaj-merchant-rail > * {
     padding: 0.8rem 0.55rem;
   }
+
+  main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+    > .rawaj-hero-surface {
+    border-radius: 1.55rem;
+  }
+
+  main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+    > section.mt-5.grid,
+  main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+    > section.mt-4.grid {
+    gap: 0.7rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rawaj-product-card {
+  .rawaj-product-card,
+  main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+    > section.mt-5.grid
+    > article,
+  main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+    > section.mt-4.grid
+    > article {
     transition: none;
   }
 }
