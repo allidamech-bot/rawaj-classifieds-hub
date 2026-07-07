@@ -2,74 +2,64 @@ name: Quality Gate
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: quality-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - name: Polish edit listing studio
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint changed source files
         shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          git fetch origin design/listing-studio-soul-pass
-          git checkout -B design/listing-studio-soul-pass origin/design/listing-studio-soul-pass
-          python - <<'PY'
-          from pathlib import Path
-          p = Path('src/routes/profile/listings.$id.tsx')
-          s = p.read_text(encoding='utf-8')
-          replacements = [
-            ('<main className="container-wide mobile-page-bottom pt-4">', '<main className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">'),
-            ('<div className="mb-4 flex flex-wrap items-center justify-between gap-2">', '<div className="rawaj-hero-surface mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[1.45rem] p-4 sm:p-5">'),
-            ('className="rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline"', 'className="rawaj-chip border-primary/10 bg-card/80 px-2.5 py-1 text-primary"'),
-            ('<span className="text-[11px] text-muted-foreground">', '<span className="text-[11px] font-medium text-muted-foreground">'),
-            ('className="inline-flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-[11px] font-bold hairline transition hover:bg-secondary"', 'className="rawaj-chip px-3 py-2 font-semibold text-primary transition hover:border-gold/40"'),
-            ('className="inline-flex items-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-[11px] font-bold transition hover:bg-secondary"', 'className="rawaj-chip bg-card-warm/75 px-3 py-2 font-semibold text-muted-foreground transition hover:border-gold/40 hover:text-primary"'),
-            ('<div className="grid gap-4 lg:grid-cols-[1fr_280px]">', '<div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">'),
-            ('className="flex items-center justify-between rounded-xl bg-card p-3 hairline"', 'className="flex items-center justify-between rounded-[1rem] border border-border/70 bg-card/80 p-3.5 transition hover:border-gold/35"'),
-            ('className="relative overflow-hidden rounded-xl bg-muted-surface p-1"', 'className="relative overflow-hidden rounded-[1.05rem] border border-border/70 bg-card p-1 shadow-soft"'),
-            ('className="absolute start-2 top-2 rounded-md bg-gold px-2 py-0.5 text-[10px] font-bold text-gold-foreground"', 'className="absolute start-2 top-2 rounded-full bg-primary/90 px-2.5 py-1 text-[9px] font-semibold text-primary-foreground shadow-soft backdrop-blur"'),
-            ('className="absolute top-1 end-1 grid h-7 w-7 place-items-center rounded-full bg-destructive/90 text-destructive-foreground transition hover:bg-destructive"', 'className="absolute end-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-card/90 text-destructive shadow-soft backdrop-blur transition hover:bg-destructive hover:text-destructive-foreground"'),
-            ('className="flex cursor-pointer flex-col items-center justify-center rounded-xl bg-muted-surface p-4 text-center text-muted-foreground"', 'className="group flex cursor-pointer flex-col items-center justify-center rounded-[1.1rem] border border-dashed border-border bg-card-warm/65 p-5 text-center text-muted-foreground transition hover:border-brand-orange/45 hover:bg-card"'),
-            ('className="rounded-lg bg-card px-3 py-1.5 text-[10px] font-bold text-muted-foreground hairline disabled:opacity-50"', 'className="rawaj-chip px-3 py-1.5 font-semibold text-muted-foreground disabled:opacity-50"'),
-            ('className="overflow-hidden rounded-xl bg-card text-[10px] hairline"', 'className="overflow-hidden rounded-[1rem] border border-border/70 bg-card text-[10px] shadow-soft"'),
-            ('className="rounded-lg bg-primary px-3 py-2 text-[10px] font-bold text-primary-foreground disabled:opacity-50"', 'className="rawaj-button-primary rounded-[0.9rem] px-3 py-2 text-[10px] disabled:opacity-50"'),
-            ('<aside className="space-y-3">', '<aside className="space-y-3 lg:sticky lg:top-24">'),
-            ('className="w-full rounded-xl bg-emerald-trust px-3 py-2.5 text-xs font-bold text-emerald-trust-foreground disabled:opacity-50"', 'className="w-full rounded-[1rem] bg-emerald-trust px-3 py-3 text-xs font-semibold text-emerald-trust-foreground shadow-soft transition hover:brightness-[0.98] disabled:opacity-50"'),
-            ('className="w-full rounded-xl bg-primary px-3 py-2.5 text-xs font-bold text-primary-foreground disabled:opacity-50"', 'className="rawaj-button-primary w-full rounded-[1rem] px-3 py-3 disabled:opacity-50"'),
-            ('className="w-full rounded-xl bg-card px-3 py-2.5 text-xs font-bold text-destructive hairline transition hover:bg-destructive/5 disabled:opacity-50"', 'className="w-full rounded-[1rem] border border-destructive/15 bg-card/80 px-3 py-3 text-xs font-semibold text-destructive transition hover:bg-destructive/5 disabled:opacity-50"'),
-            ('<p className="rounded-xl bg-muted-surface p-3 text-[11px] text-muted-foreground">', '<p className="rounded-[1rem] border border-border/65 bg-card-warm/65 p-3.5 text-[11px] leading-5 text-muted-foreground">'),
-            ('<div className="rounded-2xl bg-card p-10 text-center hairline">', '<div className="rawaj-surface rounded-[1.5rem] p-10 text-center">'),
-            ('className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"', 'className="rawaj-button-primary mt-4 px-4 py-2"'),
-            ('<span className="mb-1 block text-xs font-semibold text-muted-foreground">{label}</span>', '<span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">{label}</span>'),
-            ('className="mt-3 rounded-xl bg-muted-surface p-3"', 'className="mt-4 rounded-[1.15rem] border border-border/60 bg-card-warm/65 p-3.5"'),
-            ('className="mb-3 text-xs font-extrabold"', 'className="mb-3 text-xs font-semibold text-primary"'),
-            ('className="flex items-center justify-between rounded-xl bg-card px-3 py-2 text-xs font-bold hairline"', 'className="flex items-center justify-between rounded-[1rem] border border-border/70 bg-card/80 px-3 py-2.5 text-xs font-semibold"'),
-            ('<style>{`.input{width:100%;border-radius:.75rem;background:var(--card);border:1px solid var(--border);padding:.625rem .75rem;font-size:.875rem;color:var(--foreground);outline:none}.input:focus{border-color:var(--ring)}`}</style>', '<style>{`.input{width:100%;min-height:2.75rem;border-radius:1rem;background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid var(--border);padding:.68rem .8rem;font-size:.875rem;color:var(--foreground);outline:none;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}.input:focus{border-color:var(--brand-orange);background:var(--card);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand-orange) 12%,transparent)}.input:disabled{opacity:.62;cursor:not-allowed}`}</style>'),
-          ]
-          for old, new in replacements:
-              if old not in s:
-                  raise SystemExit(f'missing replacement: {old[:100]}')
-              s = s.replace(old, new)
-          p.write_text(s, encoding='utf-8')
-          PY
-          npx prettier --write 'src/routes/profile/listings.$id.tsx' 'src/features/listing-studio/listing-studio.tsx'
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add -- 'src/routes/profile/listings.$id.tsx' 'src/features/listing-studio/listing-studio.tsx'
-          git diff --cached --quiet || git commit -m 'Polish RAWAJ edit listing studio'
-          git push origin HEAD:design/listing-studio-soul-pass
-      - run: npx eslint --quiet 'src/routes/profile/listings.$id.tsx' 'src/features/listing-studio/listing-studio.tsx'
-      - run: npm run typecheck -- --pretty false
-      - run: npm run build
+          base="$BASE_SHA"
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="$(git rev-parse HEAD^)"
+          fi
+
+          mapfile -t files < <(
+            git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- \
+              '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
+          )
+
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No changed JS/TS source files to lint."
+            exit 0
+          fi
+
+          printf 'Linting %s\n' "${files[@]}"
+          npx eslint --quiet "${files[@]}"
+
+      - name: Typecheck
+        run: npm run typecheck -- --pretty false
+
+      - name: Production build
+        run: npm run build
