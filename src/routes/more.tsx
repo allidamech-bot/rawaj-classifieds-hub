@@ -210,9 +210,15 @@ function MorePage() {
           </div>
         </section>
 
-        <section className="mt-4 grid grid-cols-2 gap-3">
+        <section className="mt-4 grid grid-cols-3 gap-2.5 sm:gap-3">
           {primaryShortcuts.map((row) => (
             <PrimaryShortcut key={row.titleEn} row={row} text={text} />
+          ))}
+        </section>
+
+        <section className="mt-3 grid grid-cols-3 gap-2.5 sm:gap-3">
+          {secondaryShortcuts.map((row) => (
+            <SecondaryShortcut key={row.titleEn} row={row} text={text} />
           ))}
         </section>
 
@@ -226,11 +232,6 @@ function MorePage() {
             </p>
           )}
 
-          <AccountSection title={text("النشاط", "Activity")}>
-            {activityRows.map((row) => (
-              <AccountItem key={row.titleEn} row={row} text={text} />
-            ))}
-          </AccountSection>
 
           <AccountSection title={text("الإعدادات", "Settings")}>
             {settingsRows.map((row) => (
