@@ -174,10 +174,7 @@ function OffersPage() {
               />
             ) : error ? (
               <OffersState
-                title={text(
-                  "تعذر تحميل الإعلانات المميزة",
-                  "Could not load featured listings",
-                )}
+                title={text("تعذر تحميل الإعلانات المميزة", "Could not load featured listings")}
                 body={error.message}
               />
             ) : listings.length === 0 ? (
@@ -252,11 +249,7 @@ function OfferPrinciple({
 function FeaturedListingCard({ listing }: { listing: ClassifiedListing }) {
   const { language, text } = useUiPreferences();
   return (
-    <Link
-      to="/listings/$id"
-      params={{ id: listing.id }}
-      className="rawaj-product-card group block"
-    >
+    <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-product-card group block">
       <div className="rawaj-product-media aspect-[16/9]">
         {listing.primaryImageUrl ? (
           <img
@@ -280,12 +273,7 @@ function FeaturedListingCard({ listing }: { listing: ClassifiedListing }) {
         </div>
         <h3 className="line-clamp-2 text-sm font-bold">{listing.title}</h3>
         <p className="mt-1.5 text-base font-extrabold text-primary">
-          {formatPriceLocalized(
-            listing.price ?? 0,
-            listing.priceType,
-            language,
-            listing.currency,
-          )}
+          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
         </p>
         <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
           <MapPin className="h-3 w-3" />
