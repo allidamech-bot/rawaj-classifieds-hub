@@ -38,6 +38,14 @@ export function mapError(error: {
     };
   }
 
+  if (error.code === "23503") {
+    return {
+      code: "foreign_key_conflict",
+      message: "تعذر إكمال الحذف لأن العنصر مرتبط ببيانات محفوظة أخرى.",
+      details: message,
+    };
+  }
+
   if (error.code === "42501") {
     return {
       code: "permission_denied",

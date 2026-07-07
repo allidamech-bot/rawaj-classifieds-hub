@@ -239,7 +239,7 @@ export interface ConversationParticipantSummary {
 
 export interface Conversation {
   id: string;
-  listingId: string;
+  listingId: string | null;
   listingTitle: string;
   buyerUserId: string;
   sellerUserId: string;

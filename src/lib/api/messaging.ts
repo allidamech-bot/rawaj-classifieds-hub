@@ -253,7 +253,7 @@ export async function blockConversationParticipant(payload: {
 function mapConversation(row: Record<string, unknown>): Conversation {
   return {
     id: rowString(row, "id"),
-    listingId: rowString(row, "listing_id"),
+    listingId: rowNullableString(row, "listing_id"),
     listingTitle: rowString(row, "listing_title", "إعلان على رواجا"),
     buyerUserId: rowString(row, "buyer_user_id"),
     sellerUserId: rowString(row, "seller_user_id"),
