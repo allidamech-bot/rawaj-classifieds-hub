@@ -22,4 +22,10 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
       - name: Build
-        run: bun run build
+        shell: bash
+        run: |
+          set +e
+          bun run build > build.log 2>&1
+          status=$?
+          tail -n 120 build.log
+          exit $status
