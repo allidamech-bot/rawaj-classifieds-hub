@@ -109,71 +109,98 @@ function HomePage() {
     <>
       <AppHeader />
       <main className="home-container mobile-page-bottom pt-3 sm:pt-5 lg:pt-7">
-        <section className="rounded-2xl bg-card p-3.5 shadow-soft hairline sm:p-5">
-          <p className="mb-2 text-[11px] font-extrabold text-gold">
-            {text("سوق سوريا للإعلانات المبوبة", "Syria classifieds marketplace")}
-          </p>
-          <form onSubmit={handleSearch} className="flex items-stretch gap-2">
-            <label className="group flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-2xl bg-ivory-subtle hairline ps-3 pe-4 transition focus-within:border-gold focus-within:ring-[3px] focus-within:ring-gold/20">
-              <Search className="h-4.5 w-4.5 shrink-0 text-muted-foreground" />
-              <input
-                value={searchValue}
-                onChange={(event) => setSearchValue(event.target.value)}
-                type="search"
-                aria-label={text("ابحث في رواج", "Search RAWAJ")}
-                placeholder={text(
-                  "ابحث عن سيارة، جوال، عقار، خدمة...",
-                  "Search for a car, phone, property, service...",
-                )}
-                className="w-full bg-transparent py-2.5 text-sm font-semibold text-foreground outline-none placeholder:text-muted-foreground"
-              />
-            </label>
-            <button
-              type="submit"
-              className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-2xl bg-primary px-4 text-xs font-extrabold text-primary-foreground transition hover:bg-primary/95 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-gold"
-            >
-              {text("بحث", "Search")}
-            </button>
-            <Link
-              to="/listings"
-              search={listingSearch({ open_filters: true })}
-              aria-label={text("فلترة", "Filters")}
-              title={text("فلترة", "Filters")}
-              className="grid min-h-12 w-12 shrink-0 place-items-center rounded-2xl bg-ivory-subtle hairline text-foreground transition hover:border-gold/60 hover:text-gold active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-gold"
-            >
-              <Filter className="h-4.5 w-4.5" />
-            </Link>
-          </form>
+        <section className="hero-navy relative overflow-hidden rounded-3xl p-4 shadow-premium sm:p-6 lg:p-8">
+          <div className="relative z-10">
+            <p className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-gold ring-1 ring-white/15">
+              <Sparkles className="h-3 w-3" />
+              {text("سوق سوريا للإعلانات المبوبة", "Syria classifieds marketplace")}
+            </p>
+            <h1 className="text-[1.35rem] font-extrabold leading-tight text-primary-foreground sm:text-3xl lg:text-4xl">
+              {text(
+                "اعثر على كل ما تحتاجه في سوريا",
+                "Find everything you need in Syria",
+              )}
+              <span className="block text-brand-orange">
+                {text("بطريقة منظمة وموثوقة", "in one organized marketplace")}
+              </span>
+            </h1>
+
+            <form onSubmit={handleSearch} className="mt-4 flex items-stretch gap-2 sm:mt-5">
+              <label className="group flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-2xl bg-white/95 ps-3 pe-4 text-foreground shadow-soft transition focus-within:ring-[3px] focus-within:ring-brand-orange">
+                <Search className="h-4.5 w-4.5 shrink-0 text-muted-foreground" />
+                <input
+                  value={searchValue}
+                  onChange={(event) => setSearchValue(event.target.value)}
+                  type="search"
+                  aria-label={text("ابحث في رواج", "Search RAWAJ")}
+                  placeholder={text(
+                    "سيارة، جوال، عقار، خدمة...",
+                    "Car, phone, property, service...",
+                  )}
+                  className="w-full bg-transparent py-2.5 text-sm font-semibold text-foreground outline-none placeholder:text-muted-foreground"
+                />
+              </label>
+              <button
+                type="submit"
+                className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-2xl bg-brand-orange px-4 text-xs font-extrabold shadow-soft transition hover:brightness-110 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-white"
+              >
+                {text("بحث", "Search")}
+              </button>
+              <Link
+                to="/listings"
+                search={listingSearch({ open_filters: true })}
+                aria-label={text("فلترة", "Filters")}
+                title={text("فلترة", "Filters")}
+                className="grid min-h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/10 text-primary-foreground ring-1 ring-white/20 backdrop-blur transition hover:bg-white/15 hover:text-gold active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-white"
+              >
+                <Filter className="h-4.5 w-4.5" />
+              </Link>
+            </form>
+          </div>
+          {/* Geometric decor plane */}
+          <span
+            className="pointer-events-none absolute -end-16 -top-16 z-0 h-52 w-52 rotate-12 rounded-3xl opacity-30"
+            style={{
+              background:
+                "linear-gradient(140deg, rgba(224,118,43,0.6), rgba(224,118,43,0) 70%)",
+            }}
+            aria-hidden="true"
+          />
         </section>
 
         {categories.length > 0 && (
-          <section className="mt-4" aria-label={text("اكتشاف سريع", "Quick discovery")}>
+          <section className="mt-5" aria-label={text("اكتشاف سريع", "Quick discovery")}>
             <div className="mb-2 flex items-center justify-between gap-3">
               <h2 className="text-[13px] font-extrabold text-primary">
                 {text("تصفح سريع", "Quick browse")}
               </h2>
               <Link
                 to="/categories"
-                className="inline-flex items-center gap-1 text-[11px] font-extrabold text-primary transition-colors hover:text-gold"
+                className="inline-flex items-center gap-1 text-[11px] font-extrabold text-primary transition-colors hover:text-brand-orange"
               >
                 {text("كل الأقسام", "All categories")}
                 <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
               </Link>
             </div>
             <div className="no-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1">
-              {categories.slice(0, 8).map((category) => (
-                <Link
-                  key={category.id}
-                  to="/listings"
-                  search={{ category: category.id }}
-                  className="group snap-start flex min-h-16 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-xl bg-ivory-subtle p-2 text-center hairline transition hover:border-gold/40 hover:bg-card active:scale-[0.98]"
-                >
-                  <Grid3X3 className="h-4 w-4 text-primary transition group-hover:text-gold" />
-                  <span className="line-clamp-2 text-[11px] font-bold leading-tight text-foreground">
-                    {categoryName(category.id, category.nameAr, language)}
-                  </span>
-                </Link>
-              ))}
+              {categories.slice(0, 10).map((category) => {
+                const Icon = iconForCategoryPlaceholder(category.placeholder);
+                return (
+                  <Link
+                    key={category.id}
+                    to="/listings"
+                    search={{ category: category.id }}
+                    className="group snap-start flex min-h-20 w-[88px] shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl bg-card p-2 text-center hairline shadow-soft transition hover:-translate-y-0.5 hover:border-brand-orange/40 active:scale-[0.98]"
+                  >
+                    <span className="category-tile transition group-hover:text-brand-orange">
+                      <Icon className="h-5 w-5" strokeWidth={1.75} />
+                    </span>
+                    <span className="line-clamp-2 text-[11px] font-bold leading-tight text-foreground">
+                      {categoryName(category.id, category.nameAr, language)}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           </section>
         )}
@@ -203,12 +230,14 @@ function HomePage() {
           </>
         )}
 
-        <section className="mt-6 rounded-2xl bg-card-warm p-3.5 hairline lg:mt-8">
+        <section className="mt-6 rounded-2xl bg-card p-4 hairline shadow-soft lg:mt-8">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="h-4.5 w-4.5 shrink-0 text-warning" />
-            <h3 className="text-sm font-extrabold">{text("تعامل بأمان", "Trade safely")}</h3>
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-brand-orange/12 text-brand-orange">
+              <ShieldAlert className="h-4 w-4" />
+            </span>
+            <h3 className="text-sm font-extrabold text-primary">{text("تعامل بأمان", "Trade safely")}</h3>
           </div>
-          <ul className="mt-2 grid gap-1 text-xs leading-6 text-muted-foreground sm:grid-cols-3">
+          <ul className="mt-3 grid gap-1 text-xs leading-6 text-muted-foreground sm:grid-cols-3">
             <li>{text("تظهر الإعلانات بعد المراجعة.", "Listings appear after review.")}</li>
             <li>{text("افحص السلعة قبل الدفع.", "Inspect before paying.")}</li>
             <li>{text("قابل البائع في مكان عام.", "Meet in a public place.")}</li>
