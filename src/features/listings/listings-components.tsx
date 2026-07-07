@@ -294,7 +294,7 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
     <Link
       to="/listings/$id"
       params={{ id: listing.id }}
-      className="group block overflow-hidden rounded-xl bg-card hairline shadow-soft tap-card"
+      className="group block overflow-hidden rounded-2xl bg-card hairline shadow-soft tap-card transition hover:-translate-y-0.5 hover:border-brand-orange/40"
     >
       <div className="relative">
         {listing.primaryImageUrl ? (
@@ -310,17 +310,17 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
         )}
         <div className="absolute top-1.5 start-1.5 flex flex-wrap gap-1">
           {listing.isFeatured && (
-            <span className="rounded-md bg-gold px-1.5 py-0.5 text-[10px] font-bold text-gold-foreground">
+            <span className="rounded-md bg-brand-orange px-1.5 py-0.5 text-[10px] font-extrabold shadow-soft">
               {text("مميز", "Featured")}
             </span>
           )}
         </div>
-        <span className="absolute bottom-1.5 end-1.5 max-w-[80%] truncate rounded-md bg-primary/85 px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+        <span className="absolute bottom-1.5 end-1.5 max-w-[80%] truncate rounded-md bg-primary/90 px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground backdrop-blur-sm">
           {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
         </span>
       </div>
       <div className="space-y-1 p-2.5">
-        <div className="text-[15px] font-extrabold leading-tight text-primary">
+        <div className="text-[15px] font-extrabold leading-tight text-brand-orange">
           {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
         </div>
         <h3 className="line-clamp-2 min-h-[2.35rem] text-[13px] font-bold leading-snug text-foreground">
@@ -328,7 +328,7 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
         </h3>
         <div className="flex flex-col gap-0.5 text-[11px] leading-5 text-muted-foreground">
           <span className="inline-flex min-w-0 items-center gap-1">
-            <MapPin className="h-3 w-3 shrink-0" />
+            <MapPin className="h-3 w-3 shrink-0 text-primary/70" />
             <span className="truncate">
               {governorateName(
                 listing.governorateId,
