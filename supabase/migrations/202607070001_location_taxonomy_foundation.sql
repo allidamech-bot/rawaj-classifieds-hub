@@ -23,7 +23,7 @@ create table if not exists public.location_nodes (
   depth integer not null default 0 check (depth >= 0),
   is_active boolean not null default true,
   search_aliases text[] not null default '{}',
-  legacy_governorate_id uuid references public.governorates(id) on delete set null,
+  legacy_governorate_id text references public.governorates(id) on delete set null,
   legacy_district_ar text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -63,7 +63,6 @@ create trigger rawaj_touch_location_nodes_updated_at
 before update on public.location_nodes
 for each row execute function public.rawaj_touch_location_node_updated_at();
 
--- Keep depth consistent with parent hierarchy for normal writes.
 create or replace function public.rawaj_set_location_node_depth()
 returns trigger
 language plpgsql
@@ -90,7 +89,6 @@ create trigger rawaj_set_location_node_depth
 before insert or update of parent_id on public.location_nodes
 for each row execute function public.rawaj_set_location_node_depth();
 
--- Guard against recursive cycles when re-parenting.
 create or replace function public.rawaj_prevent_location_cycle()
 returns trigger
 language plpgsql
@@ -122,13 +120,11 @@ create trigger rawaj_prevent_location_cycle
 before update of parent_id on public.location_nodes
 for each row execute function public.rawaj_prevent_location_cycle();
 
--- Canonical optional location reference. Legacy columns remain authoritative fallback.
 alter table public.listings
   add column if not exists location_node_id uuid references public.location_nodes(id) on delete set null;
 
 create index if not exists listings_location_node_id_idx on public.listings(location_node_id);
 
--- Public descendant resolver used by filters. Active nodes only.
 create or replace function public.rawaj_location_descendant_ids(root_id uuid)
 returns table(id uuid)
 language sql
@@ -191,7 +187,6 @@ for select
 to anon, authenticated
 using (is_active = true);
 
--- Administrative write access follows RAWAJ owner/admin convention.
 drop policy if exists location_nodes_admin_insert on public.location_nodes;
 create policy location_nodes_admin_insert
 on public.location_nodes
@@ -214,9 +209,6 @@ for delete
 to authenticated
 using (public.rawaj_is_owner_or_admin());
 
--- Seed only the country root and governorate compatibility nodes.
--- Detailed districts/subdistricts/localities are imported from documented source data,
--- not fabricated in this migration.
 insert into public.location_nodes (
   country_code, node_type, name_ar, name_en, slug, official_code, sort_order, depth, external_source, external_id
 )
