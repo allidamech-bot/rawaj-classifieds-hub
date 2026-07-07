@@ -1,5 +1,14 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { BadgeCheck, MessageSquare, ShieldAlert, Star } from "lucide-react";
+import {
+  BadgeCheck,
+  CalendarDays,
+  MapPin,
+  MessageSquare,
+  Package,
+  ShieldAlert,
+  Star,
+  Store,
+} from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
@@ -42,91 +51,230 @@ export const Route = createFileRoute("/seller/$id")({
 });
 
 function SellerPage() {
-  const { text } = useUiPreferences();
+  const { text, language } = useUiPreferences();
   const seller = Route.useLoaderData();
 
   return (
-    <div>
-      <PageHeader title={text("ملف البائع", "Seller profile")} />
-      <main className="container-wide mobile-page-bottom pt-4">
-        <div className="space-y-4">
-          <SellerHeader seller={seller} />
+    <div className="rawaj-pulse-page min-h-dvh" dir={language === "ar" ? "rtl" : "ltr"}>
+      <PageHeader title={text("واجهة البائع", "Seller storefront")} />
+      <main className="container-wide mobile-page-bottom pb-10 pt-3 sm:pt-5">
+        <div className="space-y-7">
+          <StorefrontHero seller={seller} />
 
-          <section className="rounded-2xl bg-card p-4 hairline">
-            <h3 className="text-sm font-extrabold">{text("نبذة عن البائع", "About the seller")}</h3>
-            <p className="mt-1 text-xs leading-6 text-muted-foreground">
-              {text(
-                "يعرض هذا الملف الإعلانات العامة المعتمدة لهذا البائع فقط. لا تظهر أي بيانات خاصة من حسابه.",
-                "This profile shows only this seller's public approved listings. Private account data is not shown.",
-              )}
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-muted-foreground sm:grid-cols-4">
-              <Metric
-                label={text("الموقع", "Location")}
-                value={seller.locationAr ?? text("سوريا", "Syria")}
+          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <StorefrontMetric
+              icon={MapPin}
+              world="rawaj-world-orange"
+              label={text("الموقع", "Location")}
+              value={seller.locationAr ?? text("سوريا", "Syria")}
+            />
+            <StorefrontMetric
+              icon={Package}
+              world="rawaj-world-emerald"
+              label={text("الإعلانات العامة", "Public listings")}
+              value={`${seller.approvedListingCount}`}
+            />
+            <StorefrontMetric
+              icon={CalendarDays}
+              world="rawaj-world-indigo"
+              label={text("على رواج منذ", "On RAWAJ since")}
+              value={seller.joinedAt ? new Date(seller.joinedAt).getFullYear().toString() : "—"}
+            />
+            {seller.ratingSummary.count > 0 ? (
+              <StorefrontMetric
+                icon={Star}
+                world="rawaj-world-gold"
+                label={text("التقييم المعتمد", "Approved rating")}
+                value={`${seller.ratingSummary.average} / 5`}
               />
-              <Metric
-                label={text("التقييم", "Rating")}
+            ) : (
+              <StorefrontMetric
+                icon={Store}
+                world="rawaj-world-plum"
+                label={text("نوع الواجهة", "Storefront")}
                 value={
-                  seller.ratingSummary.count > 0
-                    ? `${seller.ratingSummary.average} / 5`
-                    : text("لا يوجد", "None")
+                  seller.businessName ? text("نشاط تجاري", "Business") : text("بائع", "Seller")
                 }
               />
-              <Metric
-                label={text("الإعلانات", "Listings")}
-                value={`${seller.approvedListingCount}`}
-              />
-              <Metric
-                label={text("منذ", "Since")}
-                value={seller.joinedAt ? new Date(seller.joinedAt).getFullYear().toString() : "-"}
-              />
-            </div>
-          </section>
-
-          <ReviewsPanel seller={seller} />
-
-          <section>
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-extrabold">
-                <span className="inline-block border-b-2 border-gold pb-0.5">
-                  {text(
-                    `الإعلانات المعتمدة (${seller.listings.length})`,
-                    `Approved listings (${seller.listings.length})`,
-                  )}
-                </span>
-              </h2>
-              <span className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground">
-                {text("إعلانات البائع", "Seller listings")}
-              </span>
-            </div>
-            {seller.listings.length === 0 ? (
-              <div className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground hairline">
-                {text("لا توجد إعلانات عامة لهذا البائع.", "This seller has no public listings.")}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {seller.listings.map((listing: ClassifiedListing) => (
-                  <SellerListingCard key={listing.id} listing={listing} />
-                ))}
-              </div>
             )}
           </section>
 
-          <section className="flex items-start gap-3 rounded-2xl bg-card p-4 text-xs text-muted-foreground hairline">
-            <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
-            <p className="leading-6">
-              <strong className="text-foreground">{text("تنبيه أمان", "Safety note")}: </strong>
-              {text(
-                "قابل البائع في مكان عام وآمن، وافحص السلعة قبل الدفع. لا تحوّل المال قبل التأكد.",
-                "Meet in a safe public place, inspect the item before paying, and do not transfer money before verifying.",
+          <section className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.8fr)] lg:items-start">
+            <div className="space-y-4">
+              <div className="rawaj-storefront-section">
+                <span className="rawaj-signature-kicker">
+                  {text("منتجات الواجهة", "Storefront products")}
+                </span>
+                <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
+                  <h2 className="text-xl font-extrabold text-primary sm:text-2xl">
+                    {text("المعروض الآن", "Available now")}
+                  </h2>
+                  <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-bold text-primary-foreground">
+                    {text(
+                      `${seller.listings.length} إعلان معتمد`,
+                      `${seller.listings.length} approved listings`,
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              {seller.listings.length === 0 ? (
+                <div className="rawaj-color-card rawaj-world-orange rounded-[1.4rem] p-8 text-center text-sm text-muted-foreground">
+                  {text("لا توجد إعلانات عامة لهذا البائع.", "This seller has no public listings.")}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {seller.listings.map((listing: ClassifiedListing) => (
+                    <SellerListingCard key={listing.id} listing={listing} />
+                  ))}
+                </div>
               )}
-            </p>
+            </div>
+
+            <div className="space-y-4">
+              <ReviewsPanel seller={seller} />
+              <SafetyPanel />
+            </div>
           </section>
+
           <script {...jsonLdScript(buildSellerStructuredData(seller))} />
         </div>
       </main>
     </div>
+  );
+}
+
+function StorefrontHero({ seller }: { seller: PublicSellerProfile }) {
+  const { text } = useUiPreferences();
+  const displayName = seller.businessName || seller.displayName;
+
+  return (
+    <section className="rawaj-merchant-stage min-h-[19rem] overflow-hidden rounded-[1.8rem] sm:rounded-[2.1rem]">
+      {seller.coverUrl ? (
+        <img src={seller.coverUrl} alt="" decoding="async" className="rawaj-merchant-cover" />
+      ) : null}
+      <div className="rawaj-merchant-scrim" />
+
+      <div className="relative z-10 flex min-h-[19rem] flex-col justify-end p-5 sm:p-7 lg:p-9">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex min-w-0 items-end gap-4">
+            <span className="rawaj-id-avatar h-24 w-24 shrink-0 rounded-[1.45rem] text-3xl font-bold sm:h-28 sm:w-28">
+              {seller.avatarUrl ? (
+                <img
+                  src={seller.avatarUrl}
+                  alt={displayName}
+                  decoding="async"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                displayName.slice(0, 1).toUpperCase()
+              )}
+            </span>
+
+            <div className="min-w-0 pb-1">
+              <span className="rawaj-signature-kicker text-gold">
+                {text("واجهة على رواج", "RAWAJ storefront")}
+              </span>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <h1 className="truncate text-2xl font-extrabold text-[#fffaf0] sm:text-3xl">
+                  {displayName}
+                </h1>
+                {seller.verified ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#1f7768] px-2.5 py-1 text-[10px] font-bold text-white">
+                    <BadgeCheck className="h-3.5 w-3.5" />
+                    {text("موثق", "Verified")}
+                  </span>
+                ) : null}
+              </div>
+              {seller.businessName && seller.businessName !== seller.displayName ? (
+                <p className="mt-1 text-xs font-semibold text-[#fffaf0]/68">{seller.displayName}</p>
+              ) : null}
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#fffaf0]/72">
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-gold" />
+                  {seller.locationAr ?? text("سوريا", "Syria")}
+                </span>
+                {seller.joinedAt ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <CalendarDays className="h-3.5 w-3.5 text-gold" />
+                    {text("منذ", "Since")} {new Date(seller.joinedAt).getFullYear()}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:min-w-[15rem]">
+            <div className="rawaj-id-stat rounded-[1rem] p-3">
+              <span className="block text-[9px] font-semibold text-[#fffaf0]/55">
+                {text("المعروض", "Listings")}
+              </span>
+              <strong className="mt-1 block text-lg text-[#fffaf0]">
+                {seller.approvedListingCount}
+              </strong>
+            </div>
+            {seller.ratingSummary.count > 0 ? (
+              <div className="rawaj-id-stat rounded-[1rem] p-3">
+                <span className="block text-[9px] font-semibold text-[#fffaf0]/55">
+                  {text("التقييم", "Rating")}
+                </span>
+                <strong className="mt-1 block text-lg text-[#fffaf0]">
+                  {seller.ratingSummary.average} ★
+                </strong>
+              </div>
+            ) : (
+              <div className="rawaj-id-stat rounded-[1rem] p-3">
+                <span className="block text-[9px] font-semibold text-[#fffaf0]/55">
+                  {text("الحضور", "Presence")}
+                </span>
+                <strong className="mt-1 block text-xs text-[#fffaf0]">
+                  {text("واجهة عامة", "Public")}
+                </strong>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {seller.bio ? (
+          <p className="mt-5 max-w-3xl rounded-[1.1rem] border border-white/10 bg-white/7 p-4 text-xs leading-6 text-[#fffaf0]/82 backdrop-blur-sm">
+            {seller.bio}
+          </p>
+        ) : (
+          <p className="mt-5 max-w-3xl text-xs leading-6 text-[#fffaf0]/68">
+            {text(
+              "هذه الواجهة تعرض فقط المعلومات العامة والإعلانات المعتمدة لهذا البائع.",
+              "This storefront shows only public information and approved listings from this seller.",
+            )}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function StorefrontMetric({
+  icon: Icon,
+  world,
+  label,
+  value,
+}: {
+  icon: typeof MapPin;
+  world: string;
+  label: string;
+  value: string;
+}) {
+  return (
+    <article className={`rawaj-color-card ${world} rounded-[1.3rem] p-4`}>
+      <div className="relative z-10 flex items-center gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[0.95rem] bg-primary text-primary-foreground">
+          <Icon className="h-4 w-4" />
+        </span>
+        <div className="min-w-0">
+          <span className="block text-[10px] font-semibold text-muted-foreground">{label}</span>
+          <strong className="mt-1 block truncate text-sm text-primary">{value}</strong>
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -156,85 +304,6 @@ function buildSellerStructuredData(seller: PublicSellerProfile) {
   }
 
   return data;
-}
-
-function SellerHeader({ seller }: { seller: PublicSellerProfile }) {
-  const { text } = useUiPreferences();
-  return (
-    <section className="overflow-hidden rounded-2xl bg-primary text-primary-foreground shadow-premium">
-      <div className="relative h-40 overflow-hidden bg-primary-foreground/10">
-        {seller.coverUrl && (
-          <>
-            <img
-              src={seller.coverUrl}
-              alt=""
-              decoding="async"
-              className="absolute inset-0 h-full w-full object-cover opacity-25 blur-md"
-            />
-            <img
-              src={seller.coverUrl}
-              alt=""
-              decoding="async"
-              className="relative z-10 h-full w-full object-contain"
-            />
-          </>
-        )}
-      </div>
-      <div className="-mt-10 flex items-end gap-4 px-5 pb-5">
-        <span className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-primary text-xl font-bold text-gold ring-4 ring-primary">
-          {seller.avatarUrl ? (
-            <img
-              src={seller.avatarUrl}
-              alt={seller.displayName}
-              decoding="async"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            seller.displayName.slice(0, 1)
-          )}
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-lg font-extrabold">{seller.displayName}</h1>
-            {seller.businessName && (
-              <span className="rounded-md bg-primary-foreground/10 px-2 py-0.5 text-[11px] font-bold">
-                {seller.businessName}
-              </span>
-            )}
-            {seller.verified && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-trust px-2 py-0.5 text-[11px] font-bold text-emerald-trust-foreground">
-                <BadgeCheck className="h-3 w-3" />
-                {text("موثق", "Verified")}
-              </span>
-            )}
-          </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-primary-foreground/80">
-            <span>
-              {seller.locationAr
-                ? text(seller.locationAr, seller.locationAr)
-                : text("سوريا", "Syria")}
-            </span>
-            {seller.joinedAt && (
-              <span>
-                {text("منذ", "Since")} {new Date(seller.joinedAt).getFullYear()}
-              </span>
-            )}
-            <span>
-              {text(
-                `${seller.approvedListingCount} إعلان`,
-                `${seller.approvedListingCount} listings`,
-              )}
-            </span>
-          </div>
-        </div>
-      </div>
-      {seller.bio && (
-        <p className="mx-5 mb-5 rounded-xl bg-primary-foreground/10 p-3 text-xs leading-6 text-primary-foreground/85">
-          {seller.bio}
-        </p>
-      )}
-    </section>
-  );
 }
 
 function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
@@ -273,118 +342,154 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   }
 
   return (
-    <section className="rounded-2xl bg-card p-4 hairline">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 className="flex items-center gap-2 text-sm font-extrabold">
-            <Star className="h-4 w-4 text-gold" />
-            {text("تقييمات المعلن", "Seller ratings")}
-          </h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {seller.ratingSummary.count > 0
-              ? text(
-                  `${seller.ratingSummary.average} من 5 بناء على ${seller.ratingSummary.count} تقييم معتمد`,
-                  `${seller.ratingSummary.average} of 5 from ${seller.ratingSummary.count} approved reviews`,
-                )
-              : text("لا توجد تقييمات معتمدة بعد.", "No approved reviews yet.")}
-          </p>
+    <section className="rawaj-color-card rawaj-world-gold rounded-[1.5rem] p-4 sm:p-5">
+      <div className="relative z-10">
+        <span className="rawaj-signature-kicker">{text("صوت العملاء", "Customer voice")}</span>
+        <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="flex items-center gap-2 text-base font-extrabold text-primary">
+              <Star className="h-4 w-4 text-gold" />
+              {text("التقييمات المعتمدة", "Approved reviews")}
+            </h3>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              {seller.ratingSummary.count > 0
+                ? text(
+                    `${seller.ratingSummary.average} من 5 بناء على ${seller.ratingSummary.count} تقييم معتمد`,
+                    `${seller.ratingSummary.average} of 5 from ${seller.ratingSummary.count} approved reviews`,
+                  )
+                : text("لا توجد تقييمات معتمدة بعد.", "No approved reviews yet.")}
+            </p>
+          </div>
+          {seller.ratingSummary.count > 0 ? (
+            <span className="rounded-full bg-primary px-3 py-2 text-sm font-extrabold text-primary-foreground">
+              {seller.ratingSummary.average} ★
+            </span>
+          ) : null}
         </div>
-        {seller.ratingSummary.count > 0 && (
-          <span className="rounded-xl bg-muted-surface px-3 py-2 text-sm font-extrabold">
-            {seller.ratingSummary.average} ★
-          </span>
-        )}
-      </div>
-      {seller.ratingSummary.count > 0 && (
-        <div className="mt-3 grid grid-cols-5 gap-2 text-center text-[11px] text-muted-foreground">
-          {[5, 4, 3, 2, 1].map((star) => (
-            <div key={star} className="rounded-lg bg-muted-surface p-2">
-              <div className="font-bold text-foreground">
-                {seller.ratingSummary.distribution[star as 1 | 2 | 3 | 4 | 5]}
+
+        {seller.ratingSummary.count > 0 ? (
+          <div className="mt-4 grid grid-cols-5 gap-1.5 text-center text-[10px] text-muted-foreground">
+            {[5, 4, 3, 2, 1].map((star) => (
+              <div key={star} className="rounded-[0.8rem] bg-white/70 p-2 hairline">
+                <div className="font-bold text-foreground">
+                  {seller.ratingSummary.distribution[star as 1 | 2 | 3 | 4 | 5]}
+                </div>
+                <div>{star} ★</div>
               </div>
-              <div>{star} ★</div>
-            </div>
-          ))}
-        </div>
-      )}
-      {seller.reviews.length > 0 && (
-        <div className="mt-3 space-y-2">
-          {seller.reviews.slice(0, 3).map((review) => (
-            <article key={review.id} className="rounded-xl bg-muted-surface p-3">
-              <div className="text-xs font-bold text-gold">{"★".repeat(review.rating)}</div>
-              <p className="mt-1 whitespace-pre-line text-xs leading-6">{review.comment}</p>
-              <p className="mt-1 text-[10px] text-muted-foreground">
-                {new Date(review.createdAt).toLocaleDateString(
-                  language === "ar" ? "ar-SY" : "en-US",
-                )}
-              </p>
-            </article>
-          ))}
-        </div>
-      )}
-      {auth.status !== "signedIn" ? (
-        <div className="mt-4 rounded-xl bg-muted-surface p-3 text-xs leading-6 hairline">
-          <p className="font-bold">{text("سجل الدخول لإرسال تقييم", "Log in to write a review")}</p>
-          <p className="mt-1 text-muted-foreground">
-            {text(
-              "تظهر التقييمات للعامة بعد المراجعة فقط.",
-              "Reviews become public only after moderation.",
-            )}
-          </p>
-          <Link
-            to="/login"
-            className="mt-3 inline-flex rounded-lg bg-primary px-3 py-2 font-bold text-primary-foreground"
-          >
-            {text("تسجيل الدخول", "Log in")}
-          </Link>
-        </div>
-      ) : isOwnProfile ? (
-        <p className="mt-4 rounded-xl bg-muted-surface p-3 text-xs font-semibold hairline">
-          {text("لا يمكنك تقييم حسابك.", "You cannot review your own account.")}
-        </p>
-      ) : (
-        <form onSubmit={(event) => void submitReview(event)} className="mt-4 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            {[1, 2, 3, 4, 5].map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setRating(value)}
-                className={`rounded-lg px-2 py-1 text-xs font-bold hairline ${
-                  rating >= value ? "bg-gold text-gold-foreground" : "bg-muted-surface"
-                }`}
-              >
-                {value} ★
-              </button>
             ))}
           </div>
-          <textarea
-            value={comment}
-            onChange={(event) => setComment(event.target.value)}
-            maxLength={1200}
-            rows={3}
-            disabled={saving}
-            placeholder={text(
-              "اكتب تجربتك مع هذا المعلن",
-              "Write your experience with this seller",
+        ) : null}
+
+        {seller.reviews.length > 0 ? (
+          <div className="mt-4 space-y-2">
+            {seller.reviews.slice(0, 3).map((review) => (
+              <article key={review.id} className="rounded-[1rem] bg-white/76 p-3 hairline">
+                <div className="text-xs font-bold text-gold">{"★".repeat(review.rating)}</div>
+                <p className="mt-1 whitespace-pre-line text-xs leading-6">{review.comment}</p>
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  {new Date(review.createdAt).toLocaleDateString(
+                    language === "ar" ? "ar-SY" : "en-US",
+                  )}
+                </p>
+              </article>
+            ))}
+          </div>
+        ) : null}
+
+        {auth.status !== "signedIn" ? (
+          <div className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs leading-6 hairline">
+            <p className="font-bold text-primary">
+              {text("سجل الدخول لإرسال تقييم", "Log in to write a review")}
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              {text(
+                "تظهر التقييمات للعامة بعد المراجعة فقط.",
+                "Reviews become public only after moderation.",
+              )}
+            </p>
+            <Link
+              to="/login"
+              className="mt-3 inline-flex rounded-lg bg-primary px-3 py-2 font-bold text-primary-foreground"
+            >
+              {text("تسجيل الدخول", "Log in")}
+            </Link>
+          </div>
+        ) : isOwnProfile ? (
+          <p className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs font-semibold hairline">
+            {text("لا يمكنك تقييم حسابك.", "You cannot review your own account.")}
+          </p>
+        ) : (
+          <form onSubmit={(event) => void submitReview(event)} className="mt-4 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {[1, 2, 3, 4, 5].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setRating(value)}
+                  className={`rounded-lg px-2 py-1 text-xs font-bold hairline ${
+                    rating >= value ? "bg-gold text-gold-foreground" : "bg-white/72"
+                  }`}
+                >
+                  {value} ★
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+              maxLength={1200}
+              rows={3}
+              disabled={saving}
+              placeholder={text(
+                "اكتب تجربتك مع هذا المعلن",
+                "Write your experience with this seller",
+              )}
+              className="w-full rounded-xl bg-white/76 px-3 py-2 text-sm outline-none hairline disabled:opacity-60"
+            />
+            <button
+              type="submit"
+              disabled={!canReview || saving}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
+            >
+              <MessageSquare className="h-4 w-4" />
+              {saving
+                ? text("جاري الإرسال", "Submitting")
+                : text("إرسال للمراجعة", "Submit for review")}
+            </button>
+            {notice ? (
+              <p className="rounded-xl bg-white/72 p-2 text-xs font-semibold">{notice}</p>
+            ) : null}
+          </form>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function SafetyPanel() {
+  const { text } = useUiPreferences();
+  return (
+    <section className="relative overflow-hidden rounded-[1.5rem] bg-primary p-5 text-primary-foreground shadow-premium">
+      <div className="absolute -end-8 -top-8 h-28 w-28 rounded-full border border-white/10" />
+      <div className="relative z-10 flex items-start gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[0.95rem] bg-brand-orange text-white">
+          <ShieldAlert className="h-5 w-5" />
+        </span>
+        <div>
+          <span className="rawaj-signature-kicker text-gold">
+            {text("أمان التعامل", "Safer trading")}
+          </span>
+          <h3 className="mt-1 text-sm font-extrabold">
+            {text("افحص قبل أن تدفع", "Check before you pay")}
+          </h3>
+          <p className="mt-2 text-xs leading-6 text-primary-foreground/72">
+            {text(
+              "قابل البائع في مكان عام وآمن، وافحص السلعة قبل الدفع. لا تحوّل المال قبل التأكد.",
+              "Meet in a safe public place, inspect the item before paying, and do not transfer money before verifying.",
             )}
-            className="w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline disabled:opacity-60"
-          />
-          <button
-            type="submit"
-            disabled={!canReview || saving}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
-          >
-            <MessageSquare className="h-4 w-4" />
-            {saving
-              ? text("جاري الإرسال", "Submitting")
-              : text("إرسال للمراجعة", "Submit for review")}
-          </button>
-          {notice && (
-            <p className="rounded-xl bg-muted-surface p-2 text-xs font-semibold">{notice}</p>
-          )}
-        </form>
-      )}
+          </p>
+        </div>
+      </div>
     </section>
   );
 }
@@ -393,35 +498,31 @@ function SellerListingCard({ listing }: { listing: ClassifiedListing }) {
   const { language } = useUiPreferences();
 
   return (
-    <Link
-      to="/listings/$id"
-      params={{ id: listing.id }}
-      className="block overflow-hidden rounded-2xl bg-card shadow-soft transition-shadow hairline hover:shadow-premium"
-    >
-      <div className="relative">
+    <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-product-card block">
+      <div className="rawaj-product-media aspect-[4/3]">
         {listing.primaryImageUrl ? (
           <img
             src={listing.primaryImageUrl}
             alt={listing.title}
             loading="lazy"
             decoding="async"
-            className="aspect-[16/9] w-full object-cover"
+            className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]"
           />
         ) : (
           <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
         )}
-        <span className="absolute bottom-2 end-2 rounded-md bg-primary/85 px-2 py-0.5 text-[11px] font-medium text-primary-foreground">
+        <span className="absolute bottom-2 end-2 rounded-full bg-primary/88 px-2.5 py-1 text-[10px] font-bold text-primary-foreground backdrop-blur-sm">
           {categoryName(listing.categoryId, listing.categoryNameAr, language)}
         </span>
       </div>
-      <div className="space-y-1.5 p-3">
+      <div className="p-3.5">
         <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-foreground">
           {listing.title}
         </h3>
-        <div className="text-lg font-extrabold text-foreground">
+        <div className="mt-2 text-lg font-extrabold text-primary">
           {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
         </div>
-        <p className="truncate text-xs text-muted-foreground">
+        <p className="mt-1.5 truncate text-xs text-muted-foreground">
           {governorateName(listing.governorateId, listing.governorateNameAr, language)}
           {listing.districtAr ? ` · ${listing.districtAr}` : ""}
         </p>
@@ -465,15 +566,6 @@ function SellerError({ reset }: { reset: () => void }) {
           {text("إعادة المحاولة", "Try again")}
         </button>
       </main>
-    </div>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-muted-surface p-3">
-      <div>{label}</div>
-      <div className="mt-1 font-bold text-foreground">{value}</div>
     </div>
   );
 }
