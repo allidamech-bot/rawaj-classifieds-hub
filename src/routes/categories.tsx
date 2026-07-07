@@ -142,22 +142,20 @@ function CategoriesPage() {
     <>
       <PageHeader title={text("الأقسام", "Categories")} />
       <main className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
-        <section className="overflow-hidden rounded-[1.35rem] bg-card hairline sm:rounded-3xl">
+        <section className="rawaj-hero-surface rounded-[1.55rem] sm:rounded-[1.9rem]">
           <div className="p-4 sm:p-6">
             <div className="flex items-start gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-soft">
+              <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-[1rem] bg-primary text-primary-foreground shadow-[0_9px_22px_rgba(16,43,70,0.16)]">
                 <Grid3X3 className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-gold">
-                  {text("دليل رواج", "RAWAJ directory")}
-                </p>
-                <h1 className="mt-1 text-xl font-extrabold leading-tight text-foreground sm:text-2xl">
+                <p className="rawaj-eyebrow">{text("دليل رواج", "RAWAJ directory")}</p>
+                <h1 className="mt-1.5 text-xl font-bold leading-[1.4] text-primary sm:text-2xl">
                   {currentNode
                     ? taxonomyNodeName(currentNode, language)
                     : text("اختر القسم المناسب", "Choose the right category")}
                 </h1>
-                <p className="mt-2 max-w-2xl text-xs leading-6 text-muted-foreground sm:text-sm">
+                <p className="mt-2.5 max-w-2xl text-xs leading-6 text-muted-foreground sm:text-sm sm:leading-7">
                   {currentNode
                     ? (taxonomyNodeDescription(currentNode, language) ??
                       text(
@@ -175,8 +173,8 @@ function CategoriesPage() {
             {showTaxonomy && <Breadcrumbs path={currentPath} language={language} text={text} />}
           </div>
 
-          <div className="border-t border-border/70 p-3 sm:p-4">
-            <label className="flex items-center gap-2.5 rounded-2xl bg-muted-surface px-3.5 py-3 hairline focus-within:ring-2 focus-within:ring-gold/50">
+          <div className="border-t border-border/60 p-3 sm:p-4">
+            <label className="flex items-center gap-2.5 rounded-[1.05rem] border border-border/80 bg-card/82 px-3.5 py-3 shadow-[0_7px_22px_rgba(16,43,70,0.045)] transition focus-within:border-brand-orange/60 focus-within:ring-[3px] focus-within:ring-brand-orange/12">
               <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
               <input
                 value={query}
@@ -239,7 +237,7 @@ function Breadcrumbs({
     <nav className="no-scrollbar mt-4 flex items-center gap-1 overflow-x-auto pb-1 text-[10px] font-bold text-muted-foreground sm:flex-wrap sm:text-[11px]">
       <Link
         to="/categories"
-        className="shrink-0 rounded-full bg-muted-surface px-2.5 py-1.5 transition hover:text-foreground"
+        className="rawaj-chip shrink-0 px-2.5 py-1.5 transition hover:border-gold/40 hover:text-primary"
       >
         {text("كل الأقسام", "All categories")}
       </Link>
@@ -319,7 +317,7 @@ function TaxonomyDirectory({
   return (
     <>
       {currentNode && canOpenCurrentLevel && currentListingSearch && (
-        <div className="mt-4 rounded-2xl bg-card p-3 hairline sm:flex sm:items-center sm:justify-between sm:gap-4 sm:p-4">
+        <div className="rawaj-surface mt-4 rounded-[1.25rem] p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
           <div>
             <p className="text-sm font-extrabold text-foreground">
               {text("تريد رؤية الإعلانات مباشرة؟", "Want to see listings now?")}
@@ -334,7 +332,7 @@ function TaxonomyDirectory({
           <Link
             to="/listings"
             search={taxonomyListingUrlSearch(currentListingSearch)}
-            className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground sm:mt-0 sm:w-auto"
+            className="rawaj-button-primary mt-3 w-full px-4 py-2.5 sm:mt-0 sm:w-auto"
           >
             {text("عرض الإعلانات", "View listings")}
           </Link>
@@ -372,7 +370,7 @@ function TaxonomyDirectory({
 
 function DirectoryGrid({ children }: { children: React.ReactNode }) {
   return (
-    <section className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:gap-3 xl:grid-cols-3">
+    <section className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:gap-4 xl:grid-cols-3">
       {children}
     </section>
   );
@@ -414,7 +412,7 @@ function TaxonomyRow({
   const isLeaf = !hasChildren;
 
   return (
-    <article className="overflow-hidden rounded-[1.15rem] bg-card hairline transition sm:rounded-2xl sm:hover:-translate-y-0.5 sm:hover:shadow-soft">
+    <article className="rawaj-surface tap-card overflow-hidden rounded-[1.25rem] transition sm:hover:-translate-y-0.5">
       <Link
         to={isLeaf ? "/listings" : "/categories"}
         search={
@@ -424,12 +422,12 @@ function TaxonomyRow({
         }
         className="group flex h-full items-center gap-3 p-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:items-start sm:p-4"
       >
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-muted-surface text-primary sm:h-12 sm:w-12">
+        <span className="category-tile h-11 w-11 shrink-0 sm:h-12 sm:w-12">
           <Icon className="h-5 w-5" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center justify-between gap-2">
-            <span className="truncate text-sm font-extrabold text-foreground sm:text-[15px]">
+            <span className="truncate text-sm font-semibold text-foreground sm:text-[15px]">
               {taxonomyNodeName(node, language)}
             </span>
             <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-foreground rtl:rotate-180" />
@@ -443,7 +441,7 @@ function TaxonomyRow({
                 ? text("انتقل إلى نتائج هذا التصنيف.", "Open results for this category.")
                 : text("افتح الفروع داخل هذا المستوى.", "Open child levels in this category."))}
           </span>
-          <span className="mt-1.5 inline-flex text-[10px] font-bold text-primary sm:mt-2 sm:text-[11px]">
+          <span className="mt-1.5 inline-flex text-[10px] font-semibold text-brand-orange sm:mt-2 sm:text-[11px]">
             {isLeaf
               ? text("عرض النتائج", "View results")
               : text("استعراض الفروع", "Browse children")}
@@ -502,7 +500,7 @@ function LegacyCategoryDirectory({
       {filteredCategories.map((category) => (
         <article
           key={category.id}
-          className="overflow-hidden rounded-[1.15rem] bg-card hairline sm:rounded-2xl"
+          className="rawaj-surface tap-card overflow-hidden rounded-[1.25rem]"
         >
           <Link
             to="/listings"
@@ -583,7 +581,7 @@ function iconForTaxonomy(iconKey: string | null) {
 
 function Panel({ title, body }: { title: string; body?: string }) {
   return (
-    <div className="mt-4 rounded-[1.35rem] bg-card p-8 text-center text-sm hairline sm:rounded-3xl">
+    <div className="rawaj-surface mt-4 rounded-[1.4rem] p-8 text-center text-sm sm:rounded-3xl">
       <span className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-muted-surface text-gold">
         <Sparkles className="h-5 w-5" />
       </span>
