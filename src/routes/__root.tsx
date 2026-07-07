@@ -18,6 +18,7 @@ import { shouldShowSiteFooter, shouldShowBottomNav } from "@/lib/primary-navigat
 import { createSeo } from "@/lib/seo";
 import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
 import homeSignatureCss from "../home-signature.css?url";
+import offersSignatureCss from "../offers-signature.css?url";
 import signatureCss from "../signature.css?url";
 import appCss from "../styles.css?url";
 
@@ -107,6 +108,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "stylesheet", href: signatureCss },
       { rel: "stylesheet", href: homeSignatureCss },
+      { rel: "stylesheet", href: offersSignatureCss },
       { rel: "icon", href: "/favicon.ico" },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/brand/rawaj-mark-transparent-192.png" },
