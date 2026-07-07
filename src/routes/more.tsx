@@ -304,17 +304,46 @@ function PrimaryShortcut({
   return (
     <Link
       to={row.to ?? "/more"}
-      className="min-h-28 rounded-xl border border-gold/25 bg-primary p-3 text-primary-foreground shadow-soft transition hover:border-gold/60 hover:bg-primary/95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+      className="group relative flex min-h-28 flex-col overflow-hidden rounded-2xl bg-brand-navy p-3 text-primary-foreground shadow-premium transition hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
     >
-      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold text-gold-foreground">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -end-6 -top-6 h-20 w-20 rotate-12 rounded-2xl opacity-40"
+        style={{
+          background:
+            "linear-gradient(140deg, rgba(224,118,43,0.55), rgba(224,118,43,0) 70%)",
+        }}
+      />
+      <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-brand-orange text-white shadow-soft">
         <Icon className="h-5 w-5" />
       </span>
-      <span className="mt-3 block text-sm font-extrabold">{text(row.titleAr, row.titleEn)}</span>
+      <span className="relative mt-3 block text-sm font-extrabold">{text(row.titleAr, row.titleEn)}</span>
       {(row.hintAr || row.hintEn) && (
-        <span className="mt-1 block text-xs font-semibold text-primary-foreground/75">
+        <span className="relative mt-1 block text-[11px] font-semibold text-primary-foreground/75">
           {text(row.hintAr ?? row.titleAr, row.hintEn ?? row.titleEn)}
         </span>
       )}
+    </Link>
+  );
+}
+
+function SecondaryShortcut({
+  row,
+  text,
+}: {
+  row: AccountRow;
+  text: (ar: string, en: string) => string;
+}) {
+  const Icon = row.icon;
+  return (
+    <Link
+      to={row.to ?? "/more"}
+      className="flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-2xl bg-card p-2 text-center hairline shadow-soft transition hover:-translate-y-0.5 hover:border-brand-orange/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
+    >
+      <span className="grid h-9 w-9 place-items-center rounded-xl bg-muted-surface text-primary">
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="text-[11px] font-bold text-foreground">{text(row.titleAr, row.titleEn)}</span>
     </Link>
   );
 }
