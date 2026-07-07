@@ -47,14 +47,19 @@ function OffersPage() {
     <>
       <PageHeader title={text("العروض", "Offers")} />
       <main className="container-wide mobile-page-bottom pt-4">
-        <section className="bg-card p-4 hairline sm:p-5">
-          <div className="flex items-start gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gold/15 text-gold">
+        <section className="hero-navy relative overflow-hidden rounded-3xl p-4 shadow-premium sm:p-6">
+          <div className="relative z-10 flex items-start gap-3">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-brand-orange text-white shadow-soft">
               <Sparkles className="h-5 w-5" />
             </span>
             <div>
-              <h1 className="mt-1 text-xl font-extrabold">{text("العروض", "Offers")}</h1>
-              <p className="mt-1 text-xs leading-6 text-muted-foreground sm:text-sm">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-gold">
+                {text("مساحة العروض", "Offers space")}
+              </p>
+              <h1 className="mt-1 text-xl font-extrabold text-primary-foreground sm:text-2xl">
+                {text("العروض والإعلانات المميزة", "Offers & featured listings")}
+              </h1>
+              <p className="mt-1.5 max-w-xl text-xs leading-6 text-primary-foreground/80 sm:text-sm">
                 {text(
                   "مساحة مخصصة لعروض المتاجر والشركات. لا توجد عروض تجارية متاحة حالياً، وتظهر الإعلانات المميزة أدناه كقسم منفصل وليست خصومات.",
                   "A dedicated space for store and company offers. No commercial offers are available right now; featured listings below are separate and are not discounts.",
@@ -63,6 +68,7 @@ function OffersPage() {
             </div>
           </div>
         </section>
+
 
         <section className="mt-5">
           <div className="mb-3 flex items-center justify-between gap-2">
