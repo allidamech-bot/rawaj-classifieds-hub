@@ -75,9 +75,7 @@ function rankLocationResult(
   const names = [result.node.nameAr, result.node.nameEn]
     .filter((value): value is string => Boolean(value))
     .map(normalizeLocationSearch);
-  const alias = result.matchedAlias
-    ? normalizeLocationSearch(result.matchedAlias)
-    : "";
+  const alias = result.matchedAlias ? normalizeLocationSearch(result.matchedAlias) : "";
 
   if (names.includes(normalizedQuery)) return 0;
   if (alias === normalizedQuery) return 1;
@@ -184,19 +182,14 @@ export async function searchLocationNodes(
       .limit(safeLimit),
   ]);
 
-  if (nodesResult.error)
-    return { ok: false, error: mapError(nodesResult.error) };
+  if (nodesResult.error) return { ok: false, error: mapError(nodesResult.error) };
 
-  const directNodes = (
-    (nodesResult.data ?? []) as Record<string, unknown>[]
-  ).map(mapLocationNode);
+  const directNodes = ((nodesResult.data ?? []) as Record<string, unknown>[]).map(mapLocationNode);
   const aliases = aliasesResult.error
     ? []
     : ((aliasesResult.data ?? []) as Record<string, unknown>[]);
   const aliasIds = [
-    ...new Set(
-      aliases.map((row) => rowString(row, "location_node_id")).filter(Boolean),
-    ),
+    ...new Set(aliases.map((row) => rowString(row, "location_node_id")).filter(Boolean)),
   ];
 
   let aliasNodes: CanonicalLocationNode[] = [];
@@ -208,23 +201,17 @@ export async function searchLocationNodes(
       .eq("is_active", true)
       .in("id", aliasIds);
     if (error) return { ok: false, error: mapError(error) };
-    aliasNodes = ((data ?? []) as Record<string, unknown>[]).map(
-      mapLocationNode,
-    );
+    aliasNodes = ((data ?? []) as Record<string, unknown>[]).map(mapLocationNode);
   }
 
   const aliasByNodeId = new Map<string, string>();
   for (const row of aliases) {
     const nodeId = rowString(row, "location_node_id");
     const alias = rowString(row, "alias");
-    if (nodeId && alias && !aliasByNodeId.has(nodeId))
-      aliasByNodeId.set(nodeId, alias);
+    if (nodeId && alias && !aliasByNodeId.has(nodeId)) aliasByNodeId.set(nodeId, alias);
   }
 
-  const mergedById = new Map<
-    string,
-    Pick<LocationSearchResult, "node" | "matchedAlias">
-  >();
+  const mergedById = new Map<string, Pick<LocationSearchResult, "node" | "matchedAlias">>();
   for (const node of directNodes) {
     mergedById.set(node.id, { node, matchedAlias: null });
   }
@@ -239,11 +226,9 @@ export async function searchLocationNodes(
   const ranked = [...mergedById.values()]
     .sort((left, right) => {
       const scoreDelta =
-        rankLocationResult(left, normalized) -
-        rankLocationResult(right, normalized);
+        rankLocationResult(left, normalized) - rankLocationResult(right, normalized);
       if (scoreDelta !== 0) return scoreDelta;
-      if (left.node.depth !== right.node.depth)
-        return left.node.depth - right.node.depth;
+      if (left.node.depth !== right.node.depth) return left.node.depth - right.node.depth;
       return left.node.nameAr.localeCompare(right.node.nameAr, "ar");
     })
     .slice(0, safeLimit);
@@ -259,9 +244,7 @@ export async function searchLocationNodes(
     return {
       ...result,
       pathAr: visiblePath.map((node) => node.nameAr).join(" › "),
-      pathEn: visiblePath
-        .map((node) => node.nameEn || node.nameAr)
-        .join(" › "),
+      pathEn: visiblePath.map((node) => node.nameEn || node.nameAr).join(" › "),
     };
   });
 
@@ -308,12 +291,9 @@ export async function resolveLocationDescendantIds(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data.rpc(
-    "rawaj_location_descendant_ids",
-    {
-      root_id: nodeId,
-    },
-  );
+  const { data, error } = await clientResult.data.rpc("rawaj_location_descendant_ids", {
+    root_id: nodeId,
+  });
   if (error) return { ok: false, error: mapError(error) };
 
   return {
