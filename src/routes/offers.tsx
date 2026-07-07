@@ -170,9 +170,11 @@ function FeaturedListingCard({ listing }: { listing: ClassifiedListing }) {
 
 function OffersState({ title, body }: { title: string; body?: string }) {
   return (
-    <section className="mt-5 bg-card p-6 text-center hairline">
-      <Search className="mx-auto h-7 w-7 text-gold" />
-      <h2 className="mt-3 text-base font-extrabold">{title}</h2>
+    <section className="mt-5 overflow-hidden rounded-2xl bg-card p-6 text-center hairline shadow-soft">
+      <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand-orange/12 text-brand-orange">
+        <Sparkles className="h-5 w-5" />
+      </span>
+      <h2 className="mt-3 text-base font-extrabold text-primary">{title}</h2>
       {body && (
         <p className="mx-auto mt-1 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p>
       )}
