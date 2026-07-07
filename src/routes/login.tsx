@@ -93,7 +93,7 @@ function LoginPage() {
   const { text } = useUiPreferences();
   const navigate = useNavigate();
   const locationSearch = useRouterState({ select: (state) => state.location.search });
-  const looseSearch = locationSearch as Record<string, unknown>;
+  const looseSearch = locationSearch as unknown as Record<string, unknown>;
   const rawReturnTo = typeof looseSearch.returnTo === "string" ? looseSearch.returnTo : undefined;
   const returnTo = sanitizeAuthReturnTo(rawReturnTo, "/more");
   const [mode, setMode] = useState<AuthMode>("login");
