@@ -2,6 +2,7 @@ export * from "@/lib/api/shared";
 export * from "@/lib/api/references";
 export * from "@/lib/api/locations";
 export * from "@/lib/api/listings";
+export { fetchPublicListingsLocationAware as fetchPublicListings } from "@/lib/api/location-aware-listings";
 export * from "@/lib/api/seller";
 export * from "@/lib/api/messaging";
 export * from "@/lib/api/favorites";
