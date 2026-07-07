@@ -44,10 +44,15 @@ export async function fetchPublicListingsLocationAware(
       filters.governorateId,
       filters.districtAr,
     );
-    query =
-      subtreeIds.length > 0
-        ? query.in("location_node_id", subtreeIds)
-        : query.eq("district_ar", filters.districtAr);
+    if (subtreeIds.length > 0) {
+      const ids = subtreeIds.map((id) => escapePostgrestFilterValue(id)).join(",");
+      const legacyDistrict = escapePostgrestFilterValue(filters.districtAr);
+      query = query.or(
+        `location_node_id.in.(${ids}),district_ar.eq.${legacyDistrict}`,
+      );
+    } else {
+      query = query.eq("district_ar", filters.districtAr);
+    }
   }
 
   if (filters.priceMin !== undefined) query = query.gte("price", filters.priceMin);
