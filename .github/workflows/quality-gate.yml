@@ -2,63 +2,51 @@ name: Quality Gate
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: quality-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - name: Polish account hub
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint changed source files
         shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          git fetch origin design/offers-account-soul-pass
-          git checkout -B design/offers-account-soul-pass origin/design/offers-account-soul-pass
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('src/routes/more.tsx')
-          s=p.read_text()
-          r=[
-            ('<main className="mobile-page-bottom mx-auto max-w-5xl px-4 py-4 sm:px-6 lg:px-8">','<main className="mobile-page-bottom mx-auto max-w-5xl px-4 pb-8 pt-3 sm:px-6 sm:pt-5 lg:px-8">'),
-            ('<section className="rounded-xl border border-border bg-card p-4 shadow-soft">','<section className="rawaj-hero-surface rounded-[1.55rem] p-4 sm:rounded-[1.9rem] sm:p-5">'),
-            ('className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"','className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.05rem] bg-primary text-primary-foreground shadow-premium-sm"'),
-            ('<p className="truncate text-sm font-extrabold text-foreground">','<p className="truncate text-sm font-bold text-primary">'),
-            ('<p className="mt-0.5 text-xs font-semibold text-muted-foreground">','<p className="mt-1 text-xs font-medium leading-5 text-muted-foreground">'),
-            ('className="w-full bg-gold text-gold-foreground hover:bg-gold/90 sm:w-auto"','className="rawaj-button-primary w-full sm:w-auto"'),
-            ('<div className="mt-5 space-y-3">','<div className="mt-6 space-y-3.5">'),
-            ('<section className={`rounded-xl border border-border bg-card p-3 ${quiet ? "bg-card/80" : ""}`}>','<section className={`rawaj-surface rounded-[1.3rem] p-3 ${quiet ? "bg-card/78" : ""}`}>'),
-            ('<h2 className="px-2 pb-2 text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">','<h2 className="px-2 pb-2.5 text-[10px] font-semibold tracking-[0.04em] text-brand-orange">'),
-            ('className="group relative flex min-h-28 flex-col overflow-hidden rounded-2xl bg-brand-navy p-3 text-primary-foreground shadow-premium transition hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"','className="rawaj-surface group relative flex min-h-28 flex-col overflow-hidden rounded-[1.25rem] p-3 text-foreground transition hover:-translate-y-0.5 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"'),
-            ('className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-brand-orange text-white shadow-soft"','className="category-tile relative h-10 w-10 text-brand-orange"'),
-            ('<span className="relative mt-3 block text-sm font-extrabold">','<span className="relative mt-3 block text-sm font-semibold text-primary">'),
-            ('<span className="relative mt-1 block text-[11px] font-semibold text-primary-foreground/75">','<span className="relative mt-1 block text-[11px] font-medium leading-5 text-muted-foreground">'),
-            ('className="flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-2xl bg-card p-2 text-center hairline shadow-soft transition hover:-translate-y-0.5 hover:border-brand-orange/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"','className="rawaj-surface tap-card flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-[1.15rem] p-2 text-center transition hover:-translate-y-0.5 hover:border-gold/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"'),
-            ('<span className="grid h-9 w-9 place-items-center rounded-xl bg-muted-surface text-primary">','<span className="category-tile h-9 w-9">'),
-            ('<span className="text-[11px] font-bold text-foreground">','<span className="text-[10.5px] font-semibold text-foreground">'),
-            ('className={`block truncate text-sm font-bold ${','className={`block truncate text-sm font-semibold ${'),
-          ]
-          for a,b in r:
-              if a not in s: raise SystemExit(f'missing: {a[:80]}')
-              s=s.replace(a,b)
-          p.write_text(s)
-          PY
-          npx prettier --write 'src/routes/more.tsx'
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add -- 'src/routes/more.tsx'
-          git diff --cached --quiet || git commit -m 'Polish RAWAJ account hub'
-          git push origin HEAD:design/offers-account-soul-pass
-      - run: npx eslint --quiet 'src/routes/more.tsx'
-      - run: npm run typecheck -- --pretty false
-      - run: npm run build
+          base="$BASE_SHA"
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="$(git rev-parse HEAD^)"
+          fi
+          mapfile -t files < <(git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs')
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No changed JS/TS source files to lint."
+            exit 0
+          fi
+          npx eslint --quiet "${files[@]}"
+      - name: Typecheck
+        run: npm run typecheck -- --pretty false
+      - name: Production build
+        run: npm run build
