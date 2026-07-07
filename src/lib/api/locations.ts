@@ -34,7 +34,9 @@ export function mapLocationNode(row: Record<string, unknown>): LocationNode {
   };
 }
 
-export async function fetchPublicLocationNodes(countryCode = "SY"): Promise<ClassifiedsResult<LocationNode[]>> {
+export async function fetchPublicLocationNodes(
+  countryCode = "SY",
+): Promise<ClassifiedsResult<LocationNode[]>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   const { data, error } = await clientResult.data
@@ -82,13 +84,19 @@ export async function fetchLocationNode(id: string): Promise<ClassifiedsResult<L
   return { ok: true, data: mapLocationNode(data as Record<string, unknown>) };
 }
 
-export async function fetchLocationDescendantIds(rootId: string): Promise<ClassifiedsResult<string[]>> {
+export async function fetchLocationDescendantIds(
+  rootId: string,
+): Promise<ClassifiedsResult<string[]>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
-  const { data, error } = await clientResult.data.rpc("rawaj_location_descendant_ids", { root_id: rootId });
+  const { data, error } = await clientResult.data.rpc("rawaj_location_descendant_ids", {
+    root_id: rootId,
+  });
   if (error) return { ok: false, error: mapError(error) };
   return {
     ok: true,
-    data: ((data ?? []) as Record<string, unknown>[]).map((row) => rowString(row, "id")).filter(Boolean),
+    data: ((data ?? []) as Record<string, unknown>[])
+      .map((row) => rowString(row, "id"))
+      .filter(Boolean),
   };
 }

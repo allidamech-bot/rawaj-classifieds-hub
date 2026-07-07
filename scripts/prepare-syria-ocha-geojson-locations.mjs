@@ -93,7 +93,7 @@ const report = {
 
 const blockingIssues = [
   ...validation.blockingIssues,
-  ...duplicatePcodes.size > 0 ? [`duplicate source P-codes: ${duplicatePcodes.size}`] : [],
+  ...(duplicatePcodes.size > 0 ? [`duplicate source P-codes: ${duplicatePcodes.size}`] : []),
   ...(!allowMojibake && arabicAudit.suspiciousCount > 0
     ? [`suspicious Arabic/mojibake values: ${arabicAudit.suspiciousCount}`]
     : []),
@@ -111,10 +111,15 @@ if (blockingIssues.length > 0) {
   await mkdir(dirname(reportPath), { recursive: true });
   await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   console.log(JSON.stringify(report, null, 2));
-  throw new Error("OCHA Syria conversion blocked by validation issues. Review the report before import.");
+  throw new Error(
+    "OCHA Syria conversion blocked by validation issues. Review the report before import.",
+  );
 }
 
-nodes.sort((a, b) => a.depth - b.depth || a.sort_order - b.sort_order || a.name_ar.localeCompare(b.name_ar, "ar"));
+nodes.sort(
+  (a, b) =>
+    a.depth - b.depth || a.sort_order - b.sort_order || a.name_ar.localeCompare(b.name_ar, "ar"),
+);
 await mkdir(dirname(outputJson), { recursive: true });
 await writeFile(outputJson, `${JSON.stringify(nodes, null, 2)}\n`, "utf8");
 await writeFile(outputCsv, toCsv(nodes), "utf8");
@@ -125,11 +130,7 @@ function adminNode(feature, level) {
   const p = props(feature);
   const pcode = required(p[`adm${level}_pcode`], `adm${level}_pcode`);
   const english = text(p[`adm${level}_name`]) || text(p[`adm${level}_ref_name`]);
-  const arabic = pickArabic(
-    p[`adm${level}_name1`],
-    p[`adm${level}_name2`],
-    p[`adm${level}_name3`],
-  );
+  const arabic = pickArabic(p[`adm${level}_name1`], p[`adm${level}_name2`], p[`adm${level}_name3`]);
   const parentPcode = level === 0 ? null : text(p[`adm${level - 1}_pcode`]);
   const types = ["country", "governorate", "district", "subdistrict"];
 
@@ -158,7 +159,12 @@ function populatedPlaceNode(feature) {
   const p = props(feature);
   const pcode = required(p.pcode, "populated place pcode");
   const english = text(p.featurename_en) || text(p.adm4_en) || text(p.featurerefname);
-  const arabic = pickArabic(p.featurename_ar, p.adm4_ar, p.featurealtname1_ar, p.featurealtname2_ar);
+  const arabic = pickArabic(
+    p.featurename_ar,
+    p.adm4_ar,
+    p.featurealtname1_ar,
+    p.featurealtname2_ar,
+  );
   const classTitle = text(p.popplaceclasstitle).toLowerCase();
 
   return baseNode({
@@ -207,17 +213,16 @@ function neighborhoodAreaNode(feature) {
 function neighborhoodNode(feature) {
   const p = props(feature);
   const pcode = required(p.neighborhoodpcode, "neighborhoodpcode");
-  const parentPcode = text(p.areapcode) || required(p.adm4_pcode, `adm4_pcode for neighborhood ${pcode}`);
+  const parentPcode =
+    text(p.areapcode) || required(p.adm4_pcode, `adm4_pcode for neighborhood ${pcode}`);
 
   return baseNode({
     pcode,
     parentPcode,
     nodeType: "neighborhood",
-    nameAr: pickArabic(
-      p.neighborhoodname_ar,
-      p.neighborhoodaltname1_ar,
-      p.neighborhoodaltname2_ar,
-    ) || text(p.neighborhoodname_en),
+    nameAr:
+      pickArabic(p.neighborhoodname_ar, p.neighborhoodaltname1_ar, p.neighborhoodaltname2_ar) ||
+      text(p.neighborhoodname_en),
     nameEn: text(p.neighborhoodname_en),
     aliases: unique([
       p.neighborhoodrefname,
@@ -318,7 +323,8 @@ function validateNodes(nodes) {
     if (node.parent_id === node.id) blockingIssues.push(`self parent: ${node.official_code}`);
 
     const parentSlugKey = `${node.country_code}|${node.parent_id ?? "root"}|${node.slug}`;
-    if (parentSlugs.has(parentSlugKey)) blockingIssues.push(`duplicate parent slug: ${parentSlugKey}`);
+    if (parentSlugs.has(parentSlugKey))
+      blockingIssues.push(`duplicate parent slug: ${parentSlugKey}`);
     parentSlugs.add(parentSlugKey);
 
     if (node.latitude !== null && (node.latitude < -90 || node.latitude > 90)) {
@@ -357,7 +363,8 @@ function auditArabic(nodes) {
     if (containsArabic(node.name_ar)) arabicScriptCount += 1;
     else englishFallbackCount += 1;
 
-    if (looksMojibake(node.name_ar)) suspicious.push({ pcode: node.official_code, value: node.name_ar });
+    if (looksMojibake(node.name_ar))
+      suspicious.push({ pcode: node.official_code, value: node.name_ar });
     for (const alias of node.search_aliases) {
       if (looksMojibake(alias)) suspicious.push({ pcode: node.official_code, value: alias });
     }
@@ -384,9 +391,7 @@ function verifyTargetPaths(nodes) {
     const matches = nodes.filter((node) => nameMatches(node, segments.at(-1)));
     const paths = matches.map((node) => pathFor(byId, node));
     const exactHierarchyMatches = paths.filter((path) =>
-      segments.every((segment, index) =>
-        path[index] ? nameMatches(path[index], segment) : false,
-      ),
+      segments.every((segment, index) => (path[index] ? nameMatches(path[index], segment) : false)),
     );
     return {
       target: segments.join(" > "),
@@ -464,9 +469,7 @@ async function readFeatures(filename) {
 }
 
 function props(feature) {
-  return feature?.properties && typeof feature.properties === "object"
-    ? feature.properties
-    : {};
+  return feature?.properties && typeof feature.properties === "object" ? feature.properties : {};
 }
 
 function countBy(values, keyFn) {
@@ -514,9 +517,7 @@ function stableUuid(value) {
 function csvCell(value) {
   if (value === null || value === undefined) return "";
   const stringValue = Array.isArray(value) ? `{${value.join(",")}}` : String(value);
-  return /[",\n]/.test(stringValue)
-    ? `"${stringValue.replaceAll('"', '""')}"`
-    : stringValue;
+  return /[",\n]/.test(stringValue) ? `"${stringValue.replaceAll('"', '""')}"` : stringValue;
 }
 
 function toCsv(nodes) {

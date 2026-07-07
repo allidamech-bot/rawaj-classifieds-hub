@@ -8,9 +8,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-const baseDir = resolve(
-  process.argv[2] ?? "data/locations/sources/geojson",
-);
+const baseDir = resolve(process.argv[2] ?? "data/locations/sources/geojson");
 
 const files = [
   "syr_admin0.geojson",
@@ -37,13 +35,17 @@ for (const filename of files) {
   const geometryTypes = new Set();
 
   for (const feature of features) {
-    const properties = feature?.properties && typeof feature.properties === "object"
-      ? feature.properties
-      : {};
+    const properties =
+      feature?.properties && typeof feature.properties === "object" ? feature.properties : {};
 
     for (const [key, value] of Object.entries(properties)) {
       propertyKeys.add(key);
-      if (!(key in examples) && value !== null && value !== undefined && String(value).trim() !== "") {
+      if (
+        !(key in examples) &&
+        value !== null &&
+        value !== undefined &&
+        String(value).trim() !== ""
+      ) {
         examples[key] = value;
       }
     }

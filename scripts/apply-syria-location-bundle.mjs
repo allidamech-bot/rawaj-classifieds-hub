@@ -61,14 +61,23 @@ await upsertAliases(supabase, overlays.aliases, nodeIdByExternalKey);
 const regionIdBySlug = await upsertRegions(supabase, overlays.regions);
 await upsertRegionMembers(supabase, overlays.regions, regionIdBySlug, nodeIdByExternalKey);
 
-console.log(JSON.stringify({
-  status: "applied",
-  canonicalNodes: nodes.length,
-  aliases: overlays.aliases.length,
-  regions: overlays.regions.length,
-  regionMembers: overlays.regions.reduce((sum, region) => sum + (region.members?.length ?? 0), 0),
-  deletesPerformed: 0,
-}, null, 2));
+console.log(
+  JSON.stringify(
+    {
+      status: "applied",
+      canonicalNodes: nodes.length,
+      aliases: overlays.aliases.length,
+      regions: overlays.regions.length,
+      regionMembers: overlays.regions.reduce(
+        (sum, region) => sum + (region.members?.length ?? 0),
+        0,
+      ),
+      deletesPerformed: 0,
+    },
+    null,
+    2,
+  ),
+);
 
 function validateBundle(canonicalNodes, curated) {
   const blockingIssues = [];
@@ -84,7 +93,8 @@ function validateBundle(canonicalNodes, curated) {
     if (ids.has(node.id)) blockingIssues.push(`duplicate node id: ${node.id}`);
     ids.add(node.id);
     const externalKey = key(node.external_source, node.external_id);
-    if (externalKeys.has(externalKey)) blockingIssues.push(`duplicate external key: ${externalKey}`);
+    if (externalKeys.has(externalKey))
+      blockingIssues.push(`duplicate external key: ${externalKey}`);
     externalKeys.add(externalKey);
   }
 
@@ -169,7 +179,11 @@ async function loadNodeIdMap(supabase, canonicalNodes) {
 
 async function upsertAliases(supabase, aliases, nodeMap) {
   const rows = aliases.map((alias) => ({
-    location_node_id: requireMappedNode(nodeMap, alias.targetExternalSource, alias.targetExternalId),
+    location_node_id: requireMappedNode(
+      nodeMap,
+      alias.targetExternalSource,
+      alias.targetExternalId,
+    ),
     alias: alias.alias,
     normalized_alias: String(alias.alias).trim(),
     language_code: alias.languageCode ?? null,
@@ -211,7 +225,10 @@ async function upsertRegions(supabase, regions) {
   const { data, error } = await supabase
     .from("location_regions")
     .select("id,country_code,slug")
-    .in("slug", regions.map((region) => region.slug));
+    .in(
+      "slug",
+      regions.map((region) => region.slug),
+    );
   if (error) throw new Error(`Failed loading regions: ${error.message}`);
   return new Map((data ?? []).map((row) => [`${row.country_code}|${row.slug}`, row.id]));
 }
@@ -224,7 +241,11 @@ async function upsertRegionMembers(supabase, regions, regionMap, nodeMap) {
     for (const member of region.members ?? []) {
       rows.push({
         region_id: regionId,
-        location_node_id: requireMappedNode(nodeMap, member.targetExternalSource, member.targetExternalId),
+        location_node_id: requireMappedNode(
+          nodeMap,
+          member.targetExternalSource,
+          member.targetExternalId,
+        ),
         relation_type: member.relationType ?? "member",
         source_name: member.sourceName ?? null,
         source_url: member.sourceUrl ?? null,
@@ -243,10 +264,29 @@ async function upsertRegionMembers(supabase, regions, regionMap, nodeMap) {
 
 function stripUnknownNodeFields(node) {
   const allowed = [
-    "id","parent_id","country_code","node_type","name_ar","name_en","slug","official_code",
-    "external_source","external_id","latitude","longitude","sort_order","depth","is_active",
-    "search_aliases","legacy_governorate_id","legacy_district_ar","source_url","source_date",
-    "confidence","review_status","notes",
+    "id",
+    "parent_id",
+    "country_code",
+    "node_type",
+    "name_ar",
+    "name_en",
+    "slug",
+    "official_code",
+    "external_source",
+    "external_id",
+    "latitude",
+    "longitude",
+    "sort_order",
+    "depth",
+    "is_active",
+    "search_aliases",
+    "legacy_governorate_id",
+    "legacy_district_ar",
+    "source_url",
+    "source_date",
+    "confidence",
+    "review_status",
+    "notes",
   ];
   return Object.fromEntries(allowed.map((field) => [field, node[field] ?? null]));
 }
@@ -269,7 +309,10 @@ function parseArgs(argv) {
     const name = arg.slice(2);
     const next = argv[index + 1];
     if (!next || next.startsWith("--")) result[name] = true;
-    else { result[name] = next; index += 1; }
+    else {
+      result[name] = next;
+      index += 1;
+    }
   }
   return result;
 }

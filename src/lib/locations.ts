@@ -20,7 +20,10 @@ export function buildLocationIndex(nodes: LocationNode[]): LocationIndex {
   return { byId, childrenByParent };
 }
 
-export function findLocationNode(index: LocationIndex, id?: string | null): LocationNode | undefined {
+export function findLocationNode(
+  index: LocationIndex,
+  id?: string | null,
+): LocationNode | undefined {
   return id ? index.byId.get(id) : undefined;
 }
 
@@ -55,12 +58,20 @@ export function getLocationDescendants(index: LocationIndex, nodeId: string): Lo
   return result;
 }
 
-export function getLocationDescendantIds(index: LocationIndex, nodeId: string, includeSelf = true): string[] {
+export function getLocationDescendantIds(
+  index: LocationIndex,
+  nodeId: string,
+  includeSelf = true,
+): string[] {
   const ids = getLocationDescendants(index, nodeId).map((node) => node.id);
   return includeSelf ? [nodeId, ...ids] : ids;
 }
 
-export function isLocationWithin(index: LocationIndex, candidateId: string, ancestorId: string): boolean {
+export function isLocationWithin(
+  index: LocationIndex,
+  candidateId: string,
+  ancestorId: string,
+): boolean {
   if (candidateId === ancestorId) return true;
   let current = index.byId.get(candidateId);
   const visited = new Set<string>();
@@ -96,7 +107,8 @@ export function findLocationByLegacyValues(
   const district = districtAr?.trim();
   if (district) {
     const exact = nodes.find(
-      (node) => node.legacyGovernorateId === governorateId && node.legacyDistrictAr?.trim() === district,
+      (node) =>
+        node.legacyGovernorateId === governorateId && node.legacyDistrictAr?.trim() === district,
     );
     if (exact) return exact;
   }

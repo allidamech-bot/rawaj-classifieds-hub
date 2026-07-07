@@ -52,12 +52,15 @@ for (const node of nodes) {
   delete node.parent_external_id;
 }
 
-nodes.sort((a, b) =>
-  a.depth - b.depth || a.sort_order - b.sort_order || a.name_ar.localeCompare(b.name_ar, "ar"),
+nodes.sort(
+  (a, b) =>
+    a.depth - b.depth || a.sort_order - b.sort_order || a.name_ar.localeCompare(b.name_ar, "ar"),
 );
 
 const duplicateKeys = findDuplicates(nodes, (node) => `${node.parent_id ?? "root"}|${node.slug}`);
-const orphanNodes = nodes.filter((node) => node.parent_id && !nodes.some((candidate) => candidate.id === node.parent_id));
+const orphanNodes = nodes.filter(
+  (node) => node.parent_id && !nodes.some((candidate) => candidate.id === node.parent_id),
+);
 const arabicCoverage = nodes.filter((node) => containsArabic(node.name_ar)).length;
 
 const report = {
@@ -102,7 +105,10 @@ function parseGeoNamesLine(line) {
     geonameid: parts[0],
     name: parts[1] ?? "",
     asciiName: parts[2] ?? "",
-    alternateNames: (parts[3] ?? "").split(",").map((value) => value.trim()).filter(Boolean),
+    alternateNames: (parts[3] ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean),
     latitude: numberOrNull(parts[4]),
     longitude: numberOrNull(parts[5]),
     featureClass: parts[6] ?? "",
@@ -180,7 +186,8 @@ function findAdminParent(row, depth, byId) {
 function findDeepestAdmin(row, adminRows) {
   for (let depth = 4; depth >= 1; depth -= 1) {
     const match = adminRows.find(
-      (candidate) => candidate.featureCode === `ADM${depth}` && sameAdminPrefix(row, candidate, depth),
+      (candidate) =>
+        candidate.featureCode === `ADM${depth}` && sameAdminPrefix(row, candidate, depth),
     );
     if (match) return match;
   }
@@ -246,13 +253,34 @@ function findDuplicates(values, keyFn) {
 
 function toCsv(nodes) {
   const columns = [
-    "id", "parent_id", "country_code", "node_type", "name_ar", "name_en", "slug",
-    "official_code", "external_source", "external_id", "latitude", "longitude", "sort_order",
-    "depth", "is_active", "search_aliases", "legacy_governorate_id", "legacy_district_ar",
+    "id",
+    "parent_id",
+    "country_code",
+    "node_type",
+    "name_ar",
+    "name_en",
+    "slug",
+    "official_code",
+    "external_source",
+    "external_id",
+    "latitude",
+    "longitude",
+    "sort_order",
+    "depth",
+    "is_active",
+    "search_aliases",
+    "legacy_governorate_id",
+    "legacy_district_ar",
   ];
   const lines = [columns.join(",")];
   for (const node of nodes) {
-    lines.push(columns.map((column) => csvCell(column === "search_aliases" ? `{${node[column].join(",")}}` : node[column])).join(","));
+    lines.push(
+      columns
+        .map((column) =>
+          csvCell(column === "search_aliases" ? `{${node[column].join(",")}}` : node[column]),
+        )
+        .join(","),
+    );
   }
   return `${lines.join("\n")}\n`;
 }

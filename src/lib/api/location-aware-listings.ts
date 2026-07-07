@@ -29,8 +29,7 @@ export async function fetchPublicListingsLocationAware(
   let query = client.from("listings").select("*").eq("status", "approved");
 
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
-  const effectiveSubcategoryId =
-    filters.taxonomyLegacySubcategoryId ?? filters.subcategoryId;
+  const effectiveSubcategoryId = filters.taxonomyLegacySubcategoryId ?? filters.subcategoryId;
   if (effectiveSubcategoryId) {
     query = query.eq("subcategory_id", effectiveSubcategoryId);
   }
@@ -47,9 +46,7 @@ export async function fetchPublicListingsLocationAware(
     if (subtreeIds.length > 0) {
       const ids = subtreeIds.map((id) => escapePostgrestFilterValue(id)).join(",");
       const legacyDistrict = escapePostgrestFilterValue(filters.districtAr);
-      query = query.or(
-        `location_node_id.in.(${ids}),district_ar.eq.${legacyDistrict}`,
-      );
+      query = query.or(`location_node_id.in.(${ids}),district_ar.eq.${legacyDistrict}`);
     } else {
       query = query.eq("district_ar", filters.districtAr);
     }
@@ -97,16 +94,17 @@ export async function fetchPublicListingsLocationAware(
   };
 }
 
-function applyDetailFilters(query: any, filters: ListingFilters) {
+function applyDetailFilters<
+  T extends {
+    eq(column: string, value: unknown): T;
+  },
+>(query: T, filters: ListingFilters): T {
   const exact: Array<[string, string | undefined]> = [
     ["details->>car_make", filters.carMake],
     ["details->>car_model", filters.carModel],
     ["details->>fuel_type", filters.fuelType],
     ["details->>transmission", filters.transmission],
-    [
-      "details->>listing_purpose",
-      filters.taxonomyPropertyPurpose ?? filters.propertyPurpose,
-    ],
+    ["details->>listing_purpose", filters.taxonomyPropertyPurpose ?? filters.propertyPurpose],
     ["details->>property_type", filters.taxonomyPropertyType ?? filters.propertyType],
     ["details->>rental_duration", filters.rentalDuration],
     ["details->>electronics_brand", filters.electronicsBrand],
@@ -124,7 +122,17 @@ function applyDetailFilters(query: any, filters: ListingFilters) {
   return query;
 }
 
-function applySort(query: any, sort: string) {
+function applySort<
+  T extends {
+    order(
+      column: string,
+      options?: {
+        ascending?: boolean;
+        nullsFirst?: boolean;
+      },
+    ): T;
+  },
+>(query: T, sort: string): T {
   if (sort === "cheapest") {
     return query
       .order("price", { ascending: true, nullsFirst: false })
@@ -144,7 +152,11 @@ function applySort(query: any, sort: string) {
   return query.order("created_at", { ascending: false }).order("id", { ascending: false });
 }
 
-function applyCursor(query: any, cursor: ListingCursor | null) {
+function applyCursor<
+  T extends {
+    or(filters: string): T;
+  },
+>(query: T, cursor: ListingCursor | null): T {
   if (!cursor) return query;
   const id = escapePostgrestFilterValue(cursor.id);
 
@@ -170,9 +182,7 @@ function applyCursor(query: any, cursor: ListingCursor | null) {
 
   const price = escapePostgrestFilterValue(String(cursor.price));
   const operator = cursor.type === "cheapest" ? "gt" : "lt";
-  return query.or(
-    `price.${operator}.${price},price.is.null,and(price.eq.${price},id.gt.${id})`,
-  );
+  return query.or(`price.${operator}.${price},price.is.null,and(price.eq.${price},id.gt.${id})`);
 }
 
 function buildCursor(sort: string, listing: ClassifiedListing): ListingCursor {

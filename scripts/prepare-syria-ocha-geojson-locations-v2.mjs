@@ -142,7 +142,12 @@ function populatedNode(feature) {
   const p = properties(feature);
   const pcode = required(p.pcode, "populated place pcode");
   const english = text(p.featurename_en) || text(p.adm4_en) || text(p.featurerefname);
-  const arabic = firstArabic(p.featurename_ar, p.adm4_ar, p.featurealtname1_ar, p.featurealtname2_ar);
+  const arabic = firstArabic(
+    p.featurename_ar,
+    p.adm4_ar,
+    p.featurealtname1_ar,
+    p.featurealtname2_ar,
+  );
   return makeNode({
     pcode,
     parentPcode: required(p.adm3_pcode, `adm3_pcode for ${pcode}`),
@@ -190,8 +195,9 @@ function neighborhoodNode(feature) {
     pcode,
     parentPcode: text(p.areapcode) || required(p.adm4_pcode, `adm4_pcode for ${pcode}`),
     type: "neighborhood",
-    nameAr: firstArabic(p.neighborhoodname_ar, p.neighborhoodaltname1_ar, p.neighborhoodaltname2_ar)
-      || text(p.neighborhoodname_en),
+    nameAr:
+      firstArabic(p.neighborhoodname_ar, p.neighborhoodaltname1_ar, p.neighborhoodaltname2_ar) ||
+      text(p.neighborhoodname_en),
     nameEn: text(p.neighborhoodname_en),
     aliases: [
       p.neighborhoodrefname,
@@ -207,7 +213,18 @@ function neighborhoodNode(feature) {
   });
 }
 
-function makeNode({ pcode, parentPcode, type, nameAr, nameEn, aliases, lat, lon, sourceDate, version }) {
+function makeNode({
+  pcode,
+  parentPcode,
+  type,
+  nameAr,
+  nameEn,
+  aliases,
+  lat,
+  lon,
+  sourceDate,
+  version,
+}) {
   const safeAr = required(nameAr || nameEn || pcode, `name for ${pcode}`);
   const safeEn = text(nameEn) || null;
   return {
@@ -320,7 +337,8 @@ function validate(values) {
   const parentById = new Map(values.map((n) => [n.id, n.parent_id]));
 
   for (const node of values) {
-    if (node.parent_id && !ids.has(node.parent_id)) issues.push(`orphan parent: ${node.official_code}`);
+    if (node.parent_id && !ids.has(node.parent_id))
+      issues.push(`orphan parent: ${node.official_code}`);
     if (node.parent_id === node.id) issues.push(`self parent: ${node.official_code}`);
     const key = `${node.country_code}|${node.parent_id ?? "root"}|${node.slug}`;
     if (parentSlug.has(key)) issues.push(`duplicate parent slug: ${key}`);
@@ -365,7 +383,9 @@ function auditArabic(values) {
 function verifyTargets(values) {
   const byId = new Map(values.map((node) => [node.id, node]));
   const leafTargets = ["Tal Dahab", "Tall Dahab", "تلذهب", "تل ذهب"];
-  const leafMatches = values.filter((node) => leafTargets.some((target) => nameMatches(node, target)));
+  const leafMatches = values.filter((node) =>
+    leafTargets.some((target) => nameMatches(node, target)),
+  );
   const actualPaths = leafMatches.map((node) => pathOf(node, byId));
   const requested = [
     ["Homs", "Al Houla", "Tal Dahab"],
@@ -462,13 +482,85 @@ function properties(feature) {
   return feature?.properties && typeof feature.properties === "object" ? feature.properties : {};
 }
 
-function text(value) { return String(value ?? "").trim(); }
-function required(value, field) { const v = text(value); if (!v) throw new Error(`Missing required field: ${field}`); return v; }
-function numberOrNull(value) { if (value === null || value === undefined || value === "") return null; const n = Number(value); return Number.isFinite(n) ? n : null; }
-function unique(values) { return [...new Set(values.map(text).filter(Boolean))]; }
-function slugify(value) { return normalize(value).replace(/\s+/g, "-") || "location"; }
-function uuid(value) { const hex = createHash("sha256").update(value).digest("hex").slice(0, 32).split(""); hex[12] = "5"; hex[16] = ((Number.parseInt(hex[16], 16) & 3) | 8).toString(16); const h = hex.join(""); return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`; }
-function countBy(values, keyFn) { const result = {}; for (const value of values) { const key = keyFn(value); result[key] = (result[key] ?? 0) + 1; } return result; }
-function csvCell(value) { if (value === null || value === undefined) return ""; const v = Array.isArray(value) ? `{${value.join(",")}}` : String(value); return /[",\n]/.test(v) ? `"${v.replaceAll('"', '""')}"` : v; }
-function csv(values) { const cols = ["id","parent_id","country_code","node_type","name_ar","name_en","slug","official_code","external_source","external_id","latitude","longitude","sort_order","depth","is_active","search_aliases","legacy_governorate_id","legacy_district_ar","source_url","source_date","confidence","review_status","notes"]; return `${[cols.join(","), ...values.map((n) => cols.map((c) => csvCell(n[c])).join(","))].join("\n")}\n`; }
-function parseArgs(argv) { const result = {}; for (let i = 0; i < argv.length; i += 1) { const arg = argv[i]; if (!arg.startsWith("--")) continue; const key = arg.slice(2); const next = argv[i + 1]; if (!next || next.startsWith("--")) result[key] = true; else { result[key] = next; i += 1; } } return result; }
+function text(value) {
+  return String(value ?? "").trim();
+}
+function required(value, field) {
+  const v = text(value);
+  if (!v) throw new Error(`Missing required field: ${field}`);
+  return v;
+}
+function numberOrNull(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+function unique(values) {
+  return [...new Set(values.map(text).filter(Boolean))];
+}
+function slugify(value) {
+  return normalize(value).replace(/\s+/g, "-") || "location";
+}
+function uuid(value) {
+  const hex = createHash("sha256").update(value).digest("hex").slice(0, 32).split("");
+  hex[12] = "5";
+  hex[16] = ((Number.parseInt(hex[16], 16) & 3) | 8).toString(16);
+  const h = hex.join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+function countBy(values, keyFn) {
+  const result = {};
+  for (const value of values) {
+    const key = keyFn(value);
+    result[key] = (result[key] ?? 0) + 1;
+  }
+  return result;
+}
+function csvCell(value) {
+  if (value === null || value === undefined) return "";
+  const v = Array.isArray(value) ? `{${value.join(",")}}` : String(value);
+  return /[",\n]/.test(v) ? `"${v.replaceAll('"', '""')}"` : v;
+}
+function csv(values) {
+  const cols = [
+    "id",
+    "parent_id",
+    "country_code",
+    "node_type",
+    "name_ar",
+    "name_en",
+    "slug",
+    "official_code",
+    "external_source",
+    "external_id",
+    "latitude",
+    "longitude",
+    "sort_order",
+    "depth",
+    "is_active",
+    "search_aliases",
+    "legacy_governorate_id",
+    "legacy_district_ar",
+    "source_url",
+    "source_date",
+    "confidence",
+    "review_status",
+    "notes",
+  ];
+  return `${[cols.join(","), ...values.map((n) => cols.map((c) => csvCell(n[c])).join(","))].join("\n")}\n`;
+}
+function parseArgs(argv) {
+  const result = {};
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    if (!arg.startsWith("--")) continue;
+    const key = arg.slice(2);
+    const next = argv[i + 1];
+    if (!next || next.startsWith("--")) result[key] = true;
+    else {
+      result[key] = next;
+      i += 1;
+    }
+  }
+  return result;
+}

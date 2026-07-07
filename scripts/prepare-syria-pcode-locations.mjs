@@ -52,9 +52,7 @@ for (const row of rows) {
   byPcode.set(pcode, row);
 }
 
-const nodes = rows
-  .map((row) => toNode(row, sourceName, sourceDate))
-  .filter(Boolean);
+const nodes = rows.map((row) => toNode(row, sourceName, sourceDate)).filter(Boolean);
 
 const idByPcode = new Map(nodes.map((node) => [node.official_code, node.id]));
 for (const node of nodes) {
@@ -162,7 +160,7 @@ function normalizeType(value) {
 }
 
 function depthForType(type) {
-  return ({ country: 0, governorate: 1, district: 2, subdistrict: 3 }[type] ?? 4);
+  return { country: 0, governorate: 1, district: 2, subdistrict: 3 }[type] ?? 4;
 }
 
 function splitAliases(...values) {
@@ -260,15 +258,15 @@ function parseCsv(text) {
       }
     } else if (char === '"') {
       quoted = true;
-    } else if (char === ',') {
+    } else if (char === ",") {
       row.push(field);
       field = "";
-    } else if (char === '\n') {
+    } else if (char === "\n") {
       row.push(field);
       records.push(row);
       row = [];
       field = "";
-    } else if (char !== '\r') {
+    } else if (char !== "\r") {
       field += char;
     }
   }
@@ -278,9 +276,7 @@ function parseCsv(text) {
     records.push(row);
   }
 
-  const [header = [], ...body] = records.filter((record) =>
-    record.some((value) => value !== ""),
-  );
+  const [header = [], ...body] = records.filter((record) => record.some((value) => value !== ""));
   return body.map((record) =>
     Object.fromEntries(header.map((name, index) => [clean(name), record[index] ?? ""])),
   );

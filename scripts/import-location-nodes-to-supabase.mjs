@@ -103,11 +103,13 @@ function validateNodes(nodes) {
     ids.add(node.id);
 
     const externalKey = `${node.external_source}|${node.external_id}`;
-    if (externalKeys.has(externalKey)) blockingIssues.push(`duplicate external key: ${externalKey}`);
+    if (externalKeys.has(externalKey))
+      blockingIssues.push(`duplicate external key: ${externalKey}`);
     externalKeys.add(externalKey);
 
     const parentSlugKey = `${node.country_code}|${node.parent_id ?? "root"}|${node.slug}`;
-    if (parentSlugKeys.has(parentSlugKey)) blockingIssues.push(`duplicate parent slug: ${parentSlugKey}`);
+    if (parentSlugKeys.has(parentSlugKey))
+      blockingIssues.push(`duplicate parent slug: ${parentSlugKey}`);
     parentSlugKeys.add(parentSlugKey);
 
     if (node.parent_id === node.id) blockingIssues.push(`self parent: ${node.id}`);
