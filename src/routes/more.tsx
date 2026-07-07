@@ -113,24 +113,7 @@ function MorePage() {
     if (result.error) setLogoutError(result.error);
   }
 
-  const activityRows: AccountRow[] = [
-    {
-      titleAr: "الرسائل",
-      titleEn: "Messages",
-      hintAr: "محادثات البيع والشراء",
-      hintEn: "Buyer and seller conversations",
-      to: "/chats",
-      icon: MessageCircle,
-    },
-    {
-      titleAr: "الإشعارات",
-      titleEn: "Notifications",
-      hintAr: "آخر التنبيهات والمتابعات",
-      hintEn: "Recent alerts and follow-ups",
-      to: "/notifications",
-      icon: Bell,
-    },
-  ];
+  // Messages/Notifications are now elevated into primaryShortcuts, so activityRows is retired.
 
   const settingsRows: AccountRow[] = [
     {
