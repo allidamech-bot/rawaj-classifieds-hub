@@ -10,6 +10,7 @@ export type ClassifiedsErrorCode =
   | "not_found"
   | "stale_review"
   | "validation_error"
+  | "foreign_key_conflict"
   | "unknown";
 
 export interface ClassifiedsError {
@@ -239,7 +240,7 @@ export interface ConversationParticipantSummary {
 
 export interface Conversation {
   id: string;
-  listingId: string;
+  listingId: string | null;
   listingTitle: string;
   buyerUserId: string;
   sellerUserId: string;

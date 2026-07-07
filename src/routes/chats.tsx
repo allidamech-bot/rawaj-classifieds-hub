@@ -162,6 +162,15 @@ function ChatsPage() {
   async function handleSend(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!auth.profile?.id || !selectedConversation || sending) return;
+    if (selectedConversation.status !== "active") {
+      setNotice(
+        text(
+          "هذه المحادثة محفوظة كسجل ولا تقبل رسائل جديدة.",
+          "This conversation is preserved as history and cannot receive new messages.",
+        ),
+      );
+      return;
+    }
     const profileId = auth.profile.id;
     const conversationId = selectedConversation.id;
     const cleanBody = body.trim();
@@ -384,13 +393,20 @@ function ChatsPage() {
                       <h2 className="truncate text-sm font-extrabold">
                         {selectedConversation.otherParticipant.displayName}
                       </h2>
-                      <Link
-                        to="/listings/$id"
-                        params={{ id: selectedConversation.listingId }}
-                        className="truncate text-xs font-semibold text-primary"
-                      >
-                        {selectedConversation.listingTitle}
-                      </Link>
+                      {selectedConversation.listingId ? (
+                        <Link
+                          to="/listings/$id"
+                          params={{ id: selectedConversation.listingId }}
+                          className="truncate text-xs font-semibold text-primary"
+                        >
+                          {selectedConversation.listingTitle}
+                        </Link>
+                      ) : (
+                        <span className="block truncate text-xs font-semibold text-muted-foreground">
+                          {selectedConversation.listingTitle} ·{" "}
+                          {text("إعلان محذوف", "Deleted listing")}
+                        </span>
+                      )}
                     </div>
                     <button
                       type="button"
@@ -402,6 +418,14 @@ function ChatsPage() {
                       {text("حظر", "Block")}
                     </button>
                   </div>
+                  {selectedConversation.status === "archived" && (
+                    <p className="mt-3 rounded-xl bg-warning/10 p-2 text-xs font-semibold text-warning">
+                      {text(
+                        "تم حذف الإعلان. احتفظنا بالمحادثة كسجل ولا يمكن إرسال رسائل جديدة.",
+                        "The listing was deleted. This conversation is preserved as history and cannot receive new messages.",
+                      )}
+                    </p>
+                  )}
                   {selectedConversation.status === "blocked" && (
                     <p className="mt-3 rounded-xl bg-destructive/10 p-2 text-xs font-semibold text-destructive">
                       {text(
@@ -486,7 +510,7 @@ function ChatsPage() {
                       disabled={
                         sending ||
                         body.trim().length === 0 ||
-                        selectedConversation.status === "blocked"
+                        selectedConversation.status !== "active"
                       }
                       className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
                     >
