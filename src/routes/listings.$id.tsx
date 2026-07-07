@@ -298,10 +298,10 @@ function ListingDetailsPage() {
   return (
     <>
       <PageHeader title={listingCategory} to="/listings" />
-      <main className="container-wide listing-detail-mobile-bottom pb-8 pt-2 sm:pt-4">
+      <main className="container-wide listing-detail-mobile-bottom pb-8 pt-3 sm:pt-5">
         <div className="grid items-start gap-4 lg:grid-cols-12 lg:gap-6">
           <div className="min-w-0 lg:col-span-7">
-            <section className="overflow-hidden rounded-[1.35rem] bg-card hairline sm:rounded-3xl">
+            <section className="rawaj-surface overflow-hidden rounded-[1.5rem] sm:rounded-[1.9rem]">
               <div className="relative overflow-hidden bg-muted-surface">
                 {selectedImage?.publicUrl ? (
                   <div className="flex aspect-[4/3] w-full items-center justify-center sm:aspect-[16/10] lg:aspect-[4/3]">
@@ -320,7 +320,7 @@ function ListingDetailsPage() {
                 )}
 
                 <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3 lg:hidden">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-background/90 px-2.5 py-1.5 text-[11px] font-bold text-foreground shadow-soft backdrop-blur">
+                  <span className="rawaj-chip border-white/40 bg-card/88 px-2.5 py-1.5 text-foreground shadow-soft backdrop-blur">
                     <Camera className="h-3.5 w-3.5" />
                     {visibleImages.length || 0}
                   </span>
@@ -329,7 +329,7 @@ function ListingDetailsPage() {
                       type="button"
                       onClick={() => void shareListing()}
                       aria-label={text("مشاركة الإعلان", "Share listing")}
-                      className="grid h-9 w-9 place-items-center rounded-full bg-background/90 text-foreground shadow-soft backdrop-blur active:scale-[0.98]"
+                      className="rawaj-icon-button h-9 w-9 bg-card/88 backdrop-blur"
                     >
                       <Share2 className="h-4 w-4" />
                     </button>
@@ -337,7 +337,7 @@ function ListingDetailsPage() {
                       type="button"
                       onClick={() => void toggleFavorite()}
                       aria-label={text("حفظ في المفضلة", "Save to favorites")}
-                      className="grid h-9 w-9 place-items-center rounded-full bg-background/90 text-foreground shadow-soft backdrop-blur active:scale-[0.98]"
+                      className="rawaj-icon-button h-9 w-9 bg-card/88 backdrop-blur"
                     >
                       <Heart
                         className={`h-4 w-4 ${fav ? "fill-destructive text-destructive" : ""}`}
@@ -380,7 +380,7 @@ function ListingDetailsPage() {
               )}
             </section>
 
-            <section className="mt-4 rounded-[1.35rem] bg-card p-4 hairline sm:rounded-3xl sm:p-5 lg:hidden">
+            <section className="rawaj-surface mt-4 rounded-[1.4rem] p-4 sm:rounded-3xl sm:p-5 lg:hidden">
               <ListingIdentity
                 listing={listing}
                 listingCategory={listingCategory}
@@ -394,7 +394,7 @@ function ListingDetailsPage() {
             </section>
 
             {categoryRows.length > 0 && (
-              <section className="mt-4 rounded-[1.35rem] bg-card p-4 hairline sm:rounded-3xl sm:p-5">
+              <section className="rawaj-surface mt-4 rounded-[1.4rem] p-4 sm:rounded-3xl sm:p-5">
                 <SectionHeading
                   title={text("المواصفات", "Specifications")}
                   subtitle={text(
@@ -404,7 +404,10 @@ function ListingDetailsPage() {
                 />
                 <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {categoryRows.map(([label, value]) => (
-                    <div key={label} className="rounded-2xl bg-muted-surface px-3 py-3">
+                    <div
+                      key={label}
+                      className="rounded-[1.05rem] border border-border/65 bg-card-warm/72 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]"
+                    >
                       <span className="block text-[10px] font-bold text-muted-foreground sm:text-[11px]">
                         {label}
                       </span>
@@ -417,7 +420,7 @@ function ListingDetailsPage() {
               </section>
             )}
 
-            <section className="mt-4 rounded-[1.35rem] bg-card p-4 hairline sm:rounded-3xl sm:p-5">
+            <section className="rawaj-surface mt-4 rounded-[1.4rem] p-4 sm:rounded-3xl sm:p-5">
               <SectionHeading
                 title={text("الوصف", "Description")}
                 subtitle={text(
@@ -434,12 +437,12 @@ function ListingDetailsPage() {
               </p>
             </section>
 
-            <section className="mt-4 rounded-[1.35rem] bg-card p-4 hairline sm:rounded-3xl sm:p-5">
+            <section className="rawaj-surface mt-4 rounded-[1.4rem] p-4 sm:rounded-3xl sm:p-5">
               <SectionHeading
                 title={text("الموقع", "Location")}
                 subtitle={text("الموقع المعلن للسلعة", "Advertised item location")}
               />
-              <div className="mt-4 flex items-center gap-3 rounded-2xl bg-muted-surface p-3.5 sm:p-4">
+              <div className="mt-4 flex items-center gap-3 rounded-[1.15rem] border border-border/65 bg-card-warm/72 p-3.5 sm:p-4">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-card text-gold hairline">
                   <MapPin className="h-5 w-5" />
                 </span>
@@ -456,7 +459,7 @@ function ListingDetailsPage() {
               </div>
             </section>
 
-            <section className="mt-4 rounded-[1.35rem] bg-card p-4 hairline sm:rounded-3xl sm:p-5 lg:hidden">
+            <section className="rawaj-surface mt-4 rounded-[1.4rem] p-4 sm:rounded-3xl sm:p-5 lg:hidden">
               <SellerCard
                 listing={listing}
                 sellerName={sellerName}
@@ -467,7 +470,7 @@ function ListingDetailsPage() {
               />
             </section>
 
-            <section className="mt-4 rounded-[1.35rem] bg-warning/10 p-4 hairline sm:rounded-3xl sm:p-5">
+            <section className="mt-4 rounded-[1.4rem] border border-warning/15 bg-warning/7 p-4 shadow-[0_8px_24px_rgba(16,43,70,0.035)] sm:rounded-3xl sm:p-5">
               <div className="flex items-start gap-3">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-background/80 text-warning">
                   <ShieldAlert className="h-5 w-5" />
@@ -490,7 +493,7 @@ function ListingDetailsPage() {
             <button
               type="button"
               onClick={() => void reportListing()}
-              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-card py-3 text-xs font-bold text-destructive hairline transition hover:bg-destructive/5"
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-destructive/12 bg-card/75 py-3 text-xs font-semibold text-destructive transition hover:bg-destructive/5"
             >
               <Flag className="h-4 w-4" /> {text("إبلاغ عن الإعلان", "Report listing")}
             </button>
@@ -508,7 +511,7 @@ function ListingDetailsPage() {
 
           <aside className="hidden lg:col-span-5 lg:block">
             <div className="sticky top-24 space-y-4">
-              <section className="rounded-3xl bg-card p-5 hairline shadow-soft">
+              <section className="rawaj-surface rounded-3xl p-5">
                 <ListingIdentity
                   listing={listing}
                   listingCategory={listingCategory}
@@ -523,7 +526,7 @@ function ListingDetailsPage() {
                   <button
                     type="button"
                     onClick={() => void shareListing()}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-muted-surface py-3 text-xs font-bold text-foreground transition hover:bg-secondary"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border/70 bg-card-warm/72 py-3 text-xs font-semibold text-foreground transition hover:border-gold/35 hover:bg-card"
                   >
                     <Share2 className="h-4 w-4" />
                     {text("مشاركة", "Share")}
@@ -531,7 +534,7 @@ function ListingDetailsPage() {
                   <button
                     type="button"
                     onClick={() => void toggleFavorite()}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-muted-surface py-3 text-xs font-bold text-foreground transition hover:bg-secondary"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border/70 bg-card-warm/72 py-3 text-xs font-semibold text-foreground transition hover:border-gold/35 hover:bg-card"
                   >
                     <Heart
                       className={`h-4 w-4 ${fav ? "fill-destructive text-destructive" : ""}`}
@@ -541,7 +544,7 @@ function ListingDetailsPage() {
                 </div>
               </section>
 
-              <section className="rounded-3xl bg-card p-5 hairline">
+              <section className="rawaj-surface rounded-3xl p-5">
                 <SellerCard
                   listing={listing}
                   sellerName={sellerName}
@@ -552,16 +555,13 @@ function ListingDetailsPage() {
                 />
               </section>
 
-              <section className="rounded-3xl bg-card p-4 hairline">
+              <section className="rawaj-surface rounded-3xl p-4">
                 <h2 className="text-sm font-extrabold text-foreground">
                   {text("التواصل المباشر", "Direct contact")}
                 </h2>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   {canCall ? (
-                    <a
-                      href={`tel:${cleanPhone}`}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-xs font-bold text-primary-foreground"
-                    >
+                    <a href={`tel:${cleanPhone}`} className="rawaj-button-primary rounded-2xl py-3">
                       <Phone className="h-4 w-4" />
                       {text("اتصال", "Call")}
                     </a>
@@ -587,11 +587,11 @@ function ListingDetailsPage() {
         </div>
 
         <div className="fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 px-3 lg:hidden">
-          <div className="mx-auto flex max-w-md items-center gap-2 rounded-[1.15rem] bg-card/95 p-2 shadow-premium hairline backdrop-blur">
+          <div className="rawaj-surface mx-auto flex max-w-md items-center gap-2 rounded-[1.3rem] bg-card/94 p-2 backdrop-blur-xl">
             <button
               type="button"
               onClick={() => void messageSeller()}
-              className="inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-extrabold text-primary-foreground"
+              className="rawaj-button-primary min-w-0 flex-1 rounded-xl px-4 py-3"
             >
               <MessageCircle className="h-4 w-4" />
               {text("مراسلة", "Message")}
@@ -641,16 +641,14 @@ function ListingIdentity({
     <div>
       <div className="flex flex-wrap items-center gap-1.5">
         {listing.isFeatured && <Badge>{text("مميز", "Featured")}</Badge>}
-        <span className="rounded-full bg-muted-surface px-2.5 py-1 text-[10px] font-bold text-muted-foreground">
-          {listingCategory}
-        </span>
-        <span className="rounded-full bg-muted-surface px-2.5 py-1 text-[10px] font-bold text-muted-foreground">
+        <span className="rawaj-chip px-2.5 py-1">{listingCategory}</span>
+        <span className="rawaj-chip px-2.5 py-1">
           {listing.status === "approved"
             ? text("متاح", "Available")
             : listingStatusLabel(listing.status, language, true)}
         </span>
       </div>
-      <h1 className="mt-3 text-xl font-extrabold leading-[1.45] text-foreground text-balance sm:text-2xl">
+      <h1 className="mt-3.5 text-xl font-bold leading-[1.5] text-primary text-balance sm:text-2xl">
         {listing.title}
       </h1>
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
@@ -681,7 +679,7 @@ function PriceDisplay({
       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
         {text("السعر", "Price")}
       </p>
-      <div className="mt-1 text-2xl font-black leading-tight text-foreground text-balance sm:text-3xl">
+      <div className="mt-1 text-2xl font-bold leading-tight text-primary text-balance sm:text-3xl">
         {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
       </div>
       <p className="mt-1.5 text-xs font-bold text-gold">
@@ -709,14 +707,14 @@ function SellerCard({
   return (
     <div>
       <div className="flex items-center gap-3">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-muted-surface text-primary">
+        <span className="category-tile h-12 w-12 shrink-0 rounded-full">
           <User className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-bold text-muted-foreground">
             {text("المعلن", "Advertiser")}
           </p>
-          <h2 className="mt-0.5 truncate text-sm font-extrabold text-foreground">{sellerName}</h2>
+          <h2 className="mt-0.5 truncate text-sm font-semibold text-foreground">{sellerName}</h2>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {canCall && (
               <span className="rounded-full bg-muted-surface px-2 py-1 text-[9px] font-bold text-muted-foreground">
@@ -742,7 +740,7 @@ function SellerCard({
         <button
           type="button"
           onClick={() => void messageSeller()}
-          className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-primary px-3 py-3 text-[11px] font-bold text-primary-foreground"
+          className="rawaj-button-primary rounded-2xl px-3 py-3 text-[11px]"
         >
           <MessageCircle className="h-3.5 w-3.5" />
           {text("مراسلة", "Message")}
@@ -755,7 +753,8 @@ function SellerCard({
 function SectionHeading({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div>
-      <h2 className="text-sm font-extrabold text-foreground sm:text-base">{title}</h2>
+      <div className="mb-1 h-0.5 w-7 rounded-full bg-gradient-to-r from-brand-orange to-gold" />
+      <h2 className="text-sm font-bold text-primary sm:text-base">{title}</h2>
       <p className="mt-0.5 text-[11px] text-muted-foreground">{subtitle}</p>
     </div>
   );
@@ -822,14 +821,11 @@ function StateCard({
   actionTo?: string;
 }) {
   return (
-    <div className="rounded-3xl bg-card p-10 text-center hairline">
+    <div className="rawaj-surface rounded-3xl p-10 text-center">
       <p className="text-sm font-semibold text-foreground">{title}</p>
       <p className="mt-1 text-xs text-muted-foreground">{body}</p>
       {actionLabel && actionTo && (
-        <Link
-          to={actionTo}
-          className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-        >
+        <Link to={actionTo} className="rawaj-button-primary mt-4 px-4 py-2">
           {actionLabel}
         </Link>
       )}
