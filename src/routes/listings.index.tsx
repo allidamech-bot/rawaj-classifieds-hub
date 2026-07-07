@@ -729,53 +729,56 @@ function ListingsPage() {
     <>
       <PageHeader title={title} />
       <main className="container-wide mobile-page-bottom pt-4">
-        <section className="bg-card p-4 hairline">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-[11px] font-extrabold text-gold">
+        <section className="rounded-[1.4rem] bg-card p-3.5 hairline shadow-premium-sm sm:p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-extrabold text-brand-orange">
                 {selectedCategory
                   ? text("نتائج ضمن قسم", "Results in category")
                   : text("نتائج السوق", "Marketplace results")}
               </p>
-              <h1 className="mt-1 text-xl font-extrabold">{title}</h1>
-              {selectedTaxonomyPath.length > 1 && (
-                <p className="mt-1 text-[11px] font-bold text-gold">
+              <h1 className="mt-0.5 truncate text-lg font-extrabold text-primary sm:text-xl">
+                {title}
+              </h1>
+              {selectedTaxonomyPath.length > 1 ? (
+                <p className="mt-1 truncate text-[10px] font-bold text-muted-foreground">
                   {taxonomyPathLabel(selectedTaxonomyPath, language)}
                 </p>
-              )}
-              <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                {loading
-                  ? text("جاري تحميل الإعلانات...", "Loading listings...")
-                  : text(
-                      `${items.length} نتيجة محملة حالياً`,
-                      `${items.length} currently loaded results`,
-                    )}
-              </p>
+              ) : null}
             </div>
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="text-start text-xs font-bold text-primary"
-              >
-                {text("مسح الفلاتر", "Clear filters")}
-              </button>
-            )}
+            <span className="shrink-0 rounded-full bg-primary/7 px-2.5 py-1 text-[10px] font-extrabold text-primary">
+              {loading
+                ? text("جارٍ التحميل", "Loading")
+                : text(`${items.length} نتيجة`, `${items.length} results`)}
+            </span>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="mt-3 flex items-stretch gap-2">
+            <label className="flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-2xl bg-background/75 px-3.5 transition focus-within:bg-card focus-within:ring-[3px] focus-within:ring-brand-orange/20">
+              <Search className="h-4.5 w-4.5 shrink-0 text-primary" strokeWidth={1.9} />
+              <input
+                value={q}
+                onChange={(event) => setQ(event.target.value)}
+                placeholder={text("ابحث ضمن النتائج...", "Search within results...")}
+                aria-label={text("بحث في الإعلانات", "Search listings")}
+                className="w-full bg-transparent text-sm font-semibold outline-none placeholder:font-medium"
+              />
+            </label>
             <button
               type="button"
               onClick={() => {
                 setSortOpen(false);
                 setFiltersOpen(true);
               }}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-3 text-xs font-bold text-primary-foreground"
+              aria-label={text("الفلاتر", "Filters")}
+              className="relative grid min-h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-soft transition active:scale-[0.98]"
             >
-              <Filter className="h-4 w-4" />
-              {activeFilterCount > 0
-                ? text(`فلترة (${activeFilterCount})`, `Filters (${activeFilterCount})`)
-                : text("فلترة", "Filters")}
+              <Filter className="h-4.5 w-4.5" strokeWidth={2} />
+              {activeFilterCount > 0 ? (
+                <span className="absolute -end-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-brand-orange px-1 text-[9px] font-extrabold text-white ring-2 ring-card">
+                  {activeFilterCount}
+                </span>
+              ) : null}
             </button>
             <button
               type="button"
@@ -784,14 +787,68 @@ function ListingsPage() {
                 setSortOpen((value) => !value);
               }}
               aria-expanded={sortOpen}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-muted-surface px-3 text-xs font-bold text-foreground hairline"
+              aria-label={text("الترتيب", "Sort")}
+              className="grid min-h-12 w-12 shrink-0 place-items-center rounded-2xl bg-background/75 text-primary transition active:scale-[0.98]"
             >
-              <ArrowUpDown className="h-4 w-4" />
-              {sortChips.find((chip) => chip.id === sort)?.label ?? text("ترتيب", "Sort")}
+              <ArrowUpDown className="h-4.5 w-4.5" strokeWidth={1.9} />
             </button>
           </div>
-          {sortOpen && (
-            <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl bg-muted-surface p-2 sm:grid-cols-4">
+
+          <div className="no-scrollbar mt-2.5 flex gap-2 overflow-x-auto pb-0.5">
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(true)}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition ${
+                districtAr || govId
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-muted-foreground"
+              }`}
+            >
+              {canonicalLocationNodeId
+                ? locationLabel || text("الموقع", "Location")
+                : selectedGovernorate
+                  ? governorateName(selectedGovernorate.id, selectedGovernorate.nameAr, language)
+                  : text("كل سوريا", "All Syria")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(true)}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition ${
+                priceMin.trim() || priceMax.trim()
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-muted-foreground"
+              }`}
+            >
+              {priceMin.trim() || priceMax.trim()
+                ? text("السعر محدد", "Price set")
+                : text("السعر", "Price")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(true)}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition ${
+                selectedCategory
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-muted-foreground"
+              }`}
+            >
+              {selectedCategory
+                ? categoryName(selectedCategory.id, selectedCategory.nameAr, language)
+                : text("القسم", "Category")}
+            </button>
+            {hasActiveFilters ? (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="shrink-0 rounded-full bg-brand-orange/10 px-3 py-1.5 text-[11px] font-extrabold text-brand-orange"
+              >
+                {text("مسح الكل", "Clear all")}
+              </button>
+            ) : null}
+          </div>
+
+          {sortOpen ? (
+            <div className="mt-3 grid grid-cols-2 gap-2 rounded-2xl bg-background/80 p-2 sm:grid-cols-4">
               {sortChips.map((chip) => (
                 <button
                   key={chip.id}
@@ -800,31 +857,18 @@ function ListingsPage() {
                     setSort(chip.id);
                     setSortOpen(false);
                   }}
-                  className={`rounded-lg px-3 py-2 text-xs font-bold transition ${
+                  className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
                     sort === chip.id
-                      ? "bg-gold text-gold-foreground"
-                      : "bg-card text-foreground hairline hover:bg-secondary"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card text-foreground hairline"
                   }`}
                 >
                   {chip.label}
                 </button>
               ))}
             </div>
-          )}
+          ) : null}
         </section>
-
-        <div className="mt-3 grid grid-cols-1 gap-2">
-          <div className="flex items-center gap-2 rounded-xl bg-card px-3 py-2.5 hairline">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <input
-              value={q}
-              onChange={(event) => setQ(event.target.value)}
-              placeholder={text("ابحث ضمن الإعلانات المعتمدة...", "Search approved listings...")}
-              aria-label={text("بحث في الإعلانات", "Search listings")}
-              className="w-full bg-transparent text-sm outline-none"
-            />
-          </div>
-        </div>
 
         <section className="mt-3 hidden rounded-2xl bg-card p-3 shadow-soft hairline lg:block">
           <div className="grid gap-3 lg:grid-cols-[220px_1fr]">
@@ -1011,9 +1055,9 @@ function ListingsPage() {
         </section>
 
         {filtersOpen && (
-          <div className="fixed inset-0 z-50 bg-primary/45 p-3 lg:hidden">
-            <div className="ms-auto flex h-full max-w-sm flex-col overflow-hidden rounded-2xl bg-card shadow-premium hairline">
-              <div className="flex items-center justify-between border-b border-border p-4">
+          <div className="fixed inset-0 z-50 flex items-end bg-primary/35 p-0 backdrop-blur-[2px] lg:hidden">
+            <div className="mx-auto flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-[1.75rem] bg-card shadow-premium">
+              <div className="relative flex items-center justify-between border-b border-border/70 px-4 pb-3 pt-5">
                 <h2 className="text-sm font-extrabold">
                   {text("فلترة الإعلانات", "Filter listings")}
                 </h2>
@@ -1026,7 +1070,7 @@ function ListingsPage() {
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <div className="mobile-page-bottom space-y-4 overflow-y-auto p-4 lg:pb-4">
+              <div className="space-y-5 overflow-y-auto px-4 pb-5 pt-4">
                 <div>
                   <h3 className="mb-2 text-xs font-extrabold text-muted-foreground">
                     {text("القسم", "Category")}
@@ -1211,19 +1255,19 @@ function ListingsPage() {
                   </div>
                 )}
               </div>
-              <div className="sticky bottom-0 grid grid-cols-2 gap-2 border-t border-border bg-card p-4">
+              <div className="sticky bottom-0 grid grid-cols-[0.8fr_1.2fr] gap-2 border-t border-border/70 bg-card/96 p-4 backdrop-blur-xl">
                 <button
                   type="button"
                   onClick={resetFilters}
                   disabled={!hasActiveFilters}
-                  className="rounded-xl bg-card px-4 py-2.5 text-xs font-bold hairline disabled:opacity-50"
+                  className="min-h-12 rounded-2xl bg-background px-4 py-2.5 text-xs font-bold text-muted-foreground disabled:opacity-50"
                 >
                   {text("مسح الفلاتر", "Clear filters")}
                 </button>
                 <button
                   type="button"
                   onClick={applyFilters}
-                  className="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground"
+                  className="min-h-12 rounded-2xl bg-primary px-4 py-2.5 text-xs font-extrabold text-primary-foreground shadow-soft"
                 >
                   {text("عرض النتائج", "Show results")}
                 </button>
