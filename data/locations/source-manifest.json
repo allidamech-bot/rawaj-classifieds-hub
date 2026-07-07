@@ -1,0 +1,109 @@
+{
+  "generatedAt": "2026-07-07T02:59:20.868Z",
+  "primarySource": {
+    "provider": "HDX / OCHA",
+    "datasetId": "cod-ab-syr",
+    "metadataUrl": "https://data.humdata.org/api/3/action/package_show?id=cod-ab-syr",
+    "title": "Syrian Arab Republic - Subnational Administrative Boundaries",
+    "name": "cod-ab-syr",
+    "version": null,
+    "metadataCreated": "2015-11-18T08:44:28.412810",
+    "metadataModified": "2026-06-24T09:16:46.789175",
+    "licenseId": "cc-by-igo",
+    "licenseTitle": "Creative Commons Attribution for Intergovernmental Organisations (CC BY-IGO)",
+    "organization": "OCHA Field Information Services Section (FISS)",
+    "notes": "Syrian Arab Republic administrative level 0-3 boundaries (COD-AB) dataset version 02.  \n  \nThis dataset is structured into 3 levels:  \n- Admin 1: 14 Governorate  \n- Admin 2: 62 District  \n- Admin 3: 272 Sub-district  \n  \n  \nDates associated with this dataset:  \n- 01 April 2024: dataset reviewed for accuracy and completeness  \n- 17 December 2020: valid for use by the humanitarian community  \n- 01 January 1960: last edit to the dataset before publishing  \n- 01 January 1960: boundaries created by the source  \n  \nContributed by [OCHA Syria](https://data.humdata.org/organization/ocha-rosc).  \nQuality assured, configured, and published by [OCHA Field Information Services (FIS)](https://data.humdata.org/organization/ocha-fiss) and [HDX](https://data.humdata.org/organization/hdx).  \n  \nPart of the dataset: [Global Subnational Administrative Boundaries](https://data.humdata.org/dataset/cod-ab-global)",
+    "resourceCount": 4,
+    "resources": [
+      {
+        "id": "041bfeb9-1c03-4587-a77b-e1bef35639b3",
+        "name": "syr_admin_boundaries.gdb.zip",
+        "description": "Syrian Arab Republic administrative level 0-3 boundaries (COD-AB), Geodatabase",
+        "format": "GEODATABASE",
+        "url": "https://data.humdata.org/dataset/356a63e9-90aa-4b9c-a938-58ef24469c00/resource/041bfeb9-1c03-4587-a77b-e1bef35639b3/download/syr_admin_boundaries.gdb.zip",
+        "size": 2428487,
+        "created": "2025-11-03T16:10:53.300360",
+        "lastModified": "2026-01-26T16:15:00.211153"
+      },
+      {
+        "id": "2e69313a-b8a8-46bf-8cc8-fbd132b279bd",
+        "name": "syr_admin_boundaries.shp.zip",
+        "description": "Syrian Arab Republic administrative level 0-3 boundaries (COD-AB), SHP",
+        "format": "SHP",
+        "url": "https://data.humdata.org/dataset/356a63e9-90aa-4b9c-a938-58ef24469c00/resource/2e69313a-b8a8-46bf-8cc8-fbd132b279bd/download/syr_admin_boundaries.shp.zip",
+        "size": 4988013,
+        "created": "2025-11-03T16:10:53.300365",
+        "lastModified": "2026-01-26T16:15:00.696550"
+      },
+      {
+        "id": "ab4b6f19-3854-4b2b-8f5c-b5dc474a4c0c",
+        "name": "syr_admin_boundaries.geojson.zip",
+        "description": "Syrian Arab Republic administrative level 0-3 boundaries (COD-AB), GeoJSON",
+        "format": "GEOJSON",
+        "url": "https://data.humdata.org/dataset/356a63e9-90aa-4b9c-a938-58ef24469c00/resource/ab4b6f19-3854-4b2b-8f5c-b5dc474a4c0c/download/syr_admin_boundaries.geojson.zip",
+        "size": 5605326,
+        "created": "2025-11-03T16:10:53.300541",
+        "lastModified": "2026-01-26T16:15:01.307668"
+      },
+      {
+        "id": "b2961725-e0e1-4977-acd5-984ea54ef522",
+        "name": "syr_admin_boundaries.xlsx",
+        "description": "Syrian Arab Republic administrative level 0-3 boundaries (COD-AB), XLSX",
+        "format": "XLSX",
+        "url": "https://data.humdata.org/dataset/356a63e9-90aa-4b9c-a938-58ef24469c00/resource/b2961725-e0e1-4977-acd5-984ea54ef522/download/syr_admin_boundaries.xlsx",
+        "size": 1061438,
+        "created": "2025-11-03T16:10:53.300547",
+        "lastModified": "2026-01-26T16:15:01.729692"
+      }
+    ]
+  },
+  "verificationSource": {
+    "provider": "Humanitarian Atlas / OCHA Syria",
+    "url": "https://humanitarianatlas.org/syria/",
+    "coverage": {
+      "governorates": 14,
+      "districts": 61,
+      "subdistricts": 272,
+      "localities": 5596,
+      "pcodeClaim": true
+    }
+  },
+  "downloads": [
+    {
+      "resourceId": "2e69313a-b8a8-46bf-8cc8-fbd132b279bd",
+      "name": "syr_admin_boundaries.shp.zip",
+      "url": "https://data.humdata.org/dataset/356a63e9-90aa-4b9c-a938-58ef24469c00/resource/2e69313a-b8a8-46bf-8cc8-fbd132b279bd/download/syr_admin_boundaries.shp.zip",
+      "status": "downloaded",
+      "file": "C:\\Users\\alida\\StudioProjects\\rawaj-lovable\\data\\locations\\sources\\syr_admin_boundaries.shp.zip",
+      "bytes": 4988013,
+      "sha256": "adc38bee9b8865f56c99b10069590430bd25c64d6518a6d577e8e5d490054e7f",
+      "contentType": "application/zip",
+      "etag": "\"7903cc80256128da172f52917066bf27\"",
+      "lastModified": "Mon, 26 Jan 2026 16:15:05 GMT"
+    },
+    {
+      "resourceId": "ab4b6f19-3854-4b2b-8f5c-b5dc474a4c0c",
+      "name": "syr_admin_boundaries.geojson.zip",
+      "url": "https://data.humdata.org/dataset/356a63e9-90aa-4b9c-a938-58ef24469c00/resource/ab4b6f19-3854-4b2b-8f5c-b5dc474a4c0c/download/syr_admin_boundaries.geojson.zip",
+      "status": "downloaded",
+      "file": "C:\\Users\\alida\\StudioProjects\\rawaj-lovable\\data\\locations\\sources\\syr_admin_boundaries.geojson.zip",
+      "bytes": 5605326,
+      "sha256": "448f0603d6c2866c095bf684ba7c7d3875656a3a145a7bba1cd5516ffcf7ee29",
+      "contentType": "application/zip",
+      "etag": "\"42c1e8d48f15494b515c0a7ff00a4668\"",
+      "lastModified": "Mon, 26 Jan 2026 16:15:06 GMT"
+    },
+    {
+      "resourceId": "b2961725-e0e1-4977-acd5-984ea54ef522",
+      "name": "syr_admin_boundaries.xlsx",
+      "url": "https://data.humdata.org/dataset/356a63e9-90aa-4b9c-a938-58ef24469c00/resource/b2961725-e0e1-4977-acd5-984ea54ef522/download/syr_admin_boundaries.xlsx",
+      "status": "downloaded",
+      "file": "C:\\Users\\alida\\StudioProjects\\rawaj-lovable\\data\\locations\\sources\\syr_admin_boundaries.xlsx",
+      "bytes": 1061438,
+      "sha256": "78f16d96071f6d25ba11f3cb5fe6d4a210382f2ada0209c4d4db0b7edd6001ec",
+      "contentType": "application/octet-stream",
+      "etag": "\"234ffb3ec8218f18b6cd4eaf1d497a92\"",
+      "lastModified": "Mon, 26 Jan 2026 16:15:06 GMT"
+    }
+  ]
+}

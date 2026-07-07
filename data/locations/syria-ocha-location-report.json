@@ -1,0 +1,171 @@
+{
+  "source": "ocha-hdx-cod-ab-syr",
+  "sourceUrl": "https://data.humdata.org/dataset/cod-ab-syr",
+  "generatedAt": "2026-07-07T10:25:08.573Z",
+  "inputCounts": {
+    "admin0": 1,
+    "admin1": 14,
+    "admin2": 62,
+    "admin3": 272,
+    "populatedPlaces": 8007,
+    "neighborhoods": 414
+  },
+  "reconciliation": {
+    "crossLayerPcodeMerges": 789,
+    "neighborhoodUpgrades": 414,
+    "areaMerges": 375,
+    "slugCollisionsResolved": 2
+  },
+  "outputCounts": {
+    "country": 1,
+    "governorate": 14,
+    "district": 62,
+    "subdistrict": 272,
+    "locality": 7609,
+    "neighborhood": 414
+  },
+  "totalNodes": 8372,
+  "validation": {
+    "blockingIssueCount": 0,
+    "blockingIssues": []
+  },
+  "arabicAudit": {
+    "arabicScriptCount": 8371,
+    "englishFallbackCount": 1,
+    "suspiciousCount": 0,
+    "suspiciousExamples": []
+  },
+  "targetPaths": {
+    "leafMatchCount": 4,
+    "actualLeafPaths": [
+      [
+        {
+          "pcode": "SY",
+          "ar": "الجمهورية العربية السورية",
+          "en": "Syrian Arab Republic"
+        },
+        {
+          "pcode": "SY08",
+          "ar": "الحسكة",
+          "en": "Al-Hasakeh"
+        },
+        {
+          "pcode": "SY0802",
+          "ar": "القامشلي",
+          "en": "Quamishli"
+        },
+        {
+          "pcode": "SY080200",
+          "ar": "مركز القامشلي",
+          "en": "Quamishli"
+        },
+        {
+          "pcode": "C8461",
+          "ar": "تل ذهب - مركز القامشلي",
+          "en": "Tall Dahab"
+        }
+      ],
+      [
+        {
+          "pcode": "SY",
+          "ar": "الجمهورية العربية السورية",
+          "en": "Syrian Arab Republic"
+        },
+        {
+          "pcode": "SY08",
+          "ar": "الحسكة",
+          "en": "Al-Hasakeh"
+        },
+        {
+          "pcode": "SY0803",
+          "ar": "المالكية",
+          "en": "Al-Malikeyyeh"
+        },
+        {
+          "pcode": "SY080300",
+          "ar": "مركز المالكية",
+          "en": "Al-Malikeyyeh"
+        },
+        {
+          "pcode": "C8544",
+          "ar": "تل ذهب - مركز المالكية",
+          "en": "Tall Thahab"
+        }
+      ],
+      [
+        {
+          "pcode": "SY",
+          "ar": "الجمهورية العربية السورية",
+          "en": "Syrian Arab Republic"
+        },
+        {
+          "pcode": "SY04",
+          "ar": "حمص",
+          "en": "Homs"
+        },
+        {
+          "pcode": "SY0401",
+          "ar": "مركز حمص",
+          "en": "Homs"
+        },
+        {
+          "pcode": "SY040101",
+          "ar": "تلدو",
+          "en": "Taldu"
+        },
+        {
+          "pcode": "C2547",
+          "ar": "تل ذهب - تلدو",
+          "en": "Tal Dahab (Taldu)"
+        }
+      ],
+      [
+        {
+          "pcode": "SY",
+          "ar": "الجمهورية العربية السورية",
+          "en": "Syrian Arab Republic"
+        },
+        {
+          "pcode": "SY05",
+          "ar": "حماة",
+          "en": "Hama"
+        },
+        {
+          "pcode": "SY0503",
+          "ar": "السلمية",
+          "en": "As-Salamiyeh"
+        },
+        {
+          "pcode": "SY050300",
+          "ar": "مركز السلمية",
+          "en": "As-Salamiyeh"
+        },
+        {
+          "pcode": "C3212",
+          "ar": "تل ذهب - مركز السلمية",
+          "en": "Tal Dahab (As-Salamiyeh)"
+        }
+      ]
+    ],
+    "requested": [
+      {
+        "target": "Homs > Al Houla > Tal Dahab",
+        "orderedHierarchyMatches": []
+      },
+      {
+        "target": "Homs > Houla > Tall Dahab",
+        "orderedHierarchyMatches": []
+      },
+      {
+        "target": "حمص > الحولة > تلذهب",
+        "orderedHierarchyMatches": []
+      },
+      {
+        "target": "حمص > الحولة > تل ذهب",
+        "orderedHierarchyMatches": []
+      }
+    ]
+  },
+  "blockingIssueCount": 0,
+  "blockingIssues": []
+}
