@@ -325,7 +325,10 @@ function TaxonomyDirectory({
               {text("تريد رؤية الإعلانات مباشرة؟", "Want to see listings now?")}
             </p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              {text("افتح كل النتائج المرتبطة بهذا المستوى.", "Open all results linked to this level.")}
+              {text(
+                "افتح كل النتائج المرتبطة بهذا المستوى.",
+                "Open all results linked to this level.",
+              )}
             </p>
           </div>
           <Link
@@ -441,7 +444,9 @@ function TaxonomyRow({
                 : text("افتح الفروع داخل هذا المستوى.", "Open child levels in this category."))}
           </span>
           <span className="mt-1.5 inline-flex text-[10px] font-bold text-primary sm:mt-2 sm:text-[11px]">
-            {isLeaf ? text("عرض النتائج", "View results") : text("استعراض الفروع", "Browse children")}
+            {isLeaf
+              ? text("عرض النتائج", "View results")
+              : text("استعراض الفروع", "Browse children")}
           </span>
         </span>
       </Link>
@@ -495,7 +500,10 @@ function LegacyCategoryDirectory({
   return (
     <section className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
       {filteredCategories.map((category) => (
-        <article key={category.id} className="overflow-hidden rounded-[1.15rem] bg-card hairline sm:rounded-2xl">
+        <article
+          key={category.id}
+          className="overflow-hidden rounded-[1.15rem] bg-card hairline sm:rounded-2xl"
+        >
           <Link
             to="/listings"
             search={{ category: category.id }}
@@ -580,7 +588,9 @@ function Panel({ title, body }: { title: string; body?: string }) {
         <Sparkles className="h-5 w-5" />
       </span>
       <p className="mt-3 font-bold text-foreground">{title}</p>
-      {body && <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-muted-foreground">{body}</p>}
+      {body && (
+        <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-muted-foreground">{body}</p>
+      )}
     </div>
   );
 }
