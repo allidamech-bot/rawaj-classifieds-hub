@@ -72,7 +72,7 @@ export function AppHeader({ compact = false, title }: Props) {
         <div className="order-3 flex shrink-0 items-center gap-1 sm:gap-2">
           <Link
             to="/add-listing"
-            className="hidden h-10 items-center gap-1.5 rounded-full bg-gradient-to-br from-gold via-gold/95 to-gold/70 px-4 text-sm font-extrabold text-gold-foreground shadow-soft ring-1 ring-gold/40 transition hover:brightness-105 lg:inline-flex"
+            className="hidden h-10 items-center gap-1.5 rounded-full bg-brand-orange px-4 text-sm font-extrabold shadow-soft ring-1 ring-white/20 transition hover:brightness-110 lg:inline-flex"
           >
             <Plus className="h-4 w-4" />
             {text("أضف إعلان", "Post listing")}
