@@ -1,0 +1,38 @@
+name: Repair Publishing Hotfix
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout hotfix branch
+        uses: actions/checkout@v4
+        with:
+          ref: hotfix/publishing-build-failure
+          fetch-depth: 0
+      - name: Restore full stylesheet and remove remote import
+        shell: bash
+        run: |
+          git fetch origin main
+          git show origin/main:src/styles.css > src/styles.css
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/styles.css')
+          s = p.read_text(encoding='utf-8')
+          remote = '@import url("https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap");\n'
+          if not s.startswith(remote):
+              raise SystemExit('Expected Google Fonts import was not found at the start of styles.css')
+          p.write_text(s[len(remote):], encoding='utf-8')
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -- src/styles.css
+          git commit -m 'Fix Bun publishing font import'
+          git push origin HEAD:hotfix/publishing-build-failure
