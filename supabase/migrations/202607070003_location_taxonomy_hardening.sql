@@ -23,7 +23,6 @@ alter table public.location_nodes
 create index if not exists location_nodes_review_status_idx
   on public.location_nodes(review_status, is_active);
 
--- Recalculate descendant depths after a node is re-parented.
 create or replace function public.rawaj_refresh_location_subtree_depths()
 returns trigger
 language plpgsql
@@ -59,14 +58,12 @@ create trigger rawaj_refresh_location_subtree_depths
 after update of parent_id on public.location_nodes
 for each row execute function public.rawaj_refresh_location_subtree_depths();
 
--- Recompute inherited legacy governorate mapping after re-parenting instead of
--- preserving a stale mapping from the previous branch of the tree.
 create or replace function public.rawaj_inherit_location_legacy_governorate()
 returns trigger
 language plpgsql
 as $$
 declare
-  inherited_governorate uuid;
+  inherited_governorate text;
 begin
   if new.parent_id is null then
     return new;
@@ -90,9 +87,6 @@ begin
 end;
 $$;
 
--- Keep listing canonical location synchronized when legacy location fields change.
--- An explicitly changed canonical id wins; otherwise legacy field edits are resolved
--- again so an old location_node_id cannot remain stale.
 create or replace function public.rawaj_sync_listing_location_node()
 returns trigger
 language plpgsql
@@ -125,13 +119,12 @@ begin
 end;
 $$;
 
--- Public helper functions expose active reference data only; remove default PUBLIC execute.
 revoke all on function public.rawaj_location_descendant_ids(uuid) from public;
 revoke all on function public.rawaj_location_path(uuid) from public;
 revoke all on function public.rawaj_location_option_paths(text) from public;
-revoke all on function public.rawaj_resolve_location_option(uuid, text) from public;
+revoke all on function public.rawaj_resolve_location_option(text, text) from public;
 
 grant execute on function public.rawaj_location_descendant_ids(uuid) to anon, authenticated;
 grant execute on function public.rawaj_location_path(uuid) to anon, authenticated;
 grant execute on function public.rawaj_location_option_paths(text) to anon, authenticated;
-grant execute on function public.rawaj_resolve_location_option(uuid, text) to anon, authenticated;
+grant execute on function public.rawaj_resolve_location_option(text, text) to anon, authenticated;
