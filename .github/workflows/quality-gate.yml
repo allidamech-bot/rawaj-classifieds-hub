@@ -3,95 +3,35 @@ name: Quality Gate
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: quality-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - name: Polish auth journey
-        shell: bash
-        run: |
-          git fetch origin design/auth-journey-soul-pass
-          git checkout -B design/auth-journey-soul-pass origin/design/auth-journey-soul-pass
-          python - <<'PY'
-          from pathlib import Path
-
-          changes = {
-            'src/routes/login.tsx': [
-              ('className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-input bg-card px-4 py-2.5 text-sm font-bold text-foreground transition-colors hover:bg-muted-surface disabled:opacity-60"', 'className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[1rem] border border-border/80 bg-card/85 px-4 py-2.5 text-sm font-semibold text-foreground shadow-soft transition hover:border-gold/40 hover:bg-card disabled:opacity-60"'),
-              ('<main className="container-wide pt-4 pb-10">', '<main className="container-wide pb-10 pt-3 sm:pt-5">'),
-              ('<section className="mx-auto max-w-md rounded-2xl bg-card p-5 hairline shadow-soft">', '<section className="rawaj-hero-surface mx-auto max-w-md rounded-[1.65rem] p-5 sm:rounded-[1.9rem] sm:p-6">'),
-              ('className="grid h-11 w-11 place-items-center rounded-xl bg-primary text-primary-foreground"', 'className="grid h-12 w-12 shrink-0 place-items-center rounded-[1.05rem] bg-primary text-primary-foreground shadow-[0_9px_22px_rgba(16,43,70,0.16)]"'),
-              ('<h1 className="text-base font-extrabold">', '<h1 className="text-base font-bold text-primary sm:text-lg">'),
-              ('<div className="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-muted-surface p-1">', '<div className="mb-5 grid grid-cols-2 gap-1 rounded-[1.05rem] border border-border/65 bg-card-warm/65 p-1.5">'),
-              ('className={`rounded-lg px-3 py-2 text-xs font-bold ${mode === "login" ? "bg-card text-foreground shadow-soft" : "text-muted-foreground"}`}', 'className={`rounded-[0.8rem] px-3 py-2.5 text-xs font-semibold transition ${mode === "login" ? "bg-primary text-primary-foreground shadow-soft" : "text-muted-foreground hover:text-primary"}`}'),
-              ('className={`rounded-lg px-3 py-2 text-xs font-bold ${mode === "register" ? "bg-card text-foreground shadow-soft" : "text-muted-foreground"}`}', 'className={`rounded-[0.8rem] px-3 py-2.5 text-xs font-semibold transition ${mode === "register" ? "bg-primary text-primary-foreground shadow-soft" : "text-muted-foreground hover:text-primary"}`}'),
-              ('<div className="rounded-xl bg-warning/10 p-3 text-xs text-foreground/90 hairline">', '<div className="rounded-[1rem] border border-warning/15 bg-warning/8 p-3.5 text-xs leading-5 text-foreground/90">'),
-              ('<span className="mb-1 block text-xs font-bold text-muted-foreground">', '<span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">'),
-              ('className="w-full rounded-xl border border-input bg-card px-3 py-2 text-sm outline-none focus:border-ring"', 'className="input"'),
-              ('className="w-full rounded-xl border border-input bg-card px-3 py-2 pe-11 text-sm outline-none focus:border-ring"', 'className="input pe-11"'),
-              ('className="inline-flex rounded-lg px-1 py-1 text-xs font-bold text-primary"', 'className="inline-flex rounded-lg px-1 py-1 text-xs font-semibold text-brand-orange transition hover:text-primary"'),
-              ('className="rounded-xl bg-muted-surface p-2 text-xs font-bold text-muted-foreground"', 'className="rounded-[1rem] border border-border/65 bg-card-warm/70 p-2.5 text-xs font-medium text-muted-foreground"'),
-              ('className="rounded-xl bg-emerald-trust/10 p-2 text-xs font-bold text-emerald-trust"', 'className="rounded-[1rem] border border-emerald-trust/15 bg-emerald-trust/8 p-2.5 text-xs font-medium text-emerald-trust"'),
-              ('className="rounded-xl bg-destructive/10 p-2 text-xs font-bold text-destructive"', 'className="rounded-[1rem] border border-destructive/15 bg-destructive/8 p-2.5 text-xs font-medium text-destructive"'),
-              ('className="rounded-xl bg-warning/10 p-2 text-xs font-bold text-warning"', 'className="rounded-[1rem] border border-warning/15 bg-warning/8 p-2.5 text-xs font-medium text-warning"'),
-              ('className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"', 'className="rawaj-button-primary min-h-11 w-full rounded-[1rem] px-4 py-2.5 disabled:opacity-60"'),
-              ('className="w-full text-center text-xs font-bold text-primary"', 'className="w-full text-center text-xs font-semibold text-primary transition hover:text-brand-orange"'),
-              ('<div className="w-full border-t border-input" />', '<div className="w-full border-t border-border/80" />'),
-              ('<div className="relative flex justify-center text-xs font-bold text-muted-foreground">', '<div className="relative flex justify-center text-[10px] font-semibold text-muted-foreground">'),
-              ('<span className="bg-card px-2">{text("أو", "Or")}</span>', '<span className="rounded-full bg-card/90 px-3 py-1">{text("أو", "Or")}</span>'),
-              ('<div className="mt-4 rounded-xl bg-muted-surface p-3 text-[11px] leading-6 text-muted-foreground">', '<div className="mt-5 rounded-[1rem] border border-border/65 bg-card-warm/65 p-3.5 text-[11px] leading-6 text-muted-foreground">'),
-              ('<Link to="/" className="mt-4 inline-flex text-xs font-bold text-primary">', '<Link to="/" className="mt-4 inline-flex text-xs font-semibold text-primary transition hover:text-brand-orange">'),
-            ],
-            'src/routes/reset-password.tsx': [
-              ('<main className="container-wide pt-4 pb-24">', '<main className="container-wide pb-24 pt-3 sm:pt-5">'),
-              ('<section className="mx-auto max-w-md rounded-2xl bg-card p-5 shadow-soft hairline">', '<section className="rawaj-hero-surface mx-auto max-w-md rounded-[1.65rem] p-5 sm:rounded-[1.9rem] sm:p-6">'),
-              ('className="grid h-11 w-11 place-items-center rounded-xl bg-primary text-primary-foreground"', 'className="grid h-12 w-12 shrink-0 place-items-center rounded-[1.05rem] bg-primary text-primary-foreground shadow-[0_9px_22px_rgba(16,43,70,0.16)]"'),
-              ('<h1 className="text-base font-extrabold">', '<h1 className="text-base font-bold text-primary sm:text-lg">'),
-              ('<div className="rounded-xl bg-muted-surface p-4 text-xs leading-6 text-muted-foreground hairline">', '<div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-4 text-xs leading-6 text-muted-foreground">'),
-              ('className="mt-3 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"', 'className="rawaj-button-primary mt-3 px-4 py-2"'),
-              ('<span className="mb-1 block text-xs font-bold text-muted-foreground">', '<span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">'),
-              ('className="rounded-xl bg-destructive/10 p-2 text-xs font-bold text-destructive"', 'className="rounded-[1rem] border border-destructive/15 bg-destructive/8 p-2.5 text-xs font-medium text-destructive"'),
-              ('className="rounded-xl bg-emerald-trust/10 p-2 text-xs font-bold text-emerald-trust"', 'className="rounded-[1rem] border border-emerald-trust/15 bg-emerald-trust/8 p-2.5 text-xs font-medium text-emerald-trust"'),
-              ('className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"', 'className="rawaj-button-primary min-h-11 w-full rounded-[1rem] px-4 py-2.5 disabled:opacity-60"'),
-              ('className="inline-flex items-center justify-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"', 'className="rawaj-chip items-center justify-center gap-1 px-3 py-2 font-semibold text-primary transition hover:border-gold/40"'),
-              ('<div className="rounded-xl bg-muted-surface p-4 text-center text-xs font-bold hairline">', '<div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-4 text-center text-xs font-semibold text-muted-foreground">'),
-            ],
-            'src/routes/auth.callback.tsx': [
-              ('<main className="flex min-h-screen items-center justify-center bg-background px-4">', '<main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">'),
-              ('<div className="max-w-md text-center">', '<div className="rawaj-surface relative w-full max-w-md overflow-hidden rounded-[1.7rem] p-8 text-center sm:p-10">'),
-              ('<h1 className="mt-4 text-lg font-extrabold text-foreground">', '<h1 className="mt-4 text-lg font-bold text-primary">'),
-              ('className="mt-6 inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground"', 'className="rawaj-button-primary mt-6 px-5 py-2.5"'),
-            ],
-          }
-
-          for filename, replacements in changes.items():
-              p = Path(filename)
-              s = p.read_text(encoding='utf-8')
-              for old, new in replacements:
-                  if old not in s:
-                      raise SystemExit(f'missing replacement in {filename}: {old[:100]}')
-                  s = s.replace(old, new)
-              p.write_text(s, encoding='utf-8')
-          PY
-          npx prettier --write 'src/routes/login.tsx' 'src/routes/reset-password.tsx' 'src/routes/auth.callback.tsx'
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add -- 'src/routes/login.tsx' 'src/routes/reset-password.tsx' 'src/routes/auth.callback.tsx'
-          git diff --cached --quiet || git commit -m 'Polish RAWAJ authentication journey'
-          git push origin HEAD:design/auth-journey-soul-pass
-      - run: npx eslint --quiet 'src/routes/login.tsx' 'src/routes/reset-password.tsx' 'src/routes/auth.callback.tsx'
-      - run: npm run typecheck -- --pretty false
-      - run: npm run build
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint changed source files
+        run: npx eslint --quiet src/routes/login.tsx src/routes/reset-password.tsx src/routes/auth.callback.tsx
+      - name: Typecheck
+        run: npm run typecheck -- --pretty false
+      - name: Production build
+        run: npm run build
