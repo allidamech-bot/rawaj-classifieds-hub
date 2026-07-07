@@ -103,14 +103,14 @@ function ResetPasswordPage() {
         to="/login"
         backMode="history"
       />
-      <main className="container-wide pt-4 pb-24">
-        <section className="mx-auto max-w-md rounded-2xl bg-card p-5 shadow-soft hairline">
+      <main className="container-wide pb-24 pt-3 sm:pt-5">
+        <section className="rawaj-hero-surface mx-auto max-w-md rounded-[1.65rem] p-5 sm:rounded-[1.9rem] sm:p-6">
           <div className="mb-4 flex items-start gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary text-primary-foreground">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[1.05rem] bg-primary text-primary-foreground shadow-[0_9px_22px_rgba(16,43,70,0.16)]">
               <KeyRound className="h-5 w-5 text-gold" />
             </span>
             <div>
-              <h1 className="text-base font-extrabold">
+              <h1 className="text-base font-bold text-primary sm:text-lg">
                 {text("تعيين كلمة مرور جديدة", "Set a new password")}
               </h1>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
@@ -125,24 +125,21 @@ function ResetPasswordPage() {
           {checking ? (
             <Panel title={text("جارٍ تجهيز الصفحة", "Preparing the page")} />
           ) : !ready ? (
-            <div className="rounded-xl bg-muted-surface p-4 text-xs leading-6 text-muted-foreground hairline">
+            <div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-4 text-xs leading-6 text-muted-foreground">
               <p>
                 {text(
                   "رابط إعادة التعيين غير صالح أو انتهت صلاحيته. افتح الرابط الأخير من بريدك الإلكتروني أو اطلب رابطاً جديداً من صفحة تسجيل الدخول.",
                   "The reset link is invalid or expired. Open the latest link from your email or request a new one from the login page.",
                 )}
               </p>
-              <Link
-                to="/login"
-                className="mt-3 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-              >
+              <Link to="/login" className="rawaj-button-primary mt-3 px-4 py-2">
                 {text("العودة لتسجيل الدخول", "Back to login")}
               </Link>
             </div>
           ) : (
             <form onSubmit={(event) => void submit(event)} className="space-y-3">
               <label className="block">
-                <span className="mb-1 block text-xs font-bold text-muted-foreground">
+                <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">
                   {text("كلمة المرور الجديدة", "New password")}
                 </span>
                 <div className="relative">
@@ -170,7 +167,7 @@ function ResetPasswordPage() {
                 </div>
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs font-bold text-muted-foreground">
+                <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">
                   {text("تأكيد كلمة المرور", "Confirm password")}
                 </span>
                 <div className="relative">
@@ -198,19 +195,19 @@ function ResetPasswordPage() {
                 </div>
               </label>
               {error && (
-                <p className="rounded-xl bg-destructive/10 p-2 text-xs font-bold text-destructive">
+                <p className="rounded-[1rem] border border-destructive/15 bg-destructive/8 p-2.5 text-xs font-medium text-destructive">
                   {error}
                 </p>
               )}
               {message && (
-                <p className="rounded-xl bg-emerald-trust/10 p-2 text-xs font-bold text-emerald-trust">
+                <p className="rounded-[1rem] border border-emerald-trust/15 bg-emerald-trust/8 p-2.5 text-xs font-medium text-emerald-trust">
                   {message}
                 </p>
               )}
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"
+                className="rawaj-button-primary min-h-11 w-full rounded-[1rem] px-4 py-2.5 disabled:opacity-60"
               >
                 {saving
                   ? text("جارٍ الحفظ", "Saving")
@@ -219,14 +216,14 @@ function ResetPasswordPage() {
               <div className="grid grid-cols-2 gap-2">
                 <Link
                   to="/profile"
-                  className="inline-flex items-center justify-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
+                  className="rawaj-chip items-center justify-center gap-1 px-3 py-2 font-semibold text-primary transition hover:border-gold/40"
                 >
                   <User className="h-4 w-4" />
                   {text("فتح حسابي", "Open profile")}
                 </Link>
                 <Link
                   to="/login"
-                  className="inline-flex items-center justify-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
+                  className="rawaj-chip items-center justify-center gap-1 px-3 py-2 font-semibold text-primary transition hover:border-gold/40"
                 >
                   <LogIn className="h-4 w-4" />
                   {text("تسجيل الدخول", "Log in")}
@@ -242,7 +239,7 @@ function ResetPasswordPage() {
 
 function Panel({ title }: { title: string }) {
   return (
-    <div className="rounded-xl bg-muted-surface p-4 text-center text-xs font-bold hairline">
+    <div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-4 text-center text-xs font-semibold text-muted-foreground">
       {title}
     </div>
   );

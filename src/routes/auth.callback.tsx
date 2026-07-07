@@ -106,8 +106,8 @@ function AuthCallbackPage() {
   }, [navigate, text]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+      <div className="rawaj-surface relative w-full max-w-md overflow-hidden rounded-[1.7rem] p-8 text-center sm:p-10">
         {status === "loading" && (
           <>
             <svg
@@ -129,7 +129,7 @@ function AuthCallbackPage() {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
               />
             </svg>
-            <h1 className="mt-4 text-lg font-extrabold text-foreground">
+            <h1 className="mt-4 text-lg font-bold text-primary">
               {text("جاري تسجيل الدخول...", "Signing in...")}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -156,7 +156,7 @@ function AuthCallbackPage() {
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <h1 className="mt-4 text-lg font-extrabold text-foreground">
+            <h1 className="mt-4 text-lg font-bold text-primary">
               {text("تم تسجيل الدخول", "Signed in")}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -180,14 +180,14 @@ function AuthCallbackPage() {
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
               />
             </svg>
-            <h1 className="mt-4 text-lg font-extrabold text-foreground">
+            <h1 className="mt-4 text-lg font-bold text-primary">
               {text("فشل تسجيل الدخول", "Sign in failed")}
             </h1>
             <p className="mt-2 text-sm text-destructive">{errorMsg}</p>
             <button
               type="button"
               onClick={() => void navigate({ to: "/login" })}
-              className="mt-6 inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground"
+              className="rawaj-button-primary mt-6 px-5 py-2.5"
             >
               {text("العودة لتسجيل الدخول", "Back to login")}
             </button>
