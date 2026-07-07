@@ -72,7 +72,7 @@ export function AppHeader({ compact = false, title }: Props) {
         <div className="order-3 flex shrink-0 items-center gap-1 sm:gap-2">
           <Link
             to="/add-listing"
-            className="hidden h-10 items-center gap-1.5 rounded-full bg-gradient-to-br from-gold via-gold/95 to-gold/70 px-4 text-sm font-extrabold text-gold-foreground shadow-soft ring-1 ring-gold/40 transition hover:brightness-105 lg:inline-flex"
+            className="hidden h-10 items-center gap-1.5 rounded-full bg-brand-orange px-4 text-sm font-extrabold shadow-soft ring-1 ring-white/20 transition hover:brightness-110 lg:inline-flex"
           >
             <Plus className="h-4 w-4" />
             {text("أضف إعلان", "Post listing")}
@@ -135,17 +135,17 @@ function Logo() {
         src="/brand/rawaj-mark-transparent-header.png"
         alt="RAWAJ"
         decoding="async"
-        className="h-11 w-auto shrink-0 object-contain sm:h-14 lg:h-16"
+        className="h-9 w-auto shrink-0 object-contain sm:h-12 lg:h-14"
       />
 
-      <span className="hidden items-center gap-2 leading-none min-[430px]:flex sm:gap-2.5">
-        <span className="text-sm font-extrabold tracking-normal text-primary-foreground sm:text-lg lg:text-xl">
+      <span className="flex items-center gap-1.5 leading-none sm:gap-2.5">
+        <span className="text-base font-extrabold tracking-normal text-primary-foreground sm:text-lg lg:text-xl">
           رواج
         </span>
 
-        <span className="h-5 w-px bg-gold/80 sm:h-7 lg:h-8" aria-hidden="true" />
+        <span className="h-4 w-px bg-gold/70 sm:h-6 lg:h-7" aria-hidden="true" />
 
-        <span className="text-[10px] font-semibold tracking-[0.18em] text-gold sm:text-sm lg:text-base">
+        <span className="text-[10px] font-semibold tracking-[0.22em] text-gold sm:text-xs lg:text-sm">
           RAWAJ
         </span>
       </span>

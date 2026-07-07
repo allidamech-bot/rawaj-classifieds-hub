@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Building2, MapPin, Search, Sparkles } from "lucide-react";
+import { Building2, MapPin, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
@@ -47,14 +47,19 @@ function OffersPage() {
     <>
       <PageHeader title={text("العروض", "Offers")} />
       <main className="container-wide mobile-page-bottom pt-4">
-        <section className="bg-card p-4 hairline sm:p-5">
-          <div className="flex items-start gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gold/15 text-gold">
+        <section className="hero-navy relative overflow-hidden rounded-3xl p-4 shadow-premium sm:p-6">
+          <div className="relative z-10 flex items-start gap-3">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-brand-orange text-white shadow-soft">
               <Sparkles className="h-5 w-5" />
             </span>
             <div>
-              <h1 className="mt-1 text-xl font-extrabold">{text("العروض", "Offers")}</h1>
-              <p className="mt-1 text-xs leading-6 text-muted-foreground sm:text-sm">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-gold">
+                {text("مساحة العروض", "Offers space")}
+              </p>
+              <h1 className="mt-1 text-xl font-extrabold text-primary-foreground sm:text-2xl">
+                {text("العروض والإعلانات المميزة", "Offers & featured listings")}
+              </h1>
+              <p className="mt-1.5 max-w-xl text-xs leading-6 text-primary-foreground/80 sm:text-sm">
                 {text(
                   "مساحة مخصصة لعروض المتاجر والشركات. لا توجد عروض تجارية متاحة حالياً، وتظهر الإعلانات المميزة أدناه كقسم منفصل وليست خصومات.",
                   "A dedicated space for store and company offers. No commercial offers are available right now; featured listings below are separate and are not discounts.",
@@ -63,6 +68,7 @@ function OffersPage() {
             </div>
           </div>
         </section>
+
 
         <section className="mt-5">
           <div className="mb-3 flex items-center justify-between gap-2">
@@ -164,9 +170,11 @@ function FeaturedListingCard({ listing }: { listing: ClassifiedListing }) {
 
 function OffersState({ title, body }: { title: string; body?: string }) {
   return (
-    <section className="mt-5 bg-card p-6 text-center hairline">
-      <Search className="mx-auto h-7 w-7 text-gold" />
-      <h2 className="mt-3 text-base font-extrabold">{title}</h2>
+    <section className="mt-5 overflow-hidden rounded-2xl bg-card p-6 text-center hairline shadow-soft">
+      <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand-orange/12 text-brand-orange">
+        <Sparkles className="h-5 w-5" />
+      </span>
+      <h2 className="mt-3 text-base font-extrabold text-primary">{title}</h2>
       {body && (
         <p className="mx-auto mt-1 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p>
       )}
