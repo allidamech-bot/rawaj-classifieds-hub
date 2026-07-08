@@ -48,11 +48,18 @@ export function PriceChangeBanner({ listingId }: { listingId: string }) {
         <div className="min-w-0 flex-1">
           <p className="text-xs font-extrabold">
             {decreased
-              ? text("انخفض السعر منذ حفظك للإعلان", "Price dropped since you saved this listing")
-              : text("ارتفع السعر منذ حفظك للإعلان", "Price increased since you saved this listing")}
+              ? text(
+                  "انخفض السعر منذ حفظك للإعلان",
+                  "Price dropped since you saved this listing",
+                )
+              : text(
+                  "ارتفع السعر منذ حفظك للإعلان",
+                  "Price increased since you saved this listing",
+                )}
           </p>
           <p className="mt-0.5 text-[10px] text-muted-foreground">
-            {formatPrice(context.previousPrice, language)} → {formatPrice(context.currentPrice, language)}
+            {formatPrice(context.previousPrice, language)} →{" "}
+            {formatPrice(context.currentPrice, language)}
           </p>
         </div>
       </section>
