@@ -61,5 +61,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
+      - name: Admin security regression
+        run: npm run security:admin
+
       - name: Production build
         run: npm run build
