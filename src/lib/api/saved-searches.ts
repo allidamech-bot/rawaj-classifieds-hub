@@ -14,8 +14,7 @@ function mapSavedSearch(row: Record<string, unknown>): SavedSearch {
     userId: rowString(row, "user_id"),
     nameAr: rowString(row, "name_ar"),
     filters: rowRecord(row, "filters"),
-    alertFrequency:
-      frequency === "daily" || frequency === "off" ? frequency : "weekly",
+    alertFrequency: frequency === "daily" || frequency === "off" ? frequency : "weekly",
     lastAlertCheckedAt:
       typeof row.last_alert_checked_at === "string" ? row.last_alert_checked_at : null,
     createdAt: rowString(row, "created_at"),

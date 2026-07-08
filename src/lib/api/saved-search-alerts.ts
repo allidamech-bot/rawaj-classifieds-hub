@@ -103,6 +103,7 @@ function isSavedSearchAlertDue(search: SavedSearch, now: number) {
   if (search.alertFrequency === "off") return false;
   const lastChecked = Date.parse(search.lastAlertCheckedAt ?? search.createdAt);
   if (!Number.isFinite(lastChecked)) return true;
-  const cadenceMs = search.alertFrequency === "daily" ? 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000;
+  const cadenceMs =
+    search.alertFrequency === "daily" ? 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000;
   return now - lastChecked >= cadenceMs;
 }
