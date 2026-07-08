@@ -2,6 +2,8 @@ export * from "@/lib/api/shared";
 export * from "@/lib/api/references";
 export * from "@/lib/api/locations";
 export * from "@/lib/api/listings";
+export * from "@/lib/api/listing-lifecycle";
+export * from "@/lib/api/draft-recovery";
 export { fetchPublicListingsCanonicalAware as fetchPublicListings } from "@/lib/api/location-aware-listings-v2";
 export * from "@/lib/api/seller";
 export * from "@/lib/api/messaging";
