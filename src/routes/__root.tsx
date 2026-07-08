@@ -165,7 +165,9 @@ function RootComponent() {
   const showBottomNav = shouldShowBottomNav(pathname);
   const showDraftRecovery = pathname === "/add-listing";
   const listingDetailMatch = pathname.match(/^\/listings\/([^/]+)$/);
-  const listingDetailId = listingDetailMatch?.[1] ? decodeURIComponent(listingDetailMatch[1]) : null;
+  const listingDetailId = listingDetailMatch?.[1]
+    ? decodeURIComponent(listingDetailMatch[1])
+    : null;
 
   return (
     <QueryClientProvider client={queryClient}>
