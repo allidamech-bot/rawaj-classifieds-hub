@@ -6,3 +6,4 @@
 - Public listing results progressively load additional cursor pages as the user approaches the end of the grid.
 - Appended pages are deduplicated by listing id and retain the manual Load more control as a fallback.
 - Regression coverage explicitly preserves legacy district writes and rejects canonical nodes that cannot resolve to any governorate.
+- Progressive loading is cursor-based rather than a single hard-limited result batch, so approved matching listings continue appearing as the user scrolls.
