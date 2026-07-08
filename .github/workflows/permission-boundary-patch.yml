@@ -1,0 +1,71 @@
+name: Permission Boundary Patch
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'feature/role-permission-enforcement-finalization' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/role-permission-enforcement-finalization
+          fetch-depth: 0
+
+      - name: Patch user management permission checks
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('src/routes/admin.users.tsx')
+          text = path.read_text()
+          text = text.replace(
+              '  const auth = useAuth();\n',
+              '  const auth = useAuth();\n  const canManageUsers = auth.hasPermission("canManageUsers");\n',
+              1,
+          )
+          text = text.replace('adminFetchUsers(auth.canAccessAdmin)', 'adminFetchUsers(canManageUsers)')
+          text = text.replace('  }, [auth.canAccessAdmin]);', '  }, [canManageUsers]);')
+          text = text.replace('  if (!auth.canAccessAdmin) {', '  if (!canManageUsers) {')
+          text = text.replace(
+              'adminManageUserAccount(auth.canAccessAdmin, {\n                        userId: selectedUser.id,\n                        status: "frozen",',
+              'adminManageUserAccount(auth.hasPermission("canSuspendUsers"), {\n                        userId: selectedUser.id,\n                        status: "frozen",',
+          )
+          text = text.replace(
+              'adminManageUserAccount(auth.canAccessAdmin, {\n                        userId: selectedUser.id,\n                        status: "active",',
+              'adminManageUserAccount(auth.hasPermission("canRestoreUsers"), {\n                        userId: selectedUser.id,\n                        status: "active",',
+          )
+          text = text.replace(
+              'adminManageUserAccount(auth.canAccessAdmin, {\n                          userId: selectedUser.id,\n                          status: "disabled",',
+              'adminManageUserAccount(auth.hasPermission("canBanUsers"), {\n                          userId: selectedUser.id,\n                          status: "disabled",',
+          )
+          text = text.replace(
+              'adminSetUserRestriction(auth.canAccessAdmin, {',
+              'adminSetUserRestriction(auth.hasPermission("canManageUserRestrictions"), {',
+          )
+          text = text.replace(
+              'adminLiftUserRestriction(auth.canAccessAdmin, {',
+              'adminLiftUserRestriction(auth.hasPermission("canManageUserRestrictions"), {',
+          )
+          text = text.replace('ownerAssignStaffRole(true, {', 'ownerAssignStaffRole(auth.hasPermission("canManageRoles"), {')
+          text = text.replace('ownerRemoveStaffRole(true, {', 'ownerRemoveStaffRole(auth.hasPermission("canManageRoles"), {')
+          path.write_text(text)
+          PY
+
+      - name: Remove temporary workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/permission-boundary-patch.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/admin.users.tsx .github/workflows/permission-boundary-patch.yml
+          git commit -m "Enforce user management permission checks in UI"
+          git push origin HEAD:feature/role-permission-enforcement-finalization
