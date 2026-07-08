@@ -736,7 +736,9 @@ export async function createListing(
   userId: string | null,
   payload: CreateListingPayload,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
-  return createListingWithStatus(userId, payload, "pending_review");
+  const draftResult = await createListingWithStatus(userId, payload, "draft");
+  if (!draftResult.ok) return draftResult;
+  return submitOwnerListingForReview(userId, draftResult.data.id);
 }
 
 export async function createOwnerDraftListing(
