@@ -44,6 +44,7 @@ const restrictionOptions: Array<{
 function UsersPage() {
   const { text } = useUiPreferences();
   const auth = useAuth();
+  const canManageUsers = auth.hasPermission("canManageUsers");
   const [users, setUsers] = useState<AdminUserSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -57,7 +58,7 @@ function UsersPage() {
 
   async function refreshUsers() {
     setLoading(true);
-    const result = await adminFetchUsers(auth.canAccessAdmin);
+    const result = await adminFetchUsers(canManageUsers);
     setLoading(false);
     if (!result.ok) {
       setError(result.error.message);
@@ -69,7 +70,7 @@ function UsersPage() {
 
   useEffect(() => {
     let cancelled = false;
-    void adminFetchUsers(auth.canAccessAdmin).then((result) => {
+    void adminFetchUsers(canManageUsers).then((result) => {
       if (cancelled) return;
       setLoading(false);
       if (!result.ok) {
@@ -81,7 +82,7 @@ function UsersPage() {
     return () => {
       cancelled = true;
     };
-  }, [auth.canAccessAdmin]);
+  }, [canManageUsers]);
 
   const filteredUsers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -113,7 +114,7 @@ function UsersPage() {
     await refreshUsers();
   }
 
-  if (!auth.canAccessAdmin) {
+  if (!canManageUsers) {
     return (
       <section className="rounded-2xl bg-card p-5 text-center hairline">
         <ShieldAlert className="mx-auto h-7 w-7 text-warning" />
@@ -235,7 +236,7 @@ function UsersPage() {
                   disabled={busy || !reasonReady}
                   onClick={() =>
                     void runAction(() =>
-                      adminManageUserAccount(auth.canAccessAdmin, {
+                      adminManageUserAccount(auth.hasPermission("canSuspendUsers"), {
                         userId: selectedUser.id,
                         status: "frozen",
                         reason,
@@ -249,7 +250,7 @@ function UsersPage() {
                   disabled={busy || !reasonReady}
                   onClick={() =>
                     void runAction(() =>
-                      adminManageUserAccount(auth.canAccessAdmin, {
+                      adminManageUserAccount(auth.hasPermission("canRestoreUsers"), {
                         userId: selectedUser.id,
                         status: "active",
                         reason,
@@ -265,7 +266,7 @@ function UsersPage() {
                     danger
                     onClick={() =>
                       void runAction(() =>
-                        adminManageUserAccount(auth.canAccessAdmin, {
+                        adminManageUserAccount(auth.hasPermission("canBanUsers"), {
                           userId: selectedUser.id,
                           status: "disabled",
                           reason,
@@ -299,7 +300,7 @@ function UsersPage() {
                     disabled={busy || !reasonReady}
                     onClick={() =>
                       void runAction(() =>
-                        adminSetUserRestriction(auth.canAccessAdmin, {
+                        adminSetUserRestriction(auth.hasPermission("canManageUserRestrictions"), {
                           userId: selectedUser.id,
                           restrictionType,
                           reason,
@@ -315,7 +316,7 @@ function UsersPage() {
                     disabled={busy || !reasonReady}
                     onClick={() =>
                       void runAction(() =>
-                        adminLiftUserRestriction(auth.canAccessAdmin, {
+                        adminLiftUserRestriction(auth.hasPermission("canManageUserRestrictions"), {
                           userId: selectedUser.id,
                           restrictionType,
                           reason,
@@ -339,7 +340,7 @@ function UsersPage() {
                       disabled={busy}
                       onAssign={() =>
                         void runAction(() =>
-                          ownerAssignStaffRole(true, {
+                          ownerAssignStaffRole(auth.hasPermission("canManageRoles"), {
                             userId: selectedUser.id,
                             role: "admin",
                             note: reason || null,
@@ -348,7 +349,7 @@ function UsersPage() {
                       }
                       onRemove={() =>
                         void runAction(() =>
-                          ownerRemoveStaffRole(true, {
+                          ownerRemoveStaffRole(auth.hasPermission("canManageRoles"), {
                             userId: selectedUser.id,
                             role: "admin",
                             reason: reason || null,
@@ -362,7 +363,7 @@ function UsersPage() {
                       disabled={busy}
                       onAssign={() =>
                         void runAction(() =>
-                          ownerAssignStaffRole(true, {
+                          ownerAssignStaffRole(auth.hasPermission("canManageRoles"), {
                             userId: selectedUser.id,
                             role: "moderator",
                             note: reason || null,
@@ -371,7 +372,7 @@ function UsersPage() {
                       }
                       onRemove={() =>
                         void runAction(() =>
-                          ownerRemoveStaffRole(true, {
+                          ownerRemoveStaffRole(auth.hasPermission("canManageRoles"), {
                             userId: selectedUser.id,
                             role: "moderator",
                             reason: reason || null,
