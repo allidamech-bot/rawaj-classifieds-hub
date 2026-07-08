@@ -20,10 +20,7 @@ import {
   rowString,
 } from "@/lib/api/shared";
 
-const pendingMessageSends = new Map<
-  string,
-  Promise<ClassifiedsResult<ConversationMessage>>
->();
+const pendingMessageSends = new Map<string, Promise<ClassifiedsResult<ConversationMessage>>>();
 
 export async function startListingConversation(
   userId: string | null,
