@@ -3,7 +3,7 @@
 -- can survive listing deletion. Rows remain private to their owning user.
 
 create table if not exists public.favorite_listing_snapshots (
-  user_id uuid not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
   listing_id uuid not null,
   title_snapshot text not null,
   price_snapshot numeric,
