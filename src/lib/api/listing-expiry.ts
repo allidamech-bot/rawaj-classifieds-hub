@@ -1,10 +1,7 @@
 export type ListingExpiryOption = 30 | 60 | 90 | "never";
 
-export function publicListingExpiryFilter(_now = new Date().toISOString()) {
-  // Compatibility guard: public listing queries already require status = approved.
-  // Avoid referencing expires_at here until the lifecycle migration is confirmed in production,
-  // otherwise one missing column makes every public marketplace query fail.
-  return "id.not.is.null";
+export function publicListingExpiryFilter(now = new Date().toISOString()) {
+  return `expires_at.is.null,expires_at.gt.${now}`;
 }
 
 export function resolveListingExpiryDate(option: ListingExpiryOption, now = new Date()) {
