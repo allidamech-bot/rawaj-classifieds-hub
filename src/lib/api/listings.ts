@@ -401,6 +401,7 @@ export async function updateOwnerListing(
       payload.districtAr,
     );
     if (!locationWrite.ok) return locationWrite;
+    updateData.governorate_id = locationWrite.data.governorateId;
     updateData.district_ar = locationWrite.data.districtAr;
     if (locationWrite.data.locationNodeId !== undefined) {
       updateData.location_node_id = locationWrite.data.locationNodeId;
@@ -509,6 +510,7 @@ export async function resubmitOwnerListing(
       payload.districtAr,
     );
     if (!locationWrite.ok) return locationWrite;
+    updateData.governorate_id = locationWrite.data.governorateId;
     updateData.district_ar = locationWrite.data.districtAr;
     if (locationWrite.data.locationNodeId !== undefined) {
       updateData.location_node_id = locationWrite.data.locationNodeId;
@@ -766,7 +768,11 @@ async function createListingWithStatus(
   const description = payload.description.trim();
   const contactName = payload.contactName?.trim() || null;
 
-  if (!payload.categoryId.trim() || !payload.governorateId.trim() || title.length < 4) {
+  if (
+    !payload.categoryId.trim() ||
+    (!payload.governorateId.trim() && !payload.districtAr?.trim().startsWith("@")) ||
+    title.length < 4
+  ) {
     return {
       ok: false,
       error: {
@@ -793,7 +799,7 @@ async function createListingWithStatus(
   const insertPayload = {
     owner_id: userId,
     category_id: payload.categoryId,
-    governorate_id: payload.governorateId,
+    governorate_id: locationWrite.data.governorateId,
     title,
     description,
     price: payload.price,

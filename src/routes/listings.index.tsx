@@ -77,6 +77,7 @@ function ListingsPage() {
   const [open, setOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(Boolean(search.open_filters));
   const [sortOpen, setSortOpen] = useState(false);
+  const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
 
   const references = useListingsReferences(search);
   const {
@@ -609,11 +610,29 @@ function ListingsPage() {
     nextCursor,
     hasPriceContradiction,
     filterVersionRef,
-    onItems: (next) => setItems((prev) => [...prev, ...next]),
+    onItems: (next) =>
+      setItems((prev) => {
+        const known = new Set(prev.map((item) => item.id));
+        return [...prev, ...next.filter((item) => !known.has(item.id))];
+      }),
     onCursor: (cursor) => setNextCursor(cursor),
     onError: (err) => setError(err),
   });
   const { loadingMore, loadMore } = pagination;
+
+  useEffect(() => {
+    const sentinel = loadMoreSentinelRef.current;
+    if (!sentinel || !nextCursor) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) void loadMore();
+      },
+      { rootMargin: "500px 0px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore, nextCursor]);
 
   const prevDraftFieldKindRef = useRef<CategoryFieldKind | undefined>(undefined);
   useEffect(() => {
@@ -1442,7 +1461,7 @@ function ListingsPage() {
               ))}
             </div>
             {nextCursor && (
-              <div className="mt-4 flex justify-center">
+              <div ref={loadMoreSentinelRef} className="mt-4 flex justify-center">
                 <button
                   type="button"
                   onClick={loadMore}
