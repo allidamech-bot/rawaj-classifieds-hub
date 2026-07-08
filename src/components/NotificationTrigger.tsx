@@ -137,7 +137,9 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
     const target = notification.targetType?.toLowerCase();
     return Boolean(
       notification.targetId &&
-        (target === "listing" || target === "conversation" || target === "seller"),
+        (target === "listing" ||
+          target === "conversation" ||
+          target === "seller"),
     );
   }
 
