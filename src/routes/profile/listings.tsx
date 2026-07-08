@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import {
   closeOwnerListing,
+  confirmOwnerListingAvailability,
   deleteOwnerListing,
   fetchCurrentUserListings,
   fetchPublicSellerProfile,
@@ -431,10 +432,7 @@ function StoreListingCard({
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
   const [lifecycleError, setLifecycleError] = useState("");
 
-  const canEdit =
-    listing.status === "draft" ||
-    listing.status === "pending_review" ||
-    listing.status === "rejected";
+  const canEdit = listing.status === "draft" || listing.status === "rejected";
   const canDelete = isOwnerDeletableStatus(listing.status);
   const canClose = listing.status === "approved";
   const canReactivate = isReactivatableListingStatus(listing.status);
@@ -478,15 +476,33 @@ function StoreListingCard({
     onChanged(result.data);
   }
 
+  async function handleConfirmAvailability() {
+    if (lifecycleBusy || listing.status !== "approved") return;
+    setLifecycleError("");
+    setLifecycleBusy(true);
+    const result = await confirmOwnerListingAvailability(userId, listing.id);
+    setLifecycleBusy(false);
+    if (!result.ok) {
+      setLifecycleError(result.error.message);
+      return;
+    }
+    onChanged(result.data);
+  }
+
   const lockedMessage = isClosedListingStatus(listing.status)
     ? text(
         "هذا الإعلان مغلق ولا يعدل من هنا. يمكنك إعادة تفعيله للحالات المدعومة.",
         "This listing is closed and cannot be edited here. Supported states can be reactivated.",
       )
-    : text(
-        "الإعلان المعتمد ظاهر للزوار ولا يعدل من هنا.",
-        "Approved listings are public and are not edited here.",
-      );
+    : listing.status === "pending_review"
+      ? text(
+          "هذا الإعلان قيد المراجعة ولا يعدل حتى قرار الإدارة.",
+          "This listing is under review and cannot be edited until the admin decision.",
+        )
+      : text(
+          "الإعلان المعتمد ظاهر للزوار ولا يعدل من هنا.",
+          "Approved listings are public and are not edited here.",
+        );
 
   return (
     <>
@@ -517,6 +533,16 @@ function StoreListingCard({
             <p className="rounded-lg bg-gold/10 p-2 text-[11px] font-semibold text-primary">
               {text("مسودة محفوظة", "Saved draft")} · {text("آخر حفظ", "Last saved")}{" "}
               {formatSavedAt(listing.updatedAt, language)}
+            </p>
+          )}
+          {listing.status === "approved" && (
+            <p className="rounded-lg bg-emerald-trust/10 p-2 text-[11px] font-semibold text-foreground">
+              {listing.renewedAt
+                ? `${text("آخر تأكيد للتوفر", "Availability last confirmed")}: ${formatSavedAt(listing.renewedAt, language)}`
+                : text(
+                    "لم يتم تأكيد استمرار التوفر بعد.",
+                    "Availability has not been confirmed yet.",
+                  )}
             </p>
           )}
           <div className="text-lg font-bold text-foreground">
@@ -574,6 +600,16 @@ function StoreListingCard({
             )}
             {canClose && (
               <>
+                <button
+                  type="button"
+                  disabled={lifecycleBusy}
+                  onClick={() => void handleConfirmAvailability()}
+                  className="rounded-lg bg-emerald-trust/10 px-2 py-1 text-[10px] font-bold text-emerald-trust disabled:opacity-60"
+                >
+                  {lifecycleBusy
+                    ? text("جارٍ التحديث", "Updating")
+                    : text("تأكيد استمرار التوفر", "Confirm availability")}
+                </button>
                 <button
                   type="button"
                   disabled={lifecycleBusy}
