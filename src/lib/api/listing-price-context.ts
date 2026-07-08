@@ -41,7 +41,10 @@ export async function fetchListingPriceChangeContext(
   if (error) return { ok: false, error: mapError(error) };
   if (!data) return { ok: true, data: null };
 
-  const previousPrice = rowNullableNumber(data as Record<string, unknown>, "price_snapshot");
+  const previousPrice = rowNullableNumber(
+    data as Record<string, unknown>,
+    "price_snapshot",
+  );
   if (previousPrice === null) return { ok: true, data: null };
 
   const listingResult = await fetchListingDetail(cleanListingId);
