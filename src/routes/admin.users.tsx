@@ -504,5 +504,7 @@ function StaffRoleButton({
 function Notice({ children, tone }: { children: React.ReactNode; tone: "error" | "success" }) {
   const toneClass =
     tone === "error" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success";
-  return <div className={`rounded-xl p-3 text-xs font-semibold hairline ${toneClass}`}>{children}</div>;
+  return (
+    <div className={`rounded-xl p-3 text-xs font-semibold hairline ${toneClass}`}>{children}</div>
+  );
 }
