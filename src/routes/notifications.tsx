@@ -165,10 +165,9 @@ function NotificationsPage() {
 
   function isNavigableNotification(notification: NotificationItem) {
     const target = notification.targetType?.toLowerCase();
-    return Boolean(
-      notification.targetId &&
-        (target === "listing" || target === "conversation" || target === "seller"),
-    );
+    const supportedTarget =
+      target === "listing" || target === "conversation" || target === "seller";
+    return Boolean(notification.targetId && supportedTarget);
   }
 
   const unreadCount = notifications.filter((item) => !item.readAt).length;
