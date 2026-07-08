@@ -35,10 +35,7 @@ export async function fetchMyNotificationsPage(
   if (!clientResult.ok) return clientResult;
 
   const boundedOffset = Math.max(0, Math.floor(offset));
-  const boundedLimit = Math.min(
-    MAX_NOTIFICATIONS_PAGE_SIZE,
-    Math.max(1, Math.floor(limit)),
-  );
+  const boundedLimit = Math.min(MAX_NOTIFICATIONS_PAGE_SIZE, Math.max(1, Math.floor(limit)));
   const { data, error } = await clientResult.data
     .from("notifications")
     .select("*")
