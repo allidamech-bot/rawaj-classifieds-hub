@@ -39,6 +39,7 @@ import type {
 } from "@/lib/classifieds-types";
 
 type ImageUploadState = "pending" | "uploading" | "uploaded" | "failed";
+type AutosaveState = "idle" | "dirty" | "saving" | "saved" | "failed";
 
 interface UploadImageEntry {
   id: string;
@@ -92,6 +93,9 @@ function AddListingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [createdListingId, setCreatedListingId] = useState<string | null>(null);
   const [draftListing, setDraftListing] = useState<ClassifiedListing | null>(null);
+  const [autosaveState, setAutosaveState] = useState<AutosaveState>("idle");
+  const [lastAutosavedAt, setLastAutosavedAt] = useState<string | null>(null);
+  const [autosaveError, setAutosaveError] = useState<string | null>(null);
   const [selectedImages, setSelectedImages] = useState<UploadImageEntry[]>([]);
   const [removingImageIds, setRemovingImageIds] = useState<Set<string>>(() => new Set());
   const [imageSelectionMessage, setImageSelectionMessage] = useState<string | null>(null);
@@ -117,6 +121,11 @@ function AddListingPage() {
   const imageUploadOperationRef = useRef<Map<string, number>>(new Map());
   const imageUploadInFlightRef = useRef<Map<string, ImageUploadInFlight>>(new Map());
   const staleUploadCleanupRef = useRef<Map<string, StaleUploadCleanupRecord>>(new Map());
+  const draftListingRef = useRef<ClassifiedListing | null>(null);
+  const autosaveTimerRef = useRef<number | null>(null);
+  const autosaveRequestIdRef = useRef(0);
+  const autosaveQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const lastAutosaveSignatureRef = useRef("");
 
   const category = categories.find((item) => item.id === categoryId);
   const categoryFieldKind = detectCategoryFieldKind(category);
@@ -162,6 +171,19 @@ function AddListingPage() {
   useEffect(() => {
     selectedImagesRef.current = selectedImages;
   }, [selectedImages]);
+
+  useEffect(() => {
+    draftListingRef.current = draftListing;
+  }, [draftListing]);
+
+  useEffect(
+    () => () => {
+      if (autosaveTimerRef.current !== null) {
+        window.clearTimeout(autosaveTimerRef.current);
+      }
+    },
+    [],
+  );
 
   function beginImageUploadOperation(id: string) {
     const operation = (imageUploadOperationRef.current.get(id) ?? 0) + 1;
@@ -508,6 +530,136 @@ function AddListingPage() {
     };
   }
 
+  const autosavePayload = useMemo(() => {
+    const normalizedPhone = normalizeContactValue(phone);
+    const normalizedWhatsapp = normalizeContactValue(whatsapp);
+    const details = mergeCategoryDetails(
+      {
+        ...(contact.phone && isSafePhoneValue(normalizedPhone) ? { phone: normalizedPhone } : {}),
+        ...(contact.whatsapp && isSafePhoneValue(normalizedWhatsapp)
+          ? { whatsapp: normalizedWhatsapp }
+          : {}),
+      },
+      categoryFieldKind,
+      categoryDetails,
+    );
+
+    return {
+      categoryId,
+      governorateId,
+      title: title.trim(),
+      description: description.trim(),
+      price: normalizedPrice ? Number(normalizedPrice) : null,
+      priceType,
+      condition,
+      districtAr: locationNodeId ? `@${locationNodeId}` : district,
+      contactName: contactName.trim() || null,
+      contactOptions: contact,
+      details,
+    };
+  }, [
+    categoryId,
+    governorateId,
+    title,
+    description,
+    normalizedPrice,
+    priceType,
+    condition,
+    locationNodeId,
+    district,
+    contactName,
+    contact,
+    phone,
+    whatsapp,
+    categoryFieldKind,
+    categoryDetails,
+  ]);
+
+  useEffect(() => {
+    const profileId = auth.profile?.id ?? null;
+    const currentDraft = draftListingRef.current;
+    const hasMinimumDraftData =
+      auth.status === "signedIn" &&
+      Boolean(profileId) &&
+      autosavePayload.categoryId.trim().length > 0 &&
+      autosavePayload.governorateId.trim().length > 0 &&
+      autosavePayload.title.length >= 4;
+
+    if (
+      !hasMinimumDraftData ||
+      submittingRef.current ||
+      (currentDraft !== null && currentDraft.status !== "draft")
+    ) {
+      if (autosaveTimerRef.current !== null) {
+        window.clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+      if (currentDraft?.status !== "draft") setAutosaveState("idle");
+      return;
+    }
+
+    const signature = JSON.stringify(autosavePayload);
+    if (signature === lastAutosaveSignatureRef.current) {
+      setAutosaveState("saved");
+      return;
+    }
+
+    setAutosaveState("dirty");
+    setAutosaveError(null);
+    const requestId = ++autosaveRequestIdRef.current;
+
+    if (autosaveTimerRef.current !== null) {
+      window.clearTimeout(autosaveTimerRef.current);
+    }
+
+    autosaveTimerRef.current = window.setTimeout(() => {
+      autosaveTimerRef.current = null;
+      const queuedSave = autosaveQueueRef.current.then(async () => {
+        if (requestId !== autosaveRequestIdRef.current || submittingRef.current) return;
+
+        setAutosaveState("saving");
+        const draft = draftListingRef.current;
+        if (draft && draft.status !== "draft") return;
+
+        const result = draft
+          ? await updateOwnerListing(profileId, draft.id, autosavePayload)
+          : await createOwnerDraftListing(profileId, autosavePayload);
+
+        if (result.ok) {
+          draftListingRef.current = result.data;
+          setDraftListing(result.data);
+          setCreatedListingId(result.data.id);
+        }
+
+        if (requestId !== autosaveRequestIdRef.current || submittingRef.current) return;
+
+        if (!result.ok) {
+          setAutosaveState("failed");
+          setAutosaveError(result.error.message);
+          return;
+        }
+
+        lastAutosaveSignatureRef.current = signature;
+        setLastAutosavedAt(result.data.updatedAt || new Date().toISOString());
+        setAutosaveState("saved");
+        setAutosaveError(null);
+      });
+
+      autosaveQueueRef.current = queuedSave.catch((error: unknown) => {
+        if (requestId !== autosaveRequestIdRef.current || submittingRef.current) return;
+        setAutosaveState("failed");
+        setAutosaveError(error instanceof Error ? error.message : "");
+      });
+    }, 1000);
+
+    return () => {
+      if (autosaveTimerRef.current !== null) {
+        window.clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+    };
+  }, [auth.status, auth.profile?.id, autosavePayload]);
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -539,8 +691,15 @@ function AddListingPage() {
       setSubmitting(false);
       return;
     }
+    autosaveRequestIdRef.current += 1;
+    if (autosaveTimerRef.current !== null) {
+      window.clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
     submittingRef.current = true;
     setSubmitting(true);
+    setAutosaveState("idle");
+    await autosaveQueueRef.current;
     setSubmitMessage(null);
 
     const beforeUnload = (event: BeforeUnloadEvent) => {
@@ -588,8 +747,9 @@ function AddListingPage() {
       );
 
       const payload = buildCurrentListingPayload(details);
-      const result = draftListing
-        ? await updateOwnerListing(auth.profile?.id ?? null, draftListing.id, payload)
+      const currentDraft = draftListingRef.current;
+      const result = currentDraft
+        ? await updateOwnerListing(auth.profile?.id ?? null, currentDraft.id, payload)
         : await createOwnerDraftListing(auth.profile?.id ?? null, payload);
 
       if (!result.ok) {
@@ -598,6 +758,7 @@ function AddListingPage() {
       }
       const listingDraft = result.data;
 
+      draftListingRef.current = listingDraft;
       setDraftListing(listingDraft);
       setCreatedListingId(listingDraft.id);
 
@@ -738,7 +899,10 @@ function AddListingPage() {
         );
         return;
       }
+      draftListingRef.current = submitResult.data;
       setDraftListing(submitResult.data);
+      lastAutosaveSignatureRef.current = "";
+      setAutosaveState("idle");
 
       setSubmitMessage(
         imageErrors.length > 0
@@ -831,6 +995,34 @@ function AddListingPage() {
           </Link>
         </div>
         <ListingStudioSteps steps={steps.map((label) => ({ label }))} current={step} />
+
+        {autosaveState !== "idle" && (
+          <div
+            aria-live="polite"
+            data-autosave-state={autosaveState}
+            className={`mb-4 rounded-[1rem] border px-3 py-2 text-xs font-semibold ${
+              autosaveState === "failed"
+                ? "border-destructive/20 bg-destructive/8 text-destructive"
+                : "border-border/70 bg-card/85 text-muted-foreground"
+            }`}
+          >
+            {autosaveState === "dirty" && text("تغييرات بانتظار الحفظ", "Changes waiting to save")}
+            {autosaveState === "saving" && text("جارٍ حفظ المسودة…", "Saving draft…")}
+            {autosaveState === "saved" && text("تم حفظ المسودة", "Draft saved")}
+            {autosaveState === "failed" && (
+              <span>{autosaveError || text("فشل حفظ المسودة تلقائياً", "Autosave failed")}</span>
+            )}
+            {autosaveState === "saved" && lastAutosavedAt && (
+              <span className="ms-2 font-normal opacity-75">
+                {text("آخر حفظ", "Last saved")}{" "}
+                {new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }).format(new Date(lastAutosavedAt))}
+              </span>
+            )}
+          </div>
+        )}
 
         {loading ? (
           <Card title={text("جارٍ تحميل بيانات النشر", "Loading posting data")}>
