@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { NotificationPreferencesPanel } from "@/features/notifications/NotificationPreferencesPanel";
 import {
   fetchMyNotifications,
   markAllNotificationsRead,
@@ -300,6 +301,8 @@ function NotificationsPage() {
             )}
           </section>
         )}
+
+        <NotificationPreferencesPanel />
 
         <section className="rounded-2xl bg-card p-4 hairline">
           <h2 className="text-sm font-extrabold">{text("متابعة سريعة", "Quick follow-up")}</h2>
