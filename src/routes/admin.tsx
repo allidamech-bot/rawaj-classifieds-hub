@@ -149,11 +149,14 @@ function AdminLayout() {
   }
 
   const visibleTabs = tabs.filter((tab) => auth.hasPermission(tab.permission));
+  const activeTab = visibleTabs.find((tab) =>
+    tab.exact ? pathname === tab.to || pathname === "/admin/" : pathname.startsWith(tab.to),
+  );
 
   return (
     <>
       <PageHeader title={text("لوحة الإدارة", "Admin dashboard")} />
-      <main className="container-wide pt-4 pb-8">
+      <main className="container-wide pt-3 pb-[calc(env(safe-area-inset-bottom)+2rem)] sm:pt-4">
         <div className="mb-4 flex items-start gap-2 rounded-2xl bg-warning/10 p-3 hairline">
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <p className="text-xs leading-6 text-foreground/90">
@@ -163,28 +166,49 @@ function AdminLayout() {
             )}
           </p>
         </div>
-        <nav className="mb-4 flex gap-2 overflow-x-auto pb-1">
-          {visibleTabs.map((tab) => {
-            const active = tab.exact
-              ? pathname === tab.to || pathname === "/admin/"
-              : pathname.startsWith(tab.to);
-            return (
-              <Link
-                key={tab.to}
-                to={tab.to as "/admin"}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${
-                  active
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card hairline hover:bg-muted-surface"
-                }`}
-              >
-                <tab.icon className="h-4 w-4" />
-                {uiLabel(tab.labelAr, language)}
-              </Link>
-            );
-          })}
-        </nav>
-        <Outlet />
+        <div className="sticky top-2 z-30 mb-4 rounded-2xl bg-background/90 p-2 shadow-soft backdrop-blur-xl hairline sm:static sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none sm:border-0">
+          <div className="mb-2 flex items-center justify-between gap-3 px-1 sm:hidden">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold text-muted-foreground">
+                {text("مساحة العمل الحالية", "Current workspace")}
+              </p>
+              <p className="truncate text-xs font-extrabold">
+                {activeTab ? uiLabel(activeTab.labelAr, language) : text("الإدارة", "Admin")}
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-extrabold text-primary">
+              {auth.profile?.role ?? "admin"}
+            </span>
+          </div>
+          <nav
+            aria-label={text("تنقل الإدارة", "Admin navigation")}
+            className="flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {visibleTabs.map((tab) => {
+              const active = tab.exact
+                ? pathname === tab.to || pathname === "/admin/"
+                : pathname.startsWith(tab.to);
+              return (
+                <Link
+                  key={tab.to}
+                  to={tab.to as "/admin"}
+                  aria-current={active ? "page" : undefined}
+                  className={`inline-flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition active:scale-[0.98] sm:rounded-full sm:px-4 ${
+                    active
+                      ? "bg-primary text-primary-foreground shadow-soft"
+                      : "bg-card hairline hover:bg-muted-surface"
+                  }`}
+                >
+                  <tab.icon className="h-4 w-4" />
+                  {uiLabel(tab.labelAr, language)}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+        <div className="min-w-0">
+          <Outlet />
+        </div>
       </main>
     </>
   );
