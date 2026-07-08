@@ -411,10 +411,6 @@ export async function updateOwnerListing(
   if (payload.contactOptions) updateData.contact_options = payload.contactOptions;
   if (payload.details !== undefined) updateData.details = payload.details;
 
-  if (existing.status === "rejected") {
-    updateData.reviewed_by = null;
-    updateData.reviewed_at = null;
-  }
 
   const { data, error } = await clientResult.data
     .from("listings")

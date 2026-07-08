@@ -1,6 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ClassifiedsResult, ModerateListingPayload } from "@/lib/classifieds-types";
-import { getClient, mapError, rowString } from "@/lib/api/shared";
+import { getClient, mapError } from "@/lib/api/shared";
 
 export async function adminModerateListing(
   canUseAdminAccess: boolean,
@@ -63,44 +62,3 @@ export async function adminModerateListing(
   return { ok: true, data: null };
 }
 
-async function createListingModerationNotification(
-  client: SupabaseClient,
-  listing: Record<string, unknown>,
-  payload: ModerateListingPayload,
-): Promise<ClassifiedsResult<null>> {
-  if (payload.status !== "approved" && payload.status !== "rejected") {
-    return { ok: true, data: null };
-  }
-
-  const ownerId = rowString(listing, "owner_id");
-  if (!ownerId) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد صاحب الإعلان لإرسال الإشعار." },
-    };
-  }
-
-  const listingTitle = rowString(listing, "title", "إعلانك");
-  const rejected = payload.status === "rejected";
-  const rejectionReason = payload.rejectionReason?.trim();
-
-  const { error } = await client.rpc("rawaj_create_notification", {
-    recipient_id: ownerId,
-    notification_type: rejected ? "listing.rejected" : "listing.approved",
-    title_ar: rejected ? "تم رفض إعلانك" : "تمت الموافقة على إعلانك",
-    body_ar: rejected
-      ? rejectionReason
-        ? `تم رفض إعلان "${listingTitle}". السبب: ${rejectionReason}`
-        : `تم رفض إعلان "${listingTitle}".`
-      : `تمت الموافقة على إعلان "${listingTitle}" وأصبح جاهزاً للظهور.`,
-    target_type: "listing",
-    target_id: payload.listingId,
-    metadata: {
-      listing_id: payload.listingId,
-      status: payload.status,
-    },
-  });
-
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: null };
-}

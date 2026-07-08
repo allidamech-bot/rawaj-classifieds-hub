@@ -27,7 +27,7 @@ import {
   fetchPublicCategories,
   fetchPublicGovernorates,
   fetchPublicSubcategories,
-  resubmitOwnerListing,
+  submitOwnerListingForReview,
   updateOwnerListing,
   uploadListingImage,
 } from "@/lib/classifieds-api";
@@ -301,7 +301,7 @@ function ManageListingPage() {
       return;
     }
 
-    const result = await resubmitOwnerListing(auth.profile?.id ?? null, listing.id, {
+    const saveResult = await updateOwnerListing(auth.profile?.id ?? null, listing.id, {
       categoryId: categoryId || undefined,
       subcategoryId: subcategoryId ?? null,
       governorateId: governorateId || undefined,
@@ -316,11 +316,23 @@ function ManageListingPage() {
       details: validation.details,
     });
 
+    if (!saveResult.ok) {
+      setResubmitting(false);
+      setSavingError(saveResult.error.message);
+      return;
+    }
+
+    const result = await submitOwnerListingForReview(
+      auth.profile?.id ?? null,
+      saveResult.data.id,
+    );
+
     setResubmitting(false);
     if (result.ok) {
       setListing(result.data);
       setSavingSuccess(text("تم إعادة إرسال الإعلان للمراجعة.", "Listing resubmitted for review."));
     } else {
+      setListing(saveResult.data);
       setSavingError(result.error.message);
     }
   }, [
