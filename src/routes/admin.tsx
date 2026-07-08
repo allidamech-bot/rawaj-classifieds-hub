@@ -1,6 +1,7 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   BadgeCheck,
+  Megaphone,
   FileCheck,
   Flag,
   LayoutDashboard,
@@ -69,6 +70,12 @@ const tabs: Array<{
     labelAr: "مساحات الإعلانات",
     icon: PanelsTopLeft,
     permission: "canManageAdPlacements",
+  },
+  {
+    to: "/admin/campaigns",
+    labelAr: "الحملات",
+    icon: Megaphone,
+    permission: "canManageAdCampaigns",
   },
 ];
 
