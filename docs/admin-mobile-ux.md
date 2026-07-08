@@ -9,3 +9,4 @@ The admin shell is mobile-first without changing the five-item public BottomNav.
 - No queue badge is displayed unless a real measured count exists; the shell does not fabricate counts.
 - Bottom safe-area padding prevents controls from colliding with device home indicators.
 - Desktop keeps the existing lightweight horizontal navigation behavior.
+- The active route exposes `aria-current="page"`, while the visible role chip reflects the authenticated profile rather than a fabricated label.
