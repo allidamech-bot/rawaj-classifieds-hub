@@ -8,7 +8,7 @@ import {
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
-export const Route = createFileRoute("/admin/safety")({
+export const Route = createFileRoute("/admin/safety" as never)({
   head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
   component: AdminSafetyPage,
 });
