@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import { BottomNav } from "@/components/BottomNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ExistingConversationBanner } from "@/features/listing-detail/ExistingConversationBanner";
 import { DraftRecoveryBanner } from "@/features/listing-studio/DraftRecoveryBanner";
 import { AuthProvider } from "@/lib/auth";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
@@ -163,6 +164,8 @@ function RootComponent() {
   const showFooter = shouldShowSiteFooter(pathname);
   const showBottomNav = shouldShowBottomNav(pathname);
   const showDraftRecovery = pathname === "/add-listing";
+  const listingDetailMatch = pathname.match(/^\/listings\/([^/]+)$/);
+  const listingDetailId = listingDetailMatch?.[1] ? decodeURIComponent(listingDetailMatch[1]) : null;
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -175,6 +178,7 @@ function RootComponent() {
             }`}
           >
             {showDraftRecovery && <DraftRecoveryBanner />}
+            {listingDetailId && <ExistingConversationBanner listingId={listingDetailId} />}
             <Outlet />
             {showFooter && <SiteFooter />}
           </div>
