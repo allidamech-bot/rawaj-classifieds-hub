@@ -101,13 +101,18 @@ export async function adminApplyListingModerationAction(
   if (!payload.listingId.trim() || !payload.expectedUpdatedAt || reason.length < 3) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "حدد الإعلان وأدخل سبباً واضحاً لا يقل عن 3 أحرف." },
+      error: {
+        code: "validation_error",
+        message: "حدد الإعلان وأدخل سبباً واضحاً لا يقل عن 3 أحرف.",
+      },
     };
   }
 
   if (
     payload.action === "extend_expiry" &&
-    (!Number.isInteger(payload.extendDays) || (payload.extendDays ?? 0) < 1 || (payload.extendDays ?? 0) > 365)
+    (!Number.isInteger(payload.extendDays) ||
+      (payload.extendDays ?? 0) < 1 ||
+      (payload.extendDays ?? 0) > 365)
   ) {
     return {
       ok: false,
