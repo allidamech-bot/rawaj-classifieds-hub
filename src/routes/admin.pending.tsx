@@ -20,6 +20,7 @@ export const Route = createFileRoute("/admin/pending")({
 function PendingPage() {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
+  const canModerateListings = auth.hasPermission("canModerateListings");
   const [listings, setListings] = useState<ClassifiedListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
@@ -32,7 +33,7 @@ function PendingPage() {
   async function loadPending() {
     setLoading(true);
     setError(null);
-    const result = await adminFetchPendingListings(auth.canAccessAdmin);
+    const result = await adminFetchPendingListings(canModerateListings);
     if (result.ok) setListings(result.data);
     else {
       setError(result.error);
@@ -43,7 +44,7 @@ function PendingPage() {
 
   useEffect(() => {
     void loadPending();
-  }, [auth.canAccessAdmin]);
+  }, [canModerateListings]);
 
   async function moderate(listing: ClassifiedListing, status: "approved" | "rejected") {
     setMessage("");
@@ -57,7 +58,7 @@ function PendingPage() {
       setMessage(text("أدخل سبب الرفض قبل تحديث الإعلان.", "Add a rejection reason first."));
       return;
     }
-    const result = await adminModerateListing(auth.canAccessAdmin, {
+    const result = await adminModerateListing(canModerateListings, {
       listingId: listing.id,
       status,
       reviewerId: auth.profile.id,
@@ -86,6 +87,18 @@ function PendingPage() {
     if (result.ok) {
       setImagesByListingId((current) => ({ ...current, [nextId]: result.data }));
     }
+  }
+
+  if (!canModerateListings) {
+    return (
+      <Panel
+        title={text("غير مخوّل لمراجعة الإعلانات", "Not authorized to moderate listings")}
+        body={text(
+          "يتطلب هذا الطابور صلاحية مراجعة الإعلانات المحفوظة في مصفوفة الوصول.",
+          "This queue requires the persisted listing moderation permission.",
+        )}
+      />
+    );
   }
 
   return (
