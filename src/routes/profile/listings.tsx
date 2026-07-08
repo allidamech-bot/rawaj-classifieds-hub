@@ -99,6 +99,13 @@ function MyListingsPage() {
     }),
     [listings],
   );
+  const latestDraft = useMemo(
+    () =>
+      listings
+        .filter((listing) => listing.status === "draft")
+        .sort((first, second) => second.updatedAt.localeCompare(first.updatedAt))[0] ?? null,
+    [listings],
+  );
 
   if (auth.status !== "signedIn") {
     return (
@@ -151,6 +158,38 @@ function MyListingsPage() {
           ratingAverage={ratingAverage}
           ratingCount={ratingCount}
         />
+
+        {latestDraft && (
+          <section className="rounded-[1.35rem] border border-gold/25 bg-gold/10 p-4 shadow-soft">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-extrabold text-primary">
+                  {text("لديك مسودة محفوظة", "You have a saved draft")}
+                </p>
+                <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                  {latestDraft.title} · {text("آخر حفظ", "Last saved")}{" "}
+                  {formatSavedAt(latestDraft.updatedAt, language)}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("needs_edit")}
+                  className="rounded-xl bg-card px-3 py-2 text-xs font-bold text-foreground hairline"
+                >
+                  {text("عرض المسودات", "Show drafts")}
+                </button>
+                <Link
+                  to="/profile/listings/$id"
+                  params={{ id: latestDraft.id }}
+                  className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+                >
+                  {text("متابعة المسودة", "Resume draft")}
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="rawaj-merchant-rail">
           <div className="rawaj-rail-approved">
@@ -474,6 +513,12 @@ function StoreListingCard({
               {listing.title}
             </h2>
           </div>
+          {listing.status === "draft" && (
+            <p className="rounded-lg bg-gold/10 p-2 text-[11px] font-semibold text-primary">
+              {text("مسودة محفوظة", "Saved draft")} · {text("آخر حفظ", "Last saved")}{" "}
+              {formatSavedAt(listing.updatedAt, language)}
+            </p>
+          )}
           <div className="text-lg font-bold text-foreground">
             {formatPriceLocalized(
               listing.price ?? 0,
@@ -518,7 +563,9 @@ function StoreListingCard({
                 className="inline-flex items-center gap-1 rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold transition hover:bg-secondary"
               >
                 <Pencil className="h-3 w-3" />
-                {text("تعديل", "Edit")}
+                {listing.status === "draft"
+                  ? text("متابعة المسودة", "Resume draft")
+                  : text("تعديل", "Edit")}
               </Link>
             ) : (
               <span className="inline-flex rounded-lg bg-muted-surface px-2 py-1 text-[10px] text-muted-foreground">
@@ -575,7 +622,9 @@ function StoreListingCard({
                 className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-2 py-1 text-[10px] font-bold text-destructive transition hover:bg-destructive/20"
               >
                 <Trash2 className="h-3 w-3" />
-                {text("حذف", "Delete")}
+                {listing.status === "draft"
+                  ? text("حذف المسودة", "Delete draft")
+                  : text("حذف", "Delete")}
               </button>
             )}
           </div>
@@ -594,10 +643,12 @@ function StoreListingCard({
             dir="rtl"
           >
             <h3 id="delete-dialog-title" className="text-base font-extrabold text-foreground">
-              حذف الإعلان؟
+              {listing.status === "draft" ? "حذف المسودة؟" : "حذف الإعلان؟"}
             </h3>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              سيتم حذف هذا الإعلان نهائيًا. لا يمكن التراجع عن هذا الإجراء.
+              {listing.status === "draft"
+                ? "سيتم حذف هذه المسودة نهائيًا. لا يمكن التراجع عن هذا الإجراء."
+                : "سيتم حذف هذا الإعلان نهائيًا. لا يمكن التراجع عن هذا الإجراء."}
             </p>
             {deleteError && (
               <p className="mt-3 rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">
@@ -611,7 +662,11 @@ function StoreListingCard({
                 onClick={() => void handleConfirmDelete()}
                 className="flex-1 rounded-xl bg-destructive px-4 py-2.5 text-xs font-bold text-white disabled:opacity-60"
               >
-                {deleting ? "جارٍ الحذف…" : "حذف الإعلان"}
+                {deleting
+                  ? "جارٍ الحذف…"
+                  : listing.status === "draft"
+                    ? "حذف المسودة"
+                    : "حذف الإعلان"}
               </button>
               <button
                 type="button"
@@ -682,4 +737,12 @@ function Panel({ title, body }: { title: string; body?: string }) {
       {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
     </section>
   );
+}
+
+function formatSavedAt(value: string, language: Language) {
+  if (!value) return "";
+  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
 }
