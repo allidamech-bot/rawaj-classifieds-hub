@@ -22,4 +22,5 @@ export * from "@/lib/api/reports";
 export * from "@/lib/api/support";
 export * from "@/lib/api/notifications";
 export * from "@/lib/api/admin";
+export * from "@/lib/api/admin-users";
 export * from "@/lib/api/profile";
