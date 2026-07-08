@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   ListChecks,
   Lock,
+  Siren,
   MessageSquareWarning,
   PanelsTopLeft,
   Sparkles,
@@ -83,6 +84,12 @@ const tabs: Array<{
     labelAr: "الحملات",
     icon: Megaphone,
     permission: "canManageAdCampaigns",
+  },
+  {
+    to: "/admin/owner-controls",
+    labelAr: "تحكم المالك",
+    icon: Siren,
+    permission: "canManageSystemSettings",
   },
 ];
 
