@@ -22,7 +22,15 @@ export interface ClassifiedsError {
 export type ClassifiedsResult<T> = { ok: true; data: T } | { ok: false; error: ClassifiedsError };
 
 export type ListingStatus =
-  "draft" | "pending_review" | "approved" | "rejected" | "archived" | "expired";
+  | "draft"
+  | "pending_review"
+  | "approved"
+  | "rejected"
+  | "archived"
+  | "expired"
+  | "sold"
+  | "rented"
+  | "unavailable";
 
 export type ListingCondition = "new" | "like_new" | "used" | "for_parts" | "not_applicable";
 
@@ -116,6 +124,9 @@ export interface ClassifiedListing {
   rejectionReason: string | null;
   publishedAt: string | null;
   archivedAt: string | null;
+  statusChangedAt?: string | null;
+  expiresAt?: string | null;
+  renewedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   primaryImageUrl?: string | null;

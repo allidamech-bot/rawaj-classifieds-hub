@@ -21,6 +21,12 @@ export function listingStatusLabel(status: ListingStatus, language: Language, de
       return language === "ar" ? "مؤرشف" : "Archived";
     case "expired":
       return language === "ar" ? "منتهي" : "Expired";
+    case "sold":
+      return language === "ar" ? "تم البيع" : "Sold";
+    case "rented":
+      return language === "ar" ? "تم التأجير" : "Rented";
+    case "unavailable":
+      return language === "ar" ? "غير متاح" : "Unavailable";
     default:
       return status;
   }
