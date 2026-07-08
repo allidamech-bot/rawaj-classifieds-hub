@@ -1,5 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Archive, Ban, CalendarPlus, CheckCircle2, Clock3, FileWarning, RefreshCw, XCircle } from "lucide-react";
+import {
+  Archive,
+  Ban,
+  CalendarPlus,
+  CheckCircle2,
+  Clock3,
+  FileWarning,
+  RefreshCw,
+  XCircle,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   adminApplyListingModerationAction,
@@ -17,7 +26,13 @@ export const Route = createFileRoute("/admin/listings")({
   component: AdminListingModerationConsole,
 });
 
-type StatusFilter = "all" | "pending_review" | "approved" | "rejected" | "archived" | "expired";
+type StatusFilter =
+  | "all"
+  | "pending_review"
+  | "approved"
+  | "rejected"
+  | "archived"
+  | "expired";
 
 const STATUS_FILTERS: StatusFilter[] = [
   "all",
@@ -71,11 +86,19 @@ function AdminListingModerationConsole() {
     });
   }, [listings, query, statusFilter]);
 
-  async function applyAction(listing: AdminModerationListingSummary, action: AdminListingModerationAction) {
+  async function applyAction(
+    listing: AdminModerationListingSummary,
+    action: AdminListingModerationAction,
+  ) {
     setMessage("");
     const reason = reasons[listing.id]?.trim() ?? "";
     if (reason.length < 3) {
-      setMessage(text("أدخل سبباً واضحاً قبل تنفيذ القرار.", "Enter a clear reason before applying the action."));
+      setMessage(
+        text(
+          "أدخل سبباً واضحاً قبل تنفيذ القرار.",
+          "Enter a clear reason before applying the action.",
+        ),
+      );
       return;
     }
 
@@ -95,7 +118,12 @@ function AdminListingModerationConsole() {
       return;
     }
 
-    setMessage(text("تم تنفيذ القرار وتسجيله في سجل التدقيق.", "Action applied and recorded in the audit log."));
+    setMessage(
+      text(
+        "تم تنفيذ القرار وتسجيله في سجل التدقيق.",
+        "Action applied and recorded in the audit log.",
+      ),
+    );
     setReasons((current) => ({ ...current, [listing.id]: "" }));
     await loadListings();
   }
@@ -134,7 +162,10 @@ function AdminListingModerationConsole() {
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder={text("ابحث بالعنوان أو ID الإعلان أو المالك", "Search title, listing ID, or owner")}
+          placeholder={text(
+            "ابحث بالعنوان أو ID الإعلان أو المالك",
+            "Search title, listing ID, or owner",
+          )}
           className="h-11 rounded-xl bg-muted-surface px-3 text-sm outline-none hairline"
         />
         <select
@@ -223,10 +254,22 @@ function ListingDecisionCard({
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] sm:grid-cols-4">
-        <Meta label={text("آخر تحديث", "Updated")} value={formatDateTime(listing.updatedAt, language)} />
-        <Meta label={text("نشر", "Published")} value={formatDateTime(listing.publishedAt, language)} />
-        <Meta label={text("انتهاء", "Expiry")} value={formatDateTime(listing.expiresAt, language)} />
-        <Meta label={text("مراجعة", "Reviewed")} value={formatDateTime(listing.reviewedAt, language)} />
+        <Meta
+          label={text("آخر تحديث", "Updated")}
+          value={formatDateTime(listing.updatedAt, language)}
+        />
+        <Meta
+          label={text("نشر", "Published")}
+          value={formatDateTime(listing.publishedAt, language)}
+        />
+        <Meta
+          label={text("انتهاء", "Expiry")}
+          value={formatDateTime(listing.expiresAt, language)}
+        />
+        <Meta
+          label={text("مراجعة", "Reviewed")}
+          value={formatDateTime(listing.reviewedAt, language)}
+        />
       </div>
 
       {listing.rejectionReason && (
@@ -239,7 +282,10 @@ function ListingDecisionCard({
         value={reason}
         onChange={(event) => onReasonChange(event.target.value)}
         rows={2}
-        placeholder={text("سبب القرار إلزامي وسيظهر في سجل التدقيق", "Decision reason is required and will be audited")}
+        placeholder={text(
+          "سبب القرار إلزامي وسيظهر في سجل التدقيق",
+          "Decision reason is required and will be audited",
+        )}
         className="mt-3 w-full resize-none rounded-xl bg-muted-surface px-3 py-2 text-xs outline-none hairline"
       />
 
@@ -277,13 +323,18 @@ function ListingDecisionCard({
 
 function allowedActions(status: ListingStatus): AdminListingModerationAction[] {
   if (status === "pending_review") return ["approve", "request_changes", "reject"];
-  if (status === "approved") return ["suspend", "unpublish", "archive", "expire_now", "extend_expiry"];
+  if (status === "approved") {
+    return ["suspend", "unpublish", "archive", "expire_now", "extend_expiry"];
+  }
   if (status === "expired") return ["extend_expiry", "archive"];
   if (status === "rejected") return ["archive"];
   return [];
 }
 
-function actionLabel(action: AdminListingModerationAction, text: (ar: string, en: string) => string) {
+function actionLabel(
+  action: AdminListingModerationAction,
+  text: (ar: string, en: string) => string,
+) {
   const labels: Record<AdminListingModerationAction, [string, string]> = {
     approve: ["اعتماد", "Approve"],
     reject: ["رفض", "Reject"],
@@ -309,8 +360,11 @@ function actionIcon(action: AdminListingModerationAction) {
 }
 
 function actionButtonClass(action: AdminListingModerationAction) {
-  const base = "inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold disabled:opacity-50";
-  if (action === "approve") return `${base} bg-emerald-trust text-emerald-trust-foreground`;
+  const base =
+    "inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold disabled:opacity-50";
+  if (action === "approve") {
+    return `${base} bg-emerald-trust text-emerald-trust-foreground`;
+  }
   if (action === "reject" || action === "suspend") {
     return `${base} bg-destructive text-destructive-foreground`;
   }
@@ -327,7 +381,9 @@ function Meta({ label, value }: { label: string; value: string }) {
 }
 
 function StatePanel({ title }: { title: string }) {
-  return <div className="rounded-2xl bg-card p-8 text-center text-sm font-bold hairline">{title}</div>;
+  return (
+    <div className="rounded-2xl bg-card p-8 text-center text-sm font-bold hairline">{title}</div>
+  );
 }
 
 function formatDateTime(value: string | null, language: "ar" | "en") {
