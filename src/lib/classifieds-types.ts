@@ -22,7 +22,15 @@ export interface ClassifiedsError {
 export type ClassifiedsResult<T> = { ok: true; data: T } | { ok: false; error: ClassifiedsError };
 
 export type ListingStatus =
-  "draft" | "pending_review" | "approved" | "rejected" | "archived" | "expired";
+  | "draft"
+  | "pending_review"
+  | "approved"
+  | "rejected"
+  | "archived"
+  | "expired"
+  | "sold"
+  | "rented"
+  | "unavailable";
 
 export type ListingCondition = "new" | "like_new" | "used" | "for_parts" | "not_applicable";
 
@@ -38,7 +46,11 @@ export type ListingReportType =
 export type ListingReportStatus = "new" | "under_review" | "resolved" | "rejected";
 
 export type SupportRequestType =
-  "complaint" | "suggestion" | "technical_issue" | "abuse_report" | "other";
+  | "complaint"
+  | "suggestion"
+  | "technical_issue"
+  | "abuse_report"
+  | "other";
 
 export type SupportRequestStatus = "new" | "under_review" | "resolved" | "rejected";
 
@@ -116,6 +128,9 @@ export interface ClassifiedListing {
   rejectionReason: string | null;
   publishedAt: string | null;
   archivedAt: string | null;
+  statusChangedAt: string | null;
+  expiresAt: string | null;
+  renewedAt: string | null;
   createdAt: string;
   updatedAt: string;
   primaryImageUrl?: string | null;
@@ -355,7 +370,11 @@ export interface ModerateSellerVerificationRequestPayload {
 }
 
 export type PromotionRequestStatus =
-  "pending_review" | "approved" | "rejected" | "expired" | "cancelled";
+  | "pending_review"
+  | "approved"
+  | "rejected"
+  | "expired"
+  | "cancelled";
 
 export type PromotionType = "featured_home" | "highlighted" | "urgent" | "top_category";
 
@@ -387,12 +406,6 @@ export interface CreateListingPromotionRequestPayload {
   paymentMethod?: string | null;
   paymentReference?: string | null;
   proofPath?: string | null;
-}
-
-export interface PromotionReceiptUploadPayload {
-  userId: string | null;
-  requestId: string;
-  file: File;
 }
 
 export interface ModerateListingPromotionRequestPayload {
@@ -473,19 +486,16 @@ export interface CreateListingPayload {
   details: Record<string, unknown>;
 }
 
-export interface UpdateListingPayload {
-  categoryId?: string;
-  subcategoryId?: string | null;
-  governorateId?: string;
-  title?: string;
-  description?: string;
-  price?: number | null;
-  priceType?: PriceType;
-  condition?: ListingCondition;
-  districtAr?: string | null;
-  contactName?: string | null;
-  contactOptions?: Record<string, boolean>;
-  details?: Record<string, unknown>;
+export interface UpdateListingPayload extends CreateListingPayload {
+  listingId: string;
+}
+
+export interface ListingImageUploadPayload {
+  userId: string | null;
+  listingId: string;
+  file: File;
+  altAr?: string | null;
+  sortOrder?: number;
 }
 
 export interface ListingFilters {
@@ -493,28 +503,20 @@ export interface ListingFilters {
   subcategoryId?: string;
   governorateId?: string;
   districtAr?: string;
-  priceMin?: number;
-  priceMax?: number;
-  carMake?: string;
-  carModel?: string;
-  yearFrom?: number;
-  yearTo?: number;
-  fuelType?: string;
-  transmission?: string;
-  propertyPurpose?: string;
-  propertyType?: string;
-  taxonomyPropertyPurpose?: string;
-  taxonomyPropertyType?: string;
-  taxonomyLegacySubcategoryId?: string;
-  rooms?: number;
-  rentalDuration?: string;
-  electronicsBrand?: string;
-  detailCondition?: string;
-  employmentType?: string;
-  salaryType?: string;
-  query?: string;
-  sort?: "latest" | "cheapest" | "expensive" | "featured";
+  minPrice?: number;
+  maxPrice?: number;
+  condition?: ListingCondition;
+  priceType?: PriceType;
+  searchTerm?: string;
+  sort?: "latest" | "featured" | "cheapest" | "expensive";
+  details?: Record<string, string | number | boolean | null>;
 }
+
+export type ListingCursor =
+  | { type: "latest"; created_at: string; id: string }
+  | { type: "featured"; is_featured: boolean; created_at: string; id: string }
+  | { type: "cheapest"; price: number | null; id: string }
+  | { type: "expensive"; price: number | null; id: string };
 
 export interface PaginatedListingsResponse<T> {
   items: T[];
@@ -522,32 +524,48 @@ export interface PaginatedListingsResponse<T> {
   pageSize: number;
 }
 
-export type ListingCursor =
-  | { type: "latest"; created_at: string; id: string }
-  | { type: "cheapest"; price: number | null; id: string }
-  | { type: "expensive"; price: number | null; id: string }
-  | { type: "featured"; is_featured: boolean; created_at: string; id: string };
-
-export interface ModerateListingPayload {
-  listingId: string;
-  status: Extract<ListingStatus, "approved" | "rejected" | "archived">;
-  reviewerId: string;
-  rejectionReason?: string | null;
-  expectedUpdatedAt: string;
+export interface AdminMetrics {
+  users: number;
+  listings: number;
+  pendingListings: number;
+  openReports: number;
+  supportRequests: number;
+  pendingReviews: number;
+  pendingVerifications: number;
+  pendingPromotions: number;
+  generatedAt: string;
 }
 
-export interface ListingImageUploadPayload {
-  userId: string | null;
-  listing: ClassifiedListing;
-  file: File;
-  sortOrder: number;
-  altAr?: string | null;
+export interface AdminUser {
+  id: string;
+  email: string;
+  displayName: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  governorate: string | null;
+  role: string;
+  accountStatus: string;
+  isVerified: boolean;
+  createdAt: string;
+  lastSignInAt: string | null;
 }
 
-export interface ModerateReportPayload {
-  reportId: string;
-  status: ListingReportStatus;
-  assignedTo?: string | null;
-  adminNote?: string | null;
-  resolvedAt?: string | null;
+export interface AdminListing {
+  id: string;
+  ownerId: string;
+  ownerDisplayName: string;
+  ownerEmail: string;
+  title: string;
+  status: ListingStatus;
+  categoryId: string;
+  governorateId: string;
+  createdAt: string;
+  rejectionReason: string | null;
+}
+
+export interface AdminRole {
+  userId: string;
+  role: "admin" | "super_admin";
+  createdAt: string;
 }
