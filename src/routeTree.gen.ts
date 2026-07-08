@@ -44,6 +44,7 @@ import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminPromotionsRouteImport } from './routes/admin.promotions'
 import { Route as AdminPendingRouteImport } from './routes/admin.pending'
 import { Route as AdminMessageReportsRouteImport } from './routes/admin.message-reports'
+import { Route as AdminListingsRouteImport } from './routes/admin.listings'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as ProfileListingsIdRouteImport } from './routes/profile/listings.$id'
 
@@ -222,6 +223,11 @@ const AdminMessageReportsRoute = AdminMessageReportsRouteImport.update({
   path: '/message-reports',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminListingsRoute = AdminListingsRouteImport.update({
+  id: '/listings',
+  path: '/listings',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAuditRoute = AdminAuditRouteImport.update({
   id: '/audit',
   path: '/audit',
@@ -256,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/verification': typeof VerificationRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
@@ -293,6 +300,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/verification': typeof VerificationRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
@@ -333,6 +341,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/verification': typeof VerificationRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
@@ -374,6 +383,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/verification'
     | '/admin/audit'
+    | '/admin/listings'
     | '/admin/message-reports'
     | '/admin/pending'
     | '/admin/promotions'
@@ -411,6 +421,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/verification'
     | '/admin/audit'
+    | '/admin/listings'
     | '/admin/message-reports'
     | '/admin/pending'
     | '/admin/promotions'
@@ -450,6 +461,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/verification'
     | '/admin/audit'
+    | '/admin/listings'
     | '/admin/message-reports'
     | '/admin/pending'
     | '/admin/promotions'
@@ -740,6 +752,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMessageReportsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/listings': {
+      id: '/admin/listings'
+      path: '/listings'
+      fullPath: '/admin/listings'
+      preLoaderRoute: typeof AdminListingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/audit': {
       id: '/admin/audit'
       path: '/audit'
@@ -759,6 +778,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAuditRoute: typeof AdminAuditRoute
+  AdminListingsRoute: typeof AdminListingsRoute
   AdminMessageReportsRoute: typeof AdminMessageReportsRoute
   AdminPendingRoute: typeof AdminPendingRoute
   AdminPromotionsRoute: typeof AdminPromotionsRoute
@@ -772,6 +792,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAuditRoute: AdminAuditRoute,
+  AdminListingsRoute: AdminListingsRoute,
   AdminMessageReportsRoute: AdminMessageReportsRoute,
   AdminPendingRoute: AdminPendingRoute,
   AdminPromotionsRoute: AdminPromotionsRoute,

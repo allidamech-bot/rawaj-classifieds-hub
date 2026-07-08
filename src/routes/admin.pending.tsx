@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Clock, FileCheck } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Clock, FileCheck, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   adminFetchPendingListings,
@@ -104,7 +104,16 @@ function PendingPage() {
               )}
             </p>
           </div>
-          <Badge>{text("محمي بالصلاحيات", "Permission protected")}</Badge>
+          <div className="flex flex-wrap gap-2">
+            <Badge>{text("محمي بالصلاحيات", "Permission protected")}</Badge>
+            <Link
+              to={"/admin/listings" as "/admin"}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              {text("وحدة القرارات", "Moderation console")}
+            </Link>
+          </div>
         </div>
         {message && (
           <p className="mt-3 rounded-xl bg-muted-surface p-2 text-xs font-semibold">{message}</p>
@@ -317,7 +326,7 @@ function PendingListingDetails({
             {contentFlags.map((flag) => (
               <span
                 key={flag}
-                className="rounded-md bg-card px-2 py-1 text-[10px] font-bold text-warning hairline"
+                className="rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline"
               >
                 {flag}
               </span>
@@ -325,43 +334,50 @@ function PendingListingDetails({
           </div>
         </div>
       )}
-      <div className="mt-3">
-        <p className="mb-1 text-xs font-bold">{text("تفاصيل إضافية", "Additional details")}</p>
-        {categoryRows.length === 0 && detailsEntries.length === 0 ? (
-          <p className="rounded-lg bg-card p-3 text-xs text-muted-foreground">-</p>
-        ) : (
-          <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {categoryRows.map(([label, value]) => (
-              <DetailItem key={label} label={label} value={value} />
-            ))}
+      {categoryRows.length > 0 && (
+        <div className="mt-3 grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
+          {categoryRows.map(([label, value]) => (
+            <DetailItem key={label} label={label} value={displayValue(value)} />
+          ))}
+        </div>
+      )}
+      {detailsEntries.length > 0 && (
+        <div className="mt-3">
+          <p className="mb-1 text-xs font-bold">{text("تفاصيل إضافية", "Additional details")}</p>
+          <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
             {detailsEntries.map(([key, value]) => (
-              <DetailItem key={key} label={key} value={safeDetailValue(value)} />
+              <DetailItem key={key} label={key} value={displayValue(value)} />
             ))}
-          </dl>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
       <div className="mt-3">
         <p className="mb-1 text-xs font-bold">{text("الصور", "Images")}</p>
         {imagesLoading ? (
-          <p className="rounded-lg bg-card p-3 text-xs text-muted-foreground">
-            {text("جاري تحميل الصور", "Loading images")}
+          <p className="text-xs text-muted-foreground">
+            {text("جارٍ تحميل الصور", "Loading images")}
           </p>
         ) : images.length === 0 ? (
-          <p className="rounded-lg bg-card p-3 text-xs text-muted-foreground">-</p>
+          <p className="text-xs text-muted-foreground">{text("لا توجد صور", "No images")}</p>
         ) : (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {images
-              .filter((image) => image.publicUrl)
-              .map((image) => (
+            {images.map((image) =>
+              image.publicUrl ? (
                 <img
                   key={image.id}
-                  src={image.publicUrl ?? ""}
+                  src={image.publicUrl}
                   alt={image.altAr ?? listing.title}
-                  loading="lazy"
-                  decoding="async"
-                  className="aspect-[4/3] rounded-lg object-cover hairline"
+                  className="aspect-square w-full rounded-lg object-cover hairline"
                 />
-              ))}
+              ) : (
+                <div
+                  key={image.id}
+                  className="grid aspect-square place-items-center rounded-lg bg-card p-2 text-[10px] text-muted-foreground hairline"
+                >
+                  {text("رابط الصورة غير متاح", "Image URL unavailable")}
+                </div>
+              ),
+            )}
           </div>
         )}
       </div>
@@ -369,26 +385,26 @@ function PendingListingDetails({
   );
 }
 
-function DetailItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg bg-card px-3 py-2">
-      <dt className="text-[10px] font-semibold text-muted-foreground">{label}</dt>
-      <dd className="mt-1 break-words text-xs font-bold text-foreground">{value}</dd>
-    </div>
-  );
-}
-
 function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+    <span className="rounded-full bg-muted-surface px-2 py-1 text-[10px] font-bold hairline">
       {children}
     </span>
   );
 }
 
+function DetailItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg bg-card p-2 hairline">
+      <p className="text-[10px] font-bold text-muted-foreground">{label}</p>
+      <p className="mt-1 break-words text-xs">{value || "-"}</p>
+    </div>
+  );
+}
+
 function detailString(details: Record<string, unknown>, key: string) {
   const value = details[key];
-  return typeof value === "string" ? value : "";
+  return typeof value === "string" ? value.trim() : "";
 }
 
 function detailStringArray(details: Record<string, unknown>, key: string) {
@@ -398,30 +414,34 @@ function detailStringArray(details: Record<string, unknown>, key: string) {
     : [];
 }
 
-function safeDetailValue(value: unknown) {
+function displayValue(value: unknown): string {
   if (typeof value === "string") return value;
   if (typeof value === "number" || typeof value === "boolean") return String(value);
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return "-";
-  }
+  if (Array.isArray(value)) return value.map(displayValue).filter(Boolean).join("، ");
+  if (value && typeof value === "object") return JSON.stringify(value);
+  return "-";
 }
 
 function contactOptionsLabel(
   options: Record<string, boolean>,
   text: (ar: string, en: string) => string,
 ) {
-  const labels = [
-    options.phone ? text("هاتف", "Phone") : null,
-    options.whatsapp ? text("واتساب", "WhatsApp") : null,
-  ].filter(Boolean);
-  return labels.length > 0 ? labels.join(" · ") : "-";
+  const labels: Record<string, string> = {
+    message: text("رسائل", "Messages"),
+    phone: text("هاتف", "Phone"),
+    whatsapp: text("واتساب", "WhatsApp"),
+  };
+  const enabled = Object.entries(options)
+    .filter(([, value]) => value)
+    .map(([key]) => labels[key] ?? key);
+  return enabled.length > 0 ? enabled.join("، ") : "-";
 }
 
 function formatDate(value: string, language: Language) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en", {
     dateStyle: "medium",
-  }).format(new Date(value));
+    timeStyle: "short",
+  }).format(date);
 }
