@@ -84,6 +84,9 @@ export function mapListing(
     rejectionReason: rowNullableString(row, "rejection_reason"),
     publishedAt: rowNullableString(row, "published_at"),
     archivedAt: rowNullableString(row, "archived_at"),
+    statusChangedAt: rowNullableString(row, "status_changed_at"),
+    expiresAt: rowNullableString(row, "expires_at"),
+    renewedAt: rowNullableString(row, "renewed_at"),
     createdAt: rowString(row, "created_at"),
     updatedAt: rowString(row, "updated_at"),
   };
