@@ -10,7 +10,7 @@ import {
   UserRoundCheck,
   Users,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { AccountStatus } from "@/lib/auth-types";
 import {
   adminFetchUsers,
@@ -52,7 +52,7 @@ function UsersPage() {
   const [restrictionType, setRestrictionType] = useState<UserRestrictionType>("posting");
   const [busyAction, setBusyAction] = useState("");
 
-  const loadUsers = useCallback(async () => {
+  async function loadUsers() {
     setLoading(true);
     setError("");
     const result = await adminFetchUsers(auth.canAccessAdmin);
@@ -62,11 +62,23 @@ function UsersPage() {
       return;
     }
     setUsers(result.data);
-  }, [auth.canAccessAdmin]);
+  }
 
   useEffect(() => {
-    void loadUsers();
-  }, [loadUsers]);
+    let cancelled = false;
+    void adminFetchUsers(auth.canAccessAdmin).then((result) => {
+      if (cancelled) return;
+      setLoading(false);
+      if (!result.ok) {
+        setError(result.error.message);
+        return;
+      }
+      setUsers(result.data);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.canAccessAdmin]);
 
   const filteredUsers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -537,13 +549,7 @@ function Message({
   children: React.ReactNode;
   tone: "error" | "success";
 }) {
-  return (
-    <div
-      className={`rounded-xl p-3 text-xs font-semibold hairline ${
-        tone === "error" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"
-      }`}
-    >
-      {children}
-    </div>
-  );
+  const toneClass =
+    tone === "error" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success";
+  return <div className={`rounded-xl p-3 text-xs font-semibold hairline ${toneClass}`}>{children}</div>;
 }
