@@ -1,0 +1,4 @@
+Admin security regression failed:
+
+- listing moderation must reject stale actions
+- public BottomNav must remain exactly five items
