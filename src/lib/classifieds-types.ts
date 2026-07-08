@@ -400,6 +400,12 @@ export interface CreateListingPromotionRequestPayload {
   proofPath?: string | null;
 }
 
+export interface PromotionReceiptUploadPayload {
+  userId: string | null;
+  requestId: string;
+  file: File;
+}
+
 export interface ModerateListingPromotionRequestPayload {
   requestId: string;
   status: Extract<PromotionRequestStatus, "approved" | "rejected">;
@@ -478,16 +484,19 @@ export interface CreateListingPayload {
   details: Record<string, unknown>;
 }
 
-export interface UpdateListingPayload extends CreateListingPayload {
-  listingId: string;
-}
-
-export interface ListingImageUploadPayload {
-  userId: string | null;
-  listingId: string;
-  file: File;
-  altAr?: string | null;
-  sortOrder?: number;
+export interface UpdateListingPayload {
+  categoryId?: string;
+  subcategoryId?: string | null;
+  governorateId?: string;
+  title?: string;
+  description?: string;
+  price?: number | null;
+  priceType?: PriceType;
+  condition?: ListingCondition;
+  districtAr?: string | null;
+  contactName?: string | null;
+  contactOptions?: Record<string, boolean>;
+  details?: Record<string, unknown>;
 }
 
 export interface ListingFilters {
@@ -495,20 +504,28 @@ export interface ListingFilters {
   subcategoryId?: string;
   governorateId?: string;
   districtAr?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  condition?: ListingCondition;
-  priceType?: PriceType;
-  searchTerm?: string;
-  sort?: "latest" | "featured" | "cheapest" | "expensive";
-  details?: Record<string, string | number | boolean | null>;
+  priceMin?: number;
+  priceMax?: number;
+  carMake?: string;
+  carModel?: string;
+  yearFrom?: number;
+  yearTo?: number;
+  fuelType?: string;
+  transmission?: string;
+  propertyPurpose?: string;
+  propertyType?: string;
+  taxonomyPropertyPurpose?: string;
+  taxonomyPropertyType?: string;
+  taxonomyLegacySubcategoryId?: string;
+  rooms?: number;
+  rentalDuration?: string;
+  electronicsBrand?: string;
+  detailCondition?: string;
+  employmentType?: string;
+  salaryType?: string;
+  query?: string;
+  sort?: "latest" | "cheapest" | "expensive" | "featured";
 }
-
-export type ListingCursor =
-  | { type: "latest"; created_at: string; id: string }
-  | { type: "featured"; is_featured: boolean; created_at: string; id: string }
-  | { type: "cheapest"; price: number | null; id: string }
-  | { type: "expensive"; price: number | null; id: string };
 
 export interface PaginatedListingsResponse<T> {
   items: T[];
@@ -516,48 +533,32 @@ export interface PaginatedListingsResponse<T> {
   pageSize: number;
 }
 
-export interface AdminMetrics {
-  users: number;
-  listings: number;
-  pendingListings: number;
-  openReports: number;
-  supportRequests: number;
-  pendingReviews: number;
-  pendingVerifications: number;
-  pendingPromotions: number;
-  generatedAt: string;
+export type ListingCursor =
+  | { type: "latest"; created_at: string; id: string }
+  | { type: "cheapest"; price: number | null; id: string }
+  | { type: "expensive"; price: number | null; id: string }
+  | { type: "featured"; is_featured: boolean; created_at: string; id: string };
+
+export interface ModerateListingPayload {
+  listingId: string;
+  status: Extract<ListingStatus, "approved" | "rejected" | "archived">;
+  reviewerId: string;
+  rejectionReason?: string | null;
+  expectedUpdatedAt: string;
 }
 
-export interface AdminUser {
-  id: string;
-  email: string;
-  displayName: string;
-  firstName: string | null;
-  lastName: string | null;
-  phone: string | null;
-  governorate: string | null;
-  role: string;
-  accountStatus: string;
-  isVerified: boolean;
-  createdAt: string;
-  lastSignInAt: string | null;
+export interface ListingImageUploadPayload {
+  userId: string | null;
+  listing: ClassifiedListing;
+  file: File;
+  sortOrder: number;
+  altAr?: string | null;
 }
 
-export interface AdminListing {
-  id: string;
-  ownerId: string;
-  ownerDisplayName: string;
-  ownerEmail: string;
-  title: string;
-  status: ListingStatus;
-  categoryId: string;
-  governorateId: string;
-  createdAt: string;
-  rejectionReason: string | null;
-}
-
-export interface AdminRole {
-  userId: string;
-  role: "admin" | "super_admin";
-  createdAt: string;
+export interface ModerateReportPayload {
+  reportId: string;
+  status: ListingReportStatus;
+  assignedTo?: string | null;
+  adminNote?: string | null;
+  resolvedAt?: string | null;
 }
