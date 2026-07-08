@@ -14,10 +14,7 @@ import {
   type NotificationPreferenceKey,
   type NotificationPreferences,
 } from "@/lib/classifieds-api";
-import {
-  getPushReadinessSnapshot,
-  type PushReadinessSnapshot,
-} from "@/lib/push-readiness";
+import { getPushReadinessSnapshot, type PushReadinessSnapshot } from "@/lib/push-readiness";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
