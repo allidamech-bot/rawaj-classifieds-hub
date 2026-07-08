@@ -1,0 +1,122 @@
+name: Moderation Console Integration
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.head_ref == 'feature/moderation-console-final-integration' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/moderation-console-final-integration
+          fetch-depth: 0
+
+      - name: Apply permission and queue integration
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          # Admin navigation: expose the lifecycle decision console explicitly.
+          p = Path('src/routes/admin.tsx')
+          s = p.read_text()
+          s = s.replace('  LayoutDashboard,\n', '  LayoutDashboard,\n  ListChecks,\n', 1)
+          marker = '''  {\n    to: "/admin/pending",\n    labelAr: "مراجعة الإعلانات",\n    icon: FileCheck,\n    permission: "canModerateListings",\n  },\n'''
+          insert = marker + '''  {\n    to: "/admin/listings",\n    labelAr: "قرارات الإعلانات",\n    icon: ListChecks,\n    permission: "canModerateListings",\n  },\n'''
+          if marker not in s:
+              raise SystemExit('admin navigation marker missing')
+          p.write_text(s.replace(marker, insert, 1))
+
+          # Pending queue: exact permission, including direct route access and action calls.
+          p = Path('src/routes/admin.pending.tsx')
+          s = p.read_text()
+          s = s.replace(
+              '  const { language, text } = useUiPreferences();\n',
+              '  const { language, text } = useUiPreferences();\n  const canModerateListings = auth.hasPermission("canModerateListings");\n',
+              1,
+          )
+          s = s.replace('adminFetchPendingListings(auth.canAccessAdmin)', 'adminFetchPendingListings(canModerateListings)')
+          s = s.replace('  }, [auth.canAccessAdmin]);', '  }, [canModerateListings]);', 1)
+          s = s.replace('adminModerateListing(auth.canAccessAdmin, {', 'adminModerateListing(canModerateListings, {')
+          render_marker = '  return (\n    <div className="space-y-5">'
+          guard = '''  if (!canModerateListings) {\n    return (\n      <Panel\n        title={text("غير مخوّل لمراجعة الإعلانات", "Not authorized to moderate listings")}\n        body={text(\n          "يتطلب هذا الطابور صلاحية مراجعة الإعلانات المحفوظة في مصفوفة الوصول.",\n          "This queue requires the persisted listing moderation permission.",\n        )}\n      />\n    );\n  }\n\n'''
+          if render_marker not in s:
+              raise SystemExit('pending render marker missing')
+          p.write_text(s.replace(render_marker, guard + render_marker, 1))
+
+          # Lifecycle console: exact permission and integrated queue summary/links.
+          p = Path('src/routes/admin.listings.tsx')
+          s = p.read_text()
+          s = s.replace(
+              'import { createFileRoute } from "@tanstack/react-router";',
+              'import { createFileRoute, Link } from "@tanstack/react-router";',
+              1,
+          )
+          s = s.replace('  FileWarning,\n', '  FileWarning,\n  Flag,\n  ListChecks,\n  MessageSquareWarning,\n', 1)
+          s = s.replace(
+              '  const { language, text } = useUiPreferences();\n',
+              '  const { language, text } = useUiPreferences();\n  const canModerateListings = auth.hasPermission("canModerateListings");\n',
+              1,
+          )
+          s = s.replace('adminFetchModerationListings(auth.canAccessAdmin)', 'adminFetchModerationListings(canModerateListings)')
+          s = s.replace('  }, [auth.canAccessAdmin]);', '  }, [canModerateListings]);', 1)
+          s = s.replace('adminApplyListingModerationAction(auth.canAccessAdmin, {', 'adminApplyListingModerationAction(canModerateListings, {')
+
+          memo_marker = '''  const visibleListings = useMemo(() => {\n'''
+          summary = '''  const queueSummary = useMemo(\n    () => ({\n      pending: listings.filter((listing) => listing.status === "pending_review").length,\n      approved: listings.filter((listing) => listing.status === "approved").length,\n      rejected: listings.filter((listing) => listing.status === "rejected").length,\n      expired: listings.filter((listing) => listing.status === "expired").length,\n    }),\n    [listings],\n  );\n\n'''
+          if memo_marker not in s:
+              raise SystemExit('listing memo marker missing')
+          s = s.replace(memo_marker, summary + memo_marker, 1)
+
+          render_marker = '  return (\n    <div className="space-y-5">'
+          guard = '''  if (!canModerateListings) {\n    return (\n      <StatePanel\n        title={text("غير مخوّل لاتخاذ قرارات على الإعلانات", "Not authorized for listing decisions")}\n      />\n    );\n  }\n\n'''
+          if render_marker not in s:
+              raise SystemExit('listing render marker missing')
+          s = s.replace(render_marker, guard + render_marker, 1)
+
+          hero_end = '''      </section>\n\n      <section className="grid gap-3 rounded-2xl bg-card p-4 hairline sm:grid-cols-[1fr_auto]">'''
+          integrated = '''      </section>\n\n      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">\n        <QueueCard\n          icon={ListChecks}\n          label={text("بانتظار المراجعة", "Pending review")}\n          value={queueSummary.pending}\n          to="/admin/pending"\n        />\n        <QueueCard\n          icon={CheckCircle2}\n          label={text("معتمدة ضمن الوحدة", "Approved in console")}\n          value={queueSummary.approved}\n          to="/admin/listings"\n        />\n        {auth.hasPermission("canManageReports") ? (\n          <QueueCard\n            icon={Flag}\n            label={text("بلاغات الإعلانات", "Listing reports")}\n            value={null}\n            to="/admin/reports"\n          />\n        ) : (\n          <QueueCard\n            icon={XCircle}\n            label={text("مرفوضة ضمن الوحدة", "Rejected in console")}\n            value={queueSummary.rejected}\n            to="/admin/listings"\n          />\n        )}\n        {auth.hasPermission("canManageReports") ? (\n          <QueueCard\n            icon={MessageSquareWarning}\n            label={text("بلاغات الرسائل", "Message reports")}\n            value={null}\n            to="/admin/message-reports"\n          />\n        ) : (\n          <QueueCard\n            icon={Clock3}\n            label={text("منتهية ضمن الوحدة", "Expired in console")}\n            value={queueSummary.expired}\n            to="/admin/listings"\n          />\n        )}\n      </section>\n\n      <section className="grid gap-3 rounded-2xl bg-card p-4 hairline sm:grid-cols-[1fr_auto]">'''
+          if hero_end not in s:
+              raise SystemExit('listing hero marker missing')
+          s = s.replace(hero_end, integrated, 1)
+
+          helper_marker = '''function ListingDecisionCard({\n'''
+          helper = '''function QueueCard({\n  icon: Icon,\n  label,\n  value,\n  to,\n}: {\n  icon: typeof ListChecks;\n  label: string;\n  value: number | null;\n  to: string;\n}) {\n  return (\n    <Link\n      to={to as "/admin"}\n      className="rounded-2xl bg-card p-4 hairline transition hover:-translate-y-0.5 hover:shadow-soft"\n    >\n      <div className="flex items-start justify-between gap-3">\n        <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">\n          <Icon className="h-4 w-4" />\n        </span>\n        {value !== null ? <strong className="text-xl font-extrabold">{value}</strong> : null}\n      </div>\n      <p className="mt-3 text-xs font-bold">{label}</p>\n    </Link>\n  );\n}\n\n'''
+          if helper_marker not in s:
+              raise SystemExit('listing helper marker missing')
+          p.write_text(s.replace(helper_marker, helper + helper_marker, 1))
+          PY
+
+      - name: Add integration contract
+        shell: bash
+        run: |
+          cat > docs/moderation-console-integration.md <<'EOF'
+          # RAWAJ Moderation Console Integration
+
+          Listing moderation has two explicit surfaces under one permission boundary:
+
+          - `/admin/pending` is the detailed pending-review queue, including full listing details and media inspection.
+          - `/admin/listings` is the lifecycle decision console for approve, request changes, reject, suspend, unpublish, archive, expire, and extend-expiry actions.
+
+          Both routes require the persisted `canModerateListings` permission, including direct URL access. Action clients receive the same effective permission rather than broad `canAccessAdmin` state.
+
+          The lifecycle console exposes live counts from its loaded moderation dataset and permission-aware links to listing and message report queues. Stale-write protection and required decision reasons remain authoritative for mutations.
+          EOF
+
+      - name: Remove workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/moderation-console-integration.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/admin.tsx src/routes/admin.pending.tsx src/routes/admin.listings.tsx docs/moderation-console-integration.md .github/workflows/moderation-console-integration.yml
+          git commit -m "Integrate moderation console permissions and queues"
+          git push origin HEAD:feature/moderation-console-final-integration
