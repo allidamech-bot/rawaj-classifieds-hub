@@ -2,6 +2,9 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { isDeepStrictEqual } from "node:util";
+import { createClient } from "@supabase/supabase-js";
+import { buildOwnerUpdateRpcArgs } from "../src/lib/api/listing-write-contract.ts";
 
 const root = process.cwd();
 const read = (path) => readFileSync(join(root, path), "utf8");
@@ -16,11 +19,13 @@ function forbidText(source, needle, label) {
 }
 
 const listings = read("src/lib/api/listings.ts");
+const listingWriteRpc = read("src/lib/api/listing-write-rpc.ts");
 const lifecycle = read("src/lib/api/listing-lifecycle.ts");
 const locationWrite = read("src/lib/api/listing-location-write.ts");
 const admin = read("src/lib/api/admin.ts");
 const reports = read("src/lib/api/reports.ts");
 const addListing = read("src/routes/add-listing.tsx");
+const editListing = read("src/routes/profile/listings.$id.tsx");
 const publicBase = read("src/lib/api/listings.ts");
 const publicLocation = read("src/lib/api/location-aware-listings.ts");
 const publicCanonical = read("src/lib/api/location-aware-listings-v2.ts");
@@ -33,6 +38,9 @@ const migration36 = read(
 );
 const migration39 = read(
   "supabase/migrations/202607090001_listing_review_lifecycle_self_contained.sql",
+);
+const ownerUpdateRuntimeMigration = read(
+  "supabase/migrations/202607090002_owner_update_rpc_runtime_v2.sql",
 );
 
 requireText(locationWrite, '.from("governorates")', "canonical governorate mapping");
@@ -64,6 +72,7 @@ forbidText(
   "no direct pending-review creation",
 );
 requireText(listings, 'rpc("rawaj_submit_listing_for_review"', "protected listing submit RPC");
+forbidText(listings, 'rpc("rawaj_owner_update_listing"', "no compatibility owner-update RPC call");
 forbidText(
   listings,
   "export async function submitOwnerListingForReview",
@@ -78,6 +87,23 @@ forbidText(
 requireText(admin, 'rpc("rawaj_review_listing_decision"', "protected moderation decision RPC");
 requireText(reports, 'rpc("rawaj_review_queue_pending")', "protected pending queue RPC");
 requireText(addListing, "submitOwnerListingForReview(", "add-listing protected submit path");
+requireText(addListing, "updateOwnerListing(", "autosave and submit preparation canonical update");
+requireText(editListing, "updateOwnerListing(", "manual edit canonical update");
+requireText(
+  listingWriteRpc,
+  'rpc("rawaj_owner_update_listing_v2", rpcArgs)',
+  "versioned canonical owner-update RPC",
+);
+requireText(
+  listingWriteRpc,
+  "buildOwnerUpdateRpcArgs(cleanListingId, patch)",
+  "owner-update argument invariant",
+);
+forbidText(
+  listingWriteRpc,
+  '.from("listings")\n    .update(',
+  "no direct owner listing update fallback",
+);
 
 for (const [label, source] of [
   ["base public listings", publicBase],
@@ -137,10 +163,62 @@ requireText(
 );
 requireText(migration39, "stale_review", "039 stale-review protection");
 requireText(
-  read("src/lib/api/listing-write-rpc.ts"),
+  ownerUpdateRuntimeMigration,
+  "rawaj_owner_update_listing_v2",
+  "versioned owner-update database route",
+);
+requireText(
+  ownerUpdateRuntimeMigration,
+  "p_patch jsonb default '{}'::jsonb",
+  "database empty-patch default",
+);
+requireText(
+  ownerUpdateRuntimeMigration,
+  "grant execute on function public.rawaj_owner_update_listing_v2(uuid, jsonb) to authenticated",
+  "versioned owner-update authenticated grant",
+);
+requireText(
+  listingWriteRpc,
   'status === "pending_review"',
   "submit success requires pending-review status",
 );
+
+const emptyPatchArgs = buildOwnerUpdateRpcArgs(" listing-id ", undefined);
+if (
+  !isDeepStrictEqual(emptyPatchArgs, {
+    p_listing_id: "listing-id",
+    p_patch: {},
+  })
+) {
+  failures.push("empty owner-update patch is not normalized to explicit {}");
+}
+
+let serializedRpcBody = null;
+const serializationClient = createClient("https://example.supabase.co", "test-anon-key", {
+  global: {
+    fetch: async (_input, init) => {
+      serializedRpcBody = typeof init?.body === "string" ? init.body : null;
+      return new Response("[]", {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+  },
+});
+await serializationClient.rpc(
+  "rawaj_owner_update_listing_v2",
+  buildOwnerUpdateRpcArgs("listing-id", undefined),
+);
+
+const parsedRpcBody = serializedRpcBody ? JSON.parse(serializedRpcBody) : null;
+if (
+  !isDeepStrictEqual(parsedRpcBody, {
+    p_listing_id: "listing-id",
+    p_patch: {},
+  })
+) {
+  failures.push(`Supabase serialized unexpected owner-update body: ${serializedRpcBody}`);
+}
 
 if (failures.length > 0) {
   console.error("Listing system regression contract failed:\n");

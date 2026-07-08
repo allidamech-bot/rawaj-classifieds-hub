@@ -5,6 +5,7 @@ import type {
 } from "@/lib/classifieds-types";
 import { fetchOwnerListingDetail, mapListing } from "@/lib/api/listings";
 import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
+import { buildOwnerUpdateRpcArgs } from "@/lib/api/listing-write-contract";
 import { getClient, mapError, rowString } from "@/lib/api/shared";
 
 export async function updateOwnerListing(
@@ -75,10 +76,8 @@ export async function updateOwnerListing(
   if (payload.contactOptions) patch.contact_options = payload.contactOptions;
   if (payload.details !== undefined) patch.details = payload.details;
 
-  const { data, error } = await clientResult.data.rpc("rawaj_owner_update_listing", {
-    p_listing_id: cleanListingId,
-    p_patch: patch,
-  });
+  const rpcArgs = buildOwnerUpdateRpcArgs(cleanListingId, patch);
+  const { data, error } = await clientResult.data.rpc("rawaj_owner_update_listing_v2", rpcArgs);
 
   if (error) return { ok: false, error: mapError(error, "owner_listing_update") };
 
