@@ -20,6 +20,7 @@ import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { shouldShowSiteFooter, shouldShowBottomNav } from "@/lib/primary-navigation";
 import { createSeo } from "@/lib/seo";
 import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
+import { UnreadActivityProvider } from "@/lib/unread-activity";
 import homeSignatureCss from "../home-signature.css?url";
 import listingStudioSignatureCss from "../listing-studio-signature.css?url";
 import messagingSignatureCss from "../messaging-signature.css?url";
@@ -174,19 +175,21 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <UiPreferencesProvider>
         <AuthProvider>
-          <HtmlAttributes />
-          <div
-            className={`min-h-dvh bg-background text-foreground lg:pb-8 ${
-              showBottomNav ? "pb-24" : "pb-6"
-            }`}
-          >
-            {showDraftRecovery && <DraftRecoveryBanner />}
-            {listingDetailId && <ViewedBeforeBanner listingId={listingDetailId} />}
-            {listingDetailId && <ExistingConversationBanner listingId={listingDetailId} />}
-            <Outlet />
-            {showFooter && <SiteFooter />}
-          </div>
-          <BottomNav />
+          <UnreadActivityProvider>
+            <HtmlAttributes />
+            <div
+              className={`min-h-dvh bg-background text-foreground lg:pb-8 ${
+                showBottomNav ? "pb-24" : "pb-6"
+              }`}
+            >
+              {showDraftRecovery && <DraftRecoveryBanner />}
+              {listingDetailId && <ViewedBeforeBanner listingId={listingDetailId} />}
+              {listingDetailId && <ExistingConversationBanner listingId={listingDetailId} />}
+              <Outlet />
+              {showFooter && <SiteFooter />}
+            </div>
+            <BottomNav />
+          </UnreadActivityProvider>
         </AuthProvider>
       </UiPreferencesProvider>
     </QueryClientProvider>
