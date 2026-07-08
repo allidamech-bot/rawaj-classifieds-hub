@@ -1,4 +1,4 @@
-export type PushPermissionState = NotificationPermission | "unsupported";
+export type PushPermissionState = "default" | "denied" | "granted" | "unsupported";
 
 export interface PushReadinessSnapshot {
   notificationApiSupported: boolean;
