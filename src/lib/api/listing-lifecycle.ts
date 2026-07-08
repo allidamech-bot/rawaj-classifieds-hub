@@ -1,9 +1,6 @@
 import { fetchOwnerListingDetail } from "@/lib/api/listings";
 import { getClient, mapError } from "@/lib/api/shared";
-import type {
-  ClassifiedListing,
-  ClassifiedsResult,
-} from "@/lib/classifieds-types";
+import type { ClassifiedListing, ClassifiedsResult } from "@/lib/classifieds-types";
 
 export type OwnerCloseListingStatus = "sold" | "rented" | "unavailable";
 
@@ -60,8 +57,7 @@ async function transitionOwnerListing(
       ok: false,
       error: {
         code: "permission_denied",
-        message:
-          "تعذر تغيير حالة الإعلان. ربما تغيرت حالته أو لم تعد العملية متاحة.",
+        message: "تعذر تغيير حالة الإعلان. ربما تغيرت حالته أو لم تعد العملية متاحة.",
       },
     };
   }
@@ -77,10 +73,7 @@ export function closeOwnerListing(
   return transitionOwnerListing(userId, listingId, ["approved"], targetStatus);
 }
 
-export function reactivateOwnerListing(
-  userId: string | null,
-  listingId: string,
-) {
+export function reactivateOwnerListing(userId: string | null, listingId: string) {
   return transitionOwnerListing(
     userId,
     listingId,
