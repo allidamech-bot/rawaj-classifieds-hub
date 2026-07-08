@@ -177,7 +177,9 @@ function AdPlacementsPage() {
   async function changeStatus(placement: AdPlacementSummary, status: AdPlacementStatus) {
     const reason = statusReason.trim();
     if (reason.length < 3) {
-      setError(text("اكتب سبباً واضحاً لتغيير الحالة.", "Enter a clear reason for the status change."));
+      setError(
+        text("اكتب سبباً واضحاً لتغيير الحالة.", "Enter a clear reason for the status change."),
+      );
       return;
     }
     setSaving(true);
@@ -244,10 +246,16 @@ function AdPlacementsPage() {
         <form onSubmit={(event) => void submit(event)} className="rounded-2xl bg-card p-5 hairline">
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-sm font-extrabold">
-              {form.id ? text("تعديل المساحة", "Edit placement") : text("مساحة جديدة", "New placement")}
+              {form.id
+                ? text("تعديل المساحة", "Edit placement")
+                : text("مساحة جديدة", "New placement")}
             </h3>
             {form.id && (
-              <button type="button" onClick={resetForm} className="rawaj-chip gap-1 px-3 py-2 text-xs font-bold">
+              <button
+                type="button"
+                onClick={resetForm}
+                className="rawaj-chip gap-1 px-3 py-2 text-xs font-bold"
+              >
                 <Plus className="h-3.5 w-3.5" />
                 {text("جديدة", "New")}
               </button>
@@ -267,7 +275,10 @@ function AdPlacementsPage() {
               <select
                 value={form.placementPage}
                 onChange={(event) =>
-                  setForm((value) => ({ ...value, placementPage: event.target.value as AdPlacementPage }))
+                  setForm((value) => ({
+                    ...value,
+                    placementPage: event.target.value as AdPlacementPage,
+                  }))
                 }
                 className="input"
               >
@@ -281,7 +292,9 @@ function AdPlacementsPage() {
             <Field label={text("رابط صورة/بانر", "Image/banner URL")} wide>
               <input
                 value={form.imageUrl}
-                onChange={(event) => setForm((value) => ({ ...value, imageUrl: event.target.value }))}
+                onChange={(event) =>
+                  setForm((value) => ({ ...value, imageUrl: event.target.value }))
+                }
                 type="url"
                 required
                 className="input"
@@ -290,7 +303,9 @@ function AdPlacementsPage() {
             <Field label={text("رابط الوجهة", "Destination URL")} wide>
               <input
                 value={form.destinationUrl}
-                onChange={(event) => setForm((value) => ({ ...value, destinationUrl: event.target.value }))}
+                onChange={(event) =>
+                  setForm((value) => ({ ...value, destinationUrl: event.target.value }))
+                }
                 type="url"
                 required
                 className="input"
@@ -299,7 +314,9 @@ function AdPlacementsPage() {
             <Field label={text("بداية العرض", "Start time")}>
               <input
                 value={form.startsAt}
-                onChange={(event) => setForm((value) => ({ ...value, startsAt: event.target.value }))}
+                onChange={(event) =>
+                  setForm((value) => ({ ...value, startsAt: event.target.value }))
+                }
                 type="datetime-local"
                 className="input"
               />
@@ -316,7 +333,10 @@ function AdPlacementsPage() {
               <select
                 value={form.status}
                 onChange={(event) =>
-                  setForm((value) => ({ ...value, status: event.target.value as AdPlacementStatus }))
+                  setForm((value) => ({
+                    ...value,
+                    status: event.target.value as AdPlacementStatus,
+                  }))
                 }
                 className="input"
               >
@@ -328,7 +348,9 @@ function AdPlacementsPage() {
             <Field label={text("الأولوية 0–1000", "Priority 0–1000")}>
               <input
                 value={form.priority}
-                onChange={(event) => setForm((value) => ({ ...value, priority: event.target.value }))}
+                onChange={(event) =>
+                  setForm((value) => ({ ...value, priority: event.target.value }))
+                }
                 type="number"
                 min={0}
                 max={1000}
@@ -348,7 +370,9 @@ function AdPlacementsPage() {
               active={form.targetDesktop}
               icon={Monitor}
               label={text("سطح المكتب", "Desktop")}
-              onClick={() => setForm((value) => ({ ...value, targetDesktop: !value.targetDesktop }))}
+              onClick={() =>
+                setForm((value) => ({ ...value, targetDesktop: !value.targetDesktop }))
+              }
             />
           </div>
 
@@ -390,7 +414,9 @@ function AdPlacementsPage() {
 
       <section className="rounded-2xl bg-card p-5 hairline">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-sm font-extrabold">{text("المساحات الحالية", "Current placements")}</h3>
+          <h3 className="text-sm font-extrabold">
+            {text("المساحات الحالية", "Current placements")}
+          </h3>
           <input
             value={statusReason}
             onChange={(event) => setStatusReason(event.target.value)}
@@ -400,7 +426,9 @@ function AdPlacementsPage() {
         </div>
 
         {loading ? (
-          <p className="mt-4 text-xs text-muted-foreground">{text("جارٍ التحميل...", "Loading...")}</p>
+          <p className="mt-4 text-xs text-muted-foreground">
+            {text("جارٍ التحميل...", "Loading...")}
+          </p>
         ) : placements.length === 0 ? (
           <p className="mt-4 text-xs text-muted-foreground">
             {text("لا توجد مساحات إعلانية بعد.", "No ad placements yet.")}
@@ -434,7 +462,11 @@ function AdPlacementsPage() {
                   </div>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button" onClick={() => editPlacement(placement)} className="rawaj-chip px-3 py-2 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => editPlacement(placement)}
+                    className="rawaj-chip px-3 py-2 text-xs font-bold"
+                  >
                     {text("تعديل", "Edit")}
                   </button>
                   {placement.status !== "active" && (

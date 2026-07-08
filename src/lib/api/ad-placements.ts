@@ -1,12 +1,15 @@
-import { getClient, mapError, rowBoolean, rowNullableString, rowNumber, rowString } from "@/lib/api/shared";
+import {
+  getClient,
+  mapError,
+  rowBoolean,
+  rowNullableString,
+  rowNumber,
+  rowString,
+} from "@/lib/api/shared";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 
 export type AdPlacementPage =
-  | "home"
-  | "search_results"
-  | "listing_detail"
-  | "categories"
-  | "offers";
+  "home" | "search_results" | "listing_detail" | "categories" | "offers";
 
 export type AdPlacementStatus = "draft" | "active" | "paused";
 
