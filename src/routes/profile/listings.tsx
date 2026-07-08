@@ -167,7 +167,7 @@ function MyListingsPage() {
                   {text("لديك مسودة محفوظة", "You have a saved draft")}
                 </p>
                 <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                  {latestDraft.title} · {text("آخر حفظ", "Last saved")} {" "}
+                  {latestDraft.title} · {text("آخر حفظ", "Last saved")}{" "}
                   {formatSavedAt(latestDraft.updatedAt, language)}
                 </p>
               </div>
@@ -515,7 +515,7 @@ function StoreListingCard({
           </div>
           {listing.status === "draft" && (
             <p className="rounded-lg bg-gold/10 p-2 text-[11px] font-semibold text-primary">
-              {text("مسودة محفوظة", "Saved draft")} · {text("آخر حفظ", "Last saved")} {" "}
+              {text("مسودة محفوظة", "Saved draft")} · {text("آخر حفظ", "Last saved")}{" "}
               {formatSavedAt(listing.updatedAt, language)}
             </p>
           )}
@@ -563,7 +563,9 @@ function StoreListingCard({
                 className="inline-flex items-center gap-1 rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold transition hover:bg-secondary"
               >
                 <Pencil className="h-3 w-3" />
-                {listing.status === "draft" ? text("متابعة المسودة", "Resume draft") : text("تعديل", "Edit")}
+                {listing.status === "draft"
+                  ? text("متابعة المسودة", "Resume draft")
+                  : text("تعديل", "Edit")}
               </Link>
             ) : (
               <span className="inline-flex rounded-lg bg-muted-surface px-2 py-1 text-[10px] text-muted-foreground">
@@ -620,7 +622,9 @@ function StoreListingCard({
                 className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-2 py-1 text-[10px] font-bold text-destructive transition hover:bg-destructive/20"
               >
                 <Trash2 className="h-3 w-3" />
-                {listing.status === "draft" ? text("حذف المسودة", "Delete draft") : text("حذف", "Delete")}
+                {listing.status === "draft"
+                  ? text("حذف المسودة", "Delete draft")
+                  : text("حذف", "Delete")}
               </button>
             )}
           </div>
