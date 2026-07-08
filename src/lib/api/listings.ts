@@ -847,7 +847,13 @@ export async function submitOwnerListingForReview(
   const { data, error } = await clientResult.data.rpc("rawaj_submit_listing_for_review", {
     p_listing_id: normalizedListingId,
   });
-  if (error) return { ok: false, error: mapError(error) };
+  if (error) {
+    const mapped = mapError(error);
+    if (mapped.code === "schema_missing") {
+      return resubmitOwnerListing(userId, normalizedListingId);
+    }
+    return { ok: false, error: mapped };
+  }
 
   const row = ((data ?? []) as Record<string, unknown>[])[0];
   if (!row) {
