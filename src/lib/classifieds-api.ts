@@ -9,7 +9,9 @@ export * from "@/lib/api/listing-conversation-context";
 export * from "@/lib/api/notification-target-resolution";
 export * from "@/lib/api/notification-preferences";
 export * from "@/lib/api/listing-price-context";
-export { fetchPublicListingsCanonicalAware as fetchPublicListings } from "@/lib/api/location-aware-listings-v2";
+export {
+  fetchPublicListingsCanonicalAware as fetchPublicListings,
+} from "@/lib/api/location-aware-listings-v2";
 export * from "@/lib/api/seller";
 export * from "@/lib/api/messaging";
 export * from "@/lib/api/favorites";
