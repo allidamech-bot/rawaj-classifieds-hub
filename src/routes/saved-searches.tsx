@@ -2,8 +2,19 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, Bookmark, Search, Trash2 } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { createSavedSearch, deleteSavedSearch, fetchSavedSearches } from "@/lib/classifieds-api";
-import type { ClassifiedsError, ListingFilters, SavedSearch } from "@/lib/classifieds-types";
+import {
+  createSavedSearch,
+  deleteSavedSearch,
+  fetchSavedSearches,
+  scanDueSavedSearchAlerts,
+  updateSavedSearchAlertFrequency,
+} from "@/lib/classifieds-api";
+import type {
+  ClassifiedsError,
+  ListingFilters,
+  SavedSearch,
+  SavedSearchAlertFrequency,
+} from "@/lib/classifieds-types";
 import { uiLabel } from "@/lib/i18n";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -63,6 +74,8 @@ function SavedSearchesPage() {
   const [keyword, setKeyword] = useState("");
   const [frequency, setFrequency] = useState<LocalSearch["frequency"]>("weekly");
   const [message, setMessage] = useState("");
+  const [savingFrequencyId, setSavingFrequencyId] = useState<string | null>(null);
+  const [scanMessage, setScanMessage] = useState("");
 
   useEffect(() => {
     if (auth.status !== "signedIn") return;
@@ -71,10 +84,26 @@ function SavedSearchesPage() {
     async function load() {
       setLoading(true);
       setError(null);
-      const result = await fetchSavedSearches(auth.profile?.id ?? null);
+      const userId = auth.profile?.id ?? null;
+      const result = await fetchSavedSearches(userId);
       if (cancelled) return;
-      if (result.ok) setItems(result.data);
-      else {
+      if (result.ok) {
+        setItems(result.data);
+        const scanResult = await scanDueSavedSearchAlerts(userId);
+        if (cancelled) return;
+        if (scanResult.ok) {
+          if (scanResult.data.createdNotifications > 0) {
+            setScanMessage(
+              text(
+                `تم العثور على ${scanResult.data.createdNotifications} نتيجة جديدة وإضافتها إلى إشعاراتك.`,
+                `${scanResult.data.createdNotifications} new matches were added to your notifications.`,
+              ),
+            );
+          }
+          const refreshed = await fetchSavedSearches(userId);
+          if (!cancelled && refreshed.ok) setItems(refreshed.data);
+        }
+      } else {
         setError(result.error);
         setItems([]);
       }
@@ -141,6 +170,7 @@ function SavedSearchesPage() {
     const result = await createSavedSearch(auth.profile?.id ?? null, {
       nameAr: label,
       filters,
+      alertFrequency: frequency,
     });
 
     if (result.ok) {
@@ -192,6 +222,25 @@ function SavedSearchesPage() {
     if (filters.salaryType) result.salary_type = filters.salaryType;
     if (filters.sort) result.sort = filters.sort;
     return result;
+  }
+
+  async function changeAlertFrequency(id: string, next: SavedSearchAlertFrequency) {
+    setSavingFrequencyId(id);
+    setMessage("");
+    const previous = items;
+    setItems((current) =>
+      current.map((item) => (item.id === id ? { ...item, alertFrequency: next } : item)),
+    );
+    const result = await updateSavedSearchAlertFrequency(auth.profile?.id ?? null, id, next);
+    setSavingFrequencyId(null);
+    if (!result.ok) {
+      setItems(previous);
+      setError(result.error);
+      setMessage(result.error.message);
+      return;
+    }
+    setItems((current) => current.map((item) => (item.id === id ? result.data : item)));
+    setMessage(text("تم تحديث تكرار التنبيه.", "Alert frequency updated."));
   }
 
   async function removeSavedSearch(id: string) {
@@ -255,8 +304,8 @@ function SavedSearchesPage() {
           </h2>
           <p className="mt-1 text-xs leading-6 text-muted-foreground">
             {text(
-              "أنشئ بحثاً باسم واضح واضبط تكرار التنبيه كإعداد واجهة، ثم افتحه من هنا عند الحاجة.",
-              "Create a clearly named search, set an alert frequency as an interface preference, and reopen it from here when needed.",
+              "أنشئ بحثاً باسم واضح واضبط تكرار تنبيه حقيقي داخل رواج. يتم الفحص بشكل محدود عند استخدامك لرواج، مع منع تكرار نفس الإعلان.",
+              "Create a clearly named search and set a real in-app alert cadence. RAWAJ runs bounded checks while you use the app and deduplicates the same listing.",
             )}
           </p>
         </section>
@@ -293,6 +342,12 @@ function SavedSearchesPage() {
             {text("حفظ البحث", "Save search")}
           </button>
         </form>
+
+        {scanMessage && (
+          <p className="rounded-xl bg-emerald-trust/10 p-3 text-xs font-semibold text-foreground">
+            {scanMessage}
+          </p>
+        )}
 
         {message && (
           <p className="rounded-xl bg-muted-surface p-3 text-xs font-semibold text-foreground hairline">
@@ -342,7 +397,9 @@ function SavedSearchesPage() {
                 name={item.nameAr}
                 createdAt={item.createdAt}
                 filters={item.filters as Record<string, unknown>}
-                frequency="weekly"
+                frequency={item.alertFrequency}
+                frequencyDisabled={savingFrequencyId === item.id}
+                onFrequencyChange={(next) => void changeAlertFrequency(item.id, next)}
                 onRemove={() => void removeSavedSearch(item.id)}
               />
             ))}
@@ -360,14 +417,18 @@ function SearchRow({
   filters,
   frequency,
   local = false,
+  frequencyDisabled = false,
+  onFrequencyChange,
   onRemove,
 }: {
   id: string;
   name: string;
   createdAt: string;
   filters: Record<string, unknown>;
-  frequency: LocalSearch["frequency"];
+  frequency: SavedSearchAlertFrequency;
   local?: boolean;
+  frequencyDisabled?: boolean;
+  onFrequencyChange?: (next: SavedSearchAlertFrequency) => void;
   onRemove?: () => void;
 }) {
   const { language, text } = useUiPreferences();
@@ -381,10 +442,29 @@ function SearchRow({
           </div>
           <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
             <span>{formatDate(createdAt, language)}</span>
-            <span className="inline-flex items-center gap-1">
-              <Bell className="h-3 w-3" />
-              {frequencyLabel(frequency, language)}
-            </span>
+            {onFrequencyChange ? (
+              <label className="inline-flex items-center gap-1">
+                <Bell className="h-3 w-3" />
+                <span className="sr-only">{text("تكرار التنبيه", "Alert frequency")}</span>
+                <select
+                  value={frequency}
+                  disabled={frequencyDisabled}
+                  onChange={(event) =>
+                    onFrequencyChange(event.target.value as SavedSearchAlertFrequency)
+                  }
+                  className="rounded-lg border border-border/70 bg-card px-1.5 py-1 text-[10px] font-semibold text-foreground disabled:opacity-60"
+                >
+                  <option value="daily">{text("يومي", "Daily")}</option>
+                  <option value="weekly">{text("أسبوعي", "Weekly")}</option>
+                  <option value="off">{text("متوقف", "Off")}</option>
+                </select>
+              </label>
+            ) : (
+              <span className="inline-flex items-center gap-1">
+                <Bell className="h-3 w-3" />
+                {frequencyLabel(frequency, language)}
+              </span>
+            )}
             {local && <span>{text("محفوظ في هذه الجلسة", "Saved in this session")}</span>}
           </div>
         </div>

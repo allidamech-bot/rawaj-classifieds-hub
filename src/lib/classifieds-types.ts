@@ -151,11 +151,15 @@ export interface Favorite {
   listing?: ClassifiedListing;
 }
 
+export type SavedSearchAlertFrequency = "daily" | "weekly" | "off";
+
 export interface SavedSearch {
   id: string;
   userId: string;
   nameAr: string;
   filters: ListingFilters;
+  alertFrequency: SavedSearchAlertFrequency;
+  lastAlertCheckedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -163,6 +167,7 @@ export interface SavedSearch {
 export interface CreateSavedSearchPayload {
   nameAr: string;
   filters: ListingFilters;
+  alertFrequency?: SavedSearchAlertFrequency;
 }
 
 export interface PublicSellerProfile {
