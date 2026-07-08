@@ -43,6 +43,7 @@ import { Route as AdminReviewsRouteImport } from './routes/admin.reviews'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminPromotionsRouteImport } from './routes/admin.promotions'
 import { Route as AdminPendingRouteImport } from './routes/admin.pending'
+import { Route as AdminOwnerControlsRouteImport } from './routes/admin.owner-controls'
 import { Route as AdminMessageReportsRouteImport } from './routes/admin.message-reports'
 import { Route as AdminListingsRouteImport } from './routes/admin.listings'
 import { Route as AdminCampaignsRouteImport } from './routes/admin.campaigns'
@@ -220,6 +221,11 @@ const AdminPendingRoute = AdminPendingRouteImport.update({
   path: '/pending',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminOwnerControlsRoute = AdminOwnerControlsRouteImport.update({
+  id: '/owner-controls',
+  path: '/owner-controls',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMessageReportsRoute = AdminMessageReportsRouteImport.update({
   id: '/message-reports',
   path: '/message-reports',
@@ -278,6 +284,7 @@ export interface FileRoutesByFullPath {
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
+  '/admin/owner-controls': typeof AdminOwnerControlsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -318,6 +325,7 @@ export interface FileRoutesByTo {
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
+  '/admin/owner-controls': typeof AdminOwnerControlsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -361,6 +369,7 @@ export interface FileRoutesById {
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
+  '/admin/owner-controls': typeof AdminOwnerControlsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -405,6 +414,7 @@ export interface FileRouteTypes {
     | '/admin/campaigns'
     | '/admin/listings'
     | '/admin/message-reports'
+    | '/admin/owner-controls'
     | '/admin/pending'
     | '/admin/promotions'
     | '/admin/reports'
@@ -445,6 +455,7 @@ export interface FileRouteTypes {
     | '/admin/campaigns'
     | '/admin/listings'
     | '/admin/message-reports'
+    | '/admin/owner-controls'
     | '/admin/pending'
     | '/admin/promotions'
     | '/admin/reports'
@@ -487,6 +498,7 @@ export interface FileRouteTypes {
     | '/admin/campaigns'
     | '/admin/listings'
     | '/admin/message-reports'
+    | '/admin/owner-controls'
     | '/admin/pending'
     | '/admin/promotions'
     | '/admin/reports'
@@ -769,6 +781,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPendingRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/owner-controls': {
+      id: '/admin/owner-controls'
+      path: '/owner-controls'
+      fullPath: '/admin/owner-controls'
+      preLoaderRoute: typeof AdminOwnerControlsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/message-reports': {
       id: '/admin/message-reports'
       path: '/message-reports'
@@ -820,6 +839,7 @@ interface AdminRouteChildren {
   AdminCampaignsRoute: typeof AdminCampaignsRoute
   AdminListingsRoute: typeof AdminListingsRoute
   AdminMessageReportsRoute: typeof AdminMessageReportsRoute
+  AdminOwnerControlsRoute: typeof AdminOwnerControlsRoute
   AdminPendingRoute: typeof AdminPendingRoute
   AdminPromotionsRoute: typeof AdminPromotionsRoute
   AdminReportsRoute: typeof AdminReportsRoute
@@ -836,6 +856,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCampaignsRoute: AdminCampaignsRoute,
   AdminListingsRoute: AdminListingsRoute,
   AdminMessageReportsRoute: AdminMessageReportsRoute,
+  AdminOwnerControlsRoute: AdminOwnerControlsRoute,
   AdminPendingRoute: AdminPendingRoute,
   AdminPromotionsRoute: AdminPromotionsRoute,
   AdminReportsRoute: AdminReportsRoute,
