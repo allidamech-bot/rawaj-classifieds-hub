@@ -1,10 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Activity, Filter, ScrollText } from "lucide-react";
 import { useEffect, useState } from "react";
-import {
-  adminFetchAuditLogs,
-  type AdminAuditLogEntry,
-} from "@/lib/classifieds-api";
+import { adminFetchAuditLogs, type AdminAuditLogEntry } from "@/lib/classifieds-api";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -194,7 +191,9 @@ function AuditEntryCard({ entry }: { entry: AdminAuditLogEntry }) {
 }
 
 function StatePanel({ title }: { title: string }) {
-  return <div className="rounded-2xl bg-card p-8 text-center text-sm font-bold hairline">{title}</div>;
+  return (
+    <div className="rounded-2xl bg-card p-8 text-center text-sm font-bold hairline">{title}</div>
+  );
 }
 
 function formatMetadata(metadata: Record<string, unknown>) {
