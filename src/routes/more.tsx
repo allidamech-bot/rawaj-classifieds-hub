@@ -17,6 +17,7 @@ import {
   Sparkles,
   Store,
   User,
+  UserCog,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { useState } from "react";
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/more")({
 });
 
 type AccountRoute =
+  | "/admin"
   | "/chats"
   | "/favorites"
   | "/login"
@@ -145,6 +147,17 @@ function MorePage() {
       onClick: toggleLanguage,
     },
   ];
+
+  if (auth.canAccessOwnerControls) {
+    settingsRows.unshift({
+      titleAr: "لوحة الإدارة",
+      titleEn: "Admin dashboard",
+      hintAr: "إدارة رواج والمراجعات",
+      hintEn: "Manage RAWAJ and reviews",
+      to: "/admin",
+      icon: UserCog,
+    });
+  }
 
   const helpRows: AccountRow[] = [
     {
