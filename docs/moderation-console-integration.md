@@ -10,3 +10,5 @@ Both routes require the persisted `canModerateListings` permission, including di
 The lifecycle console exposes live counts from its loaded moderation dataset and permission-aware links to listing and message report queues. Stale-write protection and required decision reasons remain authoritative for mutations.
 
 Report queue links are shown only when the effective permission matrix grants report management; listing moderators without that permission keep listing-only operational visibility.
+
+Admin navigation exposes both detailed review and lifecycle decision surfaces explicitly so moderators do not need to discover operational routes through hidden links.
