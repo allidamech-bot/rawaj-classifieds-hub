@@ -127,6 +127,7 @@ export async function fetchPublicListings(
     .from("listings")
     .select("*")
     .eq("status", "approved")
+    .is("archived_at", null)
     .or(publicListingExpiryFilter());
 
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
@@ -248,6 +249,7 @@ export async function fetchListingDetail(
     .select("*")
     .eq("id", listingId)
     .eq("status", "approved")
+    .is("archived_at", null)
     .or(publicListingExpiryFilter())
     .maybeSingle();
 
@@ -410,11 +412,6 @@ export async function updateOwnerListing(
   if (payload.contactName !== undefined) updateData.contact_name = payload.contactName;
   if (payload.contactOptions) updateData.contact_options = payload.contactOptions;
   if (payload.details !== undefined) updateData.details = payload.details;
-
-  if (existing.status === "rejected") {
-    updateData.reviewed_by = null;
-    updateData.reviewed_at = null;
-  }
 
   const { data, error } = await clientResult.data
     .from("listings")
@@ -827,7 +824,50 @@ export async function submitOwnerListingForReview(
   userId: string | null,
   listingId: string,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
-  return resubmitOwnerListing(userId, listingId);
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال الإعلان للمراجعة." },
+    };
+  }
+
+  const normalizedListingId = listingId.trim();
+  if (!normalizedListingId) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const references = await readReferences(clientResult.data);
+  if (!references.ok) return { ok: false, error: references.error };
+
+  const { data, error } = await clientResult.data.rpc("rawaj_submit_listing_for_review", {
+    p_listing_id: normalizedListingId,
+  });
+  if (error) {
+    const mapped = mapError(error);
+    if (mapped.code === "schema_missing") {
+      return resubmitOwnerListing(userId, normalizedListingId);
+    }
+    return { ok: false, error: mapped };
+  }
+
+  const row = ((data ?? []) as Record<string, unknown>[])[0];
+  if (!row) {
+    return {
+      ok: false,
+      error: { code: "unknown", message: "تم إرسال الطلب دون نتيجة إعلان قابلة للتحقق." },
+    };
+  }
+
+  return {
+    ok: true,
+    data: mapListing(row, references.categories, references.governorates),
+  };
 }
 
 export async function uploadListingImage({

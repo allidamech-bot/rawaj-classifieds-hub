@@ -183,7 +183,9 @@ export const emptyRolePermissions: RolePermissions = Object.freeze(
 );
 
 export function effectiveRolePermissions(profile: UserProfile | null): RolePermissions {
-  if (!profile || profile.accountStatus !== "active") return emptyRolePermissions;
+  if (!profile) return emptyRolePermissions;
+  const isPersistedOwner = profile.roles.includes("owner");
+  if (!isPersistedOwner && profile.accountStatus !== "active") return emptyRolePermissions;
 
   const permissions = { ...emptyRolePermissions };
   for (const role of profile.roles) {

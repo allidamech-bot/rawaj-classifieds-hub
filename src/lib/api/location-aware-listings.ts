@@ -31,6 +31,7 @@ export async function fetchPublicListingsLocationAware(
     .from("listings")
     .select("*")
     .eq("status", "approved")
+    .is("archived_at", null)
     .or(publicListingExpiryFilter());
 
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);

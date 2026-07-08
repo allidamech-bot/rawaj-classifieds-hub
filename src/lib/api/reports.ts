@@ -107,11 +107,17 @@ export async function adminFetchPendingListings(
   const references = await readReferences(clientResult.data);
   if (!references.ok) return { ok: false, error: references.error };
 
-  const { data, error } = await clientResult.data
-    .from("listings")
-    .select("*")
-    .eq("status", "pending_review")
-    .order("created_at", { ascending: false });
+  let { data, error } = await clientResult.data.rpc("rawaj_review_queue_pending");
+
+  if (error && mapError(error).code === "schema_missing") {
+    const fallback = await clientResult.data
+      .from("listings")
+      .select("*")
+      .eq("status", "pending_review")
+      .order("created_at", { ascending: true });
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error) return { ok: false, error: mapError(error) };
   return {

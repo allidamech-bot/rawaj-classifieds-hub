@@ -1,6 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ClassifiedsResult, ModerateListingPayload } from "@/lib/classifieds-types";
-import { getClient, mapError, rowString } from "@/lib/api/shared";
+import { getClient, mapError } from "@/lib/api/shared";
 
 export async function adminModerateListing(
   canUseAdminAccess: boolean,
@@ -27,107 +26,72 @@ export async function adminModerateListing(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
   if (!payload.expectedUpdatedAt) {
     return {
       ok: false,
-      error: {
-        code: "validation_error",
-        message: "يجب توفير توقيت التحديث المتوقع من الإعلان المحمّل.",
-      },
+      error: { code: "validation_error", message: "حدّث الإعلان قبل اتخاذ قرار المراجعة." },
     };
   }
 
-  const updatePayload = {
-    status: payload.status,
-    reviewed_by: payload.reviewerId,
-    reviewed_at: new Date().toISOString(),
-    rejection_reason:
-      payload.status === "rejected" ? (payload.rejectionReason ?? "مرفوض من لوحة الإدارة") : null,
-    published_at: payload.status === "approved" ? new Date().toISOString() : null,
-    archived_at: payload.status === "archived" ? new Date().toISOString() : null,
-  };
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data
-    .from("listings")
-    .update(updatePayload)
-    .eq("id", payload.listingId)
-    .eq("status", "pending_review")
-    .eq("updated_at", payload.expectedUpdatedAt)
-    .select("id, owner_id, title");
+  const rpcResult = await clientResult.data.rpc("rawaj_review_listing_decision", {
+    p_listing_id: payload.listingId.trim(),
+    p_decision: payload.status,
+    p_reason:
+      payload.status === "rejected"
+        ? payload.rejectionReason?.trim()
+        : "Approved after complete listing review",
+    p_expected_updated_at: payload.expectedUpdatedAt,
+  });
 
-  if (error) return { ok: false, error: mapError(error) };
-  if (!data || data.length === 0) {
-    return {
-      ok: false,
-      error: {
-        code: "stale_review",
-        message: "تغيّر الإعلان منذ فتحه للمراجعة. حدّث الصفحة وراجعه من جديد.",
-      },
-    };
-  }
+  if (rpcResult.error && mapError(rpcResult.error).code === "schema_missing") {
+    const now = new Date().toISOString();
+    const fallback = await clientResult.data
+      .from("listings")
+      .update({
+        status: payload.status,
+        reviewed_by: payload.reviewerId,
+        reviewed_at: now,
+        rejection_reason:
+          payload.status === "rejected" ? (payload.rejectionReason?.trim() ?? null) : null,
+        published_at: payload.status === "approved" ? now : null,
+        archived_at: null,
+        updated_at: now,
+      })
+      .eq("id", payload.listingId.trim())
+      .eq("status", "pending_review")
+      .eq("updated_at", payload.expectedUpdatedAt)
+      .select("id")
+      .maybeSingle();
 
-  const existing: Record<string, unknown> = {
-    id: data[0].id,
-    owner_id: data[0].owner_id,
-    title: data[0].title,
-  };
-
-  const notificationResult = await createListingModerationNotification(
-    clientResult.data,
-    existing,
-    payload,
-  );
-  if (!notificationResult.ok) {
-    console.warn("Listing moderation succeeded but notification creation failed.", {
-      listingId: payload.listingId,
-      error: notificationResult.error.message,
-    });
-  }
-
-  return { ok: true, data: null };
-}
-
-async function createListingModerationNotification(
-  client: SupabaseClient,
-  listing: Record<string, unknown>,
-  payload: ModerateListingPayload,
-): Promise<ClassifiedsResult<null>> {
-  if (payload.status !== "approved" && payload.status !== "rejected") {
+    if (fallback.error) return { ok: false, error: mapError(fallback.error) };
+    if (!fallback.data) {
+      return {
+        ok: false,
+        error: {
+          code: "stale_review",
+          message: "تغيّر الإعلان منذ فتحه للمراجعة. حدّث الصفحة وراجعه من جديد.",
+        },
+      };
+    }
     return { ok: true, data: null };
   }
 
-  const ownerId = rowString(listing, "owner_id");
-  if (!ownerId) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد صاحب الإعلان لإرسال الإشعار." },
-    };
+  const error = rpcResult.error;
+  if (error) {
+    if (error.message?.includes("stale_review")) {
+      return {
+        ok: false,
+        error: {
+          code: "stale_review",
+          message: "تغيّر الإعلان منذ فتحه للمراجعة. حدّث الصفحة وراجعه من جديد.",
+        },
+      };
+    }
+    return { ok: false, error: mapError(error) };
   }
 
-  const listingTitle = rowString(listing, "title", "إعلانك");
-  const rejected = payload.status === "rejected";
-  const rejectionReason = payload.rejectionReason?.trim();
-
-  const { error } = await client.rpc("rawaj_create_notification", {
-    recipient_id: ownerId,
-    notification_type: rejected ? "listing.rejected" : "listing.approved",
-    title_ar: rejected ? "تم رفض إعلانك" : "تمت الموافقة على إعلانك",
-    body_ar: rejected
-      ? rejectionReason
-        ? `تم رفض إعلان "${listingTitle}". السبب: ${rejectionReason}`
-        : `تم رفض إعلان "${listingTitle}".`
-      : `تمت الموافقة على إعلان "${listingTitle}" وأصبح جاهزاً للظهور.`,
-    target_type: "listing",
-    target_id: payload.listingId,
-    metadata: {
-      listing_id: payload.listingId,
-      status: payload.status,
-    },
-  });
-
-  if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: null };
 }

@@ -140,7 +140,7 @@ function AddListingPage() {
         title.trim().length >= 8,
         description.trim().length >= 30,
         !!price || priceType !== "fixed",
-        !!governorateId && (!!locationNodeId || !!district),
+        !!locationNodeId || (!!governorateId && !!district),
       ].filter(Boolean).length * 20,
     [categoryId, title, description, price, priceType, governorateId, district, locationNodeId],
   );
@@ -583,7 +583,7 @@ function AddListingPage() {
       auth.status === "signedIn" &&
       Boolean(profileId) &&
       autosavePayload.categoryId.trim().length > 0 &&
-      autosavePayload.governorateId.trim().length > 0 &&
+      (autosavePayload.governorateId.trim().length > 0 || locationNodeId.trim().length > 0) &&
       autosavePayload.title.length >= 4;
 
     if (
@@ -659,7 +659,7 @@ function AddListingPage() {
         autosaveTimerRef.current = null;
       }
     };
-  }, [auth.status, auth.profile?.id, autosavePayload]);
+  }, [auth.status, auth.profile?.id, autosavePayload, locationNodeId]);
 
   useEffect(() => {
     let cancelled = false;
