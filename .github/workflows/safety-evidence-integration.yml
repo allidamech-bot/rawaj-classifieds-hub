@@ -1,0 +1,49 @@
+name: Safety Evidence Integration
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.head_ref == 'feature/safety-case-management' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/safety-case-management
+          fetch-depth: 0
+      - name: Integrate evidence panel
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/routes/admin.safety.tsx')
+          s = p.read_text()
+          s = s.replace(
+            'import { useUiPreferences } from "@/lib/ui-preferences";\n',
+            'import { SafetyCaseEvidencePanel } from "@/components/admin/SafetyCaseEvidencePanel";\nimport { useUiPreferences } from "@/lib/ui-preferences";\n',
+            1,
+          )
+          s = s.replace('  AlertTriangle,\n', '', 1)
+          s = s.replace('  UserRoundCheck,\n', '', 1)
+          marker = '''      <section className="rounded-2xl bg-card p-5 hairline">\n        <div className="grid gap-3 sm:grid-cols-2">\n          <Field label={text("سبب تغيير الحالة أو التصعيد", "Status/escalation reason")}>'''
+          insert = '''      {form.id && (\n        <SafetyCaseEvidencePanel caseId={form.id} canManage={canManageCases} text={text} />\n      )}\n\n''' + marker
+          if marker not in s:
+            raise SystemExit('safety action marker missing')
+          p.write_text(s.replace(marker, insert, 1))
+          PY
+      - name: Remove workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/safety-evidence-integration.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/admin.safety.tsx .github/workflows/safety-evidence-integration.yml
+          git commit -m "Integrate safety case notes and links"
+          git push origin HEAD:feature/safety-case-management
