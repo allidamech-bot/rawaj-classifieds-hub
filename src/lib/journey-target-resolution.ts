@@ -30,13 +30,9 @@ export interface JourneyTarget {
 }
 
 export type JourneyTargetFallback =
-  | { kind: "browse_listings" }
-  | { kind: "open_messages" }
-  | { kind: "open_profile" };
+  { kind: "browse_listings" } | { kind: "open_messages" } | { kind: "open_profile" };
 
-export function fallbackForMissingJourneyTarget(
-  target: JourneyTarget,
-): JourneyTargetFallback {
+export function fallbackForMissingJourneyTarget(target: JourneyTarget): JourneyTargetFallback {
   switch (target.kind) {
     case "listing":
       return { kind: "browse_listings" };
