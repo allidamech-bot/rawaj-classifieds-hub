@@ -14,7 +14,6 @@ import {
   type NotificationPreferenceKey,
   type NotificationPreferences,
 } from "@/lib/classifieds-api";
-import { usePushReadinessSnapshot } from "@/lib/push-readiness";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -79,7 +78,6 @@ const preferenceItems = [
 export function NotificationPreferencesPanel() {
   const auth = useAuth();
   const { text } = useUiPreferences();
-  const pushReadiness = usePushReadinessSnapshot();
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   const [loading, setLoading] = useState(false);
   const [savingKey, setSavingKey] = useState<NotificationPreferenceKey | null>(null);
@@ -154,18 +152,13 @@ export function NotificationPreferencesPanel() {
         </span>
         <div className="min-w-0">
           <p className="text-xs font-bold">
-            {text("جاهزية Push على هذا الجهاز", "Push readiness on this device")}
+            {text("جاهزية Push", "Push readiness")}
           </p>
           <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
-            {pushReadiness.browserReady
-              ? text(
-                  "المتصفح يوفّر المتطلبات التقنية الأساسية. لم يتم تفعيل اشتراك Push أو إرسال Push فعلي من رواج بعد.",
-                  "This browser exposes the core technical capabilities. RAWAJ has not enabled a push subscription or real push delivery yet.",
-                )
-              : text(
-                  "هذا الجهاز أو المتصفح لا يوفّر حاليًا جميع المتطلبات التقنية الأساسية لـ Push. لا يوجد إرسال Push فعلي من رواج.",
-                  "This device or browser does not currently expose all core push capabilities. RAWAJ is not delivering real push notifications.",
-                )}
+            {text(
+              "رواج يجهّز البنية التقنية لـ Push، لكن لا يوجد اشتراك أو إرسال Push فعلي مفعّل حتى الآن.",
+              "RAWAJ is preparing the technical foundation for push, but no push subscription or real push delivery is enabled yet.",
+            )}
           </p>
         </div>
       </div>
