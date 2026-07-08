@@ -80,11 +80,7 @@ function NotificationsPage() {
     setLoading(true);
     setError(null);
     setPaginationError(null);
-    const result = await fetchMyNotificationsPage(
-      currentProfileId,
-      0,
-      NOTIFICATIONS_PAGE_SIZE,
-    );
+    const result = await fetchMyNotificationsPage(currentProfileId, 0, NOTIFICATIONS_PAGE_SIZE);
     if (requestId !== notificationsRequestIdRef.current || currentProfileId !== profileId) return;
     if (result.ok) {
       setNotifications(applyKnownReadState(result.data.items));
