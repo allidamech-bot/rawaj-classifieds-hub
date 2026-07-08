@@ -1014,7 +1014,7 @@ function AddListingPage() {
             )}
             {autosaveState === "saved" && lastAutosavedAt && (
               <span className="ms-2 font-normal opacity-75">
-                {text("آخر حفظ", "Last saved")} {" "}
+                {text("آخر حفظ", "Last saved")}{" "}
                 {new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
                   hour: "2-digit",
                   minute: "2-digit",
