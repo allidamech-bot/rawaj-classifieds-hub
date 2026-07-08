@@ -11,6 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import type { RolePermission } from "@/lib/auth-types";
 import { uiLabel } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -21,15 +22,47 @@ export const Route = createFileRoute("/admin")({
   component: AdminLayout,
 });
 
-const tabs = [
-  { to: "/admin", labelAr: "مركز القيادة", icon: LayoutDashboard, exact: true },
-  { to: "/admin/pending", labelAr: "مراجعة الإعلانات", icon: FileCheck },
-  { to: "/admin/reviews", labelAr: "مراجعة التقييمات", icon: Star },
-  { to: "/admin/reports", labelAr: "بلاغات الإعلانات", icon: Flag },
-  { to: "/admin/message-reports", labelAr: "بلاغات الرسائل", icon: MessageSquareWarning },
-  { to: "/admin/verifications", labelAr: "طلبات التوثيق", icon: BadgeCheck },
-  { to: "/admin/users", labelAr: "إدارة المستخدمين", icon: Users },
-  { to: "/admin/promotions", labelAr: "طلبات الترويج", icon: Sparkles },
+const tabs: Array<{
+  to: string;
+  labelAr: string;
+  icon: typeof LayoutDashboard;
+  permission: RolePermission;
+  exact?: boolean;
+}> = [
+  {
+    to: "/admin",
+    labelAr: "مركز القيادة",
+    icon: LayoutDashboard,
+    permission: "canViewAdminDashboard",
+    exact: true,
+  },
+  {
+    to: "/admin/pending",
+    labelAr: "مراجعة الإعلانات",
+    icon: FileCheck,
+    permission: "canModerateListings",
+  },
+  { to: "/admin/reviews", labelAr: "مراجعة التقييمات", icon: Star, permission: "canManageReviews" },
+  { to: "/admin/reports", labelAr: "بلاغات الإعلانات", icon: Flag, permission: "canManageReports" },
+  {
+    to: "/admin/message-reports",
+    labelAr: "بلاغات الرسائل",
+    icon: MessageSquareWarning,
+    permission: "canManageReports",
+  },
+  {
+    to: "/admin/verifications",
+    labelAr: "طلبات التوثيق",
+    icon: BadgeCheck,
+    permission: "canManageVerifications",
+  },
+  { to: "/admin/users", labelAr: "إدارة المستخدمين", icon: Users, permission: "canManageUsers" },
+  {
+    to: "/admin/promotions",
+    labelAr: "طلبات الترويج",
+    icon: Sparkles,
+    permission: "canManagePromotions",
+  },
 ];
 
 function AdminLayout() {
@@ -87,6 +120,8 @@ function AdminLayout() {
     );
   }
 
+  const visibleTabs = tabs.filter((tab) => auth.hasPermission(tab.permission));
+
   return (
     <>
       <PageHeader title={text("لوحة الإدارة", "Admin dashboard")} />
@@ -101,7 +136,7 @@ function AdminLayout() {
           </p>
         </div>
         <nav className="mb-4 flex gap-2 overflow-x-auto pb-1">
-          {tabs.map((tab) => {
+          {visibleTabs.map((tab) => {
             const active = tab.exact
               ? pathname === tab.to || pathname === "/admin/"
               : pathname.startsWith(tab.to);
