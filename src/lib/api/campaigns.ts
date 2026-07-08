@@ -171,7 +171,10 @@ export async function ownerSetCampaignStatus(
     if (error.message?.includes("stale_campaign")) {
       return {
         ok: false,
-        error: { code: "unknown", message: "تغيّرت الحملة منذ تحميلها. أعد التحميل قبل تغيير الحالة." },
+        error: {
+          code: "unknown",
+          message: "تغيّرت الحملة منذ تحميلها. أعد التحميل قبل تغيير الحالة.",
+        },
       };
     }
     return { ok: false, error: mapError(error) };
@@ -199,10 +202,18 @@ export async function ownerSaveCampaignCreative(
     };
   }
 
-  if (!payload.campaignId || payload.name.trim().length < 2 || !payload.imageUrl.trim() || !payload.destinationUrl.trim()) {
+  if (
+    !payload.campaignId ||
+    payload.name.trim().length < 2 ||
+    !payload.imageUrl.trim() ||
+    !payload.destinationUrl.trim()
+  ) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "أدخل الحملة واسم التصميم والصورة ورابط الوجهة." },
+      error: {
+        code: "validation_error",
+        message: "أدخل الحملة واسم التصميم والصورة ورابط الوجهة.",
+      },
     };
   }
 

@@ -216,7 +216,12 @@ function CampaignManagerPage() {
   async function changeStatus(campaign: CampaignSummary, status: CampaignStatus) {
     const reason = statusReason.trim();
     if (reason.length < 3) {
-      setError(text("اكتب سبباً واضحاً لتغيير حالة الحملة.", "Enter a clear reason for the status change."));
+      setError(
+        text(
+          "اكتب سبباً واضحاً لتغيير حالة الحملة.",
+          "Enter a clear reason for the status change.",
+        ),
+      );
       return;
     }
     setSaving(true);
@@ -318,13 +323,22 @@ function CampaignManagerPage() {
       {notice && <Notice tone="success">{notice}</Notice>}
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.9fr)]">
-        <form onSubmit={(event) => void saveCampaign(event)} className="rounded-2xl bg-card p-5 hairline">
+        <form
+          onSubmit={(event) => void saveCampaign(event)}
+          className="rounded-2xl bg-card p-5 hairline"
+        >
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-sm font-extrabold">
-              {campaignForm.id ? text("تعديل الحملة", "Edit campaign") : text("حملة جديدة", "New campaign")}
+              {campaignForm.id
+                ? text("تعديل الحملة", "Edit campaign")
+                : text("حملة جديدة", "New campaign")}
             </h3>
             {campaignForm.id && (
-              <button type="button" onClick={resetCampaignForm} className="rawaj-chip gap-1 px-3 py-2 text-xs font-bold">
+              <button
+                type="button"
+                onClick={resetCampaignForm}
+                className="rawaj-chip gap-1 px-3 py-2 text-xs font-bold"
+              >
                 <Plus className="h-3.5 w-3.5" />
                 {text("جديدة", "New")}
               </button>
@@ -335,7 +349,9 @@ function CampaignManagerPage() {
             <Field label={text("اسم الحملة", "Campaign name")} wide>
               <input
                 value={campaignForm.name}
-                onChange={(event) => setCampaignForm((value) => ({ ...value, name: event.target.value }))}
+                onChange={(event) =>
+                  setCampaignForm((value) => ({ ...value, name: event.target.value }))
+                }
                 required
                 className="input"
               />
@@ -344,7 +360,10 @@ function CampaignManagerPage() {
               <select
                 value={campaignForm.status}
                 onChange={(event) =>
-                  setCampaignForm((value) => ({ ...value, status: event.target.value as CampaignStatus }))
+                  setCampaignForm((value) => ({
+                    ...value,
+                    status: event.target.value as CampaignStatus,
+                  }))
                 }
                 className="input"
               >
@@ -357,7 +376,9 @@ function CampaignManagerPage() {
             <Field label={text("بداية الحملة", "Start time")}>
               <input
                 value={campaignForm.startsAt}
-                onChange={(event) => setCampaignForm((value) => ({ ...value, startsAt: event.target.value }))}
+                onChange={(event) =>
+                  setCampaignForm((value) => ({ ...value, startsAt: event.target.value }))
+                }
                 type="datetime-local"
                 className="input"
               />
@@ -365,7 +386,9 @@ function CampaignManagerPage() {
             <Field label={text("نهاية الحملة", "End time")}>
               <input
                 value={campaignForm.endsAt}
-                onChange={(event) => setCampaignForm((value) => ({ ...value, endsAt: event.target.value }))}
+                onChange={(event) =>
+                  setCampaignForm((value) => ({ ...value, endsAt: event.target.value }))
+                }
                 type="datetime-local"
                 className="input"
               />
@@ -376,7 +399,10 @@ function CampaignManagerPage() {
                 onChange={(event) =>
                   setCampaignForm((value) => ({ ...value, categoryIdsText: event.target.value }))
                 }
-                placeholder={text("افصل المعرفات بفواصل؛ اتركها فارغة لكل الأقسام", "Comma-separated IDs; blank targets all categories")}
+                placeholder={text(
+                  "افصل المعرفات بفواصل؛ اتركها فارغة لكل الأقسام",
+                  "Comma-separated IDs; blank targets all categories",
+                )}
                 className="input"
               />
             </Field>
@@ -384,7 +410,10 @@ function CampaignManagerPage() {
 
           <div className="mt-4">
             <div className="text-[11px] font-bold text-muted-foreground">
-              {text("الصفحات المستهدفة — اتركها بلا تحديد لكل الصفحات", "Target pages — leave empty for all pages")}
+              {text(
+                "الصفحات المستهدفة — اتركها بلا تحديد لكل الصفحات",
+                "Target pages — leave empty for all pages",
+              )}
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
               {pageOptions.map((page) => (
@@ -417,18 +446,35 @@ function CampaignManagerPage() {
         <section className="rounded-2xl bg-card p-5 hairline">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-extrabold">{text("القياس الحقيقي", "Measured performance")}</h3>
+            <h3 className="text-sm font-extrabold">
+              {text("القياس الحقيقي", "Measured performance")}
+            </h3>
           </div>
           {selectedCampaign ? (
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <Metric icon={Eye} label={text("انطباعات", "Impressions")} value={selectedCampaign.impressions} />
-              <Metric icon={MousePointerClick} label={text("نقرات", "Clicks")} value={selectedCampaign.clicks} />
+              <Metric
+                icon={Eye}
+                label={text("انطباعات", "Impressions")}
+                value={selectedCampaign.impressions}
+              />
+              <Metric
+                icon={MousePointerClick}
+                label={text("نقرات", "Clicks")}
+                value={selectedCampaign.clicks}
+              />
               <Metric icon={BarChart3} label="CTR" value={`${selectedCampaign.ctr.toFixed(2)}%`} />
-              <Metric icon={ImageIcon} label={text("تصاميم", "Creatives")} value={selectedCampaign.creativeCount} />
+              <Metric
+                icon={ImageIcon}
+                label={text("تصاميم", "Creatives")}
+                value={selectedCampaign.creativeCount}
+              />
             </div>
           ) : (
             <p className="mt-4 text-xs leading-6 text-muted-foreground">
-              {text("اختر حملة موجودة لعرض المقاييس المسجلة فعلياً.", "Select an existing campaign to view recorded metrics.")}
+              {text(
+                "اختر حملة موجودة لعرض المقاييس المسجلة فعلياً.",
+                "Select an existing campaign to view recorded metrics.",
+              )}
             </p>
           )}
         </section>
@@ -446,9 +492,13 @@ function CampaignManagerPage() {
         </div>
 
         {loading ? (
-          <p className="mt-4 text-xs text-muted-foreground">{text("جارٍ التحميل...", "Loading...")}</p>
+          <p className="mt-4 text-xs text-muted-foreground">
+            {text("جارٍ التحميل...", "Loading...")}
+          </p>
         ) : campaigns.length === 0 ? (
-          <p className="mt-4 text-xs text-muted-foreground">{text("لا توجد حملات بعد.", "No campaigns yet.")}</p>
+          <p className="mt-4 text-xs text-muted-foreground">
+            {text("لا توجد حملات بعد.", "No campaigns yet.")}
+          </p>
         ) : (
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
             {campaigns.map((campaign) => (
@@ -465,12 +515,19 @@ function CampaignManagerPage() {
                   </span>
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                  <SmallMetric label={text("انطباعات", "Impressions")} value={campaign.impressions} />
+                  <SmallMetric
+                    label={text("انطباعات", "Impressions")}
+                    value={campaign.impressions}
+                  />
                   <SmallMetric label={text("نقرات", "Clicks")} value={campaign.clicks} />
                   <SmallMetric label="CTR" value={`${campaign.ctr.toFixed(2)}%`} />
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button" onClick={() => editCampaign(campaign)} className="rawaj-chip px-3 py-2 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => editCampaign(campaign)}
+                    className="rawaj-chip px-3 py-2 text-xs font-bold"
+                  >
                     {text("فتح", "Open")}
                   </button>
                   {campaign.status !== "active" && (
@@ -515,15 +572,22 @@ function CampaignManagerPage() {
 
       {campaignForm.id && (
         <section className="grid gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-          <form onSubmit={(event) => void saveCreative(event)} className="rounded-2xl bg-card p-5 hairline">
+          <form
+            onSubmit={(event) => void saveCreative(event)}
+            className="rounded-2xl bg-card p-5 hairline"
+          >
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-extrabold">
-                {creativeForm.id ? text("تعديل التصميم", "Edit creative") : text("تصميم جديد", "New creative")}
+                {creativeForm.id
+                  ? text("تعديل التصميم", "Edit creative")
+                  : text("تصميم جديد", "New creative")}
               </h3>
               {creativeForm.id && (
                 <button
                   type="button"
-                  onClick={() => setCreativeForm({ ...emptyCreative, campaignId: campaignForm.id ?? "" })}
+                  onClick={() =>
+                    setCreativeForm({ ...emptyCreative, campaignId: campaignForm.id ?? "" })
+                  }
                   className="rawaj-chip px-3 py-2 text-xs font-bold"
                 >
                   {text("جديد", "New")}
@@ -534,7 +598,9 @@ function CampaignManagerPage() {
               <Field label={text("اسم التصميم", "Creative name")} wide>
                 <input
                   value={creativeForm.name}
-                  onChange={(event) => setCreativeForm((value) => ({ ...value, name: event.target.value }))}
+                  onChange={(event) =>
+                    setCreativeForm((value) => ({ ...value, name: event.target.value }))
+                  }
                   required
                   className="input"
                 />
@@ -542,7 +608,9 @@ function CampaignManagerPage() {
               <Field label={text("رابط الصورة", "Image URL")} wide>
                 <input
                   value={creativeForm.imageUrl}
-                  onChange={(event) => setCreativeForm((value) => ({ ...value, imageUrl: event.target.value }))}
+                  onChange={(event) =>
+                    setCreativeForm((value) => ({ ...value, imageUrl: event.target.value }))
+                  }
                   type="url"
                   required
                   className="input"
@@ -551,7 +619,9 @@ function CampaignManagerPage() {
               <Field label={text("رابط الوجهة", "Destination URL")} wide>
                 <input
                   value={creativeForm.destinationUrl}
-                  onChange={(event) => setCreativeForm((value) => ({ ...value, destinationUrl: event.target.value }))}
+                  onChange={(event) =>
+                    setCreativeForm((value) => ({ ...value, destinationUrl: event.target.value }))
+                  }
                   type="url"
                   required
                   className="input"
@@ -560,7 +630,9 @@ function CampaignManagerPage() {
               <Field label={text("الوزن 1–1000", "Weight 1–1000")}>
                 <input
                   value={creativeForm.weight}
-                  onChange={(event) => setCreativeForm((value) => ({ ...value, weight: event.target.value }))}
+                  onChange={(event) =>
+                    setCreativeForm((value) => ({ ...value, weight: event.target.value }))
+                  }
                   type="number"
                   min={1}
                   max={1000}
@@ -570,12 +642,18 @@ function CampaignManagerPage() {
               <label className="flex items-end">
                 <button
                   type="button"
-                  onClick={() => setCreativeForm((value) => ({ ...value, isActive: !value.isActive }))}
+                  onClick={() =>
+                    setCreativeForm((value) => ({ ...value, isActive: !value.isActive }))
+                  }
                   className={`min-h-11 w-full rounded-xl px-3 py-2 text-xs font-bold hairline ${
-                    creativeForm.isActive ? "bg-primary text-primary-foreground" : "bg-muted-surface"
+                    creativeForm.isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted-surface"
                   }`}
                 >
-                  {creativeForm.isActive ? text("التصميم نشط", "Creative active") : text("التصميم متوقف", "Creative inactive")}
+                  {creativeForm.isActive
+                    ? text("التصميم نشط", "Creative active")
+                    : text("التصميم متوقف", "Creative inactive")}
                 </button>
               </label>
             </div>
@@ -590,9 +668,13 @@ function CampaignManagerPage() {
           </form>
 
           <section className="rounded-2xl bg-card p-5 hairline">
-            <h3 className="text-sm font-extrabold">{text("تصاميم الحملة", "Campaign creatives")}</h3>
+            <h3 className="text-sm font-extrabold">
+              {text("تصاميم الحملة", "Campaign creatives")}
+            </h3>
             {creatives.length === 0 ? (
-              <p className="mt-4 text-xs text-muted-foreground">{text("لا توجد تصاميم بعد.", "No creatives yet.")}</p>
+              <p className="mt-4 text-xs text-muted-foreground">
+                {text("لا توجد تصاميم بعد.", "No creatives yet.")}
+              </p>
             ) : (
               <div className="mt-4 grid gap-3">
                 {creatives.map((creative) => (
@@ -602,7 +684,11 @@ function CampaignManagerPage() {
                     onClick={() => editCreative(creative)}
                     className="grid gap-3 rounded-2xl bg-muted-surface/55 p-3 text-start hairline sm:grid-cols-[120px_1fr]"
                   >
-                    <img src={creative.imageUrl} alt="" className="aspect-[16/9] w-full rounded-xl object-cover hairline" />
+                    <img
+                      src={creative.imageUrl}
+                      alt=""
+                      className="aspect-[16/9] w-full rounded-xl object-cover hairline"
+                    />
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h4 className="truncate text-sm font-extrabold">{creative.name}</h4>
@@ -610,7 +696,9 @@ function CampaignManagerPage() {
                           {creative.isActive ? "active" : "inactive"}
                         </span>
                       </div>
-                      <p className="mt-1 text-[11px] text-muted-foreground">W{creative.weight} · v{creative.version}</p>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        W{creative.weight} · v{creative.version}
+                      </p>
                       <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-bold">
                         <span>{creative.impressions.toLocaleString()} imp</span>
                         <span>{creative.clicks.toLocaleString()} clicks</span>
@@ -628,7 +716,15 @@ function CampaignManagerPage() {
   );
 }
 
-function Field({ label, children, wide = false }: { label: string; children: React.ReactNode; wide?: boolean }) {
+function Field({
+  label,
+  children,
+  wide = false,
+}: {
+  label: string;
+  children: React.ReactNode;
+  wide?: boolean;
+}) {
   return (
     <label className={wide ? "sm:col-span-2" : ""}>
       <span className="mb-1.5 block text-[11px] font-bold text-muted-foreground">{label}</span>
@@ -637,11 +733,21 @@ function Field({ label, children, wide = false }: { label: string; children: Rea
   );
 }
 
-function Metric({ icon: Icon, label, value }: { icon: typeof Eye; label: string; value: number | string }) {
+function Metric({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Eye;
+  label: string;
+  value: number | string;
+}) {
   return (
     <div className="rounded-2xl bg-muted-surface p-4 hairline">
       <Icon className="h-4 w-4 text-primary" />
-      <div className="mt-2 text-lg font-extrabold">{typeof value === "number" ? value.toLocaleString() : value}</div>
+      <div className="mt-2 text-lg font-extrabold">
+        {typeof value === "number" ? value.toLocaleString() : value}
+      </div>
       <div className="mt-1 text-[10px] text-muted-foreground">{label}</div>
     </div>
   );
@@ -650,7 +756,9 @@ function Metric({ icon: Icon, label, value }: { icon: typeof Eye; label: string;
 function SmallMetric({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="rounded-xl bg-card p-2 hairline">
-      <div className="text-xs font-extrabold">{typeof value === "number" ? value.toLocaleString() : value}</div>
+      <div className="text-xs font-extrabold">
+        {typeof value === "number" ? value.toLocaleString() : value}
+      </div>
       <div className="mt-1 text-[9px] text-muted-foreground">{label}</div>
     </div>
   );
