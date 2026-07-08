@@ -45,7 +45,7 @@ declare
   v_user_id uuid := auth.uid();
   v_search_name text;
   v_listing_title text;
-  v_inserted boolean := false;
+  v_inserted_rows integer := 0;
   v_preference_enabled boolean := true;
 begin
   if v_user_id is null then
@@ -87,9 +87,9 @@ begin
   values (p_saved_search_id, p_listing_id, v_user_id)
   on conflict (saved_search_id, listing_id) do nothing;
 
-  get diagnostics v_inserted = row_count;
+  get diagnostics v_inserted_rows = row_count;
 
-  if not v_inserted then
+  if v_inserted_rows = 0 then
     return false;
   end if;
 
