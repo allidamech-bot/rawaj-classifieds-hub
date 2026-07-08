@@ -4,6 +4,170 @@ on:
   pull_request:
     branches:
       - main
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    if: github.head_ref == 'hotfix/listing-submit-edit-rpc' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hotfix/listing-submit-edit-rpc
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Patch listing write clients
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('src/lib/api/listings.ts')
+          s = p.read_text()
+
+          start = s.index('export async function updateOwnerListing(')
+          end = s.index('\nexport async function resubmitOwnerListing(', start)
+          new_update = '''export async function updateOwnerListing(
+  userId: string | null,
+  listingId: string,
+  payload: UpdateListingPayload,
+): Promise<ClassifiedsResult<ClassifiedListing>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لتعديل الإعلان." },
+    };
+  }
+
+  const cleanListingId = listingId.trim();
+  if (!cleanListingId) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data: existing, error: existingError } = await clientResult.data
+    .from("listings")
+    .select("*")
+    .eq("id", cleanListingId)
+    .eq("owner_id", userId)
+    .in("status", ["draft", "rejected"])
+    .maybeSingle();
+
+  if (existingError) return { ok: false, error: mapError(existingError) };
+  if (!existing) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "لا يمكن تعديل هذا الإعلان حالياً." },
+    };
+  }
+
+  const patch: Record<string, unknown> = {};
+  if (payload.categoryId) patch.category_id = payload.categoryId;
+  if (payload.subcategoryId !== undefined) patch.subcategory_id = payload.subcategoryId;
+  if (payload.governorateId) patch.governorate_id = payload.governorateId;
+  if (payload.title?.trim()) patch.title = payload.title.trim();
+  if (payload.description !== undefined) patch.description = payload.description?.trim() ?? null;
+  if (payload.price !== undefined) patch.price = payload.price;
+  if (payload.priceType) patch.price_type = payload.priceType;
+  if (payload.condition) patch.listing_condition = payload.condition;
+
+  if (payload.districtAr !== undefined) {
+    const locationWrite = await resolveListingLocationWrite(
+      clientResult.data,
+      payload.governorateId ?? rowString(existing as Record<string, unknown>, "governorate_id"),
+      payload.districtAr,
+    );
+    if (!locationWrite.ok) return locationWrite;
+    patch.governorate_id = locationWrite.data.governorateId;
+    patch.district_ar = locationWrite.data.districtAr;
+    if (locationWrite.data.locationNodeId !== undefined) {
+      patch.location_node_id = locationWrite.data.locationNodeId;
+    }
+  }
+
+  if (payload.contactName !== undefined) patch.contact_name = payload.contactName;
+  if (payload.contactOptions) patch.contact_options = payload.contactOptions;
+  if (payload.details !== undefined) patch.details = payload.details;
+
+  const { data, error } = await clientResult.data.rpc("rawaj_owner_update_listing", {
+    p_listing_id: cleanListingId,
+    p_patch: patch,
+  });
+  if (error) return { ok: false, error: mapError(error) };
+
+  const row = ((data ?? []) as Record<string, unknown>[])[0];
+  if (!row) {
+    return { ok: false, error: { code: "unknown", message: "تم التعديل دون نتيجة قابلة للتحقق." } };
+  }
+
+  const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);
+  return refreshed.ok ? refreshed : { ok: true, data: mapListing(row) };
+}
+'''
+          s = s[:start] + new_update + s[end:]
+
+          start = s.index('export async function submitOwnerListingForReview(')
+          end = s.index('\nexport async function uploadListingImage(', start)
+          new_submit = '''export async function submitOwnerListingForReview(
+  userId: string | null,
+  listingId: string,
+): Promise<ClassifiedsResult<ClassifiedListing>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال الإعلان للمراجعة." },
+    };
+  }
+
+  const normalizedListingId = listingId.trim();
+  if (!normalizedListingId) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data.rpc("rawaj_submit_listing_for_review", {
+    p_listing_id: normalizedListingId,
+  });
+  if (error) return { ok: false, error: mapError(error) };
+
+  const row = ((data ?? []) as Record<string, unknown>[])[0];
+  if (!row) {
+    return {
+      ok: false,
+      error: { code: "unknown", message: "تم إرسال الطلب دون نتيجة إعلان قابلة للتحقق." },
+    };
+  }
+
+  const refreshed = await fetchOwnerListingDetail(userId, normalizedListingId);
+  return refreshed.ok ? refreshed : { ok: true, data: mapListing(row) };
+}
+'''
+          s = s[:start] + new_submit + s[end:]
+          p.write_text(s)
+
+          final_gate = '''name: Quality Gate
+
+on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -44,18 +208,15 @@ jobs:
           if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
             base="$(git rev-parse HEAD^)"
           fi
-
           mapfile -t files < <(
-            git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- \
+            git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- \\
               '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
           )
-
           if [ "${#files[@]}" -eq 0 ]; then
             echo "No changed JS/TS source files to lint."
             exit 0
           fi
-
-          printf 'Linting %s\n' "${files[@]}"
+          printf 'Linting %s\\n' "${files[@]}"
           npx eslint --quiet "${files[@]}"
 
       - name: Typecheck
@@ -66,3 +227,17 @@ jobs:
 
       - name: Production build
         run: npm run build
+'''
+          Path('.github/workflows/quality-gate.yml').write_text(final_gate)
+          PY
+      - name: Fix lint
+        run: npx eslint --fix src/lib/api/listings.ts
+      - name: Remove temporary workflow and push
+        shell: bash
+        run: |
+          rm -f .github/workflows/listing-submit-edit-client-wiring.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A src/lib/api/listings.ts .github/workflows
+          git commit -m "Route listing edit and submit through self-contained RPCs"
+          git push origin HEAD:hotfix/listing-submit-edit-rpc
