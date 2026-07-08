@@ -39,6 +39,7 @@ import {
 } from "@/lib/api/references";
 
 import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
+import { isListingPastExpiry, publicListingExpiryFilter } from "@/lib/api/listing-expiry";
 import { buildListingImagePath, listingImagesBucket, validateImageFile } from "@/lib/api/storage";
 
 const signedImageUrlExpiresInSeconds = 900;
@@ -52,6 +53,9 @@ export function mapListing(
   const governorateId = rowString(row, "governorate_id");
   const category = categories.find((item) => item.id === categoryId);
   const governorate = governorates.find((item) => item.id === governorateId);
+  const rawStatus = rowString(row, "status", "pending_review") as ClassifiedListing["status"];
+  const expiresAt = rowNullableString(row, "expires_at");
+  const status = rawStatus === "approved" && isListingPastExpiry(expiresAt) ? "expired" : rawStatus;
 
   return {
     id: rowString(row, "id"),
@@ -72,7 +76,7 @@ export function mapListing(
       "listing_condition",
       "not_applicable",
     ) as ClassifiedListing["condition"],
-    status: rowString(row, "status", "pending_review") as ClassifiedListing["status"],
+    status,
     districtAr: rowNullableString(row, "district_ar"),
     contactName: rowNullableString(row, "contact_name"),
     contactOptions: rowRecord(row, "contact_options") as Record<string, boolean>,
@@ -85,8 +89,9 @@ export function mapListing(
     publishedAt: rowNullableString(row, "published_at"),
     archivedAt: rowNullableString(row, "archived_at"),
     statusChangedAt: rowNullableString(row, "status_changed_at"),
-    expiresAt: rowNullableString(row, "expires_at"),
+    expiresAt,
     renewedAt: rowNullableString(row, "renewed_at"),
+    expiryDays: rowNullableNumber(row, "expiry_days") as 30 | 60 | 90 | null,
     createdAt: rowString(row, "created_at"),
     updatedAt: rowString(row, "updated_at"),
   };
@@ -118,7 +123,11 @@ export async function fetchPublicListings(
   const references = await readReferences(clientResult.data);
   if (!references.ok) return { ok: false, error: references.error };
 
-  let query = clientResult.data.from("listings").select("*").eq("status", "approved");
+  let query = clientResult.data
+    .from("listings")
+    .select("*")
+    .eq("status", "approved")
+    .or(publicListingExpiryFilter());
 
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
 
@@ -239,6 +248,7 @@ export async function fetchListingDetail(
     .select("*")
     .eq("id", listingId)
     .eq("status", "approved")
+    .or(publicListingExpiryFilter())
     .maybeSingle();
 
   if (error) return { ok: false, error: mapError(error) };

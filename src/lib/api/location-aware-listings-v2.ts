@@ -7,6 +7,7 @@ import type {
 } from "@/lib/classifieds-types";
 import { resolveCanonicalLocationIds } from "@/lib/api/canonical-location-filter";
 import { fetchPublicListingsLocationAware } from "@/lib/api/location-aware-listings";
+import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
 import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
 import { readReferences } from "@/lib/api/references";
 import {
@@ -36,6 +37,7 @@ export async function fetchPublicListingsCanonicalAware(
     .from("listings")
     .select("*")
     .eq("status", "approved")
+    .or(publicListingExpiryFilter())
     .in("location_node_id", idsResult.data);
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
   const subcategoryId = filters.taxonomyLegacySubcategoryId ?? filters.subcategoryId;

@@ -12,6 +12,7 @@ import {
   mapError,
 } from "@/lib/api/shared";
 import { resolveLocationSubtreeIds } from "@/lib/api/location-filter";
+import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
 import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
 import { readReferences } from "@/lib/api/references";
 
@@ -26,7 +27,11 @@ export async function fetchPublicListingsLocationAware(
   const references = await readReferences(client);
   if (!references.ok) return { ok: false, error: references.error };
 
-  let query = client.from("listings").select("*").eq("status", "approved");
+  let query = client
+    .from("listings")
+    .select("*")
+    .eq("status", "approved")
+    .or(publicListingExpiryFilter());
 
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
   const effectiveSubcategoryId = filters.taxonomyLegacySubcategoryId ?? filters.subcategoryId;
