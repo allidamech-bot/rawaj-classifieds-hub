@@ -8,4 +8,6 @@ Each placement stores a banner/image URL, destination URL, optional start/end sc
 
 Create, edit, activate, and pause operations are audited. Updates require the version loaded by the owner console, preventing stale browser state from silently overwriting newer changes.
 
+The owner console includes a real banner preview based on the configured image URL and target metadata before saving.
+
 The management UI does not display fake impressions, clicks, CTR, or other unmeasured analytics. Public rendering uses a dedicated RPC that returns only currently active, in-schedule placements matching the requested page and device class.
