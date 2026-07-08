@@ -25,6 +25,8 @@ This stage closes the administration security plan with persistent regression ch
 
 `npm run security:admin` executes deterministic repository contract checks. The main Quality Gate now runs this check after TypeScript validation and before the production build. A future change that removes a required permission boundary, owner-only check, stale guard, audit contract, system-control trigger, or navigation invariant fails CI.
 
+A failed security invariant is treated as an internal Quality Gate failure and blocks merge until the code or the deliberately changed invariant contract is reviewed and updated explicitly.
+
 ## E2E distinction
 
 The automated regression is an end-to-end **contract-path audit across UI permission declarations, route guards, API clients, generated route integration, SQL/RPC authority, RLS declarations, audit contracts, and database triggers**.
