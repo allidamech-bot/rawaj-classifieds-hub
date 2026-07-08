@@ -44,39 +44,19 @@ jobs:
           if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
             base="$(git rev-parse HEAD^)"
           fi
+
           mapfile -t files < <(
             git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- \
               '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
           )
+
           if [ "${#files[@]}" -eq 0 ]; then
-            echo 0 > eslint-status.txt
-            printf '[]\n' > eslint-report.json
+            echo "No changed JS/TS source files to lint."
             exit 0
           fi
-          set +e
-          npx eslint --quiet --format json "${files[@]}" > eslint-report.json
-          lint_status=$?
-          set -e
-          echo "$lint_status" > eslint-status.txt
 
-      - name: Upload ESLint diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: eslint-diagnostics
-          path: |
-            eslint-report.json
-            eslint-status.txt
-          if-no-files-found: ignore
-          retention-days: 1
-
-      - name: Enforce lint result
-        shell: bash
-        run: |
-          status="$(cat eslint-status.txt 2>/dev/null || echo 1)"
-          if [ "$status" -ne 0 ]; then
-            exit "$status"
-          fi
+          printf 'Linting %s\n' "${files[@]}"
+          npx eslint --quiet "${files[@]}"
 
       - name: Typecheck
         run: npm run typecheck -- --pretty false
