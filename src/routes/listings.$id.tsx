@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { UnavailableListingRecovery } from "@/features/listing-detail/UnavailableListingRecovery";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { categoryDetailDisplayRows, detectCategoryFieldKind } from "@/lib/category-fields";
 import {
@@ -39,14 +40,7 @@ export const Route = createFileRoute("/listings/$id")({
     if (!listing.ok) throw notFound();
     return listing.data;
   },
-  notFoundComponent: () => (
-    <ListingState
-      titleAr="تفاصيل الإعلان"
-      titleEn="Listing details"
-      bodyAr="هذا الإعلان غير متاح للعرض العام أو لم تتم الموافقة عليه."
-      bodyEn="This listing is unavailable publicly or has not been approved."
-    />
-  ),
+  notFoundComponent: UnavailableListingRecovery,
   head: ({ loaderData }) =>
     createSeo({
       title: loaderData ? `${loaderData.title} | RAWAJ / رواج` : "إعلان غير متاح | RAWAJ / رواج",
