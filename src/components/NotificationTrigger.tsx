@@ -151,6 +151,11 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
     setUnreadCount(0);
   }
 
+  function openNotificationCenter() {
+    setOpen(false);
+    void navigate({ to: "/notifications" });
+  }
+
   const triggerClass =
     tone === "dark"
       ? "relative grid h-9 w-9 place-items-center rounded-full border border-primary-foreground/15 bg-primary-foreground/[0.06] text-primary-foreground/85 backdrop-blur transition hover:border-gold/50 hover:bg-primary-foreground/10 hover:text-gold active:scale-[0.98] sm:h-10 sm:w-10"
@@ -253,6 +258,16 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
               })}
             </div>
           )}
+
+          <div className="mt-3 border-t border-border/70 pt-3">
+            <button
+              type="button"
+              onClick={openNotificationCenter}
+              className="w-full rounded-lg bg-muted-surface px-3 py-2 text-xs font-bold transition hover:bg-muted"
+            >
+              {text("فتح مركز الإشعارات", "Open notification center")}
+            </button>
+          </div>
         </div>
       )}
     </div>
