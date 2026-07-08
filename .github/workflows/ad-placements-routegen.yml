@@ -1,0 +1,47 @@
+name: Ad Placements Route Generation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.head_ref == 'feature/ad-placements-management' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/ad-placements-management
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate route tree through build
+        run: npm run build
+
+      - name: Remove temporary workflow and commit route tree
+        shell: bash
+        run: |
+          rm .github/workflows/ad-placements-routegen.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routeTree.gen.ts .github/workflows/ad-placements-routegen.yml
+          if git diff --cached --quiet; then
+            echo "No generated route changes."
+            exit 0
+          fi
+          git commit -m "Generate ad placements route tree"
+          git push origin HEAD:feature/ad-placements-management
