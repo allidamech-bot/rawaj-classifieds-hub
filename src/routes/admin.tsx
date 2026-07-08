@@ -52,10 +52,7 @@ function AdminLayout() {
   if (auth.status === "authUnavailable") {
     return (
       <AdminShellState
-        title={text(
-          "لوحة الإدارة تتطلب جلسة حساب",
-          "Admin dashboard requires an account session",
-        )}
+        title={text("لوحة الإدارة تتطلب جلسة حساب", "Admin dashboard requires an account session")}
         message={text(
           "تبقى صفحات الإدارة محمية ولا تُعرض إلا بعد توفر حساب بصلاحية مناسبة.",
           "Admin pages remain protected and are shown only with a suitable authorized account.",
@@ -149,9 +146,7 @@ function AdminShellState({
         <section className="rounded-2xl bg-card p-5 text-center hairline shadow-soft">
           <Lock className="mx-auto h-7 w-7 text-warning" />
           <h2 className="mt-3 text-base font-extrabold">{title}</h2>
-          <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">
-            {message}
-          </p>
+          <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">{message}</p>
           <Link
             to={actionTo}
             className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
