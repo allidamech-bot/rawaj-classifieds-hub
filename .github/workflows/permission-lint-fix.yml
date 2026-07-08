@@ -1,0 +1,53 @@
+name: Permission Lint Fix
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.head_ref == 'feature/role-permission-enforcement-finalization' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/role-permission-enforcement-finalization
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fix changed permission source files
+        run: >-
+          npx eslint --fix
+          src/lib/auth-types.ts
+          src/lib/auth-context.ts
+          src/lib/auth.tsx
+          src/routes/admin.tsx
+          src/routes/admin.users.tsx
+
+      - name: Remove temporary workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/permission-lint-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/auth-types.ts src/lib/auth-context.ts src/lib/auth.tsx src/routes/admin.tsx src/routes/admin.users.tsx .github/workflows/permission-lint-fix.yml
+          if git diff --cached --quiet; then
+            echo "No lint fixes needed."
+            exit 0
+          fi
+          git commit -m "Fix permission enforcement lint issues"
+          git push origin HEAD:feature/role-permission-enforcement-finalization
