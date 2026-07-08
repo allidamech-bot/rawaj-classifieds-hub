@@ -81,3 +81,54 @@ export function reactivateOwnerListing(userId: string | null, listingId: string)
     "pending_review",
   );
 }
+
+export async function confirmOwnerListingAvailability(
+  userId: string | null,
+  listingId: string,
+): Promise<ClassifiedsResult<ClassifiedListing>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: {
+        code: "auth_required",
+        message: "يجب تسجيل الدخول لتأكيد توفر الإعلان.",
+      },
+    };
+  }
+
+  const cleanListingId = listingId.trim();
+  if (!cleanListingId) {
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: "تعذر تحديد الإعلان المطلوب.",
+      },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("listings")
+    .update({ renewed_at: new Date().toISOString() })
+    .eq("id", cleanListingId)
+    .eq("owner_id", userId)
+    .eq("status", "approved")
+    .select("id")
+    .maybeSingle();
+
+  if (error) return { ok: false, error: mapError(error) };
+  if (!data) {
+    return {
+      ok: false,
+      error: {
+        code: "permission_denied",
+        message: "لا يمكن تأكيد توفر هذا الإعلان حالياً. ربما تغيرت حالته.",
+      },
+    };
+  }
+
+  return fetchOwnerListingDetail(userId, cleanListingId);
+}
