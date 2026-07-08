@@ -64,7 +64,7 @@ select
   f.listing_id,
   l.title,
   l.price,
-  coalesce(l.currency, 'SYP'),
+  'SYP',
   l.status,
   f.created_at,
   now()
