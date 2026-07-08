@@ -58,22 +58,8 @@ jobs:
           printf 'Linting %s\n' "${files[@]}"
           npx eslint --quiet "${files[@]}"
 
-      - name: Generate route tree through production build
-        shell: bash
-        run: |
-          set +e
-          npm run build
-          echo "$?" > route-build-exit-code.txt
-          set -e
-
-      - name: Upload generated route tree
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: generated-route-tree
-          path: |
-            src/routeTree.gen.ts
-            route-build-exit-code.txt
-
-      - name: Typecheck generated route tree
+      - name: Typecheck
         run: npm run typecheck -- --pretty false
+
+      - name: Production build
+        run: npm run build
