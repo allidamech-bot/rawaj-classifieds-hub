@@ -4,20 +4,26 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: quality-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  capture-auth-lint:
-    if: github.head_ref == 'feature/auth-recovery-session-hardening' && github.actor != 'github-actions[bot]'
+  validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+
     steps:
-      - name: Checkout feature branch
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: feature/auth-recovery-session-hardening
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -29,26 +35,31 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Capture ESLint output
+      - name: Lint changed source files
         shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          npx eslint --quiet \
-            src/lib/auth-return.ts \
-            src/routes/auth.callback.tsx \
-            src/routes/login.tsx \
-            src/routes/reset-password.tsx \
-            > auth-recovery-lint-output.txt 2>&1 || true
-          cat auth-recovery-lint-output.txt
+          base="$BASE_SHA"
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="$(git rev-parse HEAD^)"
+          fi
 
-      - name: Commit diagnostics
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add auth-recovery-lint-output.txt
-          if git diff --cached --quiet; then
-            echo "No diagnostic changes."
+          mapfile -t files < <(
+            git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- \
+              '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
+          )
+
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No changed JS/TS source files to lint."
             exit 0
           fi
-          git commit -m "Capture auth recovery lint diagnostics"
-          git push origin HEAD:feature/auth-recovery-session-hardening
+
+          printf 'Linting %s\n' "${files[@]}"
+          npx eslint --quiet "${files[@]}"
+
+      - name: Typecheck
+        run: npm run typecheck -- --pretty false
+
+      - name: Production build
+        run: npm run build
