@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import { BottomNav } from "@/components/BottomNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { DraftRecoveryBanner } from "@/features/listing-studio/DraftRecoveryBanner";
 import { AuthProvider } from "@/lib/auth";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { shouldShowSiteFooter, shouldShowBottomNav } from "@/lib/primary-navigation";
@@ -161,6 +162,7 @@ function RootComponent() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const showFooter = shouldShowSiteFooter(pathname);
   const showBottomNav = shouldShowBottomNav(pathname);
+  const showDraftRecovery = pathname === "/add-listing";
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -172,6 +174,7 @@ function RootComponent() {
               showBottomNav ? "pb-24" : "pb-6"
             }`}
           >
+            {showDraftRecovery && <DraftRecoveryBanner />}
             <Outlet />
             {showFooter && <SiteFooter />}
           </div>
