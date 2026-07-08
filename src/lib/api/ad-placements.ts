@@ -118,7 +118,7 @@ export async function ownerSaveAdPlacement(
       return {
         ok: false,
         error: {
-          code: "stale_ad_placement",
+          code: "unknown",
           message: "تغيّرت المساحة الإعلانية منذ تحميلها. أعد التحميل قبل الحفظ.",
         },
       };
@@ -178,7 +178,7 @@ export async function ownerSetAdPlacementStatus(
       return {
         ok: false,
         error: {
-          code: "stale_ad_placement",
+          code: "unknown",
           message: "تغيّرت المساحة الإعلانية منذ تحميلها. أعد التحميل قبل تغيير الحالة.",
         },
       };

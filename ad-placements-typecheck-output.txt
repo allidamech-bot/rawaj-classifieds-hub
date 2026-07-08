@@ -1,6 +1,0 @@
-
-> typecheck
-> tsc --noEmit --pretty false
-
-src/lib/api/ad-placements.ts(121,11): error TS2322: Type '"stale_ad_placement"' is not assignable to type 'ClassifiedsErrorCode'.
-src/lib/api/ad-placements.ts(181,11): error TS2322: Type '"stale_ad_placement"' is not assignable to type 'ClassifiedsErrorCode'.
