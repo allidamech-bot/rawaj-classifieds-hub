@@ -175,7 +175,10 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
 
 export const emptyRolePermissions: RolePermissions = Object.freeze(
   Object.fromEntries(
-    (Object.keys(rolePermissions.user) as RolePermission[]).map((permission) => [permission, false]),
+    (Object.keys(rolePermissions.user) as RolePermission[]).map((permission) => [
+      permission,
+      false,
+    ]),
   ) as unknown as RolePermissions,
 );
 
