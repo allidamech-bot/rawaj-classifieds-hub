@@ -13,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ExistingConversationBanner } from "@/features/listing-detail/ExistingConversationBanner";
+import { PriceChangeBanner } from "@/features/listing-detail/PriceChangeBanner";
 import { ViewedBeforeBanner } from "@/features/listing-detail/ViewedBeforeBanner";
 import { DraftRecoveryBanner } from "@/features/listing-studio/DraftRecoveryBanner";
 import { AuthProvider } from "@/lib/auth";
@@ -182,6 +183,7 @@ function RootComponent() {
           >
             {showDraftRecovery && <DraftRecoveryBanner />}
             {listingDetailId && <ViewedBeforeBanner listingId={listingDetailId} />}
+            {listingDetailId && <PriceChangeBanner listingId={listingDetailId} />}
             {listingDetailId && <ExistingConversationBanner listingId={listingDetailId} />}
             <Outlet />
             {showFooter && <SiteFooter />}
