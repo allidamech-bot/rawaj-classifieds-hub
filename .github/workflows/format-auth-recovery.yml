@@ -1,20 +1,20 @@
 name: Format Auth Recovery
 
 on:
-  push:
+  pull_request:
     branches:
-      - feature/auth-recovery-session-hardening
+      - main
 
 permissions:
   contents: write
 
 jobs:
   format:
-    if: github.actor != 'github-actions[bot]'
+    if: github.head_ref == 'feature/auth-recovery-session-hardening' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout
+      - name: Checkout feature branch
         uses: actions/checkout@v4
         with:
           ref: feature/auth-recovery-session-hardening
