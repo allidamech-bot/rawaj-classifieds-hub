@@ -55,7 +55,7 @@ forbidText(lifecycle, '.from("listings")', "no direct owner lifecycle table muta
 requireText(listings, 'createListingWithStatus(userId, payload, "draft")', "create through draft");
 requireText(
   listings,
-  "return submitOwnerListingForReview(userId, draftResult.data.id);",
+  "return submitCreatedListingForReview(userId, draftResult.data.id);",
   "create through protected submit",
 );
 forbidText(
@@ -64,6 +64,16 @@ forbidText(
   "no direct pending-review creation",
 );
 requireText(listings, 'rpc("rawaj_submit_listing_for_review"', "protected listing submit RPC");
+forbidText(
+  listings,
+  "export async function submitOwnerListingForReview",
+  "single exported listing submit implementation",
+);
+forbidText(
+  listings,
+  "export async function updateOwnerListing",
+  "single exported owner update implementation",
+);
 
 requireText(admin, 'rpc("rawaj_review_listing_decision"', "protected moderation decision RPC");
 requireText(reports, 'rpc("rawaj_review_queue_pending")', "protected pending queue RPC");
@@ -109,6 +119,11 @@ requireText(
 // Migration 039 must make the review lifecycle self-contained so the admin queue and
 // moderation work regardless of which intermediate migrations were applied to production.
 requireText(migration39, "rawaj_current_user_can_review_listings", "039 review authority helper");
+requireText(
+  migration39,
+  "p.account_status = 'pending_review'",
+  "039 skipped staff activation reconciliation",
+);
 requireText(migration39, "rawaj_owner_update_listing", "039 owner update RPC");
 requireText(migration39, "rawaj_submit_listing_for_review", "039 submit RPC");
 requireText(migration39, "rawaj_review_queue_pending", "039 review queue RPC");
@@ -121,6 +136,11 @@ requireText(
   "039 moderation trigger attached",
 );
 requireText(migration39, "stale_review", "039 stale-review protection");
+requireText(
+  read("src/lib/api/listing-write-rpc.ts"),
+  'status === "pending_review"',
+  "submit success requires pending-review status",
+);
 
 if (failures.length > 0) {
   console.error("Listing system regression contract failed:\n");

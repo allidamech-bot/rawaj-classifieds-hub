@@ -129,11 +129,16 @@ export async function submitOwnerListingForReview(
   if (error) return { ok: false, error: mapError(error, "owner_listing_submit") };
 
   const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);
-  if (refreshed.ok) return refreshed;
+  if (refreshed.ok) {
+    if (refreshed.data.status === "pending_review") return refreshed;
+    return submitStatusMismatch(refreshed.data.status);
+  }
 
   const row = ((data ?? []) as Record<string, unknown>[])[0];
   if (row) {
-    return { ok: true, data: mapListing(row) };
+    const listing = mapListing(row);
+    if (listing.status === "pending_review") return { ok: true, data: listing };
+    return submitStatusMismatch(listing.status);
   }
 
   return {
@@ -141,6 +146,19 @@ export async function submitOwnerListingForReview(
     error: {
       code: "unknown",
       message: "تم إرسال الطلب دون نتيجة إعلان قابلة للتحقق.",
+      operation: "owner_listing_submit",
+    },
+  };
+}
+
+function submitStatusMismatch(status: ClassifiedListing["status"]): ClassifiedsResult<never> {
+  return {
+    ok: false,
+    error: {
+      code: "status_mismatch",
+      message:
+        "لم يؤكد الخادم انتقال الإعلان إلى قائمة المراجعة. بقي الإعلان محفوظاً دون تأكيد الإرسال.",
+      details: `Expected pending_review after submit RPC, received ${status}.`,
       operation: "owner_listing_submit",
     },
   };

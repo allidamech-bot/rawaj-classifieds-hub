@@ -9,6 +9,7 @@ export type ClassifiedsErrorCode =
   | "permission_denied"
   | "not_found"
   | "stale_review"
+  | "status_mismatch"
   | "validation_error"
   | "foreign_key_conflict"
   | "unknown";

@@ -1,14 +1,14 @@
 -- RAWAJ listing review lifecycle — self-contained re-assertion.
 --
 -- Why this migration exists:
--- PR #108/#109 applied 033-038 but the review-system RPCs were first introduced in 028,
--- and the review-staff RLS policies + moderation protection trigger were also only defined
--- there. If a production database missed any of 028-032, the RPC bodies still existed (038
--- re-created them) but the RLS policies that let review staff READ all listings and the
--- moderation protection trigger could be in an inconsistent state. That produces the live
--- split-brain symptom: a customer submit persisted pending_review, but the admin queue /
--- dashboard could not read it, and the client collapsed the real error into a generic
--- "could not load" message.
+-- PR #108/#109 applied 033-038 while production may have missed 028-032. Migration 038
+-- re-created the SECURITY DEFINER review RPCs, so the pending-queue RPC does not depend on
+-- caller SELECT policies when its owner also owns listings and FORCE ROW LEVEL SECURITY is
+-- not enabled. The skipped range still matters: 029-030 activated already-provisioned review
+-- staff stuck in the legacy pending_review profile state, 028 supplied direct-table review
+-- policies, and 028/032 supplied moderation-trigger hardening. Missing staff activation can
+-- make the database authority helper return false while the role-driven UI still grants
+-- canModerateListings, yielding an authorized-looking but empty queue.
 --
 -- This migration is fully idempotent and self-contained: it re-creates every dependency the
 -- review lifecycle needs (functions, RLS policies, moderation trigger, grants) using
@@ -37,6 +37,19 @@ $$;
 revoke all on function public.rawaj_current_user_can_review_listings() from public;
 revoke all on function public.rawaj_current_user_can_review_listings() from anon;
 grant execute on function public.rawaj_current_user_can_review_listings() to authenticated;
+
+-- Reconcile the skipped migration 030 behavior. A persisted review role is authoritative for
+-- staff provisioning, but this only lifts the legacy onboarding state; frozen and disabled
+-- accounts remain untouched.
+update public.profiles p
+set account_status = 'active', updated_at = now()
+where p.account_status = 'pending_review'
+  and exists (
+    select 1
+    from public.user_roles ur
+    where ur.user_id = p.id
+      and ur.role in ('owner', 'admin', 'moderator')
+  );
 
 -- 2) Owner content edit boundary. The client resolves canonical location first, then sends
 -- only editable fields in one JSON patch. Moderation fields are never accepted here.
@@ -331,9 +344,10 @@ revoke all on function public.rawaj_review_listing_decision(uuid, text, text, ti
 revoke all on function public.rawaj_review_listing_decision(uuid, text, text, timestamptz) from anon;
 grant execute on function public.rawaj_review_listing_decision(uuid, text, text, timestamptz) to authenticated;
 
--- 6) Review-staff RLS. These let authorized reviewers READ every listing (including
--- pending_review) and perform moderation transitions. They are the missing dependency
--- when 028 was skipped; re-created here idempotently.
+-- 6) Review-staff RLS. These policies protect direct table reads and the schema-missing
+-- client fallback. The SECURITY DEFINER queue RPC does not require them under the repository
+-- schema because listings is not FORCE ROW LEVEL SECURITY and migrations create the function
+-- and table under the same migration owner.
 drop policy if exists "Admin-like reads all listings" on public.listings;
 drop policy if exists "Review staff read all listings" on public.listings;
 create policy "Review staff read all listings"
