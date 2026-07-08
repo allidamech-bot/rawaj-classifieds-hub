@@ -12,7 +12,10 @@ export interface NotificationPreferences {
   updatedAt: string | null;
 }
 
-export type NotificationPreferenceKey = Exclude<keyof NotificationPreferences, "userId" | "updatedAt">;
+export type NotificationPreferenceKey = Exclude<
+  keyof NotificationPreferences,
+  "userId" | "updatedAt"
+>;
 
 const DEFAULT_NOTIFICATION_PREFERENCES: Omit<NotificationPreferences, "userId"> = {
   messagesEnabled: true,
