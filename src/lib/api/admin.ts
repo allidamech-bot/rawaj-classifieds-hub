@@ -66,7 +66,8 @@ export async function adminModerateListing(
       .select("id")
       .maybeSingle();
 
-    if (fallback.error) return { ok: false, error: mapError(fallback.error) };
+    if (fallback.error)
+      return { ok: false, error: mapError(fallback.error, "admin_moderate_listing") };
     if (!fallback.data) {
       return {
         ok: false,
@@ -90,7 +91,7 @@ export async function adminModerateListing(
         },
       };
     }
-    return { ok: false, error: mapError(error) };
+    return { ok: false, error: mapError(error, "admin_moderate_listing") };
   }
 
   return { ok: true, data: null };

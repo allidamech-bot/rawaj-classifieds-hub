@@ -9,6 +9,7 @@ export type ClassifiedsErrorCode =
   | "permission_denied"
   | "not_found"
   | "stale_review"
+  | "status_mismatch"
   | "validation_error"
   | "foreign_key_conflict"
   | "unknown";
@@ -17,6 +18,13 @@ export interface ClassifiedsError {
   code: ClassifiedsErrorCode;
   message: string;
   details?: string;
+  /**
+   * Operational context for the failure (e.g. "owner_listing_submit",
+   * "admin_review_queue"). Used for runtime diagnosis so that distinct
+   * failures are never collapsed into a single generic message without a
+   * traceable source. Never exposed as sensitive database internals.
+   */
+  operation?: string;
 }
 
 export type ClassifiedsResult<T> = { ok: true; data: T } | { ok: false; error: ClassifiedsError };

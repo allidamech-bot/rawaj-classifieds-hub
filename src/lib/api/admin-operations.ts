@@ -42,7 +42,7 @@ export async function adminFetchCommandCenterMetrics(
   if (!clientResult.ok) return clientResult;
 
   const { data, error } = await clientResult.data.rpc("rawaj_admin_command_center_metrics");
-  if (error) return { ok: false, error: mapError(error) };
+  if (error) return { ok: false, error: mapError(error, "admin_command_center_metrics") };
 
   const row = Array.isArray(data) ? (data[0] as Record<string, unknown> | undefined) : null;
   if (!row) {

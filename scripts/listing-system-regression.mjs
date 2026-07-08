@@ -31,6 +31,9 @@ const migration35 = read(
 const migration36 = read(
   "supabase/migrations/202607080036_listing_moderation_trigger_reconciliation.sql",
 );
+const migration39 = read(
+  "supabase/migrations/202607090001_listing_review_lifecycle_self_contained.sql",
+);
 
 requireText(locationWrite, '.from("governorates")', "canonical governorate mapping");
 requireText(
@@ -52,7 +55,7 @@ forbidText(lifecycle, '.from("listings")', "no direct owner lifecycle table muta
 requireText(listings, 'createListingWithStatus(userId, payload, "draft")', "create through draft");
 requireText(
   listings,
-  "return submitOwnerListingForReview(userId, draftResult.data.id);",
+  "return submitCreatedListingForReview(userId, draftResult.data.id);",
   "create through protected submit",
 );
 forbidText(
@@ -61,6 +64,16 @@ forbidText(
   "no direct pending-review creation",
 );
 requireText(listings, 'rpc("rawaj_submit_listing_for_review"', "protected listing submit RPC");
+forbidText(
+  listings,
+  "export async function submitOwnerListingForReview",
+  "single exported listing submit implementation",
+);
+forbidText(
+  listings,
+  "export async function updateOwnerListing",
+  "single exported owner update implementation",
+);
 
 requireText(admin, 'rpc("rawaj_review_listing_decision"', "protected moderation decision RPC");
 requireText(reports, 'rpc("rawaj_review_queue_pending")', "protected pending queue RPC");
@@ -101,6 +114,32 @@ requireText(
   migration36,
   "'status_changed_at'",
   "status timestamp allowed by moderation protection",
+);
+
+// Migration 039 must make the review lifecycle self-contained so the admin queue and
+// moderation work regardless of which intermediate migrations were applied to production.
+requireText(migration39, "rawaj_current_user_can_review_listings", "039 review authority helper");
+requireText(
+  migration39,
+  "p.account_status = 'pending_review'",
+  "039 skipped staff activation reconciliation",
+);
+requireText(migration39, "rawaj_owner_update_listing", "039 owner update RPC");
+requireText(migration39, "rawaj_submit_listing_for_review", "039 submit RPC");
+requireText(migration39, "rawaj_review_queue_pending", "039 review queue RPC");
+requireText(migration39, "rawaj_review_listing_decision", "039 decision RPC");
+requireText(migration39, '"Review staff read all listings"', "039 review-staff read RLS");
+requireText(migration39, '"Review staff moderate listings"', "039 review-staff moderate RLS");
+requireText(
+  migration39,
+  "create trigger listings_protect_moderation_update",
+  "039 moderation trigger attached",
+);
+requireText(migration39, "stale_review", "039 stale-review protection");
+requireText(
+  read("src/lib/api/listing-write-rpc.ts"),
+  'status === "pending_review"',
+  "submit success requires pending-review status",
 );
 
 if (failures.length > 0) {

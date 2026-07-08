@@ -294,7 +294,7 @@ export async function fetchOwnerListingDetail(
     .eq("owner_id", userId)
     .maybeSingle();
 
-  if (error) return { ok: false, error: mapError(error) };
+  if (error) return { ok: false, error: mapError(error, "owner_listing_read") };
   if (!data) {
     return {
       ok: false,
@@ -333,110 +333,12 @@ export async function fetchCurrentUserListings(
     .eq("owner_id", userId)
     .order("created_at", { ascending: false });
 
-  if (error) return { ok: false, error: mapError(error) };
+  if (error) return { ok: false, error: mapError(error, "owner_listings_read") };
   const listings = ((data ?? []) as Record<string, unknown>[]).map((row) =>
     mapListing(row, references.categories, references.governorates),
   );
 
   return { ok: true, data: await hydrateListingsWithPrimaryImages(clientResult.data, listings) };
-}
-
-export async function updateOwnerListing(
-  userId: string | null,
-  listingId: string,
-  payload: UpdateListingPayload,
-): Promise<ClassifiedsResult<ClassifiedListing>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لتعديل الإعلان." },
-    };
-  }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  if (!listingId.trim()) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
-    };
-  }
-
-  const references = await readReferences(clientResult.data);
-  if (!references.ok) return { ok: false, error: references.error };
-
-  const { data: existing, error: existingError } = await clientResult.data
-    .from("listings")
-    .select("*")
-    .eq("id", listingId)
-    .eq("owner_id", userId)
-    .in("status", ["draft", "rejected"])
-    .maybeSingle();
-
-  if (existingError) return { ok: false, error: mapError(existingError) };
-  if (!existing) {
-    return {
-      ok: false,
-      error: {
-        code: "permission_denied",
-        message: "لا يمكن تعديل هذا الإعلان حالياً. أعد إرساله للمراجعة إذا كان مرفوضاً.",
-      },
-    };
-  }
-
-  const updateData: Record<string, unknown> = {};
-  if (payload.categoryId) updateData.category_id = payload.categoryId;
-  if (payload.governorateId) updateData.governorate_id = payload.governorateId;
-  if (payload.subcategoryId !== undefined) updateData.subcategory_id = payload.subcategoryId;
-  if (payload.title?.trim()) updateData.title = payload.title.trim();
-  if (payload.description !== undefined) {
-    updateData.description = payload.description?.trim() ?? null;
-  }
-  if (payload.price !== undefined) updateData.price = payload.price;
-  if (payload.priceType) updateData.price_type = payload.priceType;
-  if (payload.condition) updateData.listing_condition = payload.condition;
-  if (payload.districtAr !== undefined) {
-    const locationWrite = await resolveListingLocationWrite(
-      clientResult.data,
-      payload.governorateId ?? rowString(existing as Record<string, unknown>, "governorate_id"),
-      payload.districtAr,
-    );
-    if (!locationWrite.ok) return locationWrite;
-    updateData.governorate_id = locationWrite.data.governorateId;
-    updateData.district_ar = locationWrite.data.districtAr;
-    if (locationWrite.data.locationNodeId !== undefined) {
-      updateData.location_node_id = locationWrite.data.locationNodeId;
-    }
-  }
-  if (payload.contactName !== undefined) updateData.contact_name = payload.contactName;
-  if (payload.contactOptions) updateData.contact_options = payload.contactOptions;
-  if (payload.details !== undefined) updateData.details = payload.details;
-
-  const { data, error } = await clientResult.data
-    .from("listings")
-    .update(updateData)
-    .eq("id", listingId)
-    .eq("owner_id", userId)
-    .in("status", ["draft", "rejected"])
-    .select("*");
-
-  if (error) return { ok: false, error: mapError(error) };
-  if (!data || data.length === 0) {
-    return {
-      ok: false,
-      error: { code: "not_found", message: "تعذر تحديث الإعلان." },
-    };
-  }
-
-  return {
-    ok: true,
-    data: mapListing(
-      data[0] as Record<string, unknown>,
-      references.categories,
-      references.governorates,
-    ),
-  };
 }
 
 export async function resubmitOwnerListing(
@@ -464,82 +366,81 @@ export async function resubmitOwnerListing(
   const references = await readReferences(clientResult.data);
   if (!references.ok) return { ok: false, error: references.error };
 
-  const { data: existing, error: existingError } = await clientResult.data
-    .from("listings")
-    .select("*")
-    .eq("id", listingId)
-    .eq("owner_id", userId)
-    .in("status", ["draft", "rejected"])
-    .maybeSingle();
+  const cleanListingId = listingId.trim();
 
-  if (existingError) return { ok: false, error: mapError(existingError) };
-  if (!existing) {
-    return {
-      ok: false,
-      error: {
-        code: "permission_denied",
-        message: "لا يمكن إعادة إرسال هذا الإعلان حالياً.",
-      },
-    };
-  }
+  // Apply optional content edits through the canonical owner-update RPC, then submit
+  // through the canonical submit RPC. Both avoid direct table UPDATE shortcuts.
+  const hasEdit =
+    payload.categoryId ||
+    payload.subcategoryId !== undefined ||
+    payload.governorateId ||
+    payload.title?.trim() ||
+    payload.description !== undefined ||
+    payload.price !== undefined ||
+    payload.priceType ||
+    payload.condition ||
+    payload.districtAr !== undefined ||
+    payload.contactName !== undefined ||
+    payload.contactOptions ||
+    payload.details !== undefined;
 
-  const updateData: Record<string, unknown> = {
-    status: "pending_review",
-    rejection_reason: null,
-    reviewed_by: null,
-    reviewed_at: null,
-  };
-
-  if (payload.categoryId) updateData.category_id = payload.categoryId;
-  if (payload.governorateId) updateData.governorate_id = payload.governorateId;
-  if (payload.subcategoryId !== undefined) updateData.subcategory_id = payload.subcategoryId;
-  if (payload.title?.trim()) updateData.title = payload.title.trim();
-  if (payload.description !== undefined) {
-    updateData.description = payload.description?.trim() ?? null;
-  }
-  if (payload.price !== undefined) updateData.price = payload.price;
-  if (payload.priceType) updateData.price_type = payload.priceType;
-  if (payload.condition) updateData.listing_condition = payload.condition;
-  if (payload.districtAr !== undefined) {
-    const locationWrite = await resolveListingLocationWrite(
-      clientResult.data,
-      payload.governorateId ?? rowString(existing as Record<string, unknown>, "governorate_id"),
-      payload.districtAr,
-    );
-    if (!locationWrite.ok) return locationWrite;
-    updateData.governorate_id = locationWrite.data.governorateId;
-    updateData.district_ar = locationWrite.data.districtAr;
-    if (locationWrite.data.locationNodeId !== undefined) {
-      updateData.location_node_id = locationWrite.data.locationNodeId;
+  if (hasEdit) {
+    const patch: Record<string, unknown> = {};
+    if (payload.categoryId) patch.category_id = payload.categoryId;
+    if (payload.subcategoryId !== undefined) patch.subcategory_id = payload.subcategoryId;
+    if (payload.governorateId) patch.governorate_id = payload.governorateId;
+    if (payload.title?.trim()) patch.title = payload.title.trim();
+    if (payload.description !== undefined) patch.description = payload.description?.trim() ?? null;
+    if (payload.price !== undefined) patch.price = payload.price;
+    if (payload.priceType) patch.price_type = payload.priceType;
+    if (payload.condition) patch.listing_condition = payload.condition;
+    if (payload.districtAr !== undefined) {
+      const locationWrite = await resolveListingLocationWrite(
+        clientResult.data,
+        payload.governorateId ?? "",
+        payload.districtAr,
+      );
+      if (!locationWrite.ok) return locationWrite;
+      patch.governorate_id = locationWrite.data.governorateId;
+      patch.district_ar = locationWrite.data.districtAr;
+      if (locationWrite.data.locationNodeId !== undefined) {
+        patch.location_node_id = locationWrite.data.locationNodeId;
+      }
     }
+    if (payload.contactName !== undefined) patch.contact_name = payload.contactName;
+    if (payload.contactOptions) patch.contact_options = payload.contactOptions;
+    if (payload.details !== undefined) patch.details = payload.details;
+
+    const { error: editError } = await clientResult.data.rpc("rawaj_owner_update_listing", {
+      p_listing_id: cleanListingId,
+      p_patch: patch,
+    });
+    if (editError) return { ok: false, error: mapError(editError, "owner_listing_update") };
   }
-  if (payload.contactName !== undefined) updateData.contact_name = payload.contactName;
-  if (payload.contactOptions) updateData.contact_options = payload.contactOptions;
-  if (payload.details !== undefined) updateData.details = payload.details;
 
-  const { data, error } = await clientResult.data
-    .from("listings")
-    .update(updateData)
-    .eq("id", listingId)
-    .eq("owner_id", userId)
-    .in("status", ["draft", "rejected"])
-    .select("*");
+  const { data, error } = await clientResult.data.rpc("rawaj_submit_listing_for_review", {
+    p_listing_id: cleanListingId,
+  });
+  if (error) return { ok: false, error: mapError(error, "owner_listing_submit") };
 
-  if (error) return { ok: false, error: mapError(error) };
-  if (!data || data.length === 0) {
+  const row = ((data ?? []) as Record<string, unknown>[])[0];
+  if (row) {
     return {
-      ok: false,
-      error: { code: "not_found", message: "تعذر إعادة إرسال الإعلان." },
+      ok: true,
+      data: mapListing(row, references.categories, references.governorates),
     };
   }
+
+  const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);
+  if (refreshed.ok) return refreshed;
 
   return {
-    ok: true,
-    data: mapListing(
-      data[0] as Record<string, unknown>,
-      references.categories,
-      references.governorates,
-    ),
+    ok: false,
+    error: {
+      code: "unknown",
+      message: "تعذر إعادة إرسال الإعلان.",
+      operation: "owner_listing_submit",
+    },
   };
 }
 
@@ -738,7 +639,7 @@ export async function createListing(
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
   const draftResult = await createListingWithStatus(userId, payload, "draft");
   if (!draftResult.ok) return draftResult;
-  return submitOwnerListingForReview(userId, draftResult.data.id);
+  return submitCreatedListingForReview(userId, draftResult.data.id);
 }
 
 export async function createOwnerDraftListing(
@@ -822,7 +723,7 @@ async function createListingWithStatus(
   return { ok: true, data: mapListing(data as Record<string, unknown>) };
 }
 
-export async function submitOwnerListingForReview(
+async function submitCreatedListingForReview(
   userId: string | null,
   listingId: string,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
@@ -851,24 +752,39 @@ export async function submitOwnerListingForReview(
     p_listing_id: normalizedListingId,
   });
   if (error) {
-    const mapped = mapError(error);
+    const mapped = mapError(error, "owner_listing_submit");
     if (mapped.code === "schema_missing") {
-      return resubmitOwnerListing(userId, normalizedListingId);
+      const refreshed = await fetchOwnerListingDetail(userId, normalizedListingId);
+      if (refreshed.ok && refreshed.data.status === "pending_review") return refreshed;
     }
     return { ok: false, error: mapped };
   }
 
   const row = ((data ?? []) as Record<string, unknown>[])[0];
-  if (!row) {
+  if (row) {
+    const listing = mapListing(row, references.categories, references.governorates);
+    if (listing.status === "pending_review") return { ok: true, data: listing };
     return {
       ok: false,
-      error: { code: "unknown", message: "تم إرسال الطلب دون نتيجة إعلان قابلة للتحقق." },
+      error: {
+        code: "status_mismatch",
+        message: "لم يؤكد الخادم انتقال الإعلان إلى قائمة المراجعة.",
+        details: `Expected pending_review after submit RPC, received ${listing.status}.`,
+        operation: "owner_listing_submit",
+      },
     };
   }
 
+  const refreshed = await fetchOwnerListingDetail(userId, normalizedListingId);
+  if (refreshed.ok && refreshed.data.status === "pending_review") return refreshed;
+
   return {
-    ok: true,
-    data: mapListing(row, references.categories, references.governorates),
+    ok: false,
+    error: {
+      code: "unknown",
+      message: "تم إرسال الطلب دون نتيجة إعلان قابلة للتحقق.",
+      operation: "owner_listing_submit",
+    },
   };
 }
 
