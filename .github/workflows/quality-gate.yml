@@ -36,7 +36,6 @@ jobs:
         run: npm ci
 
       - name: Lint changed source files
-        id: lint
         shell: bash
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -53,37 +52,11 @@ jobs:
 
           if [ "${#files[@]}" -eq 0 ]; then
             echo "No changed JS/TS source files to lint."
-            echo 0 > eslint-status.txt
-            printf '[]\n' > eslint-report.json
             exit 0
           fi
 
           printf 'Linting %s\n' "${files[@]}"
-          set +e
-          npx eslint --quiet --format json "${files[@]}" > eslint-report.json
-          lint_status=$?
-          set -e
-          echo "$lint_status" > eslint-status.txt
-
-      - name: Upload ESLint diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: eslint-diagnostics
-          path: |
-            eslint-report.json
-            eslint-status.txt
-          if-no-files-found: ignore
-          retention-days: 1
-
-      - name: Enforce lint result
-        shell: bash
-        run: |
-          status="$(cat eslint-status.txt 2>/dev/null || echo 1)"
-          if [ "$status" -ne 0 ]; then
-            echo "ESLint failed with status $status."
-            exit "$status"
-          fi
+          npx eslint --quiet "${files[@]}"
 
       - name: Typecheck
         run: npm run typecheck -- --pretty false
