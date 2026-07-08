@@ -10,7 +10,8 @@ import {
   UserRoundCheck,
   Users,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { AccountStatus } from "@/lib/auth-types";
 import {
   adminFetchUsers,
   adminLiftUserRestriction,
@@ -21,7 +22,6 @@ import {
   type AdminUserSummary,
   type UserRestrictionType,
 } from "@/lib/classifieds-api";
-import type { AccountStatus } from "@/lib/auth-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -52,7 +52,7 @@ function UsersPage() {
   const [restrictionType, setRestrictionType] = useState<UserRestrictionType>("posting");
   const [busyAction, setBusyAction] = useState("");
 
-  async function loadUsers() {
+  const loadUsers = useCallback(async () => {
     setLoading(true);
     setError("");
     const result = await adminFetchUsers(auth.canAccessAdmin);
@@ -62,20 +62,20 @@ function UsersPage() {
       return;
     }
     setUsers(result.data);
-  }
+  }, [auth.canAccessAdmin]);
 
   useEffect(() => {
     void loadUsers();
-  }, [auth.canAccessAdmin]);
+  }, [loadUsers]);
 
   const filteredUsers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return users.filter((user) => {
       if (statusFilter !== "all" && user.accountStatus !== statusFilter) return false;
       if (!normalized) return true;
-      return [user.email, user.displayName, user.id]
-        .filter(Boolean)
-        .some((value) => value?.toLowerCase().includes(normalized));
+      return [user.email, user.displayName, user.id].some((value) =>
+        value?.toLowerCase().includes(normalized),
+      );
     });
   }, [query, statusFilter, users]);
 
@@ -96,7 +96,9 @@ function UsersPage() {
       setError(result.error.message);
       return;
     }
-    setNotice(text("تم تحديث حالة الحساب وتسجيل الإجراء.", "Account status updated and audited."));
+    setNotice(
+      text("تم تحديث حالة الحساب وتسجيل الإجراء.", "Account status updated and audited."),
+    );
     setReason("");
     await loadUsers();
   }
@@ -185,7 +187,9 @@ function UsersPage() {
     return (
       <section className="rounded-2xl bg-card p-5 text-center hairline">
         <ShieldAlert className="mx-auto h-7 w-7 text-warning" />
-        <h2 className="mt-3 text-base font-extrabold">{text("غير مخوّل", "Not authorized")}</h2>
+        <h2 className="mt-3 text-base font-extrabold">
+          {text("غير مخوّل", "Not authorized")}
+        </h2>
       </section>
     );
   }
@@ -199,7 +203,9 @@ function UsersPage() {
               <Users className="h-5 w-5" />
             </span>
             <div>
-              <h2 className="text-base font-extrabold">{text("إدارة المستخدمين", "User management")}</h2>
+              <h2 className="text-base font-extrabold">
+                {text("إدارة المستخدمين", "User management")}
+              </h2>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
                 {text(
                   "بحث ومراجعة وإيقاف وحظر واستعادة وتقييد الحسابات من مصدر محمي مع سجل تدقيق.",
@@ -257,7 +263,9 @@ function UsersPage() {
                 type="button"
                 onClick={() => setSelectedUserId(user.id)}
                 className={`rounded-2xl p-4 text-start hairline transition ${
-                  selected ? "bg-primary/5 ring-2 ring-primary/30" : "bg-card hover:bg-muted-surface"
+                  selected
+                    ? "bg-primary/5 ring-2 ring-primary/30"
+                    : "bg-card hover:bg-muted-surface"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -268,20 +276,31 @@ function UsersPage() {
                       </h3>
                       {protectedOwner && <ShieldCheck className="h-4 w-4 text-gold" />}
                     </div>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">{user.email || user.id}</p>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {user.email || user.id}
+                    </p>
                   </div>
                   <StatusBadge status={user.accountStatus} />
                 </div>
 
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center">
                   <Metric value={user.listingCount} label={text("إعلانات", "Listings")} />
-                  <Metric value={user.reportsReceived} label={text("بلاغات عليه", "Reports received")} />
-                  <Metric value={user.reportsSubmitted} label={text("بلاغات أرسلها", "Reports sent")} />
+                  <Metric
+                    value={user.reportsReceived}
+                    label={text("بلاغات عليه", "Reports received")}
+                  />
+                  <Metric
+                    value={user.reportsSubmitted}
+                    label={text("بلاغات أرسلها", "Reports sent")}
+                  />
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {user.roles.map((role) => (
-                    <span key={role} className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold">
+                    <span
+                      key={role}
+                      className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold"
+                    >
                       {role}
                     </span>
                   ))}
@@ -360,11 +379,15 @@ function UsersPage() {
               </div>
 
               <div className="mt-5 border-t border-border/70 pt-5">
-                <h3 className="text-sm font-extrabold">{text("قيود دقيقة", "Granular restrictions")}</h3>
+                <h3 className="text-sm font-extrabold">
+                  {text("قيود دقيقة", "Granular restrictions")}
+                </h3>
                 <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
                   <select
                     value={restrictionType}
-                    onChange={(event) => setRestrictionType(event.target.value as UserRestrictionType)}
+                    onChange={(event) =>
+                      setRestrictionType(event.target.value as UserRestrictionType)
+                    }
                     className="h-11 rounded-xl bg-card px-3 text-sm hairline"
                   >
                     {restrictionOptions.map((option) => (
@@ -394,7 +417,9 @@ function UsersPage() {
 
               {auth.canAccessOwnerControls && (
                 <div className="mt-5 border-t border-border/70 pt-5">
-                  <h3 className="text-sm font-extrabold">{text("إدارة الطاقم", "Staff roles")}</h3>
+                  <h3 className="text-sm font-extrabold">
+                    {text("إدارة الطاقم", "Staff roles")}
+                  </h3>
                   <p className="mt-1 text-xs leading-6 text-muted-foreground">
                     {text(
                       "المالك فقط يستطيع تعيين أو إزالة Admin وModerator. لا يمكن إنشاء Owner آخر.",
@@ -505,7 +530,13 @@ function ActionButton({
   );
 }
 
-function Message({ children, tone }: { children: React.ReactNode; tone: "error" | "success" }) {
+function Message({
+  children,
+  tone,
+}: {
+  children: React.ReactNode;
+  tone: "error" | "success";
+}) {
   return (
     <div
       className={`rounded-xl p-3 text-xs font-semibold hairline ${
