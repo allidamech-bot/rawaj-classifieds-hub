@@ -1,5 +1,3 @@
-import { useSyncExternalStore } from "react";
-
 export type PushPermissionState = NotificationPermission | "unsupported";
 
 export interface PushReadinessSnapshot {
@@ -20,14 +18,10 @@ const SERVER_SNAPSHOT: PushReadinessSnapshot = {
   browserReady: false,
 };
 
-let cachedClientSnapshot: PushReadinessSnapshot | null = null;
-
-function readPushReadinessSnapshot(): PushReadinessSnapshot {
+export function getPushReadinessSnapshot(): PushReadinessSnapshot {
   if (typeof window === "undefined" || typeof navigator === "undefined") {
     return SERVER_SNAPSHOT;
   }
-
-  if (cachedClientSnapshot) return cachedClientSnapshot;
 
   const notificationApiSupported = "Notification" in window;
   const serviceWorkerSupported = "serviceWorker" in navigator;
@@ -37,7 +31,7 @@ function readPushReadinessSnapshot(): PushReadinessSnapshot {
     ? window.Notification.permission
     : "unsupported";
 
-  cachedClientSnapshot = {
+  return {
     notificationApiSupported,
     serviceWorkerSupported,
     pushManagerSupported,
@@ -49,18 +43,4 @@ function readPushReadinessSnapshot(): PushReadinessSnapshot {
       pushManagerSupported &&
       secureContext,
   };
-
-  return cachedClientSnapshot;
-}
-
-function subscribePushReadiness() {
-  return () => undefined;
-}
-
-export function usePushReadinessSnapshot(): PushReadinessSnapshot {
-  return useSyncExternalStore(
-    subscribePushReadiness,
-    readPushReadinessSnapshot,
-    () => SERVER_SNAPSHOT,
-  );
 }
