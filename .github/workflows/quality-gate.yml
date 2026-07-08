@@ -56,7 +56,12 @@ jobs:
           fi
 
           printf 'Linting %s\n' "${files[@]}"
-          npx eslint --quiet "${files[@]}"
+          set +e
+          output="$(npx eslint --quiet "${files[@]}" 2>&1)"
+          code=$?
+          set -e
+          printf '%s\n' "$output" | tail -n 80
+          exit "$code"
 
       - name: Typecheck
         run: npm run typecheck -- --pretty false
