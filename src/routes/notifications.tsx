@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { NotificationPreferencesPanel } from "@/features/notifications/NotificationPreferencesPanel";
 import {
   fetchMyNotificationsPage,
+  fetchUnreadNotificationsCount,
   markAllNotificationsRead,
   markNotificationRead,
   resolveNotificationTarget,
@@ -52,13 +53,16 @@ function NotificationsPage() {
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [unreadTotal, setUnreadTotal] = useState(0);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [paginationError, setPaginationError] = useState<ClassifiedsError | null>(null);
   const [openingTargetId, setOpeningTargetId] = useState<string | null>(null);
   const profileId = auth.profile?.id ?? null;
   const markInFlightRef = useRef<Set<string>>(new Set());
   const markAllInFlightRef = useRef(false);
+  const loadMoreInFlightRef = useRef(false);
   const notificationsRequestIdRef = useRef(0);
+  const paginationRequestIdRef = useRef(0);
   const readNotificationIdsRef = useRef<Set<string>>(new Set());
   const markAllReadAtRef = useRef<string | null>(null);
 
@@ -77,17 +81,31 @@ function NotificationsPage() {
     if (!profileId) return;
     const currentProfileId = profileId;
     const requestId = ++notificationsRequestIdRef.current;
+    paginationRequestIdRef.current += 1;
+    loadMoreInFlightRef.current = false;
     setLoading(true);
+    setLoadingMore(false);
     setError(null);
     setPaginationError(null);
-    const result = await fetchMyNotificationsPage(currentProfileId, 0, NOTIFICATIONS_PAGE_SIZE);
+
+    const [pageResult, unreadResult] = await Promise.all([
+      fetchMyNotificationsPage(currentProfileId, 0, NOTIFICATIONS_PAGE_SIZE),
+      fetchUnreadNotificationsCount(currentProfileId),
+    ]);
+
     if (requestId !== notificationsRequestIdRef.current || currentProfileId !== profileId) return;
-    if (result.ok) {
-      setNotifications(applyKnownReadState(result.data.items));
-      setHasMore(result.data.hasMore);
+
+    if (pageResult.ok) {
+      const nextItems = applyKnownReadState(pageResult.data.items);
+      setNotifications(nextItems);
+      setHasMore(pageResult.data.hasMore);
+      setUnreadTotal(
+        unreadResult.ok ? unreadResult.data : nextItems.filter((item) => !item.readAt).length,
+      );
     } else {
-      setError(result.error);
+      setError(pageResult.error);
       setHasMore(false);
+      setUnreadTotal(0);
     }
     setLoading(false);
   }, [applyKnownReadState, profileId]);
@@ -95,12 +113,15 @@ function NotificationsPage() {
   useEffect(() => {
     if (auth.status !== "signedIn") {
       notificationsRequestIdRef.current += 1;
+      paginationRequestIdRef.current += 1;
+      loadMoreInFlightRef.current = false;
       readNotificationIdsRef.current = new Set();
       markAllReadAtRef.current = null;
       setNotifications([]);
       setLoading(false);
       setLoadingMore(false);
       setHasMore(false);
+      setUnreadTotal(0);
       setError(null);
       setPaginationError(null);
       setOpeningTargetId(null);
@@ -110,41 +131,53 @@ function NotificationsPage() {
   }, [auth.status, loadNotifications]);
 
   async function loadMoreNotifications() {
-    if (!profileId || loading || loadingMore || !hasMore) return;
+    if (!profileId || loading || loadingMore || loadMoreInFlightRef.current || !hasMore) return;
     const currentProfileId = profileId;
-    const requestId = notificationsRequestIdRef.current;
+    const parentRequestId = notificationsRequestIdRef.current;
+    const paginationRequestId = ++paginationRequestIdRef.current;
     const offset = notifications.length;
+    loadMoreInFlightRef.current = true;
     setLoadingMore(true);
     setPaginationError(null);
 
-    const result = await fetchMyNotificationsPage(
-      currentProfileId,
-      offset,
-      NOTIFICATIONS_PAGE_SIZE,
-    );
+    try {
+      const result = await fetchMyNotificationsPage(
+        currentProfileId,
+        offset,
+        NOTIFICATIONS_PAGE_SIZE,
+      );
 
-    if (requestId !== notificationsRequestIdRef.current || currentProfileId !== auth.profile?.id) {
-      return;
+      if (
+        parentRequestId !== notificationsRequestIdRef.current ||
+        paginationRequestId !== paginationRequestIdRef.current ||
+        currentProfileId !== auth.profile?.id
+      ) {
+        return;
+      }
+
+      if (!result.ok) {
+        setPaginationError(result.error);
+        return;
+      }
+
+      const nextItems = applyKnownReadState(result.data.items);
+      setNotifications((current) => {
+        const knownIds = new Set(current.map((item) => item.id));
+        return [...current, ...nextItems.filter((item) => !knownIds.has(item.id))];
+      });
+      setHasMore(result.data.hasMore);
+    } finally {
+      if (paginationRequestId === paginationRequestIdRef.current) {
+        loadMoreInFlightRef.current = false;
+        setLoadingMore(false);
+      }
     }
-
-    if (!result.ok) {
-      setPaginationError(result.error);
-      setLoadingMore(false);
-      return;
-    }
-
-    const nextItems = applyKnownReadState(result.data.items);
-    setNotifications((current) => {
-      const knownIds = new Set(current.map((item) => item.id));
-      return [...current, ...nextItems.filter((item) => !knownIds.has(item.id))];
-    });
-    setHasMore(result.data.hasMore);
-    setLoadingMore(false);
   }
 
   async function markOne(notificationId: string) {
     if (!profileId || markInFlightRef.current.has(notificationId)) return;
     const currentProfileId = profileId;
+    const wasUnread = notifications.some((item) => item.id === notificationId && !item.readAt);
     markInFlightRef.current.add(notificationId);
     try {
       const result = await markNotificationRead(currentProfileId, notificationId);
@@ -159,6 +192,7 @@ function NotificationsPage() {
           item.id === notificationId ? { ...item, readAt: new Date().toISOString() } : item,
         ),
       );
+      if (wasUnread) setUnreadTotal((current) => Math.max(0, current - 1));
     } finally {
       markInFlightRef.current.delete(notificationId);
     }
@@ -179,6 +213,7 @@ function NotificationsPage() {
       markAllReadAtRef.current = readAt;
       notifications.forEach((item) => readNotificationIdsRef.current.add(item.id));
       setNotifications((current) => current.map((item) => ({ ...item, readAt })));
+      setUnreadTotal(0);
     } finally {
       markAllInFlightRef.current = false;
     }
@@ -218,8 +253,6 @@ function NotificationsPage() {
       target === "listing" || target === "conversation" || target === "seller";
     return Boolean(notification.targetId && supportedTarget);
   }
-
-  const unreadCount = notifications.filter((item) => !item.readAt).length;
 
   return (
     <>
@@ -266,7 +299,7 @@ function NotificationsPage() {
               </div>
               <button
                 type="button"
-                disabled={unreadCount === 0}
+                disabled={unreadTotal === 0 || markAllInFlightRef.current}
                 onClick={() => void markAll()}
                 className="inline-flex items-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold disabled:opacity-50 hairline"
               >
