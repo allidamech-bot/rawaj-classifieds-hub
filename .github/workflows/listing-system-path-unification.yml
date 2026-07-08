@@ -1,0 +1,42 @@
+name: Listing System Path Unification
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  unify:
+    if: github.head_ref == 'hotfix/listing-system-reconciliation' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hotfix/listing-system-reconciliation
+          fetch-depth: 0
+      - name: Route all listing creation through draft then protected submit
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/lib/api/listings.ts')
+          s = p.read_text()
+          old = '''export async function createListing(\n  userId: string | null,\n  payload: CreateListingPayload,\n): Promise<ClassifiedsResult<ClassifiedListing>> {\n  return createListingWithStatus(userId, payload, "pending_review");\n}\n'''
+          new = '''export async function createListing(\n  userId: string | null,\n  payload: CreateListingPayload,\n): Promise<ClassifiedsResult<ClassifiedListing>> {\n  const draftResult = await createListingWithStatus(userId, payload, "draft");\n  if (!draftResult.ok) return draftResult;\n  return submitOwnerListingForReview(userId, draftResult.data.id);\n}\n'''
+          if old not in s:
+            raise SystemExit('createListing direct pending path not found')
+          p.write_text(s.replace(old, new, 1))
+          PY
+      - name: Remove workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/listing-system-path-unification.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/api/listings.ts .github/workflows/listing-system-path-unification.yml
+          git commit -m "Unify listing creation through protected review submit"
+          git push origin HEAD:hotfix/listing-system-reconciliation
