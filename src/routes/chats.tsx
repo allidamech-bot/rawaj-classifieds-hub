@@ -4,14 +4,15 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  blockConversationParticipant,
+  createMessageReport,
   fetchConversationMessages,
   fetchMyConversations,
   markConversationRead,
   sendConversationMessage,
-  createMessageReport,
-  blockConversationParticipant,
 } from "@/lib/classifieds-api";
 import type { ClassifiedsError, Conversation, ConversationMessage } from "@/lib/classifieds-types";
+import { resolveConversationTarget } from "@/lib/journey-target-resolution";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -50,20 +51,25 @@ function ChatsPage() {
   const selectedConversationIdRef = useRef<string | null>(null);
   const autoOpenedConversationRef = useRef<string | null>(null);
 
-  const selectedConversation = useMemo(
-    () => conversations.find((item) => item.id === search.conversation) ?? conversations[0] ?? null,
+  const targetResolution = useMemo(
+    () => resolveConversationTarget(conversations, search.conversation),
     [conversations, search.conversation],
   );
+  const selectedConversation =
+    targetResolution.kind === "selected" || targetResolution.kind === "default"
+      ? targetResolution.conversation
+      : null;
+  const missingConversationTarget = targetResolution.kind === "missing";
 
   useEffect(() => {
     selectedConversationIdRef.current = selectedConversation?.id ?? null;
   }, [selectedConversation?.id]);
 
   useEffect(() => {
-    if (!selectedConversation) {
+    if (!selectedConversation && !missingConversationTarget) {
       setViewingConversationOnMobile(false);
     }
-  }, [selectedConversation]);
+  }, [missingConversationTarget, selectedConversation]);
 
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)");
@@ -79,7 +85,7 @@ function ChatsPage() {
 
   useEffect(() => {
     if (!isDesktop && search.conversation && conversations.length > 0) {
-      const exists = conversations.some((c) => c.id === search.conversation);
+      const exists = conversations.some((conversation) => conversation.id === search.conversation);
       if (exists && autoOpenedConversationRef.current !== search.conversation) {
         autoOpenedConversationRef.current = search.conversation;
         setViewingConversationOnMobile(true);
@@ -118,15 +124,11 @@ function ChatsPage() {
     setLoadingMessages(true);
     setMessageError(null);
     const result = await fetchConversationMessages(profileId, conversationId);
-    if (requestId !== messagesRequestIdRef.current) {
-      return;
-    }
+    if (requestId !== messagesRequestIdRef.current) return;
     if (result.ok) {
       setMessages(result.data);
       const markResult = await markConversationRead(profileId, conversationId);
-      if (requestId !== messagesRequestIdRef.current) {
-        return;
-      }
+      if (requestId !== messagesRequestIdRef.current) return;
       if (!markResult.ok) setNotice(markResult.error.message);
     } else {
       setMessages([]);
@@ -232,6 +234,20 @@ function ChatsPage() {
         : result.error.message,
     );
     if (result.ok) await loadConversations();
+  }
+
+  function openFirstAvailableConversation() {
+    const firstConversation = conversations[0];
+    if (firstConversation) {
+      if (!isDesktop) setViewingConversationOnMobile(true);
+      void navigate({
+        to: "/chats",
+        search: { conversation: firstConversation.id },
+        replace: true,
+      });
+      return;
+    }
+    void navigate({ to: "/chats", search: {}, replace: true });
   }
 
   if (auth.status !== "signedIn") {
@@ -364,10 +380,46 @@ function ChatsPage() {
 
           <section
             className={`flex min-h-[60dvh] flex-col rounded-2xl bg-card hairline lg:min-h-[560px] ${
-              !isDesktop && !viewingConversationOnMobile ? "hidden" : ""
+              !isDesktop && !viewingConversationOnMobile && !missingConversationTarget
+                ? "hidden"
+                : ""
             }`}
           >
-            {!selectedConversation ? (
+            {missingConversationTarget ? (
+              <div className="grid flex-1 place-items-center p-6 text-center">
+                <div className="max-w-md">
+                  <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-warning/10 text-warning">
+                    <MessageCircle className="h-6 w-6" />
+                  </span>
+                  <h2 className="mt-4 text-base font-extrabold">
+                    {text("المحادثة غير متاحة", "Conversation unavailable")}
+                  </h2>
+                  <p className="mt-2 text-xs leading-6 text-muted-foreground">
+                    {text(
+                      "الرابط المطلوب لا يشير إلى محادثة متاحة في حسابك. لم نفتح أي محادثة أخرى بدلًا منها.",
+                      "The requested link does not point to an available conversation in your account. No other conversation was opened instead.",
+                    )}
+                  </p>
+                  <div className="mt-5 flex flex-wrap justify-center gap-2">
+                    {conversations.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={openFirstAvailableConversation}
+                        className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+                      >
+                        {text("فتح محادثة متاحة", "Open an available conversation")}
+                      </button>
+                    )}
+                    <Link
+                      to="/listings"
+                      className="rounded-xl bg-muted-surface px-4 py-2 text-xs font-bold text-foreground hairline"
+                    >
+                      {text("تصفح الإعلانات", "Browse listings")}
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ) : !selectedConversation ? (
               <div className="grid flex-1 place-items-center p-6 text-center">
                 <PanelText>{text("اختر محادثة لعرض الرسائل.", "Choose a conversation.")}</PanelText>
               </div>
