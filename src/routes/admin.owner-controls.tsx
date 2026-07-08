@@ -29,7 +29,14 @@ export const Route = createFileRoute("/admin/owner-controls")({
 
 const controlMeta: Record<
   OwnerSystemControlKey,
-  { ar: string; en: string; detailAr: string; detailEn: string; icon: typeof Siren; danger?: boolean }
+  {
+    ar: string;
+    en: string;
+    detailAr: string;
+    detailEn: string;
+    icon: typeof Siren;
+    danger?: boolean;
+  }
 > = {
   freeze_new_listings: {
     ar: "تجميد الإعلانات الجديدة",
@@ -136,7 +143,12 @@ function OwnerControlsPage() {
     }
 
     setReason("");
-    setNotice(text("تم تغيير مفتاح النظام وتسجيل العملية في سجل التدقيق.", "System control changed and audited."));
+    setNotice(
+      text(
+        "تم تغيير مفتاح النظام وتسجيل العملية في سجل التدقيق.",
+        "System control changed and audited.",
+      ),
+    );
     await refresh();
   }
 
@@ -232,8 +244,16 @@ function OwnerControlsPage() {
       </section>
 
       <section className="grid gap-3 sm:grid-cols-3">
-        <QuickLink icon={UserCog} label={text("إدارة الطاقم", "Staff management")} to="/admin/users" />
-        <QuickLink icon={ShieldAlert} label={text("مركز السلامة", "Safety center")} to="/admin/safety" />
+        <QuickLink
+          icon={UserCog}
+          label={text("إدارة الطاقم", "Staff management")}
+          to="/admin/users"
+        />
+        <QuickLink
+          icon={ShieldAlert}
+          label={text("مركز السلامة", "Safety center")}
+          to="/admin/safety"
+        />
         <QuickLink icon={LockKeyhole} label={text("سجل التدقيق", "Audit log")} to="/admin/audit" />
       </section>
     </div>
@@ -254,17 +274,25 @@ function ControlCard({
   const meta = controlMeta[control.key];
   const Icon = meta.icon;
   return (
-    <article className={`rounded-2xl p-4 hairline ${control.enabled ? "bg-warning/10" : "bg-card"}`}>
+    <article
+      className={`rounded-2xl p-4 hairline ${control.enabled ? "bg-warning/10" : "bg-card"}`}
+    >
       <div className="flex items-start justify-between gap-3">
-        <span className={`grid h-11 w-11 place-items-center rounded-xl ${meta.danger ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
+        <span
+          className={`grid h-11 w-11 place-items-center rounded-xl ${meta.danger ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}
+        >
           <Icon className="h-5 w-5" />
         </span>
-        <span className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold ${control.enabled ? "bg-warning text-warning-foreground" : "bg-muted-surface text-muted-foreground"}`}>
+        <span
+          className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold ${control.enabled ? "bg-warning text-warning-foreground" : "bg-muted-surface text-muted-foreground"}`}
+        >
           {control.enabled ? text("مفعّل", "Enabled") : text("متوقف", "Off")}
         </span>
       </div>
       <h3 className="mt-3 text-sm font-extrabold">{text(meta.ar, meta.en)}</h3>
-      <p className="mt-1 text-xs leading-5 text-muted-foreground">{text(meta.detailAr, meta.detailEn)}</p>
+      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+        {text(meta.detailAr, meta.detailEn)}
+      </p>
       {control.reason && (
         <p className="mt-3 rounded-xl bg-muted-surface p-3 text-[11px] leading-5 hairline">
           {control.reason}
@@ -279,7 +307,11 @@ function ControlCard({
         disabled={busy}
         onClick={onToggle}
         className={`mt-4 min-h-11 w-full rounded-xl px-4 py-2 text-xs font-extrabold hairline disabled:opacity-50 ${
-          control.enabled ? "bg-card text-foreground" : meta.danger ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"
+          control.enabled
+            ? "bg-card text-foreground"
+            : meta.danger
+              ? "bg-destructive text-destructive-foreground"
+              : "bg-primary text-primary-foreground"
         }`}
       >
         {control.enabled ? text("إلغاء التفعيل", "Disable") : text("تفعيل", "Enable")}
@@ -290,7 +322,10 @@ function ControlCard({
 
 function QuickLink({ icon: Icon, label, to }: { icon: typeof UserCog; label: string; to: string }) {
   return (
-    <Link to={to as "/admin"} className="flex items-center gap-3 rounded-2xl bg-card p-4 text-sm font-bold transition hairline hover:bg-muted-surface">
+    <Link
+      to={to as "/admin"}
+      className="flex items-center gap-3 rounded-2xl bg-card p-4 text-sm font-bold transition hairline hover:bg-muted-surface"
+    >
       <Icon className="h-5 w-5 text-primary" />
       {label}
     </Link>
@@ -299,7 +334,9 @@ function QuickLink({ icon: Icon, label, to }: { icon: typeof UserCog; label: str
 
 function Notice({ children, tone }: { children: React.ReactNode; tone: "error" | "success" }) {
   return (
-    <div className={`rounded-xl p-3 text-xs font-semibold hairline ${tone === "error" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}>
+    <div
+      className={`rounded-xl p-3 text-xs font-semibold hairline ${tone === "error" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}
+    >
       {children}
     </div>
   );

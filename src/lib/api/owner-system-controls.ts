@@ -54,7 +54,14 @@ export async function ownerSetSystemControl(
     reason: string;
     expectedVersion: number;
   },
-): Promise<ClassifiedsResult<{ key: OwnerSystemControlKey; enabled: boolean; version: number; updatedAt: string }>> {
+): Promise<
+  ClassifiedsResult<{
+    key: OwnerSystemControlKey;
+    enabled: boolean;
+    version: number;
+    updatedAt: string;
+  }>
+> {
   if (!canManageSystemSettings) {
     return {
       ok: false,
@@ -82,7 +89,10 @@ export async function ownerSetSystemControl(
     if (error.message?.includes("stale_system_control")) {
       return {
         ok: false,
-        error: { code: "unknown", message: "تغيّر مفتاح النظام منذ تحميله. أعد التحميل قبل المتابعة." },
+        error: {
+          code: "unknown",
+          message: "تغيّر مفتاح النظام منذ تحميله. أعد التحميل قبل المتابعة.",
+        },
       };
     }
     return { ok: false, error: mapError(error) };
