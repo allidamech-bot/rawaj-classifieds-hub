@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import { Bell, CheckCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -5,6 +6,7 @@ import {
   fetchUnreadNotificationsCount,
   markAllNotificationsRead,
   markNotificationRead,
+  resolveNotificationTarget,
   scanOwnerListingExpiryReminders,
 } from "@/lib/classifieds-api";
 import type { NotificationItem } from "@/lib/classifieds-types";
@@ -13,12 +15,14 @@ import { useAuth } from "@/lib/use-auth";
 
 export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark" }) {
   const auth = useAuth();
+  const navigate = useNavigate();
   const { language, text } = useUiPreferences();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [openingTargetId, setOpeningTargetId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const profileId = auth.profile?.id ?? null;
 
@@ -45,6 +49,7 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
       setNotifications([]);
       setUnreadCount(0);
       setError("");
+      setOpeningTargetId(null);
       return;
     }
     void refreshNotifications(false);
@@ -95,6 +100,45 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
       ),
     );
     setUnreadCount((current) => Math.max(0, current - 1));
+  }
+
+  async function openNotificationTarget(notification: NotificationItem) {
+    if (openingTargetId || !profileId) return;
+    setOpeningTargetId(notification.id);
+    setError("");
+    const result = await resolveNotificationTarget(profileId, notification);
+    setOpeningTargetId(null);
+
+    if (!result.ok) {
+      setError(result.error.message);
+      return;
+    }
+
+    const target = result.data;
+    if (!target) return;
+
+    if (!notification.readAt) await markOne(notification.id);
+    setOpen(false);
+
+    if (target.kind === "listing") {
+      void navigate({ to: "/listings/$id", params: { id: target.listingId } });
+    } else if (target.kind === "conversation") {
+      void navigate({ to: "/chats", search: { conversation: target.conversationId } });
+    } else if (target.kind === "conversation_missing") {
+      void navigate({ to: "/chats", search: { conversation: target.conversationId } });
+    } else if (target.kind === "seller") {
+      void navigate({ to: "/seller/$id", params: { id: target.sellerId } });
+    } else if (target.kind === "browse_listings") {
+      void navigate({ to: "/listings" });
+    }
+  }
+
+  function canOpenNotificationTarget(notification: NotificationItem) {
+    const target = notification.targetType?.toLowerCase();
+    return Boolean(
+      notification.targetId &&
+        (target === "listing" || target === "conversation" || target === "seller"),
+    );
   }
 
   async function markAll() {
@@ -165,14 +209,11 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
             </p>
           ) : (
             <div className="max-h-80 space-y-2 overflow-y-auto">
-              {notifications.map((notification) => (
-                <article
-                  key={notification.id}
-                  className={`rounded-xl p-3 hairline ${
-                    notification.readAt ? "bg-card" : "bg-muted-surface"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
+              {notifications.map((notification) => {
+                const canOpenTarget = canOpenNotificationTarget(notification);
+                const openingTarget = openingTargetId === notification.id;
+                const content = (
+                  <>
                     <div>
                       <h3 className="text-xs font-bold">{notification.titleAr}</h3>
                       {notification.bodyAr && (
@@ -184,18 +225,45 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
                     {!notification.readAt && (
                       <button
                         type="button"
-                        onClick={() => void markOne(notification.id)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void markOne(notification.id);
+                        }}
                         className="shrink-0 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline"
                       >
                         {text("تمت القراءة", "Read")}
                       </button>
                     )}
-                  </div>
-                  <p className="mt-2 text-[10px] text-muted-foreground">
-                    {formatNotificationDate(notification.createdAt, language)}
-                  </p>
-                </article>
-              ))}
+                  </>
+                );
+
+                return (
+                  <article
+                    key={notification.id}
+                    className={`rounded-xl p-3 hairline ${
+                      notification.readAt ? "bg-card" : "bg-muted-surface"
+                    }`}
+                  >
+                    {canOpenTarget ? (
+                      <button
+                        type="button"
+                        disabled={openingTargetId !== null}
+                        onClick={() => void openNotificationTarget(notification)}
+                        className="flex w-full items-start justify-between gap-2 text-start disabled:opacity-60"
+                      >
+                        {content}
+                      </button>
+                    ) : (
+                      <div className="flex items-start justify-between gap-2">{content}</div>
+                    )}
+                    <p className="mt-2 text-[10px] text-muted-foreground">
+                      {openingTarget
+                        ? text("جارٍ فتح الهدف...", "Opening target...")
+                        : formatNotificationDate(notification.createdAt, language)}
+                    </p>
+                  </article>
+                );
+              })}
             </div>
           )}
         </div>
