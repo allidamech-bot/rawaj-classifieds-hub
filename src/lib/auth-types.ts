@@ -53,6 +53,8 @@ export interface RolePermissions {
   canManageSystemSettings: boolean;
 }
 
+export type RolePermission = keyof RolePermissions;
+
 export const rolePermissions: Record<UserRole, RolePermissions> = {
   owner: {
     canViewAdminDashboard: true,
@@ -171,14 +173,40 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
   },
 };
 
+export const emptyRolePermissions: RolePermissions = Object.freeze(
+  Object.fromEntries(
+    (Object.keys(rolePermissions.user) as RolePermission[]).map((permission) => [permission, false]),
+  ) as unknown as RolePermissions,
+);
+
+export function effectiveRolePermissions(profile: UserProfile | null): RolePermissions {
+  if (!profile || profile.accountStatus !== "active") return emptyRolePermissions;
+
+  const permissions = { ...emptyRolePermissions };
+  for (const role of profile.roles) {
+    const roleMatrix = rolePermissions[role];
+    for (const permission of Object.keys(roleMatrix) as RolePermission[]) {
+      permissions[permission] ||= roleMatrix[permission];
+    }
+  }
+  return permissions;
+}
+
+export function hasRolePermission(
+  profile: UserProfile | null,
+  permission: RolePermission,
+): boolean {
+  return effectiveRolePermissions(profile)[permission];
+}
+
 export function canAccessAdmin(profile: UserProfile | null): boolean {
-  if (!profile || profile.accountStatus !== "active") return false;
-  return profile.roles.some((role) => rolePermissions[role].canViewAdminDashboard);
+  return hasRolePermission(profile, "canViewAdminDashboard");
 }
 
 export function canAccessOwnerControls(profile: UserProfile | null): boolean {
-  if (!profile || profile.accountStatus !== "active") return false;
-  return profile.roles.includes("owner") && rolePermissions.owner.canManageOwnerControls;
+  return Boolean(
+    profile?.roles.includes("owner") && hasRolePermission(profile, "canManageOwnerControls"),
+  );
 }
 
 export function canPost(profile: UserProfile | null, _emailConfirmed: boolean): boolean {
