@@ -22,13 +22,13 @@ export const Route = createFileRoute("/admin")({
 });
 
 const tabs = [
-  { to: "/admin", labelAr: "مركز المالك", icon: LayoutDashboard, exact: true },
+  { to: "/admin", labelAr: "مركز القيادة", icon: LayoutDashboard, exact: true },
   { to: "/admin/pending", labelAr: "مراجعة الإعلانات", icon: FileCheck },
   { to: "/admin/reviews", labelAr: "مراجعة التقييمات", icon: Star },
   { to: "/admin/reports", labelAr: "بلاغات الإعلانات", icon: Flag },
   { to: "/admin/message-reports", labelAr: "بلاغات الرسائل", icon: MessageSquareWarning },
   { to: "/admin/verifications", labelAr: "طلبات التوثيق", icon: BadgeCheck },
-  { to: "/admin/users", labelAr: "تحكم المالك", icon: Users, ownerOnly: true },
+  { to: "/admin/users", labelAr: "إدارة المستخدمين", icon: Users },
   { to: "/admin/promotions", labelAr: "طلبات الترويج", icon: Sparkles },
 ];
 
@@ -66,8 +66,8 @@ function AdminLayout() {
       <AdminShellState
         title={text("تسجيل الدخول مطلوب", "Login required")}
         message={text(
-          "سجّل الدخول أولاً، ثم يتم التحقق من دور المالك من مصدر الصلاحيات.",
-          "Log in first, then the owner role is checked from the permission source.",
+          "سجّل الدخول أولاً، ثم يتم التحقق من الدور الإداري من مصدر الصلاحيات.",
+          "Log in first, then the admin role is checked from the permission source.",
         )}
         actionTo="/login"
         actionLabel={text("تسجيل الدخول", "Log in")}
@@ -95,33 +95,31 @@ function AdminLayout() {
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <p className="text-xs leading-6 text-foreground/90">
             {text(
-              "لوحة الإدارة تعرض مساحات مراجعة للإعلانات والبلاغات حسب صلاحيات الحساب.",
-              "The admin dashboard shows listing and report review spaces according to account permissions.",
+              "تُعرض مساحات الإدارة حسب الدور والصلاحيات المحفوظة في مصدر الوصول. إجراءات المالك الحساسة تبقى محمية بشكل مستقل.",
+              "Admin workspaces are shown according to persisted roles and permissions. Sensitive owner actions remain separately protected.",
             )}
           </p>
         </div>
         <nav className="mb-4 flex gap-2 overflow-x-auto pb-1">
-          {tabs
-            .filter((tab) => !("ownerOnly" in tab) || auth.canAccessOwnerControls)
-            .map((tab) => {
-              const active = tab.exact
-                ? pathname === tab.to || pathname === "/admin/"
-                : pathname.startsWith(tab.to);
-              return (
-                <Link
-                  key={tab.to}
-                  to={tab.to as "/admin"}
-                  className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card hairline hover:bg-muted-surface"
-                  }`}
-                >
-                  <tab.icon className="h-4 w-4" />
-                  {uiLabel(tab.labelAr, language)}
-                </Link>
-              );
-            })}
+          {tabs.map((tab) => {
+            const active = tab.exact
+              ? pathname === tab.to || pathname === "/admin/"
+              : pathname.startsWith(tab.to);
+            return (
+              <Link
+                key={tab.to}
+                to={tab.to as "/admin"}
+                className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card hairline hover:bg-muted-surface"
+                }`}
+              >
+                <tab.icon className="h-4 w-4" />
+                {uiLabel(tab.labelAr, language)}
+              </Link>
+            );
+          })}
         </nav>
         <Outlet />
       </main>
