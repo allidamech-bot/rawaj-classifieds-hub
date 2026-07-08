@@ -768,7 +768,11 @@ async function createListingWithStatus(
   const description = payload.description.trim();
   const contactName = payload.contactName?.trim() || null;
 
-  if (!payload.categoryId.trim() || (!payload.governorateId.trim() && !payload.districtAr?.trim().startsWith("@")) || title.length < 4) {
+  if (
+    !payload.categoryId.trim() ||
+    (!payload.governorateId.trim() && !payload.districtAr?.trim().startsWith("@")) ||
+    title.length < 4
+  ) {
     return {
       ok: false,
       error: {

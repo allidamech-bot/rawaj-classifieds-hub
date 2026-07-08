@@ -58,7 +58,9 @@ export async function resolveListingLocationWrite(
 async function resolveCanonicalLocationContext(
   client: SupabaseClient,
   nodeId: string,
-): Promise<ClassifiedsResult<{ id: string; governorateId: string | null; districtAr: string | null }>> {
+): Promise<
+  ClassifiedsResult<{ id: string; governorateId: string | null; districtAr: string | null }>
+> {
   let currentId: string | null = nodeId;
   let selectedId = "";
   let governorateId: string | null = null;
