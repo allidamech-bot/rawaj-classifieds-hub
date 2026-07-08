@@ -1,12 +1,4 @@
-import {
-  BellRing,
-  Bookmark,
-  Heart,
-  MessageCircle,
-  RadioTower,
-  ScrollText,
-  Sparkles,
-} from "lucide-react";
+import { BellRing, Bookmark, Heart, MessageCircle, ScrollText, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
   fetchNotificationPreferences,
@@ -141,23 +133,6 @@ export function NotificationPreferencesPanel() {
             {text(
               "تحكم بفئات الإشعارات داخل رواج. لا نعرض قنوات بريد أو Push قبل توفر توصيل فعلي لها.",
               "Control in-app notification categories. Email and push channels are not shown until real delivery exists.",
-            )}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-start gap-3 rounded-2xl bg-muted-surface/70 p-3 hairline">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-card text-primary shadow-soft">
-          <RadioTower className="h-4 w-4" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-xs font-bold">
-            {text("جاهزية Push", "Push readiness")}
-          </p>
-          <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
-            {text(
-              "رواج يجهّز البنية التقنية لـ Push، لكن لا يوجد اشتراك أو إرسال Push فعلي مفعّل حتى الآن.",
-              "RAWAJ is preparing the technical foundation for push, but no push subscription or real push delivery is enabled yet.",
             )}
           </p>
         </div>
