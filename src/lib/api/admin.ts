@@ -55,7 +55,7 @@ export async function adminModerateListing(
         reviewed_by: payload.reviewerId,
         reviewed_at: now,
         rejection_reason:
-          payload.status === "rejected" ? payload.rejectionReason?.trim() ?? null : null,
+          payload.status === "rejected" ? (payload.rejectionReason?.trim() ?? null) : null,
         published_at: payload.status === "approved" ? now : null,
         archived_at: null,
         updated_at: now,
@@ -95,4 +95,3 @@ export async function adminModerateListing(
 
   return { ok: true, data: null };
 }
-

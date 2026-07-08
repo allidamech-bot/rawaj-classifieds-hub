@@ -322,10 +322,7 @@ function ManageListingPage() {
       return;
     }
 
-    const result = await submitOwnerListingForReview(
-      auth.profile?.id ?? null,
-      saveResult.data.id,
-    );
+    const result = await submitOwnerListingForReview(auth.profile?.id ?? null, saveResult.data.id);
 
     setResubmitting(false);
     if (result.ok) {

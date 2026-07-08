@@ -413,7 +413,6 @@ export async function updateOwnerListing(
   if (payload.contactOptions) updateData.contact_options = payload.contactOptions;
   if (payload.details !== undefined) updateData.details = payload.details;
 
-
   const { data, error } = await clientResult.data
     .from("listings")
     .update(updateData)
