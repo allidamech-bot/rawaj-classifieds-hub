@@ -23,6 +23,7 @@ import type { ComponentType, ReactNode } from "react";
 import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { useUiPreferences } from "@/lib/ui-preferences";
+import { useUnreadActivityCounts } from "@/lib/unread-activity";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/more")({
@@ -112,6 +113,7 @@ const secondaryShortcuts: (AccountRow & { world: string })[] = [
 function MorePage() {
   const { language, text, toggleLanguage } = useUiPreferences();
   const auth = useAuth();
+  const { counts } = useUnreadActivityCounts();
   const { user } = auth;
   const [logoutError, setLogoutError] = useState("");
   const isArabic = language === "ar";
@@ -278,7 +280,18 @@ function MorePage() {
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {primaryShortcuts.map((row) => (
-              <PrimaryShortcut key={row.titleEn} row={row} text={text} />
+              <PrimaryShortcut
+                key={row.titleEn}
+                row={row}
+                text={text}
+                badgeCount={
+                  row.to === "/chats"
+                    ? counts.messages
+                    : row.to === "/notifications"
+                      ? counts.notifications
+                      : 0
+                }
+              />
             ))}
           </div>
         </section>
@@ -363,9 +376,11 @@ function AccountSection({
 function PrimaryShortcut({
   row,
   text,
+  badgeCount = 0,
 }: {
   row: AccountRow & { world: string };
   text: (ar: string, en: string) => string;
+  badgeCount?: number;
 }) {
   const Icon = row.icon;
   return (
@@ -375,6 +390,11 @@ function PrimaryShortcut({
     >
       <span className="relative grid h-11 w-11 place-items-center rounded-[1rem] bg-primary text-primary-foreground shadow-soft">
         <Icon className="h-5 w-5" />
+        {badgeCount > 0 && (
+          <span className="absolute -end-2 -top-2 grid min-h-5 min-w-5 place-items-center rounded-full bg-destructive px-1.5 text-[9px] font-extrabold text-white ring-2 ring-card">
+            {badgeCount > 99 ? "99+" : badgeCount}
+          </span>
+        )}
       </span>
       <span className="relative mt-5 block text-base font-bold text-primary">
         {text(row.titleAr, row.titleEn)}

@@ -8,6 +8,7 @@ import type {
   MessageReport,
   MessageReportStatus,
 } from "@/lib/classifieds-types";
+import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
 import {
   getClient,
   isMissingMessageReportRpc,
@@ -162,6 +163,7 @@ export async function markConversationRead(
   });
 
   if (error) return { ok: false, error: mapError(error) };
+  emitUnreadActivityChanged();
   return { ok: true, data: null };
 }
 

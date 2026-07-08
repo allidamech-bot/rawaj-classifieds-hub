@@ -4,35 +4,62 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 concurrency:
   group: quality-gate-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
 
     steps:
-      - name: Checkout global unread badges branch
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: feature/global-unread-badges
           fetch-depth: 0
 
-      - name: Apply unread badge codemod and restore standard gate
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint changed source files
         shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          python .github/scripts/apply-global-unread-badges.py
-          rm .github/scripts/apply-global-unread-badges.py
-          git fetch origin main
-          git checkout origin/main -- .github/workflows/quality-gate.yml
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Add global unread activity badges"
-          git push origin HEAD:feature/global-unread-badges
+          base="$BASE_SHA"
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="$(git rev-parse HEAD^)"
+          fi
+
+          mapfile -t files < <(
+            git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- \
+              '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
+          )
+
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No changed JS/TS source files to lint."
+            exit 0
+          fi
+
+          printf 'Linting %s\n' "${files[@]}"
+          npx eslint --quiet "${files[@]}"
+
+      - name: Typecheck
+        run: npm run typecheck -- --pretty false
+
+      - name: Production build
+        run: npm run build

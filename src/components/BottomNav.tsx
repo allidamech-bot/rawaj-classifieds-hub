@@ -6,6 +6,7 @@ import {
   type PrimaryNavigationSection,
 } from "@/lib/primary-navigation";
 import { useUiPreferences } from "@/lib/ui-preferences";
+import { useUnreadActivityCounts } from "@/lib/unread-activity";
 
 type NavItem = {
   to: "/" | "/categories" | "/add-listing" | "/offers" | "/more";
@@ -40,6 +41,7 @@ const items: NavItem[] = [
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { text } = useUiPreferences();
+  const { counts } = useUnreadActivityCounts();
   const activeSection = resolvePrimaryNavigationSection(pathname);
 
   if (!shouldShowBottomNav(pathname)) return null;
@@ -56,6 +58,7 @@ export function BottomNav() {
           const active = activeSection === item.section;
           const Icon = item.icon;
           const label = text(item.labelAr, item.labelEn);
+          const badgeCount = item.section === "account" ? counts.total : 0;
 
           if (item.primary) {
             return (
@@ -92,6 +95,11 @@ export function BottomNav() {
                 }`}
               >
                 <Icon className="h-5 w-5" strokeWidth={active ? 2.15 : 1.75} />
+                {badgeCount > 0 && (
+                  <span className="absolute -end-1 -top-1 grid min-h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[8px] font-extrabold leading-none text-white ring-2 ring-card">
+                    {badgeCount > 99 ? "99+" : badgeCount}
+                  </span>
+                )}
               </span>
               <span className={`text-[9px] ${active ? "font-bold" : "font-medium"}`}>{label}</span>
               {active ? (
