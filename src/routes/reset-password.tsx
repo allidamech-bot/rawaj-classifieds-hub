@@ -56,11 +56,7 @@ function ResetPasswordPage() {
 
       const { data: listener } = client.auth.onAuthStateChange((event, session) => {
         if (!session) return;
-        if (
-          event === "PASSWORD_RECOVERY" ||
-          event === "SIGNED_IN" ||
-          event === "INITIAL_SESSION"
-        ) {
+        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
           markReady();
         }
       });
@@ -225,11 +221,7 @@ function ResetPasswordPage() {
                         : text("إظهار كلمة المرور", "Show password")
                     }
                   >
-                    {passwordVisible ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    {passwordVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </label>
@@ -258,11 +250,7 @@ function ResetPasswordPage() {
                         : text("إظهار تأكيد كلمة المرور", "Show password confirmation")
                     }
                   >
-                    {confirmVisible ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    {confirmVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </label>

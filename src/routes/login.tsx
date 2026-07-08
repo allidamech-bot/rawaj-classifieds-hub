@@ -40,12 +40,7 @@ function GoogleButton({ returnTo }: { returnTo: string }) {
         className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[1rem] border border-border/80 bg-card/85 px-4 py-2.5 text-sm font-semibold text-foreground shadow-soft transition hover:border-gold/40 hover:bg-card disabled:opacity-60"
       >
         {loading ? (
-          <svg
-            aria-hidden="true"
-            className="h-4 w-4 animate-spin"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
+          <svg aria-hidden="true" className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
             <circle
               className="opacity-25"
               cx="12"
@@ -456,9 +451,7 @@ function LoginPage() {
 function FieldLabel({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">
-        {label}
-      </span>
+      <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">{label}</span>
       {children}
     </label>
   );

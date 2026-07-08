@@ -71,11 +71,7 @@ function AuthCallbackPage() {
       const { data: listener } = client.auth.onAuthStateChange((event, session) => {
         if (cancelled || !session) return;
         if (event === "PASSWORD_RECOVERY") observedRecoveryEvent = true;
-        if (
-          event === "PASSWORD_RECOVERY" ||
-          event === "SIGNED_IN" ||
-          event === "INITIAL_SESSION"
-        ) {
+        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
           finish(observedRecoveryEvent || event === "PASSWORD_RECOVERY");
         }
       });
@@ -109,10 +105,7 @@ function AuthCallbackPage() {
                   "تعذر تجهيز جلسة استعادة كلمة المرور. قد يكون الرابط منتهيًا أو استُخدم سابقًا. اطلب رابطًا جديدًا وحاول مرة أخرى.",
                   "Could not prepare the password recovery session. The link may be expired or already used. Request a new link and try again.",
                 )
-              : text(
-                  "تعذر تسجيل الدخول. حاول مرة أخرى.",
-                  "Could not sign in. Please try again.",
-                ),
+              : text("تعذر تسجيل الدخول. حاول مرة أخرى.", "Could not sign in. Please try again."),
           );
         }, 20000);
       } catch (error) {
@@ -164,10 +157,7 @@ function AuthCallbackPage() {
             </svg>
             <h1 className="mt-4 text-lg font-bold text-primary">
               {callbackContext.isRecovery
-                ? text(
-                    "جاري تجهيز استعادة كلمة المرور...",
-                    "Preparing password recovery...",
-                  )
+                ? text("جاري تجهيز استعادة كلمة المرور...", "Preparing password recovery...")
                 : text("جاري تسجيل الدخول...", "Signing in...")}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
