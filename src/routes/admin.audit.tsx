@@ -5,7 +5,7 @@ import { adminFetchAuditLogs, type AdminAuditLogEntry } from "@/lib/classifieds-
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
-export const Route = createFileRoute("/admin/audit")({
+export const Route = createFileRoute("/admin/audit" as never)({
   head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
   component: AdminAuditPage,
 });
