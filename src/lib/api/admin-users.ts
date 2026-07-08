@@ -1,8 +1,19 @@
-import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import type { AccountStatus, UserRole, VerificationStatus } from "@/lib/auth-types";
-import { getClient, mapError, rowNullableString, rowNumber, rowString } from "@/lib/api/shared";
+import {
+  getClient,
+  mapError,
+  rowNullableString,
+  rowNumber,
+  rowString,
+} from "@/lib/api/shared";
+import type { ClassifiedsResult } from "@/lib/classifieds-types";
 
-export type UserRestrictionType = "posting" | "messaging" | "reviews" | "promotions" | "uploads";
+export type UserRestrictionType =
+  | "posting"
+  | "messaging"
+  | "reviews"
+  | "promotions"
+  | "uploads";
 
 export interface AdminUserSummary {
   id: string;
@@ -24,7 +35,10 @@ export async function adminFetchUsers(
   if (!canUseAdminAccess) {
     return {
       ok: false,
-      error: { code: "permission_denied", message: "إدارة المستخدمين متاحة لحساب إداري مخول فقط." },
+      error: {
+        code: "permission_denied",
+        message: "إدارة المستخدمين متاحة لحساب إداري مخول فقط.",
+      },
     };
   }
 
@@ -170,7 +184,10 @@ export async function ownerRemoveStaffRole(
   if (!canUseOwnerAccess) {
     return {
       ok: false,
-      error: { code: "permission_denied", message: "إزالة صلاحية الطاقم متاحة للمالك فقط." },
+      error: {
+        code: "permission_denied",
+        message: "إزالة صلاحية الطاقم متاحة للمالك فقط.",
+      },
     };
   }
 
@@ -202,7 +219,11 @@ function mapAdminUserSummary(row: Record<string, unknown>): AdminUserSummary {
     email: rowNullableString(row, "email"),
     displayName: rowNullableString(row, "display_name"),
     accountStatus: rowString(row, "account_status", "pending_review") as AccountStatus,
-    verificationStatus: rowString(row, "verification_status", "unverified") as VerificationStatus,
+    verificationStatus: rowString(
+      row,
+      "verification_status",
+      "unverified",
+    ) as VerificationStatus,
     createdAt: rowNullableString(row, "created_at"),
     roles,
     listingCount: rowNumber(row, "listing_count"),
