@@ -128,9 +128,9 @@ export interface ClassifiedListing {
   rejectionReason: string | null;
   publishedAt: string | null;
   archivedAt: string | null;
-  statusChangedAt: string | null;
-  expiresAt: string | null;
-  renewedAt: string | null;
+  statusChangedAt?: string | null;
+  expiresAt?: string | null;
+  renewedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   primaryImageUrl?: string | null;
