@@ -302,7 +302,10 @@ function PendingListingDetails({
           label={text("الحالة", "Condition")}
           value={uiLabel(listing.condition, language)}
         />
-        <DetailItem label={text("اسم التواصل", "Contact name")} value={listing.contactName ?? "-"} />
+        <DetailItem
+          label={text("اسم التواصل", "Contact name")}
+          value={listing.contactName ?? "-"}
+        />
         <DetailItem
           label={text("خيارات التواصل", "Contact options")}
           value={contactOptionsLabel(listing.contactOptions, text)}
@@ -321,7 +324,10 @@ function PendingListingDetails({
           <p className="mb-1 font-bold">{text("أعلام السلامة", "Safety flags")}</p>
           <div className="flex flex-wrap gap-1.5">
             {contentFlags.map((flag) => (
-              <span key={flag} className="rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline">
+              <span
+                key={flag}
+                className="rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline"
+              >
                 {flag}
               </span>
             ))}
@@ -348,7 +354,9 @@ function PendingListingDetails({
       <div className="mt-3">
         <p className="mb-1 text-xs font-bold">{text("الصور", "Images")}</p>
         {imagesLoading ? (
-          <p className="text-xs text-muted-foreground">{text("جارٍ تحميل الصور", "Loading images")}</p>
+          <p className="text-xs text-muted-foreground">
+            {text("جارٍ تحميل الصور", "Loading images")}
+          </p>
         ) : images.length === 0 ? (
           <p className="text-xs text-muted-foreground">{text("لا توجد صور", "No images")}</p>
         ) : (
