@@ -93,11 +93,12 @@ export async function fetchConversationMessages(
     .select("*")
     .eq("conversation_id", conversationId)
     .is("deleted_at", null)
-    .order("created_at", { ascending: true })
+    .order("created_at", { ascending: false })
     .limit(200);
 
   if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapMessage) };
+  const rows = ((data ?? []) as Record<string, unknown>[]).reverse();
+  return { ok: true, data: rows.map(mapMessage) };
 }
 
 export async function sendConversationMessage(
