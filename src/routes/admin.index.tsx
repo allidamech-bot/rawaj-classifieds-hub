@@ -134,7 +134,10 @@ function AdminOverview() {
       </section>
 
       <section>
-        <SectionTitle icon={ShieldCheck} title={text("السلامة والمراجعة", "Safety and moderation")} />
+        <SectionTitle
+          icon={ShieldCheck}
+          title={text("السلامة والمراجعة", "Safety and moderation")}
+        />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <QueueCard
             icon={FileCheck}
@@ -170,16 +173,19 @@ function AdminOverview() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <CommandCard icon={Users} title={text("حالة المستخدمين", "User health")}> 
+        <CommandCard icon={Users} title={text("حالة المستخدمين", "User health")}>
           <div className="grid grid-cols-3 gap-2">
             <MiniMetric label={text("موقوف", "Suspended")} value={metrics.frozenUsers} />
             <MiniMetric label={text("محظور", "Banned")} value={metrics.disabledUsers} />
             <MiniMetric label={text("قيود", "Restrictions")} value={metrics.activeRestrictions} />
           </div>
-          <CommandLink to="/admin/users" label={text("فتح إدارة المستخدمين", "Open user management")} />
+          <CommandLink
+            to="/admin/users"
+            label={text("فتح إدارة المستخدمين", "Open user management")}
+          />
         </CommandCard>
 
-        <CommandCard icon={UserCog} title={text("الطاقم والصلاحيات", "Staff and permissions")}> 
+        <CommandCard icon={UserCog} title={text("الطاقم والصلاحيات", "Staff and permissions")}>
           <div className="grid grid-cols-2 gap-2">
             <MiniMetric label="Admin" value={metrics.adminCount} />
             <MiniMetric label="Moderator" value={metrics.moderatorCount} />
@@ -196,9 +202,12 @@ function AdminOverview() {
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <QuickLink
-          icon={ShieldAlertIcon}
+          icon={ShieldCheck}
           title={text("مركز السلامة", "Safety center")}
-          body={text("تجميع طوابير البلاغات ومخاطر الحسابات.", "Unified report and account-risk queues.")}
+          body={text(
+            "تجميع طوابير البلاغات ومخاطر الحسابات.",
+            "Unified report and account-risk queues.",
+          )}
           to="/admin/safety"
         />
         <QuickLink
@@ -210,7 +219,10 @@ function AdminOverview() {
         <QuickLink
           icon={LockKeyhole}
           title={text("المستخدمون والقيود", "Users and restrictions")}
-          body={text("إيقاف، حظر، استعادة وقيود دقيقة.", "Suspend, ban, restore, and granular controls.")}
+          body={text(
+            "إيقاف، حظر، استعادة وقيود دقيقة.",
+            "Suspend, ban, restore, and granular controls.",
+          )}
           to="/admin/users"
         />
         <QuickLink
@@ -223,8 +235,6 @@ function AdminOverview() {
     </div>
   );
 }
-
-const ShieldAlertIcon = ShieldCheck;
 
 function formatMetric(value: number, loading: boolean) {
   return loading ? "…" : value.toLocaleString();
@@ -268,7 +278,10 @@ function QueueCard({
   to: string;
 }) {
   return (
-    <Link to={to as "/admin"} className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface">
+    <Link
+      to={to as "/admin"}
+      className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface"
+    >
       <div className="flex items-center justify-between gap-3">
         <span className="grid h-9 w-9 place-items-center rounded-xl bg-muted-surface text-primary">
           <Icon className="h-4 w-4" />
@@ -329,7 +342,10 @@ function QuickLink({
   to: string;
 }) {
   return (
-    <Link to={to as "/admin"} className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface">
+    <Link
+      to={to as "/admin"}
+      className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface"
+    >
       <Icon className="h-5 w-5 text-primary" />
       <h3 className="mt-3 text-sm font-extrabold">{title}</h3>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">{body}</p>
