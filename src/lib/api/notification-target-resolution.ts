@@ -1,10 +1,7 @@
 import { fetchListingDetail } from "@/lib/api/listings";
 import { fetchMyConversations } from "@/lib/api/messaging";
 import { fetchPublicSellerProfile } from "@/lib/api/seller";
-import type {
-  ClassifiedsResult,
-  NotificationItem,
-} from "@/lib/classifieds-types";
+import type { ClassifiedsResult, NotificationItem } from "@/lib/classifieds-types";
 
 export type ResolvedNotificationTarget =
   | { kind: "listing"; listingId: string }
