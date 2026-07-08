@@ -27,4 +27,6 @@ export * from "@/lib/api/admin-operations";
 export * from "@/lib/api/admin-listing-moderation";
 export * from "@/lib/api/ad-placements";
 export * from "@/lib/api/campaigns";
+export * from "@/lib/api/safety-cases";
+export * from "@/lib/api/safety-case-details";
 export * from "@/lib/api/profile";
