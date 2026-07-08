@@ -7,3 +7,5 @@ The effective permission matrix is derived from persisted roles only for active 
 - Moderator: queue/content moderation only where explicitly permitted; no user management, full audit feed, staff, commercial, campaign, or system authority.
 
 Sensitive operations are enforced in UI visibility/guards and again inside database/RPC authority checks. `current_user_is_admin_like()` is not accepted as a substitute for owner/admin authority on user-management or owner-sensitive operations.
+
+Direct navigation to an admin route is re-checked against the route's effective permission; hidden navigation is never treated as the security boundary.
