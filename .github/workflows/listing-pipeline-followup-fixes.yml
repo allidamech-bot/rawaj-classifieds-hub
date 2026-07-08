@@ -25,13 +25,11 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          # 1. Rejected listing edits must not mutate moderation-controlled fields.
           p = Path('src/lib/api/listings.ts')
           s = p.read_text()
           s = s.replace('''\n  if (existing.status === "rejected") {\n    updateData.reviewed_by = null;\n    updateData.reviewed_at = null;\n  }\n''', '\n', 1)
           p.write_text(s)
 
-          # 2. Canonical locations must be enough for autosave/quality scoring even if legacy governorate state is empty.
           p = Path('src/routes/add-listing.tsx')
           s = p.read_text()
           s = s.replace(
@@ -51,21 +49,15 @@ jobs:
           )
           p.write_text(s)
 
-          # 3. Profile resubmit first saves editable content, then calls the protected submit RPC.
           p = Path('src/routes/profile/listings.$id.tsx')
           s = p.read_text()
-          s = s.replace(
-            '  resubmitOwnerListing,\n',
-            '  submitOwnerListingForReview,\n',
-            1,
-          )
+          s = s.replace('  resubmitOwnerListing,\n', '  submitOwnerListingForReview,\n', 1)
           old = '''    const result = await resubmitOwnerListing(auth.profile?.id ?? null, listing.id, {\n      categoryId: categoryId || undefined,\n      subcategoryId: subcategoryId ?? null,\n      governorateId: governorateId || undefined,\n      title: title.trim() || undefined,\n      description: description.trim() || undefined,\n      price: price ? Number(price) : null,\n      priceType,\n      condition,\n      districtAr: locationNodeId ? `@${locationNodeId}` : district || undefined,\n      contactName: contactName.trim() || undefined,\n      contactOptions: contact,\n      details: validation.details,\n    });\n\n    setResubmitting(false);\n    if (result.ok) {\n      setListing(result.data);\n      setSavingSuccess(text("تم إعادة إرسال الإعلان للمراجعة.", "Listing resubmitted for review."));\n    } else {\n      setSavingError(result.error.message);\n    }'''
           new = '''    const saveResult = await updateOwnerListing(auth.profile?.id ?? null, listing.id, {\n      categoryId: categoryId || undefined,\n      subcategoryId: subcategoryId ?? null,\n      governorateId: governorateId || undefined,\n      title: title.trim() || undefined,\n      description: description.trim() || undefined,\n      price: price ? Number(price) : null,\n      priceType,\n      condition,\n      districtAr: locationNodeId ? `@${locationNodeId}` : district || undefined,\n      contactName: contactName.trim() || undefined,\n      contactOptions: contact,\n      details: validation.details,\n    });\n\n    if (!saveResult.ok) {\n      setResubmitting(false);\n      setSavingError(saveResult.error.message);\n      return;\n    }\n\n    const result = await submitOwnerListingForReview(\n      auth.profile?.id ?? null,\n      saveResult.data.id,\n    );\n\n    setResubmitting(false);\n    if (result.ok) {\n      setListing(result.data);\n      setSavingSuccess(text("تم إعادة إرسال الإعلان للمراجعة.", "Listing resubmitted for review."));\n    } else {\n      setListing(saveResult.data);\n      setSavingError(result.error.message);\n    }'''
           if old not in s:
             raise SystemExit('profile resubmit block not found')
           p.write_text(s.replace(old, new, 1))
 
-          # 4. Remove dead client-side notification path now handled atomically inside review RPC.
           p = Path('src/lib/api/admin.ts')
           s = p.read_text()
           s = s.replace('import type { SupabaseClient } from "@supabase/supabase-js";\n', '', 1)
@@ -82,6 +74,6 @@ jobs:
           rm .github/workflows/listing-pipeline-followup-fixes.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/lib/api/listings.ts src/routes/add-listing.tsx src/routes/profile/listings.$id.tsx src/lib/api/admin.ts .github/workflows/listing-pipeline-followup-fixes.yml
+          git add src/lib/api/listings.ts src/routes/add-listing.tsx 'src/routes/profile/listings.$id.tsx' src/lib/api/admin.ts .github/workflows/listing-pipeline-followup-fixes.yml
           git commit -m "Fix rejected edits canonical autosave and resubmit flow"
           git push origin HEAD:hotfix/listing-publish-review-pipeline
