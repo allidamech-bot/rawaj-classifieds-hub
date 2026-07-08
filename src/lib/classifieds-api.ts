@@ -6,6 +6,7 @@ export * from "@/lib/api/listing-lifecycle";
 export * from "@/lib/api/draft-recovery";
 export * from "@/lib/api/listing-conversation-context";
 export * from "@/lib/api/notification-target-resolution";
+export * from "@/lib/api/listing-price-context";
 export { fetchPublicListingsCanonicalAware as fetchPublicListings } from "@/lib/api/location-aware-listings-v2";
 export * from "@/lib/api/seller";
 export * from "@/lib/api/messaging";
