@@ -127,6 +127,7 @@ export interface ClassifiedListing {
   statusChangedAt?: string | null;
   expiresAt?: string | null;
   renewedAt?: string | null;
+  expiryDays?: 30 | 60 | 90 | null;
   createdAt: string;
   updatedAt: string;
   primaryImageUrl?: string | null;

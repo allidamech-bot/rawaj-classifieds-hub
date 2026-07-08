@@ -12,6 +12,7 @@ import {
   readReferences,
 } from "@/lib/api/references";
 import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
+import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
 import { buildRatingSummary, mapReview } from "@/lib/api/reviews";
 import { getClient, mapError, rowNullableString, rowNumber, rowString } from "@/lib/api/shared";
 
@@ -51,6 +52,7 @@ export async function fetchPublicSellerProfile(
     .select("*")
     .eq("owner_id", cleanSellerId)
     .eq("status", "approved")
+    .or(publicListingExpiryFilter())
     .order("created_at", { ascending: false })
     .limit(60);
 

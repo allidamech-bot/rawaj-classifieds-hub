@@ -7,6 +7,7 @@ import type {
 } from "@/lib/classifieds-types";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
 import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
+import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
 import { fetchPublicGovernorates, mapGovernorate, readReferences } from "@/lib/api/references";
 import { getClient, mapError, rowNullableNumber, rowString } from "@/lib/api/shared";
 
@@ -93,7 +94,8 @@ export async function fetchFavorites(
     .from("listings")
     .select("*")
     .in("id", listingIds)
-    .eq("status", "approved");
+    .eq("status", "approved")
+    .or(publicListingExpiryFilter());
 
   if (listingsResult.error) return { ok: true, data: favorites };
 
@@ -156,7 +158,8 @@ export async function fetchFavoriteJourneyItems(
     .from("listings")
     .select("*")
     .in("id", listingIds)
-    .eq("status", "approved");
+    .eq("status", "approved")
+    .or(publicListingExpiryFilter());
 
   const listings =
     references.ok && !listingsResult.error
@@ -209,6 +212,7 @@ export async function favoriteListing(
     .select("id, title, price, status")
     .eq("id", listingId)
     .eq("status", "approved")
+    .or(publicListingExpiryFilter())
     .maybeSingle();
 
   if (listingError) return { ok: false, error: mapError(listingError) };

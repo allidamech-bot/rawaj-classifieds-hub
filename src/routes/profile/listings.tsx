@@ -6,12 +6,12 @@ import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import {
   closeOwnerListing,
-  confirmOwnerListingAvailability,
   deleteOwnerListing,
   fetchCurrentUserListings,
   fetchPublicSellerProfile,
   isOwnerDeletableStatus,
   reactivateOwnerListing,
+  setOwnerListingExpiry,
   type OwnerCloseListingStatus,
 } from "@/lib/classifieds-api";
 import type {
@@ -21,6 +21,7 @@ import type {
 } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { isClosedListingStatus, isReactivatableListingStatus } from "@/lib/listing-lifecycle-ui";
+import type { ListingExpiryOption } from "@/lib/api/listing-expiry";
 import { listingStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -431,6 +432,13 @@ function StoreListingCard({
   const [deleting, setDeleting] = useState(false);
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
   const [lifecycleError, setLifecycleError] = useState("");
+  const [expiryOption, setExpiryOption] = useState<ListingExpiryOption>(
+    listing.expiryDays ?? "never",
+  );
+
+  useEffect(() => {
+    setExpiryOption(listing.expiryDays ?? "never");
+  }, [listing.expiryDays]);
 
   const canEdit = listing.status === "draft" || listing.status === "rejected";
   const canDelete = isOwnerDeletableStatus(listing.status);
@@ -476,11 +484,11 @@ function StoreListingCard({
     onChanged(result.data);
   }
 
-  async function handleConfirmAvailability() {
+  async function handleExpiryUpdate() {
     if (lifecycleBusy || listing.status !== "approved") return;
     setLifecycleError("");
     setLifecycleBusy(true);
-    const result = await confirmOwnerListingAvailability(userId, listing.id);
+    const result = await setOwnerListingExpiry(userId, listing.id, expiryOption);
     setLifecycleBusy(false);
     if (!result.ok) {
       setLifecycleError(result.error.message);
@@ -614,15 +622,30 @@ function StoreListingCard({
             )}
             {canClose && (
               <>
+                <select
+                  value={String(expiryOption)}
+                  disabled={lifecycleBusy}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setExpiryOption(value === "never" ? "never" : (Number(value) as 30 | 60 | 90));
+                  }}
+                  aria-label={text("مدة صلاحية الإعلان", "Listing expiry duration")}
+                  className="rounded-lg border border-border/70 bg-card px-2 py-1 text-[10px] font-bold text-foreground disabled:opacity-60"
+                >
+                  <option value="30">{text("30 يوم", "30 days")}</option>
+                  <option value="60">{text("60 يوم", "60 days")}</option>
+                  <option value="90">{text("90 يوم", "90 days")}</option>
+                  <option value="never">{text("بدون انتهاء", "No automatic expiry")}</option>
+                </select>
                 <button
                   type="button"
                   disabled={lifecycleBusy}
-                  onClick={() => void handleConfirmAvailability()}
+                  onClick={() => void handleExpiryUpdate()}
                   className="rounded-lg bg-emerald-trust/10 px-2 py-1 text-[10px] font-bold text-emerald-trust disabled:opacity-60"
                 >
                   {lifecycleBusy
                     ? text("جارٍ التحديث", "Updating")
-                    : text("تأكيد استمرار التوفر", "Confirm availability")}
+                    : text("تطبيق / تجديد المدة", "Apply / renew duration")}
                 </button>
                 <button
                   type="button"
