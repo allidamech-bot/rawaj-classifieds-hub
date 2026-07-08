@@ -6,6 +6,8 @@ Campaign management is owner-only and uses explicit `canManageAdCampaigns` UI au
 
 Campaigns support Draft, Active, Paused, and Ended states with optional start/end scheduling. Status changes require a reason and are written to the audit log. Updates use monotonic versions so stale browser state cannot silently overwrite newer changes.
 
+Immediate pause and end actions are server-authorized and audited; hiding a control in the interface is never treated as the security boundary.
+
 ## Targeting
 
 A campaign may target one or more supported marketplace pages and optional category identifiers. Empty target arrays mean broad eligibility within the active schedule.
