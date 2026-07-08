@@ -38,11 +38,13 @@ import { Route as ListingsIdRouteImport } from './routes/listings.$id'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminVerificationsRouteImport } from './routes/admin.verifications'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminSafetyRouteImport } from './routes/admin.safety'
 import { Route as AdminReviewsRouteImport } from './routes/admin.reviews'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminPromotionsRouteImport } from './routes/admin.promotions'
 import { Route as AdminPendingRouteImport } from './routes/admin.pending'
 import { Route as AdminMessageReportsRouteImport } from './routes/admin.message-reports'
+import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as ProfileListingsIdRouteImport } from './routes/profile/listings.$id'
 
 const VerificationRoute = VerificationRouteImport.update({
@@ -190,6 +192,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSafetyRoute = AdminSafetyRouteImport.update({
+  id: '/safety',
+  path: '/safety',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminReviewsRoute = AdminReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
@@ -213,6 +220,11 @@ const AdminPendingRoute = AdminPendingRouteImport.update({
 const AdminMessageReportsRoute = AdminMessageReportsRouteImport.update({
   id: '/message-reports',
   path: '/message-reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
   getParentRoute: () => AdminRoute,
 } as any)
 const ProfileListingsIdRoute = ProfileListingsIdRouteImport.update({
@@ -243,11 +255,13 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/verification': typeof VerificationRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/safety': typeof AdminSafetyRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -278,11 +292,13 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/verification': typeof VerificationRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/safety': typeof AdminSafetyRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -316,11 +332,13 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/verification': typeof VerificationRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/safety': typeof AdminSafetyRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -355,11 +373,13 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/verification'
+    | '/admin/audit'
     | '/admin/message-reports'
     | '/admin/pending'
     | '/admin/promotions'
     | '/admin/reports'
     | '/admin/reviews'
+    | '/admin/safety'
     | '/admin/users'
     | '/admin/verifications'
     | '/auth/callback'
@@ -390,11 +410,13 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/verification'
+    | '/admin/audit'
     | '/admin/message-reports'
     | '/admin/pending'
     | '/admin/promotions'
     | '/admin/reports'
     | '/admin/reviews'
+    | '/admin/safety'
     | '/admin/users'
     | '/admin/verifications'
     | '/auth/callback'
@@ -427,11 +449,13 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/verification'
+    | '/admin/audit'
     | '/admin/message-reports'
     | '/admin/pending'
     | '/admin/promotions'
     | '/admin/reports'
     | '/admin/reviews'
+    | '/admin/safety'
     | '/admin/users'
     | '/admin/verifications'
     | '/auth/callback'
@@ -674,6 +698,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/safety': {
+      id: '/admin/safety'
+      path: '/safety'
+      fullPath: '/admin/safety'
+      preLoaderRoute: typeof AdminSafetyRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/reviews': {
       id: '/admin/reviews'
       path: '/reviews'
@@ -709,6 +740,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMessageReportsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/audit': {
+      id: '/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/profile/listings/$id': {
       id: '/profile/listings/$id'
       path: '/$id'
@@ -720,22 +758,26 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminAuditRoute: typeof AdminAuditRoute
   AdminMessageReportsRoute: typeof AdminMessageReportsRoute
   AdminPendingRoute: typeof AdminPendingRoute
   AdminPromotionsRoute: typeof AdminPromotionsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReviewsRoute: typeof AdminReviewsRoute
+  AdminSafetyRoute: typeof AdminSafetyRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminVerificationsRoute: typeof AdminVerificationsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAuditRoute: AdminAuditRoute,
   AdminMessageReportsRoute: AdminMessageReportsRoute,
   AdminPendingRoute: AdminPendingRoute,
   AdminPromotionsRoute: AdminPromotionsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminReviewsRoute: AdminReviewsRoute,
+  AdminSafetyRoute: AdminSafetyRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminVerificationsRoute: AdminVerificationsRoute,
   AdminIndexRoute: AdminIndexRoute,
