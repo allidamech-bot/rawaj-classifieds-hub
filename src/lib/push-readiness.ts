@@ -1,5 +1,4 @@
-export type PushPermissionState =
-  "default" | "denied" | "granted" | "unsupported";
+export type PushPermissionState = "default" | "denied" | "granted" | "unsupported";
 
 export interface PushReadinessSnapshot {
   notificationApiSupported: boolean;
@@ -39,9 +38,6 @@ export function getPushReadinessSnapshot(): PushReadinessSnapshot {
     secureContext,
     permission,
     browserReady:
-      notificationApiSupported &&
-      serviceWorkerSupported &&
-      pushManagerSupported &&
-      secureContext,
+      notificationApiSupported && serviceWorkerSupported && pushManagerSupported && secureContext,
   };
 }
