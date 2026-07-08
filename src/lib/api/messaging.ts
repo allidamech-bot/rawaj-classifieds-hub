@@ -20,6 +20,11 @@ import {
   rowString,
 } from "@/lib/api/shared";
 
+const pendingMessageSends = new Map<
+  string,
+  Promise<ClassifiedsResult<ConversationMessage>>
+>();
+
 export async function startListingConversation(
   userId: string | null,
   listingId: string,
@@ -113,14 +118,36 @@ export async function sendConversationMessage(
     };
   }
 
+  const cleanConversationId = conversationId.trim();
   const cleanBody = body.trim();
-  if (!conversationId.trim() || cleanBody.length < 1 || cleanBody.length > 2000) {
+  if (!cleanConversationId || cleanBody.length < 1 || cleanBody.length > 2000) {
     return {
       ok: false,
       error: { code: "validation_error", message: "اكتب رسالة بين 1 و2000 حرف." },
     };
   }
 
+  const sendKey = JSON.stringify([userId, cleanConversationId, cleanBody]);
+  const existingSend = pendingMessageSends.get(sendKey);
+  if (existingSend) return existingSend;
+
+  const sendPromise = performConversationMessageSend(userId, cleanConversationId, cleanBody);
+  pendingMessageSends.set(sendKey, sendPromise);
+
+  try {
+    return await sendPromise;
+  } finally {
+    if (pendingMessageSends.get(sendKey) === sendPromise) {
+      pendingMessageSends.delete(sendKey);
+    }
+  }
+}
+
+async function performConversationMessageSend(
+  userId: string,
+  conversationId: string,
+  cleanBody: string,
+): Promise<ClassifiedsResult<ConversationMessage>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
