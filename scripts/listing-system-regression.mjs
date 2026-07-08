@@ -25,12 +25,24 @@ const publicBase = read("src/lib/api/listings.ts");
 const publicLocation = read("src/lib/api/location-aware-listings.ts");
 const publicCanonical = read("src/lib/api/location-aware-listings-v2.ts");
 const migration33 = read("supabase/migrations/202607080033_listing_system_reconciliation.sql");
-const migration35 = read("supabase/migrations/202607080035_listing_schema_contract_reconciliation.sql");
-const migration36 = read("supabase/migrations/202607080036_listing_moderation_trigger_reconciliation.sql");
+const migration35 = read(
+  "supabase/migrations/202607080035_listing_schema_contract_reconciliation.sql",
+);
+const migration36 = read(
+  "supabase/migrations/202607080036_listing_moderation_trigger_reconciliation.sql",
+);
 
 requireText(locationWrite, '.from("governorates")', "canonical governorate mapping");
-requireText(locationWrite, 'rowString(row, "node_type") === "governorate"', "canonical ancestor mapping");
-requireText(locationWrite, "resolved.data.districtAr || resolved.data.selectedNameAr", "canonical label fallback");
+requireText(
+  locationWrite,
+  'rowString(row, "node_type") === "governorate"',
+  "canonical ancestor mapping",
+);
+requireText(
+  locationWrite,
+  "resolved.data.districtAr || resolved.data.selectedNameAr",
+  "canonical label fallback",
+);
 
 requireText(lifecycle, 'rpc("rawaj_owner_transition_listing"', "owner lifecycle RPC");
 requireText(lifecycle, 'rpc("rawaj_owner_set_listing_expiry"', "owner expiry RPC");
@@ -38,7 +50,11 @@ requireText(lifecycle, 'rpc("rawaj_owner_confirm_listing_availability"', "owner 
 forbidText(lifecycle, '.from("listings")', "no direct owner lifecycle table mutation");
 
 requireText(listings, 'createListingWithStatus(userId, payload, "draft")', "create through draft");
-requireText(listings, "return submitOwnerListingForReview(userId, draftResult.data.id);", "create through protected submit");
+requireText(
+  listings,
+  "return submitOwnerListingForReview(userId, draftResult.data.id);",
+  "create through protected submit",
+);
 forbidText(
   listings,
   'return createListingWithStatus(userId, payload, "pending_review");',
@@ -59,8 +75,16 @@ for (const [label, source] of [
   requireText(source, '.is("archived_at", null)', `${label} non-archived`);
 }
 
-requireText(migration33, "drop constraint if exists listings_status_allowed", "legacy status constraint removal");
-requireText(migration33, "drop constraint if exists listings_status_check", "canonical status constraint replacement");
+requireText(
+  migration33,
+  "drop constraint if exists listings_status_allowed",
+  "legacy status constraint removal",
+);
+requireText(
+  migration33,
+  "drop constraint if exists listings_status_check",
+  "canonical status constraint replacement",
+);
 for (const status of ["expired", "sold", "rented", "unavailable"]) {
   requireText(migration33, `'${status}'`, `canonical status ${status}`);
 }
@@ -73,7 +97,11 @@ for (const column of ["expires_at", "renewed_at", "expiry_days", "location_node_
 }
 
 requireText(migration36, "'expires_at'", "approval expiry allowed by moderation protection");
-requireText(migration36, "'status_changed_at'", "status timestamp allowed by moderation protection");
+requireText(
+  migration36,
+  "'status_changed_at'",
+  "status timestamp allowed by moderation protection",
+);
 
 if (failures.length > 0) {
   console.error("Listing system regression contract failed:\n");
