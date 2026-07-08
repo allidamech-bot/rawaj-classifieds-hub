@@ -59,7 +59,32 @@ jobs:
           npx eslint --quiet "${files[@]}"
 
       - name: Typecheck
-        run: npm run typecheck -- --pretty false
+        shell: bash
+        run: |
+          set +e
+          npm run typecheck -- --pretty false > typecheck-report.txt 2>&1
+          typecheck_status=$?
+          set -e
+          echo "$typecheck_status" > typecheck-status.txt
+
+      - name: Upload typecheck diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typecheck-diagnostics
+          path: |
+            typecheck-report.txt
+            typecheck-status.txt
+          if-no-files-found: ignore
+          retention-days: 1
+
+      - name: Enforce typecheck result
+        shell: bash
+        run: |
+          status="$(cat typecheck-status.txt 2>/dev/null || echo 1)"
+          if [ "$status" -ne 0 ]; then
+            exit "$status"
+          fi
 
       - name: Production build
         run: npm run build
