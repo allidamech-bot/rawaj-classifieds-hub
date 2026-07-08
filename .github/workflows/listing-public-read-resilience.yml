@@ -12,12 +12,17 @@ jobs:
   patch:
     if: github.head_ref == 'hotfix/listing-system-reconciliation' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
           ref: hotfix/listing-system-reconciliation
           fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
       - name: Add schema-missing-only public read retry
         shell: bash
         run: |
@@ -26,30 +31,102 @@ jobs:
 
           p = Path('src/lib/api/listings.ts')
           s = p.read_text()
-          start = s.index('export async function fetchPublicListings(')
-          end = s.index('\nexport async function fetchListingDetail(', start)
-          new_fn = '''export async function fetchPublicListings(\n  filters: { categoryId?: string; sort?: string } & Record<string, unknown> = {},\n  cursor: ListingCursor | null = null,\n  pageSize = 30,\n): Promise<ClassifiedsResult<PaginatedListingsResponse<ClassifiedListing>>> {\n  const clientResult = getClient();\n  if (!clientResult.ok) return clientResult;\n\n  const references = await readReferences(clientResult.data);\n  if (!references.ok) return { ok: false, error: references.error };\n\n  const buildQuery = (includeLifecycleFilters: boolean) => {\n    let query = clientResult.data.from("listings").select("*").eq("status", "approved");\n    if (includeLifecycleFilters) {\n      query = query.is("archived_at", null).or(publicListingExpiryFilter());\n    }\n\n    if (filters.categoryId) query = query.eq("category_id", filters.categoryId);\n\n    const sort = filters.sort ?? "latest";\n    if (sort === "cheapest") {\n      query = query\n        .order("price", { ascending: true, nullsFirst: false })\n        .order("id", { ascending: true });\n    } else if (sort === "expensive") {\n      query = query\n        .order("price", { ascending: false, nullsFirst: false })\n        .order("id", { ascending: true });\n    } else if (sort === "featured") {\n      query = query\n        .order("is_featured", { ascending: false })\n        .order("created_at", { ascending: false })\n        .order("id", { ascending: false });\n    } else {\n      query = query.order("created_at", { ascending: false }).order("id", { ascending: false });\n    }\n\n    if (cursor) {\n      if (cursor.type === "latest") {\n        const created_at = escapePostgrestFilterValue(cursor.created_at);\n        const id = escapePostgrestFilterValue(cursor.id);\n        query = query.or(`created_at.lt.${created_at},and(created_at.eq.${created_at},id.lt.${id})`);\n      } else if (cursor.type === "featured") {\n        const created_at = escapePostgrestFilterValue(cursor.created_at);\n        const id = escapePostgrestFilterValue(cursor.id);\n        if (cursor.is_featured) {\n          query = query.or(\n            `is_featured.eq.false,and(is_featured.eq.true,created_at.lt.${created_at}),and(is_featured.eq.true,created_at.eq.${created_at},id.lt.${id})`,\n          );\n        } else {\n          query = query.or(\n            `and(is_featured.eq.false,created_at.lt.${created_at}),and(is_featured.eq.false,created_at.eq.${created_at},id.lt.${id})`,\n          );\n        }\n      } else if (cursor.type === "cheapest" || cursor.type === "expensive") {\n        const id = escapePostgrestFilterValue(cursor.id);\n        if (cursor.price === null) {\n          query = query.or(`and(price.is.null,id.gt.${id})`);\n        } else {\n          const price = escapePostgrestFilterValue(String(cursor.price));\n          const operator = cursor.type === "cheapest" ? "gt" : "lt";\n          query = query.or(\n            `price.${operator}.${price},price.is.null,and(price.eq.${price},id.gt.${id})`,\n          );\n        }\n      }\n    }\n\n    return query;\n  };\n\n  const safePageSize = Math.max(1, Math.min(pageSize, 50));\n  let response = await buildQuery(true).limit(safePageSize + 1);\n  if (response.error && mapError(response.error).code === "schema_missing") {\n    response = await buildQuery(false).limit(safePageSize + 1);\n  }\n  if (response.error) return { ok: false, error: mapError(response.error) };\n\n  const listings = ((response.data ?? []) as Record<string, unknown>[])\n    .map((row) => mapListing(row, references.categories, references.governorates))\n    .filter((listing) => listing.status === "approved" && !listing.archivedAt);\n\n  const sort = filters.sort ?? "latest";\n  const nextCursor: ListingCursor | null =\n    listings.length > safePageSize\n      ? ({\n          type:\n            sort === "cheapest"\n              ? "cheapest"\n              : sort === "expensive"\n                ? "expensive"\n                : sort === "featured"\n                  ? "featured"\n                  : "latest",\n          id: listings[safePageSize - 1].id,\n          ...(sort === "cheapest" || sort === "expensive"\n            ? { price: listings[safePageSize - 1].price }\n            : {}),\n          ...(sort === "featured"\n            ? {\n                is_featured: listings[safePageSize - 1].isFeatured,\n                created_at: listings[safePageSize - 1].createdAt,\n              }\n            : {}),\n          ...(sort === "latest" ? { created_at: listings[safePageSize - 1].createdAt } : {}),\n        } as ListingCursor)\n      : null;\n  const pagedItems = nextCursor ? listings.slice(0, safePageSize) : listings;\n\n  return {\n    ok: true,\n    data: {\n      items: await hydrateListingsWithPrimaryImages(clientResult.data, pagedItems),\n      nextCursor,\n      pageSize: safePageSize,\n    },\n  };\n}\n'''
-          p.write_text(s[:start] + new_fn + s[end:])
 
-          for filename in ['src/lib/api/location-aware-listings.ts', 'src/lib/api/location-aware-listings-v2.ts']:
-            p = Path(filename)
-            s = p.read_text()
-            s = s.replace(\n              '''    .eq("status", "approved")\n    .is("archived_at", null)\n    .or(publicListingExpiryFilter());''',\n              '''    .eq("status", "approved")\n    .is("archived_at", null)\n    .or(publicListingExpiryFilter());''',\n              1,\n            )
-            p.write_text(s)
+          old = '''  const safePageSize = Math.max(1, Math.min(pageSize, 50));
+  const { data, error } = await query.limit(safePageSize + 1);
+  if (error) return { ok: false, error: mapError(error) };
+
+  const listings = ((data ?? []) as Record<string, unknown>[]).map((row) =>
+    mapListing(row, references.categories, references.governorates),
+  );
+'''
+          new = '''  const safePageSize = Math.max(1, Math.min(pageSize, 50));
+  let response = await query.limit(safePageSize + 1);
+
+  if (response.error && mapError(response.error).code === "schema_missing") {
+    let fallbackQuery = clientResult.data.from("listings").select("*").eq("status", "approved");
+    if (filters.categoryId) fallbackQuery = fallbackQuery.eq("category_id", filters.categoryId);
+
+    if (sort === "cheapest") {
+      fallbackQuery = fallbackQuery
+        .order("price", { ascending: true, nullsFirst: false })
+        .order("id", { ascending: true });
+    } else if (sort === "expensive") {
+      fallbackQuery = fallbackQuery
+        .order("price", { ascending: false, nullsFirst: false })
+        .order("id", { ascending: true });
+    } else if (sort === "featured") {
+      fallbackQuery = fallbackQuery
+        .order("is_featured", { ascending: false })
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false });
+    } else {
+      fallbackQuery = fallbackQuery
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false });
+    }
+
+    response = await fallbackQuery.limit(safePageSize + 1);
+  }
+
+  if (response.error) return { ok: false, error: mapError(response.error) };
+
+  const listings = ((response.data ?? []) as Record<string, unknown>[])
+    .map((row) => mapListing(row, references.categories, references.governorates))
+    .filter((listing) => listing.status === "approved" && !listing.archivedAt);
+'''
+          if old not in s:
+            raise SystemExit('public listing response block not found')
+          s = s.replace(old, new, 1)
+
+          old_detail = '''  const { data, error } = await clientResult.data
+    .from("listings")
+    .select("*")
+    .eq("id", listingId)
+    .eq("status", "approved")
+    .is("archived_at", null)
+    .or(publicListingExpiryFilter())
+    .maybeSingle();
+
+  if (error) return { ok: false, error: mapError(error) };
+  if (!data) {
+'''
+          new_detail = '''  let detailResponse = await clientResult.data
+    .from("listings")
+    .select("*")
+    .eq("id", listingId)
+    .eq("status", "approved")
+    .is("archived_at", null)
+    .or(publicListingExpiryFilter())
+    .maybeSingle();
+
+  if (detailResponse.error && mapError(detailResponse.error).code === "schema_missing") {
+    detailResponse = await clientResult.data
+      .from("listings")
+      .select("*")
+      .eq("id", listingId)
+      .eq("status", "approved")
+      .maybeSingle();
+  }
+
+  if (detailResponse.error) return { ok: false, error: mapError(detailResponse.error) };
+  const data = detailResponse.data;
+  if (!data) {
+'''
+          if old_detail not in s:
+            raise SystemExit('public detail response block not found')
+          s = s.replace(old_detail, new_detail, 1)
+
+          p.write_text(s)
           PY
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Fix lint for patched source
-        run: npx eslint --fix src/lib/api/listings.ts
+      - name: Fix lint
+        run: npx eslint --fix src/lib/api/listings.ts scripts/listing-system-regression.mjs
       - name: Remove workflow and commit
         shell: bash
         run: |
           rm .github/workflows/listing-public-read-resilience.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/lib/api/listings.ts .github/workflows/listing-public-read-resilience.yml
-          git commit -m "Add public listing read schema fallback"
+          git add src/lib/api/listings.ts scripts/listing-system-regression.mjs .github/workflows/listing-public-read-resilience.yml
+          git commit -m "Finalize resilient public listing reads"
           git push origin HEAD:hotfix/listing-system-reconciliation
