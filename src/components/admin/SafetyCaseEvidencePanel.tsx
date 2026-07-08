@@ -35,11 +35,7 @@ export function SafetyCaseEvidencePanel({
     if (noteResult.ok) setNotes(noteResult.data);
     if (linkResult.ok) setLinks(linkResult.data);
     setError(
-      !noteResult.ok
-        ? noteResult.error.message
-        : !linkResult.ok
-          ? linkResult.error.message
-          : "",
+      !noteResult.ok ? noteResult.error.message : !linkResult.ok ? linkResult.error.message : "",
     );
   }
 
@@ -115,7 +111,9 @@ export function SafetyCaseEvidencePanel({
           </div>
           <div className="mt-3 max-h-56 space-y-2 overflow-y-auto">
             {notes.length === 0 ? (
-              <p className="text-xs text-muted-foreground">{text("لا توجد ملاحظات بعد.", "No notes yet.")}</p>
+              <p className="text-xs text-muted-foreground">
+                {text("لا توجد ملاحظات بعد.", "No notes yet.")}
+              </p>
             ) : (
               notes.map((item) => (
                 <article key={item.id} className="rounded-xl bg-muted-surface p-3 hairline">
@@ -148,7 +146,10 @@ export function SafetyCaseEvidencePanel({
             <input
               value={linkId}
               onChange={(event) => setLinkId(event.target.value)}
-              placeholder={text("معرف البلاغ أو الإعلان أو الحساب", "Report, listing, or account ID")}
+              placeholder={text(
+                "معرف البلاغ أو الإعلان أو الحساب",
+                "Report, listing, or account ID",
+              )}
               className="input min-w-0"
             />
             <button
@@ -163,7 +164,9 @@ export function SafetyCaseEvidencePanel({
           </div>
           <div className="mt-3 max-h-56 space-y-2 overflow-y-auto">
             {links.length === 0 ? (
-              <p className="text-xs text-muted-foreground">{text("لا توجد روابط بعد.", "No links yet.")}</p>
+              <p className="text-xs text-muted-foreground">
+                {text("لا توجد روابط بعد.", "No links yet.")}
+              </p>
             ) : (
               links.map((item) => (
                 <article key={item.id} className="rounded-xl bg-muted-surface p-3 hairline">

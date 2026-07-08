@@ -59,10 +59,16 @@ export async function safetyAddCaseNote(
     p_note: note.trim(),
   });
   if (error) return { ok: false, error: mapError(error) };
-  const id = typeof data === "string" ? data : rowNullableString((data ?? {}) as Record<string, unknown>, "id");
+  const id =
+    typeof data === "string"
+      ? data
+      : rowNullableString((data ?? {}) as Record<string, unknown>, "id");
   return id
     ? { ok: true, data: { id } }
-    : { ok: false, error: { code: "unknown", message: "تمت العملية دون معرف ملاحظة قابل للتحقق." } };
+    : {
+        ok: false,
+        error: { code: "unknown", message: "تمت العملية دون معرف ملاحظة قابل للتحقق." },
+      };
 }
 
 export async function safetyFetchCaseLinks(
@@ -105,7 +111,10 @@ export async function safetyAddCaseLink(
     p_link_id: payload.linkId.trim(),
   });
   if (error) return { ok: false, error: mapError(error) };
-  const id = typeof data === "string" ? data : rowNullableString((data ?? {}) as Record<string, unknown>, "id");
+  const id =
+    typeof data === "string"
+      ? data
+      : rowNullableString((data ?? {}) as Record<string, unknown>, "id");
   return id
     ? { ok: true, data: { id } }
     : { ok: false, error: { code: "unknown", message: "تمت العملية دون معرف رابط قابل للتحقق." } };

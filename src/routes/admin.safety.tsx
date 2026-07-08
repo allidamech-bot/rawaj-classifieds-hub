@@ -225,7 +225,9 @@ function AdminSafetyPage() {
     }
 
     setActionReason("");
-    setNotice(text("تم تصعيد القضية إلى المالك وتسجيل السبب.", "Case escalated to owner and audited."));
+    setNotice(
+      text("تم تصعيد القضية إلى المالك وتسجيل السبب.", "Case escalated to owner and audited."),
+    );
     await refresh();
   }
 
@@ -281,18 +283,33 @@ function AdminSafetyPage() {
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Metric label={text("مفتوحة", "Open")} value={counts.open} />
         <Metric label={text("قيد التحقيق", "Investigating")} value={counts.investigating} />
-        <Metric label={text("حرجة", "Critical")} value={counts.critical} attention={counts.critical > 0} />
-        <Metric label={text("مصعّدة للمالك", "Escalated")} value={counts.escalated} attention={counts.escalated > 0} />
+        <Metric
+          label={text("حرجة", "Critical")}
+          value={counts.critical}
+          attention={counts.critical > 0}
+        />
+        <Metric
+          label={text("مصعّدة للمالك", "Escalated")}
+          value={counts.escalated}
+          attention={counts.escalated > 0}
+        />
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <form onSubmit={(event) => void saveCase(event)} className="rounded-2xl bg-card p-5 hairline">
+        <form
+          onSubmit={(event) => void saveCase(event)}
+          className="rounded-2xl bg-card p-5 hairline"
+        >
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-sm font-extrabold">
               {form.id ? text("تعديل القضية", "Edit case") : text("قضية جديدة", "New case")}
             </h3>
             {form.id && (
-              <button type="button" onClick={resetForm} className="rawaj-chip gap-1 px-3 py-2 text-xs font-bold">
+              <button
+                type="button"
+                onClick={resetForm}
+                className="rawaj-chip gap-1 px-3 py-2 text-xs font-bold"
+              >
                 <Plus className="h-3.5 w-3.5" />
                 {text("جديدة", "New")}
               </button>
@@ -303,7 +320,12 @@ function AdminSafetyPage() {
             <Field label={text("المصدر", "Source")}>
               <select
                 value={form.sourceType}
-                onChange={(event) => setForm((value) => ({ ...value, sourceType: event.target.value as SafetyCaseSource }))}
+                onChange={(event) =>
+                  setForm((value) => ({
+                    ...value,
+                    sourceType: event.target.value as SafetyCaseSource,
+                  }))
+                }
                 className="input"
               >
                 <option value="manual">manual</option>
@@ -315,37 +337,80 @@ function AdminSafetyPage() {
             <Field label={text("الخطورة", "Severity")}>
               <select
                 value={form.severity}
-                onChange={(event) => setForm((value) => ({ ...value, severity: event.target.value as SafetyCaseSeverity }))}
+                onChange={(event) =>
+                  setForm((value) => ({
+                    ...value,
+                    severity: event.target.value as SafetyCaseSeverity,
+                  }))
+                }
                 className="input"
               >
                 {severityOptions.map((severity) => (
-                  <option key={severity} value={severity}>{severity}</option>
+                  <option key={severity} value={severity}>
+                    {severity}
+                  </option>
                 ))}
               </select>
             </Field>
             <Field label={text("معرف المصدر", "Source ID")}>
-              <input value={form.sourceId} onChange={(event) => setForm((value) => ({ ...value, sourceId: event.target.value }))} className="input" />
+              <input
+                value={form.sourceId}
+                onChange={(event) =>
+                  setForm((value) => ({ ...value, sourceId: event.target.value }))
+                }
+                className="input"
+              />
             </Field>
             <Field label={text("معرف المستخدم محل القضية", "Subject user ID")}>
-              <input value={form.subjectUserId} onChange={(event) => setForm((value) => ({ ...value, subjectUserId: event.target.value }))} className="input" />
+              <input
+                value={form.subjectUserId}
+                onChange={(event) =>
+                  setForm((value) => ({ ...value, subjectUserId: event.target.value }))
+                }
+                className="input"
+              />
             </Field>
             <Field label={text("العنوان", "Title")} wide>
-              <input value={form.title} onChange={(event) => setForm((value) => ({ ...value, title: event.target.value }))} required className="input" />
+              <input
+                value={form.title}
+                onChange={(event) => setForm((value) => ({ ...value, title: event.target.value }))}
+                required
+                className="input"
+              />
             </Field>
             <Field label={text("الملخص الداخلي", "Internal summary")} wide>
-              <textarea value={form.summary} onChange={(event) => setForm((value) => ({ ...value, summary: event.target.value }))} rows={4} className="input min-h-28" />
+              <textarea
+                value={form.summary}
+                onChange={(event) =>
+                  setForm((value) => ({ ...value, summary: event.target.value }))
+                }
+                rows={4}
+                className="input min-h-28"
+              />
             </Field>
             <Field label={text("المسؤول", "Assignee")} wide>
-              <select value={form.assignedTo} onChange={(event) => setForm((value) => ({ ...value, assignedTo: event.target.value }))} className="input">
+              <select
+                value={form.assignedTo}
+                onChange={(event) =>
+                  setForm((value) => ({ ...value, assignedTo: event.target.value }))
+                }
+                className="input"
+              >
                 <option value="">{text("غير معيّن", "Unassigned")}</option>
                 {staff.map((member) => (
-                  <option key={member.id} value={member.id}>{member.displayName} · {member.roles.join(", ")}</option>
+                  <option key={member.id} value={member.id}>
+                    {member.displayName} · {member.roles.join(", ")}
+                  </option>
                 ))}
               </select>
             </Field>
           </div>
 
-          <button type="submit" disabled={saving} className="rawaj-button-primary mt-5 min-h-11 w-full rounded-xl px-4 py-2.5 disabled:opacity-50">
+          <button
+            type="submit"
+            disabled={saving}
+            className="rawaj-button-primary mt-5 min-h-11 w-full rounded-xl px-4 py-2.5 disabled:opacity-50"
+          >
             <Save className="h-4 w-4" />
             {text("حفظ القضية", "Save case")}
           </button>
@@ -354,19 +419,29 @@ function AdminSafetyPage() {
         <section className="rounded-2xl bg-card p-5 hairline">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-sm font-extrabold">{text("طابور القضايا", "Case queue")}</h3>
-            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as SafetyCaseStatus | "all")} className="input max-w-44">
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value as SafetyCaseStatus | "all")}
+              className="input max-w-44"
+            >
               <option value="all">{text("كل الحالات", "All statuses")}</option>
               {statusOptions.map((status) => (
-                <option key={status} value={status}>{status}</option>
+                <option key={status} value={status}>
+                  {status}
+                </option>
               ))}
             </select>
           </div>
 
           <div className="mt-4 grid gap-3">
             {loading ? (
-              <p className="text-xs text-muted-foreground">{text("جارٍ التحميل...", "Loading...")}</p>
+              <p className="text-xs text-muted-foreground">
+                {text("جارٍ التحميل...", "Loading...")}
+              </p>
             ) : cases.length === 0 ? (
-              <p className="text-xs text-muted-foreground">{text("لا توجد قضايا مطابقة.", "No matching cases.")}</p>
+              <p className="text-xs text-muted-foreground">
+                {text("لا توجد قضايا مطابقة.", "No matching cases.")}
+              </p>
             ) : (
               cases.map((item) => (
                 <CaseCard
@@ -392,24 +467,52 @@ function AdminSafetyPage() {
       <section className="rounded-2xl bg-card p-5 hairline">
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label={text("سبب تغيير الحالة أو التصعيد", "Status/escalation reason")}>
-            <input value={actionReason} onChange={(event) => setActionReason(event.target.value)} className="input" />
+            <input
+              value={actionReason}
+              onChange={(event) => setActionReason(event.target.value)}
+              className="input"
+            />
           </Field>
           <Field label={text("ملاحظة الإغلاق", "Resolution note")}>
-            <input value={resolutionNote} onChange={(event) => setResolutionNote(event.target.value)} className="input" />
+            <input
+              value={resolutionNote}
+              onChange={(event) => setResolutionNote(event.target.value)}
+              className="input"
+            />
           </Field>
         </div>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-3">
-        <QuickLink icon={Flag} title={text("بلاغات الإعلانات", "Listing reports")} to="/admin/reports" />
-        <QuickLink icon={MessageSquareWarning} title={text("بلاغات الرسائل", "Message reports")} to="/admin/message-reports" />
-        <QuickLink icon={FileWarning} title={text("قرارات الإعلانات", "Listing decisions")} to="/admin/listings" />
+        <QuickLink
+          icon={Flag}
+          title={text("بلاغات الإعلانات", "Listing reports")}
+          to="/admin/reports"
+        />
+        <QuickLink
+          icon={MessageSquareWarning}
+          title={text("بلاغات الرسائل", "Message reports")}
+          to="/admin/message-reports"
+        />
+        <QuickLink
+          icon={FileWarning}
+          title={text("قرارات الإعلانات", "Listing decisions")}
+          to="/admin/listings"
+        />
       </section>
     </div>
   );
 }
 
-function CaseCard({ item, staff, onEdit, onStatus, onEscalate, saving, text }: {
+function CaseCard({
+  item,
+  staff,
+  onEdit,
+  onStatus,
+  onEscalate,
+  saving,
+  text,
+}: {
   item: SafetyCaseSummary;
   staff: SafetyStaffSummary[];
   onEdit: () => void;
@@ -431,10 +534,18 @@ function CaseCard({ item, staff, onEdit, onStatus, onEscalate, saving, text }: {
               </span>
             )}
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">{item.sourceType} · {item.severity} · {item.status} · v{item.version}</p>
-          {item.summary && <p className="mt-2 line-clamp-3 text-xs leading-5 text-muted-foreground">{item.summary}</p>}
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {item.sourceType} · {item.severity} · {item.status} · v{item.version}
+          </p>
+          {item.summary && (
+            <p className="mt-2 line-clamp-3 text-xs leading-5 text-muted-foreground">
+              {item.summary}
+            </p>
+          )}
           <p className="mt-2 text-[10px] text-muted-foreground">
-            {assignee ? `${text("المسؤول", "Assignee")}: ${assignee.displayName}` : text("غير معيّنة", "Unassigned")}
+            {assignee
+              ? `${text("المسؤول", "Assignee")}: ${assignee.displayName}`
+              : text("غير معيّنة", "Unassigned")}
           </p>
         </div>
         <button type="button" onClick={onEdit} className="rawaj-chip px-3 py-2 text-xs font-bold">
@@ -442,13 +553,26 @@ function CaseCard({ item, staff, onEdit, onStatus, onEscalate, saving, text }: {
         </button>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        {statusOptions.filter((status) => status !== item.status).map((status) => (
-          <button key={status} type="button" disabled={saving} onClick={() => onStatus(status)} className="rawaj-chip px-3 py-2 text-[11px] font-bold">
-            {status}
-          </button>
-        ))}
+        {statusOptions
+          .filter((status) => status !== item.status)
+          .map((status) => (
+            <button
+              key={status}
+              type="button"
+              disabled={saving}
+              onClick={() => onStatus(status)}
+              className="rawaj-chip px-3 py-2 text-[11px] font-bold"
+            >
+              {status}
+            </button>
+          ))}
         {!item.escalatedToOwner && (
-          <button type="button" disabled={saving} onClick={onEscalate} className="inline-flex items-center gap-1 rounded-xl bg-warning/15 px-3 py-2 text-[11px] font-bold hairline">
+          <button
+            type="button"
+            disabled={saving}
+            onClick={onEscalate}
+            className="inline-flex items-center gap-1 rounded-xl bg-warning/15 px-3 py-2 text-[11px] font-bold hairline"
+          >
             <ArrowUpRight className="h-3.5 w-3.5" />
             {text("تصعيد للمالك", "Escalate to owner")}
           </button>
@@ -458,7 +582,15 @@ function CaseCard({ item, staff, onEdit, onStatus, onEscalate, saving, text }: {
   );
 }
 
-function Field({ label, children, wide = false }: { label: string; children: React.ReactNode; wide?: boolean }) {
+function Field({
+  label,
+  children,
+  wide = false,
+}: {
+  label: string;
+  children: React.ReactNode;
+  wide?: boolean;
+}) {
   return (
     <label className={wide ? "sm:col-span-2" : ""}>
       <span className="mb-1.5 block text-[11px] font-bold text-muted-foreground">{label}</span>
@@ -467,7 +599,15 @@ function Field({ label, children, wide = false }: { label: string; children: Rea
   );
 }
 
-function Metric({ label, value, attention = false }: { label: string; value: number; attention?: boolean }) {
+function Metric({
+  label,
+  value,
+  attention = false,
+}: {
+  label: string;
+  value: number;
+  attention?: boolean;
+}) {
   return (
     <div className={`rounded-2xl p-4 hairline ${attention ? "bg-warning/10" : "bg-card"}`}>
       <div className="text-2xl font-extrabold">{value.toLocaleString()}</div>
@@ -478,7 +618,10 @@ function Metric({ label, value, attention = false }: { label: string; value: num
 
 function QuickLink({ icon: Icon, title, to }: { icon: typeof Flag; title: string; to: string }) {
   return (
-    <Link to={to as "/admin"} className="flex items-center gap-3 rounded-2xl bg-card p-4 text-sm font-bold transition hairline hover:bg-muted-surface">
+    <Link
+      to={to as "/admin"}
+      className="flex items-center gap-3 rounded-2xl bg-card p-4 text-sm font-bold transition hairline hover:bg-muted-surface"
+    >
       <Icon className="h-5 w-5 text-primary" />
       {title}
     </Link>
@@ -487,7 +630,9 @@ function QuickLink({ icon: Icon, title, to }: { icon: typeof Flag; title: string
 
 function Notice({ children, tone }: { children: React.ReactNode; tone: "error" | "success" }) {
   return (
-    <div className={`rounded-xl p-3 text-xs font-semibold hairline ${tone === "error" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}>
+    <div
+      className={`rounded-xl p-3 text-xs font-semibold hairline ${tone === "error" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}
+    >
       {children}
     </div>
   );

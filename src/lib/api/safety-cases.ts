@@ -196,7 +196,10 @@ export async function safetySetCaseStatus(
     if (error.message?.includes("stale_safety_case")) {
       return {
         ok: false,
-        error: { code: "unknown", message: "تغيّرت القضية منذ تحميلها. أعد التحميل قبل تغيير الحالة." },
+        error: {
+          code: "unknown",
+          message: "تغيّرت القضية منذ تحميلها. أعد التحميل قبل تغيير الحالة.",
+        },
       };
     }
     return { ok: false, error: mapError(error) };
