@@ -15,6 +15,7 @@ import {
   fetchMyNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  resolveNotificationTarget,
 } from "@/lib/classifieds-api";
 import type { ClassifiedsError, NotificationItem } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -47,6 +48,7 @@ function NotificationsPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ClassifiedsError | null>(null);
+  const [openingTargetId, setOpeningTargetId] = useState<string | null>(null);
   const profileId = auth.profile?.id ?? null;
   const markInFlightRef = useRef<Set<string>>(new Set());
   const markAllInFlightRef = useRef(false);
@@ -85,6 +87,7 @@ function NotificationsPage() {
       markAllReadAtRef.current = null;
       setNotifications([]);
       setLoading(false);
+      setOpeningTargetId(null);
       return;
     }
     void loadNotifications();
@@ -132,24 +135,39 @@ function NotificationsPage() {
     }
   }
 
-  function openNotificationTarget(notification: NotificationItem) {
-    if (!notification.targetType || !notification.targetId) return;
-    const target = notification.targetType.toLowerCase();
-    if (target === "listing") {
-      void navigate({ to: "/listings/$id", params: { id: notification.targetId } });
-    } else if (target === "conversation") {
-      void navigate({ to: "/chats", search: { conversation: notification.targetId } });
-    } else if (target === "seller") {
-      void navigate({ to: "/seller/$id", params: { id: notification.targetId } });
+  async function openNotificationTarget(notification: NotificationItem) {
+    if (!profileId || openingTargetId) return;
+    setOpeningTargetId(notification.id);
+    setError(null);
+    const result = await resolveNotificationTarget(profileId, notification);
+    setOpeningTargetId(null);
+
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+
+    const target = result.data;
+    if (!target) return;
+
+    if (target.kind === "listing") {
+      void navigate({ to: "/listings/$id", params: { id: target.listingId } });
+    } else if (target.kind === "conversation") {
+      void navigate({ to: "/chats", search: { conversation: target.conversationId } });
+    } else if (target.kind === "conversation_missing") {
+      void navigate({ to: "/chats", search: { conversation: target.conversationId } });
+    } else if (target.kind === "seller") {
+      void navigate({ to: "/seller/$id", params: { id: target.sellerId } });
+    } else if (target.kind === "browse_listings") {
+      void navigate({ to: "/listings" });
     }
   }
 
   function isNavigableNotification(notification: NotificationItem) {
     const target = notification.targetType?.toLowerCase();
-    return Boolean(
-      notification.targetId &&
-      (target === "listing" || target === "conversation" || target === "seller"),
-    );
+    const supportedTarget =
+      target === "listing" || target === "conversation" || target === "seller";
+    return Boolean(notification.targetId && supportedTarget);
   }
 
   const unreadCount = notifications.filter((item) => !item.readAt).length;
@@ -234,8 +252,9 @@ function NotificationsPage() {
                       {isNavigableNotification(notification) ? (
                         <button
                           type="button"
-                          onClick={() => openNotificationTarget(notification)}
-                          className="min-w-0 flex-1 text-start"
+                          disabled={openingTargetId !== null}
+                          onClick={() => void openNotificationTarget(notification)}
+                          className="min-w-0 flex-1 text-start disabled:opacity-60"
                         >
                           <h2 className="text-sm font-bold">{notification.titleAr}</h2>
                           {notification.bodyAr && (
@@ -244,7 +263,9 @@ function NotificationsPage() {
                             </p>
                           )}
                           <p className="mt-2 text-[10px] text-muted-foreground">
-                            {formatNotificationDate(notification.createdAt, language)}
+                            {openingTargetId === notification.id
+                              ? text("جارٍ فتح الهدف...", "Opening target...")
+                              : formatNotificationDate(notification.createdAt, language)}
                           </p>
                         </button>
                       ) : (
@@ -314,8 +335,7 @@ function Panel({ title, body }: { title: string; body?: string }) {
   );
 }
 
-function formatNotificationDate(value: string, language: string) {
-  if (!value) return "";
+function formatNotificationDate(value: string, language: "ar" | "en") {
   return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
     dateStyle: "short",
     timeStyle: "short",
