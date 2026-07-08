@@ -1,0 +1,40 @@
+name: Final Security Lint Fix
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.head_ref == 'feature/final-admin-security-e2e-audit' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/final-admin-security-e2e-audit
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Fix changed JS files
+        run: npx eslint --fix scripts/admin-security-regression.mjs
+      - name: Remove workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/final-security-lint-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/admin-security-regression.mjs .github/workflows/final-security-lint-fix.yml
+          if git diff --cached --quiet; then
+            echo "No lint fixes needed."
+            exit 0
+          fi
+          git commit -m "Fix final admin security regression lint"
+          git push origin HEAD:feature/final-admin-security-e2e-audit
