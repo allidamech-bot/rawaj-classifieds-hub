@@ -380,7 +380,9 @@ function ChatsPage() {
 
           <section
             className={`flex min-h-[60dvh] flex-col rounded-2xl bg-card hairline lg:min-h-[560px] ${
-              !isDesktop && !viewingConversationOnMobile && !missingConversationTarget ? "hidden" : ""
+              !isDesktop && !viewingConversationOnMobile && !missingConversationTarget
+                ? "hidden"
+                : ""
             }`}
           >
             {missingConversationTarget ? (
@@ -453,7 +455,8 @@ function ChatsPage() {
                         </Link>
                       ) : (
                         <span className="block truncate text-xs font-semibold text-muted-foreground">
-                          {selectedConversation.listingTitle} · {text("إعلان محذوف", "Deleted listing")}
+                          {selectedConversation.listingTitle} ·{" "}
+                          {text("إعلان محذوف", "Deleted listing")}
                         </span>
                       )}
                     </div>
