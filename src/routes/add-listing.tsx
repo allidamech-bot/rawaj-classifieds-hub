@@ -486,6 +486,7 @@ function AddListingPage() {
       price: normalizedPrice,
       priceType,
       governorateId,
+      locationNodeId,
       district: locationNodeId ? `@${locationNodeId}` : district,
       categoryFieldKind,
       categoryDetails,
@@ -1543,6 +1544,7 @@ function buildStepErrors({
   price,
   priceType,
   governorateId,
+  locationNodeId,
   district,
   categoryFieldKind,
   categoryDetails,
@@ -1557,6 +1559,7 @@ function buildStepErrors({
   price: string;
   priceType: PriceType;
   governorateId: string;
+  locationNodeId: string;
   district: string;
   categoryFieldKind: CategoryFieldKind;
   categoryDetails: CategorySpecificDetails;
@@ -1621,7 +1624,7 @@ function buildStepErrors({
   }
 
   if (validateFinal) {
-    if (!governorateId) add("governorateId", "اختر المحافظة.");
+    if (!governorateId && !locationNodeId) add("governorateId", "اختر المحافظة.");
     if (!district) add("district", "اختر المنطقة.");
     if ((priceType === "fixed" || priceType === "negotiable") && !price) {
       add("price", "السعر يجب أن يكون رقمًا صحيحًا.");
