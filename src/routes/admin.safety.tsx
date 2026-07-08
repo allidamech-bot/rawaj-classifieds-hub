@@ -1,12 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  Ban,
-  Flag,
-  LockKeyhole,
-  MessageSquareWarning,
-  ShieldAlert,
-  Users,
-} from "lucide-react";
+import { Ban, Flag, LockKeyhole, MessageSquareWarning, ShieldAlert, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   adminFetchCommandCenterMetrics,
@@ -184,11 +177,7 @@ function AdminSafetyPage() {
           title={text("المستخدمون والقيود", "Users and restrictions")}
           to="/admin/users"
         />
-        <QuickAction
-          icon={Ban}
-          title={text("سجل التدقيق", "Audit log")}
-          to="/admin/audit"
-        />
+        <QuickAction icon={Ban} title={text("سجل التدقيق", "Audit log")} to="/admin/audit" />
       </section>
     </div>
   );
@@ -229,7 +218,10 @@ function SafetyQueueCard({
   to: string;
 }) {
   return (
-    <Link to={to as "/admin"} className="rounded-2xl bg-card p-5 transition hairline hover:bg-muted-surface">
+    <Link
+      to={to as "/admin"}
+      className="rounded-2xl bg-card p-5 transition hairline hover:bg-muted-surface"
+    >
       <div className="flex items-center justify-between gap-3">
         <span className="grid h-10 w-10 place-items-center rounded-xl bg-muted-surface text-primary">
           <Icon className="h-5 w-5" />
