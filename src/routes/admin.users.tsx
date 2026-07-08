@@ -117,9 +117,7 @@ function UsersPage() {
     return (
       <section className="rounded-2xl bg-card p-5 text-center hairline">
         <ShieldAlert className="mx-auto h-7 w-7 text-warning" />
-        <h2 className="mt-3 text-base font-extrabold">
-          {text("غير مخوّل", "Not authorized")}
-        </h2>
+        <h2 className="mt-3 text-base font-extrabold">{text("غير مخوّل", "Not authorized")}</h2>
       </section>
     );
   }
@@ -333,9 +331,7 @@ function UsersPage() {
 
               {auth.canAccessOwnerControls && (
                 <div className="mt-5 border-t border-border/70 pt-5">
-                  <h3 className="text-sm font-extrabold">
-                    {text("إدارة الطاقم", "Staff roles")}
-                  </h3>
+                  <h3 className="text-sm font-extrabold">{text("إدارة الطاقم", "Staff roles")}</h3>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <StaffRoleButton
                       active={selectedUser.roles.includes("admin")}
@@ -505,20 +501,8 @@ function StaffRoleButton({
   );
 }
 
-function Notice({
-  children,
-  tone,
-}: {
-  children: React.ReactNode;
-  tone: "error" | "success";
-}) {
+function Notice({ children, tone }: { children: React.ReactNode; tone: "error" | "success" }) {
   const toneClass =
-    tone === "error"
-      ? "bg-destructive/10 text-destructive"
-      : "bg-success/10 text-success";
-  return (
-    <div className={`rounded-xl p-3 text-xs font-semibold hairline ${toneClass}`}>
-      {children}
-    </div>
-  );
+    tone === "error" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success";
+  return <div className={`rounded-xl p-3 text-xs font-semibold hairline ${toneClass}`}>{children}</div>;
 }
