@@ -3,8 +3,12 @@ import { Heart, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
-import { fetchFavorites, unfavoriteListing } from "@/lib/classifieds-api";
-import type { ClassifiedsError, Favorite } from "@/lib/classifieds-types";
+import {
+  fetchFavoriteJourneyItems,
+  unfavoriteListing,
+  type FavoriteJourneyItem,
+} from "@/lib/classifieds-api";
+import type { ClassifiedsError } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName, uiLabel } from "@/lib/i18n";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -19,7 +23,7 @@ export const Route = createFileRoute("/favorites")({
 function FavoritesPage() {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
-  const [items, setItems] = useState<Favorite[]>([]);
+  const [items, setItems] = useState<FavoriteJourneyItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const removeInFlightRef = useRef<Set<string>>(new Set());
@@ -39,7 +43,7 @@ function FavoritesPage() {
     async function load() {
       setLoading(true);
       setError(null);
-      const result = await fetchFavorites(profileId);
+      const result = await fetchFavoriteJourneyItems(profileId);
       if (cancelled || requestId !== loadRequestIdRef.current) return;
       if (result.ok) setItems(result.data);
       else {
@@ -147,88 +151,119 @@ function FavoritesPage() {
           />
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {items.map((item) => (
-              <article key={item.listingId} className="rounded-2xl bg-card p-4 hairline">
-                <div className="grid grid-cols-[96px_1fr] gap-3">
-                  <Link to="/listings/$id" params={{ id: item.listingId }} className="block">
-                    {item.listing?.primaryImageUrl ? (
-                      <img
-                        src={item.listing.primaryImageUrl}
-                        alt={item.listing.title}
-                        loading="lazy"
-                        decoding="async"
-                        className="aspect-square w-full rounded-xl object-cover hairline"
-                      />
+            {items.map((item) => {
+              const listing = item.availability === "available" ? item.listing : undefined;
+              const available = Boolean(listing);
+              const media = listing?.primaryImageUrl ? (
+                <img
+                  src={listing.primaryImageUrl}
+                  alt={listing.title}
+                  loading="lazy"
+                  decoding="async"
+                  className="aspect-square w-full rounded-xl object-cover hairline"
+                />
+              ) : (
+                <PlaceholderArt type={listing?.categoryPlaceholder ?? "misc"} aspect="square" />
+              );
+
+              return (
+                <article key={item.listingId} className="rounded-2xl bg-card p-4 hairline">
+                  <div className="grid grid-cols-[96px_1fr] gap-3">
+                    {available ? (
+                      <Link to="/listings/$id" params={{ id: item.listingId }} className="block">
+                        {media}
+                      </Link>
                     ) : (
-                      <PlaceholderArt
-                        type={item.listing?.categoryPlaceholder ?? "misc"}
-                        aspect="square"
-                      />
-                    )}
-                  </Link>
-                  <div className="min-w-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-extrabold">
-                          {item.listing?.title ?? text("إعلان محفوظ", "Saved listing")}
-                        </p>
-                        {item.listing ? (
-                          <>
-                            <p className="mt-1 text-xs font-bold text-foreground">
-                              {formatPriceLocalized(
-                                item.listing.price ?? 0,
-                                item.listing.priceType,
-                                language,
-                                item.listing.currency,
-                              )}
-                            </p>
-                            <p className="mt-1 truncate text-[11px] text-muted-foreground">
-                              {categoryName(
-                                item.listing.categoryId,
-                                item.listing.categoryNameAr,
-                                language,
-                              )}{" "}
-                              ·{" "}
-                              {governorateName(
-                                item.listing.governorateId,
-                                item.listing.governorateNameAr,
-                                language,
-                              )}
-                            </p>
-                          </>
-                        ) : (
-                          <p className="mt-1 truncate text-xs text-muted-foreground">
-                            {text("رقم الإعلان:", "Listing ID:")} {item.listingId}
-                          </p>
-                        )}
-                        <p className="mt-1 text-[11px] text-muted-foreground">
-                          {formatDate(item.createdAt, language)}
-                        </p>
+                      <div className="block opacity-70" aria-hidden="true">
+                        {media}
                       </div>
-                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted-surface text-destructive">
-                        <Heart className="h-4 w-4 fill-current" />
-                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-extrabold">
+                            {listing?.title ?? item.snapshot.title}
+                          </p>
+                          {listing ? (
+                            <>
+                              <p className="mt-1 text-xs font-bold text-foreground">
+                                {formatPriceLocalized(
+                                  listing.price ?? 0,
+                                  listing.priceType,
+                                  language,
+                                  listing.currency,
+                                )}
+                              </p>
+                              <p className="mt-1 truncate text-[11px] text-muted-foreground">
+                                {categoryName(listing.categoryId, listing.categoryNameAr, language)}{" "}
+                                ·{" "}
+                                {governorateName(
+                                  listing.governorateId,
+                                  listing.governorateNameAr,
+                                  language,
+                                )}
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <span className="mt-1 inline-flex rounded-full bg-warning/10 px-2 py-1 text-[10px] font-bold text-warning">
+                                {text("غير متاح", "Unavailable")}
+                              </span>
+                              <p className="mt-2 text-xs font-bold text-foreground">
+                                {formatSnapshotPrice(
+                                  item.snapshot.price,
+                                  item.snapshot.currency,
+                                  language,
+                                  text,
+                                )}
+                              </p>
+                              <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                                {text(
+                                  "هذا الإعلان لم يعد متاحًا. احتفظنا بتفاصيله الأساسية لتعرف ما الذي حفظته.",
+                                  "This listing is no longer available. We kept its basic details so you know what you saved.",
+                                )}
+                              </p>
+                            </>
+                          )}
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            {formatDate(item.snapshot.createdAt, language)}
+                          </p>
+                        </div>
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted-surface text-destructive">
+                          <Heart className="h-4 w-4 fill-current" />
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="mt-4 flex items-center gap-2">
-                  <Link
-                    to="/listings/$id"
-                    params={{ id: item.listingId }}
-                    className="flex-1 rounded-xl bg-primary px-3 py-2 text-center text-xs font-bold text-primary-foreground"
-                  >
-                    {text("فتح الإعلان", "Open listing")}
-                  </Link>
-                  <button
-                    onClick={() => void remove(item.listingId)}
-                    className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive"
-                    aria-label={text("إزالة من المفضلة", "Remove from favorites")}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </article>
-            ))}
+                  <div className="mt-4 flex items-center gap-2">
+                    {available ? (
+                      <Link
+                        to="/listings/$id"
+                        params={{ id: item.listingId }}
+                        className="flex-1 rounded-xl bg-primary px-3 py-2 text-center text-xs font-bold text-primary-foreground"
+                      >
+                        {text("فتح الإعلان", "Open listing")}
+                      </Link>
+                    ) : (
+                      <Link
+                        to="/listings"
+                        className="flex-1 rounded-xl bg-primary px-3 py-2 text-center text-xs font-bold text-primary-foreground"
+                      >
+                        {text("تصفح بدائل", "Browse alternatives")}
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => void remove(item.listingId)}
+                      className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive"
+                      aria-label={text("إزالة من المفضلة", "Remove from favorites")}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </main>
@@ -312,4 +347,15 @@ function formatDate(value: string, language: Language) {
   return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
     dateStyle: "medium",
   }).format(new Date(value));
+}
+
+function formatSnapshotPrice(
+  price: number | null,
+  currency: string,
+  language: Language,
+  text: (ar: string, en: string) => string,
+) {
+  if (price === null) return text("السعر غير محفوظ", "Price unavailable");
+  const formatted = new Intl.NumberFormat(language === "ar" ? "ar-SY" : "en-US").format(price);
+  return `${formatted} ${currency}`;
 }
