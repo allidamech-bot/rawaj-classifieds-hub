@@ -1,5 +1,13 @@
 import { useRouterState } from "@tanstack/react-router";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { fetchMyConversations } from "@/lib/api/messaging";
 import { fetchUnreadNotificationsCount } from "@/lib/api/notifications";
 import { UNREAD_ACTIVITY_CHANGED_EVENT } from "@/lib/unread-activity-events";
@@ -50,7 +58,10 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
     ]);
 
     const messages = conversationsResult.ok
-      ? conversationsResult.data.reduce((sum, conversation) => sum + Math.max(0, conversation.unreadCount), 0)
+      ? conversationsResult.data.reduce(
+          (sum, conversation) => sum + Math.max(0, conversation.unreadCount),
+          0,
+        )
       : 0;
     const notifications = notificationsResult.ok ? Math.max(0, notificationsResult.data) : 0;
 
