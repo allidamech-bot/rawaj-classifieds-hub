@@ -1,0 +1,232 @@
+name: Location Submit And Listing Visibility Hotfix
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'hotfix/location-submit-listing-visibility' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hotfix/location-submit-listing-visibility
+          fetch-depth: 0
+
+      - name: Patch canonical location write resolution
+        shell: bash
+        run: |
+          cat > src/lib/api/listing-location-write.ts <<'EOF'
+          import type { SupabaseClient } from "@supabase/supabase-js";
+          import type { ClassifiedsResult } from "@/lib/classifieds-types";
+          import { mapError, rowNullableString, rowString } from "@/lib/api/shared";
+
+          export interface ListingLocationWrite {
+            locationNodeId: string | null | undefined;
+            governorateId: string;
+            districtAr: string | null;
+          }
+
+          export async function resolveListingLocationWrite(
+            client: SupabaseClient,
+            governorateId: string,
+            districtValue: string | null | undefined,
+          ): Promise<ClassifiedsResult<ListingLocationWrite>> {
+            const value = districtValue?.trim() ?? "";
+            if (!value.startsWith("@")) {
+              return {
+                ok: true,
+                data: {
+                  locationNodeId: value ? null : undefined,
+                  governorateId,
+                  districtAr: value || null,
+                },
+              };
+            }
+
+            const nodeId = value.slice(1);
+            const resolved = await resolveCanonicalLocationContext(client, nodeId);
+            if (!resolved.ok) return resolved;
+
+            const canonicalGovernorateId = resolved.data.governorateId;
+            if (governorateId && canonicalGovernorateId && canonicalGovernorateId !== governorateId) {
+              return {
+                ok: false,
+                error: { code: "validation_error", message: "الموقع المحدد لا يتبع المحافظة المختارة." },
+              };
+            }
+
+            const effectiveGovernorateId = canonicalGovernorateId || governorateId;
+            if (!effectiveGovernorateId) {
+              return {
+                ok: false,
+                error: { code: "validation_error", message: "تعذر تحديد محافظة الموقع المختار." },
+              };
+            }
+
+            return {
+              ok: true,
+              data: {
+                locationNodeId: resolved.data.id,
+                governorateId: effectiveGovernorateId,
+                districtAr: resolved.data.districtAr,
+              },
+            };
+          }
+
+          async function resolveCanonicalLocationContext(
+            client: SupabaseClient,
+            nodeId: string,
+          ): Promise<ClassifiedsResult<{ id: string; governorateId: string | null; districtAr: string | null }>> {
+            let currentId: string | null = nodeId;
+            let selectedId = "";
+            let governorateId: string | null = null;
+            let districtAr: string | null = null;
+            const visited = new Set<string>();
+
+            for (let depth = 0; currentId && depth < 16; depth += 1) {
+              if (visited.has(currentId)) break;
+              visited.add(currentId);
+
+              const { data, error } = await client
+                .from("location_nodes")
+                .select("id,parent_id,legacy_governorate_id,legacy_district_ar")
+                .eq("id", currentId)
+                .eq("is_active", true)
+                .maybeSingle();
+
+              if (error) return { ok: false, error: mapError(error) };
+              if (!data) {
+                return {
+                  ok: false,
+                  error: { code: "validation_error", message: "الموقع المحدد غير صالح أو لم يعد متاحًا." },
+                };
+              }
+
+              const row = data as Record<string, unknown>;
+              if (!selectedId) selectedId = rowString(row, "id");
+              governorateId ||= rowNullableString(row, "legacy_governorate_id");
+              districtAr ||= rowNullableString(row, "legacy_district_ar");
+              currentId = rowNullableString(row, "parent_id");
+            }
+
+            return {
+              ok: true,
+              data: { id: selectedId || nodeId, governorateId, districtAr },
+            };
+          }
+          EOF
+
+      - name: Patch listing create and update writes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/lib/api/listings.ts')
+          s=p.read_text()
+          s=s.replace(
+            'if (!payload.categoryId.trim() || !payload.governorateId.trim() || title.length < 4) {',
+            'if (!payload.categoryId.trim() || (!payload.governorateId.trim() && !payload.districtAr?.trim().startsWith("@")) || title.length < 4) {'
+          )
+          s=s.replace(
+            'governorate_id: payload.governorateId,\n    title,',
+            'governorate_id: locationWrite.data.governorateId,\n    title,',
+            1
+          )
+          s=s.replace(
+            'if (payload.governorateId) updateData.governorate_id = payload.governorateId;\n',
+            'if (payload.governorateId) updateData.governorate_id = payload.governorateId;\n',
+            1
+          )
+          old='''    updateData.district_ar = locationWrite.data.districtAr;\n    if (locationWrite.data.locationNodeId !== undefined) {\n      updateData.location_node_id = locationWrite.data.locationNodeId;\n    }'''
+          new='''    updateData.governorate_id = locationWrite.data.governorateId;\n    updateData.district_ar = locationWrite.data.districtAr;\n    if (locationWrite.data.locationNodeId !== undefined) {\n      updateData.location_node_id = locationWrite.data.locationNodeId;\n    }'''
+          s=s.replace(old,new)
+          p.write_text(s)
+          PY
+
+      - name: Patch add listing validation
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/routes/add-listing.tsx')
+          s=p.read_text()
+          s=s.replace(
+            '      governorateId,\n      district: locationNodeId ? `@${locationNodeId}` : district,',
+            '      governorateId,\n      locationNodeId,\n      district: locationNodeId ? `@${locationNodeId}` : district,',
+            1
+          )
+          s=s.replace(
+            '  governorateId,\n  district,\n  categoryFieldKind,',
+            '  governorateId,\n  locationNodeId,\n  district,\n  categoryFieldKind,',
+            1
+          )
+          s=s.replace(
+            '  governorateId: string;\n  district: string;\n  categoryFieldKind:',
+            '  governorateId: string;\n  locationNodeId: string;\n  district: string;\n  categoryFieldKind:',
+            1
+          )
+          s=s.replace(
+            '    if (!governorateId) add("governorateId", "اختر المحافظة.");',
+            '    if (!governorateId && !locationNodeId) add("governorateId", "اختر المحافظة.");',
+            1
+          )
+          p.write_text(s)
+          PY
+
+      - name: Patch progressive listing pagination
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/routes/listings.index.tsx')
+          s=p.read_text()
+          s=s.replace(
+            '  const [sortOpen, setSortOpen] = useState(false);',
+            '  const [sortOpen, setSortOpen] = useState(false);\n  const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);',
+            1
+          )
+          s=s.replace(
+            '    onItems: (next) => setItems((prev) => [...prev, ...next]),',
+            '''    onItems: (next) =>\n      setItems((prev) => {\n        const known = new Set(prev.map((item) => item.id));\n        return [...prev, ...next.filter((item) => !known.has(item.id))];\n      }),''',
+            1
+          )
+          marker='''  const { loadingMore, loadMore } = pagination;\n'''
+          insert=marker+'''\n  useEffect(() => {\n    const sentinel = loadMoreSentinelRef.current;\n    if (!sentinel || !nextCursor) return;\n\n    const observer = new IntersectionObserver(\n      (entries) => {\n        if (entries.some((entry) => entry.isIntersecting)) void loadMore();\n      },\n      { rootMargin: "500px 0px" },\n    );\n    observer.observe(sentinel);\n    return () => observer.disconnect();\n  }, [loadMore, nextCursor]);\n'''
+          if marker not in s: raise SystemExit('pagination marker missing')
+          s=s.replace(marker,insert,1)
+          old='''            {nextCursor && (\n              <div className="mt-4 flex justify-center">'''
+          new='''            {nextCursor && (\n              <div ref={loadMoreSentinelRef} className="mt-4 flex justify-center">'''
+          if old not in s: raise SystemExit('load more render marker missing')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+
+      - name: Add regression notes
+        shell: bash
+        run: |
+          cat > docs/hotfix-location-listing-visibility.md <<'EOF'
+          # Location submit and listing visibility hotfix
+
+          - Canonical location selection no longer fails merely because the legacy governorate state was empty.
+          - Listing writes resolve the effective legacy governorate by walking the selected canonical node ancestry.
+          - Canonical location remains the source of truth while legacy governorate compatibility is derived at the API boundary.
+          - Public listing results progressively load additional cursor pages as the user approaches the end of the grid.
+          - Appended pages are deduplicated by listing id and retain the manual Load more control as a fallback.
+          EOF
+
+      - name: Remove workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/hotfix-location-listing-visibility.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/api/listing-location-write.ts src/lib/api/listings.ts src/routes/add-listing.tsx src/routes/listings.index.tsx docs/hotfix-location-listing-visibility.md .github/workflows/hotfix-location-listing-visibility.yml
+          git commit -m "Fix canonical location submit and listing pagination"
+          git push origin HEAD:hotfix/location-submit-listing-visibility
