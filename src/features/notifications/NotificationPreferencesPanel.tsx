@@ -14,7 +14,7 @@ import {
   type NotificationPreferenceKey,
   type NotificationPreferences,
 } from "@/lib/classifieds-api";
-import { getPushReadinessSnapshot, type PushReadinessSnapshot } from "@/lib/push-readiness";
+import { usePushReadinessSnapshot } from "@/lib/push-readiness";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -79,20 +79,13 @@ const preferenceItems = [
 export function NotificationPreferencesPanel() {
   const auth = useAuth();
   const { text } = useUiPreferences();
+  const pushReadiness = usePushReadinessSnapshot();
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
-  const [pushReadiness, setPushReadiness] = useState<PushReadinessSnapshot | null>(null);
   const [loading, setLoading] = useState(false);
   const [savingKey, setSavingKey] = useState<NotificationPreferenceKey | null>(null);
   const [error, setError] = useState("");
   const requestIdRef = useRef(0);
   const profileId = auth.profile?.id ?? null;
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setPushReadiness(getPushReadinessSnapshot());
-    }, 0);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
@@ -155,29 +148,27 @@ export function NotificationPreferencesPanel() {
         </div>
       </div>
 
-      {pushReadiness && (
-        <div className="mt-4 flex items-start gap-3 rounded-2xl bg-muted-surface/70 p-3 hairline">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-card text-primary shadow-soft">
-            <RadioTower className="h-4 w-4" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-bold">
-              {text("جاهزية Push على هذا الجهاز", "Push readiness on this device")}
-            </p>
-            <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
-              {pushReadiness.browserReady
-                ? text(
-                    "المتصفح يوفّر المتطلبات التقنية الأساسية. لم يتم تفعيل اشتراك Push أو إرسال Push فعلي من رواج بعد.",
-                    "This browser exposes the core technical capabilities. RAWAJ has not enabled a push subscription or real push delivery yet.",
-                  )
-                : text(
-                    "هذا الجهاز أو المتصفح لا يوفّر حاليًا جميع المتطلبات التقنية الأساسية لـ Push. لا يوجد إرسال Push فعلي من رواج.",
-                    "This device or browser does not currently expose all core push capabilities. RAWAJ is not delivering real push notifications.",
-                  )}
-            </p>
-          </div>
+      <div className="mt-4 flex items-start gap-3 rounded-2xl bg-muted-surface/70 p-3 hairline">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-card text-primary shadow-soft">
+          <RadioTower className="h-4 w-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs font-bold">
+            {text("جاهزية Push على هذا الجهاز", "Push readiness on this device")}
+          </p>
+          <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
+            {pushReadiness.browserReady
+              ? text(
+                  "المتصفح يوفّر المتطلبات التقنية الأساسية. لم يتم تفعيل اشتراك Push أو إرسال Push فعلي من رواج بعد.",
+                  "This browser exposes the core technical capabilities. RAWAJ has not enabled a push subscription or real push delivery yet.",
+                )
+              : text(
+                  "هذا الجهاز أو المتصفح لا يوفّر حاليًا جميع المتطلبات التقنية الأساسية لـ Push. لا يوجد إرسال Push فعلي من رواج.",
+                  "This device or browser does not currently expose all core push capabilities. RAWAJ is not delivering real push notifications.",
+                )}
+          </p>
         </div>
-      )}
+      </div>
 
       {loading ? (
         <p className="mt-4 text-xs text-muted-foreground">
