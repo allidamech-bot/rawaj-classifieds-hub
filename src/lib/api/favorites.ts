@@ -8,12 +8,7 @@ import type {
 import type { ClassifiedListing } from "@/lib/classifieds-types";
 import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
 import { fetchPublicGovernorates, mapGovernorate, readReferences } from "@/lib/api/references";
-import {
-  getClient,
-  mapError,
-  rowNullableNumber,
-  rowString,
-} from "@/lib/api/shared";
+import { getClient, mapError, rowNullableNumber, rowString } from "@/lib/api/shared";
 
 export type FavoriteJourneyAvailability = "available" | "unavailable";
 
@@ -229,18 +224,20 @@ export async function favoriteListing(
     .upsert({ user_id: userId, listing_id: listingId }, { onConflict: "user_id,listing_id" });
   if (error) return { ok: false, error: mapError(error) };
 
-  const { error: snapshotError } = await clientResult.data.from("favorite_listing_snapshots").upsert(
-    {
-      user_id: userId,
-      listing_id: listingId,
-      title_snapshot: listing.title,
-      price_snapshot: listing.price,
-      currency_snapshot: "SYP",
-      status_snapshot: listing.status,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id,listing_id" },
-  );
+  const { error: snapshotError } = await clientResult.data
+    .from("favorite_listing_snapshots")
+    .upsert(
+      {
+        user_id: userId,
+        listing_id: listingId,
+        title_snapshot: listing.title,
+        price_snapshot: listing.price,
+        currency_snapshot: "SYP",
+        status_snapshot: listing.status,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,listing_id" },
+    );
   if (snapshotError) return { ok: false, error: mapError(snapshotError) };
 
   return { ok: true, data: null };
