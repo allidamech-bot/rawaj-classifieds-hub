@@ -36,7 +36,21 @@ export interface RolePermissions {
   canModerateListings: boolean;
   canManageReports: boolean;
   canManageUsers: boolean;
+  canSuspendUsers: boolean;
+  canBanUsers: boolean;
+  canRestoreUsers: boolean;
+  canManageUserRestrictions: boolean;
+  canManageReviews: boolean;
+  canManageVerifications: boolean;
+  canManagePromotions: boolean;
+  canManageAdPlacements: boolean;
+  canManageAdCampaigns: boolean;
+  canCreateManagedListings: boolean;
+  canPublishOfficialListings: boolean;
+  canUseBulkActions: boolean;
+  canManageRoles: boolean;
   canViewAuditLogs: boolean;
+  canManageSystemSettings: boolean;
 }
 
 export const rolePermissions: Record<UserRole, RolePermissions> = {
@@ -47,7 +61,21 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
     canModerateListings: true,
     canManageReports: true,
     canManageUsers: true,
+    canSuspendUsers: true,
+    canBanUsers: true,
+    canRestoreUsers: true,
+    canManageUserRestrictions: true,
+    canManageReviews: true,
+    canManageVerifications: true,
+    canManagePromotions: true,
+    canManageAdPlacements: true,
+    canManageAdCampaigns: true,
+    canCreateManagedListings: true,
+    canPublishOfficialListings: true,
+    canUseBulkActions: true,
+    canManageRoles: true,
     canViewAuditLogs: true,
+    canManageSystemSettings: true,
   },
   admin: {
     canViewAdminDashboard: true,
@@ -56,7 +84,21 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
     canModerateListings: true,
     canManageReports: true,
     canManageUsers: true,
+    canSuspendUsers: true,
+    canBanUsers: false,
+    canRestoreUsers: true,
+    canManageUserRestrictions: true,
+    canManageReviews: true,
+    canManageVerifications: true,
+    canManagePromotions: true,
+    canManageAdPlacements: false,
+    canManageAdCampaigns: false,
+    canCreateManagedListings: false,
+    canPublishOfficialListings: false,
+    canUseBulkActions: true,
+    canManageRoles: false,
     canViewAuditLogs: true,
+    canManageSystemSettings: false,
   },
   moderator: {
     canViewAdminDashboard: true,
@@ -65,7 +107,21 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
     canModerateListings: true,
     canManageReports: true,
     canManageUsers: false,
+    canSuspendUsers: false,
+    canBanUsers: false,
+    canRestoreUsers: false,
+    canManageUserRestrictions: false,
+    canManageReviews: true,
+    canManageVerifications: false,
+    canManagePromotions: false,
+    canManageAdPlacements: false,
+    canManageAdCampaigns: false,
+    canCreateManagedListings: false,
+    canPublishOfficialListings: false,
+    canUseBulkActions: false,
+    canManageRoles: false,
     canViewAuditLogs: false,
+    canManageSystemSettings: false,
   },
   seller: {
     canViewAdminDashboard: false,
@@ -74,7 +130,21 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
     canModerateListings: false,
     canManageReports: false,
     canManageUsers: false,
+    canSuspendUsers: false,
+    canBanUsers: false,
+    canRestoreUsers: false,
+    canManageUserRestrictions: false,
+    canManageReviews: false,
+    canManageVerifications: false,
+    canManagePromotions: false,
+    canManageAdPlacements: false,
+    canManageAdCampaigns: false,
+    canCreateManagedListings: false,
+    canPublishOfficialListings: false,
+    canUseBulkActions: false,
+    canManageRoles: false,
     canViewAuditLogs: false,
+    canManageSystemSettings: false,
   },
   user: {
     canViewAdminDashboard: false,
@@ -83,7 +153,21 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
     canModerateListings: false,
     canManageReports: false,
     canManageUsers: false,
+    canSuspendUsers: false,
+    canBanUsers: false,
+    canRestoreUsers: false,
+    canManageUserRestrictions: false,
+    canManageReviews: false,
+    canManageVerifications: false,
+    canManagePromotions: false,
+    canManageAdPlacements: false,
+    canManageAdCampaigns: false,
+    canCreateManagedListings: false,
+    canPublishOfficialListings: false,
+    canUseBulkActions: false,
+    canManageRoles: false,
     canViewAuditLogs: false,
+    canManageSystemSettings: false,
   },
 };
 
