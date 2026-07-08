@@ -1,0 +1,64 @@
+name: Listing Pipeline Client Wiring
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    if: github.head_ref == 'hotfix/listing-publish-review-pipeline' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hotfix/listing-publish-review-pipeline
+          fetch-depth: 0
+
+      - name: Wire submit, queue, and decisions to RPCs
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          # Customer submit/resubmit must use the protected RPC.
+          p = Path('src/lib/api/listings.ts')
+          s = p.read_text()
+          old = '''export async function submitOwnerListingForReview(\n  userId: string | null,\n  listingId: string,\n): Promise<ClassifiedsResult<ClassifiedListing>> {\n  return resubmitOwnerListing(userId, listingId);\n}\n'''
+          new = '''export async function submitOwnerListingForReview(\n  userId: string | null,\n  listingId: string,\n): Promise<ClassifiedsResult<ClassifiedListing>> {\n  if (!userId) {\n    return {\n      ok: false,\n      error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال الإعلان للمراجعة." },\n    };\n  }\n\n  const normalizedListingId = listingId.trim();\n  if (!normalizedListingId) {\n    return {\n      ok: false,\n      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },\n    };\n  }\n\n  const clientResult = getClient();\n  if (!clientResult.ok) return clientResult;\n\n  const references = await readReferences(clientResult.data);\n  if (!references.ok) return { ok: false, error: references.error };\n\n  const { data, error } = await clientResult.data.rpc("rawaj_submit_listing_for_review", {\n    p_listing_id: normalizedListingId,\n  });\n  if (error) return { ok: false, error: mapError(error) };\n\n  const row = ((data ?? []) as Record<string, unknown>[])[0];\n  if (!row) {\n    return {\n      ok: false,\n      error: { code: "unknown", message: "تم إرسال الطلب دون نتيجة إعلان قابلة للتحقق." },\n    };\n  }\n\n  return {\n    ok: true,\n    data: mapListing(row, references.categories, references.governorates),\n  };\n}\n'''
+          if old not in s:
+            raise SystemExit('submitOwnerListingForReview block not found')
+          p.write_text(s.replace(old, new, 1))
+
+          # Pending queue must use protected review RPC, not direct table RLS.
+          p = Path('src/lib/api/reports.ts')
+          s = p.read_text()
+          old = '''  const { data, error } = await clientResult.data\n    .from("listings")\n    .select("*")\n    .eq("status", "pending_review")\n    .order("created_at", { ascending: false });\n'''
+          new = '''  const { data, error } = await clientResult.data.rpc("rawaj_review_queue_pending");\n'''
+          if old not in s:
+            raise SystemExit('pending queue direct query block not found')
+          p.write_text(s.replace(old, new, 1))
+
+          # Pending approve/reject must use the stale-safe audited decision RPC.
+          p = Path('src/lib/api/admin.ts')
+          s = p.read_text()
+          start = s.index('export async function adminModerateListing(')
+          end = s.index('\nasync function createListingModerationNotification(', start)
+          replacement = '''export async function adminModerateListing(\n  canUseAdminAccess: boolean,\n  payload: ModerateListingPayload,\n): Promise<ClassifiedsResult<null>> {\n  if (!canUseAdminAccess) {\n    return {\n      ok: false,\n      error: { code: "permission_denied", message: "مراجعة الإعلانات متاحة لحساب إداري مخول فقط." },\n    };\n  }\n\n  if (!payload.listingId.trim() || !payload.reviewerId.trim()) {\n    return {\n      ok: false,\n      error: { code: "validation_error", message: "تعذر تحديد الإعلان أو حساب المراجع." },\n    };\n  }\n\n  if (payload.status === "rejected" && !payload.rejectionReason?.trim()) {\n    return {\n      ok: false,\n      error: { code: "validation_error", message: "أدخل سبب الرفض قبل تحديث الإعلان." },\n    };\n  }\n\n  if (!payload.expectedUpdatedAt) {\n    return {\n      ok: false,\n      error: { code: "validation_error", message: "حدّث الإعلان قبل اتخاذ قرار المراجعة." },\n    };\n  }\n\n  const clientResult = getClient();\n  if (!clientResult.ok) return clientResult;\n\n  const { error } = await clientResult.data.rpc("rawaj_review_listing_decision", {\n    p_listing_id: payload.listingId.trim(),\n    p_decision: payload.status,\n    p_reason:\n      payload.status === "rejected"\n        ? payload.rejectionReason?.trim()\n        : "Approved after complete listing review",\n    p_expected_updated_at: payload.expectedUpdatedAt,\n  });\n\n  if (error) {\n    if (error.message?.includes("stale_review")) {\n      return {\n        ok: false,\n        error: {\n          code: "stale_review",\n          message: "تغيّر الإعلان منذ فتحه للمراجعة. حدّث الصفحة وراجعه من جديد.",\n        },\n      };\n    }\n    return { ok: false, error: mapError(error) };\n  }\n\n  return { ok: true, data: null };\n}\n'''
+          s = s[:start] + replacement + s[end:]
+          p.write_text(s)
+          PY
+
+      - name: Remove temporary workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/listing-pipeline-client-wiring.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/api/listings.ts src/lib/api/reports.ts src/lib/api/admin.ts .github/workflows/listing-pipeline-client-wiring.yml
+          git commit -m "Wire listing pipeline to protected RPCs"
+          git push origin HEAD:hotfix/listing-publish-review-pipeline
