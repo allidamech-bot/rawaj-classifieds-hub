@@ -184,7 +184,7 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
         <div
           role="dialog"
           aria-label={text("الإشعارات", "Notifications")}
-          className="absolute end-0 top-11 z-30 w-80 max-w-[calc(100vw-2rem)] bg-card p-3 text-start text-foreground shadow-premium hairline"
+          className="fixed inset-x-3 top-16 z-40 bg-card p-3 text-start text-foreground shadow-premium hairline sm:absolute sm:inset-x-auto sm:end-0 sm:top-11 sm:z-30 sm:w-80 sm:max-w-[calc(100vw-2rem)]"
         >
           <div className="mb-2 flex items-center justify-between gap-2">
             <h2 className="text-xs font-extrabold">{text("الإشعارات", "Notifications")}</h2>
