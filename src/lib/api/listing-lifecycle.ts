@@ -1,6 +1,10 @@
 import { fetchOwnerListingDetail } from "@/lib/api/listings";
 import { getClient, mapError } from "@/lib/api/shared";
-import { publicListingExpiryFilter, resolveListingExpiryDate, type ListingExpiryOption } from "@/lib/api/listing-expiry";
+import {
+  publicListingExpiryFilter,
+  resolveListingExpiryDate,
+  type ListingExpiryOption,
+} from "@/lib/api/listing-expiry";
 import type { ClassifiedListing, ClassifiedsResult } from "@/lib/classifieds-types";
 
 export type OwnerCloseListingStatus = "sold" | "rented" | "unavailable";
@@ -79,11 +83,17 @@ export async function reactivateOwnerListing(
   listingId: string,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
   if (!userId) {
-    return { ok: false, error: { code: "auth_required", message: "يجب تسجيل الدخول لإعادة تفعيل الإعلان." } };
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لإعادة تفعيل الإعلان." },
+    };
   }
   const cleanListingId = listingId.trim();
   if (!cleanListingId) {
-    return { ok: false, error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." } };
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+    };
   }
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
@@ -135,11 +145,17 @@ export async function setOwnerListingExpiry(
   option: ListingExpiryOption,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
   if (!userId) {
-    return { ok: false, error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث مدة الإعلان." } };
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث مدة الإعلان." },
+    };
   }
   const cleanListingId = listingId.trim();
   if (!cleanListingId) {
-    return { ok: false, error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." } };
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+    };
   }
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
