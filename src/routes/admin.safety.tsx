@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  AlertTriangle,
   ArrowUpRight,
   FileWarning,
   Flag,
@@ -9,7 +8,6 @@ import {
   RefreshCw,
   Save,
   ShieldAlert,
-  UserRoundCheck,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
@@ -24,6 +22,7 @@ import {
   type SafetyCaseSummary,
   type SafetyStaffSummary,
 } from "@/lib/classifieds-api";
+import { SafetyCaseEvidencePanel } from "@/components/admin/SafetyCaseEvidencePanel";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -385,6 +384,10 @@ function AdminSafetyPage() {
           </div>
         </section>
       </section>
+
+      {form.id && (
+        <SafetyCaseEvidencePanel caseId={form.id} canManage={canManageCases} text={text} />
+      )}
 
       <section className="rounded-2xl bg-card p-5 hairline">
         <div className="grid gap-3 sm:grid-cols-2">
