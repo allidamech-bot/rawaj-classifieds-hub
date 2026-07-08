@@ -17,11 +17,10 @@ export function getClient(): ClassifiedsResult<SupabaseClient> {
   return { ok: true, data: supabase };
 }
 
-export function mapError(error: {
-  code?: string;
-  message?: string;
-  details?: string;
-}): ClassifiedsError {
+export function mapError(
+  error: { code?: string; message?: string; details?: string },
+  operation?: string,
+): ClassifiedsError {
   const message = error.message ?? "حدث خطأ غير متوقع أثناء الاتصال بقاعدة البيانات.";
   const isMissingSchema =
     error.code === "42P01" ||
@@ -35,6 +34,7 @@ export function mapError(error: {
       code: "schema_missing",
       message: "تعذر تحميل البيانات الآن. حاول مرة أخرى.",
       details: message,
+      operation,
     };
   }
 
@@ -43,6 +43,7 @@ export function mapError(error: {
       code: "foreign_key_conflict",
       message: "تعذر إكمال الحذف لأن العنصر مرتبط ببيانات محفوظة أخرى.",
       details: message,
+      operation,
     };
   }
 
@@ -51,10 +52,11 @@ export function mapError(error: {
       code: "permission_denied",
       message: "ليست لديك صلاحية لتنفيذ هذا الإجراء.",
       details: message,
+      operation,
     };
   }
 
-  return { code: "unknown", message, details: error.details };
+  return { code: "unknown", message, details: error.details, operation };
 }
 
 export function mapStorageError(error: {

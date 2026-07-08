@@ -38,7 +38,7 @@ export async function updateOwnerListing(
     .in("status", ["draft", "rejected"])
     .maybeSingle();
 
-  if (existingError) return { ok: false, error: mapError(existingError) };
+  if (existingError) return { ok: false, error: mapError(existingError, "owner_listing_update") };
   if (!existing) {
     return {
       ok: false,
@@ -80,18 +80,24 @@ export async function updateOwnerListing(
     p_patch: patch,
   });
 
-  if (error) return { ok: false, error: mapError(error) };
-
-  const row = ((data ?? []) as Record<string, unknown>[])[0];
-  if (!row) {
-    return {
-      ok: false,
-      error: { code: "unknown", message: "تم التعديل دون نتيجة قابلة للتحقق." },
-    };
-  }
+  if (error) return { ok: false, error: mapError(error, "owner_listing_update") };
 
   const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);
-  return refreshed.ok ? refreshed : { ok: true, data: mapListing(row) };
+  if (refreshed.ok) return refreshed;
+
+  const row = ((data ?? []) as Record<string, unknown>[])[0];
+  if (row) {
+    return { ok: true, data: mapListing(row) };
+  }
+
+  return {
+    ok: false,
+    error: {
+      code: "unknown",
+      message: "تم التعديل دون نتيجة قابلة للتحقق.",
+      operation: "owner_listing_update",
+    },
+  };
 }
 
 export async function submitOwnerListingForReview(
@@ -120,16 +126,22 @@ export async function submitOwnerListingForReview(
     p_listing_id: cleanListingId,
   });
 
-  if (error) return { ok: false, error: mapError(error) };
-
-  const row = ((data ?? []) as Record<string, unknown>[])[0];
-  if (!row) {
-    return {
-      ok: false,
-      error: { code: "unknown", message: "تم إرسال الطلب دون نتيجة إعلان قابلة للتحقق." },
-    };
-  }
+  if (error) return { ok: false, error: mapError(error, "owner_listing_submit") };
 
   const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);
-  return refreshed.ok ? refreshed : { ok: true, data: mapListing(row) };
+  if (refreshed.ok) return refreshed;
+
+  const row = ((data ?? []) as Record<string, unknown>[])[0];
+  if (row) {
+    return { ok: true, data: mapListing(row) };
+  }
+
+  return {
+    ok: false,
+    error: {
+      code: "unknown",
+      message: "تم إرسال الطلب دون نتيجة إعلان قابلة للتحقق.",
+      operation: "owner_listing_submit",
+    },
+  };
 }

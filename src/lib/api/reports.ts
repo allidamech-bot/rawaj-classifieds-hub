@@ -119,7 +119,7 @@ export async function adminFetchPendingListings(
     error = fallback.error;
   }
 
-  if (error) return { ok: false, error: mapError(error) };
+  if (error) return { ok: false, error: mapError(error, "admin_review_queue") };
   return {
     ok: true,
     data: ((data ?? []) as Record<string, unknown>[]).map((row) =>

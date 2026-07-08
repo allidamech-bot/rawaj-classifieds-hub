@@ -31,6 +31,9 @@ const migration35 = read(
 const migration36 = read(
   "supabase/migrations/202607080036_listing_moderation_trigger_reconciliation.sql",
 );
+const migration39 = read(
+  "supabase/migrations/202607090001_listing_review_lifecycle_self_contained.sql",
+);
 
 requireText(locationWrite, '.from("governorates")', "canonical governorate mapping");
 requireText(
@@ -102,6 +105,22 @@ requireText(
   "'status_changed_at'",
   "status timestamp allowed by moderation protection",
 );
+
+// Migration 039 must make the review lifecycle self-contained so the admin queue and
+// moderation work regardless of which intermediate migrations were applied to production.
+requireText(migration39, "rawaj_current_user_can_review_listings", "039 review authority helper");
+requireText(migration39, "rawaj_owner_update_listing", "039 owner update RPC");
+requireText(migration39, "rawaj_submit_listing_for_review", "039 submit RPC");
+requireText(migration39, "rawaj_review_queue_pending", "039 review queue RPC");
+requireText(migration39, "rawaj_review_listing_decision", "039 decision RPC");
+requireText(migration39, '"Review staff read all listings"', "039 review-staff read RLS");
+requireText(migration39, '"Review staff moderate listings"', "039 review-staff moderate RLS");
+requireText(
+  migration39,
+  "create trigger listings_protect_moderation_update",
+  "039 moderation trigger attached",
+);
+requireText(migration39, "stale_review", "039 stale-review protection");
 
 if (failures.length > 0) {
   console.error("Listing system regression contract failed:\n");
