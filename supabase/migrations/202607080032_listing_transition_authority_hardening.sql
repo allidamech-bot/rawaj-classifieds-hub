@@ -10,10 +10,13 @@ set search_path = public
 as $$
 declare
   v_actor uuid := auth.uid();
-  v_is_submission boolean;
+  v_is_submission boolean := false;
 begin
-  v_is_submission := new.status = 'pending_review'
-    and (tg_op = 'INSERT' or old.status is distinct from new.status);
+  if tg_op = 'INSERT' then
+    v_is_submission := new.status = 'pending_review';
+  elsif tg_op = 'UPDATE' then
+    v_is_submission := new.status = 'pending_review' and old.status is distinct from new.status;
+  end if;
 
   if not v_is_submission then
     return new;
