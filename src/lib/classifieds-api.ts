@@ -2,6 +2,7 @@ export * from "@/lib/api/shared";
 export * from "@/lib/api/references";
 export * from "@/lib/api/locations";
 export * from "@/lib/api/listings";
+export { submitOwnerListingForReview, updateOwnerListing } from "@/lib/api/listing-write-rpc";
 export * from "@/lib/api/listing-lifecycle";
 export * from "@/lib/api/listing-expiry-retention";
 export * from "@/lib/api/draft-recovery";
