@@ -88,7 +88,10 @@ export function NotificationPreferencesPanel() {
   const profileId = auth.profile?.id ?? null;
 
   useEffect(() => {
-    setPushReadiness(getPushReadinessSnapshot());
+    const timeoutId = window.setTimeout(() => {
+      setPushReadiness(getPushReadinessSnapshot());
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
