@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ClassifiedsResult, NotificationItem } from "@/lib/classifieds-types";
 import { getClient, mapError, rowNullableString, rowRecord, rowString } from "@/lib/api/shared";
+import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
 
 export async function fetchMyNotifications(
   userId: string | null,
@@ -78,6 +79,7 @@ export async function markNotificationRead(
     .is("read_at", null);
 
   if (error) return { ok: false, error: mapError(error) };
+  emitUnreadActivityChanged();
   return { ok: true, data: null };
 }
 
@@ -101,6 +103,7 @@ export async function markAllNotificationsRead(
     .is("read_at", null);
 
   if (error) return { ok: false, error: mapError(error) };
+  emitUnreadActivityChanged();
   return { ok: true, data: null };
 }
 
