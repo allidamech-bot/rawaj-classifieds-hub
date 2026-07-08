@@ -37,6 +37,7 @@ export async function fetchPublicListingsCanonicalAware(
     .from("listings")
     .select("*")
     .eq("status", "approved")
+    .is("archived_at", null)
     .or(publicListingExpiryFilter())
     .in("location_node_id", idsResult.data);
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);

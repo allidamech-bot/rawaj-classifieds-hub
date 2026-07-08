@@ -127,6 +127,7 @@ export async function fetchPublicListings(
     .from("listings")
     .select("*")
     .eq("status", "approved")
+    .is("archived_at", null)
     .or(publicListingExpiryFilter());
 
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
@@ -248,6 +249,7 @@ export async function fetchListingDetail(
     .select("*")
     .eq("id", listingId)
     .eq("status", "approved")
+    .is("archived_at", null)
     .or(publicListingExpiryFilter())
     .maybeSingle();
 
