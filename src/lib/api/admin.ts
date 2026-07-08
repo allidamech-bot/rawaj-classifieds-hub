@@ -27,64 +27,37 @@ export async function adminModerateListing(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
   if (!payload.expectedUpdatedAt) {
     return {
       ok: false,
-      error: {
-        code: "validation_error",
-        message: "يجب توفير توقيت التحديث المتوقع من الإعلان المحمّل.",
-      },
+      error: { code: "validation_error", message: "حدّث الإعلان قبل اتخاذ قرار المراجعة." },
     };
   }
 
-  const updatePayload = {
-    status: payload.status,
-    reviewed_by: payload.reviewerId,
-    reviewed_at: new Date().toISOString(),
-    rejection_reason:
-      payload.status === "rejected" ? (payload.rejectionReason ?? "مرفوض من لوحة الإدارة") : null,
-    published_at: payload.status === "approved" ? new Date().toISOString() : null,
-    archived_at: payload.status === "archived" ? new Date().toISOString() : null,
-  };
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data
-    .from("listings")
-    .update(updatePayload)
-    .eq("id", payload.listingId)
-    .eq("status", "pending_review")
-    .eq("updated_at", payload.expectedUpdatedAt)
-    .select("id, owner_id, title");
+  const { error } = await clientResult.data.rpc("rawaj_review_listing_decision", {
+    p_listing_id: payload.listingId.trim(),
+    p_decision: payload.status,
+    p_reason:
+      payload.status === "rejected"
+        ? payload.rejectionReason?.trim()
+        : "Approved after complete listing review",
+    p_expected_updated_at: payload.expectedUpdatedAt,
+  });
 
-  if (error) return { ok: false, error: mapError(error) };
-  if (!data || data.length === 0) {
-    return {
-      ok: false,
-      error: {
-        code: "stale_review",
-        message: "تغيّر الإعلان منذ فتحه للمراجعة. حدّث الصفحة وراجعه من جديد.",
-      },
-    };
-  }
-
-  const existing: Record<string, unknown> = {
-    id: data[0].id,
-    owner_id: data[0].owner_id,
-    title: data[0].title,
-  };
-
-  const notificationResult = await createListingModerationNotification(
-    clientResult.data,
-    existing,
-    payload,
-  );
-  if (!notificationResult.ok) {
-    console.warn("Listing moderation succeeded but notification creation failed.", {
-      listingId: payload.listingId,
-      error: notificationResult.error.message,
-    });
+  if (error) {
+    if (error.message?.includes("stale_review")) {
+      return {
+        ok: false,
+        error: {
+          code: "stale_review",
+          message: "تغيّر الإعلان منذ فتحه للمراجعة. حدّث الصفحة وراجعه من جديد.",
+        },
+      };
+    }
+    return { ok: false, error: mapError(error) };
   }
 
   return { ok: true, data: null };

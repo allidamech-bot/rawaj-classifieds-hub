@@ -827,7 +827,44 @@ export async function submitOwnerListingForReview(
   userId: string | null,
   listingId: string,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
-  return resubmitOwnerListing(userId, listingId);
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال الإعلان للمراجعة." },
+    };
+  }
+
+  const normalizedListingId = listingId.trim();
+  if (!normalizedListingId) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const references = await readReferences(clientResult.data);
+  if (!references.ok) return { ok: false, error: references.error };
+
+  const { data, error } = await clientResult.data.rpc("rawaj_submit_listing_for_review", {
+    p_listing_id: normalizedListingId,
+  });
+  if (error) return { ok: false, error: mapError(error) };
+
+  const row = ((data ?? []) as Record<string, unknown>[])[0];
+  if (!row) {
+    return {
+      ok: false,
+      error: { code: "unknown", message: "تم إرسال الطلب دون نتيجة إعلان قابلة للتحقق." },
+    };
+  }
+
+  return {
+    ok: true,
+    data: mapListing(row, references.categories, references.governorates),
+  };
 }
 
 export async function uploadListingImage({

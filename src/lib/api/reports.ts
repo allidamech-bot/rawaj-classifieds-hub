@@ -107,11 +107,7 @@ export async function adminFetchPendingListings(
   const references = await readReferences(clientResult.data);
   if (!references.ok) return { ok: false, error: references.error };
 
-  const { data, error } = await clientResult.data
-    .from("listings")
-    .select("*")
-    .eq("status", "pending_review")
-    .order("created_at", { ascending: false });
+  const { data, error } = await clientResult.data.rpc("rawaj_review_queue_pending");
 
   if (error) return { ok: false, error: mapError(error) };
   return {
