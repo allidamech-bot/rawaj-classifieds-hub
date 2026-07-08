@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Eye, EyeOff, KeyRound, LogIn, User } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { sanitizeAuthReturnTo } from "@/lib/auth-return";
 import { supabase } from "@/lib/supabase";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
@@ -17,6 +18,11 @@ export const Route = createFileRoute("/reset-password")({
 
 function ResetPasswordPage() {
   const { text } = useUiPreferences();
+  const navigate = useNavigate();
+  const locationSearch = useRouterState({ select: (state) => state.location.search });
+  const looseSearch = locationSearch as unknown as Record<string, unknown>;
+  const rawReturnTo = typeof looseSearch.returnTo === "string" ? looseSearch.returnTo : undefined;
+  const returnTo = sanitizeAuthReturnTo(rawReturnTo, "/more");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -29,21 +35,56 @@ function ResetPasswordPage() {
 
   useEffect(() => {
     let cancelled = false;
+    let expiryTimer: ReturnType<typeof setTimeout> | undefined;
+
     async function checkSession() {
       const client = supabase;
       if (!client) {
-        setChecking(false);
-        setReady(false);
+        if (!cancelled) {
+          setChecking(false);
+          setReady(false);
+        }
         return;
       }
-      const { data } = await client.auth.getSession();
-      if (cancelled) return;
-      setReady(Boolean(data.session));
-      setChecking(false);
+
+      const markReady = () => {
+        if (cancelled) return;
+        clearTimeout(expiryTimer);
+        setReady(true);
+        setChecking(false);
+      };
+
+      const { data: listener } = client.auth.onAuthStateChange((event, session) => {
+        if (!session) return;
+        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+          markReady();
+        }
+      });
+
+      const { data, error: sessionError } = await client.auth.getSession();
+      if (cancelled) {
+        listener.subscription.unsubscribe();
+        return;
+      }
+      if (!sessionError && data.session) {
+        markReady();
+        return;
+      }
+
+      expiryTimer = setTimeout(async () => {
+        if (cancelled) return;
+        const { data: lateSession, error: lateError } = await client.auth.getSession();
+        if (cancelled) return;
+        listener.subscription.unsubscribe();
+        setReady(Boolean(!lateError && lateSession.session));
+        setChecking(false);
+      }, 15000);
     }
+
     void checkSession();
     return () => {
       cancelled = true;
+      clearTimeout(expiryTimer);
     };
   }, []);
 
@@ -51,6 +92,7 @@ function ResetPasswordPage() {
     event.preventDefault();
     setMessage("");
     setError("");
+
     if (password.length < 6) {
       setError(
         text(
@@ -60,10 +102,12 @@ function ResetPasswordPage() {
       );
       return;
     }
+
     if (password !== confirmPassword) {
       setError(text("تأكيد كلمة المرور غير مطابق.", "Password confirmation does not match."));
       return;
     }
+
     const client = supabase;
     if (!client) {
       setError(
@@ -74,9 +118,11 @@ function ResetPasswordPage() {
       );
       return;
     }
+
     setSaving(true);
     const { error: updateError } = await client.auth.updateUser({ password });
     setSaving(false);
+
     if (updateError) {
       setError(
         text(
@@ -86,15 +132,19 @@ function ResetPasswordPage() {
       );
       return;
     }
+
     setPassword("");
     setConfirmPassword("");
     setMessage(
       text(
-        "تم تحديث كلمة المرور. يمكنك متابعة استخدام حسابك.",
-        "Password updated. You can continue using your account.",
+        "تم تحديث كلمة المرور. جارٍ إعادتك إلى الصفحة التي كنت تريدها.",
+        "Password updated. Returning you to the page you wanted.",
       ),
     );
+    setTimeout(() => void navigate({ to: returnTo }), 700);
   }
+
+  const loginDestination = `/login?returnTo=${encodeURIComponent(returnTo)}`;
 
   return (
     <>
@@ -123,18 +173,27 @@ function ResetPasswordPage() {
           </div>
 
           {checking ? (
-            <Panel title={text("جارٍ تجهيز الصفحة", "Preparing the page")} />
+            <Panel
+              title={text(
+                "جارٍ تجهيز جلسة الاستعادة الآمنة...",
+                "Preparing the secure recovery session...",
+              )}
+            />
           ) : !ready ? (
             <div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-4 text-xs leading-6 text-muted-foreground">
               <p>
                 {text(
-                  "رابط إعادة التعيين غير صالح أو انتهت صلاحيته. افتح الرابط الأخير من بريدك الإلكتروني أو اطلب رابطاً جديداً من صفحة تسجيل الدخول.",
-                  "The reset link is invalid or expired. Open the latest link from your email or request a new one from the login page.",
+                  "لم نتمكن من تجهيز جلسة الاستعادة بعد الانتظار. قد يكون الرابط منتهيًا أو استُخدم سابقًا. افتح أحدث رابط من بريدك أو اطلب رابطًا جديدًا.",
+                  "We could not prepare the recovery session after waiting. The link may be expired or already used. Open the newest email link or request a new one.",
                 )}
               </p>
-              <Link to="/login" className="rawaj-button-primary mt-3 px-4 py-2">
-                {text("العودة لتسجيل الدخول", "Back to login")}
-              </Link>
+              <button
+                type="button"
+                onClick={() => window.location.assign(loginDestination)}
+                className="rawaj-button-primary mt-3 px-4 py-2"
+              >
+                {text("طلب رابط جديد", "Request a new link")}
+              </button>
             </div>
           ) : (
             <form onSubmit={(event) => void submit(event)} className="space-y-3">
@@ -166,6 +225,7 @@ function ResetPasswordPage() {
                   </button>
                 </div>
               </label>
+
               <label className="block">
                 <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">
                   {text("تأكيد كلمة المرور", "Confirm password")}
@@ -194,6 +254,7 @@ function ResetPasswordPage() {
                   </button>
                 </div>
               </label>
+
               {error && (
                 <p className="rounded-[1rem] border border-destructive/15 bg-destructive/8 p-2.5 text-xs font-medium text-destructive">
                   {error}
@@ -204,6 +265,7 @@ function ResetPasswordPage() {
                   {message}
                 </p>
               )}
+
               <button
                 type="submit"
                 disabled={saving}
@@ -213,6 +275,7 @@ function ResetPasswordPage() {
                   ? text("جارٍ الحفظ", "Saving")
                   : text("تحديث كلمة المرور", "Update password")}
               </button>
+
               <div className="grid grid-cols-2 gap-2">
                 <Link
                   to="/profile"
@@ -221,13 +284,14 @@ function ResetPasswordPage() {
                   <User className="h-4 w-4" />
                   {text("فتح حسابي", "Open profile")}
                 </Link>
-                <Link
-                  to="/login"
+                <button
+                  type="button"
+                  onClick={() => window.location.assign(loginDestination)}
                   className="rawaj-chip items-center justify-center gap-1 px-3 py-2 font-semibold text-primary transition hover:border-gold/40"
                 >
                   <LogIn className="h-4 w-4" />
                   {text("تسجيل الدخول", "Log in")}
-                </Link>
+                </button>
               </div>
             </form>
           )}

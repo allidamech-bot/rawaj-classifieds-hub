@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Eye, EyeOff, Lock, LogIn, ShieldCheck, UserPlus } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { PageHeader } from "@/components/PageHeader";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
@@ -28,9 +28,7 @@ function GoogleButton({ returnTo }: { returnTo: string }) {
     setLoading(true);
     const result = await auth.signInWithGoogle(returnTo);
     setLoading(false);
-    if (result.error) {
-      setError(result.error);
-    }
+    if (result.error) setError(result.error);
   }
 
   return (
@@ -105,6 +103,12 @@ function LoginPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  function switchMode(nextMode: AuthMode) {
+    setMode(nextMode);
+    setMessage("");
+    setError("");
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
@@ -134,12 +138,16 @@ function LoginPage() {
         );
         return;
       }
+
       setSubmitting(true);
-      const redirectTo = `${window.location.origin}/auth/callback?type=recovery`;
+      const callbackUrl = new URL("/auth/callback", window.location.origin);
+      callbackUrl.searchParams.set("type", "recovery");
+      callbackUrl.searchParams.set("returnTo", returnTo);
       const { error: resetError } = await client.auth.resetPasswordForEmail(cleanEmail, {
-        redirectTo,
+        redirectTo: callbackUrl.toString(),
       });
       setSubmitting(false);
+
       if (resetError) {
         setError(
           text(
@@ -149,6 +157,7 @@ function LoginPage() {
         );
         return;
       }
+
       setMessage(
         text(
           "إذا كان البريد مسجلاً، ستصلك رسالة لإعادة تعيين كلمة المرور. تحقق من البريد الوارد أو الرسائل غير المرغوب بها.",
@@ -244,7 +253,7 @@ function LoginPage() {
                   : mode === "forgot"
                     ? text(
                         "أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.",
-                        "Enter your email and we will send a password reset link.",
+                        "Enter your email and we will send you a password reset link.",
                       )
                     : text(
                         "أنشئ حسابك لإدارة إعلاناتك ومتابعة الرسائل والتنبيهات.",
@@ -257,22 +266,14 @@ function LoginPage() {
           <div className="mb-5 grid grid-cols-2 gap-1 rounded-[1.05rem] border border-border/65 bg-card-warm/65 p-1.5">
             <button
               type="button"
-              onClick={() => {
-                setMode("login");
-                setMessage("");
-                setError("");
-              }}
+              onClick={() => switchMode("login")}
               className={`rounded-[0.8rem] px-3 py-2.5 text-xs font-semibold transition ${mode === "login" ? "bg-primary text-primary-foreground shadow-soft" : "text-muted-foreground hover:text-primary"}`}
             >
               {text("تسجيل الدخول", "Log in")}
             </button>
             <button
               type="button"
-              onClick={() => {
-                setMode("register");
-                setMessage("");
-                setError("");
-              }}
+              onClick={() => switchMode("register")}
               className={`rounded-[0.8rem] px-3 py-2.5 text-xs font-semibold transition ${mode === "register" ? "bg-primary text-primary-foreground shadow-soft" : "text-muted-foreground hover:text-primary"}`}
             >
               {text("إنشاء حساب", "Register")}
@@ -289,10 +290,7 @@ function LoginPage() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
               {mode === "register" && (
-                <label className="block">
-                  <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">
-                    {text("اسم الحساب", "Account name")}
-                  </span>
+                <FieldLabel label={text("اسم الحساب", "Account name")}>
                   <input
                     value={displayName}
                     onChange={(event) => setDisplayName(event.target.value)}
@@ -301,12 +299,10 @@ function LoginPage() {
                     required
                     className="input"
                   />
-                </label>
+                </FieldLabel>
               )}
-              <label className="block">
-                <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">
-                  {text("البريد الإلكتروني", "Email")}
-                </span>
+
+              <FieldLabel label={text("البريد الإلكتروني", "Email")}>
                 <input
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
@@ -315,13 +311,10 @@ function LoginPage() {
                   required
                   className="input"
                 />
-              </label>
+              </FieldLabel>
 
               {mode !== "forgot" && (
-                <label className="block">
-                  <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">
-                    {text("كلمة المرور", "Password")}
-                  </span>
+                <FieldLabel label={text("كلمة المرور", "Password")}>
                   <div className="relative">
                     <input
                       value={password}
@@ -349,17 +342,13 @@ function LoginPage() {
                       )}
                     </button>
                   </div>
-                </label>
+                </FieldLabel>
               )}
 
               {mode === "login" && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setMode("forgot");
-                    setMessage("");
-                    setError("");
-                  }}
+                  onClick={() => switchMode("forgot")}
                   className="inline-flex rounded-lg px-1 py-1 text-xs font-semibold text-brand-orange transition hover:text-primary"
                 >
                   {text("نسيت كلمة المرور؟", "Forgot password?")}
@@ -412,14 +401,11 @@ function LoginPage() {
                     ? text("إرسال رابط إعادة التعيين", "Send reset link")
                     : text("إنشاء حساب", "Register")}
               </button>
+
               {mode === "forgot" && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setMode("login");
-                    setMessage("");
-                    setError("");
-                  }}
+                  onClick={() => switchMode("login")}
                   className="w-full text-center text-xs font-semibold text-primary transition hover:text-brand-orange"
                 >
                   {text("العودة لتسجيل الدخول", "Back to login")}
@@ -438,7 +424,6 @@ function LoginPage() {
                   <span className="rounded-full bg-card/90 px-3 py-1">{text("أو", "Or")}</span>
                 </div>
               </div>
-
               <GoogleButton returnTo={returnTo} />
             </>
           )}
@@ -463,6 +448,15 @@ function LoginPage() {
   );
 }
 
+function FieldLabel({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">{label}</span>
+      {children}
+    </label>
+  );
+}
+
 async function ensureOwnProfile(
   client: SupabaseClient,
   user: User,
@@ -470,7 +464,6 @@ async function ensureOwnProfile(
 ): Promise<string | null> {
   const metadataName =
     typeof user.user_metadata.display_name === "string" ? user.user_metadata.display_name : null;
-
   const { data: existingProfile, error: readError } = await client
     .from("profiles")
     .select("id")

@@ -1,26 +1,36 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
 import { supabase } from "@/lib/supabase";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/auth/callback")({
   head: () => ({
-    meta: [{ title: "جاري تسجيل الدخول | رواج" }, { name: "robots", content: "noindex, nofollow" }],
+    meta: [{ title: "تأكيد الحساب | رواج" }, { name: "robots", content: "noindex, nofollow" }],
   }),
   component: AuthCallbackPage,
 });
 
+type CallbackStatus = "loading" | "success" | "error";
+
 function AuthCallbackPage() {
   const { text } = useUiPreferences();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const callbackContext = useMemo(() => {
+    if (typeof window === "undefined") return { isRecovery: false, returnTo: "/more" };
+    const searchParams = new URLSearchParams(window.location.search);
+    return {
+      isRecovery: searchParams.get("type") === "recovery",
+      returnTo: sanitizeAuthReturnTo(searchParams.get("returnTo"), "/more"),
+    };
+  }, []);
+  const [status, setStatus] = useState<CallbackStatus>("loading");
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    let signedIn = false;
+    let completionTimer: ReturnType<typeof setTimeout> | undefined;
+    let expiryTimer: ReturnType<typeof setTimeout> | undefined;
 
     async function handleCallback() {
       const client = supabase;
@@ -39,71 +49,87 @@ function AuthCallbackPage() {
 
       const searchParams = new URLSearchParams(window.location.search);
       const code = searchParams.get("code");
-      const isRecovery = searchParams.get("type") === "recovery";
-      const returnTo = sanitizeAuthReturnTo(searchParams.get("returnTo"), "/more");
-      if (code) {
-        const { error: exchangeError } = await client.auth.exchangeCodeForSession(code);
-        if (exchangeError) {
-          setStatus("error");
-          setErrorMsg(exchangeError.message);
+      let observedRecoveryEvent = false;
+      let completed = false;
+
+      const finish = (recovery: boolean) => {
+        if (cancelled || completed) return;
+        completed = true;
+        clearTimeout(expiryTimer);
+        setStatus("success");
+        completionTimer = setTimeout(() => {
+          if (cancelled) return;
+          if (recovery || callbackContext.isRecovery) {
+            const destination = `/reset-password?returnTo=${encodeURIComponent(callbackContext.returnTo)}`;
+            window.location.assign(destination);
+            return;
+          }
+          void navigate({ to: callbackContext.returnTo });
+        }, 650);
+      };
+
+      const { data: listener } = client.auth.onAuthStateChange((event, session) => {
+        if (cancelled || !session) return;
+        if (event === "PASSWORD_RECOVERY") observedRecoveryEvent = true;
+        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+          finish(observedRecoveryEvent || event === "PASSWORD_RECOVERY");
+        }
+      });
+
+      try {
+        if (code) {
+          const { error: exchangeError } = await client.auth.exchangeCodeForSession(code);
+          if (exchangeError) throw exchangeError;
+        }
+
+        const { data, error } = await client.auth.getSession();
+        if (error) throw error;
+        if (data.session) {
+          finish(observedRecoveryEvent || callbackContext.isRecovery);
           return;
         }
-      }
 
-      const { data, error } = await client.auth.getSession();
-
-      if (cancelled) return;
-
-      if (error) {
-        setStatus("error");
-        setErrorMsg(error.message);
-        return;
-      }
-
-      if (data.session) {
-        setStatus("success");
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        if (!cancelled) {
-          void navigate({ to: isRecovery ? "/reset-password" : returnTo });
-        }
-      } else {
-        const { data: listener } = client.auth.onAuthStateChange((event, session) => {
-          if (cancelled) return;
-          if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && session) {
-            signedIn = true;
-            clearTimeout(timeoutId);
-            listener.subscription.unsubscribe();
-            setStatus("success");
-            setTimeout(() => {
-              if (!cancelled) {
-                void navigate({
-                  to: event === "PASSWORD_RECOVERY" || isRecovery ? "/reset-password" : returnTo,
-                });
-              }
-            }, 1500);
+        expiryTimer = setTimeout(async () => {
+          if (cancelled || completed) return;
+          const { data: lateSession, error: lateError } = await client.auth.getSession();
+          if (cancelled || completed) return;
+          if (!lateError && lateSession.session) {
+            finish(observedRecoveryEvent || callbackContext.isRecovery);
+            return;
           }
-        });
-
-        timeoutId = setTimeout(() => {
-          if (cancelled) return;
           listener.subscription.unsubscribe();
-          if (!signedIn) {
-            setStatus("error");
-            setErrorMsg(
-              text("تعذر تسجيل الدخول. حاول مرة أخرى.", "Could not sign in. Please try again."),
-            );
-          }
-        }, 15000);
+          setStatus("error");
+          setErrorMsg(
+            callbackContext.isRecovery
+              ? text(
+                  "تعذر تجهيز جلسة استعادة كلمة المرور. قد يكون الرابط منتهيًا أو استُخدم سابقًا. اطلب رابطًا جديدًا وحاول مرة أخرى.",
+                  "Could not prepare the password recovery session. The link may be expired or already used. Request a new link and try again.",
+                )
+              : text("تعذر تسجيل الدخول. حاول مرة أخرى.", "Could not sign in. Please try again."),
+          );
+        }, 20000);
+      } catch (error) {
+        if (cancelled) return;
+        listener.subscription.unsubscribe();
+        setStatus("error");
+        setErrorMsg(
+          error instanceof Error
+            ? error.message
+            : text("حدث خطأ غير متوقع.", "An unexpected error occurred."),
+        );
       }
     }
 
-    handleCallback();
+    void handleCallback();
 
     return () => {
       cancelled = true;
-      clearTimeout(timeoutId);
+      clearTimeout(completionTimer);
+      clearTimeout(expiryTimer);
     };
-  }, [navigate, text]);
+  }, [callbackContext.isRecovery, callbackContext.returnTo, navigate, text]);
+
+  const loginDestination = `/login?returnTo=${encodeURIComponent(callbackContext.returnTo)}`;
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
@@ -130,13 +156,20 @@ function AuthCallbackPage() {
               />
             </svg>
             <h1 className="mt-4 text-lg font-bold text-primary">
-              {text("جاري تسجيل الدخول...", "Signing in...")}
+              {callbackContext.isRecovery
+                ? text("جاري تجهيز استعادة كلمة المرور...", "Preparing password recovery...")
+                : text("جاري تسجيل الدخول...", "Signing in...")}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {text(
-                "جارٍ تأكيد جلسة الحساب وإعادتك للخطوة المناسبة.",
-                "Verifying your account session and returning you to the right step.",
-              )}
+              {callbackContext.isRecovery
+                ? text(
+                    "ننتظر اكتمال جلسة الاستعادة الآمنة قبل فتح صفحة كلمة المرور الجديدة.",
+                    "Waiting for the secure recovery session to finish before opening the new-password page.",
+                  )
+                : text(
+                    "جارٍ تأكيد جلسة الحساب وإعادتك للصفحة المناسبة.",
+                    "Verifying your account session and returning you to the right page.",
+                  )}
             </p>
           </>
         )}
@@ -157,10 +190,20 @@ function AuthCallbackPage() {
               />
             </svg>
             <h1 className="mt-4 text-lg font-bold text-primary">
-              {text("تم تسجيل الدخول", "Signed in")}
+              {callbackContext.isRecovery
+                ? text("تم تأكيد رابط الاستعادة", "Recovery link confirmed")
+                : text("تم تسجيل الدخول", "Signed in")}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {text("جارٍ تحويلك إلى الصفحة المناسبة...", "Redirecting you to the right page...")}
+              {callbackContext.isRecovery
+                ? text(
+                    "جارٍ فتح صفحة تعيين كلمة المرور الجديدة...",
+                    "Opening the new-password page...",
+                  )
+                : text(
+                    "جارٍ تحويلك إلى الصفحة المناسبة...",
+                    "Redirecting you to the right page...",
+                  )}
             </p>
           </>
         )}
@@ -181,15 +224,19 @@ function AuthCallbackPage() {
               />
             </svg>
             <h1 className="mt-4 text-lg font-bold text-primary">
-              {text("فشل تسجيل الدخول", "Sign in failed")}
+              {callbackContext.isRecovery
+                ? text("تعذر استكمال الاستعادة", "Recovery could not be completed")
+                : text("فشل تسجيل الدخول", "Sign in failed")}
             </h1>
             <p className="mt-2 text-sm text-destructive">{errorMsg}</p>
             <button
               type="button"
-              onClick={() => void navigate({ to: "/login" })}
+              onClick={() => window.location.assign(loginDestination)}
               className="rawaj-button-primary mt-6 px-5 py-2.5"
             >
-              {text("العودة لتسجيل الدخول", "Back to login")}
+              {callbackContext.isRecovery
+                ? text("طلب رابط جديد", "Request a new link")
+                : text("العودة لتسجيل الدخول", "Back to login")}
             </button>
           </>
         )}
