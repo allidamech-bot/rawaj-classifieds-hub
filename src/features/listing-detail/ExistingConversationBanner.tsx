@@ -39,7 +39,10 @@ export function ExistingConversationBanner({ listingId }: { listingId: string })
         </span>
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-extrabold">
-            {text("لديك محادثة مرتبطة بهذا الإعلان", "You already have a conversation for this listing")}
+            {text(
+              "لديك محادثة مرتبطة بهذا الإعلان",
+              "You already have a conversation for this listing",
+            )}
           </h2>
           <p className="mt-1 truncate text-xs text-muted-foreground">
             {conversation.otherParticipant.displayName} · {conversation.listingTitle}
