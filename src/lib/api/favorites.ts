@@ -168,7 +168,7 @@ export async function fetchFavoriteJourneyItems(
       ? await hydrateListingsWithPrimaryImages(
           clientResult.data,
           ((listingsResult.data ?? []) as Record<string, unknown>[]).map((row) =>
-            mapListing(row, references.data.categories, references.data.governorates),
+            mapListing(row, references.categories, references.governorates),
           ),
         )
       : [];
