@@ -257,7 +257,7 @@ as $$
 declare
   v_actor uuid := auth.uid();
   v_reason text := btrim(coalesce(p_reason, ''));
-  v_ids uuid[];
+  v_id uuid;
 begin
   if v_actor is null or not public.current_user_is_admin_like() then
     raise exception 'Admin permission required.';
@@ -272,13 +272,18 @@ begin
   where user_id = p_user_id
     and restriction_type = p_restriction_type
     and lifted_at is null
-  returning id into v_ids;
+  returning id into v_id;
+
+  if v_id is null then
+    return;
+  end if;
 
   perform public.rawaj_insert_audit_log(
     'user.restriction_lifted',
     'user_restrictions',
-    p_user_id::text,
+    v_id::text,
     jsonb_build_object(
+      'user_id', p_user_id,
       'restriction_type', p_restriction_type,
       'reason', v_reason
     )
