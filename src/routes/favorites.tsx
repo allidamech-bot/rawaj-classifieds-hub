@@ -163,10 +163,7 @@ function FavoritesPage() {
                   className="aspect-square w-full rounded-xl object-cover hairline"
                 />
               ) : (
-                <PlaceholderArt
-                  type={listing?.categoryPlaceholder ?? "misc"}
-                  aspect="square"
-                />
+                <PlaceholderArt type={listing?.categoryPlaceholder ?? "misc"} aspect="square" />
               );
 
               return (
@@ -198,11 +195,7 @@ function FavoritesPage() {
                                 )}
                               </p>
                               <p className="mt-1 truncate text-[11px] text-muted-foreground">
-                                {categoryName(
-                                  listing.categoryId,
-                                  listing.categoryNameAr,
-                                  language,
-                                )}{" "}
+                                {categoryName(listing.categoryId, listing.categoryNameAr, language)}{" "}
                                 ·{" "}
                                 {governorateName(
                                   listing.governorateId,
