@@ -13,7 +13,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { NotificationPreferencesPanel } from "@/features/notifications/NotificationPreferencesPanel";
 import {
-  fetchMyNotifications,
+  fetchMyNotificationsPage,
   markAllNotificationsRead,
   markNotificationRead,
   resolveNotificationTarget,
@@ -28,6 +28,8 @@ export const Route = createFileRoute("/notifications")({
   }),
   component: NotificationsPage,
 });
+
+const NOTIFICATIONS_PAGE_SIZE = 20;
 
 const followUpLinks = [
   { to: "/chats", labelAr: "الرسائل", labelEn: "Messages", icon: MessageCircle },
@@ -48,7 +50,10 @@ function NotificationsPage() {
   const { language, text } = useUiPreferences();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<ClassifiedsError | null>(null);
+  const [paginationError, setPaginationError] = useState<ClassifiedsError | null>(null);
   const [openingTargetId, setOpeningTargetId] = useState<string | null>(null);
   const profileId = auth.profile?.id ?? null;
   const markInFlightRef = useRef<Set<string>>(new Set());
@@ -74,10 +79,16 @@ function NotificationsPage() {
     const requestId = ++notificationsRequestIdRef.current;
     setLoading(true);
     setError(null);
-    const result = await fetchMyNotifications(currentProfileId);
+    setPaginationError(null);
+    const result = await fetchMyNotificationsPage(currentProfileId, 0, NOTIFICATIONS_PAGE_SIZE);
     if (requestId !== notificationsRequestIdRef.current || currentProfileId !== profileId) return;
-    if (result.ok) setNotifications(applyKnownReadState(result.data));
-    else setError(result.error);
+    if (result.ok) {
+      setNotifications(applyKnownReadState(result.data.items));
+      setHasMore(result.data.hasMore);
+    } else {
+      setError(result.error);
+      setHasMore(false);
+    }
     setLoading(false);
   }, [applyKnownReadState, profileId]);
 
@@ -88,11 +99,48 @@ function NotificationsPage() {
       markAllReadAtRef.current = null;
       setNotifications([]);
       setLoading(false);
+      setLoadingMore(false);
+      setHasMore(false);
+      setError(null);
+      setPaginationError(null);
       setOpeningTargetId(null);
       return;
     }
     void loadNotifications();
   }, [auth.status, loadNotifications]);
+
+  async function loadMoreNotifications() {
+    if (!profileId || loading || loadingMore || !hasMore) return;
+    const currentProfileId = profileId;
+    const requestId = notificationsRequestIdRef.current;
+    const offset = notifications.length;
+    setLoadingMore(true);
+    setPaginationError(null);
+
+    const result = await fetchMyNotificationsPage(
+      currentProfileId,
+      offset,
+      NOTIFICATIONS_PAGE_SIZE,
+    );
+
+    if (requestId !== notificationsRequestIdRef.current || currentProfileId !== auth.profile?.id) {
+      return;
+    }
+
+    if (!result.ok) {
+      setPaginationError(result.error);
+      setLoadingMore(false);
+      return;
+    }
+
+    const nextItems = applyKnownReadState(result.data.items);
+    setNotifications((current) => {
+      const knownIds = new Set(current.map((item) => item.id));
+      return [...current, ...nextItems.filter((item) => !knownIds.has(item.id))];
+    });
+    setHasMore(result.data.hasMore);
+    setLoadingMore(false);
+  }
 
   async function markOne(notificationId: string) {
     if (!profileId || markInFlightRef.current.has(notificationId)) return;
@@ -297,6 +345,25 @@ function NotificationsPage() {
                     </div>
                   </article>
                 ))}
+
+                {paginationError && (
+                  <div className="rounded-xl bg-destructive/10 p-3 text-center text-xs font-semibold text-destructive">
+                    {paginationError.message}
+                  </div>
+                )}
+
+                {hasMore && (
+                  <button
+                    type="button"
+                    disabled={loadingMore}
+                    onClick={() => void loadMoreNotifications()}
+                    className="w-full rounded-xl bg-muted-surface px-4 py-3 text-xs font-bold transition hover:bg-muted disabled:opacity-60 hairline"
+                  >
+                    {loadingMore
+                      ? text("جارٍ تحميل المزيد...", "Loading more...")
+                      : text("تحميل تنبيهات أقدم", "Load older notifications")}
+                  </button>
+                )}
               </div>
             )}
           </section>
