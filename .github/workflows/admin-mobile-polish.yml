@@ -1,0 +1,69 @@
+name: Admin Mobile Polish
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  polish:
+    if: github.head_ref == 'feature/admin-ux-mobile-polish' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/admin-ux-mobile-polish
+          fetch-depth: 0
+      - name: Polish admin shell
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/routes/admin.tsx')
+          s = p.read_text()
+          s = s.replace(
+            '  const visibleTabs = tabs.filter((tab) => auth.hasPermission(tab.permission));\n',
+            '''  const visibleTabs = tabs.filter((tab) => auth.hasPermission(tab.permission));\n  const activeTab = visibleTabs.find((tab) =>\n    tab.exact ? pathname === tab.to || pathname === "/admin/" : pathname.startsWith(tab.to),\n  );\n''',
+            1,
+          )
+          s = s.replace(
+            '<main className="container-wide pt-4 pb-8">',
+            '<main className="container-wide pt-3 pb-[calc(env(safe-area-inset-bottom)+2rem)] sm:pt-4">',
+            1,
+          )
+          old = '''        <nav className="mb-4 flex gap-2 overflow-x-auto pb-1">\n          {visibleTabs.map((tab) => {\n            const active = tab.exact\n              ? pathname === tab.to || pathname === "/admin/"\n              : pathname.startsWith(tab.to);\n            return (\n              <Link\n                key={tab.to}\n                to={tab.to as "/admin"}\n                className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${\n                  active\n                    ? "bg-primary text-primary-foreground"\n                    : "bg-card hairline hover:bg-muted-surface"\n                }`}\n              >\n                <tab.icon className="h-4 w-4" />\n                {uiLabel(tab.labelAr, language)}\n              </Link>\n            );\n          })}\n        </nav>\n        <Outlet />'''
+          new = '''        <div className="sticky top-2 z-30 mb-4 rounded-2xl bg-background/90 p-2 shadow-soft backdrop-blur-xl hairline sm:static sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none sm:border-0">\n          <div className="mb-2 flex items-center justify-between gap-3 px-1 sm:hidden">\n            <div className="min-w-0">\n              <p className="text-[10px] font-bold text-muted-foreground">\n                {text("مساحة العمل الحالية", "Current workspace")}\n              </p>\n              <p className="truncate text-xs font-extrabold">\n                {activeTab ? uiLabel(activeTab.labelAr, language) : text("الإدارة", "Admin")}\n              </p>\n            </div>\n            <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-extrabold text-primary">\n              {auth.profile?.role ?? "admin"}\n            </span>\n          </div>\n          <nav\n            aria-label={text("تنقل الإدارة", "Admin navigation")}\n            className="flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"\n          >\n            {visibleTabs.map((tab) => {\n              const active = tab.exact\n                ? pathname === tab.to || pathname === "/admin/"\n                : pathname.startsWith(tab.to);\n              return (\n                <Link\n                  key={tab.to}\n                  to={tab.to as "/admin"}\n                  aria-current={active ? "page" : undefined}\n                  className={`inline-flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition active:scale-[0.98] sm:rounded-full sm:px-4 ${\n                    active\n                      ? "bg-primary text-primary-foreground shadow-soft"\n                      : "bg-card hairline hover:bg-muted-surface"\n                  }`}\n                >\n                  <tab.icon className="h-4 w-4" />\n                  {uiLabel(tab.labelAr, language)}\n                </Link>\n              );\n            })}\n          </nav>\n        </div>\n        <div className="min-w-0">\n          <Outlet />\n        </div>'''
+          if old not in s:
+            raise SystemExit('admin nav block not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+      - name: Add UX contract
+        shell: bash
+        run: |
+          cat > docs/admin-mobile-ux.md <<'EOF'
+          # RAWAJ Admin Mobile UX
+
+          The admin shell is mobile-first without changing the five-item public BottomNav.
+
+          - Admin navigation is a sticky, horizontally scrollable workspace rail on small screens.
+          - The current workspace is named above the rail so deep admin routes remain orientable.
+          - Navigation items use 44px minimum touch targets, snap scrolling, active-route semantics, and hidden scrollbars.
+          - Only routes granted by the effective permission matrix are rendered.
+          - No queue badge is displayed unless a real measured count exists; the shell does not fabricate counts.
+          - Bottom safe-area padding prevents controls from colliding with device home indicators.
+          - Desktop keeps the existing lightweight horizontal navigation behavior.
+          EOF
+      - name: Remove workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/admin-mobile-polish.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/admin.tsx docs/admin-mobile-ux.md .github/workflows/admin-mobile-polish.yml
+          git commit -m "Polish admin mobile workspace navigation"
+          git push origin HEAD:feature/admin-ux-mobile-polish
