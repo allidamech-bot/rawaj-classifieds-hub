@@ -5,11 +5,13 @@ import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import {
+  closeOwnerListing,
   deleteOwnerListing,
   fetchCurrentUserListings,
   fetchPublicSellerProfile,
   isOwnerDeletableStatus,
-  OWNER_DELETABLE_STATUSES,
+  reactivateOwnerListing,
+  type OwnerCloseListingStatus,
 } from "@/lib/classifieds-api";
 import type {
   ClassifiedListing,
@@ -17,13 +19,14 @@ import type {
   PublicSellerProfile,
 } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import { isClosedListingStatus, isReactivatableListingStatus } from "@/lib/listing-lifecycle-ui";
 import { listingStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/profile/listings")({
   validateSearch: z.object({
-    tab: z.enum(["approved", "pending", "needs_edit", "reviews"]).optional(),
+    tab: z.enum(["approved", "pending", "needs_edit", "closed", "reviews"]).optional(),
   }),
   head: () => ({
     meta: [{ title: "إعلاناتي | رواج" }, { name: "robots", content: "noindex, nofollow" }],
@@ -31,7 +34,7 @@ export const Route = createFileRoute("/profile/listings")({
   component: MyListingsPage,
 });
 
-type StoreTab = "approved" | "pending" | "needs_edit" | "reviews";
+type StoreTab = "approved" | "pending" | "needs_edit" | "closed" | "reviews";
 
 function MyListingsPage() {
   const search = Route.useSearch();
@@ -79,6 +82,12 @@ function MyListingsPage() {
     setListings((prev) => prev.filter((listing) => listing.id !== listingId));
   }
 
+  function handleListingChanged(nextListing: ClassifiedListing) {
+    setListings((prev) =>
+      prev.map((listing) => (listing.id === nextListing.id ? nextListing : listing)),
+    );
+  }
+
   const grouped = useMemo(
     () => ({
       approved: listings.filter((listing) => listing.status === "approved"),
@@ -86,6 +95,7 @@ function MyListingsPage() {
       needs_edit: listings.filter(
         (listing) => listing.status === "draft" || listing.status === "rejected",
       ),
+      closed: listings.filter((listing) => isClosedListingStatus(listing.status)),
     }),
     [listings],
   );
@@ -137,6 +147,7 @@ function MyListingsPage() {
           approvedCount={grouped.approved.length}
           pendingCount={grouped.pending.length}
           needsEditCount={grouped.needs_edit.length}
+          closedCount={grouped.closed.length}
           ratingAverage={ratingAverage}
           ratingCount={ratingCount}
         />
@@ -166,6 +177,14 @@ function MyListingsPage() {
               {grouped.needs_edit.length}
             </strong>
           </div>
+          <div className="rounded-[1rem] border border-border/70 bg-card/80 p-3">
+            <span className="block text-[9px] font-semibold text-muted-foreground">
+              {text("مغلقة", "Closed")}
+            </span>
+            <strong className="mt-1 block text-lg font-bold text-primary">
+              {grouped.closed.length}
+            </strong>
+          </div>
         </section>
 
         <div className="rawaj-storefront-section flex flex-wrap items-center justify-between gap-3 pt-1">
@@ -187,6 +206,12 @@ function MyListingsPage() {
               label={text("تحتاج تعديل / مرفوضة", "Needs edit / rejected")}
               count={grouped.needs_edit.length}
               onClick={() => setActiveTab("needs_edit")}
+            />
+            <TabButton
+              active={activeTab === "closed"}
+              label={text("مغلقة / منتهية", "Closed / expired")}
+              count={grouped.closed.length}
+              onClick={() => setActiveTab("closed")}
             />
             <TabButton
               active={activeTab === "reviews"}
@@ -215,7 +240,7 @@ function MyListingsPage() {
             title={text("لا توجد عناصر في هذا القسم", "Nothing in this section")}
             body={text(
               "ستظهر الإعلانات هنا حسب حالتها الحقيقية من قاعدة البيانات.",
-              "Listings appear here according to their current review status.",
+              "Listings appear here according to their current lifecycle status.",
             )}
           />
         ) : (
@@ -227,6 +252,7 @@ function MyListingsPage() {
                 language={language}
                 userId={profileId}
                 onDeleted={handleListingDeleted}
+                onChanged={handleListingChanged}
               />
             ))}
           </div>
@@ -245,6 +271,7 @@ function StoreHeader({
   approvedCount,
   pendingCount,
   needsEditCount,
+  closedCount,
   ratingAverage,
   ratingCount,
 }: {
@@ -256,6 +283,7 @@ function StoreHeader({
   approvedCount: number;
   pendingCount: number;
   needsEditCount: number;
+  closedCount: number;
   ratingAverage: number | null;
   ratingCount: number;
 }) {
@@ -302,10 +330,11 @@ function StoreHeader({
           </div>
         </div>
         {bio && <p className="mt-3 max-w-3xl text-xs leading-6 text-muted-foreground">{bio}</p>}
-        <div className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-5">
+        <div className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-6">
           <Metric label={text("معتمدة", "Approved")} value={String(approvedCount)} />
           <Metric label={text("قيد المراجعة", "Pending")} value={String(pendingCount)} />
           <Metric label={text("تحتاج تعديل", "Needs edit")} value={String(needsEditCount)} />
+          <Metric label={text("مغلقة", "Closed")} value={String(closedCount)} />
           <Metric
             label={text("التقييم", "Rating")}
             value={ratingAverage ? `${ratingAverage} / 5` : text("لا يوجد", "None")}
@@ -348,24 +377,28 @@ function StoreListingCard({
   language,
   userId,
   onDeleted,
+  onChanged,
 }: {
   listing: ClassifiedListing;
   language: Language;
   userId: string | null;
   onDeleted: (id: string) => void;
+  onChanged: (listing: ClassifiedListing) => void;
 }) {
   const { text } = useUiPreferences();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [lifecycleBusy, setLifecycleBusy] = useState(false);
+  const [lifecycleError, setLifecycleError] = useState("");
 
   const canEdit =
     listing.status === "draft" ||
     listing.status === "pending_review" ||
     listing.status === "rejected";
-
-  // Derive canDelete from the canonical API type-safe predicate to avoid UI/API drift.
   const canDelete = isOwnerDeletableStatus(listing.status);
+  const canClose = listing.status === "approved";
+  const canReactivate = isReactivatableListingStatus(listing.status);
 
   async function handleConfirmDelete() {
     setDeleteError("");
@@ -379,6 +412,42 @@ function StoreListingCard({
     setShowDeleteConfirm(false);
     onDeleted(listing.id);
   }
+
+  async function handleClose(targetStatus: OwnerCloseListingStatus) {
+    if (lifecycleBusy) return;
+    setLifecycleError("");
+    setLifecycleBusy(true);
+    const result = await closeOwnerListing(userId, listing.id, targetStatus);
+    setLifecycleBusy(false);
+    if (!result.ok) {
+      setLifecycleError(result.error.message);
+      return;
+    }
+    onChanged(result.data);
+  }
+
+  async function handleReactivate() {
+    if (lifecycleBusy) return;
+    setLifecycleError("");
+    setLifecycleBusy(true);
+    const result = await reactivateOwnerListing(userId, listing.id);
+    setLifecycleBusy(false);
+    if (!result.ok) {
+      setLifecycleError(result.error.message);
+      return;
+    }
+    onChanged(result.data);
+  }
+
+  const lockedMessage = isClosedListingStatus(listing.status)
+    ? text(
+        "هذا الإعلان مغلق ولا يعدل من هنا. يمكنك إعادة تفعيله للحالات المدعومة.",
+        "This listing is closed and cannot be edited here. Supported states can be reactivated.",
+      )
+    : text(
+        "الإعلان المعتمد ظاهر للزوار ولا يعدل من هنا.",
+        "Approved listings are public and are not edited here.",
+      );
 
   return (
     <>
@@ -426,6 +495,11 @@ function StoreListingCard({
               {listing.rejectionReason}
             </p>
           )}
+          {lifecycleError && (
+            <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
+              {lifecycleError}
+            </p>
+          )}
           <div className="flex flex-wrap gap-2">
             {listing.status === "approved" && (
               <Link
@@ -448,11 +522,48 @@ function StoreListingCard({
               </Link>
             ) : (
               <span className="inline-flex rounded-lg bg-muted-surface px-2 py-1 text-[10px] text-muted-foreground">
-                {text(
-                  "الإعلان المعتمد ظاهر للزوار ولا يعدل من هنا.",
-                  "Approved listings are public and are not edited here.",
-                )}
+                {lockedMessage}
               </span>
+            )}
+            {canClose && (
+              <>
+                <button
+                  type="button"
+                  disabled={lifecycleBusy}
+                  onClick={() => void handleClose("sold")}
+                  className="rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold disabled:opacity-60"
+                >
+                  {text("تم البيع", "Mark sold")}
+                </button>
+                <button
+                  type="button"
+                  disabled={lifecycleBusy}
+                  onClick={() => void handleClose("rented")}
+                  className="rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold disabled:opacity-60"
+                >
+                  {text("تم التأجير", "Mark rented")}
+                </button>
+                <button
+                  type="button"
+                  disabled={lifecycleBusy}
+                  onClick={() => void handleClose("unavailable")}
+                  className="rounded-lg bg-warning/10 px-2 py-1 text-[10px] font-bold text-warning disabled:opacity-60"
+                >
+                  {text("غير متاح", "Unavailable")}
+                </button>
+              </>
+            )}
+            {canReactivate && (
+              <button
+                type="button"
+                disabled={lifecycleBusy}
+                onClick={() => void handleReactivate()}
+                className="rounded-lg bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground disabled:opacity-60"
+              >
+                {lifecycleBusy
+                  ? text("جارٍ الإرسال", "Submitting")
+                  : text("إعادة التفعيل للمراجعة", "Reactivate for review")}
+              </button>
             )}
             {canDelete && (
               <button
