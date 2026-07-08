@@ -26,22 +26,16 @@ export const Route = createFileRoute("/admin/listings")({
   component: AdminListingModerationConsole,
 });
 
-type StatusFilter =
-  | "all"
-  | "pending_review"
-  | "approved"
-  | "rejected"
-  | "archived"
-  | "expired";
-
-const STATUS_FILTERS: StatusFilter[] = [
+const STATUS_FILTERS = [
   "all",
   "pending_review",
   "approved",
   "rejected",
   "archived",
   "expired",
-];
+] as const;
+
+type StatusFilter = (typeof STATUS_FILTERS)[number];
 
 function AdminListingModerationConsole() {
   const auth = useAuth();
