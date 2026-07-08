@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Archive,
   Ban,
@@ -6,6 +6,9 @@ import {
   CheckCircle2,
   Clock3,
   FileWarning,
+  Flag,
+  ListChecks,
+  MessageSquareWarning,
   RefreshCw,
   XCircle,
 } from "lucide-react";
@@ -40,6 +43,7 @@ type StatusFilter = (typeof STATUS_FILTERS)[number];
 function AdminListingModerationConsole() {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
+  const canModerateListings = auth.hasPermission("canModerateListings");
   const [listings, setListings] = useState<AdminModerationListingSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -53,7 +57,7 @@ function AdminListingModerationConsole() {
   async function loadListings() {
     setLoading(true);
     setError("");
-    const result = await adminFetchModerationListings(auth.canAccessAdmin);
+    const result = await adminFetchModerationListings(canModerateListings);
     setLoading(false);
     if (!result.ok) {
       setError(result.error.message);
@@ -65,7 +69,17 @@ function AdminListingModerationConsole() {
 
   useEffect(() => {
     void loadListings();
-  }, [auth.canAccessAdmin]);
+  }, [canModerateListings]);
+
+  const queueSummary = useMemo(
+    () => ({
+      pending: listings.filter((listing) => listing.status === "pending_review").length,
+      approved: listings.filter((listing) => listing.status === "approved").length,
+      rejected: listings.filter((listing) => listing.status === "rejected").length,
+      expired: listings.filter((listing) => listing.status === "expired").length,
+    }),
+    [listings],
+  );
 
   const visibleListings = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -97,7 +111,7 @@ function AdminListingModerationConsole() {
     }
 
     setWorkingId(listing.id);
-    const result = await adminApplyListingModerationAction(auth.canAccessAdmin, {
+    const result = await adminApplyListingModerationAction(canModerateListings, {
       listingId: listing.id,
       action,
       reason,
@@ -120,6 +134,14 @@ function AdminListingModerationConsole() {
     );
     setReasons((current) => ({ ...current, [listing.id]: "" }));
     await loadListings();
+  }
+
+  if (!canModerateListings) {
+    return (
+      <StatePanel
+        title={text("غير مخوّل لاتخاذ قرارات على الإعلانات", "Not authorized for listing decisions")}
+      />
+    );
   }
 
   return (
@@ -150,6 +172,51 @@ function AdminListingModerationConsole() {
             {text("تحديث", "Refresh")}
           </button>
         </div>
+      </section>
+
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <QueueCard
+          icon={ListChecks}
+          label={text("بانتظار المراجعة", "Pending review")}
+          value={queueSummary.pending}
+          to="/admin/pending"
+        />
+        <QueueCard
+          icon={CheckCircle2}
+          label={text("معتمدة ضمن الوحدة", "Approved in console")}
+          value={queueSummary.approved}
+          to="/admin/listings"
+        />
+        {auth.hasPermission("canManageReports") ? (
+          <QueueCard
+            icon={Flag}
+            label={text("بلاغات الإعلانات", "Listing reports")}
+            value={null}
+            to="/admin/reports"
+          />
+        ) : (
+          <QueueCard
+            icon={XCircle}
+            label={text("مرفوضة ضمن الوحدة", "Rejected in console")}
+            value={queueSummary.rejected}
+            to="/admin/listings"
+          />
+        )}
+        {auth.hasPermission("canManageReports") ? (
+          <QueueCard
+            icon={MessageSquareWarning}
+            label={text("بلاغات الرسائل", "Message reports")}
+            value={null}
+            to="/admin/message-reports"
+          />
+        ) : (
+          <QueueCard
+            icon={Clock3}
+            label={text("منتهية ضمن الوحدة", "Expired in console")}
+            value={queueSummary.expired}
+            to="/admin/listings"
+          />
+        )}
       </section>
 
       <section className="grid gap-3 rounded-2xl bg-card p-4 hairline sm:grid-cols-[1fr_auto]">
@@ -209,6 +276,33 @@ function AdminListingModerationConsole() {
         </section>
       )}
     </div>
+  );
+}
+
+function QueueCard({
+  icon: Icon,
+  label,
+  value,
+  to,
+}: {
+  icon: typeof ListChecks;
+  label: string;
+  value: number | null;
+  to: string;
+}) {
+  return (
+    <Link
+      to={to as "/admin"}
+      className="rounded-2xl bg-card p-4 hairline transition hover:-translate-y-0.5 hover:shadow-soft"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
+          <Icon className="h-4 w-4" />
+        </span>
+        {value !== null ? <strong className="text-xl font-extrabold">{value}</strong> : null}
+      </div>
+      <p className="mt-3 text-xs font-bold">{label}</p>
+    </Link>
   );
 }
 
