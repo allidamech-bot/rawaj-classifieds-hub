@@ -163,7 +163,12 @@ async function resolveLegacyGovernorateId(
   if (wanted.size === 0) return { ok: true, data: null };
 
   const match = candidates.find((row) =>
-    [rowString(row, "id"), rowString(row, "slug"), rowString(row, "name_ar"), rowString(row, "name_en")]
+    [
+      rowString(row, "id"),
+      rowString(row, "slug"),
+      rowString(row, "name_ar"),
+      rowString(row, "name_en"),
+    ]
       .map(normalizeLocationKey)
       .some((value) => value && wanted.has(value)),
   );
