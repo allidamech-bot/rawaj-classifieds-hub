@@ -3,6 +3,7 @@ export * from "@/lib/api/references";
 export * from "@/lib/api/locations";
 export * from "@/lib/api/listings";
 export * from "@/lib/api/listing-lifecycle";
+export * from "@/lib/api/listing-expiry-retention";
 export * from "@/lib/api/draft-recovery";
 export * from "@/lib/api/listing-conversation-context";
 export * from "@/lib/api/notification-target-resolution";
