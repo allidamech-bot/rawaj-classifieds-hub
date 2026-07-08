@@ -18,6 +18,8 @@ Cases can be assigned only to active Owner, Admin, or Moderator staff. Authorize
 
 Staff-only notes are append-only operational evidence. Note creation and case links are audited. Direct table access is not used as the authorization boundary; RPCs re-check staff authority.
 
+The safety console exposes notes and linked evidence only after a concrete case is selected, keeping the mobile workflow focused while preserving the full case history.
+
 ## Permissions
 
 The UI requires the effective `canManageReports` permission. Database functions independently require authorized staff access. Owner authority remains distinct from Admin and Moderator authority.
