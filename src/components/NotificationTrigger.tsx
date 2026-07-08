@@ -136,10 +136,7 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
   function canOpenNotificationTarget(notification: NotificationItem) {
     const target = notification.targetType?.toLowerCase();
     return Boolean(
-      notification.targetId &&
-        (target === "listing" ||
-          target === "conversation" ||
-          target === "seller"),
+      notification.targetId && ["listing", "conversation", "seller"].includes(target ?? ""),
     );
   }
 
@@ -214,41 +211,32 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
               {notifications.map((notification) => {
                 const canOpenTarget = canOpenNotificationTarget(notification);
                 const openingTarget = openingTargetId === notification.id;
-                const textContent = (
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-xs font-bold">{notification.titleAr}</h3>
-                    {notification.bodyAr && (
-                      <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-                        {notification.bodyAr}
-                      </p>
-                    )}
-                  </div>
-                );
-
                 return (
                   <article
                     key={notification.id}
+                    onClick={
+                      canOpenTarget ? () => void openNotificationTarget(notification) : undefined
+                    }
                     className={`rounded-xl p-3 hairline ${
                       notification.readAt ? "bg-card" : "bg-muted-surface"
-                    }`}
+                    } ${canOpenTarget ? "cursor-pointer" : ""}`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      {canOpenTarget ? (
-                        <button
-                          type="button"
-                          disabled={openingTargetId !== null}
-                          onClick={() => void openNotificationTarget(notification)}
-                          className="min-w-0 flex-1 text-start disabled:opacity-60"
-                        >
-                          {textContent}
-                        </button>
-                      ) : (
-                        textContent
-                      )}
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-xs font-bold">{notification.titleAr}</h3>
+                        {notification.bodyAr && (
+                          <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                            {notification.bodyAr}
+                          </p>
+                        )}
+                      </div>
                       {!notification.readAt && (
                         <button
                           type="button"
-                          onClick={() => void markOne(notification.id)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void markOne(notification.id);
+                          }}
                           className="shrink-0 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline"
                         >
                           {text("تمت القراءة", "Read")}
