@@ -23,3 +23,5 @@ Impressions, clicks, and CTR are derived only from rows recorded in `ad_campaign
 ## Public selection
 
 Public creative selection returns only creatives from active, in-schedule campaigns that match the requested page and optional category context.
+
+The `/admin/campaigns` route is part of the generated TanStack route tree and is shown in admin navigation only when the effective permission matrix grants campaign management.
