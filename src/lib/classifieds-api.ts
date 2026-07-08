@@ -29,4 +29,5 @@ export * from "@/lib/api/ad-placements";
 export * from "@/lib/api/campaigns";
 export * from "@/lib/api/safety-cases";
 export * from "@/lib/api/safety-case-details";
+export * from "@/lib/api/owner-system-controls";
 export * from "@/lib/api/profile";
