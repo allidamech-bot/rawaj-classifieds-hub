@@ -5,6 +5,7 @@ import {
   fetchUnreadNotificationsCount,
   markAllNotificationsRead,
   markNotificationRead,
+  scanOwnerListingExpiryReminders,
 } from "@/lib/classifieds-api";
 import type { NotificationItem } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -76,7 +77,10 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
   async function toggleOpen() {
     const nextOpen = !open;
     setOpen(nextOpen);
-    if (nextOpen) await refreshNotifications(true);
+    if (nextOpen) {
+      await scanOwnerListingExpiryReminders(profileId);
+      await refreshNotifications(true);
+    }
   }
 
   async function markOne(notificationId: string) {
