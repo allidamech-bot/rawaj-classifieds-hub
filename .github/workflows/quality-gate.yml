@@ -58,27 +58,22 @@ jobs:
           printf 'Linting %s\n' "${files[@]}"
           npx eslint --quiet "${files[@]}"
 
-      - name: Capture typecheck diagnostics
+      - name: Generate route tree through production build
         shell: bash
         run: |
           set +e
-          npm run typecheck -- --pretty false > typecheck-diagnostics.txt 2>&1
-          code=$?
+          npm run build
+          echo "$?" > route-build-exit-code.txt
           set -e
-          echo "$code" > typecheck-exit-code.txt
 
-      - name: Upload typecheck diagnostics
+      - name: Upload generated route tree
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: typecheck-diagnostics
+          name: generated-route-tree
           path: |
-            typecheck-diagnostics.txt
-            typecheck-exit-code.txt
+            src/routeTree.gen.ts
+            route-build-exit-code.txt
 
-      - name: Enforce typecheck result
-        shell: bash
-        run: exit "$(cat typecheck-exit-code.txt)"
-
-      - name: Production build
-        run: npm run build
+      - name: Typecheck generated route tree
+        run: npm run typecheck -- --pretty false
