@@ -1,19 +1,8 @@
 import type { Language } from "@/lib/ui-preferences";
 
-const CLOSED_LISTING_STATUSES = new Set([
-  "sold",
-  "rented",
-  "unavailable",
-  "expired",
-  "archived",
-]);
+const CLOSED_LISTING_STATUSES = new Set(["sold", "rented", "unavailable", "expired", "archived"]);
 
-const REACTIVATABLE_LISTING_STATUSES = new Set([
-  "sold",
-  "rented",
-  "unavailable",
-  "expired",
-]);
+const REACTIVATABLE_LISTING_STATUSES = new Set(["sold", "rented", "unavailable", "expired"]);
 
 export function isClosedListingStatus(status: string) {
   return CLOSED_LISTING_STATUSES.has(status);
