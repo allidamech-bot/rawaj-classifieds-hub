@@ -10,7 +10,6 @@ import type {
   ListingImage,
   ListingImageUploadPayload,
   PaginatedListingsResponse,
-  UpdateListingPayload,
 } from "@/lib/classifieds-types";
 import type { PlaceholderType, PriceType } from "@/types";
 import {
@@ -339,109 +338,6 @@ export async function fetchCurrentUserListings(
   );
 
   return { ok: true, data: await hydrateListingsWithPrimaryImages(clientResult.data, listings) };
-}
-
-export async function resubmitOwnerListing(
-  userId: string | null,
-  listingId: string,
-  payload: UpdateListingPayload = {},
-): Promise<ClassifiedsResult<ClassifiedListing>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لإعادة إرسال الإعلان." },
-    };
-  }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  if (!listingId.trim()) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
-    };
-  }
-
-  const references = await readReferences(clientResult.data);
-  if (!references.ok) return { ok: false, error: references.error };
-
-  const cleanListingId = listingId.trim();
-
-  // Apply optional content edits through the canonical owner-update RPC, then submit
-  // through the canonical submit RPC. Both avoid direct table UPDATE shortcuts.
-  const hasEdit =
-    payload.categoryId ||
-    payload.subcategoryId !== undefined ||
-    payload.governorateId ||
-    payload.title?.trim() ||
-    payload.description !== undefined ||
-    payload.price !== undefined ||
-    payload.priceType ||
-    payload.condition ||
-    payload.districtAr !== undefined ||
-    payload.contactName !== undefined ||
-    payload.contactOptions ||
-    payload.details !== undefined;
-
-  if (hasEdit) {
-    const patch: Record<string, unknown> = {};
-    if (payload.categoryId) patch.category_id = payload.categoryId;
-    if (payload.subcategoryId !== undefined) patch.subcategory_id = payload.subcategoryId;
-    if (payload.governorateId) patch.governorate_id = payload.governorateId;
-    if (payload.title?.trim()) patch.title = payload.title.trim();
-    if (payload.description !== undefined) patch.description = payload.description?.trim() ?? null;
-    if (payload.price !== undefined) patch.price = payload.price;
-    if (payload.priceType) patch.price_type = payload.priceType;
-    if (payload.condition) patch.listing_condition = payload.condition;
-    if (payload.districtAr !== undefined) {
-      const locationWrite = await resolveListingLocationWrite(
-        clientResult.data,
-        payload.governorateId ?? "",
-        payload.districtAr,
-      );
-      if (!locationWrite.ok) return locationWrite;
-      patch.governorate_id = locationWrite.data.governorateId;
-      patch.district_ar = locationWrite.data.districtAr;
-      if (locationWrite.data.locationNodeId !== undefined) {
-        patch.location_node_id = locationWrite.data.locationNodeId;
-      }
-    }
-    if (payload.contactName !== undefined) patch.contact_name = payload.contactName;
-    if (payload.contactOptions) patch.contact_options = payload.contactOptions;
-    if (payload.details !== undefined) patch.details = payload.details;
-
-    const { error: editError } = await clientResult.data.rpc("rawaj_owner_update_listing", {
-      p_listing_id: cleanListingId,
-      p_patch: patch,
-    });
-    if (editError) return { ok: false, error: mapError(editError, "owner_listing_update") };
-  }
-
-  const { data, error } = await clientResult.data.rpc("rawaj_submit_listing_for_review", {
-    p_listing_id: cleanListingId,
-  });
-  if (error) return { ok: false, error: mapError(error, "owner_listing_submit") };
-
-  const row = ((data ?? []) as Record<string, unknown>[])[0];
-  if (row) {
-    return {
-      ok: true,
-      data: mapListing(row, references.categories, references.governorates),
-    };
-  }
-
-  const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);
-  if (refreshed.ok) return refreshed;
-
-  return {
-    ok: false,
-    error: {
-      code: "unknown",
-      message: "تعذر إعادة إرسال الإعلان.",
-      operation: "owner_listing_submit",
-    },
-  };
 }
 
 export const OWNER_DELETABLE_STATUSES = [
