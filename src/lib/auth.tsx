@@ -3,6 +3,9 @@ import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 import {
   canAccessAdmin,
   canAccessOwnerControls,
+  effectiveRolePermissions,
+  emptyRolePermissions,
+  type RolePermission,
   type UserProfile,
   type UserRole,
 } from "./auth-types";
@@ -21,6 +24,8 @@ const signedOutState: AuthContextValue = {
   session: null,
   profile: null,
   reason: null,
+  permissions: emptyRolePermissions,
+  hasPermission: () => false,
   canAccessAdmin: false,
   canAccessOwnerControls: false,
   emailConfirmed: false,
@@ -54,8 +59,6 @@ async function fetchProfile(client: SupabaseClient, user: User): Promise<UserPro
     throw new Error(profileError.message);
   }
 
-  // Safe bootstrap: if no profile row exists yet (e.g. first-time OAuth sign-in),
-  // upsert one to avoid duplicate-key / 409 errors.
   let profile = profileData;
 
   if (!profileData) {
@@ -191,12 +194,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await loadProfile(client, data.session?.user ?? null);
     }
 
-    loadSession(client);
+    void loadSession(client);
 
     const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       setStatus(nextSession ? "signedIn" : "signedOut");
-      loadProfile(client, nextSession?.user ?? null);
+      void loadProfile(client, nextSession?.user ?? null);
     });
 
     return () => {
@@ -244,6 +247,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: null };
     };
 
+    const permissions = effectiveRolePermissions(profile);
+    const hasPermission = (permission: RolePermission) => permissions[permission];
+
     if (!isSupabaseConfigured) {
       return {
         ...signedOutState,
@@ -261,6 +267,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       profile,
       reason,
+      permissions,
+      hasPermission,
       canAccessAdmin: canAccessAdmin(profile),
       canAccessOwnerControls: canAccessOwnerControls(profile),
       emailConfirmed: Boolean(session?.user?.email_confirmed_at),

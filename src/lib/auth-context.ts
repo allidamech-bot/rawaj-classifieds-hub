@@ -1,6 +1,6 @@
 import { createContext } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import type { UserProfile } from "./auth-types";
+import type { RolePermission, RolePermissions, UserProfile } from "./auth-types";
 import type { AuthStatus } from "./auth-status";
 
 export interface AuthContextValue {
@@ -9,6 +9,8 @@ export interface AuthContextValue {
   session: Session | null;
   profile: UserProfile | null;
   reason: string | null;
+  permissions: RolePermissions;
+  hasPermission: (permission: RolePermission) => boolean;
   canAccessAdmin: boolean;
   canAccessOwnerControls: boolean;
   signOut: () => Promise<{ error: string | null }>;
