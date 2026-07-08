@@ -10,6 +10,7 @@ export interface ListingLocationWrite {
 
 interface CanonicalLocationContext {
   id: string;
+  selectedNameAr: string | null;
   governorateId: string | null;
   governorateNameAr: string | null;
   governorateNameEn: string | null;
@@ -69,7 +70,7 @@ export async function resolveListingLocationWrite(
     data: {
       locationNodeId: resolved.data.id,
       governorateId: effectiveGovernorateId,
-      districtAr: resolved.data.districtAr,
+      districtAr: resolved.data.districtAr || resolved.data.selectedNameAr,
     },
   };
 }
@@ -80,6 +81,7 @@ async function resolveCanonicalLocationContext(
 ): Promise<ClassifiedsResult<CanonicalLocationContext>> {
   let currentId: string | null = nodeId;
   let selectedId = "";
+  let selectedNameAr: string | null = null;
   let governorateId: string | null = null;
   let governorateNameAr: string | null = null;
   let governorateNameEn: string | null = null;
@@ -109,7 +111,10 @@ async function resolveCanonicalLocationContext(
     }
 
     const row = data as Record<string, unknown>;
-    if (!selectedId) selectedId = rowString(row, "id");
+    if (!selectedId) {
+      selectedId = rowString(row, "id");
+      selectedNameAr = rowNullableString(row, "name_ar");
+    }
     governorateId ||= rowNullableString(row, "legacy_governorate_id");
     districtAr ||= rowNullableString(row, "legacy_district_ar");
 
@@ -126,6 +131,7 @@ async function resolveCanonicalLocationContext(
     ok: true,
     data: {
       id: selectedId || nodeId,
+      selectedNameAr,
       governorateId,
       governorateNameAr,
       governorateNameEn,
