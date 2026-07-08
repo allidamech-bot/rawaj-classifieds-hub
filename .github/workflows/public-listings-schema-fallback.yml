@@ -1,0 +1,198 @@
+name: Public Listings Schema Fallback Hotfix
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'hotfix/public-listings-schema-fallback' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hotfix/public-listings-schema-fallback
+          fetch-depth: 0
+
+      - name: Patch public listings schema fallback
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/lib/api/listings.ts')
+          s = p.read_text()
+
+          old = '''  let query = clientResult.data
+    .from("listings")
+    .select("*")
+    .eq("status", "approved")
+    .or(publicListingExpiryFilter());
+
+  if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
+
+  const sort = filters.sort ?? "latest";
+  if (sort === "cheapest") {
+    query = query
+      .order("price", { ascending: true, nullsFirst: false })
+      .order("id", { ascending: true });
+  } else if (sort === "expensive") {
+    query = query
+      .order("price", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: true });
+  } else if (sort === "featured") {
+    query = query
+      .order("is_featured", { ascending: false })
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
+  }
+
+  if (cursor) {
+    if (cursor.type === "latest") {
+      const created_at = escapePostgrestFilterValue(cursor.created_at);
+      const id = escapePostgrestFilterValue(cursor.id);
+      query = query.or(`created_at.lt.${created_at},and(created_at.eq.${created_at},id.lt.${id})`);
+    } else if (cursor.type === "featured") {
+      const created_at = escapePostgrestFilterValue(cursor.created_at);
+      const id = escapePostgrestFilterValue(cursor.id);
+      if (cursor.is_featured) {
+        query = query.or(
+          `is_featured.eq.false,and(is_featured.eq.true,created_at.lt.${created_at}),and(is_featured.eq.true,created_at.eq.${created_at},id.lt.${id})`,
+        );
+      } else {
+        query = query.or(
+          `and(is_featured.eq.false,created_at.lt.${created_at}),and(is_featured.eq.false,created_at.eq.${created_at},id.lt.${id})`,
+        );
+      }
+    } else if (cursor.type === "cheapest" || cursor.type === "expensive") {
+      const id = escapePostgrestFilterValue(cursor.id);
+      if (cursor.price === null) {
+        query = query.or(`and(price.is.null,id.gt.${id})`);
+      } else {
+        const price = escapePostgrestFilterValue(String(cursor.price));
+        const operator = cursor.type === "cheapest" ? "gt" : "lt";
+        query = query.or(
+          `price.${operator}.${price},price.is.null,and(price.eq.${price},id.gt.${id})`,
+        );
+      }
+    } else {
+      return { ok: false, error: { code: "validation_error", message: "Invalid cursor type." } };
+    }
+  }
+
+  const safePageSize = Math.max(1, Math.min(pageSize, 50));
+  const { data, error } = await query.limit(safePageSize + 1);
+  if (error) return { ok: false, error: mapError(error) };
+'''
+
+          new = '''  const sort = filters.sort ?? "latest";
+
+  function buildQuery(includeExpiryFilter: boolean) {
+    let query = clientResult.data.from("listings").select("*").eq("status", "approved");
+
+    if (includeExpiryFilter) query = query.or(publicListingExpiryFilter());
+    if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
+
+    if (sort === "cheapest") {
+      query = query
+        .order("price", { ascending: true, nullsFirst: false })
+        .order("id", { ascending: true });
+    } else if (sort === "expensive") {
+      query = query
+        .order("price", { ascending: false, nullsFirst: false })
+        .order("id", { ascending: true });
+    } else if (sort === "featured") {
+      query = query
+        .order("is_featured", { ascending: false })
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false });
+    } else {
+      query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
+    }
+
+    if (cursor) {
+      if (cursor.type === "latest") {
+        const created_at = escapePostgrestFilterValue(cursor.created_at);
+        const id = escapePostgrestFilterValue(cursor.id);
+        query = query.or(`created_at.lt.${created_at},and(created_at.eq.${created_at},id.lt.${id})`);
+      } else if (cursor.type === "featured") {
+        const created_at = escapePostgrestFilterValue(cursor.created_at);
+        const id = escapePostgrestFilterValue(cursor.id);
+        query = cursor.is_featured
+          ? query.or(
+              `is_featured.eq.false,and(is_featured.eq.true,created_at.lt.${created_at}),and(is_featured.eq.true,created_at.eq.${created_at},id.lt.${id})`,
+            )
+          : query.or(
+              `and(is_featured.eq.false,created_at.lt.${created_at}),and(is_featured.eq.false,created_at.eq.${created_at},id.lt.${id})`,
+            );
+      } else if (cursor.type === "cheapest" || cursor.type === "expensive") {
+        const id = escapePostgrestFilterValue(cursor.id);
+        if (cursor.price === null) {
+          query = query.or(`and(price.is.null,id.gt.${id})`);
+        } else {
+          const price = escapePostgrestFilterValue(String(cursor.price));
+          const operator = cursor.type === "cheapest" ? "gt" : "lt";
+          query = query.or(
+            `price.${operator}.${price},price.is.null,and(price.eq.${price},id.gt.${id})`,
+          );
+        }
+      }
+    }
+
+    return query;
+  }
+
+  if (cursor && !["latest", "featured", "cheapest", "expensive"].includes(cursor.type)) {
+    return { ok: false, error: { code: "validation_error", message: "Invalid cursor type." } };
+  }
+
+  const safePageSize = Math.max(1, Math.min(pageSize, 50));
+  let queryResult = await buildQuery(true).limit(safePageSize + 1);
+  if (queryResult.error && mapError(queryResult.error).code === "schema_missing") {
+    queryResult = await buildQuery(false).limit(safePageSize + 1);
+  }
+
+  const { data, error } = queryResult;
+  if (error) return { ok: false, error: mapError(error) };
+'''
+
+          if old not in s:
+              raise SystemExit('target block not found in listings.ts')
+          p.write_text(s.replace(old, new, 1))
+          PY
+
+      - name: Add regression note
+        shell: bash
+        run: |
+          cat > docs/public-listings-schema-fallback.md <<'EOF'
+          # Public listings schema fallback
+
+          The public listing query normally excludes rows past `expires_at`.
+
+          If Supabase reports a schema-missing error for the lifecycle expiry column, the client retries the same approved-listing query without the expiry predicate instead of failing the entire marketplace block.
+
+          The fallback is intentionally narrow:
+
+          - it triggers only for mapped `schema_missing` errors;
+          - it preserves category, sort, cursor, and page-size behavior;
+          - it still requires `status = approved`;
+          - unrelated permission, network, and query errors remain visible and are not swallowed.
+
+          This is compatibility protection for production schema drift and does not replace applying the lifecycle migration.
+          EOF
+
+      - name: Remove workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/public-listings-schema-fallback.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/api/listings.ts docs/public-listings-schema-fallback.md .github/workflows/public-listings-schema-fallback.yml
+          git commit -m "Harden public listings against expiry schema drift"
+          git push origin HEAD:hotfix/public-listings-schema-fallback
