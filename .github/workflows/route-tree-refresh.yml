@@ -1,0 +1,33 @@
+name: Route Tree Refresh
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/listing-moderation-console-hardening
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Generate route tree
+        run: npm run build || true
+      - name: Persist route tree
+        run: |
+          if git diff --quiet -- src/routeTree.gen.ts; then
+            echo "Route tree already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routeTree.gen.ts
+          git commit -m "Regenerate TanStack route tree"
+          git push origin HEAD:feature/listing-moderation-console-hardening
