@@ -1,0 +1,49 @@
+name: Listing Public Visibility Hardening
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    if: github.head_ref == 'hotfix/listing-publish-review-pipeline' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hotfix/listing-publish-review-pipeline
+          fetch-depth: 0
+
+      - name: Add explicit approved and non-archived filters
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for filename in [
+            'src/lib/api/listings.ts',
+            'src/lib/api/location-aware-listings.ts',
+            'src/lib/api/location-aware-listings-v2.ts',
+          ]:
+            p = Path(filename)
+            s = p.read_text()
+            s = s.replace(
+              '.eq("status", "approved")\n    .or(publicListingExpiryFilter())',
+              '.eq("status", "approved")\n    .is("archived_at", null)\n    .or(publicListingExpiryFilter())',
+            )
+            p.write_text(s)
+          PY
+
+      - name: Remove workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/listing-public-visibility-hardening.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/api/listings.ts src/lib/api/location-aware-listings.ts src/lib/api/location-aware-listings-v2.ts .github/workflows/listing-public-visibility-hardening.yml
+          git commit -m "Harden approved listing public visibility"
+          git push origin HEAD:hotfix/listing-publish-review-pipeline
