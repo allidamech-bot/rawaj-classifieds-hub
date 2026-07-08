@@ -25,4 +25,5 @@ export * from "@/lib/api/admin";
 export * from "@/lib/api/admin-users";
 export * from "@/lib/api/admin-operations";
 export * from "@/lib/api/admin-listing-moderation";
+export * from "@/lib/api/ad-placements";
 export * from "@/lib/api/profile";
