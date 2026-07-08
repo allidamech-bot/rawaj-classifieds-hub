@@ -58,5 +58,9 @@ function subscribePushReadiness() {
 }
 
 export function usePushReadinessSnapshot(): PushReadinessSnapshot {
-  return useSyncExternalStore(subscribePushReadiness, readPushReadinessSnapshot, () => SERVER_SNAPSHOT);
+  return useSyncExternalStore(
+    subscribePushReadiness,
+    readPushReadinessSnapshot,
+    () => SERVER_SNAPSHOT,
+  );
 }
