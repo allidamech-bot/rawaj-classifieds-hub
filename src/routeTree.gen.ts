@@ -46,6 +46,7 @@ import { Route as AdminPendingRouteImport } from './routes/admin.pending'
 import { Route as AdminMessageReportsRouteImport } from './routes/admin.message-reports'
 import { Route as AdminListingsRouteImport } from './routes/admin.listings'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
 import { Route as ProfileListingsIdRouteImport } from './routes/profile/listings.$id'
 
 const VerificationRoute = VerificationRouteImport.update({
@@ -233,6 +234,11 @@ const AdminAuditRoute = AdminAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAdPlacementsRoute = AdminAdPlacementsRouteImport.update({
+  id: '/ad-placements',
+  path: '/ad-placements',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ProfileListingsIdRoute = ProfileListingsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -261,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/verification': typeof VerificationRoute
+  '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
@@ -299,6 +306,7 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/verification': typeof VerificationRoute
+  '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
@@ -340,6 +348,7 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/verification': typeof VerificationRoute
+  '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
@@ -382,6 +391,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/verification'
+    | '/admin/ad-placements'
     | '/admin/audit'
     | '/admin/listings'
     | '/admin/message-reports'
@@ -420,6 +430,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/verification'
+    | '/admin/ad-placements'
     | '/admin/audit'
     | '/admin/listings'
     | '/admin/message-reports'
@@ -460,6 +471,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/verification'
+    | '/admin/ad-placements'
     | '/admin/audit'
     | '/admin/listings'
     | '/admin/message-reports'
@@ -766,6 +778,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAuditRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/ad-placements': {
+      id: '/admin/ad-placements'
+      path: '/ad-placements'
+      fullPath: '/admin/ad-placements'
+      preLoaderRoute: typeof AdminAdPlacementsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/profile/listings/$id': {
       id: '/profile/listings/$id'
       path: '/$id'
@@ -777,6 +796,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminAdPlacementsRoute: typeof AdminAdPlacementsRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminListingsRoute: typeof AdminListingsRoute
   AdminMessageReportsRoute: typeof AdminMessageReportsRoute
@@ -791,6 +811,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAdPlacementsRoute: AdminAdPlacementsRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminListingsRoute: AdminListingsRoute,
   AdminMessageReportsRoute: AdminMessageReportsRoute,

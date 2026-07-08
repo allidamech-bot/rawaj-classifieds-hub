@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Lock,
   MessageSquareWarning,
+  PanelsTopLeft,
   Sparkles,
   Star,
   Users,
@@ -62,6 +63,12 @@ const tabs: Array<{
     labelAr: "طلبات الترويج",
     icon: Sparkles,
     permission: "canManagePromotions",
+  },
+  {
+    to: "/admin/ad-placements",
+    labelAr: "مساحات الإعلانات",
+    icon: PanelsTopLeft,
+    permission: "canManageAdPlacements",
   },
 ];
 
