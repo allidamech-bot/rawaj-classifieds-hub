@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  format-auth-recovery:
+  capture-auth-lint:
     if: github.head_ref == 'feature/auth-recovery-session-hardening' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -29,23 +29,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Format auth recovery files
-        run: >-
-          npx prettier --write
-          src/lib/auth-return.ts
-          src/routes/auth.callback.tsx
-          src/routes/login.tsx
-          src/routes/reset-password.tsx
-
-      - name: Commit formatting
+      - name: Capture ESLint output
         shell: bash
         run: |
-          if git diff --quiet; then
-            echo "No formatting changes needed."
-            exit 0
-          fi
+          npx eslint --quiet \
+            src/lib/auth-return.ts \
+            src/routes/auth.callback.tsx \
+            src/routes/login.tsx \
+            src/routes/reset-password.tsx \
+            > auth-recovery-lint-output.txt 2>&1 || true
+          cat auth-recovery-lint-output.txt
+
+      - name: Commit diagnostics
+        shell: bash
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/lib/auth-return.ts src/routes/auth.callback.tsx src/routes/login.tsx src/routes/reset-password.tsx
-          git commit -m "Format auth recovery flow"
+          git add auth-recovery-lint-output.txt
+          if git diff --cached --quiet; then
+            echo "No diagnostic changes."
+            exit 0
+          fi
+          git commit -m "Capture auth recovery lint diagnostics"
           git push origin HEAD:feature/auth-recovery-session-hardening
