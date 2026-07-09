@@ -46,6 +46,11 @@ function primaryRole(roles: UserRole[]): UserRole {
   return rolePriority.find((role) => roles.includes(role)) ?? "user";
 }
 
+function isRejectedRefreshTokenError(error: { message?: string; status?: number }): boolean {
+  if (error.status !== 400) return false;
+  return (error.message ?? "").toLowerCase().includes("refresh token");
+}
+
 async function fetchProfile(client: SupabaseClient, user: User): Promise<UserProfile> {
   const { data: profileData, error: profileError } = await client
     .from("profiles")
@@ -85,10 +90,8 @@ async function fetchProfile(client: SupabaseClient, user: User): Promise<UserPro
     const { data: bootstrappedProfile, error: bootstrapReadError } = await client
       .from("profiles")
       .select(
-        "id,email,first_name,last_name,display_name,account_status,verification_status,governorate,city_area,bio,business_name,phone,whatsapp,preferred_contact_method,avatar_path,avatar_url,cover_path,cover_url,created_at,updated_at",
-      )
-      .eq("id", user.id)
-      .maybeSingle();
+        "id,email,first_name,last_name,display_name,account_status,verification_status,governorate,city_area,bio,bow?",
+      );
 
     if (bootstrapReadError) {
       throw new Error(bootstrapReadError.message);
@@ -182,6 +185,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!active) return;
 
       if (error) {
+        if (isRejectedRefreshTokenError(error)) {
+          const { error: clearError } = await client.auth.signOut({ scope: "local" });
+          if (!active) return;
+
+          if (!clearError) {
+            setSession(null);
+            setProfile(null);
+            setStatus("signedOut");
+            setReason(null);
+            return;
+          }
+        }
+
         setSession(null);
         setProfile(null);
         setStatus("authError");
