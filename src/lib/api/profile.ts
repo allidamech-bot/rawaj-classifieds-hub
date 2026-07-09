@@ -169,7 +169,9 @@ export async function uploadProfileMedia({
   }
 
   if (oldPath && oldPath.startsWith(`${userId}/${kind}/`)) {
-    const cleanupResult = await clientResult.data.storage.from(profileMediaBucket).remove([oldPath]);
+    const cleanupResult = await clientResult.data.storage
+      .from(profileMediaBucket)
+      .remove([oldPath]);
     if (cleanupResult.error) {
       console.error("Failed to clean up replaced profile media", {
         userId,
@@ -214,7 +216,9 @@ export async function removeProfileMedia(
   if (!updatedProfile) return missingProfileWriteResult();
 
   if (path && path.startsWith(`${userId}/${kind}/`)) {
-    const storageResult = await clientResult.data.storage.from(profileMediaBucket).remove([path]);
+    const storageResult = await clientResult.data.storage
+      .from(profileMediaBucket)
+      .remove([path]);
     if (storageResult.error) {
       console.error("Failed to clean up profile media after profile reference removal", {
         userId,
