@@ -45,6 +45,17 @@ export interface SaveAdPlacementPayload {
   expectedVersion?: number | null;
 }
 
+function isSafeHttpsUrl(value: string) {
+  if (!value || value.length > 2048 || /\s/.test(value)) return false;
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" && Boolean(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
 export async function ownerFetchAdPlacements(
   canManageAdPlacements: boolean,
 ): Promise<ClassifiedsResult<AdPlacementSummary[]>> {
@@ -85,6 +96,16 @@ export async function ownerSaveAdPlacement(
     return {
       ok: false,
       error: { code: "validation_error", message: "أدخل اسم المساحة وصورة الإعلان ورابط الوجهة." },
+    };
+  }
+
+  if (!isSafeHttpsUrl(imageUrl) || !isSafeHttpsUrl(destinationUrl)) {
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: "استخدم روابط HTTPS صحيحة ونظيفة لصورة الإعلان ورابط الوجهة.",
+      },
     };
   }
 
