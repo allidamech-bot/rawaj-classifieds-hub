@@ -110,7 +110,7 @@ function ReportsPage() {
                 {text("رقم البلاغ:", "Report ID:")} {report.id}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {text("الإعلان:", "Listing:")} {report.listingId} · {text("المبلّغ:", "Reporter:")} {" "}
+                {text("الإعلان:", "Listing:")} {report.listingId} · {text("المبلّغ:", "Reporter:")}{" "}
                 {report.reporterId}
               </p>
               <p className="mt-2 text-xs leading-6">{report.reason}</p>
