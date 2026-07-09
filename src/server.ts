@@ -26,7 +26,7 @@ function applySecurityHeaders(response: Response): Response {
   headers.set("x-frame-options", "DENY");
   headers.set(
     "content-security-policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.supabase.com wss://*.supabase.co wss://*.supabase.com; frame-ancestors 'none';",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.supabase.com wss://*.supabase.co wss://*.supabase.com https://fonts.googleapis.com https://fonts.gstatic.com; frame-ancestors 'none';",
   );
   return new Response(response.body, { status: response.status, headers });
 }
