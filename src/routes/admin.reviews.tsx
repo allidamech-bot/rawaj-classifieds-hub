@@ -20,6 +20,7 @@ export const Route = createFileRoute("/admin/reviews")({
 function ReviewsModerationPage() {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
+  const canManageReviews = auth.hasPermission("canManageReviews");
   const [reviews, setReviews] = useState<SellerReview[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -29,7 +30,7 @@ function ReviewsModerationPage() {
   async function loadReviews() {
     setLoading(true);
     setError(null);
-    const result = await adminFetchSellerReviews(auth.canAccessAdmin);
+    const result = await adminFetchSellerReviews(canManageReviews);
     if (result.ok) {
       setReviews(result.data);
       setNotes(
@@ -44,7 +45,7 @@ function ReviewsModerationPage() {
 
   useEffect(() => {
     void loadReviews();
-  }, [auth.canAccessAdmin]);
+  }, [canManageReviews]);
 
   async function moderate(review: SellerReview, status: "approved" | "rejected") {
     setMessage("");
@@ -52,7 +53,7 @@ function ReviewsModerationPage() {
       setMessage(text("تعذر تحديد حساب المراجع الحالي.", "Could not identify current reviewer."));
       return;
     }
-    const result = await adminModerateSellerReview(auth.canAccessAdmin, {
+    const result = await adminModerateSellerReview(canManageReviews, {
       reviewId: review.id,
       status,
       reviewerId: auth.profile.id,
