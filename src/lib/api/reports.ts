@@ -152,7 +152,7 @@ export async function adminFetchReports(
 
 export async function adminModerateReport(
   canUseAdminAccess: boolean,
-  payload: ModerateReportPayload,
+  payload: ModerateReportPayload & { expectedUpdatedAt: string },
 ): Promise<ClassifiedsResult<null>> {
   if (!canUseAdminAccess) {
     return {
@@ -161,10 +161,10 @@ export async function adminModerateReport(
     };
   }
 
-  if (!payload.reportId.trim()) {
+  if (!payload.reportId.trim() || !payload.expectedUpdatedAt) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد البلاغ." },
+      error: { code: "validation_error", message: "تعذر تحديد البلاغ أو نسخته الحالية." },
     };
   }
 
@@ -172,21 +172,32 @@ export async function adminModerateReport(
   if (!clientResult.ok) return clientResult;
 
   const dbStatus = toDbReportStatus(payload.status);
-  const { error } = await clientResult.data
-    .from("listing_reports")
-    .update({
-      status: dbStatus,
-      assigned_to: payload.assignedTo ?? null,
-      admin_note: payload.adminNote ?? null,
-      resolved_at:
-        payload.resolvedAt ??
-        (payload.status === "resolved" || payload.status === "rejected"
-          ? new Date().toISOString()
-          : null),
-    })
-    .eq("id", payload.reportId);
+  const { error } = await clientResult.data.rpc("rawaj_admin_moderate_listing_report", {
+    p_report_id: payload.reportId,
+    p_status: dbStatus,
+    p_assigned_to: payload.assignedTo ?? null,
+    p_admin_note: payload.adminNote ?? null,
+    p_resolved_at:
+      payload.resolvedAt ??
+      (payload.status === "resolved" || payload.status === "rejected"
+        ? new Date().toISOString()
+        : null),
+    p_expected_updated_at: payload.expectedUpdatedAt,
+  });
 
-  if (error) return { ok: false, error: mapError(error) };
+  if (error) {
+    if (error.message?.includes("stale_listing_report")) {
+      return {
+        ok: false,
+        error: {
+          code: "stale_review",
+          message: "تغيّر البلاغ منذ تحميله. أعد تحميل القائمة قبل اتخاذ قرار جديد.",
+        },
+      };
+    }
+    return { ok: false, error: mapError(error) };
+  }
+
   return { ok: true, data: null };
 }
 
