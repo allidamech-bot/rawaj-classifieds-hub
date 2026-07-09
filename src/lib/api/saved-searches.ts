@@ -147,13 +147,21 @@ export async function deleteSavedSearch(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { error } = await clientResult.data
+  const { data, error } = await clientResult.data
     .from("saved_searches")
     .delete()
     .eq("id", savedSearchId)
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .select("id")
+    .maybeSingle();
 
   if (error) return { ok: false, error: mapError(error) };
+  if (!data) {
+    return {
+      ok: false,
+      error: { code: "not_found", message: "لم يعد البحث المحفوظ متاحاً." },
+    };
+  }
   return { ok: true, data: null };
 }
 
