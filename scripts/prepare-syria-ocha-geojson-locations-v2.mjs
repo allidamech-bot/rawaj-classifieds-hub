@@ -10,6 +10,12 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
+import {
+  buildOchaSourceNotes,
+  classifySyriaPopulatedPlace,
+  summarizeSyriaSourceClassifications,
+} from "./syria-location-type-classification.mjs";
+
 const args = parseArgs(process.argv.slice(2));
 const inputDir = resolve(args.input ?? "data/locations/sources/geojson");
 const outputJson = resolve(args.json ?? "data/locations/syria-ocha-location-nodes.json");
@@ -19,6 +25,8 @@ const dryRun = Boolean(args["dry-run"]);
 
 const SOURCE = "ocha-hdx-cod-ab-syr";
 const SOURCE_URL = "https://data.humdata.org/dataset/cod-ab-syr";
+const POPULATED_SOURCE_URL =
+  "https://data.humdata.org/dataset/syrian-arab-republic-populated-places";
 
 const layers = {
   admin0: await features("syr_admin0.geojson"),
@@ -36,6 +44,7 @@ const reconciliation = {
   areaMerges: 0,
   slugCollisionsResolved: 0,
 };
+const sourceClassificationRecords = [];
 
 for (const feature of layers.admin0) upsert(adminNode(feature, 0), "admin");
 for (const feature of layers.admin1) upsert(adminNode(feature, 1), "admin");
@@ -64,6 +73,9 @@ recalculateDepths(output);
 const validation = validate(output);
 const arabicAudit = auditArabic(output);
 const targetPaths = verifyTargets(output);
+const sourceClassificationAudit = summarizeSyriaSourceClassifications(
+  sourceClassificationRecords,
+);
 const report = {
   source: SOURCE,
   sourceUrl: SOURCE_URL,
@@ -82,9 +94,15 @@ const report = {
   validation,
   arabicAudit,
   targetPaths,
+  sourceClassificationAudit,
 };
 
 const blocking = [...validation.blockingIssues];
+if (sourceClassificationAudit.unmappedCount > 0) {
+  blocking.push(
+    `unmapped OCHA populated-place source classes: ${sourceClassificationAudit.unmappedCount}/${sourceClassificationAudit.total}; review sourceClassificationAudit before importing`,
+  );
+}
 if (arabicAudit.suspiciousCount > 0) {
   blocking.push(`suspicious Arabic/mojibake values: ${arabicAudit.suspiciousCount}`);
 }
@@ -148,10 +166,15 @@ function populatedNode(feature) {
     p.featurealtname1_ar,
     p.featurealtname2_ar,
   );
+  const sourceClassification = classifySyriaPopulatedPlace(
+    p.popplaceclasstitle,
+    p.popplaceclassnumber,
+  );
+  sourceClassificationRecords.push({ pcode, ...sourceClassification });
   return makeNode({
     pcode,
     parentPcode: required(p.adm3_pcode, `adm3_pcode for ${pcode}`),
-    type: inferType(text(p.popplaceclasstitle)),
+    type: sourceClassification.nodeType,
     nameAr: arabic || english,
     nameEn: english,
     aliases: [
@@ -167,6 +190,8 @@ function populatedNode(feature) {
     lon: numberOrNull(p.point_x),
     sourceDate: text(p.validon) || text(p.date),
     version: text(p.version),
+    sourceUrl: POPULATED_SOURCE_URL,
+    sourceClassification,
   });
 }
 
@@ -224,6 +249,8 @@ function makeNode({
   lon,
   sourceDate,
   version,
+  sourceUrl = SOURCE_URL,
+  sourceClassification = null,
 }) {
   const safeAr = required(nameAr || nameEn || pcode, `name for ${pcode}`);
   const safeEn = text(nameEn) || null;
@@ -247,11 +274,11 @@ function makeNode({
     search_aliases: unique(aliases).filter((v) => v !== safeAr && v !== safeEn),
     legacy_governorate_id: null,
     legacy_district_ar: null,
-    source_url: SOURCE_URL,
+    source_url: sourceUrl,
     source_date: sourceDate || null,
     confidence: "high",
     review_status: "unreviewed",
-    notes: version ? `OCHA/HDX source version ${version}` : null,
+    notes: buildOchaSourceNotes(version, sourceClassification),
   };
 }
 
@@ -433,14 +460,6 @@ function nameMatches(node, target) {
   return [node.name_ar, node.name_en, ...node.search_aliases]
     .filter(Boolean)
     .some((value) => normalize(value) === n);
-}
-
-function inferType(title) {
-  const value = title.toLowerCase();
-  if (value.includes("city")) return "city";
-  if (value.includes("town")) return "town";
-  if (value.includes("village")) return "village";
-  return "locality";
 }
 
 function firstArabic(...values) {
