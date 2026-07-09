@@ -43,13 +43,20 @@ const EMPTY_METRICS: AdminCommandCenterMetrics = {
 function AdminOverview() {
   const auth = useAuth();
   const { text } = useUiPreferences();
+  const canViewCommandCenterMetrics = auth.hasPermission("canManageUsers");
   const [metrics, setMetrics] = useState<AdminCommandCenterMetrics>(EMPTY_METRICS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!canViewCommandCenterMetrics) {
+      setLoading(false);
+      setError("");
+      return;
+    }
+
     let cancelled = false;
-    void adminFetchCommandCenterMetrics(auth.canAccessAdmin).then((result) => {
+    void adminFetchCommandCenterMetrics(canViewCommandCenterMetrics).then((result) => {
       if (cancelled) return;
       setLoading(false);
       if (!result.ok) {
@@ -61,7 +68,24 @@ function AdminOverview() {
     return () => {
       cancelled = true;
     };
-  }, [auth.canAccessAdmin]);
+  }, [canViewCommandCenterMetrics]);
+
+  if (!canViewCommandCenterMetrics) {
+    return (
+      <section className="rounded-2xl bg-card p-5 text-center hairline">
+        <ShieldCheck className="mx-auto h-7 w-7 text-primary" />
+        <h2 className="mt-3 text-base font-extrabold">
+          {text("مساحات الإدارة متاحة حسب الصلاحيات", "Admin workspaces follow your permissions")}
+        </h2>
+        <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">
+          {text(
+            "المؤشرات التشغيلية التفصيلية متاحة للمالك والإدارة، بينما تبقى طوابير المراجعة المصرح بها متاحة من شريط التنقل.",
+            "Detailed operational metrics are limited to Owner and Admin, while authorized moderation queues remain available from the navigation bar.",
+          )}
+        </p>
+      </section>
+    );
+  }
 
   const queueLoad =
     metrics.pendingListings +
