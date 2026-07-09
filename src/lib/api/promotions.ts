@@ -1,4 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   ClassifiedsResult,
   CreateListingPromotionRequestPayload,
@@ -39,7 +38,10 @@ export async function createListingPromotionRequest(
   if (!payload.listingId.trim() || payload.requestedDays < 1 || payload.requestedDays > 90) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "اختر إعلاناً معتمداً ومدة بين 1 و90 يوماً." },
+      error: {
+        code: "validation_error",
+        message: "اختر إعلاناً معتمداً ومدة بين 1 و90 يوماً.",
+      },
     };
   }
 
@@ -86,7 +88,13 @@ export async function uploadPromotionReceipt({
 
   const validation = validateReceiptFile(file);
   if (!validation.ok) {
-    return { ok: false, error: { code: "validation_error", message: validation.error! } };
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: validation.error ?? "تعذر التحقق من ملف الإيصال.",
+      },
+    };
   }
 
   const clientResult = getClient();
@@ -187,7 +195,10 @@ export async function adminFetchPromotionRequests(
   if (!canUseAdminAccess) {
     return {
       ok: false,
-      error: { code: "permission_denied", message: "مراجعة الترويج متاحة لحساب إداري مخول فقط." },
+      error: {
+        code: "permission_denied",
+        message: "مراجعة الترويج متاحة لحساب إداري مخول فقط.",
+      },
     };
   }
 
@@ -212,34 +223,51 @@ export async function adminFetchPromotionRequests(
 
 export async function adminModeratePromotionRequest(
   canUseAdminAccess: boolean,
-  payload: ModerateListingPromotionRequestPayload,
+  payload: ModerateListingPromotionRequestPayload & { expectedUpdatedAt: string },
 ): Promise<ClassifiedsResult<null>> {
   if (!canUseAdminAccess) {
     return {
       ok: false,
-      error: { code: "permission_denied", message: "مراجعة الترويج متاحة لحساب إداري مخول فقط." },
+      error: {
+        code: "permission_denied",
+        message: "مراجعة الترويج متاحة لحساب إداري مخول فقط.",
+      },
     };
   }
 
-  if (!payload.requestId.trim()) {
+  if (!payload.requestId.trim() || !payload.expectedUpdatedAt) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد طلب الترويج." },
+      error: {
+        code: "validation_error",
+        message: "تعذر تحديد طلب الترويج أو نسخته الحالية.",
+      },
     };
   }
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { error } = await clientResult.data
-    .from("listing_promotion_requests")
-    .update({
-      status: payload.status,
-      admin_note: payload.adminNote?.trim() || null,
-    })
-    .eq("id", payload.requestId);
+  const { error } = await clientResult.data.rpc("rawaj_admin_moderate_promotion_request", {
+    p_request_id: payload.requestId,
+    p_status: payload.status,
+    p_admin_note: payload.adminNote?.trim() || null,
+    p_expected_updated_at: payload.expectedUpdatedAt,
+  });
 
-  if (error) return { ok: false, error: mapError(error) };
+  if (error) {
+    if (error.message?.includes("stale_promotion_request")) {
+      return {
+        ok: false,
+        error: {
+          code: "stale_review",
+          message: "تغيّر طلب الترويج منذ تحميله. أعد تحميل القائمة قبل اتخاذ قرار جديد.",
+        },
+      };
+    }
+    return { ok: false, error: mapError(error) };
+  }
+
   return { ok: true, data: null };
 }
 

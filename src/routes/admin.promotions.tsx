@@ -69,6 +69,7 @@ function PromotionsPage() {
       requestId: request.id,
       status,
       adminNote: notes[request.id] ?? null,
+      expectedUpdatedAt: request.updatedAt,
     });
     if (result.ok) {
       setNotice(
@@ -206,7 +207,10 @@ function Panel({ title, body }: { title: string; body?: string }) {
   );
 }
 
-function promotionStatusLabel(status: ListingPromotionRequest["status"], text: (ar: string, en: string) => string) {
+function promotionStatusLabel(
+  status: ListingPromotionRequest["status"],
+  text: (ar: string, en: string) => string,
+) {
   if (status === "approved") return text("معتمد", "Approved");
   if (status === "rejected") return text("مرفوض", "Rejected");
   if (status === "expired") return text("منتهي", "Expired");
