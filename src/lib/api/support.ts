@@ -1,8 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   ClassifiedsResult,
   CreateSupportRequestPayload,
-  ModerateSupportRequestPayload,
   SupportRequest,
   SupportRequestStatus,
   SupportRequestType,
@@ -80,62 +78,6 @@ export async function fetchMySupportRequests(
 
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapSupportRequest) };
-}
-
-export async function adminFetchSupportRequests(
-  canUseAdminAccess: boolean,
-): Promise<ClassifiedsResult<SupportRequest[]>> {
-  if (!canUseAdminAccess) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "طلبات الدعم متاحة لحساب إداري مخول فقط." },
-    };
-  }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data
-    .from("support_requests")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(100);
-
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapSupportRequest) };
-}
-
-export async function adminModerateSupportRequest(
-  canUseAdminAccess: boolean,
-  payload: ModerateSupportRequestPayload,
-): Promise<ClassifiedsResult<null>> {
-  if (!canUseAdminAccess) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "تحديث طلبات الدعم متاح لحساب إداري مخول فقط." },
-    };
-  }
-
-  if (!payload.requestId.trim()) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد طلب الدعم." },
-    };
-  }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { error } = await clientResult.data
-    .from("support_requests")
-    .update({
-      status: payload.status,
-      admin_note: payload.adminNote?.trim() || null,
-    })
-    .eq("id", payload.requestId);
-
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: null };
 }
 
 function mapSupportRequest(row: Record<string, unknown>): SupportRequest {
