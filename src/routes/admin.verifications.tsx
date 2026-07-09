@@ -47,6 +47,7 @@ function AdminVerificationsPage() {
       requestId: request.id,
       status,
       adminNote: notes[request.id] ?? null,
+      expectedUpdatedAt: request.updatedAt,
     });
     if (result.ok) {
       setNotice(
@@ -150,12 +151,18 @@ function Panel({ title, body }: { title: string; body?: string }) {
   );
 }
 
-function verificationStatusLabel(status: SellerVerificationRequest["status"], text: (ar: string, en: string) => string) {
+function verificationStatusLabel(
+  status: SellerVerificationRequest["status"],
+  text: (ar: string, en: string) => string,
+) {
   if (status === "approved") return text("موثق", "Verified");
   if (status === "rejected") return text("مرفوض", "Rejected");
   return text("قيد المراجعة", "Pending review");
 }
 
-function verificationTypeLabel(type: SellerVerificationRequest["requestType"], text: (ar: string, en: string) => string) {
+function verificationTypeLabel(
+  type: SellerVerificationRequest["requestType"],
+  text: (ar: string, en: string) => string,
+) {
   return type === "business" ? text("منشأة", "Business") : text("فرد", "Individual");
 }

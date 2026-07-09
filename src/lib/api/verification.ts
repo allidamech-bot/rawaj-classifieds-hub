@@ -100,7 +100,7 @@ export async function adminFetchVerificationRequests(
 
 export async function adminModerateVerificationRequest(
   canUseAdminAccess: boolean,
-  payload: ModerateSellerVerificationRequestPayload,
+  payload: ModerateSellerVerificationRequestPayload & { expectedUpdatedAt: string },
 ): Promise<ClassifiedsResult<null>> {
   if (!canUseAdminAccess) {
     return {
@@ -109,25 +109,36 @@ export async function adminModerateVerificationRequest(
     };
   }
 
-  if (!payload.requestId.trim()) {
+  if (!payload.requestId.trim() || !payload.expectedUpdatedAt) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد طلب التوثيق." },
+      error: { code: "validation_error", message: "تعذر تحديد طلب التوثيق أو نسخته الحالية." },
     };
   }
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { error } = await clientResult.data
-    .from("seller_verification_requests")
-    .update({
-      status: payload.status,
-      admin_note: payload.adminNote?.trim() || null,
-    })
-    .eq("id", payload.requestId);
+  const { error } = await clientResult.data.rpc("rawaj_admin_moderate_verification_request", {
+    p_request_id: payload.requestId,
+    p_status: payload.status,
+    p_admin_note: payload.adminNote?.trim() || null,
+    p_expected_updated_at: payload.expectedUpdatedAt,
+  });
 
-  if (error) return { ok: false, error: mapError(error) };
+  if (error) {
+    if (error.message?.includes("stale_verification_request")) {
+      return {
+        ok: false,
+        error: {
+          code: "stale_review",
+          message: "تغيّر طلب التوثيق منذ تحميله. أعد تحميل القائمة قبل اتخاذ قرار جديد.",
+        },
+      };
+    }
+    return { ok: false, error: mapError(error) };
+  }
+
   return { ok: true, data: null };
 }
 
