@@ -69,6 +69,7 @@ function PromotionsPage() {
       requestId: request.id,
       status,
       adminNote: notes[request.id] ?? null,
+      expectedUpdatedAt: request.updatedAt,
     });
     if (result.ok) {
       setNotice(
@@ -206,7 +207,10 @@ function Panel({ title, body }: { title: string; body?: string }) {
   );
 }
 
-function promotionStatusLabel(status: ListingPromotionRequest["status"], text: (ar: string, en: string) => string) {
+function promotionStatusLabel(
+  status: ListingPromotionRequest["status"],
+  text: (ar: string, en: string) => string,
+) {
   if (status === "approved") return text("معتمد", "Approved");
   if (status === "rejected") return text("مرفوض", "Rejected");
   if (status === "expired") return text("منتهي", "Expired");
@@ -214,7 +218,10 @@ function promotionStatusLabel(status: ListingPromotionRequest["status"], text: (
   return text("قيد المراجعة", "Pending review");
 }
 
-function promotionTypeLabel(type: PromotionType, text: (ar: string, en: string) => string) {
+function promotionTypeLabel(
+  type: PromotionType,
+  text: (ar: string, en: string) => string,
+) {
   if (type === "top_category") return text("أعلى القسم", "Top category");
   if (type === "highlighted") return text("إبراز داخل النتائج", "Highlighted in results");
   if (type === "urgent") return text("موضع مميز", "Priority placement");
