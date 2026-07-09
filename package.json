@@ -14,8 +14,9 @@
     "test:listing-system": "node scripts/listing-system-regression.mjs",
     "format": "prettier --write .",
     "locations:syria:build": "node scripts/prepare-syria-ocha-geojson-locations-v2.mjs",
-    "locations:syria:validate": "node scripts/prepare-syria-ocha-geojson-locations-v2.mjs --dry-run && node scripts/apply-syria-location-bundle.mjs",
-    "locations:syria:apply": "node scripts/apply-syria-location-bundle.mjs --apply"
+    "locations:syria:type-coverage": "node scripts/validate-syria-location-type-coverage.mjs",
+    "locations:syria:validate": "node scripts/prepare-syria-ocha-geojson-locations-v2.mjs --dry-run && npm run locations:syria:type-coverage && node scripts/apply-syria-location-bundle.mjs",
+    "locations:syria:apply": "npm run locations:syria:type-coverage && node scripts/apply-syria-location-bundle.mjs --apply"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.1",
