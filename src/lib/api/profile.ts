@@ -5,7 +5,13 @@ import type {
   ProfileMediaUploadPayload,
   UpdateProfileBasicsPayload,
 } from "@/lib/classifieds-types";
-import { getClient, mapError, mapStorageError, rowNullableString, rowString } from "@/lib/api/shared";
+import {
+  getClient,
+  mapError,
+  mapStorageError,
+  rowNullableString,
+  rowString,
+} from "@/lib/api/shared";
 
 import {
   buildProfileMediaPath,
@@ -147,7 +153,9 @@ export async function uploadProfileMedia({
     .maybeSingle();
 
   if (error || !updatedProfile) {
-    const cleanupResult = await clientResult.data.storage.from(profileMediaBucket).remove([storagePath]);
+    const cleanupResult = await clientResult.data.storage
+      .from(profileMediaBucket)
+      .remove([storagePath]);
     if (cleanupResult.error) {
       console.error("Failed to clean up unlinked profile media upload", {
         userId,
