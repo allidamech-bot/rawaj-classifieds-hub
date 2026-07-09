@@ -17,6 +17,7 @@ export const Route = createFileRoute("/admin/verifications")({
 function AdminVerificationsPage() {
   const auth = useAuth();
   const { text } = useUiPreferences();
+  const canManageVerifications = auth.hasPermission("canManageVerifications");
   const [requests, setRequests] = useState<SellerVerificationRequest[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -26,7 +27,7 @@ function AdminVerificationsPage() {
   async function load() {
     setLoading(true);
     setError(null);
-    const result = await adminFetchVerificationRequests(auth.canAccessAdmin);
+    const result = await adminFetchVerificationRequests(canManageVerifications);
     if (result.ok) {
       setRequests(result.data);
       setNotes(Object.fromEntries(result.data.map((item) => [item.id, item.adminNote ?? ""])));
@@ -39,11 +40,11 @@ function AdminVerificationsPage() {
 
   useEffect(() => {
     void load();
-  }, [auth.canAccessAdmin]);
+  }, [canManageVerifications]);
 
   async function moderate(request: SellerVerificationRequest, status: "approved" | "rejected") {
     setNotice("");
-    const result = await adminModerateVerificationRequest(auth.canAccessAdmin, {
+    const result = await adminModerateVerificationRequest(canManageVerifications, {
       requestId: request.id,
       status,
       adminNote: notes[request.id] ?? null,

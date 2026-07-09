@@ -24,6 +24,7 @@ export const Route = createFileRoute("/admin/promotions")({
 function PromotionsPage() {
   const auth = useAuth();
   const { text } = useUiPreferences();
+  const canManagePromotions = auth.hasPermission("canManagePromotions");
   const [requests, setRequests] = useState<ListingPromotionRequest[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [receiptUrls, setReceiptUrls] = useState<Record<string, string | null>>({});
@@ -34,7 +35,7 @@ function PromotionsPage() {
   async function load() {
     setLoading(true);
     setError(null);
-    const result = await adminFetchPromotionRequests(auth.canAccessAdmin);
+    const result = await adminFetchPromotionRequests(canManagePromotions);
     if (result.ok) {
       setRequests(result.data);
       setNotes(Object.fromEntries(result.data.map((item) => [item.id, item.adminNote ?? ""])));
@@ -61,11 +62,11 @@ function PromotionsPage() {
 
   useEffect(() => {
     void load();
-  }, [auth.canAccessAdmin]);
+  }, [canManagePromotions]);
 
   async function moderate(request: ListingPromotionRequest, status: "approved" | "rejected") {
     setNotice("");
-    const result = await adminModeratePromotionRequest(auth.canAccessAdmin, {
+    const result = await adminModeratePromotionRequest(canManagePromotions, {
       requestId: request.id,
       status,
       adminNote: notes[request.id] ?? null,
