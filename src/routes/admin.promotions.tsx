@@ -16,10 +16,7 @@ import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin/promotions")({
   head: () => ({
-    meta: [
-      { title: "طلبات الترويج | رواج" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
+    meta: [{ title: "طلبات الترويج | رواج" }, { name: "robots", content: "noindex, nofollow" }],
   }),
   component: PromotionsPage,
 });
@@ -34,33 +31,25 @@ function PromotionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [notice, setNotice] = useState("");
-
   async function load() {
     setLoading(true);
     setError(null);
     const result = await adminFetchPromotionRequests(auth.canAccessAdmin);
     if (result.ok) {
       setRequests(result.data);
-      setNotes(
-        Object.fromEntries(result.data.map((item) => [item.id, item.adminNote ?? ""])),
-      );
+      setNotes(Object.fromEntries(result.data.map((item) => [item.id, item.adminNote ?? ""])));
       const receiptEntries = await Promise.all(
         result.data.map(async (item) => {
           if (!item.proofPath) return [item.id, { url: null, error: "" }] as const;
           const signed = await createPromotionReceiptSignedUrl(item.proofPath);
           return [
             item.id,
-            {
-              url: signed.ok ? signed.data : null,
-              error: signed.ok ? "" : signed.error.message,
-            },
+            { url: signed.ok ? signed.data : null, error: signed.ok ? "" : signed.error.message },
           ] as const;
         }),
       );
       setReceiptUrls(Object.fromEntries(receiptEntries.map(([id, value]) => [id, value.url])));
-      setReceiptErrors(
-        Object.fromEntries(receiptEntries.map(([id, value]) => [id, value.error])),
-      );
+      setReceiptErrors(Object.fromEntries(receiptEntries.map(([id, value]) => [id, value.error])));
     } else {
       setRequests([]);
       setReceiptUrls({});
@@ -74,10 +63,7 @@ function PromotionsPage() {
     void load();
   }, [auth.canAccessAdmin]);
 
-  async function moderate(
-    request: ListingPromotionRequest,
-    status: "approved" | "rejected",
-  ) {
+  async function moderate(request: ListingPromotionRequest, status: "approved" | "rejected") {
     setNotice("");
     const result = await adminModeratePromotionRequest(auth.canAccessAdmin, {
       requestId: request.id,
@@ -123,9 +109,7 @@ function PromotionsPage() {
           body={error.message}
         />
       ) : requests.length === 0 ? (
-        <Panel
-          title={text("لا توجد طلبات ترويج حالياً", "No promotion requests right now")}
-        />
+        <Panel title={text("لا توجد طلبات ترويج حالياً", "No promotion requests right now")} />
       ) : (
         <div className="grid gap-3">
           {requests.map((request) => (
@@ -139,9 +123,7 @@ function PromotionsPage() {
                     {promotionTypeLabel(request.promotionType, text)} · {request.requestedDays}{" "}
                     {text("يوم", "days")}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {request.requesterUserId}
-                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{request.requesterUserId}</p>
                   {(request.paymentMethod || request.paymentReference) && (
                     <p className="mt-1 text-xs">
                       {request.paymentMethod ?? ""} {request.paymentReference ?? ""}
@@ -225,10 +207,7 @@ function Panel({ title, body }: { title: string; body?: string }) {
   );
 }
 
-function promotionStatusLabel(
-  status: ListingPromotionRequest["status"],
-  text: (ar: string, en: string) => string,
-) {
+function promotionStatusLabel(status: ListingPromotionRequest["status"], text: (ar: string, en: string) => string) {
   if (status === "approved") return text("معتمد", "Approved");
   if (status === "rejected") return text("مرفوض", "Rejected");
   if (status === "expired") return text("منتهي", "Expired");
@@ -236,10 +215,7 @@ function promotionStatusLabel(
   return text("قيد المراجعة", "Pending review");
 }
 
-function promotionTypeLabel(
-  type: PromotionType,
-  text: (ar: string, en: string) => string,
-) {
+function promotionTypeLabel(type: PromotionType, text: (ar: string, en: string) => string) {
   if (type === "top_category") return text("أعلى القسم", "Top category");
   if (type === "highlighted") return text("إبراز داخل النتائج", "Highlighted in results");
   if (type === "urgent") return text("موضع مميز", "Priority placement");
