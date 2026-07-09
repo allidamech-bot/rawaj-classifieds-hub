@@ -14,6 +14,7 @@ export const Route = createFileRoute("/admin/message-reports")({
 function AdminMessageReportsPage() {
   const auth = useAuth();
   const { text } = useUiPreferences();
+  const canManageReports = auth.hasPermission("canManageReports");
   const [reports, setReports] = useState<MessageReport[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -23,7 +24,7 @@ function AdminMessageReportsPage() {
   async function load() {
     setLoading(true);
     setError(null);
-    const result = await adminFetchMessageReports(auth.canAccessAdmin);
+    const result = await adminFetchMessageReports(canManageReports);
     if (result.ok) {
       setReports(result.data);
       setNotes(Object.fromEntries(result.data.map((item) => [item.id, item.adminNote ?? ""])));
@@ -36,11 +37,11 @@ function AdminMessageReportsPage() {
 
   useEffect(() => {
     void load();
-  }, [auth.canAccessAdmin]);
+  }, [canManageReports]);
 
   async function moderate(report: MessageReport, status: MessageReportStatus) {
     setNotice("");
-    const result = await adminModerateMessageReport(auth.canAccessAdmin, {
+    const result = await adminModerateMessageReport(canManageReports, {
       reportId: report.id,
       status,
       adminNote: notes[report.id] ?? null,
