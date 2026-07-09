@@ -46,40 +46,6 @@ export async function adminModerateListing(
     p_expected_updated_at: payload.expectedUpdatedAt,
   });
 
-  if (rpcResult.error && mapError(rpcResult.error).code === "schema_missing") {
-    const now = new Date().toISOString();
-    const fallback = await clientResult.data
-      .from("listings")
-      .update({
-        status: payload.status,
-        reviewed_by: payload.reviewerId,
-        reviewed_at: now,
-        rejection_reason:
-          payload.status === "rejected" ? (payload.rejectionReason?.trim() ?? null) : null,
-        published_at: payload.status === "approved" ? now : null,
-        archived_at: null,
-        updated_at: now,
-      })
-      .eq("id", payload.listingId.trim())
-      .eq("status", "pending_review")
-      .eq("updated_at", payload.expectedUpdatedAt)
-      .select("id")
-      .maybeSingle();
-
-    if (fallback.error)
-      return { ok: false, error: mapError(fallback.error, "admin_moderate_listing") };
-    if (!fallback.data) {
-      return {
-        ok: false,
-        error: {
-          code: "stale_review",
-          message: "تغيّر الإعلان منذ فتحه للمراجعة. حدّث الصفحة وراجعه من جديد.",
-        },
-      };
-    }
-    return { ok: true, data: null };
-  }
-
   const error = rpcResult.error;
   if (error) {
     if (error.message?.includes("stale_review")) {
