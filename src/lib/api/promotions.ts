@@ -35,11 +35,7 @@ export async function createListingPromotionRequest(
     };
   }
 
-  if (
-    !payload.listingId.trim() ||
-    payload.requestedDays < 1 ||
-    payload.requestedDays > 90
-  ) {
+  if (!payload.listingId.trim() || payload.requestedDays < 1 || payload.requestedDays > 90) {
     return {
       ok: false,
       error: {
