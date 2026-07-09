@@ -5,13 +5,7 @@ import type {
   ProfileMediaUploadPayload,
   UpdateProfileBasicsPayload,
 } from "@/lib/classifieds-types";
-import {
-  getClient,
-  mapError,
-  mapStorageError,
-  rowNullableString,
-  rowString,
-} from "@/lib/api/shared";
+import { getClient, mapError, mapStorageError, rowNullableString, rowString } from "@/lib/api/shared";
 
 import {
   buildProfileMediaPath,
