@@ -73,9 +73,7 @@ recalculateDepths(output);
 const validation = validate(output);
 const arabicAudit = auditArabic(output);
 const targetPaths = verifyTargets(output);
-const sourceClassificationAudit = summarizeSyriaSourceClassifications(
-  sourceClassificationRecords,
-);
+const sourceClassificationAudit = summarizeSyriaSourceClassifications(sourceClassificationRecords);
 const report = {
   source: SOURCE,
   sourceUrl: SOURCE_URL,
