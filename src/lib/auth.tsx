@@ -90,8 +90,10 @@ async function fetchProfile(client: SupabaseClient, user: User): Promise<UserPro
     const { data: bootstrappedProfile, error: bootstrapReadError } = await client
       .from("profiles")
       .select(
-        "id,email,first_name,last_name,display_name,account_status,verification_status,governorate,city_area,bio,bow?",
-      );
+        "id,email,first_name,last_name,display_name,account_status,verification_status,governorate,city_area,bio,business_name,phone,whatsapp,preferred_contact_method,avatar_path,avatar_url,cover_path,cover_url,created_at,updated_at",
+      )
+      .eq("id", user.id)
+      .maybeSingle();
 
     if (bootstrapReadError) {
       throw new Error(bootstrapReadError.message);
