@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import type { CanonicalLocationNode, LocationSearchResult } from "@/lib/api/location-taxonomy";
+import type {
+  CanonicalLocationNode,
+  LocationNodeType,
+  LocationSearchResult,
+} from "@/lib/api/location-taxonomy";
 import { fetchLocationChildren, searchLocationNodes } from "@/lib/api/location-taxonomy";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useLocationLevels } from "./use-location-levels";
@@ -84,6 +88,22 @@ export function CanonicalLocationSelector({
     onChange(result.node.id, result.node);
   }
 
+  function locationTypeLabel(nodeType: LocationNodeType) {
+    const labels: Record<LocationNodeType, [string, string]> = {
+      country: ["دولة", "Country"],
+      governorate: ["محافظة", "Governorate"],
+      district: ["منطقة", "District"],
+      subdistrict: ["ناحية", "Subdistrict"],
+      city: ["مدينة", "City"],
+      town: ["بلدة", "Town"],
+      village: ["قرية", "Village"],
+      neighborhood: ["حي", "Neighborhood"],
+      locality: ["موقع", "Locality"],
+    };
+    const [ar, en] = labels[nodeType] ?? labels.locality;
+    return language === "en" ? en : ar;
+  }
+
   return (
     <div className="space-y-3">
       <div className="relative">
@@ -92,7 +112,7 @@ export function CanonicalLocationSelector({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           disabled={disabled}
-          placeholder={text("ابحث باسم الموقع أو اسمه الشائع", "Search location or common name")}
+          placeholder={text("ابحث مباشرة عن مدينة أو بلدة أو قرية", "Search city, town, or village")}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm disabled:opacity-50"
         />
         {query.trim().length >= 2 ? (
@@ -114,10 +134,15 @@ export function CanonicalLocationSelector({
                 onClick={() => selectSearchResult(result)}
                 className="block w-full rounded-lg px-3 py-2 text-start hover:bg-muted-surface"
               >
-                <span className="block text-sm font-bold">
-                  {language === "en"
-                    ? result.node.nameEn || result.node.nameAr
-                    : result.node.nameAr}
+                <span className="flex items-center gap-2 text-sm font-bold">
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    {locationTypeLabel(result.node.nodeType)}
+                  </span>
+                  <span>
+                    {language === "en"
+                      ? result.node.nameEn || result.node.nameAr
+                      : result.node.nameAr}
+                  </span>
                 </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
                   {language === "en" ? result.pathEn : result.pathAr}
@@ -135,6 +160,13 @@ export function CanonicalLocationSelector({
         ) : null}
       </div>
 
+      <p className="text-xs leading-5 text-muted-foreground">
+        {text(
+          "يمكنك البحث مباشرة، أو النزول تدريجياً من المحافظة إلى المنطقة والناحية ثم المدينة أو القرية.",
+          "Search directly, or drill down from governorate to district, subdistrict, then city or village.",
+        )}
+      </p>
+
       {levels.map((level, index) => (
         <select
           key={`${level.parentId}-${index}`}
@@ -143,10 +175,10 @@ export function CanonicalLocationSelector({
           disabled={disabled}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm disabled:opacity-50"
         >
-          <option value="">{text("اختر الموقع", "Choose location")}</option>
+          <option value="">{text("اختر المستوى التالي", "Choose next level")}</option>
           {level.options.map((option) => (
             <option key={option.id} value={option.id}>
-              {language === "en" ? option.nameEn || option.nameAr : option.nameAr}
+              {locationTypeLabel(option.nodeType)} — {language === "en" ? option.nameEn || option.nameAr : option.nameAr}
             </option>
           ))}
         </select>
