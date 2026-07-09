@@ -107,11 +107,7 @@ export function buildOchaSourceNotes(version, classification) {
 }
 
 function normalizeSourceTitle(value) {
-  return text(value)
-    .normalize("NFKC")
-    .toLocaleLowerCase("en")
-    .replace(/\s+/g, " ")
-    .trim();
+  return text(value).normalize("NFKC").toLocaleLowerCase("en").replace(/\\s+/g, " ").trim();
 }
 
 function text(value) {
