@@ -57,6 +57,7 @@ function ReviewsModerationPage() {
       status,
       reviewerId: auth.profile.id,
       adminNote: notes[review.id] ?? null,
+      expectedUpdatedAt: review.updatedAt,
     });
     if (!result.ok) {
       setMessage(result.error.message);
