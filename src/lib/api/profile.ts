@@ -62,7 +62,7 @@ export async function updateOwnProfileBasics(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { error } = await clientResult.data
+  const { data, error } = await clientResult.data
     .from("profiles")
     .update({
       first_name: firstName,
@@ -76,9 +76,12 @@ export async function updateOwnProfileBasics(
       whatsapp,
       preferred_contact_method: preferredContactMethod,
     })
-    .eq("id", userId);
+    .eq("id", userId)
+    .select("id")
+    .maybeSingle();
 
   if (error) return { ok: false, error: mapError(error) };
+  if (!data) return missingProfileWriteResult();
   return { ok: true, data: null };
 }
 
@@ -142,14 +145,37 @@ export async function uploadProfileMedia({
       ? { avatar_path: storagePath, avatar_url: publicUrl }
       : { cover_path: storagePath, cover_url: publicUrl };
 
-  const { error } = await clientResult.data.from("profiles").update(updatePayload).eq("id", userId);
-  if (error) {
-    await clientResult.data.storage.from(profileMediaBucket).remove([storagePath]);
-    return { ok: false, error: mapError(error) };
+  const { data: updatedProfile, error } = await clientResult.data
+    .from("profiles")
+    .update(updatePayload)
+    .eq("id", userId)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !updatedProfile) {
+    const cleanupResult = await clientResult.data.storage.from(profileMediaBucket).remove([storagePath]);
+    if (cleanupResult.error) {
+      console.error("Failed to clean up unlinked profile media upload", {
+        userId,
+        kind,
+        storagePath,
+        error: cleanupResult.error,
+      });
+    }
+    if (error) return { ok: false, error: mapError(error) };
+    return missingProfileWriteResult();
   }
 
   if (oldPath && oldPath.startsWith(`${userId}/${kind}/`)) {
-    await clientResult.data.storage.from(profileMediaBucket).remove([oldPath]);
+    const cleanupResult = await clientResult.data.storage.from(profileMediaBucket).remove([oldPath]);
+    if (cleanupResult.error) {
+      console.error("Failed to clean up replaced profile media", {
+        userId,
+        kind,
+        oldPath,
+        error: cleanupResult.error,
+      });
+    }
   }
 
   return { ok: true, data: publicUrl ?? "" };
@@ -170,17 +196,43 @@ export async function removeProfileMedia(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  if (path && path.startsWith(`${userId}/${kind}/`)) {
-    const storageResult = await clientResult.data.storage.from(profileMediaBucket).remove([path]);
-    if (storageResult.error) return { ok: false, error: mapStorageError(storageResult.error) };
-  }
-
   const updatePayload =
     kind === "avatar"
       ? { avatar_path: null, avatar_url: null }
       : { cover_path: null, cover_url: null };
 
-  const { error } = await clientResult.data.from("profiles").update(updatePayload).eq("id", userId);
+  const { data: updatedProfile, error } = await clientResult.data
+    .from("profiles")
+    .update(updatePayload)
+    .eq("id", userId)
+    .select("id")
+    .maybeSingle();
+
   if (error) return { ok: false, error: mapError(error) };
+  if (!updatedProfile) return missingProfileWriteResult();
+
+  if (path && path.startsWith(`${userId}/${kind}/`)) {
+    const storageResult = await clientResult.data.storage.from(profileMediaBucket).remove([path]);
+    if (storageResult.error) {
+      console.error("Failed to clean up profile media after profile reference removal", {
+        userId,
+        kind,
+        path,
+        error: storageResult.error,
+      });
+    }
+  }
+
   return { ok: true, data: null };
+}
+
+function missingProfileWriteResult(): ClassifiedsResult<never> {
+  return {
+    ok: false,
+    error: {
+      code: "permission_denied",
+      message: "لم يتم تحديث الحساب. أعد تسجيل الدخول ثم حاول مرة أخرى.",
+      operation: "profile_update",
+    },
+  };
 }
