@@ -44,6 +44,7 @@ function AdminMessageReportsPage() {
       reportId: report.id,
       status,
       adminNote: notes[report.id] ?? null,
+      expectedUpdatedAt: report.updatedAt,
     });
     if (result.ok) {
       setNotice(text("تم تحديث بلاغ الرسالة.", "Message report updated."));
