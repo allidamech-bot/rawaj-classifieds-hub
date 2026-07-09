@@ -312,8 +312,6 @@ function mapMessage(row: Record<string, unknown>): ConversationMessage {
 }
 
 export function fromDbMessageReportStatus(status: string): MessageReport["status"] {
-  if (status === "in_review") return "under_review";
-  if (status === "dismissed") return "rejected";
   if (["new", "under_review", "resolved", "rejected"].includes(status)) {
     return status as MessageReport["status"];
   }
@@ -321,8 +319,6 @@ export function fromDbMessageReportStatus(status: string): MessageReport["status
 }
 
 export function toDbMessageReportStatus(status: MessageReport["status"]): string {
-  if (status === "under_review") return "in_review";
-  if (status === "rejected") return "dismissed";
   return status;
 }
 
@@ -372,7 +368,12 @@ export async function adminFetchMessageReports(
 
 export async function adminModerateMessageReport(
   canUseAdminAccess: boolean,
-  payload: { reportId: string; status: MessageReportStatus; adminNote?: string | null },
+  payload: {
+    reportId: string;
+    status: MessageReportStatus;
+    adminNote?: string | null;
+    expectedUpdatedAt: string;
+  },
 ): Promise<ClassifiedsResult<null>> {
   if (!canUseAdminAccess) {
     return {
@@ -384,24 +385,35 @@ export async function adminModerateMessageReport(
     };
   }
 
-  if (!payload.reportId.trim()) {
+  if (!payload.reportId.trim() || !payload.expectedUpdatedAt) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد بلاغ الرسالة." },
+      error: { code: "validation_error", message: "تعذر تحديد بلاغ الرسالة أو نسخته الحالية." },
     };
   }
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { error } = await clientResult.data
-    .from("message_reports")
-    .update({
-      status: toDbMessageReportStatus(payload.status),
-      admin_note: payload.adminNote?.trim() || null,
-    })
-    .eq("id", payload.reportId);
+  const { error } = await clientResult.data.rpc("rawaj_admin_moderate_message_report", {
+    p_report_id: payload.reportId,
+    p_status: toDbMessageReportStatus(payload.status),
+    p_admin_note: payload.adminNote?.trim() || null,
+    p_expected_updated_at: payload.expectedUpdatedAt,
+  });
 
-  if (error) return { ok: false, error: mapError(error) };
+  if (error) {
+    if (error.message?.includes("stale_message_report")) {
+      return {
+        ok: false,
+        error: {
+          code: "stale_review",
+          message: "تغيّر بلاغ الرسالة منذ تحميله. أعد تحميل القائمة قبل اتخاذ قرار جديد.",
+        },
+      };
+    }
+    return { ok: false, error: mapError(error) };
+  }
+
   return { ok: true, data: null };
 }
