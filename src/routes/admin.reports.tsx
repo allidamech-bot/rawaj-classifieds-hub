@@ -55,6 +55,7 @@ function ReportsPage() {
       assignedTo: auth.profile.id,
       adminNote: notes[report.id] ?? null,
       resolvedAt: status === "resolved" || status === "rejected" ? new Date().toISOString() : null,
+      expectedUpdatedAt: report.updatedAt,
     });
     if (!result.ok) {
       setMessage(result.error.message);
