@@ -15,6 +15,7 @@ export const Route = createFileRoute("/admin/reports")({
 function ReportsPage() {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
+  const canManageReports = auth.hasPermission("canManageReports");
   const [reports, setReports] = useState<ListingReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
@@ -24,7 +25,7 @@ function ReportsPage() {
   async function loadReports() {
     setLoading(true);
     setError(null);
-    const result = await adminFetchReports(auth.canAccessAdmin);
+    const result = await adminFetchReports(canManageReports);
     if (result.ok) {
       setReports(result.data);
       setNotes(
@@ -39,7 +40,7 @@ function ReportsPage() {
 
   useEffect(() => {
     void loadReports();
-  }, [auth.canAccessAdmin]);
+  }, [canManageReports]);
 
   async function moderate(report: ListingReport, status: ListingReportStatus) {
     setMessage("");
@@ -49,7 +50,7 @@ function ReportsPage() {
       );
       return;
     }
-    const result = await adminModerateReport(auth.canAccessAdmin, {
+    const result = await adminModerateReport(canManageReports, {
       reportId: report.id,
       status,
       assignedTo: auth.profile.id,
@@ -109,7 +110,7 @@ function ReportsPage() {
                 {text("رقم البلاغ:", "Report ID:")} {report.id}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {text("الإعلان:", "Listing:")} {report.listingId} · {text("المبلّغ:", "Reporter:")}{" "}
+                {text("الإعلان:", "Listing:")} {report.listingId} · {text("المبلّغ:", "Reporter:")} {" "}
                 {report.reporterId}
               </p>
               <p className="mt-2 text-xs leading-6">{report.reason}</p>
