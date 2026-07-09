@@ -31,6 +31,7 @@ export async function scanOwnerListingExpiryReminders(
     .select("id, expires_at")
     .eq("owner_id", userId)
     .eq("status", "approved")
+    .is("archived_at", null)
     .not("expires_at", "is", null)
     .gt("expires_at", now.toISOString())
     .lte("expires_at", windowEnd)
