@@ -1,8 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   ClassifiedsResult,
   ListingReport,
-  ListingReportStatus,
   ListingReportType,
   ModerateReportPayload,
 } from "@/lib/classifieds-types";
