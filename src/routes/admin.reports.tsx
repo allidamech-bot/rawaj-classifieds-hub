@@ -55,6 +55,7 @@ function ReportsPage() {
       assignedTo: auth.profile.id,
       adminNote: notes[report.id] ?? null,
       resolvedAt: status === "resolved" || status === "rejected" ? new Date().toISOString() : null,
+      expectedUpdatedAt: report.updatedAt,
     });
     if (!result.ok) {
       setMessage(result.error.message);
@@ -108,7 +109,7 @@ function ReportsPage() {
                 {text("رقم البلاغ:", "Report ID:")} {report.id}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {text("الإعلان:", "Listing:")} {report.listingId} · {text("المبلّغ:", "Reporter:")}{" "}
+                {text("الإعلان:", "Listing:")} {report.listingId} · {text("المبلّغ:", "Reporter:")} {" "}
                 {report.reporterId}
               </p>
               <p className="mt-2 text-xs leading-6">{report.reason}</p>
