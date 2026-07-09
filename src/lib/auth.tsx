@@ -46,6 +46,11 @@ function primaryRole(roles: UserRole[]): UserRole {
   return rolePriority.find((role) => roles.includes(role)) ?? "user";
 }
 
+function isRejectedRefreshTokenError(error: { message?: string; status?: number }): boolean {
+  if (error.status !== 400) return false;
+  return (error.message ?? "").toLowerCase().includes("refresh token");
+}
+
 async function fetchProfile(client: SupabaseClient, user: User): Promise<UserProfile> {
   const { data: profileData, error: profileError } = await client
     .from("profiles")
@@ -182,6 +187,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!active) return;
 
       if (error) {
+        if (isRejectedRefreshTokenError(error)) {
+          const { error: clearError } = await client.auth.signOut({ scope: "local" });
+          if (!active) return;
+
+          if (!clearError) {
+            setSession(null);
+            setProfile(null);
+            setStatus("signedOut");
+            setReason(null);
+            return;
+          }
+        }
+
         setSession(null);
         setProfile(null);
         setStatus("authError");
