@@ -35,10 +35,17 @@ export async function createListingPromotionRequest(
     };
   }
 
-  if (!payload.listingId.trim() || payload.requestedDays < 1 || payload.requestedDays > 90) {
+  if (
+    !payload.listingId.trim() ||
+    payload.requestedDays < 1 ||
+    payload.requestedDays > 90
+  ) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "اختر إعلاناً معتمداً ومدة بين 1 و90 يوماً." },
+      error: {
+        code: "validation_error",
+        message: "اختر إعلاناً معتمداً ومدة بين 1 و90 يوماً.",
+      },
     };
   }
 
@@ -186,7 +193,10 @@ export async function adminFetchPromotionRequests(
   if (!canUseAdminAccess) {
     return {
       ok: false,
-      error: { code: "permission_denied", message: "مراجعة الترويج متاحة لحساب إداري مخول فقط." },
+      error: {
+        code: "permission_denied",
+        message: "مراجعة الترويج متاحة لحساب إداري مخول فقط.",
+      },
     };
   }
 
@@ -216,14 +226,20 @@ export async function adminModeratePromotionRequest(
   if (!canUseAdminAccess) {
     return {
       ok: false,
-      error: { code: "permission_denied", message: "مراجعة الترويج متاحة لحساب إداري مخول فقط." },
+      error: {
+        code: "permission_denied",
+        message: "مراجعة الترويج متاحة لحساب إداري مخول فقط.",
+      },
     };
   }
 
   if (!payload.requestId.trim() || !payload.expectedUpdatedAt) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد طلب الترويج أو نسخته الحالية." },
+      error: {
+        code: "validation_error",
+        message: "تعذر تحديد طلب الترويج أو نسخته الحالية.",
+      },
     };
   }
 
