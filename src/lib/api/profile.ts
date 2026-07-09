@@ -170,11 +170,6 @@ export async function removeProfileMedia(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  if (path && path.startsWith(`${userId}/${kind}/`)) {
-    const storageResult = await clientResult.data.storage.from(profileMediaBucket).remove([path]);
-    if (storageResult.error) return { ok: false, error: mapStorageError(storageResult.error) };
-  }
-
   const updatePayload =
     kind === "avatar"
       ? { avatar_path: null, avatar_url: null }
@@ -182,5 +177,18 @@ export async function removeProfileMedia(
 
   const { error } = await clientResult.data.from("profiles").update(updatePayload).eq("id", userId);
   if (error) return { ok: false, error: mapError(error) };
+
+  if (path && path.startsWith(`${userId}/${kind}/`)) {
+    const storageResult = await clientResult.data.storage.from(profileMediaBucket).remove([path]);
+    if (storageResult.error) {
+      console.error("Failed to clean up profile media after profile reference removal", {
+        userId,
+        kind,
+        path,
+        error: storageResult.error,
+      });
+    }
+  }
+
   return { ok: true, data: null };
 }
