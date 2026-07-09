@@ -102,7 +102,7 @@ export async function uploadPromotionReceipt({
 
   const { data: request, error: requestError } = await clientResult.data
     .from("listing_promotion_requests")
-    .select("id, requester_user_id, status")
+    .select("id, requester_user_id, status, proof_path")
     .eq("id", requestId)
     .eq("requester_user_id", userId)
     .eq("status", "pending_review")
@@ -119,6 +119,7 @@ export async function uploadPromotionReceipt({
     };
   }
 
+  const oldPath = typeof request.proof_path === "string" ? request.proof_path : null;
   const storagePath = buildPromotionReceiptPath(userId, requestId, file.name);
 
   const uploadResult = await clientResult.data.storage
@@ -137,8 +138,22 @@ export async function uploadPromotionReceipt({
   });
 
   if (attachResult.error) {
-    await clientResult.data.storage.from(promotionReceiptsBucket).remove([storagePath]);
+    const cleanupResult = await clientResult.data.storage
+      .from(promotionReceiptsBucket)
+      .remove([storagePath]);
+    if (cleanupResult.error) {
+      console.error("Failed to clean up unattached promotion receipt", cleanupResult.error);
+    }
     return { ok: false, error: mapError(attachResult.error) };
+  }
+
+  if (oldPath && oldPath !== storagePath) {
+    const cleanupResult = await clientResult.data.storage
+      .from(promotionReceiptsBucket)
+      .remove([oldPath]);
+    if (cleanupResult.error) {
+      console.error("Failed to clean up replaced promotion receipt", cleanupResult.error);
+    }
   }
 
   return { ok: true, data: storagePath };
