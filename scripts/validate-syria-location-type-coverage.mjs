@@ -36,9 +36,9 @@ const blockingIssues = [];
 
 if (total >= 100 && localityRatio >= 0.9 && explicitRatio <= 0.01) {
   blockingIssues.push(
-    `location type collapse detected: ${counts.locality}/${total} (${(
-      localityRatio * 100
-    ).toFixed(2)}%) OCHA settlement nodes map to locality while only ${explicitSettlementTypes} map to city/town/village`,
+    `location type collapse detected: ${counts.locality}/${total} (${(localityRatio * 100).toFixed(
+      2,
+    )}%) OCHA settlement nodes map to locality while only ${explicitSettlementTypes} map to city/town/village`,
   );
 }
 
