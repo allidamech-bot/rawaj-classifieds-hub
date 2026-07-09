@@ -42,6 +42,18 @@ export interface LocationSearchResult {
   pathEn: string;
 }
 
+const LOCATION_TYPE_PRIORITY: Record<LocationNodeType, number> = {
+  country: 0,
+  governorate: 1,
+  district: 2,
+  subdistrict: 3,
+  city: 4,
+  town: 5,
+  village: 6,
+  neighborhood: 7,
+  locality: 8,
+};
+
 function mapLocationNode(row: Record<string, unknown>): CanonicalLocationNode {
   return {
     id: rowString(row, "id"),
@@ -56,6 +68,15 @@ function mapLocationNode(row: Record<string, unknown>): CanonicalLocationNode {
     legacyGovernorateId: rowNullableString(row, "legacy_governorate_id"),
     legacyDistrictAr: rowNullableString(row, "legacy_district_ar"),
   };
+}
+
+function sortLocationOptions(nodes: CanonicalLocationNode[]) {
+  return [...nodes].sort((left, right) => {
+    const typeDelta =
+      LOCATION_TYPE_PRIORITY[left.nodeType] - LOCATION_TYPE_PRIORITY[right.nodeType];
+    if (typeDelta !== 0) return typeDelta;
+    return left.nameAr.localeCompare(right.nameAr, "ar");
+  });
 }
 
 function normalizeLocationSearch(value: string) {
@@ -107,7 +128,7 @@ export async function fetchLocationRoots(
   if (error) return { ok: false, error: mapError(error) };
   return {
     ok: true,
-    data: ((data ?? []) as Record<string, unknown>[]).map(mapLocationNode),
+    data: sortLocationOptions(((data ?? []) as Record<string, unknown>[]).map(mapLocationNode)),
   };
 }
 
@@ -128,7 +149,7 @@ export async function fetchLocationChildren(
   if (error) return { ok: false, error: mapError(error) };
   return {
     ok: true,
-    data: ((data ?? []) as Record<string, unknown>[]).map(mapLocationNode),
+    data: sortLocationOptions(((data ?? []) as Record<string, unknown>[]).map(mapLocationNode)),
   };
 }
 
@@ -163,6 +184,7 @@ export async function searchLocationNodes(
   if (!clientResult.ok) return clientResult;
   const client = clientResult.data;
   const safeLimit = Math.max(1, Math.min(limit, 20));
+  const candidateLimit = Math.min(200, Math.max(80, safeLimit * 8));
   const escaped = escapePostgrestSearchTerm(clean);
   const normalized = normalizeLocationSearch(clean);
   const escapedNormalized = escapePostgrestSearchTerm(normalized);
@@ -174,12 +196,12 @@ export async function searchLocationNodes(
       .eq("country_code", "SY")
       .eq("is_active", true)
       .or(`name_ar.ilike.%${escaped}%,name_en.ilike.%${escaped}%`)
-      .limit(safeLimit),
+      .limit(candidateLimit),
     client
       .from("location_search_aliases")
       .select("location_node_id,alias,normalized_alias")
       .ilike("normalized_alias", `%${escapedNormalized}%`)
-      .limit(safeLimit),
+      .limit(candidateLimit),
   ]);
 
   if (nodesResult.error) return { ok: false, error: mapError(nodesResult.error) };
