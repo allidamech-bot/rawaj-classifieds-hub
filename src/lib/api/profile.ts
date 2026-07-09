@@ -26,19 +26,13 @@ export async function updateOwnProfileBasics(
   if (!userId) {
     return {
       ok: false,
-      error: {
-        code: "auth_required",
-        message: "يجب تسجيل الدخول لتحديث الحساب.",
-      },
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث الحساب." },
     };
   }
 
   const firstName = payload.firstName.trim();
   const lastName = payload.lastName.trim();
-  const computedDisplayName = [firstName, lastName]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+  const computedDisplayName = [firstName, lastName].filter(Boolean).join(" ").trim();
   const displayName =
     payload.displayName && payload.displayName.trim().length > 0
       ? payload.displayName.trim()
@@ -54,20 +48,14 @@ export async function updateOwnProfileBasics(
   if (firstName.length < 2 || firstName.length > 40 || lastName.length > 40) {
     return {
       ok: false,
-      error: {
-        code: "validation_error",
-        message: "أدخل الاسم الأول بين 2 و40 حرفا.",
-      },
+      error: { code: "validation_error", message: "أدخل الاسم الأول بين 2 و40 حرفا." },
     };
   }
 
   if (bio && bio.length > 600) {
     return {
       ok: false,
-      error: {
-        code: "validation_error",
-        message: "النبذة يجب ألا تتجاوز 600 حرف.",
-      },
+      error: { code: "validation_error", message: "النبذة يجب ألا تتجاوز 600 حرف." },
     };
   }
 
@@ -106,10 +94,7 @@ export async function uploadProfileMedia({
   if (!userId) {
     return {
       ok: false,
-      error: {
-        code: "auth_required",
-        message: "يجب تسجيل الدخول لتحديث صورة الحساب.",
-      },
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث صورة الحساب." },
     };
   }
 
@@ -119,20 +104,14 @@ export async function uploadProfileMedia({
   if (!allowedImageTypes.includes(file.type)) {
     return {
       ok: false,
-      error: {
-        code: "validation_error",
-        message: "الصيغ المسموحة للصور: JPG أو PNG أو WebP.",
-      },
+      error: { code: "validation_error", message: "الصيغ المسموحة للصور: JPG أو PNG أو WebP." },
     };
   }
 
   if (file.size > maxProfileImageSizeBytes) {
     return {
       ok: false,
-      error: {
-        code: "validation_error",
-        message: "حجم صورة الملف يجب ألا يتجاوز 3MB.",
-      },
+      error: { code: "validation_error", message: "حجم صورة الملف يجب ألا يتجاوز 3MB." },
     };
   }
 
@@ -141,9 +120,7 @@ export async function uploadProfileMedia({
 
   const extension = file.name.split(".").pop()?.toLowerCase();
   const safeExtension =
-    extension && ["jpg", "jpeg", "png", "webp"].includes(extension)
-      ? extension
-      : "jpg";
+    extension && ["jpg", "jpeg", "png", "webp"].includes(extension) ? extension : "jpg";
   const storagePath = `${userId}/${kind}/${crypto.randomUUID()}.${safeExtension}`;
 
   const uploadResult = await clientResult.data.storage
@@ -154,13 +131,9 @@ export async function uploadProfileMedia({
       upsert: false,
     });
 
-  if (uploadResult.error)
-    return { ok: false, error: mapStorageError(uploadResult.error) };
+  if (uploadResult.error) return { ok: false, error: mapStorageError(uploadResult.error) };
 
-  function publicProfileMediaUrl(
-    client: SupabaseClient,
-    path: string | null,
-  ): string | null {
+  function publicProfileMediaUrl(client: SupabaseClient, path: string | null): string | null {
     if (!path) return null;
     const { data } = client.storage.from(profileMediaBucket).getPublicUrl(path);
     return data.publicUrl ?? null;
@@ -220,10 +193,7 @@ export async function removeProfileMedia(
   if (!userId) {
     return {
       ok: false,
-      error: {
-        code: "auth_required",
-        message: "يجب تسجيل الدخول لتحديث صورة الحساب.",
-      },
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث صورة الحساب." },
     };
   }
 
@@ -246,19 +216,14 @@ export async function removeProfileMedia(
   if (!updatedProfile) return missingProfileWriteResult();
 
   if (path && path.startsWith(`${userId}/${kind}/`)) {
-    const storageResult = await clientResult.data.storage
-      .from(profileMediaBucket)
-      .remove([path]);
+    const storageResult = await clientResult.data.storage.from(profileMediaBucket).remove([path]);
     if (storageResult.error) {
-      console.error(
-        "Failed to clean up profile media after profile reference removal",
-        {
-          userId,
-          kind,
-          path,
-          error: storageResult.error,
-        },
-      );
+      console.error("Failed to clean up profile media after profile reference removal", {
+        userId,
+        kind,
+        path,
+        error: storageResult.error,
+      });
     }
   }
 
