@@ -200,49 +200,26 @@ export async function favoriteListing(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  if (!listingId.trim()) {
+  const cleanListingId = listingId.trim();
+  if (!cleanListingId) {
     return {
       ok: false,
       error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
     };
   }
 
-  const { data: listing, error: listingError } = await clientResult.data
-    .from("listings")
-    .select("id, title, price, status")
-    .eq("id", listingId)
-    .eq("status", "approved")
-    .or(publicListingExpiryFilter())
-    .maybeSingle();
+  const { data, error } = await clientResult.data.rpc("rawaj_set_favorite_v1", {
+    p_listing_id: cleanListingId,
+    p_favorited: true,
+  });
 
-  if (listingError) return { ok: false, error: mapError(listingError) };
-  if (!listing) {
+  if (error) return { ok: false, error: mapError(error, "favorite_listing") };
+  if (data !== true) {
     return {
       ok: false,
       error: { code: "not_found", message: "لا يمكن حفظ إعلان غير متاح." },
     };
   }
-
-  const { error } = await clientResult.data
-    .from("favorites")
-    .upsert({ user_id: userId, listing_id: listingId }, { onConflict: "user_id,listing_id" });
-  if (error) return { ok: false, error: mapError(error) };
-
-  const { error: snapshotError } = await clientResult.data
-    .from("favorite_listing_snapshots")
-    .upsert(
-      {
-        user_id: userId,
-        listing_id: listingId,
-        title_snapshot: listing.title,
-        price_snapshot: listing.price,
-        currency_snapshot: "SYP",
-        status_snapshot: listing.status,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id,listing_id" },
-    );
-  if (snapshotError) return { ok: false, error: mapError(snapshotError) };
 
   return { ok: true, data: null };
 }
@@ -261,19 +238,11 @@ export async function unfavoriteListing(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { error } = await clientResult.data
-    .from("favorites")
-    .delete()
-    .eq("user_id", userId)
-    .eq("listing_id", listingId);
-  if (error) return { ok: false, error: mapError(error) };
+  const { error } = await clientResult.data.rpc("rawaj_set_favorite_v1", {
+    p_listing_id: listingId,
+    p_favorited: false,
+  });
 
-  const { error: snapshotError } = await clientResult.data
-    .from("favorite_listing_snapshots")
-    .delete()
-    .eq("user_id", userId)
-    .eq("listing_id", listingId);
-  if (snapshotError) return { ok: false, error: mapError(snapshotError) };
-
+  if (error) return { ok: false, error: mapError(error, "unfavorite_listing") };
   return { ok: true, data: null };
 }
