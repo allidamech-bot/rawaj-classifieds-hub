@@ -92,7 +92,7 @@ export async function adminFetchSellerReviews(
 
 export async function adminModerateSellerReview(
   canUseAdminAccess: boolean,
-  payload: ModerateSellerReviewPayload,
+  payload: ModerateSellerReviewPayload & { expectedUpdatedAt: string },
 ): Promise<ClassifiedsResult<null>> {
   if (!canUseAdminAccess) {
     return {
@@ -101,28 +101,36 @@ export async function adminModerateSellerReview(
     };
   }
 
-  if (!payload.reviewId.trim() || !payload.reviewerId.trim()) {
+  if (!payload.reviewId.trim() || !payload.expectedUpdatedAt) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد التقييم أو المراجع." },
+      error: { code: "validation_error", message: "تعذر تحديد التقييم أو نسخته الحالية." },
     };
   }
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { error } = await clientResult.data
-    .from("seller_reviews")
-    .update({
-      status: payload.status,
-      admin_note: payload.adminNote?.trim() || null,
-      reviewed_by: payload.reviewerId,
-      reviewed_at: new Date().toISOString(),
-    })
-    .eq("id", payload.reviewId)
-    .eq("status", "pending_review");
+  const { error } = await clientResult.data.rpc("rawaj_admin_moderate_seller_review", {
+    p_review_id: payload.reviewId,
+    p_status: payload.status,
+    p_admin_note: payload.adminNote?.trim() || null,
+    p_expected_updated_at: payload.expectedUpdatedAt,
+  });
 
-  if (error) return { ok: false, error: mapError(error) };
+  if (error) {
+    if (error.message?.includes("stale_seller_review")) {
+      return {
+        ok: false,
+        error: {
+          code: "stale_review",
+          message: "تغيّر التقييم منذ تحميله. أعد تحميل القائمة قبل اتخاذ قرار جديد.",
+        },
+      };
+    }
+    return { ok: false, error: mapError(error) };
+  }
+
   return { ok: true, data: null };
 }
 
