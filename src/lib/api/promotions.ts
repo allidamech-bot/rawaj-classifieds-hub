@@ -92,7 +92,13 @@ export async function uploadPromotionReceipt({
 
   const validation = validateReceiptFile(file);
   if (!validation.ok) {
-    return { ok: false, error: { code: "validation_error", message: validation.error! } };
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: validation.error ?? "تعذر التحقق من ملف الإيصال.",
+      },
+    };
   }
 
   const clientResult = getClient();
