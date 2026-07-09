@@ -4,7 +4,10 @@ import type {
   LocationNodeType,
   LocationSearchResult,
 } from "@/lib/api/location-taxonomy";
-import { fetchLocationChildren, searchLocationNodes } from "@/lib/api/location-taxonomy";
+import {
+  fetchLocationChildren,
+  searchLocationNodes,
+} from "@/lib/api/location-taxonomy";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useLocationLevels } from "./use-location-levels";
 
@@ -56,17 +59,22 @@ export function CanonicalLocationSelector({
   }, [query]);
 
   async function selectAt(index: number, selectedId: string) {
-    const selected = levels[index]?.options.find((option) => option.id === selectedId) ?? null;
+    const selected =
+      levels[index]?.options.find((option) => option.id === selectedId) ?? null;
     const next = levels
       .slice(0, index + 1)
-      .map((level, currentIndex) => (currentIndex === index ? { ...level, selectedId } : level));
+      .map((level, currentIndex) =>
+        currentIndex === index ? { ...level, selectedId } : level,
+      );
 
     setError(null);
     setLevels(next);
     if (!selected) {
       const previous = next
         .slice(0, index)
-        .map((level) => level.options.find((option) => option.id === level.selectedId))
+        .map((level) =>
+          level.options.find((option) => option.id === level.selectedId),
+        )
         .filter((node): node is CanonicalLocationNode => Boolean(node))
         .at(-1);
       onChange(previous?.id ?? null, previous ?? null);
@@ -77,7 +85,10 @@ export function CanonicalLocationSelector({
     const children = await fetchLocationChildren(selected.id);
     if (!children.ok) return setError(children.error.message);
     if (children.data.length > 0) {
-      setLevels([...next, { parentId: selected.id, options: children.data, selectedId: "" }]);
+      setLevels([
+        ...next,
+        { parentId: selected.id, options: children.data, selectedId: "" },
+      ]);
     }
   }
 
@@ -112,7 +123,10 @@ export function CanonicalLocationSelector({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           disabled={disabled}
-          placeholder={text("ابحث مباشرة عن مدينة أو بلدة أو قرية", "Search city, town, or village")}
+          placeholder={text(
+            "ابحث مباشرة عن مدينة أو بلدة أو قرية",
+            "Search city, town, or village",
+          )}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm disabled:opacity-50"
         />
         {query.trim().length >= 2 ? (
@@ -155,7 +169,9 @@ export function CanonicalLocationSelector({
                 ) : null}
               </button>
             ))}
-            {searchError ? <p className="px-3 py-2 text-sm text-red-600">{searchError}</p> : null}
+            {searchError ? (
+              <p className="px-3 py-2 text-sm text-red-600">{searchError}</p>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -175,10 +191,15 @@ export function CanonicalLocationSelector({
           disabled={disabled}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm disabled:opacity-50"
         >
-          <option value="">{text("اختر المستوى التالي", "Choose next level")}</option>
+          <option value="">
+            {text("اختر المستوى التالي", "Choose next level")}
+          </option>
           {level.options.map((option) => (
             <option key={option.id} value={option.id}>
-              {locationTypeLabel(option.nodeType)} — {language === "en" ? option.nameEn || option.nameAr : option.nameAr}
+              {locationTypeLabel(option.nodeType)} —{" "}
+              {language === "en"
+                ? option.nameEn || option.nameAr
+                : option.nameAr}
             </option>
           ))}
         </select>
