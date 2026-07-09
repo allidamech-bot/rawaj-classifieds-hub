@@ -92,12 +92,12 @@ export function AppHeader({ compact = false, title }: Props) {
 
           <NotificationTrigger tone="light" />
 
-          {auth.canAccessOwnerControls ? (
+          {auth.canAccessAdmin ? (
             <Link
               to="/admin"
-              aria-label={text("لوحة المالك", "Owner dashboard")}
-              title={text("لوحة المالك", "Owner dashboard")}
-              className="hidden h-10 w-10 shrink-0 place-items-center rounded-full bg-gold text-gold-foreground shadow-soft transition hover:-translate-y-0.5 sm:grid"
+              aria-label={text("لوحة الإدارة", "Admin dashboard")}
+              title={text("لوحة الإدارة", "Admin dashboard")}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold text-gold-foreground shadow-soft transition hover:-translate-y-0.5 sm:h-10 sm:w-10"
             >
               <UserCog className="h-4 w-4" />
             </Link>
