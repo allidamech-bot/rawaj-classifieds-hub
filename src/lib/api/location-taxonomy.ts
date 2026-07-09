@@ -31,6 +31,8 @@ export interface CanonicalLocationNode {
   slug: string;
   depth: number;
   isActive: boolean;
+  externalSource: string | null;
+  externalId: string | null;
   legacyGovernorateId: string | null;
   legacyDistrictAr: string | null;
 }
@@ -65,6 +67,8 @@ function mapLocationNode(row: Record<string, unknown>): CanonicalLocationNode {
     slug: rowString(row, "slug"),
     depth: rowNumber(row, "depth"),
     isActive: rowBoolean(row, "is_active", true),
+    externalSource: rowNullableString(row, "external_source"),
+    externalId: rowNullableString(row, "external_id"),
     legacyGovernorateId: rowNullableString(row, "legacy_governorate_id"),
     legacyDistrictAr: rowNullableString(row, "legacy_district_ar"),
   };
@@ -108,7 +112,7 @@ function rankLocationResult(
 }
 
 const LOCATION_NODE_SELECT =
-  "id,parent_id,country_code,node_type,name_ar,name_en,slug,depth,is_active,legacy_governorate_id,legacy_district_ar";
+  "id,parent_id,country_code,node_type,name_ar,name_en,slug,depth,is_active,external_source,external_id,legacy_governorate_id,legacy_district_ar";
 
 export async function fetchLocationRoots(
   countryCode = "SY",
@@ -300,6 +304,8 @@ async function fetchLocationPathWithClient(
     slug: rowString(row, "slug"),
     depth: rowNumber(row, "depth"),
     isActive: true,
+    externalSource: null,
+    externalId: null,
     legacyGovernorateId: null,
     legacyDistrictAr: null,
   }));

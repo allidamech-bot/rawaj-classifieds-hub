@@ -12,6 +12,17 @@ export type LocationLevel = {
   selectedId: string;
 };
 
+const LOCATION_ROOT_SOURCE_PRIORITY = ["ocha-hdx-cod-ab-syr", "iso3166"];
+
+function preferredCountryRoot(nodes: CanonicalLocationNode[]) {
+  const countries = nodes.filter((node) => node.nodeType === "country");
+  for (const source of LOCATION_ROOT_SOURCE_PRIORITY) {
+    const match = countries.find((node) => node.externalSource === source);
+    if (match) return match;
+  }
+  return countries[0] ?? nodes[0] ?? null;
+}
+
 export function useLocationLevels(value?: string | null) {
   const [levels, setLevels] = useState<LocationLevel[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -25,13 +36,12 @@ export function useLocationLevels(value?: string | null) {
       if (cancelled) return;
       if (!roots.ok) return setError(roots.error.message);
 
-      const country = roots.data.find((node) => node.nodeType === "country") ?? roots.data[0];
-      if (!country) return setError("Locations could not be loaded.");
-
-      const first = await fetchLocationChildren(country.id);
-      if (cancelled) return;
-      if (!first.ok) return setError(first.error.message);
       if (!value) {
+        const country = preferredCountryRoot(roots.data);
+        if (!country) return setError("Locations could not be loaded.");
+        const first = await fetchLocationChildren(country.id);
+        if (cancelled) return;
+        if (!first.ok) return setError(first.error.message);
         setLevels([{ parentId: country.id, options: first.data, selectedId: "" }]);
         return;
       }
@@ -39,10 +49,23 @@ export function useLocationLevels(value?: string | null) {
       const path = await fetchLocationPath(value);
       if (cancelled) return;
       if (!path.ok || path.data.length === 0) {
+        const country = preferredCountryRoot(roots.data);
+        if (!country) return setError("Locations could not be loaded.");
+        const first = await fetchLocationChildren(country.id);
+        if (cancelled) return;
+        if (!first.ok) return setError(first.error.message);
         setLevels([{ parentId: country.id, options: first.data, selectedId: "" }]);
         setError(path.ok ? "Selected location is unavailable." : path.error.message);
         return;
       }
+
+      const country =
+        path.data.find((node) => node.nodeType === "country") ?? preferredCountryRoot(roots.data);
+      if (!country) return setError("Locations could not be loaded.");
+
+      const first = await fetchLocationChildren(country.id);
+      if (cancelled) return;
+      if (!first.ok) return setError(first.error.message);
 
       const selectedPath = path.data.filter((node) => node.nodeType !== "country");
       const restored: LocationLevel[] = [];
