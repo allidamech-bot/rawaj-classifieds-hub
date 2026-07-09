@@ -23,6 +23,7 @@ const actionFilters = [
 function AdminAuditPage() {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
+  const canViewAuditLogs = auth.hasPermission("canViewAuditLogs");
   const [entries, setEntries] = useState<AdminAuditLogEntry[]>([]);
   const [actionPrefix, setActionPrefix] = useState("");
   const [offset, setOffset] = useState(0);
@@ -34,7 +35,7 @@ function AdminAuditPage() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    void adminFetchAuditLogs(auth.canAccessAdmin, {
+    void adminFetchAuditLogs(canViewAuditLogs, {
       limit: PAGE_SIZE,
       offset: 0,
       actionPrefix: actionPrefix || null,
@@ -55,13 +56,13 @@ function AdminAuditPage() {
     return () => {
       cancelled = true;
     };
-  }, [actionPrefix, auth.canAccessAdmin]);
+  }, [actionPrefix, canViewAuditLogs]);
 
   async function loadMore() {
     if (loadingMore || !hasMore) return;
     const nextOffset = offset + PAGE_SIZE;
     setLoadingMore(true);
-    const result = await adminFetchAuditLogs(auth.canAccessAdmin, {
+    const result = await adminFetchAuditLogs(canViewAuditLogs, {
       limit: PAGE_SIZE,
       offset: nextOffset,
       actionPrefix: actionPrefix || null,
