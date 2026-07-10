@@ -50,8 +50,18 @@
   box-shadow: var(--rawaj-shadow-soft);
 }
 
+/* Listing detail owns its mobile contact bar, so reserve space for that bar only. */
+.listing-detail-mobile-bottom {
+  padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+}
+
+.listing-detail-mobile-bottom > .fixed {
+  bottom: calc(0.75rem + env(safe-area-inset-bottom)) !important;
+}
+
 @media (min-width: 1024px) {
-  .rawaj-bottom-nav-offset {
+  .rawaj-bottom-nav-offset,
+  .listing-detail-mobile-bottom {
     padding-bottom: 2rem;
   }
 }
