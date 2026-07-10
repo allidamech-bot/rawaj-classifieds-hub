@@ -75,8 +75,9 @@ test("verification types and user UI require controlled evidence", () => {
 test("admin document access is permission gated and signed", () => {
   assert.match(api, /adminCreateVerificationDocumentSignedUrl/);
   assert.match(api, /if \(!canManageVerifications\)/);
-  assert.match(api, /createSignedUrl\(normalizedPath, 300\)/);
-  assert.match(adminRoute, /adminCreateVerificationDocumentSignedUrl\(canManageVerifications/);
+  assert.match(api, /const verificationDocumentSignedUrlSeconds = 300/);
+  assert.match(api, /createSignedUrl\(normalizedPath, verificationDocumentSignedUrlSeconds\)/);
+  assert.match(adminRoute, /adminCreateVerificationDocumentSignedUrl\(\s*canManageVerifications/);
   assert.match(adminRoute, /target="_blank"/);
   assert.doesNotMatch(adminRoute, /href=\{request\.documentPath\}/);
 });
