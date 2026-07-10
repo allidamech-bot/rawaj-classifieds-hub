@@ -309,7 +309,11 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
         ) : (
           <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="standard" />
         )}
-        {listing.isFeatured ? (
+        {listing.reservedAt ? (
+          <span className="absolute start-2 top-2 rounded-full bg-warning/92 px-2 py-1 text-[9px] font-extrabold text-warning-foreground shadow-soft backdrop-blur-sm">
+            {text("محجوز", "Reserved")}
+          </span>
+        ) : listing.isFeatured ? (
           <span className="absolute start-2 top-2 rounded-full bg-primary/92 px-2 py-1 text-[9px] font-extrabold text-primary-foreground shadow-soft backdrop-blur-sm">
             {text("مميز", "Featured")}
           </span>

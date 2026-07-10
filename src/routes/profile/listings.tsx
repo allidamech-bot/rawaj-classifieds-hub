@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BadgePercent, Eye, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { BadgePercent, BookmarkCheck, Eye, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
@@ -13,6 +13,7 @@ import {
   reactivateOwnerListing,
   reduceOwnerListingPrice,
   setOwnerListingExpiry,
+  setOwnerListingReserved,
   type OwnerCloseListingStatus,
 } from "@/lib/classifieds-api";
 import type {
@@ -435,6 +436,8 @@ function StoreListingCard({
   const [lifecycleError, setLifecycleError] = useState("");
   const [priceDropBusy, setPriceDropBusy] = useState(false);
   const [priceDropError, setPriceDropError] = useState("");
+  const [reservationBusy, setReservationBusy] = useState(false);
+  const [reservationError, setReservationError] = useState("");
   const [priceDropDraft, setPriceDropDraft] = useState(
     listing.price && listing.price > 0 ? String(listing.price) : "",
   );
@@ -453,6 +456,7 @@ function StoreListingCard({
   const canEdit = listing.status === "draft" || listing.status === "rejected";
   const canDelete = isOwnerDeletableStatus(listing.status);
   const canClose = listing.status === "approved";
+  const canManageReservation = listing.status === "approved";
   const canReducePrice =
     listing.status === "approved" &&
     listing.price !== null &&
@@ -481,6 +485,19 @@ function StoreListingCard({
     setLifecycleBusy(false);
     if (!result.ok) {
       setLifecycleError(result.error.message);
+      return;
+    }
+    onChanged(result.data);
+  }
+
+  async function handleReservationToggle() {
+    if (reservationBusy || !canManageReservation) return;
+    setReservationError("");
+    setReservationBusy(true);
+    const result = await setOwnerListingReserved(userId, listing.id, !listing.reservedAt);
+    setReservationBusy(false);
+    if (!result.ok) {
+      setReservationError(result.error.message);
       return;
     }
     onChanged(result.data);
@@ -576,6 +593,11 @@ function StoreListingCard({
               {formatSavedAt(listing.updatedAt, language)}
             </p>
           )}
+          {listing.reservedAt ? (
+            <p className="rounded-lg bg-warning/10 p-2 text-[11px] font-semibold text-foreground">
+              {text("هذا الإعلان محجوز حالياً.", "This listing is currently reserved.")}
+            </p>
+          ) : null}
           {listing.status === "approved" && (
             <p className="rounded-lg bg-emerald-trust/10 p-2 text-[11px] font-semibold text-foreground">
               {listing.renewedAt
@@ -629,6 +651,11 @@ function StoreListingCard({
           {priceDropError && (
             <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
               {priceDropError}
+            </p>
+          )}
+          {reservationError && (
+            <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
+              {reservationError}
             </p>
           )}
           {canReducePrice ? (
@@ -693,6 +720,23 @@ function StoreListingCard({
                 {lockedMessage}
               </span>
             )}
+            {canManageReservation ? (
+              <button
+                type="button"
+                disabled={reservationBusy}
+                onClick={() => void handleReservationToggle()}
+                className={`inline-flex min-h-11 items-center gap-1.5 rounded-xl px-3 py-2 text-[10px] font-bold disabled:opacity-60 ${
+                  listing.reservedAt ? "bg-warning/12 text-warning" : "bg-primary/8 text-primary"
+                }`}
+              >
+                <BookmarkCheck className="h-3.5 w-3.5" />
+                {reservationBusy
+                  ? text("جارٍ التحديث", "Updating")
+                  : listing.reservedAt
+                    ? text("إلغاء الحجز", "Clear reservation")
+                    : text("وضع محجوز", "Mark reserved")}
+              </button>
+            ) : null}
             {canClose && (
               <>
                 <select
