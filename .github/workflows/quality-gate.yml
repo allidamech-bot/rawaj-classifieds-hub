@@ -94,6 +94,9 @@ jobs:
       - name: Account activity center contract
         run: npm run test:activity-center
 
+      - name: SEO discovery contract
+        run: npm run test:seo-discovery
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
