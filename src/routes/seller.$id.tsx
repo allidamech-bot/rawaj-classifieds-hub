@@ -9,10 +9,14 @@ import {
   Star,
   Store,
 } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
-import { createSellerReview, fetchPublicSellerProfile } from "@/lib/classifieds-api";
+import {
+  createSellerReview,
+  fetchPublicSellerProfile,
+  fetchSellerReviewEligibility,
+} from "@/lib/classifieds-api";
 import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { absoluteUrl, createSeo, jsonLdScript, plainText } from "@/lib/seo";
@@ -306,6 +310,14 @@ function buildSellerStructuredData(seller: PublicSellerProfile) {
   return data;
 }
 
+type ReviewEligibilityUiState =
+  | "idle"
+  | "loading"
+  | "eligible"
+  | "existing_review"
+  | "no_qualifying_interaction"
+  | "error";
+
 function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
@@ -313,11 +325,53 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   const [comment, setComment] = useState("");
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
-  const canReview = auth.status === "signedIn" && auth.profile?.id !== seller.id;
+  const [eligibilityState, setEligibilityState] = useState<ReviewEligibilityUiState>("idle");
   const isOwnProfile = auth.status === "signedIn" && auth.profile?.id === seller.id;
+  const shouldCheckEligibility = auth.status === "signedIn" && !isOwnProfile;
+
+  useEffect(() => {
+    if (!shouldCheckEligibility) {
+      setEligibilityState("idle");
+      return;
+    }
+
+    let cancelled = false;
+    setEligibilityState("loading");
+    setNotice("");
+
+    void fetchSellerReviewEligibility(seller.id).then((result) => {
+      if (cancelled) return;
+      if (!result.ok) {
+        setEligibilityState("error");
+        return;
+      }
+
+      if (result.data.eligible) {
+        setEligibilityState("eligible");
+        return;
+      }
+
+      if (result.data.reason === "existing_review") {
+        setEligibilityState("existing_review");
+        return;
+      }
+
+      if (result.data.reason === "no_qualifying_interaction") {
+        setEligibilityState("no_qualifying_interaction");
+        return;
+      }
+
+      setEligibilityState("error");
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.profile?.id, auth.status, seller.id, shouldCheckEligibility]);
 
   async function submitReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (eligibilityState !== "eligible") return;
     setNotice("");
     setSaving(true);
     const result = await createSellerReview({
@@ -330,6 +384,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
     if (result.ok) {
       setComment("");
       setRating(5);
+      setEligibilityState("existing_review");
       setNotice(
         text(
           "تم إرسال التقييم للمراجعة قبل ظهوره للعامة.",
@@ -338,6 +393,11 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
       );
     } else {
       setNotice(result.error.message);
+      if (result.error.code === "permission_denied") {
+        setEligibilityState("no_qualifying_interaction");
+      } else if (result.error.code === "status_mismatch") {
+        setEligibilityState("existing_review");
+      }
     }
   }
 
@@ -403,13 +463,13 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
             </p>
             <p className="mt-1 text-muted-foreground">
               {text(
-                "تظهر التقييمات للعامة بعد المراجعة فقط.",
-                "Reviews become public only after moderation.",
+                "التقييم متاح بعد تواصل فعلي مع البائع، ويظهر للعامة بعد المراجعة فقط.",
+                "Reviews are available after real interaction with the seller and become public only after moderation.",
               )}
             </p>
             <Link
               to="/login"
-              className="mt-3 inline-flex rounded-lg bg-primary px-3 py-2 font-bold text-primary-foreground"
+              className="mt-3 inline-flex min-h-11 items-center rounded-lg bg-primary px-3 py-2 font-bold text-primary-foreground"
             >
               {text("تسجيل الدخول", "Log in")}
             </Link>
@@ -418,6 +478,47 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
           <p className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs font-semibold hairline">
             {text("لا يمكنك تقييم حسابك.", "You cannot review your own account.")}
           </p>
+        ) : eligibilityState === "loading" || eligibilityState === "idle" ? (
+          <p className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs font-semibold text-muted-foreground hairline">
+            {text("جارٍ التحقق من أهلية التقييم…", "Checking review eligibility…")}
+          </p>
+        ) : eligibilityState === "existing_review" ? (
+          <div className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs leading-6 hairline">
+            <p className="font-bold text-primary">
+              {text("لديك تقييم مسجل لهذا البائع", "You already have a review for this seller")}
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              {notice ||
+                text(
+                  "التقييم الحالي قيد المراجعة أو معتمد بالفعل.",
+                  "Your current review is pending moderation or already approved.",
+                )}
+            </p>
+          </div>
+        ) : eligibilityState === "no_qualifying_interaction" ? (
+          <div className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs leading-6 hairline">
+            <p className="font-bold text-primary">
+              {text("التقييم يتطلب تواصلاً فعليًا", "A real interaction is required")}
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              {text(
+                "يمكنك تقييم البائع بعد محادثة متبادلة معه حول أحد إعلاناته. هذا يمنع التقييمات العشوائية.",
+                "You can review a seller after a bidirectional conversation about one of their listings. This prevents random reviews.",
+              )}
+            </p>
+          </div>
+        ) : eligibilityState === "error" ? (
+          <div className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs leading-6 hairline">
+            <p className="font-bold text-primary">
+              {text("التقييم غير متاح مؤقتًا", "Reviews are temporarily unavailable")}
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              {text(
+                "تعذر التحقق من أهلية التقييم الآن. لم يتم فتح نموذج غير محمي.",
+                "Review eligibility could not be verified. An unprotected review form was not opened.",
+              )}
+            </p>
+          </div>
         ) : (
           <form onSubmit={(event) => void submitReview(event)} className="mt-4 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
@@ -426,7 +527,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
                   key={value}
                   type="button"
                   onClick={() => setRating(value)}
-                  className={`rounded-lg px-2 py-1 text-xs font-bold hairline ${
+                  className={`min-h-11 rounded-lg px-3 py-2 text-xs font-bold hairline ${
                     rating >= value ? "bg-gold text-gold-foreground" : "bg-white/72"
                   }`}
                 >
@@ -448,8 +549,8 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
             />
             <button
               type="submit"
-              disabled={!canReview || saving}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
+              disabled={saving}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
             >
               <MessageSquare className="h-4 w-4" />
               {saving
