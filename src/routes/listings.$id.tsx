@@ -293,6 +293,24 @@ function ListingDetailsPage() {
     <>
       <PageHeader title={listingCategory} to="/listings" />
       <main className="container-wide listing-detail-mobile-bottom pb-8 pt-3 sm:pt-5">
+        {listing.reservedAt ? (
+          <section className="mb-4 flex items-start gap-3 rounded-2xl border border-warning/20 bg-warning/8 p-3.5 sm:p-4">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-warning/12 text-warning">
+              <Clock className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-extrabold text-foreground">
+                {text("هذا الإعلان محجوز حالياً", "This listing is currently reserved")}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                {text(
+                  "أبقاه المعلن ظاهراً للمرجعية، لكن قد تكون السلعة ملتزماً بها لمشترٍ آخر. يمكنك الاستفسار من البائع عن آخر حالة.",
+                  "The seller kept it public for reference, but the item may be committed to another buyer. You can ask the seller for the latest status.",
+                )}
+              </p>
+            </div>
+          </section>
+        ) : null}
         <div className="grid items-start gap-4 lg:grid-cols-12 lg:gap-6">
           <div className="min-w-0 lg:col-span-7">
             <section className="rawaj-surface overflow-hidden rounded-[1.5rem] sm:rounded-[1.9rem]">
