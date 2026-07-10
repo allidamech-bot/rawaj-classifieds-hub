@@ -35,6 +35,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Format seller review report diagnostic
+        run: |
+          npx prettier --write src/lib/api/review-reports.ts scripts/seller-review-report.test.mjs
+          git diff -- src/lib/api/review-reports.ts scripts/seller-review-report.test.mjs > /tmp/review-report-prettier.diff
+
+      - name: Upload seller review report formatting artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: seller-review-report-formatting
+          path: |
+            src/lib/api/review-reports.ts
+            scripts/seller-review-report.test.mjs
+            /tmp/review-report-prettier.diff
+          if-no-files-found: error
+
+      - name: Require committed seller review report formatting
+        run: git diff --exit-code -- src/lib/api/review-reports.ts scripts/seller-review-report.test.mjs
+
       - name: Lint changed source files
         shell: bash
         env:
