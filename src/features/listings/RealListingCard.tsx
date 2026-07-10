@@ -5,7 +5,6 @@ import type { ClassifiedListing } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized } from "@/lib/i18n";
 import { listingLocationDisplay } from "@/lib/listing-location-display";
 import { useUiPreferences } from "@/lib/ui-preferences";
-import { formatDate } from "@/features/listings/listings-components";
 
 export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
   const { language, text } = useUiPreferences();
@@ -67,10 +66,18 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
           </span>
           <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap">
             <Clock className="h-3.5 w-3.5" strokeWidth={1.8} />
-            <span>{formatDate(listing.createdAt, language)}</span>
+            <span>{formatListingDate(listing.createdAt, language)}</span>
           </span>
         </div>
       </div>
     </Link>
   );
+}
+
+function formatListingDate(value: string, language: "ar" | "en") {
+  if (!value) return language === "ar" ? "تاريخ غير محدد" : "Date unavailable";
+
+  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+    dateStyle: "medium",
+  }).format(new Date(value));
 }
