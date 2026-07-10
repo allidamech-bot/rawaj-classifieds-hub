@@ -61,6 +61,9 @@ jobs:
       - name: Syria location classification contract
         run: npm run test:location-classification
 
+      - name: Syria location discovery and presentation contract
+        run: npm run test:location-presentation
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
