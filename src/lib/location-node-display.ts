@@ -17,10 +17,7 @@ const LOCATION_NODE_TYPE_LABELS: Record<
   locality: { ar: "تجمّع سكاني", en: "Community" },
 };
 
-const LOCATION_LEVEL_PROMPTS: Record<
-  LocationNodeType,
-  Record<LocationDisplayLanguage, string>
-> = {
+const LOCATION_LEVEL_PROMPTS: Record<LocationNodeType, Record<LocationDisplayLanguage, string>> = {
   country: { ar: "اختر البلد", en: "Choose country" },
   governorate: { ar: "اختر المحافظة", en: "Choose governorate" },
   district: { ar: "اختر المنطقة", en: "Choose district" },
@@ -32,7 +29,12 @@ const LOCATION_LEVEL_PROMPTS: Record<
   locality: { ar: "اختر التجمّع السكاني", en: "Choose community" },
 };
 
-const POPULATED_PLACE_TYPES = new Set<LocationNodeType>(["city", "town", "village", "locality"]);
+const POPULATED_PLACE_TYPES = new Set<LocationNodeType>([
+  "city",
+  "town",
+  "village",
+  "locality",
+]);
 
 export function getLocationNodeTypeLabel(
   nodeType: LocationNodeType,
@@ -57,7 +59,8 @@ export function getLocationLevelPrompt(
   language: LocationDisplayLanguage,
 ) {
   const types = [...new Set(nodes.map((node) => node.nodeType))];
-  if (types.length === 1) return LOCATION_LEVEL_PROMPTS[types[0]][language];
+  const singleType = types.length === 1 ? types[0] : undefined;
+  if (singleType) return LOCATION_LEVEL_PROMPTS[singleType][language];
 
   if (types.length > 1 && types.every((type) => POPULATED_PLACE_TYPES.has(type))) {
     return language === "en"
