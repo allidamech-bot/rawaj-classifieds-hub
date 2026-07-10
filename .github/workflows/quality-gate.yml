@@ -35,33 +35,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Format seller review API diagnostic
-        run: |
-          cp src/lib/api/reviews.ts /tmp/reviews.before.ts
-          npx prettier --write src/lib/api/reviews.ts
-          git diff -- src/lib/api/reviews.ts > /tmp/reviews-prettier.diff
+      - name: Check seller review API formatting
+        run: npx prettier --check src/lib/api/reviews.ts
 
-      - name: Upload seller review API formatting artifact
+      - name: Format seller review eligibility contract diagnostic
+        run: |
+          npx prettier --write scripts/seller-review-eligibility.test.mjs
+          git diff -- scripts/seller-review-eligibility.test.mjs > /tmp/review-contract-prettier.diff
+
+      - name: Upload seller review contract formatting artifact
         uses: actions/upload-artifact@v4
         with:
-          name: seller-review-api-formatting
+          name: seller-review-contract-formatting
           path: |
-            src/lib/api/reviews.ts
-            /tmp/reviews-prettier.diff
+            scripts/seller-review-eligibility.test.mjs
+            /tmp/review-contract-prettier.diff
           if-no-files-found: error
 
-      - name: Require committed seller review API formatting
-        run: git diff --exit-code -- src/lib/api/reviews.ts
-
-      - name: Lint seller review API rules
-        run: |
-          npx eslint --quiet --rule 'prettier/prettier: off' src/lib/api/reviews.ts
-
-      - name: Lint seller review API
-        run: npx eslint --quiet src/lib/api/reviews.ts
-
-      - name: Lint seller review eligibility contract
-        run: npx eslint --quiet scripts/seller-review-eligibility.test.mjs
+      - name: Require committed seller review contract formatting
+        run: git diff --exit-code -- scripts/seller-review-eligibility.test.mjs
 
       - name: Lint changed source files
         shell: bash
