@@ -58,6 +58,9 @@ jobs:
           printf 'Linting %s\n' "${files[@]}"
           npx eslint --quiet "${files[@]}"
 
+      - name: Syria location classification contract
+        run: npm run test:location-classification
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
