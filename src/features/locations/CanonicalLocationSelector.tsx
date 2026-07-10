@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { CanonicalLocationNode, LocationSearchResult } from "@/lib/api/location-taxonomy";
 import { fetchLocationChildren, searchLocationNodes } from "@/lib/api/location-taxonomy";
+import { getLocationNodeOptionLabel, getLocationNodeTypeLabel } from "@/lib/location-node-display";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useLocationLevels } from "./use-location-levels";
 
@@ -14,6 +15,7 @@ export function CanonicalLocationSelector({
   disabled?: boolean;
 }) {
   const { language, text } = useUiPreferences();
+  const displayLanguage = language === "en" ? "en" : "ar";
   const { levels, setLevels, error, setError } = useLocationLevels(value);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<LocationSearchResult[]>([]);
@@ -119,6 +121,9 @@ export function CanonicalLocationSelector({
                     ? result.node.nameEn || result.node.nameAr
                     : result.node.nameAr}
                 </span>
+                <span className="mt-0.5 block text-xs font-medium text-primary">
+                  {getLocationNodeTypeLabel(result.node.nodeType, displayLanguage)}
+                </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
                   {language === "en" ? result.pathEn : result.pathAr}
                 </span>
@@ -146,7 +151,7 @@ export function CanonicalLocationSelector({
           <option value="">{text("اختر الموقع", "Choose location")}</option>
           {level.options.map((option) => (
             <option key={option.id} value={option.id}>
-              {language === "en" ? option.nameEn || option.nameAr : option.nameAr}
+              {getLocationNodeOptionLabel(option, displayLanguage)}
             </option>
           ))}
         </select>
