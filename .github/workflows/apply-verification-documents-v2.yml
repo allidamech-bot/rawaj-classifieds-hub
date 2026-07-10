@@ -96,17 +96,20 @@ jobs:
       - name: Verification V2 focused lint
         run: npx eslint --quiet src/lib/classifieds-types.ts src/lib/api/verification.ts src/routes/verification.tsx src/routes/admin.verifications.tsx scripts/verification-documents-v2.test.mjs
 
-      - name: Verification V2 typecheck
-        run: npm run typecheck -- --pretty false
+      - name: Capture Verification V2 typecheck diagnostics
+        shell: bash
+        run: |
+          set +e
+          npm run typecheck -- --pretty false > typecheck-diagnostics.txt 2>&1
+          status=$?
+          printf '\nEXIT_STATUS=%s\n' "$status" >> typecheck-diagnostics.txt
+          exit 0
 
-      - name: Verification V2 production build
-        run: npm run build
-
-      - name: Commit implementation
+      - name: Commit typecheck diagnostics
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/lib/classifieds-types.ts src/lib/api/verification.ts src/routes/verification.tsx src/routes/admin.verifications.tsx package.json scripts/verification-documents-v2.test.mjs supabase/migrations/202607100011_verification_documents_v2.sql
-          git commit -m "Add private verification documents V2"
+          git add typecheck-diagnostics.txt
+          git commit -m "Capture Verification V2 typecheck diagnostics"
           git push origin HEAD:feature/verification-documents-v2
