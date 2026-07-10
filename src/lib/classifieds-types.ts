@@ -220,13 +220,22 @@ export interface ProfileMediaUploadPayload {
 
 export type SellerReviewStatus = "pending_review" | "approved" | "rejected";
 
+export type SellerReviewTrait =
+  | "accurate_description"
+  | "good_communication"
+  | "fast_response"
+  | "fair_deal"
+  | "punctual"
+  | "trustworthy";
+
 export interface SellerReview {
   id: string;
   sellerUserId: string;
   reviewerUserId: string;
   relatedListingId: string | null;
   rating: number;
-  comment: string;
+  comment: string | null;
+  traits: SellerReviewTrait[];
   status: SellerReviewStatus;
   adminNote: string | null;
   reviewedBy: string | null;
@@ -246,7 +255,8 @@ export interface CreateSellerReviewPayload {
   reviewerUserId: string | null;
   relatedListingId?: string | null;
   rating: number;
-  comment: string;
+  comment?: string | null;
+  traits?: SellerReviewTrait[];
 }
 
 export interface ModerateSellerReviewPayload {
