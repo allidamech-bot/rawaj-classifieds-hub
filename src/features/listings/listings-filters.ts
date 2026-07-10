@@ -296,7 +296,7 @@ export function buildListingsMobileApplySearch(
     debouncedQ,
     sort,
   } = inputs;
-  const preserveTaxonomy = Boolean(searchTaxonomy && !draftCategoryId);
+  const preserveTaxonomy = Boolean(searchTaxonomy && draftCategoryId === undefined);
   const canonicalLocation = districtAr.startsWith("@") ? districtAr.slice(1) : undefined;
 
   return {
