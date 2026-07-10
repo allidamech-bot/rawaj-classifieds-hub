@@ -1,6 +1,9 @@
 name: Prepare review response UI
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - feature/seller-review-response-ui
