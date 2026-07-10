@@ -21,6 +21,14 @@ const LOCATION_TYPE_PRIORITY: Record<LocationNodeOrderType, number> = {
   locality: 8,
 };
 
+export function getLocationNodeTypePriority(nodeType: LocationNodeOrderType) {
+  return LOCATION_TYPE_PRIORITY[nodeType];
+}
+
+export function getLocationNodeSourceSortOrder(nodeType: LocationNodeOrderType) {
+  return getLocationNodeTypePriority(nodeType) * 100;
+}
+
 export function sortLocationNodesForDisplay<
   T extends { sortOrder: number; nodeType: LocationNodeOrderType; nameAr: string },
 >(nodes: T[]): T[] {
@@ -29,7 +37,7 @@ export function sortLocationNodesForDisplay<
     if (orderDelta !== 0) return orderDelta;
 
     const typeDelta =
-      LOCATION_TYPE_PRIORITY[left.nodeType] - LOCATION_TYPE_PRIORITY[right.nodeType];
+      getLocationNodeTypePriority(left.nodeType) - getLocationNodeTypePriority(right.nodeType);
     if (typeDelta !== 0) return typeDelta;
 
     return left.nameAr.localeCompare(right.nameAr, "ar");
