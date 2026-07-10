@@ -85,10 +85,6 @@ export function useListingsReferences(search: ListingsSearch): ListingsReference
       setTaxonomyNodes(taxonomyResult.ok ? taxonomyResult.data : []);
       setTaxonomyAvailable(taxonomyResult.ok);
       setReferencesLoaded(true);
-      const initialGov = search.gov
-        ? governoratesResult.data.find((gov) => gov.id === search.gov || gov.slug === search.gov)
-        : undefined;
-      setGovId(initialGov?.id ?? "");
       setLoading(false);
     }
 
@@ -97,7 +93,15 @@ export function useListingsReferences(search: ListingsSearch): ListingsReference
     return () => {
       cancelled = true;
     };
-  }, [search.gov]);
+  }, []);
+
+  useEffect(() => {
+    if (!referencesLoaded) return;
+    const selected = search.gov
+      ? governorates.find((gov) => gov.id === search.gov || gov.slug === search.gov)
+      : undefined;
+    setGovId(selected?.id ?? "");
+  }, [governorates, referencesLoaded, search.gov]);
 
   return {
     categories,
