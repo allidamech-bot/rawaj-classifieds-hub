@@ -27,12 +27,9 @@ export function AppHeader({ compact = false, title }: Props) {
   ];
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/75 bg-background/88 text-foreground shadow-[0_10px_34px_rgba(16,43,70,0.045)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/80">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/80 to-transparent" />
-      <div className="absolute start-0 top-0 h-[2px] w-20 bg-gradient-to-r from-brand-orange to-gold" />
-
+    <header className="sticky top-0 z-30 border-b border-border/75 bg-background/94 text-foreground backdrop-blur-xl supports-[backdrop-filter]:bg-background/88">
       <div className="container-wide flex min-h-14 items-center gap-2 py-1.5 sm:min-h-16 sm:gap-4 sm:py-2 lg:min-h-[4.5rem]">
-        <Link to="/" className="group order-1 flex min-w-0 items-center gap-2 sm:gap-3">
+        <Link to="/" className="order-1 flex min-w-0 items-center gap-2 sm:gap-3">
           <Logo />
         </Link>
 
@@ -52,16 +49,16 @@ export function AppHeader({ compact = false, title }: Props) {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`relative rounded-full px-3.5 py-2 text-[13px] font-semibold transition duration-200 ${
+                className={`relative inline-flex min-h-11 items-center rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-colors duration-150 ${
                   active
-                    ? "bg-card text-primary shadow-soft hairline"
-                    : "text-muted-foreground hover:bg-card/70 hover:text-primary"
+                    ? "bg-muted-surface text-primary"
+                    : "text-muted-foreground hover:bg-muted-surface hover:text-primary"
                 }`}
                 aria-current={active ? "page" : undefined}
               >
                 {item.label}
                 {active ? (
-                  <span className="absolute inset-x-0 -bottom-1 mx-auto h-1 w-1 rounded-full bg-brand-orange" />
+                  <span className="absolute inset-x-3 bottom-0.5 h-0.5 rounded-full bg-brand-orange" />
                 ) : null}
               </Link>
             );
@@ -73,7 +70,7 @@ export function AppHeader({ compact = false, title }: Props) {
         <div className="order-3 flex shrink-0 items-center gap-1.5 sm:gap-2">
           <Link
             to="/add-listing"
-            className="rawaj-button-primary hidden h-10 min-h-0 rounded-full px-4 text-[12px] lg:inline-flex"
+            className="rawaj-button-primary hidden min-h-11 rounded-[var(--rawaj-radius-button)] px-4 text-[12px] lg:inline-flex"
           >
             <Plus className="h-4 w-4" strokeWidth={2.1} />
             {text("أضف إعلان", "Post listing")}
@@ -84,7 +81,7 @@ export function AppHeader({ compact = false, title }: Props) {
             onClick={toggleLanguage}
             aria-label={text("تبديل اللغة", "Switch language")}
             title={text("العربية / English", "English / العربية")}
-            className="hidden h-9 shrink-0 items-center gap-1.5 rounded-full bg-card/80 px-3 text-[10px] font-semibold text-muted-foreground hairline transition hover:border-gold/55 hover:text-primary sm:inline-flex"
+            className="hidden min-h-11 shrink-0 items-center gap-1.5 rounded-[var(--rawaj-radius-button)] bg-card px-3 text-[10px] font-semibold text-muted-foreground hairline transition-colors hover:border-primary/20 hover:bg-muted-surface hover:text-primary sm:inline-flex"
           >
             <Languages className="h-3.5 w-3.5" strokeWidth={1.9} />
             <span>{language === "ar" ? "English" : "العربية"}</span>
@@ -97,7 +94,7 @@ export function AppHeader({ compact = false, title }: Props) {
               to="/admin"
               aria-label={text("لوحة الإدارة", "Admin dashboard")}
               title={text("لوحة الإدارة", "Admin dashboard")}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold text-gold-foreground shadow-soft transition hover:-translate-y-0.5 sm:h-10 sm:w-10"
+              className="rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)] bg-gold text-gold-foreground transition-colors hover:bg-gold/85"
             >
               <UserCog className="h-4 w-4" />
             </Link>
@@ -115,7 +112,7 @@ export function AppHeader({ compact = false, title }: Props) {
                 ? text("حسابي", "My account")
                 : text("تسجيل الدخول", "Log in")
             }
-            className="rawaj-icon-button h-9 w-9 shrink-0 sm:h-10 sm:w-10"
+            className="rawaj-icon-button rawaj-touch-target shrink-0 shadow-none"
           >
             {auth.status === "signedIn" ? (
               <User className="h-4 w-4" strokeWidth={1.9} />
@@ -132,8 +129,7 @@ export function AppHeader({ compact = false, title }: Props) {
 function Logo() {
   return (
     <span className="flex items-center gap-2.5 sm:gap-3">
-      <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-[0.95rem] bg-primary shadow-[0_7px_18px_rgba(16,43,70,0.16)] sm:h-10 sm:w-10">
-        <span className="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-brand-orange" />
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[var(--rawaj-radius-card)] bg-primary">
         <img
           src="/brand/rawaj-mark-transparent-header.png"
           alt="RAWAJ"
