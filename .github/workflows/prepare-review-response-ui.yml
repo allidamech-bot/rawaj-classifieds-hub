@@ -1,22 +1,30 @@
 name: Prepare review response UI
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
     branches:
       - feature/seller-review-response-ui
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   prepare:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout feature branch
         uses: actions/checkout@v4
+        with:
+          ref: feature/seller-review-response-ui
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Patch seller storefront review cards
         shell: python
@@ -33,28 +41,39 @@ jobs:
                   raise SystemExit("missing import anchor")
               source = source.replace(import_anchor, import_anchor + import_line, 1)
 
-          start_marker = '              <article key={review.id} className="rounded-[1rem] bg-white/76 p-3 hairline">'
-          end_marker = '              </article>'
-          start = source.find(start_marker)
-          if start < 0:
-              raise SystemExit("missing review card start anchor")
-          end = source.find(end_marker, start)
-          if end < 0:
-              raise SystemExit("missing review card end anchor")
-          end += len(end_marker)
+          if "<SellerReviewCard" not in source:
+              start_marker = '              <article key={review.id} className="rounded-[1rem] bg-white/76 p-3 hairline">'
+              end_marker = '              </article>'
+              start = source.find(start_marker)
+              if start < 0:
+                  raise SystemExit("missing review card start anchor")
+              end = source.find(end_marker, start)
+              if end < 0:
+                  raise SystemExit("missing review card end anchor")
+              end += len(end_marker)
 
-          new = '''              <SellerReviewCard
+              new = '''              <SellerReviewCard
                 key={review.id}
                 review={review}
                 canManageResponse={isOwnProfile}
               />'''
-          source = source[:start] + new + source[end:]
+              source = source[:start] + new + source[end:]
 
           path.write_text(source, encoding="utf-8")
 
-      - name: Upload patched seller route
-        uses: actions/upload-artifact@v4
-        with:
-          name: seller-review-response-ui-route
-          path: src/routes/seller.$id.tsx
-          if-no-files-found: error
+      - name: Format patched files
+        run: npx prettier --write 'src/routes/seller.$id.tsx' src/features/reviews/SellerReviewCard.tsx
+
+      - name: Commit patched route
+        shell: bash
+        run: |
+          if git diff --quiet -- 'src/routes/seller.$id.tsx' src/features/reviews/SellerReviewCard.tsx; then
+            echo "Seller review response UI is already applied."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- 'src/routes/seller.$id.tsx' src/features/reviews/SellerReviewCard.tsx
+          git commit -m "Integrate seller review response UI"
+          git push origin HEAD:feature/seller-review-response-ui
