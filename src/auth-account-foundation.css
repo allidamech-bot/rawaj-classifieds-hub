@@ -1,0 +1,120 @@
+/* Authentication and account surfaces: clearer identity, calmer forms, stronger actions. */
+
+main.container-wide > section.rawaj-hero-surface.mx-auto.max-w-md {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  background: var(--color-card);
+  box-shadow: var(--rawaj-shadow-soft);
+}
+
+main.container-wide > section.rawaj-hero-surface.mx-auto.max-w-md::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 0.25rem;
+  background: linear-gradient(90deg, var(--color-brand-orange), var(--color-gold));
+}
+
+main.container-wide > section.rawaj-hero-surface.mx-auto.max-w-md form {
+  display: grid;
+  gap: 0.875rem;
+}
+
+main.container-wide > section.rawaj-hero-surface.mx-auto.max-w-md .input {
+  min-height: var(--rawaj-touch-target);
+  border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
+  background: var(--color-card);
+  box-shadow: none;
+}
+
+main.container-wide > section.rawaj-hero-surface.mx-auto.max-w-md .input:focus {
+  border-color: color-mix(in srgb, var(--color-brand-orange) 55%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-orange) 12%, transparent);
+}
+
+main.container-wide > section.rawaj-hero-surface.mx-auto.max-w-md > div[class*="grid-cols-2"] {
+  border: 1px solid color-mix(in srgb, var(--color-border) 76%, transparent);
+  background: var(--color-muted-surface);
+}
+
+main.container-wide > section.rawaj-hero-surface.mx-auto.max-w-md button[type="submit"] {
+  min-height: var(--rawaj-touch-target);
+  box-shadow: none;
+}
+
+main.container-wide.mobile-page-bottom.space-y-5 > section:first-child {
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--color-border) 78%, transparent);
+  border-radius: var(--rawaj-radius-surface);
+  background: linear-gradient(140deg, #102b46 0%, #0d243b 72%, #143653 100%);
+  color: white;
+  box-shadow: var(--rawaj-shadow-soft);
+}
+
+main.container-wide.mobile-page-bottom.space-y-5 > section:first-child .text-muted-foreground {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+main.container-wide.mobile-page-bottom.space-y-5 > section:first-child .bg-muted-surface {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+main.container-wide.mobile-page-bottom.space-y-5 > section:first-child a[class*="bg-primary"] {
+  background: var(--color-brand-orange);
+  color: white;
+}
+
+main.container-wide.mobile-page-bottom.space-y-5 > section:not(:first-child) {
+  border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
+  border-radius: var(--rawaj-radius-surface);
+  box-shadow: none;
+}
+
+main.container-wide.mobile-page-bottom.space-y-5 #account-info {
+  scroll-margin-top: 6rem;
+}
+
+main.container-wide.mobile-page-bottom.space-y-5 #account-info form {
+  display: grid;
+  gap: 1rem;
+}
+
+main.container-wide.mobile-page-bottom.space-y-5 #account-info .input,
+main.container-wide.mobile-page-bottom.space-y-5 #account-info textarea,
+main.container-wide.mobile-page-bottom.space-y-5 #account-info select {
+  min-height: var(--rawaj-touch-target);
+  border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
+  background: var(--color-card);
+  box-shadow: none;
+}
+
+main.container-wide.mobile-page-bottom.space-y-5 #account-info [class*="bg-muted-surface"] {
+  border-radius: var(--rawaj-radius-card);
+  box-shadow: none;
+}
+
+main.container-wide.mobile-page-bottom.space-y-5 #account-info button,
+main.container-wide.mobile-page-bottom.space-y-5 #account-info a {
+  min-height: var(--rawaj-touch-target);
+}
+
+@media (max-width: 639px) {
+  main.container-wide > section.rawaj-hero-surface.mx-auto.max-w-md,
+  main.container-wide.mobile-page-bottom.space-y-5 > section {
+    border-radius: var(--rawaj-radius-surface);
+  }
+
+  main.container-wide.mobile-page-bottom.space-y-5 > section:first-child > div {
+    align-items: stretch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main.container-wide > section.rawaj-hero-surface.mx-auto.max-w-md .input {
+    transition: none;
+  }
+}
