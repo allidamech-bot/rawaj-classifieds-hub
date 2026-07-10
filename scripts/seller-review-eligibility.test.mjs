@@ -7,10 +7,12 @@ const migrationPath = new URL(
   import.meta.url,
 );
 const apiPath = new URL("../src/lib/api/reviews.ts", import.meta.url);
+const sellerRoutePath = new URL("../src/routes/seller.$id.tsx", import.meta.url);
 
-const [migration, api] = await Promise.all([
+const [migration, api, sellerRoute] = await Promise.all([
   readFile(migrationPath, "utf8"),
   readFile(apiPath, "utf8"),
+  readFile(sellerRoutePath, "utf8"),
 ]);
 
 test("seller review eligibility requires a seller-owned listing and bidirectional messages", () => {
@@ -40,4 +42,11 @@ test("seller review creation derives reviewer identity from auth and uses the el
 test("client exposes an eligibility read contract", () => {
   assert.match(api, /fetchSellerReviewEligibility/);
   assert.match(api, /rpc\("rawaj_get_seller_review_eligibility"/);
+});
+
+test("seller storefront fails closed until review eligibility is verified", () => {
+  assert.match(sellerRoute, /fetchSellerReviewEligibility\(seller\.id\)/);
+  assert.match(sellerRoute, /if \(eligibilityState !== "eligible"\) return;/);
+  assert.match(sellerRoute, /eligibilityState === "error"/);
+  assert.match(sellerRoute, /Reviews are temporarily unavailable/);
 });
