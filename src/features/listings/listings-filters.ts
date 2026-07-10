@@ -82,6 +82,7 @@ export function buildListingFilters(inputs: ListingFilterInputs) {
     debouncedQ,
     sort,
   } = inputs;
+  const hasCanonicalLocation = districtAr.startsWith("@");
 
   return {
     categoryId: selectedCategoryId,
@@ -93,7 +94,7 @@ export function buildListingFilters(inputs: ListingFilterInputs) {
     taxonomyPropertyType: taxonomyOwnsPropertyType
       ? taxonomyListingSearch?.property_type
       : undefined,
-    governorateId: govId || undefined,
+    governorateId: hasCanonicalLocation ? undefined : govId || undefined,
     districtAr: districtAr || undefined,
     priceMin: Number.isFinite(parsedPriceMin) ? parsedPriceMin : undefined,
     priceMax: Number.isFinite(parsedPriceMax) ? parsedPriceMax : undefined,
@@ -186,7 +187,7 @@ export function buildListingsSyncSearch(inputs: ListingsSyncSearchInputs): Listi
       !taxonomyListingSearch?.taxonomyLegacySubcategoryId && !subcategoryId
         ? undefined
         : subcategoryId || undefined,
-    gov: govId || undefined,
+    gov: canonicalLocation ? undefined : govId || undefined,
     location: canonicalLocation,
     district: canonicalLocation ? undefined : districtAr || undefined,
     price_min: parsedPriceMin,
@@ -302,7 +303,7 @@ export function buildListingsMobileApplySearch(
     taxonomy: preserveTaxonomy ? searchTaxonomy : undefined,
     category: preserveTaxonomy ? undefined : draftCategoryId || undefined,
     subcategory: preserveTaxonomy ? undefined : subcategoryId || undefined,
-    gov: govId || undefined,
+    gov: canonicalLocation ? undefined : govId || undefined,
     location: canonicalLocation,
     district: canonicalLocation ? undefined : districtAr || undefined,
     price_min: parsedPriceMin,
