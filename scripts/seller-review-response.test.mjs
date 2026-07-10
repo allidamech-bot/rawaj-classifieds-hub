@@ -28,7 +28,10 @@ test("response RPC derives seller identity and requires ownership plus approved 
 
 test("empty response clears the seller reply and anonymous execution is denied", () => {
   assert.match(migration, /nullif\(btrim\(coalesce\(p_response, ''\)\), ''\)/);
-  assert.match(migration, /seller_response_updated_at = case when v_response is null then null else now\(\) end/);
+  assert.match(
+    migration,
+    /seller_response_updated_at = case when v_response is null then null else now\(\) end/,
+  );
   assert.match(
     migration,
     /revoke all on function public\.rawaj_set_seller_review_response\(uuid, text\) from anon/,
@@ -40,5 +43,8 @@ test("client routes seller responses through the protected RPC and maps public r
   assert.match(api, /rpc\("rawaj_set_seller_review_response"/);
   assert.doesNotMatch(api, /\.from\("seller_reviews"\)[\s\S]*\.update\(/);
   assert.match(api, /sellerResponse: rowNullableString\(row, "seller_response"\)/);
-  assert.match(api, /sellerResponseUpdatedAt: rowNullableString\(row, "seller_response_updated_at"\)/);
+  assert.match(
+    api,
+    /sellerResponseUpdatedAt: rowNullableString\(row, "seller_response_updated_at"\)/,
+  );
 });
