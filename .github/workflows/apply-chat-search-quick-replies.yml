@@ -1,0 +1,177 @@
+name: Apply chat search and quick replies
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'feature/chat-search-quick-replies' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/chat-search-quick-replies
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply guarded chat workspace patches
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              file = Path(path)
+              text = file.read_text()
+              if text.count(old) != 1:
+                  raise SystemExit(f'Expected exactly one chat anchor in {path}: {old[:140]!r}')
+              file.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              'src/routes/chats.tsx',
+              'import { Ban, Flag, MessageCircle, Send, ShieldAlert } from "lucide-react";\n',
+              'import { Ban, Flag, MessageCircle, Search, Send, ShieldAlert } from "lucide-react";\n',
+          )
+          replace_once(
+              'src/routes/chats.tsx',
+              'const chatsSearchSchema = z.object({\n  conversation: z.string().optional(),\n});\n',
+              'const chatsSearchSchema = z.object({\n'
+              '  conversation: z.string().optional(),\n'
+              '});\n\n'
+              'const quickReplies = [\n'
+              '  { ar: "هل الإعلان ما زال متوفراً؟", en: "Is this listing still available?" },\n'
+              '  { ar: "ما السعر النهائي؟", en: "What is your final price?" },\n'
+              '  { ar: "هل يمكن المعاينة قبل الشراء؟", en: "Can I inspect it before buying?" },\n'
+              '  { ar: "متى يناسبك التواصل؟", en: "When is a good time to talk?" },\n'
+              '] as const;\n',
+          )
+          replace_once(
+              'src/routes/chats.tsx',
+              '  const [body, setBody] = useState("");\n  const [sending, setSending] = useState(false);\n',
+              '  const [body, setBody] = useState("");\n'
+              '  const [conversationQuery, setConversationQuery] = useState("");\n'
+              '  const [sending, setSending] = useState(false);\n',
+          )
+          replace_once(
+              'src/routes/chats.tsx',
+              '  const missingConversationTarget = targetResolution.kind === "missing";\n\n  useEffect(() => {\n',
+              '  const missingConversationTarget = targetResolution.kind === "missing";\n'
+              '  const filteredConversations = useMemo(() => {\n'
+              '    const query = conversationQuery\n'
+              '      .trim()\n'
+              '      .toLocaleLowerCase(language === "ar" ? "ar" : "en");\n'
+              '    if (!query) return conversations;\n'
+              '    return conversations.filter((conversation) =>\n'
+              '      [\n'
+              '        conversation.otherParticipant.displayName,\n'
+              '        conversation.listingTitle,\n'
+              '        conversation.lastMessagePreview ?? "",\n'
+              '      ].some((value) =>\n'
+              '        value.toLocaleLowerCase(language === "ar" ? "ar" : "en").includes(query),\n'
+              '      ),\n'
+              '    );\n'
+              '  }, [conversationQuery, conversations, language]);\n\n'
+              '  useEffect(() => {\n',
+          )
+          replace_once(
+              'src/routes/chats.tsx',
+              '            <h2 className="mb-3 flex items-center gap-2 text-sm font-extrabold">\n              <MessageCircle className="h-4 w-4 text-primary" />\n              {text("قائمة المحادثات", "Conversation list")}\n            </h2>\n            {loadingConversations ? (\n',
+              '            <h2 className="mb-3 flex items-center gap-2 text-sm font-extrabold">\n'
+              '              <MessageCircle className="h-4 w-4 text-primary" />\n'
+              '              {text("قائمة المحادثات", "Conversation list")}\n'
+              '            </h2>\n'
+              '            <label className="relative mb-3 block">\n'
+              '              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />\n'
+              '              <input\n'
+              '                value={conversationQuery}\n'
+              '                onChange={(event) => setConversationQuery(event.target.value)}\n'
+              '                placeholder={text("ابحث باسم أو إعلان أو رسالة", "Search conversations")}\n'
+              '                aria-label={text("بحث في المحادثات", "Search conversations")}\n'
+              '                className="min-h-11 w-full rounded-xl bg-muted-surface ps-10 pe-3 py-2 text-xs outline-none hairline"\n'
+              '              />\n'
+              '            </label>\n'
+              '            {loadingConversations ? (\n',
+          )
+          replace_once(
+              'src/routes/chats.tsx',
+              '            ) : conversations.length === 0 ? (\n              <PanelText>\n                {text(\n                  "لا توجد محادثات بعد. افتح إعلانا معتمدا وابدأ محادثة من صفحة الإعلان.",\n                  "No conversations yet. Open an approved listing and start a conversation from it.",\n                )}\n              </PanelText>\n            ) : (\n              <div className="space-y-2">\n                {conversations.map((conversation) => (\n',
+              '            ) : conversations.length === 0 ? (\n'
+              '              <PanelText>\n'
+              '                {text(\n'
+              '                  "لا توجد محادثات بعد. افتح إعلانا معتمدا وابدأ محادثة من صفحة الإعلان.",\n'
+              '                  "No conversations yet. Open an approved listing and start a conversation from it.",\n'
+              '                )}\n'
+              '              </PanelText>\n'
+              '            ) : filteredConversations.length === 0 ? (\n'
+              '              <PanelText>\n'
+              '                {text(\n'
+              '                  "لا توجد محادثات تطابق بحثك.",\n'
+              '                  "No conversations match your search.",\n'
+              '                )}\n'
+              '              </PanelText>\n'
+              '            ) : (\n'
+              '              <div className="space-y-2">\n'
+              '                {filteredConversations.map((conversation) => (\n',
+          )
+          replace_once(
+              'src/routes/chats.tsx',
+              '                  <div className="grid gap-2 sm:grid-cols-[1fr_auto]">\n                    <textarea\n',
+              '                  {selectedConversation.status === "active" ? (\n'
+              '                    <div className="mb-2">\n'
+              '                      <p className="mb-1.5 text-[10px] font-bold text-muted-foreground">\n'
+              '                        {text("ردود سريعة", "Quick replies")}\n'
+              '                      </p>\n'
+              '                      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">\n'
+              '                        {quickReplies.map((reply) => (\n'
+              '                          <button\n'
+              '                            key={reply.en}\n'
+              '                            type="button"\n'
+              '                            onClick={() => setBody(language === "ar" ? reply.ar : reply.en)}\n'
+              '                            className="min-h-11 shrink-0 rounded-xl bg-muted-surface px-3 py-2 text-[11px] font-bold text-foreground hairline"\n'
+              '                          >\n'
+              '                            {language === "ar" ? reply.ar : reply.en}\n'
+              '                          </button>\n'
+              '                        ))}\n'
+              '                      </div>\n'
+              '                    </div>\n'
+              '                  ) : null}\n'
+              '                  <div className="grid gap-2 sm:grid-cols-[1fr_auto]">\n'
+              '                    <textarea\n',
+          )
+          replace_once(
+              'package.json',
+              '&& npm run test:reservation && npm run lint',
+              '&& npm run test:reservation && npm run test:chat-workspace && npm run lint',
+          )
+          replace_once(
+              'package.json',
+              '    "test:reservation": "node --test scripts/listing-reservation.test.mjs",\n',
+              '    "test:reservation": "node --test scripts/listing-reservation.test.mjs",\n'
+              '    "test:chat-workspace": "node --test scripts/chat-workspace.test.mjs",\n',
+          )
+          PY
+
+      - name: Format changed sources
+        run: npx prettier --write src/routes/chats.tsx package.json scripts/chat-workspace.test.mjs
+
+      - name: Commit chat workspace implementation
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/chats.tsx package.json scripts/chat-workspace.test.mjs
+          git commit -m "Add chat search and quick replies"
+          git push origin HEAD:feature/chat-search-quick-replies
