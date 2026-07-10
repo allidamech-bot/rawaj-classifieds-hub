@@ -14,14 +14,18 @@ function fail(messages) {
   process.exitCode = 1;
 }
 
-const files = (await readdir(migrationsDir)).filter((file) => file.endsWith(".sql")).sort();
+const files = (await readdir(migrationsDir))
+  .filter((file) => file.endsWith(".sql"))
+  .sort();
 console.log(`MIGRATION_INVENTORY_JSON=${JSON.stringify(files)}`);
 
 const malformed = files.filter((file) => !versionPattern.test(file));
-const parsed = files.map((file) => {
-  const match = file.match(versionPattern);
-  return match ? { filename: file, version: match[1] } : null;
-}).filter(Boolean);
+const parsed = files
+  .map((file) => {
+    const match = file.match(versionPattern);
+    return match ? { filename: file, version: match[1] } : null;
+  })
+  .filter(Boolean);
 
 const ledger = JSON.parse(await readFile(ledgerPath, "utf8"));
 const defaults = ledger.defaults ?? {};
@@ -32,7 +36,11 @@ const entries = Object.entries(classifications).flatMap(([classification, filena
 const documentedCollisions = ledger.documentedCollisions ?? {};
 const errors = [];
 
-if (malformed.length) errors.push(`Migration filenames must match <12-14 digit version>_<name>.sql: ${malformed.join(", ")}`);
+if (malformed.length) {
+  errors.push(
+    `Migration filenames must match <12-14 digit version>_<name>.sql: ${malformed.join(", ")}`,
+  );
+}
 
 const repositoryFiles = new Set(files);
 const ledgerFiles = new Set();
@@ -41,15 +49,25 @@ for (const entry of entries) {
     errors.push("Every grouped ledger entry must be a filename string.");
     continue;
   }
-  if (ledgerFiles.has(entry.filename)) errors.push(`Duplicate ledger entry: ${entry.filename}`);
+  if (ledgerFiles.has(entry.filename)) {
+    errors.push(`Duplicate ledger entry: ${entry.filename}`);
+  }
   ledgerFiles.add(entry.filename);
-  if (!repositoryFiles.has(entry.filename)) errors.push(`Ledger references a missing migration: ${entry.filename}`);
+  if (!repositoryFiles.has(entry.filename)) {
+    errors.push(`Ledger references a missing migration: ${entry.filename}`);
+  }
   for (const field of ["classification", "productionState", "replaySafety"]) {
-    if (!(entry[field] ?? defaults[field])) errors.push(`${entry.filename} is missing effective ${field}.`);
+    if (!(entry[field] ?? defaults[field])) {
+      errors.push(`${entry.filename} is missing effective ${field}.`);
+    }
   }
 }
 
-for (const file of files) if (!ledgerFiles.has(file)) errors.push(`Migration is not registered in the canonical ledger: ${file}`);
+for (const file of files) {
+  if (!ledgerFiles.has(file)) {
+    errors.push(`Migration is not registered in the canonical ledger: ${file}`);
+  }
+}
 
 const byVersion = new Map();
 for (const migration of parsed) {
@@ -62,19 +80,31 @@ for (const [version, collisionFiles] of byVersion) {
   if (collisionFiles.length < 2) continue;
   const documented = documentedCollisions[version];
   if (!Array.isArray(documented)) {
-    errors.push(`Duplicate migration version ${version}: ${collisionFiles.join(", ")}. Add an exact documentedCollisions entry; do not rename historical files blindly.`);
+    errors.push(
+      `Duplicate migration version ${version}: ${collisionFiles.join(", ")}. Add an exact documentedCollisions entry; do not rename historical files blindly.`,
+    );
     continue;
   }
   const actual = [...collisionFiles].sort();
   const expected = [...documented].sort();
-  if (JSON.stringify(actual) !== JSON.stringify(expected)) errors.push(`Collision documentation mismatch for ${version}. Actual: ${actual.join(", ")}; documented: ${expected.join(", ")}`);
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    errors.push(
+      `Collision documentation mismatch for ${version}. Actual: ${actual.join(", ")}; documented: ${expected.join(", ")}`,
+    );
+  }
 }
 
 for (const [version, documented] of Object.entries(documentedCollisions)) {
   const actual = [...(byVersion.get(version) ?? [])].sort();
   const expected = Array.isArray(documented) ? [...documented].sort() : [];
-  if (actual.length < 2) errors.push(`documentedCollisions.${version} is stale; the repository no longer has a collision.`);
-  if (JSON.stringify(actual) !== JSON.stringify(expected)) errors.push(`documentedCollisions.${version} does not exactly match repository files.`);
+  if (actual.length < 2) {
+    errors.push(
+      `documentedCollisions.${version} is stale; the repository no longer has a collision.`,
+    );
+  }
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    errors.push(`documentedCollisions.${version} does not exactly match repository files.`);
+  }
 }
 
 if (errors.length) fail(errors);
