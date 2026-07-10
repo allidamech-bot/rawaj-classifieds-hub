@@ -2,8 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const migrationPath =
-  "supabase/migrations/202607100004_backfill_syria_source_location_aliases.sql";
+const migrationPath = "supabase/migrations/202607100004_backfill_syria_source_location_aliases.sql";
 const migration = await readFile(migrationPath, "utf8");
 const normalized = migration.toLowerCase();
 
