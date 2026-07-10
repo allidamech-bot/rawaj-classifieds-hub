@@ -90,12 +90,17 @@ jobs:
       - name: Format changed sources
         run: npx prettier --write src/lib/classifieds-types.ts src/lib/api/verification.ts src/routes/verification.tsx src/routes/admin.verifications.tsx package.json scripts/verification-documents-v2.test.mjs
 
-      - name: Validate focused Verification V2 package
-        run: |
-          npm run test:verification-documents
-          npx eslint --quiet src/lib/classifieds-types.ts src/lib/api/verification.ts src/routes/verification.tsx src/routes/admin.verifications.tsx scripts/verification-documents-v2.test.mjs
-          npm run typecheck -- --pretty false
-          npm run build
+      - name: Verification V2 regression contract
+        run: npm run test:verification-documents
+
+      - name: Verification V2 focused lint
+        run: npx eslint --quiet src/lib/classifieds-types.ts src/lib/api/verification.ts src/routes/verification.tsx src/routes/admin.verifications.tsx scripts/verification-documents-v2.test.mjs
+
+      - name: Verification V2 typecheck
+        run: npm run typecheck -- --pretty false
+
+      - name: Verification V2 production build
+        run: npm run build
 
       - name: Commit implementation
         shell: bash
