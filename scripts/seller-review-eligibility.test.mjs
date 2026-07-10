@@ -14,7 +14,10 @@ const [migration, api] = await Promise.all([
 ]);
 
 test("seller review eligibility requires a seller-owned listing and bidirectional messages", () => {
-  assert.match(migration, /join public\.listings l[\s\S]*l\.owner_id = p_seller_user_id/);
+  assert.match(
+    migration,
+    /join public\.listings l[\s\S]*l\.owner_id = p_seller_user_id/,
+  );
   assert.match(
     migration,
     /buyer_message\.sender_user_id = v_reviewer[\s\S]*buyer_message\.deleted_at is null/,
