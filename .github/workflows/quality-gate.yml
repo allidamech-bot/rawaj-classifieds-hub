@@ -35,8 +35,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check seller review API formatting
-        run: npx prettier --check src/lib/api/reviews.ts
+      - name: Format seller review API diagnostic
+        run: |
+          cp src/lib/api/reviews.ts /tmp/reviews.before.ts
+          npx prettier --write src/lib/api/reviews.ts
+          git diff -- src/lib/api/reviews.ts > /tmp/reviews-prettier.diff
+
+      - name: Upload seller review API formatting artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: seller-review-api-formatting
+          path: |
+            src/lib/api/reviews.ts
+            /tmp/reviews-prettier.diff
+          if-no-files-found: error
+
+      - name: Require committed seller review API formatting
+        run: git diff --exit-code -- src/lib/api/reviews.ts
 
       - name: Lint seller review API rules
         run: |
