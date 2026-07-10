@@ -132,6 +132,7 @@ export interface ClassifiedListing {
   rejectionReason: string | null;
   publishedAt: string | null;
   archivedAt: string | null;
+  reservedAt?: string | null;
   statusChangedAt?: string | null;
   expiresAt?: string | null;
   renewedAt?: string | null;

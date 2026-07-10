@@ -35,10 +35,7 @@ test("owner reservation derives authority, locks the listing, and requires curre
 });
 
 test("reservation writes use a transaction-local owner trigger whitelist", () => {
-  assert.match(
-    migration,
-    /current_setting\('rawaj\.owner_reservation_write', true\) = 'on'/,
-  );
+  assert.match(migration, /current_setting\('rawaj\.owner_reservation_write', true\) = 'on'/);
   assert.match(migration, /old\.owner_id <> auth\.uid\(\)/);
   assert.match(migration, /old\.status <> 'approved'/);
   assert.match(migration, /to_jsonb\(new\) - array\['reserved_at', 'updated_at'\]/);
