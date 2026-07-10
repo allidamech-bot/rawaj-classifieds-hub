@@ -21,6 +21,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "paths": {
+      "@/features/listings/listings-components": [
+        "./src/features/listings/listings-components-public.tsx"
+      ],
       "@/*": ["./src/*"]
     }
   }
