@@ -3,10 +3,7 @@ import { ArrowUpLeft, BadgePercent, Clock3, MapPin, ShieldCheck, Sparkles } from
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
-import {
-  fetchActivePriceDropOffers,
-  type ListingPriceDropOffer,
-} from "@/lib/classifieds-api";
+import { fetchActivePriceDropOffers, type ListingPriceDropOffer } from "@/lib/classifieds-api";
 import type { ClassifiedsError } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
@@ -61,7 +58,10 @@ function OffersPage() {
                   {text("تخفيضات موثقة", "Recorded price drops")}
                 </span>
                 <h1 className="mt-3 max-w-xl text-[1.7rem] font-extrabold leading-[1.38] text-[#fffaf0] sm:text-[2.3rem]">
-                  {text("السعر نزل فعلاً — وهنا يظهر.", "The price really dropped — it shows here.")}
+                  {text(
+                    "السعر نزل فعلاً — وهنا يظهر.",
+                    "The price really dropped — it shows here.",
+                  )}
                 </h1>
                 <p className="mt-3 max-w-xl text-xs leading-6 text-[#fffaf0]/72 sm:text-sm sm:leading-7">
                   {text(
@@ -233,7 +233,9 @@ function OffersState({ title, body }: { title: string; body?: string }) {
         <BadgePercent className="h-5 w-5" />
       </span>
       <h3 className="mt-3 text-sm font-extrabold text-primary">{title}</h3>
-      {body ? <p className="mx-auto mt-1 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p> : null}
+      {body ? (
+        <p className="mx-auto mt-1 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p>
+      ) : null}
     </section>
   );
 }
