@@ -46,14 +46,8 @@ test("uses an honest mixed populated-place prompt without inventing classificati
     { nodeType: "locality" },
   ];
 
-  assert.equal(
-    getLocationLevelPrompt(nodes, "ar"),
-    "اختر المدينة أو البلدة أو القرية أو التجمّع",
-  );
-  assert.equal(
-    getLocationLevelPrompt(nodes, "en"),
-    "Choose city, town, village, or community",
-  );
+  assert.equal(getLocationLevelPrompt(nodes, "ar"), "اختر المدينة أو البلدة أو القرية أو التجمّع");
+  assert.equal(getLocationLevelPrompt(nodes, "en"), "Choose city, town, village, or community");
 });
 
 test("respects curated sort order before type and Arabic name fallback", () => {
