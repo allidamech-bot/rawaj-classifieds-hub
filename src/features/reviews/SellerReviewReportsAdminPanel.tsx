@@ -34,7 +34,9 @@ export function SellerReviewReportsAdminPanel({ canManageReports }: { canManageR
     const result = await adminFetchSellerReviewReports(canManageReports);
     if (result.ok) {
       setReports(result.data);
-      setNotes(Object.fromEntries(result.data.map((report) => [report.id, report.adminNote ?? ""])));
+      setNotes(
+        Object.fromEntries(result.data.map((report) => [report.id, report.adminNote ?? ""])),
+      );
       setStatuses(Object.fromEntries(result.data.map((report) => [report.id, report.status])));
     } else {
       setReports([]);
@@ -125,11 +127,15 @@ export function SellerReviewReportsAdminPanel({ canManageReports }: { canManageR
 
               <dl className="mt-3 space-y-1 text-xs text-muted-foreground">
                 <div>
-                  <dt className="inline font-bold text-foreground">{text("التقييم:", "Review:")}</dt>{" "}
+                  <dt className="inline font-bold text-foreground">
+                    {text("التقييم:", "Review:")}
+                  </dt>{" "}
                   <dd className="inline break-all">{report.reviewId}</dd>
                 </div>
                 <div>
-                  <dt className="inline font-bold text-foreground">{text("المبلّغ:", "Reporter:")}</dt>{" "}
+                  <dt className="inline font-bold text-foreground">
+                    {text("المبلّغ:", "Reporter:")}
+                  </dt>{" "}
                   <dd className="inline break-all">{report.reporterUserId}</dd>
                 </div>
                 <div>
@@ -187,7 +193,9 @@ export function SellerReviewReportsAdminPanel({ canManageReports }: { canManageR
                 onClick={() => void moderate(report)}
                 className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50"
               >
-                {savingId === report.id ? text("جارٍ الحفظ", "Saving") : text("حفظ القرار", "Save decision")}
+                {savingId === report.id
+                  ? text("جارٍ الحفظ", "Saving")
+                  : text("حفظ القرار", "Save decision")}
               </button>
             </article>
           ))}
