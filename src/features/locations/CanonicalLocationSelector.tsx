@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import type { CanonicalLocationNode, LocationSearchResult } from "@/lib/api/location-taxonomy";
 import { fetchLocationChildren, searchLocationNodes } from "@/lib/api/location-taxonomy";
-import { getLocationNodeOptionLabel, getLocationNodeTypeLabel } from "@/lib/location-node-display";
+import {
+  getLocationLevelPrompt,
+  getLocationNodeOptionLabel,
+  getLocationNodeTypeLabel,
+} from "@/lib/location-node-display";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useLocationLevels } from "./use-location-levels";
 
@@ -94,7 +98,7 @@ export function CanonicalLocationSelector({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           disabled={disabled}
-          placeholder={text("ابحث باسم الموقع أو اسمه الشائع", "Search location or common name")}
+          placeholder={text("ابحث باسم المكان أو اسمه الشائع", "Search location or common name")}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm disabled:opacity-50"
         />
         {query.trim().length >= 2 ? (
@@ -140,22 +144,26 @@ export function CanonicalLocationSelector({
         ) : null}
       </div>
 
-      {levels.map((level, index) => (
-        <select
-          key={`${level.parentId}-${index}`}
-          value={level.selectedId}
-          onChange={(event) => void selectAt(index, event.target.value)}
-          disabled={disabled}
-          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm disabled:opacity-50"
-        >
-          <option value="">{text("اختر الموقع", "Choose location")}</option>
-          {level.options.map((option) => (
-            <option key={option.id} value={option.id}>
-              {getLocationNodeOptionLabel(option, displayLanguage)}
-            </option>
-          ))}
-        </select>
-      ))}
+      {levels.map((level, index) => {
+        const prompt = getLocationLevelPrompt(level.options, displayLanguage);
+        return (
+          <select
+            key={`${level.parentId}-${index}`}
+            value={level.selectedId}
+            onChange={(event) => void selectAt(index, event.target.value)}
+            disabled={disabled}
+            aria-label={prompt}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm disabled:opacity-50"
+          >
+            <option value="">{prompt}</option>
+            {level.options.map((option) => (
+              <option key={option.id} value={option.id}>
+                {getLocationNodeOptionLabel(option, displayLanguage)}
+              </option>
+            ))}
+          </select>
+        );
+      })}
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
     </div>
   );
