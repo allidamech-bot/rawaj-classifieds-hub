@@ -76,10 +76,7 @@ test("keeps type labels when a location level mixes real node types", () => {
     { nodeType: "town", nameAr: "مثال البلدة", nameEn: "Example Town" },
   ];
 
-  assert.equal(
-    getLocationLevelOptionLabel(mixed[0], mixed, "ar"),
-    "مثال المدينة — مدينة",
-  );
+  assert.equal(getLocationLevelOptionLabel(mixed[0], mixed, "ar"), "مثال المدينة — مدينة");
   assert.equal(getLocationLevelOptionLabel(mixed[1], mixed, "en"), "Example Town — Town");
 });
 
