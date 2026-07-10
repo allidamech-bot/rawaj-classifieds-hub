@@ -67,6 +67,9 @@ jobs:
       - name: Listings mobile category switch contract
         run: npm run test:listings-filters
 
+      - name: Seller review eligibility contract
+        run: npm run test:review-eligibility
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
