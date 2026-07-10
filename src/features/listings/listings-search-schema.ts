@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { parseBooleanParam } from "@/lib/boolean-parser";
+import { parseBooleanParam } from "../../lib/boolean-parser.ts";
 
 export const listingsSortValues = ["latest", "cheapest", "expensive", "featured"] as const;
 
@@ -33,7 +33,7 @@ export const listingsSearchSchema = z
   })
   .transform((search) => ({
     ...search,
-    district: search.location && !search.district ? `@${search.location}` : search.district,
+    district: search.location ? `@${search.location}` : search.district,
   }));
 
 export type ListingsSearch = z.infer<typeof listingsSearchSchema>;

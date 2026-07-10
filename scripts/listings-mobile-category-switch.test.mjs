@@ -6,6 +6,7 @@ import {
   buildListingsMobileApplySearch,
   buildListingsSyncSearch,
 } from "../src/features/listings/listings-filters.ts";
+import { listingsSearchSchema } from "../src/features/listings/listings-search-schema.ts";
 
 const baseInputs = {
   searchTaxonomy: undefined,
@@ -87,6 +88,8 @@ const syncSearchInputs = {
   sort: "latest",
 };
 
+const canonicalLocationId = "123e4567-e89b-12d3-a456-426614174000";
+
 test("preserves a deep taxonomy selection when the mobile category choice is untouched", () => {
   const search = buildListingsMobileApplySearch({
     ...baseInputs,
@@ -157,22 +160,22 @@ test("canonical location suppresses a stale governorate in listing fetch filters
   const filters = buildListingFilters({
     ...listingFilterInputs,
     govId: "old-governorate",
-    districtAr: "@123e4567-e89b-12d3-a456-426614174000",
+    districtAr: `@${canonicalLocationId}`,
   });
 
   assert.equal(filters.governorateId, undefined);
-  assert.equal(filters.districtAr, "@123e4567-e89b-12d3-a456-426614174000");
+  assert.equal(filters.districtAr, `@${canonicalLocationId}`);
 });
 
 test("canonical location removes stale governorate from synchronized URL search", () => {
   const search = buildListingsSyncSearch({
     ...syncSearchInputs,
     govId: "old-governorate",
-    districtAr: "@123e4567-e89b-12d3-a456-426614174000",
+    districtAr: `@${canonicalLocationId}`,
   });
 
   assert.equal(search.gov, undefined);
-  assert.equal(search.location, "123e4567-e89b-12d3-a456-426614174000");
+  assert.equal(search.location, canonicalLocationId);
   assert.equal(search.district, undefined);
 });
 
@@ -180,12 +183,29 @@ test("mobile apply keeps canonical location authoritative over a stale governora
   const search = buildListingsMobileApplySearch({
     ...baseInputs,
     govId: "old-governorate",
-    districtAr: "@123e4567-e89b-12d3-a456-426614174000",
+    districtAr: `@${canonicalLocationId}`,
   });
 
   assert.equal(search.gov, undefined);
-  assert.equal(search.location, "123e4567-e89b-12d3-a456-426614174000");
+  assert.equal(search.location, canonicalLocationId);
   assert.equal(search.district, undefined);
+});
+
+test("canonical location URL state overrides a conflicting legacy district", () => {
+  const search = listingsSearchSchema.parse({
+    location: canonicalLocationId,
+    district: "المزة",
+  });
+
+  assert.equal(search.location, canonicalLocationId);
+  assert.equal(search.district, `@${canonicalLocationId}`);
+});
+
+test("legacy district URL state remains when canonical location is absent", () => {
+  const search = listingsSearchSchema.parse({ district: "المزة" });
+
+  assert.equal(search.location, undefined);
+  assert.equal(search.district, "المزة");
 });
 
 test("legacy district filters continue to retain their governorate", () => {
