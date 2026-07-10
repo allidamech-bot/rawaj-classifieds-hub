@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   buildListingFilters,
+  buildListingsCategoryNavigationSearch,
   buildListingsMobileApplySearch,
   buildListingsSyncSearch,
 } from "../src/features/listings/listings-filters.ts";
@@ -206,6 +207,39 @@ test("legacy district URL state remains when canonical location is absent", () =
 
   assert.equal(search.location, undefined);
   assert.equal(search.district, "المزة");
+});
+
+test("category navigation preserves canonical location instead of degrading to governorate", () => {
+  const search = buildListingsCategoryNavigationSearch({
+    categoryId: "vehicles",
+    govId: "stale-governorate",
+    districtAr: `@${canonicalLocationId}`,
+    query: "  Toyota  ",
+    sort: "latest",
+  });
+
+  assert.equal(search.category, "vehicles");
+  assert.equal(search.gov, undefined);
+  assert.equal(search.location, canonicalLocationId);
+  assert.equal(search.district, undefined);
+  assert.equal(search.q, "Toyota");
+  assert.equal(search.sort, undefined);
+});
+
+test("category navigation preserves legacy district with its governorate", () => {
+  const search = buildListingsCategoryNavigationSearch({
+    categoryId: undefined,
+    govId: "damascus",
+    districtAr: "المزة",
+    query: "",
+    sort: "expensive",
+  });
+
+  assert.equal(search.category, undefined);
+  assert.equal(search.gov, "damascus");
+  assert.equal(search.location, undefined);
+  assert.equal(search.district, "المزة");
+  assert.equal(search.sort, "expensive");
 });
 
 test("legacy district filters continue to retain their governorate", () => {
