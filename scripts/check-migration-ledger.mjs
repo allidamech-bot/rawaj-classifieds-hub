@@ -22,8 +22,11 @@ const parsed = files.map((file) => {
 }).filter(Boolean);
 
 const ledger = JSON.parse(await readFile(ledgerPath, "utf8"));
-const entries = Array.isArray(ledger.migrations) ? ledger.migrations : [];
 const defaults = ledger.defaults ?? {};
+const classifications = ledger.classifications ?? {};
+const entries = Object.entries(classifications).flatMap(([classification, filenames]) =>
+  Array.isArray(filenames) ? filenames.map((filename) => ({ filename, classification })) : [],
+);
 const documentedCollisions = ledger.documentedCollisions ?? {};
 const errors = [];
 
@@ -32,8 +35,8 @@ if (malformed.length) errors.push(`Migration filenames must match <12-14 digit v
 const repositoryFiles = new Set(files);
 const ledgerFiles = new Set();
 for (const entry of entries) {
-  if (!entry || typeof entry.filename !== "string") {
-    errors.push("Every ledger migration entry must contain a filename.");
+  if (typeof entry.filename !== "string") {
+    errors.push("Every grouped ledger entry must be a filename string.");
     continue;
   }
   if (ledgerFiles.has(entry.filename)) errors.push(`Duplicate ledger entry: ${entry.filename}`);
