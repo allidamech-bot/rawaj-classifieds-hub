@@ -6,20 +6,10 @@ import type {
   SellerReviewStatus,
   SellerRatingSummary,
 } from "@/lib/classifieds-types";
-import {
-  getClient,
-  mapError,
-  rowNullableString,
-  rowNumber,
-  rowString,
-} from "@/lib/api/shared";
+import { getClient, mapError, rowNullableString, rowNumber, rowString } from "@/lib/api/shared";
 
 export type SellerReviewEligibilityReason =
-  | "eligible"
-  | "auth_required"
-  | "invalid_seller"
-  | "existing_review"
-  | "no_qualifying_interaction";
+  "eligible" | "auth_required" | "invalid_seller" | "existing_review" | "no_qualifying_interaction";
 
 export interface SellerReviewEligibility {
   eligible: boolean;
@@ -43,13 +33,10 @@ export async function fetchSellerReviewEligibility(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data.rpc(
-    "rawaj_get_seller_review_eligibility",
-    {
-      p_seller_user_id: sellerId,
-      p_related_listing_id: relatedListingId?.trim() || null,
-    },
-  );
+  const { data, error } = await clientResult.data.rpc("rawaj_get_seller_review_eligibility", {
+    p_seller_user_id: sellerId,
+    p_related_listing_id: relatedListingId?.trim() || null,
+  });
 
   if (error) return { ok: false, error: mapError(error) };
 
@@ -104,11 +91,7 @@ export async function createSellerReview(
     };
   }
 
-  if (
-    !Number.isInteger(payload.rating) ||
-    payload.rating < 1 ||
-    payload.rating > 5
-  ) {
+  if (!Number.isInteger(payload.rating) || payload.rating < 1 || payload.rating > 5) {
     return {
       ok: false,
       error: { code: "validation_error", message: "اختر تقييما من 1 إلى 5." },
@@ -128,15 +111,12 @@ export async function createSellerReview(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data.rpc(
-    "rawaj_create_eligible_seller_review",
-    {
-      p_seller_user_id: sellerUserId,
-      p_rating: payload.rating,
-      p_comment: comment,
-      p_related_listing_id: payload.relatedListingId?.trim() || null,
-    },
-  );
+  const { data, error } = await clientResult.data.rpc("rawaj_create_eligible_seller_review", {
+    p_seller_user_id: sellerUserId,
+    p_rating: payload.rating,
+    p_comment: comment,
+    p_related_listing_id: payload.relatedListingId?.trim() || null,
+  });
 
   if (error) {
     const message = error.message ?? "";
@@ -243,15 +223,12 @@ export async function adminModerateSellerReview(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { error } = await clientResult.data.rpc(
-    "rawaj_admin_moderate_seller_review",
-    {
-      p_review_id: payload.reviewId,
-      p_status: payload.status,
-      p_admin_note: payload.adminNote?.trim() || null,
-      p_expected_updated_at: payload.expectedUpdatedAt,
-    },
-  );
+  const { error } = await clientResult.data.rpc("rawaj_admin_moderate_seller_review", {
+    p_review_id: payload.reviewId,
+    p_status: payload.status,
+    p_admin_note: payload.adminNote?.trim() || null,
+    p_expected_updated_at: payload.expectedUpdatedAt,
+  });
 
   if (error) {
     if (error.message?.includes("stale_seller_review")) {
@@ -259,8 +236,7 @@ export async function adminModerateSellerReview(
         ok: false,
         error: {
           code: "stale_review",
-          message:
-            "تغيّر التقييم منذ تحميله. أعد تحميل القائمة قبل اتخاذ قرار جديد.",
+          message: "تغيّر التقييم منذ تحميله. أعد تحميل القائمة قبل اتخاذ قرار جديد.",
         },
       };
     }
@@ -270,9 +246,7 @@ export async function adminModerateSellerReview(
   return { ok: true, data: null };
 }
 
-export function buildRatingSummary(
-  reviews: SellerReview[],
-): SellerRatingSummary {
+export function buildRatingSummary(reviews: SellerReview[]): SellerRatingSummary {
   const approved = reviews.filter((review) => review.status === "approved");
   if (approved.length === 0) {
     return {
@@ -291,8 +265,7 @@ export function buildRatingSummary(
   };
   let total = 0;
   for (const review of approved) {
-    const rating = Math.min(5, Math.max(1, Math.round(review.rating))) as
-      1 | 2 | 3 | 4 | 5;
+    const rating = Math.min(5, Math.max(1, Math.round(review.rating))) as 1 | 2 | 3 | 4 | 5;
     distribution[rating] += 1;
     total += rating;
   }
