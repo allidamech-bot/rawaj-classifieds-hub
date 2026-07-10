@@ -91,6 +91,9 @@ jobs:
       - name: Listing studio image parity contract
         run: npm run test:listing-studio-images
 
+      - name: Account activity center contract
+        run: npm run test:activity-center
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
