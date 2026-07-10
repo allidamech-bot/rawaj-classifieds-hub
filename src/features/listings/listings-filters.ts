@@ -304,8 +304,7 @@ export function buildListingsMobileApplySearch(
   return {
     taxonomy: preserveTaxonomy ? searchTaxonomy : undefined,
     category: preserveTaxonomy ? undefined : draftCategoryId || undefined,
-    subcategory:
-      preserveTaxonomy || explicitAllCategories ? undefined : subcategoryId || undefined,
+    subcategory: preserveTaxonomy || explicitAllCategories ? undefined : subcategoryId || undefined,
     gov: canonicalLocation ? undefined : govId || undefined,
     location: canonicalLocation,
     district: canonicalLocation ? undefined : districtAr || undefined,
@@ -329,13 +328,14 @@ export function buildListingsMobileApplySearch(
     rental_duration:
       hasConcreteCategory && fieldKind === "real_estate" ? rentalDuration || undefined : undefined,
     electronics_brand:
-      hasConcreteCategory && fieldKind === "electronics" ? electronicsBrand || undefined : undefined,
+      hasConcreteCategory && fieldKind === "electronics"
+        ? electronicsBrand || undefined
+        : undefined,
     detail_condition:
       hasConcreteCategory && fieldKind === "electronics" ? detailCondition || undefined : undefined,
     employment_type:
       hasConcreteCategory && fieldKind === "jobs" ? employmentType || undefined : undefined,
-    salary_type:
-      hasConcreteCategory && fieldKind === "jobs" ? salaryType || undefined : undefined,
+    salary_type: hasConcreteCategory && fieldKind === "jobs" ? salaryType || undefined : undefined,
     q: debouncedQ || undefined,
     sort: sort === "latest" ? undefined : sort,
   };
