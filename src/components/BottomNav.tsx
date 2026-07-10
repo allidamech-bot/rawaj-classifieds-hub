@@ -48,48 +48,57 @@ export function BottomNav() {
 
   return (
     <nav
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pt-2 lg:hidden"
-      style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))" }}
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-2.5 pt-2 lg:hidden"
+      style={{ paddingBottom: "calc(0.45rem + env(safe-area-inset-bottom))" }}
       aria-label={text("التنقل الرئيسي", "Primary navigation")}
     >
-      <div className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid max-w-[32rem] grid-cols-5 items-stretch border border-border/80 bg-card/96 p-1 backdrop-blur-xl supports-[backdrop-filter]:bg-card/90">
+      <div className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid max-w-[31rem] grid-cols-5 items-end border border-border/80 bg-card/96 px-1.5 pb-1 pt-1.5 shadow-[0_18px_46px_rgba(16,43,70,0.16)] backdrop-blur-xl supports-[backdrop-filter]:bg-card/90">
         {items.map((item) => {
           const active = activeSection === item.section;
           const Icon = item.icon;
           const label = text(item.labelAr, item.labelEn);
           const badgeCount = item.section === "account" ? counts.total : 0;
+          const itemTone = item.primary
+            ? "text-brand-orange"
+            : active
+              ? "bg-primary/8 text-primary"
+              : "text-muted-foreground hover:bg-muted-surface/80 hover:text-primary";
+          const iconTone = item.primary
+            ? "-mt-5 h-12 w-12 rounded-[1.15rem] bg-brand-orange text-white shadow-[0_12px_28px_rgba(217,111,50,0.34)] ring-4 ring-card"
+            : active
+              ? "h-8 w-9 rounded-xl bg-primary text-primary-foreground shadow-[0_7px_16px_rgba(16,43,70,0.14)]"
+              : "h-8 w-9 rounded-xl";
 
           return (
             <Link
               key={item.to}
               to={item.to}
-              className={`relative flex min-h-[3.75rem] min-w-0 flex-col items-center justify-center gap-1 rounded-[0.9rem] px-1 py-1.5 transition-colors duration-150 active:bg-muted-surface ${
-                active ? "bg-primary/8 text-primary" : "text-muted-foreground"
-              }`}
+              className={`relative flex min-h-[3.7rem] min-w-0 flex-col items-center justify-end gap-1 rounded-[0.95rem] px-1 pb-1.5 pt-1 transition-all duration-150 active:scale-[0.98] ${itemTone}`}
               aria-label={label}
               aria-current={active ? "page" : undefined}
             >
               <span
-                className={`relative grid h-8 w-9 place-items-center rounded-xl transition-colors duration-150 ${
-                  item.primary
-                    ? "bg-primary text-primary-foreground"
-                    : active
-                      ? "bg-primary/8 text-primary"
-                      : ""
-                }`}
+                className={`relative grid place-items-center transition-all duration-150 ${iconTone}`}
               >
-                <Icon className="h-5 w-5" strokeWidth={active || item.primary ? 2.1 : 1.8} />
+                <Icon
+                  className={item.primary ? "h-6 w-6" : "h-5 w-5"}
+                  strokeWidth={active || item.primary ? 2.2 : 1.8}
+                />
                 {badgeCount > 0 && (
                   <span className="absolute -end-1.5 -top-1.5 grid min-h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[8px] font-bold leading-none text-destructive-foreground ring-2 ring-card">
                     {badgeCount > 99 ? "99+" : badgeCount}
                   </span>
                 )}
               </span>
-              <span className={`truncate text-[10px] ${active ? "font-bold" : "font-medium"}`}>
+              <span
+                className={`max-w-full truncate text-[9.5px] leading-none ${
+                  active || item.primary ? "font-extrabold" : "font-semibold"
+                }`}
+              >
                 {label}
               </span>
-              {active ? (
-                <span className="absolute inset-x-4 bottom-0.5 h-0.5 rounded-full bg-brand-orange" />
+              {active && !item.primary ? (
+                <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-brand-orange" />
               ) : null}
             </Link>
           );
