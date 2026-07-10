@@ -18,6 +18,13 @@ export interface SellerReviewEligibility {
   reason: SellerReviewEligibilityReason;
 }
 
+export interface SellerReviewResponseFields {
+  sellerResponse: string | null;
+  sellerResponseUpdatedAt: string | null;
+}
+
+export type SellerReviewWithResponse = SellerReview & SellerReviewResponseFields;
+
 export async function fetchSellerReviewEligibility(
   sellerUserId: string,
   relatedListingId?: string | null,
@@ -164,6 +171,83 @@ export async function createSellerReview(
   return { ok: true, data: mapReview(raw as Record<string, unknown>) };
 }
 
+export async function setSellerReviewResponse(
+  reviewId: string,
+  response: string,
+): Promise<ClassifiedsResult<SellerReviewWithResponse>> {
+  const cleanReviewId = reviewId.trim();
+  const cleanResponse = response.trim();
+
+  if (!cleanReviewId) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد التقييم." },
+    };
+  }
+
+  if (cleanResponse && (cleanResponse.length < 3 || cleanResponse.length > 800)) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "اكتب ردا بين 3 و800 حرف." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data.rpc("rawaj_set_seller_review_response", {
+    p_review_id: cleanReviewId,
+    p_response: cleanResponse,
+  });
+
+  if (error) {
+    const message = error.message ?? "";
+    if (message.includes("seller_review_response_auth_required")) {
+      return {
+        ok: false,
+        error: { code: "auth_required", message: "يجب تسجيل الدخول للرد على التقييم." },
+      };
+    }
+    if (message.includes("seller_review_response_permission_denied")) {
+      return {
+        ok: false,
+        error: { code: "permission_denied", message: "لا يمكنك الرد على تقييم بائع آخر." },
+      };
+    }
+    if (message.includes("seller_review_response_requires_approved_review")) {
+      return {
+        ok: false,
+        error: { code: "status_mismatch", message: "يمكن الرد على التقييمات المعتمدة فقط." },
+      };
+    }
+    if (message.includes("seller_review_response_not_found")) {
+      return {
+        ok: false,
+        error: { code: "not_found", message: "التقييم غير موجود أو لم يعد متاحا." },
+      };
+    }
+    return { ok: false, error: mapError(error) };
+  }
+
+  const raw = Array.isArray(data) ? data[0] : data;
+  if (!raw || typeof raw !== "object") {
+    return {
+      ok: false,
+      error: { code: "unknown", message: "تم حفظ الرد دون إعادة التقييم المحدث." },
+    };
+  }
+
+  return { ok: true, data: mapReview(raw as Record<string, unknown>) };
+}
+
+export function readSellerReviewResponse(review: SellerReview): SellerReviewResponseFields {
+  const extended = review as SellerReviewWithResponse;
+  return {
+    sellerResponse: extended.sellerResponse ?? null,
+    sellerResponseUpdatedAt: extended.sellerResponseUpdatedAt ?? null,
+  };
+}
+
 export async function adminFetchSellerReviews(
   canUseAdminAccess: boolean,
 ): Promise<ClassifiedsResult<SellerReview[]>> {
@@ -277,7 +361,7 @@ export function buildRatingSummary(reviews: SellerReview[]): SellerRatingSummary
   };
 }
 
-export function mapReview(row: Record<string, unknown>): SellerReview {
+export function mapReview(row: Record<string, unknown>): SellerReviewWithResponse {
   return {
     id: rowString(row, "id"),
     sellerUserId: rowString(row, "seller_user_id"),
@@ -289,6 +373,8 @@ export function mapReview(row: Record<string, unknown>): SellerReview {
     adminNote: rowNullableString(row, "admin_note"),
     reviewedBy: rowNullableString(row, "reviewed_by"),
     reviewedAt: rowNullableString(row, "reviewed_at"),
+    sellerResponse: rowNullableString(row, "seller_response"),
+    sellerResponseUpdatedAt: rowNullableString(row, "seller_response_updated_at"),
     createdAt: rowString(row, "created_at"),
     updatedAt: rowString(row, "updated_at"),
   };
