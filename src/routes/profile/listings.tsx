@@ -494,7 +494,7 @@ function StoreListingCard({
     if (reservationBusy || !canManageReservation) return;
     setReservationError("");
     setReservationBusy(true);
-    const result = await setOwnerListingReserved(userId, listing.id, !Boolean(listing.reservedAt));
+    const result = await setOwnerListingReserved(userId, listing.id, !listing.reservedAt);
     setReservationBusy(false);
     if (!result.ok) {
       setReservationError(result.error.message);
