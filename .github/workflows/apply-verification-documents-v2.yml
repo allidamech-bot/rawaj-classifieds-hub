@@ -1,0 +1,107 @@
+name: Apply verification documents V2
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'feature/verification-documents-v2' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/verification-documents-v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply guarded type and script patches
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              file = Path(path)
+              text = file.read_text()
+              if text.count(old) != 1:
+                  raise SystemExit(f"Expected exactly one anchor in {path}: {old[:180]!r}")
+              file.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              'src/lib/classifieds-types.ts',
+              'export type VerificationRequestStatus = "pending_review" | "approved" | "rejected";\n'
+              'export type VerificationRequestType = "personal" | "business";\n',
+              'export type VerificationRequestStatus = "pending_review" | "approved" | "rejected";\n'
+              'export type VerificationRequestType = "personal" | "business";\n'
+              'export type VerificationDocumentType =\n'
+              '  | "national_id"\n'
+              '  | "passport"\n'
+              '  | "other_government_id"\n'
+              '  | "commercial_registration"\n'
+              '  | "business_license"\n'
+              '  | "tax_document";\n',
+          )
+
+          replace_once(
+              'src/lib/classifieds-types.ts',
+              'export interface CreateSellerVerificationRequestPayload {\n'
+              '  userId: string | null;\n'
+              '  requestType: VerificationRequestType;\n'
+              '  legalName: string;\n'
+              '  businessName?: string | null;\n'
+              '  documentType?: string | null;\n'
+              '}\n',
+              'export interface CreateSellerVerificationRequestPayload {\n'
+              '  userId: string | null;\n'
+              '  requestType: VerificationRequestType;\n'
+              '  legalName: string;\n'
+              '  businessName?: string | null;\n'
+              '  documentType: VerificationDocumentType;\n'
+              '  documentFile: File;\n'
+              '}\n',
+          )
+
+          replace_once(
+              'package.json',
+              '&& npm run test:semantic-seo && npm run lint',
+              '&& npm run test:semantic-seo && npm run test:verification-documents && npm run lint',
+          )
+          replace_once(
+              'package.json',
+              '    "test:semantic-seo": "node --test scripts/semantic-seo.test.mjs",\n',
+              '    "test:semantic-seo": "node --test scripts/semantic-seo.test.mjs",\n'
+              '    "test:verification-documents": "node --test scripts/verification-documents-v2.test.mjs",\n',
+          )
+          PY
+
+      - name: Format changed sources
+        run: npx prettier --write src/lib/classifieds-types.ts src/lib/api/verification.ts src/routes/verification.tsx src/routes/admin.verifications.tsx package.json scripts/verification-documents-v2.test.mjs
+
+      - name: Validate focused Verification V2 package
+        run: |
+          npm run test:verification-documents
+          npx eslint --quiet src/lib/classifieds-types.ts src/lib/api/verification.ts src/routes/verification.tsx src/routes/admin.verifications.tsx scripts/verification-documents-v2.test.mjs
+          npm run typecheck -- --pretty false
+          npm run build
+
+      - name: Commit implementation
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/classifieds-types.ts src/lib/api/verification.ts src/routes/verification.tsx src/routes/admin.verifications.tsx package.json scripts/verification-documents-v2.test.mjs supabase/migrations/202607100011_verification_documents_v2.sql
+          git commit -m "Add private verification documents V2"
+          git push origin HEAD:feature/verification-documents-v2
