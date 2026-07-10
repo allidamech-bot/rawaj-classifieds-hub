@@ -19,10 +19,7 @@ const verificationFileAccept = "image/jpeg,image/png,image/webp,application/pdf"
 
 export const Route = createFileRoute("/verification")({
   head: () => ({
-    meta: [
-      { title: "طلب توثيق | رواج" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
+    meta: [{ title: "طلب توثيق | رواج" }, { name: "robots", content: "noindex, nofollow" }],
   }),
   component: VerificationPage,
 });
@@ -88,7 +85,9 @@ function VerificationPage() {
     }
 
     if (!documentType || !documentFile) {
-      setNotice(text("اختر نوع المستند وأرفق الوثيقة.", "Choose a document type and attach the file."));
+      setNotice(
+        text("اختر نوع المستند وأرفق الوثيقة.", "Choose a document type and attach the file."),
+      );
       setNoticeKind("error");
       return;
     }
@@ -183,7 +182,9 @@ function VerificationPage() {
             <Field label={text("نوع الطلب", "Request type")}>
               <select
                 value={requestType}
-                onChange={(event) => changeRequestType(event.target.value as VerificationRequestType)}
+                onChange={(event) =>
+                  changeRequestType(event.target.value as VerificationRequestType)
+                }
                 className="input"
               >
                 <option value="personal">{text("فرد", "Individual")}</option>
@@ -216,7 +217,9 @@ function VerificationPage() {
             <Field label={text("نوع المستند", "Document type")}>
               <select
                 value={documentType}
-                onChange={(event) => setDocumentType(event.target.value as VerificationDocumentType)}
+                onChange={(event) =>
+                  setDocumentType(event.target.value as VerificationDocumentType)
+                }
                 required
                 className="input"
               >
@@ -284,7 +287,9 @@ function VerificationPage() {
             }
             className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-gold px-4 py-2 text-xs font-bold text-gold-foreground disabled:opacity-60"
           >
-            {saving ? text("جارٍ الرفع والإرسال", "Uploading and sending") : text("إرسال الطلب", "Submit request")}
+            {saving
+              ? text("جارٍ الرفع والإرسال", "Uploading and sending")
+              : text("إرسال الطلب", "Submit request")}
           </button>
 
           {notice ? (
@@ -318,7 +323,10 @@ function VerificationPage() {
           ) : (
             <div className="mt-3 grid gap-2">
               {requests.map((request) => (
-                <article key={request.id} className="rounded-xl bg-muted-surface p-3 text-xs hairline">
+                <article
+                  key={request.id}
+                  className="rounded-xl bg-muted-surface p-3 text-xs hairline"
+                >
                   <p className="font-bold">{request.legalName}</p>
                   <p className="mt-1 text-muted-foreground">
                     {statusLabel(request.status, text)} · {typeLabel(request.requestType, text)}
@@ -377,10 +385,7 @@ function documentTypeOptions(type: VerificationRequestType) {
   ];
 }
 
-function verificationDocumentTypeLabel(
-  type: string,
-  text: (ar: string, en: string) => string,
-) {
+function verificationDocumentTypeLabel(type: string, text: (ar: string, en: string) => string) {
   const labels: Record<string, [string, string]> = {
     national_id: ["هوية وطنية", "National ID"],
     passport: ["جواز سفر", "Passport"],

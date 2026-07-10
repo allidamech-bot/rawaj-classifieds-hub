@@ -1,4 +1,5 @@
 import type {
+  ClassifiedsError,
   ClassifiedsResult,
   CreateSellerVerificationRequestPayload,
   ModerateSellerVerificationRequestPayload,
@@ -269,7 +270,11 @@ function documentTypeMatchesRequest(
   return ["national_id", "passport", "other_government_id"].includes(documentType);
 }
 
-function mapVerificationCreationError(error: { message?: string | null }) {
+function mapVerificationCreationError(error: {
+  code?: string;
+  message?: string;
+  details?: string;
+}): ClassifiedsError {
   if (error.message?.includes("verification_request_already_pending")) {
     return { code: "validation_error", message: "لديك طلب توثيق قيد المراجعة بالفعل." };
   }

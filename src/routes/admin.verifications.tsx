@@ -126,10 +126,13 @@ function AdminVerificationsPage() {
                   <p className="mt-1 text-xs text-muted-foreground">
                     {verificationTypeLabel(request.requestType, text)} · {request.userId}
                   </p>
-                  {request.businessName ? <p className="mt-1 text-xs">{request.businessName}</p> : null}
+                  {request.businessName ? (
+                    <p className="mt-1 text-xs">{request.businessName}</p>
+                  ) : null}
                   {request.documentType ? (
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {text("نوع المستند:", "Document type:")} {verificationDocumentTypeLabel(request.documentType, text)}
+                      {text("نوع المستند:", "Document type:")}{" "}
+                      {verificationDocumentTypeLabel(request.documentType, text)}
                     </p>
                   ) : null}
                 </div>
@@ -245,10 +248,7 @@ function verificationTypeLabel(
   return type === "business" ? text("منشأة", "Business") : text("فرد", "Individual");
 }
 
-function verificationDocumentTypeLabel(
-  type: string,
-  text: (ar: string, en: string) => string,
-) {
+function verificationDocumentTypeLabel(type: string, text: (ar: string, en: string) => string) {
   const labels: Record<string, [string, string]> = {
     national_id: ["هوية وطنية", "National ID"],
     passport: ["جواز سفر", "Passport"],
