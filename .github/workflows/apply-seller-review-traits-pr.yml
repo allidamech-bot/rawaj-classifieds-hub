@@ -1,4 +1,4 @@
-name: Apply seller review traits on PR
+name: Apply seller review traits route on PR
 
 on:
   pull_request:
@@ -6,11 +6,11 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   patch:
-    if: github.head_ref == 'feature/seller-review-traits'
+    if: github.head_ref == 'feature/seller-review-traits' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout feature branch
@@ -27,36 +27,101 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Extract and apply guarded patch
+      - name: Apply guarded route patch
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          source = Path('.github/workflows/apply-seller-review-traits.yml').read_text().splitlines()
-          start = next(i for i, line in enumerate(source) if "python - <<'PY'" in line) + 1
-          end = next(i for i in range(start, len(source)) if source[i].strip() == 'PY')
-          script_lines = source[start:end]
-          nonempty = [line for line in script_lines if line.strip()]
-          indent = min(len(line) - len(line.lstrip()) for line in nonempty)
-          script = '\n'.join(line[indent:] if line.strip() else '' for line in script_lines) + '\n'
-          Path('/tmp/apply-seller-review-traits.py').write_text(script)
+          path = Path('src/routes/seller.$id.tsx')
+          text = path.read_text()
+
+          if 'selectedTraits' in text:
+              print('Seller review traits route is already patched.')
+              raise SystemExit(0)
+
+          def replace_once(old: str, new: str) -> None:
+              global text
+              if text.count(old) != 1:
+                  raise SystemExit(f'Expected exactly one route anchor: {old[:100]!r}')
+              text = text.replace(old, new, 1)
+
+          replace_once(
+              '  createSellerReview,\n  fetchPublicSellerProfile,\n  fetchSellerReviewEligibility,\n',
+              '  createSellerReview,\n  fetchPublicSellerProfile,\n  fetchSellerReviewEligibility,\n  SELLER_REVIEW_TRAITS,\n  sellerReviewTraitLabel,\n',
+          )
+          replace_once(
+              '  const [rating, setRating] = useState(5);\n  const [comment, setComment] = useState("");\n',
+              '  const [rating, setRating] = useState(5);\n'
+              '  const [comment, setComment] = useState("");\n'
+              '  const [selectedTraits, setSelectedTraits] = useState<typeof SELLER_REVIEW_TRAITS[number][]>([]);\n',
+          )
+          replace_once(
+              '      rating,\n      comment,\n    });\n',
+              '      rating,\n      comment,\n      traits: selectedTraits,\n    });\n',
+          )
+          replace_once(
+              '      setComment("");\n      setRating(5);\n',
+              '      setComment("");\n      setRating(5);\n      setSelectedTraits([]);\n',
+          )
+          replace_once(
+              '            <textarea\n              value={comment}\n',
+              '            <div>\n'
+              '              <p className="text-[10px] font-bold text-muted-foreground">\n'
+              '                {text("صفات سريعة — اختر حتى 3", "Quick traits — choose up to 3")}\n'
+              '              </p>\n'
+              '              <div className="mt-2 flex flex-wrap gap-2">\n'
+              '                {SELLER_REVIEW_TRAITS.map((trait) => {\n'
+              '                  const selected = selectedTraits.includes(trait);\n'
+              '                  return (\n'
+              '                    <button\n'
+              '                      key={trait}\n'
+              '                      type="button"\n'
+              '                      aria-pressed={selected}\n'
+              '                      disabled={saving || (!selected && selectedTraits.length >= 3)}\n'
+              '                      onClick={() =>\n'
+              '                        setSelectedTraits((current) =>\n'
+              '                          current.includes(trait)\n'
+              '                            ? current.filter((item) => item !== trait)\n'
+              '                            : current.length >= 3\n'
+              '                              ? current\n'
+              '                              : [...current, trait],\n'
+              '                        )\n'
+              '                      }\n'
+              '                      className={`min-h-11 rounded-xl px-3 py-2 text-[11px] font-bold hairline disabled:opacity-45 ${\n'
+              '                        selected ? "bg-primary text-primary-foreground" : "bg-white/72"\n'
+              '                      }`}\n'
+              '                    >\n'
+              '                      {sellerReviewTraitLabel(trait, language)}\n'
+              '                    </button>\n'
+              '                  );\n'
+              '                })}\n'
+              '              </div>\n'
+              '            </div>\n'
+              '            <textarea\n'
+              '              value={comment}\n',
+          )
+          replace_once(
+              '                "اكتب تجربتك مع هذا المعلن",\n                "Write your experience with this seller",\n',
+              '                "تعليق كتابي اختياري — 10 أحرف على الأقل عند الكتابة",\n'
+              '                "Optional written comment — at least 10 characters when provided",\n',
+          )
+
+          path.write_text(text)
           PY
-          python /tmp/apply-seller-review-traits.py
 
-      - name: Format changed sources
-        run: npx prettier --write src/lib/classifieds-types.ts src/lib/api/reviews.ts src/features/reviews/SellerReviewCard.tsx 'src/routes/seller.$id.tsx' package.json scripts/seller-review-traits.test.mjs .github/workflows/quality-gate.yml
+      - name: Format route
+        run: npx prettier --write 'src/routes/seller.$id.tsx'
 
-      - name: Upload generated implementation
-        uses: actions/upload-artifact@v4
-        with:
-          name: seller-review-traits-generated
-          path: |
-            src/lib/classifieds-types.ts
-            src/lib/api/reviews.ts
-            src/features/reviews/SellerReviewCard.tsx
-            src/routes/seller.$id.tsx
-            package.json
-            scripts/seller-review-traits.test.mjs
-            .github/workflows/quality-gate.yml
-          if-no-files-found: error
+      - name: Commit route implementation
+        shell: bash
+        run: |
+          if git diff --quiet -- 'src/routes/seller.$id.tsx'; then
+            echo "No route changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 'src/routes/seller.$id.tsx'
+          git commit -m "Implement seller review traits storefront"
+          git push origin HEAD:feature/seller-review-traits
