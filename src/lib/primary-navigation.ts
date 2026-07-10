@@ -19,6 +19,10 @@ function matchesPath(pathname: string, path: string) {
   return pathname === path || pathname.startsWith(`${path}/`);
 }
 
+function isListingDetailPath(pathname: string) {
+  return /^\/listings\/[^/]+$/.test(pathname);
+}
+
 export function resolvePrimaryNavigationSection(pathname: string): PrimaryNavigationSection {
   if (pathname === "/") return "home";
   if (matchesPath(pathname, "/categories")) return "categories";
@@ -60,6 +64,9 @@ export function shouldShowBottomNav(pathname: string) {
   ] as const;
 
   if (hiddenPaths.some((path) => matchesPath(pathname, path))) return false;
+
+  // Listing detail owns a persistent contact action bar and must not compete with primary nav.
+  if (isListingDetailPath(pathname)) return false;
 
   if (/^\/profile\/listings\/[^/]+$/.test(pathname)) return false;
 
