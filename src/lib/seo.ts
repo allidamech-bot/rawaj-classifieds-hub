@@ -16,6 +16,11 @@ type SeoOptions = {
   noindex?: boolean;
 };
 
+export type BreadcrumbItem = {
+  name: string;
+  path: string;
+};
+
 export function getSiteUrl() {
   const configured = (import.meta.env[SITE_URL_ENV_NAME] as string | undefined)?.trim();
   return (configured || fallbackSiteUrl).replace(/\/+$/, "");
@@ -60,6 +65,50 @@ export function createSeo(options: SeoOptions = {}) {
       ...(options.noindex ? [{ name: "robots", content: "noindex, nofollow" }] : []),
     ],
     links: [{ rel: "canonical", href: url }],
+  };
+}
+
+export function buildSiteStructuredData() {
+  const organizationId = absoluteUrl("/#organization");
+  const websiteId = absoluteUrl("/#website");
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": organizationId,
+        name: "RAWAJ / رواج",
+        url: absoluteUrl("/"),
+        logo: absoluteUrl("/brand/rawaj-mark-transparent-192.png"),
+      },
+      {
+        "@type": "WebSite",
+        "@id": websiteId,
+        name: "RAWAJ / رواج",
+        url: absoluteUrl("/"),
+        inLanguage: ["ar", "en"],
+        publisher: { "@id": organizationId },
+        potentialAction: {
+          "@type": "SearchAction",
+          target: `${absoluteUrl("/listings")}?q={search_term_string}`,
+          "query-input": "required name=search_term_string",
+        },
+      },
+    ],
+  };
+}
+
+export function buildBreadcrumbStructuredData(items: BreadcrumbItem[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: plainText(item.name, 120),
+      item: absoluteUrl(item.path),
+    })),
   };
 }
 
