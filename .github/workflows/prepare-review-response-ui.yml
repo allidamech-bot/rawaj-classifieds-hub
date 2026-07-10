@@ -1,0 +1,58 @@
+name: Prepare review response UI
+
+on:
+  push:
+    branches:
+      - feature/seller-review-response-ui
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch seller storefront review cards
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path("src/routes/seller.$id.tsx")
+          source = path.read_text(encoding="utf-8")
+
+          import_anchor = 'import { PlaceholderArt } from "@/components/PlaceholderArt";\n'
+          import_line = 'import { SellerReviewCard } from "@/features/reviews/SellerReviewCard";\n'
+          if import_line not in source:
+              if import_anchor not in source:
+                  raise SystemExit("missing import anchor")
+              source = source.replace(import_anchor, import_anchor + import_line, 1)
+
+          old = '''              <article key={review.id} className="rounded-[1rem] bg-white/76 p-3 hairline">
+                <div className="text-xs font-bold text-gold">{"★".repeat(review.rating)}</div>
+                <p className="mt-1 whitespace-pre-line text-xs leading-6">{review.comment}</p>
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  {new Date(review.createdAt).toLocaleDateString(
+                    language === "ar" ? "ar-SY" : "en-US",
+                  )}
+                </p>
+              </article>'''
+          new = '''              <SellerReviewCard
+                key={review.id}
+                review={review}
+                canManageResponse={isOwnProfile}
+              />'''
+          if old not in source:
+              raise SystemExit("missing review card anchor")
+          source = source.replace(old, new, 1)
+
+          path.write_text(source, encoding="utf-8")
+
+      - name: Upload patched seller route
+        uses: actions/upload-artifact@v4
+        with:
+          name: seller-review-response-ui-route
+          path: src/routes/seller.$id.tsx
+          if-no-files-found: error
