@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   buildSyriaSourceAliases,
+  mergeSyriaLocationAliases,
   normalizeSyriaLocationAlias,
 } from "./syria-location-search-aliases.mjs";
 
@@ -60,4 +61,21 @@ test("deduplicates normalized aliases without inventing classifications", () => 
   assert.equal(aliases.length, 1);
   assert.equal(aliases[0].alias, "تلّة آمنة");
   assert.equal("nodeType" in aliases[0], false);
+});
+
+test("lets a curated alias override duplicate source metadata", () => {
+  const source = {
+    targetExternalSource: "ocha-hdx-cod-ab-syr",
+    targetExternalId: "C789",
+    alias: "تلّة آمنة",
+    reviewStatus: "reviewed",
+  };
+  const curated = {
+    targetExternalSource: "ocha-hdx-cod-ab-syr",
+    targetExternalId: "C789",
+    alias: "تله امنه",
+    reviewStatus: "needs_review",
+  };
+
+  assert.deepEqual(mergeSyriaLocationAliases([source], [curated]), [curated]);
 });
