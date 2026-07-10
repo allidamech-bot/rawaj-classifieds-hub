@@ -52,23 +52,14 @@ test("response trigger repair only opens a transaction-local owned approved resp
     repairMigration,
     /current_setting\('rawaj\.seller_review_response_write', true\) = 'on'/,
   );
-  assert.match(
-    repairMigration,
-    /auth\.uid\(\) is null or old\.seller_user_id <> auth\.uid\(\)/,
-  );
+  assert.match(repairMigration, /auth\.uid\(\) is null or old\.seller_user_id <> auth\.uid\(\)/);
   assert.match(repairMigration, /old\.status <> 'approved'/);
   assert.match(
     repairMigration,
     /to_jsonb\(new\) - array\['seller_response', 'seller_response_updated_at', 'updated_at'\]/,
   );
-  assert.match(
-    repairMigration,
-    /set_config\('rawaj\.seller_review_response_write', 'on', true\)/,
-  );
-  assert.doesNotMatch(
-    repairMigration,
-    /create policy[\s\S]*seller_reviews[\s\S]*for update/i,
-  );
+  assert.match(repairMigration, /set_config\('rawaj\.seller_review_response_write', 'on', true\)/);
+  assert.doesNotMatch(repairMigration, /create policy[\s\S]*seller_reviews[\s\S]*for update/i);
 });
 
 test("response trigger repair preserves a moderation-only field whitelist", () => {
