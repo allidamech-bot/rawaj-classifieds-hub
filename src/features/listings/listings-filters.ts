@@ -297,41 +297,45 @@ export function buildListingsMobileApplySearch(
     sort,
   } = inputs;
   const preserveTaxonomy = Boolean(searchTaxonomy && draftCategoryId === undefined);
+  const explicitAllCategories = draftCategoryId === "";
+  const hasConcreteCategory = Boolean(draftCategoryId);
   const canonicalLocation = districtAr.startsWith("@") ? districtAr.slice(1) : undefined;
 
   return {
     taxonomy: preserveTaxonomy ? searchTaxonomy : undefined,
     category: preserveTaxonomy ? undefined : draftCategoryId || undefined,
-    subcategory: preserveTaxonomy ? undefined : subcategoryId || undefined,
+    subcategory:
+      preserveTaxonomy || explicitAllCategories ? undefined : subcategoryId || undefined,
     gov: canonicalLocation ? undefined : govId || undefined,
     location: canonicalLocation,
     district: canonicalLocation ? undefined : districtAr || undefined,
     price_min: parsedPriceMin,
     price_max: parsedPriceMax,
-    car_make: !preserveTaxonomy && fieldKind === "vehicles" ? carMake || undefined : undefined,
-    car_model: !preserveTaxonomy && fieldKind === "vehicles" ? carModel || undefined : undefined,
-    fuel: !preserveTaxonomy && fieldKind === "vehicles" ? fuelType || undefined : undefined,
+    car_make: hasConcreteCategory && fieldKind === "vehicles" ? carMake || undefined : undefined,
+    car_model: hasConcreteCategory && fieldKind === "vehicles" ? carModel || undefined : undefined,
+    fuel: hasConcreteCategory && fieldKind === "vehicles" ? fuelType || undefined : undefined,
     transmission:
-      !preserveTaxonomy && fieldKind === "vehicles" ? transmission || undefined : undefined,
+      hasConcreteCategory && fieldKind === "vehicles" ? transmission || undefined : undefined,
     property_purpose:
-      !preserveTaxonomy && fieldKind === "real_estate" ? propertyPurpose || undefined : undefined,
+      hasConcreteCategory && fieldKind === "real_estate" ? propertyPurpose || undefined : undefined,
     property_type:
-      !preserveTaxonomy && fieldKind === "real_estate" ? propertyType || undefined : undefined,
+      hasConcreteCategory && fieldKind === "real_estate" ? propertyType || undefined : undefined,
     rooms:
-      !preserveTaxonomy && fieldKind === "real_estate"
+      hasConcreteCategory && fieldKind === "real_estate"
         ? rooms.trim()
           ? Number(rooms)
           : undefined
         : undefined,
     rental_duration:
-      !preserveTaxonomy && fieldKind === "real_estate" ? rentalDuration || undefined : undefined,
+      hasConcreteCategory && fieldKind === "real_estate" ? rentalDuration || undefined : undefined,
     electronics_brand:
-      !preserveTaxonomy && fieldKind === "electronics" ? electronicsBrand || undefined : undefined,
+      hasConcreteCategory && fieldKind === "electronics" ? electronicsBrand || undefined : undefined,
     detail_condition:
-      !preserveTaxonomy && fieldKind === "electronics" ? detailCondition || undefined : undefined,
+      hasConcreteCategory && fieldKind === "electronics" ? detailCondition || undefined : undefined,
     employment_type:
-      !preserveTaxonomy && fieldKind === "jobs" ? employmentType || undefined : undefined,
-    salary_type: !preserveTaxonomy && fieldKind === "jobs" ? salaryType || undefined : undefined,
+      hasConcreteCategory && fieldKind === "jobs" ? employmentType || undefined : undefined,
+    salary_type:
+      hasConcreteCategory && fieldKind === "jobs" ? salaryType || undefined : undefined,
     q: debouncedQ || undefined,
     sort: sort === "latest" ? undefined : sort,
   };
