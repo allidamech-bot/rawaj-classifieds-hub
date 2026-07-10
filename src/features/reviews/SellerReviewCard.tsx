@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import {
   createSellerReviewReport,
   readSellerReviewResponse,
+  sellerReviewTraitLabel,
   setSellerReviewResponse,
   type SellerReviewReportReason,
 } from "@/lib/classifieds-api";
@@ -119,7 +120,21 @@ export function SellerReviewCard({
           </button>
         ) : null}
       </div>
-      <p className="mt-1 whitespace-pre-line text-xs leading-6">{review.comment}</p>
+      {review.traits.length > 0 ? (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {review.traits.map((trait) => (
+            <span
+              key={trait}
+              className="rounded-lg bg-primary/[0.06] px-2 py-1 text-[10px] font-bold text-primary"
+            >
+              {sellerReviewTraitLabel(trait, language)}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      {review.comment ? (
+        <p className="mt-2 whitespace-pre-line text-xs leading-6">{review.comment}</p>
+      ) : null}
       <p className="mt-1 text-[10px] text-muted-foreground">
         {new Date(review.createdAt).toLocaleDateString(language === "ar" ? "ar-SY" : "en-US")}
       </p>
