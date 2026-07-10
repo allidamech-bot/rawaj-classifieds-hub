@@ -29,12 +29,7 @@ const LOCATION_LEVEL_PROMPTS: Record<LocationNodeType, Record<LocationDisplayLan
   locality: { ar: "اختر التجمّع السكاني", en: "Choose community" },
 };
 
-const POPULATED_PLACE_TYPES = new Set<LocationNodeType>([
-  "city",
-  "town",
-  "village",
-  "locality",
-]);
+const POPULATED_PLACE_TYPES = new Set<LocationNodeType>(["city", "town", "village", "locality"]);
 
 export function getLocationNodeTypeLabel(
   nodeType: LocationNodeType,
