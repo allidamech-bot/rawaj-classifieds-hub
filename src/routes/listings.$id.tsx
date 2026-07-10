@@ -29,7 +29,13 @@ import {
 import type { ClassifiedListing, ClassifiedsError, ListingImage } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized } from "@/lib/i18n";
 import { listingLocationDisplay } from "@/lib/listing-location-display";
-import { absoluteUrl, createSeo, jsonLdScript, plainText } from "@/lib/seo";
+import {
+  absoluteUrl,
+  buildBreadcrumbStructuredData,
+  createSeo,
+  jsonLdScript,
+  plainText,
+} from "@/lib/seo";
 import { listingStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -288,6 +294,15 @@ function ListingDetailsPage() {
     listing.categoryNameAr ?? undefined,
     language,
   );
+  const listingBreadcrumbs = buildBreadcrumbStructuredData([
+    { name: "RAWAJ / رواج", path: "/" },
+    { name: text("الإعلانات", "Listings"), path: "/listings" },
+    {
+      name: listing.categoryNameAr ?? listingCategory,
+      path: `/listings?category=${encodeURIComponent(listing.categoryId)}`,
+    },
+    { name: listing.title, path: `/listings/${listing.id}` },
+  ]);
 
   return (
     <>
@@ -640,6 +655,7 @@ function ListingDetailsPage() {
         </div>
 
         <script {...jsonLdScript(buildListingStructuredData(listing))} />
+        <script {...jsonLdScript(listingBreadcrumbs)} />
       </main>
     </>
   );
@@ -798,6 +814,9 @@ function buildListingStructuredData(listing: ClassifiedListing) {
       "@type": "Offer",
       price: listing.price,
       priceCurrency: listing.currency,
+      availability: listing.reservedAt
+        ? "https://schema.org/LimitedAvailability"
+        : "https://schema.org/InStock",
       url: absoluteUrl(`/listings/${listing.id}`),
     };
   }
