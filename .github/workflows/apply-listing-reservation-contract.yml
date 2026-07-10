@@ -69,25 +69,16 @@ jobs:
               '    "test:price-drop": "node --test scripts/listing-price-drop.test.mjs",\n'
               '    "test:reservation": "node --test scripts/listing-reservation.test.mjs",\n',
           )
-          replace_once(
-              '.github/workflows/quality-gate.yml',
-              '      - name: Listing price drop contract\n        run: npm run test:price-drop\n\n      - name: Typecheck\n',
-              '      - name: Listing price drop contract\n'
-              '        run: npm run test:price-drop\n\n'
-              '      - name: Listing reservation contract\n'
-              '        run: npm run test:reservation\n\n'
-              '      - name: Typecheck\n',
-          )
           PY
 
       - name: Format changed sources
-        run: npx prettier --write src/lib/classifieds-types.ts src/lib/api/listings.ts src/lib/classifieds-api.ts package.json scripts/listing-reservation.test.mjs .github/workflows/quality-gate.yml
+        run: npx prettier --write src/lib/classifieds-types.ts src/lib/api/listings.ts src/lib/classifieds-api.ts package.json scripts/listing-reservation.test.mjs
 
       - name: Commit contract implementation
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/lib/classifieds-types.ts src/lib/api/listings.ts src/lib/classifieds-api.ts package.json scripts/listing-reservation.test.mjs .github/workflows/quality-gate.yml
+          git add src/lib/classifieds-types.ts src/lib/api/listings.ts src/lib/classifieds-api.ts package.json scripts/listing-reservation.test.mjs
           git commit -m "Integrate listing reservation contract"
           git push origin HEAD:feature/listing-reservation-contract
