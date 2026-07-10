@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
@@ -6,7 +7,22 @@ import {
   getLocationNodeOptionLabel,
   getLocationNodeTypeLabel,
 } from "../src/lib/location-node-display.ts";
-import { sortLocationNodesForDisplay } from "../src/lib/location-node-order.ts";
+import {
+  getLocationNodeSourceSortOrder,
+  sortLocationNodesForDisplay,
+} from "../src/lib/location-node-order.ts";
+
+const generatorSource = readFileSync(
+  new URL("./prepare-syria-ocha-geojson-locations-v2.mjs", import.meta.url),
+  "utf8",
+);
+const sortOrderMigration = readFileSync(
+  new URL(
+    "../supabase/migrations/202607100005_backfill_syria_location_type_sort_order.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 test("labels every canonical location level in Arabic and English", () => {
   assert.equal(getLocationNodeTypeLabel("governorate", "ar"), "محافظة");
@@ -48,6 +64,26 @@ test("uses an honest mixed populated-place prompt without inventing classificati
 
   assert.equal(getLocationLevelPrompt(nodes, "ar"), "اختر المدينة أو البلدة أو القرية أو التجمّع");
   assert.equal(getLocationLevelPrompt(nodes, "en"), "Choose city, town, village, or community");
+});
+
+test("uses stable type-aware sort weights for source data", () => {
+  assert.equal(getLocationNodeSourceSortOrder("country"), 0);
+  assert.equal(getLocationNodeSourceSortOrder("governorate"), 100);
+  assert.equal(getLocationNodeSourceSortOrder("district"), 200);
+  assert.equal(getLocationNodeSourceSortOrder("subdistrict"), 300);
+  assert.equal(getLocationNodeSourceSortOrder("city"), 400);
+  assert.equal(getLocationNodeSourceSortOrder("town"), 500);
+  assert.equal(getLocationNodeSourceSortOrder("village"), 600);
+  assert.equal(getLocationNodeSourceSortOrder("neighborhood"), 700);
+  assert.equal(getLocationNodeSourceSortOrder("locality"), 800);
+});
+
+test("keeps generator and production backfill wired to type-aware ordering", () => {
+  assert.match(generatorSource, /sort_order: getLocationNodeSourceSortOrder\(type\)/);
+  assert.match(sortOrderMigration, /when 'governorate' then 100/);
+  assert.match(sortOrderMigration, /when 'neighborhood' then 700/);
+  assert.match(sortOrderMigration, /when 'locality' then 800/);
+  assert.match(sortOrderMigration, /and sort_order = 0/);
 });
 
 test("respects curated sort order before type and Arabic name fallback", () => {
