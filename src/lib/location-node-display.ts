@@ -25,7 +25,10 @@ export function getLocationNodeTypeLabel(
 }
 
 export function getLocationNodeOptionLabel(
-  node: Pick<{ nodeType: LocationNodeType; nameAr: string; nameEn: string | null }, "nodeType" | "nameAr" | "nameEn">,
+  node: Pick<
+    { nodeType: LocationNodeType; nameAr: string; nameEn: string | null },
+    "nodeType" | "nameAr" | "nameEn"
+  >,
   language: LocationDisplayLanguage,
 ) {
   const name = language === "en" ? node.nameEn || node.nameAr : node.nameAr;
