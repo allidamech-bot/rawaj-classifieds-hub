@@ -1,78 +1,117 @@
 # RAWAJ Production Schema Proof
 
-Status: **awaiting Supabase Production extraction**
+Status: **Production catalog extraction received; repository reconciliation in progress**
 
 Baseline repository commit: `427dd3924f073aa370fcb58751548de65f284430`
 
-Evidence classification: **S — Requires Supabase Production Verification** until populated from the read-only extractor.
+Evidence classification: **S — Supabase Production verified** for PostgreSQL catalog objects listed below. Migration application history and Dashboard-only Auth settings remain unverified.
 
 ## Extraction record
 
 - Supabase project: RAWAJ Production
-- Extraction date/time:
-- Extracted by:
-- Extractor commit:
-- SQL file: `docs/production-schema/extract-production-truth.sql`
-- Scheduled jobs query executed: yes / no / not applicable
-- Auth configuration evidence source:
+- Extraction date: 2026-07-11
+- Evidence source: read-only SQL catalog extraction exported from Supabase SQL Editor
+- Extractor scope: PostgreSQL catalogs, information schema, storage buckets, RLS policies, extensions, and realtime publication membership
+- Scheduled jobs query executed: not applicable (`pg_cron` is not installed)
+- Auth configuration evidence source: pending Supabase Dashboard verification
 
 ## Evidence sections received
 
-- [ ] 01 Migration history
-- [ ] 02 Relations and RLS state
-- [ ] 03 Columns
-- [ ] 04 Constraints
-- [ ] 05 Indexes
-- [ ] 06 Triggers
-- [ ] 07 Functions/procedures
-- [ ] 08 Table grants
-- [ ] 09 Routine grants
-- [ ] 10 RLS and storage policies
-- [ ] 11 Custom types
-- [ ] 12 Storage buckets
-- [ ] 13 Extensions
-- [ ] 14 Realtime publication
-- [ ] 15 Replica identity
-- [ ] 16 Scheduled jobs, when pg_cron is installed
+- [ ] Application migration history — no `supabase_migrations.schema_migrations` relation exists
+- [x] Relations and RLS state
+- [x] Columns
+- [x] Constraints
+- [x] Indexes
+- [x] Triggers
+- [x] Functions/procedures
+- [x] Table grants
+- [x] Routine grants
+- [x] RLS and storage policies
+- [x] Custom enum types
+- [x] Storage buckets
+- [x] Extensions
+- [x] Realtime publication membership
+- [x] Replica identity
+- [x] Scheduled jobs applicability
 - [ ] Auth settings from Supabase Dashboard
 
-## Migration-history comparison
+## Production catalog summary
 
-Pending extraction.
+- Public tables: **38**
+- Public tables with RLS enabled: **38 / 38**
+- Public tables without a primary key: **0**
+- Public tables using default replica identity: **38 / 38**
+- Public indexes: **128**
+- Public constraints: **229**
+- Non-internal public triggers: **51**
+- Public functions/procedures: **133**
+- Public RLS policies: **96**
+- Storage RLS policies: **16**
+- Table grants: **1165**
+- Routine grants: **533**
+- Public enum types: **8**
+- Installed extensions: **5**
+- SECURITY DEFINER routines without explicit `search_path`: **0**
+- Tables in `supabase_realtime` publication: **0**
 
-The comparison must map every repository migration to one of:
+## Confirmed Production storage buckets
 
-- verified applied
-- verified not applied
-- ambiguous because of a duplicate version
-- repository-only historical record
-- manual Production change
-- superseded
-- reconciliation
+| Bucket | Public | Limit | Allowed MIME types |
+|---|---:|---:|---|
+| `listing-images` | no | 5 MiB | JPEG, PNG, WebP |
+| `profile-media` | yes | 3 MiB | JPEG, PNG, WebP |
+| `verification-documents` | no | 10 MiB | JPEG, PNG, WebP, PDF |
 
-No duplicate-version file may be assigned an applied state based only on its numeric prefix.
+## Confirmed findings requiring reconciliation review
+
+### 1. Two unvalidated constraints
+
+Production contains two `NOT VALID` constraints on `public.ad_placements`:
+
+- `ad_placements_destination_url_https_check`
+- `ad_placements_image_url_https_check`
+
+Both enforce non-empty HTTPS URLs with a maximum length of 2048 characters. They apply to new/updated rows but have not been validated against all existing rows. No `VALIDATE CONSTRAINT` action is authorized until repository intent and current data compatibility are checked.
+
+### 2. Realtime publication is empty
+
+The `supabase_realtime` publication currently has no member tables. This is not automatically a defect. It must be compared with application behavior to determine whether RAWAJ relies on Supabase Realtime for chats, notifications, or other live updates.
+
+### 3. Application migration history remains unavailable
+
+The database contains internal migration tables for Supabase Auth, Realtime, and Storage only. No application-level `supabase_migrations.schema_migrations` relation exists, so repository migrations cannot be marked applied solely from Production catalog evidence.
+
+## Positive controls confirmed
+
+- Every public table has RLS enabled.
+- Every public table has a primary key.
+- No SECURITY DEFINER routine is missing an explicit `search_path` configuration.
+- Storage bucket privacy and MIME/size limits are explicit.
+- `pg_cron` is not installed, so there are no extension-backed scheduled jobs to reconcile.
 
 ## Object-level comparison
 
-| Object class | Repository intent | Production truth | Difference | Severity | Resolution |
-|---|---|---|---|---|---|
-| Tables/columns | Pending | Pending | Pending | Pending | Pending |
-| Constraints | Pending | Pending | Pending | Pending | Pending |
-| Indexes | Pending | Pending | Pending | Pending | Pending |
-| Triggers | Pending | Pending | Pending | Pending | Pending |
-| Functions/RPCs | Pending | Pending | Pending | Pending | Pending |
-| Grants | Pending | Pending | Pending | Pending | Pending |
-| RLS policies | Pending | Pending | Pending | Pending | Pending |
-| Storage | Pending | Pending | Pending | Pending | Pending |
-| Types/enums | Pending | Pending | Pending | Pending | Pending |
-| Realtime | Pending | Pending | Pending | Pending | Pending |
-| Scheduled jobs | Pending | Pending | Pending | Pending | Pending |
-| Extensions | Pending | Pending | Pending | Pending | Pending |
+| Object class | Production truth | Current classification | Next action |
+|---|---|---|---|
+| Tables/columns | 38 public tables extracted | Verified Production evidence | Compare exact definitions to repository migrations |
+| Constraints | 229 total; 2 not validated | Review required | Compare migration intent and inspect affected data before validation |
+| Indexes | 128 extracted | Verified Production evidence | Compare exact definitions to repository migrations |
+| Triggers | 51 extracted | Verified Production evidence | Compare exact definitions and owning functions |
+| Functions/RPCs | 133 extracted | Verified Production evidence | Compare signatures, definitions, grants, and callers |
+| Grants | 1165 table and 533 routine grants | Verified Production evidence | Compare with intended anon/authenticated/service-role access |
+| RLS policies | 96 public and 16 storage policies | Verified Production evidence | Compare policy definitions to migrations and API assumptions |
+| Storage | 3 buckets extracted | Verified Production evidence | Confirm public `profile-media` exposure is intentional |
+| Types/enums | 8 public enums extracted | Verified Production evidence | Compare labels and usage to repository migrations |
+| Realtime | Publication has 0 tables | Review required | Determine whether application depends on Realtime subscriptions |
+| Scheduled jobs | `pg_cron` not installed | Not applicable | No action |
+| Extensions | 5 installed | Verified Production evidence | Compare with repository prerequisites |
+| Migration history | Application history unavailable | Unresolved | Infer object state only; do not replay or rename migrations |
+| Auth settings | Not in PostgreSQL extraction | Pending | Verify through Supabase Dashboard |
 
 ## Reconciliation decision
 
-No reconciliation SQL may be written until the evidence sections above are complete and differences are classified.
+No historical migration will be replayed or renamed from this evidence. The next repository step is a deterministic object-level comparison between the extracted Production catalog and the canonical migration ledger. Any corrective SQL must be narrow, forward-only, idempotent where practical, and separately reviewed before Production execution.
 
 ## Production safety statement
 
-The extraction query is read-only. This document does not authorize replaying historical migrations, renaming applied migrations, dropping objects, or changing Production data.
+The extraction was read-only. This document does not authorize replaying historical migrations, renaming applied migrations, validating constraints, changing Realtime publication membership, modifying grants or RLS policies, altering storage visibility, or changing Production data.
