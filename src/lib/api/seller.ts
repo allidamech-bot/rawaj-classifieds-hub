@@ -52,6 +52,7 @@ export async function fetchPublicSellerProfile(
     .select("*")
     .eq("owner_id", cleanSellerId)
     .eq("status", "approved")
+    .is("archived_at", null)
     .or(publicListingExpiryFilter())
     .order("created_at", { ascending: false })
     .limit(60);
