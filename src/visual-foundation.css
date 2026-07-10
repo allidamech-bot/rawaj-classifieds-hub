@@ -1,0 +1,57 @@
+:root {
+  --rawaj-space-1: 0.25rem;
+  --rawaj-space-2: 0.5rem;
+  --rawaj-space-3: 0.75rem;
+  --rawaj-space-4: 1rem;
+  --rawaj-space-5: 1.25rem;
+  --rawaj-space-6: 1.5rem;
+  --rawaj-space-8: 2rem;
+  --rawaj-space-10: 2.5rem;
+  --rawaj-space-12: 3rem;
+
+  --rawaj-radius-input: 0.875rem;
+  --rawaj-radius-button: 0.9375rem;
+  --rawaj-radius-card: 1rem;
+  --rawaj-radius-surface: 1.25rem;
+
+  --rawaj-shadow-none: none;
+  --rawaj-shadow-soft:
+    0 1px 2px rgba(16, 43, 70, 0.035),
+    0 6px 18px rgba(16, 43, 70, 0.055);
+  --rawaj-shadow-overlay:
+    0 1px 3px rgba(16, 43, 70, 0.04),
+    0 14px 36px rgba(16, 43, 70, 0.1);
+
+  --rawaj-motion-fast: 140ms;
+  --rawaj-motion-base: 180ms;
+  --rawaj-touch-target: 2.75rem;
+  --rawaj-mobile-nav-height: 4.25rem;
+}
+
+.rawaj-bottom-nav-offset {
+  padding-bottom: calc(var(--rawaj-mobile-nav-height) + 0.75rem + env(safe-area-inset-bottom));
+}
+
+.rawaj-bottom-nav-shell {
+  border-radius: var(--rawaj-radius-surface);
+  box-shadow: var(--rawaj-shadow-overlay);
+}
+
+.rawaj-touch-target {
+  min-width: var(--rawaj-touch-target);
+  min-height: var(--rawaj-touch-target);
+}
+
+.rawaj-foundation-card {
+  border-radius: var(--rawaj-radius-card);
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-card-foreground);
+  box-shadow: var(--rawaj-shadow-soft);
+}
+
+@media (min-width: 1024px) {
+  .rawaj-bottom-nav-offset {
+    padding-bottom: 2rem;
+  }
+}
