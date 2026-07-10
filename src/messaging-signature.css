@@ -5,76 +5,54 @@ main.container-wide:has(section [aria-current="true"]) {
 main.container-wide:has(section [aria-current="true"]) > section:first-of-type {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 1.55rem;
-  background:
-    radial-gradient(20rem 12rem at 108% -12%, rgba(197, 154, 74, 0.24), transparent 64%),
-    radial-gradient(18rem 12rem at -8% 112%, rgba(232, 111, 50, 0.18), transparent 68%),
-    linear-gradient(135deg, #102b46 0%, #0d243b 54%, #173b5b 100%);
-  color: #fffaf0;
-  box-shadow: 0 22px 56px rgba(8, 24, 42, 0.18);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: var(--rawaj-radius-surface);
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: none;
 }
 
 main.container-wide:has(section [aria-current="true"]) > section:first-of-type::before {
-  content: "";
-  position: absolute;
-  inset-inline-end: -2.8rem;
-  top: -3.8rem;
-  width: 10rem;
-  height: 10rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 42% 58% 67% 33% / 38% 40% 60% 62%;
-  transform: rotate(24deg);
+  content: none;
 }
 
 main.container-wide:has(section [aria-current="true"]) > section:first-of-type h1 {
   position: relative;
   z-index: 1;
-  color: #fffaf0;
+  color: var(--primary);
 }
 
-main.container-wide:has(section [aria-current="true"])
-  > section:first-of-type
-  p {
+main.container-wide:has(section [aria-current="true"]) > section:first-of-type p {
   position: relative;
   z-index: 1;
-  color: rgba(255, 250, 240, 0.68);
+  color: var(--muted-foreground);
 }
 
 main.container-wide:has(section [aria-current="true"]) > .flex.flex-wrap.gap-2 a {
-  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 10px 24px rgba(16, 43, 70, 0.06);
-  backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  background: var(--card);
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 main.container-wide:has(section [aria-current="true"]) > section.flex.items-start {
-  border-color: color-mix(in srgb, var(--gold) 20%, var(--border));
-  background:
-    radial-gradient(10rem 7rem at 100% 0%, rgba(197, 154, 74, 0.1), transparent 72%),
-    rgba(255, 251, 242, 0.78);
-  box-shadow: 0 14px 34px rgba(16, 43, 70, 0.06);
+  border-color: color-mix(in srgb, var(--border) 82%, transparent);
+  background: var(--card-warm);
+  box-shadow: none;
 }
 
-main.container-wide:has(section [aria-current="true"])
-  > div.grid.min-h-\[60dvh\] {
+main.container-wide:has(section [aria-current="true"]) > div.grid.min-h-\[60dvh\] {
   position: relative;
-  padding: 0.2rem;
-  border-radius: 1.65rem;
-  background:
-    radial-gradient(16rem 11rem at 0% 0%, rgba(89, 101, 199, 0.06), transparent 70%),
-    radial-gradient(16rem 10rem at 100% 100%, rgba(232, 111, 50, 0.06), transparent 70%);
+  padding: 0;
+  border-radius: var(--rawaj-radius-surface);
+  background: transparent;
 }
 
-main.container-wide:has(section [aria-current="true"])
-  > div.grid.min-h-\[60dvh\]
-  > aside {
-  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
-  border-radius: 1.45rem;
-  background:
-    radial-gradient(12rem 8rem at 0% 0%, rgba(89, 101, 199, 0.07), transparent 72%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(255, 253, 248, 0.84));
-  box-shadow: 0 16px 40px rgba(16, 43, 70, 0.075);
+main.container-wide:has(section [aria-current="true"]) > div.grid.min-h-\[60dvh\] > aside {
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: var(--rawaj-radius-surface);
+  background: var(--card);
+  box-shadow: none;
 }
 
 main.container-wide:has(section [aria-current="true"])
@@ -90,30 +68,28 @@ main.container-wide:has(section [aria-current="true"])
   button[aria-current="true"] {
   position: relative;
   overflow: hidden;
-  border-color: rgba(255, 255, 255, 0.12);
-  background:
-    radial-gradient(9rem 6rem at 104% -10%, rgba(197, 154, 74, 0.2), transparent 68%),
-    linear-gradient(135deg, #102b46, #0d243b 72%, #173b5b);
-  color: #fffaf0;
-  box-shadow: 0 14px 30px rgba(8, 24, 42, 0.16);
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: none;
 }
 
 main.container-wide:has(section [aria-current="true"])
   > div.grid.min-h-\[60dvh\]
   > aside
   button:not([aria-current="true"]) {
-  border-color: color-mix(in srgb, var(--border) 76%, transparent);
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 8px 20px rgba(16, 43, 70, 0.045);
+  border-color: color-mix(in srgb, var(--border) 82%, transparent);
+  background: var(--card);
+  box-shadow: none;
 }
 
 main.container-wide:has(section [aria-current="true"])
   > div.grid.min-h-\[60dvh\]
   > aside
   button:not([aria-current="true"]):hover {
-  border-color: color-mix(in srgb, var(--brand-orange) 28%, var(--border));
-  background: rgba(255, 255, 255, 0.92);
-  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--primary) 18%, var(--border));
+  background: var(--muted-surface);
+  transform: none;
 }
 
 main.container-wide:has(section [aria-current="true"])
@@ -122,73 +98,62 @@ main.container-wide:has(section [aria-current="true"])
   button
   > div
   > span:last-child {
-  box-shadow: 0 8px 18px rgba(197, 154, 74, 0.2);
+  box-shadow: none;
 }
 
-main.container-wide:has(section [aria-current="true"])
-  > div.grid.min-h-\[60dvh\]
-  > section {
+main.container-wide:has(section [aria-current="true"]) > div.grid.min-h-\[60dvh\] > section {
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
-  border-radius: 1.45rem;
-  background:
-    radial-gradient(15rem 10rem at 100% 0%, rgba(232, 111, 50, 0.045), transparent 74%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(255, 253, 248, 0.88));
-  box-shadow: 0 18px 46px rgba(16, 43, 70, 0.08);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: var(--rawaj-radius-surface);
+  background: var(--card);
+  box-shadow: none;
 }
 
 main.container-wide:has(section [aria-current="true"])
   > div.grid.min-h-\[60dvh\]
   > section
   > header {
-  border-color: color-mix(in srgb, var(--border) 70%, transparent);
-  background:
-    radial-gradient(12rem 7rem at 100% 0%, rgba(197, 154, 74, 0.09), transparent 70%),
-    rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(14px);
+  border-color: color-mix(in srgb, var(--border) 82%, transparent);
+  background: var(--card);
+  backdrop-filter: none;
 }
 
 main.container-wide:has(section [aria-current="true"])
   > div.grid.min-h-\[60dvh\]
   > section
   > div.flex-1 {
-  background:
-    radial-gradient(16rem 10rem at 0% 0%, rgba(89, 101, 199, 0.035), transparent 72%),
-    radial-gradient(16rem 10rem at 100% 100%, rgba(232, 111, 50, 0.035), transparent 72%);
+  background: var(--background);
 }
 
 main.container-wide:has(section [aria-current="true"])
   > div.grid.min-h-\[60dvh\]
   article.max-w-\[82\%\] {
-  box-shadow: 0 10px 24px rgba(16, 43, 70, 0.07);
+  box-shadow: none;
 }
 
 main.container-wide:has(section [aria-current="true"])
   > div.grid.min-h-\[60dvh\]
   article.ms-auto {
-  border-end-end-radius: 0.45rem;
-  background:
-    radial-gradient(8rem 5rem at 100% 0%, rgba(197, 154, 74, 0.12), transparent 68%),
-    linear-gradient(135deg, #102b46, #0d243b 76%, #173b5b);
+  border-end-end-radius: 0.5rem;
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 main.container-wide:has(section [aria-current="true"])
   > div.grid.min-h-\[60dvh\]
   article.me-auto {
-  border-end-start-radius: 0.45rem;
-  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  background: rgba(255, 255, 255, 0.84);
+  border-end-start-radius: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  background: var(--card);
 }
 
 main.container-wide:has(section [aria-current="true"])
   > div.grid.min-h-\[60dvh\]
   > section
   > form {
-  border-color: color-mix(in srgb, var(--border) 70%, transparent);
-  background:
-    radial-gradient(12rem 7rem at 100% 100%, rgba(232, 111, 50, 0.07), transparent 72%),
-    rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(16px);
+  border-color: color-mix(in srgb, var(--border) 82%, transparent);
+  background: var(--card);
+  backdrop-filter: none;
 }
 
 main.container-wide:has(section [aria-current="true"])
@@ -201,12 +166,13 @@ main.container-wide:has(section [aria-current="true"])
   > section
   > form
   textarea {
-  border-color: color-mix(in srgb, var(--border) 76%, transparent);
-  background: rgba(255, 255, 255, 0.84);
+  min-height: var(--rawaj-touch-target);
+  border-color: color-mix(in srgb, var(--border) 82%, transparent);
+  background: var(--card);
   transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    background-color 160ms ease;
+    border-color var(--rawaj-motion-fast) ease,
+    box-shadow var(--rawaj-motion-fast) ease,
+    background-color var(--rawaj-motion-fast) ease;
 }
 
 main.container-wide:has(section [aria-current="true"])
@@ -220,8 +186,8 @@ main.container-wide:has(section [aria-current="true"])
   > form
   textarea:focus {
   border-color: color-mix(in srgb, var(--brand-orange) 52%, var(--border));
-  background: white;
-  box-shadow: 0 0 0 3px rgba(232, 111, 50, 0.12);
+  background: var(--card);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-orange) 12%, transparent);
 }
 
 main.container-wide:has(section [aria-current="true"])
@@ -229,14 +195,13 @@ main.container-wide:has(section [aria-current="true"])
   > section
   > form
   button[type="submit"] {
-  background: var(--brand-orange);
-  color: white;
-  box-shadow: 0 12px 26px rgba(232, 111, 50, 0.24);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: none;
 }
 
 @media (max-width: 1023px) {
-  main.container-wide:has(section [aria-current="true"])
-    > div.grid.min-h-\[60dvh\] {
+  main.container-wide:has(section [aria-current="true"]) > div.grid.min-h-\[60dvh\] {
     padding: 0;
     background: transparent;
   }
@@ -247,7 +212,7 @@ main.container-wide:has(section [aria-current="true"])
   main.container-wide:has(section [aria-current="true"])
     > div.grid.min-h-\[60dvh\]
     > section {
-    border-radius: 1.25rem;
+    border-radius: var(--rawaj-radius-surface);
   }
 }
 
