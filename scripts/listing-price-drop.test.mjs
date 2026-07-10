@@ -15,6 +15,16 @@ const [migration, api, barrel] = await Promise.all([
   readFile(barrelPath, "utf8"),
 ]);
 
+const publicOffersStart = migration.indexOf(
+  "create or replace function public.rawaj_get_active_price_drop_offers",
+);
+const publicOffersEnd = migration.indexOf(
+  "revoke all on function public.rawaj_get_active_price_drop_offers",
+  publicOffersStart,
+);
+assert.ok(publicOffersStart >= 0 && publicOffersEnd > publicOffersStart);
+const publicOffersFunction = migration.slice(publicOffersStart, publicOffersEnd);
+
 test("price-drop history is immutable to clients and owner-readable only", () => {
   assert.match(migration, /create table if not exists public\.listing_price_changes/);
   assert.match(migration, /old_price > 0/);
@@ -55,15 +65,14 @@ test("price reduction updates the listing and records immutable history with aud
 });
 
 test("public offers are recent latest real drops and never depend on featured state", () => {
-  assert.match(migration, /rawaj_get_active_price_drop_offers/);
-  assert.match(migration, /select distinct on \(c\.listing_id\)/);
-  assert.match(migration, /l\.status = 'approved'/);
-  assert.match(migration, /l\.archived_at is null/);
-  assert.match(migration, /l\.price = d\.new_price/);
-  assert.match(migration, /d\.created_at >= now\(\) - interval '30 days'/);
-  assert.match(migration, /discount_percent/);
-  assert.doesNotMatch(migration, /is_featured/);
-  assert.doesNotMatch(migration, /featured_until/);
+  assert.match(publicOffersFunction, /select distinct on \(c\.listing_id\)/);
+  assert.match(publicOffersFunction, /l\.status = 'approved'/);
+  assert.match(publicOffersFunction, /l\.archived_at is null/);
+  assert.match(publicOffersFunction, /l\.price = d\.new_price/);
+  assert.match(publicOffersFunction, /d\.created_at >= now\(\) - interval '30 days'/);
+  assert.match(publicOffersFunction, /discount_percent/);
+  assert.doesNotMatch(publicOffersFunction, /is_featured/);
+  assert.doesNotMatch(publicOffersFunction, /featured_until/);
 });
 
 test("client price-drop writes use only the governed RPC and public offers re-read current public listings", () => {
