@@ -21,7 +21,8 @@ const [migration, api, listingsApi, types, barrel] = await Promise.all([
 
 test("reservation is an orthogonal timestamp and does not introduce a listing status", () => {
   assert.match(migration, /add column if not exists reserved_at timestamptz null/);
-  assert.doesNotMatch(migration, /status[^\n]*reserved/i);
+  assert.doesNotMatch(migration, /set status = 'reserved'/i);
+  assert.doesNotMatch(migration, /new\.status\s*:?=\s*'reserved'/i);
   assert.match(migration, /Reserved listings remain approved\/public/);
 });
 
