@@ -44,7 +44,9 @@ export function SellerReviewCard({
   const [reportNotice, setReportNotice] = useState("");
   const [reported, setReported] = useState(false);
   const canReport =
-    auth.status === "signedIn" && Boolean(auth.profile?.id) && auth.profile?.id !== review.reviewerUserId;
+    auth.status === "signedIn" &&
+    Boolean(auth.profile?.id) &&
+    auth.profile?.id !== review.reviewerUserId;
 
   async function persistResponse(responseText: string) {
     if (saving) return;
@@ -135,7 +137,10 @@ export function SellerReviewCard({
       ) : null}
 
       {reportOpen && canReport && !reported ? (
-        <form onSubmit={(event) => void submitReport(event)} className="mt-3 space-y-2 border-t border-border/70 pt-3">
+        <form
+          onSubmit={(event) => void submitReport(event)}
+          className="mt-3 space-y-2 border-t border-border/70 pt-3"
+        >
           <div>
             <p className="text-[10px] font-bold text-foreground">
               {text("لماذا تبلغ عن هذا التقييم؟", "Why are you reporting this review?")}
@@ -159,10 +164,7 @@ export function SellerReviewCard({
             maxLength={1000}
             rows={3}
             disabled={reportSaving}
-            placeholder={text(
-              "تفاصيل إضافية اختيارية",
-              "Optional additional details",
-            )}
+            placeholder={text("تفاصيل إضافية اختيارية", "Optional additional details")}
             className="w-full rounded-xl bg-card px-3 py-2 text-xs leading-6 outline-none hairline disabled:opacity-60"
           />
           <div className="flex flex-wrap gap-2">
@@ -172,7 +174,9 @@ export function SellerReviewCard({
               className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground disabled:opacity-50"
             >
               <Flag className="h-4 w-4" />
-              {reportSaving ? text("جارٍ الإرسال", "Submitting") : text("إرسال البلاغ", "Submit report")}
+              {reportSaving
+                ? text("جارٍ الإرسال", "Submitting")
+                : text("إرسال البلاغ", "Submit report")}
             </button>
             <button
               type="button"
