@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import type { CanonicalLocationNode, LocationSearchResult } from "@/lib/api/location-taxonomy";
 import { fetchLocationChildren, searchLocationNodes } from "@/lib/api/location-taxonomy";
 import {
+  getLocationLevelOptionLabel,
   getLocationLevelPrompt,
-  getLocationNodeOptionLabel,
   getLocationNodeTypeLabel,
 } from "@/lib/location-node-display";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -158,7 +158,7 @@ export function CanonicalLocationSelector({
             <option value="">{prompt}</option>
             {level.options.map((option) => (
               <option key={option.id} value={option.id}>
-                {getLocationNodeOptionLabel(option, displayLanguage)}
+                {getLocationLevelOptionLabel(option, level.options, displayLanguage)}
               </option>
             ))}
           </select>

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
+  getLocationLevelOptionLabel,
   getLocationLevelPrompt,
   getLocationNodeOptionLabel,
   getLocationNodeTypeLabel,
@@ -52,6 +53,31 @@ test("guides customers through known administrative hierarchy levels", () => {
   assert.equal(getLocationLevelPrompt([{ nodeType: "district" }], "ar"), "اختر المنطقة");
   assert.equal(getLocationLevelPrompt([{ nodeType: "subdistrict" }], "ar"), "اختر الناحية");
   assert.equal(getLocationLevelPrompt([{ nodeType: "neighborhood" }], "ar"), "اختر الحي");
+});
+
+test("uses concise names when a location level has one clear node type", () => {
+  const governorates = [
+    { nodeType: "governorate", nameAr: "دمشق", nameEn: "Damascus" },
+    { nodeType: "governorate", nameAr: "حلب", nameEn: "Aleppo" },
+  ];
+  const localities = [
+    { nodeType: "locality", nameAr: "تل الذهب", nameEn: "Tal Dahab" },
+    { nodeType: "locality", nameAr: "عين النور", nameEn: "Ain Al Nour" },
+  ];
+
+  assert.equal(getLocationLevelOptionLabel(governorates[0], governorates, "ar"), "دمشق");
+  assert.equal(getLocationLevelOptionLabel(localities[0], localities, "ar"), "تل الذهب");
+  assert.equal(getLocationLevelOptionLabel(governorates[1], governorates, "en"), "Aleppo");
+});
+
+test("keeps type labels when a location level mixes real node types", () => {
+  const mixed = [
+    { nodeType: "city", nameAr: "مثال المدينة", nameEn: "Example City" },
+    { nodeType: "town", nameAr: "مثال البلدة", nameEn: "Example Town" },
+  ];
+
+  assert.equal(getLocationLevelOptionLabel(mixed[0], mixed, "ar"), "مثال المدينة — مدينة");
+  assert.equal(getLocationLevelOptionLabel(mixed[1], mixed, "en"), "Example Town — Town");
 });
 
 test("uses an honest mixed populated-place prompt without inventing classifications", () => {
