@@ -23,6 +23,7 @@ const parsed = files.map((file) => {
 
 const ledger = JSON.parse(await readFile(ledgerPath, "utf8"));
 const entries = Array.isArray(ledger.migrations) ? ledger.migrations : [];
+const defaults = ledger.defaults ?? {};
 const documentedCollisions = ledger.documentedCollisions ?? {};
 const errors = [];
 
@@ -39,7 +40,7 @@ for (const entry of entries) {
   ledgerFiles.add(entry.filename);
   if (!repositoryFiles.has(entry.filename)) errors.push(`Ledger references a missing migration: ${entry.filename}`);
   for (const field of ["classification", "productionState", "replaySafety"]) {
-    if (!entry[field]) errors.push(`${entry.filename} is missing ${field}.`);
+    if (!(entry[field] ?? defaults[field])) errors.push(`${entry.filename} is missing effective ${field}.`);
   }
 }
 
