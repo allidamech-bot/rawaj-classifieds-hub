@@ -48,62 +48,48 @@ export function BottomNav() {
 
   return (
     <nav
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-2.5 pb-2 lg:hidden"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pt-2 lg:hidden"
       style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))" }}
       aria-label={text("التنقل الرئيسي", "Primary navigation")}
     >
-      <div className="pointer-events-auto relative mx-auto grid max-w-[34rem] grid-cols-5 items-end overflow-visible rounded-[1.5rem] border border-border/80 bg-card/94 px-1.5 pt-1 shadow-[0_-10px_36px_rgba(16,43,70,0.11)] backdrop-blur-xl supports-[backdrop-filter]:bg-card/88">
-        <span className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent" />
+      <div className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid max-w-[32rem] grid-cols-5 items-stretch border border-border/80 bg-card/96 p-1 backdrop-blur-xl supports-[backdrop-filter]:bg-card/90">
         {items.map((item) => {
           const active = activeSection === item.section;
           const Icon = item.icon;
           const label = text(item.labelAr, item.labelEn);
           const badgeCount = item.section === "account" ? counts.total : 0;
 
-          if (item.primary) {
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className="flex min-h-[4.25rem] flex-col items-center justify-end gap-0.5 pb-1.5 transition active:scale-[0.98]"
-                aria-label={label}
-                aria-current={active ? "page" : undefined}
-              >
-                <span className="-mt-5 rounded-[1.2rem] border border-gold/45 bg-card p-[3px] shadow-[0_10px_24px_rgba(16,43,70,0.16)]">
-                  <span className="relative grid h-12 w-12 place-items-center rounded-[1.05rem] bg-primary text-primary-foreground ring-2 ring-card">
-                    <Icon className="h-5.5 w-5.5" strokeWidth={2.15} />
-                    <span className="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-brand-orange" />
-                  </span>
-                </span>
-                <span className="text-[9px] font-bold text-primary">{label}</span>
-              </Link>
-            );
-          }
-
           return (
             <Link
               key={item.to}
               to={item.to}
-              className={`relative flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-2xl py-1.5 transition active:scale-[0.98] ${
-                active ? "text-primary" : "text-muted-foreground"
+              className={`relative flex min-h-[3.75rem] min-w-0 flex-col items-center justify-center gap-1 rounded-[0.9rem] px-1 py-1.5 transition-colors duration-150 active:bg-muted-surface ${
+                active ? "bg-primary/8 text-primary" : "text-muted-foreground"
               }`}
+              aria-label={label}
               aria-current={active ? "page" : undefined}
             >
               <span
-                className={`grid h-8 w-9 place-items-center rounded-xl transition ${
-                  active ? "bg-primary/7 text-primary" : ""
+                className={`relative grid h-8 w-9 place-items-center rounded-xl transition-colors duration-150 ${
+                  item.primary
+                    ? "bg-primary text-primary-foreground"
+                    : active
+                      ? "bg-primary/8 text-primary"
+                      : ""
                 }`}
               >
-                <Icon className="h-5 w-5" strokeWidth={active ? 2.15 : 1.75} />
+                <Icon className="h-5 w-5" strokeWidth={active || item.primary ? 2.1 : 1.8} />
                 {badgeCount > 0 && (
-                  <span className="absolute -end-1 -top-1 grid min-h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[8px] font-extrabold leading-none text-white ring-2 ring-card">
+                  <span className="absolute -end-1.5 -top-1.5 grid min-h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[8px] font-bold leading-none text-destructive-foreground ring-2 ring-card">
                     {badgeCount > 99 ? "99+" : badgeCount}
                   </span>
                 )}
               </span>
-              <span className={`text-[9px] ${active ? "font-bold" : "font-medium"}`}>{label}</span>
+              <span className={`truncate text-[10px] ${active ? "font-bold" : "font-medium"}`}>
+                {label}
+              </span>
               {active ? (
-                <span className="absolute bottom-0.5 h-1 w-4 rounded-full bg-gradient-to-r from-brand-orange to-gold" />
+                <span className="absolute inset-x-4 bottom-0.5 h-0.5 rounded-full bg-brand-orange" />
               ) : null}
             </Link>
           );

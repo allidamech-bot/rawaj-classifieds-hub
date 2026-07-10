@@ -27,6 +27,7 @@ import messagingSignatureCss from "../messaging-signature.css?url";
 import offersSignatureCss from "../offers-signature.css?url";
 import signatureCss from "../signature.css?url";
 import appCss from "../styles.css?url";
+import visualFoundationCss from "../visual-foundation.css?url";
 
 const ROOT_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
 const ROOT_DESCRIPTION =
@@ -112,6 +113,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "stylesheet", href: visualFoundationCss },
       { rel: "stylesheet", href: signatureCss },
       { rel: "stylesheet", href: homeSignatureCss },
       { rel: "stylesheet", href: offersSignatureCss },
@@ -179,7 +181,7 @@ function RootComponent() {
             <HtmlAttributes />
             <div
               className={`min-h-dvh bg-background text-foreground lg:pb-8 ${
-                showBottomNav ? "pb-24" : "pb-6"
+                showBottomNav ? "rawaj-bottom-nav-offset" : "pb-6"
               }`}
             >
               {showDraftRecovery && <DraftRecoveryBanner />}
