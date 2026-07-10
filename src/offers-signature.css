@@ -2,62 +2,39 @@
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 1.85rem;
-  background:
-    radial-gradient(24rem 16rem at 110% -12%, rgba(197, 154, 74, 0.3), transparent 64%),
-    radial-gradient(20rem 15rem at -8% 112%, rgba(232, 111, 50, 0.22), transparent 66%),
-    linear-gradient(135deg, #102b46 0%, #0d243b 50%, #153957 100%);
-  box-shadow: 0 24px 64px rgba(8, 24, 42, 0.2);
+  border-radius: var(--rawaj-radius-surface);
+  background: linear-gradient(140deg, #102b46 0%, #0d243b 72%, #143653 100%);
+  box-shadow: var(--rawaj-shadow-soft);
 }
 
 .rawaj-offers-stage::before {
   content: "";
   position: absolute;
-  inset-inline-end: -3rem;
-  top: -4rem;
-  width: 12rem;
-  height: 12rem;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 42% 58% 67% 33% / 38% 40% 60% 62%;
-  transform: rotate(24deg);
+  inset-inline: 10%;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(197, 154, 74, 0.58), transparent);
+  pointer-events: none;
 }
 
 .rawaj-offers-stage::after {
-  content: "";
-  position: absolute;
-  inset-inline-start: -4.5rem;
-  bottom: -6rem;
-  width: 14rem;
-  height: 14rem;
-  border: 2px solid rgba(232, 111, 50, 0.24);
-  border-radius: 63% 37% 42% 58% / 46% 58% 42% 54%;
-  transform: rotate(-16deg);
+  content: none;
 }
 
 .rawaj-offers-empty {
   position: relative;
-  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
-  background:
-    radial-gradient(13rem 9rem at 100% 0%, rgba(232, 111, 50, 0.1), transparent 70%),
-    radial-gradient(12rem 9rem at 0% 100%, rgba(89, 101, 199, 0.08), transparent 72%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(255, 253, 248, 0.84));
-  box-shadow: 0 16px 40px rgba(16, 43, 70, 0.075);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: var(--rawaj-radius-surface);
+  background: var(--card);
+  box-shadow: none;
 }
 
 .rawaj-offers-empty::before {
-  content: "";
-  position: absolute;
-  inset-inline-end: -2.25rem;
-  top: -2.75rem;
-  width: 7rem;
-  height: 7rem;
-  border: 1px solid rgba(197, 154, 74, 0.16);
-  border-radius: 54% 46% 61% 39% / 43% 57% 43% 57%;
-  transform: rotate(18deg);
+  content: none;
 }
 
 @media (max-width: 639px) {
   .rawaj-offers-stage {
-    border-radius: 1.6rem;
+    border-radius: var(--rawaj-radius-surface);
   }
 }
