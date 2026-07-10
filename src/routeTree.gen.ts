@@ -29,6 +29,7 @@ import { Route as ChatsRouteImport } from './routes/chats'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AddListingRouteImport } from './routes/add-listing'
+import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ListingsIndexRouteImport } from './routes/listings.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -151,6 +152,11 @@ const AddListingRoute = AddListingRouteImport.update({
   path: '/add-listing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ActivityRoute = ActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -259,6 +265,7 @@ const ProfileListingsIdRoute = ProfileListingsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
   '/add-listing': typeof AddListingRoute
   '/admin': typeof AdminRouteWithChildren
   '/categories': typeof CategoriesRoute
@@ -302,6 +309,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
   '/add-listing': typeof AddListingRoute
   '/categories': typeof CategoriesRoute
   '/chats': typeof ChatsRoute
@@ -344,6 +352,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
   '/add-listing': typeof AddListingRoute
   '/admin': typeof AdminRouteWithChildren
   '/categories': typeof CategoriesRoute
@@ -389,6 +398,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/activity'
     | '/add-listing'
     | '/admin'
     | '/categories'
@@ -432,6 +442,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/activity'
     | '/add-listing'
     | '/categories'
     | '/chats'
@@ -473,6 +484,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/activity'
     | '/add-listing'
     | '/admin'
     | '/categories'
@@ -517,6 +529,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ActivityRoute: typeof ActivityRoute
   AddListingRoute: typeof AddListingRoute
   AdminRoute: typeof AdminRouteWithChildren
   CategoriesRoute: typeof CategoriesRoute
@@ -681,6 +694,13 @@ declare module '@tanstack/react-router' {
       path: '/add-listing'
       fullPath: '/add-listing'
       preLoaderRoute: typeof AddListingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/activity': {
+      id: '/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof ActivityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -908,6 +928,7 @@ const ProfileRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ActivityRoute: ActivityRoute,
   AddListingRoute: AddListingRoute,
   AdminRoute: AdminRouteWithChildren,
   CategoriesRoute: CategoriesRoute,
