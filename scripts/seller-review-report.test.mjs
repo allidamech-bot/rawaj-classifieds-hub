@@ -41,6 +41,11 @@ test("review report writes use protected RPCs without direct client mutations", 
   );
 });
 
+test("submitting a review report never auto-hides or mutates the target review", () => {
+  assert.doesNotMatch(migration, /update public\.seller_reviews/);
+  assert.doesNotMatch(migration, /delete from public\.seller_reviews/);
+});
+
 test("review report moderation is permission checked, stale safe, and audited", () => {
   assert.match(migration, /not public\.current_user_can_moderate\(\)/);
   assert.match(migration, /seller_review_reports\.updated_at = p_expected_updated_at/);
