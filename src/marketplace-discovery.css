@@ -92,6 +92,65 @@ main.listing-detail-mobile-bottom [class*="bg-card-warm"] {
   box-shadow: none;
 }
 
+/* Seller storefront: public trust signals first, decoration second. */
+.rawaj-pulse-page:has(.rawaj-merchant-stage) {
+  background: var(--color-background);
+}
+
+.rawaj-pulse-page .rawaj-merchant-stage {
+  border-radius: var(--rawaj-radius-surface);
+  background: linear-gradient(140deg, #102b46 0%, #0d243b 72%, #143653 100%);
+  box-shadow: var(--rawaj-shadow-soft);
+}
+
+.rawaj-pulse-page .rawaj-merchant-stage::before,
+.rawaj-pulse-page .rawaj-merchant-stage::after {
+  content: none;
+}
+
+.rawaj-pulse-page .rawaj-id-avatar {
+  border-width: 2px;
+  box-shadow: 0 0 0 2px rgba(197, 154, 74, 0.22);
+}
+
+.rawaj-pulse-page .rawaj-id-stat {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: none;
+}
+
+.rawaj-pulse-page .rawaj-color-card {
+  border-radius: var(--rawaj-radius-card);
+  background: var(--color-card);
+  box-shadow: none;
+}
+
+.rawaj-pulse-page .rawaj-color-card::before {
+  content: none;
+}
+
+.rawaj-pulse-page .rawaj-storefront-section {
+  padding-inline-start: 0;
+}
+
+.rawaj-pulse-page .rawaj-storefront-section::before {
+  content: none;
+}
+
+.rawaj-pulse-page .rawaj-product-card {
+  border-radius: var(--rawaj-radius-card);
+  box-shadow: none;
+}
+
+.rawaj-pulse-page .rawaj-product-card:hover {
+  transform: none;
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  box-shadow: var(--rawaj-shadow-soft);
+}
+
+.rawaj-pulse-page .rawaj-product-media {
+  background: var(--color-muted-surface);
+}
+
 @media (min-width: 1024px) {
   main.container-wide.mobile-page-bottom > section.rawaj-surface {
     border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
