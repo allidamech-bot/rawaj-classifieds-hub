@@ -7,10 +7,12 @@ const migrationPath = new URL(
   import.meta.url,
 );
 const apiPath = new URL("../src/lib/api/review-reports.ts", import.meta.url);
+const cardPath = new URL("../src/features/reviews/SellerReviewCard.tsx", import.meta.url);
 
-const [migration, api] = await Promise.all([
+const [migration, api, card] = await Promise.all([
   readFile(migrationPath, "utf8"),
   readFile(apiPath, "utf8"),
+  readFile(cardPath, "utf8"),
 ]);
 
 test("review reports derive identities and only accept approved reviews", () => {
@@ -59,4 +61,12 @@ test("review reports expose only own-user and moderator select policies", () => 
   assert.match(migration, /reporter_user_id = auth\.uid\(\)/);
   assert.match(migration, /seller_review_reports_admin_select/);
   assert.match(migration, /public\.current_user_can_moderate\(\)/);
+});
+
+test("review cards expose governed reporting without allowing self-report UI", () => {
+  assert.match(card, /createSellerReviewReport\(review\.id, reportReason, reportDetails\)/);
+  assert.match(card, /auth\.profile\?\.id !== review\.reviewerUserId/);
+  assert.match(card, /reportReasons/);
+  assert.match(card, /maxLength=\{1000\}/);
+  assert.match(card, /Report submitted for review without automatically hiding the review/);
 });
