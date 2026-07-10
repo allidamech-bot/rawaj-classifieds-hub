@@ -18,7 +18,11 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import { buildSyriaSourceAliases } from "./syria-location-search-aliases.mjs";
+import {
+  buildSyriaSourceAliases,
+  mergeSyriaLocationAliases,
+  normalizeSyriaLocationAlias,
+} from "./syria-location-search-aliases.mjs";
 
 const args = parseArgs(process.argv.slice(2));
 const nodesPath = resolve(args.nodes ?? "data/locations/syria-ocha-location-nodes.json");
@@ -59,7 +63,8 @@ await assertSchemaReady(supabase);
 await upsertNodes(supabase, nodes);
 const nodeIdByExternalKey = await loadNodeIdMap(supabase, nodes);
 const sourceAliases = buildSyriaSourceAliases(nodes);
-await upsertAliases(supabase, [...sourceAliases, ...overlays.aliases], nodeIdByExternalKey);
+const searchableAliases = mergeSyriaLocationAliases(sourceAliases, overlays.aliases);
+await upsertAliases(supabase, searchableAliases, nodeIdByExternalKey);
 const regionIdBySlug = await upsertRegions(supabase, overlays.regions);
 await upsertRegionMembers(supabase, overlays.regions, regionIdBySlug, nodeIdByExternalKey);
 
@@ -68,7 +73,7 @@ console.log(
     {
       status: "applied",
       canonicalNodes: nodes.length,
-      aliases: overlays.aliases.length + sourceAliases.length,
+      aliases: searchableAliases.length,
       sourceAliases: sourceAliases.length,
       regions: overlays.regions.length,
       regionMembers: overlays.regions.reduce(
@@ -188,7 +193,7 @@ async function upsertAliases(supabase, aliases, nodeMap) {
       alias.targetExternalId,
     ),
     alias: alias.alias,
-    normalized_alias: String(alias.alias).trim(),
+    normalized_alias: normalizeSyriaLocationAlias(alias.alias),
     language_code: alias.languageCode ?? null,
     alias_type: alias.aliasType ?? "alternate_name",
     source_name: alias.sourceName ?? null,
