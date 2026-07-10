@@ -23,6 +23,7 @@ import { shouldShowSiteFooter, shouldShowBottomNav } from "@/lib/primary-navigat
 import { buildSiteStructuredData, createSeo, jsonLdScript } from "@/lib/seo";
 import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
 import { UnreadActivityProvider } from "@/lib/unread-activity";
+import authAccountFoundationCss from "../auth-account-foundation.css?url";
 import homeSignatureCss from "../home-signature.css?url";
 import listingDetailFoundationCss from "../listing-detail-foundation.css?url";
 import listingStudioSignatureCss from "../listing-studio-signature.css?url";
@@ -113,6 +114,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: marketplaceDiscoveryCss },
         { rel: "stylesheet", href: listingsResultsCss },
         { rel: "stylesheet", href: listingDetailFoundationCss },
+        { rel: "stylesheet", href: authAccountFoundationCss },
         { rel: "stylesheet", href: offersSignatureCss },
         { rel: "stylesheet", href: listingStudioSignatureCss },
         { rel: "stylesheet", href: messagingSignatureCss },
