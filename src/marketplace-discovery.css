@@ -241,6 +241,56 @@ main.container-wide.mobile-page-bottom:has(#account-info) a {
   min-height: var(--rawaj-touch-target);
 }
 
+/* Categories: preserve taxonomy depth while removing decorative color cycling. */
+main.container-wide:has(> .rawaj-hero-surface input[type="search"]) > .rawaj-hero-surface {
+  border-radius: var(--rawaj-radius-surface);
+  background: linear-gradient(140deg, #102b46 0%, #0d243b 72%, #143653 100%);
+  box-shadow: var(--rawaj-shadow-soft);
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > .rawaj-hero-surface::before {
+  content: none;
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > .rawaj-hero-surface
+  label {
+  box-shadow: none;
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-5.grid
+  > article,
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-4.grid
+  > article {
+  border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
+  border-radius: var(--rawaj-radius-card);
+  background: var(--color-card);
+  box-shadow: none;
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-5.grid
+  > article:hover,
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-4.grid
+  > article:hover {
+  transform: none;
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  box-shadow: var(--rawaj-shadow-soft);
+}
+
+main.container-wide:has(> .rawaj-hero-surface input[type="search"])
+  > section.mt-5.grid
+  > article
+  .category-tile {
+  background: var(--color-muted-surface);
+  color: var(--color-primary);
+  box-shadow: none;
+}
+
 @media (min-width: 1024px) {
   main.container-wide.mobile-page-bottom > section.rawaj-surface {
     border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
