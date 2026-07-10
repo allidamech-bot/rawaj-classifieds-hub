@@ -8,11 +8,15 @@ const migrationPath = new URL(
 );
 const apiPath = new URL("../src/lib/api/price-drops.ts", import.meta.url);
 const barrelPath = new URL("../src/lib/classifieds-api.ts", import.meta.url);
+const ownerRoutePath = new URL("../src/routes/profile/listings.tsx", import.meta.url);
+const offersRoutePath = new URL("../src/routes/offers.tsx", import.meta.url);
 
-const [migration, api, barrel] = await Promise.all([
+const [migration, api, barrel, ownerRoute, offersRoute] = await Promise.all([
   readFile(migrationPath, "utf8"),
   readFile(apiPath, "utf8"),
   readFile(barrelPath, "utf8"),
+  readFile(ownerRoutePath, "utf8"),
+  readFile(offersRoutePath, "utf8"),
 ]);
 
 const policyBlockStart = migration.indexOf(
@@ -91,6 +95,28 @@ test("client price-drop writes use only the governed RPC and public offers re-re
   assert.match(api, /\.eq\("status", "approved"\)/);
   assert.match(api, /listing\.price !== item\.newPrice/);
   assert.match(api, /hydrateListingsWithPrimaryImages/);
+});
+
+test("owner UI gates price drops to approved numeric fixed or negotiable listings", () => {
+  assert.match(ownerRoute, /const canReducePrice =/);
+  assert.match(ownerRoute, /listing\.status === "approved"/);
+  assert.match(ownerRoute, /listing\.price !== null/);
+  assert.match(ownerRoute, /listing\.priceType === "fixed"/);
+  assert.match(ownerRoute, /listing\.priceType === "negotiable"/);
+  assert.match(ownerRoute, /reduceOwnerListingPrice\(userId, listing\.id, nextPrice\)/);
+  assert.match(ownerRoute, /priceDropError/);
+  assert.match(ownerRoute, /min-h-11/);
+});
+
+test("Offers route consumes only real active price-drop data and renders old new percent and date", () => {
+  assert.match(offersRoute, /fetchActivePriceDropOffers\(30\)/);
+  assert.doesNotMatch(offersRoute, /fetchPublicListings/);
+  assert.doesNotMatch(offersRoute, /isFeatured/);
+  assert.match(offersRoute, /offer\.newPrice/);
+  assert.match(offersRoute, /offer\.oldPrice/);
+  assert.match(offersRoute, /offer\.discountPercent/);
+  assert.match(offersRoute, /offer\.droppedAt/);
+  assert.match(offersRoute, /line-through/);
 });
 
 test("price-drop API is exported from the classifieds barrel", () => {
