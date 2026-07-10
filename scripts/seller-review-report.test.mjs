@@ -8,11 +8,18 @@ const migrationPath = new URL(
 );
 const apiPath = new URL("../src/lib/api/review-reports.ts", import.meta.url);
 const cardPath = new URL("../src/features/reviews/SellerReviewCard.tsx", import.meta.url);
+const adminPanelPath = new URL(
+  "../src/features/reviews/SellerReviewReportsAdminPanel.tsx",
+  import.meta.url,
+);
+const adminRoutePath = new URL("../src/routes/admin.reviews.tsx", import.meta.url);
 
-const [migration, api, card] = await Promise.all([
+const [migration, api, card, adminPanel, adminRoute] = await Promise.all([
   readFile(migrationPath, "utf8"),
   readFile(apiPath, "utf8"),
   readFile(cardPath, "utf8"),
+  readFile(adminPanelPath, "utf8"),
+  readFile(adminRoutePath, "utf8"),
 ]);
 
 test("review reports derive identities and only accept approved reviews", () => {
@@ -69,4 +76,13 @@ test("review cards expose governed reporting without allowing self-report UI", (
   assert.match(card, /reportReasons/);
   assert.match(card, /maxLength=\{1000\}/);
   assert.match(card, /Report submitted for review without automatically hiding the review/);
+});
+
+test("admin review reports stay behind report permission and use stale-safe moderation API", () => {
+  assert.match(adminRoute, /auth\.hasPermission\("canManageReports"\)/);
+  assert.match(adminRoute, /SellerReviewReportsAdminPanel canManageReports=\{canManageReports\}/);
+  assert.match(adminPanel, /if \(!canManageReports\) return null;/);
+  assert.match(adminPanel, /adminFetchSellerReviewReports\(canManageReports\)/);
+  assert.match(adminPanel, /adminModerateSellerReviewReport\(canManageReports/);
+  assert.match(adminPanel, /expectedUpdatedAt: report\.updatedAt/);
 });
