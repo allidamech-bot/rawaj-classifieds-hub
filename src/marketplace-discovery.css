@@ -61,9 +61,44 @@ main.container-wide.mobile-page-bottom button.rawaj-chip {
     color var(--rawaj-motion-fast) ease;
 }
 
+/* Listing detail: image first, content second, actions clear. */
+main.listing-detail-mobile-bottom .rawaj-surface {
+  border-radius: var(--rawaj-radius-surface);
+  box-shadow: none;
+}
+
+main.listing-detail-mobile-bottom > .grid > div:first-child > section.rawaj-surface:first-child {
+  border-color: color-mix(in srgb, var(--color-border) 78%, transparent);
+  box-shadow: var(--rawaj-shadow-soft);
+}
+
+main.listing-detail-mobile-bottom aside .rawaj-surface {
+  border-color: color-mix(in srgb, var(--color-border) 84%, transparent);
+}
+
+main.listing-detail-mobile-bottom .rawaj-chip {
+  box-shadow: none;
+}
+
+main.listing-detail-mobile-bottom .rawaj-icon-button {
+  box-shadow: none;
+}
+
+main.listing-detail-mobile-bottom section.rawaj-surface + section.rawaj-surface {
+  margin-top: 0.875rem;
+}
+
+main.listing-detail-mobile-bottom [class*="bg-card-warm"] {
+  box-shadow: none;
+}
+
 @media (min-width: 1024px) {
   main.container-wide.mobile-page-bottom > section.rawaj-surface {
     border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
+  }
+
+  main.listing-detail-mobile-bottom aside .rawaj-surface {
+    box-shadow: none;
   }
 }
 
@@ -74,6 +109,10 @@ main.container-wide.mobile-page-bottom button.rawaj-chip {
 
   main.container-wide.mobile-page-bottom > section.rawaj-hero-surface:first-child {
     border-radius: var(--rawaj-radius-surface);
+  }
+
+  main.listing-detail-mobile-bottom section.rawaj-surface + section.rawaj-surface {
+    margin-top: 0.75rem;
   }
 }
 
