@@ -35,6 +35,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Format review report admin UI diagnostic
+        run: |
+          npx prettier --write src/features/reviews/SellerReviewReportsAdminPanel.tsx src/routes/admin.reviews.tsx scripts/seller-review-report.test.mjs
+          git diff -- src/features/reviews/SellerReviewReportsAdminPanel.tsx src/routes/admin.reviews.tsx scripts/seller-review-report.test.mjs > /tmp/review-report-admin-ui-prettier.diff
+
+      - name: Upload review report admin UI formatting artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: seller-review-report-admin-ui-formatting
+          path: |
+            src/features/reviews/SellerReviewReportsAdminPanel.tsx
+            src/routes/admin.reviews.tsx
+            scripts/seller-review-report.test.mjs
+            /tmp/review-report-admin-ui-prettier.diff
+          if-no-files-found: error
+
+      - name: Require committed review report admin UI formatting
+        run: git diff --exit-code -- src/features/reviews/SellerReviewReportsAdminPanel.tsx src/routes/admin.reviews.tsx scripts/seller-review-report.test.mjs
+
       - name: Lint changed source files
         shell: bash
         env:
