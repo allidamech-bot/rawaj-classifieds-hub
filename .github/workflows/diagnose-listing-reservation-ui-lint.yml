@@ -1,0 +1,38 @@
+name: Diagnose listing reservation UI lint
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    if: github.head_ref == 'feature/listing-reservation-ui'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint owner listings route
+        run: npx eslint --quiet src/routes/profile/listings.tsx
+
+      - name: Lint public listing card
+        run: npx eslint --quiet src/features/listings/listings-components.tsx
+
+      - name: Lint listing detail route
+        run: npx eslint --quiet 'src/routes/listings.$id.tsx'
+
+      - name: Lint reservation contract
+        run: npx eslint --quiet scripts/listing-reservation.test.mjs
