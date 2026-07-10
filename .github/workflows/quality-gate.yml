@@ -70,6 +70,9 @@ jobs:
       - name: Seller review eligibility contract
         run: npm run test:review-eligibility
 
+      - name: Seller review response contract
+        run: npm run test:review-response
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
