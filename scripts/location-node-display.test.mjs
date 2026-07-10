@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  getLocationLevelPrompt,
   getLocationNodeOptionLabel,
   getLocationNodeTypeLabel,
 } from "../src/lib/location-node-display.ts";
@@ -28,6 +29,31 @@ test("does not present an unclassified locality as a proven city or village", ()
 
   assert.equal(getLocationNodeOptionLabel(node, "ar"), "تل الذهب — تجمّع سكاني");
   assert.equal(getLocationNodeOptionLabel(node, "en"), "Tal Dahab — Community");
+});
+
+test("guides customers through known administrative hierarchy levels", () => {
+  assert.equal(getLocationLevelPrompt([{ nodeType: "governorate" }], "ar"), "اختر المحافظة");
+  assert.equal(getLocationLevelPrompt([{ nodeType: "district" }], "ar"), "اختر المنطقة");
+  assert.equal(getLocationLevelPrompt([{ nodeType: "subdistrict" }], "ar"), "اختر الناحية");
+  assert.equal(getLocationLevelPrompt([{ nodeType: "neighborhood" }], "ar"), "اختر الحي");
+});
+
+test("uses an honest mixed populated-place prompt without inventing classifications", () => {
+  const nodes = [
+    { nodeType: "city" },
+    { nodeType: "town" },
+    { nodeType: "village" },
+    { nodeType: "locality" },
+  ];
+
+  assert.equal(
+    getLocationLevelPrompt(nodes, "ar"),
+    "اختر المدينة أو البلدة أو القرية أو التجمّع",
+  );
+  assert.equal(
+    getLocationLevelPrompt(nodes, "en"),
+    "Choose city, town, village, or community",
+  );
 });
 
 test("respects curated sort order before type and Arabic name fallback", () => {
