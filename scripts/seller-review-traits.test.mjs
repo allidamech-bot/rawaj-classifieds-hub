@@ -51,7 +51,14 @@ test("trait-aware creation keeps eligibility enforcement and a legacy compatibil
   assert.match(migration, /v_reviewer uuid := auth\.uid\(\)/);
   assert.match(migration, /rawaj_get_seller_review_eligibility/);
   assert.match(migration, /seller_review_invalid_traits/);
-  assert.match(migration, /'\{\}'::text\[\]/);
+  assert.match(
+    migration,
+    /select public\.rawaj_create_eligible_seller_review\([\s\S]*p_related_listing_id,[\s\S]*'\{\}'::text\[\]/,
+  );
+  assert.match(
+    migration,
+    /revoke all on function public\.rawaj_create_eligible_seller_review\(uuid, integer, text, uuid\) from anon/,
+  );
   assert.match(
     migration,
     /grant execute on function public\.rawaj_create_eligible_seller_review\(uuid, integer, text, uuid, text\[\]\) to authenticated/,
