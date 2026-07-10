@@ -27,7 +27,10 @@ test("written seller-review comments become optional but stay bounded when prese
 });
 
 test("quick traits are controlled unique arrays capped at three", () => {
-  assert.match(migration, /add column if not exists traits text\[\] not null default '\{\}'::text\[\]/);
+  assert.match(
+    migration,
+    /add column if not exists traits text\[\] not null default '\{\}'::text\[\]/,
+  );
   assert.match(migration, /cardinality\(v_traits\) > 3/);
   assert.match(migration, /v_trait = any\(v_seen\)/);
   for (const trait of [
