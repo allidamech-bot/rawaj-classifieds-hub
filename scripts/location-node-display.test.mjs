@@ -17,6 +17,10 @@ const generatorSource = readFileSync(
   new URL("./prepare-syria-ocha-geojson-locations-v2.mjs", import.meta.url),
   "utf8",
 );
+const selectorSource = readFileSync(
+  new URL("../src/features/locations/CanonicalLocationSelector.tsx", import.meta.url),
+  "utf8",
+);
 const sortOrderMigration = readFileSync(
   new URL(
     "../supabase/migrations/202607100005_backfill_syria_location_type_sort_order.sql",
@@ -90,6 +94,12 @@ test("uses an honest mixed populated-place prompt without inventing classificati
 
   assert.equal(getLocationLevelPrompt(nodes, "ar"), "اختر المدينة أو البلدة أو القرية أو التجمّع");
   assert.equal(getLocationLevelPrompt(nodes, "en"), "Choose city, town, village, or community");
+});
+
+test("guards cascading location levels against stale child responses", () => {
+  assert.match(selectorSource, /childRequestSequenceRef = useRef\(0\)/);
+  assert.match(selectorSource, /requestSequence !== childRequestSequenceRef\.current/);
+  assert.match(selectorSource, /childRequestSequenceRef\.current \+= 1/);
 });
 
 test("uses stable type-aware sort weights for source data", () => {
