@@ -32,15 +32,55 @@
   min-width: 0;
 }
 
+/* Listings and category discovery pages share the same first-stage hierarchy. */
+main.container-wide.mobile-page-bottom > section.rawaj-hero-surface:first-child {
+  border-radius: var(--rawaj-radius-surface);
+  box-shadow: var(--rawaj-shadow-soft);
+}
+
+main.container-wide.mobile-page-bottom > section.rawaj-hero-surface:first-child .rawaj-chip {
+  min-height: 2.25rem;
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+main.container-wide.mobile-page-bottom > section.rawaj-surface {
+  border-radius: var(--rawaj-radius-surface);
+  box-shadow: none;
+}
+
+main.container-wide.mobile-page-bottom .input {
+  min-height: var(--rawaj-touch-target);
+}
+
+main.container-wide.mobile-page-bottom button.rawaj-chip {
+  min-height: 2.25rem;
+  transition:
+    background-color var(--rawaj-motion-fast) ease,
+    border-color var(--rawaj-motion-fast) ease,
+    color var(--rawaj-motion-fast) ease;
+}
+
+@media (min-width: 1024px) {
+  main.container-wide.mobile-page-bottom > section.rawaj-surface {
+    border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
+  }
+}
+
 @media (max-width: 639px) {
   .listing-card-grid {
     gap: 0.625rem;
+  }
+
+  main.container-wide.mobile-page-bottom > section.rawaj-hero-surface:first-child {
+    border-radius: var(--rawaj-radius-surface);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .listing-card-grid > a.tap-card img,
-  .rawaj-home-listings-section a.tap-card img {
+  .rawaj-home-listings-section a.tap-card img,
+  main.container-wide.mobile-page-bottom button.rawaj-chip {
     transition: none;
   }
 }
