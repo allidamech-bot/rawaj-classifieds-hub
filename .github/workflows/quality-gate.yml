@@ -24,7 +24,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
+          show-progress: false
+
+      - name: Canonical migration ledger and collision check
+        run: node scripts/check-migration-ledger.mjs
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -43,6 +47,10 @@ jobs:
           base="$BASE_SHA"
           if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
             base="$(git rev-parse HEAD^)"
+          fi
+
+          if ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            git fetch --no-tags --depth=1 origin "$base"
           fi
 
           mapfile -t files < <(
