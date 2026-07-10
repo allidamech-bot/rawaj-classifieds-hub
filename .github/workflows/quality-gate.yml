@@ -88,6 +88,9 @@ jobs:
       - name: Chat workspace contract
         run: npm run test:chat-workspace
 
+      - name: Listing studio image parity contract
+        run: npm run test:listing-studio-images
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 

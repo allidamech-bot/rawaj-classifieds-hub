@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Camera, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Camera, RefreshCw, Trash2, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   ListingStudioMessage,
@@ -47,6 +47,22 @@ import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 import type { PriceType } from "@/types";
 
+type EditImageUploadState = "pending" | "uploading" | "failed";
+
+interface EditUploadImageEntry {
+  id: string;
+  file: File;
+  state: EditImageUploadState;
+  error?: string;
+  url: string;
+}
+
+const MAX_IMAGES = 6;
+
+function fileFingerprint(file: File) {
+  return `${file.name}:${file.size}:${file.lastModified}`;
+}
+
 export const Route = createFileRoute("/profile/listings/$id")({
   head: () => ({
     meta: [{ title: "تعديل الإعلان | رَوَاج" }, { name: "robots", content: "noindex, nofollow" }],
@@ -72,8 +88,10 @@ function ManageListingPage() {
   const [deleting, setDeleting] = useState(false);
   const [images, setImages] = useState<ListingImage[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
-  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [selectedImages, setSelectedImages] = useState<EditUploadImageEntry[]>([]);
   const [uploading, setUploading] = useState(false);
+  const selectedImagesRef = useRef<EditUploadImageEntry[]>([]);
+  const imagesRef = useRef<ListingImage[]>([]);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
@@ -98,15 +116,6 @@ function ManageListingPage() {
   const currentSubcategories = useMemo(
     () => subcategories.filter((item) => item.categoryId === categoryId),
     [subcategories, categoryId],
-  );
-  const selectedImagePreviews = useMemo(
-    () =>
-      selectedImages.map((file, index) => ({
-        id: `${file.name}-${file.size}-${file.lastModified}-${index}`,
-        file,
-        url: URL.createObjectURL(file),
-      })),
-    [selectedImages],
   );
 
   const isEditable = listing?.status === "draft" || listing?.status === "rejected";
@@ -193,11 +202,19 @@ function ManageListingPage() {
     };
   }, [auth.status, id, auth.profile?.id]);
 
+  useEffect(() => {
+    selectedImagesRef.current = selectedImages;
+  }, [selectedImages]);
+
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
+
   useEffect(
     () => () => {
-      selectedImagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
+      selectedImagesRef.current.forEach((entry) => URL.revokeObjectURL(entry.url));
     },
-    [selectedImagePreviews],
+    [],
   );
 
   async function loadImages() {
@@ -374,25 +391,101 @@ function ManageListingPage() {
     void loadImages();
   }, [listing]);
 
+  function handleImageSelection(files: FileList | null) {
+    const nextFiles = Array.from(files ?? []);
+    setSelectedImages((current) => {
+      const capacity = Math.max(0, MAX_IMAGES - images.length - current.length);
+      const existing = new Set(current.map((entry) => fileFingerprint(entry.file)));
+      const unique = nextFiles
+        .filter(
+          (file, index, files) =>
+            !existing.has(fileFingerprint(file)) &&
+            files.findIndex((item) => fileFingerprint(item) === fileFingerprint(file)) === index,
+        )
+        .slice(0, capacity)
+        .map((file) => ({
+          id: `${fileFingerprint(file)}-${crypto.randomUUID()}`,
+          file,
+          state: "pending" as const,
+          url: URL.createObjectURL(file),
+        }));
+      const next = [...current, ...unique];
+      selectedImagesRef.current = next;
+      return next;
+    });
+    if (images.length + selectedImagesRef.current.length + nextFiles.length > MAX_IMAGES) {
+      setUploadError(text("الحد الأقصى 6 صور للإعلان.", "A listing can have up to 6 photos."));
+    } else {
+      setUploadError(null);
+    }
+  }
+
+  function removeSelectedImage(entryId: string) {
+    const entry = selectedImagesRef.current.find((item) => item.id === entryId);
+    if (!entry || entry.state === "uploading") return;
+    URL.revokeObjectURL(entry.url);
+    const next = selectedImagesRef.current.filter((item) => item.id !== entryId);
+    selectedImagesRef.current = next;
+    setSelectedImages(next);
+  }
+
+  function clearSelectedImages() {
+    selectedImagesRef.current.forEach((entry) => URL.revokeObjectURL(entry.url));
+    selectedImagesRef.current = [];
+    setSelectedImages([]);
+    setUploadError(null);
+  }
+
+  async function uploadSelectedImage(entryId: string) {
+    if (!listing) return;
+    const entry = selectedImagesRef.current.find((item) => item.id === entryId);
+    if (!entry || entry.state === "uploading") return;
+    const uploadingEntries = selectedImagesRef.current.map((item) =>
+      item.id === entryId ? { ...item, state: "uploading" as const, error: undefined } : item,
+    );
+    selectedImagesRef.current = uploadingEntries;
+    setSelectedImages(uploadingEntries);
+    const result = await uploadListingImage({
+      userId: auth.profile?.id ?? null,
+      listing,
+      file: entry.file,
+      sortOrder: imagesRef.current.length,
+      altAr: title.trim() || listing.title,
+    });
+    const latest = selectedImagesRef.current.find((item) => item.id === entryId);
+    if (!latest) return;
+    if (!result.ok) {
+      const failed = selectedImagesRef.current.map((item) =>
+        item.id === entryId
+          ? { ...item, state: "failed" as const, error: result.error.message }
+          : item,
+      );
+      selectedImagesRef.current = failed;
+      setSelectedImages(failed);
+      setUploadError(result.error.message);
+      return;
+    }
+    const nextImages = [...imagesRef.current, result.data];
+    imagesRef.current = nextImages;
+    setImages(nextImages);
+    URL.revokeObjectURL(latest.url);
+    const remaining = selectedImagesRef.current.filter((item) => item.id !== entryId);
+    selectedImagesRef.current = remaining;
+    setSelectedImages(remaining);
+  }
+
+  async function retrySelectedImage(entryId: string) {
+    await uploadSelectedImage(entryId);
+  }
+
   async function handleUploadImages() {
-    if (!listing || selectedImages.length === 0) return;
+    if (!listing || selectedImagesRef.current.length === 0) return;
     setUploading(true);
     setUploadError(null);
-    const errors: string[] = [];
-    for (const [index, file] of selectedImages.entries()) {
-      const result = await uploadListingImage({
-        userId: auth.profile?.id ?? null,
-        listing,
-        file,
-        sortOrder: images.length + index,
-        altAr: title.trim() || listing.title,
-      });
-      if (!result.ok) errors.push(result.error.message);
-      else if (result.data) setImages((value) => [...value, result.data]);
+    for (const entry of [...selectedImagesRef.current]) {
+      await uploadSelectedImage(entry.id);
     }
-    setSelectedImages([]);
     setUploading(false);
-    if (errors.length > 0) setUploadError(errors[0]);
   }
 
   function handleDeleteImage(image: ListingImage) {
@@ -777,9 +870,10 @@ function ManageListingPage() {
                       disabled={uploading || imagesLoading}
                       accept="image/jpeg,image/png,image/webp"
                       className="sr-only"
-                      onChange={(e) =>
-                        setSelectedImages(Array.from(e.target.files ?? []).slice(0, 6))
-                      }
+                      onChange={(e) => {
+                        handleImageSelection(e.target.files);
+                        e.target.value = "";
+                      }}
                     />
                   </label>
                 )}
@@ -793,35 +887,64 @@ function ManageListingPage() {
                     <button
                       type="button"
                       disabled={uploading}
-                      onClick={() => setSelectedImages([])}
+                      onClick={clearSelectedImages}
                       className="rawaj-chip px-3 py-1.5 font-semibold text-muted-foreground disabled:opacity-50"
                     >
                       {text("تفريغ الاختيار", "Clear selection")}
                     </button>
                   </div>
                   <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {selectedImagePreviews.map((preview, index) => (
+                    {selectedImages.map((preview, index) => (
                       <div
                         key={preview.id}
                         className="overflow-hidden rounded-[1rem] border border-border/70 bg-card text-[10px] shadow-soft"
                       >
-                        <img
-                          src={preview.url}
-                          alt={preview.file.name}
-                          loading="lazy"
-                          decoding="async"
-                          className="aspect-[4/3] w-full object-cover"
-                        />
+                        <div className="relative">
+                          <img
+                            src={preview.url}
+                            alt={preview.file.name}
+                            loading="lazy"
+                            decoding="async"
+                            className="aspect-[4/3] w-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            disabled={preview.state === "uploading"}
+                            onClick={() => removeSelectedImage(preview.id)}
+                            className="absolute end-2 top-2 grid min-h-11 min-w-11 place-items-center rounded-xl bg-card/90 text-destructive shadow-soft disabled:opacity-50"
+                            aria-label={text("إزالة الصورة المختارة", "Remove selected photo")}
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
                         <div className="p-2">
                           <p className="truncate font-bold">{preview.file.name}</p>
                           <p className="text-muted-foreground">
                             {(preview.file.size / 1024 / 1024).toFixed(1)} MB
                           </p>
-                          {index === 0 && (
+                          {preview.state === "uploading" ? (
+                            <p className="mt-1 font-bold text-primary">
+                              {text("جارٍ رفع هذه الصورة", "Uploading this photo")}
+                            </p>
+                          ) : null}
+                          {preview.state === "failed" ? (
+                            <div className="mt-2">
+                              <p className="line-clamp-2 text-destructive">{preview.error}</p>
+                              <button
+                                type="button"
+                                onClick={() => void retrySelectedImage(preview.id)}
+                                className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-xl bg-destructive/10 px-3 py-2 font-bold text-destructive"
+                              >
+                                <RefreshCw className="h-3.5 w-3.5" />
+                                {text("إعادة المحاولة", "Retry")}
+                              </button>
+                            </div>
+                          ) : null}
+                          {index === 0 && preview.state === "pending" ? (
                             <p className="mt-1 font-bold text-gold">
                               {text("ستظهر أولاً بعد الرفع", "Will appear first after upload")}
                             </p>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                     ))}
