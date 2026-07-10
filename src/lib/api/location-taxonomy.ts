@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
+import { sortLocationNodesForDisplay } from "@/lib/location-node-order";
 import {
   escapePostgrestSearchTerm,
   getClient,
@@ -29,6 +30,7 @@ export interface CanonicalLocationNode {
   nameAr: string;
   nameEn: string | null;
   slug: string;
+  sortOrder: number;
   depth: number;
   isActive: boolean;
   externalSource: string | null;
@@ -44,18 +46,6 @@ export interface LocationSearchResult {
   pathEn: string;
 }
 
-const LOCATION_TYPE_PRIORITY: Record<LocationNodeType, number> = {
-  country: 0,
-  governorate: 1,
-  district: 2,
-  subdistrict: 3,
-  city: 4,
-  town: 5,
-  village: 6,
-  neighborhood: 7,
-  locality: 8,
-};
-
 function mapLocationNode(row: Record<string, unknown>): CanonicalLocationNode {
   return {
     id: rowString(row, "id"),
@@ -65,6 +55,7 @@ function mapLocationNode(row: Record<string, unknown>): CanonicalLocationNode {
     nameAr: rowString(row, "name_ar"),
     nameEn: rowNullableString(row, "name_en"),
     slug: rowString(row, "slug"),
+    sortOrder: rowNumber(row, "sort_order"),
     depth: rowNumber(row, "depth"),
     isActive: rowBoolean(row, "is_active", true),
     externalSource: rowNullableString(row, "external_source"),
@@ -72,15 +63,6 @@ function mapLocationNode(row: Record<string, unknown>): CanonicalLocationNode {
     legacyGovernorateId: rowNullableString(row, "legacy_governorate_id"),
     legacyDistrictAr: rowNullableString(row, "legacy_district_ar"),
   };
-}
-
-function sortLocationOptions(nodes: CanonicalLocationNode[]) {
-  return [...nodes].sort((left, right) => {
-    const typeDelta =
-      LOCATION_TYPE_PRIORITY[left.nodeType] - LOCATION_TYPE_PRIORITY[right.nodeType];
-    if (typeDelta !== 0) return typeDelta;
-    return left.nameAr.localeCompare(right.nameAr, "ar");
-  });
 }
 
 function normalizeLocationSearch(value: string) {
@@ -112,7 +94,7 @@ function rankLocationResult(
 }
 
 const LOCATION_NODE_SELECT =
-  "id,parent_id,country_code,node_type,name_ar,name_en,slug,depth,is_active,external_source,external_id,legacy_governorate_id,legacy_district_ar";
+  "id,parent_id,country_code,node_type,name_ar,name_en,slug,sort_order,depth,is_active,external_source,external_id,legacy_governorate_id,legacy_district_ar";
 
 export async function fetchLocationRoots(
   countryCode = "SY",
@@ -132,7 +114,9 @@ export async function fetchLocationRoots(
   if (error) return { ok: false, error: mapError(error) };
   return {
     ok: true,
-    data: sortLocationOptions(((data ?? []) as Record<string, unknown>[]).map(mapLocationNode)),
+    data: sortLocationNodesForDisplay(
+      ((data ?? []) as Record<string, unknown>[]).map(mapLocationNode),
+    ),
   };
 }
 
@@ -153,7 +137,9 @@ export async function fetchLocationChildren(
   if (error) return { ok: false, error: mapError(error) };
   return {
     ok: true,
-    data: sortLocationOptions(((data ?? []) as Record<string, unknown>[]).map(mapLocationNode)),
+    data: sortLocationNodesForDisplay(
+      ((data ?? []) as Record<string, unknown>[]).map(mapLocationNode),
+    ),
   };
 }
 
@@ -302,6 +288,7 @@ async function fetchLocationPathWithClient(
     nameAr: rowString(row, "name_ar"),
     nameEn: rowNullableString(row, "name_en"),
     slug: rowString(row, "slug"),
+    sortOrder: 0,
     depth: rowNumber(row, "depth"),
     isActive: true,
     externalSource: null,
