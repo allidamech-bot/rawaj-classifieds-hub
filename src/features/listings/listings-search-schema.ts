@@ -33,7 +33,7 @@ export const listingsSearchSchema = z
   })
   .transform((search) => ({
     ...search,
-    district: search.location && !search.district ? `@${search.location}` : search.district,
+    district: search.location ? `@${search.location}` : search.district,
   }));
 
 export type ListingsSearch = z.infer<typeof listingsSearchSchema>;
