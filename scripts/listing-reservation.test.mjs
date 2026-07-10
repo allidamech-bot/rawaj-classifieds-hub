@@ -10,14 +10,21 @@ const apiPath = new URL("../src/lib/api/listing-reservation.ts", import.meta.url
 const listingsApiPath = new URL("../src/lib/api/listings.ts", import.meta.url);
 const typesPath = new URL("../src/lib/classifieds-types.ts", import.meta.url);
 const barrelPath = new URL("../src/lib/classifieds-api.ts", import.meta.url);
+const ownerRoutePath = new URL("../src/routes/profile/listings.tsx", import.meta.url);
+const cardPath = new URL("../src/features/listings/listings-components.tsx", import.meta.url);
+const detailRoutePath = new URL("../src/routes/listings.$id.tsx", import.meta.url);
 
-const [migration, api, listingsApi, types, barrel] = await Promise.all([
-  readFile(migrationPath, "utf8"),
-  readFile(apiPath, "utf8"),
-  readFile(listingsApiPath, "utf8"),
-  readFile(typesPath, "utf8"),
-  readFile(barrelPath, "utf8"),
-]);
+const [migration, api, listingsApi, types, barrel, ownerRoute, card, detailRoute] =
+  await Promise.all([
+    readFile(migrationPath, "utf8"),
+    readFile(apiPath, "utf8"),
+    readFile(listingsApiPath, "utf8"),
+    readFile(typesPath, "utf8"),
+    readFile(barrelPath, "utf8"),
+    readFile(ownerRoutePath, "utf8"),
+    readFile(cardPath, "utf8"),
+    readFile(detailRoutePath, "utf8"),
+  ]);
 
 test("reservation is an orthogonal timestamp and does not introduce a listing status", () => {
   assert.match(migration, /add column if not exists reserved_at timestamptz null/);
@@ -75,6 +82,37 @@ test("client reservation writes use only the governed RPC", () => {
 test("listing contracts map the public reservation timestamp", () => {
   assert.match(types, /reservedAt\?: string \| null/);
   assert.match(listingsApi, /reservedAt: rowNullableString\(row, "reserved_at"\)/);
+});
+
+test("owner UI gates reservation controls to approved listings and uses the governed API", () => {
+  assert.match(ownerRoute, /setOwnerListingReserved/);
+  assert.match(ownerRoute, /const canManageReservation = listing\.status === "approved"/);
+  assert.match(
+    ownerRoute,
+    /setOwnerListingReserved\([\s\S]*userId,[\s\S]*listing\.id,[\s\S]*!Boolean\(listing\.reservedAt\)/,
+  );
+  assert.match(ownerRoute, /listing\.reservedAt[\s\S]*Clear reservation/);
+  assert.match(ownerRoute, /Mark reserved/);
+  assert.match(ownerRoute, /min-h-11/);
+});
+
+test("public cards prioritize a single Reserved badge over Featured", () => {
+  assert.match(card, /listing\.reservedAt \?/);
+  assert.match(card, /محجوز/);
+  assert.match(card, /Reserved/);
+  assert.match(card, /\) : listing\.isFeatured \? \(/);
+});
+
+test("listing detail explains reservation without changing approved messaging eligibility", () => {
+  assert.match(detailRoute, /listing\.reservedAt \?/);
+  assert.match(detailRoute, /هذا الإعلان محجوز حالياً/);
+  assert.match(detailRoute, /This listing is currently reserved/);
+  assert.match(detailRoute, /if \(!listing \|\| listing\.status !== "approved"\)/);
+  const messageStart = detailRoute.indexOf("async function messageSeller");
+  const shareStart = detailRoute.indexOf("async function shareListing", messageStart);
+  assert.ok(messageStart >= 0 && shareStart > messageStart);
+  const messageSellerFunction = detailRoute.slice(messageStart, shareStart);
+  assert.doesNotMatch(messageSellerFunction, /reservedAt/);
 });
 
 test("reservation API is exported from the classifieds barrel", () => {
