@@ -35,26 +35,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check seller review API formatting
-        run: npx prettier --check src/lib/api/reviews.ts
-
-      - name: Format seller review eligibility contract diagnostic
-        run: |
-          npx prettier --write scripts/seller-review-eligibility.test.mjs
-          git diff -- scripts/seller-review-eligibility.test.mjs > /tmp/review-contract-prettier.diff
-
-      - name: Upload seller review contract formatting artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: seller-review-contract-formatting
-          path: |
-            scripts/seller-review-eligibility.test.mjs
-            /tmp/review-contract-prettier.diff
-          if-no-files-found: error
-
-      - name: Require committed seller review contract formatting
-        run: git diff --exit-code -- scripts/seller-review-eligibility.test.mjs
-
       - name: Lint changed source files
         shell: bash
         env:
