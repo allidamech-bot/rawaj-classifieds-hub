@@ -9,6 +9,66 @@ import type {
 } from "@/lib/classifieds-types";
 import { getClient, mapError, rowNullableString, rowNumber, rowString } from "@/lib/api/shared";
 
+export type SellerReviewEligibilityReason =
+  | "eligible"
+  | "auth_required"
+  | "invalid_seller"
+  | "existing_review"
+  | "no_qualifying_interaction";
+
+export interface SellerReviewEligibility {
+  eligible: boolean;
+  relatedListingId: string | null;
+  conversationId: string | null;
+  reason: SellerReviewEligibilityReason;
+}
+
+export async function fetchSellerReviewEligibility(
+  sellerUserId: string,
+  relatedListingId?: string | null,
+): Promise<ClassifiedsResult<SellerReviewEligibility>> {
+  const sellerId = sellerUserId.trim();
+  if (!sellerId) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد البائع." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data.rpc("rawaj_get_seller_review_eligibility", {
+    p_seller_user_id: sellerId,
+    p_related_listing_id: relatedListingId?.trim() || null,
+  });
+
+  if (error) return { ok: false, error: mapError(error) };
+
+  const raw = Array.isArray(data) ? data[0] : data;
+  if (!raw || typeof raw !== "object") {
+    return {
+      ok: false,
+      error: { code: "unknown", message: "تعذر التحقق من أهلية التقييم." },
+    };
+  }
+
+  const row = raw as Record<string, unknown>;
+  return {
+    ok: true,
+    data: {
+      eligible: row.eligible === true,
+      relatedListingId: rowNullableString(row, "related_listing_id"),
+      conversationId: rowNullableString(row, "conversation_id"),
+      reason: rowString(
+        row,
+        "reason",
+        "no_qualifying_interaction",
+      ) as SellerReviewEligibilityReason,
+    },
+  };
+}
+
 export async function createSellerReview(
   payload: CreateSellerReviewPayload,
 ): Promise<ClassifiedsResult<SellerReview>> {
@@ -47,21 +107,51 @@ export async function createSellerReview(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data
-    .from("seller_reviews")
-    .insert({
-      seller_user_id: sellerUserId,
-      reviewer_user_id: reviewerUserId,
-      related_listing_id: payload.relatedListingId?.trim() || null,
-      rating: payload.rating,
-      comment,
-      status: "pending_review",
-    })
-    .select("*")
-    .single();
+  const { data, error } = await clientResult.data.rpc("rawaj_create_eligible_seller_review", {
+    p_seller_user_id: sellerUserId,
+    p_rating: payload.rating,
+    p_comment: comment,
+    p_related_listing_id: payload.relatedListingId?.trim() || null,
+  });
 
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: mapReview(data as Record<string, unknown>) };
+  if (error) {
+    const message = error.message ?? "";
+    if (message.includes("seller_review_not_eligible")) {
+      return {
+        ok: false,
+        error: {
+          code: "permission_denied",
+          message: "يمكنك تقييم البائع فقط بعد محادثة فعلية متبادلة معه.",
+        },
+      };
+    }
+    if (message.includes("seller_review_already_exists")) {
+      return {
+        ok: false,
+        error: {
+          code: "status_mismatch",
+          message: "لديك بالفعل تقييم قيد المراجعة أو معتمد لهذا البائع.",
+        },
+      };
+    }
+    if (message.includes("seller_review_auth_required")) {
+      return {
+        ok: false,
+        error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال تقييم." },
+      };
+    }
+    return { ok: false, error: mapError(error) };
+  }
+
+  const raw = Array.isArray(data) ? data[0] : data;
+  if (!raw || typeof raw !== "object") {
+    return {
+      ok: false,
+      error: { code: "unknown", message: "تم تنفيذ الطلب دون إعادة التقييم المنشأ." },
+    };
+  }
+
+  return { ok: true, data: mapReview(raw as Record<string, unknown>) };
 }
 
 export async function adminFetchSellerReviews(
