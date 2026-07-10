@@ -1,4 +1,4 @@
-name: Diagnose listing reservation UI lint
+name: Fix listing reservation UI lint
 
 on:
   pull_request:
@@ -6,34 +6,37 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  lint:
-    if: github.head_ref == 'feature/listing-reservation-ui'
+  fix:
+    if: github.head_ref == 'feature/listing-reservation-ui' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout feature branch
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
+          ref: feature/listing-reservation-ui
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Capture owner listings ESLint JSON
+      - name: Apply exact ESLint fix
         shell: bash
         run: |
-          npx eslint --format json src/routes/profile/listings.tsx > /tmp/owner-eslint.json || true
-          test -s /tmp/owner-eslint.json
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('src/routes/profile/listings.tsx')
+          text = path.read_text()
+          old = '!Boolean(listing.reservedAt)'
+          new = '!listing.reservedAt'
+          if text.count(old) != 1:
+              raise SystemExit('Expected exactly one redundant Boolean reservation cast.')
+          path.write_text(text.replace(old, new, 1))
+          PY
 
-      - name: Upload ESLint diagnostics
-        uses: actions/upload-artifact@v4
-        with:
-          name: owner-listings-eslint-diagnostics
-          path: /tmp/owner-eslint.json
-          if-no-files-found: error
+      - name: Commit lint fix
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/profile/listings.tsx
+          git commit -m "Fix listing reservation UI lint"
+          git push origin HEAD:feature/listing-reservation-ui
