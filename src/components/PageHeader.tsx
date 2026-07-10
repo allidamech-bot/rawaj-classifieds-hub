@@ -23,12 +23,11 @@ export function PageHeader({ title, to = "/", back = true, backMode = "link" }: 
   }
 
   const backClassName =
-    "rawaj-icon-button grid h-9 w-9 shrink-0 place-items-center sm:h-10 sm:w-10";
+    "rawaj-icon-button rawaj-touch-target grid shrink-0 place-items-center shadow-none";
 
   return (
-    <div className="sticky top-0 z-20 border-b border-border/75 bg-background/88 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80">
-      <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-gold/65 to-transparent" />
-      <div className="container-wide flex min-h-14 items-center gap-2.5 py-2 sm:min-h-16 sm:gap-3">
+    <div className="sticky top-0 z-20 border-b border-border/75 bg-background/94 backdrop-blur-xl supports-[backdrop-filter]:bg-background/88">
+      <div className="container-wide flex min-h-14 items-center gap-2.5 py-1.5 sm:min-h-16 sm:gap-3">
         {back && backMode === "history" ? (
           <button
             type="button"
@@ -37,7 +36,7 @@ export function PageHeader({ title, to = "/", back = true, backMode = "link" }: 
             title={text("رجوع", "Back")}
             className={backClassName}
           >
-            <ChevronRight className="h-4 w-4 rtl:rotate-180" strokeWidth={1.9} />
+            <ChevronRight className="h-4.5 w-4.5 rtl:rotate-180" strokeWidth={1.9} />
           </button>
         ) : back ? (
           <Link
@@ -46,7 +45,7 @@ export function PageHeader({ title, to = "/", back = true, backMode = "link" }: 
             title={text("رجوع", "Back")}
             className={backClassName}
           >
-            <ChevronRight className="h-4 w-4 rtl:rotate-180" strokeWidth={1.9} />
+            <ChevronRight className="h-4.5 w-4.5 rtl:rotate-180" strokeWidth={1.9} />
           </Link>
         ) : null}
 
@@ -55,7 +54,6 @@ export function PageHeader({ title, to = "/", back = true, backMode = "link" }: 
             <h1 className="truncate text-[15px] font-bold leading-tight text-primary sm:text-base">
               {title}
             </h1>
-            <span className="mt-1 block h-0.5 w-7 rounded-full bg-gradient-to-r from-brand-orange to-gold" />
           </div>
         ) : (
           <div className="flex-1" />
