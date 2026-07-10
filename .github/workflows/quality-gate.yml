@@ -79,6 +79,9 @@ jobs:
       - name: Seller review traits contract
         run: npm run test:review-traits
 
+      - name: Listing price drop contract
+        run: npm run test:price-drop
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
