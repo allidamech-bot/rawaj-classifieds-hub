@@ -89,7 +89,7 @@ test("owner UI gates reservation controls to approved listings and uses the gove
   assert.match(ownerRoute, /const canManageReservation = listing\.status === "approved"/);
   assert.match(
     ownerRoute,
-    /setOwnerListingReserved\([\s\S]*userId,[\s\S]*listing\.id,[\s\S]*!Boolean\(listing\.reservedAt\)/,
+    /setOwnerListingReserved\([\s\S]*userId,[\s\S]*listing\.id,[\s\S]*!listing\.reservedAt/,
   );
   assert.match(ownerRoute, /listing\.reservedAt[\s\S]*Clear reservation/);
   assert.match(ownerRoute, /Mark reserved/);
