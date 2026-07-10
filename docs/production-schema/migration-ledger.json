@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "baseline": {
+    "branch": "main",
+    "commit": "a9a53981ab82de385604f4145e0975aaace97b40",
+    "lastMergedPullRequest": 209,
+    "capturedAt": "2026-07-10"
+  },
+  "classificationDefinitions": {
+    "canonical": "Part of the intended clean-install schema history.",
+    "historical": "Retained because it is part of repository or Production history.",
+    "superseded": "Retained for history but replaced by a later reconciliation migration.",
+    "reconciliation": "Narrow forward-only correction for an observed deployed-state difference.",
+    "manual": "Represents a change known to have required manual Production handling.",
+    "unknown": "Production application state has not yet been verified."
+  },
+  "productionStateDefinitions": [
+    "verified-applied",
+    "verified-not-applied",
+    "unknown"
+  ],
+  "replaySafetyDefinitions": [
+    "clean-replay-required",
+    "forward-only-do-not-replay",
+    "requires-production-verification"
+  ],
+  "documentedCollisions": {},
+  "migrations": []
+}
