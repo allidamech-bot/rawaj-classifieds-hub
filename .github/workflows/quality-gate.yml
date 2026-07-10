@@ -85,6 +85,9 @@ jobs:
       - name: Listing reservation contract
         run: npm run test:reservation
 
+      - name: Chat workspace contract
+        run: npm run test:chat-workspace
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
