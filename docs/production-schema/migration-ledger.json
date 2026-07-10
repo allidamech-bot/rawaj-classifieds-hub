@@ -10,9 +10,9 @@
     "canonical": "Part of the intended clean-install schema history.",
     "historical": "Retained because it is part of repository or Production history.",
     "superseded": "Retained for history but replaced by a later reconciliation migration.",
-    "reconciliation": "Narrow forward-only correction for an observed deployed-state difference.",
-    "manual": "Represents a change known to have required manual Production handling.",
-    "unknown": "Production application state has not yet been verified."
+    "reconciliation": "Forward-only correction or backfill identified by repository intent.",
+    "manual": "Repository record explicitly references manual Production hotfix reconciliation.",
+    "unknown": "Repository intent is not yet sufficiently established."
   },
   "productionStateDefinitions": [
     "verified-applied",
@@ -24,6 +24,129 @@
     "forward-only-do-not-replay",
     "requires-production-verification"
   ],
-  "documentedCollisions": {},
-  "migrations": []
+  "defaults": {
+    "productionState": "unknown",
+    "replaySafety": "requires-production-verification",
+    "evidence": "R: repository inventory; S: Production history not yet extracted",
+    "notes": "Do not rename or replay based on repository presence alone."
+  },
+  "documentedCollisions": {
+    "202607070001": [
+      "202607070001_location_taxonomy_foundation.sql",
+      "202607070001_preserve_conversations_when_listing_deleted.sql"
+    ],
+    "202607080002": [
+      "202607080002_favorite_listing_snapshots.sql",
+      "202607080002_listing_expiry_options.sql"
+    ],
+    "202607100004": [
+      "202607100004_backfill_syria_source_location_aliases.sql",
+      "202607100004_seller_review_eligibility.sql"
+    ],
+    "202607100005": [
+      "202607100005_backfill_syria_location_type_sort_order.sql",
+      "202607100005_seller_review_response.sql"
+    ]
+  },
+  "classifications": {
+    "canonical": [
+      "202606290001_auth_roles_foundation.sql",
+      "202606290002_classifieds_foundation.sql",
+      "202606300001_core_marketplace_schema_rls.sql",
+      "202607010001_notifications_profile_roles_contract.sql",
+      "202607010002_support_requests_contract.sql",
+      "202607010003_account_settings_seller_reviews_contract.sql",
+      "202607010004_messaging_seller_search_contract.sql",
+      "202607010005_core_completion_contract.sql",
+      "202607020001_syrian_districts_completion.sql",
+      "202607020002_promotion_receipts_storage_rpc.sql",
+      "202607020003_owner_admin_moderator_policy_alignment.sql",
+      "202607020005_message_report_rpc.sql",
+      "202607040001_taxonomy_nodes_foundation.sql",
+      "202607050003_owner_self_delete_own_listings.sql",
+      "202607060001_harden_moderation_field_protection.sql",
+      "202607060002_lock_listing_images_during_review.sql",
+      "202607070000_location_taxonomy_install.sql",
+      "202607070001_location_taxonomy_foundation.sql",
+      "202607070001_preserve_conversations_when_listing_deleted.sql",
+      "202607070002_location_taxonomy_compatibility.sql",
+      "202607070003_location_taxonomy_hardening.sql",
+      "202607070005_location_taxonomy_upsert_key.sql",
+      "202607070006_location_search_regions.sql",
+      "202607080001_customer_journey_listing_lifecycle.sql",
+      "202607080002_favorite_listing_snapshots.sql",
+      "202607080002_listing_expiry_options.sql",
+      "202607080003_notification_preferences.sql",
+      "202607080004_saved_search_alerts.sql",
+      "202607080005_notification_delivery_integrity.sql",
+      "202607080006_listing_expiry_retention.sql",
+      "202607080007_conversation_block_idempotency.sql",
+      "202607080008_message_report_idempotency.sql",
+      "202607080009_conversation_list_query_indexes.sql",
+      "202607080010_conversation_block_bypass_prevention.sql",
+      "202607080011_message_notification_delivery.sql",
+      "202607080012_message_notification_read_coupling.sql",
+      "202607080013_listing_status_notification_delivery.sql",
+      "202607080014_review_notification_delivery.sql",
+      "202607080016_owner_authority_truth.sql",
+      "202607080017_user_control_lifecycle.sql",
+      "202607080018_admin_command_center_ops.sql",
+      "202607080019_listing_moderation_console.sql",
+      "202607080020_permission_enforcement_finalization.sql",
+      "202607080021_ad_placements_management.sql",
+      "202607080022_campaign_manager.sql",
+      "202607080023_safety_case_management.sql",
+      "202607080024_safety_case_assignment_escalation.sql",
+      "202607080025_safety_case_notes_links.sql",
+      "202607080026_owner_system_controls.sql",
+      "202607080031_listing_review_notification_resilience.sql",
+      "202607080032_listing_transition_authority_hardening.sql",
+      "202607080033_listing_system_reconciliation.sql",
+      "202607080034_canonical_location_governorate_bridge.sql",
+      "202607080035_listing_schema_contract_reconciliation.sql",
+      "202607080036_listing_moderation_trigger_reconciliation.sql",
+      "202607090001_listing_review_lifecycle_self_contained.sql",
+      "202607090002_owner_update_rpc_runtime_v2.sql",
+      "202607090005_harden_ad_placement_urls.sql",
+      "202607090006_govern_listing_report_moderation.sql",
+      "202607090007_govern_message_report_moderation.sql",
+      "202607090008_govern_seller_review_moderation.sql",
+      "202607090009_block_direct_seller_review_moderation.sql",
+      "202607090010_govern_verification_moderation.sql",
+      "202607090011_govern_promotion_moderation.sql",
+      "202607090012_align_admin_permission_authority.sql",
+      "202607090013_enforce_report_moderation_rpc_exclusivity.sql",
+      "202607090014_align_public_seller_visibility.sql",
+      "202607090015_align_saved_search_alert_visibility.sql",
+      "202607090016_skip_archived_listing_expiry_reminders.sql",
+      "202607100001_atomic_favorite_mutations.sql",
+      "202607100002_allow_pending_receipt_cleanup.sql",
+      "202607100003_align_conversation_start_visibility.sql",
+      "202607100004_seller_review_eligibility.sql",
+      "202607100005_seller_review_response.sql",
+      "202607100006_seller_review_reports.sql",
+      "202607100008_seller_review_traits_optional_comment.sql",
+      "202607100009_listing_price_drop_contract.sql",
+      "202607100010_listing_reservation_contract.sql",
+      "202607100011_verification_documents_v2.sql"
+    ],
+    "reconciliation": [
+      "202607020004_fix_verification_status_enum_cast.sql",
+      "202607050001_reconcile_listing_image_storage_visibility.sql",
+      "202607050002_reconcile_live_authorization_alignment.sql",
+      "202607070004_location_taxonomy_backfill.sql",
+      "202607080028_listing_publish_review_pipeline_repair.sql",
+      "202607080029_listing_staff_activation_repair.sql",
+      "202607080030_reconcile_existing_review_staff_status.sql",
+      "202607080037_remove_legacy_listing_write_trigger.sql",
+      "202607080038_listing_submit_edit_rpc_repair.sql",
+      "202607090003_reconcile_admin_listing_moderation_contract.sql",
+      "202607100004_backfill_syria_source_location_aliases.sql",
+      "202607100005_backfill_syria_location_type_sort_order.sql",
+      "202607100007_repair_seller_review_response_update_path.sql"
+    ],
+    "manual": [
+      "202607090004_reconcile_manual_production_hotfixes.sql"
+    ]
+  }
 }
