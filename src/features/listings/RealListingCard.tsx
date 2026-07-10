@@ -25,7 +25,10 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
             className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-[1.025]"
           />
         ) : (
-          <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="standard" />
+          <PlaceholderArt
+            type={listing.categoryPlaceholder ?? "misc"}
+            aspect="standard"
+          />
         )}
 
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/28 to-transparent" />
@@ -41,7 +44,11 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
         ) : null}
 
         <span className="absolute bottom-2.5 end-2.5 max-w-[72%] truncate rounded-full bg-card/94 px-2.5 py-1 text-[9px] font-extrabold text-primary shadow-sm backdrop-blur-sm">
-          {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
+          {categoryName(
+            listing.categoryId,
+            listing.categoryNameAr ?? undefined,
+            language,
+          )}
         </span>
       </div>
 
@@ -61,8 +68,13 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
 
         <div className="mt-auto grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-t border-border/60 pt-2.5 text-[10px] text-muted-foreground sm:text-[11px]">
           <span className="inline-flex min-w-0 items-center gap-1.5">
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-orange" strokeWidth={1.9} />
-            <span className="truncate">{listingLocationDisplay(listing, language)}</span>
+            <MapPin
+              className="h-3.5 w-3.5 shrink-0 text-brand-orange"
+              strokeWidth={1.9}
+            />
+            <span className="truncate">
+              {listingLocationDisplay(listing, language)}
+            </span>
           </span>
           <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap">
             <Clock className="h-3.5 w-3.5" strokeWidth={1.8} />
@@ -75,7 +87,9 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
 }
 
 function formatListingDate(value: string, language: "ar" | "en") {
-  if (!value) return language === "ar" ? "تاريخ غير محدد" : "Date unavailable";
+  if (!value) {
+    return language === "ar" ? "تاريخ غير محدد" : "Date unavailable";
+  }
 
   return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
     dateStyle: "medium",
