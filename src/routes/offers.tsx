@@ -1,19 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ArrowUpLeft,
-  BadgePercent,
-  Building2,
-  MapPin,
-  Megaphone,
-  ShieldCheck,
-  Sparkles,
-  Store,
-} from "lucide-react";
+import { ArrowUpLeft, BadgePercent, Clock3, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
-import { fetchPublicListings } from "@/lib/classifieds-api";
-import type { ClassifiedListing, ClassifiedsError } from "@/lib/classifieds-types";
+import {
+  fetchActivePriceDropOffers,
+  type ListingPriceDropOffer,
+} from "@/lib/classifieds-api";
+import type { ClassifiedsError } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -21,17 +15,17 @@ import { useUiPreferences } from "@/lib/ui-preferences";
 export const Route = createFileRoute("/offers")({
   head: () =>
     createSeo({
-      title: "العروض | RAWAJ / رواج",
+      title: "العروض الحقيقية | RAWAJ / رواج",
       description:
-        "مساحة مخصصة لعروض المتاجر والشركات على رواج، مع عرض الإعلانات المميزة بشكل منفصل دون افتراض خصومات.",
+        "إعلانات انخفض سعرها فعلياً على رواج، مع السعر السابق والجديد ونسبة التخفيض وتاريخ الانخفاض.",
       path: "/offers",
     }),
   component: OffersPage,
 });
 
 function OffersPage() {
-  const { language, text } = useUiPreferences();
-  const [listings, setListings] = useState<ClassifiedListing[]>([]);
+  const { text } = useUiPreferences();
+  const [offers, setOffers] = useState<ListingPriceDropOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ClassifiedsError | null>(null);
 
@@ -40,10 +34,13 @@ function OffersPage() {
     async function load() {
       setLoading(true);
       setError(null);
-      const result = await fetchPublicListings({ sort: "featured" }, null, 30);
+      const result = await fetchActivePriceDropOffers(30);
       if (cancelled) return;
-      if (result.ok) setListings(result.data.items.filter((listing) => listing.isFeatured));
-      else setError(result.error);
+      if (result.ok) setOffers(result.data);
+      else {
+        setOffers([]);
+        setError(result.error);
+      }
       setLoading(false);
     }
     void load();
@@ -58,140 +55,98 @@ function OffersPage() {
       <main className="rawaj-pulse-page min-h-dvh">
         <div className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
           <section className="rawaj-offers-stage">
-            <div className="relative z-10 grid min-h-[18rem] gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.55fr)] lg:items-end lg:p-9">
+            <div className="relative z-10 grid min-h-[15rem] gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.45fr)] lg:items-end lg:p-9">
               <div className="self-end">
                 <span className="rawaj-signature-kicker text-gold">
-                  {text("مساحة العروض", "Offers space")}
+                  {text("تخفيضات موثقة", "Recorded price drops")}
                 </span>
                 <h1 className="mt-3 max-w-xl text-[1.7rem] font-extrabold leading-[1.38] text-[#fffaf0] sm:text-[2.3rem]">
-                  {text("عروض حقيقية عندما تتوفر.", "Real offers when they are available.")}
+                  {text("السعر نزل فعلاً — وهنا يظهر.", "The price really dropped — it shows here.")}
                 </h1>
-                <p className="mt-3 max-w-xl text-xs leading-6 text-[#fffaf0]/68 sm:text-sm sm:leading-7">
+                <p className="mt-3 max-w-xl text-xs leading-6 text-[#fffaf0]/72 sm:text-sm sm:leading-7">
                   {text(
-                    "هذه مساحة مخصصة لعروض المتاجر والشركات. لا نعرض خصماً أو سعراً ترويجياً ما لم يكن موجوداً فعلاً في البيانات.",
-                    "A dedicated space for store and company offers. Discounts or promotional prices are shown only when real offer data exists.",
+                    "نعرض فقط الإعلانات التي خفّض صاحبها السعر فعلياً. السعر السابق والجديد ونسبة التخفيض محفوظة في البيانات، ولا علاقة للإعلان المميز بهذه الصفحة.",
+                    "Only listings with a real owner-recorded price reduction appear here. Old price, new price and discount percentage come from recorded data; featured promotion is separate.",
                   )}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2.5">
                 <OfferSignal
-                  icon={Store}
-                  label={text("عروض المتاجر", "Store offers")}
-                  value={text("عند توفرها", "When available")}
+                  icon={BadgePercent}
+                  label={text("الخصم", "Discount")}
+                  value={text("محسوب من السعرين", "Calculated from prices")}
                 />
                 <OfferSignal
-                  icon={BadgePercent}
-                  label={text("الخصومات", "Discounts")}
-                  value={text("بيانات حقيقية فقط", "Real data only")}
+                  icon={Clock3}
+                  label={text("الحداثة", "Recency")}
+                  value={text("آخر 30 يوماً", "Last 30 days")}
                 />
                 <OfferSignal
                   icon={ShieldCheck}
-                  label={text("الوضوح", "Clarity")}
-                  value={text("بدون ادعاءات", "No fake claims")}
+                  label={text("التحقق", "Verification")}
+                  value={text("السعر الحالي يطابق التخفيض", "Current price must match")}
                 />
                 <OfferSignal
-                  icon={Megaphone}
-                  label={text("الترويج", "Promotion")}
-                  value={text("منفصل وواضح", "Clearly separate")}
+                  icon={Sparkles}
+                  label={text("الوضوح", "Clarity")}
+                  value={text("لا Featured مزيف", "No fake featured offers")}
                 />
               </div>
             </div>
-          </section>
-
-          <section className="mt-5 grid gap-3 sm:grid-cols-3">
-            <OfferPrinciple
-              icon={Store}
-              world="rawaj-world-orange"
-              title={text("عروض تجارية", "Commercial offers")}
-              body={text(
-                "تظهر هنا فقط عندما تتوفر عروض فعلية من متجر أو شركة.",
-                "Shown here only when real store or company offers exist.",
-              )}
-            />
-            <OfferPrinciple
-              icon={Sparkles}
-              world="rawaj-world-indigo"
-              title={text("إعلانات مميزة", "Featured listings")}
-              body={text(
-                "مساحة منفصلة للترويج، وليست خصماً تلقائياً.",
-                "A separate promotion space, not an automatic discount.",
-              )}
-            />
-            <OfferPrinciple
-              icon={ShieldCheck}
-              world="rawaj-world-emerald"
-              title={text("فصل واضح", "Clear separation")}
-              body={text(
-                "لا نخلط الإعلان المميز مع العرض التجاري.",
-                "Featured listings are not presented as commercial offers.",
-              )}
-            />
           </section>
 
           <section className="mt-7">
             <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <span className="rawaj-signature-kicker">
-                  {text("مساحة ترويج منفصلة", "Separate promotion space")}
+                  {text("تخفيضات حديثة", "Recent reductions")}
                 </span>
                 <h2 className="mt-1 text-xl font-extrabold text-primary sm:text-2xl">
-                  {text("الإعلانات المميزة", "Featured listings")}
+                  {text("إعلانات انخفض سعرها فعلياً", "Listings with real price drops")}
                 </h2>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   {text(
-                    "هذه ليست خصومات أو عروضاً تجارية.",
-                    "These are not discounts or commercial offers.",
+                    "يختفي العرض تلقائياً إذا تغيّر السعر الحالي أو انتهى الإعلان أو لم يعد متاحاً للعامة.",
+                    "An offer disappears automatically if the current price changes, the listing expires, or it is no longer public.",
                   )}
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to="/promotion"
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-brand-orange px-3.5 py-2 text-[11px] font-bold text-white shadow-[0_10px_24px_rgba(232,111,50,0.2)]"
-                >
-                  {text("طلب ترويج إعلان", "Request promotion")}
-                  <ArrowUpLeft className="h-3.5 w-3.5 rtl:-rotate-90" />
-                </Link>
-                <Link
-                  to="/listings"
-                  search={{ sort: "featured" }}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-[11px] font-bold text-primary-foreground"
-                >
-                  {text("عرض في النتائج", "View in results")}
-                </Link>
-              </div>
+              <Link
+                to="/listings"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-[11px] font-bold text-primary-foreground"
+              >
+                {text("كل الإعلانات", "All listings")}
+                <ArrowUpLeft className="h-3.5 w-3.5 rtl:-rotate-90" />
+              </Link>
             </div>
 
             {loading ? (
               <OffersState
-                title={text("جاري تحميل الإعلانات المميزة", "Loading featured listings")}
+                title={text("جاري تحميل التخفيضات الحقيقية", "Loading real price drops")}
                 body={text(
-                  "يتم الآن جلب الإعلانات المميزة المتاحة.",
-                  "Loading available featured listings.",
+                  "يتم التحقق من أحدث الأسعار العامة الآن.",
+                  "Checking the latest public prices now.",
                 )}
               />
             ) : error ? (
               <OffersState
-                title={text("تعذر تحميل الإعلانات المميزة", "Could not load featured listings")}
+                title={text("تعذر تحميل العروض", "Could not load offers")}
                 body={error.message}
               />
-            ) : listings.length === 0 ? (
+            ) : offers.length === 0 ? (
               <OffersState
-                title={text(
-                  "لا توجد عروض تجارية متاحة حالياً",
-                  "No commercial offers available right now",
-                )}
+                title={text("لا توجد تخفيضات حقيقية حالياً", "No real price drops right now")}
                 body={text(
-                  "ولا توجد حالياً إعلانات مميزة معتمدة لعرضها هنا. ستظهر البيانات الفعلية فقط عند توفرها.",
-                  "There are also no approved featured listings to show here right now. Only real available data will appear.",
+                  "لن نملأ الصفحة بإعلانات مميزة أو خصومات غير موثقة. ستظهر هنا التخفيضات الفعلية عند تسجيلها.",
+                  "We will not fill this page with featured listings or unverified discounts. Real recorded reductions will appear here.",
                 )}
               />
             ) : (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {listings.map((listing) => (
-                  <FeaturedListingCard key={listing.id} listing={listing} />
+                {offers.map((offer) => (
+                  <PriceDropOfferCard key={offer.listing.id} offer={offer} />
                 ))}
               </div>
             )}
@@ -207,7 +162,7 @@ function OfferSignal({
   label,
   value,
 }: {
-  icon: typeof Store;
+  icon: typeof BadgePercent;
   label: string;
   value: string;
 }) {
@@ -220,34 +175,10 @@ function OfferSignal({
   );
 }
 
-function OfferPrinciple({
-  icon: Icon,
-  world,
-  title,
-  body,
-}: {
-  icon: typeof Store;
-  world: string;
-  title: string;
-  body: string;
-}) {
-  return (
-    <article className={`rawaj-color-card ${world} rounded-[1.35rem] p-4`}>
-      <div className="relative z-10 flex items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[0.95rem] bg-primary text-primary-foreground">
-          <Icon className="h-4 w-4" />
-        </span>
-        <div>
-          <h3 className="text-sm font-extrabold text-primary">{title}</h3>
-          <p className="mt-1 text-[11px] leading-5 text-muted-foreground">{body}</p>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function FeaturedListingCard({ listing }: { listing: ClassifiedListing }) {
+function PriceDropOfferCard({ offer }: { offer: ListingPriceDropOffer }) {
   const { language, text } = useUiPreferences();
+  const { listing } = offer;
+
   return (
     <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-product-card group block">
       <div className="rawaj-product-media aspect-[16/9]">
@@ -262,22 +193,33 @@ function FeaturedListingCard({ listing }: { listing: ClassifiedListing }) {
         ) : (
           <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
         )}
-        <span className="absolute start-2.5 top-2.5 rounded-full bg-primary/90 px-2.5 py-1 text-[9px] font-semibold text-primary-foreground shadow-soft backdrop-blur">
-          {text("إعلان مميز", "Featured listing")}
+        <span className="absolute start-2.5 top-2.5 rounded-full bg-destructive px-2.5 py-1 text-[10px] font-extrabold text-destructive-foreground shadow-soft">
+          -{formatDiscountPercent(offer.discountPercent)}%
         </span>
       </div>
+
       <div className="p-3.5">
-        <div className="mb-1 inline-flex items-center gap-1 text-[11px] font-bold text-muted-foreground">
-          <Building2 className="h-3 w-3" />
+        <p className="text-[11px] font-bold text-muted-foreground">
           {categoryName(listing.categoryId, listing.categoryNameAr, language)}
-        </div>
-        <h3 className="line-clamp-2 text-sm font-bold">{listing.title}</h3>
-        <p className="mt-1.5 text-base font-extrabold text-primary">
-          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
         </p>
-        <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+        <h3 className="mt-1 line-clamp-2 text-sm font-bold">{listing.title}</h3>
+
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <strong className="text-base font-extrabold text-primary">
+            {formatPriceLocalized(offer.newPrice, listing.priceType, language, listing.currency)}
+          </strong>
+          <span className="text-[11px] text-muted-foreground line-through decoration-destructive/60">
+            {formatPriceLocalized(offer.oldPrice, listing.priceType, language, listing.currency)}
+          </span>
+        </div>
+
+        <p className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
           <MapPin className="h-3 w-3" />
           {governorateName(listing.governorateId, listing.governorateNameAr, language)}
+        </p>
+        <p className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
+          <Clock3 className="h-3 w-3" />
+          {text("انخفض السعر", "Price dropped")} {formatDropDate(offer.droppedAt, language)}
         </p>
       </div>
     </Link>
@@ -287,13 +229,24 @@ function FeaturedListingCard({ listing }: { listing: ClassifiedListing }) {
 function OffersState({ title, body }: { title: string; body?: string }) {
   return (
     <section className="rawaj-offers-empty mt-5 overflow-hidden rounded-[1.5rem] p-6 text-center sm:p-8">
-      <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand-orange text-white shadow-[0_12px_28px_rgba(232,111,50,0.24)]">
-        <Sparkles className="h-5 w-5" />
+      <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand-orange text-white">
+        <BadgePercent className="h-5 w-5" />
       </span>
-      <h2 className="mt-3 text-base font-extrabold text-primary">{title}</h2>
-      {body ? (
-        <p className="mx-auto mt-1 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p>
-      ) : null}
+      <h3 className="mt-3 text-sm font-extrabold text-primary">{title}</h3>
+      {body ? <p className="mx-auto mt-1 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p> : null}
     </section>
   );
+}
+
+function formatDiscountPercent(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function formatDropDate(value: string, language: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+    day: "numeric",
+    month: "short",
+  }).format(date);
 }
