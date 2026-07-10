@@ -85,7 +85,15 @@ Classification: **no current repository evidence that RAWAJ depends on database-
 
 Authorized action: none. Do not add tables to `supabase_realtime` merely because the publication is empty.
 
-### 3. Application migration history remains unavailable
+### 3. Public profile-media bucket is intentional
+
+Production exposes `profile-media` publicly with a 3 MiB limit and JPEG/PNG/WebP allowlist. Repository migration `202607010003_account_settings_seller_reviews_contract.sql` explicitly creates or updates this bucket with `public = true` and adds a public SELECT policy. Upload, update, and delete policies remain restricted to authenticated users operating within their own UUID-prefixed `avatar` or `cover` path.
+
+Classification: **verified repository intent; no storage visibility defect identified**.
+
+Authorized action: none. Public read is required for seller avatars and cover media; private document storage remains isolated in `verification-documents`.
+
+### 4. Application migration history remains unavailable
 
 The database contains internal migration tables for Supabase Auth, Realtime, and Storage only. No application-level `supabase_migrations.schema_migrations` relation exists, so repository migrations cannot be marked applied solely from Production catalog evidence.
 
@@ -100,6 +108,7 @@ Classification: **migration ledger application order remains unresolved; object-
 - `pg_cron` is not installed, so there are no extension-backed scheduled jobs to reconcile.
 - The only non-validated constraints match intentional repository design.
 - No repository evidence requires Realtime publication membership.
+- Public profile media exposure matches repository design and write access remains owner-scoped.
 
 ## Object-level comparison
 
@@ -112,7 +121,7 @@ Classification: **migration ledger application order remains unresolved; object-
 | Functions/RPCs | 133 extracted | Security baseline passes | Compare signatures, definitions, grants, and application callers |
 | Grants | 1165 table and 533 routine grants | Verified Production evidence | Compare only access paths used by anon/authenticated clients |
 | RLS policies | 96 public and 16 storage policies | Baseline safety passes | Compare policy definitions to API assumptions |
-| Storage | 3 buckets extracted | Verified Production evidence | Confirm public `profile-media` exposure remains intentional |
+| Storage | 3 buckets extracted | Aligned with repository intent | No corrective SQL |
 | Types/enums | 8 public enums extracted | Verified Production evidence | Compare labels and usage to repository migrations |
 | Realtime | Publication has 0 tables; no subscriptions found | No defect identified | No action |
 | Scheduled jobs | `pg_cron` not installed | Not applicable | No action |
@@ -122,9 +131,9 @@ Classification: **migration ledger application order remains unresolved; object-
 
 ## Reconciliation decision
 
-No historical migration will be replayed or renamed from this evidence. No corrective SQL is currently justified for the two `NOT VALID` constraints or the empty Realtime publication.
+No historical migration will be replayed or renamed from this evidence. No corrective SQL is currently justified for the two `NOT VALID` constraints, the empty Realtime publication, or the public profile-media bucket.
 
-The remaining reconciliation work is limited to deterministic comparison of Production RPC signatures/grants, RLS policy definitions, storage exposure, and repository callers. Any future corrective SQL must be narrow, forward-only, idempotent where practical, and separately reviewed before Production execution.
+The remaining reconciliation work is limited to deterministic comparison of Production RPC signatures/grants, RLS policy definitions, and repository callers. Any future corrective SQL must be narrow, forward-only, idempotent where practical, and separately reviewed before Production execution.
 
 ## Production safety statement
 
