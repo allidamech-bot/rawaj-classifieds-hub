@@ -33,23 +33,22 @@ jobs:
                   raise SystemExit("missing import anchor")
               source = source.replace(import_anchor, import_anchor + import_line, 1)
 
-          old = '''              <article key={review.id} className="rounded-[1rem] bg-white/76 p-3 hairline">
-                <div className="text-xs font-bold text-gold">{"★".repeat(review.rating)}</div>
-                <p className="mt-1 whitespace-pre-line text-xs leading-6">{review.comment}</p>
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  {new Date(review.createdAt).toLocaleDateString(
-                    language === "ar" ? "ar-SY" : "en-US",
-                  )}
-                </p>
-              </article>'''
+          start_marker = '              <article key={review.id} className="rounded-[1rem] bg-white/76 p-3 hairline">'
+          end_marker = '              </article>'
+          start = source.find(start_marker)
+          if start < 0:
+              raise SystemExit("missing review card start anchor")
+          end = source.find(end_marker, start)
+          if end < 0:
+              raise SystemExit("missing review card end anchor")
+          end += len(end_marker)
+
           new = '''              <SellerReviewCard
                 key={review.id}
                 review={review}
                 canManageResponse={isOwnProfile}
               />'''
-          if old not in source:
-              raise SystemExit("missing review card anchor")
-          source = source.replace(old, new, 1)
+          source = source[:start] + new + source[end:]
 
           path.write_text(source, encoding="utf-8")
 
