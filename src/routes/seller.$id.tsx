@@ -17,6 +17,8 @@ import {
   createSellerReview,
   fetchPublicSellerProfile,
   fetchSellerReviewEligibility,
+  SELLER_REVIEW_TRAITS,
+  sellerReviewTraitLabel,
 } from "@/lib/classifieds-api";
 import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
@@ -319,6 +321,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   const { language, text } = useUiPreferences();
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [selectedTraits, setSelectedTraits] = useState<(typeof SELLER_REVIEW_TRAITS)[number][]>([]);
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
   const [eligibilityState, setEligibilityState] = useState<ReviewEligibilityUiState>("idle");
@@ -375,11 +378,13 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
       reviewerUserId: auth.profile?.id ?? null,
       rating,
       comment,
+      traits: selectedTraits,
     });
     setSaving(false);
     if (result.ok) {
       setComment("");
       setRating(5);
+      setSelectedTraits([]);
       setEligibilityState("existing_review");
       setNotice(
         text(
@@ -523,6 +528,38 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
                 </button>
               ))}
             </div>
+            <div>
+              <p className="text-[10px] font-bold text-muted-foreground">
+                {text("صفات سريعة — اختر حتى 3", "Quick traits — choose up to 3")}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {SELLER_REVIEW_TRAITS.map((trait) => {
+                  const selected = selectedTraits.includes(trait);
+                  return (
+                    <button
+                      key={trait}
+                      type="button"
+                      aria-pressed={selected}
+                      disabled={saving || (!selected && selectedTraits.length >= 3)}
+                      onClick={() =>
+                        setSelectedTraits((current) =>
+                          current.includes(trait)
+                            ? current.filter((item) => item !== trait)
+                            : current.length >= 3
+                              ? current
+                              : [...current, trait],
+                        )
+                      }
+                      className={`min-h-11 rounded-xl px-3 py-2 text-[11px] font-bold hairline disabled:opacity-45 ${
+                        selected ? "bg-primary text-primary-foreground" : "bg-white/72"
+                      }`}
+                    >
+                      {sellerReviewTraitLabel(trait, language)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <textarea
               value={comment}
               onChange={(event) => setComment(event.target.value)}
@@ -530,8 +567,8 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
               rows={3}
               disabled={saving}
               placeholder={text(
-                "اكتب تجربتك مع هذا المعلن",
-                "Write your experience with this seller",
+                "تعليق كتابي اختياري — 10 أحرف على الأقل عند الكتابة",
+                "Optional written comment — at least 10 characters when provided",
               )}
               className="w-full rounded-xl bg-white/76 px-3 py-2 text-sm outline-none hairline disabled:opacity-60"
             />
