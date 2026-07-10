@@ -158,8 +158,8 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
 
   const triggerClass =
     tone === "dark"
-      ? "relative grid h-9 w-9 place-items-center rounded-full border border-primary-foreground/15 bg-primary-foreground/[0.06] text-primary-foreground/85 backdrop-blur transition hover:border-gold/50 hover:bg-primary-foreground/10 hover:text-gold active:scale-[0.98] sm:h-10 sm:w-10"
-      : "relative grid h-9 w-9 place-items-center rounded-full bg-card hairline transition hover:bg-muted-surface active:scale-[0.98]";
+      ? "relative grid rawaj-touch-target place-items-center rounded-[var(--rawaj-radius-button)] border border-primary-foreground/15 bg-primary-foreground/[0.06] text-primary-foreground/85 transition-colors hover:border-gold/50 hover:bg-primary-foreground/10 hover:text-gold"
+      : "relative grid rawaj-touch-target place-items-center rounded-[var(--rawaj-radius-button)] bg-card text-primary hairline transition-colors hover:bg-muted-surface";
 
   return (
     <div ref={containerRef} className="relative">
@@ -184,7 +184,7 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
         <div
           role="dialog"
           aria-label={text("الإشعارات", "Notifications")}
-          className="fixed inset-x-3 top-16 z-40 bg-card p-3 text-start text-foreground shadow-premium hairline sm:absolute sm:inset-x-auto sm:end-0 sm:top-11 sm:z-30 sm:w-80 sm:max-w-[calc(100vw-2rem)]"
+          className="fixed inset-x-3 top-16 z-40 rounded-[var(--rawaj-radius-surface)] bg-card p-3 text-start text-foreground shadow-[var(--rawaj-shadow-overlay)] hairline sm:absolute sm:inset-x-auto sm:end-0 sm:top-12 sm:z-30 sm:w-80 sm:max-w-[calc(100vw-2rem)]"
         >
           <div className="mb-2 flex items-center justify-between gap-2">
             <h2 className="text-xs font-extrabold">{text("الإشعارات", "Notifications")}</h2>
@@ -192,7 +192,7 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
               type="button"
               onClick={() => void markAll()}
               disabled={unreadCount === 0}
-              className="inline-flex items-center gap-1 rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold disabled:opacity-50"
+              className="inline-flex min-h-11 items-center gap-1 rounded-[var(--rawaj-radius-button)] bg-muted-surface px-3 text-[10px] font-bold disabled:opacity-50"
             >
               <CheckCheck className="h-3 w-3" />
               {text("قراءة الكل", "Mark all read")}
@@ -242,7 +242,7 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
                             event.stopPropagation();
                             void markOne(notification.id);
                           }}
-                          className="shrink-0 rounded-lg bg-card px-2 py-1 text-[10px] font-bold hairline"
+                          className="min-h-11 shrink-0 rounded-[var(--rawaj-radius-button)] bg-card px-2 text-[10px] font-bold hairline"
                         >
                           {text("تمت القراءة", "Read")}
                         </button>
@@ -263,7 +263,7 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
             <button
               type="button"
               onClick={openNotificationCenter}
-              className="w-full rounded-lg bg-muted-surface px-3 py-2 text-xs font-bold transition hover:bg-muted"
+              className="min-h-11 w-full rounded-[var(--rawaj-radius-button)] bg-muted-surface px-3 text-xs font-bold transition-colors hover:bg-muted"
             >
               {text("فتح مركز الإشعارات", "Open notification center")}
             </button>
