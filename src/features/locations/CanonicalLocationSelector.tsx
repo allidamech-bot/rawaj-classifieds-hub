@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CanonicalLocationNode, LocationSearchResult } from "@/lib/api/location-taxonomy";
 import { fetchLocationChildren, searchLocationNodes } from "@/lib/api/location-taxonomy";
 import {
@@ -25,6 +25,7 @@ export function CanonicalLocationSelector({
   const [results, setResults] = useState<LocationSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const childRequestSequenceRef = useRef(0);
 
   useEffect(() => {
     const clean = query.trim();
@@ -58,6 +59,8 @@ export function CanonicalLocationSelector({
   }, [query]);
 
   async function selectAt(index: number, selectedId: string) {
+    const requestSequence = childRequestSequenceRef.current + 1;
+    childRequestSequenceRef.current = requestSequence;
     const selected = levels[index]?.options.find((option) => option.id === selectedId) ?? null;
     const next = levels
       .slice(0, index + 1)
@@ -77,6 +80,7 @@ export function CanonicalLocationSelector({
 
     onChange(selected.id, selected);
     const children = await fetchLocationChildren(selected.id);
+    if (requestSequence !== childRequestSequenceRef.current) return;
     if (!children.ok) return setError(children.error.message);
     if (children.data.length > 0) {
       setLevels([...next, { parentId: selected.id, options: children.data, selectedId: "" }]);
@@ -84,6 +88,7 @@ export function CanonicalLocationSelector({
   }
 
   function selectSearchResult(result: LocationSearchResult) {
+    childRequestSequenceRef.current += 1;
     setQuery("");
     setResults([]);
     setSearchError(null);
