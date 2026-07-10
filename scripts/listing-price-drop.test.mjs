@@ -38,10 +38,7 @@ test("owner price reduction derives authority, locks the row, and requires a pub
 });
 
 test("approved owner price writes use a transaction-local trigger whitelist", () => {
-  assert.match(
-    migration,
-    /current_setting\('rawaj\.owner_price_drop_write', true\) = 'on'/,
-  );
+  assert.match(migration, /current_setting\('rawaj\.owner_price_drop_write', true\) = 'on'/);
   assert.match(migration, /old\.owner_id <> auth\.uid\(\)/);
   assert.match(migration, /old\.status <> 'approved'/);
   assert.match(migration, /to_jsonb\(new\) - array\['price', 'updated_at'\]/);
