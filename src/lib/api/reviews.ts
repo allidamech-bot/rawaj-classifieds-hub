@@ -4,9 +4,17 @@ import type {
   ModerateSellerReviewPayload,
   SellerReview,
   SellerReviewStatus,
+  SellerReviewTrait,
   SellerRatingSummary,
 } from "@/lib/classifieds-types";
-import { getClient, mapError, rowNullableString, rowNumber, rowString } from "@/lib/api/shared";
+import {
+  getClient,
+  mapError,
+  rowArray,
+  rowNullableString,
+  rowNumber,
+  rowString,
+} from "@/lib/api/shared";
 
 export type SellerReviewEligibilityReason =
   "eligible" | "auth_required" | "invalid_seller" | "existing_review" | "no_qualifying_interaction";
@@ -24,6 +32,29 @@ export interface SellerReviewResponseFields {
 }
 
 export type SellerReviewWithResponse = SellerReview & SellerReviewResponseFields;
+
+export const SELLER_REVIEW_TRAITS = [
+  "accurate_description",
+  "good_communication",
+  "fast_response",
+  "fair_deal",
+  "punctual",
+  "trustworthy",
+] as const satisfies readonly SellerReviewTrait[];
+
+const sellerReviewTraitSet = new Set<string>(SELLER_REVIEW_TRAITS);
+
+export function sellerReviewTraitLabel(trait: SellerReviewTrait, language: string): string {
+  const labels: Record<SellerReviewTrait, [string, string]> = {
+    accurate_description: ["الوصف دقيق", "Accurate description"],
+    good_communication: ["تواصل جيد", "Good communication"],
+    fast_response: ["سريع الرد", "Fast response"],
+    fair_deal: ["تعامل منصف", "Fair deal"],
+    punctual: ["ملتزم بالموعد", "Punctual"],
+    trustworthy: ["جدير بالثقة", "Trustworthy"],
+  };
+  return labels[trait][language === "ar" ? 0 : 1];
+}
 
 export async function fetchSellerReviewEligibility(
   sellerUserId: string,
@@ -86,7 +117,9 @@ export async function createSellerReview(
 
   const sellerUserId = payload.sellerUserId.trim();
   const reviewerUserId = payload.reviewerUserId.trim();
-  const comment = payload.comment.trim();
+  const comment = payload.comment?.trim() ?? "";
+  const requestedTraitCount = payload.traits?.length ?? 0;
+  const traits = Array.from(new Set(payload.traits ?? []));
 
   if (!sellerUserId || sellerUserId === reviewerUserId) {
     return {
@@ -105,12 +138,26 @@ export async function createSellerReview(
     };
   }
 
-  if (comment.length < 10 || comment.length > 1200) {
+  if (comment && (comment.length < 10 || comment.length > 1200)) {
     return {
       ok: false,
       error: {
         code: "validation_error",
         message: "اكتب مراجعة بين 10 و1200 حرف.",
+      },
+    };
+  }
+
+  if (
+    traits.length > 3 ||
+    traits.length !== requestedTraitCount ||
+    !traits.every((trait) => sellerReviewTraitSet.has(trait))
+  ) {
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: "اختر حتى 3 صفات معتمدة بدون تكرار.",
       },
     };
   }
@@ -123,6 +170,7 @@ export async function createSellerReview(
     p_rating: payload.rating,
     p_comment: comment,
     p_related_listing_id: payload.relatedListingId?.trim() || null,
+    p_traits: traits,
   });
 
   if (error) {
@@ -267,7 +315,7 @@ export async function adminFetchSellerReviews(
   const { data, error } = await clientResult.data
     .from("seller_reviews")
     .select(
-      "id,seller_user_id,reviewer_user_id,related_listing_id,rating,comment,status,admin_note,reviewed_by,reviewed_at,created_at,updated_at",
+      "id,seller_user_id,reviewer_user_id,related_listing_id,rating,comment,traits,status,admin_note,reviewed_by,reviewed_at,created_at,updated_at",
     )
     .eq("status", "pending_review")
     .order("created_at", { ascending: false })
@@ -368,7 +416,10 @@ export function mapReview(row: Record<string, unknown>): SellerReviewWithRespons
     reviewerUserId: rowString(row, "reviewer_user_id"),
     relatedListingId: rowNullableString(row, "related_listing_id"),
     rating: rowNumber(row, "rating"),
-    comment: rowString(row, "comment"),
+    comment: rowNullableString(row, "comment"),
+    traits: rowArray(row, "traits").filter((trait): trait is SellerReviewTrait =>
+      sellerReviewTraitSet.has(trait),
+    ),
     status: rowString(row, "status", "pending_review") as SellerReviewStatus,
     adminNote: rowNullableString(row, "admin_note"),
     reviewedBy: rowNullableString(row, "reviewed_by"),
