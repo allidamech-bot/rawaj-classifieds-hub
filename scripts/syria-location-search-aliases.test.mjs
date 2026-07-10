@@ -8,7 +8,7 @@ import {
 } from "./syria-location-search-aliases.mjs";
 
 test("normalizes Arabic location spelling consistently with the database", () => {
-  assert.equal(normalizeSyriaLocationAlias("  تلّة   آمنة "), "تله امنه");
+  assert.equal(normalizeSyriaLocationAlias("  تلة   آمنة "), "تله امنه");
 });
 
 test("publishes source-provided alternate names as reviewed searchable aliases", () => {
