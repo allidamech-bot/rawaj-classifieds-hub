@@ -64,6 +64,9 @@ jobs:
       - name: Syria location discovery and presentation contract
         run: npm run test:location-presentation
 
+      - name: Listings mobile category switch contract
+        run: npm run test:listings-filters
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
