@@ -72,22 +72,19 @@ export function useLocationLevels(value?: string | null) {
       let parentId = country.id;
       let options = first.data;
 
-      for (const selected of selectedPath) {
+      for (const [index, selected] of selectedPath.entries()) {
         restored.push({ parentId, options, selectedId: selected.id });
         const children = await fetchLocationChildren(selected.id);
         if (cancelled) return;
         if (!children.ok || children.data.length === 0) break;
+
+        if (index === selectedPath.length - 1) {
+          restored.push({ parentId: selected.id, options: children.data, selectedId: "" });
+          break;
+        }
+
         parentId = selected.id;
         options = children.data;
-      }
-
-      const last = selectedPath.at(-1);
-      if (last) {
-        const children = await fetchLocationChildren(last.id);
-        if (cancelled) return;
-        if (children.ok && children.data.length > 0) {
-          restored.push({ parentId: last.id, options: children.data, selectedId: "" });
-        }
       }
 
       setLevels(restored);
