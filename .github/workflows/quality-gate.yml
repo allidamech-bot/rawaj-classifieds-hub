@@ -39,7 +39,8 @@ jobs:
         run: npx prettier --check src/lib/api/reviews.ts
 
       - name: Lint seller review API rules
-        run: npx eslint --quiet --rule 'prettier/prettier: off' src/lib/api/reviews.ts
+        run: |
+          npx eslint --quiet --rule 'prettier/prettier: off' src/lib/api/reviews.ts
 
       - name: Lint seller review API
         run: npx eslint --quiet src/lib/api/reviews.ts
