@@ -1098,7 +1098,7 @@ function ListingsPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        setDraftCategoryId(undefined);
+                        setDraftCategoryId("");
                         setSubcategoryId("");
                       }}
                       aria-pressed={!draftSelectedCategory}
