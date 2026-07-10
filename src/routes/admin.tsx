@@ -157,7 +157,7 @@ function AdminLayout() {
     <>
       <PageHeader title={text("لوحة الإدارة", "Admin dashboard")} />
       <main className="container-wide pt-3 pb-[calc(env(safe-area-inset-bottom)+2rem)] sm:pt-4">
-        <div className="mb-4 flex items-start gap-2 rounded-2xl bg-warning/10 p-3 hairline">
+        <div className="mb-4 flex items-start gap-2 rounded-[var(--rawaj-radius-card)] bg-warning/10 p-3 hairline">
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <p className="text-xs leading-6 text-foreground/90">
             {text(
@@ -166,7 +166,7 @@ function AdminLayout() {
             )}
           </p>
         </div>
-        <div className="sticky top-2 z-30 mb-4 rounded-2xl bg-background/90 p-2 shadow-soft backdrop-blur-xl hairline sm:static sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none sm:border-0">
+        <div className="sticky top-2 z-30 mb-4 rounded-[var(--rawaj-radius-surface)] bg-background/94 p-2 shadow-none backdrop-blur-xl hairline sm:static sm:bg-transparent sm:p-0 sm:backdrop-blur-none sm:border-0">
           <div className="mb-2 flex items-center justify-between gap-3 px-1 sm:hidden">
             <div className="min-w-0">
               <p className="text-[10px] font-bold text-muted-foreground">
@@ -193,9 +193,9 @@ function AdminLayout() {
                   key={tab.to}
                   to={tab.to as "/admin"}
                   aria-current={active ? "page" : undefined}
-                  className={`inline-flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition active:scale-[0.98] sm:rounded-full sm:px-4 ${
+                  className={`inline-flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-colors duration-150 ${
                     active
-                      ? "bg-primary text-primary-foreground shadow-soft"
+                      ? "bg-primary text-primary-foreground"
                       : "bg-card hairline hover:bg-muted-surface"
                   }`}
                 >
@@ -230,13 +230,13 @@ function AdminShellState({
     <>
       <PageHeader title={text("لوحة الإدارة", "Admin dashboard")} />
       <main className="container-wide pt-4 pb-8">
-        <section className="rounded-2xl bg-card p-5 text-center hairline shadow-soft">
+        <section className="rounded-[var(--rawaj-radius-surface)] bg-card p-5 text-center hairline shadow-none">
           <Lock className="mx-auto h-7 w-7 text-warning" />
           <h2 className="mt-3 text-base font-extrabold">{title}</h2>
           <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">{message}</p>
           <Link
             to={actionTo}
-            className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+            className="mt-4 inline-flex min-h-11 items-center rounded-[var(--rawaj-radius-button)] bg-primary px-4 text-xs font-bold text-primary-foreground"
           >
             {actionLabel ?? text("العودة للرئيسية", "Back to home")}
           </Link>
