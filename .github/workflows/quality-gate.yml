@@ -100,6 +100,9 @@ jobs:
       - name: Semantic SEO contract
         run: npm run test:semantic-seo
 
+      - name: Verification documents V2 contract
+        run: npm run test:verification-documents
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
