@@ -99,6 +99,22 @@ test("preserves a deep taxonomy selection when the mobile category choice is unt
   assert.equal(search.gov, "damascus");
 });
 
+test("clears deep taxonomy and stale category state when all categories is explicit", () => {
+  const search = buildListingsMobileApplySearch({
+    ...baseInputs,
+    searchTaxonomy: "taxonomy-apartment-sale",
+    draftCategoryId: "",
+    subcategoryId: "stale-subcategory",
+    fieldKind: "vehicles",
+    carMake: "Toyota",
+  });
+
+  assert.equal(search.taxonomy, undefined);
+  assert.equal(search.category, undefined);
+  assert.equal(search.subcategory, undefined);
+  assert.equal(search.car_make, undefined);
+});
+
 test("drops the old taxonomy when the user selects a concrete category in mobile filters", () => {
   const search = buildListingsMobileApplySearch({
     ...baseInputs,
