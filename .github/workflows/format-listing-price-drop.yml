@@ -1,0 +1,44 @@
+name: Format listing price drop
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.head_ref == 'feature/listing-price-drop-contract' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/listing-price-drop-contract
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format price drop sources
+        run: npx prettier --write src/lib/api/price-drops.ts scripts/listing-price-drop.test.mjs
+
+      - name: Commit formatter output
+        shell: bash
+        run: |
+          if git diff --quiet -- src/lib/api/price-drops.ts scripts/listing-price-drop.test.mjs; then
+            echo "No formatting changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/api/price-drops.ts scripts/listing-price-drop.test.mjs
+          git commit -m "Format listing price drop sources"
+          git push origin HEAD:feature/listing-price-drop-contract
