@@ -14,9 +14,7 @@ function fail(messages) {
   process.exitCode = 1;
 }
 
-const files = (await readdir(migrationsDir))
-  .filter((file) => file.endsWith(".sql"))
-  .sort();
+const files = (await readdir(migrationsDir)).filter((file) => file.endsWith(".sql")).sort();
 console.log(`MIGRATION_INVENTORY_JSON=${JSON.stringify(files)}`);
 
 const malformed = files.filter((file) => !versionPattern.test(file));
