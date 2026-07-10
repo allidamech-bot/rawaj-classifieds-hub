@@ -18,6 +18,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
+import { buildSyriaSourceAliases } from "./syria-location-search-aliases.mjs";
 
 const args = parseArgs(process.argv.slice(2));
 const nodesPath = resolve(args.nodes ?? "data/locations/syria-ocha-location-nodes.json");
@@ -57,7 +58,8 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 await assertSchemaReady(supabase);
 await upsertNodes(supabase, nodes);
 const nodeIdByExternalKey = await loadNodeIdMap(supabase, nodes);
-await upsertAliases(supabase, overlays.aliases, nodeIdByExternalKey);
+const sourceAliases = buildSyriaSourceAliases(nodes);
+await upsertAliases(supabase, [...sourceAliases, ...overlays.aliases], nodeIdByExternalKey);
 const regionIdBySlug = await upsertRegions(supabase, overlays.regions);
 await upsertRegionMembers(supabase, overlays.regions, regionIdBySlug, nodeIdByExternalKey);
 
@@ -66,7 +68,8 @@ console.log(
     {
       status: "applied",
       canonicalNodes: nodes.length,
-      aliases: overlays.aliases.length,
+      aliases: overlays.aliases.length + sourceAliases.length,
+      sourceAliases: sourceAliases.length,
       regions: overlays.regions.length,
       regionMembers: overlays.regions.reduce(
         (sum, region) => sum + (region.members?.length ?? 0),
