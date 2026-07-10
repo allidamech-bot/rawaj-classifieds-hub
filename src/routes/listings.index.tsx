@@ -21,6 +21,7 @@ import {
   type ListingsSort,
 } from "@/features/listings/listings-search-schema";
 import {
+  buildListingsCategoryNavigationSearch,
   buildListingsMobileApplySearch,
   buildListingsResetSearch,
   buildListingsSyncSearch,
@@ -898,7 +899,13 @@ function ListingsPage() {
               <div className="no-scrollbar flex gap-2 overflow-x-auto lg:grid lg:grid-cols-1 lg:overflow-visible">
                 <Link
                   to="/listings"
-                  search={{ gov: govId || undefined, q: q.trim() || undefined, sort }}
+                  search={buildListingsCategoryNavigationSearch({
+                    categoryId: undefined,
+                    govId,
+                    districtAr,
+                    query: q,
+                    sort,
+                  })}
                   className={`shrink-0 rounded-xl px-3 py-2 text-xs font-bold transition ${
                     !selectedCategory
                       ? "bg-primary text-primary-foreground"
@@ -911,12 +918,13 @@ function ListingsPage() {
                   <Link
                     key={category.id}
                     to="/listings"
-                    search={{
-                      category: category.id,
-                      gov: govId || undefined,
-                      q: q.trim() || undefined,
+                    search={buildListingsCategoryNavigationSearch({
+                      categoryId: category.id,
+                      govId,
+                      districtAr,
+                      query: q,
                       sort,
-                    }}
+                    })}
                     className={`shrink-0 rounded-xl px-3 py-2 text-xs font-bold transition ${
                       selectedCategory?.id === category.id
                         ? "bg-primary text-primary-foreground"
