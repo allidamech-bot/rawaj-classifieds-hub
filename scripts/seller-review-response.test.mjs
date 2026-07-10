@@ -6,12 +6,17 @@ const migrationPath = new URL(
   "../supabase/migrations/202607100005_seller_review_response.sql",
   import.meta.url,
 );
+const repairMigrationPath = new URL(
+  "../supabase/migrations/202607100007_repair_seller_review_response_update_path.sql",
+  import.meta.url,
+);
 const apiPath = new URL("../src/lib/api/reviews.ts", import.meta.url);
 const cardPath = new URL("../src/features/reviews/SellerReviewCard.tsx", import.meta.url);
 const sellerRoutePath = new URL("../src/routes/seller.$id.tsx", import.meta.url);
 
-const [migration, api, card, sellerRoute] = await Promise.all([
+const [migration, repairMigration, api, card, sellerRoute] = await Promise.all([
   readFile(migrationPath, "utf8"),
+  readFile(repairMigrationPath, "utf8"),
   readFile(apiPath, "utf8"),
   readFile(cardPath, "utf8"),
   readFile(sellerRoutePath, "utf8"),
@@ -40,6 +45,31 @@ test("empty response clears the seller reply and anonymous execution is denied",
     migration,
     /revoke all on function public\.rawaj_set_seller_review_response\(uuid, text\) from anon/,
   );
+});
+
+test("response trigger repair only opens a transaction-local owned approved response path", () => {
+  assert.match(
+    repairMigration,
+    /current_setting\('rawaj\.seller_review_response_write', true\) = 'on'/,
+  );
+  assert.match(repairMigration, /auth\.uid\(\) is null or old\.seller_user_id <> auth\.uid\(\)/);
+  assert.match(repairMigration, /old\.status <> 'approved'/);
+  assert.match(
+    repairMigration,
+    /to_jsonb\(new\) - array\['seller_response', 'seller_response_updated_at', 'updated_at'\]/,
+  );
+  assert.match(repairMigration, /set_config\('rawaj\.seller_review_response_write', 'on', true\)/);
+  assert.doesNotMatch(repairMigration, /create policy[\s\S]*seller_reviews[\s\S]*for update/i);
+});
+
+test("response trigger repair preserves a moderation-only field whitelist", () => {
+  assert.match(repairMigration, /not public\.current_user_can_moderate\(\)/);
+  assert.match(
+    repairMigration,
+    /to_jsonb\(new\) - array\[[\s\S]*'status'[\s\S]*'admin_note'[\s\S]*'reviewed_by'[\s\S]*'reviewed_at'[\s\S]*'updated_at'/,
+  );
+  assert.match(repairMigration, /new\.reviewed_by := auth\.uid\(\)/);
+  assert.match(repairMigration, /new\.reviewed_at := now\(\)/);
 });
 
 test("client routes seller responses through the protected RPC and maps public response fields", () => {
