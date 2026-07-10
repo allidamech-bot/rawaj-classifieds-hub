@@ -24,6 +24,7 @@ const lifecycle = read("src/lib/api/listing-lifecycle.ts");
 const locationWrite = read("src/lib/api/listing-location-write.ts");
 const admin = read("src/lib/api/admin.ts");
 const reports = read("src/lib/api/reports.ts");
+const seller = read("src/lib/api/seller.ts");
 const addListing = read("src/routes/add-listing.tsx");
 const editListing = read("src/routes/profile/listings.$id.tsx");
 const publicBase = read("src/lib/api/listings.ts");
@@ -109,6 +110,7 @@ for (const [label, source] of [
   ["base public listings", publicBase],
   ["location-aware public listings", publicLocation],
   ["canonical public listings", publicCanonical],
+  ["public seller listings", seller],
 ]) {
   requireText(source, '.eq("status", "approved")', `${label} approved-only`);
   requireText(source, '.is("archived_at", null)', `${label} non-archived`);
