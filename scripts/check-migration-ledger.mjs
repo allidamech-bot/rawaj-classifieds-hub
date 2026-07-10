@@ -12,26 +12,21 @@ function fail(messages) {
   process.exitCode = 1;
 }
 
-const files = (await readdir(migrationsDir))
-  .filter((file) => file.endsWith(".sql"))
-  .sort();
+const files = (await readdir(migrationsDir)).filter((file) => file.endsWith(".sql")).sort();
+console.log(`MIGRATION_INVENTORY_JSON=${JSON.stringify(files)}`);
 
 const malformed = files.filter((file) => !versionPattern.test(file));
-const parsed = files
-  .map((file) => {
-    const match = file.match(versionPattern);
-    return match ? { filename: file, version: match[1] } : null;
-  })
-  .filter(Boolean);
+const parsed = files.map((file) => {
+  const match = file.match(versionPattern);
+  return match ? { filename: file, version: match[1] } : null;
+}).filter(Boolean);
 
 const ledger = JSON.parse(await readFile(ledgerPath, "utf8"));
 const entries = Array.isArray(ledger.migrations) ? ledger.migrations : [];
 const documentedCollisions = ledger.documentedCollisions ?? {};
 const errors = [];
 
-if (malformed.length) {
-  errors.push(`Migration filenames must match <12-14 digit version>_<name>.sql: ${malformed.join(", ")}`);
-}
+if (malformed.length) errors.push(`Migration filenames must match <12-14 digit version>_<name>.sql: ${malformed.join(", ")}`);
 
 const repositoryFiles = new Set(files);
 const ledgerFiles = new Set();
@@ -48,9 +43,7 @@ for (const entry of entries) {
   }
 }
 
-for (const file of files) {
-  if (!ledgerFiles.has(file)) errors.push(`Migration is not registered in the canonical ledger: ${file}`);
-}
+for (const file of files) if (!ledgerFiles.has(file)) errors.push(`Migration is not registered in the canonical ledger: ${file}`);
 
 const byVersion = new Map();
 for (const migration of parsed) {
@@ -68,22 +61,15 @@ for (const [version, collisionFiles] of byVersion) {
   }
   const actual = [...collisionFiles].sort();
   const expected = [...documented].sort();
-  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-    errors.push(`Collision documentation mismatch for ${version}. Actual: ${actual.join(", ")}; documented: ${expected.join(", ")}`);
-  }
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) errors.push(`Collision documentation mismatch for ${version}. Actual: ${actual.join(", ")}; documented: ${expected.join(", ")}`);
 }
 
 for (const [version, documented] of Object.entries(documentedCollisions)) {
   const actual = [...(byVersion.get(version) ?? [])].sort();
   const expected = Array.isArray(documented) ? [...documented].sort() : [];
   if (actual.length < 2) errors.push(`documentedCollisions.${version} is stale; the repository no longer has a collision.`);
-  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-    errors.push(`documentedCollisions.${version} does not exactly match repository files.`);
-  }
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) errors.push(`documentedCollisions.${version} does not exactly match repository files.`);
 }
 
-console.log(`Migration inventory (${files.length} files):`);
-for (const file of files) console.log(`- ${file}`);
-
 if (errors.length) fail(errors);
-else console.log("Migration ledger and version collision checks passed.");
+else console.log(`Migration ledger and version collision checks passed (${files.length} files).`);
