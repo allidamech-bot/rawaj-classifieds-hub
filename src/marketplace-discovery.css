@@ -180,6 +180,37 @@ main.container-wide > section.rawaj-hero-surface.mx-auto.max-w-md [class*="bg-ca
   box-shadow: none;
 }
 
+/* Account space: identity and shortcuts without decorative card competition. */
+.rawaj-pulse-page:has(.rawaj-id-card) {
+  background: var(--color-background);
+}
+
+.rawaj-pulse-page .rawaj-id-card {
+  border-radius: var(--rawaj-radius-surface);
+  background: linear-gradient(140deg, #102b46 0%, #0d243b 72%, #143653 100%);
+  box-shadow: var(--rawaj-shadow-soft);
+}
+
+.rawaj-pulse-page .rawaj-id-card::before,
+.rawaj-pulse-page .rawaj-id-card::after {
+  content: none;
+}
+
+.rawaj-pulse-page:has(.rawaj-id-card) .rawaj-signature-kicker::before {
+  content: none;
+}
+
+.rawaj-pulse-page:has(.rawaj-id-card) .rawaj-color-card:hover {
+  transform: none;
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  box-shadow: var(--rawaj-shadow-soft);
+}
+
+.rawaj-pulse-page .rawaj-id-card a[class*="bg-brand-orange"] {
+  box-shadow: none;
+  transform: none;
+}
+
 @media (min-width: 1024px) {
   main.container-wide.mobile-page-bottom > section.rawaj-surface {
     border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
