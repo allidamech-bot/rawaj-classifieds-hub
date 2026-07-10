@@ -1,0 +1,12 @@
+
+/home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/src/features/reviews/SellerReviewReportsAdminPanel.tsx
+   37:16  error  Replace `Object.fromEntries(result.data.map((report)·=>·[report.id,·report.adminNote·??·""]))` with `⏎········Object.fromEntries(result.data.map((report)·=>·[report.id,·report.adminNote·??·""])),⏎······`  prettier/prettier
+  128:68  error  Replace `{text("التقييم:",·"Review:")}` with `⏎····················{text("التقييم:",·"Review:")}⏎··················`                                                                                         prettier/prettier
+  132:68  error  Replace `{text("المبلّغ:",·"Reporter:")}` with `⏎····················{text("المبلّغ:",·"Reporter:")}⏎··················`                                                                                     prettier/prettier
+  190:40  error  Replace `·?·text("جارٍ·الحفظ",·"Saving")` with `⏎··················?·text("جارٍ·الحفظ",·"Saving")⏎·················`                                                                                         prettier/prettier
+
+✖ 4 problems (4 errors, 0 warnings)
+  4 errors and 0 warnings potentially fixable with the `--fix` option.
+
+
+EXIT_STATUS=1
