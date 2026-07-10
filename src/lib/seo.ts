@@ -1,6 +1,6 @@
 export const SITE_URL_ENV_NAME = "VITE_SITE_URL";
 
-const fallbackSiteUrl = "http://localhost:3000";
+const fallbackSiteUrl = "https://rawa-j.com";
 const defaultTitle = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
 const defaultDescription =
   "سوق إعلانات مبوبة في سوريا لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة آمنة ومنظمة.";

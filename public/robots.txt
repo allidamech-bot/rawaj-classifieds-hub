@@ -4,6 +4,8 @@ Allow: /
 Disallow: /admin
 Disallow: /admin/
 Disallow: /chats
+Disallow: /activity
+Disallow: /notifications
 Disallow: /profile
 Disallow: /profile/
 Disallow: /add-listing
@@ -11,3 +13,5 @@ Disallow: /login
 Disallow: /favorites
 Disallow: /saved-searches
 Disallow: /promotion
+
+Sitemap: https://rawa-j.com/sitemap.xml
