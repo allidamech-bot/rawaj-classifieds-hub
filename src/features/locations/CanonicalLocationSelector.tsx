@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import type { CanonicalLocationNode, LocationSearchResult } from "@/lib/api/location-taxonomy";
 import { fetchLocationChildren, searchLocationNodes } from "@/lib/api/location-taxonomy";
-import {
-  getLocationNodeOptionLabel,
-  getLocationNodeTypeLabel,
-} from "@/lib/location-node-display";
+import { getLocationNodeOptionLabel, getLocationNodeTypeLabel } from "@/lib/location-node-display";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useLocationLevels } from "./use-location-levels";
 
