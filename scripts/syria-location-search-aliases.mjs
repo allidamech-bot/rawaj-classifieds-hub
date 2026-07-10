@@ -43,3 +43,17 @@ export function buildSyriaSourceAliases(nodes) {
 
   return aliases;
 }
+
+export function mergeSyriaLocationAliases(...groups) {
+  const merged = new Map();
+
+  for (const alias of groups.flat()) {
+    const source = text(alias?.targetExternalSource);
+    const externalId = text(alias?.targetExternalId);
+    const normalized = normalizeSyriaLocationAlias(alias?.alias);
+    if (!source || !externalId || !normalized) continue;
+    merged.set(`${source}|${externalId}|${normalized}`, alias);
+  }
+
+  return [...merged.values()];
+}
