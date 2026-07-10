@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
+import { getLocationNodeSourceSortOrder } from "../src/lib/location-node-order.ts";
 import {
   buildOchaSourceNotes,
   classifySyriaPopulatedPlace,
@@ -266,7 +267,7 @@ function makeNode({
     external_id: pcode,
     latitude: lat,
     longitude: lon,
-    sort_order: 0,
+    sort_order: getLocationNodeSourceSortOrder(type),
     depth: 0,
     is_active: true,
     search_aliases: unique(aliases).filter((v) => v !== safeAr && v !== safeEn),
@@ -303,12 +304,14 @@ function upsert(incoming, layer) {
     existing.parent_official_code = incoming.parent_official_code || existing.parent_official_code;
     existing.name_ar = incoming.name_ar || existing.name_ar;
     existing.name_en = incoming.name_en || existing.name_en;
+    existing.sort_order = incoming.sort_order;
     existing.__layer = "neighborhood";
     reconciliation.neighborhoodUpgrades += 1;
   } else if (layer === "area" && existing.__layer !== "neighborhood") {
     existing.parent_official_code = incoming.parent_official_code || existing.parent_official_code;
     existing.name_ar = incoming.name_ar || existing.name_ar;
     existing.name_en = incoming.name_en || existing.name_en;
+    existing.sort_order = incoming.sort_order;
     reconciliation.areaMerges += 1;
   }
 
