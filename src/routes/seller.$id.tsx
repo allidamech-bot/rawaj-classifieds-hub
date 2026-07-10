@@ -12,6 +12,7 @@ import {
 import { useEffect, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
+import { SellerReviewCard } from "@/features/reviews/SellerReviewCard";
 import {
   createSellerReview,
   fetchPublicSellerProfile,
@@ -438,15 +439,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
         {seller.reviews.length > 0 ? (
           <div className="mt-4 space-y-2">
             {seller.reviews.slice(0, 3).map((review) => (
-              <article key={review.id} className="rounded-[1rem] bg-white/76 p-3 hairline">
-                <div className="text-xs font-bold text-gold">{"★".repeat(review.rating)}</div>
-                <p className="mt-1 whitespace-pre-line text-xs leading-6">{review.comment}</p>
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  {new Date(review.createdAt).toLocaleDateString(
-                    language === "ar" ? "ar-SY" : "en-US",
-                  )}
-                </p>
-              </article>
+              <SellerReviewCard key={review.id} review={review} canManageResponse={isOwnProfile} />
             ))}
           </div>
         ) : null}

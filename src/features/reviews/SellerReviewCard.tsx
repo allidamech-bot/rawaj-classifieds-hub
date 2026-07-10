@@ -1,9 +1,6 @@
 import { MessageSquareReply, Trash2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import {
-  readSellerReviewResponse,
-  setSellerReviewResponse,
-} from "@/lib/classifieds-api";
+import { readSellerReviewResponse, setSellerReviewResponse } from "@/lib/classifieds-api";
 import type { SellerReview } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
