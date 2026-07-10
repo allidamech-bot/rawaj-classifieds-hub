@@ -15,6 +15,13 @@ const [migration, api, barrel] = await Promise.all([
   readFile(barrelPath, "utf8"),
 ]);
 
+const policyBlockStart = migration.indexOf(
+  "alter table public.listing_price_changes enable row level security",
+);
+const policyBlockEnd = migration.indexOf("-- Keep direct client writes closed", policyBlockStart);
+assert.ok(policyBlockStart >= 0 && policyBlockEnd > policyBlockStart);
+const priceChangePolicyBlock = migration.slice(policyBlockStart, policyBlockEnd);
+
 const publicOffersStart = migration.indexOf(
   "create or replace function public.rawaj_get_active_price_drop_offers",
 );
@@ -30,10 +37,11 @@ test("price-drop history is immutable to clients and owner-readable only", () =>
   assert.match(migration, /old_price > 0/);
   assert.match(migration, /new_price > 0/);
   assert.match(migration, /new_price < old_price/);
-  assert.match(migration, /listing_price_changes_owner_select/);
-  assert.match(migration, /owner_id = auth\.uid\(\)/);
-  assert.doesNotMatch(migration, /create policy[\s\S]*listing_price_changes[\s\S]*for insert/i);
-  assert.doesNotMatch(migration, /create policy[\s\S]*listing_price_changes[\s\S]*for update/i);
+  assert.match(priceChangePolicyBlock, /listing_price_changes_owner_select/);
+  assert.match(priceChangePolicyBlock, /owner_id = auth\.uid\(\)/);
+  assert.doesNotMatch(priceChangePolicyBlock, /for insert/i);
+  assert.doesNotMatch(priceChangePolicyBlock, /for update/i);
+  assert.doesNotMatch(priceChangePolicyBlock, /for delete/i);
 });
 
 test("owner price reduction derives authority, locks the row, and requires a public numeric listing", () => {
