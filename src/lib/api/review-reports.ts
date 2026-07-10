@@ -2,12 +2,7 @@ import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import { getClient, mapError, rowNullableString, rowString } from "@/lib/api/shared";
 
 export type SellerReviewReportReason =
-  | "abuse"
-  | "spam"
-  | "misleading"
-  | "personal_data"
-  | "prohibited_content"
-  | "other";
+  "abuse" | "spam" | "misleading" | "personal_data" | "prohibited_content" | "other";
 
 export type SellerReviewReportStatus = "new" | "under_review" | "resolved" | "rejected";
 
