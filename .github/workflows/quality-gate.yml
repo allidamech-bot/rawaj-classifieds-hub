@@ -82,6 +82,9 @@ jobs:
       - name: Listing price drop contract
         run: npm run test:price-drop
 
+      - name: Listing reservation contract
+        run: npm run test:reservation
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
