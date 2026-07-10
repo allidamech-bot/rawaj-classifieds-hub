@@ -292,7 +292,11 @@ export function buildRatingSummary(
   let total = 0;
   for (const review of approved) {
     const rating = Math.min(5, Math.max(1, Math.round(review.rating))) as
-      1 | 2 | 3 | 4 | 5;
+      | 1
+      | 2
+      | 3
+      | 4
+      | 5;
     distribution[rating] += 1;
     total += rating;
   }
