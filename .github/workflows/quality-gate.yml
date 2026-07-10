@@ -97,6 +97,9 @@ jobs:
       - name: SEO discovery contract
         run: npm run test:seo-discovery
 
+      - name: Semantic SEO contract
+        run: npm run test:semantic-seo
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
