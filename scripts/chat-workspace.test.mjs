@@ -30,14 +30,8 @@ test("quick replies fill the composer but never auto-send", () => {
   assert.match(chatRoute, /Quick replies/);
   assert.match(chatRoute, /type="button"/);
   assert.match(chatRoute, /min-h-11/);
-  assert.doesNotMatch(
-    chatRoute,
-    /quickReplies\.map\([\s\S]*onClick=\{\(\) => void handleSend/,
-  );
-  assert.doesNotMatch(
-    chatRoute,
-    /quickReplies\.map\([\s\S]*sendConversationMessage/,
-  );
+  assert.doesNotMatch(chatRoute, /quickReplies\.map\([\s\S]*onClick=\{\(\) => void handleSend/);
+  assert.doesNotMatch(chatRoute, /quickReplies\.map\([\s\S]*sendConversationMessage/);
 });
 
 test("existing message safety controls remain present", () => {

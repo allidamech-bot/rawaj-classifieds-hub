@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Ban, Flag, MessageCircle, Send, ShieldAlert } from "lucide-react";
+import { Ban, Flag, MessageCircle, Search, Send, ShieldAlert } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
@@ -19,6 +19,13 @@ import { useAuth } from "@/lib/use-auth";
 const chatsSearchSchema = z.object({
   conversation: z.string().optional(),
 });
+
+const quickReplies = [
+  { ar: "هل الإعلان ما زال متوفراً؟", en: "Is this listing still available?" },
+  { ar: "ما السعر النهائي؟", en: "What is your final price?" },
+  { ar: "هل يمكن المعاينة قبل الشراء؟", en: "Can I inspect it before buying?" },
+  { ar: "متى يناسبك التواصل؟", en: "When is a good time to talk?" },
+] as const;
 
 export const Route = createFileRoute("/chats")({
   validateSearch: chatsSearchSchema,
@@ -40,6 +47,7 @@ function ChatsPage() {
   const [conversationError, setConversationError] = useState<ClassifiedsError | null>(null);
   const [messageError, setMessageError] = useState<ClassifiedsError | null>(null);
   const [body, setBody] = useState("");
+  const [conversationQuery, setConversationQuery] = useState("");
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState("");
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
@@ -60,6 +68,17 @@ function ChatsPage() {
       ? targetResolution.conversation
       : null;
   const missingConversationTarget = targetResolution.kind === "missing";
+  const filteredConversations = useMemo(() => {
+    const query = conversationQuery.trim().toLocaleLowerCase(language === "ar" ? "ar" : "en");
+    if (!query) return conversations;
+    return conversations.filter((conversation) =>
+      [
+        conversation.otherParticipant.displayName,
+        conversation.listingTitle,
+        conversation.lastMessagePreview ?? "",
+      ].some((value) => value.toLocaleLowerCase(language === "ar" ? "ar" : "en").includes(query)),
+    );
+  }, [conversationQuery, conversations, language]);
 
   useEffect(() => {
     selectedConversationIdRef.current = selectedConversation?.id ?? null;
@@ -317,6 +336,16 @@ function ChatsPage() {
               <MessageCircle className="h-4 w-4 text-primary" />
               {text("قائمة المحادثات", "Conversation list")}
             </h2>
+            <label className="relative mb-3 block">
+              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={conversationQuery}
+                onChange={(event) => setConversationQuery(event.target.value)}
+                placeholder={text("ابحث باسم أو إعلان أو رسالة", "Search conversations")}
+                aria-label={text("بحث في المحادثات", "Search conversations")}
+                className="min-h-11 w-full rounded-xl bg-muted-surface ps-10 pe-3 py-2 text-xs outline-none hairline"
+              />
+            </label>
             {loadingConversations ? (
               <PanelText>{text("جاري تحميل المحادثات.", "Loading conversations.")}</PanelText>
             ) : conversationError ? (
@@ -328,9 +357,13 @@ function ChatsPage() {
                   "No conversations yet. Open an approved listing and start a conversation from it.",
                 )}
               </PanelText>
+            ) : filteredConversations.length === 0 ? (
+              <PanelText>
+                {text("لا توجد محادثات تطابق بحثك.", "No conversations match your search.")}
+              </PanelText>
             ) : (
               <div className="space-y-2">
-                {conversations.map((conversation) => (
+                {filteredConversations.map((conversation) => (
                   <button
                     key={conversation.id}
                     type="button"
@@ -547,6 +580,25 @@ function ChatsPage() {
                     placeholder={text("سبب الحظر اختياري", "Optional block reason")}
                     className="mb-2 w-full rounded-xl bg-muted-surface px-3 py-2 text-xs outline-none hairline"
                   />
+                  {selectedConversation.status === "active" ? (
+                    <div className="mb-2">
+                      <p className="mb-1.5 text-[10px] font-bold text-muted-foreground">
+                        {text("ردود سريعة", "Quick replies")}
+                      </p>
+                      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                        {quickReplies.map((reply) => (
+                          <button
+                            key={reply.en}
+                            type="button"
+                            onClick={() => setBody(language === "ar" ? reply.ar : reply.en)}
+                            className="min-h-11 shrink-0 rounded-xl bg-muted-surface px-3 py-2 text-[11px] font-bold text-foreground hairline"
+                          >
+                            {language === "ar" ? reply.ar : reply.en}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                   <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
                     <textarea
                       value={body}
