@@ -213,6 +213,30 @@ export function buildListingsSyncSearch(inputs: ListingsSyncSearchInputs): Listi
   };
 }
 
+export interface ListingsCategoryNavigationInputs {
+  categoryId?: string;
+  govId: string;
+  districtAr: string;
+  query: string;
+  sort: ListingsSort;
+}
+
+export function buildListingsCategoryNavigationSearch(
+  inputs: ListingsCategoryNavigationInputs,
+): ListingsUrlSearch {
+  const { categoryId, govId, districtAr, query, sort } = inputs;
+  const canonicalLocation = districtAr.startsWith("@") ? districtAr.slice(1) : undefined;
+
+  return {
+    category: categoryId,
+    gov: canonicalLocation ? undefined : govId || undefined,
+    location: canonicalLocation,
+    district: canonicalLocation ? undefined : districtAr || undefined,
+    q: query.trim() || undefined,
+    sort: sort === "latest" ? undefined : sort,
+  };
+}
+
 export interface ListingsResetSearchInputs {
   selectedTaxonomyNodeId?: string;
   searchTaxonomy?: string;
