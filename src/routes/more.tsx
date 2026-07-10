@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
+  Activity,
   BadgeCheck,
-  Bell,
   Bookmark,
   ChevronLeft,
   FileText,
@@ -11,7 +11,6 @@ import {
   Lock,
   LogIn,
   LogOut,
-  MessageCircle,
   ScrollText,
   ShieldAlert,
   Sparkles,
@@ -31,6 +30,7 @@ export const Route = createFileRoute("/more")({
 });
 
 type AccountRoute =
+  | "/activity"
   | "/admin"
   | "/chats"
   | "/favorites"
@@ -67,22 +67,13 @@ const primaryShortcuts: (AccountRow & { world: string })[] = [
     world: "rawaj-world-orange",
   },
   {
-    titleAr: "الرسائل",
-    titleEn: "Messages",
-    hintAr: "محادثات البيع والشراء",
-    hintEn: "Buyer and seller chats",
-    to: "/chats",
-    icon: MessageCircle,
+    titleAr: "النشاط",
+    titleEn: "Activity",
+    hintAr: "رسائلك وما يحتاج انتباهك",
+    hintEn: "Messages and what needs attention",
+    to: "/activity",
+    icon: Activity,
     world: "rawaj-world-indigo",
-  },
-  {
-    titleAr: "الإشعارات",
-    titleEn: "Notifications",
-    hintAr: "آخر ما يحتاج انتباهك",
-    hintEn: "What needs your attention",
-    to: "/notifications",
-    icon: Bell,
-    world: "rawaj-world-emerald",
   },
 ];
 
@@ -278,19 +269,13 @@ function MorePage() {
               </h2>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {primaryShortcuts.map((row) => (
               <PrimaryShortcut
                 key={row.titleEn}
                 row={row}
                 text={text}
-                badgeCount={
-                  row.to === "/chats"
-                    ? counts.messages
-                    : row.to === "/notifications"
-                      ? counts.notifications
-                      : 0
-                }
+                badgeCount={row.to === "/activity" ? counts.messages + counts.notifications : 0}
               />
             ))}
           </div>

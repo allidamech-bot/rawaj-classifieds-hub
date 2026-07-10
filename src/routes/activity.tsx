@@ -129,7 +129,11 @@ function ActivityCenterPage() {
             )}
           </p>
 
-          <div className="mt-4 grid grid-cols-2 gap-2" role="tablist" aria-label={text("أقسام النشاط", "Activity sections")}>
+          <div
+            className="mt-4 grid grid-cols-2 gap-2"
+            role="tablist"
+            aria-label={text("أقسام النشاط", "Activity sections")}
+          >
             <ActivityTabButton
               active={activeTab === "notifications"}
               count={counts.notifications}
@@ -203,9 +207,7 @@ function ActivityCenterPage() {
             ) : conversationError ? (
               <ActivityState>{conversationError.message}</ActivityState>
             ) : conversations.length === 0 ? (
-              <ActivityState>
-                {text("لا توجد محادثات بعد.", "No conversations yet.")}
-              </ActivityState>
+              <ActivityState>{text("لا توجد محادثات بعد.", "No conversations yet.")}</ActivityState>
             ) : (
               <div className="mt-3 space-y-2">
                 {conversations.map((conversation) => (
@@ -298,7 +300,10 @@ function ActivitySectionHeader({
   return (
     <div className="flex items-center justify-between gap-3">
       <h2 className="text-sm font-extrabold">{title}</h2>
-      <Link to={to} className="inline-flex min-h-11 items-center rounded-xl px-3 py-2 text-xs font-bold text-primary">
+      <Link
+        to={to}
+        className="inline-flex min-h-11 items-center rounded-xl px-3 py-2 text-xs font-bold text-primary"
+      >
         {action}
       </Link>
     </div>
