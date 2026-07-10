@@ -2,6 +2,11 @@ import type { LocationNodeType } from "@/lib/api/location-taxonomy";
 
 export type LocationDisplayLanguage = "ar" | "en";
 
+type LocationDisplayNode = Pick<
+  { nodeType: LocationNodeType; nameAr: string; nameEn: string | null },
+  "nodeType" | "nameAr" | "nameEn"
+>;
+
 const LOCATION_NODE_TYPE_LABELS: Record<
   LocationNodeType,
   Record<LocationDisplayLanguage, string>
@@ -31,6 +36,10 @@ const LOCATION_LEVEL_PROMPTS: Record<LocationNodeType, Record<LocationDisplayLan
 
 const POPULATED_PLACE_TYPES = new Set<LocationNodeType>(["city", "town", "village", "locality"]);
 
+function getLocationNodeName(node: LocationDisplayNode, language: LocationDisplayLanguage) {
+  return language === "en" ? node.nameEn || node.nameAr : node.nameAr;
+}
+
 export function getLocationNodeTypeLabel(
   nodeType: LocationNodeType,
   language: LocationDisplayLanguage,
@@ -39,14 +48,20 @@ export function getLocationNodeTypeLabel(
 }
 
 export function getLocationNodeOptionLabel(
-  node: Pick<
-    { nodeType: LocationNodeType; nameAr: string; nameEn: string | null },
-    "nodeType" | "nameAr" | "nameEn"
-  >,
+  node: LocationDisplayNode,
   language: LocationDisplayLanguage,
 ) {
-  const name = language === "en" ? node.nameEn || node.nameAr : node.nameAr;
-  return `${name} — ${getLocationNodeTypeLabel(node.nodeType, language)}`;
+  return `${getLocationNodeName(node, language)} — ${getLocationNodeTypeLabel(node.nodeType, language)}`;
+}
+
+export function getLocationLevelOptionLabel(
+  node: LocationDisplayNode,
+  nodes: Array<Pick<LocationDisplayNode, "nodeType">>,
+  language: LocationDisplayLanguage,
+) {
+  const types = new Set(nodes.map((option) => option.nodeType));
+  if (types.size === 1) return getLocationNodeName(node, language);
+  return getLocationNodeOptionLabel(node, language);
 }
 
 export function getLocationLevelPrompt(
