@@ -20,7 +20,7 @@ import { DraftRecoveryBanner } from "@/features/listing-studio/DraftRecoveryBann
 import { AuthProvider } from "@/lib/auth";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { shouldShowSiteFooter, shouldShowBottomNav } from "@/lib/primary-navigation";
-import { createSeo } from "@/lib/seo";
+import { buildSiteStructuredData, createSeo, jsonLdScript } from "@/lib/seo";
 import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
 import { UnreadActivityProvider } from "@/lib/unread-activity";
 import homeSignatureCss from "../home-signature.css?url";
@@ -92,34 +92,38 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { name: "theme-color", content: "#123047" },
-      { name: "author", content: "RAWAJ" },
-      ...createSeo({ title: ROOT_TITLE, description: ROOT_DESCRIPTION }).meta,
-    ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "stylesheet", href: visualFoundationCss },
-      { rel: "stylesheet", href: signatureCss },
-      { rel: "stylesheet", href: homeSignatureCss },
-      { rel: "stylesheet", href: marketplaceDiscoveryCss },
-      { rel: "stylesheet", href: offersSignatureCss },
-      { rel: "stylesheet", href: listingStudioSignatureCss },
-      { rel: "stylesheet", href: messagingSignatureCss },
-      { rel: "icon", href: "/favicon.ico" },
-      { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/brand/rawaj-mark-transparent-192.png" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap",
-      },
-    ],
-  }),
+  head: () => {
+    const seo = createSeo({ title: ROOT_TITLE, description: ROOT_DESCRIPTION });
+    return {
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+        { name: "theme-color", content: "#123047" },
+        { name: "author", content: "RAWAJ" },
+        ...seo.meta,
+      ],
+      links: [
+        ...seo.links,
+        { rel: "stylesheet", href: appCss },
+        { rel: "stylesheet", href: visualFoundationCss },
+        { rel: "stylesheet", href: signatureCss },
+        { rel: "stylesheet", href: homeSignatureCss },
+        { rel: "stylesheet", href: marketplaceDiscoveryCss },
+        { rel: "stylesheet", href: offersSignatureCss },
+        { rel: "stylesheet", href: listingStudioSignatureCss },
+        { rel: "stylesheet", href: messagingSignatureCss },
+        { rel: "icon", href: "/favicon.ico" },
+        { rel: "manifest", href: "/manifest.webmanifest" },
+        { rel: "apple-touch-icon", href: "/brand/rawaj-mark-transparent-192.png" },
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap",
+        },
+      ],
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -134,6 +138,7 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
+        <script {...jsonLdScript(buildSiteStructuredData())} />
         <Scripts />
       </body>
     </html>
