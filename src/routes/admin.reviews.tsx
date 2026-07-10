@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Star } from "lucide-react";
 import { useEffect, useState } from "react";
+import { SellerReviewReportsAdminPanel } from "@/features/reviews/SellerReviewReportsAdminPanel";
 import { adminFetchSellerReviews, adminModerateSellerReview } from "@/lib/classifieds-api";
 import type { ClassifiedsError, SellerReview } from "@/lib/classifieds-types";
 import { sellerReviewStatusLabel } from "@/lib/status-labels";
@@ -21,6 +22,7 @@ function ReviewsModerationPage() {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
   const canManageReviews = auth.hasPermission("canManageReviews");
+  const canManageReports = auth.hasPermission("canManageReports");
   const [reviews, setReviews] = useState<SellerReview[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -159,6 +161,8 @@ function ReviewsModerationPage() {
           ))}
         </div>
       )}
+
+      <SellerReviewReportsAdminPanel canManageReports={canManageReports} />
     </div>
   );
 }
