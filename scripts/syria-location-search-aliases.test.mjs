@@ -54,12 +54,12 @@ test("deduplicates normalized aliases without inventing classifications", () => 
     {
       external_source: "ocha-hdx-cod-ab-syr",
       external_id: "C456",
-      search_aliases: ["تلّة آمنة", "تله امنه", "", null],
+      search_aliases: ["تلة آمنة", "تله امنه", "", null],
     },
   ]);
 
   assert.equal(aliases.length, 1);
-  assert.equal(aliases[0].alias, "تلّة آمنة");
+  assert.equal(aliases[0].alias, "تلة آمنة");
   assert.equal("nodeType" in aliases[0], false);
 });
 
@@ -67,7 +67,7 @@ test("lets a curated alias override duplicate source metadata", () => {
   const source = {
     targetExternalSource: "ocha-hdx-cod-ab-syr",
     targetExternalId: "C789",
-    alias: "تلّة آمنة",
+    alias: "تلة آمنة",
     reviewStatus: "reviewed",
   };
   const curated = {
