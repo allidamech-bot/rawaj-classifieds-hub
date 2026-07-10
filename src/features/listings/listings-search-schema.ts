@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { parseBooleanParam } from "@/lib/boolean-parser";
+import { parseBooleanParam } from "../../lib/boolean-parser";
 
 export const listingsSortValues = ["latest", "cheapest", "expensive", "featured"] as const;
 
