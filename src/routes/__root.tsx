@@ -32,6 +32,7 @@ import listingsResultsCss from "../listings-results.css?url";
 import marketplaceDiscoveryCss from "../marketplace-discovery.css?url";
 import messagingSignatureCss from "../messaging-signature.css?url";
 import offersSignatureCss from "../offers-signature.css?url";
+import sellerStorefrontFoundationCss from "../seller-storefront-foundation.css?url";
 import signatureCss from "../signature.css?url";
 import appCss from "../styles.css?url";
 import visualFoundationCss from "../visual-foundation.css?url";
@@ -117,6 +118,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: listingDetailFoundationCss },
         { rel: "stylesheet", href: authAccountFoundationCss },
         { rel: "stylesheet", href: activityMoreFoundationCss },
+        { rel: "stylesheet", href: sellerStorefrontFoundationCss },
         { rel: "stylesheet", href: offersSignatureCss },
         { rel: "stylesheet", href: listingStudioSignatureCss },
         { rel: "stylesheet", href: messagingSignatureCss },
