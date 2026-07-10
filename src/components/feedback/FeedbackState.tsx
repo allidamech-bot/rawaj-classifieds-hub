@@ -31,14 +31,14 @@ export function FeedbackState({
       role={tone === "error" ? "alert" : undefined}
     >
       {code ? (
-        <p className="font-display text-4xl font-bold leading-none text-primary sm:text-5xl">{code}</p>
+        <p className="font-display text-4xl font-bold leading-none text-primary sm:text-5xl">
+          {code}
+        </p>
       ) : null}
       <h1 className={cn("text-lg font-bold text-foreground sm:text-xl", code && "mt-4")}>
         {title}
       </h1>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-muted-foreground">
-        {description}
-      </p>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-muted-foreground">{description}</p>
       {action ? <div className="mt-6 flex justify-center">{action}</div> : null}
     </section>
   );
