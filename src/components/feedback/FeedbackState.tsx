@@ -1,0 +1,45 @@
+import type { ReactNode } from "react";
+
+import { cn } from "@/lib/utils";
+
+type FeedbackTone = "neutral" | "error";
+
+interface FeedbackStateProps {
+  title: string;
+  description: string;
+  action?: ReactNode;
+  code?: string;
+  tone?: FeedbackTone;
+  className?: string;
+}
+
+export function FeedbackState({
+  title,
+  description,
+  action,
+  code,
+  tone = "neutral",
+  className,
+}: FeedbackStateProps) {
+  return (
+    <section
+      className={cn(
+        "rawaj-foundation-card mx-auto w-full max-w-xl p-6 text-center sm:p-8",
+        tone === "error" && "border-destructive/20",
+        className,
+      )}
+      role={tone === "error" ? "alert" : undefined}
+    >
+      {code ? (
+        <p className="font-display text-4xl font-bold leading-none text-primary sm:text-5xl">
+          {code}
+        </p>
+      ) : null}
+      <h1 className={cn("text-lg font-bold text-foreground sm:text-xl", code && "mt-4")}>
+        {title}
+      </h1>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-muted-foreground">{description}</p>
+      {action ? <div className="mt-6 flex justify-center">{action}</div> : null}
+    </section>
+  );
+}

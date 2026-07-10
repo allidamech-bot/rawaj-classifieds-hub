@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 
 import { BottomNav } from "@/components/BottomNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { FeedbackState } from "@/components/feedback/FeedbackState";
+import { Button } from "@/components/ui/button";
 import { ExistingConversationBanner } from "@/features/listing-detail/ExistingConversationBanner";
 import { ViewedBeforeBanner } from "@/features/listing-detail/ViewedBeforeBanner";
 import { DraftRecoveryBanner } from "@/features/listing-studio/DraftRecoveryBanner";
@@ -37,27 +39,20 @@ function NotFoundComponent() {
   const { text } = useUiPreferences();
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-extrabold text-primary">404</h1>
-        <h2 className="mt-4 text-xl font-bold text-foreground">
-          {text("الصفحة غير موجودة", "Page not found")}
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {text(
-            "الصفحة التي تبحث عنها غير متاحة أو تم نقلها.",
-            "The page you are looking for is unavailable or has moved.",
-          )}
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            {text("العودة للرئيسية", "Back to home")}
-          </Link>
-        </div>
-      </div>
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
+      <FeedbackState
+        code="404"
+        title={text("الصفحة غير موجودة", "Page not found")}
+        description={text(
+          "الصفحة التي تبحث عنها غير متاحة أو تم نقلها.",
+          "The page you are looking for is unavailable or has moved.",
+        )}
+        action={
+          <Button asChild>
+            <Link to="/">{text("العودة للرئيسية", "Back to home")}</Link>
+          </Button>
+        }
+      />
     </div>
   );
 }
@@ -72,32 +67,25 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-bold text-foreground">
-          {text("حدث خطأ غير متوقع", "Something went wrong")}
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {text("حاول تحديث الصفحة أو العودة للرئيسية.", "Refresh the page or return home.")}
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
+      <FeedbackState
+        tone="error"
+        title={text("حدث خطأ غير متوقع", "Something went wrong")}
+        description={text(
+          "تعذر إكمال الطلب الآن. حاول مرة أخرى.",
+          "The request could not be completed. Try again.",
+        )}
+        action={
+          <Button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground"
           >
             {text("إعادة المحاولة", "Try again")}
-          </button>
-          <a
-            href="/"
-            className="rounded-xl border border-input bg-card px-5 py-2.5 text-sm font-bold text-foreground"
-          >
-            {text("الرئيسية", "Home")}
-          </a>
-        </div>
-      </div>
+          </Button>
+        }
+      />
     </div>
   );
 }
