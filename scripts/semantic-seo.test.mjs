@@ -25,6 +25,12 @@ test("root keeps canonical links and emits site structured data", () => {
   assert.match(rootRoute, /jsonLdScript\(buildSiteStructuredData\(\)\)/);
 });
 
+test("breadcrumb helper preserves route order and absolute item URLs", () => {
+  assert.match(seo, /"@type": "BreadcrumbList"/);
+  assert.match(seo, /position: index \+ 1/);
+  assert.match(seo, /item: absoluteUrl\(item\.path\)/);
+});
+
 test("listing detail emits breadcrumb structured data with real route targets", () => {
   assert.match(listingRoute, /buildBreadcrumbStructuredData/);
   assert.match(listingRoute, /path: "\/listings"/);
