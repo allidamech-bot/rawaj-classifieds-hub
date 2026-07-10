@@ -7,10 +7,14 @@ const migrationPath = new URL(
   import.meta.url,
 );
 const apiPath = new URL("../src/lib/api/reviews.ts", import.meta.url);
+const cardPath = new URL("../src/features/reviews/SellerReviewCard.tsx", import.meta.url);
+const sellerRoutePath = new URL("../src/routes/seller.$id.tsx", import.meta.url);
 
-const [migration, api] = await Promise.all([
+const [migration, api, card, sellerRoute] = await Promise.all([
   readFile(migrationPath, "utf8"),
   readFile(apiPath, "utf8"),
+  readFile(cardPath, "utf8"),
+  readFile(sellerRoutePath, "utf8"),
 ]);
 
 test("seller review responses are stored with bounded public fields", () => {
@@ -47,4 +51,13 @@ test("client routes seller responses through the protected RPC and maps public r
     api,
     /sellerResponseUpdatedAt: rowNullableString\(row, "seller_response_updated_at"\)/,
   );
+});
+
+test("seller storefront displays responses publicly and gates response management to the owner", () => {
+  assert.match(sellerRoute, /import \{ SellerReviewCard \}/);
+  assert.match(sellerRoute, /canManageResponse=\{isOwnProfile\}/);
+  assert.match(card, /readSellerReviewResponse\(review\)/);
+  assert.match(card, /setSellerReviewResponse\(review\.id, responseText\)/);
+  assert.match(card, /Seller response/);
+  assert.match(card, /canManageResponse \?/);
 });
