@@ -296,9 +296,7 @@ export function buildListingsMobileApplySearch(
     sort,
   } = inputs;
   const preserveTaxonomy = Boolean(searchTaxonomy && !draftCategoryId);
-  const canonicalLocation = districtAr.startsWith("@")
-    ? districtAr.slice(1)
-    : undefined;
+  const canonicalLocation = districtAr.startsWith("@") ? districtAr.slice(1) : undefined;
 
   return {
     taxonomy: preserveTaxonomy ? searchTaxonomy : undefined,
@@ -309,30 +307,15 @@ export function buildListingsMobileApplySearch(
     district: canonicalLocation ? undefined : districtAr || undefined,
     price_min: parsedPriceMin,
     price_max: parsedPriceMax,
-    car_make:
-      !preserveTaxonomy && fieldKind === "vehicles"
-        ? carMake || undefined
-        : undefined,
-    car_model:
-      !preserveTaxonomy && fieldKind === "vehicles"
-        ? carModel || undefined
-        : undefined,
-    fuel:
-      !preserveTaxonomy && fieldKind === "vehicles"
-        ? fuelType || undefined
-        : undefined,
+    car_make: !preserveTaxonomy && fieldKind === "vehicles" ? carMake || undefined : undefined,
+    car_model: !preserveTaxonomy && fieldKind === "vehicles" ? carModel || undefined : undefined,
+    fuel: !preserveTaxonomy && fieldKind === "vehicles" ? fuelType || undefined : undefined,
     transmission:
-      !preserveTaxonomy && fieldKind === "vehicles"
-        ? transmission || undefined
-        : undefined,
+      !preserveTaxonomy && fieldKind === "vehicles" ? transmission || undefined : undefined,
     property_purpose:
-      !preserveTaxonomy && fieldKind === "real_estate"
-        ? propertyPurpose || undefined
-        : undefined,
+      !preserveTaxonomy && fieldKind === "real_estate" ? propertyPurpose || undefined : undefined,
     property_type:
-      !preserveTaxonomy && fieldKind === "real_estate"
-        ? propertyType || undefined
-        : undefined,
+      !preserveTaxonomy && fieldKind === "real_estate" ? propertyType || undefined : undefined,
     rooms:
       !preserveTaxonomy && fieldKind === "real_estate"
         ? rooms.trim()
@@ -340,23 +323,14 @@ export function buildListingsMobileApplySearch(
           : undefined
         : undefined,
     rental_duration:
-      !preserveTaxonomy && fieldKind === "real_estate"
-        ? rentalDuration || undefined
-        : undefined,
+      !preserveTaxonomy && fieldKind === "real_estate" ? rentalDuration || undefined : undefined,
     electronics_brand:
-      !preserveTaxonomy && fieldKind === "electronics"
-        ? electronicsBrand || undefined
-        : undefined,
+      !preserveTaxonomy && fieldKind === "electronics" ? electronicsBrand || undefined : undefined,
     detail_condition:
-      !preserveTaxonomy && fieldKind === "electronics"
-        ? detailCondition || undefined
-        : undefined,
+      !preserveTaxonomy && fieldKind === "electronics" ? detailCondition || undefined : undefined,
     employment_type:
-      !preserveTaxonomy && fieldKind === "jobs"
-        ? employmentType || undefined
-        : undefined,
-    salary_type:
-      !preserveTaxonomy && fieldKind === "jobs" ? salaryType || undefined : undefined,
+      !preserveTaxonomy && fieldKind === "jobs" ? employmentType || undefined : undefined,
+    salary_type: !preserveTaxonomy && fieldKind === "jobs" ? salaryType || undefined : undefined,
     q: debouncedQ || undefined,
     sort: sort === "latest" ? undefined : sort,
   };
