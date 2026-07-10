@@ -1,0 +1,46 @@
+/* Marketplace discovery surfaces: keep listings compact, image-led, and visually calm. */
+
+.listing-card-grid > a.tap-card,
+.rawaj-home-listings-section a.tap-card {
+  border-radius: var(--rawaj-radius-card);
+  border-color: color-mix(in srgb, var(--color-border) 86%, transparent);
+  box-shadow: none;
+}
+
+.listing-card-grid > a.tap-card:hover,
+.rawaj-home-listings-section a.tap-card:hover {
+  transform: none;
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  box-shadow: var(--rawaj-shadow-soft);
+}
+
+.listing-card-grid > a.tap-card img,
+.rawaj-home-listings-section a.tap-card img {
+  transition-duration: var(--rawaj-motion-base);
+}
+
+.listing-card-grid > a.tap-card:hover img,
+.rawaj-home-listings-section a.tap-card:hover img {
+  transform: none;
+}
+
+.listing-card-grid {
+  align-items: stretch;
+}
+
+.listing-card-grid > * {
+  min-width: 0;
+}
+
+@media (max-width: 639px) {
+  .listing-card-grid {
+    gap: 0.625rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .listing-card-grid > a.tap-card img,
+  .rawaj-home-listings-section a.tap-card img {
+    transition: none;
+  }
+}
