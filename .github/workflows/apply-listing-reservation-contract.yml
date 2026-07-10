@@ -1,0 +1,93 @@
+name: Apply listing reservation contract
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'feature/listing-reservation-contract' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/listing-reservation-contract
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply guarded contract patches
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              file = Path(path)
+              text = file.read_text()
+              if text.count(old) != 1:
+                  raise SystemExit(f'Expected exactly one contract anchor in {path}: {old[:120]!r}')
+              file.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              'src/lib/classifieds-types.ts',
+              '  archivedAt: string | null;\n  statusChangedAt?: string | null;\n',
+              '  archivedAt: string | null;\n  reservedAt?: string | null;\n  statusChangedAt?: string | null;\n',
+          )
+          replace_once(
+              'src/lib/api/listings.ts',
+              '    archivedAt: rowNullableString(row, "archived_at"),\n    statusChangedAt: rowNullableString(row, "status_changed_at"),\n',
+              '    archivedAt: rowNullableString(row, "archived_at"),\n'
+              '    reservedAt: rowNullableString(row, "reserved_at"),\n'
+              '    statusChangedAt: rowNullableString(row, "status_changed_at"),\n',
+          )
+          replace_once(
+              'src/lib/classifieds-api.ts',
+              'export * from "@/lib/api/listing-lifecycle";\n',
+              'export * from "@/lib/api/listing-lifecycle";\n'
+              'export * from "@/lib/api/listing-reservation";\n',
+          )
+          replace_once(
+              'package.json',
+              '&& npm run test:price-drop && npm run lint',
+              '&& npm run test:price-drop && npm run test:reservation && npm run lint',
+          )
+          replace_once(
+              'package.json',
+              '    "test:price-drop": "node --test scripts/listing-price-drop.test.mjs",\n',
+              '    "test:price-drop": "node --test scripts/listing-price-drop.test.mjs",\n'
+              '    "test:reservation": "node --test scripts/listing-reservation.test.mjs",\n',
+          )
+          replace_once(
+              '.github/workflows/quality-gate.yml',
+              '      - name: Listing price drop contract\n        run: npm run test:price-drop\n\n      - name: Typecheck\n',
+              '      - name: Listing price drop contract\n'
+              '        run: npm run test:price-drop\n\n'
+              '      - name: Listing reservation contract\n'
+              '        run: npm run test:reservation\n\n'
+              '      - name: Typecheck\n',
+          )
+          PY
+
+      - name: Format changed sources
+        run: npx prettier --write src/lib/classifieds-types.ts src/lib/api/listings.ts src/lib/classifieds-api.ts package.json scripts/listing-reservation.test.mjs .github/workflows/quality-gate.yml
+
+      - name: Commit contract implementation
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/classifieds-types.ts src/lib/api/listings.ts src/lib/classifieds-api.ts package.json scripts/listing-reservation.test.mjs .github/workflows/quality-gate.yml
+          git commit -m "Integrate listing reservation contract"
+          git push origin HEAD:feature/listing-reservation-contract
