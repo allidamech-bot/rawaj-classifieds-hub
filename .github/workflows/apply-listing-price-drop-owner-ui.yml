@@ -1,0 +1,176 @@
+name: Apply listing price drop owner UI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'feature/listing-price-drop-ui' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/listing-price-drop-ui
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply guarded owner UI patch
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/routes/profile/listings.tsx')
+          text = path.read_text()
+
+          if 'priceDropDraft' in text:
+              print('Owner price-drop UI is already patched.')
+              raise SystemExit(0)
+
+          def replace_once(old: str, new: str) -> None:
+              global text
+              if text.count(old) != 1:
+                  raise SystemExit(f'Expected exactly one owner UI anchor: {old[:120]!r}')
+              text = text.replace(old, new, 1)
+
+          replace_once(
+              'import { Eye, Pencil, Plus, Star, Trash2 } from "lucide-react";\n',
+              'import { BadgePercent, Eye, Pencil, Plus, Star, Trash2 } from "lucide-react";\n',
+          )
+          replace_once(
+              '  reactivateOwnerListing,\n  setOwnerListingExpiry,\n',
+              '  reactivateOwnerListing,\n  reduceOwnerListingPrice,\n  setOwnerListingExpiry,\n',
+          )
+          replace_once(
+              '  const [lifecycleBusy, setLifecycleBusy] = useState(false);\n  const [lifecycleError, setLifecycleError] = useState("");\n  const [expiryOption, setExpiryOption] = useState<ListingExpiryOption>(\n',
+              '  const [lifecycleBusy, setLifecycleBusy] = useState(false);\n'
+              '  const [lifecycleError, setLifecycleError] = useState("");\n'
+              '  const [priceDropBusy, setPriceDropBusy] = useState(false);\n'
+              '  const [priceDropError, setPriceDropError] = useState("");\n'
+              '  const [priceDropDraft, setPriceDropDraft] = useState(\n'
+              '    listing.price && listing.price > 0 ? String(listing.price) : "",\n'
+              '  );\n'
+              '  const [expiryOption, setExpiryOption] = useState<ListingExpiryOption>(\n',
+          )
+          replace_once(
+              '  useEffect(() => {\n    setExpiryOption(listing.expiryDays ?? "never");\n  }, [listing.expiryDays]);\n\n  const canEdit =',
+              '  useEffect(() => {\n'
+              '    setExpiryOption(listing.expiryDays ?? "never");\n'
+              '  }, [listing.expiryDays]);\n\n'
+              '  useEffect(() => {\n'
+              '    setPriceDropDraft(listing.price && listing.price > 0 ? String(listing.price) : "");\n'
+              '  }, [listing.price]);\n\n'
+              '  const canEdit =',
+          )
+          replace_once(
+              '  const canClose = listing.status === "approved";\n  const canReactivate = isReactivatableListingStatus(listing.status);\n',
+              '  const canClose = listing.status === "approved";\n'
+              '  const canReducePrice =\n'
+              '    listing.status === "approved" &&\n'
+              '    listing.price !== null &&\n'
+              '    listing.price > 0 &&\n'
+              '    (listing.priceType === "fixed" || listing.priceType === "negotiable");\n'
+              '  const canReactivate = isReactivatableListingStatus(listing.status);\n',
+          )
+          replace_once(
+              '  async function handleReactivate() {\n',
+              '  async function handlePriceDrop() {\n'
+              '    if (priceDropBusy || !canReducePrice) return;\n'
+              '    const nextPrice = Number(priceDropDraft);\n'
+              '    setPriceDropError("");\n'
+              '    if (!Number.isFinite(nextPrice) || nextPrice <= 0) {\n'
+              '      setPriceDropError(text("أدخل سعراً جديداً صالحاً.", "Enter a valid new price."));\n'
+              '      return;\n'
+              '    }\n'
+              '    setPriceDropBusy(true);\n'
+              '    const result = await reduceOwnerListingPrice(userId, listing.id, nextPrice);\n'
+              '    setPriceDropBusy(false);\n'
+              '    if (!result.ok) {\n'
+              '      setPriceDropError(result.error.message);\n'
+              '      return;\n'
+              '    }\n'
+              '    onChanged(result.data);\n'
+              '  }\n\n'
+              '  async function handleReactivate() {\n',
+          )
+          replace_once(
+              '          {lifecycleError && (\n            <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">\n              {lifecycleError}\n            </p>\n          )}\n          <div className="flex flex-wrap gap-2">\n',
+              '          {lifecycleError && (\n'
+              '            <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">\n'
+              '              {lifecycleError}\n'
+              '            </p>\n'
+              '          )}\n'
+              '          {priceDropError && (\n'
+              '            <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">\n'
+              '              {priceDropError}\n'
+              '            </p>\n'
+              '          )}\n'
+              '          {canReducePrice ? (\n'
+              '            <div className="rounded-xl bg-brand-orange/5 p-2.5 hairline">\n'
+              '              <p className="flex items-center gap-1.5 text-[10px] font-bold text-primary">\n'
+              '                <BadgePercent className="h-3.5 w-3.5 text-brand-orange" />\n'
+              '                {text("تخفيض سعر حقيقي", "Record a real price drop")}\n'
+              '              </p>\n'
+              '              <div className="mt-2 flex gap-2">\n'
+              '                <input\n'
+              '                  type="number"\n'
+              '                  min="1"\n'
+              '                  step="1"\n'
+              '                  inputMode="decimal"\n'
+              '                  value={priceDropDraft}\n'
+              '                  onChange={(event) => setPriceDropDraft(event.target.value)}\n'
+              '                  disabled={priceDropBusy}\n'
+              '                  aria-label={text("السعر الجديد", "New price")}\n'
+              '                  className="min-h-11 min-w-0 flex-1 rounded-xl bg-card px-3 py-2 text-xs font-bold outline-none hairline disabled:opacity-60"\n'
+              '                />\n'
+              '                <button\n'
+              '                  type="button"\n'
+              '                  disabled={priceDropBusy}\n'
+              '                  onClick={() => void handlePriceDrop()}\n'
+              '                  className="min-h-11 rounded-xl bg-brand-orange px-3 py-2 text-xs font-bold text-white disabled:opacity-50"\n'
+              '                >\n'
+              '                  {priceDropBusy ? text("جارٍ الحفظ", "Saving") : text("خفض السعر", "Drop price")}\n'
+              '                </button>\n'
+              '              </div>\n'
+              '              <p className="mt-1.5 text-[10px] leading-4 text-muted-foreground">\n'
+              '                {text(\n'
+              '                  "يجب أن يقل السعر 1٪ على الأقل. سيظهر في العروض إذا بقي الإعلان عاماً والسعر الحالي يطابق التخفيض.",\n'
+              '                  "Price must drop by at least 1%. It appears in Offers only while the listing stays public and the current price matches the reduction.",\n'
+              '                )}\n'
+              '              </p>\n'
+              '            </div>\n'
+              '          ) : null}\n'
+              '          <div className="flex flex-wrap gap-2">\n',
+          )
+
+          path.write_text(text)
+          PY
+
+      - name: Format owner UI route
+        run: npx prettier --write src/routes/profile/listings.tsx
+
+      - name: Commit owner UI implementation
+        shell: bash
+        run: |
+          if git diff --quiet -- src/routes/profile/listings.tsx; then
+            echo "No owner UI changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/profile/listings.tsx
+          git commit -m "Add owner price drop controls"
+          git push origin HEAD:feature/listing-price-drop-ui
