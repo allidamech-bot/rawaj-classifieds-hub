@@ -17,6 +17,7 @@ export * from "@/lib/api/favorites";
 export * from "@/lib/api/saved-searches";
 export * from "@/lib/api/saved-search-alerts";
 export * from "@/lib/api/reviews";
+export * from "@/lib/api/review-reports";
 export * from "@/lib/api/verification";
 export * from "@/lib/api/promotions";
 export * from "@/lib/api/reports";
