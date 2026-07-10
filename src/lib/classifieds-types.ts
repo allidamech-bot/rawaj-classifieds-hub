@@ -359,6 +359,13 @@ export interface BlockConversationPayload {
 
 export type VerificationRequestStatus = "pending_review" | "approved" | "rejected";
 export type VerificationRequestType = "personal" | "business";
+export type VerificationDocumentType =
+  | "national_id"
+  | "passport"
+  | "other_government_id"
+  | "commercial_registration"
+  | "business_license"
+  | "tax_document";
 
 export interface SellerVerificationRequest {
   id: string;
@@ -381,7 +388,8 @@ export interface CreateSellerVerificationRequestPayload {
   requestType: VerificationRequestType;
   legalName: string;
   businessName?: string | null;
-  documentType?: string | null;
+  documentType: VerificationDocumentType;
+  documentFile: File;
 }
 
 export interface ModerateSellerVerificationRequestPayload {
