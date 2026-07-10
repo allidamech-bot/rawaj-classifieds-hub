@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Eye, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { BadgePercent, Eye, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
@@ -11,6 +11,7 @@ import {
   fetchPublicSellerProfile,
   isOwnerDeletableStatus,
   reactivateOwnerListing,
+  reduceOwnerListingPrice,
   setOwnerListingExpiry,
   type OwnerCloseListingStatus,
 } from "@/lib/classifieds-api";
@@ -432,6 +433,11 @@ function StoreListingCard({
   const [deleting, setDeleting] = useState(false);
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
   const [lifecycleError, setLifecycleError] = useState("");
+  const [priceDropBusy, setPriceDropBusy] = useState(false);
+  const [priceDropError, setPriceDropError] = useState("");
+  const [priceDropDraft, setPriceDropDraft] = useState(
+    listing.price && listing.price > 0 ? String(listing.price) : "",
+  );
   const [expiryOption, setExpiryOption] = useState<ListingExpiryOption>(
     listing.expiryDays ?? "never",
   );
@@ -440,9 +446,18 @@ function StoreListingCard({
     setExpiryOption(listing.expiryDays ?? "never");
   }, [listing.expiryDays]);
 
+  useEffect(() => {
+    setPriceDropDraft(listing.price && listing.price > 0 ? String(listing.price) : "");
+  }, [listing.price]);
+
   const canEdit = listing.status === "draft" || listing.status === "rejected";
   const canDelete = isOwnerDeletableStatus(listing.status);
   const canClose = listing.status === "approved";
+  const canReducePrice =
+    listing.status === "approved" &&
+    listing.price !== null &&
+    listing.price > 0 &&
+    (listing.priceType === "fixed" || listing.priceType === "negotiable");
   const canReactivate = isReactivatableListingStatus(listing.status);
 
   async function handleConfirmDelete() {
@@ -466,6 +481,24 @@ function StoreListingCard({
     setLifecycleBusy(false);
     if (!result.ok) {
       setLifecycleError(result.error.message);
+      return;
+    }
+    onChanged(result.data);
+  }
+
+  async function handlePriceDrop() {
+    if (priceDropBusy || !canReducePrice) return;
+    const nextPrice = Number(priceDropDraft);
+    setPriceDropError("");
+    if (!Number.isFinite(nextPrice) || nextPrice <= 0) {
+      setPriceDropError(text("أدخل سعراً جديداً صالحاً.", "Enter a valid new price."));
+      return;
+    }
+    setPriceDropBusy(true);
+    const result = await reduceOwnerListingPrice(userId, listing.id, nextPrice);
+    setPriceDropBusy(false);
+    if (!result.ok) {
+      setPriceDropError(result.error.message);
       return;
     }
     onChanged(result.data);
@@ -593,6 +626,46 @@ function StoreListingCard({
               {lifecycleError}
             </p>
           )}
+          {priceDropError && (
+            <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
+              {priceDropError}
+            </p>
+          )}
+          {canReducePrice ? (
+            <div className="rounded-xl bg-brand-orange/5 p-2.5 hairline">
+              <p className="flex items-center gap-1.5 text-[10px] font-bold text-primary">
+                <BadgePercent className="h-3.5 w-3.5 text-brand-orange" />
+                {text("تخفيض سعر حقيقي", "Record a real price drop")}
+              </p>
+              <div className="mt-2 flex gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  inputMode="decimal"
+                  value={priceDropDraft}
+                  onChange={(event) => setPriceDropDraft(event.target.value)}
+                  disabled={priceDropBusy}
+                  aria-label={text("السعر الجديد", "New price")}
+                  className="min-h-11 min-w-0 flex-1 rounded-xl bg-card px-3 py-2 text-xs font-bold outline-none hairline disabled:opacity-60"
+                />
+                <button
+                  type="button"
+                  disabled={priceDropBusy}
+                  onClick={() => void handlePriceDrop()}
+                  className="min-h-11 rounded-xl bg-brand-orange px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                >
+                  {priceDropBusy ? text("جارٍ الحفظ", "Saving") : text("خفض السعر", "Drop price")}
+                </button>
+              </div>
+              <p className="mt-1.5 text-[10px] leading-4 text-muted-foreground">
+                {text(
+                  "يجب أن يقل السعر 1٪ على الأقل. سيظهر في العروض إذا بقي الإعلان عاماً والسعر الحالي يطابق التخفيض.",
+                  "Price must drop by at least 1%. It appears in Offers only while the listing stays public and the current price matches the reduction.",
+                )}
+              </p>
+            </div>
+          ) : null}
           <div className="flex flex-wrap gap-2">
             {listing.status === "approved" && (
               <Link
