@@ -311,12 +311,7 @@ function buildSellerStructuredData(seller: PublicSellerProfile) {
 }
 
 type ReviewEligibilityUiState =
-  | "idle"
-  | "loading"
-  | "eligible"
-  | "existing_review"
-  | "no_qualifying_interaction"
-  | "error";
+  "idle" | "loading" | "eligible" | "existing_review" | "no_qualifying_interaction" | "error";
 
 function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   const auth = useAuth();
