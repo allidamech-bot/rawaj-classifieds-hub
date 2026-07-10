@@ -1,0 +1,129 @@
+name: Apply account activity center
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'feature/account-activity-center' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/account-activity-center
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply guarded account hub patch
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              file = Path(path)
+              text = file.read_text()
+              if text.count(old) != 1:
+                  raise SystemExit(f"Expected exactly one anchor in {path}: {old[:160]!r}")
+              file.write_text(text.replace(old, new, 1))
+
+          path = 'src/routes/more.tsx'
+          replace_once(path, '  BadgeCheck,\n  Bell,\n', '  Activity,\n  BadgeCheck,\n')
+          replace_once(path, '  LogOut,\n  MessageCircle,\n', '  LogOut,\n')
+          replace_once(
+              path,
+              'type AccountRoute =\n  | "/admin"\n',
+              'type AccountRoute =\n  | "/activity"\n  | "/admin"\n',
+          )
+          replace_once(
+              path,
+              '  {\n'
+              '    titleAr: "الرسائل",\n'
+              '    titleEn: "Messages",\n'
+              '    hintAr: "محادثات البيع والشراء",\n'
+              '    hintEn: "Buyer and seller chats",\n'
+              '    to: "/chats",\n'
+              '    icon: MessageCircle,\n'
+              '    world: "rawaj-world-indigo",\n'
+              '  },\n'
+              '  {\n'
+              '    titleAr: "الإشعارات",\n'
+              '    titleEn: "Notifications",\n'
+              '    hintAr: "آخر ما يحتاج انتباهك",\n'
+              '    hintEn: "What needs your attention",\n'
+              '    to: "/notifications",\n'
+              '    icon: Bell,\n'
+              '    world: "rawaj-world-emerald",\n'
+              '  },\n',
+              '  {\n'
+              '    titleAr: "النشاط",\n'
+              '    titleEn: "Activity",\n'
+              '    hintAr: "رسائلك وما يحتاج انتباهك",\n'
+              '    hintEn: "Messages and what needs attention",\n'
+              '    to: "/activity",\n'
+              '    icon: Activity,\n'
+              '    world: "rawaj-world-indigo",\n'
+              '  },\n',
+          )
+          replace_once(
+              path,
+              '          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">\n',
+              '          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">\n',
+          )
+          replace_once(
+              path,
+              '                badgeCount={\n'
+              '                  row.to === "/chats"\n'
+              '                    ? counts.messages\n'
+              '                    : row.to === "/notifications"\n'
+              '                      ? counts.notifications\n'
+              '                      : 0\n'
+              '                }\n',
+              '                badgeCount={\n'
+              '                  row.to === "/activity" ? counts.messages + counts.notifications : 0\n'
+              '                }\n',
+          )
+
+          replace_once(
+              'package.json',
+              '&& npm run test:listing-studio-images && npm run lint',
+              '&& npm run test:listing-studio-images && npm run test:activity-center && npm run lint',
+          )
+          replace_once(
+              'package.json',
+              '    "test:listing-studio-images": "node --test scripts/listing-studio-image-parity.test.mjs",\n',
+              '    "test:listing-studio-images": "node --test scripts/listing-studio-image-parity.test.mjs",\n'
+              '    "test:activity-center": "node --test scripts/account-activity-center.test.mjs",\n',
+          )
+          PY
+
+      - name: Format changed files
+        run: npx prettier --write src/routes/activity.tsx src/routes/more.tsx package.json scripts/account-activity-center.test.mjs
+
+      - name: Generate route tree and validate focused contract
+        run: |
+          npm run build
+          npm run test:activity-center
+          npx eslint --quiet src/routes/activity.tsx src/routes/more.tsx scripts/account-activity-center.test.mjs
+
+      - name: Commit implementation
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/activity.tsx src/routes/more.tsx src/routeTree.gen.ts package.json scripts/account-activity-center.test.mjs
+          git commit -m "Unify account activity center"
+          git push origin HEAD:feature/account-activity-center
