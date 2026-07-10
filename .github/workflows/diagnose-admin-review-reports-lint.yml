@@ -1,0 +1,50 @@
+name: Diagnose admin review report lint
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: github.head_ref == 'feature/admin-review-reports-current' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/admin-review-reports-current
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Capture changed-file lint diagnostics
+        shell: bash
+        run: |
+          set +e
+          npx eslint --quiet \
+            scripts/seller-review-report.test.mjs \
+            src/features/reviews/SellerReviewReportsAdminPanel.tsx \
+            src/routes/admin.reviews.tsx \
+            > lint-diagnostics.txt 2>&1
+          status=$?
+          printf '\nEXIT_STATUS=%s\n' "$status" >> lint-diagnostics.txt
+          exit 0
+
+      - name: Commit diagnostics
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lint-diagnostics.txt
+          git commit -m "Capture admin review report lint diagnostics"
+          git push origin HEAD:feature/admin-review-reports-current
