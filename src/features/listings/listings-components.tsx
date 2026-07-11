@@ -1,15 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { Clock, MapPin } from "lucide-react";
 import { carMakeOptions, type CategoryFieldKind } from "@/lib/category-fields";
-import type {
-  ClassifiedListing,
-  ClassifiedSubcategory,
-  PublicSellerSearchResult,
-} from "@/lib/classifieds-types";
-import { categoryName, formatPriceLocalized } from "@/lib/i18n";
-import { listingLocationDisplay } from "@/lib/listing-location-display";
+import type { ClassifiedSubcategory, PublicSellerSearchResult } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
-import { PlaceholderArt } from "@/components/PlaceholderArt";
 
 type TextFn = (ar: string, en: string) => string;
 
@@ -286,72 +278,6 @@ export function GovernorateChip({
 
 export function subcategoryName(subcategory: ClassifiedSubcategory, language: "ar" | "en") {
   return language === "en" ? (subcategory.nameEn ?? subcategory.nameAr) : subcategory.nameAr;
-}
-
-export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
-  const { language, text } = useUiPreferences();
-
-  return (
-    <Link
-      to="/listings/$id"
-      params={{ id: listing.id }}
-      className="group block overflow-hidden rounded-[1.15rem] border border-border/80 bg-card tap-card transition hover:-translate-y-0.5 hover:border-gold/60 hover:shadow-premium-sm"
-    >
-      <div className="relative overflow-hidden bg-muted-surface">
-        {listing.primaryImageUrl ? (
-          <img
-            src={listing.primaryImageUrl}
-            alt={listing.title}
-            loading="lazy"
-            decoding="async"
-            className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
-          />
-        ) : (
-          <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="standard" />
-        )}
-        {listing.reservedAt ? (
-          <span className="absolute start-2 top-2 rounded-full bg-warning/92 px-2 py-1 text-[9px] font-extrabold text-warning-foreground shadow-soft backdrop-blur-sm">
-            {text("محجوز", "Reserved")}
-          </span>
-        ) : listing.isFeatured ? (
-          <span className="absolute start-2 top-2 rounded-full bg-primary/92 px-2 py-1 text-[9px] font-extrabold text-primary-foreground shadow-soft backdrop-blur-sm">
-            {text("مميز", "Featured")}
-          </span>
-        ) : null}
-      </div>
-
-      <div className="p-2.5 sm:p-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 text-[14px] font-extrabold leading-tight text-primary sm:text-base">
-            {formatPriceLocalized(
-              listing.price ?? 0,
-              listing.priceType,
-              language,
-              listing.currency,
-            )}
-          </div>
-          <span className="max-w-[45%] shrink-0 truncate rounded-full bg-background px-2 py-1 text-[9px] font-bold text-muted-foreground">
-            {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
-          </span>
-        </div>
-
-        <h3 className="mt-1.5 line-clamp-2 min-h-[2.35rem] text-[12.5px] font-bold leading-snug text-foreground sm:text-[13px]">
-          {listing.title}
-        </h3>
-
-        <div className="mt-2 flex items-center justify-between gap-2 border-t border-border/60 pt-2 text-[10px] text-muted-foreground sm:text-[11px]">
-          <span className="inline-flex min-w-0 items-center gap-1">
-            <MapPin className="h-3 w-3 shrink-0 text-brand-orange" strokeWidth={1.9} />
-            <span className="truncate">{listingLocationDisplay(listing, language)}</span>
-          </span>
-          <span className="inline-flex shrink-0 items-center gap-1">
-            <Clock className="h-3 w-3" strokeWidth={1.8} />
-            <span>{formatDate(listing.createdAt, language)}</span>
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
 }
 
 export function SellerSearchCard({ seller }: { seller: PublicSellerSearchResult }) {

@@ -2,29 +2,54 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, home, hero, worlds, showcase, listingCard, marketplaceCss, discoveryCss] =
-  await Promise.all([
-    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/index.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/home/DiscoveryHero.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/home/CategoryWorlds.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/home/FeaturedListingShowcase.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/listings/RealListingCard.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/home-marketplace-v2.css", import.meta.url), "utf8"),
-    readFile(new URL("../src/home-discovery-v3.css", import.meta.url), "utf8"),
-  ]);
+const [
+  root,
+  home,
+  hero,
+  worlds,
+  showcase,
+  adaptiveCard,
+  sharedCard,
+  marketplaceCss,
+  discoveryCss,
+  adaptiveCss,
+] = await Promise.all([
+  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/index.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/home/DiscoveryHero.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/home/CategoryWorlds.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/home/FeaturedListingShowcase.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/listings/cards/AdaptiveListingCard.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listings/cards/ListingCardShared.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(new URL("../src/home-marketplace-v2.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/home-discovery-v3.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/adaptive-listing-cards.css", import.meta.url), "utf8"),
+]);
 
 test("marketplace layers load after Design System V2", () => {
   assert.match(root, /import homeMarketplaceV2Css from "\.\.\/home-marketplace-v2\.css\?url";/);
   assert.match(root, /import homeDiscoveryV3Css from "\.\.\/home-discovery-v3\.css\?url";/);
+  assert.match(
+    root,
+    /import adaptiveListingCardsCss from "\.\.\/adaptive-listing-cards\.css\?url";/,
+  );
   const foundationIndex = root.indexOf("href: designSystemV2Css");
   const marketplaceIndex = root.indexOf("href: homeMarketplaceV2Css");
   const discoveryIndex = root.indexOf("href: homeDiscoveryV3Css");
+  const adaptiveIndex = root.indexOf("href: adaptiveListingCardsCss");
   assert.notEqual(foundationIndex, -1);
   assert.notEqual(marketplaceIndex, -1);
   assert.notEqual(discoveryIndex, -1);
+  assert.notEqual(adaptiveIndex, -1);
   assert.ok(marketplaceIndex > foundationIndex);
   assert.ok(discoveryIndex > marketplaceIndex);
+  assert.ok(adaptiveIndex > discoveryIndex);
 });
 
 test("home discovery uses a dominant search, asymmetric worlds, and editorial featured inventory", () => {
@@ -33,17 +58,21 @@ test("home discovery uses a dominant search, asymmetric worlds, and editorial fe
   assert.match(home, /<FeaturedListingShowcase/);
   assert.match(hero, /rawaj-search-overlay/);
   assert.match(worlds, /data-size=\{index < 2 \? "large" : "compact"\}/);
-  assert.match(showcase, /rawaj-featured-showcase__main/);
+  assert.match(showcase, /<FeaturedShowcaseCard listing=\{primary\}/);
   assert.doesNotMatch(showcase, /RealListingCard/);
   assert.doesNotMatch([home, hero, worlds, showcase].join("\n"), /trending/i);
 });
 
-test("listing cards expose featured and reserved states with stronger hierarchy", () => {
-  assert.match(listingCard, /data-featured=\{listing\.isFeatured\}/);
-  assert.match(listingCard, /data-reserved=\{Boolean\(listing\.reservedAt\)\}/);
-  assert.match(listingCard, /rawaj-listing-status/);
-  assert.match(listingCard, /rawaj-listing-price/);
-  assert.match(listingCard, /rawaj-listing-title/);
+test("listing cards adapt by category and preserve featured and reserved states", () => {
+  assert.match(adaptiveCard, /resolveListingCardVariant\(listing\)/);
+  assert.match(adaptiveCard, /<VehicleCard/);
+  assert.match(adaptiveCard, /<PropertyCard/);
+  assert.match(adaptiveCard, /<ProductCard/);
+  assert.match(sharedCard, /data-featured=\{listing\.isFeatured\}/);
+  assert.match(sharedCard, /data-reserved=\{Boolean\(listing\.reservedAt\)\}/);
+  assert.match(sharedCard, /rawaj-adaptive-card__status/);
+  assert.match(sharedCard, /rawaj-adaptive-card__price/);
+  assert.match(sharedCard, /rawaj-adaptive-card__title/);
 });
 
 test("mobile listing grid protects readability on narrow screens", () => {
@@ -56,4 +85,5 @@ test("mobile listing grid protects readability on narrow screens", () => {
     /@media \(min-width: 390px\)[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/,
   );
   assert.match(discoveryCss, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(adaptiveCss, /@media \(prefers-reduced-motion: reduce\)/);
 });

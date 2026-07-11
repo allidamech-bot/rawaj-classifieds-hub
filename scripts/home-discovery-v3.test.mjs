@@ -2,12 +2,16 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, home, hero, worlds, showcase, latest, trust, css] = await Promise.all([
+const [root, home, hero, worlds, showcase, featuredCard, latest, trust, css] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/index.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/home/DiscoveryHero.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/home/CategoryWorlds.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/home/FeaturedListingShowcase.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/listings/cards/FeaturedShowcaseCard.tsx", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/features/home/LatestDiscovery.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/home/HomeTrustStrip.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/home-discovery-v3.css", import.meta.url), "utf8"),
@@ -48,13 +52,15 @@ test("category worlds use live categories and asymmetric sizing", () => {
   assert.match(css, /grid-column: span 2/);
 });
 
-test("featured inventory uses an editorial showcase instead of the result card", () => {
-  assert.match(showcase, /rawaj-featured-showcase__main/);
+test("featured inventory uses the adaptive editorial showcase", () => {
   assert.match(showcase, /const \[primary, \.\.\.secondary\] = listings/);
   assert.match(showcase, /if \(!primary\) return null/);
+  assert.match(showcase, /<FeaturedShowcaseCard listing=\{primary\}/);
+  assert.match(showcase, /<CompactCard key=\{listing\.id\} listing=\{listing\}/);
   assert.doesNotMatch(showcase, /RealListingCard/);
-  assert.match(showcase, /primary\.reservedAt/);
-  assert.match(showcase, /listingLocationDisplay\(primary, language\)/);
+  assert.match(featuredCard, /data-card-variant="featured"/);
+  assert.match(featuredCard, /listing\.reservedAt/);
+  assert.match(featuredCard, /listingLocationDisplay\(listing, language\)/);
 });
 
 test("latest discovery excludes showcased ids and keeps standard real cards", () => {
@@ -71,7 +77,7 @@ test("trust strip links to the safety guide", () => {
 });
 
 test("claims and motion remain honest and accessible", () => {
-  const combined = [home, hero, worlds, showcase, latest].join("\n");
+  const combined = [home, hero, worlds, showcase, featuredCard, latest].join("\n");
   assert.doesNotMatch(combined, /trending|most viewed|الأكثر مشاهدة|الأكثر رواجًا/i);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /transition: none/);

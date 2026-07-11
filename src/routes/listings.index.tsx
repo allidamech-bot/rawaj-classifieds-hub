@@ -2,6 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpDown, Filter, Search, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { ListingCardSkeleton } from "@/features/listings/cards";
+import { RealListingCard } from "@/features/listings/RealListingCard";
 import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
 import { detectCategoryFieldKind, type CategoryFieldKind } from "@/lib/category-fields";
 import { categoryName, governorateName } from "@/lib/i18n";
@@ -32,7 +34,6 @@ import { useListingsPagination } from "@/features/listings/use-listings-paginati
 import {
   CategorySpecificFilterFields,
   GovernorateChip,
-  RealListingCard,
   SellerSearchCard,
   StateCard,
   subcategoryName,
@@ -1430,13 +1431,23 @@ function ListingsPage() {
             actionTo="/listings"
           />
         ) : loading ? (
-          <StateCard
-            title={text("جاري تحميل الإعلانات", "Loading listings")}
-            body={text(
-              "نبحث عن الإعلانات المعتمدة المتاحة للتصفح داخل سوريا.",
-              "Looking for approved listings available across Syria.",
-            )}
-          />
+          <div
+            className="listing-card-grid mt-3"
+            aria-label={text("جاري تحميل الإعلانات", "Loading listings")}
+          >
+            {Array.from({ length: 6 }, (_, index) => (
+              <ListingCardSkeleton
+                key={index}
+                variant={
+                  categoryFieldKind === "vehicles"
+                    ? "vehicle"
+                    : categoryFieldKind === "real_estate"
+                      ? "property"
+                      : "product"
+                }
+              />
+            ))}
+          </div>
         ) : error ? (
           <StateCard
             title={text("تعذر تحميل الإعلانات", "Could not load listings")}
