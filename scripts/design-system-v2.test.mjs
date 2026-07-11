@@ -2,15 +2,15 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [css, root, button, input, card, badge, header, bottomNav] = await Promise.all([
+const [css, root, button, input, card, badge, header, bottomDock] = await Promise.all([
   readFile(new URL("../src/design-system-v2.css", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/ui/button.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/ui/input.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/ui/card.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/ui/badge.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/components/AppHeader.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/components/BottomNav.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/shell/BottomDock.tsx", import.meta.url), "utf8"),
 ]);
 
 test("design system V2 is loaded after legacy page styles", () => {
@@ -50,9 +50,9 @@ test("shared navigation uses explicit active-state hooks", () => {
   assert.match(header, /rawaj-header-nav-item/);
   assert.match(header, /data-active=\{active\}/);
   assert.match(header, /rawaj-header-cta/);
-  assert.match(bottomNav, /rawaj-dock-item/);
-  assert.match(bottomNav, /data-primary=\{item\.primary === true\}/);
-  assert.match(bottomNav, /rawaj-dock-icon/);
+  assert.match(bottomDock, /rawaj-dock-item/);
+  assert.match(bottomDock, /data-primary=\{item\.primary === true\}/);
+  assert.match(bottomDock, /rawaj-dock-icon/);
 });
 
 test("motion remains accessible", () => {
