@@ -46,6 +46,7 @@ export function useListingsPagination(inputs: ListingsPaginationInputs): Listing
     detailCondition,
     employmentType,
     salaryType,
+    withPhotos,
     debouncedQ,
     sort,
   } = inputs;
@@ -83,6 +84,7 @@ export function useListingsPagination(inputs: ListingsPaginationInputs): Listing
         detailCondition,
         employmentType,
         salaryType,
+        withPhotos,
         debouncedQ,
         sort,
       }),
@@ -137,6 +139,7 @@ export function useListingsPagination(inputs: ListingsPaginationInputs): Listing
     detailCondition,
     employmentType,
     salaryType,
+    withPhotos,
     debouncedQ,
     sort,
   ]);

@@ -141,7 +141,7 @@ function CategoriesPage() {
   return (
     <>
       <PageHeader title={text("الأقسام", "Categories")} />
-      <main className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+      <main className="rawaj-categories-v2 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
         <section className="rawaj-hero-surface rounded-[1.55rem] sm:rounded-[1.9rem]">
           <div className="p-4 sm:p-6">
             <div className="flex items-start gap-3">
@@ -369,11 +369,7 @@ function TaxonomyDirectory({
 }
 
 function DirectoryGrid({ children }: { children: React.ReactNode }) {
-  return (
-    <section className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:gap-4 xl:grid-cols-3">
-      {children}
-    </section>
-  );
+  return <section className="rawaj-category-directory-grid mt-5">{children}</section>;
 }
 
 function levelScopeMatchesSearch(
@@ -412,7 +408,7 @@ function TaxonomyRow({
   const isLeaf = !hasChildren;
 
   return (
-    <article className="rawaj-surface tap-card overflow-hidden rounded-[1.25rem] transition sm:hover:-translate-y-0.5">
+    <article className="rawaj-category-directory-card tap-card">
       <Link
         to={isLeaf ? "/listings" : "/categories"}
         search={

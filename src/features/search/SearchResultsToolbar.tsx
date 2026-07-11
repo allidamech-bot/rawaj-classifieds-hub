@@ -1,13 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import {
-  Bookmark,
-  Filter,
-  Grid2X2,
-  List,
-  Map,
-  Search,
-  SlidersHorizontal,
-} from "lucide-react";
+import { Bookmark, Filter, Grid2X2, List, Map, Search, SlidersHorizontal } from "lucide-react";
 import type { ListingsSort, ListingsView } from "@/features/listings/listings-search-schema";
 
 interface SearchResultsToolbarProps {
@@ -50,7 +42,9 @@ export function SearchResultsToolbar({
           {pathLabel ? <span>{pathLabel}</span> : null}
         </div>
         <strong aria-live="polite">
-          {loading ? text("جارٍ التحميل", "Loading") : text(`${resultCount} نتيجة`, `${resultCount} results`)}
+          {loading
+            ? text("جارٍ التحميل", "Loading")
+            : text(`${resultCount} نتيجة`, `${resultCount} results`)}
         </strong>
       </div>
 

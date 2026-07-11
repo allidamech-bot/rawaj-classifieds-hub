@@ -12,7 +12,9 @@ export function SearchEmptyState({
 }) {
   return (
     <section className="rawaj-search-empty-state">
-      <span className="rawaj-search-empty-state__icon"><SearchX aria-hidden="true" /></span>
+      <span className="rawaj-search-empty-state__icon">
+        <SearchX aria-hidden="true" />
+      </span>
       <h2>{text("لا توجد إعلانات مطابقة الآن", "No matching listings right now")}</h2>
       <p>
         {text(

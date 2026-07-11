@@ -54,11 +54,7 @@ export type ListingReportType =
 export type ListingReportStatus = "new" | "under_review" | "resolved" | "rejected";
 
 export type SupportRequestType =
-  | "complaint"
-  | "suggestion"
-  | "technical_issue"
-  | "abuse_report"
-  | "other";
+  "complaint" | "suggestion" | "technical_issue" | "abuse_report" | "other";
 
 export type SupportRequestStatus = "new" | "under_review" | "resolved" | "rejected";
 
@@ -403,11 +399,7 @@ export interface ModerateSellerVerificationRequestPayload {
 }
 
 export type PromotionRequestStatus =
-  | "pending_review"
-  | "approved"
-  | "rejected"
-  | "expired"
-  | "cancelled";
+  "pending_review" | "approved" | "rejected" | "expired" | "cancelled";
 
 export type PromotionType = "featured_home" | "highlighted" | "urgent" | "top_category";
 

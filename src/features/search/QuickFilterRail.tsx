@@ -42,7 +42,11 @@ export function QuickFilterRail({
         <Sparkles aria-hidden="true" />
         <span>{text("الأحدث", "Newest")}</span>
       </button>
-      <button type="button" onClick={onOpenFilters} data-active={locationLabel !== text("كل سوريا", "All Syria")}>
+      <button
+        type="button"
+        onClick={onOpenFilters}
+        data-active={locationLabel !== text("كل سوريا", "All Syria")}
+      >
         <MapPin aria-hidden="true" />
         <span>{locationLabel}</span>
       </button>
@@ -55,9 +59,16 @@ export function QuickFilterRail({
         <span>{categoryLabel}</span>
       </button>
       {showCondition ? (
-        <button type="button" onClick={onOpenFilters} data-active={conditionActive} data-kind={fieldKind}>
+        <button
+          type="button"
+          onClick={onOpenFilters}
+          data-active={conditionActive}
+          data-kind={fieldKind}
+        >
           <span className="rawaj-quick-filter-rail__dot" aria-hidden="true" />
-          <span>{conditionActive ? text("الحالة محددة", "Condition set") : text("الحالة", "Condition")}</span>
+          <span>
+            {conditionActive ? text("الحالة محددة", "Condition set") : text("الحالة", "Condition")}
+          </span>
         </button>
       ) : null}
       <button type="button" onClick={onTogglePhotos} data-active={withPhotos}>

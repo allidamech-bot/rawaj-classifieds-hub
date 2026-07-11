@@ -1,4 +1,4 @@
-import type { ListingsSearch, ListingsSort } from "./listings-search-schema";
+import type { ListingsSearch, ListingsSort, ListingsView } from "./listings-search-schema";
 import type { CategoryFieldKind } from "@/lib/category-fields";
 
 export interface ListingFilterInputs {
@@ -27,6 +27,7 @@ export interface ListingFilterInputs {
   detailCondition: string;
   employmentType: string;
   salaryType: string;
+  withPhotos: boolean;
   debouncedQ: string;
   sort: ListingsSort;
 }
@@ -54,6 +55,8 @@ export interface ListingsUrlSearch {
   salary_type?: string;
   q?: string;
   sort?: ListingsSort;
+  view?: ListingsView;
+  with_photos?: boolean;
 }
 
 export function buildListingFilters(inputs: ListingFilterInputs) {
@@ -79,6 +82,7 @@ export function buildListingFilters(inputs: ListingFilterInputs) {
     detailCondition,
     employmentType,
     salaryType,
+    withPhotos,
     debouncedQ,
     sort,
   } = inputs;
@@ -110,6 +114,7 @@ export function buildListingFilters(inputs: ListingFilterInputs) {
     detailCondition: detailCondition || undefined,
     employmentType: employmentType || undefined,
     salaryType: salaryType || undefined,
+    withPhotos: withPhotos || undefined,
     query: debouncedQ,
     sort,
   };
@@ -144,8 +149,10 @@ export interface ListingsSyncSearchInputs {
   detailCondition: string;
   employmentType: string;
   salaryType: string;
+  withPhotos: boolean;
   debouncedQ: string;
   sort: ListingsSort;
+  view: ListingsView;
 }
 
 export function buildListingsSyncSearch(inputs: ListingsSyncSearchInputs): ListingsUrlSearch {
@@ -174,8 +181,10 @@ export function buildListingsSyncSearch(inputs: ListingsSyncSearchInputs): Listi
     detailCondition,
     employmentType,
     salaryType,
+    withPhotos,
     debouncedQ,
     sort,
+    view,
   } = inputs;
 
   const canonicalLocation = districtAr.startsWith("@") ? districtAr.slice(1) : undefined;
@@ -208,8 +217,10 @@ export function buildListingsSyncSearch(inputs: ListingsSyncSearchInputs): Listi
     detail_condition: detailCondition || undefined,
     employment_type: employmentType || undefined,
     salary_type: salaryType || undefined,
+    with_photos: withPhotos || undefined,
     q: debouncedQ || undefined,
     sort: sort === "latest" ? undefined : sort,
+    view: view === "grid" ? undefined : view,
   };
 }
 
@@ -219,12 +230,14 @@ export interface ListingsCategoryNavigationInputs {
   districtAr: string;
   query: string;
   sort: ListingsSort;
+  view?: ListingsView;
+  withPhotos?: boolean;
 }
 
 export function buildListingsCategoryNavigationSearch(
   inputs: ListingsCategoryNavigationInputs,
 ): ListingsUrlSearch {
-  const { categoryId, govId, districtAr, query, sort } = inputs;
+  const { categoryId, govId, districtAr, query, sort, view, withPhotos } = inputs;
   const canonicalLocation = districtAr.startsWith("@") ? districtAr.slice(1) : undefined;
 
   return {
@@ -234,6 +247,8 @@ export function buildListingsCategoryNavigationSearch(
     district: canonicalLocation ? undefined : districtAr || undefined,
     q: query.trim() || undefined,
     sort: sort === "latest" ? undefined : sort,
+    view: view === "grid" ? undefined : view,
+    with_photos: withPhotos || undefined,
   };
 }
 
@@ -245,6 +260,7 @@ export interface ListingsResetSearchInputs {
   taxonomyPropertyPurpose?: string;
   taxonomyPropertyType?: string;
   sort: ListingsSort;
+  view: ListingsView;
 }
 
 export function buildListingsResetSearch(inputs: ListingsResetSearchInputs): ListingsUrlSearch {
@@ -256,6 +272,7 @@ export function buildListingsResetSearch(inputs: ListingsResetSearchInputs): Lis
     taxonomyPropertyPurpose,
     taxonomyPropertyType,
     sort,
+    view,
   } = inputs;
 
   return {
@@ -265,6 +282,7 @@ export function buildListingsResetSearch(inputs: ListingsResetSearchInputs): Lis
     property_purpose: taxonomyPropertyPurpose,
     property_type: taxonomyPropertyType,
     sort: sort === "latest" ? undefined : sort,
+    view: view === "grid" ? undefined : view,
   };
 }
 
@@ -289,8 +307,10 @@ export interface ListingsMobileApplyInputs {
   detailCondition: string;
   employmentType: string;
   salaryType: string;
+  withPhotos: boolean;
   debouncedQ: string;
   sort: ListingsSort;
+  view: ListingsView;
 }
 
 export function buildListingsMobileApplySearch(
@@ -317,8 +337,10 @@ export function buildListingsMobileApplySearch(
     detailCondition,
     employmentType,
     salaryType,
+    withPhotos,
     debouncedQ,
     sort,
+    view,
   } = inputs;
   const preserveTaxonomy = Boolean(searchTaxonomy && draftCategoryId === undefined);
   const explicitAllCategories = draftCategoryId === "";
@@ -360,7 +382,9 @@ export function buildListingsMobileApplySearch(
     employment_type:
       hasConcreteCategory && fieldKind === "jobs" ? employmentType || undefined : undefined,
     salary_type: hasConcreteCategory && fieldKind === "jobs" ? salaryType || undefined : undefined,
+    with_photos: withPhotos || undefined,
     q: debouncedQ || undefined,
     sort: sort === "latest" ? undefined : sort,
+    view: view === "grid" ? undefined : view,
   };
 }

@@ -54,7 +54,9 @@ export function FilterCategoryGrid({
         aria-pressed={!selectedCategory}
         data-selected={!selectedCategory}
       >
-        <span><Grid3X3 aria-hidden="true" /></span>
+        <span>
+          <Grid3X3 aria-hidden="true" />
+        </span>
         <strong>{text("كل الأقسام", "All categories")}</strong>
       </button>
       {categories.map((category) => {
@@ -68,7 +70,9 @@ export function FilterCategoryGrid({
             aria-pressed={selected}
             data-selected={selected}
           >
-            <span><Icon aria-hidden="true" /></span>
+            <span>
+              <Icon aria-hidden="true" />
+            </span>
             <strong>{categoryName(category.id, category.nameAr, language)}</strong>
           </button>
         );

@@ -124,9 +124,13 @@ export async function fetchPublicListings(
   const references = await readReferences(clientResult.data);
   if (!references.ok) return { ok: false, error: references.error };
 
+  const listingSelect = filters.withPhotos
+    ? `${publicListingSelect},listing_images!inner(id)`
+    : publicListingSelect;
+
   let query = clientResult.data
     .from("listings")
-    .select(publicListingSelect)
+    .select(listingSelect)
     .eq("status", "approved")
     .is("archived_at", null)
     .or(publicListingExpiryFilter());

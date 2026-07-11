@@ -133,6 +133,7 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
     filterInputs.detailCondition,
     filterInputs.employmentType,
     filterInputs.salaryType,
+    filterInputs.withPhotos,
     filterInputs.debouncedQ,
     filterInputs.sort,
   ]);
