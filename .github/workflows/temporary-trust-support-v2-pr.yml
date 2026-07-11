@@ -24,6 +24,29 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Align integration script with current More hub
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/temporary-integrate-trust-support-v2.py")
+          source = path.read_text()
+          replacements = {
+              "'<div className=\"min-h-dvh\">'": "'<div className=\"rawaj-pulse-page min-h-dvh\" dir={isArabic ? \"rtl\" : \"ltr\"}>'",
+              "'<div className=\"rawaj-trust-v2 rawaj-more-v2 min-h-dvh\">'": "'<div className=\"rawaj-trust-v2 rawaj-more-v2 min-h-dvh\" dir={isArabic ? \"rtl\" : \"ltr\"}>'",
+              "'<main className=\"container-wide mobile-page-bottom space-y-5 pb-8 pt-3 sm:pt-5\">'": "'<main className=\"mobile-page-bottom mx-auto max-w-6xl px-4 pb-8 pt-3 sm:px-6 sm:pt-5 lg:px-8\">'",
+              "'          <div className=\"rawaj-storefront-section mb-3\">'": "'          <div className=\"mb-3.5 flex items-end justify-between gap-3\">'",
+              "'          </div>\\n          <div className=\"grid grid-cols-2 gap-3\">'": "'          </div>\\n          <div className=\"grid grid-cols-1 gap-3 sm:grid-cols-2\">'",
+              "'<div className=\"grid grid-cols-2 gap-3\">'": "'<div className=\"grid grid-cols-1 gap-3 sm:grid-cols-2\">'",
+              "'<section className=\"grid grid-cols-3 gap-2.5\">'": "'<section className=\"mt-4 grid grid-cols-3 gap-2.5 sm:gap-3\">'",
+              "'<div className=\"space-y-3\">'": "'<div className=\"mt-7 grid gap-4 lg:grid-cols-2\">'",
+          }
+          for old, new in replacements.items():
+              if old not in source:
+                  raise RuntimeError(f"Missing script anchor: {old}")
+              source = source.replace(old, new, 1)
+          path.write_text(source)
+          PY
       - name: Capture integration output
         shell: bash
         run: |
