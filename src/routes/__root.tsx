@@ -33,6 +33,7 @@ import marketplaceDiscoveryCss from "../marketplace-discovery.css?url";
 import messagingSignatureCss from "../messaging-signature.css?url";
 import myStoreHeaderCss from "../my-store-header.css?url";
 import myStoreReviewCardCss from "../my-store-review-card.css?url";
+import myStoreRedesignCss from "../my-store-redesign.css?url";
 import offersSignatureCss from "../offers-signature.css?url";
 import sellerStorefrontFoundationCss from "../seller-storefront-foundation.css?url";
 import signatureCss from "../signature.css?url";
@@ -124,6 +125,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: sellerStorefrontFoundationCss },
         { rel: "stylesheet", href: myStoreHeaderCss },
         { rel: "stylesheet", href: myStoreReviewCardCss },
+        { rel: "stylesheet", href: myStoreRedesignCss },
         { rel: "stylesheet", href: offersSignatureCss },
         { rel: "stylesheet", href: listingStudioSignatureCss },
         { rel: "stylesheet", href: messagingSignatureCss },
