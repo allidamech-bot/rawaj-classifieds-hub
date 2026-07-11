@@ -1,9 +1,9 @@
 name: Storefront Lint Diagnostic
 
 on:
-  push:
+  pull_request:
     branches:
-      - feature/apply-compact-storefront-review
+      - main
 
 permissions:
   contents: read
