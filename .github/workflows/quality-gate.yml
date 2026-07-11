@@ -129,6 +129,9 @@ jobs:
       - name: Contact phone normalization contract
         run: node --test scripts/contact-phone.test.mjs
 
+      - name: Authentication recovery contract
+        run: node --test scripts/auth-recovery.test.mjs
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
