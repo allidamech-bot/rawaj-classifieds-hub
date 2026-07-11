@@ -339,7 +339,7 @@ export async function fetchCurrentUserListings(
     .order("created_at", { ascending: false });
 
   if (error) return { ok: false, error: mapError(error, "owner_listings_read") };
-  const listings = ((data ?? []) as Record<string, unknown>[]).map((row) =>
+  const listings = ((data ?? []) as unknown as Record<string, unknown>[]).map((row) =>
     mapListing(row, references.categories, references.governorates),
   );
 
