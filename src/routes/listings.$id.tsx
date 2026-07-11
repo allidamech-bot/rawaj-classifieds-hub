@@ -36,6 +36,7 @@ import {
   jsonLdScript,
   plainText,
 } from "@/lib/seo";
+import { phoneHref, whatsappHref } from "@/lib/contact-phone";
 import { listingStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -284,8 +285,10 @@ function ListingDetailsPage() {
   ]);
   const cleanPhone = phone || detailString(listing, ["رقم الهاتف", "الهاتف"]);
   const cleanWhatsapp = whatsapp || detailString(listing, ["واتساب", "رقم واتساب"]);
-  const canCall = Boolean(listing.contactOptions.phone && cleanPhone);
-  const canWhatsapp = Boolean(listing.contactOptions.whatsapp && cleanWhatsapp);
+  const callHref = listing.contactOptions.phone ? phoneHref(cleanPhone) : null;
+  const whatsappUrl = listing.contactOptions.whatsapp ? whatsappHref(cleanWhatsapp) : null;
+  const canCall = Boolean(callHref);
+  const canWhatsapp = Boolean(whatsappUrl);
   const sellerName = listing.contactName?.trim() || text("معلن على رواج", "RAWAJ advertiser");
   const visibleImages = images.filter((image) => image.publicUrl);
   const selectedImage = visibleImages[selectedImageIndex] ?? visibleImages[0] ?? null;
@@ -597,7 +600,10 @@ function ListingDetailsPage() {
                 </h2>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   {canCall ? (
-                    <a href={`tel:${cleanPhone}`} className="rawaj-button-primary rounded-2xl py-3">
+                    <a
+                      href={callHref ?? undefined}
+                      className="rawaj-button-primary rounded-2xl py-3"
+                    >
                       <Phone className="h-4 w-4" />
                       {text("اتصال", "Call")}
                     </a>
@@ -606,7 +612,7 @@ function ListingDetailsPage() {
                   )}
                   {canWhatsapp ? (
                     <a
-                      href={`https://wa.me/${normalizePhoneForWhatsapp(cleanWhatsapp)}`}
+                      href={whatsappUrl ?? undefined}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center justify-center rounded-2xl bg-emerald-trust py-3 text-xs font-bold text-emerald-trust-foreground"
@@ -634,7 +640,7 @@ function ListingDetailsPage() {
             </button>
             {canCall && (
               <a
-                href={`tel:${cleanPhone}`}
+                href={callHref ?? undefined}
                 aria-label={text("اتصال", "Call")}
                 className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted-surface text-foreground"
               >
@@ -643,7 +649,7 @@ function ListingDetailsPage() {
             )}
             {canWhatsapp && (
               <a
-                href={`https://wa.me/${normalizePhoneForWhatsapp(cleanWhatsapp)}`}
+                href={whatsappUrl ?? undefined}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-emerald-trust px-3 text-[11px] font-extrabold text-emerald-trust-foreground"
@@ -908,10 +914,6 @@ function detailString(listing: ClassifiedListing, keys: string[]) {
     if (typeof value === "number") return String(value);
   }
   return "";
-}
-
-function normalizePhoneForWhatsapp(value: string) {
-  return value.replace(/[^\d]/g, "");
 }
 
 function formatDate(value: string, language: Language) {
