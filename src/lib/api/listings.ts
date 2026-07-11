@@ -39,6 +39,7 @@ import {
 
 import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
 import { isListingPastExpiry, publicListingExpiryFilter } from "@/lib/api/listing-expiry";
+import { publicListingSelect } from "@/lib/api/public-fields";
 import { buildListingImagePath, listingImagesBucket, validateImageFile } from "@/lib/api/storage";
 
 const signedImageUrlExpiresInSeconds = 900;
@@ -125,7 +126,7 @@ export async function fetchPublicListings(
 
   let query = clientResult.data
     .from("listings")
-    .select("*")
+    .select(publicListingSelect)
     .eq("status", "approved")
     .is("archived_at", null)
     .or(publicListingExpiryFilter());
@@ -246,7 +247,7 @@ export async function fetchListingDetail(
 
   const { data, error } = await clientResult.data
     .from("listings")
-    .select("*")
+    .select(publicListingSelect)
     .eq("id", listingId)
     .eq("status", "approved")
     .is("archived_at", null)

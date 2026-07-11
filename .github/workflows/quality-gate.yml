@@ -114,6 +114,9 @@ jobs:
       - name: Production deployment truth contract
         run: npm run test:deployment-truth
 
+      - name: Public data security contract
+        run: npm run test:public-data-security
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
