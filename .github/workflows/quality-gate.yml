@@ -117,6 +117,9 @@ jobs:
       - name: Public data security contract
         run: npm run test:public-data-security
 
+      - name: Admin security regression contract
+        run: node scripts/admin-security-regression.mjs
+
       - name: Home SSR contract
         run: npm run test:home-ssr
 
