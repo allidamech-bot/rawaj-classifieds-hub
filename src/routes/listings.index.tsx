@@ -39,7 +39,6 @@ import { useListingsResults } from "@/features/listings/use-listings-results";
 import { useListingsPagination } from "@/features/listings/use-listings-pagination";
 import {
   CategorySpecificFilterFields,
-  GovernorateChip,
   SellerSearchCard,
   StateCard,
   subcategoryName,
@@ -84,7 +83,6 @@ function ListingsPage() {
   const [salaryType, setSalaryType] = useState(search.salary_type ?? "");
   const [q, setQ] = useState(search.q ?? "");
   const [debouncedQ, setDebouncedQ] = useState(search.q ?? "");
-  const [open, setOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(Boolean(search.open_filters));
   const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -432,12 +430,6 @@ function ListingsPage() {
       : selectedCategory
         ? categoryName(selectedCategory.id, selectedCategory.nameAr, language)
         : text("كل الإعلانات", "All listings");
-  const sortChips = [
-    { id: "latest", label: text("الأحدث", "Latest") },
-    { id: "cheapest", label: text("الأرخص", "Lowest price") },
-    { id: "expensive", label: text("الأعلى سعرا", "Highest price") },
-    { id: "featured", label: text("المميز", "Featured") },
-  ] as const;
   const fuelTypeLabels: Record<string, string> = {
     gasoline: text("بنزين", "Gasoline"),
     diesel: text("ديزل", "Diesel"),
@@ -854,7 +846,7 @@ function ListingsPage() {
         />
 
         <aside className="rawaj-search-results-v1__sidebar rawaj-surface hidden rounded-[1.35rem] p-4 lg:block">
-          <div className="grid gap-3 lg:grid-cols-[220px_1fr]">
+          <div className="grid gap-4">
             <div>
               <h2 className="mb-2 text-xs font-extrabold text-muted-foreground">
                 {text("الأقسام", "Categories")}
@@ -1210,32 +1202,6 @@ function ListingsPage() {
             </section>
           ) : null}
         </FilterBottomSheet>
-
-        {open && (
-          <div className="mt-2 rounded-xl bg-card p-2 shadow-premium hairline">
-            <div className="flex flex-wrap gap-2">
-              <GovernorateChip
-                active={!govId}
-                label={text("كل سوريا", "All Syria")}
-                onClick={() => {
-                  setGovId("");
-                  setOpen(false);
-                }}
-              />
-              {governorates.map((governorate) => (
-                <GovernorateChip
-                  key={governorate.id}
-                  active={govId === governorate.id}
-                  label={governorateName(governorate.id, governorate.nameAr, language)}
-                  onClick={() => {
-                    setGovId(governorate.id);
-                    setOpen(false);
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
           <span>
