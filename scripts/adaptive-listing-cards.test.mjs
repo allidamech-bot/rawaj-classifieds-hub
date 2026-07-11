@@ -23,15 +23,30 @@ const [
 ] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/listings/RealListingCard.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listings/cards/AdaptiveListingCard.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/listings/cards/AdaptiveListingCard.tsx", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/features/listings/cards/ProductCard.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/listings/cards/VehicleCard.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/listings/cards/PropertyCard.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/listings/cards/CompactCard.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listings/cards/FeaturedShowcaseCard.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listings/cards/ListingCardSkeleton.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listings/cards/ListingCardShared.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listings/cards/listing-card-utils.ts", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/listings/cards/FeaturedShowcaseCard.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listings/cards/ListingCardSkeleton.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listings/cards/ListingCardShared.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listings/cards/listing-card-utils.ts", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/features/listings/listings-components.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/listings.index.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/favorites.tsx", import.meta.url), "utf8"),

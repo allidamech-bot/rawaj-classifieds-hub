@@ -2,21 +2,20 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, home, hero, worlds, showcase, featuredCard, latest, trust, css] =
-  await Promise.all([
-    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/index.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/home/DiscoveryHero.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/home/CategoryWorlds.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/home/FeaturedListingShowcase.tsx", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/features/listings/cards/FeaturedShowcaseCard.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../src/features/home/LatestDiscovery.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/home/HomeTrustStrip.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/home-discovery-v3.css", import.meta.url), "utf8"),
-  ]);
+const [root, home, hero, worlds, showcase, featuredCard, latest, trust, css] = await Promise.all([
+  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/index.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/home/DiscoveryHero.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/home/CategoryWorlds.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/home/FeaturedListingShowcase.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/listings/cards/FeaturedShowcaseCard.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(new URL("../src/features/home/LatestDiscovery.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/home/HomeTrustStrip.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/home-discovery-v3.css", import.meta.url), "utf8"),
+]);
 
 test("home discovery V3 styles load after marketplace V2", () => {
   assert.match(root, /import homeDiscoveryV3Css from "\.\.\/home-discovery-v3\.css\?url";/);
