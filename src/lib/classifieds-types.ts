@@ -459,6 +459,14 @@ export interface ListingReport {
   updatedAt: string;
 }
 
+export interface ModerateReportPayload {
+  reportId: string;
+  status: ListingReportStatus;
+  assignedTo?: string | null;
+  adminNote?: string | null;
+  resolvedAt?: string | null;
+}
+
 export interface SupportRequest {
   id: string;
   userId: string;
@@ -556,6 +564,7 @@ export interface ListingFilters {
   detailCondition?: string;
   employmentType?: string;
   salaryType?: string;
+  withPhotos?: boolean;
   query?: string;
   sort?: "latest" | "cheapest" | "expensive" | "featured";
 }
@@ -588,10 +597,32 @@ export interface ListingImageUploadPayload {
   altAr?: string | null;
 }
 
-export interface ModerateReportPayload {
-  reportId: string;
-  status: ListingReportStatus;
-  assignedTo?: string | null;
-  adminNote?: string | null;
-  resolvedAt?: string | null;
+export interface ReorderListingImagePayload {
+  userId: string | null;
+  listing: ClassifiedListing;
+  imageId: string;
+  expectedSortOrder: number;
+  targetSortOrder: number;
+}
+
+export interface DeleteListingImagePayload {
+  userId: string | null;
+  listing: ClassifiedListing;
+  image: ListingImage;
+  expectedSortOrder: number;
+}
+
+export interface ListingDraft {
+  id: string;
+  userId: string;
+  status: "draft";
+  updatedAt: string;
+  listing: ClassifiedListing;
+  images: ListingImage[];
+}
+
+export interface ListingDraftRecoverySnapshot {
+  listingId: string;
+  updatedAt: string;
+  source: "server_draft";
 }

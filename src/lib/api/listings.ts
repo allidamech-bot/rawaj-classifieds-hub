@@ -124,9 +124,13 @@ export async function fetchPublicListings(
   const references = await readReferences(clientResult.data);
   if (!references.ok) return { ok: false, error: references.error };
 
+  const listingSelect = filters.withPhotos
+    ? `${publicListingSelect},listing_images!inner(id)`
+    : publicListingSelect;
+
   let query = clientResult.data
     .from("listings")
-    .select(publicListingSelect)
+    .select(listingSelect)
     .eq("status", "approved")
     .is("archived_at", null)
     .or(publicListingExpiryFilter());
@@ -188,7 +192,7 @@ export async function fetchPublicListings(
   const { data, error } = await query.limit(safePageSize + 1);
   if (error) return { ok: false, error: mapError(error) };
 
-  const listings = ((data ?? []) as Record<string, unknown>[]).map((row) =>
+  const listings = ((data ?? []) as unknown as Record<string, unknown>[]).map((row) =>
     mapListing(row, references.categories, references.governorates),
   );
 
@@ -335,7 +339,7 @@ export async function fetchCurrentUserListings(
     .order("created_at", { ascending: false });
 
   if (error) return { ok: false, error: mapError(error, "owner_listings_read") };
-  const listings = ((data ?? []) as Record<string, unknown>[]).map((row) =>
+  const listings = ((data ?? []) as unknown as Record<string, unknown>[]).map((row) =>
     mapListing(row, references.categories, references.governorates),
   );
 

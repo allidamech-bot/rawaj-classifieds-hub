@@ -1,7 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpDown, Filter, Search, X } from "lucide-react";
+import { X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { FilterBottomSheet } from "@/features/search/FilterBottomSheet";
+import { FilterCategoryGrid } from "@/features/search/FilterCategoryGrid";
+import { QuickFilterRail } from "@/features/search/QuickFilterRail";
+import { SearchEmptyState } from "@/features/search/SearchEmptyState";
+import { SearchResultsToolbar } from "@/features/search/SearchResultsToolbar";
 import { ListingCardSkeleton } from "@/features/listings/cards";
 import { RealListingCard } from "@/features/listings/RealListingCard";
 import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
@@ -21,6 +26,7 @@ import { useUiPreferences } from "@/lib/ui-preferences";
 import {
   listingsSearchSchema,
   type ListingsSort,
+  type ListingsView,
 } from "@/features/listings/listings-search-schema";
 import {
   buildListingsCategoryNavigationSearch,
@@ -33,7 +39,6 @@ import { useListingsResults } from "@/features/listings/use-listings-results";
 import { useListingsPagination } from "@/features/listings/use-listings-pagination";
 import {
   CategorySpecificFilterFields,
-  GovernorateChip,
   SellerSearchCard,
   StateCard,
   subcategoryName,
@@ -56,6 +61,8 @@ function ListingsPage() {
   const navigate = useNavigate();
   const { language, text } = useUiPreferences();
   const [sort, setSort] = useState<ListingsSort>(search.sort ?? "latest");
+  const [view, setView] = useState<ListingsView>(search.view ?? "grid");
+  const [withPhotos, setWithPhotos] = useState(Boolean(search.with_photos));
   const [subcategoryId, setSubcategoryId] = useState(search.subcategory ?? "");
   const [districtAr, setDistrictAr] = useState(search.district ?? "");
   const [locationLabel, setLocationLabel] = useState("");
@@ -76,9 +83,7 @@ function ListingsPage() {
   const [salaryType, setSalaryType] = useState(search.salary_type ?? "");
   const [q, setQ] = useState(search.q ?? "");
   const [debouncedQ, setDebouncedQ] = useState(search.q ?? "");
-  const [open, setOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(Boolean(search.open_filters));
-  const [sortOpen, setSortOpen] = useState(false);
   const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
 
   const references = useListingsReferences(search);
@@ -174,7 +179,8 @@ function ListingsPage() {
     electronicsBrand ||
     detailCondition ||
     employmentType ||
-    salaryType,
+    salaryType ||
+    withPhotos,
   );
 
   useEffect(() => {
@@ -197,6 +203,8 @@ function ListingsPage() {
     setEmploymentType(search.employment_type ?? "");
     setSalaryType(search.salary_type ?? "");
     setSort(search.sort ?? "latest");
+    setView(search.view ?? "grid");
+    setWithPhotos(Boolean(search.with_photos));
   }, [
     search.car_make,
     search.car_model,
@@ -217,6 +225,8 @@ function ListingsPage() {
     search.sort,
     search.subcategory,
     search.transmission,
+    search.view,
+    search.with_photos,
   ]);
 
   useEffect(() => {
@@ -285,7 +295,7 @@ function ListingsPage() {
   }, [availableDistricts, canonicalLocationNodeId, districtAr, selectedGovernorate]);
 
   useEffect(() => {
-    if (!referencesLoaded) return;
+    if (!referencesLoaded || filtersOpen) return;
     if (taxonomyAvailable && search.taxonomy && !selectedTaxonomyNode) return;
 
     void navigate({
@@ -315,8 +325,10 @@ function ListingsPage() {
         detailCondition,
         employmentType,
         salaryType,
+        withPhotos,
         debouncedQ,
         sort,
+        view,
       }),
       replace: true,
     });
@@ -351,8 +363,11 @@ function ListingsPage() {
     detailCondition,
     employmentType,
     salaryType,
+    withPhotos,
     debouncedQ,
     sort,
+    view,
+    filtersOpen,
     navigate,
   ]);
 
@@ -378,6 +393,7 @@ function ListingsPage() {
     detailCondition,
     employmentType,
     salaryType,
+    withPhotos,
     debouncedQ,
     sort,
     referencesLoaded,
@@ -414,12 +430,6 @@ function ListingsPage() {
       : selectedCategory
         ? categoryName(selectedCategory.id, selectedCategory.nameAr, language)
         : text("كل الإعلانات", "All listings");
-  const sortChips = [
-    { id: "latest", label: text("الأحدث", "Latest") },
-    { id: "cheapest", label: text("الأرخص", "Lowest price") },
-    { id: "expensive", label: text("الأعلى سعرا", "Highest price") },
-    { id: "featured", label: text("المميز", "Featured") },
-  ] as const;
   const fuelTypeLabels: Record<string, string> = {
     gasoline: text("بنزين", "Gasoline"),
     diesel: text("ديزل", "Diesel"),
@@ -506,6 +516,13 @@ function ListingsPage() {
       : null,
     priceMax.trim()
       ? { key: "priceMax", label: `${text("إلى", "To")} ${priceMax}`, clear: () => setPriceMax("") }
+      : null,
+    withPhotos
+      ? {
+          key: "withPhotos",
+          label: text("مع صور", "With photos"),
+          clear: () => setWithPhotos(false),
+        }
       : null,
     q.trim() ? { key: "query", label: q.trim(), clear: () => setQ("") } : null,
     carMake ? { key: "carMake", label: carMake, clear: () => setCarMake("") } : null,
@@ -607,6 +624,7 @@ function ListingsPage() {
     detailCondition,
     employmentType,
     salaryType,
+    withPhotos,
     debouncedQ,
     sort,
     nextCursor,
@@ -675,6 +693,32 @@ function ListingsPage() {
     }
   }
 
+  function restoreFilterDraftFromSearch() {
+    setGovId(search.gov ?? "");
+    setDistrictAr(search.district ?? "");
+    setPriceMin(search.price_min?.toString() ?? "");
+    setPriceMax(search.price_max?.toString() ?? "");
+    setCarMake(search.car_make ?? "");
+    setCarModel(search.car_model ?? "");
+    setFuelType(search.fuel ?? "");
+    setTransmission(search.transmission ?? "");
+    setPropertyPurpose(search.property_purpose ?? "");
+    setPropertyType(search.property_type ?? "");
+    setRooms(search.rooms?.toString() ?? "");
+    setRentalDuration(search.rental_duration ?? "");
+    setElectronicsBrand(search.electronics_brand ?? "");
+    setDetailCondition(search.detail_condition ?? "");
+    setEmploymentType(search.employment_type ?? "");
+    setSalaryType(search.salary_type ?? "");
+    setSubcategoryId(search.subcategory ?? "");
+    setDraftCategoryId(search.taxonomy ? undefined : (search.category ?? undefined));
+  }
+
+  function handleFilterSheetOpenChange(nextOpen: boolean) {
+    if (!nextOpen) restoreFilterDraftFromSearch();
+    setFiltersOpen(nextOpen);
+  }
+
   function resetFilters() {
     setGovId("");
     setDistrictAr("");
@@ -691,7 +735,7 @@ function ListingsPage() {
     setEmploymentType("");
     setSalaryType("");
     setQ("");
-    setSortOpen(false);
+    setWithPhotos(false);
     setFiltersOpen(false);
     setDraftCategoryId(undefined);
     const taxonomyPurposeVal = taxonomyListingSearch?.property_purpose;
@@ -709,6 +753,7 @@ function ListingsPage() {
         taxonomyPropertyPurpose: taxonomyPurposeVal,
         taxonomyPropertyType: taxonomyTypeVal,
         sort,
+        view,
       }),
       replace: true,
     });
@@ -739,8 +784,10 @@ function ListingsPage() {
         detailCondition,
         employmentType,
         salaryType,
+        withPhotos,
         debouncedQ,
         sort,
+        view,
       }),
       replace: true,
     });
@@ -749,150 +796,57 @@ function ListingsPage() {
   return (
     <>
       <PageHeader title={title} />
-      <main className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
-        <section className="rawaj-hero-surface rounded-[1.55rem] p-4 sm:rounded-[1.8rem] sm:p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="rawaj-eyebrow">
-                {selectedCategory
-                  ? text("نتائج ضمن قسم", "Results in category")
-                  : text("نتائج السوق", "Marketplace results")}
-              </p>
-              <h1 className="mt-1 truncate text-lg font-bold leading-tight text-primary sm:text-[1.35rem]">
-                {title}
-              </h1>
-              {selectedTaxonomyPath.length > 1 ? (
-                <p className="mt-1.5 truncate text-[10px] font-medium text-muted-foreground">
-                  {taxonomyPathLabel(selectedTaxonomyPath, language)}
-                </p>
-              ) : null}
-            </div>
-            <span className="rawaj-chip shrink-0 border-primary/10 bg-card/75 px-2.5 py-1 text-primary shadow-soft">
-              {loading
-                ? text("جارٍ التحميل", "Loading")
-                : text(`${items.length} نتيجة`, `${items.length} results`)}
-            </span>
-          </div>
+      <main className="rawaj-search-results-v1 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+        <SearchResultsToolbar
+          title={title}
+          pathLabel={
+            selectedTaxonomyPath.length > 1
+              ? taxonomyPathLabel(selectedTaxonomyPath, language)
+              : undefined
+          }
+          query={q}
+          onQueryChange={setQ}
+          resultCount={items.length}
+          loading={loading}
+          activeFilterCount={activeFilterCount}
+          sort={sort}
+          onSortChange={setSort}
+          view={view}
+          onViewChange={setView}
+          onOpenFilters={() => setFiltersOpen(true)}
+          text={text}
+        />
 
-          <div className="mt-3 flex items-stretch gap-2">
-            <label className="flex min-h-13 min-w-0 flex-1 items-center gap-2.5 rounded-[1.05rem] border border-border/85 bg-card/88 px-3.5 shadow-[0_7px_22px_rgba(16,43,70,0.05)] transition focus-within:border-brand-orange/60 focus-within:bg-card focus-within:ring-[3px] focus-within:ring-brand-orange/12">
-              <Search className="h-4.5 w-4.5 shrink-0 text-primary" strokeWidth={1.9} />
-              <input
-                value={q}
-                onChange={(event) => setQ(event.target.value)}
-                placeholder={text("ابحث ضمن النتائج...", "Search within results...")}
-                aria-label={text("بحث في الإعلانات", "Search listings")}
-                className="w-full bg-transparent text-sm font-medium outline-none placeholder:font-normal"
-              />
-            </label>
-            <button
-              type="button"
-              onClick={() => {
-                setSortOpen(false);
-                setFiltersOpen(true);
-              }}
-              aria-label={text("الفلاتر", "Filters")}
-              className="rawaj-button-primary relative grid min-h-13 w-13 shrink-0 place-items-center rounded-[1.05rem] p-0"
-            >
-              <Filter className="h-4.5 w-4.5" strokeWidth={2} />
-              {activeFilterCount > 0 ? (
-                <span className="absolute -end-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-brand-orange px-1 text-[9px] font-extrabold text-white ring-2 ring-card">
-                  {activeFilterCount}
-                </span>
-              ) : null}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setFiltersOpen(false);
-                setSortOpen((value) => !value);
-              }}
-              aria-expanded={sortOpen}
-              aria-label={text("الترتيب", "Sort")}
-              className="rawaj-icon-button min-h-13 w-13 shrink-0 rounded-[1.05rem]"
-            >
-              <ArrowUpDown className="h-4.5 w-4.5" strokeWidth={1.9} />
-            </button>
-          </div>
+        <QuickFilterRail
+          locationLabel={
+            canonicalLocationNodeId
+              ? locationLabel || text("الموقع", "Location")
+              : selectedGovernorate
+                ? governorateName(selectedGovernorate.id, selectedGovernorate.nameAr, language)
+                : text("كل سوريا", "All Syria")
+          }
+          priceActive={Boolean(priceMin.trim() || priceMax.trim())}
+          categoryLabel={
+            selectedCategory
+              ? categoryName(selectedCategory.id, selectedCategory.nameAr, language)
+              : text("القسم", "Category")
+          }
+          categoryActive={Boolean(selectedCategory)}
+          conditionActive={Boolean(detailCondition)}
+          showCondition={categoryFieldKind === "electronics"}
+          withPhotos={withPhotos}
+          newestActive={sort === "latest"}
+          hasActiveFilters={hasActiveFilters}
+          onOpenFilters={() => setFiltersOpen(true)}
+          onNewest={() => setSort("latest")}
+          onTogglePhotos={() => setWithPhotos((value) => !value)}
+          onReset={resetFilters}
+          fieldKind={categoryFieldKind}
+          text={text}
+        />
 
-          <div className="no-scrollbar mt-2.5 flex gap-2 overflow-x-auto pb-0.5">
-            <button
-              type="button"
-              onClick={() => setFiltersOpen(true)}
-              className={`rawaj-chip shrink-0 px-3 py-1.5 transition ${
-                districtAr || govId
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "bg-card/72 text-muted-foreground"
-              }`}
-            >
-              {canonicalLocationNodeId
-                ? locationLabel || text("الموقع", "Location")
-                : selectedGovernorate
-                  ? governorateName(selectedGovernorate.id, selectedGovernorate.nameAr, language)
-                  : text("كل سوريا", "All Syria")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setFiltersOpen(true)}
-              className={`rawaj-chip shrink-0 px-3 py-1.5 transition ${
-                priceMin.trim() || priceMax.trim()
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "bg-card/72 text-muted-foreground"
-              }`}
-            >
-              {priceMin.trim() || priceMax.trim()
-                ? text("السعر محدد", "Price set")
-                : text("السعر", "Price")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setFiltersOpen(true)}
-              className={`rawaj-chip shrink-0 px-3 py-1.5 transition ${
-                selectedCategory
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "bg-card/72 text-muted-foreground"
-              }`}
-            >
-              {selectedCategory
-                ? categoryName(selectedCategory.id, selectedCategory.nameAr, language)
-                : text("القسم", "Category")}
-            </button>
-            {hasActiveFilters ? (
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="rawaj-chip shrink-0 border-brand-orange/20 bg-brand-orange/8 px-3 py-1.5 font-semibold text-brand-orange"
-              >
-                {text("مسح الكل", "Clear all")}
-              </button>
-            ) : null}
-          </div>
-
-          {sortOpen ? (
-            <div className="rawaj-surface mt-3 grid grid-cols-2 gap-2 rounded-[1.15rem] p-2 sm:grid-cols-4">
-              {sortChips.map((chip) => (
-                <button
-                  key={chip.id}
-                  type="button"
-                  onClick={() => {
-                    setSort(chip.id);
-                    setSortOpen(false);
-                  }}
-                  className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
-                    sort === chip.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card text-foreground hairline"
-                  }`}
-                >
-                  {chip.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </section>
-
-        <section className="rawaj-surface mt-4 hidden rounded-[1.35rem] p-4 lg:block">
-          <div className="grid gap-3 lg:grid-cols-[220px_1fr]">
+        <aside className="rawaj-search-results-v1__sidebar rawaj-surface hidden rounded-[1.35rem] p-4 lg:block">
+          <div className="grid gap-4">
             <div>
               <h2 className="mb-2 text-xs font-extrabold text-muted-foreground">
                 {text("الأقسام", "Categories")}
@@ -906,6 +860,8 @@ function ListingsPage() {
                     districtAr,
                     query: q,
                     sort,
+                    view,
+                    withPhotos,
                   })}
                   className={`shrink-0 rounded-xl px-3 py-2 text-xs font-bold transition ${
                     !selectedCategory
@@ -1080,255 +1036,172 @@ function ListingsPage() {
               </div>
             </div>
           </div>
-        </section>
+        </aside>
 
-        {filtersOpen && (
-          <div className="fixed inset-0 z-50 flex items-end bg-primary/32 p-0 backdrop-blur-[3px] lg:hidden">
-            <div className="mx-auto flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-[2rem] border border-b-0 border-border/80 bg-card shadow-premium">
-              <div className="relative flex items-center justify-between border-b border-border/70 px-4 pb-3 pt-5 before:absolute before:left-1/2 before:top-2 before:h-1 before:w-10 before:-translate-x-1/2 before:rounded-full before:bg-border">
-                <h2 className="text-sm font-extrabold">
-                  {text("فلترة الإعلانات", "Filter listings")}
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setFiltersOpen(false)}
-                  className="rawaj-icon-button h-9 w-9"
-                  aria-label={text("إغلاق الفلاتر", "Close filters")}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="space-y-5 overflow-y-auto px-4 pb-5 pt-4">
-                <div>
-                  <h3 className="mb-2 text-xs font-extrabold text-muted-foreground">
-                    {text("القسم", "Category")}
-                  </h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDraftCategoryId("");
-                        setSubcategoryId("");
-                      }}
-                      aria-pressed={!draftSelectedCategory}
-                      className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
-                        !draftSelectedCategory
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted-surface text-foreground"
-                      }`}
-                    >
-                      {text("كل الأقسام", "All categories")}
-                    </button>
-                    {categories.map((category) => (
-                      <button
-                        key={category.id}
-                        type="button"
-                        onClick={() => {
-                          setDraftCategoryId(category.id);
-                          setSubcategoryId("");
-                        }}
-                        aria-pressed={draftSelectedCategory?.id === category.id}
-                        className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
-                          draftSelectedCategory?.id === category.id
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted-surface text-foreground"
-                        }`}
-                      >
-                        {categoryName(category.id, category.nameAr, language)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {draftSelectedCategory && mobileAvailableSubcategories.length > 0 && (
-                  <div>
-                    <h3 className="mb-2 text-xs font-extrabold text-muted-foreground">
-                      {text("الأقسام الفرعية", "Subcategories")}
-                    </h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSubcategoryId("")}
-                        aria-pressed={!subcategoryId}
-                        className={`rounded-xl px-3 py-2 text-start text-xs font-bold ${
-                          !subcategoryId
-                            ? "bg-gold text-gold-foreground"
-                            : "bg-muted-surface text-foreground"
-                        }`}
-                      >
-                        {text("كل القسم", "All in category")}
-                      </button>
-                      {mobileAvailableSubcategories.map((subcategory) => (
-                        <button
-                          key={subcategory.id}
-                          type="button"
-                          onClick={() => setSubcategoryId(subcategory.id)}
-                          aria-pressed={subcategoryId === subcategory.id}
-                          className={`rounded-xl px-3 py-2 text-start text-xs font-bold ${
-                            subcategoryId === subcategory.id
-                              ? "bg-gold text-gold-foreground"
-                              : "bg-muted-surface text-foreground"
-                          }`}
-                        >
-                          {subcategoryName(subcategory, language)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <h3 className="text-xs font-extrabold text-muted-foreground">
-                      {text("الموقع", "Location")}
-                    </h3>
-                    {(districtAr || govId) && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setGovId("");
-                          setDistrictAr("");
-                        }}
-                        className="text-xs font-bold text-primary"
-                      >
-                        {text("كل سوريا", "All Syria")}
-                      </button>
-                    )}
-                  </div>
-                  <CanonicalLocationSelector
-                    value={canonicalLocationNodeId || null}
-                    onChange={handleCanonicalLocationChange}
-                  />
-                  {districtAr && !canonicalLocationNodeId ? (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      {text("الموقع القديم المحفوظ: ", "Saved legacy location: ")}
-                      {districtAr}
-                    </p>
-                  ) : null}
-                </div>
-
-                <div>
-                  <h3 className="mb-2 text-xs font-extrabold text-muted-foreground">
-                    {text("السعر", "Price")}
-                  </h3>
-                  <div className="mb-3 grid grid-cols-2 gap-3">
-                    <label>
-                      <span className="mb-1 block text-xs font-bold text-muted-foreground">
-                        {text("السعر من", "Price from")}
-                      </span>
-                      <input
-                        value={priceMin}
-                        onChange={(event) => setPriceMin(event.target.value)}
-                        type="number"
-                        min={0}
-                        inputMode="numeric"
-                        className="input text-xs"
-                      />
-                    </label>
-                    <label>
-                      <span className="mb-1 block text-xs font-bold text-muted-foreground">
-                        {text("السعر إلى", "Price to")}
-                      </span>
-                      <input
-                        value={priceMax}
-                        onChange={(event) => setPriceMax(event.target.value)}
-                        type="number"
-                        min={0}
-                        inputMode="numeric"
-                        className="input text-xs"
-                      />
-                    </label>
-                  </div>
-                </div>
-
-                {draftCategoryFieldKind !== "general" && (
-                  <div>
-                    <h3 className="mb-2 text-xs font-extrabold text-muted-foreground">
-                      {text("خيارات متقدمة", "Advanced options")}
-                    </h3>
-                    <CategorySpecificFilterFields
-                      kind={draftCategoryFieldKind}
-                      text={text}
-                      values={{
-                        carMake,
-                        carModel,
-                        fuelType,
-                        transmission,
-                        propertyPurpose: filterPropertyPurpose,
-                        propertyType: filterPropertyType,
-                        rooms,
-                        rentalDuration,
-                        electronicsBrand,
-                        detailCondition,
-                        employmentType,
-                        salaryType,
-                      }}
-                      setters={{
-                        setCarMake,
-                        setCarModel,
-                        setFuelType,
-                        setTransmission,
-                        setPropertyPurpose,
-                        setPropertyType,
-                        setRooms,
-                        setRentalDuration,
-                        setElectronicsBrand,
-                        setDetailCondition,
-                        setEmploymentType,
-                        setSalaryType,
-                      }}
-                      taxonomyOwnsPurpose={taxonomyOwnsPropertyPurpose}
-                      taxonomyOwnsType={taxonomyOwnsPropertyType}
-                    />
-                  </div>
-                )}
-              </div>
-              <div className="sticky bottom-0 grid grid-cols-[0.8fr_1.2fr] gap-2 border-t border-border/70 bg-card/94 p-4 shadow-[0_-10px_30px_rgba(16,43,70,0.06)] backdrop-blur-xl">
-                <button
-                  type="button"
-                  onClick={resetFilters}
-                  disabled={!hasActiveFilters}
-                  className="min-h-12 rounded-2xl bg-background px-4 py-2.5 text-xs font-bold text-muted-foreground disabled:opacity-50"
-                >
-                  {text("مسح الفلاتر", "Clear filters")}
-                </button>
-                <button
-                  type="button"
-                  onClick={applyFilters}
-                  className="rawaj-button-primary min-h-12 rounded-2xl px-4 py-2.5"
-                >
-                  {text("عرض النتائج", "Show results")}
-                </button>
-              </div>
+        <FilterBottomSheet
+          open={filtersOpen}
+          onOpenChange={handleFilterSheetOpenChange}
+          activeCount={activeFilterCount}
+          onReset={resetFilters}
+          onApply={applyFilters}
+          text={text}
+        >
+          <section className="rawaj-filter-sheet__section">
+            <div className="rawaj-filter-sheet__section-heading">
+              <h3>{text("القسم", "Category")}</h3>
             </div>
-          </div>
-        )}
+            <FilterCategoryGrid
+              categories={categories}
+              selectedCategory={draftSelectedCategory}
+              language={language}
+              onSelect={(categoryId) => {
+                setDraftCategoryId(categoryId);
+                setSubcategoryId("");
+              }}
+              text={text}
+            />
+          </section>
 
-        {open && (
-          <div className="mt-2 rounded-xl bg-card p-2 shadow-premium hairline">
-            <div className="flex flex-wrap gap-2">
-              <GovernorateChip
-                active={!govId}
-                label={text("كل سوريا", "All Syria")}
-                onClick={() => {
-                  setGovId("");
-                  setOpen(false);
-                }}
-              />
-              {governorates.map((governorate) => (
-                <GovernorateChip
-                  key={governorate.id}
-                  active={govId === governorate.id}
-                  label={governorateName(governorate.id, governorate.nameAr, language)}
+          {draftSelectedCategory && mobileAvailableSubcategories.length > 0 ? (
+            <section className="rawaj-filter-sheet__section">
+              <div className="rawaj-filter-sheet__section-heading">
+                <h3>{text("الأقسام الفرعية", "Subcategories")}</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <button
+                  type="button"
+                  onClick={() => setSubcategoryId("")}
+                  aria-pressed={!subcategoryId}
+                  className={`rounded-xl px-3 py-2 text-start text-xs font-bold ${
+                    !subcategoryId
+                      ? "bg-gold text-gold-foreground"
+                      : "bg-muted-surface text-foreground"
+                  }`}
+                >
+                  {text("كل القسم", "All in category")}
+                </button>
+                {mobileAvailableSubcategories.map((subcategory) => (
+                  <button
+                    key={subcategory.id}
+                    type="button"
+                    onClick={() => setSubcategoryId(subcategory.id)}
+                    aria-pressed={subcategoryId === subcategory.id}
+                    className={`rounded-xl px-3 py-2 text-start text-xs font-bold ${
+                      subcategoryId === subcategory.id
+                        ? "bg-gold text-gold-foreground"
+                        : "bg-muted-surface text-foreground"
+                    }`}
+                  >
+                    {subcategoryName(subcategory, language)}
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          <section className="rawaj-filter-sheet__section">
+            <div className="rawaj-filter-sheet__section-heading">
+              <h3>{text("الموقع", "Location")}</h3>
+              {districtAr || govId ? (
+                <button
+                  type="button"
                   onClick={() => {
-                    setGovId(governorate.id);
-                    setOpen(false);
+                    setGovId("");
+                    setDistrictAr("");
                   }}
-                />
-              ))}
+                >
+                  {text("كل سوريا", "All Syria")}
+                </button>
+              ) : null}
             </div>
-          </div>
-        )}
+            <CanonicalLocationSelector
+              value={canonicalLocationNodeId || null}
+              onChange={handleCanonicalLocationChange}
+            />
+            {districtAr && !canonicalLocationNodeId ? (
+              <p className="text-xs text-muted-foreground">
+                {text("الموقع القديم المحفوظ: ", "Saved legacy location: ")}
+                {districtAr}
+              </p>
+            ) : null}
+          </section>
+
+          <section className="rawaj-filter-sheet__section">
+            <div className="rawaj-filter-sheet__section-heading">
+              <h3>{text("السعر", "Price")}</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <label>
+                <span className="mb-1 block text-xs font-bold text-muted-foreground">
+                  {text("السعر من", "Price from")}
+                </span>
+                <input
+                  value={priceMin}
+                  onChange={(event) => setPriceMin(event.target.value)}
+                  type="number"
+                  min={0}
+                  inputMode="numeric"
+                  className="input text-xs"
+                />
+              </label>
+              <label>
+                <span className="mb-1 block text-xs font-bold text-muted-foreground">
+                  {text("السعر إلى", "Price to")}
+                </span>
+                <input
+                  value={priceMax}
+                  onChange={(event) => setPriceMax(event.target.value)}
+                  type="number"
+                  min={0}
+                  inputMode="numeric"
+                  className="input text-xs"
+                />
+              </label>
+            </div>
+          </section>
+
+          {draftCategoryFieldKind !== "general" ? (
+            <section className="rawaj-filter-sheet__section">
+              <div className="rawaj-filter-sheet__section-heading">
+                <h3>{text("خيارات القسم", "Category options")}</h3>
+              </div>
+              <CategorySpecificFilterFields
+                kind={draftCategoryFieldKind}
+                text={text}
+                values={{
+                  carMake,
+                  carModel,
+                  fuelType,
+                  transmission,
+                  propertyPurpose: filterPropertyPurpose,
+                  propertyType: filterPropertyType,
+                  rooms,
+                  rentalDuration,
+                  electronicsBrand,
+                  detailCondition,
+                  employmentType,
+                  salaryType,
+                }}
+                setters={{
+                  setCarMake,
+                  setCarModel,
+                  setFuelType,
+                  setTransmission,
+                  setPropertyPurpose,
+                  setPropertyType,
+                  setRooms,
+                  setRentalDuration,
+                  setElectronicsBrand,
+                  setDetailCondition,
+                  setEmploymentType,
+                  setSalaryType,
+                }}
+                taxonomyOwnsPurpose={taxonomyOwnsPropertyPurpose}
+                taxonomyOwnsType={taxonomyOwnsPropertyType}
+              />
+            </section>
+          ) : null}
+        </FilterBottomSheet>
 
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
           <span>
@@ -1432,7 +1305,8 @@ function ListingsPage() {
           />
         ) : loading ? (
           <div
-            className="listing-card-grid mt-3"
+            className="rawaj-results-grid listing-card-grid mt-3"
+            data-view={view}
             aria-label={text("جاري تحميل الإعلانات", "Loading listings")}
           >
             {Array.from({ length: 6 }, (_, index) => (
@@ -1463,18 +1337,14 @@ function ListingsPage() {
             actionTo="/"
           />
         ) : items.length === 0 ? (
-          <StateCard
-            title={text("لا توجد إعلانات مطابقة الآن", "No matching listings now")}
-            body={text(
-              "تظهر هنا الإعلانات المعتمدة فقط بعد المراجعة.",
-              "Only approved listings appear here after review.",
-            )}
-            actionLabel={text("أضف إعلانك", "Post your listing")}
-            actionTo="/add-listing"
+          <SearchEmptyState
+            hasActiveFilters={hasActiveFilters}
+            onReset={resetFilters}
+            text={text}
           />
         ) : (
           <>
-            <div className="listing-card-grid mt-3">
+            <div className="rawaj-results-grid listing-card-grid mt-3" data-view={view}>
               {items.map((listing) => (
                 <RealListingCard key={listing.id} listing={listing} />
               ))}

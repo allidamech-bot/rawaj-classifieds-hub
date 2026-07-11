@@ -2,8 +2,10 @@ import { z } from "zod";
 import { parseBooleanParam } from "../../lib/boolean-parser.ts";
 
 export const listingsSortValues = ["latest", "cheapest", "expensive", "featured"] as const;
+export const listingsViewValues = ["grid", "list"] as const;
 
 export type ListingsSort = (typeof listingsSortValues)[number];
+export type ListingsView = (typeof listingsViewValues)[number];
 
 export const listingsSearchSchema = z
   .object({
@@ -29,6 +31,8 @@ export const listingsSearchSchema = z
     salary_type: z.string().optional(),
     q: z.string().optional(),
     sort: z.enum(listingsSortValues).optional(),
+    view: z.enum(listingsViewValues).optional(),
+    with_photos: z.preprocess(parseBooleanParam, z.boolean().optional()),
     open_filters: z.preprocess(parseBooleanParam, z.boolean().optional()),
   })
   .transform((search) => ({

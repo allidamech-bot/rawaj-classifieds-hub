@@ -1,10 +1,13 @@
-import type {
-  ClassifiedsResult,
-  ListingReport,
-  ListingReportType,
-  ModerateReportPayload,
-} from "@/lib/classifieds-types";
+import type { ClassifiedsResult, ListingReport, ListingReportType } from "@/lib/classifieds-types";
 import { getClient, mapError, rowNullableString, rowRecord, rowString } from "@/lib/api/shared";
+
+interface ModerateReportPayload {
+  reportId: string;
+  status: ListingReport["status"];
+  assignedTo?: string | null;
+  adminNote?: string | null;
+  resolvedAt?: string | null;
+}
 
 export function fromDbReportStatus(status: string): ListingReport["status"] {
   if (status === "in_review") return "under_review";

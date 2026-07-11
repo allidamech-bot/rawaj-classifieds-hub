@@ -39,6 +39,7 @@ import myStoreHeaderRefinementCss from "../my-store-header-refinement.css?url";
 import myStoreRedesignCss from "../my-store-redesign.css?url";
 import offersSignatureCss from "../offers-signature.css?url";
 import personalSpacePolishCss from "../personal-space-polish.css?url";
+import searchFiltersV1Css from "../search-filters-v1.css?url";
 import sellerStorefrontFoundationCss from "../seller-storefront-foundation.css?url";
 import signatureCss from "../signature.css?url";
 import spatialAppShellCss from "../spatial-app-shell.css?url";
@@ -141,6 +142,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: homeMarketplaceV2Css },
         { rel: "stylesheet", href: homeDiscoveryV3Css },
         { rel: "stylesheet", href: adaptiveListingCardsCss },
+        { rel: "stylesheet", href: searchFiltersV1Css },
         { rel: "icon", href: "/favicon.ico" },
         { rel: "manifest", href: "/manifest.webmanifest" },
         { rel: "apple-touch-icon", href: "/brand/rawaj-mark-transparent-192.png" },

@@ -23,11 +23,11 @@ function functionSource(source, start, end) {
 
 test("JSON-LD serialization neutralizes script-breaking characters", () => {
   assert.match(seo, /export function serializeJsonLd/);
-  assert.match(seo, /replace\(\/<\/g, "\\\\u003c"\)/);
-  assert.match(seo, /replace\(\/>\/g, "\\\\u003e"\)/);
-  assert.match(seo, /replace\(\/&\/g, "\\\\u0026"\)/);
-  assert.match(seo, /replace\(\/\\u2028\/g, "\\\\u2028"\)/);
-  assert.match(seo, /replace\(\/\\u2029\/g, "\\\\u2029"\)/);
+  assert.ok(seo.includes('.replace(/</g, "\\\\u003c")'));
+  assert.ok(seo.includes('.replace(/>/g, "\\\\u003e")'));
+  assert.ok(seo.includes('.replace(/&/g, "\\\\u0026")'));
+  assert.ok(seo.includes('.replace(/\\u2028/g, "\\\\u2028")'));
+  assert.ok(seo.includes('.replace(/\\u2029/g, "\\\\u2029")'));
   assert.match(seo, /__html: serializeJsonLd\(data\)/);
   assert.doesNotMatch(seo, /__html: JSON\.stringify\(data\)/);
 });
@@ -46,7 +46,7 @@ test("public listing allowlist excludes moderation-only fields", () => {
   assert.doesNotMatch(publicFields, /"admin_note"/);
 });
 
-test("all public listing reads use the explicit allowlist", () => {
+test("all public listing reads use explicit allowlists", () => {
   const publicList = functionSource(
     listings,
     "export async function fetchPublicListings(",
@@ -58,9 +58,15 @@ test("all public listing reads use the explicit allowlist", () => {
     "export async function fetchOwnerListingDetail(",
   );
 
-  for (const source of [publicList, publicDetail, locationAware, canonicalAware, priceDrops]) {
+  assert.ok(publicList.includes("const listingSelect = filters.withPhotos"));
+  assert.ok(publicList.includes("`${publicListingSelect},listing_images!inner(id)`"));
+  assert.ok(publicList.includes(".select(listingSelect)"));
+
+  for (const source of [publicDetail, locationAware, canonicalAware, priceDrops]) {
     assert.match(source, /\.select\(publicListingSelect\)/);
   }
+
+  assert.doesNotMatch(publicList, /listing_images!inner\(\*\)/);
   assert.doesNotMatch(publicList, /\.select\("\*"\)/);
   assert.doesNotMatch(publicDetail, /\.select\("\*"\)/);
 });
