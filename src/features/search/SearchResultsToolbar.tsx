@@ -2,6 +2,29 @@ import { Link } from "@tanstack/react-router";
 import { Bookmark, Filter, Grid2X2, List, Map, Search, SlidersHorizontal } from "lucide-react";
 import type { ListingsSort, ListingsView } from "@/features/listings/listings-search-schema";
 
+const emptySavedSearchParams = {
+  q: "",
+  category: "",
+  subcategory: "",
+  gov: "",
+  district: "",
+  price_min: "",
+  price_max: "",
+  car_make: "",
+  car_model: "",
+  fuel: "",
+  transmission: "",
+  property_purpose: "",
+  property_type: "",
+  rooms: "",
+  rental_duration: "",
+  electronics_brand: "",
+  detail_condition: "",
+  employment_type: "",
+  salary_type: "",
+  sort: "latest" as const,
+};
+
 interface SearchResultsToolbarProps {
   title: string;
   pathLabel?: string;
@@ -122,7 +145,11 @@ export function SearchResultsToolbar({
           </button>
         </div>
 
-        <Link to="/saved-searches" className="rawaj-search-toolbar__saved">
+        <Link
+          to="/saved-searches"
+          search={emptySavedSearchParams}
+          className="rawaj-search-toolbar__saved"
+        >
           <Bookmark aria-hidden="true" />
           <span>{text("عمليات البحث", "Saved searches")}</span>
         </Link>
