@@ -26,7 +26,7 @@ test("robots advertises the sitemap and keeps private workspaces out of crawl", 
 });
 
 test("dynamic sitemap keeps stable public routes and excludes private workspaces", () => {
-  assert.match(sitemap, /createServerFileRoute\("\/sitemap\.xml"\)/);
+  assert.match(sitemap, /createFileRoute\("\/sitemap\.xml"\)/);
 
   for (const path of ["/", "/listings", "/categories"]) {
     const escapedPath = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
