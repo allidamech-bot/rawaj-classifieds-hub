@@ -983,8 +983,8 @@ function ManageListingPage() {
 
           <aside className="rawaj-studio-shell__aside">
             <ListingStudioCompletionCard
-              score={score}
-              ready={score === 100}
+              score={studioScore}
+              ready={studioScore === 100}
               title={
                 isEditable
                   ? text("راجع التعديلات قبل الحفظ", "Review changes before saving")
