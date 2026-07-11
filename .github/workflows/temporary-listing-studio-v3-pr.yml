@@ -48,13 +48,17 @@ jobs:
           src/routes/__root.tsx
           src/routes/add-listing.tsx
           'src/routes/profile/listings.$id.tsx'
-      - name: Commit integration and self-delete
+      - name: Commit integration code
         shell: bash
         run: |
-          rm .github/workflows/temporary-listing-studio-v3.yml
-          rm .github/workflows/temporary-listing-studio-v3-pr.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
+          git add .github/workflows/quality-gate.yml
+          git add scripts/listing-studio-v3.test.mjs
+          git add src/features/listing-studio/listing-studio.tsx
+          git add src/listing-studio-v3.css
+          git add src/routes/__root.tsx
+          git add src/routes/add-listing.tsx
+          git add 'src/routes/profile/listings.$id.tsx'
           git commit -m "Build guided Listing Studio V3"
           git push origin HEAD:design/listing-studio-v2
