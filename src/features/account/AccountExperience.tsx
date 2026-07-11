@@ -277,8 +277,13 @@ export function AccountSection({
   children: ReactNode;
   tone?: "default" | "muted" | "security";
 }) {
+  const sectionClassName =
+    id === "account-info"
+      ? "rawaj-account-section rawaj-account-profile-editor"
+      : "rawaj-account-section";
+
   return (
-    <section id={id} className="rawaj-account-section" data-tone={tone}>
+    <section id={id} className={sectionClassName} data-tone={tone}>
       <header>
         <span>
           <Icon aria-hidden="true" />
