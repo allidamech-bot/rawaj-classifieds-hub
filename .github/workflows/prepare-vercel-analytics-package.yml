@@ -1,9 +1,9 @@
 name: Prepare Vercel Analytics Package
 
 on:
-  push:
+  pull_request:
     branches:
-      - feature/vercel-web-analytics
+      - main
 
 permissions:
   contents: read
