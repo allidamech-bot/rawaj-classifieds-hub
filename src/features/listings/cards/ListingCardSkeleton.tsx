@@ -15,6 +15,7 @@ export function ListingCardSkeleton({
       className={cn("rawaj-listing-card-skeleton", className)}
       data-card-variant={compact ? "compact" : variant}
       data-loading="true"
+      data-loading-layout={compact ? "compact" : "standard"}
       aria-hidden="true"
     >
       <div className="rawaj-listing-card-skeleton__media" />
