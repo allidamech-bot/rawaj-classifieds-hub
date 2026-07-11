@@ -20,8 +20,17 @@ test("canonical fallback is production safe and never defaults to localhost", ()
 
 test("robots advertises the sitemap and keeps private workspaces out of crawl", () => {
   assert.match(robots, /Sitemap: https:\/\/rawa-j\.com\/sitemap\.xml/);
-  for (const path of ["/admin", "/profile", "/chats", "/activity", "/notifications"]) {
-    assert.match(robots, new RegExp(`Disallow: ${path.replace("/", "\\/")}(?:\\n|$)`));
+  for (const path of [
+    "/admin",
+    "/profile",
+    "/chats",
+    "/activity",
+    "/notifications",
+  ]) {
+    assert.match(
+      robots,
+      new RegExp(`Disallow: ${path.replace("/", "\\/")}(?:\\n|$)`),
+    );
   }
 });
 
@@ -33,9 +42,18 @@ test("dynamic sitemap keeps stable public routes and excludes private workspaces
     assert.match(sitemap, new RegExp(`absoluteUrl\\("${escapedPath}"\\)`));
   }
 
-  for (const privatePath of ["/admin", "/profile", "/chats", "/activity", "/notifications"]) {
+  for (const privatePath of [
+    "/admin",
+    "/profile",
+    "/chats",
+    "/activity",
+    "/notifications",
+  ]) {
     const escapedPath = privatePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    assert.doesNotMatch(sitemap, new RegExp(`absoluteUrl\\("${escapedPath}"\\)`));
+    assert.doesNotMatch(
+      sitemap,
+      new RegExp(`absoluteUrl\\("${escapedPath}"\\)`),
+    );
   }
 
   assert.doesNotMatch(sitemap, /localhost/i);
