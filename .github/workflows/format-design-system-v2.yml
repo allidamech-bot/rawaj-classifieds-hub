@@ -1,0 +1,63 @@
+name: Format Design System V2
+
+on:
+  push:
+    branches:
+      - design/design-system-v2
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: design/design-system-v2
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format changed files
+        run: |
+          npx prettier --write \
+            .github/workflows/quality-gate.yml \
+            docs/design-system-v2.md \
+            scripts/design-system-v2.test.mjs \
+            src/design-system-v2.css \
+            src/routes/__root.tsx \
+            src/components/AppHeader.tsx \
+            src/components/BottomNav.tsx \
+            src/components/ui/badge.tsx \
+            src/components/ui/button.tsx \
+            src/components/ui/card.tsx \
+            src/components/ui/input.tsx
+          npx eslint --fix \
+            scripts/design-system-v2.test.mjs \
+            src/routes/__root.tsx \
+            src/components/AppHeader.tsx \
+            src/components/BottomNav.tsx \
+            src/components/ui/badge.tsx \
+            src/components/ui/button.tsx \
+            src/components/ui/card.tsx \
+            src/components/ui/input.tsx
+
+      - name: Commit formatting and remove helper
+        run: |
+          rm .github/workflows/format-design-system-v2.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Format design system V2"
+          git push origin HEAD:design/design-system-v2
