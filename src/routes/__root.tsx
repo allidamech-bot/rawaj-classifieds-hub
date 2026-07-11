@@ -22,6 +22,7 @@ import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { buildSiteStructuredData, createSeo, jsonLdScript } from "@/lib/seo";
 import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
 import { UnreadActivityProvider } from "@/lib/unread-activity";
+import adaptiveListingCardsCss from "../adaptive-listing-cards.css?url";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import authAccountFoundationCss from "../auth-account-foundation.css?url";
 import designSystemV2Css from "../design-system-v2.css?url";
@@ -139,6 +140,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: spatialAppShellCss },
         { rel: "stylesheet", href: homeMarketplaceV2Css },
         { rel: "stylesheet", href: homeDiscoveryV3Css },
+        { rel: "stylesheet", href: adaptiveListingCardsCss },
         { rel: "icon", href: "/favicon.ico" },
         { rel: "manifest", href: "/manifest.webmanifest" },
         { rel: "apple-touch-icon", href: "/brand/rawaj-mark-transparent-192.png" },

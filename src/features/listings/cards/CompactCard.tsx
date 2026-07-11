@@ -1,10 +1,6 @@
 import type { ReactNode } from "react";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
-import {
-  ListingCardFrame,
-  ListingCardHeading,
-  ListingCardMeta,
-} from "./ListingCardShared";
+import { ListingCardFrame, ListingCardHeading, ListingCardMeta } from "./ListingCardShared";
 
 export function CompactCard({
   listing,

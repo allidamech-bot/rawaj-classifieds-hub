@@ -337,7 +337,12 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, rgba(5, 27, 24, 0.95) 0%, rgba(5, 27, 24, 0.54) 48%, rgba(5, 27, 24, 0.08) 80%),
+    linear-gradient(
+      to top,
+      rgba(5, 27, 24, 0.95) 0%,
+      rgba(5, 27, 24, 0.54) 48%,
+      rgba(5, 27, 24, 0.08) 80%
+    ),
     linear-gradient(to right, rgba(5, 27, 24, 0.25), transparent 58%);
 }
 
