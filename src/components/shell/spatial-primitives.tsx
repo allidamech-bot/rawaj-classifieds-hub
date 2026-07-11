@@ -19,11 +19,12 @@ export const PageContainer = React.forwardRef<HTMLDivElement, React.HTMLAttribut
 );
 PageContainer.displayName = "PageContainer";
 
-export const PageTransition = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("rawaj-page-transition", className)} {...props} />
-  ),
-);
+export const PageTransition = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("rawaj-page-transition", className)} {...props} />
+));
 PageTransition.displayName = "PageTransition";
 
 export const SpatialCard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
@@ -68,13 +69,7 @@ interface SectionHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   action?: React.ReactNode;
 }
 
-export function SectionHeader({
-  title,
-  eyebrow,
-  action,
-  className,
-  ...props
-}: SectionHeaderProps) {
+export function SectionHeader({ title, eyebrow, action, className, ...props }: SectionHeaderProps) {
   return (
     <div
       className={cn("flex items-end justify-between gap-4", className)}
@@ -90,19 +85,20 @@ export function SectionHeader({
   );
 }
 
-export const HorizontalRail = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(
-        "-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-        className,
-      )}
-      data-ui="horizontal-rail"
-      {...props}
-    />
-  ),
-);
+export const HorizontalRail = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+      className,
+    )}
+    data-ui="horizontal-rail"
+    {...props}
+  />
+));
 HorizontalRail.displayName = "HorizontalRail";
 
 interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {

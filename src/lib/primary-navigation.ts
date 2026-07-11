@@ -1,11 +1,5 @@
 export type PrimaryNavigationSection =
-  | "home"
-  | "categories"
-  | "addListing"
-  | "chats"
-  | "offers"
-  | "account"
-  | "none";
+  "home" | "categories" | "addListing" | "chats" | "offers" | "account" | "none";
 
 export type AppShellMode =
   | "standard"
