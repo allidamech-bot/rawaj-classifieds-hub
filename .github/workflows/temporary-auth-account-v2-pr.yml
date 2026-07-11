@@ -1,0 +1,50 @@
+name: Temporary Auth Account V2 Integration
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.event.pull_request.head.ref == 'design/auth-account-v2' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: design/auth-account-v2
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Integrate Auth Account V2
+        run: python scripts/temporary-integrate-auth-account-v2.py
+      - name: Format integrated product files
+        run: >-
+          npx prettier --write
+          scripts/auth-account-v2.test.mjs
+          src/features/account/AccountExperience.tsx
+          src/auth-account-v2.css
+          src/routes/__root.tsx
+          src/routes/login.tsx
+          src/routes/profile.tsx
+      - name: Commit and push product files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/auth-account-v2.test.mjs
+          git add src/features/account/AccountExperience.tsx
+          git add src/auth-account-v2.css
+          git add src/routes/__root.tsx
+          git add src/routes/login.tsx
+          git add src/routes/profile.tsx
+          git commit -m "Integrate Auth Account V2"
+          git push origin HEAD:design/auth-account-v2
