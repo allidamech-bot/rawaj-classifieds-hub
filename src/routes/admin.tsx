@@ -208,8 +208,7 @@ function AdminLayout() {
           </nav>
         </div>
         <div className="min-w-0">
-          {pathname === "/admin/owner-controls" &&
-          auth.hasPermission("canManageSystemSettings") ? (
+          {pathname === "/admin/owner-controls" && auth.hasPermission("canManageSystemSettings") ? (
             <div className="mb-5">
               <DeploymentTruthPanel />
             </div>

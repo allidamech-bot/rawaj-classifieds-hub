@@ -13,11 +13,7 @@ const rawajBuildInfo = {
   target: process.env.VERCEL_TARGET_ENV ?? process.env.VERCEL_ENV ?? "unknown",
   builtAt: new Date().toISOString(),
   deploymentUrl: process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL ?? "",
-  provider: process.env.VERCEL
-    ? "vercel"
-    : process.env.GITHUB_ACTIONS
-      ? "github-actions"
-      : "local",
+  provider: process.env.VERCEL ? "vercel" : process.env.GITHUB_ACTIONS ? "github-actions" : "local",
 };
 
 export default defineConfig({

@@ -61,12 +61,7 @@ export function DeploymentTruthPanel() {
           value={commit}
           mono
         />
-        <DeploymentFact
-          icon={GitBranch}
-          label={text("الفرع", "Branch")}
-          value={branch}
-          mono
-        />
+        <DeploymentFact icon={GitBranch} label={text("الفرع", "Branch")} value={branch} mono />
         <DeploymentFact
           icon={Server}
           label={text("البيئة / الهدف", "Environment / target")}
