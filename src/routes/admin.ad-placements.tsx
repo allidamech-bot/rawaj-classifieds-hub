@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   Eye,
   Image as ImageIcon,
+  Loader2,
   Monitor,
   Pause,
   Play,
@@ -10,12 +11,14 @@ import {
   Save,
   ShieldAlert,
   Smartphone,
+  Upload,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   ownerFetchAdPlacements,
   ownerSaveAdPlacement,
   ownerSetAdPlacementStatus,
+  ownerUploadAdPlacementImage,
   type AdPlacementPage,
   type AdPlacementStatus,
   type AdPlacementSummary,
@@ -74,6 +77,7 @@ function AdPlacementsPage() {
   const [form, setForm] = useState<PlacementFormState>(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [statusReason, setStatusReason] = useState("");
@@ -137,9 +141,32 @@ function AdPlacementsPage() {
     setNotice("");
   }
 
+  async function handleImageSelection(file: File | undefined) {
+    if (!file || uploadingImage) return;
+    setUploadingImage(true);
+    setError("");
+    setNotice("");
+    const result = await ownerUploadAdPlacementImage(
+      canManage,
+      auth.profile?.id ?? null,
+      file,
+    );
+    setUploadingImage(false);
+    if (!result.ok) {
+      setError(result.error.message);
+      return;
+    }
+    setForm((value) => ({ ...value, imageUrl: result.data }));
+    setNotice(text("تم رفع صورة الإعلان بنجاح.", "Ad image uploaded successfully."));
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (saving) return;
+    if (saving || uploadingImage) return;
+    if (!form.imageUrl) {
+      setError(text("اختر صورة الإعلان أولاً.", "Choose an ad image first."));
+      return;
+    }
     setSaving(true);
     setError("");
     setNotice("");
@@ -170,7 +197,8 @@ function AdPlacementsPage() {
         ? text("تم تحديث المساحة الإعلانية وتسجيل العملية.", "Placement updated and audited.")
         : text("تم إنشاء المساحة الإعلانية وتسجيل العملية.", "Placement created and audited."),
     );
-    resetForm();
+    setForm(emptyForm);
+    setStatusReason("");
     await refresh();
   }
 
@@ -222,8 +250,8 @@ function AdPlacementsPage() {
             </h2>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">
               {text(
-                "أنشئ وحدد الجدولة والأولوية والأجهزة المستهدفة. لا تُعرض أرقام نقرات أو مشاهدات غير مقاسة.",
-                "Create placements with scheduling, priority, and device targeting. No unmeasured click or impression numbers are shown.",
+                "ارفع صورة الإعلان مباشرة، ثم حدد مكان العرض والجدولة والأجهزة المستهدفة.",
+                "Upload the ad image directly, then choose placement, schedule, and target devices.",
               )}
             </p>
           </div>
@@ -289,17 +317,58 @@ function AdPlacementsPage() {
                 ))}
               </select>
             </Field>
-            <Field label={text("رابط صورة/بانر", "Image/banner URL")} wide>
-              <input
-                value={form.imageUrl}
-                onChange={(event) =>
-                  setForm((value) => ({ ...value, imageUrl: event.target.value }))
-                }
-                type="url"
-                required
-                className="input"
-              />
-            </Field>
+
+            <div className="sm:col-span-2">
+              <span className="mb-1.5 block text-[11px] font-bold text-muted-foreground">
+                {text("صورة الإعلان", "Ad image")}
+              </span>
+              <label className="group flex min-h-36 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-primary/25 bg-muted-surface/55 p-4 text-center transition hover:border-primary/50 hover:bg-primary/5">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="sr-only"
+                  disabled={uploadingImage}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = "";
+                    void handleImageSelection(file);
+                  }}
+                />
+                {uploadingImage ? (
+                  <>
+                    <Loader2 className="h-7 w-7 animate-spin text-primary" />
+                    <strong className="mt-3 text-sm">
+                      {text("جارٍ رفع الصورة...", "Uploading image...")}
+                    </strong>
+                  </>
+                ) : form.imageUrl ? (
+                  <div className="w-full">
+                    <img
+                      src={form.imageUrl}
+                      alt={text("معاينة صورة الإعلان", "Ad image preview")}
+                      className="aspect-[16/7] w-full rounded-xl object-cover"
+                    />
+                    <span className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-primary">
+                      <Upload className="h-4 w-4" />
+                      {text("اضغط لتغيير الصورة", "Click to replace image")}
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
+                      <Upload className="h-5 w-5" />
+                    </span>
+                    <strong className="mt-3 text-sm">
+                      {text("اختر صورة الإعلان من جهازك", "Choose the ad image from your device")}
+                    </strong>
+                    <span className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                      {text("JPG أو PNG أو WebP — حتى 5MB", "JPG, PNG, or WebP — up to 5MB")}
+                    </span>
+                  </>
+                )}
+              </label>
+            </div>
+
             <Field label={text("رابط الوجهة", "Destination URL")} wide>
               <input
                 value={form.destinationUrl}
@@ -307,6 +376,7 @@ function AdPlacementsPage() {
                   setForm((value) => ({ ...value, destinationUrl: event.target.value }))
                 }
                 type="url"
+                placeholder="https://rawa-j.com/..."
                 required
                 className="input"
               />
@@ -378,7 +448,7 @@ function AdPlacementsPage() {
 
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || uploadingImage || !form.imageUrl}
             className="rawaj-button-primary mt-5 min-h-11 w-full rounded-xl px-4 py-2.5 disabled:opacity-50"
           >
             <Save className="h-4 w-4" />
@@ -438,7 +508,11 @@ function AdPlacementsPage() {
             {placements.map((placement) => (
               <article
                 key={placement.id}
-                className={`rounded-2xl p-4 hairline ${selected?.id === placement.id ? "bg-primary/5 ring-2 ring-primary/20" : "bg-muted-surface/55"}`}
+                className={`rounded-2xl p-4 hairline ${
+                  selected?.id === placement.id
+                    ? "bg-primary/5 ring-2 ring-primary/20"
+                    : "bg-muted-surface/55"
+                }`}
               >
                 <div className="flex gap-3">
                   <img
