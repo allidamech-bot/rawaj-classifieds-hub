@@ -1,0 +1,684 @@
+/* RAWAJ Auth & Account V2 — calm, trustworthy personal space. */
+
+.rawaj-auth-v2,
+.rawaj-account-v2 {
+  position: relative;
+  overflow: clip;
+}
+
+.rawaj-auth-v2::before,
+.rawaj-account-v2::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: -11rem;
+  z-index: -1;
+  height: 36rem;
+  background:
+    radial-gradient(
+      circle at 88% 7%,
+      color-mix(in srgb, var(--rawaj-orange) 10%, transparent),
+      transparent 29%
+    ),
+    radial-gradient(
+      circle at 9% 0%,
+      color-mix(in srgb, var(--rawaj-gold) 12%, transparent),
+      transparent 27%
+    );
+  pointer-events: none;
+}
+
+.rawaj-auth-layout {
+  display: grid;
+  width: min(100%, 64rem);
+  min-height: 39rem;
+  overflow: hidden;
+  margin-inline: auto;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 9%, var(--color-border));
+  border-radius: clamp(1.5rem, 5vw, 2.35rem);
+  background: var(--rawaj-surface-card);
+  box-shadow: 0 28px 70px color-mix(in srgb, var(--color-primary) 17%, transparent);
+}
+
+.rawaj-auth-aside {
+  position: relative;
+  display: none;
+  min-height: 100%;
+  overflow: hidden;
+  align-content: space-between;
+  background:
+    radial-gradient(
+      circle at 90% 7%,
+      color-mix(in srgb, var(--rawaj-gold) 24%, transparent),
+      transparent 27%
+    ),
+    linear-gradient(145deg, #082f2a, var(--color-primary) 52%, #1f5d50);
+  padding: clamp(1.5rem, 4vw, 2.4rem);
+  color: white;
+}
+
+.rawaj-auth-aside::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: -5rem;
+  bottom: -4rem;
+  width: 16rem;
+  height: 16rem;
+  border: 1px solid color-mix(in srgb, white 9%, transparent);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2.5rem color-mix(in srgb, white 3%, transparent),
+    0 0 0 5rem color-mix(in srgb, white 2%, transparent);
+}
+
+.rawaj-auth-aside__brand {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.rawaj-auth-aside__brand > span {
+  display: grid;
+  width: 2.45rem;
+  height: 2.45rem;
+  place-items: center;
+  border-radius: 0.8rem;
+  background: linear-gradient(145deg, #ff7653, var(--rawaj-orange));
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--rawaj-orange) 28%, transparent);
+}
+
+.rawaj-auth-aside__brand svg {
+  width: 1rem;
+  height: 1rem;
+}
+.rawaj-auth-aside__brand p {
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.rawaj-auth-aside__copy {
+  position: relative;
+  z-index: 2;
+  margin-top: 4.5rem;
+}
+
+.rawaj-auth-aside__copy > p {
+  color: #f2c77f;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.rawaj-auth-aside__copy h1 {
+  max-width: 28rem;
+  margin-top: 0.6rem;
+  color: white;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 900;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.rawaj-auth-aside__copy > span {
+  display: block;
+  max-width: 31rem;
+  margin-top: 0.75rem;
+  color: color-mix(in srgb, white 70%, transparent);
+  font-size: 0.72rem;
+  line-height: 1.9;
+}
+
+.rawaj-auth-aside ul {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 2rem;
+}
+
+.rawaj-auth-aside li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid color-mix(in srgb, white 10%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, white 6%, transparent);
+  padding: 0.65rem;
+  backdrop-filter: blur(12px);
+}
+
+.rawaj-auth-aside li > span {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, white 9%, transparent);
+  color: #f2c77f;
+}
+
+.rawaj-auth-aside li svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+.rawaj-auth-aside li > svg {
+  color: #58c89f;
+}
+.rawaj-auth-aside li strong {
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.rawaj-auth-aside__trust {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 2rem;
+  border-top: 1px solid color-mix(in srgb, white 10%, transparent);
+  padding-top: 1rem;
+  color: color-mix(in srgb, white 58%, transparent);
+  font-size: 0.55rem;
+  line-height: 1.6;
+}
+
+.rawaj-auth-aside__trust svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  flex: 0 0 auto;
+  color: #f2c77f;
+}
+
+.rawaj-auth-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(1rem, 5vw, 2.2rem);
+}
+
+.rawaj-auth-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.rawaj-auth-card__header > span {
+  display: grid;
+  width: 2.8rem;
+  height: 2.8rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--rawaj-orange) 10%, white);
+  color: var(--rawaj-orange);
+}
+
+.rawaj-auth-card__header svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.rawaj-auth-card__header p {
+  color: var(--rawaj-orange);
+  font-size: 0.55rem;
+  font-weight: 900;
+}
+.rawaj-auth-card__header h2 {
+  margin-top: 0.18rem;
+  color: var(--color-primary);
+  font-size: 1.08rem;
+  font-weight: 900;
+}
+.rawaj-auth-card__header small {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.62rem;
+  line-height: 1.7;
+}
+
+.rawaj-auth-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.28rem;
+  margin-bottom: 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
+  border-radius: 1rem;
+  background: var(--rawaj-surface-warm);
+  padding: 0.3rem;
+}
+
+.rawaj-auth-tabs button {
+  min-height: 2.7rem;
+  border-radius: 0.75rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.rawaj-auth-tabs button[data-active="true"] {
+  background: var(--color-primary);
+  color: white;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.rawaj-auth-card form {
+  display: grid;
+  gap: 0.7rem;
+}
+.rawaj-auth-card .input {
+  min-height: 3.15rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 9%, var(--color-border));
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--rawaj-surface-card) 97%, var(--color-background));
+}
+.rawaj-auth-card .input:focus {
+  border-color: color-mix(in srgb, var(--rawaj-orange) 58%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rawaj-orange) 13%, transparent);
+}
+
+.rawaj-auth-google {
+  display: inline-flex;
+  min-height: 3rem;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 10%, var(--color-border));
+  border-radius: 0.9rem;
+  background: var(--rawaj-surface-card);
+  padding-inline: 0.85rem;
+  color: var(--color-foreground);
+  font-size: 0.68rem;
+  font-weight: 800;
+  box-shadow: var(--shadow-xs);
+}
+
+.rawaj-auth-security-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  border: 1px solid color-mix(in srgb, #258067 17%, var(--color-border));
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, #258067 6%, var(--rawaj-surface-card));
+  padding: 0.75rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.58rem;
+  line-height: 1.7;
+}
+
+.rawaj-auth-security-note svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  flex: 0 0 auto;
+  color: #258067;
+}
+
+.rawaj-account-identity {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, white 10%, transparent);
+  border-radius: clamp(1.5rem, 5vw, 2.25rem);
+  background: linear-gradient(145deg, #082f2a, var(--color-primary) 54%, #1d5b4e);
+  color: white;
+  box-shadow: 0 24px 64px color-mix(in srgb, var(--color-primary) 23%, transparent);
+}
+
+.rawaj-account-identity__cover {
+  position: absolute;
+  inset: 0;
+}
+
+.rawaj-account-identity__cover > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.38;
+}
+.rawaj-account-identity__cover > div {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at 90% 4%,
+      color-mix(in srgb, var(--rawaj-gold) 26%, transparent),
+      transparent 28%
+    ),
+    linear-gradient(180deg, color-mix(in srgb, #082f2a 20%, transparent), #082f2a 94%);
+}
+
+.rawaj-account-identity__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(0.8rem, 3vw, 1.2rem);
+  min-height: 16rem;
+  padding: clamp(1rem, 4vw, 1.7rem);
+  padding-bottom: 5.1rem;
+}
+
+.rawaj-account-identity__avatar {
+  position: relative;
+  display: grid;
+  width: clamp(5rem, 19vw, 7rem);
+  height: clamp(5rem, 19vw, 7rem);
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: visible;
+  border: 3px solid color-mix(in srgb, white 84%, transparent);
+  border-radius: clamp(1.2rem, 4vw, 1.7rem);
+  background: linear-gradient(145deg, #f2c77f, #f28f57);
+  color: var(--color-primary);
+  box-shadow: 0 18px 40px color-mix(in srgb, black 28%, transparent);
+}
+
+.rawaj-account-identity__avatar > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+.rawaj-account-identity__avatar > svg {
+  width: 2rem;
+  height: 2rem;
+}
+.rawaj-account-identity__avatar > span {
+  position: absolute;
+  inset-inline-end: -0.3rem;
+  bottom: -0.3rem;
+  display: grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  place-items: center;
+  border: 2px solid white;
+  border-radius: 0.6rem;
+  background: var(--rawaj-orange);
+  color: white;
+}
+.rawaj-account-identity__avatar > span svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.rawaj-account-identity__copy {
+  min-width: 0;
+}
+.rawaj-account-identity__copy > p {
+  color: #f2c77f;
+  font-size: 0.55rem;
+  font-weight: 900;
+}
+.rawaj-account-identity__copy > div:first-of-type {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.2rem;
+}
+.rawaj-account-identity__copy h1 {
+  overflow: hidden;
+  color: white;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.35rem, 6vw, 2.35rem);
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rawaj-account-identity__copy > div > strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 999px;
+  background: #258067;
+  padding: 0.32rem 0.5rem;
+  color: white;
+  font-size: 0.5rem;
+  font-weight: 850;
+}
+.rawaj-account-identity__copy > div > strong svg {
+  width: 0.7rem;
+  height: 0.7rem;
+}
+.rawaj-account-identity__copy > small,
+.rawaj-account-identity__copy > span {
+  display: block;
+  margin-top: 0.25rem;
+  color: color-mix(in srgb, white 62%, transparent);
+  font-size: 0.58rem;
+}
+
+.rawaj-account-identity__badges {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 0.35rem !important;
+  margin-top: 0.6rem !important;
+}
+.rawaj-account-identity__badges b {
+  border: 1px solid color-mix(in srgb, white 12%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, white 7%, transparent);
+  padding: 0.35rem 0.55rem;
+  color: white;
+  font-size: 0.5rem;
+  font-weight: 750;
+}
+
+.rawaj-account-identity__actions {
+  position: absolute;
+  inset-inline: clamp(1rem, 4vw, 1.7rem);
+  bottom: clamp(1rem, 4vw, 1.35rem);
+  z-index: 3;
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.rawaj-account-identity__actions::-webkit-scrollbar {
+  display: none;
+}
+.rawaj-account-identity__actions a,
+.rawaj-account-identity__actions button {
+  display: inline-flex;
+  min-height: 2.65rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid color-mix(in srgb, white 13%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, white 8%, transparent);
+  padding-inline: 0.75rem;
+  color: white;
+  font-size: 0.58rem;
+  font-weight: 850;
+  backdrop-filter: blur(12px);
+}
+.rawaj-account-identity__actions svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.rawaj-account-quick-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.rawaj-account-quick-links a {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
+  border-radius: 1rem;
+  background: var(--rawaj-surface-card);
+  padding: 0.7rem;
+  box-shadow: var(--shadow-card);
+}
+.rawaj-account-quick-links a > span {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--rawaj-orange) 9%, white);
+  color: var(--rawaj-orange);
+}
+.rawaj-account-quick-links svg {
+  width: 1rem;
+  height: 1rem;
+}
+.rawaj-account-quick-links div {
+  min-width: 0;
+}
+.rawaj-account-quick-links strong {
+  display: block;
+  color: var(--color-primary);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+.rawaj-account-quick-links small {
+  display: block;
+  overflow: hidden;
+  margin-top: 0.15rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.52rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rawaj-account-section,
+.rawaj-account-card {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
+  border-radius: 1.35rem;
+  background: var(--rawaj-surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.rawaj-account-section > header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 7%, var(--color-border));
+  padding: 0.9rem 1rem;
+}
+.rawaj-account-section > header > span {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--rawaj-orange) 9%, white);
+  color: var(--rawaj-orange);
+}
+.rawaj-account-section > header svg {
+  width: 1rem;
+  height: 1rem;
+}
+.rawaj-account-section > header p {
+  color: var(--rawaj-orange);
+  font-size: 0.52rem;
+  font-weight: 900;
+}
+.rawaj-account-section > header h2 {
+  margin-top: 0.12rem;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+.rawaj-account-section > header small {
+  display: block;
+  margin-top: 0.22rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.58rem;
+  line-height: 1.65;
+}
+.rawaj-account-section__body {
+  padding: 1rem;
+}
+.rawaj-account-section[data-tone="muted"] {
+  background: var(--rawaj-surface-warm);
+}
+.rawaj-account-section[data-tone="security"] > header > span {
+  background: color-mix(in srgb, #258067 9%, white);
+  color: #258067;
+}
+
+.rawaj-account-profile-editor .input {
+  min-height: 3rem;
+  border-radius: 0.88rem;
+  border-color: color-mix(in srgb, var(--color-primary) 9%, var(--color-border));
+  background: color-mix(in srgb, var(--rawaj-surface-card) 98%, var(--color-background));
+}
+.rawaj-account-profile-editor textarea.input {
+  min-height: 7.5rem;
+  line-height: 1.8;
+}
+.rawaj-account-profile-editor .input:focus {
+  border-color: color-mix(in srgb, var(--rawaj-orange) 55%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rawaj-orange) 12%, transparent);
+}
+
+.rawaj-account-overview-grid {
+  display: grid;
+  gap: 0.8rem;
+}
+.rawaj-account-card {
+  padding: 1rem;
+}
+.rawaj-account-card h2 {
+  color: var(--color-primary);
+}
+
+@media (min-width: 640px) {
+  .rawaj-account-quick-links {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .rawaj-account-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .rawaj-auth-layout {
+    grid-template-columns: minmax(0, 1.05fr) minmax(22rem, 0.95fr);
+  }
+  .rawaj-auth-aside {
+    display: grid;
+  }
+}
+
+@media (max-width: 389px) {
+  .rawaj-account-identity__content {
+    align-items: center;
+    min-height: 18rem;
+    padding-bottom: 5.4rem;
+  }
+  .rawaj-account-identity__copy h1 {
+    font-size: 1.2rem;
+  }
+  .rawaj-account-quick-links {
+    gap: 0.4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-auth-v2 *,
+  .rawaj-account-v2 * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

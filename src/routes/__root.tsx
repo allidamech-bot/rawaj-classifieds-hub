@@ -25,6 +25,7 @@ import { UnreadActivityProvider } from "@/lib/unread-activity";
 import adaptiveListingCardsCss from "../adaptive-listing-cards.css?url";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import authAccountFoundationCss from "../auth-account-foundation.css?url";
+import authAccountV2Css from "../auth-account-v2.css?url";
 import designSystemV2Css from "../design-system-v2.css?url";
 import homeDiscoveryV3Css from "../home-discovery-v3.css?url";
 import homeMarketplaceV2Css from "../home-marketplace-v2.css?url";
@@ -130,6 +131,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: listingsResultsCss },
         { rel: "stylesheet", href: listingDetailFoundationCss },
         { rel: "stylesheet", href: authAccountFoundationCss },
+        { rel: "stylesheet", href: authAccountV2Css },
         { rel: "stylesheet", href: activityMoreFoundationCss },
         { rel: "stylesheet", href: sellerStorefrontFoundationCss },
         { rel: "stylesheet", href: sellerStorefrontV2Css },

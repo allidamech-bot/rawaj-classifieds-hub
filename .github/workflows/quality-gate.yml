@@ -171,6 +171,9 @@ jobs:
       - name: Seller Storefront V2 contract
         run: node --test scripts/seller-storefront-v2.test.mjs
 
+      - name: Auth and Account V2 contract
+        run: node --test scripts/auth-account-v2.test.mjs
+
       - name: Spatial App Shell contract
         run: node --test scripts/spatial-app-shell.test.mjs
 
