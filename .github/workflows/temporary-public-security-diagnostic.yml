@@ -1,9 +1,9 @@
 name: Temporary Public Security Diagnostic
 
 on:
-  push:
+  pull_request:
     branches:
-      - design/search-filters-v1
+      - main
 
 permissions:
   contents: read
