@@ -43,23 +43,18 @@ jobs:
         if: github.event_name == 'pull_request' && github.head_ref == 'fix/home-hydration-and-ad-media' && github.actor != 'github-actions[bot]'
         shell: bash
         run: |
-          git fetch origin fix/home-hydration-and-ad-media:refs/remotes/origin/fix/home-hydration-and-ad-media
-          git checkout -B fix/home-hydration-and-ad-media refs/remotes/origin/fix/home-hydration-and-ad-media
+          git fetch origin fix/home-hydration-and-ad-media
+          git checkout -B fix/home-hydration-and-ad-media FETCH_HEAD
           python <<'PY'
           from pathlib import Path
 
           path = Path("src/features/listings/listings-components.tsx")
           text = path.read_text()
-          old = '''  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
-            dateStyle: "medium",
-          }).format(new Date(value));'''
-          new = '''  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
-            dateStyle: "medium",
-            timeZone: "Asia/Damascus",
-          }).format(new Date(value));'''
-          if old not in text:
+          needle = '    dateStyle: "medium",\n  }).format(new Date(value));'
+          replacement = '    dateStyle: "medium",\n    timeZone: "Asia/Damascus",\n  }).format(new Date(value));'
+          if needle not in text:
               raise SystemExit("listing date formatter anchor missing")
-          path.write_text(text.replace(old, new, 1))
+          path.write_text(text.replace(needle, replacement, 1))
           PY
           npx prettier --write src/features/listings/listings-components.tsx src/lib/ad-placement-media-url.ts src/lib/api/ad-placements.ts scripts/home-hydration-ad-media.test.mjs
 
