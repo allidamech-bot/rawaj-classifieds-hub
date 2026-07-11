@@ -26,6 +26,7 @@ test("public and owner storefronts share one factual identity component", () => 
   assert.match(shared, /approvedCount/);
   assert.match(shared, /ratingAverage/);
   assert.match(shared, /ratingCount/);
+  assert.match(shared, /This page shows public information and approved listings only/);
   assert.doesNotMatch(shared, /response time|transactions completed|sales count/i);
 });
 
@@ -37,7 +38,6 @@ test("public seller uses adaptive cards and preserves review privacy contracts",
   assert.match(publicRoute, /fetchSellerReviewEligibility/);
   assert.match(publicRoute, /createSellerReview/);
   assert.match(publicRoute, /buildSellerStructuredData/);
-  assert.match(publicRoute, /This storefront shows only public information and approved listings/);
 });
 
 test("owner store shares the identity system and preserves lifecycle operations", () => {
