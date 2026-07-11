@@ -1,5 +1,6 @@
 export const listingImagesBucket = "listing-images";
 export const profileMediaBucket = "profile-media";
+export const adPlacementMediaBucket = "ad-placement-media";
 export const promotionReceiptsBucket = "promotion-receipts";
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -71,18 +72,21 @@ export function validateProfileImageFile(file: File): { ok: boolean; error?: str
   return { ok: true };
 }
 
+function normalizedImageExtension(filename: string): string {
+  const extension = filename.split(".").pop()?.toLowerCase();
+  return extension && ["jpg", "jpeg", "png", "webp"].includes(extension) ? extension : "jpg";
+}
+
 export function buildListingImagePath(userId: string, listingId: string, filename: string): string {
-  const safeExtension = filename.split(".").pop()?.toLowerCase();
-  const normalizedExtension =
-    safeExtension && ["jpg", "jpeg", "png", "webp"].includes(safeExtension) ? safeExtension : "jpg";
-  return `${userId}/${listingId}/${crypto.randomUUID()}.${normalizedExtension}`;
+  return `${userId}/${listingId}/${crypto.randomUUID()}.${normalizedImageExtension(filename)}`;
 }
 
 export function buildProfileMediaPath(userId: string, kind: string, filename: string): string {
-  const safeExtension = filename.split(".").pop()?.toLowerCase();
-  const normalizedExtension =
-    safeExtension && ["jpg", "jpeg", "png", "webp"].includes(safeExtension) ? safeExtension : "jpg";
-  return `${userId}/${kind}/${crypto.randomUUID()}.${normalizedExtension}`;
+  return `${userId}/${kind}/${crypto.randomUUID()}.${normalizedImageExtension(filename)}`;
+}
+
+export function buildAdPlacementMediaPath(userId: string, filename: string): string {
+  return `${userId}/${crypto.randomUUID()}.${normalizedImageExtension(filename)}`;
 }
 
 export function buildPromotionReceiptPath(
