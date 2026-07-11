@@ -128,7 +128,8 @@
       "202607100008_seller_review_traits_optional_comment.sql",
       "202607100009_listing_price_drop_contract.sql",
       "202607100010_listing_reservation_contract.sql",
-      "202607100011_verification_documents_v2.sql"
+      "202607100011_verification_documents_v2.sql",
+      "202607110015_ad_placement_media_contract.sql"
     ],
     "reconciliation": [
       "202607020004_fix_verification_status_enum_cast.sql",
