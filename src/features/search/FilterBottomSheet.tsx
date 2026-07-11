@@ -38,7 +38,7 @@ export function FilterBottomSheet({
       setActiveSnapPoint={setActiveSnapPoint}
       fadeFromIndex={1}
     >
-      <BottomSheetContent className="rawaj-filter-sheet">
+      <BottomSheetContent className="rawaj-filter-sheet" data-filter-state="draft">
         <div className="rawaj-filter-sheet__header">
           <div>
             <BottomSheetTitle>{text("فلترة الإعلانات", "Filter listings")}</BottomSheetTitle>
