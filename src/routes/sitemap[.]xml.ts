@@ -35,7 +35,8 @@ export const ServerRoute = createServerFileRoute("/sitemap.xml").methods({
     return new Response(xml, {
       headers: {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=900, s-maxage=3600, stale-while-revalidate=86400",
+        "Cache-Control":
+          "public, max-age=900, s-maxage=3600, stale-while-revalidate=86400",
         "X-Content-Type-Options": "nosniff",
       },
     });
@@ -77,15 +78,19 @@ async function readDynamicMarketplaceEntries(): Promise<SitemapEntry[]> {
   const sellerLastModified = new Map<string, string>();
   for (const row of rows) {
     const current = sellerLastModified.get(row.owner_id);
-    if (!current || row.updated_at > current) sellerLastModified.set(row.owner_id, row.updated_at);
+    if (!current || row.updated_at > current)
+      sellerLastModified.set(row.owner_id, row.updated_at);
   }
 
-  const sellerEntries: SitemapEntry[] = Array.from(sellerLastModified, ([ownerId, updatedAt]) => ({
-    loc: absoluteUrl(`/seller/${encodeURIComponent(ownerId)}`),
-    lastmod: toIsoDate(updatedAt),
-    changefreq: "weekly",
-    priority: 0.6,
-  }));
+  const sellerEntries: SitemapEntry[] = Array.from(
+    sellerLastModified,
+    ([ownerId, updatedAt]) => ({
+      loc: absoluteUrl(`/seller/${encodeURIComponent(ownerId)}`),
+      lastmod: toIsoDate(updatedAt),
+      changefreq: "weekly",
+      priority: 0.6,
+    }),
+  );
 
   return [...listingEntries, ...sellerEntries];
 }
@@ -97,7 +102,9 @@ function buildSitemapXml(entries: SitemapEntry[]): string {
         `<loc>${escapeXml(entry.loc)}</loc>`,
         entry.lastmod ? `<lastmod>${escapeXml(entry.lastmod)}</lastmod>` : "",
         entry.changefreq ? `<changefreq>${entry.changefreq}</changefreq>` : "",
-        typeof entry.priority === "number" ? `<priority>${entry.priority.toFixed(1)}</priority>` : "",
+        typeof entry.priority === "number"
+          ? `<priority>${entry.priority.toFixed(1)}</priority>`
+          : "",
       ]
         .filter(Boolean)
         .join("");
@@ -110,7 +117,9 @@ function buildSitemapXml(entries: SitemapEntry[]): string {
 
 function toIsoDate(value: string): string | undefined {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? undefined : date.toISOString().slice(0, 10);
+  return Number.isNaN(date.getTime())
+    ? undefined
+    : date.toISOString().slice(0, 10);
 }
 
 function escapeXml(value: string): string {
