@@ -58,7 +58,9 @@ export function ListingStudioHero({
         {status ? <div className="rawaj-studio-hero__status">{status}</div> : null}
       </div>
       <div className="rawaj-studio-hero__visual" aria-hidden="true">
-        <span><ImagePlus /></span>
+        <span>
+          <ImagePlus />
+        </span>
         <i />
         <b />
       </div>
@@ -158,7 +160,13 @@ export function ListingStudioAutosaveStatus({
   if (state === "idle") return null;
 
   const Icon =
-    state === "saving" ? Loader2 : state === "failed" ? CloudOff : state === "saved" ? Cloud : CircleDashed;
+    state === "saving"
+      ? Loader2
+      : state === "failed"
+        ? CloudOff
+        : state === "saved"
+          ? Cloud
+          : CircleDashed;
   const label =
     state === "dirty"
       ? text("تغييرات بانتظار الحفظ", "Changes waiting to save")
@@ -206,14 +214,21 @@ export function ListingStudioPreview({
         <span>{imageCount}</span>
       </div>
       <div className="rawaj-studio-preview__media">
-        {imageUrl ? <img src={imageUrl} alt="" loading="lazy" decoding="async" /> : placeholder ?? <ImagePlus aria-hidden="true" />}
+        {imageUrl ? (
+          <img src={imageUrl} alt="" loading="lazy" decoding="async" />
+        ) : (
+          (placeholder ?? <ImagePlus aria-hidden="true" />)
+        )}
         <small>{text("الصورة الرئيسية", "Primary photo")}</small>
       </div>
       <div className="rawaj-studio-preview__body">
         <span>{category || text("اختر القسم", "Choose category")}</span>
         <h3>{title || text("عنوان إعلانك سيظهر هنا", "Your listing title appears here")}</h3>
         <strong>{price || text("السعر", "Price")}</strong>
-        <p><MapPin aria-hidden="true" />{location || text("اختر الموقع", "Choose location")}</p>
+        <p>
+          <MapPin aria-hidden="true" />
+          {location || text("اختر الموقع", "Choose location")}
+        </p>
       </div>
     </section>
   );
@@ -237,7 +252,9 @@ export function ListingStudioQualityPanel({
         </div>
         <span style={{ "--studio-score": `${score}%` } as React.CSSProperties} />
       </div>
-      <div className="rawaj-studio-quality__track"><span style={{ width: `${score}%` }} /></div>
+      <div className="rawaj-studio-quality__track">
+        <span style={{ width: `${score}%` }} />
+      </div>
       <ul>
         {checks.map((check) => (
           <li key={check.label} data-done={check.done}>
