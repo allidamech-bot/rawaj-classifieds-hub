@@ -84,7 +84,7 @@ export function AppHeader({ compact = false, title }: Props) {
           <div className="order-3 flex shrink-0 items-center gap-1.5 sm:gap-2">
             <Link
               to="/add-listing"
-              className="rawaj-header-cta hidden min-h-11 items-center gap-2 rounded-[var(--rawaj-radius-button)] px-4 text-[12px] font-extrabold text-white lg:inline-flex"
+              className="rawaj-header-cta hidden min-h-11 items-center gap-2 rounded-[var(--rawaj-radius-button)] bg-brand-orange px-4 text-[12px] font-extrabold text-white shadow-[0_9px_22px_rgba(244,95,56,0.22)] transition hover:bg-brand-orange/92 lg:inline-flex"
             >
               <Plus className="h-4 w-4" strokeWidth={2.2} />
               {text("أضف إعلان", "Post listing")}
