@@ -43,7 +43,8 @@ jobs:
         if: github.event_name == 'pull_request' && github.head_ref == 'fix/home-hydration-and-ad-media' && github.actor != 'github-actions[bot]'
         shell: bash
         run: |
-          git checkout --detach "${{ github.event.pull_request.head.sha }}"
+          git fetch origin fix/home-hydration-and-ad-media:refs/remotes/origin/fix/home-hydration-and-ad-media
+          git checkout -B fix/home-hydration-and-ad-media refs/remotes/origin/fix/home-hydration-and-ad-media
           python <<'PY'
           from pathlib import Path
 
