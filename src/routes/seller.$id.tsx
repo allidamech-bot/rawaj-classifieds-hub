@@ -257,14 +257,21 @@ function buildSellerStructuredData(seller: PublicSellerProfile) {
 }
 
 type ReviewEligibilityUiState =
-  "idle" | "loading" | "eligible" | "existing_review" | "no_qualifying_interaction" | "error";
+  | "idle"
+  | "loading"
+  | "eligible"
+  | "existing_review"
+  | "no_qualifying_interaction"
+  | "error";
 
 function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
-  const [selectedTraits, setSelectedTraits] = useState<(typeof SELLER_REVIEW_TRAITS)[number][]>([]);
+  const [selectedTraits, setSelectedTraits] = useState<
+    (typeof SELLER_REVIEW_TRAITS)[number][]
+  >([]);
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
   const [eligibilityState, setEligibilityState] = useState<ReviewEligibilityUiState>("idle");
