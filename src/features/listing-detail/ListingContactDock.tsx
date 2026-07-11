@@ -29,6 +29,7 @@ export function ListingContactDock({
       className="rawaj-contact-dock"
       aria-label={text("إجراءات الإعلان", "Listing actions")}
       data-owner={isOwner}
+      data-action-contract="conversation-and-direct-contact"
     >
       <div className="rawaj-contact-dock__inner">
         {isOwner ? (
