@@ -19,15 +19,8 @@ import {
   SELLER_REVIEW_TRAITS,
   sellerReviewTraitLabel,
 } from "@/lib/classifieds-api";
-import type {
-  ClassifiedListing,
-  PublicSellerProfile,
-} from "@/lib/classifieds-types";
-import {
-  categoryName,
-  formatPriceLocalized,
-  governorateName,
-} from "@/lib/i18n";
+import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
+import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { absoluteUrl, createSeo, jsonLdScript, plainText } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -68,10 +61,7 @@ function SellerPage() {
   const seller = Route.useLoaderData();
 
   return (
-    <div
-      className="rawaj-pulse-page min-h-dvh"
-      dir={language === "ar" ? "rtl" : "ltr"}
-    >
+    <div className="rawaj-pulse-page min-h-dvh" dir={language === "ar" ? "rtl" : "ltr"}>
       <PageHeader title={text("واجهة البائع", "Seller storefront")} />
       <main className="container-wide mobile-page-bottom pb-10 pt-3 sm:pt-5">
         <div className="space-y-7">
@@ -98,10 +88,7 @@ function SellerPage() {
 
               {seller.listings.length === 0 ? (
                 <div className="rawaj-color-card rawaj-world-orange rounded-[1.4rem] p-8 text-center text-sm text-muted-foreground">
-                  {text(
-                    "لا توجد إعلانات عامة لهذا البائع.",
-                    "This seller has no public listings.",
-                  )}
+                  {text("لا توجد إعلانات عامة لهذا البائع.", "This seller has no public listings.")}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -132,12 +119,7 @@ function StorefrontHero({ seller }: { seller: PublicSellerProfile }) {
   return (
     <section className="rawaj-merchant-stage rawaj-storefront-hero overflow-hidden rounded-[1.8rem] sm:rounded-[2.1rem]">
       {seller.coverUrl ? (
-        <img
-          src={seller.coverUrl}
-          alt=""
-          decoding="async"
-          className="rawaj-merchant-cover"
-        />
+        <img src={seller.coverUrl} alt="" decoding="async" className="rawaj-merchant-cover" />
       ) : null}
       <div className="rawaj-merchant-scrim" />
 
@@ -172,11 +154,8 @@ function StorefrontHero({ seller }: { seller: PublicSellerProfile }) {
                   </span>
                 ) : null}
               </div>
-              {seller.businessName &&
-              seller.businessName !== seller.displayName ? (
-                <p className="mt-1 text-xs font-semibold text-[#fffaf0]/68">
-                  {seller.displayName}
-                </p>
+              {seller.businessName && seller.businessName !== seller.displayName ? (
+                <p className="mt-1 text-xs font-semibold text-[#fffaf0]/68">{seller.displayName}</p>
               ) : null}
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#fffaf0]/72">
                 <span className="inline-flex items-center gap-1.5">
@@ -186,8 +165,7 @@ function StorefrontHero({ seller }: { seller: PublicSellerProfile }) {
                 {seller.joinedAt ? (
                   <span className="inline-flex items-center gap-1.5">
                     <CalendarDays className="h-3.5 w-3.5 text-gold" />
-                    {text("منذ", "Since")}{" "}
-                    {new Date(seller.joinedAt).getFullYear()}
+                    {text("منذ", "Since")} {new Date(seller.joinedAt).getFullYear()}
                   </span>
                 ) : null}
               </div>
@@ -238,10 +216,7 @@ function StorefrontReviewLink({ seller }: { seller: PublicSellerProfile }) {
         </strong>
         <span className="block truncate text-[9px] text-gold">
           {hasReviews
-            ? text(
-                `${seller.ratingSummary.count} تعليق`,
-                `${seller.ratingSummary.count} reviews`,
-              )
+            ? text(`${seller.ratingSummary.count} تعليق`, `${seller.ratingSummary.count} reviews`)
             : text("لا توجد تعليقات بعد", "No reviews yet")}
         </span>
       </span>
@@ -279,27 +254,18 @@ function buildSellerStructuredData(seller: PublicSellerProfile) {
 }
 
 type ReviewEligibilityUiState =
-  | "idle"
-  | "loading"
-  | "eligible"
-  | "existing_review"
-  | "no_qualifying_interaction"
-  | "error";
+  "idle" | "loading" | "eligible" | "existing_review" | "no_qualifying_interaction" | "error";
 
 function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
-  const [selectedTraits, setSelectedTraits] = useState<
-    (typeof SELLER_REVIEW_TRAITS)[number][]
-  >([]);
+  const [selectedTraits, setSelectedTraits] = useState<(typeof SELLER_REVIEW_TRAITS)[number][]>([]);
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
-  const [eligibilityState, setEligibilityState] =
-    useState<ReviewEligibilityUiState>("idle");
-  const isOwnProfile =
-    auth.status === "signedIn" && auth.profile?.id === seller.id;
+  const [eligibilityState, setEligibilityState] = useState<ReviewEligibilityUiState>("idle");
+  const isOwnProfile = auth.status === "signedIn" && auth.profile?.id === seller.id;
   const shouldCheckEligibility = auth.status === "signedIn" && !isOwnProfile;
 
   useEffect(() => {
@@ -382,9 +348,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
       className="rawaj-color-card rawaj-world-gold scroll-mt-24 rounded-[1.5rem] p-4 sm:p-5"
     >
       <div className="relative z-10">
-        <span className="rawaj-signature-kicker">
-          {text("صوت العملاء", "Customer voice")}
-        </span>
+        <span className="rawaj-signature-kicker">{text("صوت العملاء", "Customer voice")}</span>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 className="flex items-center gap-2 text-base font-extrabold text-primary">
@@ -397,10 +361,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
                     `${seller.ratingSummary.average} من 5 بناء على ${seller.ratingSummary.count} تقييم معتمد`,
                     `${seller.ratingSummary.average} of 5 from ${seller.ratingSummary.count} approved reviews`,
                   )
-                : text(
-                    "لا توجد تقييمات معتمدة بعد.",
-                    "No approved reviews yet.",
-                  )}
+                : text("لا توجد تقييمات معتمدة بعد.", "No approved reviews yet.")}
             </p>
           </div>
           {seller.ratingSummary.count > 0 ? (
@@ -413,10 +374,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
         {seller.ratingSummary.count > 0 ? (
           <div className="mt-4 grid grid-cols-5 gap-1.5 text-center text-[10px] text-muted-foreground">
             {[5, 4, 3, 2, 1].map((star) => (
-              <div
-                key={star}
-                className="rounded-[0.8rem] bg-white/70 p-2 hairline"
-              >
+              <div key={star} className="rounded-[0.8rem] bg-white/70 p-2 hairline">
                 <div className="font-bold text-foreground">
                   {seller.ratingSummary.distribution[star as 1 | 2 | 3 | 4 | 5]}
                 </div>
@@ -429,11 +387,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
         {seller.reviews.length > 0 ? (
           <div className="mt-4 space-y-2">
             {seller.reviews.slice(0, 3).map((review) => (
-              <SellerReviewCard
-                key={review.id}
-                review={review}
-                canManageResponse={isOwnProfile}
-              />
+              <SellerReviewCard key={review.id} review={review} canManageResponse={isOwnProfile} />
             ))}
           </div>
         ) : null}
@@ -458,25 +412,16 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
           </div>
         ) : isOwnProfile ? (
           <p className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs font-semibold hairline">
-            {text(
-              "لا يمكنك تقييم حسابك.",
-              "You cannot review your own account.",
-            )}
+            {text("لا يمكنك تقييم حسابك.", "You cannot review your own account.")}
           </p>
         ) : eligibilityState === "loading" || eligibilityState === "idle" ? (
           <p className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs font-semibold text-muted-foreground hairline">
-            {text(
-              "جارٍ التحقق من أهلية التقييم…",
-              "Checking review eligibility…",
-            )}
+            {text("جارٍ التحقق من أهلية التقييم…", "Checking review eligibility…")}
           </p>
         ) : eligibilityState === "existing_review" ? (
           <div className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs leading-6 hairline">
             <p className="font-bold text-primary">
-              {text(
-                "لديك تقييم مسجل لهذا البائع",
-                "You already have a review for this seller",
-              )}
+              {text("لديك تقييم مسجل لهذا البائع", "You already have a review for this seller")}
             </p>
             <p className="mt-1 text-muted-foreground">
               {notice ||
@@ -489,10 +434,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
         ) : eligibilityState === "no_qualifying_interaction" ? (
           <div className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs leading-6 hairline">
             <p className="font-bold text-primary">
-              {text(
-                "التقييم يتطلب تواصلاً فعليًا",
-                "A real interaction is required",
-              )}
+              {text("التقييم يتطلب تواصلاً فعليًا", "A real interaction is required")}
             </p>
             <p className="mt-1 text-muted-foreground">
               {text(
@@ -504,10 +446,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
         ) : eligibilityState === "error" ? (
           <div className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs leading-6 hairline">
             <p className="font-bold text-primary">
-              {text(
-                "التقييم غير متاح مؤقتًا",
-                "Reviews are temporarily unavailable",
-              )}
+              {text("التقييم غير متاح مؤقتًا", "Reviews are temporarily unavailable")}
             </p>
             <p className="mt-1 text-muted-foreground">
               {text(
@@ -517,10 +456,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
             </p>
           </div>
         ) : (
-          <form
-            onSubmit={(event) => void submitReview(event)}
-            className="mt-4 space-y-2"
-          >
+          <form onSubmit={(event) => void submitReview(event)} className="mt-4 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
@@ -528,9 +464,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
                   type="button"
                   onClick={() => setRating(value)}
                   className={`min-h-11 rounded-lg px-3 py-2 text-xs font-bold hairline ${
-                    rating >= value
-                      ? "bg-gold text-gold-foreground"
-                      : "bg-white/72"
+                    rating >= value ? "bg-gold text-gold-foreground" : "bg-white/72"
                   }`}
                 >
                   {value} ★
@@ -539,10 +473,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
             </div>
             <div>
               <p className="text-[10px] font-bold text-muted-foreground">
-                {text(
-                  "صفات سريعة — اختر حتى 3",
-                  "Quick traits — choose up to 3",
-                )}
+                {text("صفات سريعة — اختر حتى 3", "Quick traits — choose up to 3")}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {SELLER_REVIEW_TRAITS.map((trait) => {
@@ -552,9 +483,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
                       key={trait}
                       type="button"
                       aria-pressed={selected}
-                      disabled={
-                        saving || (!selected && selectedTraits.length >= 3)
-                      }
+                      disabled={saving || (!selected && selectedTraits.length >= 3)}
                       onClick={() =>
                         setSelectedTraits((current) =>
                           current.includes(trait)
@@ -565,9 +494,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
                         )
                       }
                       className={`min-h-11 rounded-xl px-3 py-2 text-[11px] font-bold hairline disabled:opacity-45 ${
-                        selected
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-white/72"
+                        selected ? "bg-primary text-primary-foreground" : "bg-white/72"
                       }`}
                     >
                       {sellerReviewTraitLabel(trait, language)}
@@ -599,9 +526,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
                 : text("إرسال للمراجعة", "Submit for review")}
             </button>
             {notice ? (
-              <p className="rounded-xl bg-white/72 p-2 text-xs font-semibold">
-                {notice}
-              </p>
+              <p className="rounded-xl bg-white/72 p-2 text-xs font-semibold">{notice}</p>
             ) : null}
           </form>
         )}
@@ -642,11 +567,7 @@ function SellerListingCard({ listing }: { listing: ClassifiedListing }) {
   const { language } = useUiPreferences();
 
   return (
-    <Link
-      to="/listings/$id"
-      params={{ id: listing.id }}
-      className="rawaj-product-card block"
-    >
+    <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-product-card block">
       <div className="rawaj-product-media aspect-[4/3]">
         {listing.primaryImageUrl ? (
           <img
@@ -657,10 +578,7 @@ function SellerListingCard({ listing }: { listing: ClassifiedListing }) {
             className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]"
           />
         ) : (
-          <PlaceholderArt
-            type={listing.categoryPlaceholder ?? "misc"}
-            aspect="wide"
-          />
+          <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
         )}
         <span className="absolute bottom-2 end-2 rounded-full bg-primary/88 px-2.5 py-1 text-[10px] font-bold text-primary-foreground backdrop-blur-sm">
           {categoryName(listing.categoryId, listing.categoryNameAr, language)}
@@ -671,19 +589,10 @@ function SellerListingCard({ listing }: { listing: ClassifiedListing }) {
           {listing.title}
         </h3>
         <div className="mt-2 text-lg font-extrabold text-primary">
-          {formatPriceLocalized(
-            listing.price ?? 0,
-            listing.priceType,
-            language,
-            listing.currency,
-          )}
+          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
         </div>
         <p className="mt-1.5 truncate text-xs text-muted-foreground">
-          {governorateName(
-            listing.governorateId,
-            listing.governorateNameAr,
-            language,
-          )}
+          {governorateName(listing.governorateId, listing.governorateNameAr, language)}
           {listing.districtAr ? ` · ${listing.districtAr}` : ""}
         </p>
       </div>
