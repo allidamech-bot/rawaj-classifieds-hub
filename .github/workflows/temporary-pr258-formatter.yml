@@ -35,7 +35,7 @@ jobs:
           src/features/listing-detail/SimilarListingsRail.tsx
           src/listing-detail-v2.css
           src/routes/__root.tsx
-          src/routes/listings.$id.tsx
+          'src/routes/listings.$id.tsx'
       - name: Commit formatting and self-delete
         shell: bash
         run: |
