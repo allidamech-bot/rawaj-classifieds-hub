@@ -84,7 +84,10 @@ for (const permission of [
 }
 
 expect("sensitive migrations enable RLS", /enable row level security/i.test(migrations));
-expect("owner-sensitive RPCs recheck owner", migrations.includes("current_user_has_role('owner')"));
+expect(
+  "owner-sensitive RPCs recheck owner",
+  migrations.includes("current_user_has_role('owner')"),
+);
 expect("stale write guards exist", /stale_[a-z_]+/i.test(migrations));
 expect("sensitive mutations write audit events", migrations.includes("rawaj_insert_audit_log"));
 
