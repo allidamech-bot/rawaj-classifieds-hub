@@ -34,7 +34,11 @@ export function SearchResultsToolbar({
   text,
 }: SearchResultsToolbarProps) {
   return (
-    <section className="rawaj-search-toolbar" aria-labelledby="rawaj-results-title">
+    <section
+      className="rawaj-search-toolbar"
+      aria-labelledby="rawaj-results-title"
+      data-state-contract="url-backed"
+    >
       <div className="rawaj-search-toolbar__heading">
         <div className="min-w-0">
           <p>{text("نتائج السوق", "Marketplace results")}</p>
