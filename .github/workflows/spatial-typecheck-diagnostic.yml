@@ -1,9 +1,9 @@
 name: Temporary Spatial Typecheck Diagnostic
 
 on:
-  push:
+  pull_request:
     branches:
-      - design/spatial-app-shell-v1
+      - main
 
 permissions:
   contents: read
