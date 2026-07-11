@@ -3,6 +3,7 @@ import { Eye, EyeOff, Lock, LogIn, ShieldCheck, UserPlus } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { PageHeader } from "@/components/PageHeader";
+import { authErrorMessage } from "@/lib/auth-errors";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
 import { supabase } from "@/lib/supabase";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -28,7 +29,9 @@ function GoogleButton({ returnTo }: { returnTo: string }) {
     setLoading(true);
     const result = await auth.signInWithGoogle(returnTo);
     setLoading(false);
-    if (result.error) setError(result.error);
+    if (result.error) {
+      setError(authErrorMessage({ message: result.error }, "callback", text));
+    }
   }
 
   return (
@@ -94,7 +97,8 @@ function LoginPage() {
   const looseSearch = locationSearch as unknown as Record<string, unknown>;
   const rawReturnTo = typeof looseSearch.returnTo === "string" ? looseSearch.returnTo : undefined;
   const returnTo = sanitizeAuthReturnTo(rawReturnTo, "/more");
-  const [mode, setMode] = useState<AuthMode>("login");
+  const initialMode: AuthMode = looseSearch.mode === "forgot" ? "forgot" : "login";
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -149,12 +153,7 @@ function LoginPage() {
       setSubmitting(false);
 
       if (resetError) {
-        setError(
-          text(
-            "تعذر إرسال رابط إعادة التعيين الآن. حاول مرة أخرى.",
-            "Could not send the reset link right now. Try again.",
-          ),
-        );
+        setError(authErrorMessage(resetError, "recovery", text));
         return;
       }
 
@@ -184,11 +183,7 @@ function LoginPage() {
 
     if (result.error) {
       setSubmitting(false);
-      setError(
-        mode === "login"
-          ? text("خطأ في البريد أو كلمة المرور", "Incorrect email or password")
-          : result.error.message,
-      );
+      setError(authErrorMessage(result.error, mode === "login" ? "login" : "register", text));
       return;
     }
 
