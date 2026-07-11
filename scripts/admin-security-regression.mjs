@@ -15,7 +15,7 @@ const adminShell = read("src/routes/admin.tsx");
 const adminUsers = read("src/routes/admin.users.tsx");
 const adminPending = read("src/routes/admin.pending.tsx");
 const adminReviews = read("src/routes/admin.reviews.tsx");
-const bottomNav = read("src/components/BottomNav.tsx");
+const bottomDock = read("src/components/shell/BottomDock.tsx");
 const primaryNavigation = read("src/lib/primary-navigation.ts");
 
 const failures = [];
@@ -89,9 +89,9 @@ expect("owner-sensitive RPCs recheck owner", migrations.includes("current_user_h
 expect("stale write guards exist", /stale_[a-z_]+/i.test(migrations));
 expect("sensitive mutations write audit events", migrations.includes("rawaj_insert_audit_log"));
 
-const primaryTargets = ["/", "/categories", "/add-listing", "/offers", "/more"];
+const primaryTargets = ["/", "/categories", "/add-listing", "/chats", "/more"];
 for (const target of primaryTargets) {
-  expect(`bottom navigation preserves ${target}`, bottomNav.includes(`to: "${target}"`));
+  expect(`bottom navigation preserves ${target}`, bottomDock.includes(`to: "${target}"`));
 }
 expect("admin routes remain outside public navigation", primaryNavigation.includes('"/admin"'));
 
