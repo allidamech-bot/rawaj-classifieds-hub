@@ -4,12 +4,14 @@ import { Camera, Info, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   ListingStudioAutosaveStatus,
+  ListingStudioCompletionCard,
   ListingStudioHero,
   ListingStudioMessage,
   ListingStudioPreview,
   ListingStudioQualityPanel,
   ListingStudioSection,
   ListingStudioSteps,
+  ListingStudioTrustStrip,
 } from "@/features/listing-studio/listing-studio";
 import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
 import {
@@ -87,6 +89,7 @@ function AddListingPage() {
   const { language, text } = useUiPreferences();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
+  const [furthestStep, setFurthestStep] = useState(0);
   const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
   const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -516,7 +519,11 @@ function AddListingPage() {
     if (!validateCurrentStep(step)) return;
     setStepErrors([]);
     setFieldErrors({});
-    setStep((value) => Math.min(steps.length - 1, value + 1));
+    setStep((value) => {
+      const next = Math.min(steps.length - 1, value + 1);
+      setFurthestStep((current) => Math.max(current, next));
+      return next;
+    });
   }
 
   function buildCurrentListingPayload(details: Record<string, unknown>) {
@@ -984,7 +991,7 @@ function AddListingPage() {
   return (
     <>
       <PageHeader title={text("أضف إعلاناً", "Post a listing")} />
-      <main className="rawaj-listing-studio-v2 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
         <ListingStudioHero
           eyebrow={text("استوديو الإعلان", "Listing studio")}
           title={text(
@@ -1008,7 +1015,25 @@ function AddListingPage() {
             </>
           }
         />
-        <ListingStudioSteps steps={steps.map((label) => ({ label }))} current={step} />
+        <ListingStudioTrustStrip text={text} />
+        <ListingStudioSteps
+          steps={steps.map((label, index) => ({
+            label,
+            description:
+              index === 0
+                ? text("القسم والعنوان", "Category and title")
+                : index === 1
+                  ? text("الصور والوصف", "Photos and description")
+                  : text("السعر والتواصل", "Price and contact"),
+          }))}
+          current={step}
+          maxReachable={furthestStep}
+          onStepChange={(nextStep) => {
+            setStep(nextStep);
+            setStepErrors([]);
+            setFieldErrors({});
+          }}
+        />
 
         <ListingStudioAutosaveStatus
           state={autosaveState}
@@ -1444,6 +1469,24 @@ function AddListingPage() {
             </div>
 
             <aside className="rawaj-studio-shell__aside">
+              <ListingStudioCompletionCard
+                score={score}
+                ready={score === 100}
+                title={
+                  score === 100
+                    ? text("الإعلان جاهز للمراجعة", "Ready for review")
+                    : text("أكمل الإعلان خطوة بخطوة", "Complete your listing step by step")
+                }
+                body={
+                  score === 100
+                    ? text("راجع المعاينة ثم أرسل الإعلان.", "Review the preview, then submit.")
+                    : text(
+                        "كل معلومة واضحة ترفع فرصة البيع.",
+                        "Every clear detail improves your chances.",
+                      )
+                }
+                text={text}
+              />
               <ListingStudioPreview
                 imageUrl={selectedImagePreviews[0]?.url}
                 title={title}

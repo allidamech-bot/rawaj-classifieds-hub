@@ -3,11 +3,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Camera, RefreshCw, Trash2, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  ListingStudioCompletionCard,
   ListingStudioHero,
   ListingStudioMessage,
   ListingStudioPreview,
   ListingStudioQualityPanel,
   ListingStudioSection,
+  ListingStudioTrustStrip,
 } from "@/features/listing-studio/listing-studio";
 import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
 import {
@@ -550,7 +552,7 @@ function ManageListingPage() {
   return (
     <>
       <PageHeader title={text("تعديل الإعلان", "Edit listing")} back to="/profile" />
-      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v2--manage container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v2--manage container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
         <ListingStudioHero
           eyebrow={text("إدارة الإعلان", "Listing management")}
           title={title || text("تعديل الإعلان", "Edit listing")}
@@ -577,6 +579,7 @@ function ManageListingPage() {
             </>
           }
         />
+        <ListingStudioTrustStrip text={text} />
 
         {isPendingReview && (
           <div className="mb-4">
@@ -979,6 +982,27 @@ function ManageListingPage() {
           </div>
 
           <aside className="rawaj-studio-shell__aside">
+            <ListingStudioCompletionCard
+              score={studioScore}
+              ready={studioScore === 100}
+              title={
+                isEditable
+                  ? text("راجع التعديلات قبل الحفظ", "Review changes before saving")
+                  : text("الإعلان للعرض فقط الآن", "Listing is view-only right now")
+              }
+              body={
+                isEditable
+                  ? text(
+                      "المعاينة تتحدث مع بيانات الإعلان.",
+                      "The preview updates with listing data.",
+                    )
+                  : text(
+                      "حالة الإعلان الحالية تمنع التعديل.",
+                      "The current status prevents editing.",
+                    )
+              }
+              text={text}
+            />
             <ListingStudioPreview
               imageUrl={images[0]?.publicUrl ?? selectedImages[0]?.url}
               title={title}
