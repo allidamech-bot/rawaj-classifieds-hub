@@ -142,7 +142,7 @@ function CategoriesPage() {
     <>
       <PageHeader title={text("الأقسام", "Categories")} />
       <main className="rawaj-categories-v2 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
-        <section className="rawaj-hero-surface rounded-[1.55rem] sm:rounded-[1.9rem]">
+        <section className="rawaj-categories-v2__hero rounded-[1.55rem] sm:rounded-[1.9rem]">
           <div className="p-4 sm:p-6">
             <div className="flex items-start gap-3">
               <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-[1rem] bg-primary text-primary-foreground shadow-[0_9px_22px_rgba(16,43,70,0.16)]">
@@ -173,7 +173,7 @@ function CategoriesPage() {
             {showTaxonomy && <Breadcrumbs path={currentPath} language={language} text={text} />}
           </div>
 
-          <div className="border-t border-border/60 p-3 sm:p-4">
+          <div className="rawaj-categories-v2__hero-search p-3 sm:p-4">
             <label className="flex items-center gap-2.5 rounded-[1.05rem] border border-border/80 bg-card/82 px-3.5 py-3 shadow-[0_7px_22px_rgba(16,43,70,0.045)] transition focus-within:border-brand-orange/60 focus-within:ring-[3px] focus-within:ring-brand-orange/12">
               <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
               <input
