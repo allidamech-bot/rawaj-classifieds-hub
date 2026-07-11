@@ -15,8 +15,16 @@
   z-index: -1;
   height: 36rem;
   background:
-    radial-gradient(circle at 88% 7%, color-mix(in srgb, var(--rawaj-orange) 10%, transparent), transparent 29%),
-    radial-gradient(circle at 9% 0%, color-mix(in srgb, var(--rawaj-gold) 12%, transparent), transparent 27%);
+    radial-gradient(
+      circle at 88% 7%,
+      color-mix(in srgb, var(--rawaj-orange) 10%, transparent),
+      transparent 29%
+    ),
+    radial-gradient(
+      circle at 9% 0%,
+      color-mix(in srgb, var(--rawaj-gold) 12%, transparent),
+      transparent 27%
+    );
   pointer-events: none;
 }
 
@@ -39,7 +47,11 @@
   overflow: hidden;
   align-content: space-between;
   background:
-    radial-gradient(circle at 90% 7%, color-mix(in srgb, var(--rawaj-gold) 24%, transparent), transparent 27%),
+    radial-gradient(
+      circle at 90% 7%,
+      color-mix(in srgb, var(--rawaj-gold) 24%, transparent),
+      transparent 27%
+    ),
     linear-gradient(145deg, #082f2a, var(--color-primary) 52%, #1f5d50);
   padding: clamp(1.5rem, 4vw, 2.4rem);
   color: white;
@@ -77,8 +89,15 @@
   box-shadow: 0 12px 28px color-mix(in srgb, var(--rawaj-orange) 28%, transparent);
 }
 
-.rawaj-auth-aside__brand svg { width: 1rem; height: 1rem; }
-.rawaj-auth-aside__brand p { font-size: 0.75rem; font-weight: 900; letter-spacing: 0.12em; }
+.rawaj-auth-aside__brand svg {
+  width: 1rem;
+  height: 1rem;
+}
+.rawaj-auth-aside__brand p {
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
 
 .rawaj-auth-aside__copy {
   position: relative;
@@ -143,9 +162,17 @@
   color: #f2c77f;
 }
 
-.rawaj-auth-aside li svg { width: 0.85rem; height: 0.85rem; }
-.rawaj-auth-aside li > svg { color: #58c89f; }
-.rawaj-auth-aside li strong { font-size: 0.62rem; font-weight: 800; }
+.rawaj-auth-aside li svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+.rawaj-auth-aside li > svg {
+  color: #58c89f;
+}
+.rawaj-auth-aside li strong {
+  font-size: 0.62rem;
+  font-weight: 800;
+}
 
 .rawaj-auth-aside__trust {
   position: relative;
@@ -161,7 +188,12 @@
   line-height: 1.6;
 }
 
-.rawaj-auth-aside__trust svg { width: 0.8rem; height: 0.8rem; flex: 0 0 auto; color: #f2c77f; }
+.rawaj-auth-aside__trust svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  flex: 0 0 auto;
+  color: #f2c77f;
+}
 
 .rawaj-auth-card {
   display: flex;
@@ -189,10 +221,28 @@
   color: var(--rawaj-orange);
 }
 
-.rawaj-auth-card__header svg { width: 1.1rem; height: 1.1rem; }
-.rawaj-auth-card__header p { color: var(--rawaj-orange); font-size: 0.55rem; font-weight: 900; }
-.rawaj-auth-card__header h2 { margin-top: 0.18rem; color: var(--color-primary); font-size: 1.08rem; font-weight: 900; }
-.rawaj-auth-card__header small { display: block; margin-top: 0.25rem; color: var(--color-muted-foreground); font-size: 0.62rem; line-height: 1.7; }
+.rawaj-auth-card__header svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.rawaj-auth-card__header p {
+  color: var(--rawaj-orange);
+  font-size: 0.55rem;
+  font-weight: 900;
+}
+.rawaj-auth-card__header h2 {
+  margin-top: 0.18rem;
+  color: var(--color-primary);
+  font-size: 1.08rem;
+  font-weight: 900;
+}
+.rawaj-auth-card__header small {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.62rem;
+  line-height: 1.7;
+}
 
 .rawaj-auth-tabs {
   display: grid;
@@ -219,7 +269,10 @@
   box-shadow: 0 8px 22px color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
-.rawaj-auth-card form { display: grid; gap: 0.7rem; }
+.rawaj-auth-card form {
+  display: grid;
+  gap: 0.7rem;
+}
 .rawaj-auth-card .input {
   min-height: 3.15rem;
   border: 1px solid color-mix(in srgb, var(--color-primary) 9%, var(--color-border));
@@ -262,7 +315,12 @@
   line-height: 1.7;
 }
 
-.rawaj-auth-security-note svg { width: 0.8rem; height: 0.8rem; flex: 0 0 auto; color: #258067; }
+.rawaj-auth-security-note svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  flex: 0 0 auto;
+  color: #258067;
+}
 
 .rawaj-account-identity {
   position: relative;
@@ -279,12 +337,21 @@
   inset: 0;
 }
 
-.rawaj-account-identity__cover > img { width: 100%; height: 100%; object-fit: cover; opacity: 0.38; }
+.rawaj-account-identity__cover > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.38;
+}
 .rawaj-account-identity__cover > div {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 90% 4%, color-mix(in srgb, var(--rawaj-gold) 26%, transparent), transparent 28%),
+    radial-gradient(
+      circle at 90% 4%,
+      color-mix(in srgb, var(--rawaj-gold) 26%, transparent),
+      transparent 28%
+    ),
     linear-gradient(180deg, color-mix(in srgb, #082f2a 20%, transparent), #082f2a 94%);
 }
 
@@ -314,8 +381,16 @@
   box-shadow: 0 18px 40px color-mix(in srgb, black 28%, transparent);
 }
 
-.rawaj-account-identity__avatar > img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
-.rawaj-account-identity__avatar > svg { width: 2rem; height: 2rem; }
+.rawaj-account-identity__avatar > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+.rawaj-account-identity__avatar > svg {
+  width: 2rem;
+  height: 2rem;
+}
 .rawaj-account-identity__avatar > span {
   position: absolute;
   inset-inline-end: -0.3rem;
@@ -329,19 +404,73 @@
   background: var(--rawaj-orange);
   color: white;
 }
-.rawaj-account-identity__avatar > span svg { width: 0.75rem; height: 0.75rem; }
+.rawaj-account-identity__avatar > span svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
 
-.rawaj-account-identity__copy { min-width: 0; }
-.rawaj-account-identity__copy > p { color: #f2c77f; font-size: 0.55rem; font-weight: 900; }
-.rawaj-account-identity__copy > div:first-of-type { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; margin-top: 0.2rem; }
-.rawaj-account-identity__copy h1 { overflow: hidden; color: white; font-family: var(--font-display, inherit); font-size: clamp(1.35rem, 6vw, 2.35rem); font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
-.rawaj-account-identity__copy > div > strong { display: inline-flex; align-items: center; gap: 0.25rem; border-radius: 999px; background: #258067; padding: 0.32rem 0.5rem; color: white; font-size: 0.5rem; font-weight: 850; }
-.rawaj-account-identity__copy > div > strong svg { width: 0.7rem; height: 0.7rem; }
+.rawaj-account-identity__copy {
+  min-width: 0;
+}
+.rawaj-account-identity__copy > p {
+  color: #f2c77f;
+  font-size: 0.55rem;
+  font-weight: 900;
+}
+.rawaj-account-identity__copy > div:first-of-type {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.2rem;
+}
+.rawaj-account-identity__copy h1 {
+  overflow: hidden;
+  color: white;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.35rem, 6vw, 2.35rem);
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rawaj-account-identity__copy > div > strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 999px;
+  background: #258067;
+  padding: 0.32rem 0.5rem;
+  color: white;
+  font-size: 0.5rem;
+  font-weight: 850;
+}
+.rawaj-account-identity__copy > div > strong svg {
+  width: 0.7rem;
+  height: 0.7rem;
+}
 .rawaj-account-identity__copy > small,
-.rawaj-account-identity__copy > span { display: block; margin-top: 0.25rem; color: color-mix(in srgb, white 62%, transparent); font-size: 0.58rem; }
+.rawaj-account-identity__copy > span {
+  display: block;
+  margin-top: 0.25rem;
+  color: color-mix(in srgb, white 62%, transparent);
+  font-size: 0.58rem;
+}
 
-.rawaj-account-identity__badges { display: flex !important; flex-wrap: wrap; gap: 0.35rem !important; margin-top: 0.6rem !important; }
-.rawaj-account-identity__badges b { border: 1px solid color-mix(in srgb, white 12%, transparent); border-radius: 999px; background: color-mix(in srgb, white 7%, transparent); padding: 0.35rem 0.55rem; color: white; font-size: 0.5rem; font-weight: 750; }
+.rawaj-account-identity__badges {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 0.35rem !important;
+  margin-top: 0.6rem !important;
+}
+.rawaj-account-identity__badges b {
+  border: 1px solid color-mix(in srgb, white 12%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, white 7%, transparent);
+  padding: 0.35rem 0.55rem;
+  color: white;
+  font-size: 0.5rem;
+  font-weight: 750;
+}
 
 .rawaj-account-identity__actions {
   position: absolute;
@@ -353,10 +482,29 @@
   overflow-x: auto;
   scrollbar-width: none;
 }
-.rawaj-account-identity__actions::-webkit-scrollbar { display: none; }
+.rawaj-account-identity__actions::-webkit-scrollbar {
+  display: none;
+}
 .rawaj-account-identity__actions a,
-.rawaj-account-identity__actions button { display: inline-flex; min-height: 2.65rem; flex: 0 0 auto; align-items: center; gap: 0.35rem; border: 1px solid color-mix(in srgb, white 13%, transparent); border-radius: 999px; background: color-mix(in srgb, white 8%, transparent); padding-inline: 0.75rem; color: white; font-size: 0.58rem; font-weight: 850; backdrop-filter: blur(12px); }
-.rawaj-account-identity__actions svg { width: 0.8rem; height: 0.8rem; }
+.rawaj-account-identity__actions button {
+  display: inline-flex;
+  min-height: 2.65rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid color-mix(in srgb, white 13%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, white 8%, transparent);
+  padding-inline: 0.75rem;
+  color: white;
+  font-size: 0.58rem;
+  font-weight: 850;
+  backdrop-filter: blur(12px);
+}
+.rawaj-account-identity__actions svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
 
 .rawaj-account-quick-links {
   display: grid;
@@ -375,11 +523,38 @@
   padding: 0.7rem;
   box-shadow: var(--shadow-card);
 }
-.rawaj-account-quick-links a > span { display: grid; width: 2.35rem; height: 2.35rem; flex: 0 0 auto; place-items: center; border-radius: 0.75rem; background: color-mix(in srgb, var(--rawaj-orange) 9%, white); color: var(--rawaj-orange); }
-.rawaj-account-quick-links svg { width: 1rem; height: 1rem; }
-.rawaj-account-quick-links div { min-width: 0; }
-.rawaj-account-quick-links strong { display: block; color: var(--color-primary); font-size: 0.68rem; font-weight: 900; }
-.rawaj-account-quick-links small { display: block; overflow: hidden; margin-top: 0.15rem; color: var(--color-muted-foreground); font-size: 0.52rem; text-overflow: ellipsis; white-space: nowrap; }
+.rawaj-account-quick-links a > span {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--rawaj-orange) 9%, white);
+  color: var(--rawaj-orange);
+}
+.rawaj-account-quick-links svg {
+  width: 1rem;
+  height: 1rem;
+}
+.rawaj-account-quick-links div {
+  min-width: 0;
+}
+.rawaj-account-quick-links strong {
+  display: block;
+  color: var(--color-primary);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+.rawaj-account-quick-links small {
+  display: block;
+  overflow: hidden;
+  margin-top: 0.15rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.52rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .rawaj-account-section,
 .rawaj-account-card {
@@ -397,37 +572,105 @@
   border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 7%, var(--color-border));
   padding: 0.9rem 1rem;
 }
-.rawaj-account-section > header > span { display: grid; width: 2.35rem; height: 2.35rem; flex: 0 0 auto; place-items: center; border-radius: 0.75rem; background: color-mix(in srgb, var(--rawaj-orange) 9%, white); color: var(--rawaj-orange); }
-.rawaj-account-section > header svg { width: 1rem; height: 1rem; }
-.rawaj-account-section > header p { color: var(--rawaj-orange); font-size: 0.52rem; font-weight: 900; }
-.rawaj-account-section > header h2 { margin-top: 0.12rem; color: var(--color-primary); font-size: 0.8rem; font-weight: 900; }
-.rawaj-account-section > header small { display: block; margin-top: 0.22rem; color: var(--color-muted-foreground); font-size: 0.58rem; line-height: 1.65; }
-.rawaj-account-section__body { padding: 1rem; }
-.rawaj-account-section[data-tone="muted"] { background: var(--rawaj-surface-warm); }
-.rawaj-account-section[data-tone="security"] > header > span { background: color-mix(in srgb, #258067 9%, white); color: #258067; }
+.rawaj-account-section > header > span {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--rawaj-orange) 9%, white);
+  color: var(--rawaj-orange);
+}
+.rawaj-account-section > header svg {
+  width: 1rem;
+  height: 1rem;
+}
+.rawaj-account-section > header p {
+  color: var(--rawaj-orange);
+  font-size: 0.52rem;
+  font-weight: 900;
+}
+.rawaj-account-section > header h2 {
+  margin-top: 0.12rem;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+.rawaj-account-section > header small {
+  display: block;
+  margin-top: 0.22rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.58rem;
+  line-height: 1.65;
+}
+.rawaj-account-section__body {
+  padding: 1rem;
+}
+.rawaj-account-section[data-tone="muted"] {
+  background: var(--rawaj-surface-warm);
+}
+.rawaj-account-section[data-tone="security"] > header > span {
+  background: color-mix(in srgb, #258067 9%, white);
+  color: #258067;
+}
 
-.rawaj-account-profile-editor .input { min-height: 3rem; border-radius: 0.88rem; border-color: color-mix(in srgb, var(--color-primary) 9%, var(--color-border)); background: color-mix(in srgb, var(--rawaj-surface-card) 98%, var(--color-background)); }
-.rawaj-account-profile-editor textarea.input { min-height: 7.5rem; line-height: 1.8; }
-.rawaj-account-profile-editor .input:focus { border-color: color-mix(in srgb, var(--rawaj-orange) 55%, var(--color-border)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--rawaj-orange) 12%, transparent); }
+.rawaj-account-profile-editor .input {
+  min-height: 3rem;
+  border-radius: 0.88rem;
+  border-color: color-mix(in srgb, var(--color-primary) 9%, var(--color-border));
+  background: color-mix(in srgb, var(--rawaj-surface-card) 98%, var(--color-background));
+}
+.rawaj-account-profile-editor textarea.input {
+  min-height: 7.5rem;
+  line-height: 1.8;
+}
+.rawaj-account-profile-editor .input:focus {
+  border-color: color-mix(in srgb, var(--rawaj-orange) 55%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rawaj-orange) 12%, transparent);
+}
 
-.rawaj-account-overview-grid { display: grid; gap: 0.8rem; }
-.rawaj-account-card { padding: 1rem; }
-.rawaj-account-card h2 { color: var(--color-primary); }
+.rawaj-account-overview-grid {
+  display: grid;
+  gap: 0.8rem;
+}
+.rawaj-account-card {
+  padding: 1rem;
+}
+.rawaj-account-card h2 {
+  color: var(--color-primary);
+}
 
 @media (min-width: 640px) {
-  .rawaj-account-quick-links { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .rawaj-account-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rawaj-account-quick-links {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .rawaj-account-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 900px) {
-  .rawaj-auth-layout { grid-template-columns: minmax(0, 1.05fr) minmax(22rem, 0.95fr); }
-  .rawaj-auth-aside { display: grid; }
+  .rawaj-auth-layout {
+    grid-template-columns: minmax(0, 1.05fr) minmax(22rem, 0.95fr);
+  }
+  .rawaj-auth-aside {
+    display: grid;
+  }
 }
 
 @media (max-width: 389px) {
-  .rawaj-account-identity__content { align-items: center; min-height: 18rem; padding-bottom: 5.4rem; }
-  .rawaj-account-identity__copy h1 { font-size: 1.2rem; }
-  .rawaj-account-quick-links { gap: 0.4rem; }
+  .rawaj-account-identity__content {
+    align-items: center;
+    min-height: 18rem;
+    padding-bottom: 5.4rem;
+  }
+  .rawaj-account-identity__copy h1 {
+    font-size: 1.2rem;
+  }
+  .rawaj-account-quick-links {
+    gap: 0.4rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

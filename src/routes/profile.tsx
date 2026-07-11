@@ -15,6 +15,12 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  AccountIdentityHero,
+  AccountQuickLinks,
+  AccountSection,
+  accountSectionIcons,
+} from "@/features/account/AccountExperience";
+import {
   fetchCurrentUserListings,
   fetchMyVerificationRequests,
   removeProfileMedia,
@@ -211,114 +217,60 @@ function ProfilePage() {
   return (
     <>
       <PageHeader title={text("حسابي", "My account")} to="/more" backMode="history" />
-      <main className="container-wide mobile-page-bottom space-y-5 pt-4">
-        <section className="rounded-2xl bg-card p-4 shadow-soft hairline">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full bg-muted-surface text-primary">
-                {auth.profile?.avatarUrl ? (
-                  <img
-                    src={auth.profile.avatarUrl}
-                    alt={text("صورة الحساب", "Account image")}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  <User className="h-6 w-6" />
-                )}
-              </span>
-              <div className="min-w-0">
-                <h1 className="truncate text-lg font-extrabold">{displayName}</h1>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {auth.status === "signedIn"
-                    ? text(
-                        "مركز الحساب جاهز لإدارة بياناتك وإعلاناتك.",
-                        "Your account center is ready.",
-                      )
-                    : text(
-                        "سجّل الدخول لإدارة بياناتك وإعلاناتك.",
-                        "Log in to manage your information and listings.",
-                      )}
-                </p>
-                <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-bold">
-                  <span className="rounded-full bg-muted-surface px-2 py-1">
-                    {roleLabel(auth.profile?.role, text)}
-                  </span>
-                  <span className="rounded-full bg-muted-surface px-2 py-1">
-                    {accountStatusLabel(auth.profile?.accountStatus, text)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
-              {auth.status === "signedIn" ? (
-                <>
-                  <a
-                    href="/profile#account-info"
-                    className="inline-flex items-center justify-center gap-1 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
-                  >
-                    <Pencil className="h-4 w-4" />
-                    {text("تعديل معلومات الحساب", "Edit account info")}
-                  </a>
-                  <Link
-                    to="/profile/listings"
-                    className="inline-flex items-center justify-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
-                  >
-                    <FileSpreadsheet className="h-4 w-4" />
-                    {text("إعلاناتي / متجري", "My listings")}
-                  </Link>
-                  <Link
-                    to="/verification"
-                    className="inline-flex items-center justify-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
-                  >
-                    <BadgeCheck className="h-4 w-4" />
-                    {text("طلب التوثيق", "Verification")}
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="inline-flex items-center justify-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    {text("تسجيل الخروج", "Log out")}
-                  </button>
-                </>
-              ) : (
-                <Link
-                  to="/login"
-                  className="col-span-2 inline-flex items-center justify-center gap-1 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
-                >
-                  <LogIn className="h-4 w-4" />
-                  {text("تسجيل الدخول", "Log in")}
+      <main className="rawaj-account-v2 container-wide mobile-page-bottom space-y-5 pb-8 pt-4">
+        <AccountIdentityHero
+          displayName={displayName}
+          email={auth.profile?.email}
+          avatarUrl={auth.profile?.avatarUrl}
+          coverUrl={auth.profile?.coverUrl}
+          location={auth.profile?.cityArea || auth.profile?.governorate}
+          roleLabel={roleLabel(auth.profile?.role, text)}
+          statusLabel={accountStatusLabel(auth.profile?.accountStatus, text)}
+          verified={auth.profile?.verificationStatus === "verified"}
+          signedIn={auth.status === "signedIn"}
+          actions={
+            auth.status === "signedIn" ? (
+              <>
+                <a href="#account-info">
+                  <Pencil className="h-4 w-4" />
+                  {text("تعديل الحساب", "Edit account")}
+                </a>
+                <Link to="/profile/listings">
+                  <FileSpreadsheet className="h-4 w-4" />
+                  {text("متجري", "My store")}
                 </Link>
-              )}
-            </div>
-          </div>
-          {logoutError && (
-            <p className="mt-3 rounded-xl bg-destructive/10 p-2 text-xs text-destructive">
-              {logoutError}
-            </p>
-          )}
-        </section>
+                <Link to="/verification">
+                  <BadgeCheck className="h-4 w-4" />
+                  {text("التوثيق", "Verification")}
+                </Link>
+                <button type="button" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                  {text("خروج", "Log out")}
+                </button>
+              </>
+            ) : (
+              <Link to="/login">
+                <LogIn className="h-4 w-4" />
+                {text("تسجيل الدخول", "Log in")}
+              </Link>
+            )
+          }
+        />
+        {logoutError ? (
+          <p className="rounded-xl bg-destructive/10 p-3 text-xs text-destructive">{logoutError}</p>
+        ) : null}
+        {auth.status === "signedIn" ? <AccountQuickLinks /> : null}
 
-        <section
+        <AccountSection
           id="account-info"
-          className="scroll-mt-24 rounded-2xl bg-card p-4 shadow-soft hairline"
+          eyebrow={text("الهوية والتواصل", "Identity and contact")}
+          title={text("معلومات الحساب", "Account information")}
+          description={text(
+            "حدّث الصور والاسم والموقع ووسائل التواصل التي تستخدمها في متجرك وإعلاناتك.",
+            "Update the images, name, location, and contact methods used by your store and listings.",
+          )}
+          icon={accountSectionIcons.identity}
         >
-          <div className="mb-4">
-            <h2 className="text-base font-extrabold">
-              {text("معلومات الحساب", "Account information")}
-            </h2>
-            <p className="mt-1 text-xs leading-6 text-muted-foreground">
-              {text(
-                "عدّل بيانات التواصل التي تظهر للمستخدمين.",
-                "Edit the contact details shown to users.",
-              )}
-            </p>
-          </div>
-
           {auth.status === "signedIn" ? (
             <form onSubmit={(event) => void handleSaveProfileBasics(event)} className="space-y-4">
               <div className="rounded-2xl bg-muted-surface p-3 hairline">
@@ -456,10 +408,10 @@ function ProfilePage() {
               {text("سجّل الدخول لتحديث معلومات الحساب.", "Log in to update account information.")}
             </p>
           )}
-        </section>
+        </AccountSection>
 
-        <section className="grid gap-4 lg:grid-cols-2">
-          <section className="rounded-2xl bg-card p-4 hairline">
+        <section className="rawaj-account-overview-grid">
+          <section className="rawaj-account-card">
             <div className="mb-3 flex items-center justify-between gap-2">
               <h2 className="text-sm font-extrabold">{text("إعلاناتي", "My listings")}</h2>
               <span className="rounded-full bg-muted-surface px-2.5 py-1 text-[11px] font-bold">
@@ -526,7 +478,7 @@ function ProfilePage() {
             </div>
           </section>
 
-          <section className="rounded-2xl bg-card p-4 hairline">
+          <section className="rawaj-account-card">
             <h2 className="mb-2 inline-flex items-center gap-2 text-sm font-extrabold">
               <BadgeCheck className="h-4 w-4 text-emerald-trust" />
               {text("توثيق الحساب", "Account verification")}
@@ -577,7 +529,7 @@ function ProfilePage() {
           </section>
         </section>
 
-        <section className="rounded-2xl bg-card p-4 hairline">
+        <section className="rawaj-account-card">
           <div className="flex items-start gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted-surface text-primary">
               <ShieldCheck className="h-5 w-5" />

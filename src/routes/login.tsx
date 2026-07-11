@@ -3,6 +3,7 @@ import { Eye, EyeOff, Lock, LogIn, ShieldCheck, UserPlus } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { PageHeader } from "@/components/PageHeader";
+import { AuthExperienceAside, AuthExperienceHeader } from "@/features/account/AccountExperience";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
 import { supabase } from "@/lib/supabase";
@@ -40,7 +41,7 @@ function GoogleButton({ returnTo }: { returnTo: string }) {
         type="button"
         disabled={loading || auth.status === "authUnavailable"}
         onClick={handleGoogleSignIn}
-        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[1rem] border border-border/80 bg-card/85 px-4 py-2.5 text-sm font-semibold text-foreground shadow-soft transition hover:border-gold/40 hover:bg-card disabled:opacity-60"
+        className="rawaj-auth-google disabled:opacity-60"
       >
         {loading ? (
           <svg aria-hidden="true" className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -225,218 +226,192 @@ function LoginPage() {
   return (
     <>
       <PageHeader title={text("الحساب", "Account")} />
-      <main className="container-wide pb-10 pt-3 sm:pt-5">
-        <section className="rawaj-hero-surface mx-auto max-w-md rounded-[1.65rem] p-5 sm:rounded-[1.9rem] sm:p-6">
-          <div className="mb-4 flex items-start gap-3">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[1.05rem] bg-primary text-primary-foreground shadow-[0_9px_22px_rgba(16,43,70,0.16)]">
-              <Lock className="h-5 w-5 text-gold" />
-            </span>
-            <div>
-              <h1 className="text-base font-bold text-primary sm:text-lg">
-                {mode === "login"
-                  ? text("دخول الحساب", "Account login")
-                  : mode === "forgot"
-                    ? text("إعادة تعيين كلمة المرور", "Reset password")
-                    : text("إنشاء حساب", "Create account")}
-              </h1>
-              <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                {mode === "login"
-                  ? text(
-                      "سجل الدخول ببريدك وكلمة المرور لإدارة إعلاناتك.",
-                      "Log in with your email and password to manage your listings.",
-                    )
-                  : mode === "forgot"
-                    ? text(
-                        "أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.",
-                        "Enter your email and we will send you a password reset link.",
-                      )
-                    : text(
-                        "أنشئ حسابك لإدارة إعلاناتك ومتابعة الرسائل والتنبيهات.",
-                        "Create your account to manage listings, messages, and notifications.",
-                      )}
-              </p>
-            </div>
-          </div>
+      <main className="rawaj-auth-v2 container-wide pb-10 pt-3 sm:pt-5">
+        <section className="rawaj-auth-layout">
+          <AuthExperienceAside mode={mode} />
+          <div className="rawaj-auth-card">
+            <AuthExperienceHeader mode={mode} />
 
-          <div className="mb-5 grid grid-cols-2 gap-1 rounded-[1.05rem] border border-border/65 bg-card-warm/65 p-1.5">
-            <button
-              type="button"
-              onClick={() => switchMode("login")}
-              className={`rounded-[0.8rem] px-3 py-2.5 text-xs font-semibold transition ${mode === "login" ? "bg-primary text-primary-foreground shadow-soft" : "text-muted-foreground hover:text-primary"}`}
-            >
-              {text("تسجيل الدخول", "Log in")}
-            </button>
-            <button
-              type="button"
-              onClick={() => switchMode("register")}
-              className={`rounded-[0.8rem] px-3 py-2.5 text-xs font-semibold transition ${mode === "register" ? "bg-primary text-primary-foreground shadow-soft" : "text-muted-foreground hover:text-primary"}`}
-            >
-              {text("إنشاء حساب", "Register")}
-            </button>
-          </div>
-
-          {auth.status === "authUnavailable" ? (
-            <div className="rounded-[1rem] border border-warning/15 bg-warning/8 p-3.5 text-xs leading-5 text-foreground/90">
-              {text(
-                "خدمة الحسابات غير متاحة الآن. يمكنك تصفح الإعلانات والمحاولة لاحقاً.",
-                "Account service is unavailable right now. You can browse listings and try again later.",
-              )}
+            <div className="rawaj-auth-tabs">
+              <button
+                type="button"
+                onClick={() => switchMode("login")}
+                data-active={mode === "login"}
+              >
+                {text("تسجيل الدخول", "Log in")}
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode("register")}
+                data-active={mode === "register"}
+              >
+                {text("إنشاء حساب", "Register")}
+              </button>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-3">
-              {mode === "register" && (
-                <FieldLabel label={text("اسم الحساب", "Account name")}>
+
+            {auth.status === "authUnavailable" ? (
+              <div className="rounded-[1rem] border border-warning/15 bg-warning/8 p-3.5 text-xs leading-5 text-foreground/90">
+                {text(
+                  "خدمة الحسابات غير متاحة الآن. يمكنك تصفح الإعلانات والمحاولة لاحقاً.",
+                  "Account service is unavailable right now. You can browse listings and try again later.",
+                )}
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-3">
+                {mode === "register" && (
+                  <FieldLabel label={text("اسم الحساب", "Account name")}>
+                    <input
+                      value={displayName}
+                      onChange={(event) => setDisplayName(event.target.value)}
+                      type="text"
+                      autoComplete="name"
+                      required
+                      className="input"
+                    />
+                  </FieldLabel>
+                )}
+
+                <FieldLabel label={text("البريد الإلكتروني", "Email")}>
                   <input
-                    value={displayName}
-                    onChange={(event) => setDisplayName(event.target.value)}
-                    type="text"
-                    autoComplete="name"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    type="email"
+                    autoComplete="email"
                     required
                     className="input"
                   />
                 </FieldLabel>
-              )}
 
-              <FieldLabel label={text("البريد الإلكتروني", "Email")}>
-                <input
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="input"
-                />
-              </FieldLabel>
-
-              {mode !== "forgot" && (
-                <FieldLabel label={text("كلمة المرور", "Password")}>
-                  <div className="relative">
-                    <input
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      type={passwordVisible ? "text" : "password"}
-                      autoComplete={mode === "login" ? "current-password" : "new-password"}
-                      required
-                      minLength={6}
-                      className="input pe-11"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setPasswordVisible((value) => !value)}
-                      className="absolute inset-y-0 end-0 grid w-11 place-items-center text-muted-foreground"
-                      aria-label={
-                        passwordVisible
-                          ? text("إخفاء كلمة المرور", "Hide password")
-                          : text("إظهار كلمة المرور", "Show password")
-                      }
-                    >
-                      {passwordVisible ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </FieldLabel>
-              )}
-
-              {mode === "login" && (
-                <button
-                  type="button"
-                  onClick={() => switchMode("forgot")}
-                  className="inline-flex rounded-lg px-1 py-1 text-xs font-semibold text-brand-orange transition hover:text-primary"
-                >
-                  {text("نسيت كلمة المرور؟", "Forgot password?")}
-                </button>
-              )}
-
-              {submitting && (
-                <p className="rounded-[1rem] border border-border/65 bg-card-warm/70 p-2.5 text-xs font-medium text-muted-foreground">
-                  {mode === "forgot"
-                    ? text("جارٍ إرسال الرابط", "Sending link")
-                    : mode === "login"
-                      ? text("جاري تسجيل الدخول", "Logging in")
-                      : text("جاري إنشاء الحساب", "Creating account")}
-                </p>
-              )}
-              {message && (
-                <p className="rounded-[1rem] border border-emerald-trust/15 bg-emerald-trust/8 p-2.5 text-xs font-medium text-emerald-trust">
-                  {message}
-                </p>
-              )}
-              {error && (
-                <p className="rounded-[1rem] border border-destructive/15 bg-destructive/8 p-2.5 text-xs font-medium text-destructive">
-                  {error}
-                </p>
-              )}
-              {auth.status === "authError" && (
-                <p className="rounded-[1rem] border border-warning/15 bg-warning/8 p-2.5 text-xs font-medium text-warning">
-                  {text(
-                    "تعذر فتح الحساب الآن. حاول مرة أخرى.",
-                    "Could not open the account right now. Try again.",
-                  )}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="rawaj-button-primary min-h-11 w-full rounded-[1rem] px-4 py-2.5 disabled:opacity-60"
-              >
-                {mode === "login" ? (
-                  <LogIn className="h-4 w-4" />
-                ) : mode === "forgot" ? (
-                  <Lock className="h-4 w-4" />
-                ) : (
-                  <UserPlus className="h-4 w-4" />
+                {mode !== "forgot" && (
+                  <FieldLabel label={text("كلمة المرور", "Password")}>
+                    <div className="relative">
+                      <input
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        type={passwordVisible ? "text" : "password"}
+                        autoComplete={mode === "login" ? "current-password" : "new-password"}
+                        required
+                        minLength={6}
+                        className="input pe-11"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setPasswordVisible((value) => !value)}
+                        className="absolute inset-y-0 end-0 grid w-11 place-items-center text-muted-foreground"
+                        aria-label={
+                          passwordVisible
+                            ? text("إخفاء كلمة المرور", "Hide password")
+                            : text("إظهار كلمة المرور", "Show password")
+                        }
+                      >
+                        {passwordVisible ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </FieldLabel>
                 )}
-                {mode === "login"
-                  ? text("تسجيل الدخول", "Log in")
-                  : mode === "forgot"
-                    ? text("إرسال رابط إعادة التعيين", "Send reset link")
-                    : text("إنشاء حساب", "Register")}
-              </button>
 
-              {mode === "forgot" && (
+                {mode === "login" && (
+                  <button
+                    type="button"
+                    onClick={() => switchMode("forgot")}
+                    className="inline-flex rounded-lg px-1 py-1 text-xs font-semibold text-brand-orange transition hover:text-primary"
+                  >
+                    {text("نسيت كلمة المرور؟", "Forgot password?")}
+                  </button>
+                )}
+
+                {submitting && (
+                  <p className="rounded-[1rem] border border-border/65 bg-card-warm/70 p-2.5 text-xs font-medium text-muted-foreground">
+                    {mode === "forgot"
+                      ? text("جارٍ إرسال الرابط", "Sending link")
+                      : mode === "login"
+                        ? text("جاري تسجيل الدخول", "Logging in")
+                        : text("جاري إنشاء الحساب", "Creating account")}
+                  </p>
+                )}
+                {message && (
+                  <p className="rounded-[1rem] border border-emerald-trust/15 bg-emerald-trust/8 p-2.5 text-xs font-medium text-emerald-trust">
+                    {message}
+                  </p>
+                )}
+                {error && (
+                  <p className="rounded-[1rem] border border-destructive/15 bg-destructive/8 p-2.5 text-xs font-medium text-destructive">
+                    {error}
+                  </p>
+                )}
+                {auth.status === "authError" && (
+                  <p className="rounded-[1rem] border border-warning/15 bg-warning/8 p-2.5 text-xs font-medium text-warning">
+                    {text(
+                      "تعذر فتح الحساب الآن. حاول مرة أخرى.",
+                      "Could not open the account right now. Try again.",
+                    )}
+                  </p>
+                )}
+
                 <button
-                  type="button"
-                  onClick={() => switchMode("login")}
-                  className="w-full text-center text-xs font-semibold text-primary transition hover:text-brand-orange"
+                  type="submit"
+                  disabled={submitting}
+                  className="rawaj-button-primary min-h-11 w-full rounded-[1rem] px-4 py-2.5 disabled:opacity-60"
                 >
-                  {text("العودة لتسجيل الدخول", "Back to login")}
+                  {mode === "login" ? (
+                    <LogIn className="h-4 w-4" />
+                  ) : mode === "forgot" ? (
+                    <Lock className="h-4 w-4" />
+                  ) : (
+                    <UserPlus className="h-4 w-4" />
+                  )}
+                  {mode === "login"
+                    ? text("تسجيل الدخول", "Log in")
+                    : mode === "forgot"
+                      ? text("إرسال رابط إعادة التعيين", "Send reset link")
+                      : text("إنشاء حساب", "Register")}
                 </button>
-              )}
-            </form>
-          )}
 
-          {mode !== "forgot" && (
-            <>
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border/80" />
-                </div>
-                <div className="relative flex justify-center text-[10px] font-semibold text-muted-foreground">
-                  <span className="rounded-full bg-card/90 px-3 py-1">{text("أو", "Or")}</span>
-                </div>
-              </div>
-              <GoogleButton returnTo={returnTo} />
-            </>
-          )}
-
-          <div className="mt-5 rounded-[1rem] border border-border/65 bg-card-warm/65 p-3.5 text-[11px] leading-6 text-muted-foreground">
-            <ShieldCheck className="me-1 inline h-3.5 w-3.5 text-emerald-trust" />
-            {text(
-              "تتم حماية الحسابات والصلاحيات من خلال إعدادات المنصة المعتمدة.",
-              "Accounts and permissions are protected through the platform's approved settings.",
+                {mode === "forgot" && (
+                  <button
+                    type="button"
+                    onClick={() => switchMode("login")}
+                    className="w-full text-center text-xs font-semibold text-primary transition hover:text-brand-orange"
+                  >
+                    {text("العودة لتسجيل الدخول", "Back to login")}
+                  </button>
+                )}
+              </form>
             )}
-          </div>
 
-          <Link
-            to="/"
-            className="mt-4 inline-flex text-xs font-semibold text-primary transition hover:text-brand-orange"
-          >
-            {text("العودة للرئيسية", "Back to home")}
-          </Link>
+            {mode !== "forgot" && (
+              <>
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-border/80" />
+                  </div>
+                  <div className="relative flex justify-center text-[10px] font-semibold text-muted-foreground">
+                    <span className="rounded-full bg-card/90 px-3 py-1">{text("أو", "Or")}</span>
+                  </div>
+                </div>
+                <GoogleButton returnTo={returnTo} />
+              </>
+            )}
+
+            <div className="rawaj-auth-security-note">
+              <ShieldCheck className="me-1 inline h-3.5 w-3.5 text-emerald-trust" />
+              {text(
+                "تتم حماية الحسابات والصلاحيات من خلال إعدادات المنصة المعتمدة.",
+                "Accounts and permissions are protected through the platform's approved settings.",
+              )}
+            </div>
+
+            <Link
+              to="/"
+              className="mt-4 inline-flex text-xs font-semibold text-primary transition hover:text-brand-orange"
+            >
+              {text("العودة للرئيسية", "Back to home")}
+            </Link>
+          </div>
         </section>
       </main>
     </>

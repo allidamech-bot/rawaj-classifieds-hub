@@ -45,7 +45,9 @@ export function AuthExperienceAside({ mode }: { mode: "login" | "register" | "fo
   return (
     <aside className="rawaj-auth-aside" aria-label={text("مزايا الحساب", "Account benefits")}>
       <div className="rawaj-auth-aside__brand">
-        <span><Sparkles aria-hidden="true" /></span>
+        <span>
+          <Sparkles aria-hidden="true" />
+        </span>
         <p>RAWAJ</p>
       </div>
       <div className="rawaj-auth-aside__copy">
@@ -55,13 +57,27 @@ export function AuthExperienceAside({ mode }: { mode: "login" | "register" | "fo
       </div>
       <ul>
         <AuthBenefit icon={Store} label={text("متجرك وإعلاناتك", "Your store and listings")} />
-        <AuthBenefit icon={MessageCircle} label={text("رسائلك ومحادثاتك", "Your messages and conversations")} />
-        <AuthBenefit icon={Bookmark} label={text("المفضلة وعمليات البحث", "Favorites and saved searches")} />
-        <AuthBenefit icon={ShieldCheck} label={text("إعدادات وأمان الحساب", "Account settings and security")} />
+        <AuthBenefit
+          icon={MessageCircle}
+          label={text("رسائلك ومحادثاتك", "Your messages and conversations")}
+        />
+        <AuthBenefit
+          icon={Bookmark}
+          label={text("المفضلة وعمليات البحث", "Favorites and saved searches")}
+        />
+        <AuthBenefit
+          icon={ShieldCheck}
+          label={text("إعدادات وأمان الحساب", "Account settings and security")}
+        />
       </ul>
       <div className="rawaj-auth-aside__trust">
         <LockKeyhole aria-hidden="true" />
-        <span>{text("الدخول والصلاحيات عبر نظام المصادقة المعتمد", "Sign-in and permissions use the approved authentication system")}</span>
+        <span>
+          {text(
+            "الدخول والصلاحيات عبر نظام المصادقة المعتمد",
+            "Sign-in and permissions use the approved authentication system",
+          )}
+        </span>
       </div>
     </aside>
   );
@@ -70,18 +86,16 @@ export function AuthExperienceAside({ mode }: { mode: "login" | "register" | "fo
 function AuthBenefit({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
   return (
     <li>
-      <span><Icon aria-hidden="true" /></span>
+      <span>
+        <Icon aria-hidden="true" />
+      </span>
       <strong>{label}</strong>
       <CheckCircle2 aria-hidden="true" />
     </li>
   );
 }
 
-export function AuthExperienceHeader({
-  mode,
-}: {
-  mode: "login" | "register" | "forgot";
-}) {
+export function AuthExperienceHeader({ mode }: { mode: "login" | "register" | "forgot" }) {
   const { text } = useUiPreferences();
   const title =
     mode === "login"
@@ -93,12 +107,20 @@ export function AuthExperienceHeader({
     mode === "login"
       ? text("ادخل إلى حسابك لمتابعة نشاطك على رواج.", "Sign in to continue your RAWAJ activity.")
       : mode === "forgot"
-        ? text("أدخل بريدك وسنرسل رابط الاستعادة الآمن.", "Enter your email and we will send a secure recovery link.")
-        : text("معلومات بسيطة تفصلك عن نشر أول إعلان.", "A few details separate you from posting your first listing.");
+        ? text(
+            "أدخل بريدك وسنرسل رابط الاستعادة الآمن.",
+            "Enter your email and we will send a secure recovery link.",
+          )
+        : text(
+            "معلومات بسيطة تفصلك عن نشر أول إعلان.",
+            "A few details separate you from posting your first listing.",
+          );
 
   return (
     <header className="rawaj-auth-card__header">
-      <span><User aria-hidden="true" /></span>
+      <span>
+        <User aria-hidden="true" />
+      </span>
       <div>
         <p>{text("مساحة الحساب", "Account space")}</p>
         <h2>{title}</h2>
@@ -145,13 +167,26 @@ export function AccountIdentityHero({
           ) : (
             <User aria-hidden="true" />
           )}
-          {signedIn ? <span><Camera aria-hidden="true" /></span> : null}
+          {signedIn ? (
+            <span>
+              <Camera aria-hidden="true" />
+            </span>
+          ) : null}
         </div>
         <div className="rawaj-account-identity__copy">
-          <p>{signedIn ? text("مساحتي الشخصية", "My personal space") : text("حساب رواج", "RAWAJ account")}</p>
+          <p>
+            {signedIn
+              ? text("مساحتي الشخصية", "My personal space")
+              : text("حساب رواج", "RAWAJ account")}
+          </p>
           <div>
             <h1>{displayName}</h1>
-            {verified ? <strong><BadgeCheck aria-hidden="true" />{text("موثّق", "Verified")}</strong> : null}
+            {verified ? (
+              <strong>
+                <BadgeCheck aria-hidden="true" />
+                {text("موثّق", "Verified")}
+              </strong>
+            ) : null}
           </div>
           {email ? <small>{email}</small> : null}
           {location ? <span>{location}</span> : null}
@@ -169,11 +204,34 @@ export function AccountIdentityHero({
 export function AccountQuickLinks() {
   const { text } = useUiPreferences();
   return (
-    <nav className="rawaj-account-quick-links" aria-label={text("اختصارات الحساب", "Account shortcuts")}>
-      <AccountQuickLink to="/profile/listings" icon={FileSpreadsheet} title={text("متجري", "My store")} description={text("الإعلانات والحالات", "Listings and statuses")} />
-      <AccountQuickLink to="/chats" icon={MessageCircle} title={text("الرسائل", "Messages")} description={text("المحادثات النشطة", "Active conversations")} />
-      <AccountQuickLink to="/favorites" icon={Heart} title={text("المفضلة", "Favorites")} description={text("الإعلانات المحفوظة", "Saved listings")} />
-      <AccountQuickLink to="/notifications" icon={Bell} title={text("التنبيهات", "Notifications")} description={text("آخر المستجدات", "Latest updates")} />
+    <nav
+      className="rawaj-account-quick-links"
+      aria-label={text("اختصارات الحساب", "Account shortcuts")}
+    >
+      <AccountQuickLink
+        to="/profile/listings"
+        icon={FileSpreadsheet}
+        title={text("متجري", "My store")}
+        description={text("الإعلانات والحالات", "Listings and statuses")}
+      />
+      <AccountQuickLink
+        to="/chats"
+        icon={MessageCircle}
+        title={text("الرسائل", "Messages")}
+        description={text("المحادثات النشطة", "Active conversations")}
+      />
+      <AccountQuickLink
+        to="/favorites"
+        icon={Heart}
+        title={text("المفضلة", "Favorites")}
+        description={text("الإعلانات المحفوظة", "Saved listings")}
+      />
+      <AccountQuickLink
+        to="/notifications"
+        icon={Bell}
+        title={text("التنبيهات", "Notifications")}
+        description={text("آخر المستجدات", "Latest updates")}
+      />
     </nav>
   );
 }
@@ -191,8 +249,13 @@ function AccountQuickLink({
 }) {
   return (
     <Link to={to}>
-      <span><Icon aria-hidden="true" /></span>
-      <div><strong>{title}</strong><small>{description}</small></div>
+      <span>
+        <Icon aria-hidden="true" />
+      </span>
+      <div>
+        <strong>{title}</strong>
+        <small>{description}</small>
+      </div>
     </Link>
   );
 }
@@ -217,8 +280,14 @@ export function AccountSection({
   return (
     <section id={id} className="rawaj-account-section" data-tone={tone}>
       <header>
-        <span><Icon aria-hidden="true" /></span>
-        <div><p>{eyebrow}</p><h2>{title}</h2>{description ? <small>{description}</small> : null}</div>
+        <span>
+          <Icon aria-hidden="true" />
+        </span>
+        <div>
+          <p>{eyebrow}</p>
+          <h2>{title}</h2>
+          {description ? <small>{description}</small> : null}
+        </div>
       </header>
       <div className="rawaj-account-section__body">{children}</div>
     </section>
