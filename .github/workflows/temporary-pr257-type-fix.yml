@@ -1,0 +1,78 @@
+name: Temporary PR 257 Type Fix
+
+on:
+  push:
+    branches:
+      - design/search-filters-v1
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: design/search-filters-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Apply focused type fixes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          listings = Path('src/lib/api/listings.ts')
+          source = listings.read_text()
+          old = 'const listings = ((data ?? []) as Record<string, unknown>[]).map((row) =>'
+          new = 'const listings = ((data ?? []) as unknown as Record<string, unknown>[]).map((row) =>'
+          if old not in source:
+              raise SystemExit('Missing listings cast anchor')
+          listings.write_text(source.replace(old, new, 1))
+
+          types = Path('src/lib/classifieds-types.ts')
+          source = types.read_text()
+          anchor = '''export interface ListingReport {
+  id: string;
+  listingId: string;
+  reporterId: string;
+  reportType: ListingReportType;
+  reason: string;
+  status: ListingReportStatus;
+  assignedTo: string | null;
+  adminNote: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+'''
+          addition = anchor + '''
+export interface ModerateReportPayload {
+  reportId: string;
+  status: ListingReportStatus;
+  assignedTo?: string | null;
+  adminNote?: string | null;
+  resolvedAt?: string | null;
+}
+'''
+          if anchor not in source:
+              raise SystemExit('Missing ListingReport anchor')
+          if 'export interface ModerateReportPayload' not in source:
+              source = source.replace(anchor, addition, 1)
+          types.write_text(source)
+          PY
+      - run: npx prettier --write src/lib/api/listings.ts src/lib/classifieds-types.ts
+      - name: Commit and remove diagnostics
+        run: |
+          rm -f .github/workflows/temporary-pr257-typecheck-diagnostic.yml
+          rm .github/workflows/temporary-pr257-type-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Fix search filter TypeScript contracts"
+          git push origin HEAD:design/search-filters-v1
