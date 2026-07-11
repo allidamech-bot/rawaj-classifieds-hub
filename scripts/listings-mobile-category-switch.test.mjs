@@ -30,8 +30,10 @@ const baseInputs = {
   detailCondition: "",
   employmentType: "",
   salaryType: "",
+  withPhotos: false,
   debouncedQ: "",
   sort: "latest",
+  view: "grid",
 };
 
 const listingFilterInputs = {
@@ -56,6 +58,7 @@ const listingFilterInputs = {
   detailCondition: "",
   employmentType: "",
   salaryType: "",
+  withPhotos: false,
   debouncedQ: "",
   sort: "latest",
 };
@@ -85,8 +88,10 @@ const syncSearchInputs = {
   detailCondition: "",
   employmentType: "",
   salaryType: "",
+  withPhotos: false,
   debouncedQ: "",
   sort: "latest",
+  view: "grid",
 };
 
 const canonicalLocationId = "123e4567-e89b-12d3-a456-426614174000";
@@ -216,6 +221,8 @@ test("category navigation preserves canonical location instead of degrading to g
     districtAr: `@${canonicalLocationId}`,
     query: "  Toyota  ",
     sort: "latest",
+    view: "grid",
+    withPhotos: false,
   });
 
   assert.equal(search.category, "vehicles");
@@ -233,6 +240,8 @@ test("category navigation preserves legacy district with its governorate", () =>
     districtAr: "المزة",
     query: "",
     sort: "expensive",
+    view: "grid",
+    withPhotos: false,
   });
 
   assert.equal(search.category, undefined);
@@ -252,4 +261,24 @@ test("legacy district filters continue to retain their governorate", () => {
   assert.equal(search.gov, "damascus");
   assert.equal(search.location, undefined);
   assert.equal(search.district, "المزة");
+});
+
+test("presentation and image filters survive URL synchronization", () => {
+  const search = buildListingsSyncSearch({
+    ...syncSearchInputs,
+    withPhotos: true,
+    view: "list",
+  });
+
+  assert.equal(search.with_photos, true);
+  assert.equal(search.view, "list");
+});
+
+test("image-only filter reaches listing fetch inputs", () => {
+  const filters = buildListingFilters({
+    ...listingFilterInputs,
+    withPhotos: true,
+  });
+
+  assert.equal(filters.withPhotos, true);
 });
