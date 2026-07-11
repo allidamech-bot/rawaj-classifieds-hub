@@ -8,6 +8,7 @@ import {
   useRouter,
   useRouterState,
 } from "@tanstack/react-router";
+import { Analytics } from "@vercel/analytics/react";
 import { useEffect, type ReactNode } from "react";
 
 import { BottomNav } from "@/components/BottomNav";
@@ -159,6 +160,7 @@ function RootShell({ children }: { children: ReactNode }) {
       <body>
         {children}
         <script {...jsonLdScript(buildSiteStructuredData())} />
+        <Analytics />
         <Scripts />
       </body>
     </html>
