@@ -5,7 +5,8 @@ import test from "node:test";
 const sitemap = await readFile(new URL("../src/routes/sitemap[.]xml.ts", import.meta.url), "utf8");
 
 test("sitemap is served dynamically as XML", () => {
-  assert.match(sitemap, /createServerFileRoute\("\/sitemap\.xml"\)/);
+  assert.match(sitemap, /createFileRoute\("\/sitemap\.xml"\)/);
+  assert.match(sitemap, /server: \{[\s\S]*handlers: \{[\s\S]*GET: async/);
   assert.match(sitemap, /Content-Type": "application\/xml; charset=utf-8"/);
   assert.match(sitemap, /Cache-Control/);
   assert.match(sitemap, /escapeXml/);
