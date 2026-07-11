@@ -333,27 +333,21 @@ function StoreHeader({
   const { text } = useUiPreferences();
   return (
     <section className="rawaj-merchant-stage rounded-[1.7rem] sm:rounded-[2rem]">
-      <div className="relative h-44 overflow-hidden bg-primary sm:h-52">
-        {coverUrl && (
-          <>
-            <img
-              src={coverUrl}
-              alt=""
-              decoding="async"
-              className="absolute inset-0 h-full w-full object-cover opacity-25 blur-md"
-            />
-            <img
-              src={coverUrl}
-              alt=""
-              decoding="async"
-              className="relative z-10 h-full w-full object-contain"
-            />
-          </>
+      <div className="rawaj-store-cover relative h-36 overflow-hidden sm:h-48">
+        {coverUrl ? (
+          <img src={coverUrl} alt="" decoding="async" className="h-full w-full object-cover" />
+        ) : (
+          <img
+            src="/brand/rawaj-mark-transparent-512.png"
+            alt=""
+            decoding="async"
+            className="absolute -end-8 -top-10 h-52 w-52 rotate-[-9deg] object-contain opacity-15"
+          />
         )}
       </div>
       <div className="relative z-10 -mt-12 px-5 pb-5 sm:px-7 sm:pb-7">
         <div className="flex flex-wrap items-end gap-3">
-          <span className="relative z-20 grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-[1.35rem] bg-card-warm text-xl font-bold text-primary ring-4 ring-[#0d243b]">
+          <span className="relative z-20 grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-[1.35rem] bg-card-warm text-xl font-bold text-primary ring-4 ring-card">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
