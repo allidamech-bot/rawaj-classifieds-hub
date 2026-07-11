@@ -1,0 +1,146 @@
+name: Temporary Search Filters Cleanup
+
+on:
+  push:
+    branches:
+      - design/search-filters-v1
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: design/search-filters-v1
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Finalize search and categories integration
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          function read(path) {
+            return fs.readFileSync(path, 'utf8');
+          }
+          function write(path, value) {
+            fs.writeFileSync(path, value);
+          }
+          function replaceExact(value, from, to, label) {
+            if (!value.includes(from)) throw new Error(`Missing ${label}`);
+            return value.replace(from, to);
+          }
+
+          let route = read('src/routes/listings.index.tsx');
+          route = route.replace('  GovernorateChip,\n', '');
+          route = route.replace('  const [open, setOpen] = useState(false);\n', '');
+
+          const sortStart = route.indexOf('  const sortChips = [');
+          const labelsStart = route.indexOf('  const fuelTypeLabels:', sortStart);
+          if (sortStart >= 0 && labelsStart > sortStart) {
+            route = route.slice(0, sortStart) + route.slice(labelsStart);
+          }
+
+          route = route.replace(
+            '          <div className="grid gap-3 lg:grid-cols-[220px_1fr]">',
+            '          <div className="grid gap-4">',
+          );
+          route = route.replace(
+            `                      query: q,\n                      sort,\n                    })}`,
+            `                      query: q,\n                      sort,\n                      view,\n                      withPhotos,\n                    })}`,
+          );
+
+          const legacyStart = route.indexOf('        {open && (');
+          const countStart = route.indexOf(
+            '        <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">',
+            legacyStart,
+          );
+          if (legacyStart >= 0 && countStart > legacyStart) {
+            route = route.slice(0, legacyStart) + route.slice(countStart);
+          }
+          write('src/routes/listings.index.tsx', route);
+
+          let categories = read('src/routes/categories.tsx');
+          categories = categories.replace(
+            '        <section className="rawaj-hero-surface rounded-[1.55rem] sm:rounded-[1.9rem]">',
+            '        <section className="rawaj-categories-v2__hero rounded-[1.55rem] sm:rounded-[1.9rem]">',
+          );
+          categories = categories.replace(
+            '          <div className="border-t border-border/60 p-3 sm:p-4">',
+            '          <div className="rawaj-categories-v2__hero-search p-3 sm:p-4">',
+          );
+          write('src/routes/categories.tsx', categories);
+
+          let css = read('src/search-filters-v1.css');
+          css = css.replace(
+            `  .rawaj-search-results-v1 > .rawaj-search-toolbar,\n  .rawaj-search-results-v1 > .rawaj-quick-filter-rail,\n  .rawaj-search-results-v1 > .rawaj-search-results-v1__content,\n  .rawaj-search-results-v1 > .rawaj-search-results-v1__states {\n    grid-column: 2;\n  }`,
+            `  .rawaj-search-results-v1 > :not(.rawaj-search-results-v1__sidebar) {\n    grid-column: 2;\n  }`,
+          );
+          css = css.replace(
+            `  .rawaj-filter-sheet {\n    width: min(44rem, calc(100vw - 2rem));\n    inset-inline: 50%;\n    transform: translateX(-50%);\n    border-radius: 1.8rem 1.8rem 0 0;\n  }\n\n  [dir="rtl"] .rawaj-filter-sheet {\n    transform: translateX(50%);\n  }`,
+            `  .rawaj-filter-sheet {\n    width: min(44rem, calc(100vw - 2rem));\n    margin-inline: auto;\n    border-radius: 1.8rem 1.8rem 0 0;\n  }`,
+          );
+          css += `\n.rawaj-search-empty-state {\n  display: grid;\n  justify-items: center;\n  border: 1px dashed color-mix(in srgb, var(--color-primary) 18%, var(--color-border));\n  border-radius: 1.5rem;\n  background: var(--rawaj-surface-warm);\n  padding: clamp(2rem, 7vw, 4rem) 1rem;\n  text-align: center;\n}\n\n.rawaj-search-empty-state__icon {\n  display: grid;\n  width: 3.5rem;\n  height: 3.5rem;\n  place-items: center;\n  border-radius: 1.15rem;\n  background: color-mix(in srgb, var(--rawaj-orange) 11%, white);\n  color: var(--rawaj-orange);\n}\n\n.rawaj-search-empty-state__icon svg {\n  width: 1.5rem;\n  height: 1.5rem;\n}\n\n.rawaj-search-empty-state h2 {\n  margin-top: 0.9rem;\n  color: var(--color-primary);\n  font-size: 1rem;\n  font-weight: 850;\n}\n\n.rawaj-search-empty-state p {\n  max-width: 34rem;\n  margin-top: 0.45rem;\n  color: var(--color-muted-foreground);\n  font-size: 0.72rem;\n  line-height: 1.8;\n}\n\n.rawaj-search-empty-state .rawaj-category-empty-actions button,\n.rawaj-search-empty-state .rawaj-category-empty-actions a {\n  display: inline-flex;\n  min-height: 2.7rem;\n  align-items: center;\n  gap: 0.35rem;\n  border-radius: 999px;\n  background: var(--rawaj-surface-card);\n  padding-inline: 0.9rem;\n  color: var(--color-primary);\n  font-size: 0.65rem;\n  font-weight: 800;\n  box-shadow: var(--shadow-xs);\n}\n\n.rawaj-search-empty-state .rawaj-category-empty-actions [data-tone="primary"] {\n  background: var(--rawaj-orange);\n  color: white;\n}\n\n.rawaj-search-empty-state .rawaj-category-empty-actions svg {\n  width: 0.9rem;\n  height: 0.9rem;\n}\n`;
+          write('src/search-filters-v1.css', css);
+
+          let filterTest = read('scripts/listings-mobile-category-switch.test.mjs');
+          filterTest = filterTest.replace(
+            `  salaryType: "",\n  debouncedQ: "",\n  sort: "latest",`,
+            `  salaryType: "",\n  withPhotos: false,\n  debouncedQ: "",\n  sort: "latest",\n  view: "grid",`,
+          );
+          filterTest = filterTest.replace(
+            `  salaryType: "",\n  debouncedQ: "",\n  sort: "latest",\n};\n\nconst syncSearchInputs`,
+            `  salaryType: "",\n  withPhotos: false,\n  debouncedQ: "",\n  sort: "latest",\n};\n\nconst syncSearchInputs`,
+          );
+          filterTest = filterTest.replace(
+            `  salaryType: "",\n  debouncedQ: "",\n  sort: "latest",\n};\n\nconst canonicalLocationId`,
+            `  salaryType: "",\n  withPhotos: false,\n  debouncedQ: "",\n  sort: "latest",\n  view: "grid",\n};\n\nconst canonicalLocationId`,
+          );
+          filterTest += `\n\ntest("presentation and image filters survive URL synchronization", () => {\n  const search = buildListingsSyncSearch({\n    ...syncSearchInputs,\n    withPhotos: true,\n    view: "list",\n  });\n\n  assert.equal(search.with_photos, true);\n  assert.equal(search.view, "list");\n});\n\ntest("image-only filter reaches listing fetch inputs", () => {\n  const filters = buildListingFilters({\n    ...listingFilterInputs,\n    withPhotos: true,\n  });\n\n  assert.equal(filters.withPhotos, true);\n});\n`;
+          write('scripts/listings-mobile-category-switch.test.mjs', filterTest);
+
+          let workflow = read('.github/workflows/quality-gate.yml');
+          const anchor = `      - name: Adaptive Listing Cards contract\n        run: node --test scripts/adaptive-listing-cards.test.mjs\n`;
+          const insertion = `${anchor}\n      - name: Search and Filters V1 contract\n        run: node --test scripts/search-filters-v1.test.mjs\n`;
+          if (!workflow.includes(anchor)) throw new Error('Missing Quality Gate adaptive anchor');
+          if (!workflow.includes('Search and Filters V1 contract')) {
+            workflow = workflow.replace(anchor, insertion);
+          }
+          write('.github/workflows/quality-gate.yml', workflow);
+          NODE
+
+      - name: Format finalized files
+        run: >-
+          npx prettier --write
+          .github/workflows/quality-gate.yml
+          scripts/listings-mobile-category-switch.test.mjs
+          scripts/search-filters-v1.test.mjs
+          src/features/search
+          src/routes/categories.tsx
+          src/routes/listings.index.tsx
+          src/search-filters-v1.css
+
+      - name: Commit cleanup and remove temporary workflow
+        shell: bash
+        run: |
+          rm .github/workflows/temporary-search-filters-cleanup.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Finalize search and filter experience"
+          git push origin HEAD:design/search-filters-v1
