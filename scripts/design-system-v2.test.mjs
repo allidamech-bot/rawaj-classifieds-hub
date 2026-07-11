@@ -15,8 +15,8 @@ const [css, root, button, input, card, badge, header, bottomNav] = await Promise
 
 test("design system V2 is loaded after legacy page styles", () => {
   assert.match(root, /import designSystemV2Css from "\.\.\/design-system-v2\.css\?url";/);
-  const legacyIndex = root.indexOf('href: personalSpacePolishCss');
-  const designSystemIndex = root.indexOf('href: designSystemV2Css');
+  const legacyIndex = root.indexOf("href: personalSpacePolishCss");
+  const designSystemIndex = root.indexOf("href: designSystemV2Css");
   assert.notEqual(legacyIndex, -1);
   assert.notEqual(designSystemIndex, -1);
   assert.ok(designSystemIndex > legacyIndex);

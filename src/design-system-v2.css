@@ -114,8 +114,7 @@ body {
   background:
     radial-gradient(32rem 22rem at 104% -3%, rgba(244, 95, 56, 0.1), transparent 68%),
     radial-gradient(30rem 22rem at -8% 24%, rgba(47, 122, 92, 0.08), transparent 70%),
-    linear-gradient(180deg, #fbf8f1 0%, var(--rawaj-surface-page) 24rem),
-    var(--rawaj-surface-page);
+    linear-gradient(180deg, #fbf8f1 0%, var(--rawaj-surface-page) 24rem), var(--rawaj-surface-page);
 }
 
 .dark body {
@@ -181,8 +180,7 @@ body {
 .rawaj-app-header,
 .rawaj-page-header {
   border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 11%, var(--color-border));
-  background:
-    linear-gradient(180deg, rgba(255, 253, 249, 0.96), rgba(250, 247, 239, 0.9));
+  background: linear-gradient(180deg, rgba(255, 253, 249, 0.96), rgba(250, 247, 239, 0.9));
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.82) inset,
     0 7px 22px rgba(18, 63, 56, 0.06);
