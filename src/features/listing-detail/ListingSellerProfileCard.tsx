@@ -1,0 +1,103 @@
+import { Link } from "@tanstack/react-router";
+import { BadgeCheck, CalendarDays, ChevronLeft, MessageCircle, Star, Store, User } from "lucide-react";
+import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
+import type { Language } from "@/lib/ui-preferences";
+
+interface ListingSellerProfileCardProps {
+  listing: ClassifiedListing;
+  seller: PublicSellerProfile | null;
+  loading: boolean;
+  fallbackName: string;
+  onMessage: () => void;
+  language: Language;
+  text: (ar: string, en: string) => string;
+}
+
+export function ListingSellerProfileCard({
+  listing,
+  seller,
+  loading,
+  fallbackName,
+  onMessage,
+  language,
+  text,
+}: ListingSellerProfileCardProps) {
+  const displayName = seller?.businessName?.trim() || seller?.displayName?.trim() || fallbackName;
+  const joinedLabel = seller?.joinedAt ? formatJoinedDate(seller.joinedAt, language) : null;
+  const rating = seller?.ratingSummary.average;
+  const ratingCount = seller?.ratingSummary.count ?? 0;
+
+  return (
+    <section className="rawaj-detail-seller" aria-labelledby="rawaj-detail-seller-title">
+      <div className="rawaj-detail-seller__identity">
+        <div className="rawaj-detail-seller__avatar" data-loading={loading}>
+          {seller?.avatarUrl ? (
+            <img src={seller.avatarUrl} alt={displayName} loading="lazy" decoding="async" />
+          ) : (
+            <User aria-hidden="true" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p>{text("البائع", "Seller")}</p>
+          <div className="rawaj-detail-seller__name-row">
+            <h2 id="rawaj-detail-seller-title">{displayName}</h2>
+            {seller?.verified ? (
+              <span title={text("بائع موثّق", "Verified seller")}>
+                <BadgeCheck aria-hidden="true" />
+                <span className="sr-only">{text("موثّق", "Verified")}</span>
+              </span>
+            ) : null}
+          </div>
+          {seller?.locationAr ? <small>{seller.locationAr}</small> : null}
+        </div>
+      </div>
+
+      <div className="rawaj-detail-seller__stats">
+        {rating !== null && rating !== undefined && ratingCount > 0 ? (
+          <div>
+            <Star aria-hidden="true" />
+            <strong>{rating.toFixed(1)}</strong>
+            <span>{text(`${ratingCount} تقييم`, `${ratingCount} reviews`)}</span>
+          </div>
+        ) : null}
+        {seller ? (
+          <div>
+            <Store aria-hidden="true" />
+            <strong>{seller.approvedListingCount}</strong>
+            <span>{text("إعلان معتمد", "approved listings")}</span>
+          </div>
+        ) : null}
+        {joinedLabel ? (
+          <div>
+            <CalendarDays aria-hidden="true" />
+            <strong>{joinedLabel}</strong>
+            <span>{text("عضو منذ", "member since")}</span>
+          </div>
+        ) : null}
+      </div>
+
+      {seller?.bio ? <p className="rawaj-detail-seller__bio">{seller.bio}</p> : null}
+
+      <div className="rawaj-detail-seller__actions">
+        <Link to="/seller/$id" params={{ id: listing.ownerId }}>
+          <Store aria-hidden="true" />
+          {text("زيارة متجر البائع", "Visit seller store")}
+          <ChevronLeft className="rtl:rotate-180" aria-hidden="true" />
+        </Link>
+        <button type="button" onClick={onMessage}>
+          <MessageCircle aria-hidden="true" />
+          {text("مراسلة", "Message")}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function formatJoinedDate(value: string, language: Language): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
