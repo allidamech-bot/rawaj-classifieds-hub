@@ -14,6 +14,7 @@ import {
   Star,
   Users,
 } from "lucide-react";
+import { DeploymentTruthPanel } from "@/components/DeploymentTruthPanel";
 import { PageHeader } from "@/components/PageHeader";
 import type { RolePermission } from "@/lib/auth-types";
 import { uiLabel } from "@/lib/i18n";
@@ -207,6 +208,12 @@ function AdminLayout() {
           </nav>
         </div>
         <div className="min-w-0">
+          {pathname === "/admin/owner-controls" &&
+          auth.hasPermission("canManageSystemSettings") ? (
+            <div className="mb-5">
+              <DeploymentTruthPanel />
+            </div>
+          ) : null}
           <Outlet />
         </div>
       </main>
