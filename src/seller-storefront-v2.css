@@ -1,0 +1,577 @@
+/* RAWAJ Seller Storefront V2 — one identity system for public sellers and owner workspace. */
+
+.rawaj-storefront-v2 {
+  position: relative;
+  overflow: clip;
+}
+
+.rawaj-storefront-v2::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: -10rem;
+  z-index: -1;
+  height: 34rem;
+  background:
+    radial-gradient(
+      circle at 88% 6%,
+      color-mix(in srgb, var(--rawaj-orange) 11%, transparent),
+      transparent 29%
+    ),
+    radial-gradient(
+      circle at 8% 0%,
+      color-mix(in srgb, var(--rawaj-gold) 12%, transparent),
+      transparent 25%
+    );
+  pointer-events: none;
+}
+
+.rawaj-storefront-identity {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, white 10%, transparent);
+  border-radius: clamp(1.55rem, 5vw, 2.35rem);
+  background: linear-gradient(150deg, #082f2a, var(--color-primary) 52%, #1f5f51);
+  color: white;
+  box-shadow: 0 28px 68px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+.rawaj-storefront-identity__media,
+.rawaj-storefront-identity__scrim,
+.rawaj-storefront-identity__pattern {
+  position: absolute;
+  inset: 0;
+}
+
+.rawaj-storefront-identity__media > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rawaj-storefront-identity__scrim {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #062821 20%, transparent), #062821 92%),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, #062821 82%, transparent),
+      color-mix(in srgb, #062821 20%, transparent)
+    );
+}
+
+.rawaj-storefront-identity__pattern {
+  opacity: 0.6;
+  background-image:
+    radial-gradient(
+      circle at 90% 10%,
+      color-mix(in srgb, var(--rawaj-gold) 24%, transparent),
+      transparent 22%
+    ),
+    linear-gradient(
+      120deg,
+      transparent 62%,
+      color-mix(in srgb, white 4%, transparent) 62% 64%,
+      transparent 64%
+    );
+}
+
+.rawaj-storefront-identity__content {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  min-height: clamp(25rem, 68vw, 34rem);
+  align-content: end;
+  padding: clamp(1rem, 4vw, 2rem);
+}
+
+.rawaj-storefront-identity__topline {
+  position: absolute;
+  inset-inline: clamp(1rem, 4vw, 2rem);
+  top: clamp(1rem, 4vw, 1.6rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.rawaj-storefront-identity__topline > span,
+.rawaj-storefront-identity__topline > strong {
+  display: inline-flex;
+  min-height: 2.2rem;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid color-mix(in srgb, white 13%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, white 8%, transparent);
+  padding-inline: 0.65rem;
+  color: color-mix(in srgb, white 86%, transparent);
+  font-size: 0.58rem;
+  font-weight: 850;
+  backdrop-filter: blur(12px);
+}
+
+.rawaj-storefront-identity__topline > strong {
+  background: color-mix(in srgb, #1f8a70 82%, transparent);
+  color: white;
+}
+
+.rawaj-storefront-identity__topline svg {
+  width: 0.78rem;
+  height: 0.78rem;
+}
+
+.rawaj-storefront-identity__main {
+  display: flex;
+  min-width: 0;
+  align-items: flex-end;
+  gap: clamp(0.85rem, 3vw, 1.25rem);
+}
+
+.rawaj-storefront-identity__avatar {
+  display: grid;
+  width: clamp(5rem, 20vw, 7.4rem);
+  height: clamp(5rem, 20vw, 7.4rem);
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border: 3px solid color-mix(in srgb, white 84%, transparent);
+  border-radius: clamp(1.2rem, 4vw, 1.8rem);
+  background: linear-gradient(145deg, #f2c77f, #f28f57);
+  color: var(--color-primary);
+  font-size: clamp(1.6rem, 6vw, 2.5rem);
+  font-weight: 900;
+  box-shadow: 0 18px 42px color-mix(in srgb, black 30%, transparent);
+}
+
+.rawaj-storefront-identity__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rawaj-storefront-identity__copy {
+  min-width: 0;
+  padding-bottom: 0.2rem;
+}
+
+.rawaj-storefront-identity__copy h1 {
+  overflow: hidden;
+  color: white;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.5rem, 7vw, 2.8rem);
+  font-weight: 900;
+  line-height: 1.18;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rawaj-storefront-identity__copy > p {
+  margin-top: 0.22rem;
+  color: color-mix(in srgb, white 66%, transparent);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.rawaj-storefront-identity__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+  margin-top: 0.55rem;
+}
+
+.rawaj-storefront-identity__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: color-mix(in srgb, white 72%, transparent);
+  font-size: 0.58rem;
+  font-weight: 650;
+}
+
+.rawaj-storefront-identity__meta svg {
+  width: 0.72rem;
+  height: 0.72rem;
+  color: #f2c77f;
+}
+
+.rawaj-storefront-identity__bio {
+  max-width: 48rem;
+  margin-top: 1rem;
+  border-inline-start: 0.2rem solid var(--rawaj-orange);
+  padding-inline-start: 0.75rem;
+  color: color-mix(in srgb, white 75%, transparent);
+  font-size: 0.68rem;
+  line-height: 1.9;
+}
+
+.rawaj-storefront-identity__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.rawaj-storefront-identity__metrics > div {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 0.45rem;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, white 11%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, white 7%, transparent);
+  padding: 0.65rem;
+  backdrop-filter: blur(12px);
+}
+
+.rawaj-storefront-identity__metrics svg {
+  grid-row: 1 / span 2;
+  width: 1rem;
+  height: 1rem;
+  color: #f2c77f;
+}
+
+.rawaj-storefront-identity__metrics strong {
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.rawaj-storefront-identity__metrics span {
+  overflow: hidden;
+  color: color-mix(in srgb, white 58%, transparent);
+  font-size: 0.52rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rawaj-storefront-identity__metrics [data-tone="live"] {
+  border-color: color-mix(in srgb, #55c89f 25%, transparent);
+}
+.rawaj-storefront-identity__metrics [data-tone="pending"] {
+  border-color: color-mix(in srgb, #f2c77f 26%, transparent);
+}
+.rawaj-storefront-identity__metrics [data-tone="action"] {
+  border-color: color-mix(in srgb, var(--rawaj-orange) 35%, transparent);
+}
+.rawaj-storefront-identity__metrics [data-tone="closed"] {
+  opacity: 0.72;
+}
+
+.rawaj-storefront-identity__actions {
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  margin-top: 1rem;
+  padding-bottom: 0.1rem;
+  scrollbar-width: none;
+}
+
+.rawaj-storefront-identity__actions::-webkit-scrollbar {
+  display: none;
+}
+
+.rawaj-storefront-identity__actions a,
+.rawaj-storefront-identity__actions button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.38rem;
+  border: 1px solid color-mix(in srgb, white 13%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, white 8%, transparent);
+  padding-inline: 0.82rem;
+  color: white;
+  font-size: 0.62rem;
+  font-weight: 850;
+  backdrop-filter: blur(12px);
+}
+
+.rawaj-storefront-identity__actions [data-tone="primary"] {
+  border-color: transparent;
+  background: linear-gradient(145deg, #ff7653, var(--rawaj-orange));
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--rawaj-orange) 28%, transparent);
+}
+
+.rawaj-storefront-identity__actions svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.rawaj-storefront-section-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.8rem;
+}
+
+.rawaj-storefront-section-header p {
+  color: var(--rawaj-orange);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.035em;
+}
+
+.rawaj-storefront-section-header h2 {
+  margin-top: 0.2rem;
+  color: var(--color-primary);
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.05rem, 4vw, 1.5rem);
+  font-weight: 900;
+}
+
+.rawaj-storefront-section-header > div > span {
+  display: block;
+  max-width: 38rem;
+  margin-top: 0.25rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.62rem;
+  line-height: 1.7;
+}
+
+.rawaj-storefront-section-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.rawaj-storefront-section-header__actions > strong {
+  display: grid;
+  min-width: 2.2rem;
+  height: 2.2rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-primary);
+  padding-inline: 0.45rem;
+  color: white;
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.rawaj-storefront-section-header__actions a,
+.rawaj-storefront-section-header__actions button {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  background: var(--rawaj-surface-card);
+  padding-inline: 0.75rem;
+  color: var(--color-primary);
+  font-size: 0.6rem;
+  font-weight: 800;
+  box-shadow: var(--shadow-xs);
+}
+
+.rawaj-storefront-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
+  border-radius: 1.25rem;
+  background: var(--rawaj-surface-card);
+  padding: 0.9rem;
+  box-shadow: var(--shadow-card);
+}
+
+.rawaj-storefront-notice[data-tone="draft"] {
+  border-color: color-mix(in srgb, var(--rawaj-gold) 32%, var(--color-border));
+  background: color-mix(in srgb, var(--rawaj-gold) 8%, var(--rawaj-surface-card));
+}
+
+.rawaj-storefront-notice h3 {
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.rawaj-storefront-notice p {
+  margin-top: 0.2rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.6rem;
+  line-height: 1.65;
+}
+
+.rawaj-storefront-notice > div:last-child {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.4rem;
+}
+
+.rawaj-storefront-notice a,
+.rawaj-storefront-notice button {
+  display: inline-flex;
+  min-height: 2.55rem;
+  align-items: center;
+  border-radius: 0.82rem;
+  background: var(--color-primary);
+  padding-inline: 0.75rem;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 850;
+}
+
+.rawaj-storefront-v2__layout {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.rawaj-storefront-v2__main,
+.rawaj-storefront-v2__aside {
+  min-width: 0;
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.rawaj-storefront-v2__products {
+  scroll-margin-top: calc(var(--rawaj-header-height) + 1rem);
+}
+
+.rawaj-storefront-v2__product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.rawaj-storefront-v2 #seller-reviews {
+  scroll-margin-top: calc(var(--rawaj-header-height) + 1rem);
+}
+
+.rawaj-storefront-v2 #seller-reviews,
+.rawaj-storefront-v2 .rawaj-storefront-safety {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
+  border-radius: 1.35rem;
+  background: var(--rawaj-surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.rawaj-storefront-v2 #seller-reviews {
+  padding: 1rem;
+}
+
+.rawaj-storefront-v2 .rawaj-storefront-safety {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--rawaj-orange) 12%, transparent),
+      transparent 36%
+    ),
+    var(--color-primary);
+  padding: 1rem;
+  color: white;
+}
+
+.rawaj-storefront-owner-tabs {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
+  border-radius: 1rem;
+  background: var(--rawaj-surface-card);
+  padding: 0.38rem;
+  box-shadow: var(--shadow-card);
+  scrollbar-width: none;
+}
+
+.rawaj-storefront-owner-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.rawaj-storefront-owner-tabs button {
+  min-height: 2.55rem;
+  flex: 0 0 auto;
+  border-radius: 0.75rem;
+  padding-inline: 0.72rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+
+.rawaj-storefront-owner-tabs button[data-active="true"] {
+  background: var(--color-primary);
+  color: white;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.rawaj-storefront-owner-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.rawaj-storefront-v2--owner .rawaj-product-card,
+.rawaj-storefront-v2--owner .rawaj-surface {
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-card);
+}
+
+@media (min-width: 480px) {
+  .rawaj-storefront-identity__metrics[data-owner],
+  .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 640px) {
+  .rawaj-storefront-v2__product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .rawaj-storefront-owner-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .rawaj-storefront-identity__content {
+    min-height: 31rem;
+  }
+
+  .rawaj-storefront-v2__layout {
+    grid-template-columns: minmax(0, 1.65fr) minmax(18rem, 0.75fr);
+    gap: 1.25rem;
+  }
+
+  .rawaj-storefront-v2__aside {
+    position: sticky;
+    top: calc(var(--rawaj-header-height) + 1rem);
+  }
+
+  .rawaj-storefront-owner-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 389px) {
+  .rawaj-storefront-identity__content {
+    min-height: 27rem;
+  }
+
+  .rawaj-storefront-identity__copy h1 {
+    font-size: 1.35rem;
+  }
+
+  .rawaj-storefront-v2__product-grid {
+    gap: 0.45rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-storefront-v2 *,
+  .rawaj-storefront-identity__actions a,
+  .rawaj-storefront-owner-tabs button {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

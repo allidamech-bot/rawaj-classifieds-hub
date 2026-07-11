@@ -1,17 +1,14 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import {
-  BadgeCheck,
-  CalendarDays,
-  ChevronLeft,
-  MapPin,
-  MessageSquare,
-  ShieldAlert,
-  Star,
-} from "lucide-react";
+import { MessageSquare, ShieldAlert, Star } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { SellerReviewCard } from "@/features/reviews/SellerReviewCard";
+import { AdaptiveListingCard } from "@/features/listings/cards/AdaptiveListingCard";
+import {
+  StorefrontIdentityHero,
+  StorefrontNotice,
+  StorefrontSectionHeader,
+} from "@/features/storefront/StorefrontIdentityHero";
 import {
   createSellerReview,
   fetchPublicSellerProfile,
@@ -19,8 +16,7 @@ import {
   SELLER_REVIEW_TRAITS,
   sellerReviewTraitLabel,
 } from "@/lib/classifieds-api";
-import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
-import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import type { PublicSellerProfile } from "@/lib/classifieds-types";
 import { absoluteUrl, createSeo, jsonLdScript, plainText } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -61,45 +57,57 @@ function SellerPage() {
   const seller = Route.useLoaderData();
 
   return (
-    <div className="rawaj-pulse-page min-h-dvh" dir={language === "ar" ? "rtl" : "ltr"}>
+    <div className="rawaj-storefront-v2 min-h-dvh" dir={language === "ar" ? "rtl" : "ltr"}>
       <PageHeader title={text("واجهة البائع", "Seller storefront")} />
       <main className="container-wide mobile-page-bottom pb-10 pt-3 sm:pt-5">
         <div className="space-y-7">
-          <StorefrontHero seller={seller} />
+          <StorefrontIdentityHero
+            mode="public"
+            sellerId={seller.id}
+            displayName={seller.businessName || seller.displayName}
+            secondaryName={seller.businessName ? seller.displayName : null}
+            avatarUrl={seller.avatarUrl}
+            coverUrl={seller.coverUrl}
+            bio={seller.bio}
+            location={seller.locationAr}
+            verified={seller.verified}
+            joinedAt={seller.joinedAt}
+            ratingAverage={seller.ratingSummary.average}
+            ratingCount={seller.ratingSummary.count}
+            approvedCount={seller.approvedListingCount}
+          />
 
-          <section className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.8fr)] lg:items-start">
-            <div className="space-y-4">
-              <div className="rawaj-storefront-section">
-                <span className="rawaj-signature-kicker">
-                  {text("منتجات الواجهة", "Storefront products")}
-                </span>
-                <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
-                  <h2 className="text-xl font-extrabold text-primary sm:text-2xl">
-                    {text("المعروض الآن", "Available now")}
-                  </h2>
-                  <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-bold text-primary-foreground">
-                    {text(
-                      `${seller.listings.length} إعلان معتمد`,
-                      `${seller.listings.length} approved listings`,
-                    )}
-                  </span>
-                </div>
-              </div>
+          <section className="rawaj-storefront-v2__layout">
+            <div className="rawaj-storefront-v2__main">
+              <StorefrontSectionHeader
+                eyebrow={text("منتجات الواجهة", "Storefront products")}
+                title={text("المعروض الآن", "Available now")}
+                description={text(
+                  "إعلانات عامة معتمدة ومتاح تصفحها مباشرة.",
+                  "Approved public listings available to browse now.",
+                )}
+                count={seller.listings.length}
+              />
 
               {seller.listings.length === 0 ? (
-                <div className="rawaj-color-card rawaj-world-orange rounded-[1.4rem] p-8 text-center text-sm text-muted-foreground">
-                  {text("لا توجد إعلانات عامة لهذا البائع.", "This seller has no public listings.")}
-                </div>
+                <StorefrontNotice
+                  tone="empty"
+                  title={text("لا توجد إعلانات عامة الآن", "No public listings right now")}
+                  description={text(
+                    "ستظهر هنا الإعلانات المعتمدة عندما ينشر البائع عروضاً جديدة.",
+                    "Approved listings will appear here when the seller publishes new offers.",
+                  )}
+                />
               ) : (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {seller.listings.map((listing: ClassifiedListing) => (
-                    <SellerListingCard key={listing.id} listing={listing} />
+                <div id="storefront-listings" className="rawaj-storefront-v2__product-grid">
+                  {seller.listings.map((listing) => (
+                    <AdaptiveListingCard key={listing.id} listing={listing} />
                   ))}
                 </div>
               )}
             </div>
 
-            <div className="space-y-4">
+            <div className="rawaj-storefront-v2__aside">
               <ReviewsPanel seller={seller} />
               <SafetyPanel />
             </div>
@@ -109,119 +117,6 @@ function SellerPage() {
         </div>
       </main>
     </div>
-  );
-}
-
-function StorefrontHero({ seller }: { seller: PublicSellerProfile }) {
-  const { text } = useUiPreferences();
-  const displayName = seller.businessName || seller.displayName;
-
-  return (
-    <section className="rawaj-merchant-stage rawaj-storefront-hero overflow-hidden rounded-[1.8rem] sm:rounded-[2.1rem]">
-      {seller.coverUrl ? (
-        <img src={seller.coverUrl} alt="" decoding="async" className="rawaj-merchant-cover" />
-      ) : null}
-      <div className="rawaj-merchant-scrim" />
-
-      <div className="relative z-10 flex min-h-[18rem] flex-col justify-end p-5 sm:min-h-[20rem] sm:p-7 lg:p-9">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex min-w-0 items-end gap-4">
-            <span className="rawaj-id-avatar h-24 w-24 shrink-0 rounded-[1.45rem] text-3xl font-bold sm:h-28 sm:w-28">
-              {seller.avatarUrl ? (
-                <img
-                  src={seller.avatarUrl}
-                  alt={displayName}
-                  decoding="async"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                displayName.slice(0, 1).toUpperCase()
-              )}
-            </span>
-
-            <div className="min-w-0 pb-1">
-              <span className="rawaj-signature-kicker text-gold">
-                {text("واجهة على رواج", "RAWAJ storefront")}
-              </span>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <h1 className="truncate text-2xl font-extrabold text-[#fffaf0] sm:text-3xl">
-                  {displayName}
-                </h1>
-                {seller.verified ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#1f7768] px-2.5 py-1 text-[10px] font-bold text-white">
-                    <BadgeCheck className="h-3.5 w-3.5" />
-                    {text("موثق", "Verified")}
-                  </span>
-                ) : null}
-              </div>
-              {seller.businessName && seller.businessName !== seller.displayName ? (
-                <p className="mt-1 text-xs font-semibold text-[#fffaf0]/68">{seller.displayName}</p>
-              ) : null}
-              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#fffaf0]/72">
-                <span className="inline-flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5 text-gold" />
-                  {seller.locationAr ?? text("سوريا", "Syria")}
-                </span>
-                {seller.joinedAt ? (
-                  <span className="inline-flex items-center gap-1.5">
-                    <CalendarDays className="h-3.5 w-3.5 text-gold" />
-                    {text("منذ", "Since")} {new Date(seller.joinedAt).getFullYear()}
-                  </span>
-                ) : null}
-              </div>
-            </div>
-          </div>
-
-          <StorefrontReviewLink seller={seller} />
-        </div>
-
-        {seller.bio ? (
-          <p className="mt-5 max-w-3xl rounded-[1.1rem] border border-white/10 bg-white/7 p-4 text-xs leading-6 text-[#fffaf0]/82 backdrop-blur-sm">
-            {seller.bio}
-          </p>
-        ) : (
-          <p className="mt-5 max-w-3xl text-xs leading-6 text-[#fffaf0]/68">
-            {text(
-              "هذه الواجهة تعرض فقط المعلومات العامة والإعلانات المعتمدة لهذا البائع.",
-              "This storefront shows only public information and approved listings from this seller.",
-            )}
-          </p>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function StorefrontReviewLink({ seller }: { seller: PublicSellerProfile }) {
-  const { text } = useUiPreferences();
-  const hasReviews = seller.ratingSummary.count > 0;
-
-  return (
-    <a href="#seller-reviews" className="rawaj-storefront-review-link group">
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gold text-gold-foreground shadow-sm">
-        <Star className="h-4 w-4 fill-current" />
-      </span>
-      <span className="min-w-0">
-        <strong className="block text-sm font-extrabold text-[#fffaf0]">
-          {hasReviews ? seller.ratingSummary.average : "—"}
-        </strong>
-        <span className="block text-[9px] font-semibold text-[#fffaf0]/55">
-          {hasReviews ? `(${seller.ratingSummary.count})` : text("جديد", "New")}
-        </span>
-      </span>
-      <span className="h-7 w-px bg-white/12" aria-hidden="true" />
-      <span className="min-w-0 flex-1 text-start">
-        <strong className="block truncate text-[11px] font-bold text-[#fffaf0]">
-          {text("التعليقات", "Reviews")}
-        </strong>
-        <span className="block truncate text-[9px] text-gold">
-          {hasReviews
-            ? text(`${seller.ratingSummary.count} تعليق`, `${seller.ratingSummary.count} reviews`)
-            : text("لا توجد تعليقات بعد", "No reviews yet")}
-        </span>
-      </span>
-      <ChevronLeft className="h-4 w-4 shrink-0 text-gold transition group-hover:-translate-x-0.5" />
-    </a>
   );
 }
 
@@ -343,10 +238,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   }
 
   return (
-    <section
-      id="seller-reviews"
-      className="rawaj-color-card rawaj-world-gold scroll-mt-24 rounded-[1.5rem] p-4 sm:p-5"
-    >
+    <section id="seller-reviews" className="rawaj-storefront-v2__reviews">
       <div className="relative z-10">
         <span className="rawaj-signature-kicker">{text("صوت العملاء", "Customer voice")}</span>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
@@ -538,7 +430,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
 function SafetyPanel() {
   const { text } = useUiPreferences();
   return (
-    <section className="relative overflow-hidden rounded-[1.5rem] bg-primary p-5 text-primary-foreground shadow-premium">
+    <section className="rawaj-storefront-safety">
       <div className="absolute -end-8 -top-8 h-28 w-28 rounded-full border border-white/10" />
       <div className="relative z-10 flex items-start gap-3">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[0.95rem] bg-brand-orange text-white">
@@ -560,43 +452,6 @@ function SafetyPanel() {
         </div>
       </div>
     </section>
-  );
-}
-
-function SellerListingCard({ listing }: { listing: ClassifiedListing }) {
-  const { language } = useUiPreferences();
-
-  return (
-    <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-product-card block">
-      <div className="rawaj-product-media aspect-[4/3]">
-        {listing.primaryImageUrl ? (
-          <img
-            src={listing.primaryImageUrl}
-            alt={listing.title}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]"
-          />
-        ) : (
-          <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
-        )}
-        <span className="absolute bottom-2 end-2 rounded-full bg-primary/88 px-2.5 py-1 text-[10px] font-bold text-primary-foreground backdrop-blur-sm">
-          {categoryName(listing.categoryId, listing.categoryNameAr, language)}
-        </span>
-      </div>
-      <div className="p-3.5">
-        <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-foreground">
-          {listing.title}
-        </h3>
-        <div className="mt-2 text-lg font-extrabold text-primary">
-          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
-        </div>
-        <p className="mt-1.5 truncate text-xs text-muted-foreground">
-          {governorateName(listing.governorateId, listing.governorateNameAr, language)}
-          {listing.districtAr ? ` · ${listing.districtAr}` : ""}
-        </p>
-      </div>
-    </Link>
   );
 }
 
