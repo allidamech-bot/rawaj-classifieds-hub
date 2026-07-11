@@ -135,6 +135,9 @@ jobs:
       - name: Hydration and ad media contract
         run: node --test scripts/home-hydration-ad-media.test.mjs
 
+      - name: Public ad placement rendering contract
+        run: node --test scripts/public-ad-placement-rendering.test.mjs
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
