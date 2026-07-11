@@ -58,27 +58,26 @@ export function BottomNav() {
           const Icon = item.icon;
           const label = text(item.labelAr, item.labelEn);
           const badgeCount = item.section === "account" ? counts.total : 0;
-          const itemTone = item.primary
-            ? "text-brand-orange"
-            : active
-              ? "bg-primary/8 text-primary"
-              : "text-muted-foreground hover:bg-muted-surface/80 hover:text-primary";
-          const iconTone = item.primary
-            ? "rawaj-dock-create -mt-5 h-12 w-12 rounded-[1.15rem] bg-brand-orange text-white ring-4 ring-card"
-            : active
-              ? "h-8 w-9 rounded-xl bg-primary text-primary-foreground shadow-[0_7px_16px_rgba(16,43,70,0.14)]"
-              : "h-8 w-9 rounded-xl";
 
           return (
             <Link
               key={item.to}
               to={item.to}
-              className={`relative flex min-h-[3.7rem] min-w-0 flex-col items-center justify-end gap-1 rounded-[0.95rem] px-1 pb-1.5 pt-1 transition-all duration-150 active:scale-[0.98] ${itemTone}`}
+              data-active={active}
+              data-primary={item.primary === true}
+              className={`rawaj-dock-item relative flex min-h-[3.7rem] min-w-0 flex-col items-center justify-end gap-1 rounded-[0.95rem] px-1 pb-1.5 pt-1 transition-all duration-150 active:scale-[0.98] ${
+                item.primary ? "text-brand-orange" : ""
+              }`}
               aria-label={label}
               aria-current={active ? "page" : undefined}
             >
               <span
-                className={`relative grid place-items-center transition-all duration-150 ${iconTone}`}
+                data-active={active && !item.primary}
+                className={`relative grid place-items-center transition-all duration-150 ${
+                  item.primary
+                    ? "rawaj-dock-create -mt-5 h-12 w-12 rounded-[1.15rem] ring-4 ring-card"
+                    : "rawaj-dock-icon h-8 w-9 rounded-xl"
+                }`}
               >
                 <Icon
                   className={item.primary ? "h-6 w-6" : "h-5 w-5"}

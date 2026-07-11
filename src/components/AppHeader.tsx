@@ -54,14 +54,14 @@ export function AppHeader({ compact = false, title }: Props) {
           </Link>
 
           {compact && title ? (
-            <h1 className="order-2 ms-1 flex-1 truncate text-sm font-bold text-primary sm:text-base lg:hidden">
+            <h1 className="order-2 ms-1 flex-1 truncate font-display text-sm font-extrabold text-primary sm:text-base lg:hidden">
               {title}
             </h1>
           ) : null}
 
           <nav
             aria-label={text("التنقل الرئيسي", "Primary navigation")}
-            className="order-2 ms-7 hidden items-center gap-1 rounded-2xl bg-card/70 p-1 ring-1 ring-border/70 lg:flex"
+            className="rawaj-header-nav order-2 ms-7 hidden items-center gap-1 rounded-2xl p-1 lg:flex"
           >
             {navItems.map((item) => {
               const active = activeSection === item.section;
@@ -69,11 +69,8 @@ export function AppHeader({ compact = false, title }: Props) {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`inline-flex min-h-10 items-center rounded-xl px-4 py-2 text-[13px] font-semibold transition-colors duration-150 ${
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted-surface hover:text-primary"
-                  }`}
+                  data-active={active}
+                  className="rawaj-header-nav-item inline-flex min-h-10 items-center rounded-xl px-4 py-2 text-[13px] font-bold"
                   aria-current={active ? "page" : undefined}
                 >
                   {item.label}
@@ -87,9 +84,9 @@ export function AppHeader({ compact = false, title }: Props) {
           <div className="order-3 flex shrink-0 items-center gap-1.5 sm:gap-2">
             <Link
               to="/add-listing"
-              className="hidden min-h-11 items-center gap-2 rounded-[var(--rawaj-radius-button)] bg-brand-orange px-4 text-[12px] font-extrabold text-white shadow-[0_10px_24px_rgba(217,111,50,0.24)] transition hover:bg-brand-orange/92 lg:inline-flex"
+              className="rawaj-header-cta hidden min-h-11 items-center gap-2 rounded-[var(--rawaj-radius-button)] bg-brand-orange px-4 text-[12px] font-extrabold text-white shadow-[0_9px_22px_rgba(244,95,56,0.22)] transition hover:bg-brand-orange/92 lg:inline-flex"
             >
-              <Plus className="h-4 w-4" strokeWidth={2.1} />
+              <Plus className="h-4 w-4" strokeWidth={2.2} />
               {text("أضف إعلان", "Post listing")}
             </Link>
 
@@ -98,7 +95,7 @@ export function AppHeader({ compact = false, title }: Props) {
               onClick={toggleLanguage}
               aria-label={text("تبديل اللغة", "Switch language")}
               title={text("العربية / English", "English / العربية")}
-              className="hidden min-h-11 shrink-0 items-center gap-1.5 rounded-[var(--rawaj-radius-button)] bg-card px-3 text-[10px] font-semibold text-muted-foreground hairline transition-colors hover:border-primary/20 hover:bg-muted-surface hover:text-primary sm:inline-flex"
+              className="rawaj-header-action hidden min-h-11 shrink-0 items-center gap-1.5 rounded-[var(--rawaj-radius-button)] px-3 text-[10px] font-semibold sm:inline-flex"
             >
               <Languages className="h-3.5 w-3.5" strokeWidth={1.9} />
               <span>{language === "ar" ? "English" : "العربية"}</span>
@@ -111,7 +108,7 @@ export function AppHeader({ compact = false, title }: Props) {
                 to="/admin"
                 aria-label={text("لوحة الإدارة", "Admin dashboard")}
                 title={text("لوحة الإدارة", "Admin dashboard")}
-                className="rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)] bg-gold text-gold-foreground transition-colors hover:bg-gold/85"
+                className="rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)] bg-gold text-gold-foreground shadow-[var(--rawaj-shadow-xs)] transition-colors hover:bg-gold/85"
               >
                 <UserCog className="h-4 w-4" />
               </Link>
@@ -129,7 +126,7 @@ export function AppHeader({ compact = false, title }: Props) {
                   ? text("حسابي", "My account")
                   : text("تسجيل الدخول", "Log in")
               }
-              className="rawaj-header-account rawaj-icon-button rawaj-touch-target shrink-0 shadow-none"
+              className="rawaj-header-account rawaj-header-action rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
             >
               {auth.status === "signedIn" ? (
                 <User className="h-4 w-4" strokeWidth={1.9} />
