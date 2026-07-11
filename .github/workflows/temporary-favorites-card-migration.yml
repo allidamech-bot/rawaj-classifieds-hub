@@ -1,0 +1,76 @@
+name: Temporary Favorites Card Migration
+
+on:
+  push:
+    branches:
+      - design/adaptive-listing-cards-v1
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: design/adaptive-listing-cards-v1
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Migrate available favorite cards
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'src/routes/favorites.tsx';
+          let source = fs.readFileSync(path, 'utf8');
+
+          const importAnchor = 'import { PageHeader } from "@/components/PageHeader";';
+          if (!source.includes(importAnchor)) throw new Error('Missing favorites import anchor');
+          source = source.replace(
+            importAnchor,
+            `${importAnchor}\nimport { FavoriteListingCard } from "@/features/favorites/FavoriteListingCard";`,
+          );
+          source = source.replace(
+            'import { categoryName, formatPriceLocalized, governorateName, uiLabel } from "@/lib/i18n";',
+            'import { uiLabel } from "@/lib/i18n";',
+          );
+
+          const start = source.indexOf('            {items.map((item) => {');
+          const outerClose = source.indexOf('\n          </div>\n        )}', start);
+          if (start < 0 || outerClose < 0) throw new Error('Could not locate favorites card map');
+
+          const replacement = `            {items.map((item) => {\n              const listing = item.availability === "available" ? item.listing : undefined;\n\n              if (listing) {\n                return (\n                  <FavoriteListingCard\n                    key={item.listingId}\n                    listing={listing}\n                    onRemove={() => void remove(item.listingId)}\n                  />\n                );\n              }\n\n              return (\n                <article\n                  key={item.listingId}\n                  className="rounded-2xl bg-card p-4 opacity-85 hairline"\n                >\n                  <div className="grid grid-cols-[96px_1fr] gap-3">\n                    <div className="overflow-hidden rounded-xl opacity-70" aria-hidden="true">\n                      <PlaceholderArt type="misc" aspect="square" />\n                    </div>\n                    <div className="min-w-0">\n                      <p className="truncate text-sm font-extrabold">{item.snapshot.title}</p>\n                      <span className="mt-1 inline-flex rounded-full bg-warning/10 px-2 py-1 text-[10px] font-bold text-warning">\n                        {text("غير متاح", "Unavailable")}\n                      </span>\n                      <p className="mt-2 text-xs font-bold text-foreground">\n                        {formatSnapshotPrice(\n                          item.snapshot.price,\n                          item.snapshot.currency,\n                          language,\n                          text,\n                        )}\n                      </p>\n                      <p className="mt-1 text-[11px] leading-5 text-muted-foreground">\n                        {text(\n                          "هذا الإعلان لم يعد متاحًا. احتفظنا بتفاصيله الأساسية لتعرف ما الذي حفظته.",\n                          "This listing is no longer available. We kept its basic details so you know what you saved.",\n                        )}\n                      </p>\n                      <p className="mt-1 text-[11px] text-muted-foreground">\n                        {formatDate(item.snapshot.createdAt, language)}\n                      </p>\n                    </div>\n                  </div>\n                  <div className="mt-4 flex items-center gap-2">\n                    <Link\n                      to="/listings"\n                      className="flex-1 rounded-xl bg-primary px-3 py-2 text-center text-xs font-bold text-primary-foreground"\n                    >\n                      {text("تصفح بدائل", "Browse alternatives")}\n                    </Link>\n                    <button\n                      type="button"\n                      onClick={() => void remove(item.listingId)}\n                      className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive"\n                      aria-label={text("إزالة من المفضلة", "Remove from favorites")}\n                    >\n                      <Trash2 className="h-4 w-4" />\n                    </button>\n                  </div>\n                </article>\n              );\n            })}`;
+
+          source = source.slice(0, start) + replacement + source.slice(outerClose);
+          fs.writeFileSync(path, source);
+          NODE
+
+      - name: Format favorites files
+        run: >-
+          npx prettier --write
+          src/routes/favorites.tsx
+          src/features/favorites/FavoriteListingCard.tsx
+
+      - name: Commit migration and remove temporary workflow
+        shell: bash
+        run: |
+          rm .github/workflows/temporary-favorites-card-migration.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Use compact adaptive cards in favorites"
+          git push origin HEAD:design/adaptive-listing-cards-v1
