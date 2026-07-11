@@ -1,0 +1,36 @@
+name: Prepare Vercel Analytics Package
+
+on:
+  push:
+    branches:
+      - feature/vercel-web-analytics
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Vercel Analytics
+        run: npm install @vercel/analytics@^2.0.1 --save
+
+      - name: Upload package files
+        uses: actions/upload-artifact@v4
+        with:
+          name: vercel-analytics-package-files
+          path: |
+            package.json
+            package-lock.json
+          if-no-files-found: error
