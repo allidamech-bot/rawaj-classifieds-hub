@@ -141,6 +141,9 @@ jobs:
       - name: Public ad placement rendering contract
         run: node --test scripts/public-ad-placement-rendering.test.mjs
 
+      - name: Vercel Analytics integration contract
+        run: node --test scripts/vercel-analytics.test.mjs
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
