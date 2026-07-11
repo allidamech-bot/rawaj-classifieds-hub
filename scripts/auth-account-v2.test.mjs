@@ -38,7 +38,7 @@ test("account center shares identity, shortcuts, editor and safety while preserv
   assert.match(profile, /rawaj-account-v2/);
   assert.match(profile, /<AccountIdentityHero/);
   assert.match(profile, /<AccountQuickLinks/);
-  assert.match(profile, /rawaj-account-profile-editor/);
+  assert.match(shared, /rawaj-account-profile-editor/);
   assert.match(profile, /updateOwnProfileBasics/);
   assert.match(profile, /uploadProfileMedia/);
   assert.match(profile, /removeProfileMedia/);
