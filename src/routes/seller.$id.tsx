@@ -216,7 +216,10 @@ function StorefrontReviewLink({ seller }: { seller: PublicSellerProfile }) {
         </strong>
         <span className="block truncate text-[9px] text-gold">
           {hasReviews
-            ? text(`${seller.ratingSummary.count} تعليق`, `${seller.ratingSummary.count} reviews`)
+            ? text(
+                `${seller.ratingSummary.count} تعليق`,
+                `${seller.ratingSummary.count} reviews`,
+              )
             : text("لا توجد تعليقات بعد", "No reviews yet")}
         </span>
       </span>
@@ -254,12 +257,7 @@ function buildSellerStructuredData(seller: PublicSellerProfile) {
 }
 
 type ReviewEligibilityUiState =
-  | "idle"
-  | "loading"
-  | "eligible"
-  | "existing_review"
-  | "no_qualifying_interaction"
-  | "error";
+  "idle" | "loading" | "eligible" | "existing_review" | "no_qualifying_interaction" | "error";
 
 function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   const auth = useAuth();
