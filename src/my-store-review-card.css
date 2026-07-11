@@ -1,0 +1,169 @@
+/* Keep the My Store review card fully native to the RAWAJ navy-and-gold hero. */
+main.rawaj-pulse-page.container-wide .rawaj-merchant-stage > div:nth-child(2) {
+  display: grid;
+  grid-template-columns: 6.75rem minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 1rem;
+  row-gap: 0.35rem;
+  align-items: center;
+  isolation: isolate;
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:first-child {
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  max-width: none;
+}
+
+main.rawaj-pulse-page.container-wide .rawaj-merchant-stage > div:nth-child(2) > p {
+  grid-column: 2;
+  grid-row: 2;
+  width: 100%;
+  max-width: none;
+  margin-top: 0;
+}
+
+main.rawaj-pulse-page.container-wide .rawaj-merchant-stage .rawaj-id-avatar {
+  position: relative;
+  z-index: 3;
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child {
+  position: static;
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: center;
+  width: 6.75rem;
+  overflow: hidden;
+  border: 1px solid rgba(197, 154, 74, 0.44);
+  border-radius: 0.9rem;
+  background: rgba(8, 24, 42, 0.82);
+  box-shadow:
+    0 12px 28px rgba(3, 13, 24, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(14px);
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div:nth-child(5),
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div:nth-child(6) {
+  min-height: 2rem;
+  padding: 0.36rem 0.48rem;
+  color: #fffaf0;
+  background: transparent;
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div:nth-child(6) {
+  border-top: 1px solid rgba(197, 154, 74, 0.2);
+  background: rgba(197, 154, 74, 0.08);
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div:nth-child(5)::before {
+  color: #d8b566;
+  font-size: 0.82rem;
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div:nth-child(6)::after {
+  color: #d8b566;
+  font-size: 0.82rem;
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div
+  > div:first-child {
+  color: rgba(255, 250, 240, 0.68);
+  font-size: 0.52rem;
+  font-weight: 650;
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div
+  > div:last-child {
+  color: #fffaf0;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+html[lang="ar"]
+  main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div:nth-child(6)
+  > div:first-child::before,
+html[lang="en"]
+  main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div:nth-child(6)
+  > div:first-child::before {
+  color: rgba(255, 250, 240, 0.72);
+}
+
+@media (max-width: 639px) {
+  main.rawaj-pulse-page.container-wide .rawaj-merchant-stage > div:nth-child(2) {
+    grid-template-columns: 6.2rem minmax(0, 1fr);
+    column-gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  main.rawaj-pulse-page.container-wide
+    .rawaj-merchant-stage
+    > div:nth-child(2)
+    > div:last-child {
+    width: 6.2rem;
+    border-radius: 0.82rem;
+  }
+
+  main.rawaj-pulse-page.container-wide .rawaj-merchant-stage .rawaj-id-avatar {
+    width: 4.7rem;
+    height: 4.7rem;
+  }
+
+  main.rawaj-pulse-page.container-wide
+    .rawaj-merchant-stage
+    > div:nth-child(2)
+    > div:last-child
+    > div:nth-child(5),
+  main.rawaj-pulse-page.container-wide
+    .rawaj-merchant-stage
+    > div:nth-child(2)
+    > div:last-child
+    > div:nth-child(6) {
+    min-height: 1.85rem;
+    padding: 0.3rem 0.42rem;
+  }
+}
