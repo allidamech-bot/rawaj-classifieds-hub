@@ -1,0 +1,268 @@
+name: Temporary Listing Studio V3 Integration
+
+on:
+  push:
+    branches:
+      - design/listing-studio-v2
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: design/listing-studio-v2
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Integrate V3 routes and contracts
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new, label):
+              p = Path(path)
+              s = p.read_text()
+              if old not in s:
+                  raise SystemExit(f'missing {label} in {path}')
+              p.write_text(s.replace(old, new, 1))
+
+          # Root CSS ordering.
+          replace(
+              'src/routes/__root.tsx',
+              'import listingStudioV2Css from "../listing-studio-v2.css?url";\n',
+              'import listingStudioV2Css from "../listing-studio-v2.css?url";\nimport listingStudioV3Css from "../listing-studio-v3.css?url";\n',
+              'root v3 import',
+          )
+          replace(
+              'src/routes/__root.tsx',
+              '        { rel: "stylesheet", href: listingStudioV2Css },\n',
+              '        { rel: "stylesheet", href: listingStudioV2Css },\n        { rel: "stylesheet", href: listingStudioV3Css },\n',
+              'root v3 stylesheet',
+          )
+
+          # Create flow imports and state.
+          replace(
+              'src/routes/add-listing.tsx',
+              '  ListingStudioAutosaveStatus,\n  ListingStudioHero,',
+              '  ListingStudioAutosaveStatus,\n  ListingStudioCompletionCard,\n  ListingStudioHero,',
+              'create completion import',
+          )
+          replace(
+              'src/routes/add-listing.tsx',
+              '  ListingStudioSteps,\n} from "@/features/listing-studio/listing-studio";',
+              '  ListingStudioSteps,\n  ListingStudioTrustStrip,\n} from "@/features/listing-studio/listing-studio";',
+              'create trust import',
+          )
+          replace(
+              'src/routes/add-listing.tsx',
+              '  const [step, setStep] = useState(0);\n',
+              '  const [step, setStep] = useState(0);\n  const [furthestStep, setFurthestStep] = useState(0);\n',
+              'furthest step state',
+          )
+          replace(
+              'src/routes/add-listing.tsx',
+              '    setStep((value) => Math.min(steps.length - 1, value + 1));',
+              '    setStep((value) => {\n      const next = Math.min(steps.length - 1, value + 1);\n      setFurthestStep((current) => Math.max(current, next));\n      return next;\n    });',
+              'guided next step',
+          )
+          replace(
+              'src/routes/add-listing.tsx',
+              '      <main className="rawaj-listing-studio-v2 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">',
+              '      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">',
+              'create v3 class',
+          )
+          replace(
+              'src/routes/add-listing.tsx',
+              '        />\n        <ListingStudioSteps steps={steps.map((label) => ({ label }))} current={step} />',
+              '''        />
+        <ListingStudioTrustStrip text={text} />
+        <ListingStudioSteps
+          steps={steps.map((label, index) => ({
+            label,
+            description:
+              index === 0
+                ? text("القسم والعنوان", "Category and title")
+                : index === 1
+                  ? text("الصور والوصف", "Photos and description")
+                  : text("السعر والتواصل", "Price and contact"),
+          }))}
+          current={step}
+          maxReachable={furthestStep}
+          onStepChange={(nextStep) => {
+            setStep(nextStep);
+            setStepErrors([]);
+            setFieldErrors({});
+          }}
+        />''',
+              'interactive create steps',
+          )
+          replace(
+              'src/routes/add-listing.tsx',
+              '            <aside className="rawaj-studio-shell__aside">\n              <ListingStudioPreview',
+              '''            <aside className="rawaj-studio-shell__aside">
+              <ListingStudioCompletionCard
+                score={score}
+                ready={score === 100}
+                title={
+                  score === 100
+                    ? text("الإعلان جاهز للمراجعة", "Ready for review")
+                    : text("أكمل الإعلان خطوة بخطوة", "Complete your listing step by step")
+                }
+                body={
+                  score === 100
+                    ? text("راجع المعاينة ثم أرسل الإعلان.", "Review the preview, then submit.")
+                    : text("كل معلومة واضحة ترفع فرصة البيع.", "Every clear detail improves your chances.")
+                }
+                text={text}
+              />
+              <ListingStudioPreview''',
+              'create completion card',
+          )
+
+          # Manage flow imports and V3 shell.
+          replace(
+              'src/routes/profile/listings.$id.tsx',
+              '  ListingStudioHero,\n',
+              '  ListingStudioCompletionCard,\n  ListingStudioHero,\n',
+              'manage completion import',
+          )
+          replace(
+              'src/routes/profile/listings.$id.tsx',
+              '  ListingStudioSection,\n} from "@/features/listing-studio/listing-studio";',
+              '  ListingStudioSection,\n  ListingStudioTrustStrip,\n} from "@/features/listing-studio/listing-studio";',
+              'manage trust import',
+          )
+          replace(
+              'src/routes/profile/listings.$id.tsx',
+              '      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v2--manage container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">',
+              '      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v2--manage container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">',
+              'manage v3 class',
+          )
+          replace(
+              'src/routes/profile/listings.$id.tsx',
+              '        />\n\n        {isPendingReview && (',
+              '        />\n        <ListingStudioTrustStrip text={text} />\n\n        {isPendingReview && (',
+              'manage trust strip',
+          )
+          replace(
+              'src/routes/profile/listings.$id.tsx',
+              '          <aside className="rawaj-studio-shell__aside">\n            <ListingStudioPreview',
+              '''          <aside className="rawaj-studio-shell__aside">
+            <ListingStudioCompletionCard
+              score={score}
+              ready={score === 100}
+              title={
+                isEditable
+                  ? text("راجع التعديلات قبل الحفظ", "Review changes before saving")
+                  : text("الإعلان للعرض فقط الآن", "Listing is view-only right now")
+              }
+              body={
+                isEditable
+                  ? text("المعاينة تتحدث مع بيانات الإعلان.", "The preview updates with listing data.")
+                  : text("حالة الإعلان الحالية تمنع التعديل.", "The current status prevents editing.")
+              }
+              text={text}
+            />
+            <ListingStudioPreview''',
+              'manage completion card',
+          )
+
+          # Permanent V3 contract.
+          Path('scripts/listing-studio-v3.test.mjs').write_text('''import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
+
+const [root, shared, createRoute, manageRoute, css, gate] = await Promise.all([
+  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/listing-studio/listing-studio.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/profile/listings.$id.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/listing-studio-v3.css", import.meta.url), "utf8"),
+  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+]);
+
+test("V3 stylesheet loads after V2", () => {
+  assert.match(root, /listingStudioV3Css/);
+  assert.ok(root.indexOf("href: listingStudioV3Css") > root.indexOf("href: listingStudioV2Css"));
+});
+
+test("shared studio supports guided navigation, trust and readiness", () => {
+  assert.match(shared, /maxReachable/);
+  assert.match(shared, /onStepChange/);
+  assert.match(shared, /export function ListingStudioTrustStrip/);
+  assert.match(shared, /export function ListingStudioCompletionCard/);
+});
+
+test("create flow is guided without weakening draft and image contracts", () => {
+  assert.match(createRoute, /rawaj-listing-studio-v3/);
+  assert.match(createRoute, /furthestStep/);
+  assert.match(createRoute, /<ListingStudioTrustStrip/);
+  assert.match(createRoute, /<ListingStudioCompletionCard/);
+  assert.match(createRoute, /createOwnerDraftListing/);
+  assert.match(createRoute, /registerStaleUploadCleanup/);
+  assert.match(createRoute, /const MAX_IMAGES = 6/);
+});
+
+test("manage flow uses the same V3 workspace and preserves permissions", () => {
+  assert.match(manageRoute, /rawaj-listing-studio-v3/);
+  assert.match(manageRoute, /<ListingStudioTrustStrip/);
+  assert.match(manageRoute, /<ListingStudioCompletionCard/);
+  assert.match(manageRoute, /listing\?\.status === "draft" \|\| listing\?\.status === "rejected"/);
+  assert.match(manageRoute, /submitOwnerListingForReview/);
+  assert.match(manageRoute, /deleteOwnerListing/);
+});
+
+test("V3 remains sticky, mobile-first and motion safe", () => {
+  assert.match(css, /position: sticky/);
+  assert.match(css, /scroll-snap-type: inline mandatory/);
+  assert.match(css, /grid-template-columns: minmax\(0, 1fr\) 20rem/);
+  assert.match(css, /@media \(max-width: 639px\)/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+});
+
+test("quality gate runs V3 read-only", () => {
+  assert.match(gate, /contents: read/);
+  assert.match(gate, /Listing Studio V3 contract/);
+  assert.doesNotMatch(gate, /contents: write/);
+});
+''')
+
+          gate = Path('.github/workflows/quality-gate.yml')
+          s = gate.read_text()
+          anchor = '      - name: Listing Studio V2 contract\n        run: node --test scripts/listing-studio-v2.test.mjs\n'
+          insertion = anchor + '\n      - name: Listing Studio V3 contract\n        run: node --test scripts/listing-studio-v3.test.mjs\n'
+          if 'Listing Studio V3 contract' not in s:
+              if anchor not in s:
+                  raise SystemExit('missing V2 quality gate anchor')
+              s = s.replace(anchor, insertion, 1)
+          gate.write_text(s)
+          PY
+      - name: Format V3 files
+        run: >-
+          npx prettier --write
+          .github/workflows/quality-gate.yml
+          scripts/listing-studio-v3.test.mjs
+          src/features/listing-studio/listing-studio.tsx
+          src/listing-studio-v3.css
+          src/routes/__root.tsx
+          src/routes/add-listing.tsx
+          'src/routes/profile/listings.$id.tsx'
+      - name: Commit and self-delete
+        shell: bash
+        run: |
+          rm .github/workflows/temporary-listing-studio-v3.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Build guided Listing Studio V3"
+          git push origin HEAD:design/listing-studio-v2
