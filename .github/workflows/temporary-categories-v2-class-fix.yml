@@ -1,0 +1,49 @@
+name: Temporary Categories V2 Class Fix
+
+on:
+  push:
+    branches:
+      - design/search-filters-v1
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: design/search-filters-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Apply category surface classes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/routes/categories.tsx')
+          s = p.read_text()
+          s = s.replace(
+              'className="rawaj-hero-surface rounded-[1.55rem] sm:rounded-[1.9rem]"',
+              'className="rawaj-categories-v2__hero rounded-[1.55rem] sm:rounded-[1.9rem]"',
+          )
+          s = s.replace(
+              'className="border-t border-border/60 p-3 sm:p-4"',
+              'className="rawaj-categories-v2__hero-search p-3 sm:p-4"',
+          )
+          p.write_text(s)
+          PY
+      - run: npx prettier --write src/routes/categories.tsx
+      - name: Commit and self-delete
+        run: |
+          rm .github/workflows/temporary-categories-v2-class-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Apply Categories V2 surface classes"
+          git push origin HEAD:design/search-filters-v1
