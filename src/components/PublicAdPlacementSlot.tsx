@@ -24,7 +24,8 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
     if (!placementPage) return;
 
     let cancelled = false;
-    const device: AdPlacementDevice = window.matchMedia("(max-width: 767px)").matches
+    const device: AdPlacementDevice = window.matchMedia("(max-width: 767px)")
+      .matches
       ? "mobile"
       : "desktop";
 
