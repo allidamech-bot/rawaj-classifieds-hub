@@ -6,6 +6,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
+      data-ui="card"
       className={cn(
         "rounded-[var(--rawaj-radius-card)] border border-border bg-card text-card-foreground shadow-soft",
         className,
@@ -28,7 +29,7 @@ const CardTitle = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivE
     <div
       ref={ref}
       className={cn(
-        "font-display font-semibold leading-snug tracking-tight text-foreground",
+        "font-display font-bold leading-snug tracking-tight text-foreground",
         className,
       )}
       {...props}
