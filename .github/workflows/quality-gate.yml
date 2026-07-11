@@ -111,6 +111,9 @@ jobs:
       - name: Verification documents V2 contract
         run: npm run test:verification-documents
 
+      - name: Production deployment truth contract
+        run: npm run test:deployment-truth
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
