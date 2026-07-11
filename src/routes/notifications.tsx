@@ -1,16 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import {
-  Bell,
-  Bookmark,
-  CheckCheck,
-  Heart,
-  LogIn,
-  MessageCircle,
-  ScrollText,
-  Sparkles,
-} from "lucide-react";
+import { Bookmark, CheckCheck, Heart, MessageCircle, ScrollText, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import {
+  CommunicationCenterHero,
+  CommunicationSectionHeader,
+  CommunicationSignedOut,
+  NotificationTimelineItem,
+} from "@/features/communication/CommunicationExperience";
 import { NotificationPreferencesPanel } from "@/features/notifications/NotificationPreferencesPanel";
 import {
   fetchMyNotificationsPage,
@@ -257,156 +254,94 @@ function NotificationsPage() {
   return (
     <>
       <PageHeader title={text("التنبيهات", "Notifications")} to="/more" backMode="history" />
-      <main className="container-wide mobile-page-bottom space-y-5 pt-4">
+      <main className="rawaj-communication-v2 rawaj-communication-v2--notifications container-wide mobile-page-bottom space-y-5 pt-4">
         {auth.status !== "signedIn" ? (
-          <section className="rounded-2xl bg-card p-8 text-center shadow-soft hairline">
-            <LogIn className="mx-auto h-8 w-8 text-gold" />
-            <h1 className="mt-3 text-base font-extrabold">
-              {text("تسجيل الدخول مطلوب", "Login required")}
-            </h1>
-            <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">
-              {text(
-                "سجّل الدخول لمتابعة تنبيهات الحساب والإعلانات عند توفرها.",
-                "Log in to follow account and listing notifications when available.",
-              )}
-            </p>
-            <Link
-              to="/login"
-              search={{ returnTo: "/notifications" }}
-              className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-            >
-              {text("تسجيل الدخول", "Log in")}
-            </Link>
-          </section>
+          <CommunicationSignedOut returnTo="/notifications" />
         ) : (
-          <section className="rounded-2xl bg-card p-4 shadow-soft hairline">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gold/15 text-gold">
-                  <Bell className="h-6 w-6" />
-                </span>
-                <div>
-                  <h1 className="text-lg font-extrabold">
-                    {text("تنبيهات الحساب", "Account notifications")}
-                  </h1>
-                  <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                    {text(
-                      "تظهر هنا التنبيهات الحقيقية المرتبطة بحسابك وإعلاناتك عند توفرها.",
-                      "Real notifications linked to your account and listings appear here when available.",
-                    )}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                disabled={unreadTotal === 0 || markAllInFlightRef.current}
-                onClick={() => void markAll()}
-                className="inline-flex items-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold disabled:opacity-50 hairline"
-              >
-                <CheckCheck className="h-4 w-4" />
-                {text("قراءة الكل", "Mark all read")}
-              </button>
-            </div>
-
-            {loading ? (
-              <Panel title={text("جارٍ تحميل التنبيهات", "Loading notifications")} />
-            ) : error ? (
-              <Panel
-                title={text("تعذر تحميل التنبيهات", "Could not load notifications")}
-                body={error.message}
-              />
-            ) : notifications.length === 0 ? (
-              <Panel
-                title={text("لا توجد تنبيهات جديدة حالياً", "No new notifications right now")}
-                body={text(
-                  "لا توجد عناصر غير مقروءة أو محفوظة حالياً. استخدم الروابط السريعة لمتابعة الرسائل والإعلانات والطلبات.",
-                  "There are no unread or saved items right now. Use the quick links to follow messages, listings, and requests.",
+          <section className="space-y-4">
+            <CommunicationCenterHero
+              mode="notifications"
+              unreadNotifications={unreadTotal}
+              actions={
+                <button
+                  type="button"
+                  disabled={unreadTotal === 0 || markAllInFlightRef.current}
+                  onClick={() => void markAll()}
+                >
+                  <CheckCheck aria-hidden="true" />
+                  {text("قراءة الكل", "Mark all read")}
+                </button>
+              }
+            />
+            <section className="rawaj-notification-panel">
+              <CommunicationSectionHeader
+                eyebrow={text("السجل", "Timeline")}
+                title={text("تنبيهات الحساب", "Account notifications")}
+                description={text(
+                  "التنبيهات الحقيقية المرتبطة بحسابك وإعلاناتك مرتبة من الأحدث.",
+                  "Real notifications linked to your account and listings, ordered newest first.",
                 )}
               />
-            ) : (
-              <div className="mt-4 space-y-2">
-                {notifications.map((notification) => (
-                  <article
-                    key={notification.id}
-                    className={`rounded-xl p-3 hairline ${notification.readAt ? "bg-card" : "bg-muted-surface"}`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      {isNavigableNotification(notification) ? (
-                        <button
-                          type="button"
-                          disabled={openingTargetId !== null}
-                          onClick={() => void openNotificationTarget(notification)}
-                          className="min-w-0 flex-1 text-start disabled:opacity-60"
-                        >
-                          <h2 className="text-sm font-bold">{notification.titleAr}</h2>
-                          {notification.bodyAr && (
-                            <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                              {notification.bodyAr}
-                            </p>
-                          )}
-                          <p className="mt-2 text-[10px] text-muted-foreground">
-                            {openingTargetId === notification.id
-                              ? text("جارٍ فتح الهدف...", "Opening target...")
-                              : formatNotificationDate(notification.createdAt, language)}
-                          </p>
-                        </button>
-                      ) : (
-                        <div className="min-w-0 flex-1">
-                          <h2 className="text-sm font-bold">{notification.titleAr}</h2>
-                          {notification.bodyAr && (
-                            <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                              {notification.bodyAr}
-                            </p>
-                          )}
-                          <p className="mt-2 text-[10px] text-muted-foreground">
-                            {formatNotificationDate(notification.createdAt, language)}
-                          </p>
-                        </div>
-                      )}
-                      {!notification.readAt && (
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void markOne(notification.id);
-                          }}
-                          className="shrink-0 rounded-xl bg-card px-2 py-1 text-[10px] font-bold hairline"
-                        >
-                          {text("تمت القراءة", "Read")}
-                        </button>
-                      )}
+              {loading ? (
+                <Panel title={text("جارٍ تحميل التنبيهات", "Loading notifications")} />
+              ) : error ? (
+                <Panel
+                  title={text("تعذر تحميل التنبيهات", "Could not load notifications")}
+                  body={error.message}
+                />
+              ) : notifications.length === 0 ? (
+                <Panel
+                  title={text("لا توجد تنبيهات جديدة حالياً", "No new notifications right now")}
+                  body={text(
+                    "لا توجد عناصر غير مقروءة أو محفوظة حالياً. استخدم الروابط السريعة لمتابعة الرسائل والإعلانات والطلبات.",
+                    "There are no unread or saved items right now. Use the quick links to follow messages, listings, and requests.",
+                  )}
+                />
+              ) : (
+                <div className="rawaj-notification-list">
+                  {notifications.map((notification) => (
+                    <NotificationTimelineItem
+                      key={notification.id}
+                      notification={notification}
+                      navigable={isNavigableNotification(notification)}
+                      opening={openingTargetId === notification.id}
+                      onOpen={() => void openNotificationTarget(notification)}
+                      onMarkRead={() => void markOne(notification.id)}
+                      dateLabel={formatNotificationDate(notification.createdAt, language)}
+                    />
+                  ))}
+
+                  {paginationError && (
+                    <div className="rounded-xl bg-destructive/10 p-3 text-center text-xs font-semibold text-destructive">
+                      {paginationError.message}
                     </div>
-                  </article>
-                ))}
+                  )}
 
-                {paginationError && (
-                  <div className="rounded-xl bg-destructive/10 p-3 text-center text-xs font-semibold text-destructive">
-                    {paginationError.message}
-                  </div>
-                )}
-
-                {hasMore && (
-                  <button
-                    type="button"
-                    disabled={loadingMore}
-                    onClick={() => void loadMoreNotifications()}
-                    className="w-full rounded-xl bg-muted-surface px-4 py-3 text-xs font-bold transition hover:bg-muted disabled:opacity-60 hairline"
-                  >
-                    {loadingMore
-                      ? text("جارٍ تحميل المزيد...", "Loading more...")
-                      : text("تحميل تنبيهات أقدم", "Load older notifications")}
-                  </button>
-                )}
-              </div>
-            )}
+                  {hasMore && (
+                    <button
+                      type="button"
+                      disabled={loadingMore}
+                      onClick={() => void loadMoreNotifications()}
+                      className="w-full rounded-xl bg-muted-surface px-4 py-3 text-xs font-bold transition hover:bg-muted disabled:opacity-60 hairline"
+                    >
+                      {loadingMore
+                        ? text("جارٍ تحميل المزيد...", "Loading more...")
+                        : text("تحميل تنبيهات أقدم", "Load older notifications")}
+                    </button>
+                  )}
+                </div>
+              )}
+            </section>
           </section>
         )}
 
-        <NotificationPreferencesPanel />
+        <div className="rawaj-notification-preferences">
+          <NotificationPreferencesPanel />
+        </div>
 
-        <section className="rounded-2xl bg-card p-4 hairline">
+        <section className="rawaj-communication-follow-up">
           <h2 className="text-sm font-extrabold">{text("متابعة سريعة", "Quick follow-up")}</h2>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <div className="rawaj-communication-follow-up__grid">
             {followUpLinks.map((item) => {
               const Icon = item.icon;
               return (
