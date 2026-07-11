@@ -4,10 +4,13 @@ import {
   CircleDashed,
   Cloud,
   CloudOff,
+  Eye,
   ImagePlus,
   Loader2,
   MapPin,
+  ShieldCheck,
   Sparkles,
+  WandSparkles,
 } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 
@@ -72,21 +75,22 @@ export function ListingStudioHero({
 export function ListingStudioSteps({
   steps,
   current,
+  maxReachable = current,
+  onStepChange,
 }: {
   steps: ListingStudioStep[];
   current: number;
+  maxReachable?: number;
+  onStepChange?: (step: number) => void;
 }) {
   return (
     <ol className="rawaj-studio-steps" aria-label="Listing progress">
       {steps.map((step, index) => {
         const done = index < current;
         const active = index === current;
-        return (
-          <li
-            key={step.label}
-            aria-current={active ? "step" : undefined}
-            data-state={done ? "done" : active ? "active" : "upcoming"}
-          >
+        const reachable = index <= maxReachable;
+        const content = (
+          <>
             <span className="rawaj-studio-steps__index">
               {done ? <Check aria-hidden="true" /> : index + 1}
             </span>
@@ -95,6 +99,28 @@ export function ListingStudioSteps({
               {step.description ? <small>{step.description}</small> : null}
             </span>
             <span className="rawaj-studio-steps__line" aria-hidden="true" />
+          </>
+        );
+
+        return (
+          <li
+            key={step.label}
+            aria-current={active ? "step" : undefined}
+            data-state={done ? "done" : active ? "active" : "upcoming"}
+            data-reachable={reachable}
+          >
+            {onStepChange ? (
+              <button
+                type="button"
+                disabled={!reachable}
+                onClick={() => onStepChange(index)}
+                aria-label={step.label}
+              >
+                {content}
+              </button>
+            ) : (
+              content
+            )}
           </li>
         );
       })}
@@ -263,6 +289,68 @@ export function ListingStudioQualityPanel({
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+export function ListingStudioTrustStrip({
+  text,
+}: {
+  text: (ar: string, en: string) => string;
+}) {
+  const items = [
+    {
+      icon: Cloud,
+      label: text("مسودتك محفوظة تلقائياً", "Your draft is saved automatically"),
+    },
+    {
+      icon: ShieldCheck,
+      label: text("الإعلان يمر بمراجعة قبل النشر", "Listings are reviewed before publishing"),
+    },
+    {
+      icon: Eye,
+      label: text("عاين الإعلان قبل الإرسال", "Preview before submitting"),
+    },
+  ];
+
+  return (
+    <section className="rawaj-studio-trust-strip" aria-label={text("مزايا النشر", "Publishing benefits")}>
+      {items.map(({ icon: Icon, label }) => (
+        <div key={label}>
+          <span>
+            <Icon aria-hidden="true" />
+          </span>
+          <strong>{label}</strong>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+export function ListingStudioCompletionCard({
+  score,
+  ready,
+  title,
+  body,
+  text,
+}: {
+  score: number;
+  ready: boolean;
+  title: string;
+  body: string;
+  text: (ar: string, en: string) => string;
+}) {
+  return (
+    <section className="rawaj-studio-completion" data-ready={ready}>
+      <span className="rawaj-studio-completion__icon">
+        {ready ? <CheckCircle2 aria-hidden="true" /> : <WandSparkles aria-hidden="true" />}
+      </span>
+      <div>
+        <p>{text("جاهزية الإعلان", "Listing readiness")}</p>
+        <h2>{title}</h2>
+        <span>{body}</span>
+      </div>
+      <strong>{score}%</strong>
     </section>
   );
 }
