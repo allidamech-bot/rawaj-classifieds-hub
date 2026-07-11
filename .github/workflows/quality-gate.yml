@@ -120,6 +120,9 @@ jobs:
       - name: Home SSR contract
         run: npm run test:home-ssr
 
+      - name: Offers SSR contract
+        run: node --test scripts/offers-ssr.test.mjs
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
