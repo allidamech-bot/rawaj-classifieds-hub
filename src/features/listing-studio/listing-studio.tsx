@@ -9,7 +9,7 @@ import {
   MapPin,
   Sparkles,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 export type ListingStudioStep = {
   label: string;
@@ -250,7 +250,7 @@ export function ListingStudioQualityPanel({
           <p>{text("جودة الإعلان", "Listing quality")}</p>
           <h2 id="rawaj-studio-quality-title">{score}%</h2>
         </div>
-        <span style={{ "--studio-score": `${score}%` } as React.CSSProperties} />
+        <span style={{ "--studio-score": `${score}%` } as CSSProperties} />
       </div>
       <div className="rawaj-studio-quality__track">
         <span style={{ width: `${score}%` }} />
