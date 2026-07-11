@@ -7,11 +7,19 @@ import {
   rowNumber,
   rowString,
 } from "@/lib/api/shared";
-import { buildProfileMediaPath, profileMediaBucket, validateImageFile } from "@/lib/api/storage";
+import {
+  adPlacementMediaBucket,
+  buildAdPlacementMediaPath,
+  validateImageFile,
+} from "@/lib/api/storage";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 
 export type AdPlacementPage =
-  "home" | "search_results" | "listing_detail" | "categories" | "offers";
+  | "home"
+  | "search_results"
+  | "listing_detail"
+  | "categories"
+  | "offers";
 
 export type AdPlacementStatus = "draft" | "active" | "paused";
 
@@ -90,9 +98,9 @@ export async function ownerUploadAdPlacementImage(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const storagePath = buildProfileMediaPath(userId, "ad-placements", file.name);
+  const storagePath = buildAdPlacementMediaPath(userId, file.name);
   const uploadResult = await clientResult.data.storage
-    .from(profileMediaBucket)
+    .from(adPlacementMediaBucket)
     .upload(storagePath, file, {
       cacheControl: "3600",
       contentType: file.type,
@@ -100,9 +108,9 @@ export async function ownerUploadAdPlacementImage(
     });
   if (uploadResult.error) return { ok: false, error: mapStorageError(uploadResult.error) };
 
-  const { data } = clientResult.data.storage.from(profileMediaBucket).getPublicUrl(storagePath);
+  const { data } = clientResult.data.storage.from(adPlacementMediaBucket).getPublicUrl(storagePath);
   if (!data.publicUrl) {
-    await clientResult.data.storage.from(profileMediaBucket).remove([storagePath]);
+    await clientResult.data.storage.from(adPlacementMediaBucket).remove([storagePath]);
     return {
       ok: false,
       error: { code: "unknown", message: "تم رفع الصورة لكن تعذر إنشاء رابط العرض." },
