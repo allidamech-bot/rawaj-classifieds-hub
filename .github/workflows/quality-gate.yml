@@ -126,6 +126,9 @@ jobs:
       - name: Dynamic sitemap contract
         run: node --test scripts/dynamic-sitemap.test.mjs
 
+      - name: Contact phone normalization contract
+        run: node --test scripts/contact-phone.test.mjs
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
