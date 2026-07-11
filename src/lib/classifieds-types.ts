@@ -54,7 +54,11 @@ export type ListingReportType =
 export type ListingReportStatus = "new" | "under_review" | "resolved" | "rejected";
 
 export type SupportRequestType =
-  "complaint" | "suggestion" | "technical_issue" | "abuse_report" | "other";
+  | "complaint"
+  | "suggestion"
+  | "technical_issue"
+  | "abuse_report"
+  | "other";
 
 export type SupportRequestStatus = "new" | "under_review" | "resolved" | "rejected";
 
@@ -399,7 +403,11 @@ export interface ModerateSellerVerificationRequestPayload {
 }
 
 export type PromotionRequestStatus =
-  "pending_review" | "approved" | "rejected" | "expired" | "cancelled";
+  | "pending_review"
+  | "approved"
+  | "rejected"
+  | "expired"
+  | "cancelled";
 
 export type PromotionType = "featured_home" | "highlighted" | "urgent" | "top_category";
 
@@ -556,6 +564,7 @@ export interface ListingFilters {
   detailCondition?: string;
   employmentType?: string;
   salaryType?: string;
+  withPhotos?: boolean;
   query?: string;
   sort?: "latest" | "cheapest" | "expensive" | "featured";
 }
@@ -588,10 +597,32 @@ export interface ListingImageUploadPayload {
   altAr?: string | null;
 }
 
-export interface ModerateReportPayload {
-  reportId: string;
-  status: ListingReportStatus;
-  assignedTo?: string | null;
-  adminNote?: string | null;
-  resolvedAt?: string | null;
+export interface ReorderListingImagePayload {
+  userId: string | null;
+  listing: ClassifiedListing;
+  imageId: string;
+  expectedSortOrder: number;
+  targetSortOrder: number;
+}
+
+export interface DeleteListingImagePayload {
+  userId: string | null;
+  listing: ClassifiedListing;
+  image: ListingImage;
+  expectedSortOrder: number;
+}
+
+export interface ListingDraft {
+  id: string;
+  userId: string;
+  status: "draft";
+  updatedAt: string;
+  listing: ClassifiedListing;
+  images: ListingImage[];
+}
+
+export interface ListingDraftRecoverySnapshot {
+  listingId: string;
+  updatedAt: string;
+  source: "server_draft";
 }
