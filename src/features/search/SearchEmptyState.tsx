@@ -11,7 +11,11 @@ export function SearchEmptyState({
   text: (ar: string, en: string) => string;
 }) {
   return (
-    <section className="rawaj-search-empty-state" data-recovery-actions="filters-categories-post">
+    <section
+      className="rawaj-search-empty-state"
+      data-recovery-actions="filters-categories-post"
+      aria-live="polite"
+    >
       <span className="rawaj-search-empty-state__icon">
         <SearchX aria-hidden="true" />
       </span>
