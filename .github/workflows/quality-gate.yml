@@ -153,6 +153,9 @@ jobs:
       - name: Marketplace core V2 contract
         run: node --test scripts/marketplace-core-v2.test.mjs
 
+      - name: Home Discovery V3 contract
+        run: node --test scripts/home-discovery-v3.test.mjs
+
       - name: Spatial App Shell contract
         run: node --test scripts/spatial-app-shell.test.mjs
 
