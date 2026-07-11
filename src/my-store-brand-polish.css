@@ -1,0 +1,306 @@
+/*
+ * RAWAJ My Store brand polish
+ * Adds a quieter smoked-glass identity surface and removes the pale logo tile.
+ */
+
+/* The compact page chrome should feel like part of the storefront, not a second card. */
+.rawaj-page-header:has(+ main.rawaj-pulse-page.container-wide) {
+  border-bottom: 1px solid rgba(21, 63, 55, 0.065);
+  background: rgba(255, 253, 248, 0.82);
+  box-shadow: 0 8px 24px rgba(12, 44, 39, 0.045);
+  backdrop-filter: blur(18px) saturate(1.08);
+}
+
+.rawaj-page-header:has(+ main.rawaj-pulse-page.container-wide) .rawaj-icon-button {
+  border: 1px solid rgba(21, 63, 55, 0.08);
+  background: rgba(255, 255, 252, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+/* Cover: restrained depth and a warmer RAWAJ glow. */
+main.rawaj-pulse-page.container-wide .rawaj-merchant-stage > div:first-child {
+  height: 8.9rem !important;
+  border-color: rgba(21, 63, 55, 0.12) !important;
+  background:
+    radial-gradient(13rem 8rem at 88% 0%, rgba(228, 100, 49, 0.3), transparent 70%),
+    radial-gradient(10rem 7rem at 10% 100%, rgba(216, 181, 102, 0.16), transparent 72%),
+    linear-gradient(135deg, #071f1d 0%, #0d3b35 56%, #164f46 100%) !important;
+  box-shadow:
+    0 18px 42px rgba(9, 39, 35, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+main.rawaj-pulse-page.container-wide .rawaj-merchant-stage > div:first-child::before {
+  width: 5.25rem;
+  border-color: rgba(218, 183, 104, 0.13) !important;
+  box-shadow:
+    0 0 0 0.9rem rgba(255, 255, 255, 0.012),
+    0 0 42px rgba(226, 103, 51, 0.08) !important;
+}
+
+main.rawaj-pulse-page.container-wide .rawaj-merchant-stage > div:first-child::after {
+  height: 5.2rem !important;
+  background: linear-gradient(180deg, transparent 0%, rgba(4, 27, 24, 0.72) 100%) !important;
+}
+
+main.rawaj-pulse-page.container-wide .rawaj-merchant-stage > div:first-child img:first-child {
+  opacity: 0.22 !important;
+  filter: blur(10px) saturate(1.08) contrast(1.03) !important;
+}
+
+main.rawaj-pulse-page.container-wide .rawaj-merchant-stage > div:first-child img:last-child {
+  opacity: 0.68 !important;
+  filter: saturate(0.96) contrast(1.04);
+}
+
+/*
+ * Identity surface: translucent, intentionally not fully transparent.
+ * This removes the washed-out white slab visible behind the logo.
+ */
+main.rawaj-pulse-page.container-wide .rawaj-merchant-stage > div:nth-child(2) {
+  margin-top: -2.2rem !important;
+  padding-inline: 0.62rem !important;
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:first-child {
+  position: relative;
+  isolation: isolate;
+  min-height: 4.85rem !important;
+  overflow: hidden;
+  padding: 0.68rem 0.74rem !important;
+  padding-inline-end: 7.15rem !important;
+  border: 1px solid rgba(230, 197, 125, 0.24) !important;
+  border-radius: 1.12rem !important;
+  background:
+    radial-gradient(8rem 5rem at 100% 0%, rgba(228, 104, 52, 0.13), transparent 72%),
+    linear-gradient(135deg, rgba(7, 37, 33, 0.86), rgba(16, 67, 58, 0.73)) !important;
+  box-shadow:
+    0 16px 34px rgba(5, 34, 30, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.11),
+    inset 0 -1px 0 rgba(5, 25, 22, 0.22) !important;
+  backdrop-filter: blur(22px) saturate(1.12) !important;
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:first-child::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(105deg, rgba(255, 255, 255, 0.07), transparent 38%),
+    radial-gradient(10rem 5rem at 12% 120%, rgba(217, 181, 98, 0.09), transparent 70%);
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:first-child::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0.9rem;
+  bottom: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(224, 187, 104, 0.36), transparent);
+}
+
+/* Logo tile: smoked glass instead of white, with a restrained gold contour. */
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:first-child
+  > span:first-child {
+  width: 3.55rem !important;
+  height: 3.55rem !important;
+  padding: 0.12rem;
+  border: 1px solid rgba(229, 195, 120, 0.46) !important;
+  border-radius: 0.96rem !important;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.11), transparent 38%),
+    rgba(4, 27, 24, 0.58) !important;
+  color: #fff8e8 !important;
+  box-shadow:
+    0 0 0 3px rgba(216, 181, 102, 0.07),
+    0 10px 24px rgba(2, 21, 19, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09) !important;
+  backdrop-filter: blur(14px) saturate(1.08);
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:first-child
+  > span:first-child
+  img {
+  border-radius: 0.78rem;
+  background: transparent !important;
+  object-fit: cover;
+  filter: saturate(1.05) contrast(1.04);
+}
+
+main.rawaj-pulse-page.container-wide .rawaj-merchant-stage h1 {
+  color: #fffaf0 !important;
+  font-size: 1rem !important;
+  letter-spacing: -0.015em;
+  text-shadow: 0 2px 16px rgba(3, 24, 21, 0.24) !important;
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:first-child
+  p {
+  color: rgba(255, 250, 240, 0.64) !important;
+  font-size: 0.61rem !important;
+}
+
+/* Rating becomes a small premium status point, not a competing block. */
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child {
+  inset-inline-end: 1.08rem !important;
+  top: 0.82rem !important;
+  max-width: 6.65rem !important;
+  min-height: 2.25rem !important;
+  border: 1px solid rgba(226, 190, 107, 0.34) !important;
+  border-radius: 0.78rem !important;
+  background:
+    linear-gradient(145deg, rgba(5, 32, 28, 0.78), rgba(13, 58, 50, 0.62)) !important;
+  box-shadow:
+    0 8px 18px rgba(3, 25, 22, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(16px) saturate(1.08) !important;
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div:nth-child(5),
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div:nth-child(6) {
+  min-height: 2.25rem !important;
+  padding: 0.32rem 0.4rem !important;
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div:nth-child(5)::before {
+  color: #e8c46f !important;
+  font-size: 0.66rem !important;
+  text-shadow: 0 0 12px rgba(232, 196, 111, 0.25);
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div:nth-child(5)
+  > div:last-child,
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div:nth-child(6)
+  > div:last-child {
+  font-size: 0.61rem !important;
+  letter-spacing: 0.01em;
+}
+
+main.rawaj-pulse-page.container-wide
+  .rawaj-merchant-stage
+  > div:nth-child(2)
+  > div:last-child
+  > div:nth-child(6)::after {
+  color: rgba(255, 250, 240, 0.5) !important;
+  font-size: 0.45rem !important;
+}
+
+/* The bio stays visually subordinate below the identity glass. */
+main.rawaj-pulse-page.container-wide .rawaj-merchant-stage > div:nth-child(2) > p {
+  margin-top: 0.42rem !important;
+  color: #65766f !important;
+  font-size: 0.64rem !important;
+}
+
+/* Slightly elevate the first interaction row without adding bulk. */
+main.rawaj-pulse-page.container-wide .rawaj-storefront-section {
+  padding-top: 0.12rem !important;
+}
+
+main.rawaj-pulse-page.container-wide .rawaj-storefront-section > a {
+  border-color: rgba(230, 196, 121, 0.22) !important;
+  background:
+    radial-gradient(7rem 4rem at 100% 0%, rgba(228, 104, 52, 0.16), transparent 70%),
+    linear-gradient(135deg, #0d4038, #0d594b) !important;
+  box-shadow:
+    0 13px 28px rgba(8, 57, 48, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09) !important;
+}
+
+@media (max-width: 389px) {
+  main.rawaj-pulse-page.container-wide
+    .rawaj-merchant-stage
+    > div:nth-child(2)
+    > div:first-child {
+    padding-inline-end: 6.25rem !important;
+  }
+
+  main.rawaj-pulse-page.container-wide
+    .rawaj-merchant-stage
+    > div:nth-child(2)
+    > div:last-child {
+    inset-inline-end: 0.92rem !important;
+    max-width: 5.8rem !important;
+  }
+
+  main.rawaj-pulse-page.container-wide
+    .rawaj-merchant-stage
+    > div:nth-child(2)
+    > div:first-child
+    > span:first-child {
+    width: 3.25rem !important;
+    height: 3.25rem !important;
+  }
+}
+
+@media (min-width: 640px) {
+  main.rawaj-pulse-page.container-wide .rawaj-merchant-stage > div:first-child {
+    height: 10.5rem !important;
+  }
+
+  main.rawaj-pulse-page.container-wide
+    .rawaj-merchant-stage
+    > div:nth-child(2)
+    > div:first-child {
+    max-width: 39rem !important;
+    padding-inline-end: 7.75rem !important;
+  }
+
+  main.rawaj-pulse-page.container-wide
+    .rawaj-merchant-stage
+    > div:nth-child(2)
+    > div:last-child {
+    inset-inline-end: 1.45rem !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-page-header:has(+ main.rawaj-pulse-page.container-wide),
+  main.rawaj-pulse-page.container-wide .rawaj-merchant-stage * {
+    transition: none !important;
+  }
+}
