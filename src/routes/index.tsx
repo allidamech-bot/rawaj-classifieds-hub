@@ -118,10 +118,7 @@ function HomePage() {
     <>
       <AppHeader />
       <main className="home-container mobile-page-bottom pt-3 sm:pt-5 lg:pt-7">
-        <section
-          className="rawaj-home-stage rawaj-home-v2-hero"
-          aria-labelledby="rawaj-home-title"
-        >
+        <section className="rawaj-home-stage rawaj-home-v2-hero" aria-labelledby="rawaj-home-title">
           <div className="relative z-10 grid min-h-[20rem] gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.82fr)] lg:items-end lg:gap-12 lg:p-9">
             <div className="self-end">
               <p className="rawaj-signature-kicker rawaj-home-kicker">
@@ -337,9 +334,7 @@ function ListingsSection({
 }) {
   const { text } = useUiPreferences();
   return (
-    <section
-      className={`rawaj-home-v2-section rawaj-home-v2-listings rawaj-home-tone-${tone}`}
-    >
+    <section className={`rawaj-home-v2-section rawaj-home-v2-listings rawaj-home-tone-${tone}`}>
       <SectionHeading
         kicker={kicker}
         title={title}

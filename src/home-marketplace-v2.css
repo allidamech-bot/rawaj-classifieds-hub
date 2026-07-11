@@ -129,7 +129,8 @@
 }
 
 .rawaj-home-category-card {
-  border: 1px solid color-mix(in srgb, var(--category-accent, var(--rawaj-orange)) 18%, var(--color-border));
+  border: 1px solid
+    color-mix(in srgb, var(--category-accent, var(--rawaj-orange)) 18%, var(--color-border));
   background:
     radial-gradient(
       9rem 7rem at 108% -12%,
