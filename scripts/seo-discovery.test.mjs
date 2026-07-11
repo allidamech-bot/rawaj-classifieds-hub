@@ -4,7 +4,7 @@ import test from "node:test";
 
 const seoPath = new URL("../src/lib/seo.ts", import.meta.url);
 const robotsPath = new URL("../public/robots.txt", import.meta.url);
-const sitemapPath = new URL("../public/sitemap.xml", import.meta.url);
+const sitemapPath = new URL("../src/routes/sitemap[.]xml.ts", import.meta.url);
 
 const [seo, robots, sitemap] = await Promise.all([
   readFile(seoPath, "utf8"),
@@ -25,17 +25,17 @@ test("robots advertises the sitemap and keeps private workspaces out of crawl", 
   }
 });
 
-test("sitemap contains only stable public discovery routes", () => {
-  for (const url of [
-    "https://rawa-j.com/",
-    "https://rawa-j.com/listings",
-    "https://rawa-j.com/categories",
-  ]) {
-    assert.match(sitemap, new RegExp(`<loc>${url.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</loc>`));
+test("dynamic sitemap keeps stable public routes and excludes private workspaces", () => {
+  assert.match(sitemap, /createFileRoute\("\/sitemap\.xml"\)/);
+
+  for (const path of ["/", "/listings", "/categories"]) {
+    const escapedPath = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    assert.match(sitemap, new RegExp(`absoluteUrl\\("${escapedPath}"\\)`));
   }
 
   for (const privatePath of ["/admin", "/profile", "/chats", "/activity", "/notifications"]) {
-    assert.doesNotMatch(sitemap, new RegExp(`<loc>[^<]*${privatePath}`));
+    const escapedPath = privatePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    assert.doesNotMatch(sitemap, new RegExp(`absoluteUrl\\("${escapedPath}"\\)`));
   }
 
   assert.doesNotMatch(sitemap, /localhost/i);
