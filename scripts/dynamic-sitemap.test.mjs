@@ -30,5 +30,7 @@ test("sitemap publishes listing and eligible seller URLs with lastmod", () => {
 });
 
 test("legacy static sitemap no longer shadows the server route", async () => {
-  await assert.rejects(access(new URL("../public/sitemap.xml", import.meta.url)));
+  await assert.rejects(
+    access(new URL("../public/sitemap.xml", import.meta.url)),
+  );
 });
