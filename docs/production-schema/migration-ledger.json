@@ -14,11 +14,7 @@
     "manual": "Repository record explicitly references manual Production hotfix reconciliation.",
     "unknown": "Repository intent is not yet sufficiently established."
   },
-  "productionStateDefinitions": [
-    "verified-applied",
-    "verified-not-applied",
-    "unknown"
-  ],
+  "productionStateDefinitions": ["verified-applied", "verified-not-applied", "unknown"],
   "replaySafetyDefinitions": [
     "clean-replay-required",
     "forward-only-do-not-replay",
@@ -146,8 +142,6 @@
       "202607100005_backfill_syria_location_type_sort_order.sql",
       "202607100007_repair_seller_review_response_update_path.sql"
     ],
-    "manual": [
-      "202607090004_reconcile_manual_production_hotfixes.sql"
-    ]
+    "manual": ["202607090004_reconcile_manual_production_hotfixes.sql"]
   }
 }
