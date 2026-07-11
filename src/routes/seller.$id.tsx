@@ -2,12 +2,11 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import {
   BadgeCheck,
   CalendarDays,
+  ChevronLeft,
   MapPin,
   MessageSquare,
-  Package,
   ShieldAlert,
   Star,
-  Store,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
@@ -68,44 +67,6 @@ function SellerPage() {
         <div className="space-y-7">
           <StorefrontHero seller={seller} />
 
-          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <StorefrontMetric
-              icon={MapPin}
-              world="rawaj-world-orange"
-              label={text("الموقع", "Location")}
-              value={seller.locationAr ?? text("سوريا", "Syria")}
-            />
-            <StorefrontMetric
-              icon={Package}
-              world="rawaj-world-emerald"
-              label={text("الإعلانات العامة", "Public listings")}
-              value={`${seller.approvedListingCount}`}
-            />
-            <StorefrontMetric
-              icon={CalendarDays}
-              world="rawaj-world-indigo"
-              label={text("على رواج منذ", "On RAWAJ since")}
-              value={seller.joinedAt ? new Date(seller.joinedAt).getFullYear().toString() : "—"}
-            />
-            {seller.ratingSummary.count > 0 ? (
-              <StorefrontMetric
-                icon={Star}
-                world="rawaj-world-gold"
-                label={text("التقييم المعتمد", "Approved rating")}
-                value={`${seller.ratingSummary.average} / 5`}
-              />
-            ) : (
-              <StorefrontMetric
-                icon={Store}
-                world="rawaj-world-plum"
-                label={text("نوع الواجهة", "Storefront")}
-                value={
-                  seller.businessName ? text("نشاط تجاري", "Business") : text("بائع", "Seller")
-                }
-              />
-            )}
-          </section>
-
           <section className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.8fr)] lg:items-start">
             <div className="space-y-4">
               <div className="rawaj-storefront-section">
@@ -156,13 +117,13 @@ function StorefrontHero({ seller }: { seller: PublicSellerProfile }) {
   const displayName = seller.businessName || seller.displayName;
 
   return (
-    <section className="rawaj-merchant-stage min-h-[19rem] overflow-hidden rounded-[1.8rem] sm:rounded-[2.1rem]">
+    <section className="rawaj-merchant-stage rawaj-storefront-hero overflow-hidden rounded-[1.8rem] sm:rounded-[2.1rem]">
       {seller.coverUrl ? (
         <img src={seller.coverUrl} alt="" decoding="async" className="rawaj-merchant-cover" />
       ) : null}
       <div className="rawaj-merchant-scrim" />
 
-      <div className="relative z-10 flex min-h-[19rem] flex-col justify-end p-5 sm:p-7 lg:p-9">
+      <div className="relative z-10 flex min-h-[18rem] flex-col justify-end p-5 sm:min-h-[20rem] sm:p-7 lg:p-9">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex min-w-0 items-end gap-4">
             <span className="rawaj-id-avatar h-24 w-24 shrink-0 rounded-[1.45rem] text-3xl font-bold sm:h-28 sm:w-28">
@@ -211,35 +172,7 @@ function StorefrontHero({ seller }: { seller: PublicSellerProfile }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 sm:min-w-[15rem]">
-            <div className="rawaj-id-stat rounded-[1rem] p-3">
-              <span className="block text-[9px] font-semibold text-[#fffaf0]/55">
-                {text("المعروض", "Listings")}
-              </span>
-              <strong className="mt-1 block text-lg text-[#fffaf0]">
-                {seller.approvedListingCount}
-              </strong>
-            </div>
-            {seller.ratingSummary.count > 0 ? (
-              <div className="rawaj-id-stat rounded-[1rem] p-3">
-                <span className="block text-[9px] font-semibold text-[#fffaf0]/55">
-                  {text("التقييم", "Rating")}
-                </span>
-                <strong className="mt-1 block text-lg text-[#fffaf0]">
-                  {seller.ratingSummary.average} ★
-                </strong>
-              </div>
-            ) : (
-              <div className="rawaj-id-stat rounded-[1rem] p-3">
-                <span className="block text-[9px] font-semibold text-[#fffaf0]/55">
-                  {text("الحضور", "Presence")}
-                </span>
-                <strong className="mt-1 block text-xs text-[#fffaf0]">
-                  {text("واجهة عامة", "Public")}
-                </strong>
-              </div>
-            )}
-          </div>
+          <StorefrontReviewLink seller={seller} />
         </div>
 
         {seller.bio ? (
@@ -259,29 +192,36 @@ function StorefrontHero({ seller }: { seller: PublicSellerProfile }) {
   );
 }
 
-function StorefrontMetric({
-  icon: Icon,
-  world,
-  label,
-  value,
-}: {
-  icon: typeof MapPin;
-  world: string;
-  label: string;
-  value: string;
-}) {
+function StorefrontReviewLink({ seller }: { seller: PublicSellerProfile }) {
+  const { text } = useUiPreferences();
+  const hasReviews = seller.ratingSummary.count > 0;
+
   return (
-    <article className={`rawaj-color-card ${world} rounded-[1.3rem] p-4`}>
-      <div className="relative z-10 flex items-center gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[0.95rem] bg-primary text-primary-foreground">
-          <Icon className="h-4 w-4" />
+    <a href="#seller-reviews" className="rawaj-storefront-review-link group">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gold text-gold-foreground shadow-sm">
+        <Star className="h-4 w-4 fill-current" />
+      </span>
+      <span className="min-w-0">
+        <strong className="block text-sm font-extrabold text-[#fffaf0]">
+          {hasReviews ? seller.ratingSummary.average : "—"}
+        </strong>
+        <span className="block text-[9px] font-semibold text-[#fffaf0]/55">
+          {hasReviews ? `(${seller.ratingSummary.count})` : text("جديد", "New")}
         </span>
-        <div className="min-w-0">
-          <span className="block text-[10px] font-semibold text-muted-foreground">{label}</span>
-          <strong className="mt-1 block truncate text-sm text-primary">{value}</strong>
-        </div>
-      </div>
-    </article>
+      </span>
+      <span className="h-7 w-px bg-white/12" aria-hidden="true" />
+      <span className="min-w-0 flex-1 text-start">
+        <strong className="block truncate text-[11px] font-bold text-[#fffaf0]">
+          {text("التعليقات", "Reviews")}
+        </strong>
+        <span className="block truncate text-[9px] text-gold">
+          {hasReviews
+            ? text(`${seller.ratingSummary.count} تعليق`, `${seller.ratingSummary.count} reviews`)
+            : text("لا توجد تعليقات بعد", "No reviews yet")}
+        </span>
+      </span>
+      <ChevronLeft className="h-4 w-4 shrink-0 text-gold transition group-hover:-translate-x-0.5" />
+    </a>
   );
 }
 
@@ -403,7 +343,10 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   }
 
   return (
-    <section className="rawaj-color-card rawaj-world-gold rounded-[1.5rem] p-4 sm:p-5">
+    <section
+      id="seller-reviews"
+      className="rawaj-color-card rawaj-world-gold scroll-mt-24 rounded-[1.5rem] p-4 sm:p-5"
+    >
       <div className="relative z-10">
         <span className="rawaj-signature-kicker">{text("صوت العملاء", "Customer voice")}</span>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
