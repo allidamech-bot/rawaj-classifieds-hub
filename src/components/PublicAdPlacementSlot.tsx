@@ -11,27 +11,29 @@ interface Props {
   placementPage: AdPlacementPage | null;
 }
 
+interface LoadedPlacement {
+  page: AdPlacementPage;
+  placement: PublicAdPlacement | null;
+}
+
 export function PublicAdPlacementSlot({ placementPage }: Props) {
   const { text } = useUiPreferences();
-  const [placement, setPlacement] = useState<PublicAdPlacement | null>(null);
+  const [loaded, setLoaded] = useState<LoadedPlacement | null>(null);
 
   useEffect(() => {
+    if (!placementPage) return;
+
     let cancelled = false;
-
-    if (!placementPage) {
-      setPlacement(null);
-      return () => {
-        cancelled = true;
-      };
-    }
-
     const device: AdPlacementDevice = window.matchMedia("(max-width: 767px)").matches
       ? "mobile"
       : "desktop";
 
     void fetchActiveAdPlacements(placementPage, device).then((result) => {
       if (cancelled) return;
-      setPlacement(result.ok ? (result.data[0] ?? null) : null);
+      setLoaded({
+        page: placementPage,
+        placement: result.ok ? (result.data[0] ?? null) : null,
+      });
     });
 
     return () => {
@@ -39,10 +41,14 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
     };
   }, [placementPage]);
 
+  const placement = loaded?.page === placementPage ? loaded.placement : null;
   if (!placementPage || !placement) return null;
 
   return (
-    <aside className="container-wide mt-3" aria-label={text("مساحة إعلانية", "Advertisement")}> 
+    <aside
+      className="container-wide mt-3"
+      aria-label={text("مساحة إعلانية", "Advertisement")}
+    >
       <a
         href={placement.destinationUrl}
         target="_blank"
