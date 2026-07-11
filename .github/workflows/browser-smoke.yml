@@ -6,92 +6,60 @@ on:
       - main
     paths:
       - "src/**"
-      - "scripts/**"
+      - "e2e/**"
+      - "playwright.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/browser-smoke.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "e2e/**"
+      - "playwright.config.ts"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/browser-smoke.yml"
 
+concurrency:
+  group: browser-smoke-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  repair:
+  smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 20
+
     steps:
-      - name: Checkout PR branch
+      - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          ref: design/search-filters-v1
-          fetch-depth: 0
+          node-version: 22
+          cache: npm
 
-      - name: Apply type fixes
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
+      - name: Install dependencies
+        run: npm ci
 
-          def replace_exact(source: str, old: str, new: str, label: str) -> str:
-              if old not in source:
-                  raise RuntimeError(f"Missing {label}")
-              return source.replace(old, new, 1)
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
 
-          path = Path('src/lib/api/listings.ts')
-          source = path.read_text()
-          source = replace_exact(
-              source,
-              'import { publicListingSelect } from "@/lib/api/public-fields";',
-              'import {\n  publicListingSelect,\n  publicListingWithImagesSelect,\n} from "@/lib/api/public-fields";',
-              'public listing imports',
-          )
-          source = replace_exact(
-              source,
-              '''  const listingSelect = filters.withPhotos
-    ? `${publicListingSelect},listing_images!inner(id)`
-    : publicListingSelect;''',
-              '''  const listingSelect = filters.withPhotos
-    ? publicListingWithImagesSelect
-    : publicListingSelect;''',
-              'typed listing select',
-          )
-          path.write_text(source)
+      - name: Run browser smoke tests
+        run: npm run test:e2e
 
-          path = Path('src/lib/classifieds-types.ts')
-          source = path.read_text()
-          if 'export interface ModerateReportPayload' not in source:
-              marker = 'export interface ListingImageUploadPayload {'
-              insertion = '''export interface ModerateReportPayload {
-  reportId: string;
-  status: ListingReportStatus;
-  assignedTo?: string | null;
-  adminNote?: string | null;
-  resolvedAt?: string | null;
-}
-
-'''
-              source = replace_exact(source, marker, insertion + marker, 'report moderation payload')
-          path.write_text(source)
-
-          path = Path('scripts/search-filters-v1.test.mjs')
-          source = path.read_text().replace(
-              '  assert.match(api, /listing_images!inner\\(id\\)/);',
-              '  assert.match(api, /publicListingWithImagesSelect/);',
-          )
-          path.write_text(source)
-
-          path = Path('scripts/public-data-security.test.mjs')
-          source = path.read_text().replace(
-              '  assert.ok(publicList.includes("`${publicListingSelect},listing_images!inner(id)`"));',
-              '  assert.ok(publicList.includes("publicListingWithImagesSelect"));\n  assert.ok(publicFields.includes("listing_images!inner(id)"));',
-          )
-          path.write_text(source)
-          PY
-
-          rm -f .github/workflows/temporary-pr257-*.yml
-
-      - name: Commit fixes
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Fix search filter type contracts"
-          git push origin HEAD:design/search-filters-v1
+      - name: Upload browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 7
