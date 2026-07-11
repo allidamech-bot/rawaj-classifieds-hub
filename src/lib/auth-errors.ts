@@ -16,9 +16,12 @@ export function authErrorMessage(
   const code = error?.code?.toLowerCase() ?? "";
   const message = error?.message?.toLowerCase() ?? "";
   const status = error?.status;
-  const contains = (...values: string[]) => values.some((value) => code.includes(value) || message.includes(value));
+  const contains = (...values: string[]) =>
+    values.some((value) => code.includes(value) || message.includes(value));
 
-  if (contains("over_email_send_rate_limit", "rate limit", "too many requests", "security purposes")) {
+  if (
+    contains("over_email_send_rate_limit", "rate limit", "too many requests", "security purposes")
+  ) {
     return text(
       "تم إرسال طلبات كثيرة خلال وقت قصير. انتظر قليلاً ثم حاول مرة أخرى.",
       "Too many requests were sent in a short time. Wait a moment and try again.",

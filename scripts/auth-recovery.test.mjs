@@ -16,7 +16,10 @@ test("account failures are translated into safe bilingual messages", () => {
   assert.match(errors, /weak_password/);
   assert.match(errors, /otp_expired/);
   assert.match(login, /authErrorMessage\(resetError, "recovery", text\)/);
-  assert.match(login, /authErrorMessage\(result\.error, mode === "login" \? "login" : "register", text\)/);
+  assert.match(
+    login,
+    /authErrorMessage\(result\.error, mode === "login" \? "login" : "register", text\)/,
+  );
   assert.doesNotMatch(login, /: result\.error\.message/);
 });
 
