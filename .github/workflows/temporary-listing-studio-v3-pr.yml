@@ -41,7 +41,6 @@ jobs:
       - name: Format V3 files
         run: >-
           npx prettier --write
-          .github/workflows/quality-gate.yml
           scripts/listing-studio-v3.test.mjs
           src/features/listing-studio/listing-studio.tsx
           src/listing-studio-v3.css
@@ -53,7 +52,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/workflows/quality-gate.yml
           git add scripts/listing-studio-v3.test.mjs
           git add src/features/listing-studio/listing-studio.tsx
           git add src/listing-studio-v3.css
