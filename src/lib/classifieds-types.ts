@@ -459,6 +459,14 @@ export interface ListingReport {
   updatedAt: string;
 }
 
+export interface ModerateReportPayload {
+  reportId: string;
+  status: ListingReportStatus;
+  assignedTo?: string | null;
+  adminNote?: string | null;
+  resolvedAt?: string | null;
+}
+
 export interface SupportRequest {
   id: string;
   userId: string;

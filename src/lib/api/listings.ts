@@ -192,7 +192,7 @@ export async function fetchPublicListings(
   const { data, error } = await query.limit(safePageSize + 1);
   if (error) return { ok: false, error: mapError(error) };
 
-  const listings = ((data ?? []) as Record<string, unknown>[]).map((row) =>
+  const listings = ((data ?? []) as unknown as Record<string, unknown>[]).map((row) =>
     mapListing(row, references.categories, references.governorates),
   );
 
