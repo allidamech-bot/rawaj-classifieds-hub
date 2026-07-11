@@ -174,7 +174,10 @@ export function ListingMediaExperience({
         </div>
 
         {visibleImages.length > 1 ? (
-          <div className="rawaj-detail-media__thumbnails" aria-label={text("مصغرات الصور", "Thumbnails")}>
+          <div
+            className="rawaj-detail-media__thumbnails"
+            aria-label={text("مصغرات الصور", "Thumbnails")}
+          >
             {visibleImages.map((image, index) => (
               <button
                 key={image.id}
@@ -183,12 +186,7 @@ export function ListingMediaExperience({
                 aria-pressed={selectedIndex === index}
                 aria-label={text(`عرض الصورة ${index + 1}`, `View image ${index + 1}`)}
               >
-                <img
-                  src={image.publicUrl ?? ""}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                />
+                <img src={image.publicUrl ?? ""} alt="" loading="lazy" decoding="async" />
               </button>
             ))}
           </div>
@@ -277,9 +275,7 @@ function ListingMediaViewer({
           <DialogPrimitive.Title className="sr-only">
             {text("عارض صور الإعلان", "Listing image viewer")}
           </DialogPrimitive.Title>
-          <DialogPrimitive.Description className="sr-only">
-            {title}
-          </DialogPrimitive.Description>
+          <DialogPrimitive.Description className="sr-only">{title}</DialogPrimitive.Description>
 
           <header className="rawaj-media-viewer__header">
             <DialogPrimitive.Close aria-label={text("إغلاق العارض", "Close viewer")}>

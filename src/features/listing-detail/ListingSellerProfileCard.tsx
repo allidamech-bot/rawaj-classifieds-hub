@@ -1,5 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck, CalendarDays, ChevronLeft, MessageCircle, Star, Store, User } from "lucide-react";
+import {
+  BadgeCheck,
+  CalendarDays,
+  ChevronLeft,
+  MessageCircle,
+  Star,
+  Store,
+  User,
+} from "lucide-react";
 import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
 import type { Language } from "@/lib/ui-preferences";
 

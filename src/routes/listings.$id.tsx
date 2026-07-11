@@ -146,7 +146,9 @@ function ListingDetailsPage() {
       );
       if (cancelled) return;
       if (result.ok) {
-        setSimilarListings(result.data.items.filter((item) => item.id !== initialListing.id).slice(0, 8));
+        setSimilarListings(
+          result.data.items.filter((item) => item.id !== initialListing.id).slice(0, 8),
+        );
       }
       setSimilarLoading(false);
     }
@@ -293,7 +295,11 @@ function ListingDetailsPage() {
       setActionMessage(text("سجّل الدخول لتفعيل تنبيه السعر.", "Log in to enable a price alert."));
       return;
     }
-    if (!listing || listing.price === null || !["fixed", "negotiable"].includes(listing.priceType)) {
+    if (
+      !listing ||
+      listing.price === null ||
+      !["fixed", "negotiable"].includes(listing.priceType)
+    ) {
       setActionMessage(
         text(
           "تنبيه السعر متاح للإعلانات ذات السعر الرقمي.",
@@ -467,8 +473,14 @@ function ListingDetailsPage() {
                 </div>
                 <h1>{listing.title}</h1>
                 <div className="rawaj-detail-summary__meta">
-                  <span><MapPin aria-hidden="true" />{locationLabel}</span>
-                  <span><Clock aria-hidden="true" />{formatDate(listing.createdAt, language)}</span>
+                  <span>
+                    <MapPin aria-hidden="true" />
+                    {locationLabel}
+                  </span>
+                  <span>
+                    <Clock aria-hidden="true" />
+                    {formatDate(listing.createdAt, language)}
+                  </span>
                 </div>
                 <PriceDisplay listing={listing} language={language} text={text} />
               </section>
@@ -516,7 +528,9 @@ function ListingDetailsPage() {
                   subtitle={text("الموقع المعلن للسلعة", "Advertised item location")}
                 />
                 <div className="rawaj-detail-location">
-                  <span><MapPin aria-hidden="true" /></span>
+                  <span>
+                    <MapPin aria-hidden="true" />
+                  </span>
                   <div>
                     <strong>{locationLabel}</strong>
                     <p>
@@ -560,7 +574,9 @@ function ListingDetailsPage() {
           </div>
 
           {actionMessage ? (
-            <p className="rawaj-detail-v2__message" role="status">{actionMessage}</p>
+            <p className="rawaj-detail-v2__message" role="status">
+              {actionMessage}
+            </p>
           ) : null}
 
           <SimilarListingsRail
