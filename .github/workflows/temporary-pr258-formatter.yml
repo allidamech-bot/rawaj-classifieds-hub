@@ -1,15 +1,16 @@
 name: Temporary PR 258 Formatter
 
 on:
-  push:
+  pull_request:
     branches:
-      - design/listing-detail-contact-v1
+      - main
 
 permissions:
   contents: write
 
 jobs:
   format:
+    if: github.event.pull_request.head.ref == 'design/listing-detail-contact-v1'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
