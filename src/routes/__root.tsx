@@ -38,6 +38,7 @@ import sellerStorefrontFoundationCss from "../seller-storefront-foundation.css?u
 import signatureCss from "../signature.css?url";
 import appCss from "../styles.css?url";
 import visualFoundationCss from "../visual-foundation.css?url";
+import marketplaceSystemCss from "../marketplace-system.css?url";
 
 const ROOT_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
 const ROOT_DESCRIPTION =
@@ -105,7 +106,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       meta: [
         { charSet: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-        { name: "theme-color", content: "#123047" },
+        { name: "theme-color", content: "#153f37" },
         { name: "author", content: "RAWAJ" },
         ...seo.meta,
       ],
@@ -126,6 +127,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: offersSignatureCss },
         { rel: "stylesheet", href: listingStudioSignatureCss },
         { rel: "stylesheet", href: messagingSignatureCss },
+        { rel: "stylesheet", href: marketplaceSystemCss },
         { rel: "icon", href: "/favicon.ico" },
         { rel: "manifest", href: "/manifest.webmanifest" },
         { rel: "apple-touch-icon", href: "/brand/rawaj-mark-transparent-192.png" },

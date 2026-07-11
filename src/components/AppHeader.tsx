@@ -27,8 +27,8 @@ export function AppHeader({ compact = false, title }: Props) {
   ];
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/75 bg-background/94 text-foreground backdrop-blur-xl supports-[backdrop-filter]:bg-background/88">
-      <div className="container-wide flex min-h-14 items-center gap-2 py-1.5 sm:min-h-16 sm:gap-4 sm:py-2 lg:min-h-[4.5rem]">
+    <header className="rawaj-app-header sticky top-0 z-30 text-foreground">
+      <div className="container-wide flex min-h-[3.75rem] items-center gap-2 py-1.5 sm:min-h-16 sm:gap-4 sm:py-2 lg:min-h-[4.5rem]">
         <Link to="/" className="order-1 flex min-w-0 items-center gap-2 sm:gap-3">
           <Logo />
         </Link>
@@ -109,7 +109,7 @@ export function AppHeader({ compact = false, title }: Props) {
                 ? text("حسابي", "My account")
                 : text("تسجيل الدخول", "Log in")
             }
-            className="rawaj-icon-button rawaj-touch-target shrink-0 shadow-none"
+            className="rawaj-header-account rawaj-icon-button rawaj-touch-target shrink-0 shadow-none"
           >
             {auth.status === "signedIn" ? (
               <User className="h-4 w-4" strokeWidth={1.9} />
@@ -125,8 +125,8 @@ export function AppHeader({ compact = false, title }: Props) {
 
 function Logo() {
   return (
-    <span className="flex items-center gap-2.5 sm:gap-3">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[var(--rawaj-radius-card)] bg-primary shadow-[0_8px_20px_rgba(16,43,70,0.14)]">
+    <span className="rawaj-brand-lockup flex items-center gap-2.5 sm:gap-3">
+      <span className="rawaj-brand-mark grid h-10 w-10 shrink-0 place-items-center">
         <img
           src="/brand/rawaj-mark-transparent-header.png"
           alt="RAWAJ"
@@ -136,9 +136,11 @@ function Logo() {
       </span>
 
       <span className="flex items-center gap-1.5 leading-none sm:gap-2">
-        <span className="font-display text-[15px] font-bold text-primary sm:text-[17px]">رواج</span>
-        <span className="h-4 w-px bg-gold/65 sm:h-5" aria-hidden="true" />
-        <span className="text-[8px] font-bold tracking-[0.24em] text-brand-orange sm:text-[9px]">
+        <span className="font-display text-[17px] font-extrabold text-primary sm:text-[18px]">
+          رواج
+        </span>
+        <span className="rawaj-brand-divider h-4 w-px sm:h-5" aria-hidden="true" />
+        <span className="text-[8px] font-extrabold tracking-[0.22em] text-brand-orange sm:text-[9px]">
           RAWAJ
         </span>
       </span>

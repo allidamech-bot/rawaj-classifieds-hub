@@ -26,7 +26,7 @@ export function PageHeader({ title, to = "/", back = true, backMode = "link" }: 
     "rawaj-icon-button rawaj-touch-target grid shrink-0 place-items-center shadow-none";
 
   return (
-    <div className="sticky top-0 z-20 border-b border-border/75 bg-background/94 backdrop-blur-xl supports-[backdrop-filter]:bg-background/88">
+    <div className="rawaj-page-header sticky top-0 z-20">
       <div className="container-wide flex min-h-14 items-center gap-2.5 py-1.5 sm:min-h-16 sm:gap-3">
         {back && backMode === "history" ? (
           <button

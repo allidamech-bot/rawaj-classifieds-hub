@@ -135,7 +135,10 @@ function ProfilePage() {
     setMediaSaving(null);
     setSettingsNotice(
       result.ok
-        ? text("تم حفظ الصورة. قد تحتاج لتحديث الصفحة إذا لم تظهر فوراً.", "Image saved. Refresh if it does not appear immediately.")
+        ? text(
+            "تم حفظ الصورة. قد تحتاج لتحديث الصفحة إذا لم تظهر فوراً.",
+            "Image saved. Refresh if it does not appear immediately.",
+          )
         : result.error.message,
     );
   }
@@ -150,7 +153,9 @@ function ProfilePage() {
     );
     setMediaSaving(null);
     setSettingsNotice(
-      result.ok ? text("تمت إزالة الصورة من الحساب.", "Image removed from account.") : result.error.message,
+      result.ok
+        ? text("تمت إزالة الصورة من الحساب.", "Image removed from account.")
+        : result.error.message,
     );
   }
 
@@ -227,8 +232,14 @@ function ProfilePage() {
                 <h1 className="truncate text-lg font-extrabold">{displayName}</h1>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {auth.status === "signedIn"
-                    ? text("مركز الحساب جاهز لإدارة بياناتك وإعلاناتك.", "Your account center is ready.")
-                    : text("سجّل الدخول لإدارة بياناتك وإعلاناتك.", "Log in to manage your information and listings.")}
+                    ? text(
+                        "مركز الحساب جاهز لإدارة بياناتك وإعلاناتك.",
+                        "Your account center is ready.",
+                      )
+                    : text(
+                        "سجّل الدخول لإدارة بياناتك وإعلاناتك.",
+                        "Log in to manage your information and listings.",
+                      )}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-bold">
                   <span className="rounded-full bg-muted-surface px-2 py-1">
@@ -285,12 +296,21 @@ function ProfilePage() {
               )}
             </div>
           </div>
-          {logoutError && <p className="mt-3 rounded-xl bg-destructive/10 p-2 text-xs text-destructive">{logoutError}</p>}
+          {logoutError && (
+            <p className="mt-3 rounded-xl bg-destructive/10 p-2 text-xs text-destructive">
+              {logoutError}
+            </p>
+          )}
         </section>
 
-        <section id="account-info" className="scroll-mt-24 rounded-2xl bg-card p-4 shadow-soft hairline">
+        <section
+          id="account-info"
+          className="scroll-mt-24 rounded-2xl bg-card p-4 shadow-soft hairline"
+        >
           <div className="mb-4">
-            <h2 className="text-base font-extrabold">{text("معلومات الحساب", "Account information")}</h2>
+            <h2 className="text-base font-extrabold">
+              {text("معلومات الحساب", "Account information")}
+            </h2>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">
               {text(
                 "عدّل بيانات التواصل التي تظهر للمستخدمين.",
@@ -302,11 +322,16 @@ function ProfilePage() {
           {auth.status === "signedIn" ? (
             <form onSubmit={(event) => void handleSaveProfileBasics(event)} className="space-y-4">
               <div className="rounded-2xl bg-muted-surface p-3 hairline">
-                <h3 className="mb-3 text-sm font-extrabold">{text("صور الحساب", "Account photos")}</h3>
+                <h3 className="mb-3 text-sm font-extrabold">
+                  {text("صور الحساب", "Account photos")}
+                </h3>
                 <div className="grid gap-3 md:grid-cols-[minmax(180px,0.8fr)_minmax(0,1.2fr)]">
                   <MediaField
                     title={text("الصورة الشخصية", "Profile image")}
-                    helper={text("يمكنك اختيار صورة من الجهاز.", "Choose an image from your device.")}
+                    helper={text(
+                      "يمكنك اختيار صورة من الجهاز.",
+                      "Choose an image from your device.",
+                    )}
                     imageUrl={auth.profile?.avatarUrl}
                     busy={mediaSaving === "avatar"}
                     text={text}
@@ -315,7 +340,10 @@ function ProfilePage() {
                   />
                   <MediaField
                     title={text("صورة الغلاف", "Cover image")}
-                    helper={text("يمكنك اختيار صورة من الجهاز.", "Choose an image from your device.")}
+                    helper={text(
+                      "يمكنك اختيار صورة من الجهاز.",
+                      "Choose an image from your device.",
+                    )}
                     imageUrl={auth.profile?.coverUrl}
                     busy={mediaSaving === "cover"}
                     text={text}
@@ -327,14 +355,56 @@ function ProfilePage() {
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <SettingsInput label={text("الاسم الأول", "First name")} value={settingsFirstName} onChange={setSettingsFirstName} maxLength={40} />
-                <SettingsInput label={text("اسم العائلة", "Last name")} value={settingsLastName} onChange={setSettingsLastName} maxLength={40} />
-                <SettingsInput label={text("اسم العرض", "Display name")} value={settingsDisplayName} onChange={setSettingsDisplayName} maxLength={80} />
-                <SettingsInput label={text("المحافظة", "Governorate")} value={settingsGovernorate} onChange={setSettingsGovernorate} maxLength={80} />
-                <SettingsInput label={text("المدينة / المنطقة", "City / area")} value={settingsCityArea} onChange={setSettingsCityArea} maxLength={120} />
-                <SettingsInput label={text("اسم المنشأة", "Business name")} value={settingsBusinessName} onChange={setSettingsBusinessName} maxLength={120} />
-                <SettingsInput label={text("الهاتف", "Phone")} value={settingsPhone} onChange={setSettingsPhone} maxLength={40} inputMode="tel" />
-                <SettingsInput label={text("واتساب", "WhatsApp")} value={settingsWhatsapp} onChange={setSettingsWhatsapp} maxLength={40} inputMode="tel" />
+                <SettingsInput
+                  label={text("الاسم الأول", "First name")}
+                  value={settingsFirstName}
+                  onChange={setSettingsFirstName}
+                  maxLength={40}
+                />
+                <SettingsInput
+                  label={text("اسم العائلة", "Last name")}
+                  value={settingsLastName}
+                  onChange={setSettingsLastName}
+                  maxLength={40}
+                />
+                <SettingsInput
+                  label={text("اسم العرض", "Display name")}
+                  value={settingsDisplayName}
+                  onChange={setSettingsDisplayName}
+                  maxLength={80}
+                />
+                <SettingsInput
+                  label={text("المحافظة", "Governorate")}
+                  value={settingsGovernorate}
+                  onChange={setSettingsGovernorate}
+                  maxLength={80}
+                />
+                <SettingsInput
+                  label={text("المدينة / المنطقة", "City / area")}
+                  value={settingsCityArea}
+                  onChange={setSettingsCityArea}
+                  maxLength={120}
+                />
+                <SettingsInput
+                  label={text("اسم المنشأة", "Business name")}
+                  value={settingsBusinessName}
+                  onChange={setSettingsBusinessName}
+                  maxLength={120}
+                />
+                <SettingsInput
+                  label={text("الهاتف", "Phone")}
+                  value={settingsPhone}
+                  onChange={setSettingsPhone}
+                  maxLength={40}
+                  inputMode="tel"
+                />
+                <SettingsInput
+                  label={text("واتساب", "WhatsApp")}
+                  value={settingsWhatsapp}
+                  onChange={setSettingsWhatsapp}
+                  maxLength={40}
+                  inputMode="tel"
+                />
                 <label className="block sm:col-span-2">
                   <span className="text-xs font-bold text-muted-foreground">
                     {text("طريقة التواصل المفضلة", "Preferred contact method")}
@@ -351,7 +421,9 @@ function ProfilePage() {
                   </select>
                 </label>
                 <label className="block sm:col-span-2">
-                  <span className="text-xs font-bold text-muted-foreground">{text("نبذة قصيرة", "Short bio")}</span>
+                  <span className="text-xs font-bold text-muted-foreground">
+                    {text("نبذة قصيرة", "Short bio")}
+                  </span>
                   <textarea
                     value={settingsBio}
                     onChange={(event) => setSettingsBio(event.target.value)}
@@ -368,7 +440,9 @@ function ProfilePage() {
                   disabled={settingsSaving}
                   className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground disabled:opacity-60"
                 >
-                  {settingsSaving ? text("جارٍ الحفظ", "Saving") : text("حفظ معلومات الحساب", "Save account information")}
+                  {settingsSaving
+                    ? text("جارٍ الحفظ", "Saving")
+                    : text("حفظ معلومات الحساب", "Save account information")}
                 </button>
                 {settingsNotice && (
                   <p className="rounded-xl bg-muted-surface p-3 text-xs font-semibold text-foreground">
@@ -389,11 +463,15 @@ function ProfilePage() {
             <div className="mb-3 flex items-center justify-between gap-2">
               <h2 className="text-sm font-extrabold">{text("إعلاناتي", "My listings")}</h2>
               <span className="rounded-full bg-muted-surface px-2.5 py-1 text-[11px] font-bold">
-                {myListingsLoading ? text("تحميل", "Loading") : text(`${myListings.length} إعلان`, `${myListings.length} listings`)}
+                {myListingsLoading
+                  ? text("تحميل", "Loading")
+                  : text(`${myListings.length} إعلان`, `${myListings.length} listings`)}
               </span>
             </div>
             {myListingsError ? (
-              <p className="rounded-xl bg-muted-surface p-3 text-xs text-muted-foreground">{myListingsError.message}</p>
+              <p className="rounded-xl bg-muted-surface p-3 text-xs text-muted-foreground">
+                {myListingsError.message}
+              </p>
             ) : recentListings.length === 0 ? (
               <p className="rounded-xl bg-muted-surface p-3 text-xs text-muted-foreground">
                 {text("لا توجد إعلانات في حسابك بعد.", "No listings in your account yet.")}
@@ -401,13 +479,25 @@ function ProfilePage() {
             ) : (
               <div className="space-y-2">
                 {recentListings.map((listing) => (
-                  <article key={listing.id} className="rounded-xl bg-muted-surface p-3 text-xs hairline">
+                  <article
+                    key={listing.id}
+                    className="rounded-xl bg-muted-surface p-3 text-xs hairline"
+                  >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <h3 className="truncate font-bold">{listing.title}</h3>
                         <p className="mt-1 text-muted-foreground">
-                          {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)} ·{" "}
-                          {governorateName(listing.governorateId, listing.governorateNameAr ?? undefined, language)}
+                          {categoryName(
+                            listing.categoryId,
+                            listing.categoryNameAr ?? undefined,
+                            language,
+                          )}{" "}
+                          ·{" "}
+                          {governorateName(
+                            listing.governorateId,
+                            listing.governorateNameAr ?? undefined,
+                            language,
+                          )}
                         </p>
                       </div>
                       <span className="shrink-0 rounded-md bg-card px-2 py-0.5 text-[10px] font-bold hairline">
@@ -419,11 +509,17 @@ function ProfilePage() {
               </div>
             )}
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <Link to="/profile/listings" className="inline-flex items-center justify-center gap-1 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">
+              <Link
+                to="/profile/listings"
+                className="inline-flex items-center justify-center gap-1 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+              >
                 <FileSpreadsheet className="h-4 w-4" />
                 {text("فتح إدارة الإعلانات", "Manage listings")}
               </Link>
-              <Link to="/add-listing" className="inline-flex items-center justify-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline">
+              <Link
+                to="/add-listing"
+                className="inline-flex items-center justify-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
+              >
                 <Plus className="h-4 w-4" />
                 {text("إضافة إعلان", "Post listing")}
               </Link>
@@ -436,7 +532,9 @@ function ProfilePage() {
               {text("توثيق الحساب", "Account verification")}
             </h2>
             <div className="rounded-xl bg-muted-surface p-3 text-xs leading-6 hairline">
-              <p className="font-bold">{text("حالة التوثيق الحالية", "Current verification status")}</p>
+              <p className="font-bold">
+                {text("حالة التوثيق الحالية", "Current verification status")}
+              </p>
               <p className="mt-1 text-muted-foreground">
                 {verificationStatusLabel(auth.profile?.verificationStatus, text)}
               </p>
@@ -448,20 +546,28 @@ function ProfilePage() {
               )}
             </p>
             {verificationLoading ? (
-              <p className="mt-3 text-xs text-muted-foreground">{text("جارٍ تحميل طلباتك", "Loading your requests")}</p>
+              <p className="mt-3 text-xs text-muted-foreground">
+                {text("جارٍ تحميل طلباتك", "Loading your requests")}
+              </p>
             ) : verificationRequests.length > 0 ? (
               <div className="mt-3 space-y-2">
                 {verificationRequests.slice(0, 2).map((request) => (
-                  <div key={request.id} className="rounded-xl bg-muted-surface p-3 text-xs hairline">
+                  <div
+                    key={request.id}
+                    className="rounded-xl bg-muted-surface p-3 text-xs hairline"
+                  >
                     <p className="font-bold">{request.legalName}</p>
                     <p className="mt-1 text-muted-foreground">
-                      {verificationStatusLabel(request.status, text)} · {verificationTypeLabel(request.requestType, text)}
+                      {verificationStatusLabel(request.status, text)} ·{" "}
+                      {verificationTypeLabel(request.requestType, text)}
                     </p>
                   </div>
                 ))}
               </div>
             ) : null}
-            {verificationNotice && <p className="mt-3 text-xs text-muted-foreground">{verificationNotice}</p>}
+            {verificationNotice && (
+              <p className="mt-3 text-xs text-muted-foreground">{verificationNotice}</p>
+            )}
             <Link
               to="/verification"
               className="mt-3 inline-flex rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
@@ -477,7 +583,9 @@ function ProfilePage() {
               <ShieldCheck className="h-5 w-5" />
             </span>
             <div>
-              <h2 className="text-sm font-extrabold">{text("مراجعة الحساب أو حذفه", "Account review or deletion")}</h2>
+              <h2 className="text-sm font-extrabold">
+                {text("مراجعة الحساب أو حذفه", "Account review or deletion")}
+              </h2>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
                 {text(
                   "لحذف الحساب أو مراجعة بياناته، أرسل طلباً عبر الدعم ليتم التعامل معه بطريقة آمنة.",
@@ -549,11 +657,21 @@ function MediaField({
     <div className="rounded-xl bg-card p-3 hairline">
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="text-xs font-bold text-muted-foreground">{title}</span>
-        {busy && <span className="text-xs font-bold text-primary">{text("جارٍ الحفظ", "Saving")}</span>}
+        {busy && (
+          <span className="text-xs font-bold text-primary">{text("جارٍ الحفظ", "Saving")}</span>
+        )}
       </div>
-      <div className={`grid place-items-center overflow-hidden rounded-xl bg-muted-surface ${wide ? "h-36 sm:h-44 lg:h-48" : "h-40 sm:h-44 lg:h-48"}`}>
+      <div
+        className={`grid place-items-center overflow-hidden rounded-xl bg-muted-surface ${wide ? "h-36 sm:h-44 lg:h-48" : "h-40 sm:h-44 lg:h-48"}`}
+      >
         {imageUrl ? (
-          <img src={imageUrl} alt={title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          <img
+            src={imageUrl}
+            alt={title}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
         ) : (
           <Camera className="h-6 w-6 text-muted-foreground" />
         )}
@@ -594,16 +712,23 @@ function roleLabel(role: string | null | undefined, text: (ar: string, en: strin
   return text("مستخدم", "User");
 }
 
-function accountStatusLabel(status: string | null | undefined, text: (ar: string, en: string) => string) {
+function accountStatusLabel(
+  status: string | null | undefined,
+  text: (ar: string, en: string) => string,
+) {
   if (status === "suspended") return text("موقوف", "Suspended");
   if (status === "pending_review") return text("قيد المراجعة", "Pending review");
   return text("نشط", "Active");
 }
 
-function verificationStatusLabel(status: string | null | undefined, text: (ar: string, en: string) => string) {
+function verificationStatusLabel(
+  status: string | null | undefined,
+  text: (ar: string, en: string) => string,
+) {
   if (status === "approved") return text("موثق", "Verified");
   if (status === "rejected") return text("مرفوض", "Rejected");
-  if (status === "pending" || status === "pending_review") return text("قيد المراجعة", "Pending review");
+  if (status === "pending" || status === "pending_review")
+    return text("قيد المراجعة", "Pending review");
   return text("غير موثق", "Unverified");
 }
 

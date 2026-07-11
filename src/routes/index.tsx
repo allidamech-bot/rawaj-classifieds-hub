@@ -119,20 +119,23 @@ function HomePage() {
     <>
       <AppHeader />
       <main className="home-container mobile-page-bottom pt-3 sm:pt-5 lg:pt-7">
-        <section className="rawaj-home-stage">
+        <section className="rawaj-home-stage" aria-labelledby="rawaj-home-title">
           <div className="relative z-10 grid min-h-[18rem] gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.82fr)] lg:items-end lg:gap-12 lg:p-9">
             <div className="self-end">
-              <p className="rawaj-signature-kicker text-gold">
+              <p className="rawaj-signature-kicker rawaj-home-kicker">
                 <Sparkles className="h-3.5 w-3.5" strokeWidth={1.9} />
                 {text("سوق سوريا الحديث", "Syria's modern marketplace")}
               </p>
-              <h1 className="mt-3 max-w-xl text-[1.65rem] font-extrabold leading-[1.36] text-[#fffaf0] sm:text-[2.25rem] lg:text-[2.8rem]">
+              <h1
+                id="rawaj-home-title"
+                className="rawaj-home-title mt-3 max-w-xl text-[1.75rem] font-extrabold leading-[1.34] sm:text-[2.35rem] lg:text-[2.9rem]"
+              >
                 {text(
                   "ابحث عمّا يستحق. وتواصل بثقة.",
                   "Find what matters. Connect with confidence.",
                 )}
               </h1>
-              <p className="mt-3 max-w-xl text-[12px] leading-6 text-[#fffaf0]/68 sm:text-sm sm:leading-7">
+              <p className="rawaj-home-description mt-3 max-w-xl text-[12px] leading-6 sm:text-sm sm:leading-7">
                 {text(
                   "إعلانات أوضح، وصول أسرع، وتجربة مصممة لتوصلك لما تحتاجه بدون تشويش.",
                   "Clearer listings, faster discovery, and a focused path to what you need.",
@@ -169,11 +172,11 @@ function HomePage() {
                 <Link
                   to="/listings"
                   search={listingSearch({ open_filters: true })}
-                  className="inline-flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-xl bg-white/9 px-3 text-[11px] font-semibold text-[#fffaf0] ring-1 ring-white/10 transition hover:bg-white/13"
+                  className="rawaj-home-location inline-flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-xl px-3 text-[11px] font-semibold transition"
                 >
                   <MapPin className="h-4 w-4 shrink-0 text-gold" strokeWidth={1.9} />
                   <span className="truncate">{text("كل سوريا", "All Syria")}</span>
-                  <span className="ms-auto text-[9px] font-semibold text-[#fffaf0]/52">
+                  <span className="ms-auto text-[9px] font-semibold text-muted-foreground">
                     {text("تغيير", "Change")}
                   </span>
                 </Link>
@@ -181,7 +184,7 @@ function HomePage() {
                   to="/listings"
                   search={listingSearch({ open_filters: true })}
                   aria-label={text("الفلاتر", "Filters")}
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/9 text-[#fffaf0] ring-1 ring-white/10 transition hover:bg-white/13"
+                  className="rawaj-home-filter grid h-10 w-10 shrink-0 place-items-center rounded-xl transition"
                 >
                   <SlidersHorizontal className="h-4 w-4" strokeWidth={1.9} />
                 </Link>
@@ -264,13 +267,13 @@ function HomePage() {
               <ShieldCheck className="h-5 w-5" strokeWidth={1.8} />
             </span>
             <div>
-              <span className="rawaj-signature-kicker text-gold">
+              <span className="rawaj-signature-kicker text-emerald-trust">
                 {text("ثقة تبدأ منك", "Confidence starts with you")}
               </span>
-              <h3 className="mt-1 text-sm font-extrabold text-[#fffaf0]">
+              <h3 className="mt-1 text-sm font-extrabold text-primary">
                 {text("تعامل بوعي", "Trade smart")}
               </h3>
-              <p className="mt-1 text-[11px] leading-5 text-[#fffaf0]/68 sm:text-xs">
+              <p className="mt-1 text-[11px] leading-5 text-muted-foreground sm:text-xs">
                 {text(
                   "افحص السلعة قبل الدفع، وتواصل بوضوح، واختر مكانًا عامًا للقاء.",
                   "Inspect before paying, communicate clearly, and meet in a public place.",
