@@ -6,16 +6,19 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   prepare:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-      - name: Checkout
+      - name: Checkout branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -26,11 +29,13 @@ jobs:
       - name: Install Vercel Analytics
         run: npm install @vercel/analytics@^2.0.1 --save
 
-      - name: Upload package files
-        uses: actions/upload-artifact@v4
-        with:
-          name: vercel-analytics-package-files
-          path: |
-            package.json
-            package-lock.json
-          if-no-files-found: error
+      - name: Commit package files and remove helper
+        env:
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          rm .github/workflows/prepare-vercel-analytics-package.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json .github/workflows/prepare-vercel-analytics-package.yml
+          git commit -m "Install Vercel Analytics package"
+          git push origin "HEAD:${HEAD_BRANCH}"
