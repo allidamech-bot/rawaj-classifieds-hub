@@ -1,8 +1,4 @@
-import type {
-  ClassifiedsResult,
-  ListingReport,
-  ListingReportType,
-} from "@/lib/classifieds-types";
+import type { ClassifiedsResult, ListingReport, ListingReportType } from "@/lib/classifieds-types";
 import { getClient, mapError, rowNullableString, rowRecord, rowString } from "@/lib/api/shared";
 
 interface ModerateReportPayload {
@@ -244,7 +240,7 @@ function mapListing(
     contactName: rowNullableString(row, "contact_name"),
     contactOptions: rowRecord(row, "contact_options") as Record<string, boolean>,
     details: rowRecord(row, "details"),
-    isFeatured: rowString(row, "is_featured") === "true",
+    isFeatured: rowString(row, "is_featureatured") === "true",
     featuredUntil: rowNullableString(row, "featured_until"),
     reviewedBy: rowNullableString(row, "reviewed_by"),
     reviewedAt: rowNullableString(row, "reviewed_at"),
