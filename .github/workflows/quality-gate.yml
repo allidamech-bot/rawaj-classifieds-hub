@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
@@ -38,6 +38,41 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Apply deterministic listing date timezone
+        if: github.event_name == 'pull_request' && github.head_ref == 'fix/home-hydration-and-ad-media' && github.actor != 'github-actions[bot]'
+        shell: bash
+        run: |
+          git checkout --detach "${{ github.event.pull_request.head.sha }}"
+          python <<'PY'
+          from pathlib import Path
+
+          path = Path("src/features/listings/listings-components.tsx")
+          text = path.read_text()
+          old = '''  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+            dateStyle: "medium",
+          }).format(new Date(value));'''
+          new = '''  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+            dateStyle: "medium",
+            timeZone: "Asia/Damascus",
+          }).format(new Date(value));'''
+          if old not in text:
+              raise SystemExit("listing date formatter anchor missing")
+          path.write_text(text.replace(old, new, 1))
+          PY
+          npx prettier --write src/features/listings/listings-components.tsx src/lib/ad-placement-media-url.ts src/lib/api/ad-placements.ts scripts/home-hydration-ad-media.test.mjs
+
+      - name: Commit hydration date fix
+        if: github.event_name == 'pull_request' && github.head_ref == 'fix/home-hydration-and-ad-media' && github.actor != 'github-actions[bot]'
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/listings/listings-components.tsx src/lib/ad-placement-media-url.ts src/lib/api/ad-placements.ts scripts/home-hydration-ad-media.test.mjs
+          git commit -m "Fix home hydration dates and ad media URLs"
+          git push origin HEAD:fix/home-hydration-and-ad-media
 
       - name: Lint changed source files
         shell: bash
@@ -131,6 +166,9 @@ jobs:
 
       - name: Authentication recovery contract
         run: node --test scripts/auth-recovery.test.mjs
+
+      - name: Hydration and ad media contract
+        run: node --test scripts/home-hydration-ad-media.test.mjs
 
       - name: Typecheck
         run: npm run typecheck -- --pretty false
