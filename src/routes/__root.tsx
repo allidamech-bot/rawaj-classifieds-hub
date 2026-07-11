@@ -35,6 +35,7 @@ import myStoreBrandPolishCss from "../my-store-brand-polish.css?url";
 import myStoreHeaderRefinementCss from "../my-store-header-refinement.css?url";
 import myStoreRedesignCss from "../my-store-redesign.css?url";
 import offersSignatureCss from "../offers-signature.css?url";
+import personalSpacePolishCss from "../personal-space-polish.css?url";
 import sellerStorefrontFoundationCss from "../seller-storefront-foundation.css?url";
 import signatureCss from "../signature.css?url";
 import appCss from "../styles.css?url";
@@ -130,6 +131,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: marketplaceSystemCss },
         { rel: "stylesheet", href: myStoreHeaderRefinementCss },
         { rel: "stylesheet", href: myStoreBrandPolishCss },
+        { rel: "stylesheet", href: personalSpacePolishCss },
         { rel: "icon", href: "/favicon.ico" },
         { rel: "manifest", href: "/manifest.webmanifest" },
         { rel: "apple-touch-icon", href: "/brand/rawaj-mark-transparent-192.png" },
@@ -175,12 +177,24 @@ function HtmlAttributes() {
   return null;
 }
 
+function personalSpaceRouteClass(pathname: string) {
+  if (pathname === "/favorites") return "rawaj-route-favorites";
+  if (pathname === "/saved-searches") return "rawaj-route-saved-searches";
+  if (pathname === "/activity") return "rawaj-route-activity";
+  if (pathname === "/chats") return "rawaj-route-chats";
+  if (pathname === "/notifications") return "rawaj-route-notifications";
+  if (pathname === "/more") return "rawaj-route-more";
+  if (pathname === "/profile" || pathname === "/profile/") return "rawaj-route-profile";
+  return "";
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const showFooter = shouldShowSiteFooter(pathname);
   const showBottomNav = shouldShowBottomNav(pathname);
   const showDraftRecovery = pathname === "/add-listing";
+  const routeScopeClass = personalSpaceRouteClass(pathname);
   const listingDetailMatch = pathname.match(/^\/listings\/([^/]+)$/);
   const listingDetailId = listingDetailMatch?.[1]
     ? decodeURIComponent(listingDetailMatch[1])
@@ -193,7 +207,7 @@ function RootComponent() {
           <UnreadActivityProvider>
             <HtmlAttributes />
             <div
-              className={`min-h-dvh bg-background text-foreground lg:pb-8 ${
+              className={`min-h-dvh bg-background text-foreground lg:pb-8 ${routeScopeClass} ${
                 showBottomNav ? "rawaj-bottom-nav-offset" : "pb-6"
               }`}
             >
