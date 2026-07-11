@@ -1,5 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { authErrorMessage } from "@/lib/auth-errors";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
 import { supabase } from "@/lib/supabase";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -16,14 +17,15 @@ type CallbackStatus = "loading" | "success" | "error";
 function AuthCallbackPage() {
   const { text } = useUiPreferences();
   const navigate = useNavigate();
-  const callbackContext = useMemo(() => {
-    if (typeof window === "undefined") return { isRecovery: false, returnTo: "/more" };
-    const searchParams = new URLSearchParams(window.location.search);
-    return {
-      isRecovery: searchParams.get("type") === "recovery",
-      returnTo: sanitizeAuthReturnTo(searchParams.get("returnTo"), "/more"),
-    };
-  }, []);
+  const locationSearch = useRouterState({ select: (state) => state.location.search });
+  const looseSearch = locationSearch as unknown as Record<string, unknown>;
+  const callbackContext = {
+    isRecovery: looseSearch.type === "recovery",
+    returnTo: sanitizeAuthReturnTo(
+      typeof looseSearch.returnTo === "string" ? looseSearch.returnTo : undefined,
+      "/more",
+    ),
+  };
   const [status, setStatus] = useState<CallbackStatus>("loading");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -113,9 +115,11 @@ function AuthCallbackPage() {
         listener.subscription.unsubscribe();
         setStatus("error");
         setErrorMsg(
-          error instanceof Error
-            ? error.message
-            : text("حدث خطأ غير متوقع.", "An unexpected error occurred."),
+          authErrorMessage(
+            error instanceof Error ? error : null,
+            callbackContext.isRecovery ? "recovery" : "callback",
+            text,
+          ),
         );
       }
     }
@@ -129,7 +133,9 @@ function AuthCallbackPage() {
     };
   }, [callbackContext.isRecovery, callbackContext.returnTo, navigate, text]);
 
-  const loginDestination = `/login?returnTo=${encodeURIComponent(callbackContext.returnTo)}`;
+  const loginDestination = callbackContext.isRecovery
+    ? `/login?mode=forgot&returnTo=${encodeURIComponent(callbackContext.returnTo)}`
+    : `/login?returnTo=${encodeURIComponent(callbackContext.returnTo)}`;
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
