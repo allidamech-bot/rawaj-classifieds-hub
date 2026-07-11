@@ -58,11 +58,9 @@ test("all public listing reads use explicit allowlists", () => {
     "export async function fetchOwnerListingDetail(",
   );
 
-  assert.match(
-    publicList,
-    /const listingSelect = filters\.withPhotos[\s\S]*\$\{publicListingSelect\},listing_images!inner\(id\)[\s\S]*: publicListingSelect/,
-  );
-  assert.match(publicList, /\.select\(listingSelect\)/);
+  assert.ok(publicList.includes("const listingSelect = filters.withPhotos"));
+  assert.ok(publicList.includes("`${publicListingSelect},listing_images!inner(id)`"));
+  assert.ok(publicList.includes(".select(listingSelect)"));
 
   for (const source of [publicDetail, locationAware, canonicalAware, priceDrops]) {
     assert.match(source, /\.select\(publicListingSelect\)/);
