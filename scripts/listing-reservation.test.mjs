@@ -11,7 +11,10 @@ const listingsApiPath = new URL("../src/lib/api/listings.ts", import.meta.url);
 const typesPath = new URL("../src/lib/classifieds-types.ts", import.meta.url);
 const barrelPath = new URL("../src/lib/classifieds-api.ts", import.meta.url);
 const ownerRoutePath = new URL("../src/routes/profile/listings.tsx", import.meta.url);
-const cardPath = new URL("../src/features/listings/listings-components.tsx", import.meta.url);
+const cardPath = new URL(
+  "../src/features/listings/cards/ListingCardShared.tsx",
+  import.meta.url,
+);
 const detailRoutePath = new URL("../src/routes/listings.$id.tsx", import.meta.url);
 
 const [migration, api, listingsApi, types, barrel, ownerRoute, card, detailRoute] =
