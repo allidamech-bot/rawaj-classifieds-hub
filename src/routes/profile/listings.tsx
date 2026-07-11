@@ -5,6 +5,10 @@ import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import {
+  StorefrontIdentityHero,
+  StorefrontNotice,
+} from "@/features/storefront/StorefrontIdentityHero";
+import {
   closeOwnerListing,
   deleteOwnerListing,
   fetchCurrentUserListings,
@@ -148,90 +152,49 @@ function MyListingsPage() {
         to="/profile"
         backMode="history"
       />
-      <main className="rawaj-pulse-page container-wide mobile-page-bottom space-y-5 pb-8 pt-3 sm:pt-5">
-        <StoreHeader
+      <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner container-wide mobile-page-bottom space-y-5 pb-8 pt-3 sm:pt-5">
+        <StorefrontIdentityHero
+          mode="owner"
+          sellerId={profileId ?? ""}
           displayName={displayName}
+          secondaryName={auth.profile?.businessName ? auth.profile?.displayName : null}
           avatarUrl={auth.profile?.avatarUrl}
           coverUrl={auth.profile?.coverUrl}
           bio={auth.profile?.bio}
           location={auth.profile?.cityArea || auth.profile?.governorate}
+          verified={sellerProfile?.verified ?? false}
+          joinedAt={sellerProfile?.joinedAt}
+          ratingAverage={ratingAverage}
+          ratingCount={ratingCount}
           approvedCount={grouped.approved.length}
           pendingCount={grouped.pending.length}
           needsEditCount={grouped.needs_edit.length}
           closedCount={grouped.closed.length}
-          ratingAverage={ratingAverage}
-          ratingCount={ratingCount}
         />
 
-        {latestDraft && (
-          <section className="rounded-[1.35rem] border border-gold/25 bg-gold/10 p-4 shadow-soft">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-extrabold text-primary">
-                  {text("لديك مسودة محفوظة", "You have a saved draft")}
-                </p>
-                <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                  {latestDraft.title} · {text("آخر حفظ", "Last saved")}{" "}
-                  {formatSavedAt(latestDraft.updatedAt, language)}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("needs_edit")}
-                  className="rounded-xl bg-card px-3 py-2 text-xs font-bold text-foreground hairline"
-                >
+        {latestDraft ? (
+          <StorefrontNotice
+            tone="draft"
+            title={text("لديك مسودة محفوظة", "You have a saved draft")}
+            description={`${latestDraft.title} · ${text("آخر حفظ", "Last saved")} ${formatSavedAt(
+              latestDraft.updatedAt,
+              language,
+            )}`}
+            action={
+              <>
+                <button type="button" onClick={() => setActiveTab("needs_edit")}>
                   {text("عرض المسودات", "Show drafts")}
                 </button>
-                <Link
-                  to="/profile/listings/$id"
-                  params={{ id: latestDraft.id }}
-                  className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
-                >
+                <Link to="/profile/listings/$id" params={{ id: latestDraft.id }}>
                   {text("متابعة المسودة", "Resume draft")}
                 </Link>
-              </div>
-            </div>
-          </section>
-        )}
+              </>
+            }
+          />
+        ) : null}
 
-        <section className="rawaj-merchant-rail">
-          <div className="rawaj-rail-approved">
-            <span className="block text-[9px] font-semibold text-muted-foreground">
-              {text("نشط", "Live")}
-            </span>
-            <strong className="mt-1 block text-lg font-bold text-primary">
-              {grouped.approved.length}
-            </strong>
-          </div>
-          <div className="rawaj-rail-pending">
-            <span className="block text-[9px] font-semibold text-muted-foreground">
-              {text("مراجعة", "Review")}
-            </span>
-            <strong className="mt-1 block text-lg font-bold text-primary">
-              {grouped.pending.length}
-            </strong>
-          </div>
-          <div className="rawaj-rail-needs">
-            <span className="block text-[9px] font-semibold text-muted-foreground">
-              {text("تحتاج تدخل", "Action")}
-            </span>
-            <strong className="mt-1 block text-lg font-bold text-primary">
-              {grouped.needs_edit.length}
-            </strong>
-          </div>
-          <div className="rounded-[1rem] border border-border/70 bg-card/80 p-3">
-            <span className="block text-[9px] font-semibold text-muted-foreground">
-              {text("مغلقة", "Closed")}
-            </span>
-            <strong className="mt-1 block text-lg font-bold text-primary">
-              {grouped.closed.length}
-            </strong>
-          </div>
-        </section>
-
-        <div className="rawaj-storefront-section flex flex-wrap items-center justify-between gap-3 pt-1">
-          <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+          <div className="rawaj-storefront-owner-tabs">
             <TabButton
               active={activeTab === "approved"}
               label={text("الإعلانات المعتمدة", "Approved listings")}
@@ -287,7 +250,7 @@ function MyListingsPage() {
             )}
           />
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="rawaj-storefront-owner-grid">
             {visibleListings.map((listing) => (
               <StoreListingCard
                 key={listing.id}
@@ -305,90 +268,6 @@ function MyListingsPage() {
   );
 }
 
-function StoreHeader({
-  displayName,
-  avatarUrl,
-  coverUrl,
-  bio,
-  location,
-  approvedCount,
-  pendingCount,
-  needsEditCount,
-  closedCount,
-  ratingAverage,
-  ratingCount,
-}: {
-  displayName: string;
-  avatarUrl?: string | null;
-  coverUrl?: string | null;
-  bio?: string | null;
-  location?: string | null;
-  approvedCount: number;
-  pendingCount: number;
-  needsEditCount: number;
-  closedCount: number;
-  ratingAverage: number | null;
-  ratingCount: number;
-}) {
-  const { text } = useUiPreferences();
-  return (
-    <section className="rawaj-merchant-stage rounded-[1.7rem] sm:rounded-[2rem]">
-      <div className="relative h-44 overflow-hidden bg-primary sm:h-52">
-        {coverUrl && (
-          <>
-            <img
-              src={coverUrl}
-              alt=""
-              decoding="async"
-              className="absolute inset-0 h-full w-full object-cover opacity-25 blur-md"
-            />
-            <img
-              src={coverUrl}
-              alt=""
-              decoding="async"
-              className="relative z-10 h-full w-full object-contain"
-            />
-          </>
-        )}
-      </div>
-      <div className="relative z-10 -mt-12 px-5 pb-5 sm:px-7 sm:pb-7">
-        <div className="flex flex-wrap items-end gap-3">
-          <span className="relative z-20 grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-[1.35rem] bg-card-warm text-xl font-bold text-primary ring-4 ring-[#0d243b]">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={displayName}
-                decoding="async"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              displayName.slice(0, 1)
-            )}
-          </span>
-          <div className="min-w-0 flex-1 pb-1">
-            <h1 className="text-xl font-bold text-[#fffaf0]">{displayName}</h1>
-            <p className="mt-1 text-xs text-[#fffaf0]/70">
-              {location || text("الموقع غير محدد", "Location not set")}
-            </p>
-          </div>
-        </div>
-        {bio && <p className="mt-3 max-w-3xl text-xs leading-6 text-muted-foreground">{bio}</p>}
-        <div className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-6">
-          <Metric label={text("معتمدة", "Approved")} value={String(approvedCount)} />
-          <Metric label={text("قيد المراجعة", "Pending")} value={String(pendingCount)} />
-          <Metric label={text("تحتاج تعديل", "Needs edit")} value={String(needsEditCount)} />
-          <Metric label={text("مغلقة", "Closed")} value={String(closedCount)} />
-          <Metric
-            label={text("التقييم", "Rating")}
-            value={ratingAverage ? `${ratingAverage} / 5` : text("لا يوجد", "None")}
-          />
-          <Metric label={text("تقييمات معتمدة", "Approved reviews")} value={String(ratingCount)} />
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function TabButton({
   active,
   label,
@@ -401,15 +280,7 @@ function TabButton({
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`shrink-0 rounded-full px-3.5 py-2 text-[11px] font-semibold transition ${
-        active
-          ? "bg-primary text-primary-foreground shadow-soft"
-          : "border border-border/70 bg-card/80 text-muted-foreground hover:border-gold/40 hover:text-primary"
-      }`}
-    >
+    <button type="button" onClick={onClick} data-active={active}>
       {label} <span className="opacity-75">({count})</span>
     </button>
   );
@@ -564,7 +435,7 @@ function StoreListingCard({
 
   return (
     <>
-      <article className="rawaj-product-card group">
+      <article className="rawaj-owner-listing-card rawaj-product-card group">
         <div className="rawaj-product-media">
           <span className="rawaj-status-ribbon" data-status={listing.status}>
             {listingStatusLabel(listing.status, language)}
@@ -893,7 +764,7 @@ function ReviewsSection({ sellerProfile }: { sellerProfile: PublicSellerProfile 
   }
 
   return (
-    <section className="grid gap-3">
+    <section className="rawaj-storefront-owner-reviews grid gap-3">
       {reviews.map((review) => (
         <article key={review.id} className="rounded-2xl bg-card p-4 hairline">
           <div className="flex items-center gap-1 text-gold">
@@ -908,15 +779,6 @@ function ReviewsSection({ sellerProfile }: { sellerProfile: PublicSellerProfile 
         </article>
       ))}
     </section>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[1rem] border border-white/10 bg-white/7 p-3">
-      <div className="text-[10px] text-[#fffaf0]/60">{label}</div>
-      <div className="mt-1 text-sm font-bold text-[#fffaf0]">{value}</div>
-    </div>
   );
 }
 

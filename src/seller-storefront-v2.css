@@ -13,8 +13,16 @@
   z-index: -1;
   height: 34rem;
   background:
-    radial-gradient(circle at 88% 6%, color-mix(in srgb, var(--rawaj-orange) 11%, transparent), transparent 29%),
-    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--rawaj-gold) 12%, transparent), transparent 25%);
+    radial-gradient(
+      circle at 88% 6%,
+      color-mix(in srgb, var(--rawaj-orange) 11%, transparent),
+      transparent 29%
+    ),
+    radial-gradient(
+      circle at 8% 0%,
+      color-mix(in srgb, var(--rawaj-gold) 12%, transparent),
+      transparent 25%
+    );
   pointer-events: none;
 }
 
@@ -44,14 +52,27 @@
 .rawaj-storefront-identity__scrim {
   background:
     linear-gradient(180deg, color-mix(in srgb, #062821 20%, transparent), #062821 92%),
-    linear-gradient(90deg, color-mix(in srgb, #062821 82%, transparent), color-mix(in srgb, #062821 20%, transparent));
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, #062821 82%, transparent),
+      color-mix(in srgb, #062821 20%, transparent)
+    );
 }
 
 .rawaj-storefront-identity__pattern {
   opacity: 0.6;
   background-image:
-    radial-gradient(circle at 90% 10%, color-mix(in srgb, var(--rawaj-gold) 24%, transparent), transparent 22%),
-    linear-gradient(120deg, transparent 62%, color-mix(in srgb, white 4%, transparent) 62% 64%, transparent 64%);
+    radial-gradient(
+      circle at 90% 10%,
+      color-mix(in srgb, var(--rawaj-gold) 24%, transparent),
+      transparent 22%
+    ),
+    linear-gradient(
+      120deg,
+      transparent 62%,
+      color-mix(in srgb, white 4%, transparent) 62% 64%,
+      transparent 64%
+    );
 }
 
 .rawaj-storefront-identity__content {
@@ -226,10 +247,18 @@
   white-space: nowrap;
 }
 
-.rawaj-storefront-identity__metrics [data-tone="live"] { border-color: color-mix(in srgb, #55c89f 25%, transparent); }
-.rawaj-storefront-identity__metrics [data-tone="pending"] { border-color: color-mix(in srgb, #f2c77f 26%, transparent); }
-.rawaj-storefront-identity__metrics [data-tone="action"] { border-color: color-mix(in srgb, var(--rawaj-orange) 35%, transparent); }
-.rawaj-storefront-identity__metrics [data-tone="closed"] { opacity: 0.72; }
+.rawaj-storefront-identity__metrics [data-tone="live"] {
+  border-color: color-mix(in srgb, #55c89f 25%, transparent);
+}
+.rawaj-storefront-identity__metrics [data-tone="pending"] {
+  border-color: color-mix(in srgb, #f2c77f 26%, transparent);
+}
+.rawaj-storefront-identity__metrics [data-tone="action"] {
+  border-color: color-mix(in srgb, var(--rawaj-orange) 35%, transparent);
+}
+.rawaj-storefront-identity__metrics [data-tone="closed"] {
+  opacity: 0.72;
+}
 
 .rawaj-storefront-identity__actions {
   display: flex;
@@ -240,7 +269,9 @@
   scrollbar-width: none;
 }
 
-.rawaj-storefront-identity__actions::-webkit-scrollbar { display: none; }
+.rawaj-storefront-identity__actions::-webkit-scrollbar {
+  display: none;
+}
 
 .rawaj-storefront-identity__actions a,
 .rawaj-storefront-identity__actions button {
@@ -429,7 +460,11 @@
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--rawaj-orange) 12%, transparent), transparent 36%),
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--rawaj-orange) 12%, transparent),
+      transparent 36%
+    ),
     var(--color-primary);
   padding: 1rem;
   color: white;
@@ -447,7 +482,9 @@
   scrollbar-width: none;
 }
 
-.rawaj-storefront-owner-tabs::-webkit-scrollbar { display: none; }
+.rawaj-storefront-owner-tabs::-webkit-scrollbar {
+  display: none;
+}
 
 .rawaj-storefront-owner-tabs button {
   min-height: 2.55rem;

@@ -4,7 +4,10 @@ import test from "node:test";
 
 const [root, shared, publicRoute, ownerRoute, css, qualityGate] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/storefront/StorefrontIdentityHero.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/storefront/StorefrontIdentityHero.tsx", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/routes/seller.$id.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/profile/listings.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/seller-storefront-v2.css", import.meta.url), "utf8"),

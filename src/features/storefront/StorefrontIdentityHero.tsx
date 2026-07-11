@@ -77,14 +77,21 @@ export function StorefrontIdentityHero({
       : [
           { label: text("إعلان معتمد", "Approved listings"), value: approvedCount, icon: Store },
           {
-            label: ratingCount > 0 ? text("تقييمات معتمدة", "Approved reviews") : text("بائع جديد", "New seller"),
+            label:
+              ratingCount > 0
+                ? text("تقييمات معتمدة", "Approved reviews")
+                : text("بائع جديد", "New seller"),
             value: ratingCount > 0 && ratingAverage != null ? ratingAverage.toFixed(1) : "—",
             icon: Star,
           },
         ];
 
   return (
-    <section className="rawaj-storefront-identity" data-mode={mode} aria-labelledby="rawaj-storefront-name">
+    <section
+      className="rawaj-storefront-identity"
+      data-mode={mode}
+      aria-labelledby="rawaj-storefront-name"
+    >
       <div className="rawaj-storefront-identity__media">
         {coverUrl ? <img src={coverUrl} alt="" decoding="async" /> : null}
         <div className="rawaj-storefront-identity__pattern" aria-hidden="true" />
@@ -93,7 +100,11 @@ export function StorefrontIdentityHero({
 
       <div className="rawaj-storefront-identity__content">
         <div className="rawaj-storefront-identity__topline">
-          <span>{mode === "owner" ? text("مساحة متجري", "My store workspace") : text("واجهة على رواج", "RAWAJ storefront")}</span>
+          <span>
+            {mode === "owner"
+              ? text("مساحة متجري", "My store workspace")
+              : text("واجهة على رواج", "RAWAJ storefront")}
+          </span>
           {verified ? (
             <strong>
               <BadgeCheck aria-hidden="true" />
@@ -115,8 +126,16 @@ export function StorefrontIdentityHero({
             <h1 id="rawaj-storefront-name">{displayName}</h1>
             {secondaryName && secondaryName !== displayName ? <p>{secondaryName}</p> : null}
             <div className="rawaj-storefront-identity__meta">
-              <span><MapPin aria-hidden="true" />{location || text("سوريا", "Syria")}</span>
-              {joinedLabel ? <span><CalendarDays aria-hidden="true" />{text("عضو منذ", "Member since")} {joinedLabel}</span> : null}
+              <span>
+                <MapPin aria-hidden="true" />
+                {location || text("سوريا", "Syria")}
+              </span>
+              {joinedLabel ? (
+                <span>
+                  <CalendarDays aria-hidden="true" />
+                  {text("عضو منذ", "Member since")} {joinedLabel}
+                </span>
+              ) : null}
             </div>
           </div>
         </div>
@@ -124,8 +143,14 @@ export function StorefrontIdentityHero({
         <p className="rawaj-storefront-identity__bio">
           {bio ||
             (mode === "owner"
-              ? text("أضف نبذة قصيرة ليعرف المشترون طبيعة متجرك وما تقدمه.", "Add a short bio so buyers understand your store and what you offer.")
-              : text("تعرض هذه الصفحة المعلومات العامة والإعلانات المعتمدة فقط.", "This page shows public information and approved listings only."))}
+              ? text(
+                  "أضف نبذة قصيرة ليعرف المشترون طبيعة متجرك وما تقدمه.",
+                  "Add a short bio so buyers understand your store and what you offer.",
+                )
+              : text(
+                  "تعرض هذه الصفحة المعلومات العامة والإعلانات المعتمدة فقط.",
+                  "This page shows public information and approved listings only.",
+                ))}
         </p>
 
         <div className="rawaj-storefront-identity__metrics">
