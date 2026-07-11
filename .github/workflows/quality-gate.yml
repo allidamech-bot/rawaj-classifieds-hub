@@ -156,6 +156,9 @@ jobs:
       - name: Home Discovery V3 contract
         run: node --test scripts/home-discovery-v3.test.mjs
 
+      - name: Adaptive Listing Cards contract
+        run: node --test scripts/adaptive-listing-cards.test.mjs
+
       - name: Spatial App Shell contract
         run: node --test scripts/spatial-app-shell.test.mjs
 
