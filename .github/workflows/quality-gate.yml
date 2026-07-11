@@ -144,6 +144,9 @@ jobs:
       - name: Vercel Analytics integration contract
         run: node --test scripts/vercel-analytics.test.mjs
 
+      - name: Promotion status notification contract
+        run: node --test scripts/promotion-status-notifications.test.mjs
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
