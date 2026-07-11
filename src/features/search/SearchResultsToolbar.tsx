@@ -45,7 +45,7 @@ export function SearchResultsToolbar({
           <h1 id="rawaj-results-title">{title}</h1>
           {pathLabel ? <span>{pathLabel}</span> : null}
         </div>
-        <strong aria-live="polite">
+        <strong aria-live="polite" aria-atomic="true">
           {loading
             ? text("جارٍ التحميل", "Loading")
             : text(`${resultCount} نتيجة`, `${resultCount} results`)}
