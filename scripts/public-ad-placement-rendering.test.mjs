@@ -3,14 +3,14 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const [header, slot, api] = await Promise.all([
-  readFile(new URL("../src/components/AppHeader.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/public-ad-placements.ts", import.meta.url), "utf8"),
 ]);
 
 test("supported marketplace pages resolve to their ad placement inventory", () => {
   for (const placement of ["home", "search_results", "listing_detail", "categories", "offers"]) {
-    assert.match(header, new RegExp(`return \\\"${placement}\\\"`));
+    assert.match(header, new RegExp(`return \\"${placement}\\"`));
   }
   assert.match(header, /PublicAdPlacementSlot/);
 });
