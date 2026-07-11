@@ -1,15 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpLeft, BadgePercent, Clock3, MapPin, ShieldCheck, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { fetchActivePriceDropOffers, type ListingPriceDropOffer } from "@/lib/classifieds-api";
-import type { ClassifiedsError } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/offers")({
+  loader: async () => {
+    const result = await fetchActivePriceDropOffers(30);
+    return result.ok ? { offers: result.data, error: null } : { offers: [], error: result.error };
+  },
   head: () =>
     createSeo({
       title: "العروض الحقيقية | RAWAJ / رواج",
@@ -22,29 +24,7 @@ export const Route = createFileRoute("/offers")({
 
 function OffersPage() {
   const { text } = useUiPreferences();
-  const [offers, setOffers] = useState<ListingPriceDropOffer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<ClassifiedsError | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
-      setError(null);
-      const result = await fetchActivePriceDropOffers(30);
-      if (cancelled) return;
-      if (result.ok) setOffers(result.data);
-      else {
-        setOffers([]);
-        setError(result.error);
-      }
-      setLoading(false);
-    }
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { offers, error } = Route.useLoaderData();
 
   return (
     <>
@@ -122,15 +102,7 @@ function OffersPage() {
               </Link>
             </div>
 
-            {loading ? (
-              <OffersState
-                title={text("جاري تحميل التخفيضات الحقيقية", "Loading real price drops")}
-                body={text(
-                  "يتم التحقق من أحدث الأسعار العامة الآن.",
-                  "Checking the latest public prices now.",
-                )}
-              />
-            ) : error ? (
+            {error ? (
               <OffersState
                 title={text("تعذر تحميل العروض", "Could not load offers")}
                 body={error.message}
