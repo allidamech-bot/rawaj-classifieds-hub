@@ -1,0 +1,60 @@
+name: Temporary Listing Studio V3 PR Integration
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.event.pull_request.head.ref == 'design/listing-studio-v2'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: design/listing-studio-v2
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Execute integration script from temporary push workflow
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          source = Path('.github/workflows/temporary-listing-studio-v3.yml').read_text()
+          marker = "          python - <<'PY'\n"
+          start = source.index(marker) + len(marker)
+          end = source.index("\n          PY", start)
+          code = "\n".join(
+              line[10:] if line.startswith("          ") else line
+              for line in source[start:end].splitlines()
+          )
+          exec(compile(code, 'temporary-listing-studio-v3', 'exec'))
+          PY
+      - name: Format V3 files
+        run: >-
+          npx prettier --write
+          .github/workflows/quality-gate.yml
+          scripts/listing-studio-v3.test.mjs
+          src/features/listing-studio/listing-studio.tsx
+          src/listing-studio-v3.css
+          src/routes/__root.tsx
+          src/routes/add-listing.tsx
+          'src/routes/profile/listings.$id.tsx'
+      - name: Commit integration and self-delete
+        shell: bash
+        run: |
+          rm .github/workflows/temporary-listing-studio-v3.yml
+          rm .github/workflows/temporary-listing-studio-v3-pr.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Build guided Listing Studio V3"
+          git push origin HEAD:design/listing-studio-v2
