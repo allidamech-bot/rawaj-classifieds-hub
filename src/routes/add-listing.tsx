@@ -3,7 +3,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Camera, Info, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  ListingStudioAutosaveStatus,
+  ListingStudioHero,
   ListingStudioMessage,
+  ListingStudioPreview,
+  ListingStudioQualityPanel,
   ListingStudioSection,
   ListingStudioSteps,
 } from "@/features/listing-studio/listing-studio";
@@ -980,50 +984,45 @@ function AddListingPage() {
   return (
     <>
       <PageHeader title={text("أضف إعلاناً", "Post a listing")} />
-      <main className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
-        <div className="mb-4 flex flex-wrap gap-2">
-          <Link
-            to="/"
-            className="rawaj-chip px-3 py-2 font-semibold text-primary transition hover:border-gold/40"
-          >
-            {text("الرئيسية", "Home")}
-          </Link>
-          <Link
-            to="/listings"
-            className="rawaj-chip px-3 py-2 font-semibold text-primary transition hover:border-gold/40"
-          >
-            {text("تصفح الإعلانات", "Browse listings")}
-          </Link>
-        </div>
+      <main className="rawaj-listing-studio-v2 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+        <ListingStudioHero
+          eyebrow={text("استوديو الإعلان", "Listing studio")}
+          title={text(
+            "حوّل ما لديك إلى إعلان واضح وجاهز للبيع",
+            "Turn what you have into a clear, ready-to-sell listing",
+          )}
+          description={text(
+            "أضف المعلومات على ثلاث خطوات قصيرة. نحفظ المسودة تلقائياً ونريك شكل الإعلان أثناء العمل.",
+            "Add the essentials in three short steps. We save the draft automatically and preview the listing as you work.",
+          )}
+          status={
+            <>
+              <span>{text("3 خطوات فقط", "Only 3 steps")}</span>
+              <span>{text("حفظ تلقائي للمسودة", "Automatic draft saving")}</span>
+            </>
+          }
+          actions={
+            <>
+              <Link to="/">{text("الرئيسية", "Home")}</Link>
+              <Link to="/listings">{text("تصفح الإعلانات", "Browse listings")}</Link>
+            </>
+          }
+        />
         <ListingStudioSteps steps={steps.map((label) => ({ label }))} current={step} />
 
-        {autosaveState !== "idle" && (
-          <div
-            aria-live="polite"
-            data-autosave-state={autosaveState}
-            className={`mb-4 rounded-[1rem] border px-3 py-2 text-xs font-semibold ${
-              autosaveState === "failed"
-                ? "border-destructive/20 bg-destructive/8 text-destructive"
-                : "border-border/70 bg-card/85 text-muted-foreground"
-            }`}
-          >
-            {autosaveState === "dirty" && text("تغييرات بانتظار الحفظ", "Changes waiting to save")}
-            {autosaveState === "saving" && text("جارٍ حفظ المسودة…", "Saving draft…")}
-            {autosaveState === "saved" && text("تم حفظ المسودة", "Draft saved")}
-            {autosaveState === "failed" && (
-              <span>{autosaveError || text("فشل حفظ المسودة تلقائياً", "Autosave failed")}</span>
-            )}
-            {autosaveState === "saved" && lastAutosavedAt && (
-              <span className="ms-2 font-normal opacity-75">
-                {text("آخر حفظ", "Last saved")}{" "}
-                {new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }).format(new Date(lastAutosavedAt))}
-              </span>
-            )}
-          </div>
-        )}
+        <ListingStudioAutosaveStatus
+          state={autosaveState}
+          error={autosaveError}
+          lastSavedLabel={
+            lastAutosavedAt
+              ? `${text("آخر حفظ", "Last saved")} ${new Intl.DateTimeFormat(
+                  language === "ar" ? "ar-SY" : "en-US",
+                  { hour: "2-digit", minute: "2-digit" },
+                ).format(new Date(lastAutosavedAt))}`
+              : null
+          }
+          text={text}
+        />
 
         {loading ? (
           <Card title={text("جارٍ تحميل بيانات النشر", "Loading posting data")}>
@@ -1039,8 +1038,8 @@ function AddListingPage() {
             <p className="text-sm text-muted-foreground">{setupError.message}</p>
           </Card>
         ) : (
-          <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">
-            <div className="space-y-4">
+          <div className="rawaj-studio-shell">
+            <div className="rawaj-studio-shell__content">
               {stepErrors.length > 0 && (
                 <div
                   data-error-summary="true"
@@ -1069,12 +1068,13 @@ function AddListingPage() {
                       "Start with the closest category so the right fields appear.",
                     )}
                   >
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    <div className="rawaj-studio-category-grid">
                       {categories.map((item) => (
                         <button
                           key={item.id}
                           type="button"
                           onClick={() => setCategoryId(item.id)}
+                          data-selected={categoryId === item.id}
                           className={`relative min-h-14 rounded-[1rem] border p-3 text-start text-sm font-semibold transition active:scale-[0.985] ${categoryId === item.id ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(16,43,70,0.13)]" : "border-border/75 bg-card/80 text-foreground hover:border-gold/40 hover:bg-card"}`}
                         >
                           {categoryName(item.id, item.nameAr, language)}
@@ -1111,7 +1111,7 @@ function AddListingPage() {
                       "Photos are optional, but they help buyers understand the listing quickly.",
                     )}
                   >
-                    <label className="group flex cursor-pointer flex-col items-center justify-center rounded-[1.2rem] border border-dashed border-border bg-card-warm/65 p-6 text-center text-muted-foreground transition hover:border-brand-orange/45 hover:bg-card">
+                    <label className="rawaj-studio-media-picker">
                       <Camera className="h-7 w-7" />
                       <span className="mt-2 text-sm font-bold">
                         {text("اختر صور الإعلان", "Choose listing photos")}
@@ -1132,12 +1132,9 @@ function AddListingPage() {
                         {imageSelectionMessage}
                       </ListingStudioMessage>
                     )}
-                    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    <div className="rawaj-studio-media-grid">
                       {selectedImagePreviews.map((preview, index) => (
-                        <div
-                          key={preview.id}
-                          className="group relative overflow-hidden rounded-[1.05rem] border border-border/70 bg-card text-xs shadow-soft"
-                        >
+                        <div key={preview.id} className="rawaj-studio-media-card group text-xs">
                           <img
                             src={preview.url}
                             alt={preview.file.name}
@@ -1392,7 +1389,7 @@ function AddListingPage() {
                 </>
               )}
 
-              <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 flex items-center justify-between gap-2 rounded-[1.2rem] border border-border/80 bg-card/94 p-2.5 shadow-premium backdrop-blur-xl lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+              <div className="rawaj-studio-action-bar">
                 <button
                   disabled={step === 0}
                   onClick={() => setStep((value) => Math.max(0, value - 1))}
@@ -1446,16 +1443,48 @@ function AddListingPage() {
               )}
             </div>
 
-            <aside className="space-y-3 lg:sticky lg:top-24">
-              <Card title={text("جودة الإعلان", "Listing quality")}>
-                <div className="text-2xl font-bold text-primary">{score}%</div>
-                <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-card-warm">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-brand-orange to-gold transition-all"
-                    style={{ width: `${score}%` }}
-                  />
-                </div>
-              </Card>
+            <aside className="rawaj-studio-shell__aside">
+              <ListingStudioPreview
+                imageUrl={selectedImagePreviews[0]?.url}
+                title={title}
+                category={category ? categoryName(category.id, category.nameAr, language) : ""}
+                price={
+                  priceType === "free"
+                    ? text("مجاني", "Free")
+                    : priceType === "contact"
+                      ? text("عند التواصل", "On contact")
+                      : price
+                        ? `${price} SYP`
+                        : ""
+                }
+                location={
+                  locationLabel ||
+                  district ||
+                  (governorate ? governorateName(governorate.id, governorate.nameAr, language) : "")
+                }
+                imageCount={selectedImages.length}
+                text={text}
+              />
+              <ListingStudioQualityPanel
+                score={score}
+                checks={[
+                  { label: text("القسم محدد", "Category selected"), done: Boolean(categoryId) },
+                  { label: text("عنوان واضح", "Clear title"), done: title.trim().length >= 8 },
+                  {
+                    label: text("وصف كافٍ", "Useful description"),
+                    done: description.trim().length >= 30,
+                  },
+                  {
+                    label: text("السعر مكتمل", "Price completed"),
+                    done: Boolean(price) || priceType !== "fixed",
+                  },
+                  {
+                    label: text("الموقع مكتمل", "Location completed"),
+                    done: Boolean(locationNodeId) || Boolean(governorateId && district),
+                  },
+                ]}
+                text={text}
+              />
               <Card title={text("تنبيه", "Note")}>
                 <p className="flex items-start gap-2 text-xs text-foreground/80">
                   <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold" />

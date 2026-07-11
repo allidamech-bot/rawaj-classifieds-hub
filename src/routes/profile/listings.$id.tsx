@@ -3,7 +3,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Camera, RefreshCw, Trash2, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  ListingStudioHero,
   ListingStudioMessage,
+  ListingStudioPreview,
+  ListingStudioQualityPanel,
   ListingStudioSection,
 } from "@/features/listing-studio/listing-studio";
 import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
@@ -122,6 +125,14 @@ function ManageListingPage() {
   const isPendingReview = listing?.status === "pending_review";
   const isResubmittable = listing?.status === "draft" || listing?.status === "rejected";
   const isDeletable = listing?.status === "draft" || listing?.status === "rejected";
+  const studioScore =
+    [
+      Boolean(categoryId),
+      title.trim().length >= 8,
+      description.trim().length >= 30,
+      Boolean(price) || priceType !== "fixed",
+      Boolean(locationNodeId) || Boolean(governorateId && district),
+    ].filter(Boolean).length * 20;
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !auth.profile?.id) return;
@@ -539,34 +550,33 @@ function ManageListingPage() {
   return (
     <>
       <PageHeader title={text("تعديل الإعلان", "Edit listing")} back to="/profile" />
-      <main className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
-        <div className="rawaj-hero-surface mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[1.45rem] p-4 sm:p-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rawaj-chip border-primary/10 bg-card/80 px-2.5 py-1 text-primary">
-              {listingStatusLabel(listing.status, language, true)}
-            </span>
-            <span className="text-[11px] font-medium text-muted-foreground">
-              {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {listing.status === "approved" && (
-              <Link
-                to="/listings/$id"
-                params={{ id: listing.id }}
-                className="rawaj-chip px-3 py-2 font-semibold text-primary transition hover:border-gold/40"
-              >
-                {text("عرض العام", "View public")}
-              </Link>
-            )}
-            <Link
-              to="/profile"
-              className="rawaj-chip bg-card-warm/75 px-3 py-2 font-semibold text-muted-foreground transition hover:border-gold/40 hover:text-primary"
-            >
-              {text("إعلاناتي", "My listings")}
-            </Link>
-          </div>
-        </div>
+      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v2--manage container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+        <ListingStudioHero
+          eyebrow={text("إدارة الإعلان", "Listing management")}
+          title={title || text("تعديل الإعلان", "Edit listing")}
+          description={text(
+            "حدّث المعلومات والصور، راقب حالة الإعلان، ثم احفظه أو أعد إرساله للمراجعة عندما يصبح جاهزاً.",
+            "Update information and photos, track listing status, then save or resubmit when it is ready.",
+          )}
+          status={
+            <>
+              <span>{listingStatusLabel(listing.status, language, true)}</span>
+              <span>
+                {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
+              </span>
+            </>
+          }
+          actions={
+            <>
+              {listing.status === "approved" ? (
+                <Link to="/listings/$id" params={{ id: listing.id }}>
+                  {text("عرض الإعلان العام", "View public listing")}
+                </Link>
+              ) : null}
+              <Link to="/profile/listings">{text("إعلاناتي", "My listings")}</Link>
+            </>
+          }
+        />
 
         {isPendingReview && (
           <div className="mb-4">
@@ -618,8 +628,8 @@ function ManageListingPage() {
           </div>
         )}
 
-        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">
-          <div className="space-y-4">
+        <div className="rawaj-studio-shell" data-mode="manage">
+          <div className="rawaj-studio-shell__content">
             <ListingStudioSection title={text("ماذا تبيع؟", "What are you selling?")}>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Field label={text("عنوان الإعلان", "Listing title")}>
@@ -820,12 +830,9 @@ function ManageListingPage() {
             </ListingStudioSection>
 
             <ListingStudioSection title={text("الصور والتفاصيل", "Photos and details")}>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <div className="rawaj-studio-media-grid">
                 {images.map((image, index) => (
-                  <div
-                    key={image.id}
-                    className="relative overflow-hidden rounded-[1.05rem] border border-border/70 bg-card p-1 shadow-soft"
-                  >
+                  <div key={image.id} className="rawaj-studio-media-card p-1">
                     {image.publicUrl ? (
                       <img
                         src={image.publicUrl}
@@ -856,7 +863,7 @@ function ManageListingPage() {
                   </div>
                 ))}
                 {isEditable && (
-                  <label className="group flex cursor-pointer flex-col items-center justify-center rounded-[1.1rem] border border-dashed border-border bg-card-warm/65 p-5 text-center text-muted-foreground transition hover:border-brand-orange/45 hover:bg-card">
+                  <label className="rawaj-studio-media-picker min-h-[9rem]">
                     <Camera className="h-6 w-6" />
                     <span className="mt-1 text-[10px] font-bold">
                       {text("إضافة صور", "Add photos")}
@@ -893,7 +900,7 @@ function ManageListingPage() {
                       {text("تفريغ الاختيار", "Clear selection")}
                     </button>
                   </div>
-                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  <div className="rawaj-studio-media-grid mt-2">
                     {selectedImages.map((preview, index) => (
                       <div
                         key={preview.id}
@@ -971,7 +978,47 @@ function ManageListingPage() {
             </ListingStudioSection>
           </div>
 
-          <aside className="space-y-3 lg:sticky lg:top-24">
+          <aside className="rawaj-studio-shell__aside">
+            <ListingStudioPreview
+              imageUrl={images[0]?.publicUrl ?? selectedImages[0]?.url}
+              title={title}
+              category={category ? categoryName(category.id, category.nameAr, language) : ""}
+              price={
+                priceType === "free"
+                  ? text("مجاني", "Free")
+                  : priceType === "contact"
+                    ? text("عند التواصل", "On contact")
+                    : price
+                      ? `${price} SYP`
+                      : ""
+              }
+              location={
+                district ||
+                (governorate ? governorateName(governorate.id, governorate.nameAr, language) : "")
+              }
+              imageCount={images.length + selectedImages.length}
+              text={text}
+            />
+            <ListingStudioQualityPanel
+              score={studioScore}
+              checks={[
+                { label: text("القسم محدد", "Category selected"), done: Boolean(categoryId) },
+                { label: text("عنوان واضح", "Clear title"), done: title.trim().length >= 8 },
+                {
+                  label: text("وصف كافٍ", "Useful description"),
+                  done: description.trim().length >= 30,
+                },
+                {
+                  label: text("السعر مكتمل", "Price completed"),
+                  done: Boolean(price) || priceType !== "fixed",
+                },
+                {
+                  label: text("الموقع مكتمل", "Location completed"),
+                  done: Boolean(locationNodeId) || Boolean(governorateId && district),
+                },
+              ]}
+              text={text}
+            />
             <ListingStudioSection title={text("إجراءات", "Actions")}>
               <div className="space-y-2">
                 {isEditable && (
