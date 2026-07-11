@@ -31,6 +31,7 @@ import listingStudioSignatureCss from "../listing-studio-signature.css?url";
 import listingsResultsCss from "../listings-results.css?url";
 import marketplaceDiscoveryCss from "../marketplace-discovery.css?url";
 import messagingSignatureCss from "../messaging-signature.css?url";
+import myStoreHeaderRefinementCss from "../my-store-header-refinement.css?url";
 import myStoreRedesignCss from "../my-store-redesign.css?url";
 import offersSignatureCss from "../offers-signature.css?url";
 import sellerStorefrontFoundationCss from "../seller-storefront-foundation.css?url";
@@ -126,6 +127,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: listingStudioSignatureCss },
         { rel: "stylesheet", href: messagingSignatureCss },
         { rel: "stylesheet", href: marketplaceSystemCss },
+        { rel: "stylesheet", href: myStoreHeaderRefinementCss },
         { rel: "icon", href: "/favicon.ico" },
         { rel: "manifest", href: "/manifest.webmanifest" },
         { rel: "apple-touch-icon", href: "/brand/rawaj-mark-transparent-192.png" },
