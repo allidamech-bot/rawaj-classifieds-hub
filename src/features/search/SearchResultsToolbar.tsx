@@ -52,7 +52,11 @@ export function SearchResultsToolbar({
         </strong>
       </div>
 
-      <div className="rawaj-search-toolbar__search-row">
+      <div
+        className="rawaj-search-toolbar__search-row"
+        role="search"
+        aria-label={text("البحث ضمن النتائج", "Search within results")}
+      >
         <label className="rawaj-search-toolbar__search">
           <Search aria-hidden="true" />
           <input
