@@ -48,11 +48,11 @@ export function BottomNav() {
 
   return (
     <nav
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-2.5 pt-2 lg:hidden"
+      className="rawaj-mobile-dock pointer-events-none fixed inset-x-0 bottom-0 z-40 px-2.5 pt-2 lg:hidden"
       style={{ paddingBottom: "calc(0.45rem + env(safe-area-inset-bottom))" }}
       aria-label={text("التنقل الرئيسي", "Primary navigation")}
     >
-      <div className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid max-w-[31rem] grid-cols-5 items-end border border-border/80 bg-card/96 px-1.5 pb-1 pt-1.5 shadow-[0_18px_46px_rgba(16,43,70,0.16)] backdrop-blur-xl supports-[backdrop-filter]:bg-card/90">
+      <div className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid max-w-[31rem] grid-cols-5 items-end px-1.5 pb-1 pt-1.5">
         {items.map((item) => {
           const active = activeSection === item.section;
           const Icon = item.icon;
@@ -64,7 +64,7 @@ export function BottomNav() {
               ? "bg-primary/8 text-primary"
               : "text-muted-foreground hover:bg-muted-surface/80 hover:text-primary";
           const iconTone = item.primary
-            ? "-mt-5 h-12 w-12 rounded-[1.15rem] bg-brand-orange text-white shadow-[0_12px_28px_rgba(217,111,50,0.34)] ring-4 ring-card"
+            ? "rawaj-dock-create -mt-5 h-12 w-12 rounded-[1.15rem] bg-brand-orange text-white ring-4 ring-card"
             : active
               ? "h-8 w-9 rounded-xl bg-primary text-primary-foreground shadow-[0_7px_16px_rgba(16,43,70,0.14)]"
               : "h-8 w-9 rounded-xl";

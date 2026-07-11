@@ -14,16 +14,16 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
     <Link
       to="/listings/$id"
       params={{ id: listing.id }}
-      className="group flex h-full flex-col overflow-hidden rounded-[1.2rem] border border-border/80 bg-card shadow-[0_8px_24px_rgba(16,43,70,0.05)] transition hover:-translate-y-0.5 hover:border-gold/60 hover:shadow-premium-sm"
+      className="rawaj-listing-card group flex h-full flex-col overflow-hidden bg-card transition"
     >
-      <div className="relative overflow-hidden bg-muted-surface">
+      <div className="rawaj-listing-media relative overflow-hidden bg-muted-surface">
         {listing.primaryImageUrl ? (
           <img
             src={listing.primaryImageUrl}
             alt={listing.title}
             loading="lazy"
             decoding="async"
-            className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+            className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-[1.025]"
           />
         ) : (
           <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="standard" />
@@ -49,7 +49,7 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
               listing.currency,
             )}
           </div>
-          <span className="max-w-[45%] shrink-0 truncate rounded-full bg-background px-2 py-1 text-[9px] font-bold text-muted-foreground">
+          <span className="rawaj-listing-category max-w-[45%] shrink-0 truncate rounded-full px-2 py-1 text-[9px] font-bold text-muted-foreground">
             {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
           </span>
         </div>
@@ -58,7 +58,7 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
           {listing.title}
         </h3>
 
-        <div className="mt-auto flex items-center justify-between gap-2 border-t border-border/60 pt-2 text-[10px] text-muted-foreground sm:text-[11px]">
+        <div className="rawaj-listing-meta mt-auto flex items-center justify-between gap-2 pt-2 text-[10px] text-muted-foreground sm:text-[11px]">
           <span className="inline-flex min-w-0 items-center gap-1">
             <MapPin className="h-3 w-3 shrink-0 text-brand-orange" strokeWidth={1.9} />
             <span className="truncate">{listingLocationDisplay(listing, language)}</span>

@@ -327,7 +327,8 @@ function PromotionPage() {
                 <div key={request.id} className="rounded-xl bg-muted-surface p-3 text-xs hairline">
                   <p className="font-bold">{request.listingTitle ?? request.listingId}</p>
                   <p className="mt-1 text-muted-foreground">
-                    {promotionStatusLabel(request.status, text)} · {promotionTypeLabel(request.promotionType, text)} · {request.requestedDays}{" "}
+                    {promotionStatusLabel(request.status, text)} ·{" "}
+                    {promotionTypeLabel(request.promotionType, text)} · {request.requestedDays}{" "}
                     {text("يوم", "days")}
                   </p>
                   {request.adminNote && (
@@ -369,7 +370,10 @@ function Panel({ title, body }: { title: string; body?: string }) {
   );
 }
 
-function promotionStatusLabel(status: ListingPromotionRequest["status"], text: (ar: string, en: string) => string) {
+function promotionStatusLabel(
+  status: ListingPromotionRequest["status"],
+  text: (ar: string, en: string) => string,
+) {
   if (status === "approved") return text("معتمد", "Approved");
   if (status === "rejected") return text("مرفوض", "Rejected");
   if (status === "expired") return text("منتهي", "Expired");
