@@ -18,17 +18,19 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Capture lint output
+      - name: Capture CI-formatted source
         shell: bash
         run: |
           set +e
-          npx eslint --quiet 'src/routes/seller.$id.tsx' > lint-output.txt 2>&1
+          npx eslint --fix 'src/routes/seller.$id.tsx' > lint-output.txt 2>&1
           status=$?
           echo "$status" > lint-status.txt
+          cp 'src/routes/seller.$id.tsx' seller-formatted.tsx
           exit 0
       - uses: actions/upload-artifact@v4
         with:
-          name: storefront-lint-output
+          name: storefront-lint-fixed-source
           path: |
             lint-output.txt
             lint-status.txt
+            seller-formatted.tsx
