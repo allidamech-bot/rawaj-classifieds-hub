@@ -132,6 +132,9 @@ jobs:
       - name: Authentication recovery contract
         run: node --test scripts/auth-recovery.test.mjs
 
+      - name: Hydration and ad media contract
+        run: node --test scripts/home-hydration-ad-media.test.mjs
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 

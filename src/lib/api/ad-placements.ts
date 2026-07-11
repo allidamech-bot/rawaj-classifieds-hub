@@ -1,3 +1,4 @@
+import { normalizeAdPlacementMediaUrl } from "@/lib/ad-placement-media-url";
 import {
   getClient,
   mapError,
@@ -105,7 +106,8 @@ export async function ownerUploadAdPlacementImage(
   if (uploadResult.error) return { ok: false, error: mapStorageError(uploadResult.error) };
 
   const { data } = clientResult.data.storage.from(adPlacementMediaBucket).getPublicUrl(storagePath);
-  if (!data.publicUrl) {
+  const publicUrl = normalizeAdPlacementMediaUrl(data.publicUrl ?? "");
+  if (!publicUrl) {
     await clientResult.data.storage.from(adPlacementMediaBucket).remove([storagePath]);
     return {
       ok: false,
@@ -113,7 +115,7 @@ export async function ownerUploadAdPlacementImage(
     };
   }
 
-  return { ok: true, data: data.publicUrl };
+  return { ok: true, data: publicUrl };
 }
 
 export async function ownerFetchAdPlacements(
@@ -150,7 +152,7 @@ export async function ownerSaveAdPlacement(
   }
 
   const name = payload.name.trim();
-  const imageUrl = payload.imageUrl.trim();
+  const imageUrl = normalizeAdPlacementMediaUrl(payload.imageUrl);
   const destinationUrl = payload.destinationUrl.trim();
   if (name.length < 2 || !imageUrl || !destinationUrl) {
     return {
@@ -290,7 +292,7 @@ function mapAdPlacement(row: Record<string, unknown>): AdPlacementSummary {
     id: rowString(row, "id"),
     name: rowString(row, "name"),
     placementPage: rowString(row, "placement_page", "home") as AdPlacementPage,
-    imageUrl: rowString(row, "image_url"),
+    imageUrl: normalizeAdPlacementMediaUrl(rowString(row, "image_url")),
     destinationUrl: rowString(row, "destination_url"),
     startsAt: rowNullableString(row, "starts_at"),
     endsAt: rowNullableString(row, "ends_at"),
