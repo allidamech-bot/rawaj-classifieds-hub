@@ -14,8 +14,16 @@
   z-index: -1;
   height: 34rem;
   background:
-    radial-gradient(circle at 82% 8%, color-mix(in srgb, var(--rawaj-orange) 14%, transparent), transparent 32%),
-    radial-gradient(circle at 14% 12%, color-mix(in srgb, var(--rawaj-gold) 15%, transparent), transparent 28%);
+    radial-gradient(
+      circle at 82% 8%,
+      color-mix(in srgb, var(--rawaj-orange) 14%, transparent),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 14% 12%,
+      color-mix(in srgb, var(--rawaj-gold) 15%, transparent),
+      transparent 28%
+    );
   pointer-events: none;
 }
 
@@ -24,7 +32,11 @@
   grid-template-columns: minmax(0, 1fr) minmax(7rem, 12rem);
   background:
     linear-gradient(135deg, color-mix(in srgb, white 5%, transparent), transparent 35%),
-    radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--rawaj-gold) 30%, transparent), transparent 26%),
+    radial-gradient(
+      circle at 85% 15%,
+      color-mix(in srgb, var(--rawaj-gold) 30%, transparent),
+      transparent 26%
+    ),
     linear-gradient(145deg, #082e29, #123f38 52%, #246f5f);
 }
 
@@ -125,7 +137,11 @@
   min-height: 5.4rem;
   border-radius: 1.25rem;
   background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--rawaj-orange) 10%, transparent), transparent 42%),
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--rawaj-orange) 10%, transparent),
+      transparent 42%
+    ),
     var(--rawaj-surface-card);
 }
 
@@ -153,7 +169,11 @@
   border-width: 1.5px;
   border-style: dashed;
   background:
-    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--rawaj-orange) 10%, transparent), transparent 42%),
+    radial-gradient(
+      circle at 50% 0%,
+      color-mix(in srgb, var(--rawaj-orange) 10%, transparent),
+      transparent 42%
+    ),
     color-mix(in srgb, var(--rawaj-surface-warm) 78%, white);
 }
 
@@ -183,7 +203,11 @@
   border: 1px solid color-mix(in srgb, var(--rawaj-orange) 18%, var(--color-border));
   border-radius: 1.25rem;
   background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--rawaj-orange) 10%, transparent), transparent 40%),
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--rawaj-orange) 10%, transparent),
+      transparent 40%
+    ),
     var(--rawaj-surface-card);
   padding: 0.9rem;
   box-shadow: var(--shadow-card);
@@ -192,7 +216,11 @@
 .rawaj-studio-completion[data-ready="true"] {
   border-color: color-mix(in srgb, var(--rawaj-emerald, #258067) 28%, var(--color-border));
   background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--rawaj-emerald, #258067) 11%, transparent), transparent 40%),
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--rawaj-emerald, #258067) 11%, transparent),
+      transparent 40%
+    ),
     var(--rawaj-surface-card);
 }
 

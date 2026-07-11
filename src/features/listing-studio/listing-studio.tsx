@@ -293,11 +293,7 @@ export function ListingStudioQualityPanel({
   );
 }
 
-export function ListingStudioTrustStrip({
-  text,
-}: {
-  text: (ar: string, en: string) => string;
-}) {
+export function ListingStudioTrustStrip({ text }: { text: (ar: string, en: string) => string }) {
   const items = [
     {
       icon: Cloud,
@@ -314,7 +310,10 @@ export function ListingStudioTrustStrip({
   ];
 
   return (
-    <section className="rawaj-studio-trust-strip" aria-label={text("مزايا النشر", "Publishing benefits")}>
+    <section
+      className="rawaj-studio-trust-strip"
+      aria-label={text("مزايا النشر", "Publishing benefits")}
+    >
       {items.map(({ icon: Icon, label }) => (
         <div key={label}>
           <span>

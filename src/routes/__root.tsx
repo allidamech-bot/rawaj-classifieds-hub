@@ -33,6 +33,7 @@ import listingDetailFoundationCss from "../listing-detail-foundation.css?url";
 import listingDetailV2Css from "../listing-detail-v2.css?url";
 import listingStudioSignatureCss from "../listing-studio-signature.css?url";
 import listingStudioV2Css from "../listing-studio-v2.css?url";
+import listingStudioV3Css from "../listing-studio-v3.css?url";
 import listingsResultsCss from "../listings-results.css?url";
 import marketplaceDiscoveryCss from "../marketplace-discovery.css?url";
 import messagingSignatureCss from "../messaging-signature.css?url";
@@ -137,6 +138,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: offersSignatureCss },
         { rel: "stylesheet", href: listingStudioSignatureCss },
         { rel: "stylesheet", href: listingStudioV2Css },
+        { rel: "stylesheet", href: listingStudioV3Css },
         { rel: "stylesheet", href: messagingSignatureCss },
         { rel: "stylesheet", href: marketplaceSystemCss },
         { rel: "stylesheet", href: myStoreHeaderRefinementCss },
