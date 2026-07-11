@@ -11,16 +11,14 @@ import {
 import { Analytics } from "@vercel/analytics/react";
 import { useEffect, type ReactNode } from "react";
 
-import { BottomNav } from "@/components/BottomNav";
-import { SiteFooter } from "@/components/SiteFooter";
 import { FeedbackState } from "@/components/feedback/FeedbackState";
+import { AppShell } from "@/components/shell/AppShell";
 import { Button } from "@/components/ui/button";
 import { ExistingConversationBanner } from "@/features/listing-detail/ExistingConversationBanner";
 import { ViewedBeforeBanner } from "@/features/listing-detail/ViewedBeforeBanner";
 import { DraftRecoveryBanner } from "@/features/listing-studio/DraftRecoveryBanner";
 import { AuthProvider } from "@/lib/auth";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
-import { shouldShowSiteFooter, shouldShowBottomNav } from "@/lib/primary-navigation";
 import { buildSiteStructuredData, createSeo, jsonLdScript } from "@/lib/seo";
 import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
 import { UnreadActivityProvider } from "@/lib/unread-activity";
@@ -41,6 +39,7 @@ import offersSignatureCss from "../offers-signature.css?url";
 import personalSpacePolishCss from "../personal-space-polish.css?url";
 import sellerStorefrontFoundationCss from "../seller-storefront-foundation.css?url";
 import signatureCss from "../signature.css?url";
+import spatialAppShellCss from "../spatial-app-shell.css?url";
 import appCss from "../styles.css?url";
 import visualFoundationCss from "../visual-foundation.css?url";
 import marketplaceSystemCss from "../marketplace-system.css?url";
@@ -136,6 +135,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: myStoreBrandPolishCss },
         { rel: "stylesheet", href: personalSpacePolishCss },
         { rel: "stylesheet", href: designSystemV2Css },
+        { rel: "stylesheet", href: spatialAppShellCss },
         { rel: "stylesheet", href: homeMarketplaceV2Css },
         { rel: "icon", href: "/favicon.ico" },
         { rel: "manifest", href: "/manifest.webmanifest" },
@@ -197,8 +197,6 @@ function personalSpaceRouteClass(pathname: string) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const showFooter = shouldShowSiteFooter(pathname);
-  const showBottomNav = shouldShowBottomNav(pathname);
   const showDraftRecovery = pathname === "/add-listing";
   const routeScopeClass = personalSpaceRouteClass(pathname);
   const listingDetailMatch = pathname.match(/^\/listings\/([^/]+)$/);
@@ -212,18 +210,21 @@ function RootComponent() {
         <AuthProvider>
           <UnreadActivityProvider>
             <HtmlAttributes />
-            <div
-              className={`min-h-dvh bg-background text-foreground lg:pb-8 ${routeScopeClass} ${
-                showBottomNav ? "rawaj-bottom-nav-offset" : "pb-6"
-              }`}
+            <AppShell
+              pathname={pathname}
+              routeClassName={routeScopeClass}
+              announcements={
+                <>
+                  {showDraftRecovery ? <DraftRecoveryBanner /> : null}
+                  {listingDetailId ? <ViewedBeforeBanner listingId={listingDetailId} /> : null}
+                  {listingDetailId ? (
+                    <ExistingConversationBanner listingId={listingDetailId} />
+                  ) : null}
+                </>
+              }
             >
-              {showDraftRecovery && <DraftRecoveryBanner />}
-              {listingDetailId && <ViewedBeforeBanner listingId={listingDetailId} />}
-              {listingDetailId && <ExistingConversationBanner listingId={listingDetailId} />}
               <Outlet />
-              {showFooter && <SiteFooter />}
-            </div>
-            <BottomNav />
+            </AppShell>
           </UnreadActivityProvider>
         </AuthProvider>
       </UiPreferencesProvider>
