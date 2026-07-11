@@ -47,7 +47,7 @@ export function FilterCategoryGrid({
   text,
 }: FilterCategoryGridProps) {
   return (
-    <div className="rawaj-filter-category-grid">
+    <div className="rawaj-filter-category-grid" data-source="live-categories">
       <button
         type="button"
         onClick={() => onSelect("")}
