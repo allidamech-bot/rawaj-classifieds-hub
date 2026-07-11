@@ -31,3 +31,7 @@ Use the lightest suitable layer instead of making every block white:
 ## Page redesign rule
 
 New page work must consume these tokens and components. Do not add a route-local replacement palette or a generic white card system. Page-specific CSS may arrange and specialize components, but the shared color, radius, shadow, motion, and focus contracts remain authoritative.
+
+## Rollout checks
+
+Every page redesign must be reviewed at 320px, 360px, 390px, 430px, and desktop widths. It must preserve RTL and LTR layout, visible keyboard focus, reduced-motion behavior, readable dark-surface contrast, and a minimum 44px touch target for primary controls.
