@@ -11,11 +11,7 @@ import { buildProfileMediaPath, profileMediaBucket, validateImageFile } from "@/
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 
 export type AdPlacementPage =
-  | "home"
-  | "search_results"
-  | "listing_detail"
-  | "categories"
-  | "offers";
+  "home" | "search_results" | "listing_detail" | "categories" | "offers";
 
 export type AdPlacementStatus = "draft" | "active" | "paused";
 
@@ -70,7 +66,10 @@ export async function ownerUploadAdPlacementImage(
   if (!canManageAdPlacements) {
     return {
       ok: false,
-      error: { code: "permission_denied", message: "إدارة صور المساحات الإعلانية متاحة للمالك فقط." },
+      error: {
+        code: "permission_denied",
+        message: "إدارة صور المساحات الإعلانية متاحة للمالك فقط.",
+      },
     };
   }
   if (!userId) {
@@ -92,11 +91,13 @@ export async function ownerUploadAdPlacementImage(
   if (!clientResult.ok) return clientResult;
 
   const storagePath = buildProfileMediaPath(userId, "ad-placements", file.name);
-  const uploadResult = await clientResult.data.storage.from(profileMediaBucket).upload(storagePath, file, {
-    cacheControl: "3600",
-    contentType: file.type,
-    upsert: false,
-  });
+  const uploadResult = await clientResult.data.storage
+    .from(profileMediaBucket)
+    .upload(storagePath, file, {
+      cacheControl: "3600",
+      contentType: file.type,
+      upsert: false,
+    });
   if (uploadResult.error) return { ok: false, error: mapStorageError(uploadResult.error) };
 
   const { data } = clientResult.data.storage.from(profileMediaBucket).getPublicUrl(storagePath);

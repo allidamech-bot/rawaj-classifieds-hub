@@ -146,11 +146,7 @@ function AdPlacementsPage() {
     setUploadingImage(true);
     setError("");
     setNotice("");
-    const result = await ownerUploadAdPlacementImage(
-      canManage,
-      auth.profile?.id ?? null,
-      file,
-    );
+    const result = await ownerUploadAdPlacementImage(canManage, auth.profile?.id ?? null, file);
     setUploadingImage(false);
     if (!result.ok) {
       setError(result.error.message);
