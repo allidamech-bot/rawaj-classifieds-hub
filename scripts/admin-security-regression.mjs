@@ -85,10 +85,7 @@ for (const permission of [
 }
 
 expect("sensitive migrations enable RLS", /enable row level security/i.test(migrations));
-expect(
-  "owner-sensitive RPCs recheck owner",
-  migrations.includes("current_user_has_role('owner')"),
-);
+expect("owner-sensitive RPCs recheck owner", migrations.includes("current_user_has_role('owner')"));
 expect("stale write guards exist", /stale_[a-z_]+/i.test(migrations));
 expect("sensitive mutations write audit events", migrations.includes("rawaj_insert_audit_log"));
 
@@ -96,10 +93,7 @@ const primaryTargets = ["/", "/categories", "/add-listing", "/offers", "/more"];
 for (const target of primaryTargets) {
   expect(`bottom navigation preserves ${target}`, bottomNav.includes(`to: "${target}"`));
 }
-expect(
-  "admin routes remain outside public navigation",
-  primaryNavigation.includes('"/admin"'),
-);
+expect("admin routes remain outside public navigation", primaryNavigation.includes('"/admin"'));
 
 if (failures.length > 0) {
   process.stderr.write("Admin security regression failed:\n\n");
