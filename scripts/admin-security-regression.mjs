@@ -1,6 +1,6 @@
-/* global console, process */
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import process from "node:process";
 
 const root = process.cwd();
 const read = (path) => readFileSync(join(root, path), "utf8");
@@ -102,9 +102,9 @@ expect(
 );
 
 if (failures.length > 0) {
-  console.error("Admin security regression failed:\n");
-  for (const failure of failures) console.error(`- ${failure}`);
+  process.stderr.write("Admin security regression failed:\n\n");
+  for (const failure of failures) process.stderr.write(`- ${failure}\n`);
   process.exit(1);
 }
 
-console.log(`Admin security regression passed (${assertions} invariants).`);
+process.stdout.write(`Admin security regression passed (${assertions} invariants).\n`);
