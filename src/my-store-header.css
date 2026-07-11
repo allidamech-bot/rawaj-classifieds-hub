@@ -145,6 +145,10 @@ main.rawaj-pulse-page.container-wide
   font-size: 0.78rem;
 }
 
+main.rawaj-pulse-page.container-wide .rawaj-merchant-rail {
+  display: none;
+}
+
 @media (max-width: 639px) {
   main.rawaj-pulse-page.container-wide .rawaj-merchant-stage,
   main.rawaj-pulse-page.container-wide .rawaj-merchant-stage > div:first-child {
