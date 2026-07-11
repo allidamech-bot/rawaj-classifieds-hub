@@ -19,13 +19,10 @@ export async function fetchActiveAdPlacements(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data.rpc(
-    "rawaj_fetch_active_ad_placements",
-    {
-      p_placement_page: placementPage,
-      p_device: device,
-    },
-  );
+  const { data, error } = await clientResult.data.rpc("rawaj_fetch_active_ad_placements", {
+    p_placement_page: placementPage,
+    p_device: device,
+  });
 
   if (error) return { ok: false, error: mapError(error) };
 
@@ -38,9 +35,6 @@ export async function fetchActiveAdPlacements(
         destinationUrl: rowString(row, "destination_url"),
         priority: rowNumber(row, "priority"),
       }))
-      .filter(
-        (placement) =>
-          placement.id && placement.imageUrl && placement.destinationUrl,
-      ),
+      .filter((placement) => placement.id && placement.imageUrl && placement.destinationUrl),
   };
 }
