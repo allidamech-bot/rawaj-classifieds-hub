@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VerificationRouteImport } from './routes/verification'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SavedSearchesRouteImport } from './routes/saved-searches'
 import { Route as SafetyRouteImport } from './routes/safety'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -65,6 +66,11 @@ const TermsRoute = TermsRouteImport.update({
 const SupportRoute = SupportRouteImport.update({
   id: '/support',
   path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SavedSearchesRoute = SavedSearchesRouteImport.update({
@@ -283,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/safety': typeof SafetyRoute
   '/saved-searches': typeof SavedSearchesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/verification': typeof VerificationRoute
@@ -325,6 +332,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/safety': typeof SafetyRoute
   '/saved-searches': typeof SavedSearchesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/verification': typeof VerificationRoute
@@ -370,6 +378,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/safety': typeof SafetyRoute
   '/saved-searches': typeof SavedSearchesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/verification': typeof VerificationRoute
@@ -416,6 +425,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/safety'
     | '/saved-searches'
+    | '/sitemap.xml'
     | '/support'
     | '/terms'
     | '/verification'
@@ -458,6 +468,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/safety'
     | '/saved-searches'
+    | '/sitemap.xml'
     | '/support'
     | '/terms'
     | '/verification'
@@ -502,6 +513,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/safety'
     | '/saved-searches'
+    | '/sitemap.xml'
     | '/support'
     | '/terms'
     | '/verification'
@@ -547,6 +559,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SafetyRoute: typeof SafetyRoute
   SavedSearchesRoute: typeof SavedSearchesRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   VerificationRoute: typeof VerificationRoute
@@ -575,6 +588,13 @@ declare module '@tanstack/react-router' {
       path: '/support'
       fullPath: '/support'
       preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/saved-searches': {
@@ -946,6 +966,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SafetyRoute: SafetyRoute,
   SavedSearchesRoute: SavedSearchesRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   VerificationRoute: VerificationRoute,
