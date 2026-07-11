@@ -162,6 +162,9 @@ jobs:
       - name: Search and Filters V1 contract
         run: node --test scripts/search-filters-v1.test.mjs
 
+      - name: Listing Detail V2 contract
+        run: node --test scripts/listing-detail-v2.test.mjs
+
       - name: Spatial App Shell contract
         run: node --test scripts/spatial-app-shell.test.mjs
 
