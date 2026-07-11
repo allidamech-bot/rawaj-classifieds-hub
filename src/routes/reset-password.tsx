@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/re
 import { Eye, EyeOff, KeyRound, LogIn, User } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { authErrorMessage } from "@/lib/auth-errors";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
 import { supabase } from "@/lib/supabase";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -36,6 +37,7 @@ function ResetPasswordPage() {
   useEffect(() => {
     let cancelled = false;
     let expiryTimer: ReturnType<typeof setTimeout> | undefined;
+    let unsubscribeAuth: (() => void) | undefined;
 
     async function checkSession() {
       const client = supabase;
@@ -60,12 +62,10 @@ function ResetPasswordPage() {
           markReady();
         }
       });
+      unsubscribeAuth = () => listener.subscription.unsubscribe();
 
       const { data, error: sessionError } = await client.auth.getSession();
-      if (cancelled) {
-        listener.subscription.unsubscribe();
-        return;
-      }
+      if (cancelled) return;
       if (!sessionError && data.session) {
         markReady();
         return;
@@ -75,7 +75,6 @@ function ResetPasswordPage() {
         if (cancelled) return;
         const { data: lateSession, error: lateError } = await client.auth.getSession();
         if (cancelled) return;
-        listener.subscription.unsubscribe();
         setReady(Boolean(!lateError && lateSession.session));
         setChecking(false);
       }, 15000);
@@ -85,6 +84,7 @@ function ResetPasswordPage() {
     return () => {
       cancelled = true;
       clearTimeout(expiryTimer);
+      unsubscribeAuth?.();
     };
   }, []);
 
@@ -124,12 +124,7 @@ function ResetPasswordPage() {
     setSaving(false);
 
     if (updateError) {
-      setError(
-        text(
-          "تعذر تحديث كلمة المرور الآن. اطلب رابطاً جديداً وحاول مرة أخرى.",
-          "Could not update the password right now. Request a new link and try again.",
-        ),
-      );
+      setError(authErrorMessage(updateError, "update-password", text));
       return;
     }
 
@@ -144,7 +139,7 @@ function ResetPasswordPage() {
     setTimeout(() => void navigate({ to: returnTo }), 700);
   }
 
-  const loginDestination = `/login?returnTo=${encodeURIComponent(returnTo)}`;
+  const loginDestination = `/login?mode=forgot&returnTo=${encodeURIComponent(returnTo)}`;
 
   return (
     <>
