@@ -36,7 +36,11 @@ export function ListingSellerProfileCard({
   const ratingCount = seller?.ratingSummary.count ?? 0;
 
   return (
-    <section className="rawaj-detail-seller" aria-labelledby="rawaj-detail-seller-title">
+    <section
+      className="rawaj-detail-seller"
+      aria-labelledby="rawaj-detail-seller-title"
+      data-profile-contract="public-seller-data"
+    >
       <div className="rawaj-detail-seller__identity">
         <div className="rawaj-detail-seller__avatar" data-loading={loading}>
           {seller?.avatarUrl ? (
