@@ -159,6 +159,9 @@ jobs:
       - name: Adaptive Listing Cards contract
         run: node --test scripts/adaptive-listing-cards.test.mjs
 
+      - name: Search and Filters V1 contract
+        run: node --test scripts/search-filters-v1.test.mjs
+
       - name: Spatial App Shell contract
         run: node --test scripts/spatial-app-shell.test.mjs
 
