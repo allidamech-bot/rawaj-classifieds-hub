@@ -1,4 +1,14 @@
-import { Check } from "lucide-react";
+import {
+  Check,
+  CheckCircle2,
+  CircleDashed,
+  Cloud,
+  CloudOff,
+  ImagePlus,
+  Loader2,
+  MapPin,
+  Sparkles,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
 export type ListingStudioStep = {
@@ -9,15 +19,51 @@ export type ListingStudioStep = {
 export function ListingStudioShell({
   children,
   aside,
+  mode = "create",
 }: {
   children: ReactNode;
   aside?: ReactNode;
+  mode?: "create" | "manage";
 }) {
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">
-      <div className="min-w-0 space-y-4">{children}</div>
-      {aside ? <aside className="space-y-3 lg:sticky lg:top-24">{aside}</aside> : null}
+    <div className="rawaj-studio-shell" data-mode={mode}>
+      <div className="rawaj-studio-shell__content">{children}</div>
+      {aside ? <aside className="rawaj-studio-shell__aside">{aside}</aside> : null}
     </div>
+  );
+}
+
+export function ListingStudioHero({
+  eyebrow,
+  title,
+  description,
+  status,
+  actions,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  status?: ReactNode;
+  actions?: ReactNode;
+}) {
+  return (
+    <section className="rawaj-studio-hero" aria-labelledby="rawaj-studio-title">
+      <div className="rawaj-studio-hero__copy">
+        <p className="rawaj-studio-hero__eyebrow">
+          <Sparkles aria-hidden="true" />
+          {eyebrow}
+        </p>
+        <h1 id="rawaj-studio-title">{title}</h1>
+        <p className="rawaj-studio-hero__description">{description}</p>
+        {status ? <div className="rawaj-studio-hero__status">{status}</div> : null}
+      </div>
+      <div className="rawaj-studio-hero__visual" aria-hidden="true">
+        <span><ImagePlus /></span>
+        <i />
+        <b />
+      </div>
+      {actions ? <div className="rawaj-studio-hero__actions">{actions}</div> : null}
+    </section>
   );
 }
 
@@ -29,11 +75,7 @@ export function ListingStudioSteps({
   current: number;
 }) {
   return (
-    <ol className="rawaj-surface relative mb-5 grid grid-cols-3 gap-1.5 overflow-hidden rounded-[1.35rem] p-2 sm:gap-2 sm:p-2.5">
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-gold/65 to-transparent"
-      />
+    <ol className="rawaj-studio-steps" aria-label="Listing progress">
       {steps.map((step, index) => {
         const done = index < current;
         const active = index === current;
@@ -41,38 +83,16 @@ export function ListingStudioSteps({
           <li
             key={step.label}
             aria-current={active ? "step" : undefined}
-            className={`relative min-w-0 rounded-[1rem] px-2 py-2.5 transition sm:px-3 ${
-              active
-                ? "bg-primary text-primary-foreground shadow-[0_8px_22px_rgba(16,43,70,0.14)]"
-                : done
-                  ? "bg-emerald-trust/8 text-emerald-trust"
-                  : "text-muted-foreground"
-            }`}
+            data-state={done ? "done" : active ? "active" : "upcoming"}
           >
-            <span className="flex items-center gap-2">
-              <span
-                className={`grid h-7 w-7 shrink-0 place-items-center rounded-[0.7rem] text-[10px] font-bold transition ${
-                  active
-                    ? "bg-white/10 text-gold ring-1 ring-white/10"
-                    : done
-                      ? "bg-emerald-trust text-emerald-trust-foreground"
-                      : "border border-border/80 bg-card-warm/80 text-primary"
-                }`}
-              >
-                {done ? <Check className="h-3.5 w-3.5" strokeWidth={2.2} /> : index + 1}
-              </span>
-              <span className="min-w-0 truncate text-[10px] font-semibold leading-tight sm:text-xs">
-                {step.label}
-              </span>
+            <span className="rawaj-studio-steps__index">
+              {done ? <Check aria-hidden="true" /> : index + 1}
             </span>
-            {step.description ? (
-              <span className="mt-1.5 hidden ps-9 text-[10px] leading-4 opacity-75 sm:block">
-                {step.description}
-              </span>
-            ) : null}
-            {active ? (
-              <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-gradient-to-r from-brand-orange to-gold" />
-            ) : null}
+            <span className="rawaj-studio-steps__copy">
+              <strong>{step.label}</strong>
+              {step.description ? <small>{step.description}</small> : null}
+            </span>
+            <span className="rawaj-studio-steps__line" aria-hidden="true" />
           </li>
         );
       })}
@@ -85,28 +105,24 @@ export function ListingStudioSection({
   description,
   children,
   tone = "default",
+  icon,
 }: {
   title: string;
   description?: string;
   children: ReactNode;
   tone?: "default" | "muted";
+  icon?: ReactNode;
 }) {
   return (
-    <section
-      className={`rounded-[1.4rem] p-4 sm:p-5 ${
-        tone === "muted" ? "border border-border/65 bg-card-warm/65" : "rawaj-surface"
-      }`}
-    >
-      <div className="mb-4">
-        <span className="mb-1.5 block h-0.5 w-7 rounded-full bg-gradient-to-r from-brand-orange to-gold" />
-        <h3 className="text-sm font-bold leading-tight text-primary sm:text-[15px]">{title}</h3>
-        {description ? (
-          <p className="mt-1.5 max-w-2xl text-[11px] leading-5 text-muted-foreground sm:text-xs sm:leading-6">
-            {description}
-          </p>
-        ) : null}
+    <section className="rawaj-studio-section" data-tone={tone}>
+      <div className="rawaj-studio-section__heading">
+        {icon ? <span className="rawaj-studio-section__icon">{icon}</span> : null}
+        <div>
+          <h2>{title}</h2>
+          {description ? <p>{description}</p> : null}
+        </div>
       </div>
-      {children}
+      <div className="rawaj-studio-section__body">{children}</div>
     </section>
   );
 }
@@ -118,18 +134,122 @@ export function ListingStudioMessage({
   children: ReactNode;
   tone?: "neutral" | "success" | "warning" | "danger";
 }) {
-  const className =
-    tone === "success"
-      ? "border-emerald-trust/15 bg-emerald-trust/8 text-emerald-trust"
-      : tone === "warning"
-        ? "border-warning/15 bg-warning/8 text-warning"
-        : tone === "danger"
-          ? "border-destructive/15 bg-destructive/8 text-destructive"
-          : "border-border/70 bg-card-warm/70 text-foreground";
-
   return (
-    <div className={`rounded-[1rem] border p-3 text-xs font-medium leading-5 ${className}`}>
-      {children}
+    <div className="rawaj-studio-message" data-tone={tone}>
+      {tone === "success" ? <CheckCircle2 aria-hidden="true" /> : null}
+      <div>{children}</div>
     </div>
   );
+}
+
+export type ListingStudioAutosaveState = "idle" | "dirty" | "saving" | "saved" | "failed";
+
+export function ListingStudioAutosaveStatus({
+  state,
+  error,
+  lastSavedLabel,
+  text,
+}: {
+  state: ListingStudioAutosaveState;
+  error?: string | null;
+  lastSavedLabel?: string | null;
+  text: (ar: string, en: string) => string;
+}) {
+  if (state === "idle") return null;
+
+  const Icon =
+    state === "saving" ? Loader2 : state === "failed" ? CloudOff : state === "saved" ? Cloud : CircleDashed;
+  const label =
+    state === "dirty"
+      ? text("تغييرات بانتظار الحفظ", "Changes waiting to save")
+      : state === "saving"
+        ? text("جارٍ حفظ المسودة", "Saving draft")
+        : state === "saved"
+          ? text("تم حفظ المسودة", "Draft saved")
+          : error || text("فشل حفظ المسودة تلقائياً", "Autosave failed");
+
+  return (
+    <div className="rawaj-studio-autosave" data-state={state} aria-live="polite">
+      <Icon aria-hidden="true" className={state === "saving" ? "animate-spin" : undefined} />
+      <strong>{label}</strong>
+      {state === "saved" && lastSavedLabel ? <span>{lastSavedLabel}</span> : null}
+    </div>
+  );
+}
+
+export function ListingStudioPreview({
+  imageUrl,
+  title,
+  category,
+  price,
+  location,
+  imageCount,
+  placeholder,
+  text,
+}: {
+  imageUrl?: string | null;
+  title: string;
+  category: string;
+  price: string;
+  location: string;
+  imageCount: number;
+  placeholder?: ReactNode;
+  text: (ar: string, en: string) => string;
+}) {
+  return (
+    <section className="rawaj-studio-preview" aria-labelledby="rawaj-studio-preview-title">
+      <div className="rawaj-studio-preview__heading">
+        <div>
+          <p>{text("معاينة مباشرة", "Live preview")}</p>
+          <h2 id="rawaj-studio-preview-title">{text("شكل إعلانك", "Your listing")}</h2>
+        </div>
+        <span>{imageCount}</span>
+      </div>
+      <div className="rawaj-studio-preview__media">
+        {imageUrl ? <img src={imageUrl} alt="" loading="lazy" decoding="async" /> : placeholder ?? <ImagePlus aria-hidden="true" />}
+        <small>{text("الصورة الرئيسية", "Primary photo")}</small>
+      </div>
+      <div className="rawaj-studio-preview__body">
+        <span>{category || text("اختر القسم", "Choose category")}</span>
+        <h3>{title || text("عنوان إعلانك سيظهر هنا", "Your listing title appears here")}</h3>
+        <strong>{price || text("السعر", "Price")}</strong>
+        <p><MapPin aria-hidden="true" />{location || text("اختر الموقع", "Choose location")}</p>
+      </div>
+    </section>
+  );
+}
+
+export function ListingStudioQualityPanel({
+  score,
+  checks,
+  text,
+}: {
+  score: number;
+  checks: Array<{ label: string; done: boolean }>;
+  text: (ar: string, en: string) => string;
+}) {
+  return (
+    <section className="rawaj-studio-quality" aria-labelledby="rawaj-studio-quality-title">
+      <div className="rawaj-studio-quality__score">
+        <div>
+          <p>{text("جودة الإعلان", "Listing quality")}</p>
+          <h2 id="rawaj-studio-quality-title">{score}%</h2>
+        </div>
+        <span style={{ "--studio-score": `${score}%` } as React.CSSProperties} />
+      </div>
+      <div className="rawaj-studio-quality__track"><span style={{ width: `${score}%` }} /></div>
+      <ul>
+        {checks.map((check) => (
+          <li key={check.label} data-done={check.done}>
+            {check.done ? <CheckCircle2 aria-hidden="true" /> : <CircleDashed aria-hidden="true" />}
+            {check.label}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export function ListingStudioActionBar({ children }: { children: ReactNode }) {
+  return <div className="rawaj-studio-action-bar">{children}</div>;
 }
