@@ -61,6 +61,7 @@ export function SearchResultsToolbar({
       className="rawaj-search-toolbar"
       aria-labelledby="rawaj-results-title"
       data-state-contract="url-backed"
+      data-view={view}
     >
       <div className="rawaj-search-toolbar__heading">
         <div className="min-w-0">
