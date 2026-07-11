@@ -1,4 +1,4 @@
-name: Temporary Search Filters Cleanup
+name: Temporary Search Filters Cleanup V2
 
 on:
   push:
@@ -7,6 +7,10 @@ on:
 
 permissions:
   contents: write
+
+concurrency:
+  group: search-filters-cleanup-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   cleanup:
@@ -40,10 +44,6 @@ jobs:
           }
           function write(path, value) {
             fs.writeFileSync(path, value);
-          }
-          function replaceExact(value, from, to, label) {
-            if (!value.includes(from)) throw new Error(`Missing ${label}`);
-            return value.replace(from, to);
           }
 
           let route = read('src/routes/listings.index.tsx');
@@ -95,23 +95,21 @@ jobs:
             `  .rawaj-filter-sheet {\n    width: min(44rem, calc(100vw - 2rem));\n    inset-inline: 50%;\n    transform: translateX(-50%);\n    border-radius: 1.8rem 1.8rem 0 0;\n  }\n\n  [dir="rtl"] .rawaj-filter-sheet {\n    transform: translateX(50%);\n  }`,
             `  .rawaj-filter-sheet {\n    width: min(44rem, calc(100vw - 2rem));\n    margin-inline: auto;\n    border-radius: 1.8rem 1.8rem 0 0;\n  }`,
           );
-          css += `\n.rawaj-search-empty-state {\n  display: grid;\n  justify-items: center;\n  border: 1px dashed color-mix(in srgb, var(--color-primary) 18%, var(--color-border));\n  border-radius: 1.5rem;\n  background: var(--rawaj-surface-warm);\n  padding: clamp(2rem, 7vw, 4rem) 1rem;\n  text-align: center;\n}\n\n.rawaj-search-empty-state__icon {\n  display: grid;\n  width: 3.5rem;\n  height: 3.5rem;\n  place-items: center;\n  border-radius: 1.15rem;\n  background: color-mix(in srgb, var(--rawaj-orange) 11%, white);\n  color: var(--rawaj-orange);\n}\n\n.rawaj-search-empty-state__icon svg {\n  width: 1.5rem;\n  height: 1.5rem;\n}\n\n.rawaj-search-empty-state h2 {\n  margin-top: 0.9rem;\n  color: var(--color-primary);\n  font-size: 1rem;\n  font-weight: 850;\n}\n\n.rawaj-search-empty-state p {\n  max-width: 34rem;\n  margin-top: 0.45rem;\n  color: var(--color-muted-foreground);\n  font-size: 0.72rem;\n  line-height: 1.8;\n}\n\n.rawaj-search-empty-state .rawaj-category-empty-actions button,\n.rawaj-search-empty-state .rawaj-category-empty-actions a {\n  display: inline-flex;\n  min-height: 2.7rem;\n  align-items: center;\n  gap: 0.35rem;\n  border-radius: 999px;\n  background: var(--rawaj-surface-card);\n  padding-inline: 0.9rem;\n  color: var(--color-primary);\n  font-size: 0.65rem;\n  font-weight: 800;\n  box-shadow: var(--shadow-xs);\n}\n\n.rawaj-search-empty-state .rawaj-category-empty-actions [data-tone="primary"] {\n  background: var(--rawaj-orange);\n  color: white;\n}\n\n.rawaj-search-empty-state .rawaj-category-empty-actions svg {\n  width: 0.9rem;\n  height: 0.9rem;\n}\n`;
+          if (!css.includes('.rawaj-search-empty-state {')) {
+            css += `\n.rawaj-search-empty-state {\n  display: grid;\n  justify-items: center;\n  border: 1px dashed color-mix(in srgb, var(--color-primary) 18%, var(--color-border));\n  border-radius: 1.5rem;\n  background: var(--rawaj-surface-warm);\n  padding: clamp(2rem, 7vw, 4rem) 1rem;\n  text-align: center;\n}\n\n.rawaj-search-empty-state__icon {\n  display: grid;\n  width: 3.5rem;\n  height: 3.5rem;\n  place-items: center;\n  border-radius: 1.15rem;\n  background: color-mix(in srgb, var(--rawaj-orange) 11%, white);\n  color: var(--rawaj-orange);\n}\n\n.rawaj-search-empty-state__icon svg {\n  width: 1.5rem;\n  height: 1.5rem;\n}\n\n.rawaj-search-empty-state h2 {\n  margin-top: 0.9rem;\n  color: var(--color-primary);\n  font-size: 1rem;\n  font-weight: 850;\n}\n\n.rawaj-search-empty-state p {\n  max-width: 34rem;\n  margin-top: 0.45rem;\n  color: var(--color-muted-foreground);\n  font-size: 0.72rem;\n  line-height: 1.8;\n}\n\n.rawaj-search-empty-state .rawaj-category-empty-actions button,\n.rawaj-search-empty-state .rawaj-category-empty-actions a {\n  display: inline-flex;\n  min-height: 2.7rem;\n  align-items: center;\n  gap: 0.35rem;\n  border-radius: 999px;\n  background: var(--rawaj-surface-card);\n  padding-inline: 0.9rem;\n  color: var(--color-primary);\n  font-size: 0.65rem;\n  font-weight: 800;\n  box-shadow: var(--shadow-xs);\n}\n\n.rawaj-search-empty-state .rawaj-category-empty-actions [data-tone="primary"] {\n  background: var(--rawaj-orange);\n  color: white;\n}\n\n.rawaj-search-empty-state .rawaj-category-empty-actions svg {\n  width: 0.9rem;\n  height: 0.9rem;\n}\n`;
+          }
           write('src/search-filters-v1.css', css);
 
           let filterTest = read('scripts/listings-mobile-category-switch.test.mjs');
-          filterTest = filterTest.replace(
-            `  salaryType: "",\n  debouncedQ: "",\n  sort: "latest",`,
-            `  salaryType: "",\n  withPhotos: false,\n  debouncedQ: "",\n  sort: "latest",\n  view: "grid",`,
-          );
-          filterTest = filterTest.replace(
-            `  salaryType: "",\n  debouncedQ: "",\n  sort: "latest",\n};\n\nconst syncSearchInputs`,
-            `  salaryType: "",\n  withPhotos: false,\n  debouncedQ: "",\n  sort: "latest",\n};\n\nconst syncSearchInputs`,
-          );
-          filterTest = filterTest.replace(
-            `  salaryType: "",\n  debouncedQ: "",\n  sort: "latest",\n};\n\nconst canonicalLocationId`,
-            `  salaryType: "",\n  withPhotos: false,\n  debouncedQ: "",\n  sort: "latest",\n  view: "grid",\n};\n\nconst canonicalLocationId`,
-          );
-          filterTest += `\n\ntest("presentation and image filters survive URL synchronization", () => {\n  const search = buildListingsSyncSearch({\n    ...syncSearchInputs,\n    withPhotos: true,\n    view: "list",\n  });\n\n  assert.equal(search.with_photos, true);\n  assert.equal(search.view, "list");\n});\n\ntest("image-only filter reaches listing fetch inputs", () => {\n  const filters = buildListingFilters({\n    ...listingFilterInputs,\n    withPhotos: true,\n  });\n\n  assert.equal(filters.withPhotos, true);\n});\n`;
+          if (!filterTest.includes('withPhotos: false')) {
+            filterTest = filterTest.replaceAll(
+              `  salaryType: "",\n  debouncedQ: "",\n  sort: "latest",`,
+              `  salaryType: "",\n  withPhotos: false,\n  debouncedQ: "",\n  sort: "latest",\n  view: "grid",`,
+            );
+          }
+          if (!filterTest.includes('presentation and image filters survive URL synchronization')) {
+            filterTest += `\n\ntest("presentation and image filters survive URL synchronization", () => {\n  const search = buildListingsSyncSearch({\n    ...syncSearchInputs,\n    withPhotos: true,\n    view: "list",\n  });\n\n  assert.equal(search.with_photos, true);\n  assert.equal(search.view, "list");\n});\n\ntest("image-only filter reaches listing fetch inputs", () => {\n  const filters = buildListingFilters({\n    ...listingFilterInputs,\n    withPhotos: true,\n  });\n\n  assert.equal(filters.withPhotos, true);\n});\n`;
+          }
           write('scripts/listings-mobile-category-switch.test.mjs', filterTest);
 
           let workflow = read('.github/workflows/quality-gate.yml');
