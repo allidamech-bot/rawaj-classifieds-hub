@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import {
   Briefcase,
   Building2,
@@ -24,11 +24,7 @@ import {
 import { AppHeader } from "@/components/AppHeader";
 import { RealListingCard } from "@/features/listings/listings-components";
 import { fetchPublicCategories, fetchPublicListings } from "@/lib/classifieds-api";
-import type {
-  ClassifiedCategory,
-  ClassifiedListing,
-  ClassifiedsError,
-} from "@/lib/classifieds-types";
+import type { ClassifiedCategory, ClassifiedListing } from "@/lib/classifieds-types";
 import { categoryName } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -68,6 +64,18 @@ const HOME_DESCRIPTION =
   "سوق إعلانات مبوبة في سوريا لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة منظمة وواضحة.";
 
 export const Route = createFileRoute("/")({
+  loader: async () => {
+    const [listingsResult, categoriesResult] = await Promise.all([
+      fetchPublicListings({}, null, 18),
+      fetchPublicCategories(),
+    ]);
+
+    return {
+      listings: listingsResult.ok ? listingsResult.data.items : [],
+      categories: categoriesResult.ok ? categoriesResult.data : [],
+      error: listingsResult.ok ? null : listingsResult.error,
+    };
+  },
   head: () => createSeo({ title: HOME_TITLE, description: HOME_DESCRIPTION, path: "/" }),
   component: HomePage,
 });
@@ -75,35 +83,14 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const navigate = useNavigate();
   const { language, text } = useUiPreferences();
+  const { listings, categories, error } = Route.useLoaderData();
   const [searchValue, setSearchValue] = useState("");
-  const [listings, setListings] = useState<ClassifiedListing[]>([]);
-  const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<ClassifiedsError | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
-      setError(null);
-      const [listingsResult, categoriesResult] = await Promise.all([
-        fetchPublicListings({}, null, 30),
-        fetchPublicCategories(),
-      ]);
-      if (cancelled) return;
-      if (!listingsResult.ok) setError(listingsResult.error);
-      else setListings(listingsResult.data.items);
-      if (categoriesResult.ok) setCategories(categoriesResult.data);
-      setLoading(false);
-    }
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const featuredListings = listings.filter((listing) => listing.isFeatured).slice(0, 6);
-  const latestListings = listings.slice(0, 12);
+  const featuredListingIds = new Set(featuredListings.map((listing) => listing.id));
+  const latestListings = listings
+    .filter((listing) => !featuredListingIds.has(listing.id))
+    .slice(0, 12);
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -231,9 +218,7 @@ function HomePage() {
           </section>
         ) : null}
 
-        {loading ? (
-          <HomeState title={text("جاري تحميل الإعلانات", "Loading listings")} />
-        ) : error ? (
+        {error ? (
           <HomeState
             title={text("تعذر تحميل بيانات السوق", "Could not load marketplace data")}
             body={error.message}
