@@ -22,8 +22,9 @@ test("home discovery uses layered hero, section surfaces, and honest quick searc
   assert.match(home, /rawaj-home-v2-hero/);
   assert.match(home, /rawaj-home-v2-categories/);
   assert.match(home, /rawaj-home-v2-listings/);
-  assert.match(home, /rawaj-home-tone-featured/);
-  assert.match(home, /rawaj-home-tone-latest/);
+  assert.match(home, /tone="featured"/);
+  assert.match(home, /tone="latest"/);
+  assert.match(home, /rawaj-home-tone-\$\{tone\}/);
   assert.match(home, /quickSearches/);
   assert.match(home, /rawaj-home-shortcut/);
   assert.doesNotMatch(home, /trending/i);
