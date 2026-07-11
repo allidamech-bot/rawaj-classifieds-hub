@@ -56,6 +56,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
           ) : (
             <Link
               to="/listings"
+              search={{ open_filters: true }}
               className="rawaj-header-location order-2 hidden min-h-10 items-center gap-1.5 rounded-xl px-2.5 text-[10px] font-bold sm:inline-flex lg:px-3 lg:text-[11px]"
               aria-label={text("تصفح الإعلانات في كل سوريا", "Browse listings across Syria")}
             >
