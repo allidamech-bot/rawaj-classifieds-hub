@@ -32,6 +32,14 @@ Use the lightest suitable layer instead of making every block white:
 
 New page work must consume these tokens and components. Do not add a route-local replacement palette or a generic white card system. Page-specific CSS may arrange and specialize components, but the shared color, radius, shadow, motion, and focus contracts remain authoritative.
 
+## Marketplace core rules
+
+- Home discovery uses a single high-contrast hero and one dominant search action.
+- Categories, featured inventory, and latest inventory use distinct sage, gold, and warm section surfaces.
+- Common search links are presented as shortcuts, never as unsupported trending claims.
+- Listing cards render one per row below 390px, two from 390px, three from 640px, and four from 1024px.
+- Featured and reserved states must be explicit in markup and cannot rely on color alone.
+
 ## Rollout checks
 
 Every page redesign must be reviewed at 320px, 360px, 390px, 430px, and desktop widths. It must preserve RTL and LTR layout, visible keyboard focus, reduced-motion behavior, readable dark-surface contrast, and a minimum 44px touch target for primary controls.
