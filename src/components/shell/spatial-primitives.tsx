@@ -63,7 +63,7 @@ export const StickyActionBar = React.forwardRef<
 ));
 StickyActionBar.displayName = "StickyActionBar";
 
-interface SectionHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+interface SectionHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   title: React.ReactNode;
   eyebrow?: React.ReactNode;
   action?: React.ReactNode;
@@ -101,7 +101,7 @@ export const HorizontalRail = React.forwardRef<
 ));
 HorizontalRail.displayName = "HorizontalRail";
 
-interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
+interface EmptyStateProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   icon?: React.ReactNode;
   title: React.ReactNode;
   description?: React.ReactNode;
