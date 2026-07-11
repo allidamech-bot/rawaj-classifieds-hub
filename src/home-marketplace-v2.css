@@ -1,0 +1,325 @@
+/* RAWAJ marketplace core V2 — home discovery and listing cards. */
+
+.rawaj-home-v2-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--rawaj-radius-feature);
+  background:
+    radial-gradient(24rem 18rem at 104% -8%, rgba(201, 149, 67, 0.32), transparent 68%),
+    radial-gradient(22rem 18rem at -8% 112%, rgba(244, 95, 56, 0.24), transparent 68%),
+    linear-gradient(135deg, #0b2d29 0%, #123f38 54%, #1a584b 100%);
+  color: #fffdf7;
+  box-shadow: 0 22px 56px rgba(11, 45, 41, 0.2);
+}
+
+.rawaj-home-v2-hero::before {
+  content: "";
+  position: absolute;
+  inset-inline-end: -4rem;
+  top: -6rem;
+  width: 17rem;
+  height: 17rem;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 42% 58% 64% 36% / 39% 43% 57% 61%;
+  transform: rotate(24deg);
+  opacity: 0.8;
+}
+
+.rawaj-home-v2-hero::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: -7rem;
+  bottom: -9rem;
+  width: 20rem;
+  height: 20rem;
+  border: 2px solid rgba(244, 95, 56, 0.18);
+  border-radius: 63% 37% 42% 58% / 46% 58% 42% 54%;
+  transform: rotate(-18deg);
+}
+
+.rawaj-home-v2-hero .rawaj-home-kicker {
+  color: #f2c77f;
+}
+
+.rawaj-home-v2-hero .rawaj-home-title {
+  color: #fffdf7;
+  text-shadow: 0 8px 26px rgba(4, 21, 18, 0.18);
+}
+
+.rawaj-home-v2-hero .rawaj-home-description {
+  color: rgba(255, 253, 247, 0.72);
+}
+
+.rawaj-home-value-chip {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.075);
+  color: rgba(255, 253, 247, 0.84);
+  backdrop-filter: blur(10px);
+}
+
+.rawaj-home-v2-hero .rawaj-home-search-shell {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 1.35rem;
+  background: rgba(255, 253, 249, 0.11);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 18px 44px rgba(4, 21, 18, 0.22);
+  backdrop-filter: blur(18px) saturate(130%);
+}
+
+.rawaj-home-search-input {
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: rgba(255, 253, 249, 0.97);
+  box-shadow: 0 12px 30px rgba(4, 21, 18, 0.2);
+}
+
+.rawaj-home-search-submit {
+  background: linear-gradient(145deg, #ff724d, var(--rawaj-orange));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.28) inset,
+    0 14px 30px rgba(244, 95, 56, 0.32);
+}
+
+.rawaj-home-v2-hero .rawaj-home-location,
+.rawaj-home-v2-hero .rawaj-home-filter {
+  border-color: rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.075);
+  color: rgba(255, 253, 247, 0.92);
+}
+
+.rawaj-home-v2-hero .rawaj-home-location .text-muted-foreground {
+  color: rgba(255, 253, 247, 0.58);
+}
+
+.rawaj-home-v2-hero .rawaj-home-location:hover,
+.rawaj-home-v2-hero .rawaj-home-filter:hover {
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.rawaj-home-shortcuts {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rawaj-home-shortcut {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.075);
+  color: rgba(255, 253, 247, 0.82);
+}
+
+.rawaj-home-shortcut:hover {
+  border-color: rgba(244, 95, 56, 0.5);
+  background: rgba(244, 95, 56, 0.15);
+  color: #fff;
+}
+
+.rawaj-home-v2-section {
+  position: relative;
+  overflow: hidden;
+  margin-top: 1.75rem;
+  border-radius: var(--rawaj-radius-feature);
+  padding: 1.1rem;
+}
+
+.rawaj-home-v2-categories {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 10%, var(--color-border));
+  background:
+    radial-gradient(18rem 12rem at 104% -10%, rgba(47, 122, 92, 0.1), transparent 70%),
+    linear-gradient(145deg, var(--rawaj-surface-sage), #f1f5f0);
+}
+
+.rawaj-home-category-card {
+  border: 1px solid
+    color-mix(in srgb, var(--category-accent, var(--rawaj-orange)) 18%, var(--color-border));
+  background:
+    radial-gradient(
+      9rem 7rem at 108% -12%,
+      color-mix(in srgb, var(--category-accent, var(--rawaj-orange)) 14%, transparent),
+      transparent 72%
+    ),
+    var(--rawaj-surface-card);
+  box-shadow: var(--rawaj-shadow-sm);
+}
+
+.rawaj-home-category-card .rawaj-category-icon {
+  background: color-mix(in srgb, var(--category-accent, var(--rawaj-orange)) 14%, white);
+  color: var(--category-accent, var(--rawaj-orange));
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--category-accent, var(--rawaj-orange)) 18%, transparent);
+}
+
+.rawaj-home-category-card:hover .rawaj-category-icon {
+  background: var(--category-accent, var(--rawaj-orange));
+  color: white;
+}
+
+.rawaj-home-v2-listings {
+  border: 1px solid color-mix(in srgb, var(--rawaj-home-tone) 14%, var(--color-border));
+  background:
+    radial-gradient(
+      20rem 13rem at 104% -10%,
+      color-mix(in srgb, var(--rawaj-home-tone) 10%, transparent),
+      transparent 70%
+    ),
+    var(--rawaj-home-surface);
+}
+
+.rawaj-home-tone-featured {
+  --rawaj-home-tone: var(--rawaj-gold);
+  --rawaj-home-surface: var(--rawaj-surface-gold);
+}
+
+.rawaj-home-tone-latest {
+  --rawaj-home-tone: var(--rawaj-orange);
+  --rawaj-home-surface: var(--rawaj-surface-warm);
+}
+
+.rawaj-home-section-heading > div:first-child {
+  position: relative;
+  padding-inline-start: 0.9rem;
+}
+
+.rawaj-home-section-heading > div:first-child::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.18rem;
+  bottom: 0.18rem;
+  width: 0.22rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--rawaj-orange), var(--rawaj-gold));
+}
+
+.rawaj-home-section-action {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 10%, var(--color-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-card) 76%, transparent);
+  padding: 0.45rem 0.7rem;
+  color: var(--color-primary);
+}
+
+.rawaj-home-section-action:hover {
+  border-color: color-mix(in srgb, var(--rawaj-orange) 30%, var(--color-border));
+  background: var(--color-card);
+  color: var(--rawaj-orange);
+}
+
+.rawaj-home-trust-stage {
+  border: 1px solid color-mix(in srgb, var(--color-emerald-trust) 22%, var(--color-border));
+  border-radius: var(--rawaj-radius-feature);
+  background:
+    radial-gradient(17rem 11rem at 100% 0%, rgba(47, 122, 92, 0.12), transparent 70%),
+    linear-gradient(145deg, #e6f1e9, #f4f7f1);
+  box-shadow: var(--rawaj-shadow-sm);
+}
+
+/* Listing cards — readable at 360px, image-led from 390px upward. */
+.listing-card-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem;
+}
+
+.rawaj-listing-card {
+  position: relative;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 10%, var(--color-border));
+  border-radius: 1.15rem;
+  background: var(--rawaj-surface-card);
+  box-shadow: var(--rawaj-shadow-sm);
+}
+
+.rawaj-listing-card[data-featured="true"] {
+  border-color: color-mix(in srgb, var(--rawaj-gold) 42%, var(--color-border));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--rawaj-gold) 12%, transparent) inset,
+    var(--rawaj-shadow-md);
+}
+
+.rawaj-listing-media {
+  margin: 0.42rem 0.42rem 0;
+  border-radius: 0.9rem;
+  background:
+    radial-gradient(circle at 84% 10%, rgba(201, 149, 67, 0.16), transparent 36%),
+    var(--rawaj-surface-sage);
+}
+
+.rawaj-listing-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 60%, rgba(8, 31, 27, 0.13));
+  pointer-events: none;
+}
+
+.rawaj-listing-status {
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(10px);
+}
+
+.rawaj-listing-status[data-tone="featured"] {
+  background: rgba(11, 45, 41, 0.9);
+  color: #fffdf7;
+}
+
+.rawaj-listing-status[data-tone="reserved"] {
+  background: rgba(215, 144, 39, 0.94);
+  color: #24190a;
+}
+
+.rawaj-listing-price {
+  color: var(--color-primary);
+  letter-spacing: -0.02em;
+}
+
+.rawaj-listing-category {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
+  background: var(--rawaj-surface-sage);
+  color: var(--color-primary);
+}
+
+.rawaj-listing-title {
+  color: var(--color-foreground);
+}
+
+.rawaj-listing-meta {
+  border-top: 1px solid color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
+}
+
+@media (min-width: 390px) {
+  .listing-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 640px) {
+  .rawaj-home-v2-section {
+    padding: 1.4rem;
+  }
+
+  .listing-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .rawaj-home-v2-section {
+    margin-top: 2.25rem;
+    padding: 1.65rem;
+  }
+
+  .listing-card-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-home-shortcut,
+  .rawaj-home-category-card,
+  .rawaj-category-icon,
+  .rawaj-listing-card,
+  .rawaj-listing-card img {
+    transition: none;
+  }
+}

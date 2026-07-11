@@ -54,6 +54,18 @@ const categoryWorlds = [
   "rawaj-world-orange",
 ];
 
+const quickSearches: Array<{
+  query: string;
+  labelAr: string;
+  labelEn: string;
+  icon: LucideIcon;
+}> = [
+  { query: "سيارة", labelAr: "سيارات", labelEn: "Cars", icon: Car },
+  { query: "شقة للإيجار", labelAr: "شقق للإيجار", labelEn: "Apartments", icon: Building2 },
+  { query: "موبايل", labelAr: "موبايلات", labelEn: "Phones", icon: Smartphone },
+  { query: "وظيفة", labelAr: "وظائف", labelEn: "Jobs", icon: Briefcase },
+];
+
 function iconForCategoryPlaceholder(placeholder: string | null | undefined): LucideIcon {
   if (placeholder && categoryIcons[placeholder]) return categoryIcons[placeholder];
   return Grid3X3;
@@ -106,8 +118,8 @@ function HomePage() {
     <>
       <AppHeader />
       <main className="home-container mobile-page-bottom pt-3 sm:pt-5 lg:pt-7">
-        <section className="rawaj-home-stage" aria-labelledby="rawaj-home-title">
-          <div className="relative z-10 grid min-h-[18rem] gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.82fr)] lg:items-end lg:gap-12 lg:p-9">
+        <section className="rawaj-home-stage rawaj-home-v2-hero" aria-labelledby="rawaj-home-title">
+          <div className="relative z-10 grid min-h-[20rem] gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.82fr)] lg:items-end lg:gap-12 lg:p-9">
             <div className="self-end">
               <p className="rawaj-signature-kicker rawaj-home-kicker">
                 <Sparkles className="h-3.5 w-3.5" strokeWidth={1.9} />
@@ -118,21 +130,32 @@ function HomePage() {
                 className="rawaj-home-title mt-3 max-w-xl text-[1.75rem] font-extrabold leading-[1.34] sm:text-[2.35rem] lg:text-[2.9rem]"
               >
                 {text(
-                  "ابحث عمّا يستحق. وتواصل بثقة.",
-                  "Find what matters. Connect with confidence.",
+                  "كل ما تحتاجه في سوريا، أقرب مما تتوقع.",
+                  "Everything you need in Syria, closer than you think.",
                 )}
               </h1>
               <p className="rawaj-home-description mt-3 max-w-xl text-[12px] leading-6 sm:text-sm sm:leading-7">
                 {text(
-                  "إعلانات أوضح، وصول أسرع، وتجربة مصممة لتوصلك لما تحتاجه بدون تشويش.",
-                  "Clearer listings, faster discovery, and a focused path to what you need.",
+                  "اكتشف السيارات والعقارات والمنتجات والخدمات، وتواصل مباشرة مع أشخاص ومتاجر قريبين منك.",
+                  "Discover vehicles, homes, products, and services, then connect directly with people and stores near you.",
                 )}
               </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="rawaj-home-value-chip rounded-full px-3 py-1.5 text-[10px] font-bold sm:text-[11px]">
+                  {text("إعلانات مجانية", "Free listings")}
+                </span>
+                <span className="rawaj-home-value-chip rounded-full px-3 py-1.5 text-[10px] font-bold sm:text-[11px]">
+                  {text("تواصل مباشر", "Direct contact")}
+                </span>
+                <span className="rawaj-home-value-chip rounded-full px-3 py-1.5 text-[10px] font-bold sm:text-[11px]">
+                  {text("سوق لكل سوريا", "Across Syria")}
+                </span>
+              </div>
             </div>
 
-            <div className="rawaj-home-search-shell">
+            <div className="rawaj-home-search-shell p-3 sm:p-4">
               <form onSubmit={handleSearch} className="flex items-stretch gap-2">
-                <label className="group flex min-h-14 min-w-0 flex-1 items-center gap-2.5 rounded-[1.05rem] bg-white ps-3.5 pe-4 text-foreground shadow-[0_14px_34px_rgba(8,24,42,0.16)] ring-1 ring-white/50 transition focus-within:ring-[3px] focus-within:ring-brand-orange/28">
+                <label className="rawaj-home-search-input group flex min-h-14 min-w-0 flex-1 items-center gap-2.5 rounded-[1.05rem] ps-3.5 pe-4 text-foreground transition focus-within:ring-[3px] focus-within:ring-brand-orange/28">
                   <Search className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.9} />
                   <input
                     value={searchValue}
@@ -149,7 +172,7 @@ function HomePage() {
                 <button
                   type="submit"
                   aria-label={text("بحث", "Search")}
-                  className="grid min-h-14 w-14 shrink-0 place-items-center rounded-[1.05rem] bg-brand-orange text-white shadow-[0_14px_34px_rgba(232,111,50,0.28)] transition hover:-translate-y-0.5 active:scale-[0.98]"
+                  className="rawaj-home-search-submit grid min-h-14 w-14 shrink-0 place-items-center rounded-[1.05rem] text-white transition hover:-translate-y-0.5 active:scale-[0.98]"
                 >
                   <Search className="h-5 w-5" strokeWidth={2} />
                 </button>
@@ -176,12 +199,37 @@ function HomePage() {
                   <SlidersHorizontal className="h-4 w-4" strokeWidth={1.9} />
                 </Link>
               </div>
+
+              <div className="rawaj-home-shortcuts mt-3 pt-3">
+                <span className="text-[9px] font-bold text-white/55">
+                  {text("اختصارات البحث", "Quick searches")}
+                </span>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {quickSearches.map((shortcut) => {
+                    const Icon = shortcut.icon;
+                    return (
+                      <Link
+                        key={shortcut.query}
+                        to="/listings"
+                        search={{ q: shortcut.query }}
+                        className="rawaj-home-shortcut inline-flex min-h-9 items-center gap-1.5 rounded-full px-2.5 text-[9px] font-bold sm:text-[10px]"
+                      >
+                        <Icon className="h-3.5 w-3.5" strokeWidth={1.9} />
+                        {text(shortcut.labelAr, shortcut.labelEn)}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
         {categories.length > 0 ? (
-          <section className="mt-7" aria-label={text("الأقسام", "Categories")}>
+          <section
+            className="rawaj-home-v2-section rawaj-home-v2-categories"
+            aria-label={text("الأقسام", "Categories")}
+          >
             <SectionHeading
               kicker={text("اكتشف السوق", "Explore the market")}
               title={text("تصفح الأقسام", "Browse categories")}
@@ -199,7 +247,7 @@ function HomePage() {
                     className={`group rawaj-color-card ${categoryWorlds[index]} rawaj-home-category-card`}
                   >
                     <div className="relative z-10 flex items-center gap-3 lg:flex-col lg:items-start">
-                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[1rem] bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(16,43,70,0.14)] transition group-hover:-translate-y-0.5 group-hover:bg-brand-orange">
+                      <span className="rawaj-category-icon grid h-11 w-11 shrink-0 place-items-center rounded-[1rem] transition group-hover:-translate-y-0.5">
                         <Icon className="h-5 w-5" strokeWidth={1.8} />
                       </span>
                       <div className="min-w-0">
@@ -231,8 +279,7 @@ function HomePage() {
                 title={text("مختارات مميزة", "Featured picks")}
                 listings={featuredListings}
                 empty=""
-                mobileRail
-                tone="indigo"
+                tone="featured"
               />
             ) : null}
 
@@ -241,14 +288,14 @@ function HomePage() {
               title={text("أحدث الإعلانات", "Latest listings")}
               listings={latestListings}
               empty={text("لا توجد إعلانات معتمدة للعرض.", "No reviewed listings to show.")}
-              tone="orange"
+              tone="latest"
             />
           </>
         )}
 
         <section className="rawaj-home-trust-stage mt-8">
           <div className="relative z-10 flex items-start gap-3 p-5 sm:p-6">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-orange text-white shadow-[0_12px_28px_rgba(232,111,50,0.25)]">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-orange text-white shadow-[0_12px_28px_rgba(244,95,56,0.25)]">
               <ShieldCheck className="h-5 w-5" strokeWidth={1.8} />
             </span>
             <div>
@@ -277,19 +324,17 @@ function ListingsSection({
   title,
   listings,
   empty,
-  mobileRail = false,
   tone,
 }: {
   kicker: string;
   title: string;
   listings: ClassifiedListing[];
   empty: string;
-  mobileRail?: boolean;
-  tone: "orange" | "indigo";
+  tone: "featured" | "latest";
 }) {
   const { text } = useUiPreferences();
   return (
-    <section className={`rawaj-home-listings-section rawaj-home-tone-${tone}`}>
+    <section className={`rawaj-home-v2-section rawaj-home-v2-listings rawaj-home-tone-${tone}`}>
       <SectionHeading
         kicker={kicker}
         title={title}
@@ -298,14 +343,6 @@ function ListingsSection({
       />
       {listings.length === 0 ? (
         <HomeState title={empty} compact />
-      ) : mobileRail ? (
-        <div className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 sm:grid sm:grid-cols-3 lg:grid-cols-4">
-          {listings.map((listing) => (
-            <div key={listing.id} className="w-[11rem] shrink-0 snap-start sm:w-auto">
-              <RealListingCard listing={listing} />
-            </div>
-          ))}
-        </div>
       ) : (
         <div className="listing-card-grid">
           {listings.map((listing) => (
@@ -329,14 +366,14 @@ function SectionHeading({
   actionTo: "/categories" | "/listings";
 }) {
   return (
-    <div className="mb-4 flex items-end justify-between gap-3">
+    <div className="rawaj-home-section-heading mb-4 flex items-end justify-between gap-3">
       <div>
         <span className="rawaj-signature-kicker">{kicker}</span>
-        <h2 className="mt-1 rawaj-section-title">{title}</h2>
+        <h2 className="rawaj-section-title mt-1">{title}</h2>
       </div>
       <Link
         to={actionTo}
-        className="inline-flex items-center gap-1 pb-0.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:text-brand-orange sm:text-[11px]"
+        className="rawaj-home-section-action inline-flex items-center gap-1 text-[10px] font-bold transition-colors sm:text-[11px]"
       >
         {actionLabel}
         <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" strokeWidth={1.8} />

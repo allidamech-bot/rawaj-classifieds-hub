@@ -150,6 +150,9 @@ jobs:
       - name: Design system V2 contract
         run: node --test scripts/design-system-v2.test.mjs
 
+      - name: Marketplace core V2 contract
+        run: node --test scripts/marketplace-core-v2.test.mjs
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 

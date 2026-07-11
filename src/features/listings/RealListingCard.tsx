@@ -14,6 +14,8 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
     <Link
       to="/listings/$id"
       params={{ id: listing.id }}
+      data-featured={listing.isFeatured}
+      data-reserved={Boolean(listing.reservedAt)}
       className="rawaj-listing-card group flex h-full flex-col overflow-hidden bg-card transition"
     >
       <div className="rawaj-listing-media relative overflow-hidden bg-muted-surface">
@@ -29,19 +31,25 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
           <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="standard" />
         )}
         {listing.reservedAt ? (
-          <span className="absolute start-2 top-2 rounded-full bg-warning/92 px-2 py-1 text-[9px] font-extrabold text-warning-foreground shadow-soft backdrop-blur-sm">
+          <span
+            data-tone="reserved"
+            className="rawaj-listing-status absolute start-2 top-2 rounded-full px-2 py-1 text-[9px] font-extrabold shadow-soft"
+          >
             {text("محجوز", "Reserved")}
           </span>
         ) : listing.isFeatured ? (
-          <span className="absolute start-2 top-2 rounded-full bg-primary/92 px-2 py-1 text-[9px] font-extrabold text-primary-foreground shadow-soft backdrop-blur-sm">
+          <span
+            data-tone="featured"
+            className="rawaj-listing-status absolute start-2 top-2 rounded-full px-2 py-1 text-[9px] font-extrabold shadow-soft"
+          >
             {text("مميز", "Featured")}
           </span>
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
+      <div className="flex flex-1 flex-col p-3 sm:p-3.5">
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 text-[14px] font-extrabold leading-tight text-primary sm:text-base">
+          <div className="rawaj-listing-price min-w-0 text-[14px] font-extrabold leading-tight sm:text-base">
             {formatPriceLocalized(
               listing.price ?? 0,
               listing.priceType,
@@ -49,12 +57,12 @@ export function RealListingCard({ listing }: { listing: ClassifiedListing }) {
               listing.currency,
             )}
           </div>
-          <span className="rawaj-listing-category max-w-[45%] shrink-0 truncate rounded-full px-2 py-1 text-[9px] font-bold text-muted-foreground">
+          <span className="rawaj-listing-category max-w-[45%] shrink-0 truncate rounded-full px-2 py-1 text-[9px] font-bold">
             {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
           </span>
         </div>
 
-        <h3 className="mt-1.5 line-clamp-2 min-h-[2.35rem] text-[12.5px] font-bold leading-snug text-foreground sm:text-[13px]">
+        <h3 className="rawaj-listing-title mt-1.5 line-clamp-2 min-h-[2.35rem] text-[12.5px] font-bold leading-snug sm:text-[13px]">
           {listing.title}
         </h3>
 
