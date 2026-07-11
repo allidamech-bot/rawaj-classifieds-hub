@@ -53,38 +53,40 @@ function HomePage() {
   return (
     <>
       <AppHeader />
-      <PageTransition>
-        <PageContainer className="rawaj-home-v3 py-3 sm:py-5 lg:py-7">
-          <DiscoveryHero
-            searchValue={searchValue}
-            onSearchValueChange={setSearchValue}
-            onSubmit={handleSearch}
-            text={text}
-          />
-
-          <CategoryWorlds categories={categories} language={language} text={text} />
-
-          {listingLoadFailed ? (
-            <EmptyState
-              className="rawaj-home-load-state"
-              title={text("تعذر تحميل إعلانات السوق", "Marketplace listings could not be loaded")}
-              description={text(
-                "الأقسام ما زالت متاحة. حاول فتح السوق مرة أخرى بعد قليل.",
-                "Categories remain available. Try opening the marketplace again shortly.",
-              )}
+      <main className="rawaj-home-v3-main">
+        <PageTransition>
+          <PageContainer className="rawaj-home-v3 py-3 sm:py-5 lg:py-7">
+            <DiscoveryHero
+              searchValue={searchValue}
+              onSearchValueChange={setSearchValue}
+              onSubmit={handleSearch}
+              text={text}
             />
-          ) : (
-            <>
-              {featuredListings.length > 0 ? (
-                <FeaturedListingShowcase listings={featuredListings} />
-              ) : null}
-              <LatestDiscovery listings={latestListings} text={text} />
-            </>
-          )}
 
-          <HomeTrustStrip text={text} />
-        </PageContainer>
-      </PageTransition>
+            <CategoryWorlds categories={categories} language={language} text={text} />
+
+            {listingLoadFailed ? (
+              <EmptyState
+                className="rawaj-home-load-state"
+                title={text("تعذر تحميل إعلانات السوق", "Marketplace listings could not be loaded")}
+                description={text(
+                  "الأقسام ما زالت متاحة. حاول فتح السوق مرة أخرى بعد قليل.",
+                  "Categories remain available. Try opening the marketplace again shortly.",
+                )}
+              />
+            ) : (
+              <>
+                {featuredListings.length > 0 ? (
+                  <FeaturedListingShowcase listings={featuredListings} />
+                ) : null}
+                <LatestDiscovery listings={latestListings} text={text} />
+              </>
+            )}
+
+            <HomeTrustStrip text={text} />
+          </PageContainer>
+        </PageTransition>
+      </main>
     </>
   );
 }
