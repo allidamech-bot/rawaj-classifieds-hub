@@ -41,6 +41,7 @@ export function QuickFilterRail({
       className="rawaj-quick-filter-rail"
       aria-label={text("فلاتر سريعة", "Quick filters")}
       data-state-contract="contextual-url-filters"
+      data-has-active-filters={hasActiveFilters}
     >
       <button type="button" onClick={onNewest} data-active={newestActive}>
         <Sparkles aria-hidden="true" />
