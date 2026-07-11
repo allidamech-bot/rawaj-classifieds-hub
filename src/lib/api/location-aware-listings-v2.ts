@@ -8,6 +8,7 @@ import type {
 import { resolveCanonicalLocationIds } from "@/lib/api/canonical-location-filter";
 import { fetchPublicListingsLocationAware } from "@/lib/api/location-aware-listings";
 import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
+import { publicListingSelect } from "@/lib/api/public-fields";
 import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
 import { readReferences } from "@/lib/api/references";
 import {
@@ -35,7 +36,7 @@ export async function fetchPublicListingsCanonicalAware(
 
   let query = client
     .from("listings")
-    .select("*")
+    .select(publicListingSelect)
     .eq("status", "approved")
     .is("archived_at", null)
     .or(publicListingExpiryFilter())

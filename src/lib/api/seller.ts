@@ -13,6 +13,7 @@ import {
 } from "@/lib/api/references";
 import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
 import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
+import { publicListingSelect, publicSellerReviewSelect } from "@/lib/api/public-fields";
 import { buildRatingSummary, mapReview } from "@/lib/api/reviews";
 import { getClient, mapError, rowNullableString, rowNumber, rowString } from "@/lib/api/shared";
 
@@ -49,7 +50,7 @@ export async function fetchPublicSellerProfile(
 
   const { data: listingData, error: listingError } = await clientResult.data
     .from("listings")
-    .select("*")
+    .select(publicListingSelect)
     .eq("owner_id", cleanSellerId)
     .eq("status", "approved")
     .is("archived_at", null)
@@ -83,7 +84,7 @@ export async function fetchPublicSellerProfile(
 
   const { data: reviewData, error: reviewError } = await clientResult.data
     .from("seller_reviews")
-    .select("*")
+    .select(publicSellerReviewSelect)
     .eq("seller_user_id", cleanSellerId)
     .eq("status", "approved")
     .order("created_at", { ascending: false })

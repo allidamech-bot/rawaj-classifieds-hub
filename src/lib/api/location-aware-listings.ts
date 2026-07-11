@@ -13,6 +13,7 @@ import {
 } from "@/lib/api/shared";
 import { resolveLocationSubtreeIds } from "@/lib/api/location-filter";
 import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
+import { publicListingSelect } from "@/lib/api/public-fields";
 import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
 import { readReferences } from "@/lib/api/references";
 
@@ -29,7 +30,7 @@ export async function fetchPublicListingsLocationAware(
 
   let query = client
     .from("listings")
-    .select("*")
+    .select(publicListingSelect)
     .eq("status", "approved")
     .is("archived_at", null)
     .or(publicListingExpiryFilter());

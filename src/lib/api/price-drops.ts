@@ -1,4 +1,5 @@
 import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
+import { publicListingSelect } from "@/lib/api/public-fields";
 import {
   fetchOwnerListingDetail,
   hydrateListingsWithPrimaryImages,
@@ -144,7 +145,7 @@ export async function fetchActivePriceDropOffers(
   const listingIds = [...new Set(metadata.map((item) => item.listingId))];
   const { data: listingData, error: listingError } = await clientResult.data
     .from("listings")
-    .select("*")
+    .select(publicListingSelect)
     .in("id", listingIds)
     .eq("status", "approved")
     .is("archived_at", null)
