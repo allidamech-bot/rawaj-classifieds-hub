@@ -1,0 +1,52 @@
+name: Temporary Communication Center V2 Integration
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.event.pull_request.head.ref == 'design/communication-center-v2' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: design/communication-center-v2
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Integrate Communication Center V2
+        run: python scripts/temporary-integrate-communication-center-v2.py
+      - name: Format integrated product files
+        run: >-
+          npx prettier --write
+          scripts/communication-center-v2.test.mjs
+          src/features/communication/CommunicationExperience.tsx
+          src/communication-center-v2.css
+          src/routes/__root.tsx
+          src/routes/chats.tsx
+          src/routes/notifications.tsx
+          src/routes/activity.tsx
+      - name: Commit and push product files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/communication-center-v2.test.mjs
+          git add src/features/communication/CommunicationExperience.tsx
+          git add src/communication-center-v2.css
+          git add src/routes/__root.tsx
+          git add src/routes/chats.tsx
+          git add src/routes/notifications.tsx
+          git add src/routes/activity.tsx
+          git commit -m "Integrate Communication Center V2"
+          git push origin HEAD:design/communication-center-v2
