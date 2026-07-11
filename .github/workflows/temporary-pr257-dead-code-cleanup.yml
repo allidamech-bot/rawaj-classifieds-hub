@@ -1,0 +1,61 @@
+name: Temporary PR 257 Dead Code Cleanup
+
+on:
+  push:
+    branches:
+      - design/search-filters-v1
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: design/search-filters-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Remove unreachable legacy controls
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/routes/listings.index.tsx')
+          s = p.read_text()
+          s = s.replace('  GovernorateChip,\n', '')
+          s = s.replace('  const [open, setOpen] = useState(false);\n', '')
+          start = s.find('  const sortChips = [')
+          end = s.find('  const fuelTypeLabels:', start)
+          if start >= 0 and end > start:
+              s = s[:start] + s[end:]
+          legacy = s.find('        {open && (')
+          count = s.find('        <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">', legacy)
+          if legacy >= 0 and count > legacy:
+              s = s[:legacy] + s[count:]
+          s = s.replace('className="grid gap-3 lg:grid-cols-[220px_1fr]"', 'className="grid gap-4"')
+          old = '''                      query: q,
+                      sort,
+                    })}'''
+          new = '''                      query: q,
+                      sort,
+                      view,
+                      withPhotos,
+                    })}'''
+          s = s.replace(old, new)
+          p.write_text(s)
+          PY
+      - run: npx prettier --write src/routes/listings.index.tsx scripts/search-filters-v1.test.mjs
+      - name: Commit and self-delete
+        run: |
+          rm .github/workflows/temporary-pr257-dead-code-cleanup.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Remove legacy search overlay code"
+          git push origin HEAD:design/search-filters-v1
