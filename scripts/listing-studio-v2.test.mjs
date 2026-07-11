@@ -33,6 +33,8 @@ test("shared studio exposes one shell, hero, preview, quality, autosave and acti
   ]) {
     assert.match(shared, new RegExp(`export function ${component}`));
   }
+  assert.match(shared, /className="rawaj-studio-shell"/);
+  assert.match(shared, /className="rawaj-studio-preview"/);
 });
 
 test("create flow uses the shared studio while preserving draft and review behavior", () => {
