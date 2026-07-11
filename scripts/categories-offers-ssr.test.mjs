@@ -15,6 +15,7 @@ test("category directory data is loaded before render with taxonomy fallback", (
   assert.match(categories, /fetchPublicSubcategories\(\)/);
   assert.match(categories, /taxonomyResult\.error\.code === "schema_missing"/);
   assert.doesNotMatch(categories, /useEffect\(\(\) => \{[\s\S]*fetchPublicTaxonomyNodes/);
+  assert.doesNotMatch(categories, /جاري تحميل الأقسام/);
 });
 
 test("verified price drops are loaded before offers render", () => {
@@ -22,5 +23,6 @@ test("verified price drops are loaded before offers render", () => {
   assert.match(offers, /Route\.useLoaderData\(\)/);
   assert.match(offers, /fetchActivePriceDropOffers\(30\)/);
   assert.doesNotMatch(offers, /useEffect\(\(\) => \{[\s\S]*fetchActivePriceDropOffers/);
+  assert.doesNotMatch(offers, /useState<ListingPriceDropOffer/);
   assert.doesNotMatch(offers, /جاري تحميل التخفيضات الحقيقية/);
 });
