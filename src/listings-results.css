@@ -1,0 +1,99 @@
+/* Listings results: keep the toolbar decisive and the product grid visually dominant. */
+
+main.container-wide.mobile-page-bottom > section.rawaj-hero-surface:first-child {
+  border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--color-card) 96%, white) 0%, var(--color-card) 100%);
+  box-shadow: 0 14px 34px rgba(16, 43, 70, 0.08);
+}
+
+main.container-wide.mobile-page-bottom
+  > section.rawaj-hero-surface:first-child
+  > div:first-child {
+  align-items: center;
+}
+
+main.container-wide.mobile-page-bottom
+  > section.rawaj-hero-surface:first-child
+  label:has(input[type="search"]) {
+  border-color: color-mix(in srgb, var(--color-primary) 14%, var(--color-border));
+  background: var(--color-card);
+  box-shadow: 0 8px 22px rgba(16, 43, 70, 0.06);
+}
+
+main.container-wide.mobile-page-bottom
+  > section.rawaj-hero-surface:first-child
+  label:has(input[type="search"]):focus-within {
+  border-color: color-mix(in srgb, var(--color-brand-orange) 62%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-orange) 14%, transparent);
+}
+
+main.container-wide.mobile-page-bottom
+  > section.rawaj-hero-surface:first-child
+  button.rawaj-button-primary {
+  box-shadow: 0 10px 24px rgba(16, 43, 70, 0.16);
+}
+
+main.container-wide.mobile-page-bottom
+  > section.rawaj-hero-surface:first-child
+  button.rawaj-chip {
+  border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
+  background: color-mix(in srgb, var(--color-card) 88%, transparent);
+}
+
+main.container-wide.mobile-page-bottom
+  > section.rawaj-hero-surface:first-child
+  button.rawaj-chip[class*="bg-primary"] {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+main.container-wide.mobile-page-bottom > section.rawaj-surface.mt-4.lg\:block {
+  border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+  background: color-mix(in srgb, var(--color-card) 98%, var(--color-muted-surface));
+}
+
+main.container-wide.mobile-page-bottom .listing-card-grid {
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+
+main.container-wide.mobile-page-bottom .listing-card-grid > a {
+  height: 100%;
+  border-color: color-mix(in srgb, var(--color-border) 80%, transparent);
+  box-shadow: 0 7px 20px rgba(16, 43, 70, 0.045);
+}
+
+main.container-wide.mobile-page-bottom .listing-card-grid > a:hover {
+  border-color: color-mix(in srgb, var(--color-gold) 42%, var(--color-border));
+  box-shadow: 0 14px 30px rgba(16, 43, 70, 0.09);
+}
+
+@media (min-width: 1024px) {
+  main.container-wide.mobile-page-bottom > section.rawaj-surface.mt-4.lg\:block {
+    position: sticky;
+    top: 5.5rem;
+    z-index: 10;
+  }
+
+  main.container-wide.mobile-page-bottom .listing-card-grid {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 639px) {
+  main.container-wide.mobile-page-bottom > section.rawaj-hero-surface:first-child {
+    padding: 0.875rem;
+    box-shadow: 0 10px 26px rgba(16, 43, 70, 0.07);
+  }
+
+  main.container-wide.mobile-page-bottom .listing-card-grid {
+    gap: 0.625rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main.container-wide.mobile-page-bottom .listing-card-grid > a {
+    transition: none;
+  }
+}

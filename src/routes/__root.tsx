@@ -23,7 +23,21 @@ import { shouldShowSiteFooter, shouldShowBottomNav } from "@/lib/primary-navigat
 import { buildSiteStructuredData, createSeo, jsonLdScript } from "@/lib/seo";
 import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
 import { UnreadActivityProvider } from "@/lib/unread-activity";
+import activityMoreFoundationCss from "../activity-more-foundation.css?url";
+import authAccountFoundationCss from "../auth-account-foundation.css?url";
+import homeSignatureCss from "../home-signature.css?url";
+import listingDetailFoundationCss from "../listing-detail-foundation.css?url";
+import listingStudioSignatureCss from "../listing-studio-signature.css?url";
+import listingsResultsCss from "../listings-results.css?url";
+import marketplaceDiscoveryCss from "../marketplace-discovery.css?url";
+import messagingSignatureCss from "../messaging-signature.css?url";
+import myStoreHeaderCss from "../my-store-header.css?url";
+import myStoreReviewCardCss from "../my-store-review-card.css?url";
+import offersSignatureCss from "../offers-signature.css?url";
+import sellerStorefrontFoundationCss from "../seller-storefront-foundation.css?url";
+import signatureCss from "../signature.css?url";
 import appCss from "../styles.css?url";
+import visualFoundationCss from "../visual-foundation.css?url";
 import marketplaceSystemCss from "../marketplace-system.css?url";
 
 const ROOT_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
@@ -92,13 +106,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       meta: [
         { charSet: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-        { name: "theme-color", content: "#35241f" },
+        { name: "theme-color", content: "#153f37" },
         { name: "author", content: "RAWAJ" },
         ...seo.meta,
       ],
       links: [
         ...seo.links,
         { rel: "stylesheet", href: appCss },
+        { rel: "stylesheet", href: visualFoundationCss },
+        { rel: "stylesheet", href: signatureCss },
+        { rel: "stylesheet", href: homeSignatureCss },
+        { rel: "stylesheet", href: marketplaceDiscoveryCss },
+        { rel: "stylesheet", href: listingsResultsCss },
+        { rel: "stylesheet", href: listingDetailFoundationCss },
+        { rel: "stylesheet", href: authAccountFoundationCss },
+        { rel: "stylesheet", href: activityMoreFoundationCss },
+        { rel: "stylesheet", href: sellerStorefrontFoundationCss },
+        { rel: "stylesheet", href: myStoreHeaderCss },
+        { rel: "stylesheet", href: myStoreReviewCardCss },
+        { rel: "stylesheet", href: offersSignatureCss },
+        { rel: "stylesheet", href: listingStudioSignatureCss },
+        { rel: "stylesheet", href: messagingSignatureCss },
         { rel: "stylesheet", href: marketplaceSystemCss },
         { rel: "icon", href: "/favicon.ico" },
         { rel: "manifest", href: "/manifest.webmanifest" },

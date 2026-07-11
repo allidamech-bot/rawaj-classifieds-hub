@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Languages, LogIn, Plus, Search, User, UserCog } from "lucide-react";
+import { Languages, LogIn, Plus, User, UserCog } from "lucide-react";
 import { NotificationTrigger } from "@/components/NotificationTrigger";
 import { resolvePrimaryNavigationSection } from "@/lib/primary-navigation";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -84,15 +84,6 @@ export function AppHeader({ compact = false, title }: Props) {
             <span>{language === "ar" ? "English" : "العربية"}</span>
           </button>
 
-          <Link
-            to="/listings"
-            aria-label={text("البحث في رواج", "Search RAWAJ")}
-            title={text("البحث", "Search")}
-            className="rawaj-header-search rawaj-icon-button rawaj-touch-target shrink-0 shadow-none lg:hidden"
-          >
-            <Search className="h-4 w-4" strokeWidth={2} />
-          </Link>
-
           <NotificationTrigger tone="light" />
 
           {auth.canAccessAdmin ? (
@@ -135,17 +126,17 @@ export function AppHeader({ compact = false, title }: Props) {
 function Logo() {
   return (
     <span className="rawaj-brand-lockup flex items-center gap-2.5 sm:gap-3">
-      <span className="rawaj-brand-mark grid h-11 w-11 shrink-0 place-items-center">
+      <span className="rawaj-brand-mark grid h-10 w-10 shrink-0 place-items-center">
         <img
           src="/brand/rawaj-mark-transparent-header.png"
           alt="RAWAJ"
           decoding="async"
-          className="h-10 w-10 object-contain"
+          className="h-7 w-auto object-contain sm:h-8"
         />
       </span>
 
       <span className="flex items-center gap-1.5 leading-none sm:gap-2">
-        <span className="font-display text-[18px] font-extrabold text-primary sm:text-[19px]">
+        <span className="font-display text-[17px] font-extrabold text-primary sm:text-[18px]">
           رواج
         </span>
         <span className="rawaj-brand-divider h-4 w-px sm:h-5" aria-hidden="true" />
