@@ -52,7 +52,11 @@ export function CategoryWorlds({ categories, language, text }: CategoryWorldsPro
     <section className="rawaj-category-worlds" aria-labelledby="rawaj-category-worlds-title">
       <SectionHeader
         eyebrow={text("عوالم السوق", "Marketplace worlds")}
-        title={<span id="rawaj-category-worlds-title">{text("ابدأ من القسم", "Start with a category")}</span>}
+        title={
+          <span id="rawaj-category-worlds-title">
+            {text("ابدأ من القسم", "Start with a category")}
+          </span>
+        }
         action={
           <Link to="/categories" className="rawaj-section-link">
             {text("كل الأقسام", "All categories")}
@@ -81,7 +85,10 @@ export function CategoryWorlds({ categories, language, text }: CategoryWorldsPro
                 <strong>{categoryName(category.id, category.nameAr, language)}</strong>
                 <small>{category.hintAr ?? text("استكشف الإعلانات", "Explore listings")}</small>
               </span>
-              <ChevronRight className="rawaj-category-world__arrow rtl:rotate-180" strokeWidth={1.8} />
+              <ChevronRight
+                className="rawaj-category-world__arrow rtl:rotate-180"
+                strokeWidth={1.8}
+              />
             </Link>
           );
         })}

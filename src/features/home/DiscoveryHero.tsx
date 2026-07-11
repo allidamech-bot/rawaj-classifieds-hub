@@ -48,7 +48,10 @@ export function DiscoveryHero({
               "Discover listings, compare options, and connect directly with sellers.",
             )}
           </p>
-          <div className="rawaj-discovery-benefits" aria-label={text("مزايا رواج", "RAWAJ benefits")}>
+          <div
+            className="rawaj-discovery-benefits"
+            aria-label={text("مزايا رواج", "RAWAJ benefits")}
+          >
             <span>{text("إعلان مجاني", "Free listing")}</span>
             <span>{text("تواصل مباشر", "Direct contact")}</span>
             <span>{text("جميع المحافظات", "All governorates")}</span>

@@ -31,7 +31,10 @@ export function LatestDiscovery({ listings, text }: LatestDiscoveryProps) {
         </div>
       ) : (
         <div className="rawaj-latest-discovery__empty">
-          {text("لا توجد إعلانات معتمدة للعرض الآن.", "No reviewed listings are available right now.")}
+          {text(
+            "لا توجد إعلانات معتمدة للعرض الآن.",
+            "No reviewed listings are available right now.",
+          )}
         </div>
       )}
     </section>

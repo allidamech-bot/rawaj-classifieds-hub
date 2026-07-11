@@ -40,8 +40,16 @@
   border: 1px solid color-mix(in srgb, white 12%, transparent);
   border-radius: clamp(1.55rem, 5vw, 2.75rem);
   background:
-    radial-gradient(circle at 86% 12%, color-mix(in srgb, var(--rawaj-gold) 28%, transparent), transparent 28%),
-    radial-gradient(circle at 8% 100%, color-mix(in srgb, var(--rawaj-orange) 22%, transparent), transparent 35%),
+    radial-gradient(
+      circle at 86% 12%,
+      color-mix(in srgb, var(--rawaj-gold) 28%, transparent),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 8% 100%,
+      color-mix(in srgb, var(--rawaj-orange) 22%, transparent),
+      transparent 35%
+    ),
     linear-gradient(145deg, #092d29 0%, var(--color-primary) 48%, #1b594b 100%);
   box-shadow: 0 28px 70px color-mix(in srgb, var(--color-primary) 25%, transparent);
   color: #fffdf7;
@@ -308,7 +316,11 @@
 .rawaj-category-worlds {
   border-radius: clamp(1.35rem, 4vw, 2.2rem);
   background:
-    radial-gradient(circle at 95% 0%, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 35%),
+    radial-gradient(
+      circle at 95% 0%,
+      color-mix(in srgb, var(--color-primary) 8%, transparent),
+      transparent 35%
+    ),
     var(--rawaj-surface-sage);
   padding: clamp(1rem, 3vw, 1.7rem);
 }
@@ -340,7 +352,11 @@
   border: 1px solid color-mix(in srgb, var(--world-accent) 20%, var(--color-border));
   border-radius: 1.45rem;
   background:
-    radial-gradient(circle at 92% 8%, color-mix(in srgb, var(--world-accent) 17%, transparent), transparent 45%),
+    radial-gradient(
+      circle at 92% 8%,
+      color-mix(in srgb, var(--world-accent) 17%, transparent),
+      transparent 45%
+    ),
     var(--rawaj-surface-card);
   padding: 1rem;
   box-shadow: var(--shadow-card);
@@ -448,7 +464,11 @@
 .rawaj-featured-showcase {
   border-radius: clamp(1.35rem, 4vw, 2.3rem);
   background:
-    radial-gradient(circle at 4% 0%, color-mix(in srgb, var(--rawaj-gold) 12%, transparent), transparent 36%),
+    radial-gradient(
+      circle at 4% 0%,
+      color-mix(in srgb, var(--rawaj-gold) 12%, transparent),
+      transparent 36%
+    ),
     linear-gradient(145deg, #f8f0df, var(--rawaj-surface-card));
   padding: clamp(1rem, 3vw, 1.7rem);
 }
@@ -490,7 +510,12 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, rgba(5, 27, 24, 0.94) 0%, rgba(5, 27, 24, 0.52) 45%, rgba(5, 27, 24, 0.08) 78%),
+    linear-gradient(
+      to top,
+      rgba(5, 27, 24, 0.94) 0%,
+      rgba(5, 27, 24, 0.52) 45%,
+      rgba(5, 27, 24, 0.08) 78%
+    ),
     linear-gradient(to inline-end, rgba(5, 27, 24, 0.28), transparent 55%);
 }
 
@@ -680,7 +705,11 @@
 .rawaj-latest-discovery {
   border-radius: clamp(1.25rem, 4vw, 2rem);
   background:
-    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--rawaj-orange) 7%, transparent), transparent 34%),
+    radial-gradient(
+      circle at 0% 0%,
+      color-mix(in srgb, var(--rawaj-orange) 7%, transparent),
+      transparent 34%
+    ),
     var(--rawaj-surface-warm);
   padding: clamp(1rem, 3vw, 1.7rem);
 }
@@ -708,7 +737,11 @@
   border: 1px solid color-mix(in srgb, var(--color-primary) 11%, var(--color-border));
   border-radius: clamp(1.25rem, 4vw, 1.9rem);
   background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 38%),
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--color-primary) 8%, transparent),
+      transparent 38%
+    ),
     var(--rawaj-surface-sage);
   padding: clamp(1rem, 3vw, 1.45rem);
 }

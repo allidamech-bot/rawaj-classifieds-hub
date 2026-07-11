@@ -1,11 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { AppHeader } from "@/components/AppHeader";
-import {
-  EmptyState,
-  PageContainer,
-  PageTransition,
-} from "@/components/shell/spatial-primitives";
+import { EmptyState, PageContainer, PageTransition } from "@/components/shell/spatial-primitives";
 import { CategoryWorlds } from "@/features/home/CategoryWorlds";
 import { DiscoveryHero } from "@/features/home/DiscoveryHero";
 import { FeaturedListingShowcase } from "@/features/home/FeaturedListingShowcase";

@@ -18,12 +18,7 @@ export function FeaturedListingMiniCard({ listing }: { listing: ClassifiedListin
     >
       <div className="rawaj-featured-mini-card__media">
         {listing.primaryImageUrl ? (
-          <img
-            src={listing.primaryImageUrl}
-            alt={listing.title}
-            loading="lazy"
-            decoding="async"
-          />
+          <img src={listing.primaryImageUrl} alt={listing.title} loading="lazy" decoding="async" />
         ) : (
           <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="standard" />
         )}
@@ -31,12 +26,7 @@ export function FeaturedListingMiniCard({ listing }: { listing: ClassifiedListin
       </div>
       <div className="rawaj-featured-mini-card__body">
         <strong>
-          {formatPriceLocalized(
-            listing.price ?? 0,
-            listing.priceType,
-            language,
-            listing.currency,
-          )}
+          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
         </strong>
         <h3>{listing.title}</h3>
         <p>

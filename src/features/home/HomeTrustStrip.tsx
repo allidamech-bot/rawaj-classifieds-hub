@@ -10,7 +10,9 @@ export function HomeTrustStrip({ text }: { text: (ar: string, en: string) => str
         </span>
         <div>
           <strong>{text("تعامل بأمان", "Trade safely")}</strong>
-          <small>{text("خطوات بسيطة تحميك أثناء البيع والشراء.", "Simple steps protect every deal.")}</small>
+          <small>
+            {text("خطوات بسيطة تحميك أثناء البيع والشراء.", "Simple steps protect every deal.")}
+          </small>
         </div>
       </div>
       <div className="rawaj-home-trust-strip__tips">

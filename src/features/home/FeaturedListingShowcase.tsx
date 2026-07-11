@@ -17,7 +17,11 @@ export function FeaturedListingShowcase({ listings }: { listings: ClassifiedList
     <section className="rawaj-featured-showcase" aria-labelledby="rawaj-featured-title">
       <SectionHeader
         eyebrow={text("مختارات رواج", "RAWAJ selection")}
-        title={<span id="rawaj-featured-title">{text("إعلانات تستحق النظرة الأولى", "Listings worth seeing first")}</span>}
+        title={
+          <span id="rawaj-featured-title">
+            {text("إعلانات تستحق النظرة الأولى", "Listings worth seeing first")}
+          </span>
+        }
         action={
           <Link to="/listings" className="rawaj-section-link">
             {text("عرض الكل", "View all")}

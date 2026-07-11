@@ -47,7 +47,10 @@ test("listing cards expose featured and reserved states with stronger hierarchy"
 });
 
 test("mobile listing grid protects readability on narrow screens", () => {
-  assert.match(marketplaceCss, /\.listing-card-grid\s*\{\s*grid-template-columns: minmax\(0, 1fr\)/s);
+  assert.match(
+    marketplaceCss,
+    /\.listing-card-grid\s*\{\s*grid-template-columns: minmax\(0, 1fr\)/s,
+  );
   assert.match(
     marketplaceCss,
     /@media \(min-width: 390px\)[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/,
