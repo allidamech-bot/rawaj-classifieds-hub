@@ -14,9 +14,11 @@ interface Props {
 
 function resolveAdPlacementPage(pathname: string): AdPlacementPage | null {
   if (pathname === "/") return "home";
-  if (pathname === "/listings" || pathname === "/listings/") return "search_results";
+  if (pathname === "/listings" || pathname === "/listings/")
+    return "search_results";
   if (pathname.startsWith("/listings/")) return "listing_detail";
-  if (pathname === "/categories" || pathname === "/categories/") return "categories";
+  if (pathname === "/categories" || pathname === "/categories/")
+    return "categories";
   if (pathname === "/offers" || pathname === "/offers/") return "offers";
   return null;
 }
@@ -28,20 +30,31 @@ export function AppHeader({ compact = false, title }: Props) {
   const activeSection = resolvePrimaryNavigationSection(pathname);
 
   const navItems = [
-    { to: "/" as const, section: "home" as const, label: text("الرئيسية", "Home") },
+    {
+      to: "/" as const,
+      section: "home" as const,
+      label: text("الرئيسية", "Home"),
+    },
     {
       to: "/categories" as const,
       section: "categories" as const,
       label: text("الأقسام", "Categories"),
     },
-    { to: "/offers" as const, section: "offers" as const, label: text("العروض", "Offers") },
+    {
+      to: "/offers" as const,
+      section: "offers" as const,
+      label: text("العروض", "Offers"),
+    },
   ];
 
   return (
     <>
       <header className="rawaj-app-header sticky top-0 z-30 text-foreground">
         <div className="container-wide flex min-h-[3.75rem] items-center gap-2 py-1.5 sm:min-h-16 sm:gap-4 sm:py-2 lg:min-h-[4.5rem]">
-          <Link to="/" className="order-1 flex min-w-0 items-center gap-2 sm:gap-3">
+          <Link
+            to="/"
+            className="order-1 flex min-w-0 items-center gap-2 sm:gap-3"
+          >
             <Logo />
           </Link>
 
@@ -153,7 +166,10 @@ function Logo() {
         <span className="font-display text-[17px] font-extrabold text-primary sm:text-[18px]">
           رواج
         </span>
-        <span className="rawaj-brand-divider h-4 w-px sm:h-5" aria-hidden="true" />
+        <span
+          className="rawaj-brand-divider h-4 w-px sm:h-5"
+          aria-hidden="true"
+        />
         <span className="text-[8px] font-extrabold tracking-[0.22em] text-brand-orange sm:text-[9px]">
           RAWAJ
         </span>
