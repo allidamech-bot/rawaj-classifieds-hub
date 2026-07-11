@@ -1,15 +1,21 @@
 import {
   getClient,
   mapError,
+  mapStorageError,
   rowBoolean,
   rowNullableString,
   rowNumber,
   rowString,
 } from "@/lib/api/shared";
+import { buildProfileMediaPath, profileMediaBucket, validateImageFile } from "@/lib/api/storage";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 
 export type AdPlacementPage =
-  "home" | "search_results" | "listing_detail" | "categories" | "offers";
+  | "home"
+  | "search_results"
+  | "listing_detail"
+  | "categories"
+  | "offers";
 
 export type AdPlacementStatus = "draft" | "active" | "paused";
 
@@ -54,6 +60,55 @@ function isSafeHttpsUrl(value: string) {
   } catch {
     return false;
   }
+}
+
+export async function ownerUploadAdPlacementImage(
+  canManageAdPlacements: boolean,
+  userId: string | null,
+  file: File,
+): Promise<ClassifiedsResult<string>> {
+  if (!canManageAdPlacements) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "إدارة صور المساحات الإعلانية متاحة للمالك فقط." },
+    };
+  }
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لرفع صورة الإعلان." },
+    };
+  }
+
+  const validation = validateImageFile(file);
+  if (!validation.ok) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: validation.error ?? "ملف الصورة غير صالح." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const storagePath = buildProfileMediaPath(userId, "ad-placements", file.name);
+  const uploadResult = await clientResult.data.storage.from(profileMediaBucket).upload(storagePath, file, {
+    cacheControl: "3600",
+    contentType: file.type,
+    upsert: false,
+  });
+  if (uploadResult.error) return { ok: false, error: mapStorageError(uploadResult.error) };
+
+  const { data } = clientResult.data.storage.from(profileMediaBucket).getPublicUrl(storagePath);
+  if (!data.publicUrl) {
+    await clientResult.data.storage.from(profileMediaBucket).remove([storagePath]);
+    return {
+      ok: false,
+      error: { code: "unknown", message: "تم رفع الصورة لكن تعذر إنشاء رابط العرض." },
+    };
+  }
+
+  return { ok: true, data: data.publicUrl };
 }
 
 export async function ownerFetchAdPlacements(
@@ -104,7 +159,7 @@ export async function ownerSaveAdPlacement(
       ok: false,
       error: {
         code: "validation_error",
-        message: "استخدم روابط HTTPS صحيحة ونظيفة لصورة الإعلان ورابط الوجهة.",
+        message: "اختر صورة إعلان صالحة واستخدم رابط HTTPS صحيحاً للوجهة.",
       },
     };
   }
