@@ -1,0 +1,253 @@
+name: Implement categories and offers SSR
+
+on:
+  push:
+    branches:
+      - perf/categories-offers-ssr
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: perf/categories-offers-ssr
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Implement SSR loaders
+        shell: bash
+        run: |
+          python <<'PY'
+          import json
+          from pathlib import Path
+
+          categories = Path("src/routes/categories.tsx")
+          text = categories.read_text()
+          text = text.replace(
+              '''import type {
+            ClassifiedCategory,
+            ClassifiedsError,
+            ClassifiedSubcategory,
+            TaxonomyNode,
+          } from "@/lib/classifieds-types";''',
+              '''import type {
+            ClassifiedCategory,
+            ClassifiedSubcategory,
+            TaxonomyNode,
+          } from "@/lib/classifieds-types";''',
+              1,
+          )
+          old = '''export const Route = createFileRoute("/categories")({
+            validateSearch: categoriesSearchSchema,
+            head: () =>
+              createSeo({
+                title: "الأقسام | RAWAJ / رواج",
+                description: "دليل أقسام رواج لاختيار القسم المناسب قبل تصفح نتائج الإعلانات المعتمدة.",
+                path: "/categories",
+              }),
+            component: CategoriesPage,
+          });'''
+          new = '''export const Route = createFileRoute("/categories")({
+            validateSearch: categoriesSearchSchema,
+            loader: async () => {
+              const [taxonomyResult, categoriesResult, subcategoriesResult] = await Promise.all([
+                fetchPublicTaxonomyNodes(),
+                fetchPublicCategories(),
+                fetchPublicSubcategories(),
+              ]);
+              let fetchError = !categoriesResult.ok
+                ? categoriesResult.error
+                : !subcategoriesResult.ok
+                  ? subcategoriesResult.error
+                  : null;
+              if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
+                fetchError = taxonomyResult.error;
+              }
+              return {
+                taxonomyNodes: taxonomyResult.ok ? taxonomyResult.data : [],
+                taxonomyAvailable: taxonomyResult.ok,
+                categories: categoriesResult.ok ? categoriesResult.data : [],
+                subcategories: subcategoriesResult.ok ? subcategoriesResult.data : [],
+                fetchError,
+              };
+            },
+            head: () =>
+              createSeo({
+                title: "الأقسام | RAWAJ / رواج",
+                description: "دليل أقسام رواج لاختيار القسم المناسب قبل تصفح نتائج الإعلانات المعتمدة.",
+                path: "/categories",
+              }),
+            component: CategoriesPage,
+          });'''
+          if old not in text:
+              raise SystemExit("categories route anchor missing")
+          text = text.replace(old, new, 1)
+          old = '''  const { language, text } = useUiPreferences();
+            const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>([]);
+            const [taxonomyAvailable, setTaxonomyAvailable] = useState(false);
+            const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
+            const [subcategories, setSubcategories] = useState<ClassifiedSubcategory[]>([]);
+            const [query, setQuery] = useState(search.q ?? "");
+            const [loading, setLoading] = useState(true);
+            const [fetchError, setFetchError] = useState<ClassifiedsError | null>(null);'''
+          new = '''  const { language, text } = useUiPreferences();
+            const { taxonomyNodes, taxonomyAvailable, categories, subcategories, fetchError } =
+              Route.useLoaderData();
+            const [query, setQuery] = useState(search.q ?? "");'''
+          if old not in text:
+              raise SystemExit("categories state anchor missing")
+          text = text.replace(old, new, 1)
+          old = '''  useEffect(() => {
+            let cancelled = false;
+
+            async function load() {
+              setLoading(true);
+              setFetchError(null);
+
+              const [taxonomyResult, categoriesResult, subcategoriesResult] = await Promise.all([
+                fetchPublicTaxonomyNodes(),
+                fetchPublicCategories(),
+                fetchPublicSubcategories(),
+              ]);
+              if (cancelled) return;
+
+              if (!categoriesResult.ok) {
+                setFetchError(categoriesResult.error);
+              } else if (!subcategoriesResult.ok) {
+                setFetchError(subcategoriesResult.error);
+              } else {
+                setCategories(categoriesResult.data);
+                setSubcategories(subcategoriesResult.data);
+              }
+
+              if (taxonomyResult.ok) {
+                setTaxonomyNodes(taxonomyResult.data);
+                setTaxonomyAvailable(true);
+              } else if (taxonomyResult.error.code === "schema_missing") {
+                setTaxonomyNodes([]);
+                setTaxonomyAvailable(false);
+              } else {
+                setFetchError(taxonomyResult.error);
+              }
+
+              setLoading(false);
+            }
+
+            void load();
+            return () => {
+              cancelled = true;
+            };
+          }, []);
+
+'''
+          if old not in text:
+              raise SystemExit("categories effect anchor missing")
+          text = text.replace(old, "", 1)
+          old = '''        {loading ? (
+                    <Panel title={text("جاري تحميل الأقسام", "Loading categories")} />
+                  ) : fetchError ? ('''
+          if old not in text:
+              raise SystemExit("categories render anchor missing")
+          categories.write_text(text.replace(old, '''        {fetchError ? (''', 1))
+
+          offers = Path("src/routes/offers.tsx")
+          text = offers.read_text()
+          text = text.replace('import { useEffect, useState } from "react";\n', "", 1)
+          text = text.replace('import type { ClassifiedsError } from "@/lib/classifieds-types";\n', "", 1)
+          old = '''export const Route = createFileRoute("/offers")({
+            head: () =>
+              createSeo({
+                title: "العروض الحقيقية | RAWAJ / رواج",
+                description:
+                  "إعلانات انخفض سعرها فعلياً على رواج، مع السعر السابق والجديد ونسبة التخفيض وتاريخ الانخفاض.",
+                path: "/offers",
+              }),
+            component: OffersPage,
+          });'''
+          new = '''export const Route = createFileRoute("/offers")({
+            loader: async () => {
+              const result = await fetchActivePriceDropOffers(30);
+              return result.ok
+                ? { offers: result.data, error: null }
+                : { offers: [], error: result.error };
+            },
+            head: () =>
+              createSeo({
+                title: "العروض الحقيقية | RAWAJ / رواج",
+                description:
+                  "إعلانات انخفض سعرها فعلياً على رواج، مع السعر السابق والجديد ونسبة التخفيض وتاريخ الانخفاض.",
+                path: "/offers",
+              }),
+            component: OffersPage,
+          });'''
+          if old not in text:
+              raise SystemExit("offers route anchor missing")
+          text = text.replace(old, new, 1)
+          old = '''  const { text } = useUiPreferences();
+            const [offers, setOffers] = useState<ListingPriceDropOffer[]>([]);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState<ClassifiedsError | null>(null);
+
+            useEffect(() => {
+              let cancelled = false;
+              async function load() {
+                setLoading(true);
+                setError(null);
+                const result = await fetchActivePriceDropOffers(30);
+                if (cancelled) return;
+                if (result.ok) setOffers(result.data);
+                else {
+                  setOffers([]);
+                  setError(result.error);
+                }
+                setLoading(false);
+              }
+              void load();
+              return () => {
+                cancelled = true;
+              };
+            }, []);'''
+          new = '''  const { text } = useUiPreferences();
+            const { offers, error } = Route.useLoaderData();'''
+          if old not in text:
+              raise SystemExit("offers state anchor missing")
+          text = text.replace(old, new, 1)
+          old = '''            {loading ? (
+                          <OffersState
+                            title={text("جاري تحميل التخفيضات الحقيقية", "Loading real price drops")}
+                            body={text(
+                              "يتم التحقق من أحدث الأسعار العامة الآن.",
+                              "Checking the latest public prices now.",
+                            )}
+                          />
+                        ) : error ? ('''
+          if old not in text:
+              raise SystemExit("offers render anchor missing")
+          offers.write_text(text.replace(old, '''            {error ? (''', 1))
+
+          package_path = Path("package.json")
+          package = json.loads(package_path.read_text())
+          scripts = package["scripts"]
+          scripts["test:categories-offers-ssr"] = "node --test scripts/categories-offers-ssr.test.mjs"
+          marker = "npm run test:home-ssr && npm run lint"
+          replacement = "npm run test:home-ssr && npm run test:categories-offers-ssr && npm run lint"
+          if marker not in scripts["check"]:
+              raise SystemExit("package check anchor missing")
+          scripts["check"] = scripts["check"].replace(marker, replacement, 1)
+          package_path.write_text(json.dumps(package, ensure_ascii=False, indent=2) + "\n")
+          PY
+          npx prettier --write src/routes/categories.tsx src/routes/offers.tsx scripts/categories-offers-ssr.test.mjs package.json
+      - name: Commit implementation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/categories.tsx src/routes/offers.tsx scripts/categories-offers-ssr.test.mjs package.json
+          git commit -m "Render categories and offers through SSR loaders"
+          git push origin HEAD:perf/categories-offers-ssr
