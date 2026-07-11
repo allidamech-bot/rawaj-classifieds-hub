@@ -1,0 +1,418 @@
+/* RAWAJ Design System V2
+ * Shared visual foundation for the marketplace. Page-specific redesigns build on
+ * these tokens and primitives instead of reintroducing white-on-white surfaces.
+ */
+
+:root {
+  --background: #f6f2e9;
+  --foreground: #17372f;
+  --card: #fffdf9;
+  --card-foreground: #17372f;
+  --card-warm: #fbf5ea;
+  --muted-surface: #e9f0ea;
+  --popover: #fffdf9;
+  --popover-foreground: #17372f;
+  --primary: #123f38;
+  --primary-foreground: #fffdf7;
+  --secondary: #e4ece6;
+  --secondary-foreground: #17372f;
+  --muted: #e8eee9;
+  --muted-foreground: #63766f;
+  --accent: #f45f38;
+  --accent-foreground: #ffffff;
+  --brand-orange: #f45f38;
+  --brand-orange-foreground: #ffffff;
+  --brand-navy: #123f38;
+  --gold: #c99543;
+  --gold-foreground: #2b251a;
+  --emerald-trust: #2f7a5c;
+  --emerald-trust-foreground: #ffffff;
+  --destructive: #c73d35;
+  --destructive-foreground: #ffffff;
+  --warning: #d79027;
+  --border: #d7e1da;
+  --input: #c6d3cb;
+  --ring: #f45f38;
+
+  --rawaj-surface-page: #f6f2e9;
+  --rawaj-surface-card: #fffdf9;
+  --rawaj-surface-sage: #e9f0ea;
+  --rawaj-surface-sage-strong: #dce8df;
+  --rawaj-surface-warm: #fff0e8;
+  --rawaj-surface-gold: #f7eddc;
+  --rawaj-ink-soft: #63766f;
+  --rawaj-forest-deep: #0b2d29;
+  --rawaj-forest: #123f38;
+  --rawaj-orange: #f45f38;
+  --rawaj-gold: #c99543;
+
+  --rawaj-radius-input: 0.875rem;
+  --rawaj-radius-button: 0.875rem;
+  --rawaj-radius-card: 1rem;
+  --rawaj-radius-surface: 1.25rem;
+  --rawaj-radius-feature: 1.5rem;
+
+  --rawaj-shadow-xs: 0 2px 8px rgba(18, 63, 56, 0.045);
+  --rawaj-shadow-sm: 0 4px 14px rgba(18, 63, 56, 0.065);
+  --rawaj-shadow-md: 0 10px 28px rgba(18, 63, 56, 0.09);
+  --rawaj-shadow-lg: 0 16px 42px rgba(18, 63, 56, 0.14);
+  --rawaj-shadow-soft: var(--rawaj-shadow-sm);
+  --rawaj-shadow-card: var(--rawaj-shadow-sm);
+  --rawaj-shadow-card-hover: var(--rawaj-shadow-md);
+  --rawaj-shadow-overlay: var(--rawaj-shadow-lg);
+
+  --rawaj-motion-fast: 150ms;
+  --rawaj-motion-base: 200ms;
+  --rawaj-motion-slow: 250ms;
+}
+
+.dark {
+  --background: #101713;
+  --foreground: #eff6f1;
+  --card: #18211c;
+  --card-foreground: #eff6f1;
+  --card-warm: #1d2821;
+  --muted-surface: #243229;
+  --popover: #18211c;
+  --popover-foreground: #eff6f1;
+  --primary: #dcece2;
+  --primary-foreground: #102019;
+  --secondary: #26342b;
+  --secondary-foreground: #eff6f1;
+  --muted: #26342b;
+  --muted-foreground: #a8b9b0;
+  --accent: #ff7651;
+  --brand-orange: #ff7651;
+  --brand-navy: #dcece2;
+  --gold: #ddb56f;
+  --gold-foreground: #17130d;
+  --emerald-trust: #56bd94;
+  --emerald-trust-foreground: #071811;
+  --destructive: #ee736b;
+  --warning: #e7a849;
+  --border: rgba(235, 244, 238, 0.14);
+  --input: rgba(235, 244, 238, 0.24);
+  --ring: #ff7651;
+
+  --rawaj-surface-page: #101713;
+  --rawaj-surface-card: #18211c;
+  --rawaj-surface-sage: #223128;
+  --rawaj-surface-sage-strong: #2b3c31;
+  --rawaj-surface-warm: #33231d;
+  --rawaj-surface-gold: #30291d;
+  --rawaj-ink-soft: #a8b9b0;
+  --rawaj-forest-deep: #09130f;
+  --rawaj-forest: #dcece2;
+}
+
+html,
+body {
+  background-color: var(--rawaj-surface-page);
+}
+
+body {
+  background:
+    radial-gradient(32rem 22rem at 104% -3%, rgba(244, 95, 56, 0.1), transparent 68%),
+    radial-gradient(30rem 22rem at -8% 24%, rgba(47, 122, 92, 0.08), transparent 70%),
+    linear-gradient(180deg, #fbf8f1 0%, var(--rawaj-surface-page) 24rem),
+    var(--rawaj-surface-page);
+}
+
+.dark body {
+  background:
+    radial-gradient(30rem 20rem at 104% -3%, rgba(255, 118, 81, 0.08), transparent 70%),
+    var(--rawaj-surface-page);
+}
+
+/* Shared page and section surfaces */
+.rawaj-page-surface {
+  background: var(--rawaj-surface-page);
+}
+
+.rawaj-section-sage {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 9%, var(--color-border));
+  background:
+    radial-gradient(18rem 12rem at 100% 0%, rgba(47, 122, 92, 0.08), transparent 70%),
+    var(--rawaj-surface-sage);
+}
+
+.rawaj-section-warm {
+  border: 1px solid color-mix(in srgb, var(--color-brand-orange) 13%, var(--color-border));
+  background:
+    radial-gradient(18rem 12rem at 100% 0%, rgba(244, 95, 56, 0.09), transparent 70%),
+    var(--rawaj-surface-warm);
+}
+
+.rawaj-section-gold {
+  border: 1px solid color-mix(in srgb, var(--color-gold) 18%, var(--color-border));
+  background: var(--rawaj-surface-gold);
+}
+
+.rawaj-surface,
+.rawaj-foundation-card,
+.rawaj-color-card,
+.rawaj-hero-surface,
+[data-ui="card"] {
+  border-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
+  background-color: var(--rawaj-surface-card);
+  box-shadow: var(--rawaj-shadow-sm);
+}
+
+.rawaj-surface,
+.rawaj-foundation-card,
+[data-ui="card"] {
+  transition:
+    transform var(--rawaj-motion-base) ease,
+    border-color var(--rawaj-motion-base) ease,
+    box-shadow var(--rawaj-motion-base) ease,
+    background-color var(--rawaj-motion-base) ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tap-card:hover,
+  [data-ui="card"][data-interactive="true"]:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+    box-shadow: var(--rawaj-shadow-md);
+  }
+}
+
+/* Header and brand */
+.rawaj-app-header,
+.rawaj-page-header {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 11%, var(--color-border));
+  background:
+    linear-gradient(180deg, rgba(255, 253, 249, 0.96), rgba(250, 247, 239, 0.9));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.82) inset,
+    0 7px 22px rgba(18, 63, 56, 0.06);
+  backdrop-filter: blur(18px) saturate(145%);
+}
+
+.dark .rawaj-app-header,
+.dark .rawaj-page-header {
+  background: color-mix(in srgb, var(--color-card) 90%, transparent);
+}
+
+.rawaj-brand-mark {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  background:
+    radial-gradient(circle at 78% 12%, rgba(201, 149, 67, 0.24), transparent 42%),
+    linear-gradient(145deg, #164d43, var(--rawaj-forest-deep));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.13) inset,
+    0 8px 22px rgba(18, 63, 56, 0.2);
+}
+
+.rawaj-brand-divider {
+  background: linear-gradient(180deg, var(--rawaj-orange), var(--rawaj-gold));
+}
+
+.rawaj-header-nav {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
+  background: color-mix(in srgb, var(--rawaj-surface-sage) 70%, var(--color-card));
+  box-shadow: var(--rawaj-shadow-xs);
+}
+
+.rawaj-header-nav-item {
+  color: var(--color-muted-foreground);
+}
+
+.rawaj-header-nav-item[data-active="true"] {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  box-shadow: 0 8px 18px rgba(18, 63, 56, 0.16);
+}
+
+.rawaj-header-action {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 9%, var(--color-border));
+  background: color-mix(in srgb, var(--color-card) 88%, transparent);
+  color: var(--color-primary);
+  box-shadow: var(--rawaj-shadow-xs);
+}
+
+.rawaj-header-action:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 24%, var(--color-border));
+  background: var(--rawaj-surface-sage);
+}
+
+/* Bottom navigation */
+.rawaj-bottom-nav-shell {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 10%, var(--color-border));
+  background: color-mix(in srgb, var(--color-card) 94%, transparent);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.78) inset,
+    0 16px 40px rgba(18, 63, 56, 0.16);
+  backdrop-filter: blur(20px) saturate(145%);
+}
+
+.rawaj-dock-item {
+  color: var(--color-muted-foreground);
+}
+
+.rawaj-dock-item[data-active="true"] {
+  background: var(--rawaj-surface-sage);
+  color: var(--color-primary);
+}
+
+.rawaj-dock-icon[data-active="true"] {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  box-shadow: 0 8px 18px rgba(18, 63, 56, 0.17);
+}
+
+.rawaj-dock-create {
+  background: linear-gradient(145deg, #ff714b, var(--rawaj-orange));
+  color: #fff;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.28) inset,
+    0 13px 28px rgba(244, 95, 56, 0.34);
+}
+
+/* Buttons */
+[data-ui="button"] {
+  min-height: 2.75rem;
+  box-shadow: none;
+}
+
+[data-ui="button"][data-variant="default"] {
+  background: linear-gradient(145deg, #174d44, var(--color-primary));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 8px 20px rgba(18, 63, 56, 0.14);
+}
+
+[data-ui="button"][data-variant="accent"] {
+  background: linear-gradient(145deg, #ff714b, var(--rawaj-orange));
+  color: #fff;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2) inset,
+    0 9px 22px rgba(244, 95, 56, 0.22);
+}
+
+[data-ui="button"][data-variant="soft"] {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 9%, var(--color-border));
+  background: var(--rawaj-surface-sage);
+  color: var(--color-primary);
+}
+
+[data-ui="button"][data-variant="outline"] {
+  border-color: color-mix(in srgb, var(--color-primary) 13%, var(--color-border));
+  background: var(--rawaj-surface-card);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-ui="button"]:not(:disabled):hover {
+    transform: translateY(-1px);
+  }
+}
+
+/* Inputs */
+[data-ui="input"],
+.input {
+  min-height: 3rem;
+  border-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-input));
+  background: var(--rawaj-surface-card);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.72) inset,
+    var(--rawaj-shadow-xs);
+}
+
+[data-ui="input"]:hover:not(:disabled),
+.input:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-primary) 24%, var(--color-input));
+}
+
+[data-ui="input"]:focus-visible,
+.input:focus {
+  border-color: var(--color-ring);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--color-ring) 14%, transparent),
+    var(--rawaj-shadow-sm);
+}
+
+/* Chips and badges */
+.rawaj-chip,
+[data-ui="badge"] {
+  border-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.45) inset;
+}
+
+[data-ui="badge"][data-variant="accent"] {
+  border-color: color-mix(in srgb, var(--rawaj-orange) 22%, transparent);
+  background: color-mix(in srgb, var(--rawaj-orange) 12%, white);
+  color: #b63e21;
+}
+
+[data-ui="badge"][data-variant="success"] {
+  border-color: color-mix(in srgb, var(--color-emerald-trust) 22%, transparent);
+  background: color-mix(in srgb, var(--color-emerald-trust) 12%, white);
+  color: #205f47;
+}
+
+[data-ui="badge"][data-variant="warning"] {
+  border-color: color-mix(in srgb, var(--color-warning) 24%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 13%, white);
+  color: #8b591b;
+}
+
+[data-ui="badge"][data-variant="gold"] {
+  border-color: color-mix(in srgb, var(--rawaj-gold) 28%, transparent);
+  background: var(--rawaj-surface-gold);
+  color: #76551f;
+}
+
+/* Typography and section markers */
+.rawaj-eyebrow,
+.rawaj-signature-kicker {
+  color: var(--rawaj-orange);
+}
+
+.rawaj-section-title {
+  color: var(--color-primary);
+  font-weight: 800;
+  letter-spacing: -0.024em;
+}
+
+.rawaj-section-heading {
+  position: relative;
+  padding-inline-start: 1rem;
+}
+
+.rawaj-section-heading::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.15rem;
+  bottom: 0.15rem;
+  width: 0.25rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--rawaj-orange), var(--rawaj-gold));
+}
+
+/* Motion and accessibility */
+.tap-card,
+.rawaj-icon-button,
+.rawaj-dock-item,
+.rawaj-header-action,
+.rawaj-header-nav-item {
+  transition:
+    transform var(--rawaj-motion-fast) ease,
+    color var(--rawaj-motion-fast) ease,
+    background-color var(--rawaj-motion-fast) ease,
+    border-color var(--rawaj-motion-fast) ease,
+    box-shadow var(--rawaj-motion-fast) ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tap-card,
+  .rawaj-icon-button,
+  .rawaj-dock-item,
+  .rawaj-header-action,
+  .rawaj-header-nav-item,
+  [data-ui="button"],
+  [data-ui="card"] {
+    transition: none;
+  }
+}
