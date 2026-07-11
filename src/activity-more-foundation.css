@@ -1,0 +1,125 @@
+/* RAWAJ activity + more hub visual foundation */
+
+main.container-wide:has([role="tablist"]) > section:first-child {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--primary) 16%, var(--border));
+  border-radius: var(--rawaj-radius-surface);
+  background:
+    radial-gradient(circle at 85% 10%, color-mix(in srgb, var(--brand-orange) 10%, transparent), transparent 34%),
+    var(--card);
+  box-shadow: var(--rawaj-shadow-card);
+}
+
+main.container-wide:has([role="tablist"]) [role="tablist"] {
+  padding: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 1rem;
+  background: var(--muted-surface);
+}
+
+main.container-wide:has([role="tablist"]) [role="tab"] {
+  min-height: var(--rawaj-touch-target);
+  border: 0;
+  box-shadow: none;
+}
+
+main.container-wide:has([role="tablist"]) [role="tab"][aria-selected="true"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+main.container-wide:has([role="tablist"]) [role="tabpanel"] {
+  border-color: color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: var(--rawaj-radius-surface);
+  box-shadow: var(--rawaj-shadow-card);
+}
+
+main.container-wide:has([role="tablist"]) [role="tabpanel"] article,
+main.container-wide:has([role="tablist"]) [role="tabpanel"] a[href*="/chats"] {
+  border-color: color-mix(in srgb, var(--border) 78%, transparent);
+  transition:
+    border-color var(--rawaj-motion-fast) ease,
+    background-color var(--rawaj-motion-fast) ease,
+    transform var(--rawaj-motion-fast) ease;
+}
+
+main.container-wide:has([role="tablist"]) [role="tabpanel"] article:not(.bg-card) {
+  border-inline-start: 3px solid var(--brand-orange);
+  background: color-mix(in srgb, var(--brand-orange) 7%, var(--card));
+}
+
+main.container-wide:has([role="tablist"]) [role="tabpanel"] a[href*="/chats"]:hover {
+  border-color: color-mix(in srgb, var(--primary) 24%, var(--border));
+  background: var(--card);
+  transform: translateY(-1px);
+}
+
+.rawaj-pulse-page .rawaj-id-card {
+  box-shadow: 0 22px 56px rgba(16, 43, 70, 0.2);
+}
+
+.rawaj-pulse-page .rawaj-id-avatar {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 14px 34px rgba(5, 20, 34, 0.28);
+}
+
+.rawaj-pulse-page main > section:nth-of-type(2) > div.grid > a {
+  min-height: 7.25rem;
+  border-color: color-mix(in srgb, var(--border) 78%, transparent);
+  box-shadow: var(--rawaj-shadow-card);
+  transition:
+    transform var(--rawaj-motion-fast) ease,
+    box-shadow var(--rawaj-motion-fast) ease,
+    border-color var(--rawaj-motion-fast) ease;
+}
+
+.rawaj-pulse-page main > section:nth-of-type(2) > div.grid > a:hover {
+  border-color: color-mix(in srgb, var(--brand-orange) 28%, var(--border));
+  box-shadow: var(--rawaj-shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+.rawaj-pulse-page main > section:nth-of-type(3) > a {
+  min-height: 6.5rem;
+  border-color: color-mix(in srgb, var(--border) 80%, transparent);
+  background: var(--card);
+}
+
+.rawaj-pulse-page main > div.grid > section {
+  border-color: color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: var(--rawaj-radius-surface);
+  box-shadow: var(--rawaj-shadow-card);
+}
+
+.rawaj-pulse-page main > div.grid > section a,
+.rawaj-pulse-page main > div.grid > section button {
+  min-height: var(--rawaj-touch-target);
+}
+
+@media (max-width: 639px) {
+  main.container-wide:has([role="tablist"]) {
+    padding-top: 0.75rem;
+  }
+
+  .rawaj-pulse-page main > section:nth-of-type(2) > div.grid > a {
+    min-height: 6.5rem;
+  }
+
+  .rawaj-pulse-page main > section:nth-of-type(3) {
+    gap: 0.5rem;
+  }
+
+  .rawaj-pulse-page main > section:nth-of-type(3) > a {
+    min-height: 5.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main.container-wide:has([role="tablist"]) [role="tabpanel"] article,
+  main.container-wide:has([role="tablist"]) [role="tabpanel"] a[href*="/chats"],
+  .rawaj-pulse-page main > section:nth-of-type(2) > div.grid > a {
+    transition: none;
+  }
+}

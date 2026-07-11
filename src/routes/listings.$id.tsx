@@ -328,7 +328,7 @@ function ListingDetailsPage() {
         ) : null}
         <div className="grid items-start gap-4 lg:grid-cols-12 lg:gap-6">
           <div className="min-w-0 lg:col-span-7">
-            <section className="rawaj-detail-gallery rawaj-surface overflow-hidden rounded-[1.5rem] sm:rounded-[1.9rem]">
+            <section className="rawaj-surface overflow-hidden rounded-[1.5rem] sm:rounded-[1.9rem]">
               <div className="relative overflow-hidden bg-muted-surface">
                 {selectedImage?.publicUrl ? (
                   <div className="flex aspect-[4/3] w-full items-center justify-center sm:aspect-[16/10] lg:aspect-[4/3]">
@@ -416,7 +416,7 @@ function ListingDetailsPage() {
               )}
             </section>
 
-            <section className="rawaj-detail-summary rawaj-surface mt-3 rounded-[1.4rem] p-4 sm:rounded-3xl sm:p-5 lg:hidden">
+            <section className="rawaj-surface mt-4 rounded-[1.4rem] p-4 sm:rounded-3xl sm:p-5 lg:hidden">
               <ListingIdentity
                 listing={listing}
                 listingCategory={listingCategory}
@@ -429,73 +429,71 @@ function ListingDetailsPage() {
               </div>
             </section>
 
-            <div className="rawaj-detail-flow">
-              {categoryRows.length > 0 && (
-                <section className="rawaj-detail-section">
-                  <SectionHeading
-                    title={text("المواصفات", "Specifications")}
-                    subtitle={text(
-                      "أهم تفاصيل الإعلان في مكان واحد",
-                      "Key listing details at a glance",
-                    )}
-                  />
-                  <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {categoryRows.map(([label, value]) => (
-                      <div
-                        key={label}
-                        className="rounded-[1.05rem] border border-border/65 bg-card-warm/72 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]"
-                      >
-                        <span className="block text-[10px] font-bold text-muted-foreground sm:text-[11px]">
-                          {label}
-                        </span>
-                        <span className="mt-1 block text-sm font-bold leading-5 text-foreground">
-                          {value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              <section className="rawaj-detail-section">
+            {categoryRows.length > 0 && (
+              <section className="rawaj-surface mt-4 rounded-[1.4rem] p-4 sm:rounded-3xl sm:p-5">
                 <SectionHeading
-                  title={text("الوصف", "Description")}
+                  title={text("المواصفات", "Specifications")}
                   subtitle={text(
-                    "تفاصيل يضيفها المعلن عن السلعة",
-                    "Details provided by the advertiser",
+                    "أهم تفاصيل الإعلان في مكان واحد",
+                    "Key listing details at a glance",
                   )}
                 />
-                <p className="mt-4 whitespace-pre-line text-sm leading-7 text-foreground/90 sm:text-[15px] sm:leading-8">
-                  {listing.description?.trim() ||
-                    text(
-                      "لم يضف البائع وصفا مفصلا.",
-                      "The seller has not added a detailed description.",
-                    )}
-                </p>
-              </section>
-
-              <section className="rawaj-detail-section">
-                <SectionHeading
-                  title={text("الموقع", "Location")}
-                  subtitle={text("الموقع المعلن للسلعة", "Advertised item location")}
-                />
-                <div className="mt-4 flex items-center gap-3 rounded-[1.15rem] border border-border/65 bg-card-warm/72 p-3.5 sm:p-4">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-card text-gold hairline">
-                    <MapPin className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-extrabold text-foreground">{locationLabel}</p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      {text(
-                        "اتفق على نقطة عامة وآمنة للمعاينة",
-                        "Agree on a safe public inspection point",
-                      )}
-                    </p>
-                  </div>
-                  <MapIcon className="h-5 w-5 shrink-0 text-muted-foreground/70" />
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {categoryRows.map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="rounded-[1.05rem] border border-border/65 bg-card-warm/72 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]"
+                    >
+                      <span className="block text-[10px] font-bold text-muted-foreground sm:text-[11px]">
+                        {label}
+                      </span>
+                      <span className="mt-1 block text-sm font-bold leading-5 text-foreground">
+                        {value}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </section>
-            </div>
+            )}
+
+            <section className="rawaj-surface mt-4 rounded-[1.4rem] p-4 sm:rounded-3xl sm:p-5">
+              <SectionHeading
+                title={text("الوصف", "Description")}
+                subtitle={text(
+                  "تفاصيل يضيفها المعلن عن السلعة",
+                  "Details provided by the advertiser",
+                )}
+              />
+              <p className="mt-4 whitespace-pre-line text-sm leading-7 text-foreground/90 sm:text-[15px] sm:leading-8">
+                {listing.description?.trim() ||
+                  text(
+                    "لم يضف البائع وصفا مفصلا.",
+                    "The seller has not added a detailed description.",
+                  )}
+              </p>
+            </section>
+
+            <section className="rawaj-surface mt-4 rounded-[1.4rem] p-4 sm:rounded-3xl sm:p-5">
+              <SectionHeading
+                title={text("الموقع", "Location")}
+                subtitle={text("الموقع المعلن للسلعة", "Advertised item location")}
+              />
+              <div className="mt-4 flex items-center gap-3 rounded-[1.15rem] border border-border/65 bg-card-warm/72 p-3.5 sm:p-4">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-card text-gold hairline">
+                  <MapPin className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-extrabold text-foreground">{locationLabel}</p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    {text(
+                      "اتفق على نقطة عامة وآمنة للمعاينة",
+                      "Agree on a safe public inspection point",
+                    )}
+                  </p>
+                </div>
+                <MapIcon className="h-5 w-5 shrink-0 text-muted-foreground/70" />
+              </div>
+            </section>
 
             <section className="rawaj-surface mt-4 rounded-[1.4rem] p-4 sm:rounded-3xl sm:p-5 lg:hidden">
               <SellerCard

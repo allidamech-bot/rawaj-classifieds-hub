@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import {
-  BadgeCheck,
   Briefcase,
   Building2,
   Car,
@@ -11,7 +10,6 @@ import {
   Laptop,
   MapPin,
   PawPrint,
-  Plus,
   Search,
   ShieldCheck,
   Shirt,
@@ -50,6 +48,15 @@ const categoryIcons: Record<string, LucideIcon> = {
   business: Store,
   misc: Sparkles,
 };
+
+const categoryWorlds = [
+  "rawaj-world-orange",
+  "rawaj-world-indigo",
+  "rawaj-world-emerald",
+  "rawaj-world-plum",
+  "rawaj-world-gold",
+  "rawaj-world-orange",
+];
 
 function iconForCategoryPlaceholder(placeholder: string | null | undefined): LucideIcon {
   if (placeholder && categoryIcons[placeholder]) return categoryIcons[placeholder];
@@ -111,87 +118,90 @@ function HomePage() {
   return (
     <>
       <AppHeader />
-      <main className="home-container mobile-page-bottom pb-8 pt-2 sm:pt-4 lg:pt-6">
+      <main className="home-container mobile-page-bottom pt-3 sm:pt-5 lg:pt-7">
         <section className="rawaj-home-stage" aria-labelledby="rawaj-home-title">
-          <div className="rawaj-home-facet" aria-hidden="true">
-            <img src="/brand/rawaj-mark-transparent-512.png" alt="" decoding="async" />
-          </div>
-
-          <div className="rawaj-home-copy">
-            <p className="rawaj-signature-kicker rawaj-home-kicker">
-              <Sparkles className="h-3.5 w-3.5" strokeWidth={1.9} />
-              {text("السوق الأقرب لكل سوريا", "The marketplace closer to all Syria")}
-            </p>
-            <h1 id="rawaj-home-title" className="rawaj-home-title">
-              {text(
-                "كل ما تبحث عنه، أقرب مما تتخيّل.",
-                "Everything you need, closer than you think.",
-              )}
-            </h1>
-            <p className="rawaj-home-description">
-              {text(
-                "اكتشف إعلانات من مختلف المحافظات، قارن بسهولة، وتواصل مباشرة مع البائع.",
-                "Discover listings across Syria, compare easily, and contact sellers directly.",
-              )}
-            </p>
-            <div className="rawaj-home-proof">
-              <span>
-                <BadgeCheck className="h-3.5 w-3.5" />
-                {text("إعلانات معتمدة للعرض", "Approved public listings")}
-              </span>
-              <span>
-                <MapPin className="h-3.5 w-3.5" />
-                {text("كل المحافظات", "All governorates")}
-              </span>
+          <div className="relative z-10 grid min-h-[18rem] gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.82fr)] lg:items-end lg:gap-12 lg:p-9">
+            <div className="self-end">
+              <p className="rawaj-signature-kicker rawaj-home-kicker">
+                <Sparkles className="h-3.5 w-3.5" strokeWidth={1.9} />
+                {text("سوق سوريا الحديث", "Syria's modern marketplace")}
+              </p>
+              <h1
+                id="rawaj-home-title"
+                className="rawaj-home-title mt-3 max-w-xl text-[1.75rem] font-extrabold leading-[1.34] sm:text-[2.35rem] lg:text-[2.9rem]"
+              >
+                {text(
+                  "ابحث عمّا يستحق. وتواصل بثقة.",
+                  "Find what matters. Connect with confidence.",
+                )}
+              </h1>
+              <p className="rawaj-home-description mt-3 max-w-xl text-[12px] leading-6 sm:text-sm sm:leading-7">
+                {text(
+                  "إعلانات أوضح، وصول أسرع، وتجربة مصممة لتوصلك لما تحتاجه بدون تشويش.",
+                  "Clearer listings, faster discovery, and a focused path to what you need.",
+                )}
+              </p>
             </div>
-          </div>
 
-          <div className="rawaj-home-search-shell">
-            <form onSubmit={handleSearch} className="rawaj-home-search-form">
-              <label className="rawaj-home-search-field">
-                <Search className="h-5 w-5 shrink-0" strokeWidth={2} />
-                <input
-                  value={searchValue}
-                  onChange={(event) => setSearchValue(event.target.value)}
-                  type="search"
-                  aria-label={text("ابحث في رواج", "Search RAWAJ")}
-                  placeholder={text(
-                    "ابحث عن سيارة، منزل، هاتف...",
-                    "Search for a car, home, phone...",
-                  )}
-                />
-              </label>
-              <button type="submit" aria-label={text("بحث", "Search")}>
-                <Search className="h-5 w-5" strokeWidth={2.2} />
-              </button>
-            </form>
+            <div className="rawaj-home-search-shell">
+              <form onSubmit={handleSearch} className="flex items-stretch gap-2">
+                <label className="group flex min-h-14 min-w-0 flex-1 items-center gap-2.5 rounded-[1.05rem] bg-white ps-3.5 pe-4 text-foreground shadow-[0_14px_34px_rgba(8,24,42,0.16)] ring-1 ring-white/50 transition focus-within:ring-[3px] focus-within:ring-brand-orange/28">
+                  <Search className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.9} />
+                  <input
+                    value={searchValue}
+                    onChange={(event) => setSearchValue(event.target.value)}
+                    type="search"
+                    aria-label={text("ابحث في رواج", "Search RAWAJ")}
+                    placeholder={text(
+                      "ماذا تبحث عنه؟ سيارة، عقار، جوال...",
+                      "What are you looking for?",
+                    )}
+                    className="w-full bg-transparent py-3 text-sm font-medium text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  aria-label={text("بحث", "Search")}
+                  className="grid min-h-14 w-14 shrink-0 place-items-center rounded-[1.05rem] bg-brand-orange text-white shadow-[0_14px_34px_rgba(232,111,50,0.28)] transition hover:-translate-y-0.5 active:scale-[0.98]"
+                >
+                  <Search className="h-5 w-5" strokeWidth={2} />
+                </button>
+              </form>
 
-            <div className="rawaj-home-quick-actions">
-              <Link to="/listings" search={listingSearch({ open_filters: true })}>
-                <MapPin className="h-4 w-4" />
-                <span>{text("كل سوريا", "All Syria")}</span>
-              </Link>
-              <Link to="/listings" search={listingSearch({ open_filters: true })}>
-                <SlidersHorizontal className="h-4 w-4" />
-                <span>{text("تصفية", "Filter")}</span>
-              </Link>
-              <Link to="/add-listing" className="rawaj-home-post-action">
-                <Plus className="h-4 w-4" />
-                <span>{text("أضف إعلانك", "Post listing")}</span>
-              </Link>
+              <div className="mt-2.5 flex items-center gap-2">
+                <Link
+                  to="/listings"
+                  search={listingSearch({ open_filters: true })}
+                  className="rawaj-home-location inline-flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-xl px-3 text-[11px] font-semibold transition"
+                >
+                  <MapPin className="h-4 w-4 shrink-0 text-gold" strokeWidth={1.9} />
+                  <span className="truncate">{text("كل سوريا", "All Syria")}</span>
+                  <span className="ms-auto text-[9px] font-semibold text-muted-foreground">
+                    {text("تغيير", "Change")}
+                  </span>
+                </Link>
+                <Link
+                  to="/listings"
+                  search={listingSearch({ open_filters: true })}
+                  aria-label={text("الفلاتر", "Filters")}
+                  className="rawaj-home-filter grid h-10 w-10 shrink-0 place-items-center rounded-xl transition"
+                >
+                  <SlidersHorizontal className="h-4 w-4" strokeWidth={1.9} />
+                </Link>
+              </div>
             </div>
           </div>
         </section>
 
         {categories.length > 0 ? (
-          <section className="rawaj-home-section" aria-label={text("الأقسام", "Categories")}>
+          <section className="mt-7" aria-label={text("الأقسام", "Categories")}>
             <SectionHeading
               kicker={text("اكتشف السوق", "Explore the market")}
               title={text("تصفح الأقسام", "Browse categories")}
               actionLabel={text("عرض الكل", "View all")}
               actionTo="/categories"
             />
-            <div className="rawaj-category-rail no-scrollbar">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6 lg:gap-3.5">
               {categories.slice(0, 6).map((category, index) => {
                 const Icon = iconForCategoryPlaceholder(category.placeholder);
                 return (
@@ -199,19 +209,18 @@ function HomePage() {
                     key={category.id}
                     to="/listings"
                     search={{ category: category.id }}
-                    className="rawaj-home-category-card group"
-                    data-facet={index % 3}
+                    className={`group rawaj-color-card ${categoryWorlds[index]} rawaj-home-category-card`}
                   >
-                    <div className="rawaj-home-category-inner">
-                      <span className="rawaj-category-icon">
+                    <div className="relative z-10 flex items-center gap-3 lg:flex-col lg:items-start">
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[1rem] bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(16,43,70,0.14)] transition group-hover:-translate-y-0.5 group-hover:bg-brand-orange">
                         <Icon className="h-5 w-5" strokeWidth={1.8} />
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <span className="line-clamp-1 text-[12px] font-bold text-foreground">
+                      <div className="min-w-0">
+                        <span className="line-clamp-1 text-[11px] font-bold text-foreground sm:text-[12px]">
                           {categoryName(category.id, category.nameAr, language)}
                         </span>
-                        <span className="mt-1 block text-[9px] font-medium text-muted-foreground">
-                          {text("تصفّح الآن", "Browse now")}
+                        <span className="mt-1 block text-[9px] font-semibold text-muted-foreground">
+                          {text("عرض النتائج", "View listings")}
                         </span>
                       </div>
                     </div>
@@ -221,12 +230,6 @@ function HomePage() {
             </div>
           </section>
         ) : null}
-
-        <section className="rawaj-market-promise" aria-label={text("مزايا رواج", "RAWAJ benefits")}>
-          <span>{text("بيع مباشر", "Direct selling")}</span>
-          <span>{text("تصفح سريع", "Fast discovery")}</span>
-          <span>{text("تواصل واضح", "Clear contact")}</span>
-        </section>
 
         {loading ? (
           <HomeState title={text("جاري تحميل الإعلانات", "Loading listings")} />
@@ -258,13 +261,13 @@ function HomePage() {
           </>
         )}
 
-        <section className="rawaj-home-trust-stage">
+        <section className="rawaj-home-trust-stage mt-8">
           <div className="relative z-10 flex items-start gap-3 p-5 sm:p-6">
-            <span className="rawaj-trust-icon">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-orange text-white shadow-[0_12px_28px_rgba(232,111,50,0.25)]">
               <ShieldCheck className="h-5 w-5" strokeWidth={1.8} />
             </span>
             <div>
-              <span className="rawaj-signature-kicker">
+              <span className="rawaj-signature-kicker text-emerald-trust">
                 {text("ثقة تبدأ منك", "Confidence starts with you")}
               </span>
               <h3 className="mt-1 text-sm font-extrabold text-primary">
