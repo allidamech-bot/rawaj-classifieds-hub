@@ -428,5 +428,6 @@ export function formatDate(value: string, language: "ar" | "en") {
   if (!value) return language === "ar" ? "تاريخ غير محدد" : "Date unavailable";
   return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
     dateStyle: "medium",
+    timeZone: "Asia/Damascus",
   }).format(new Date(value));
 }

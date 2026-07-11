@@ -18,6 +18,9 @@ test("legacy private-object ad media URLs are repaired to public-object URLs", (
   assert.match(mediaUrl, /storage\/v1\/object\//);
   assert.match(mediaUrl, /url\.pathname = url\.pathname\.replace/);
   assert.match(adPlacements, /normalizeAdPlacementMediaUrl\(data\.publicUrl \?\? ""\)/);
-  assert.match(adPlacements, /imageUrl: normalizeAdPlacementMediaUrl\(rowString\(row, "image_url"\)\)/);
+  assert.match(
+    adPlacements,
+    /imageUrl: normalizeAdPlacementMediaUrl\(rowString\(row, "image_url"\)\)/,
+  );
   assert.match(adPlacements, /const imageUrl = normalizeAdPlacementMediaUrl\(payload\.imageUrl\)/);
 });
