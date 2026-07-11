@@ -1,0 +1,127 @@
+name: Temporary Adaptive Card Migration
+
+on:
+  push:
+    branches:
+      - design/adaptive-listing-cards-v1
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: design/adaptive-listing-cards-v1
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Migrate card consumers and remove duplicate implementation
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          function read(path) {
+            return fs.readFileSync(path, 'utf8');
+          }
+
+          function write(path, value) {
+            fs.writeFileSync(path, value);
+          }
+
+          function replaceExact(value, from, to, label) {
+            if (!value.includes(from)) throw new Error(`Missing ${label}`);
+            return value.replace(from, to);
+          }
+
+          let root = read('src/routes/__root.tsx');
+          root = replaceExact(
+            root,
+            'import activityMoreFoundationCss from "../activity-more-foundation.css?url";',
+            'import adaptiveListingCardsCss from "../adaptive-listing-cards.css?url";\nimport activityMoreFoundationCss from "../activity-more-foundation.css?url";',
+            'root adaptive CSS import anchor',
+          );
+          root = replaceExact(
+            root,
+            '        { rel: "stylesheet", href: homeDiscoveryV3Css },',
+            '        { rel: "stylesheet", href: homeDiscoveryV3Css },\n        { rel: "stylesheet", href: adaptiveListingCardsCss },',
+            'root adaptive CSS link anchor',
+          );
+          write('src/routes/__root.tsx', root);
+
+          let components = read('src/features/listings/listings-components.tsx');
+          components = components.replace('import { Clock, MapPin } from "lucide-react";\n', '');
+          components = components.replace('  ClassifiedListing,\n', '');
+          components = components.replace(
+            'import { categoryName, formatPriceLocalized } from "@/lib/i18n";\n',
+            '',
+          );
+          components = components.replace(
+            'import { listingLocationDisplay } from "@/lib/listing-location-display";\n',
+            '',
+          );
+          components = components.replace('import { PlaceholderArt } from "@/components/PlaceholderArt";\n', '');
+          const duplicateStart = components.indexOf('\nexport function RealListingCard(');
+          const duplicateEnd = components.indexOf('\nexport function SellerSearchCard', duplicateStart);
+          if (duplicateStart < 0 || duplicateEnd < 0) {
+            throw new Error('Could not locate duplicate RealListingCard implementation');
+          }
+          components = components.slice(0, duplicateStart) + components.slice(duplicateEnd);
+          write('src/features/listings/listings-components.tsx', components);
+
+          let listings = read('src/routes/listings.index.tsx');
+          listings = replaceExact(
+            listings,
+            'import { PageHeader } from "@/components/PageHeader";',
+            'import { PageHeader } from "@/components/PageHeader";\nimport { ListingCardSkeleton } from "@/features/listings/cards";\nimport { RealListingCard } from "@/features/listings/RealListingCard";',
+            'listings adaptive imports anchor',
+          );
+          listings = listings.replace('  RealListingCard,\n', '');
+          const loadingBlock = `        ) : loading ? (\n          <StateCard\n            title={text("جاري تحميل الإعلانات", "Loading listings")}\n            body={text(\n              "نبحث عن الإعلانات المعتمدة المتاحة للتصفح داخل سوريا.",\n              "Looking for approved listings available across Syria.",\n            )}\n          />\n        ) : error ? (`;
+          const loadingReplacement = `        ) : loading ? (\n          <div\n            className="listing-card-grid mt-3"\n            aria-label={text("جاري تحميل الإعلانات", "Loading listings")}\n          >\n            {Array.from({ length: 6 }, (_, index) => (\n              <ListingCardSkeleton\n                key={index}\n                variant={\n                  categoryFieldKind === "vehicles"\n                    ? "vehicle"\n                    : categoryFieldKind === "real_estate"\n                      ? "property"\n                      : "product"\n                }\n              />\n            ))}\n          </div>\n        ) : error ? (`;
+          listings = replaceExact(listings, loadingBlock, loadingReplacement, 'listings loading state');
+          write('src/routes/listings.index.tsx', listings);
+
+          let publicExports = read('src/features/listings/listings-components-public.tsx');
+          if (!publicExports.includes('export * from "./cards";')) {
+            publicExports += '\nexport * from "./cards";\n';
+          }
+          write('src/features/listings/listings-components-public.tsx', publicExports);
+          NODE
+
+      - name: Format migrated files
+        run: >-
+          npx prettier --write
+          src/routes/__root.tsx
+          src/routes/listings.index.tsx
+          src/features/listings/listings-components.tsx
+          src/features/listings/listings-components-public.tsx
+          src/features/listings/RealListingCard.tsx
+          src/features/listings/cards
+          src/features/home/FeaturedListingShowcase.tsx
+          src/adaptive-listing-cards.css
+
+      - name: Commit migration and remove temporary workflow
+        shell: bash
+        run: |
+          rm .github/workflows/temporary-adaptive-card-migration.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Migrate marketplace to adaptive listing cards"
+          git push origin HEAD:design/adaptive-listing-cards-v1
