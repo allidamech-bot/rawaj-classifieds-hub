@@ -1,6 +1,6 @@
-import { createServerFileRoute } from "@tanstack/react-start/server";
-import { getClient } from "@/lib/api/shared";
+import { createFileRoute } from "@tanstack/react-router";
 import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
+import { getClient } from "@/lib/api/shared";
 import { absoluteUrl } from "@/lib/seo";
 
 type SitemapEntry = {
@@ -27,18 +27,23 @@ const staticEntries: SitemapEntry[] = [
   { loc: absoluteUrl("/terms"), changefreq: "yearly", priority: 0.3 },
 ];
 
-export const ServerRoute = createServerFileRoute("/sitemap.xml").methods({
-  GET: async () => {
-    const dynamicEntries = await readDynamicMarketplaceEntries();
-    const xml = buildSitemapXml([...staticEntries, ...dynamicEntries]);
+export const Route = createFileRoute("/sitemap.xml")({
+  server: {
+    handlers: {
+      GET: async () => {
+        const dynamicEntries = await readDynamicMarketplaceEntries();
+        const xml = buildSitemapXml([...staticEntries, ...dynamicEntries]);
 
-    return new Response(xml, {
-      headers: {
-        "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=900, s-maxage=3600, stale-while-revalidate=86400",
-        "X-Content-Type-Options": "nosniff",
+        return new Response(xml, {
+          headers: {
+            "Content-Type": "application/xml; charset=utf-8",
+            "Cache-Control":
+              "public, max-age=900, s-maxage=3600, stale-while-revalidate=86400",
+            "X-Content-Type-Options": "nosniff",
+          },
+        });
       },
-    });
+    },
   },
 });
 
