@@ -1,8 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Ban, Flag, MessageCircle, Search, Send, ShieldAlert } from "lucide-react";
+import { Ban, Flag, MessageCircle, Send } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
+import {
+  CommunicationCenterHero,
+  CommunicationSafetyNote,
+  CommunicationSearch,
+  CommunicationSignedOut,
+  ConversationSummaryItem,
+} from "@/features/communication/CommunicationExperience";
 import {
   blockConversationParticipant,
   createMessageReport,
@@ -273,17 +280,8 @@ function ChatsPage() {
     return (
       <>
         <PageHeader title={text("المحادثات", "Messages")} />
-        <main className="container-wide mobile-page-bottom pt-4">
-          <StatePanel
-            title={text("تسجيل الدخول مطلوب", "Login required")}
-            body={text(
-              "سجل الدخول لعرض محادثاتك الحقيقية مع البائعين والمشترين.",
-              "Log in to view your real conversations with buyers and sellers.",
-            )}
-            actionTo="/login"
-            actionSearch={{ returnTo: "/chats" }}
-            actionLabel={text("تسجيل الدخول", "Log in")}
-          />
+        <main className="rawaj-communication-v2 container-wide mobile-page-bottom pt-4">
+          <CommunicationSignedOut returnTo="/chats" />
         </main>
       </>
     );
@@ -292,60 +290,36 @@ function ChatsPage() {
   return (
     <>
       <PageHeader title={text("المحادثات", "Messages")} />
-      <main className="container-wide mobile-page-bottom space-y-4 pt-4">
-        <section className="rounded-2xl bg-card p-4 hairline shadow-soft">
-          <h1 className="text-lg font-extrabold">{text("رسائلك", "Your messages")}</h1>
-          <p className="mt-1 text-xs leading-6 text-muted-foreground">
-            {text(
-              "تابع المحادثات المرتبطة بإعلانات حقيقية. لا نعرض حالات اتصال أو قراءة غير مدعومة.",
-              "Follow conversations linked to real listings. Unsupported online or read states are not shown.",
-            )}
-          </p>
-        </section>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            to="/"
-            className="rounded-xl bg-card px-3 py-2 text-xs font-bold text-foreground hairline"
-          >
-            {text("الرئيسية", "Home")}
-          </Link>
-          <Link
-            to="/listings"
-            className="rounded-xl bg-card px-3 py-2 text-xs font-bold text-foreground hairline"
-          >
-            {text("تصفح الإعلانات", "Browse listings")}
-          </Link>
-        </div>
-        <section className="flex items-start gap-3 rounded-2xl bg-warning/10 p-4 hairline">
-          <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
-          <p className="text-xs leading-6">
-            {text(
-              "المحادثات مرتبطة بإعلانات معتمدة فقط. اتفق على المعاينة في مكان عام وآمن ولا تحول أي مبلغ قبل التأكد.",
-              "Conversations are linked only to approved listings. Meet safely and do not transfer money before verifying.",
-            )}
-          </p>
-        </section>
+      <main className="rawaj-communication-v2 rawaj-communication-v2--messages container-wide mobile-page-bottom space-y-4 pt-4">
+        <CommunicationCenterHero
+          mode="messages"
+          unreadMessages={conversations.reduce(
+            (total, conversation) => total + conversation.unreadCount,
+            0,
+          )}
+          conversationCount={conversations.length}
+        />
+        <CommunicationSafetyNote />
 
-        <div className="grid min-h-[60dvh] grid-cols-1 gap-3 lg:min-h-[560px] lg:grid-cols-[320px_1fr]">
+        <div className="rawaj-message-workspace">
           <aside
-            className={`rounded-2xl bg-card p-3 hairline ${
+            className={`rawaj-conversation-sidebar ${
               !isDesktop && viewingConversationOnMobile ? "hidden" : ""
             }`}
           >
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-extrabold">
-              <MessageCircle className="h-4 w-4 text-primary" />
-              {text("قائمة المحادثات", "Conversation list")}
-            </h2>
-            <label className="relative mb-3 block">
-              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                value={conversationQuery}
-                onChange={(event) => setConversationQuery(event.target.value)}
-                placeholder={text("ابحث باسم أو إعلان أو رسالة", "Search conversations")}
-                aria-label={text("بحث في المحادثات", "Search conversations")}
-                className="min-h-11 w-full rounded-xl bg-muted-surface ps-10 pe-3 py-2 text-xs outline-none hairline"
-              />
-            </label>
+            <div className="rawaj-conversation-sidebar__heading">
+              <h2>
+                <MessageCircle aria-hidden="true" />
+                {text("المحادثات", "Conversations")}
+              </h2>
+              <span>{filteredConversations.length}</span>
+            </div>
+            <CommunicationSearch
+              value={conversationQuery}
+              onChange={setConversationQuery}
+              placeholder={text("ابحث باسم أو إعلان أو رسالة", "Search conversations")}
+              label={text("بحث في المحادثات", "Search conversations")}
+            />
             {loadingConversations ? (
               <PanelText>{text("جاري تحميل المحادثات.", "Loading conversations.")}</PanelText>
             ) : conversationError ? (
@@ -362,57 +336,27 @@ function ChatsPage() {
                 {text("لا توجد محادثات تطابق بحثك.", "No conversations match your search.")}
               </PanelText>
             ) : (
-              <div className="space-y-2">
+              <div className="rawaj-conversation-list">
                 {filteredConversations.map((conversation) => (
-                  <button
+                  <ConversationSummaryItem
                     key={conversation.id}
-                    type="button"
-                    onClick={() => {
+                    conversation={conversation}
+                    selected={selectedConversation?.id === conversation.id}
+                    onSelect={() => {
                       if (!isDesktop) setViewingConversationOnMobile(true);
                       void navigate({
                         to: "/chats",
                         search: { conversation: conversation.id },
                       });
                     }}
-                    className={`w-full rounded-xl p-3 text-start transition hairline ${
-                      selectedConversation?.id === conversation.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted-surface hover:bg-secondary"
-                    }`}
-                    aria-current={selectedConversation?.id === conversation.id ? "true" : undefined}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Avatar
-                        name={conversation.otherParticipant.displayName}
-                        url={conversation.otherParticipant.avatarUrl}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-bold">
-                          {conversation.otherParticipant.displayName}
-                        </p>
-                        <p className="truncate text-[11px] opacity-80">
-                          {conversation.listingTitle}
-                        </p>
-                      </div>
-                      {conversation.unreadCount > 0 && (
-                        <span className="rounded-full bg-gold px-2 py-0.5 text-[10px] font-bold text-gold-foreground">
-                          {conversation.unreadCount}
-                        </span>
-                      )}
-                    </div>
-                    {conversation.lastMessagePreview && (
-                      <p className="mt-2 truncate text-xs opacity-80">
-                        {conversation.lastMessagePreview}
-                      </p>
-                    )}
-                  </button>
+                  />
                 ))}
               </div>
             )}
           </aside>
 
           <section
-            className={`flex min-h-[60dvh] flex-col rounded-2xl bg-card hairline lg:min-h-[560px] ${
+            className={`rawaj-message-panel ${
               !isDesktop && !viewingConversationOnMobile && !missingConversationTarget
                 ? "hidden"
                 : ""
@@ -458,8 +402,8 @@ function ChatsPage() {
               </div>
             ) : (
               <>
-                <header className="border-b border-border p-4">
-                  <div className="flex items-center gap-3">
+                <header className="rawaj-message-header">
+                  <div className="rawaj-message-header__row">
                     {!isDesktop && viewingConversationOnMobile && (
                       <button
                         type="button"
@@ -474,7 +418,7 @@ function ChatsPage() {
                       name={selectedConversation.otherParticipant.displayName}
                       url={selectedConversation.otherParticipant.avatarUrl}
                     />
-                    <div className="min-w-0 flex-1">
+                    <div className="rawaj-message-header__copy">
                       <h2 className="truncate text-sm font-extrabold">
                         {selectedConversation.otherParticipant.displayName}
                       </h2>
@@ -521,7 +465,7 @@ function ChatsPage() {
                   )}
                 </header>
 
-                <div className="flex-1 space-y-2 overflow-y-auto p-4">
+                <div className="rawaj-message-stream">
                   {loadingMessages ? (
                     <PanelText>{text("جاري تحميل الرسائل.", "Loading messages.")}</PanelText>
                   ) : messageError ? (
@@ -537,16 +481,9 @@ function ChatsPage() {
                     messages.map((message) => {
                       const mine = message.senderUserId === auth.profile?.id;
                       return (
-                        <article
-                          key={message.id}
-                          className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm leading-6 ${
-                            mine
-                              ? "ms-auto bg-primary text-primary-foreground"
-                              : "me-auto bg-muted-surface text-foreground"
-                          }`}
-                        >
+                        <article key={message.id} className="rawaj-message-bubble" data-mine={mine}>
                           <p className="whitespace-pre-line break-words">{message.body}</p>
-                          <p className="mt-1 text-[10px] opacity-70">
+                          <p className="rawaj-message-bubble__time">
                             {formatDateTime(message.createdAt, language)}
                           </p>
                           {!mine && (
@@ -555,7 +492,7 @@ function ChatsPage() {
                               disabled={reportingMessageId === message.id}
                               onClick={() => void handleReport(message)}
                               aria-label={text("إبلاغ عن هذه الرسالة", "Report this message")}
-                              className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold opacity-80"
+                              className="rawaj-message-bubble__report"
                             >
                               <Flag className="h-3 w-3" />
                               {reportingMessageId === message.id
@@ -571,27 +508,26 @@ function ChatsPage() {
 
                 <form
                   onSubmit={(event) => void handleSend(event)}
-                  className="border-t border-border p-3"
+                  className="rawaj-message-composer"
                 >
                   <input
                     value={blockReason}
                     onChange={(event) => setBlockReason(event.target.value)}
                     maxLength={300}
                     placeholder={text("سبب الحظر اختياري", "Optional block reason")}
-                    className="mb-2 w-full rounded-xl bg-muted-surface px-3 py-2 text-xs outline-none hairline"
+                    className="rawaj-message-composer__block-reason mb-2"
                   />
                   {selectedConversation.status === "active" ? (
                     <div className="mb-2">
                       <p className="mb-1.5 text-[10px] font-bold text-muted-foreground">
                         {text("ردود سريعة", "Quick replies")}
                       </p>
-                      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                      <div className="rawaj-quick-replies">
                         {quickReplies.map((reply) => (
                           <button
                             key={reply.en}
                             type="button"
                             onClick={() => setBody(language === "ar" ? reply.ar : reply.en)}
-                            className="min-h-11 shrink-0 rounded-xl bg-muted-surface px-3 py-2 text-[11px] font-bold text-foreground hairline"
                           >
                             {language === "ar" ? reply.ar : reply.en}
                           </button>
@@ -607,7 +543,6 @@ function ChatsPage() {
                       rows={2}
                       placeholder={text("اكتب رسالة...", "Write a message...")}
                       aria-label={text("اكتب رسالة...", "Write a message...")}
-                      className="min-h-12 rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
                     />
                     <button
                       type="submit"
@@ -616,7 +551,7 @@ function ChatsPage() {
                         body.trim().length === 0 ||
                         selectedConversation.status !== "active"
                       }
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
+                      className="rawaj-message-composer__send"
                     >
                       <Send className="h-4 w-4" />
                       {sending ? text("جاري الإرسال", "Sending") : text("إرسال", "Send")}
@@ -658,37 +593,6 @@ function PanelText({ children }: { children: React.ReactNode }) {
     <p className="rounded-xl bg-muted-surface p-3 text-xs leading-6 text-muted-foreground">
       {children}
     </p>
-  );
-}
-
-function StatePanel({
-  title,
-  body,
-  actionTo,
-  actionSearch,
-  actionLabel,
-}: {
-  title: string;
-  body: string;
-  actionTo?: "/login" | "/listings";
-  actionSearch?: Record<string, string>;
-  actionLabel?: string;
-}) {
-  return (
-    <section className="rounded-2xl bg-card p-8 text-center hairline">
-      <MessageCircle className="mx-auto h-7 w-7 text-primary" />
-      <h2 className="mt-3 text-base font-extrabold">{title}</h2>
-      <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p>
-      {actionTo && actionLabel && (
-        <Link
-          to={actionTo}
-          search={actionSearch}
-          className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-        >
-          {actionLabel}
-        </Link>
-      )}
-    </section>
   );
 }
 

@@ -55,26 +55,47 @@ export function CommunicationCenterHero({
   return (
     <section className="rawaj-communication-hero" data-mode={mode}>
       <div className="rawaj-communication-hero__copy">
-        <p><Sparkles aria-hidden="true" />{text("مركز التواصل", "Communication center")}</p>
+        <p>
+          <Sparkles aria-hidden="true" />
+          {text("مركز التواصل", "Communication center")}
+        </p>
         <h1>{title}</h1>
         <span>{description}</span>
       </div>
       <div className="rawaj-communication-hero__metrics">
-        <CommunicationMetric icon={MessageCircle} value={unreadMessages} label={text("رسائل غير مقروءة", "Unread messages")} />
-        <CommunicationMetric icon={Bell} value={unreadNotifications} label={text("تنبيهات غير مقروءة", "Unread notifications")} />
+        <CommunicationMetric
+          icon={MessageCircle}
+          value={unreadMessages}
+          label={text("رسائل غير مقروءة", "Unread messages")}
+        />
+        <CommunicationMetric
+          icon={Bell}
+          value={unreadNotifications}
+          label={text("تنبيهات غير مقروءة", "Unread notifications")}
+        />
         {mode === "messages" ? (
-          <CommunicationMetric icon={Inbox} value={conversationCount} label={text("محادثات محفوظة", "Saved conversations")} />
+          <CommunicationMetric
+            icon={Inbox}
+            value={conversationCount}
+            label={text("محادثات محفوظة", "Saved conversations")}
+          />
         ) : null}
       </div>
-      <nav className="rawaj-communication-hero__actions" aria-label={text("روابط مركز التواصل", "Communication links")}>
+      <nav
+        className="rawaj-communication-hero__actions"
+        aria-label={text("روابط مركز التواصل", "Communication links")}
+      >
         <Link to="/activity" search={{ tab: "notifications" }} data-active={mode === "activity"}>
-          <Sparkles aria-hidden="true" />{text("النشاط", "Activity")}
+          <Sparkles aria-hidden="true" />
+          {text("النشاط", "Activity")}
         </Link>
         <Link to="/chats" search={{}} data-active={mode === "messages"}>
-          <MessageCircle aria-hidden="true" />{text("الرسائل", "Messages")}
+          <MessageCircle aria-hidden="true" />
+          {text("الرسائل", "Messages")}
         </Link>
         <Link to="/notifications" data-active={mode === "notifications"}>
-          <Bell aria-hidden="true" />{text("التنبيهات", "Notifications")}
+          <Bell aria-hidden="true" />
+          {text("التنبيهات", "Notifications")}
         </Link>
         {actions}
       </nav>
@@ -82,7 +103,15 @@ export function CommunicationCenterHero({
   );
 }
 
-function CommunicationMetric({ icon: Icon, value, label }: { icon: LucideIcon; value: number; label: string }) {
+function CommunicationMetric({
+  icon: Icon,
+  value,
+  label,
+}: {
+  icon: LucideIcon;
+  value: number;
+  label: string;
+}) {
   return (
     <div>
       <Icon aria-hidden="true" />
@@ -99,7 +128,12 @@ export function CommunicationSafetyNote() {
       <ShieldCheck aria-hidden="true" />
       <div>
         <strong>{text("تواصل بأمان", "Communicate safely")}</strong>
-        <p>{text("اتفق على المعاينة في مكان عام، ولا تحول أي مبلغ قبل التحقق من الإعلان والطرف الآخر.", "Meet in a public place and do not transfer money before verifying the listing and the other party.")}</p>
+        <p>
+          {text(
+            "اتفق على المعاينة في مكان عام، ولا تحول أي مبلغ قبل التحقق من الإعلان والطرف الآخر.",
+            "Meet in a public place and do not transfer money before verifying the listing and the other party.",
+          )}
+        </p>
       </div>
     </aside>
   );
@@ -122,14 +156,21 @@ export function ConversationSummaryItem({
       data-selected={selected}
       aria-current={selected ? "true" : undefined}
     >
-      <ParticipantAvatar name={conversation.otherParticipant.displayName} url={conversation.otherParticipant.avatarUrl} />
+      <ParticipantAvatar
+        name={conversation.otherParticipant.displayName}
+        url={conversation.otherParticipant.avatarUrl}
+      />
       <span className="rawaj-conversation-summary__copy">
         <strong>{conversation.otherParticipant.displayName}</strong>
         <small>{conversation.listingTitle}</small>
         {conversation.lastMessagePreview ? <p>{conversation.lastMessagePreview}</p> : null}
       </span>
       <span className="rawaj-conversation-summary__meta">
-        {conversation.unreadCount > 0 ? <b>{conversation.unreadCount}</b> : <Check aria-hidden="true" />}
+        {conversation.unreadCount > 0 ? (
+          <b>{conversation.unreadCount}</b>
+        ) : (
+          <Check aria-hidden="true" />
+        )}
       </span>
     </button>
   );
@@ -161,26 +202,36 @@ export function NotificationTimelineItem({
   const { text } = useUiPreferences();
   const content = (
     <>
-      <span className="rawaj-notification-timeline__icon"><Bell aria-hidden="true" /></span>
+      <span className="rawaj-notification-timeline__icon">
+        <Bell aria-hidden="true" />
+      </span>
       <span className="rawaj-notification-timeline__copy">
         <strong>{notification.titleAr}</strong>
         {notification.bodyAr ? <p>{notification.bodyAr}</p> : null}
         <small>{opening ? text("جارٍ فتح الهدف...", "Opening target...") : dateLabel}</small>
       </span>
-      {navigable ? <ChevronLeft className="rawaj-notification-timeline__chevron rtl:rotate-180" aria-hidden="true" /> : null}
+      {navigable ? (
+        <ChevronLeft
+          className="rawaj-notification-timeline__chevron rtl:rotate-180"
+          aria-hidden="true"
+        />
+      ) : null}
     </>
   );
 
   return (
     <article className="rawaj-notification-timeline" data-read={Boolean(notification.readAt)}>
       {navigable ? (
-        <button type="button" onClick={onOpen} disabled={opening}>{content}</button>
+        <button type="button" onClick={onOpen} disabled={opening}>
+          {content}
+        </button>
       ) : (
         <div>{content}</div>
       )}
       {!notification.readAt ? (
         <button type="button" className="rawaj-notification-timeline__read" onClick={onMarkRead}>
-          <Check aria-hidden="true" />{text("تحديد كمقروء", "Mark read")}
+          <Check aria-hidden="true" />
+          {text("تحديد كمقروء", "Mark read")}
         </button>
       ) : null}
     </article>
@@ -201,7 +252,12 @@ export function CommunicationSearch({
   return (
     <label className="rawaj-communication-search">
       <Search aria-hidden="true" />
-      <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} aria-label={label} />
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        aria-label={label}
+      />
     </label>
   );
 }
@@ -219,21 +275,41 @@ export function CommunicationSectionHeader({
 }) {
   return (
     <header className="rawaj-communication-section-header">
-      <div><p>{eyebrow}</p><h2>{title}</h2>{description ? <span>{description}</span> : null}</div>
+      <div>
+        <p>{eyebrow}</p>
+        <h2>{title}</h2>
+        {description ? <span>{description}</span> : null}
+      </div>
       {action ? <div>{action}</div> : null}
     </header>
   );
 }
 
-export function CommunicationSignedOut({ returnTo }: { returnTo: "/activity" | "/chats" | "/notifications" }) {
+export function CommunicationSignedOut({
+  returnTo,
+}: {
+  returnTo: "/activity" | "/chats" | "/notifications";
+}) {
   const { text } = useUiPreferences();
   return (
     <section className="rawaj-communication-signed-out">
-      <span><LockKeyhole aria-hidden="true" /></span>
+      <span>
+        <LockKeyhole aria-hidden="true" />
+      </span>
       <h1>{text("تسجيل الدخول مطلوب", "Login required")}</h1>
-      <p>{text("سجّل الدخول لعرض الرسائل والتنبيهات الخاصة بحسابك فقط.", "Sign in to view messages and notifications that belong to your account.")}</p>
-      <Link to="/login" search={{ returnTo }}>{text("تسجيل الدخول", "Log in")}</Link>
-      <Link to="/listings"><Store aria-hidden="true" />{text("تصفح الإعلانات", "Browse listings")}</Link>
+      <p>
+        {text(
+          "سجّل الدخول لعرض الرسائل والتنبيهات الخاصة بحسابك فقط.",
+          "Sign in to view messages and notifications that belong to your account.",
+        )}
+      </p>
+      <Link to="/login" search={{ returnTo }}>
+        {text("تسجيل الدخول", "Log in")}
+      </Link>
+      <Link to="/listings">
+        <Store aria-hidden="true" />
+        {text("تصفح الإعلانات", "Browse listings")}
+      </Link>
     </section>
   );
 }

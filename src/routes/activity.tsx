@@ -1,8 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Bell, LogIn, MessageCircle } from "lucide-react";
+import { Bell, MessageCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
+import {
+  CommunicationCenterHero,
+  CommunicationSignedOut,
+  ParticipantAvatar,
+} from "@/features/communication/CommunicationExperience";
 import { fetchMyConversations, fetchMyNotificationsPage } from "@/lib/classifieds-api";
 import type { ClassifiedsError, Conversation, NotificationItem } from "@/lib/classifieds-types";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
@@ -91,26 +96,8 @@ function ActivityCenterPage() {
     return (
       <>
         <PageHeader title={text("مركز النشاط", "Activity center")} to="/more" backMode="history" />
-        <main className="container-wide mobile-page-bottom pt-4">
-          <section className="rounded-2xl bg-card p-8 text-center hairline">
-            <LogIn className="mx-auto h-8 w-8 text-primary" />
-            <h1 className="mt-3 text-base font-extrabold">
-              {text("تسجيل الدخول مطلوب", "Login required")}
-            </h1>
-            <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">
-              {text(
-                "سجّل الدخول لمتابعة رسائلك وتنبيهاتك من مركز واحد.",
-                "Log in to follow messages and notifications from one center.",
-              )}
-            </p>
-            <Link
-              to="/login"
-              search={{ returnTo: "/activity" }}
-              className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-            >
-              {text("تسجيل الدخول", "Log in")}
-            </Link>
-          </section>
+        <main className="rawaj-communication-v2 container-wide mobile-page-bottom pt-4">
+          <CommunicationSignedOut returnTo="/activity" />
         </main>
       </>
     );
@@ -119,40 +106,35 @@ function ActivityCenterPage() {
   return (
     <>
       <PageHeader title={text("مركز النشاط", "Activity center")} to="/more" backMode="history" />
-      <main className="container-wide mobile-page-bottom space-y-4 pt-4">
-        <section className="rounded-2xl bg-card p-4 hairline">
-          <h1 className="text-lg font-extrabold">{text("نشاطك", "Your activity")}</h1>
-          <p className="mt-1 text-xs leading-6 text-muted-foreground">
-            {text(
-              "تابع ما يحتاج انتباهك ومحادثات البيع والشراء دون التنقل بين مراكز متفرقة.",
-              "Follow what needs attention and buyer-seller conversations without jumping between separate hubs.",
-            )}
-          </p>
-
-          <div
-            className="mt-4 grid grid-cols-2 gap-2"
-            role="tablist"
-            aria-label={text("أقسام النشاط", "Activity sections")}
-          >
-            <ActivityTabButton
-              active={activeTab === "notifications"}
-              count={counts.notifications}
-              icon={Bell}
-              label={text("الإشعارات", "Notifications")}
-              onClick={() => selectTab("notifications")}
-            />
-            <ActivityTabButton
-              active={activeTab === "messages"}
-              count={counts.messages}
-              icon={MessageCircle}
-              label={text("الرسائل", "Messages")}
-              onClick={() => selectTab("messages")}
-            />
-          </div>
-        </section>
+      <main className="rawaj-communication-v2 rawaj-communication-v2--activity container-wide mobile-page-bottom space-y-4 pt-4">
+        <CommunicationCenterHero
+          mode="activity"
+          unreadMessages={counts.messages}
+          unreadNotifications={counts.notifications}
+        />
+        <div
+          className="rawaj-activity-tabs"
+          role="tablist"
+          aria-label={text("أقسام النشاط", "Activity sections")}
+        >
+          <ActivityTabButton
+            active={activeTab === "notifications"}
+            count={counts.notifications}
+            icon={Bell}
+            label={text("الإشعارات", "Notifications")}
+            onClick={() => selectTab("notifications")}
+          />
+          <ActivityTabButton
+            active={activeTab === "messages"}
+            count={counts.messages}
+            icon={MessageCircle}
+            label={text("الرسائل", "Messages")}
+            onClick={() => selectTab("messages")}
+          />
+        </div>
 
         {activeTab === "notifications" ? (
-          <section className="rounded-2xl bg-card p-4 hairline" role="tabpanel">
+          <section className="rawaj-activity-panel" role="tabpanel">
             <ActivitySectionHeader
               title={text("آخر الإشعارات", "Latest notifications")}
               to="/notifications"
@@ -167,11 +149,12 @@ function ActivityCenterPage() {
                 {text("لا توجد إشعارات محفوظة حاليًا.", "No saved notifications right now.")}
               </ActivityState>
             ) : (
-              <div className="mt-3 space-y-2">
+              <div className="rawaj-activity-feed">
                 {notifications.map((notification) => (
                   <article
                     key={notification.id}
-                    className={`rounded-xl p-3 hairline ${notification.readAt ? "bg-card" : "bg-muted-surface"}`}
+                    className="rawaj-notification-timeline"
+                    data-read={Boolean(notification.readAt)}
                   >
                     <div className="flex items-start gap-3">
                       <span
@@ -196,7 +179,7 @@ function ActivityCenterPage() {
             )}
           </section>
         ) : (
-          <section className="rounded-2xl bg-card p-4 hairline" role="tabpanel">
+          <section className="rawaj-activity-panel" role="tabpanel">
             <ActivitySectionHeader
               title={text("آخر المحادثات", "Latest conversations")}
               to="/chats"
@@ -209,28 +192,19 @@ function ActivityCenterPage() {
             ) : conversations.length === 0 ? (
               <ActivityState>{text("لا توجد محادثات بعد.", "No conversations yet.")}</ActivityState>
             ) : (
-              <div className="mt-3 space-y-2">
+              <div className="rawaj-activity-feed">
                 {conversations.map((conversation) => (
                   <Link
                     key={conversation.id}
                     to="/chats"
                     search={{ conversation: conversation.id }}
-                    className="flex min-h-11 items-center gap-3 rounded-xl bg-muted-surface p-3 transition hover:bg-secondary hairline"
+                    className="rawaj-activity-conversation"
                   >
-                    <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-card text-sm font-bold text-primary hairline">
-                      {conversation.otherParticipant.avatarUrl ? (
-                        <img
-                          src={conversation.otherParticipant.avatarUrl}
-                          alt={conversation.otherParticipant.displayName}
-                          loading="lazy"
-                          decoding="async"
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        conversation.otherParticipant.displayName.slice(0, 1)
-                      )}
-                    </span>
-                    <span className="min-w-0 flex-1 text-start">
+                    <ParticipantAvatar
+                      name={conversation.otherParticipant.displayName}
+                      url={conversation.otherParticipant.avatarUrl}
+                    />
+                    <span className="rawaj-activity-conversation__copy">
                       <strong className="block truncate text-sm">
                         {conversation.otherParticipant.displayName}
                       </strong>
@@ -238,11 +212,7 @@ function ActivityCenterPage() {
                         {conversation.lastMessagePreview || conversation.listingTitle}
                       </span>
                     </span>
-                    {conversation.unreadCount > 0 ? (
-                      <span className="rounded-full bg-gold px-2 py-0.5 text-[10px] font-bold text-gold-foreground">
-                        {conversation.unreadCount}
-                      </span>
-                    ) : null}
+                    {conversation.unreadCount > 0 ? <b>{conversation.unreadCount}</b> : null}
                   </Link>
                 ))}
               </div>
@@ -268,22 +238,10 @@ function ActivityTabButton({
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition hairline ${
-        active ? "bg-primary text-primary-foreground" : "bg-muted-surface text-foreground"
-      }`}
-    >
+    <button type="button" role="tab" aria-selected={active} onClick={onClick}>
       <Icon className="h-4 w-4" />
       {label}
-      {count > 0 ? (
-        <span className="rounded-full bg-gold px-1.5 py-0.5 text-[10px] font-bold text-gold-foreground">
-          {count}
-        </span>
-      ) : null}
+      {count > 0 ? <b>{count}</b> : null}
     </button>
   );
 }
@@ -311,11 +269,7 @@ function ActivitySectionHeader({
 }
 
 function ActivityState({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mt-3 rounded-xl bg-muted-surface p-4 text-center text-xs leading-6 text-muted-foreground hairline">
-      {children}
-    </p>
-  );
+  return <p className="rawaj-communication-state">{children}</p>;
 }
 
 function formatDateTime(value: string, language: "ar" | "en") {

@@ -4,7 +4,10 @@ import test from "node:test";
 
 const [root, shared, chats, notifications, activity, css, qualityGate] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/notifications.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/activity.tsx", import.meta.url), "utf8"),
@@ -13,7 +16,10 @@ const [root, shared, chats, notifications, activity, css, qualityGate] = await P
 ]);
 
 test("communication center stylesheet loads after messaging and activity foundations", () => {
-  assert.match(root, /import communicationCenterV2Css from "\.\.\/communication-center-v2\.css\?url"/);
+  assert.match(
+    root,
+    /import communicationCenterV2Css from "\.\.\/communication-center-v2\.css\?url"/,
+  );
   const messaging = root.indexOf("href: messagingSignatureCss");
   const communication = root.indexOf("href: communicationCenterV2Css");
   assert.notEqual(messaging, -1);
