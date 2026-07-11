@@ -1,0 +1,432 @@
+name: Temporary Search Filters Migration
+
+on:
+  push:
+    branches:
+      - design/search-filters-v1
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: design/search-filters-v1
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Migrate search state, URL filters, and presentation
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          function read(path) {
+            return fs.readFileSync(path, 'utf8');
+          }
+          function write(path, value) {
+            fs.writeFileSync(path, value);
+          }
+          function replaceExact(value, from, to, label) {
+            if (!value.includes(from)) throw new Error(`Missing ${label}`);
+            return value.replace(from, to);
+          }
+
+          // Public listing image-only filtering without schema changes.
+          let api = read('src/lib/api/listings.ts');
+          api = replaceExact(
+            api,
+            `  let query = clientResult.data\n    .from("listings")\n    .select(publicListingSelect)`,
+            `  const listingSelect = filters.withPhotos\n    ? \`${'${publicListingSelect}'},listing_images!inner(id)\`\n    : publicListingSelect;\n\n  let query = clientResult.data\n    .from("listings")\n    .select(listingSelect)`,
+            'public listing select',
+          );
+          write('src/lib/api/listings.ts', api);
+
+          // URL/filter builders.
+          let filters = read('src/features/listings/listings-filters.ts');
+          filters = replaceExact(
+            filters,
+            `import type { ListingsSearch, ListingsSort } from "./listings-search-schema";`,
+            `import type { ListingsSearch, ListingsSort, ListingsView } from "./listings-search-schema";`,
+            'filter type import',
+          );
+          filters = replaceExact(
+            filters,
+            `  salaryType: string;\n  debouncedQ: string;`,
+            `  salaryType: string;\n  withPhotos: boolean;\n  debouncedQ: string;`,
+            'filter input image flag',
+          );
+          filters = replaceExact(
+            filters,
+            `    salaryType,\n    debouncedQ,`,
+            `    salaryType,\n    withPhotos,\n    debouncedQ,`,
+            'filter input destructure',
+          );
+          filters = replaceExact(
+            filters,
+            `    salaryType: salaryType || undefined,\n    query: debouncedQ,`,
+            `    salaryType: salaryType || undefined,\n    withPhotos: withPhotos || undefined,\n    query: debouncedQ,`,
+            'built API filter image flag',
+          );
+          filters = replaceExact(
+            filters,
+            `  q?: string;\n  sort?: ListingsSort;`,
+            `  q?: string;\n  sort?: ListingsSort;\n  view?: ListingsView;\n  with_photos?: boolean;`,
+            'URL filter presentation fields',
+          );
+          filters = replaceExact(
+            filters,
+            `  salaryType: string;\n  debouncedQ: string;\n  sort: ListingsSort;\n}`,
+            `  salaryType: string;\n  withPhotos: boolean;\n  debouncedQ: string;\n  sort: ListingsSort;\n  view: ListingsView;\n}`,
+            'sync search inputs',
+          );
+          filters = replaceExact(
+            filters,
+            `    salaryType,\n    debouncedQ,\n    sort,`,
+            `    salaryType,\n    withPhotos,\n    debouncedQ,\n    sort,\n    view,`,
+            'sync search destructure',
+          );
+          filters = replaceExact(
+            filters,
+            `    salary_type: salaryType || undefined,\n    q: debouncedQ || undefined,\n    sort: sort === "latest" ? undefined : sort,`,
+            `    salary_type: salaryType || undefined,\n    with_photos: withPhotos || undefined,\n    q: debouncedQ || undefined,\n    sort: sort === "latest" ? undefined : sort,\n    view: view === "grid" ? undefined : view,`,
+            'sync search return',
+          );
+          filters = replaceExact(
+            filters,
+            `  sort: ListingsSort;\n}\n\nexport function buildListingsCategoryNavigationSearch`,
+            `  sort: ListingsSort;\n  view?: ListingsView;\n  withPhotos?: boolean;\n}\n\nexport function buildListingsCategoryNavigationSearch`,
+            'category navigation presentation inputs',
+          );
+          filters = replaceExact(
+            filters,
+            `  const { categoryId, govId, districtAr, query, sort } = inputs;`,
+            `  const { categoryId, govId, districtAr, query, sort, view, withPhotos } = inputs;`,
+            'category navigation destructure',
+          );
+          filters = replaceExact(
+            filters,
+            `    q: query.trim() || undefined,\n    sort: sort === "latest" ? undefined : sort,\n  };\n}\n\nexport interface ListingsResetSearchInputs`,
+            `    q: query.trim() || undefined,\n    sort: sort === "latest" ? undefined : sort,\n    view: view === "grid" ? undefined : view,\n    with_photos: withPhotos || undefined,\n  };\n}\n\nexport interface ListingsResetSearchInputs`,
+            'category navigation return',
+          );
+          filters = replaceExact(
+            filters,
+            `  sort: ListingsSort;\n}\n\nexport function buildListingsResetSearch`,
+            `  sort: ListingsSort;\n  view: ListingsView;\n}\n\nexport function buildListingsResetSearch`,
+            'reset presentation input',
+          );
+          filters = replaceExact(
+            filters,
+            `    sort,\n  } = inputs;\n\n  return {\n    taxonomy: selectedTaxonomyNodeId,`,
+            `    sort,\n    view,\n  } = inputs;\n\n  return {\n    taxonomy: selectedTaxonomyNodeId,`,
+            'reset destructure',
+          );
+          filters = replaceExact(
+            filters,
+            `    sort: sort === "latest" ? undefined : sort,\n  };\n}\n\nexport interface ListingsMobileApplyInputs`,
+            `    sort: sort === "latest" ? undefined : sort,\n    view: view === "grid" ? undefined : view,\n  };\n}\n\nexport interface ListingsMobileApplyInputs`,
+            'reset return',
+          );
+          filters = replaceExact(
+            filters,
+            `  salaryType: string;\n  debouncedQ: string;\n  sort: ListingsSort;\n}\n\nexport function buildListingsMobileApplySearch`,
+            `  salaryType: string;\n  withPhotos: boolean;\n  debouncedQ: string;\n  sort: ListingsSort;\n  view: ListingsView;\n}\n\nexport function buildListingsMobileApplySearch`,
+            'mobile apply presentation inputs',
+          );
+          const mobileDestructure = `    salaryType,\n    debouncedQ,\n    sort,\n  } = inputs;`;
+          const mobileDestructureReplacement = `    salaryType,\n    withPhotos,\n    debouncedQ,\n    sort,\n    view,\n  } = inputs;`;
+          const mobileIndex = filters.lastIndexOf(mobileDestructure);
+          if (mobileIndex < 0) throw new Error('Missing mobile apply destructure');
+          filters =
+            filters.slice(0, mobileIndex) +
+            mobileDestructureReplacement +
+            filters.slice(mobileIndex + mobileDestructure.length);
+          filters = replaceExact(
+            filters,
+            `    salary_type: hasConcreteCategory && fieldKind === "jobs" ? salaryType || undefined : undefined,\n    q: debouncedQ || undefined,\n    sort: sort === "latest" ? undefined : sort,`,
+            `    salary_type: hasConcreteCategory && fieldKind === "jobs" ? salaryType || undefined : undefined,\n    with_photos: withPhotos || undefined,\n    q: debouncedQ || undefined,\n    sort: sort === "latest" ? undefined : sort,\n    view: view === "grid" ? undefined : view,`,
+            'mobile apply return',
+          );
+          write('src/features/listings/listings-filters.ts', filters);
+
+          // Result and pagination hooks include image-only filter.
+          let results = read('src/features/listings/use-listings-results.ts');
+          results = replaceExact(
+            results,
+            `    filterInputs.salaryType,\n    filterInputs.debouncedQ,`,
+            `    filterInputs.salaryType,\n    filterInputs.withPhotos,\n    filterInputs.debouncedQ,`,
+            'result dependency image flag',
+          );
+          write('src/features/listings/use-listings-results.ts', results);
+
+          let pagination = read('src/features/listings/use-listings-pagination.ts');
+          pagination = replaceExact(
+            pagination,
+            `    salaryType,\n    debouncedQ,`,
+            `    salaryType,\n    withPhotos,\n    debouncedQ,`,
+            'pagination destructure image flag',
+          );
+          pagination = replaceExact(
+            pagination,
+            `        salaryType,\n        debouncedQ,`,
+            `        salaryType,\n        withPhotos,\n        debouncedQ,`,
+            'pagination filter image flag',
+          );
+          pagination = replaceExact(
+            pagination,
+            `    salaryType,\n    debouncedQ,\n    sort,`,
+            `    salaryType,\n    withPhotos,\n    debouncedQ,\n    sort,`,
+            'pagination dependency image flag',
+          );
+          write('src/features/listings/use-listings-pagination.ts', pagination);
+
+          // Root stylesheet ordering.
+          let root = read('src/routes/__root.tsx');
+          root = replaceExact(
+            root,
+            `import sellerStorefrontFoundationCss from "../seller-storefront-foundation.css?url";`,
+            `import searchFiltersV1Css from "../search-filters-v1.css?url";\nimport sellerStorefrontFoundationCss from "../seller-storefront-foundation.css?url";`,
+            'root search CSS import',
+          );
+          root = replaceExact(
+            root,
+            `        { rel: "stylesheet", href: adaptiveListingCardsCss },`,
+            `        { rel: "stylesheet", href: adaptiveListingCardsCss },\n        { rel: "stylesheet", href: searchFiltersV1Css },`,
+            'root search CSS link',
+          );
+          write('src/routes/__root.tsx', root);
+
+          // Listings route imports and state.
+          let route = read('src/routes/listings.index.tsx');
+          route = replaceExact(
+            route,
+            `import { ArrowUpDown, Filter, Search, X } from "lucide-react";`,
+            `import { X } from "lucide-react";`,
+            'listings icon import',
+          );
+          route = replaceExact(
+            route,
+            `import { PageHeader } from "@/components/PageHeader";`,
+            `import { PageHeader } from "@/components/PageHeader";\nimport { FilterBottomSheet } from "@/features/search/FilterBottomSheet";\nimport { FilterCategoryGrid } from "@/features/search/FilterCategoryGrid";\nimport { QuickFilterRail } from "@/features/search/QuickFilterRail";\nimport { SearchEmptyState } from "@/features/search/SearchEmptyState";\nimport { SearchResultsToolbar } from "@/features/search/SearchResultsToolbar";`,
+            'listings search component imports',
+          );
+          route = replaceExact(
+            route,
+            `  type ListingsSort,\n} from "@/features/listings/listings-search-schema";`,
+            `  type ListingsSort,\n  type ListingsView,\n} from "@/features/listings/listings-search-schema";`,
+            'listings view type import',
+          );
+          route = replaceExact(
+            route,
+            `  const [sort, setSort] = useState<ListingsSort>(search.sort ?? "latest");`,
+            `  const [sort, setSort] = useState<ListingsSort>(search.sort ?? "latest");\n  const [view, setView] = useState<ListingsView>(search.view ?? "grid");\n  const [withPhotos, setWithPhotos] = useState(Boolean(search.with_photos));`,
+            'listings presentation state',
+          );
+          route = route.replace(`  const [sortOpen, setSortOpen] = useState(false);\n`, '');
+          route = replaceExact(
+            route,
+            `    salaryType,\n  );`,
+            `    salaryType ||\n    withPhotos,\n  );`,
+            'active filter image state',
+          );
+          route = replaceExact(
+            route,
+            `    setSort(search.sort ?? "latest");`,
+            `    setSort(search.sort ?? "latest");\n    setView(search.view ?? "grid");\n    setWithPhotos(Boolean(search.with_photos));`,
+            'search presentation synchronization',
+          );
+          route = replaceExact(
+            route,
+            `    search.transmission,\n  ]);`,
+            `    search.transmission,\n    search.view,\n    search.with_photos,\n  ]);`,
+            'search presentation dependencies',
+          );
+          route = replaceExact(
+            route,
+            `    if (!referencesLoaded) return;\n    if (taxonomyAvailable && search.taxonomy && !selectedTaxonomyNode) return;`,
+            `    if (!referencesLoaded || filtersOpen) return;\n    if (taxonomyAvailable && search.taxonomy && !selectedTaxonomyNode) return;`,
+            'pause URL sync during draft edits',
+          );
+          route = replaceExact(
+            route,
+            `        salaryType,\n        debouncedQ,\n        sort,`,
+            `        salaryType,\n        withPhotos,\n        debouncedQ,\n        sort,\n        view,`,
+            'sync search presentation values',
+          );
+          route = replaceExact(
+            route,
+            `    salaryType,\n    debouncedQ,\n    sort,\n    navigate,`,
+            `    salaryType,\n    withPhotos,\n    debouncedQ,\n    sort,\n    view,\n    filtersOpen,\n    navigate,`,
+            'sync effect presentation dependencies',
+          );
+
+          const resultCallAnchor = `    salaryType,\n    debouncedQ,\n    sort,\n    referencesLoaded,`;
+          route = replaceExact(
+            route,
+            resultCallAnchor,
+            `    salaryType,\n    withPhotos,\n    debouncedQ,\n    sort,\n    referencesLoaded,`,
+            'results image filter',
+          );
+          route = replaceExact(
+            route,
+            `    salaryType,\n    debouncedQ,\n    sort,\n    nextCursor,`,
+            `    salaryType,\n    withPhotos,\n    debouncedQ,\n    sort,\n    nextCursor,`,
+            'pagination image filter',
+          );
+          route = replaceExact(
+            route,
+            `    q.trim() ? { key: "query", label: q.trim(), clear: () => setQ("") } : null,`,
+            `    withPhotos\n      ? {\n          key: "withPhotos",\n          label: text("مع صور", "With photos"),\n          clear: () => setWithPhotos(false),\n        }\n      : null,\n    q.trim() ? { key: "query", label: q.trim(), clear: () => setQ("") } : null,`,
+            'active image filter chip',
+          );
+          route = replaceExact(
+            route,
+            `    setQ("");\n    setSortOpen(false);`,
+            `    setQ("");\n    setWithPhotos(false);`,
+            'reset image filter',
+          );
+          route = replaceExact(
+            route,
+            `        sort,\n      }),`,
+            `        sort,\n        view,\n      }),`,
+            'reset view preservation',
+          );
+
+          const restoreFunction = `\n  function restoreFilterDraftFromSearch() {\n    setGovId(search.gov ?? "");\n    setDistrictAr(search.district ?? "");\n    setPriceMin(search.price_min?.toString() ?? "");\n    setPriceMax(search.price_max?.toString() ?? "");\n    setCarMake(search.car_make ?? "");\n    setCarModel(search.car_model ?? "");\n    setFuelType(search.fuel ?? "");\n    setTransmission(search.transmission ?? "");\n    setPropertyPurpose(search.property_purpose ?? "");\n    setPropertyType(search.property_type ?? "");\n    setRooms(search.rooms?.toString() ?? "");\n    setRentalDuration(search.rental_duration ?? "");\n    setElectronicsBrand(search.electronics_brand ?? "");\n    setDetailCondition(search.detail_condition ?? "");\n    setEmploymentType(search.employment_type ?? "");\n    setSalaryType(search.salary_type ?? "");\n    setSubcategoryId(search.subcategory ?? "");\n    setDraftCategoryId(search.taxonomy ? undefined : search.category ?? undefined);\n  }\n\n  function handleFilterSheetOpenChange(nextOpen: boolean) {\n    if (!nextOpen) restoreFilterDraftFromSearch();\n    setFiltersOpen(nextOpen);\n  }\n`;
+          route = replaceExact(
+            route,
+            `\n  function resetFilters() {`,
+            `${restoreFunction}\n  function resetFilters() {`,
+            'filter draft restore functions',
+          );
+          route = replaceExact(
+            route,
+            `        salaryType,\n        debouncedQ,\n        sort,\n      }),`,
+            `        salaryType,\n        withPhotos,\n        debouncedQ,\n        sort,\n        view,\n      }),`,
+            'apply presentation values',
+          );
+
+          // Preserve presentation filters when navigating categories.
+          route = route.replaceAll(
+            `                    query: q,\n                    sort,`,
+            `                    query: q,\n                    sort,\n                    view,\n                    withPhotos,`,
+          );
+
+          // New compact toolbar and quick filters replace the oversized hero.
+          const heroStart = route.indexOf(
+            `        <section className="rawaj-hero-surface rounded-[1.55rem] p-4 sm:rounded-[1.8rem] sm:p-5">`,
+          );
+          const sidebarStart = route.indexOf(
+            `        <section className="rawaj-surface mt-4 hidden rounded-[1.35rem] p-4 lg:block">`,
+            heroStart,
+          );
+          if (heroStart < 0 || sidebarStart < 0) throw new Error('Could not locate listings hero');
+          const newHero = `        <SearchResultsToolbar\n          title={title}\n          pathLabel={\n            selectedTaxonomyPath.length > 1\n              ? taxonomyPathLabel(selectedTaxonomyPath, language)\n              : undefined\n          }\n          query={q}\n          onQueryChange={setQ}\n          resultCount={items.length}\n          loading={loading}\n          activeFilterCount={activeFilterCount}\n          sort={sort}\n          onSortChange={setSort}\n          view={view}\n          onViewChange={setView}\n          onOpenFilters={() => setFiltersOpen(true)}\n          text={text}\n        />\n\n        <QuickFilterRail\n          locationLabel={\n            canonicalLocationNodeId\n              ? locationLabel || text("الموقع", "Location")\n              : selectedGovernorate\n                ? governorateName(selectedGovernorate.id, selectedGovernorate.nameAr, language)\n                : text("كل سوريا", "All Syria")\n          }\n          priceActive={Boolean(priceMin.trim() || priceMax.trim())}\n          categoryLabel={\n            selectedCategory\n              ? categoryName(selectedCategory.id, selectedCategory.nameAr, language)\n              : text("القسم", "Category")\n          }\n          categoryActive={Boolean(selectedCategory)}\n          conditionActive={Boolean(detailCondition)}\n          showCondition={categoryFieldKind === "electronics"}\n          withPhotos={withPhotos}\n          newestActive={sort === "latest"}\n          hasActiveFilters={hasActiveFilters}\n          onOpenFilters={() => setFiltersOpen(true)}\n          onNewest={() => setSort("latest")}\n          onTogglePhotos={() => setWithPhotos((value) => !value)}\n          onReset={resetFilters}\n          fieldKind={categoryFieldKind}\n          text={text}\n        />\n\n`;
+          route = route.slice(0, heroStart) + newHero + route.slice(sidebarStart);
+
+          // Convert desktop filter surface to a sticky sidebar.
+          route = route.replace(
+            `        <section className="rawaj-surface mt-4 hidden rounded-[1.35rem] p-4 lg:block">`,
+            `        <aside className="rawaj-search-results-v1__sidebar rawaj-surface hidden rounded-[1.35rem] p-4 lg:block">`,
+          );
+          const asideStart = route.indexOf('        <aside className="rawaj-search-results-v1__sidebar');
+          const filterOverlayStart = route.indexOf('        {filtersOpen && (', asideStart);
+          if (asideStart < 0 || filterOverlayStart < 0) throw new Error('Could not locate sidebar boundary');
+          const asideSegment = route.slice(asideStart, filterOverlayStart);
+          const lastSectionClose = asideSegment.lastIndexOf('        </section>');
+          if (lastSectionClose < 0) throw new Error('Could not locate sidebar close');
+          const fixedAsideSegment =
+            asideSegment.slice(0, lastSectionClose) +
+            '        </aside>' +
+            asideSegment.slice(lastSectionClose + '        </section>'.length);
+          route = route.slice(0, asideStart) + fixedAsideSegment + route.slice(filterOverlayStart);
+
+          // Replace fixed overlay with the reusable snap-point bottom sheet.
+          const overlayStart = route.indexOf('        {filtersOpen && (');
+          const legacyGovernorateStart = route.indexOf('        {open && (', overlayStart);
+          if (overlayStart < 0 || legacyGovernorateStart < 0) {
+            throw new Error('Could not locate mobile filter overlay boundaries');
+          }
+          const newSheet = `        <FilterBottomSheet\n          open={filtersOpen}\n          onOpenChange={handleFilterSheetOpenChange}\n          activeCount={activeFilterCount}\n          onReset={resetFilters}\n          onApply={applyFilters}\n          text={text}\n        >\n          <section className="rawaj-filter-sheet__section">\n            <div className="rawaj-filter-sheet__section-heading">\n              <h3>{text("القسم", "Category")}</h3>\n            </div>\n            <FilterCategoryGrid\n              categories={categories}\n              selectedCategory={draftSelectedCategory}\n              language={language}\n              onSelect={(categoryId) => {\n                setDraftCategoryId(categoryId);\n                setSubcategoryId("");\n              }}\n              text={text}\n            />\n          </section>\n\n          {draftSelectedCategory && mobileAvailableSubcategories.length > 0 ? (\n            <section className="rawaj-filter-sheet__section">\n              <div className="rawaj-filter-sheet__section-heading">\n                <h3>{text("الأقسام الفرعية", "Subcategories")}</h3>\n              </div>\n              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">\n                <button\n                  type="button"\n                  onClick={() => setSubcategoryId("")}\n                  aria-pressed={!subcategoryId}\n                  className={\`rounded-xl px-3 py-2 text-start text-xs font-bold \${\n                    !subcategoryId\n                      ? "bg-gold text-gold-foreground"\n                      : "bg-muted-surface text-foreground"\n                  }\`}\n                >\n                  {text("كل القسم", "All in category")}\n                </button>\n                {mobileAvailableSubcategories.map((subcategory) => (\n                  <button\n                    key={subcategory.id}\n                    type="button"\n                    onClick={() => setSubcategoryId(subcategory.id)}\n                    aria-pressed={subcategoryId === subcategory.id}\n                    className={\`rounded-xl px-3 py-2 text-start text-xs font-bold \${\n                      subcategoryId === subcategory.id\n                        ? "bg-gold text-gold-foreground"\n                        : "bg-muted-surface text-foreground"\n                    }\`}\n                  >\n                    {subcategoryName(subcategory, language)}\n                  </button>\n                ))}\n              </div>\n            </section>\n          ) : null}\n\n          <section className="rawaj-filter-sheet__section">\n            <div className="rawaj-filter-sheet__section-heading">\n              <h3>{text("الموقع", "Location")}</h3>\n              {districtAr || govId ? (\n                <button\n                  type="button"\n                  onClick={() => {\n                    setGovId("");\n                    setDistrictAr("");\n                  }}\n                >\n                  {text("كل سوريا", "All Syria")}\n                </button>\n              ) : null}\n            </div>\n            <CanonicalLocationSelector\n              value={canonicalLocationNodeId || null}\n              onChange={handleCanonicalLocationChange}\n            />\n            {districtAr && !canonicalLocationNodeId ? (\n              <p className="text-xs text-muted-foreground">\n                {text("الموقع القديم المحفوظ: ", "Saved legacy location: ")}\n                {districtAr}\n              </p>\n            ) : null}\n          </section>\n\n          <section className="rawaj-filter-sheet__section">\n            <div className="rawaj-filter-sheet__section-heading">\n              <h3>{text("السعر", "Price")}</h3>\n            </div>\n            <div className="grid grid-cols-2 gap-3">\n              <label>\n                <span className="mb-1 block text-xs font-bold text-muted-foreground">\n                  {text("السعر من", "Price from")}\n                </span>\n                <input\n                  value={priceMin}\n                  onChange={(event) => setPriceMin(event.target.value)}\n                  type="number"\n                  min={0}\n                  inputMode="numeric"\n                  className="input text-xs"\n                />\n              </label>\n              <label>\n                <span className="mb-1 block text-xs font-bold text-muted-foreground">\n                  {text("السعر إلى", "Price to")}\n                </span>\n                <input\n                  value={priceMax}\n                  onChange={(event) => setPriceMax(event.target.value)}\n                  type="number"\n                  min={0}\n                  inputMode="numeric"\n                  className="input text-xs"\n                />\n              </label>\n            </div>\n          </section>\n\n          {draftCategoryFieldKind !== "general" ? (\n            <section className="rawaj-filter-sheet__section">\n              <div className="rawaj-filter-sheet__section-heading">\n                <h3>{text("خيارات القسم", "Category options")}</h3>\n              </div>\n              <CategorySpecificFilterFields\n                kind={draftCategoryFieldKind}\n                text={text}\n                values={{\n                  carMake,\n                  carModel,\n                  fuelType,\n                  transmission,\n                  propertyPurpose: filterPropertyPurpose,\n                  propertyType: filterPropertyType,\n                  rooms,\n                  rentalDuration,\n                  electronicsBrand,\n                  detailCondition,\n                  employmentType,\n                  salaryType,\n                }}\n                setters={{\n                  setCarMake,\n                  setCarModel,\n                  setFuelType,\n                  setTransmission,\n                  setPropertyPurpose,\n                  setPropertyType,\n                  setRooms,\n                  setRentalDuration,\n                  setElectronicsBrand,\n                  setDetailCondition,\n                  setEmploymentType,\n                  setSalaryType,\n                }}\n                taxonomyOwnsPurpose={taxonomyOwnsPropertyPurpose}\n                taxonomyOwnsType={taxonomyOwnsPropertyType}\n              />\n            </section>\n          ) : null}\n        </FilterBottomSheet>\n\n`;
+          route = route.slice(0, overlayStart) + newSheet + route.slice(legacyGovernorateStart);
+
+          route = route.replace(
+            `      <main className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">`,
+            `      <main className="rawaj-search-results-v1 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">`,
+          );
+          route = route.replaceAll(
+            `className="listing-card-grid mt-3"`,
+            `className="rawaj-results-grid listing-card-grid mt-3" data-view={view}`,
+          );
+          route = replaceExact(
+            route,
+            `        ) : items.length === 0 ? (\n          <StateCard\n            title={text("لا توجد إعلانات مطابقة الآن", "No matching listings now")}\n            body={text(\n              "تظهر هنا الإعلانات المعتمدة فقط بعد المراجعة.",\n              "Only approved listings appear here after review.",\n            )}\n            actionLabel={text("أضف إعلانك", "Post your listing")}\n            actionTo="/add-listing"\n          />`,
+            `        ) : items.length === 0 ? (\n          <SearchEmptyState hasActiveFilters={hasActiveFilters} onReset={resetFilters} text={text} />`,
+            'useful empty results state',
+          );
+          write('src/routes/listings.index.tsx', route);
+
+          // Categories become a spatial atlas without changing taxonomy behavior.
+          let categories = read('src/routes/categories.tsx');
+          categories = categories.replace(
+            `      <main className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">`,
+            `      <main className="rawaj-categories-v2 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">`,
+          );
+          categories = categories.replace(
+            `        <section className="rawaj-hero-surface rounded-[1.55rem] p-4 sm:rounded-[1.8rem] sm:p-5">`,
+            `        <section className="rawaj-categories-v2__hero rounded-[1.55rem] p-4 sm:rounded-[1.8rem] sm:p-5">`,
+          );
+          categories = categories.replace(
+            `          <div className="mt-3 flex items-stretch gap-2">`,
+            `          <div className="rawaj-categories-v2__hero-search mt-4 flex items-stretch gap-2 rounded-[1.15rem] p-2">`,
+          );
+          categories = categories.replace(
+            `    <section className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:gap-4 xl:grid-cols-3">`,
+            `    <section className="rawaj-category-directory-grid mt-5">`,
+          );
+          categories = categories.replaceAll(
+            `    <article className="rawaj-surface tap-card overflow-hidden rounded-[1.25rem] transition sm:hover:-translate-y-0.5">`,
+            `    <article className="rawaj-category-directory-card tap-card">`,
+          );
+          write('src/routes/categories.tsx', categories);
+          NODE
+
+      - name: Format migrated files
+        run: >-
+          npx prettier --write
+          src/features/listings/listings-filters.ts
+          src/features/listings/listings-search-schema.ts
+          src/features/listings/use-listings-pagination.ts
+          src/features/listings/use-listings-results.ts
+          src/features/search
+          src/lib/api/listings.ts
+          src/lib/classifieds-types.ts
+          src/routes/__root.tsx
+          src/routes/categories.tsx
+          src/routes/listings.index.tsx
+          src/search-filters-v1.css
+
+      - name: Commit migration and remove temporary workflow
+        shell: bash
+        run: |
+          rm .github/workflows/temporary-search-filters-migration.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Build category search and filter surfaces"
+          git push origin HEAD:design/search-filters-v1
