@@ -29,15 +29,20 @@ p = Path("src/routes/more.tsx")
 s = p.read_text()
 s = replace_exact(
     s,
-    'import { PageHeader } from "@/components/PageHeader";',
-    '''import { PageHeader } from "@/components/PageHeader";
+    'import { AppHeader } from "@/components/AppHeader";',
+    '''import { AppHeader } from "@/components/AppHeader";
 import {
   TrustHubHero,
   TrustSectionHeader,
 } from "@/features/trust/TrustSupportExperience";''',
     "more trust imports",
 )
-s = replace_exact(s, '<div className="min-h-dvh">', '<div className="rawaj-trust-v2 rawaj-more-v2 min-h-dvh">', "more root")
+s = replace_exact(
+    s,
+    '<div className="min-h-dvh">',
+    '<div className="rawaj-trust-v2 rawaj-more-v2 min-h-dvh">',
+    "more root",
+)
 s = replace_exact(
     s,
     '<main className="container-wide mobile-page-bottom space-y-5 pb-8 pt-3 sm:pt-5">',
@@ -58,9 +63,20 @@ hero = '''        <TrustHubHero
 
 '''
 s = s[:hero_start] + hero + s[command_start:]
-s = replace_exact(s, '<section className="mt-7">', '<section className="rawaj-more-v2__command">', "more command")
+s = replace_exact(
+    s,
+    '<section className="mt-7">',
+    '<section className="rawaj-more-v2__command">',
+    "more command",
+)
 heading_start = s.index('          <div className="rawaj-storefront-section mb-3">')
-heading_end = s.index('          </div>\n          <div className="grid grid-cols-2 gap-3">', heading_start) + len('          </div>')
+heading_end = (
+    s.index(
+        '          </div>\n          <div className="grid grid-cols-2 gap-3">',
+        heading_start,
+    )
+    + len('          </div>')
+)
 heading = '''          <TrustSectionHeader
             eyebrow={text("الاختصارات", "Shortcuts")}
             title={text("مركز العمليات", "Command center")}
@@ -70,9 +86,21 @@ heading = '''          <TrustSectionHeader
             )}
           />'''
 s = s[:heading_start] + heading + s[heading_end:]
-s = s.replace('<div className="grid grid-cols-2 gap-3">', '<div className="rawaj-more-v2__command">', 1)
-s = s.replace('<section className="grid grid-cols-3 gap-2.5">', '<section className="rawaj-more-v2__secondary">', 1)
-s = s.replace('<div className="space-y-3">', '<div className="rawaj-more-v2__sections">', 1)
+s = s.replace(
+    '<div className="grid grid-cols-2 gap-3">',
+    '<div className="rawaj-more-v2__command">',
+    1,
+)
+s = s.replace(
+    '<section className="grid grid-cols-3 gap-2.5">',
+    '<section className="rawaj-more-v2__secondary">',
+    1,
+)
+s = s.replace(
+    '<div className="space-y-3">',
+    '<div className="rawaj-more-v2__sections">',
+    1,
+)
 s = s.replace(
     'className={`rawaj-color-card rounded-[1.35rem] p-3 ${quiet ? "rawaj-world-gold" : "rawaj-world-indigo"}`}',
     'className="rawaj-account-section" data-tone={quiet ? "muted" : "default"}',
@@ -101,7 +129,9 @@ s = replace_exact(
     "support main",
 )
 hero_start = s.index('        <section className="rounded-2xl bg-primary')
-form_start = s.index('        <section className="rounded-2xl bg-card p-4 hairline">', hero_start)
+form_start = s.index(
+    '        <section className="rounded-2xl bg-card p-4 hairline">', hero_start
+)
 hero = '''        <TrustHubHero
           mode="support"
           signedIn={auth.status === "signedIn"}
@@ -114,7 +144,12 @@ hero = '''        <TrustHubHero
           <div className="rawaj-support-v2__main">
 '''
 s = s[:hero_start] + hero + s[form_start:]
-s = replace_exact(s, '<section className="rounded-2xl bg-card p-4 hairline">', '<section className="rawaj-support-panel">', "support form panel")
+s = replace_exact(
+    s,
+    '<section className="rounded-2xl bg-card p-4 hairline">',
+    '<section className="rawaj-support-panel">',
+    "support form panel",
+)
 s = replace_exact(
     s,
     '''          <h3 className="text-sm font-extrabold">
@@ -130,12 +165,27 @@ s = replace_exact(
           />''',
     "support form heading",
 )
-s = s.replace('className="mt-3 space-y-3"', '', 1)
-s = s.replace('className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"', '', 4)
-s = s.replace('className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground disabled:opacity-60"', '', 1)
-s = s.replace('className="rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground"', 'className="rawaj-support-notice"', 1)
+s = s.replace('className="mt-3 space-y-3"', "", 1)
+s = s.replace(
+    'className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"',
+    "",
+    4,
+)
+s = s.replace(
+    'className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground disabled:opacity-60"',
+    "",
+    1,
+)
+s = s.replace(
+    'className="rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground"',
+    'className="rawaj-support-notice"',
+    1,
+)
 requests_start = s.index('        {auth.status === "signedIn" && (')
-help_start = s.index('        <section>\n          <h3 className="mb-3 text-sm font-extrabold">{text("مواضيع المساعدة"', requests_start)
+help_start = s.index(
+    '        <section>\n          <h3 className="mb-3 text-sm font-extrabold">{text("مواضيع المساعدة"',
+    requests_start,
+)
 requests = '''        {auth.status === "signedIn" ? (
           <section className="rawaj-support-requests">
             <TrustSectionHeader
@@ -156,14 +206,41 @@ requests = '''        {auth.status === "signedIn" ? (
 
 '''
 s = s[:requests_start] + requests + s[help_start:]
-s = s.replace('<section>\n          <h3 className="mb-3 text-sm font-extrabold">{text("مواضيع المساعدة", "Help topics")}</h3>', '<section className="rawaj-support-topics">\n          <TrustSectionHeader eyebrow={text("الإرشاد", "Guidance")} title={text("مواضيع المساعدة", "Help topics")} />', 1)
-s = s.replace('<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">', '<div className="rawaj-support-topic-grid">', 1)
-s = s.replace('<article key={topic.en} className="rounded-2xl bg-card p-4 hairline">', '<article key={topic.en} className="rawaj-support-topic">', 1)
-s = s.replace('<section className="rounded-2xl bg-card p-4 hairline">', '<section className="rawaj-support-topics">', 1)
-s = s.replace('<section className="rounded-2xl bg-warning/10 p-4 text-xs leading-6 hairline">', '<section className="rawaj-support-notice">', 1)
-s = s.replace('<section>\n          <h3 className="mb-3 text-sm font-extrabold">{text("الأسئلة الشائعة", "FAQ")}</h3>', '<section className="rawaj-support-faq">\n          <TrustSectionHeader eyebrow={text("الأسئلة", "Questions")} title={text("الأسئلة الشائعة", "FAQ")} />', 1)
-s = s.replace('<div className="overflow-hidden rounded-2xl bg-card hairline">', '<div>', 1)
-# Close support main and add aside before final action links.
+s = s.replace(
+    '<section>\n          <h3 className="mb-3 text-sm font-extrabold">{text("مواضيع المساعدة", "Help topics")}</h3>',
+    '<section className="rawaj-support-topics">\n          <TrustSectionHeader eyebrow={text("الإرشاد", "Guidance")} title={text("مواضيع المساعدة", "Help topics")} />',
+    1,
+)
+s = s.replace(
+    '<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">',
+    '<div className="rawaj-support-topic-grid">',
+    1,
+)
+s = s.replace(
+    '<article key={topic.en} className="rounded-2xl bg-card p-4 hairline">',
+    '<article key={topic.en} className="rawaj-support-topic">',
+    1,
+)
+s = s.replace(
+    '<section className="rounded-2xl bg-card p-4 hairline">',
+    '<section className="rawaj-support-topics">',
+    1,
+)
+s = s.replace(
+    '<section className="rounded-2xl bg-warning/10 p-4 text-xs leading-6 hairline">',
+    '<section className="rawaj-support-notice">',
+    1,
+)
+s = s.replace(
+    '<section>\n          <h3 className="mb-3 text-sm font-extrabold">{text("الأسئلة الشائعة", "FAQ")}</h3>',
+    '<section className="rawaj-support-faq">\n          <TrustSectionHeader eyebrow={text("الأسئلة", "Questions")} title={text("الأسئلة الشائعة", "FAQ")} />',
+    1,
+)
+s = s.replace(
+    '<div className="overflow-hidden rounded-2xl bg-card hairline">',
+    '<div>',
+    1,
+)
 actions_start = s.index('        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">')
 insert = '''          </div>
           <aside className="rawaj-support-v2__aside">
@@ -184,12 +261,19 @@ insert = '''          </div>
 
 '''
 s = s[:actions_start] + insert + s[actions_start:]
-# Remove the original duplicated details section now located before warning.
-details_start = s.find('        <section className="rawaj-support-topics">\n          <h3 className="text-sm font-extrabold">\n            {text("معلومات تساعد فريق الدعم"')
+details_start = s.find(
+    '        <section className="rawaj-support-topics">\n          <h3 className="text-sm font-extrabold">\n            {text("معلومات تساعد فريق الدعم"'
+)
 if details_start >= 0:
-    warning_start = s.index('        <section className="rawaj-support-notice">', details_start)
+    warning_start = s.index(
+        '        <section className="rawaj-support-notice">', details_start
+    )
     s = s[:details_start] + s[warning_start:]
-s = s.replace('<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">', '<div className="rawaj-safety-actions">', 1)
+s = s.replace(
+    '<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">',
+    '<div className="rawaj-safety-actions">',
+    1,
+)
 p.write_text(s)
 
 # Safety.
@@ -235,5 +319,9 @@ map_replacement = '''        {sections.map((section) => (
         ))}
         </div>'''
 s = s[:map_start] + map_replacement + s[map_end:]
-s = s.replace('<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">', '<div className="rawaj-safety-actions">', 1)
+s = s.replace(
+    '<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">',
+    '<div className="rawaj-safety-actions">',
+    1,
+)
 p.write_text(s)
