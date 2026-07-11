@@ -2,10 +2,7 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
-const sitemap = await readFile(
-  new URL("../src/routes/sitemap[.]xml.ts", import.meta.url),
-  "utf8",
-);
+const sitemap = await readFile(new URL("../src/routes/sitemap[.]xml.ts", import.meta.url), "utf8");
 
 test("sitemap is served dynamically as XML", () => {
   assert.match(sitemap, /createServerFileRoute\("\/sitemap\.xml"\)/);
@@ -30,7 +27,5 @@ test("sitemap publishes listing and eligible seller URLs with lastmod", () => {
 });
 
 test("legacy static sitemap no longer shadows the server route", async () => {
-  await assert.rejects(
-    access(new URL("../public/sitemap.xml", import.meta.url)),
-  );
+  await assert.rejects(access(new URL("../public/sitemap.xml", import.meta.url)));
 });
