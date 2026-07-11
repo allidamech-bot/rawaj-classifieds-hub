@@ -1,0 +1,40 @@
+name: Temporary Listing Studio Type Fix
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.event.pull_request.head.ref == 'design/listing-studio-v2'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: design/listing-studio-v2
+          fetch-depth: 0
+      - name: Fix manage readiness variable
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('src/routes/profile/listings.$id.tsx')
+          value = path.read_text()
+          value = value.replace('score={score}', 'score={studioScore}')
+          value = value.replace('ready={score === 100}', 'ready={studioScore === 100}')
+          path.write_text(value)
+          PY
+          npx prettier --write 'src/routes/profile/listings.$id.tsx'
+      - name: Commit code fix
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 'src/routes/profile/listings.$id.tsx'
+          git commit -m "Fix Listing Studio readiness score"
+          git push origin HEAD:design/listing-studio-v2
