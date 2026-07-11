@@ -36,17 +36,37 @@ jobs:
           src/routes/__root.tsx
           src/routes/add-listing.tsx
           'src/routes/profile/listings.$id.tsx'
-      - name: Commit and push product files
+      - name: Capture git publish diagnostic
         shell: bash
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/workflows/quality-gate.yml
-          git add scripts/listing-studio-v2.test.mjs
-          git add src/features/listing-studio/listing-studio.tsx
-          git add src/listing-studio-v2.css
-          git add src/routes/__root.tsx
-          git add src/routes/add-listing.tsx
-          git add 'src/routes/profile/listings.$id.tsx'
-          git commit -m "Integrate Listing Studio V2"
-          git push origin HEAD:design/listing-studio-v1
+          set +e
+          {
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            echo '--- status before add ---'
+            git status --short
+            git add .github/workflows/quality-gate.yml
+            git add scripts/listing-studio-v2.test.mjs
+            git add src/features/listing-studio/listing-studio.tsx
+            git add src/listing-studio-v2.css
+            git add src/routes/__root.tsx
+            git add src/routes/add-listing.tsx
+            git add 'src/routes/profile/listings.$id.tsx'
+            echo '--- staged diff ---'
+            git diff --cached --stat
+            echo '--- commit ---'
+            git commit -m "Integrate Listing Studio V2"
+            commit_status=$?
+            echo "commit_status=$commit_status"
+            if [ "$commit_status" -eq 0 ]; then
+              echo '--- push ---'
+              git push origin HEAD:design/listing-studio-v1
+              echo "push_status=$?"
+            fi
+          } > git-publish-diagnostic.log 2>&1
+          cat git-publish-diagnostic.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: listing-studio-v2-git-diagnostic
+          path: git-publish-diagnostic.log
+          retention-days: 1
