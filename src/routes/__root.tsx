@@ -27,6 +27,7 @@ import { UnreadActivityProvider } from "@/lib/unread-activity";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import authAccountFoundationCss from "../auth-account-foundation.css?url";
 import designSystemV2Css from "../design-system-v2.css?url";
+import homeMarketplaceV2Css from "../home-marketplace-v2.css?url";
 import homeSignatureCss from "../home-signature.css?url";
 import listingDetailFoundationCss from "../listing-detail-foundation.css?url";
 import listingStudioSignatureCss from "../listing-studio-signature.css?url";
@@ -135,6 +136,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: myStoreBrandPolishCss },
         { rel: "stylesheet", href: personalSpacePolishCss },
         { rel: "stylesheet", href: designSystemV2Css },
+        { rel: "stylesheet", href: homeMarketplaceV2Css },
         { rel: "icon", href: "/favicon.ico" },
         { rel: "manifest", href: "/manifest.webmanifest" },
         { rel: "apple-touch-icon", href: "/brand/rawaj-mark-transparent-192.png" },
