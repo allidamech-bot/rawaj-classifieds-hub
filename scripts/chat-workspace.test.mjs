@@ -38,7 +38,10 @@ test("conversation search keeps an explicit empty-result state and accessible to
   assert.match(chatRoute, /No results/);
   assert.match(chatRoute, /label=\{text\("بحث في المحادثات", "Search conversations"\)\}/);
   assert.match(communicationComponents, /aria-label=\{label\}/);
-  assert.match(chatCss, /\.rawaj-chat-inbox \.rawaj-communication-search[\s\S]*min-height: 3\.2rem/);
+  assert.match(
+    chatCss,
+    /\.rawaj-chat-inbox \.rawaj-communication-search[\s\S]*min-height: 3\.2rem/,
+  );
 });
 
 test("quick replies fill the composer but never auto-send", () => {

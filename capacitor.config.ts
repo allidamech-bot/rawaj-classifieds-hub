@@ -16,9 +16,7 @@ function resolveAndroidServerUrl() {
 
 const serverUrl = resolveAndroidServerUrl();
 const serverHost = new URL(serverUrl).hostname;
-const allowNavigation = Array.from(
-  new Set(["rawa-j.com", "*.rawa-j.com", serverHost]),
-);
+const allowNavigation = Array.from(new Set(["rawa-j.com", "*.rawa-j.com", serverHost]));
 
 const config: CapacitorConfig = {
   appId: "com.rawaj.marketplace",

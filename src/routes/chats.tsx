@@ -252,14 +252,17 @@ function ChatsPage() {
     setSending(true);
     const result = await sendConversationMessage(profileId, conversationId, cleanBody);
     setSending(false);
-    if (selectedConversationIdRef.current !== conversationId || auth.profile?.id !== profileId) return;
+    if (selectedConversationIdRef.current !== conversationId || auth.profile?.id !== profileId)
+      return;
     if (!result.ok) {
       setMessageError(result.error);
       return;
     }
     setBody("");
     setMessages((current) =>
-      current.some((message) => message.id === result.data.id) ? current : [...current, result.data],
+      current.some((message) => message.id === result.data.id)
+        ? current
+        : [...current, result.data],
     );
     await loadConversations();
   }
@@ -356,17 +359,17 @@ function ChatsPage() {
       >
         <div className="rawaj-chat-layout">
           {!mobileThreadOpen ? (
-            <aside className="rawaj-chat-inbox" aria-label={text("قائمة المحادثات", "Conversation list")}>
+            <aside
+              className="rawaj-chat-inbox"
+              aria-label={text("قائمة المحادثات", "Conversation list")}
+            >
               <header className="rawaj-chat-inbox__header">
                 <div>
                   <span>{text("صندوق الرسائل", "Inbox")}</span>
                   <h1>{text("محادثاتك", "Your conversations")}</h1>
                   <p>
                     {totalUnread > 0
-                      ? text(
-                          `${totalUnread} رسالة بانتظارك`,
-                          `${totalUnread} unread messages`,
-                        )
+                      ? text(`${totalUnread} رسالة بانتظارك`, `${totalUnread} unread messages`)
                       : text("كل رسائلك مقروءة", "You are all caught up")}
                   </p>
                 </div>
@@ -388,7 +391,10 @@ function ChatsPage() {
                   <ChatState
                     loading
                     title={text("جاري تحميل المحادثات", "Loading conversations")}
-                    description={text("لحظات ونرتب أحدث الرسائل.", "Preparing your latest messages.")}
+                    description={text(
+                      "لحظات ونرتب أحدث الرسائل.",
+                      "Preparing your latest messages.",
+                    )}
                   />
                 ) : conversationError ? (
                   <ChatState
@@ -477,7 +483,9 @@ function ChatsPage() {
                       <h2>{selectedConversation.otherParticipant.displayName}</h2>
                       <span
                         className="rawaj-chat-thread__presence"
-                        data-online={onlineUserIds.has(selectedConversation.otherParticipant.userId)}
+                        data-online={onlineUserIds.has(
+                          selectedConversation.otherParticipant.userId,
+                        )}
                       >
                         <i aria-hidden="true" />
                         {onlineUserIds.has(selectedConversation.otherParticipant.userId)
@@ -518,9 +526,15 @@ function ChatsPage() {
                   </div>
 
                   {selectedConversation.status !== "active" ? (
-                    <div className="rawaj-chat-thread__status" data-status={selectedConversation.status}>
+                    <div
+                      className="rawaj-chat-thread__status"
+                      data-status={selectedConversation.status}
+                    >
                       {selectedConversation.status === "blocked"
-                        ? text("هذه المحادثة محظورة ولا تقبل رسائل جديدة.", "This conversation is blocked.")
+                        ? text(
+                            "هذه المحادثة محظورة ولا تقبل رسائل جديدة.",
+                            "This conversation is blocked.",
+                          )
                         : text(
                             "الإعلان لم يعد متاحًا، لكن المحادثة محفوظة كسجل.",
                             "The listing is unavailable, but the conversation is preserved.",
@@ -530,20 +544,31 @@ function ChatsPage() {
 
                   <div className="rawaj-chat-messages">
                     {loadingMessages ? (
-                      <PanelText loading>{text("جاري تحميل الرسائل", "Loading messages")}</PanelText>
+                      <PanelText loading>
+                        {text("جاري تحميل الرسائل", "Loading messages")}
+                      </PanelText>
                     ) : messageError ? (
                       <PanelText error>{messageError.message}</PanelText>
                     ) : messages.length === 0 ? (
                       <div className="rawaj-chat-messages__empty">
                         <MessageCircle aria-hidden="true" />
                         <strong>{text("ابدأ المحادثة", "Start the conversation")}</strong>
-                        <p>{text("اكتب أول رسالة بوضوح واحترام.", "Write the first message clearly.")}</p>
+                        <p>
+                          {text(
+                            "اكتب أول رسالة بوضوح واحترام.",
+                            "Write the first message clearly.",
+                          )}
+                        </p>
                       </div>
                     ) : (
                       messages.map((message) => {
                         const mine = message.senderUserId === auth.profile?.id;
                         return (
-                          <article key={message.id} className="rawaj-message-bubble" data-mine={mine}>
+                          <article
+                            key={message.id}
+                            className="rawaj-message-bubble"
+                            data-mine={mine}
+                          >
                             <p className="whitespace-pre-line break-words">{message.body}</p>
                             <div className="rawaj-message-bubble__meta">
                               <time>{formatDateTime(message.createdAt, language)}</time>
@@ -568,7 +593,10 @@ function ChatsPage() {
                     <div ref={messagesEndRef} aria-hidden="true" />
                   </div>
 
-                  <form onSubmit={(event) => void handleSend(event)} className="rawaj-chat-composer">
+                  <form
+                    onSubmit={(event) => void handleSend(event)}
+                    className="rawaj-chat-composer"
+                  >
                     {selectedConversation.status === "active" ? (
                       <div className="rawaj-chat-quick-replies">
                         {quickReplies.map((reply) => (
@@ -599,7 +627,9 @@ function ChatsPage() {
                           body.trim().length === 0 ||
                           selectedConversation.status !== "active"
                         }
-                        aria-label={sending ? text("جاري الإرسال", "Sending") : text("إرسال", "Send")}
+                        aria-label={
+                          sending ? text("جاري الإرسال", "Sending") : text("إرسال", "Send")
+                        }
                       >
                         {sending ? (
                           <RefreshCw className="animate-spin" aria-hidden="true" />
@@ -657,15 +687,7 @@ function ChatState({
   );
 }
 
-function ChatAvatar({
-  name,
-  url,
-  online,
-}: {
-  name: string;
-  url: string | null;
-  online: boolean;
-}) {
+function ChatAvatar({ name, url, online }: { name: string; url: string | null; online: boolean }) {
   return (
     <span className="rawaj-chat-avatar" data-online={online}>
       {url ? <img src={url} alt={name} loading="lazy" decoding="async" /> : name.slice(0, 1)}

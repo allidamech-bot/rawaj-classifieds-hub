@@ -130,7 +130,10 @@ test("Android device tests can target a branch preview without changing producti
   assert.match(capacitor, /parsed\.protocol !== "https:"/);
   assert.match(capacitor, /const serverHost = new URL\(serverUrl\)\.hostname/);
   assert.match(androidWorkflow, /RAWAJ_ANDROID_PREVIEW_URL:/);
-  assert.match(androidWorkflow, /RAWAJ_ANDROID_SERVER_URL: \$\{\{ env\.RAWAJ_ANDROID_PREVIEW_URL \}\}/);
+  assert.match(
+    androidWorkflow,
+    /RAWAJ_ANDROID_SERVER_URL: \$\{\{ env\.RAWAJ_ANDROID_PREVIEW_URL \}\}/,
+  );
   assert.match(androidWorkflow, /Assemble branch-preview debug APK/);
   assert.match(androidWorkflow, /Restore production Android configuration/);
   assert.match(androidWorkflow, /rawaj-android-1\.0\.3-preview-debug-apk/);
