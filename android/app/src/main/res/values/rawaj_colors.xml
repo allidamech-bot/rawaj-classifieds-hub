@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared native palette keeps the launcher, system splash, and animated intro seamless. -->
+    <color name="rawaj_launch_background">#080605</color>
+    <color name="rawaj_launcher_background">#080605</color>
+    <color name="rawaj_intro_ivory">#FFF1D0</color>
+    <color name="rawaj_intro_gold">#E9B85E</color>
+</resources>
