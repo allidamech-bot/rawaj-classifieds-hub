@@ -32,8 +32,28 @@ jobs:
       - name: Apply implementation patch
         run: node scripts/apply-launch-readiness-batch-1.mjs
 
-      - name: Correct generated registration assertion
-        run: sed -i 's/{0,280}/{0,800}/' scripts/launch-readiness-batch-1.test.mjs
+      - name: Make generated registration contract structural
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'scripts/launch-readiness-batch-1.test.mjs';
+          let source = fs.readFileSync(path, 'utf8');
+          const start = source.indexOf('test("new accounts with an immediate Supabase session enter RAWAJ directly"');
+          const end = source.indexOf('\n});', start) + 4;
+          if (start < 0 || end < 4) throw new Error('Registration contract block not found');
+          const replacement = `test("new accounts with an immediate Supabase session enter RAWAJ directly", () => {
+            const registerStart = login.indexOf('if (mode === "register")');
+            const loginSuccess = login.indexOf('setMessage(text("تم تسجيل الدخول"', registerStart);
+            const registrationBranch = login.slice(registerStart, loginSuccess);
+            assert.ok(registerStart >= 0 && loginSuccess > registerStart);
+            assert.match(registrationBranch, /if \\(result\\.data\\.session\\)/);
+            assert.match(registrationBranch, /Account created\\. Opening RAWAJ now\\./);
+            assert.match(registrationBranch, /void navigate\\(\\{ to: returnTo \\}\\)/);
+          });`;
+          source = source.slice(0, start) + replacement + source.slice(end);
+          fs.writeFileSync(path, source);
+          NODE
 
       - name: Auth recovery contract
         run: node --test scripts/auth-recovery.test.mjs
