@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { AuthExperienceAside, AuthExperienceHeader } from "@/features/account/AccountExperience";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
+import { createAuthCallbackUrl } from "@/lib/native-runtime";
 import { supabase } from "@/lib/supabase";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -145,11 +146,9 @@ function LoginPage() {
       }
 
       setSubmitting(true);
-      const callbackUrl = new URL("/auth/callback", window.location.origin);
-      callbackUrl.searchParams.set("type", "recovery");
-      callbackUrl.searchParams.set("returnTo", returnTo);
+      const callbackUrl = createAuthCallbackUrl(returnTo, { recovery: true });
       const { error: resetError } = await client.auth.resetPasswordForEmail(cleanEmail, {
-        redirectTo: callbackUrl.toString(),
+        redirectTo: callbackUrl,
       });
       setSubmitting(false);
 
