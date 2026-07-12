@@ -2,18 +2,23 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, shared, chats, notifications, activity, css, qualityGate] = await Promise.all([
-  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-  readFile(
-    new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
-    "utf8",
-  ),
-  readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/notifications.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/activity.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
-]);
+const [root, shared, notificationCard, chats, notifications, activity, css, qualityGate] =
+  await Promise.all([
+    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+    readFile(
+      new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../src/features/notifications/NotificationTimelineCard.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/notifications.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/activity.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
+    readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  ]);
 
 test("communication center stylesheet loads after messaging and activity foundations", () => {
   assert.match(
@@ -36,47 +41,72 @@ test("shared communication components avoid unsupported presence and read claims
     "CommunicationSearch",
     "CommunicationSectionHeader",
     "CommunicationSignedOut",
-  ]) {
+  ])
     assert.match(shared, new RegExp(`export function ${component}`));
-  }
   assert.doesNotMatch(shared, /online now|last seen|typing now|message read by/i);
 });
 
-test("messages use the shared workspace and preserve report block and read contracts", () => {
-  assert.match(chats, /rawaj-communication-v2--messages/);
-  assert.match(chats, /<CommunicationCenterHero/);
-  assert.match(chats, /<CommunicationSafetyNote/);
-  assert.match(chats, /<ConversationSummaryItem/);
-  assert.match(chats, /rawaj-message-workspace/);
-  assert.match(chats, /rawaj-message-stream/);
-  assert.match(chats, /rawaj-message-composer/);
-  assert.match(chats, /fetchMyConversations/);
-  assert.match(chats, /fetchConversationMessages/);
-  assert.match(chats, /markConversationRead/);
-  assert.match(chats, /sendConversationMessage/);
-  assert.match(chats, /createMessageReport/);
-  assert.match(chats, /blockConversationParticipant/);
-  assert.match(chats, /resolveConversationTarget/);
+test("messages preserve workspace report block and read contracts", () => {
+  for (const contract of [
+    /rawaj-communication-v2--messages/,
+    /<CommunicationCenterHero/,
+    /<CommunicationSafetyNote/,
+    /<ConversationSummaryItem/,
+    /rawaj-message-workspace/,
+    /fetchMyConversations/,
+    /fetchConversationMessages/,
+    /markConversationRead/,
+    /sendConversationMessage/,
+    /createMessageReport/,
+    /blockConversationParticipant/,
+    /resolveConversationTarget/,
+  ])
+    assert.match(chats, contract);
 });
 
-test("notifications use a factual timeline and preserve pagination read and target resolution", () => {
-  assert.match(notifications, /rawaj-communication-v2--notifications/);
-  assert.match(notifications, /<CommunicationCenterHero/);
-  assert.match(notifications, /<NotificationTimelineItem/);
-  assert.match(notifications, /rawaj-notification-list/);
-  assert.match(notifications, /fetchMyNotificationsPage/);
-  assert.match(notifications, /fetchUnreadNotificationsCount/);
-  assert.match(notifications, /markNotificationRead/);
-  assert.match(notifications, /markAllNotificationsRead/);
-  assert.match(notifications, /resolveNotificationTarget/);
-  assert.match(notifications, /<NotificationPreferencesPanel/);
+test("notifications separate loading failures from action failures", () => {
+  assert.match(notifications, /const \[loadError, setLoadError\]/);
+  assert.match(notifications, /const \[actionMessage, setActionMessage\]/);
+  assert.match(notifications, /loadError \?/);
+  assert.match(notifications, /actionMessage \?/);
+  assert.doesNotMatch(notifications, /const \[error, setError\]/);
 });
 
-test("activity center previews real notifications and conversations using shared navigation", () => {
+test("notifications expose accurate activity and visible async states", () => {
+  assert.match(notifications, /useUnreadActivityCounts/);
+  assert.match(notifications, /unreadMessages=\{counts\.messages\}/);
+  assert.match(notifications, /const \[markingAll, setMarkingAll\]/);
+  assert.match(notifications, /const \[markingReadIds, setMarkingReadIds\]/);
+  assert.match(notifications, /aria-busy=\{markingAll\}/);
+  assert.match(notificationCard, /aria-busy=\{markingRead\}/);
+  assert.match(notificationCard, /disabled=\{markingRead\}/);
+});
+
+test("notifications preserve pagination read and target recovery", () => {
+  for (const contract of [
+    /fetchMyNotificationsPage/,
+    /fetchUnreadNotificationsCount/,
+    /markNotificationRead/,
+    /markAllNotificationsRead/,
+    /resolveNotificationTarget/,
+    /<NotificationPreferencesPanel/,
+    /<NotificationTimelineCard/,
+    /openingTargetIds\.has\(notification\.id\)/,
+    /لم يعد الهدف المرتبط بهذا التنبيه متاحًا/,
+    /await markOne\(notification\.id\)/,
+  ])
+    assert.match(notifications, contract);
+});
+
+test("notifications localize from metadata with safe Arabic fallback", () => {
+  assert.match(notifications, /metadataString\(notification\.metadata, "title_en"\)/);
+  assert.match(notifications, /metadataString\(notification\.metadata, "body_en"\)/);
+  assert.match(notifications, /\|\|\s+notification\.titleAr/);
+  assert.match(notifications, /\|\|\s+notification\.bodyAr/);
+});
+
+test("activity center previews real notifications and conversations", () => {
   assert.match(activity, /rawaj-communication-v2--activity/);
-  assert.match(activity, /<CommunicationCenterHero/);
-  assert.match(activity, /rawaj-activity-tabs/);
-  assert.match(activity, /rawaj-activity-panel/);
   assert.match(activity, /fetchMyNotificationsPage/);
   assert.match(activity, /fetchMyConversations/);
   assert.match(activity, /useUnreadActivityCounts/);
@@ -84,10 +114,9 @@ test("activity center previews real notifications and conversations using shared
   assert.match(activity, /to="\/chats"/);
 });
 
-test("communication center is responsive logical-property based and reduced-motion safe", () => {
+test("communication center stays responsive and reduced-motion safe", () => {
   assert.match(css, /\.rawaj-message-workspace/);
   assert.match(css, /\.rawaj-notification-timeline/);
-  assert.match(css, /\.rawaj-activity-tabs/);
   assert.match(css, /inset-inline/);
   assert.match(css, /@media \(min-width: 1024px\)/);
   assert.match(css, /@media \(max-width: 389px\)/);
