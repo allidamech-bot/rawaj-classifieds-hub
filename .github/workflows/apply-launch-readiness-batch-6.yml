@@ -42,6 +42,7 @@ jobs:
       - name: Format and lint Batch 6 source
         run: |
           npx eslint --fix \
+            scripts/home-discovery-v3.test.mjs \
             scripts/launch-readiness-batch-6.test.mjs \
             src/features/home/CategoryWorlds.tsx \
             src/lib/api/listings.ts \
@@ -53,6 +54,7 @@ jobs:
             'src/routes/sitemap[.]xml.ts'
           npx prettier --write package.json public/robots.txt
           npx eslint --quiet \
+            scripts/home-discovery-v3.test.mjs \
             scripts/launch-readiness-batch-6.test.mjs \
             src/features/home/CategoryWorlds.tsx \
             src/lib/api/listings.ts \
@@ -65,6 +67,7 @@ jobs:
 
       - name: Run launch and SEO regressions
         run: |
+          node --test scripts/home-discovery-v3.test.mjs
           npm run test:launch-readiness-batch-6
           npm run test:seo-discovery
           npm run test:semantic-seo
@@ -76,6 +79,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json public/robots.txt scripts/launch-readiness-batch-6.test.mjs src
+          git add package.json public/robots.txt scripts/home-discovery-v3.test.mjs scripts/launch-readiness-batch-6.test.mjs src
           git commit -m "Complete public launch SEO readiness"
           git push origin HEAD:agent/launch-readiness-batch-6
