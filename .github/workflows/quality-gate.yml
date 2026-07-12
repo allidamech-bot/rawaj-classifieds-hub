@@ -40,8 +40,6 @@ jobs:
         run: npm ci
 
       - name: Lint changed source files
-        id: changed-lint
-        continue-on-error: true
         shell: bash
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -61,23 +59,12 @@ jobs:
           )
 
           if [ "${#files[@]}" -eq 0 ]; then
-            echo "No changed JS/TS source files to lint." | tee lint-output.txt
+            echo "No changed JS/TS source files to lint."
             exit 0
           fi
 
-          printf 'Linting %s\n' "${files[@]}" | tee lint-output.txt
-          npx eslint --quiet "${files[@]}" 2>&1 | tee -a lint-output.txt
-
-      - name: Upload lint diagnostic
-        if: steps.changed-lint.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: search-v2-lint-diagnostic
-          path: lint-output.txt
-
-      - name: Enforce lint result
-        if: steps.changed-lint.outcome == 'failure'
-        run: exit 1
+          printf 'Linting %s\n' "${files[@]}"
+          npx eslint --quiet "${files[@]}"
 
       - name: Syria location classification contract
         run: npm run test:location-classification
