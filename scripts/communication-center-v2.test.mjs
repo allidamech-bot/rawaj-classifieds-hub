@@ -2,23 +2,33 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, shared, notificationCard, chats, notifications, activity, css, qualityGate] =
-  await Promise.all([
-    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/features/notifications/NotificationTimelineCard.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/notifications.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/activity.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
-    readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
-  ]);
+const [
+  root,
+  shared,
+  presence,
+  notificationCard,
+  chats,
+  notifications,
+  activity,
+  css,
+  qualityGate,
+] = await Promise.all([
+  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(new URL("../src/lib/use-online-presence.ts", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/notifications/NotificationTimelineCard.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/notifications.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/activity.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
+  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+]);
 
 test("communication center stylesheet loads after messaging and activity foundations", () => {
   assert.match(
@@ -32,7 +42,7 @@ test("communication center stylesheet loads after messaging and activity foundat
   assert.ok(communication > messaging);
 });
 
-test("shared communication components avoid unsupported presence and read claims", () => {
+test("shared communication components expose only realtime-backed presence claims", () => {
   for (const component of [
     "CommunicationCenterHero",
     "CommunicationSafetyNote",
@@ -43,7 +53,12 @@ test("shared communication components avoid unsupported presence and read claims
     "CommunicationSignedOut",
   ])
     assert.match(shared, new RegExp(`export function ${component}`));
-  assert.doesNotMatch(shared, /online now|last seen|typing now|message read by/i);
+
+  assert.match(shared, /data-online=\{online\}/);
+  assert.match(presence, /presenceState\(\)/);
+  assert.match(presence, /channel\.track/);
+  assert.match(presence, /table: "conversation_messages"/);
+  assert.doesNotMatch(shared, /last seen|typing now|message read by/i);
 });
 
 test("messages preserve workspace report block and read contracts", () => {
