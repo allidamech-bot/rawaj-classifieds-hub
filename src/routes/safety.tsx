@@ -71,23 +71,21 @@ function SafetyPage() {
       <PageHeader title={text("نصائح الأمان", "Safety tips")} />
       <main className="rawaj-trust-v2 rawaj-safety-v2 container-wide mobile-page-bottom space-y-4 pb-8 pt-4">
         <TrustHubHero mode="safety" />
+
         <div className="rawaj-safety-guide-grid">
-        {sections.map((section) => (
-          <SafetyGuideCard
-            key={section.title}
-            icon={section.icon}
-            title={safetyText(section.title, language)}
-            items={section.items.map((item) => safetyText(item, language))}
-            warning={section.tone === "warn"}
-          />
-        ))}
+          {sections.map((section) => (
+            <SafetyGuideCard
+              key={section.title}
+              icon={section.icon}
+              title={safetyText(section.title, language)}
+              items={section.items.map((item) => safetyText(item, language))}
+              warning={section.tone === "warn"}
+            />
+          ))}
         </div>
-            </ul>
-          </section>
-        ))}
 
         <p className="text-center text-xs text-muted-foreground">
-          {text("هل تحتاج مساعدة؟", "Need help?")}{" "}
+          {text("هل تحتاج مساعدة؟", "Need help?")} {" "}
           <Link to="/support" className="font-bold text-primary underline-offset-2 hover:underline">
             {text("تواصل مع الدعم", "Contact support")}
           </Link>
