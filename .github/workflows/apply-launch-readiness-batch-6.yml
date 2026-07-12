@@ -70,15 +70,26 @@ jobs:
             'src/routes/governorates.$slug.tsx' \
             'src/routes/sitemap[.]xml.ts'
 
-      - name: Run launch and SEO regressions
-        run: |
-          node --test scripts/home-discovery-v3.test.mjs
-          npm run test:launch-readiness-batch-6
-          npm run test:seo-discovery
-          npm run test:semantic-seo
-          node --test scripts/dynamic-sitemap.test.mjs
-          npm run test:deployment-truth
-          npm run typecheck -- --pretty false
+      - name: Home discovery compatibility
+        run: node --test scripts/home-discovery-v3.test.mjs
+
+      - name: Batch 6 launch contract
+        run: npm run test:launch-readiness-batch-6
+
+      - name: SEO discovery compatibility
+        run: npm run test:seo-discovery
+
+      - name: Semantic SEO compatibility
+        run: npm run test:semantic-seo
+
+      - name: Dynamic sitemap compatibility
+        run: node --test scripts/dynamic-sitemap.test.mjs
+
+      - name: Deployment truth compatibility
+        run: npm run test:deployment-truth
+
+      - name: Typecheck launch routes
+        run: npm run typecheck -- --pretty false
 
       - name: Commit source implementation
         run: |
