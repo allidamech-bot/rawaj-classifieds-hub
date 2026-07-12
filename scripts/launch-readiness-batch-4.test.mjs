@@ -66,17 +66,20 @@ test("listing detail gallery continues signing every requested gallery image", (
   assert.ok(galleryBlock.includes("signListingImages(clientResult.data, images)"));
 });
 
-test("public references use a client-scoped TTL and in-flight promise cache", () => {
-  assert.ok(referencesSource.includes("new WeakMap<SupabaseClient, PublicReferenceCacheEntry>()"));
+test("public categories and governorates use separate client-scoped TTL caches", () => {
+  assert.ok(referencesSource.includes("interface PublicReferenceCacheEntry<T>"));
   assert.ok(referencesSource.includes("publicReferenceCacheTtlMs = 5 * 60 * 1000"));
+  assert.ok(referencesSource.includes("const publicCategoryCache = new WeakMap<"));
+  assert.ok(referencesSource.includes("const publicGovernorateCache = new WeakMap<"));
+  assert.ok(referencesSource.includes("async function readCachedPublicReference<T>"));
   assert.ok(
     referencesSource.includes("if (cached && cached.expiresAt > now) return cached.promise"),
   );
-  assert.ok(referencesSource.includes("promise: loadPublicReferences(client)"));
-  assert.ok(referencesSource.includes("publicReferenceCache.delete(client)"));
+  assert.ok(referencesSource.includes("if (!result.ok && cache.get(client) === entry)"));
 });
 
-test("category and governorate readers reuse the unified public reference request", () => {
+test("combined references share cached subset reads without coupling category-only callers", () => {
+  const referencesStart = referencesSource.indexOf("export async function readReferences");
   const categoriesStart = referencesSource.indexOf("export async function fetchPublicCategories");
   const subcategoriesStart = referencesSource.indexOf(
     "export async function fetchPublicSubcategories",
@@ -84,14 +87,17 @@ test("category and governorate readers reuse the unified public reference reques
   const governoratesStart = referencesSource.indexOf(
     "export async function fetchPublicGovernorates",
   );
+  const referencesBlock = referencesSource.slice(referencesStart, categoriesStart);
   const categoriesBlock = referencesSource.slice(categoriesStart, subcategoriesStart);
   const governoratesBlock = referencesSource.slice(governoratesStart);
 
-  assert.ok(categoriesBlock.includes("readReferences(clientResult.data)"));
-  assert.ok(categoriesBlock.includes("references.categories"));
+  assert.ok(referencesBlock.includes("readPublicCategories(client)"));
+  assert.ok(referencesBlock.includes("readPublicGovernorates(client)"));
+  assert.ok(categoriesBlock.includes("readPublicCategories(clientResult.data)"));
+  assert.ok(!categoriesBlock.includes("readPublicGovernorates"));
   assert.ok(!categoriesBlock.includes('.from("categories")'));
-  assert.ok(governoratesBlock.includes("readReferences(clientResult.data)"));
-  assert.ok(governoratesBlock.includes("references.governorates"));
+  assert.ok(governoratesBlock.includes("readPublicGovernorates(clientResult.data)"));
+  assert.ok(!governoratesBlock.includes("readPublicCategories"));
   assert.ok(!governoratesBlock.includes('.from("governorates")'));
 });
 
