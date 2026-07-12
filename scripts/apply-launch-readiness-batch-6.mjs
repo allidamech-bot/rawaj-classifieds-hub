@@ -1,47 +1,51 @@
 import { readFile, writeFile } from "node:fs/promises";
 
-async function updateSource(path, updater) {
+async function replaceExact(path, before, after, label) {
   const source = await readFile(path, "utf8");
-  const next = updater(source);
-  if (next === source) throw new Error(`No structural change applied to ${path}`);
-  await writeFile(path, next);
+  const matches = source.split(before).length - 1;
+  if (matches !== 1) throw new Error(`${label}: expected one match in ${path}, found ${matches}`);
+  await writeFile(path, source.replace(before, after));
+  console.log(`Applied: ${label}`);
 }
 
-await updateSource("src/lib/api/listings.ts", (source) => {
-  let next = source.replace(
-    /filters:\s*\{\s*categoryId\?: string;\s*sort\?: string\s*\}\s*&\s*Record<string, unknown>\s*=\s*\{\},/,
-    `filters: { categoryId?: string; governorateId?: string; sort?: string } & Record<
+await replaceExact(
+  "src/lib/api/listings.ts",
+  `  filters: { categoryId?: string; sort?: string } & Record<string, unknown> = {},`,
+  `  filters: { categoryId?: string; governorateId?: string; sort?: string } & Record<
     string,
     unknown
   > = {},`,
-  );
-  if (next === source) throw new Error("Public listing filter signature was not found");
+  "governorate filter signature",
+);
 
-  const categoryFilter =
-    '  if (filters.categoryId) query = query.eq("category_id", filters.categoryId);';
-  if (!next.includes(categoryFilter)) throw new Error("Category query filter was not found");
-  next = next.replace(
-    categoryFilter,
-    `${categoryFilter}
+await replaceExact(
+  "src/lib/api/listings.ts",
+  `  if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
+
+  const sort = filters.sort ?? "latest";`,
+  `  if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
   if (filters.governorateId) {
     query = query.eq("governorate_id", filters.governorateId);
-  }`,
-  );
-  return next;
-});
+  }
 
-await updateSource("src/routes/categories.tsx", (source) => {
-  const legacyLink = /<Link\s+to="\/listings"\s+search=\{\{ category: category\.id \}\}\s+className="group flex h-full flex-col gap-4 p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"\s*>/;
-  if (!legacyLink.test(source)) throw new Error("Legacy category result link was not found");
-  return source.replace(
-    legacyLink,
-    `<Link
-              to="/categories/$slug"
-              params={{ slug: category.slug }}
-              className="group flex h-full flex-col gap-4 p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-            >`,
-  );
-});
+  const sort = filters.sort ?? "latest";`,
+  "governorate query boundary",
+);
+
+await replaceExact(
+  "src/routes/categories.tsx",
+  `          <Link
+            to="/listings"
+            search={{ category: category.id }}
+            className="group flex items-center gap-3 p-3.5 transition hover:bg-muted-surface/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:items-start sm:p-4"
+          >`,
+  `          <Link
+            to="/categories/$slug"
+            params={{ slug: category.slug }}
+            className="group flex items-center gap-3 p-3.5 transition hover:bg-muted-surface/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:items-start sm:p-4"
+          >`,
+  "legacy category canonical link",
+);
 
 const packagePath = "package.json";
 const packageJson = JSON.parse(await readFile(packagePath, "utf8"));
@@ -57,5 +61,4 @@ if (!packageJson.scripts.check.includes("test:launch-readiness-batch-6")) {
   throw new Error("Could not wire Batch 6 into the local check command");
 }
 await writeFile(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
-
-console.log("Launch readiness Batch 6 patch applied.");
+console.log("Applied: Batch 6 package scripts");
