@@ -1,0 +1,66 @@
+name: Fix Batch 1 lint
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
+    paths:
+      - .github/workflows/fix-batch1-lint.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/launch-readiness-batch-1
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply ESLint and Prettier fixes
+        run: |
+          npx eslint --fix \
+            scripts/launch-readiness-batch-1.test.mjs \
+            src/lib/api/listing-image-order.ts \
+            src/lib/classifieds-api.ts \
+            src/routes/add-listing.tsx \
+            src/routes/auth.callback.tsx \
+            src/routes/login.tsx \
+            'src/routes/profile/listings.$id.tsx'
+          npx prettier --write package.json
+
+      - name: Verify changed files
+        run: |
+          npx eslint --quiet \
+            scripts/launch-readiness-batch-1.test.mjs \
+            src/lib/api/listing-image-order.ts \
+            src/lib/classifieds-api.ts \
+            src/routes/add-listing.tsx \
+            src/routes/auth.callback.tsx \
+            src/routes/login.tsx \
+            'src/routes/profile/listings.$id.tsx'
+
+      - name: Remove one-time workflow
+        run: rm .github/workflows/fix-batch1-lint.yml
+
+      - name: Commit lint fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Fix Batch 1 lint findings"
+          git push origin HEAD:agent/launch-readiness-batch-1
