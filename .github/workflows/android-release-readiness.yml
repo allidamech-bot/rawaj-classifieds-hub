@@ -89,6 +89,21 @@ jobs:
           RAWAJ_ANDROID_BUNDLED_PREVIEW: "1"
         run: npx cap sync android
 
+      - name: Keep debug OAuth callback inside bundled preview
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("android/app/src/main/java/com/rawaj/marketplace/MainActivity.java")
+          source = path.read_text(encoding="utf-8")
+          expected = 'private static final String RAWAJ_ORIGIN = "https://rawa-j.com";'
+          replacement = 'private static final String RAWAJ_ORIGIN = "https://localhost";'
+          if expected not in source:
+              raise SystemExit("RAWAJ_ORIGIN production constant was not found")
+          path.write_text(source.replace(expected, replacement, 1), encoding="utf-8")
+          PY
+
       - name: Assemble bundled branch-preview debug APK
         working-directory: android
         run: |
@@ -96,7 +111,10 @@ jobs:
           ./gradlew assembleDebug --no-daemon
 
       - name: Restore production Android configuration
-        run: npx cap sync android
+        shell: bash
+        run: |
+          git checkout -- android/app/src/main/java/com/rawaj/marketplace/MainActivity.java
+          npx cap sync android
 
       - name: Build production release AAB readiness artifact
         working-directory: android
