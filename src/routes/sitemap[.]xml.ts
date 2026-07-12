@@ -16,13 +16,19 @@ type PublicListingSitemapRow = {
   updated_at: string;
 };
 
+type PublicReferenceSitemapRow = {
+  slug: string;
+};
+
 const staticEntries: SitemapEntry[] = [
   { loc: absoluteUrl("/"), changefreq: "daily", priority: 1 },
   { loc: absoluteUrl("/listings"), changefreq: "hourly", priority: 0.9 },
   { loc: absoluteUrl("/categories"), changefreq: "weekly", priority: 0.9 },
+  { loc: absoluteUrl("/governorates"), changefreq: "weekly", priority: 0.8 },
   { loc: absoluteUrl("/offers"), changefreq: "daily", priority: 0.8 },
   { loc: absoluteUrl("/safety"), changefreq: "monthly", priority: 0.5 },
   { loc: absoluteUrl("/prohibited"), changefreq: "monthly", priority: 0.4 },
+  { loc: absoluteUrl("/support"), changefreq: "monthly", priority: 0.4 },
   { loc: absoluteUrl("/privacy"), changefreq: "yearly", priority: 0.3 },
   { loc: absoluteUrl("/terms"), changefreq: "yearly", priority: 0.3 },
 ];
@@ -49,13 +55,35 @@ export const Route = createFileRoute("/sitemap.xml")({
 async function readDynamicMarketplaceEntries(): Promise<SitemapEntry[]> {
   const clientResult = getClient();
   if (!clientResult.ok) return [];
+  const client = clientResult.data;
+
+  const [categoriesResult, governoratesResult] = await Promise.all([
+    client.from("categories").select("slug").eq("is_active", true).order("sort_order"),
+    client.from("governorates").select("slug").eq("is_active", true).order("sort_order"),
+  ]);
+
+  const categoryEntries: SitemapEntry[] = categoriesResult.error
+    ? []
+    : ((categoriesResult.data ?? []) as PublicReferenceSitemapRow[]).map((row) => ({
+        loc: absoluteUrl(`/categories/${encodeURIComponent(row.slug)}`),
+        changefreq: "daily",
+        priority: 0.8,
+      }));
+  const governorateEntries: SitemapEntry[] = governoratesResult.error
+    ? []
+    : ((governoratesResult.data ?? []) as PublicReferenceSitemapRow[]).map((row) => ({
+        loc: absoluteUrl(`/governorates/${encodeURIComponent(row.slug)}`),
+        changefreq: "daily",
+        priority: 0.7,
+      }));
+  const referenceEntries = [...categoryEntries, ...governorateEntries];
 
   const rows: PublicListingSitemapRow[] = [];
   const pageSize = 1000;
   const maxRows = 10_000;
 
   for (let offset = 0; offset < maxRows; offset += pageSize) {
-    const { data, error } = await clientResult.data
+    const { data, error } = await client
       .from("listings")
       .select("id,owner_id,updated_at")
       .eq("status", "approved")
@@ -64,7 +92,7 @@ async function readDynamicMarketplaceEntries(): Promise<SitemapEntry[]> {
       .order("updated_at", { ascending: false })
       .range(offset, offset + pageSize - 1);
 
-    if (error) return [];
+    if (error) return referenceEntries;
 
     const page = (data ?? []) as PublicListingSitemapRow[];
     rows.push(...page);
@@ -91,7 +119,7 @@ async function readDynamicMarketplaceEntries(): Promise<SitemapEntry[]> {
     priority: 0.6,
   }));
 
-  return [...listingEntries, ...sellerEntries];
+  return [...referenceEntries, ...listingEntries, ...sellerEntries];
 }
 
 function buildSitemapXml(entries: SitemapEntry[]): string {
