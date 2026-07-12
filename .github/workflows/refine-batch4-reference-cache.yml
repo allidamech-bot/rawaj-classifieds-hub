@@ -36,7 +36,7 @@ jobs:
       - name: Apply cache refinement
         run: node scripts/refine-batch4-reference-cache.mjs
 
-      - name: Format and lint
+      - name: Format and lint refined cache
         run: |
           npx eslint --fix src/lib/api/references.ts scripts/launch-readiness-batch-4.test.mjs
           npx eslint --quiet src/lib/api/references.ts scripts/launch-readiness-batch-4.test.mjs
