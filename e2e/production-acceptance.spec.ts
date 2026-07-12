@@ -23,7 +23,10 @@ function isExpectedRequestFailure(url: string, failure: string) {
   );
 }
 
-async function expectAuthenticatedRoute(page: Page, path: (typeof authenticatedRoutes)[number]) {
+async function expectAuthenticatedRoute(
+  page: Page,
+  path: (typeof authenticatedRoutes)[number],
+) {
   const response = await page.goto(path, { waitUntil: "domcontentloaded" });
   expect(response, `Missing navigation response for ${path}`).not.toBeNull();
   expect(response!.status(), `${path} returned ${response!.status()}`).toBeLessThan(500);
@@ -70,7 +73,9 @@ test.describe("RAWAJ authenticated production acceptance", () => {
     expect(deployedCommit).toBe(expectedCommitSha);
 
     await page.locator('input[type="email"]').fill(acceptanceEmail);
-    await page.locator('input[autocomplete="current-password"]').fill(acceptancePassword);
+    await page
+      .locator('input[autocomplete="current-password"]')
+      .fill(acceptancePassword);
     await page.locator('form button[type="submit"]').click();
 
     await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 30_000 });
