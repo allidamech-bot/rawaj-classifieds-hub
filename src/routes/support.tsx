@@ -1,11 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronDown, LifeBuoy, ShieldAlert } from "lucide-react";
+import { ChevronDown, ShieldAlert } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import {
+  SupportRequestTimeline,
+  TrustHubHero,
+  TrustSectionHeader,
+} from "@/features/trust/TrustSupportExperience";
 import { createSupportRequest, fetchMySupportRequests } from "@/lib/classifieds-api";
 import type { ClassifiedsError, SupportRequest, SupportRequestType } from "@/lib/classifieds-types";
 import { createSeo } from "@/lib/seo";
-import { supportStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -129,192 +133,176 @@ function SupportPage() {
   return (
     <>
       <PageHeader title={text("الدعم والمساعدة", "Support and help")} />
-      <main className="container-wide mobile-page-bottom space-y-5 pt-4">
-        <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-soft">
-          <div className="flex items-center gap-3">
-            <LifeBuoy className="h-6 w-6 text-gold" />
-            <div>
-              <h2 className="text-lg font-extrabold">
-                {text("جهز تفاصيل طلبك بوضوح", "Prepare your request clearly")}
-              </h2>
-              <p className="mt-1 text-xs leading-6 text-primary-foreground/80">
-                {text(
-                  "يمكن للمستخدم المسجل إرسال طلب دعم محفوظ من هذه الصفحة. عند ارتباط المشكلة بإعلان محدد، أضف رقم الإعلان أو استخدم زر البلاغ داخل صفحة الإعلان.",
-                  "Signed-in users can submit a stored support request from this page. When the issue is tied to a specific listing, add the listing ID or use the report button on the listing page.",
+      <main className="rawaj-trust-v2 rawaj-support-v2 container-wide mobile-page-bottom space-y-5 pb-8 pt-4">
+        <TrustHubHero
+          mode="support"
+          signedIn={auth.status === "signedIn"}
+          displayName={auth.profile?.displayName ?? undefined}
+          location={auth.profile?.cityArea || auth.profile?.governorate || undefined}
+          avatarUrl={auth.profile?.avatarUrl}
+          verified={auth.profile?.verificationStatus === "verified"}
+        />
+        <div className="rawaj-support-v2__layout">
+          <div className="rawaj-support-v2__main">
+            <section className="rawaj-support-panel">
+              <TrustSectionHeader
+                eyebrow={text("طلب جديد", "New request")}
+                title={text("إرسال طلب دعم محفوظ", "Submit a stored support request")}
+                description={text(
+                  "اكتب الموضوع والتفاصيل واربط الطلب بإعلان عند الحاجة.",
+                  "Describe the issue and link the request to a listing when relevant.",
                 )}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-2xl bg-card p-4 hairline">
-          <h3 className="text-sm font-extrabold">
-            {text("إرسال طلب دعم حقيقي", "Submit a real support request")}
-          </h3>
-          {auth.status === "signedIn" ? (
-            <form onSubmit={(event) => void submitRequest(event)} className="mt-3 space-y-3">
-              <label className="block">
-                <span className="text-xs font-bold text-muted-foreground">
-                  {text("نوع الطلب", "Request type")}
-                </span>
-                <select
-                  value={requestType}
-                  onChange={(event) => setRequestType(event.target.value as SupportRequestType)}
-                  className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
-                >
-                  <option value="complaint">{text("شكوى", "Complaint")}</option>
-                  <option value="suggestion">{text("اقتراح", "Suggestion")}</option>
-                  <option value="technical_issue">{text("مشكلة تقنية", "Technical issue")}</option>
-                  <option value="abuse_report">{text("إساءة أو مخالفة", "Abuse report")}</option>
-                  <option value="other">{text("أخرى", "Other")}</option>
-                </select>
-              </label>
-              <label className="block">
-                <span className="text-xs font-bold text-muted-foreground">
-                  {text("العنوان", "Subject")}
-                </span>
-                <input
-                  value={subject}
-                  onChange={(event) => setSubject(event.target.value)}
-                  maxLength={160}
-                  className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs font-bold text-muted-foreground">
-                  {text("رقم الإعلان المرتبط اختياري", "Related listing ID, optional")}
-                </span>
-                <input
-                  value={relatedListingId}
-                  onChange={(event) => setRelatedListingId(event.target.value)}
-                  className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs font-bold text-muted-foreground">
-                  {text("الرسالة", "Message")}
-                </span>
-                <textarea
-                  value={message}
-                  onChange={(event) => setMessage(event.target.value)}
-                  maxLength={3000}
-                  rows={5}
-                  className="mt-1 w-full rounded-xl bg-muted-surface px-3 py-2 text-sm outline-none hairline"
-                />
-              </label>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground disabled:opacity-60"
-              >
-                {submitting
-                  ? text("جار الإرسال", "Submitting")
-                  : text("إرسال الطلب", "Submit request")}
-              </button>
-              {notice && (
-                <p className="rounded-xl bg-muted-surface p-3 text-center text-xs font-semibold text-foreground">
-                  {notice}
+              />
+              {auth.status === "signedIn" ? (
+                <form onSubmit={(event) => void submitRequest(event)}>
+                  <label className="block">
+                    <span className="text-xs font-bold text-muted-foreground">
+                      {text("نوع الطلب", "Request type")}
+                    </span>
+                    <select
+                      value={requestType}
+                      onChange={(event) => setRequestType(event.target.value as SupportRequestType)}
+                    >
+                      <option value="complaint">{text("شكوى", "Complaint")}</option>
+                      <option value="suggestion">{text("اقتراح", "Suggestion")}</option>
+                      <option value="technical_issue">
+                        {text("مشكلة تقنية", "Technical issue")}
+                      </option>
+                      <option value="abuse_report">
+                        {text("إساءة أو مخالفة", "Abuse report")}
+                      </option>
+                      <option value="other">{text("أخرى", "Other")}</option>
+                    </select>
+                  </label>
+                  <label className="block">
+                    <span className="text-xs font-bold text-muted-foreground">
+                      {text("العنوان", "Subject")}
+                    </span>
+                    <input
+                      value={subject}
+                      onChange={(event) => setSubject(event.target.value)}
+                      maxLength={160}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-xs font-bold text-muted-foreground">
+                      {text("رقم الإعلان المرتبط اختياري", "Related listing ID, optional")}
+                    </span>
+                    <input
+                      value={relatedListingId}
+                      onChange={(event) => setRelatedListingId(event.target.value)}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-xs font-bold text-muted-foreground">
+                      {text("الرسالة", "Message")}
+                    </span>
+                    <textarea
+                      value={message}
+                      onChange={(event) => setMessage(event.target.value)}
+                      maxLength={3000}
+                      rows={5}
+                    />
+                  </label>
+                  <button type="submit" disabled={submitting}>
+                    {submitting
+                      ? text("جار الإرسال", "Submitting")
+                      : text("إرسال الطلب", "Submit request")}
+                  </button>
+                  {notice && <p className="rawaj-support-notice">{notice}</p>}
+                </form>
+              ) : (
+                <p className="mt-2 text-xs leading-6 text-muted-foreground">
+                  {text(
+                    "سجل الدخول لإرسال طلب دعم محفوظ ومتابعة حالته.",
+                    "Log in to submit a stored support request and track its status.",
+                  )}
                 </p>
               )}
-            </form>
-          ) : (
-            <p className="mt-2 text-xs leading-6 text-muted-foreground">
-              {text(
-                "سجل الدخول لإرسال طلب دعم محفوظ ومتابعة حالته.",
-                "Log in to submit a stored support request and track its status.",
-              )}
-            </p>
-          )}
-        </section>
+            </section>
 
-        {auth.status === "signedIn" && (
-          <section className="rounded-2xl bg-card p-4 hairline">
-            <h3 className="text-sm font-extrabold">{text("طلباتي", "My requests")}</h3>
-            {requestsError ? (
-              <p className="mt-2 text-xs text-muted-foreground">{requestsError.message}</p>
-            ) : requests.length === 0 ? (
-              <p className="mt-2 text-xs text-muted-foreground">
-                {text("لا توجد طلبات دعم محفوظة حتى الآن.", "No stored support requests yet.")}
-              </p>
-            ) : (
-              <div className="mt-3 space-y-2">
-                {requests.slice(0, 5).map((request) => (
-                  <article key={request.id} className="rounded-xl bg-muted-surface p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h4 className="text-xs font-extrabold">{request.subject}</h4>
-                      <span className="rounded-md bg-card px-2 py-0.5 text-[10px] font-bold hairline">
-                        {supportStatusLabel(request.status, language)}
-                      </span>
-                    </div>
-                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                      {request.message}
+            {auth.status === "signedIn" ? (
+              <section className="rawaj-support-requests">
+                <TrustSectionHeader
+                  eyebrow={text("المتابعة", "Tracking")}
+                  title={text("طلباتي", "My requests")}
+                  description={text(
+                    "آخر طلبات الدعم المحفوظة وحالة مراجعتها.",
+                    "Your latest stored support requests and review status.",
+                  )}
+                />
+                {requestsError ? (
+                  <p className="rawaj-support-notice">{requestsError.message}</p>
+                ) : (
+                  <SupportRequestTimeline requests={requests} language={language} />
+                )}
+              </section>
+            ) : null}
+
+            <section className="rawaj-support-topics">
+              <TrustSectionHeader
+                eyebrow={text("الإرشاد", "Guidance")}
+                title={text("مواضيع المساعدة", "Help topics")}
+              />
+              <div className="rawaj-support-topic-grid">
+                {helpTopics.map((topic) => (
+                  <article key={topic.en} className="rawaj-support-topic">
+                    <h4 className="text-sm font-bold">{language === "ar" ? topic.ar : topic.en}</h4>
+                    <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                      {language === "ar" ? topic.bodyAr : topic.bodyEn}
                     </p>
-                    {request.adminNote && (
-                      <p className="mt-2 rounded-lg bg-card p-2 text-[11px] leading-5 text-foreground hairline">
-                        {request.adminNote}
-                      </p>
-                    )}
                   </article>
                 ))}
               </div>
-            )}
-          </section>
-        )}
+            </section>
 
-        <section>
-          <h3 className="mb-3 text-sm font-extrabold">{text("مواضيع المساعدة", "Help topics")}</h3>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {helpTopics.map((topic) => (
-              <article key={topic.en} className="rounded-2xl bg-card p-4 hairline">
-                <h4 className="text-sm font-bold">{language === "ar" ? topic.ar : topic.en}</h4>
-                <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                  {language === "ar" ? topic.bodyAr : topic.bodyEn}
-                </p>
-              </article>
-            ))}
+            <section className="rawaj-support-notice">
+              <ShieldAlert className="me-1 inline h-4 w-4 text-warning" />
+              {text(
+                "للبلاغات المرتبطة بإعلان معتمد، استخدم زر البلاغ داخل صفحة الإعلان حتى ترتبط المراجعة بالإعلان الصحيح.",
+                "For reports tied to an approved listing, use the report button on the listing page so review is linked to the correct listing.",
+              )}
+            </section>
+
+            <section className="rawaj-support-faq">
+              <TrustSectionHeader
+                eyebrow={text("الأسئلة", "Questions")}
+                title={text("الأسئلة الشائعة", "FAQ")}
+              />
+              <div>
+                {faqs.map((faq, index) => (
+                  <details key={faq.qEn} className={index === 0 ? "" : "border-t border-border"}>
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 text-sm font-semibold">
+                      {language === "ar" ? faq.qAr : faq.qEn}
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    </summary>
+                    <p className="px-4 pb-4 text-xs leading-6 text-muted-foreground">
+                      {language === "ar" ? faq.aAr : faq.aEn}
+                    </p>
+                  </details>
+                ))}
+              </div>
+            </section>
           </div>
-        </section>
+          <aside className="rawaj-support-v2__aside">
+            <section className="rawaj-support-topics">
+              <TrustSectionHeader
+                eyebrow={text("قبل الإرسال", "Before submitting")}
+                title={text("معلومات تساعد فريق الدعم", "Details that help support")}
+              />
+              <div className="rawaj-support-topic-grid">
+                <SupportDetail
+                  label={text("رابط الإعلان أو رقمه عند وجوده", "Listing link or ID when relevant")}
+                />
+                <SupportDetail label={text("وصف مختصر للمشكلة", "Short issue description")} />
+                <SupportDetail label={text("وقت حدوث المشكلة", "When the issue happened")} />
+                <SupportDetail label={text("وسيلة تواصل للرد", "Contact method for reply")} />
+              </div>
+            </section>
+          </aside>
+        </div>
 
-        <section className="rounded-2xl bg-card p-4 hairline">
-          <h3 className="text-sm font-extrabold">
-            {text("معلومات تساعد فريق الدعم", "Details that help support")}
-          </h3>
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <SupportDetail
-              label={text("رابط الإعلان أو رقمه عند وجوده", "Listing link or ID when relevant")}
-            />
-            <SupportDetail label={text("وصف مختصر للمشكلة", "Short issue description")} />
-            <SupportDetail label={text("وقت حدوث المشكلة", "When the issue happened")} />
-            <SupportDetail label={text("وسيلة تواصل للرد", "Contact method for reply")} />
-          </div>
-        </section>
-
-        <section className="rounded-2xl bg-warning/10 p-4 text-xs leading-6 hairline">
-          <ShieldAlert className="me-1 inline h-4 w-4 text-warning" />
-          {text(
-            "للبلاغات المرتبطة بإعلان معتمد، استخدم زر البلاغ داخل صفحة الإعلان حتى ترتبط المراجعة بالإعلان الصحيح.",
-            "For reports tied to an approved listing, use the report button on the listing page so review is linked to the correct listing.",
-          )}
-        </section>
-
-        <section>
-          <h3 className="mb-3 text-sm font-extrabold">{text("الأسئلة الشائعة", "FAQ")}</h3>
-          <div className="overflow-hidden rounded-2xl bg-card hairline">
-            {faqs.map((faq, index) => (
-              <details key={faq.qEn} className={index === 0 ? "" : "border-t border-border"}>
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 text-sm font-semibold">
-                  {language === "ar" ? faq.qAr : faq.qEn}
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                </summary>
-                <p className="px-4 pb-4 text-xs leading-6 text-muted-foreground">
-                  {language === "ar" ? faq.aAr : faq.aEn}
-                </p>
-              </details>
-            ))}
-          </div>
-        </section>
-
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="rawaj-safety-actions">
           <Link
             to="/listings"
             className="rounded-xl bg-card px-4 py-2.5 text-center text-sm font-bold hairline"

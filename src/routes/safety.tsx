@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ShieldAlert, ShoppingCart, Store, CreditCard, Flag } from "lucide-react";
+import { ShoppingCart, Store, CreditCard, Flag } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { SafetyGuideCard, TrustHubHero } from "@/features/trust/TrustSupportExperience";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 
@@ -15,7 +16,12 @@ export const Route = createFileRoute("/safety")({
   component: SafetyPage,
 });
 
-const sections: { icon: typeof ShoppingCart; title: string; items: string[]; tone?: "warn" }[] = [
+const sections: {
+  icon: typeof ShoppingCart;
+  title: string;
+  items: string[];
+  tone?: "warn";
+}[] = [
   {
     icon: ShoppingCart,
     title: "أمان المشتري",
@@ -65,39 +71,20 @@ function SafetyPage() {
   return (
     <>
       <PageHeader title={text("نصائح الأمان", "Safety tips")} />
-      <main className="container-wide mobile-page-bottom space-y-4 pt-4">
-        <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-soft">
-          <div className="flex items-center gap-3">
-            <ShieldAlert className="h-6 w-6 text-gold" />
-            <div>
-              <h2 className="text-lg font-extrabold">
-                {text("سلامتك أولويتنا", "Your safety comes first")}
-              </h2>
-              <p className="text-xs text-primary-foreground/80">
-                {text(
-                  "رَوَاج منصة إعلانات تربط المستخدمين ولا تتولى الدفع أو الضمان أو حماية المشتري أو الإسكرو.",
-                  "RAWAJ is a classifieds platform that connects users and does not provide payment handling, guarantees, buyer protection, or escrow.",
-                )}
-              </p>
-            </div>
-          </div>
-        </section>
+      <main className="rawaj-trust-v2 rawaj-safety-v2 container-wide mobile-page-bottom space-y-4 pb-8 pt-4">
+        <TrustHubHero mode="safety" />
 
-        {sections.map((s) => (
-          <section
-            key={s.title}
-            className={`rounded-2xl p-4 hairline ${s.tone === "warn" ? "bg-warning/10" : "bg-card"}`}
-          >
-            <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-extrabold">
-              <s.icon className="h-4 w-4 text-gold" /> {safetyText(s.title, language)}
-            </h3>
-            <ul className="list-disc ps-5 space-y-1.5 text-sm text-foreground/90">
-              {s.items.map((t) => (
-                <li key={t}>{safetyText(t, language)}</li>
-              ))}
-            </ul>
-          </section>
-        ))}
+        <div className="rawaj-safety-guide-grid">
+          {sections.map((section) => (
+            <SafetyGuideCard
+              key={section.title}
+              icon={section.icon}
+              title={safetyText(section.title, language)}
+              items={section.items.map((item) => safetyText(item, language))}
+              warning={section.tone === "warn"}
+            />
+          ))}
+        </div>
 
         <p className="text-center text-xs text-muted-foreground">
           {text("هل تحتاج مساعدة؟", "Need help?")}{" "}
@@ -106,7 +93,7 @@ function SafetyPage() {
           </Link>
         </p>
 
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="rawaj-safety-actions">
           <Link
             to="/prohibited"
             className="rounded-xl bg-card px-4 py-2.5 text-center text-xs font-bold hairline"

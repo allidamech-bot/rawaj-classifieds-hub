@@ -4,16 +4,13 @@ import {
   BadgeCheck,
   Bookmark,
   ChevronLeft,
-  FileText,
   Heart,
   Languages,
   LifeBuoy,
   Lock,
-  LogIn,
   LogOut,
   ScrollText,
   ShieldAlert,
-  Sparkles,
   Store,
   User,
   UserCog,
@@ -21,6 +18,7 @@ import {
 import type { ComponentType, ReactNode } from "react";
 import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
+import { TrustHubHero, TrustSectionHeader } from "@/features/trust/TrustSupportExperience";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 import { useAuth } from "@/lib/use-auth";
@@ -105,6 +103,7 @@ function MorePage() {
   const { language, text, toggleLanguage } = useUiPreferences();
   const auth = useAuth();
   const { counts } = useUnreadActivityCounts();
+  const unreadTotal = counts.messages + counts.notifications;
   const { user } = auth;
   const [logoutError, setLogoutError] = useState("");
   const isArabic = language === "ar";
@@ -114,7 +113,6 @@ function MorePage() {
     profile?.displayName ||
     user?.email ||
     text("حساب رواج", "RAWAJ account");
-  const location = profile?.cityArea || profile?.governorate || text("سوريا", "Syria");
 
   async function handleLogout() {
     setLogoutError("");
@@ -177,99 +175,30 @@ function MorePage() {
   ];
 
   return (
-    <div className="rawaj-pulse-page min-h-dvh" dir={isArabic ? "rtl" : "ltr"}>
+    <div className="rawaj-trust-v2 rawaj-more-v2 min-h-dvh" dir={isArabic ? "rtl" : "ltr"}>
       <AppHeader compact title={text("مساحتي", "My space")} />
 
-      <main className="mobile-page-bottom mx-auto max-w-6xl px-4 pb-8 pt-3 sm:px-6 sm:pt-5 lg:px-8">
-        <section className="rawaj-id-card rounded-[1.7rem] p-5 sm:rounded-[2rem] sm:p-7">
-          <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="flex min-w-0 items-center gap-4">
-              <span className="rawaj-id-avatar h-20 w-20 shrink-0 rounded-[1.35rem] text-2xl font-bold sm:h-24 sm:w-24">
-                {profile?.avatarUrl ? (
-                  <img
-                    src={profile.avatarUrl}
-                    alt={displayName}
-                    className="h-full w-full object-cover"
-                  />
-                ) : user ? (
-                  displayName.slice(0, 1).toUpperCase()
-                ) : (
-                  <LogIn className="h-7 w-7" />
-                )}
-              </span>
+      <main className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+        <TrustHubHero
+          mode="more"
+          displayName={displayName}
+          location={profile?.cityArea || profile?.governorate || undefined}
+          avatarUrl={profile?.avatarUrl}
+          signedIn={Boolean(user)}
+          verified={profile?.verificationStatus === "verified"}
+          unreadActivity={unreadTotal}
+        />
 
-              <div className="min-w-0">
-                <span className="rawaj-signature-kicker text-gold">
-                  {user
-                    ? text("RAWAJ ID", "RAWAJ ID")
-                    : text("مساحتك على رواج", "Your RAWAJ space")}
-                </span>
-                <h1 className="mt-2 truncate text-xl font-bold text-[#fffaf0] sm:text-2xl">
-                  {displayName}
-                </h1>
-                <p className="mt-1 text-xs text-[#fffaf0]/70">{location}</p>
-                <p className="mt-2 max-w-xl text-xs leading-6 text-[#fffaf0]/72">
-                  {user
-                    ? text(
-                        "مساحتك الشخصية لإدارة متجرك ونشاطك ومحادثاتك من مكان واحد.",
-                        "Your personal space for managing your store, activity, and conversations.",
-                      )
-                    : text(
-                        "سجل الدخول لتفتح مساحتك الشخصية وتدير إعلاناتك كواجهة متجر.",
-                        "Sign in to unlock your personal space and manage listings like a storefront.",
-                      )}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-              {user && profile?.id ? (
-                <Link
-                  to="/seller/$id"
-                  params={{ id: profile.id }}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[1rem] border border-white/15 bg-white/8 px-4 text-xs font-semibold text-[#fffaf0] backdrop-blur transition hover:bg-white/12"
-                >
-                  <Sparkles className="h-4 w-4 text-gold" />
-                  {text("عرض واجهتي", "View storefront")}
-                </Link>
-              ) : null}
-              <Link
-                to={user ? "/profile" : "/login"}
-                className="inline-flex min-h-11 items-center justify-center rounded-[1rem] bg-brand-orange px-4 text-xs font-bold text-white shadow-[0_10px_24px_rgba(232,111,50,0.25)] transition hover:-translate-y-0.5"
-              >
-                {user ? text("تعديل هويتي", "Edit identity") : text("تسجيل الدخول", "Sign in")}
-              </Link>
-            </div>
-          </div>
-
-          <div className="relative z-10 mt-5 grid grid-cols-3 gap-2">
-            {[
-              [text("واجهة", "Storefront"), text("متجر شخصي", "Personal store")],
-              [text("نشاط", "Activity"), text("في مكان واحد", "One place")],
-              [text("هوية", "Identity"), text("خاصة بك", "Yours")],
-            ].map(([label, value]) => (
-              <div key={label} className="rawaj-id-stat rounded-[1rem] p-3">
-                <span className="block text-[9px] font-semibold text-[#fffaf0]/55 sm:text-[10px]">
-                  {label}
-                </span>
-                <strong className="mt-1 block truncate text-[11px] sm:text-xs">{value}</strong>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-7">
-          <div className="mb-3.5 flex items-end justify-between gap-3">
-            <div>
-              <span className="rawaj-signature-kicker">
-                {text("مركز التحكم", "Command center")}
-              </span>
-              <h2 className="mt-1 text-lg font-bold text-primary">
-                {text("أهم ما تحتاجه الآن", "What matters now")}
-              </h2>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <section className="rawaj-more-v2__command">
+          <TrustSectionHeader
+            eyebrow={text("الاختصارات", "Shortcuts")}
+            title={text("مركز العمليات", "Command center")}
+            description={text(
+              "وصول سريع إلى الإعلانات والرسائل والتنبيهات.",
+              "Quick access to listings, messages, and notifications.",
+            )}
+          />
+          <div className="rawaj-more-v2__command">
             {primaryShortcuts.map((row) => (
               <PrimaryShortcut
                 key={row.titleEn}
@@ -281,13 +210,13 @@ function MorePage() {
           </div>
         </section>
 
-        <section className="mt-4 grid grid-cols-3 gap-2.5 sm:gap-3">
+        <section className="rawaj-more-v2__secondary">
           {secondaryShortcuts.map((row) => (
             <SecondaryShortcut key={row.titleEn} row={row} text={text} />
           ))}
         </section>
 
-        <div className="mt-7 grid gap-4 lg:grid-cols-2">
+        <div className="rawaj-more-v2__sections">
           {logoutError && (
             <p
               role="alert"
@@ -347,9 +276,7 @@ function AccountSection({
   quiet?: boolean;
 }) {
   return (
-    <section
-      className={`rawaj-color-card rounded-[1.35rem] p-3 ${quiet ? "rawaj-world-gold" : "rawaj-world-indigo"}`}
-    >
+    <section className="rawaj-account-section" data-tone={quiet ? "muted" : "default"}>
       <h2 className="relative px-2 pb-2.5 text-[10px] font-semibold tracking-[0.04em] text-brand-orange">
         {title}
       </h2>
