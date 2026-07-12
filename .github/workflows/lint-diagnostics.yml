@@ -1,0 +1,60 @@
+name: Lint Diagnostics
+
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: lint-diagnostics-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          show-progress: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Capture lint report
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          base="$BASE_SHA"
+          if ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            git fetch --no-tags --depth=1 origin "$base"
+          fi
+          mapfile -t files < <(
+            git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- \
+              '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
+          )
+          if [ "${#files[@]}" -eq 0 ]; then
+            printf '[]\n' > eslint-report.json
+            exit 0
+          fi
+          npx eslint --quiet --format json --output-file eslint-report.json "${files[@]}" || true
+
+      - name: Upload lint report
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawaj-eslint-report
+          path: eslint-report.json
+          if-no-files-found: error
+          retention-days: 1
