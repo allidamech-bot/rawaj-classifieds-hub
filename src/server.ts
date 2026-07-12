@@ -21,9 +21,7 @@ async function getServerEntry(): Promise<ServerEntry> {
 const sensitiveAuthPaths = ["/auth/callback", "/login", "/reset-password"];
 
 function isSensitiveAuthPath(pathname: string) {
-  return sensitiveAuthPaths.some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`),
-  );
+  return sensitiveAuthPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
 
 function buildContentSecurityPolicy(isSecureRequest: boolean) {

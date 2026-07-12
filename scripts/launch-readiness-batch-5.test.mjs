@@ -3,15 +3,21 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import ts from "typescript";
 
-const [serverSource, authReturnSource, storageSource, publicSecuritySource, packageJson, qualityGate] =
-  await Promise.all([
-    readFile(new URL("../src/server.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/auth-return.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/api/storage.ts", import.meta.url), "utf8"),
-    readFile(new URL("./public-data-security.test.mjs", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
-  ]);
+const [
+  serverSource,
+  authReturnSource,
+  storageSource,
+  publicSecuritySource,
+  packageJson,
+  qualityGate,
+] = await Promise.all([
+  readFile(new URL("../src/server.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/auth-return.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/storage.ts", import.meta.url), "utf8"),
+  readFile(new URL("./public-data-security.test.mjs", import.meta.url), "utf8"),
+  readFile(new URL("../package.json", import.meta.url), "utf8"),
+  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+]);
 
 const transpiledAuthReturn = ts.transpileModule(authReturnSource, {
   compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 },
@@ -43,10 +49,14 @@ test("HTTPS responses receive transport and cross-origin hardening", () => {
       'headers.set("strict-transport-security", "max-age=31536000; includeSubDomains; preload")',
     ),
   );
-  assert.ok(serverSource.includes('headers.set("cross-origin-opener-policy", "same-origin-allow-popups")'));
+  assert.ok(
+    serverSource.includes('headers.set("cross-origin-opener-policy", "same-origin-allow-popups")'),
+  );
   assert.ok(serverSource.includes('headers.set("cross-origin-resource-policy", "same-site")'));
   assert.ok(serverSource.includes('headers.set("x-permitted-cross-domain-policies", "none")'));
-  assert.ok(serverSource.includes('if (isSecureRequest) directives.push("upgrade-insecure-requests")'));
+  assert.ok(
+    serverSource.includes('if (isSecureRequest) directives.push("upgrade-insecure-requests")'),
+  );
 });
 
 test("authentication and recovery pages are never cacheable", () => {
@@ -68,7 +78,10 @@ test("auth return URLs stay same-origin and avoid authentication loops", () => {
   ]) {
     assert.equal(sanitizeAuthReturnTo(unsafeValue, "/more"), "/more");
   }
-  assert.equal(sanitizeAuthReturnTo("/profile/listings?q=test#top", "/more"), "/profile/listings?q=test#top");
+  assert.equal(
+    sanitizeAuthReturnTo("/profile/listings?q=test#top", "/more"),
+    "/profile/listings?q=test#top",
+  );
 });
 
 test("file uploads require allowed MIME, extension, and bounded size before storage", () => {
@@ -82,8 +95,12 @@ test("file uploads require allowed MIME, extension, and bounded size before stor
 });
 
 test("existing public data and JSON-LD security regression remains active", () => {
-  assert.ok(publicSecuritySource.includes("JSON-LD serialization neutralizes script-breaking characters"));
-  assert.ok(publicSecuritySource.includes("public listing allowlist excludes moderation-only fields"));
+  assert.ok(
+    publicSecuritySource.includes("JSON-LD serialization neutralizes script-breaking characters"),
+  );
+  assert.ok(
+    publicSecuritySource.includes("public listing allowlist excludes moderation-only fields"),
+  );
   assert.ok(qualityGate.includes("Public data security contract"));
   assert.ok(qualityGate.includes("Admin security regression contract"));
 });
