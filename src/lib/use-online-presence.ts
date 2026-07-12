@@ -7,6 +7,25 @@ interface PresencePayload {
   online_at?: string;
 }
 
+function mapRealtimeMessage(row: Record<string, unknown>): ConversationMessage | null {
+  const id = typeof row.id === "string" ? row.id : "";
+  const conversationId = typeof row.conversation_id === "string" ? row.conversation_id : "";
+  const senderUserId = typeof row.sender_user_id === "string" ? row.sender_user_id : "";
+  const body = typeof row.body === "string" ? row.body : "";
+  const createdAt = typeof row.created_at === "string" ? row.created_at : "";
+  if (!id || !conversationId || !senderUserId || !createdAt) return null;
+
+  return {
+    id,
+    conversationId,
+    senderUserId,
+    body,
+    createdAt,
+    editedAt: typeof row.edited_at === "string" ? row.edited_at : null,
+    deletedAt: typeof row.deleted_at === "string" ? row.deleted_at : null,
+  };
+}
+
 export function useOnlinePresence(userId: string | null | undefined, enabled: boolean) {
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(() => new Set<string>());
 
@@ -61,6 +80,47 @@ export function useOnlinePresence(userId: string | null | undefined, enabled: bo
   return { onlineUserIds };
 }
 
+export function useConversationActivityRealtime({
+  userId,
+  enabled,
+  onMessage,
+}: {
+  userId: string | null;
+  enabled: boolean;
+  onMessage: (message: ConversationMessage) => void;
+}) {
+  const callbackRef = useRef(onMessage);
+
+  useEffect(() => {
+    callbackRef.current = onMessage;
+  }, [onMessage]);
+
+  useEffect(() => {
+    const client = supabase;
+    if (!client || !enabled || !userId) return;
+
+    const channel = client
+      .channel(`rawaj-message-activity-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "conversation_messages",
+        },
+        (payload) => {
+          const message = mapRealtimeMessage(payload.new as Record<string, unknown>);
+          if (message) callbackRef.current(message);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void client.removeChannel(channel);
+    };
+  }, [enabled, userId]);
+}
+
 export function useConversationMessagesRealtime({
   conversationId,
   enabled,
@@ -91,24 +151,8 @@ export function useConversationMessagesRealtime({
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          const row = payload.new as Record<string, unknown>;
-          const id = typeof row.id === "string" ? row.id : "";
-          const rowConversationId =
-            typeof row.conversation_id === "string" ? row.conversation_id : "";
-          const senderUserId = typeof row.sender_user_id === "string" ? row.sender_user_id : "";
-          const body = typeof row.body === "string" ? row.body : "";
-          const createdAt = typeof row.created_at === "string" ? row.created_at : "";
-          if (!id || rowConversationId !== conversationId || !senderUserId || !createdAt) return;
-
-          callbackRef.current({
-            id,
-            conversationId: rowConversationId,
-            senderUserId,
-            body,
-            createdAt,
-            editedAt: typeof row.edited_at === "string" ? row.edited_at : null,
-            deletedAt: typeof row.deleted_at === "string" ? row.deleted_at : null,
-          });
+          const message = mapRealtimeMessage(payload.new as Record<string, unknown>);
+          if (message?.conversationId === conversationId) callbackRef.current(message);
         },
       )
       .subscribe();
