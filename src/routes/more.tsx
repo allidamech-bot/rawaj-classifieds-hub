@@ -4,16 +4,13 @@ import {
   BadgeCheck,
   Bookmark,
   ChevronLeft,
-  FileText,
   Heart,
   Languages,
   LifeBuoy,
   Lock,
-  LogIn,
   LogOut,
   ScrollText,
   ShieldAlert,
-  Sparkles,
   Store,
   User,
   UserCog,
@@ -106,6 +103,7 @@ function MorePage() {
   const { language, text, toggleLanguage } = useUiPreferences();
   const auth = useAuth();
   const { counts } = useUnreadActivityCounts();
+  const unreadTotal = counts.messages + counts.notifications;
   const { user } = auth;
   const [logoutError, setLogoutError] = useState("");
   const isArabic = language === "ar";
@@ -115,7 +113,6 @@ function MorePage() {
     profile?.displayName ||
     user?.email ||
     text("حساب رواج", "RAWAJ account");
-  const location = profile?.cityArea || profile?.governorate || text("سوريا", "Syria");
 
   async function handleLogout() {
     setLogoutError("");

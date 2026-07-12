@@ -1,10 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ShoppingCart, Store, CreditCard, Flag } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import {
-  SafetyGuideCard,
-  TrustHubHero,
-} from "@/features/trust/TrustSupportExperience";
+import { SafetyGuideCard, TrustHubHero } from "@/features/trust/TrustSupportExperience";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 
@@ -91,10 +88,7 @@ function SafetyPage() {
 
         <p className="text-center text-xs text-muted-foreground">
           {text("هل تحتاج مساعدة؟", "Need help?")}{" "}
-          <Link
-            to="/support"
-            className="font-bold text-primary underline-offset-2 hover:underline"
-          >
+          <Link to="/support" className="font-bold text-primary underline-offset-2 hover:underline">
             {text("تواصل مع الدعم", "Contact support")}
           </Link>
         </p>

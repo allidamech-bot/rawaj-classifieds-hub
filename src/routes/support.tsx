@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronDown, LifeBuoy, ShieldAlert } from "lucide-react";
+import { ChevronDown, ShieldAlert } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -10,7 +10,6 @@ import {
 import { createSupportRequest, fetchMySupportRequests } from "@/lib/classifieds-api";
 import type { ClassifiedsError, SupportRequest, SupportRequestType } from "@/lib/classifieds-types";
 import { createSeo } from "@/lib/seo";
-import { supportStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
