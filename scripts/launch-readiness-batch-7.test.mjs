@@ -2,11 +2,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [capacitor, manifest, strings, packageJson, qualityGate] = await Promise.all([
+const [capacitor, manifest, strings, qualityGate] = await Promise.all([
   readFile(new URL("../capacitor.config.ts", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/AndroidManifest.xml", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/res/values/strings.xml", import.meta.url), "utf8"),
-  readFile(new URL("../package.json", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
 ]);
 
@@ -32,9 +31,7 @@ test("Android identity remains aligned with the Play package", () => {
   assert.match(strings, /<string name="custom_url_scheme">com\.rawaj\.marketplace<\/string>/);
 });
 
-test("Batch 7 is permanently part of the repository checks", () => {
-  assert.match(packageJson, /"test:launch-readiness-batch-7"/);
-  assert.match(packageJson, /npm run test:launch-readiness-batch-7/);
+test("Batch 7 is permanently part of the Quality Gate", () => {
   assert.match(qualityGate, /Launch readiness Batch 7 contract/);
-  assert.match(qualityGate, /npm run test:launch-readiness-batch-7/);
+  assert.match(qualityGate, /node --test scripts\/launch-readiness-batch-7\.test\.mjs/);
 });
