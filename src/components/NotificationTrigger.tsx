@@ -3,13 +3,14 @@ import { Bell, CheckCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchMyNotifications,
-  fetchUnreadNotificationsCount,
   markAllNotificationsRead,
   markNotificationRead,
   resolveNotificationTarget,
   scanOwnerListingExpiryReminders,
 } from "@/lib/classifieds-api";
 import type { NotificationItem } from "@/lib/classifieds-types";
+import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
+import { useUnreadActivityCounts } from "@/lib/unread-activity";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -17,22 +18,21 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
   const auth = useAuth();
   const navigate = useNavigate();
   const { language, text } = useUiPreferences();
+  const { counts, refresh: refreshUnreadActivity } = useUnreadActivityCounts();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [openingTargetId, setOpeningTargetId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const profileId = auth.profile?.id ?? null;
+  const unreadCount = counts.notifications;
 
   const refreshNotifications = useCallback(
     async (loadList: boolean) => {
       if (!profileId) return;
       setError("");
-      const countResult = await fetchUnreadNotificationsCount(profileId);
-      if (countResult.ok) setUnreadCount(countResult.data);
-      else setError(countResult.error.message);
+      await refreshUnreadActivity();
 
       if (!loadList) return;
       setLoading(true);
@@ -41,13 +41,12 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
       if (listResult.ok) setNotifications(listResult.data);
       else setError(listResult.error.message);
     },
-    [profileId],
+    [profileId, refreshUnreadActivity],
   );
 
   useEffect(() => {
     if (!profileId) {
       setNotifications([]);
-      setUnreadCount(0);
       setError("");
       setOpeningTargetId(null);
       return;
@@ -99,7 +98,7 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
         item.id === notificationId ? { ...item, readAt: new Date().toISOString() } : item,
       ),
     );
-    setUnreadCount((current) => Math.max(0, current - 1));
+    emitUnreadActivityChanged();
   }
 
   async function openNotificationTarget(notification: NotificationItem) {
@@ -148,7 +147,7 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
     }
     const readAt = new Date().toISOString();
     setNotifications((current) => current.map((item) => ({ ...item, readAt })));
-    setUnreadCount(0);
+    emitUnreadActivityChanged();
   }
 
   function openNotificationCenter() {
