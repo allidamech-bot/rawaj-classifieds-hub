@@ -107,6 +107,7 @@ test("External communication and map links leave the WebView through a strict na
   assert.match(nativeAppRuntime, /target\.closest<HTMLAnchorElement>\("a\[href\]"\)/);
   assert.match(nativeAppRuntime, /!isRawajWebUrl\(url\)/);
   assert.match(nativeAppRuntime, /window\.open =/);
+  assert.match(nativeRuntime, /url\.origin === window\.location\.origin/);
 });
 
 test("Slow or offline startup keeps RAWAJ branded and recoverable", () => {
@@ -123,20 +124,18 @@ test("Slow or offline startup keeps RAWAJ branded and recoverable", () => {
   assert.match(nativeAppRuntime, /window\.location\.reload\(\)/);
 });
 
-test("Android device tests can target a branch preview without changing production release routing", () => {
+test("Android device tests bundle the branch UI without changing production release routing", () => {
   assert.match(capacitor, /PRODUCTION_SERVER_URL = "https:\/\/rawa-j\.com"/);
-  assert.match(capacitor, /process\.env\.RAWAJ_ANDROID_SERVER_URL/);
-  assert.match(capacitor, /if \(!requestedServerUrl\) return PRODUCTION_SERVER_URL/);
-  assert.match(capacitor, /parsed\.protocol !== "https:"/);
-  assert.match(capacitor, /const serverHost = new URL\(serverUrl\)\.hostname/);
-  assert.match(androidWorkflow, /RAWAJ_ANDROID_PREVIEW_URL:/);
-  assert.match(
-    androidWorkflow,
-    /RAWAJ_ANDROID_SERVER_URL: \$\{\{ env\.RAWAJ_ANDROID_PREVIEW_URL \}\}/,
-  );
-  assert.match(androidWorkflow, /Assemble branch-preview debug APK/);
+  assert.match(capacitor, /RAWAJ_ANDROID_BUNDLED_PREVIEW === "1"/);
+  assert.match(capacitor, /androidScheme:\s*"https"/);
+  assert.match(capacitor, /url:\s*serverUrl/);
+  assert.match(androidWorkflow, /Create self-contained branch preview shell/);
+  assert.match(androidWorkflow, /npm run preview -- --host 127\.0\.0\.1 --port 4173/);
+  assert.match(androidWorkflow, /cp \/tmp\/rawaj-index\.html \.output\/public\/index\.html/);
+  assert.match(androidWorkflow, /RAWAJ_ANDROID_BUNDLED_PREVIEW:\s*"1"/);
+  assert.match(androidWorkflow, /Assemble bundled branch-preview debug APK/);
   assert.match(androidWorkflow, /Restore production Android configuration/);
-  assert.match(androidWorkflow, /rawaj-android-1\.0\.3-preview-debug-apk/);
+  assert.match(androidWorkflow, /rawaj-android-1\.0\.3-bundled-preview-apk/);
 });
 
 test("Play identity and version remain unchanged during readiness work", () => {
