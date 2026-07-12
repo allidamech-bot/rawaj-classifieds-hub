@@ -73,8 +73,29 @@ jobs:
       - name: Home discovery compatibility
         run: node --test scripts/home-discovery-v3.test.mjs
 
-      - name: Batch 6 launch contract
-        run: npm run test:launch-readiness-batch-6
+      - name: Social sharing contract
+        run: node --test --test-name-pattern="all indexable pages" scripts/launch-readiness-batch-6.test.mjs
+
+      - name: Public SEO landing contract
+        run: node --test --test-name-pattern="category and governorate SEO pages" scripts/launch-readiness-batch-6.test.mjs
+
+      - name: Governorate query boundary contract
+        run: node --test --test-name-pattern="governorate landing listings" scripts/launch-readiness-batch-6.test.mjs
+
+      - name: Canonical category links contract
+        run: node --test --test-name-pattern="canonical category pages" scripts/launch-readiness-batch-6.test.mjs
+
+      - name: Sitemap launch contract
+        run: node --test --test-name-pattern="sitemap covers" scripts/launch-readiness-batch-6.test.mjs
+
+      - name: Robots privacy contract
+        run: node --test --test-name-pattern="robots keeps" scripts/launch-readiness-batch-6.test.mjs
+
+      - name: Analytics and Android contract
+        run: node --test --test-name-pattern="production analytics" scripts/launch-readiness-batch-6.test.mjs
+
+      - name: Batch 6 gate wiring contract
+        run: node --test --test-name-pattern="permanent in local and GitHub" scripts/launch-readiness-batch-6.test.mjs
 
       - name: SEO discovery compatibility
         run: npm run test:seo-discovery
