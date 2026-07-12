@@ -16,6 +16,8 @@ jobs:
   android:
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    env:
+      RAWAJ_ANDROID_PREVIEW_URL: https://rawaj-classifieds-hub-git-agent-and-f3d17b-alidaamishs-projects.vercel.app
 
     steps:
       - name: Checkout
@@ -49,19 +51,28 @@ jobs:
       - name: Production web build
         run: npm run build
 
-      - name: Sync Capacitor Android
+      - name: Sync branch preview into Android debug configuration
+        env:
+          RAWAJ_ANDROID_SERVER_URL: ${{ env.RAWAJ_ANDROID_PREVIEW_URL }}
         run: npx cap sync android
 
-      - name: Assemble debug APK and release AAB
+      - name: Assemble branch-preview debug APK
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug bundleRelease --no-daemon
+          ./gradlew assembleDebug --no-daemon
 
-      - name: Upload debug APK for device testing
+      - name: Restore production Android configuration
+        run: npx cap sync android
+
+      - name: Build production release AAB readiness artifact
+        working-directory: android
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Upload branch-preview APK for real-device testing
         uses: actions/upload-artifact@v4
         with:
-          name: rawaj-android-1.0.3-debug-apk
+          name: rawaj-android-1.0.3-preview-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 7
