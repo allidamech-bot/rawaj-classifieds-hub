@@ -8,7 +8,7 @@ on:
       - .github/workflows/apply-launch-readiness-batch-4.yml
       - scripts/apply-launch-readiness-batch-4.mjs
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, ready_for_review]
     branches:
       - main
     paths:
