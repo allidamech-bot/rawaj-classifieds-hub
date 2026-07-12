@@ -22,7 +22,8 @@ async function openHealthyPage(page: Page, path: string) {
   page.on("pageerror", (error) => pageErrors.push(error.message));
   page.on("requestfailed", (request) => {
     const failure = request.failure()?.errorText ?? "unknown failure";
-    if (!failure.includes("ERR_ABORTED")) failedRequests.push(`${request.method()} ${request.url()}: ${failure}`);
+    if (!failure.includes("ERR_ABORTED"))
+      failedRequests.push(`${request.method()} ${request.url()}: ${failure}`);
   });
 
   const response = await page.goto(path, { waitUntil: "domcontentloaded" });
@@ -61,10 +62,13 @@ test("home discovery can navigate to the public listings workspace", async ({ pa
   await expect(page.locator("main")).toBeVisible();
 });
 
-test("category directory exposes an indexable category landing route when data exists", async ({ page }) => {
+test("category directory exposes an indexable category landing route when data exists", async ({
+  page,
+}) => {
   await openHealthyPage(page, "/categories");
   const categoryLink = page.locator('a[href^="/category/"]').first();
-  if ((await categoryLink.count()) === 0) test.skip(true, "No active public categories in this environment");
+  if ((await categoryLink.count()) === 0)
+    test.skip(true, "No active public categories in this environment");
   await expect(categoryLink).toBeVisible();
   await categoryLink.click();
   await expect(page).toHaveURL(/\/category\/[^/?#]+/);

@@ -13,7 +13,8 @@ async function expectHealthyDocument(page: Page, path: string) {
   });
   page.on("requestfailed", (request) => {
     const failure = request.failure()?.errorText ?? "unknown failure";
-    if (!failure.includes("ERR_ABORTED")) failedRequests.push(`${request.method()} ${request.url()}: ${failure}`);
+    if (!failure.includes("ERR_ABORTED"))
+      failedRequests.push(`${request.method()} ${request.url()}: ${failure}`);
   });
 
   const response = await page.goto(path, { waitUntil: "networkidle" });
