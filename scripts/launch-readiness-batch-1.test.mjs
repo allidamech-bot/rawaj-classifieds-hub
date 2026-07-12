@@ -1,4 +1,4 @@
-// Permanent regression contract for RAWAJ launch-critical account and listing journeys.
+// Permanent regression contract for RAWAJ launch-critical authentication, ownership and image-ordering journeys.
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
