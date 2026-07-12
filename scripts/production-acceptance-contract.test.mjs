@@ -3,7 +3,10 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const [workflow, spec, packageSource, qualityGate] = await Promise.all([
-  readFile(new URL("../.github/workflows/production-acceptance.yml", import.meta.url), "utf8"),
+  readFile(
+    new URL("../.github/workflows/production-acceptance.yml", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../e2e/production-acceptance.spec.ts", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
@@ -33,11 +36,14 @@ test("authenticated production acceptance remains read-only", () => {
     "/notifications",
     "/promotion",
   ]) {
-    assert.ok(spec.includes(`"${path}"`), `Missing authenticated acceptance route ${path}`);
+    assert.ok(
+      spec.includes(`"${path}"`),
+      `Missing authenticated acceptance route ${path}`,
+    );
   }
 
-  assert.match(spec, /input\[type=\\?"email\\?"\]/);
-  assert.match(spec, /autocomplete=\\?"current-password\\?"/);
+  assert.ok(spec.includes(`input[type="email"]`));
+  assert.ok(spec.includes(`input[autocomplete="current-password"]`));
   assert.match(spec, /rawaj-build-commit/);
   assert.match(spec, /page\.on\("pageerror"/);
   assert.match(spec, /page\.on\("console"/);
@@ -48,13 +54,16 @@ test("authenticated production acceptance remains read-only", () => {
     "request.put(",
     "request.patch(",
     "request.delete(",
-    "input[type=\"file\"]",
+    `input[type="file"]`,
     "createOwnerDraftListing",
     "submitOwnerListingForReview",
     "إرسال للمراجعة",
     "Submit for review",
   ]) {
-    assert.ok(!spec.includes(mutationMarker), `Production acceptance must remain read-only: ${mutationMarker}`);
+    assert.ok(
+      !spec.includes(mutationMarker),
+      `Production acceptance must remain read-only: ${mutationMarker}`,
+    );
   }
 });
 
