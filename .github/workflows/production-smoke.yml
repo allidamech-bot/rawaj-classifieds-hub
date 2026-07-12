@@ -27,6 +27,7 @@ jobs:
     env:
       E2E_BASE_URL: https://rawa-j.com
       PRODUCTION_SMOKE: "1"
+      EXPECTED_COMMIT_SHA: ${{ github.sha }}
 
     steps:
       - name: Checkout
@@ -44,15 +45,16 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Wait for production deployment
+      - name: Wait for matching production deployment
         run: |
-          for attempt in {1..24}; do
-            if curl --fail --silent --show-error --max-time 15 https://rawa-j.com/ >/dev/null; then
+          for attempt in {1..30}; do
+            html="$(curl --fail --silent --show-error --max-time 15 https://rawa-j.com/ || true)"
+            if printf '%s' "$html" | grep -Fq "name=\"rawaj-build-commit\" content=\"$EXPECTED_COMMIT_SHA\""; then
               exit 0
             fi
             sleep 10
           done
-          echo "RAWAJ production did not become reachable in time" >&2
+          echo "RAWAJ production did not deploy commit $EXPECTED_COMMIT_SHA in time" >&2
           exit 1
 
       - name: Run production smoke tests
