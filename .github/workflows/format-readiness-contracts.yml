@@ -1,0 +1,63 @@
+name: Format Readiness Contracts
+
+on:
+  push:
+    branches:
+      - agent/android-release-readiness-1-0-3
+    paths:
+      - scripts/format-readiness-contracts.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/android-release-readiness-1-0-3
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format and lint readiness contracts
+        run: |
+          npx prettier --write \
+            scripts/android-release-readiness.test.mjs \
+            scripts/communication-center-v2.test.mjs
+          npx eslint --fix \
+            scripts/android-release-readiness.test.mjs \
+            scripts/communication-center-v2.test.mjs
+
+      - name: Validate focused contracts
+        run: |
+          npm run test:android-release-readiness
+          node --test scripts/communication-center-v2.test.mjs
+          npm run test:mobile-app-stabilization
+
+      - name: Remove one-shot machinery
+        run: |
+          rm -f \
+            scripts/format-readiness-contracts.trigger \
+            .github/workflows/format-readiness-contracts.yml
+
+      - name: Validate patch whitespace
+        run: git diff --check
+
+      - name: Commit formatting
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Format RAWAJ readiness contracts"
+          git push origin HEAD:agent/android-release-readiness-1-0-3
