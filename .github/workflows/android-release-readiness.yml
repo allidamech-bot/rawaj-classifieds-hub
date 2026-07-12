@@ -70,7 +70,22 @@ jobs:
         run: exit 1
 
       - name: Typecheck
-        run: npm run typecheck -- --pretty false
+        id: readiness_typecheck
+        continue-on-error: true
+        run: npm run typecheck -- --pretty false > android-readiness-typecheck.log 2>&1
+
+      - name: Upload typecheck diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-readiness-typecheck
+          path: android-readiness-typecheck.log
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Enforce typecheck result
+        if: steps.readiness_typecheck.outcome == 'failure'
+        run: exit 1
 
       - name: Production web build
         run: npm run build
