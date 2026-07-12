@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [capacitor, manifest, strings, qualityGate] = await Promise.all([
+const [capacitor, manifest, strings, buildGradle, qualityGate] = await Promise.all([
   readFile(new URL("../capacitor.config.ts", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/AndroidManifest.xml", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/res/values/strings.xml", import.meta.url), "utf8"),
+  readFile(new URL("../android/app/build.gradle", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
 ]);
 
@@ -29,6 +30,14 @@ test("Android launch configuration protects app data and supports RAWAJ links", 
 test("Android identity remains aligned with the Play package", () => {
   assert.match(strings, /<string name="package_name">com\.rawaj\.marketplace<\/string>/);
   assert.match(strings, /<string name="custom_url_scheme">com\.rawaj\.marketplace<\/string>/);
+  assert.match(buildGradle, /applicationId "com\.rawaj\.marketplace"/);
+});
+
+test("Android release is prepared for Play version 1.0.2", () => {
+  assert.match(buildGradle, /versionCode 3/);
+  assert.match(buildGradle, /versionName "1\.0\.2"/);
+  assert.doesNotMatch(buildGradle, /versionCode 2/);
+  assert.doesNotMatch(buildGradle, /versionName "1\.0\.1"/);
 });
 
 test("Batch 7 is permanently part of the Quality Gate", () => {
