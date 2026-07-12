@@ -52,7 +52,7 @@ jobs:
             src/routes/governorates.tsx \
             'src/routes/governorates.$slug.tsx' \
             'src/routes/sitemap[.]xml.ts' || true
-          npx prettier --write package.json public/robots.txt
+          npx prettier --write package.json
 
       - name: Lint Batch 6 tests
         run: npx eslint --quiet scripts/home-discovery-v3.test.mjs scripts/launch-readiness-batch-6.test.mjs
