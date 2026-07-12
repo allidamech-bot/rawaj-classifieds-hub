@@ -40,6 +40,35 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint Android readiness source
+        id: readiness_lint
+        continue-on-error: true
+        shell: bash
+        run: |
+          npx eslint --quiet \
+            capacitor.config.ts \
+            scripts/android-release-readiness.test.mjs \
+            src/components/native/NativeAppRuntime.tsx \
+            src/lib/auth.tsx \
+            src/lib/native-runtime.ts \
+            src/lib/supabase.ts \
+            src/routes/auth.callback.tsx \
+            src/routes/login.tsx \
+            > android-readiness-lint.log 2>&1
+
+      - name: Upload lint diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-readiness-lint
+          path: android-readiness-lint.log
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Enforce lint result
+        if: steps.readiness_lint.outcome == 'failure'
+        run: exit 1
+
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
