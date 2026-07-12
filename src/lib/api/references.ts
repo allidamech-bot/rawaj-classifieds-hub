@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   ClassifiedCategory,
   ClassifiedGovernorate,
+  ClassifiedsError,
   ClassifiedsResult,
   ClassifiedSubcategory,
   TaxonomyNode,
@@ -100,37 +101,70 @@ async function enrichGovernoratesWithLocationPaths(
   });
 }
 
-export async function readReferences(client: SupabaseClient) {
+type PublicReferencesResult =
+  | {
+      ok: true;
+      categories: ClassifiedCategory[];
+      governorates: ClassifiedGovernorate[];
+    }
+  | { ok: false; error: ClassifiedsError };
+
+interface PublicReferenceCacheEntry {
+  expiresAt: number;
+  promise: Promise<PublicReferencesResult>;
+}
+
+const publicReferenceCacheTtlMs = 5 * 60 * 1000;
+const publicReferenceCache = new WeakMap<SupabaseClient, PublicReferenceCacheEntry>();
+
+async function loadPublicReferences(client: SupabaseClient): Promise<PublicReferencesResult> {
   const [categoriesResult, governoratesResult] = await Promise.all([
     client.from("categories").select("*").eq("is_active", true).order("sort_order"),
     client.from("governorates").select("*").eq("is_active", true).order("sort_order"),
   ]);
 
-  if (categoriesResult.error)
-    return { ok: false as const, error: mapError(categoriesResult.error) };
-  if (governoratesResult.error)
-    return { ok: false as const, error: mapError(governoratesResult.error) };
+  if (categoriesResult.error) return { ok: false, error: mapError(categoriesResult.error) };
+  if (governoratesResult.error) return { ok: false, error: mapError(governoratesResult.error) };
 
   const governorates = ((governoratesResult.data ?? []) as Record<string, unknown>[]).map(
     mapGovernorate,
   );
   return {
-    ok: true as const,
+    ok: true,
     categories: ((categoriesResult.data ?? []) as Record<string, unknown>[]).map(mapCategory),
     governorates: await enrichGovernoratesWithLocationPaths(client, governorates),
   };
 }
 
+export async function readReferences(client: SupabaseClient): Promise<PublicReferencesResult> {
+  const now = Date.now();
+  const cached = publicReferenceCache.get(client);
+  if (cached && cached.expiresAt > now) return cached.promise;
+
+  const entry: PublicReferenceCacheEntry = {
+    expiresAt: now + publicReferenceCacheTtlMs,
+    promise: loadPublicReferences(client),
+  };
+  publicReferenceCache.set(client, entry);
+
+  try {
+    const result = await entry.promise;
+    if (!result.ok && publicReferenceCache.get(client) === entry) {
+      publicReferenceCache.delete(client);
+    }
+    return result;
+  } catch (error) {
+    if (publicReferenceCache.get(client) === entry) publicReferenceCache.delete(client);
+    throw error;
+  }
+}
+
 export async function fetchPublicCategories(): Promise<ClassifiedsResult<ClassifiedCategory[]>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
-  const { data, error } = await clientResult.data
-    .from("categories")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order");
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapCategory) };
+  const references = await readReferences(clientResult.data);
+  if (!references.ok) return references;
+  return { ok: true, data: references.categories };
 }
 
 export async function fetchPublicSubcategories(): Promise<
@@ -164,15 +198,7 @@ export async function fetchPublicGovernorates(): Promise<
 > {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
-  const { data, error } = await clientResult.data
-    .from("governorates")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order");
-  if (error) return { ok: false, error: mapError(error) };
-  const governorates = ((data ?? []) as Record<string, unknown>[]).map(mapGovernorate);
-  return {
-    ok: true,
-    data: await enrichGovernoratesWithLocationPaths(clientResult.data, governorates),
-  };
+  const references = await readReferences(clientResult.data);
+  if (!references.ok) return references;
+  return { ok: true, data: references.governorates };
 }
