@@ -1,0 +1,163 @@
+/* RAWAJ Listing Detail V3 — product-focused hierarchy and calmer conversion surfaces. */
+
+.rawaj-detail-v2 {
+  --rawaj-detail-reading-width: 48rem;
+  --rawaj-detail-panel-radius: 1.4rem;
+}
+
+.rawaj-detail-summary {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--rawaj-detail-panel-radius);
+}
+
+.rawaj-detail-summary::after {
+  position: absolute;
+  inset: auto -4rem -5rem auto;
+  width: 11rem;
+  height: 11rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rawaj-orange) 9%, transparent);
+  content: "";
+  filter: blur(22px);
+  pointer-events: none;
+}
+
+.rawaj-detail-summary h1,
+.rawaj-detail-summary__meta,
+.rawaj-detail-price {
+  position: relative;
+  z-index: 1;
+}
+
+.rawaj-detail-summary h1 {
+  max-width: 28ch;
+  text-wrap: balance;
+}
+
+.rawaj-detail-price {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: end;
+  gap: 0.15rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--rawaj-gold) 24%, var(--color-border));
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--rawaj-warm) 70%, var(--rawaj-surface-card));
+  padding: 0.85rem 1rem;
+}
+
+.rawaj-detail-price > span,
+.rawaj-detail-price > small {
+  grid-column: 1;
+}
+
+.rawaj-detail-price > strong {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.rawaj-detail-section {
+  border-radius: var(--rawaj-detail-panel-radius);
+}
+
+.rawaj-detail-section__heading h2 {
+  text-wrap: balance;
+}
+
+.rawaj-detail-description {
+  max-width: var(--rawaj-detail-reading-width);
+  line-height: 2;
+  white-space: pre-line;
+}
+
+.rawaj-detail-specs > div {
+  min-height: 4.6rem;
+  align-content: center;
+}
+
+.rawaj-detail-location {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 10%, var(--color-border));
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--rawaj-sage) 40%, var(--rawaj-surface-card));
+}
+
+.rawaj-detail-seller,
+.rawaj-detail-reference {
+  border-radius: var(--rawaj-detail-panel-radius);
+}
+
+.rawaj-detail-media__stage {
+  isolation: isolate;
+}
+
+.rawaj-detail-media__image {
+  transition: transform var(--motion-slow, 320ms) ease;
+}
+
+.rawaj-detail-media__top-actions button:focus-visible,
+.rawaj-detail-media__bottom-actions button:focus-visible,
+.rawaj-detail-media__arrow:focus-visible,
+.rawaj-detail-media__thumbnails button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--rawaj-gold) 78%, white);
+  outline-offset: 3px;
+}
+
+@media (max-width: 767px) {
+  .rawaj-detail-v2__container {
+    margin-top: -0.45rem;
+  }
+
+  .rawaj-detail-summary {
+    border-start-start-radius: 1.6rem;
+    border-start-end-radius: 1.6rem;
+  }
+
+  .rawaj-detail-price {
+    grid-template-columns: 1fr;
+  }
+
+  .rawaj-detail-price > span,
+  .rawaj-detail-price > small,
+  .rawaj-detail-price > strong {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+  }
+}
+
+@media (min-width: 1024px) {
+  .rawaj-detail-media__stage {
+    border-radius: 0 0 1.75rem 1.75rem;
+  }
+
+  .rawaj-detail-media__image {
+    object-fit: contain;
+    background: #071b19;
+  }
+
+  .rawaj-detail-v2__content {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .rawaj-detail-v2__sidebar {
+    top: calc(var(--rawaj-header-height, 4rem) + 1rem);
+  }
+
+  .rawaj-detail-media:hover .rawaj-detail-media__image {
+    transform: scale(1.012);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-detail-media__image {
+    transition: none;
+  }
+
+  .rawaj-detail-media:hover .rawaj-detail-media__image {
+    transform: none;
+  }
+}
