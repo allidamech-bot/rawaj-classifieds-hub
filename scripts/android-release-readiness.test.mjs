@@ -26,7 +26,10 @@ const [
   readFile(new URL("../capacitor.config.ts", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/AndroidManifest.xml", import.meta.url), "utf8"),
   readFile(
-    new URL("../android/app/src/main/java/com/rawaj/marketplace/MainActivity.java", import.meta.url),
+    new URL(
+      "../android/app/src/main/java/com/rawaj/marketplace/MainActivity.java",
+      import.meta.url,
+    ),
     "utf8",
   ),
   readFile(
