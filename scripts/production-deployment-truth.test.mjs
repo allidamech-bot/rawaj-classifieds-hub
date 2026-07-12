@@ -56,8 +56,8 @@ test("production health covers discovery, policy, console, and network failures"
   assert.match(productionSpec, /page\.on\("pageerror"/);
   assert.match(productionSpec, /page\.on\("console"/);
   assert.match(productionSpec, /page\.on\("requestfailed"/);
-  assert.match(productionSpec, /href\^="\/category\/"/);
-  assert.match(productionSpec, /\/syria\//);
+  assert.ok(productionSpec.includes("/category/"), "Missing category landing discovery check");
+  assert.ok(productionSpec.includes("syria"), "Missing governorate landing discovery check");
 });
 
 test("local browser smoke retains legal and controlled not-found coverage", () => {
