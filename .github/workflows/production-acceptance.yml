@@ -1,0 +1,77 @@
+name: Production Acceptance
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: production-acceptance
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      E2E_BASE_URL: https://rawa-j.com
+      PRODUCTION_ACCEPTANCE: "1"
+      RAWAJ_ACCEPTANCE_EMAIL: ${{ secrets.RAWAJ_ACCEPTANCE_EMAIL }}
+      RAWAJ_ACCEPTANCE_PASSWORD: ${{ secrets.RAWAJ_ACCEPTANCE_PASSWORD }}
+
+    steps:
+      - name: Checkout production branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Export expected production commit
+        run: echo "EXPECTED_COMMIT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Validate dedicated acceptance credentials
+        shell: bash
+        run: |
+          if [ -z "$RAWAJ_ACCEPTANCE_EMAIL" ] || [ -z "$RAWAJ_ACCEPTANCE_PASSWORD" ]; then
+            echo "Configure RAWAJ_ACCEPTANCE_EMAIL and RAWAJ_ACCEPTANCE_PASSWORD repository secrets before running this workflow." >&2
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Wait for matching production deployment
+        shell: bash
+        run: |
+          for attempt in {1..30}; do
+            html="$(curl --fail --silent --show-error --max-time 15 https://rawa-j.com/ || true)"
+            if printf '%s' "$html" | grep -Fq "name=\"rawaj-build-commit\" content=\"$EXPECTED_COMMIT_SHA\""; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "RAWAJ production did not deploy commit $EXPECTED_COMMIT_SHA in time" >&2
+          exit 1
+
+      - name: Run authenticated mobile acceptance
+        run: npx playwright test e2e/production-acceptance.spec.ts --project=mobile-chromium --workers=1
+
+      - name: Upload acceptance diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-acceptance-report-${{ github.run_id }}
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 14
