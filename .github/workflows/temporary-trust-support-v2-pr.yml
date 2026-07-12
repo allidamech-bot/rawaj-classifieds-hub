@@ -6,7 +6,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   integrate:
@@ -48,15 +48,29 @@ jobs:
               source = source.replace(old, new, 1)
           path.write_text(source)
           PY
-      - name: Capture integration output
+      - name: Integrate Trust Support Hub V2
+        run: python scripts/temporary-integrate-trust-support-v2.py
+      - name: Format integrated product files
+        run: >-
+          npx prettier --write
+          scripts/trust-support-hub-v2.test.mjs
+          src/features/trust/TrustSupportExperience.tsx
+          src/trust-support-hub-v2.css
+          src/routes/__root.tsx
+          src/routes/more.tsx
+          src/routes/support.tsx
+          src/routes/safety.tsx
+      - name: Commit and push product files
         shell: bash
         run: |
-          set +e
-          python scripts/temporary-integrate-trust-support-v2.py > trust-support-diagnostic.log 2>&1
-          echo "status=$?" >> trust-support-diagnostic.log
-          cat trust-support-diagnostic.log
-      - uses: actions/upload-artifact@v4
-        with:
-          name: trust-support-integration-diagnostic
-          path: trust-support-diagnostic.log
-          retention-days: 1
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/trust-support-hub-v2.test.mjs
+          git add src/features/trust/TrustSupportExperience.tsx
+          git add src/trust-support-hub-v2.css
+          git add src/routes/__root.tsx
+          git add src/routes/more.tsx
+          git add src/routes/support.tsx
+          git add src/routes/safety.tsx
+          git commit -m "Integrate Trust Support Hub V2"
+          git push origin HEAD:design/trust-support-hub-v2
