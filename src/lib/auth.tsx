@@ -163,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const authClient = client;
     let active = true;
     let currentUserId: string | null = null;
     let reconcilePromise: Promise<void> | null = null;
@@ -208,16 +209,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStatus(nextSession ? "signedIn" : "signedOut");
       const nextUserId = nextSession?.user.id ?? null;
       if (nextUserId !== currentUserId) {
-        await loadProfile(client, nextSession?.user ?? null);
+        await loadProfile(authClient, nextSession?.user ?? null);
       }
     }
 
     async function loadSession() {
-      const { data, error } = await client.auth.getSession();
+      const { data, error } = await authClient.auth.getSession();
       if (!active) return;
 
       if (error) {
-        if (isRejectedRefreshTokenError(error) && (await clearRejectedSession(client))) return;
+        if (isRejectedRefreshTokenError(error) && (await clearRejectedSession(authClient))) return;
         setSession(null);
         setProfile(null);
         setStatus("authError");
@@ -232,11 +233,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!active || document.visibilityState === "hidden" || reconcilePromise) return;
 
       reconcilePromise = (async () => {
-        const { data, error } = await client.auth.getSession();
+        const { data, error } = await authClient.auth.getSession();
         if (!active) return;
 
         if (error) {
-          if (isRejectedRefreshTokenError(error) && (await clearRejectedSession(client))) return;
+          if (isRejectedRefreshTokenError(error) && (await clearRejectedSession(authClient))) {
+            return;
+          }
           setStatus("authError");
           setReason(error.message);
           return;
@@ -248,10 +251,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           nextSession.expires_at <= Math.floor(Date.now() / 1000) + REFRESH_EARLY_SECONDS;
 
         if (expiresSoon) {
-          const { data: refreshed, error: refreshError } = await client.auth.refreshSession();
+          const { data: refreshed, error: refreshError } = await authClient.auth.refreshSession();
           if (!active) return;
           if (refreshError) {
-            if (isRejectedRefreshTokenError(refreshError) && (await clearRejectedSession(client))) {
+            if (
+              isRejectedRefreshTokenError(refreshError) &&
+              (await clearRejectedSession(authClient))
+            ) {
               return;
             }
             setStatus("authError");
@@ -271,7 +277,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void loadSession();
 
-    const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: listener } = authClient.auth.onAuthStateChange((_event, nextSession) => {
       void applySession(nextSession);
     });
     const handleForeground = () => void reconcileForegroundSession();
