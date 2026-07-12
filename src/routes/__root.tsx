@@ -27,7 +27,9 @@ import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import trustSupportHubV2Css from "../trust-support-hub-v2.css?url";
 import authAccountFoundationCss from "../auth-account-foundation.css?url";
 import authAccountV2Css from "../auth-account-v2.css?url";
+import communicationCenterV2Css from "../communication-center-v2.css?url";
 import designSystemV2Css from "../design-system-v2.css?url";
+import desktopExperienceV1Css from "../desktop-experience-v1.css?url";
 import homeDiscoveryV3Css from "../home-discovery-v3.css?url";
 import homeMarketplaceV2Css from "../home-marketplace-v2.css?url";
 import homeSignatureCss from "../home-signature.css?url";
@@ -38,8 +40,8 @@ import listingStudioV2Css from "../listing-studio-v2.css?url";
 import listingStudioV3Css from "../listing-studio-v3.css?url";
 import listingsResultsCss from "../listings-results.css?url";
 import marketplaceDiscoveryCss from "../marketplace-discovery.css?url";
+import marketplaceSystemCss from "../marketplace-system.css?url";
 import messagingSignatureCss from "../messaging-signature.css?url";
-import communicationCenterV2Css from "../communication-center-v2.css?url";
 import myStoreBrandPolishCss from "../my-store-brand-polish.css?url";
 import myStoreHeaderRefinementCss from "../my-store-header-refinement.css?url";
 import myStoreRedesignCss from "../my-store-redesign.css?url";
@@ -52,7 +54,6 @@ import signatureCss from "../signature.css?url";
 import spatialAppShellCss from "../spatial-app-shell.css?url";
 import appCss from "../styles.css?url";
 import visualFoundationCss from "../visual-foundation.css?url";
-import marketplaceSystemCss from "../marketplace-system.css?url";
 
 const ROOT_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
 const ROOT_DESCRIPTION =
@@ -157,6 +158,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: adaptiveListingCardsCss },
         { rel: "stylesheet", href: searchFiltersV1Css },
         { rel: "stylesheet", href: listingDetailV2Css },
+        { rel: "stylesheet", href: desktopExperienceV1Css },
         { rel: "icon", href: "/favicon.ico" },
         { rel: "manifest", href: "/manifest.webmanifest" },
         { rel: "apple-touch-icon", href: "/brand/rawaj-mark-transparent-192.png" },

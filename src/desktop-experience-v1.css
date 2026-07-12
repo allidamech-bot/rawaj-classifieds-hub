@@ -1,0 +1,157 @@
+/* RAWAJ Desktop Experience V1 — coherent density and readable wide-screen composition. */
+
+@media (min-width: 1024px) {
+  :root {
+    --rawaj-desktop-content: 86rem;
+    --rawaj-desktop-reading: 72rem;
+    --rawaj-desktop-sidebar: 20rem;
+    --rawaj-desktop-gap: clamp(1rem, 1.6vw, 1.6rem);
+  }
+
+  body {
+    background:
+      radial-gradient(58rem 34rem at 100% -5%, color-mix(in srgb, var(--rawaj-gold) 11%, transparent), transparent 64%),
+      radial-gradient(48rem 32rem at 0% 2%, color-mix(in srgb, var(--color-primary) 6%, transparent), transparent 64%),
+      var(--color-background);
+  }
+
+  .container-wide {
+    max-width: var(--rawaj-desktop-content);
+    padding-inline: clamp(1.5rem, 3vw, 3rem);
+  }
+
+  .home-container {
+    max-width: var(--rawaj-desktop-content);
+    padding-inline: clamp(1.5rem, 3vw, 3rem);
+  }
+
+  .rawaj-shell__content > main {
+    min-width: 0;
+  }
+
+  .rawaj-search-results-v1 {
+    grid-template-columns: var(--rawaj-desktop-sidebar) minmax(0, 1fr);
+    gap: var(--rawaj-desktop-gap);
+  }
+
+  .rawaj-search-results-v1__sidebar {
+    max-height: calc(100dvh - var(--rawaj-header-height, 4rem) - 2rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .rawaj-results-grid.listing-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.1rem;
+  }
+
+  .rawaj-results-grid[data-view="list"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rawaj-detail-v2__layout {
+    grid-template-columns: minmax(0, 1.55fr) minmax(19rem, 0.7fr);
+    gap: var(--rawaj-desktop-gap);
+    align-items: start;
+  }
+
+  .rawaj-detail-v2__aside {
+    position: sticky;
+    top: calc(var(--rawaj-header-height, 4rem) + 1rem);
+    max-height: calc(100dvh - var(--rawaj-header-height, 4rem) - 2rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .rawaj-listing-studio-v3 .rawaj-studio-shell {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    gap: var(--rawaj-desktop-gap);
+  }
+
+  .rawaj-category-directory-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .rawaj-category-directory-card:nth-child(1),
+  .rawaj-category-directory-card:nth-child(4) {
+    grid-row: span 1;
+  }
+
+  .rawaj-communication-shell,
+  .rawaj-chat-workspace {
+    min-height: min(48rem, calc(100dvh - var(--rawaj-header-height, 4rem) - 3rem));
+  }
+
+  .rawaj-auth-v2,
+  .rawaj-account-v2,
+  .rawaj-seller-storefront-v2,
+  .rawaj-listing-studio-v3,
+  .rawaj-detail-v2 {
+    scroll-margin-top: calc(var(--rawaj-header-height, 4rem) + 1rem);
+  }
+
+  .rawaj-seller-storefront-v2 .listing-card-grid,
+  .rawaj-route-favorites .listing-card-grid,
+  .rawaj-route-saved-searches .listing-card-grid {
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .rawaj-results-grid.listing-card-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .rawaj-results-grid[data-view="list"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rawaj-category-directory-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .rawaj-listing-studio-v3 .rawaj-studio-category-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1536px) {
+  :root {
+    --rawaj-desktop-content: 92rem;
+    --rawaj-desktop-sidebar: 21rem;
+  }
+
+  .listing-card-grid:not(.rawaj-results-grid) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .rawaj-results-grid.listing-card-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .rawaj-results-grid[data-view="list"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .rawaj-surface,
+  .rawaj-adaptive-card,
+  .rawaj-category-directory-card,
+  .rawaj-studio-section {
+    transition:
+      transform var(--motion-fast, 160ms) ease,
+      box-shadow var(--motion-fast, 160ms) ease,
+      border-color var(--motion-fast, 160ms) ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-surface,
+  .rawaj-adaptive-card,
+  .rawaj-category-directory-card,
+  .rawaj-studio-section {
+    transition: none;
+  }
+}
