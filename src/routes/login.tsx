@@ -205,16 +205,19 @@ function LoginPage() {
     }
 
     if (mode === "register") {
+      if (result.data.session) {
+        setMessage(
+          text("تم إنشاء الحساب. جارٍ إدخالك إلى رواج.", "Account created. Opening RAWAJ now."),
+        );
+        void navigate({ to: returnTo });
+        return;
+      }
+
       setMessage(
-        result.data.session
-          ? text(
-              "تم إنشاء الحساب ويمكنك متابعة إدارة إعلاناتك ورسائلك.",
-              "Account created. You can continue managing your listings and messages.",
-            )
-          : text(
-              "تم إرسال رابط تفعيل الحساب إلى بريدك الإلكتروني. افتح البريد واضغط على رابط التفعيل لإكمال إنشاء الحساب. إذا لم تجد الرسالة خلال دقائق، تحقق من مجلد الرسائل غير المرغوبة / Spam.",
-              "We sent an account activation link to your email. Open your inbox and click the activation link to complete account setup. If you do not see it within a few minutes, check your Spam or Junk folder.",
-            ),
+        text(
+          "تم إرسال رابط تفعيل الحساب إلى بريدك الإلكتروني. افتح البريد واضغط على رابط التفعيل لإكمال إنشاء الحساب. إذا لم تجد الرسالة خلال دقائق، تحقق من مجلد الرسائل غير المرغوبة / Spam.",
+          "We sent an account activation link to your email. Open your inbox and click the activation link to complete account setup. If you do not see it within a few minutes, check your Spam or Junk folder.",
+        ),
       );
       return;
     }

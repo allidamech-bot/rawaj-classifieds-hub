@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, RefreshCw, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Camera, RefreshCw, Trash2, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   ListingStudioCompletionCard,
@@ -28,6 +28,8 @@ import {
   deleteListingImage,
   deleteOwnerListing,
   fetchListingImages,
+  isOwnerDeletableStatus,
+  reorderListingImages,
   fetchOwnerListingDetail,
   fetchPublicCategories,
   fetchPublicGovernorates,
@@ -98,6 +100,7 @@ function ManageListingPage() {
   const selectedImagesRef = useRef<EditUploadImageEntry[]>([]);
   const imagesRef = useRef<ListingImage[]>([]);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [reorderingImages, setReorderingImages] = useState(false);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -126,7 +129,7 @@ function ManageListingPage() {
   const isEditable = listing?.status === "draft" || listing?.status === "rejected";
   const isPendingReview = listing?.status === "pending_review";
   const isResubmittable = listing?.status === "draft" || listing?.status === "rejected";
-  const isDeletable = listing?.status === "draft" || listing?.status === "rejected";
+  const isDeletable = Boolean(listing && isOwnerDeletableStatus(listing.status));
   const studioScore =
     [
       Boolean(categoryId),
@@ -442,6 +445,18 @@ function ManageListingPage() {
     setSelectedImages(next);
   }
 
+  function moveSelectedPendingImage(entryId: string, direction: -1 | 1) {
+    if (uploading || reorderingImages) return;
+    const current = selectedImagesRef.current;
+    const index = current.findIndex((item) => item.id === entryId);
+    const targetIndex = index + direction;
+    if (index < 0 || targetIndex < 0 || targetIndex >= current.length) return;
+    const next = [...current];
+    [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+    selectedImagesRef.current = next;
+    setSelectedImages(next);
+  }
+
   function clearSelectedImages() {
     selectedImagesRef.current.forEach((entry) => URL.revokeObjectURL(entry.url));
     selectedImagesRef.current = [];
@@ -501,13 +516,46 @@ function ManageListingPage() {
     setUploading(false);
   }
 
+  async function moveExistingImage(imageId: string, direction: -1 | 1) {
+    if (!listing || !isEditable || imagesLoading || uploading || reorderingImages) return;
+    const current = imagesRef.current;
+    const index = current.findIndex((image) => image.id === imageId);
+    const targetIndex = index + direction;
+    if (index < 0 || targetIndex < 0 || targetIndex >= current.length) return;
+
+    const previous = [...current];
+    const next = [...current];
+    [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+    imagesRef.current = next;
+    setImages(next);
+    setReorderingImages(true);
+    setUploadError(null);
+
+    const result = await reorderListingImages(
+      auth.profile?.id ?? null,
+      listing.id,
+      next.map((image, sortOrder) => ({ id: image.id, sortOrder })),
+    );
+    setReorderingImages(false);
+    if (!result.ok) {
+      imagesRef.current = previous;
+      setImages(previous);
+      setUploadError(result.error.message);
+      return;
+    }
+    imagesRef.current = result.data;
+    setImages(result.data);
+  }
+
   function handleDeleteImage(image: ListingImage) {
     void (async () => {
       setImagesLoading(true);
       const result = await deleteListingImage(auth.profile?.id ?? null, listing!.id, image);
       setImagesLoading(false);
       if (result.ok) {
-        setImages((value) => value.filter((item) => item.id !== image.id));
+        const nextImages = imagesRef.current.filter((item) => item.id !== image.id);
+        imagesRef.current = nextImages;
+        setImages(nextImages);
       } else {
         setUploadError(result.error.message);
       }
@@ -852,10 +900,37 @@ function ManageListingPage() {
                         {text("الصورة الرئيسية", "Primary")}
                       </span>
                     )}
+                    {isEditable && images.length > 1 && (
+                      <div className="mt-1 grid grid-cols-2 gap-1">
+                        <button
+                          type="button"
+                          disabled={index === 0 || imagesLoading || uploading || reorderingImages}
+                          onClick={() => void moveExistingImage(image.id, -1)}
+                          className="rawaj-chip min-h-9 justify-center px-2 disabled:opacity-35"
+                          aria-label={text("تحريك الصورة للأمام", "Move photo earlier")}
+                        >
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={
+                            index === images.length - 1 ||
+                            imagesLoading ||
+                            uploading ||
+                            reorderingImages
+                          }
+                          onClick={() => void moveExistingImage(image.id, 1)}
+                          className="rawaj-chip min-h-9 justify-center px-2 disabled:opacity-35"
+                          aria-label={text("تحريك الصورة للخلف", "Move photo later")}
+                        >
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
                     {isEditable && (
                       <button
                         type="button"
-                        disabled={imagesLoading || uploading}
+                        disabled={imagesLoading || uploading || reorderingImages}
                         onClick={() => handleDeleteImage(image)}
                         className="absolute end-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-card/90 text-destructive shadow-soft backdrop-blur transition hover:bg-destructive hover:text-destructive-foreground"
                         aria-label={text("حذف الصورة", "Delete photo")}
@@ -928,6 +1003,30 @@ function ManageListingPage() {
                           </button>
                         </div>
                         <div className="p-2">
+                          <div className="mb-2 flex gap-1">
+                            <button
+                              type="button"
+                              disabled={index === 0 || uploading || preview.state === "uploading"}
+                              onClick={() => moveSelectedPendingImage(preview.id, -1)}
+                              className="rawaj-icon-button h-8 w-8 disabled:opacity-35"
+                              aria-label={text("تحريك الصورة للأمام", "Move photo earlier")}
+                            >
+                              <ArrowUp className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={
+                                index === selectedImages.length - 1 ||
+                                uploading ||
+                                preview.state === "uploading"
+                              }
+                              onClick={() => moveSelectedPendingImage(preview.id, 1)}
+                              className="rawaj-icon-button h-8 w-8 disabled:opacity-35"
+                              aria-label={text("تحريك الصورة للخلف", "Move photo later")}
+                            >
+                              <ArrowDown className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                           <p className="truncate font-bold">{preview.file.name}</p>
                           <p className="text-muted-foreground">
                             {(preview.file.size / 1024 / 1024).toFixed(1)} MB

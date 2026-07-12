@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Info, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Camera, Info, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   ListingStudioAutosaveStatus,
@@ -31,6 +31,7 @@ import {
   deleteListingImage,
   fetchPublicCategories,
   fetchPublicGovernorates,
+  reorderListingImages,
   submitOwnerListingForReview,
   updateOwnerListing,
   uploadListingImage,
@@ -106,6 +107,7 @@ function AddListingPage() {
   const [selectedImages, setSelectedImages] = useState<UploadImageEntry[]>([]);
   const [removingImageIds, setRemovingImageIds] = useState<Set<string>>(() => new Set());
   const [imageSelectionMessage, setImageSelectionMessage] = useState<string | null>(null);
+  const [reorderingImages, setReorderingImages] = useState(false);
   const [categoryId, setCategoryId] = useState("");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
@@ -394,6 +396,49 @@ function AddListingPage() {
     selectedImagesRef.current = selectedImagesRef.current.filter((item) => item.id !== id);
     setSelectedImages((current) => current.filter((item) => item.id !== id));
     setImageSelectionMessage(null);
+  }
+
+  async function moveSelectedImage(id: string, direction: -1 | 1) {
+    if (submittingRef.current || reorderingImages) return;
+    const current = selectedImagesRef.current;
+    if (current.some((entry) => entry.state === "uploading")) return;
+    const index = current.findIndex((entry) => entry.id === id);
+    const targetIndex = index + direction;
+    if (index < 0 || targetIndex < 0 || targetIndex >= current.length) return;
+
+    const previous = [...current];
+    const next = [...current];
+    [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+    selectedImagesRef.current = next;
+    setSelectedImages(next);
+
+    const draft = draftListingRef.current;
+    const persistedOrder = next.flatMap((entry, sortOrder) =>
+      entry.uploadedImage ? [{ id: entry.uploadedImage.id, sortOrder }] : [],
+    );
+    if (!draft || persistedOrder.length === 0) return;
+
+    setReorderingImages(true);
+    const result = await reorderListingImages(auth.profile?.id ?? null, draft.id, persistedOrder);
+    setReorderingImages(false);
+    if (!result.ok) {
+      selectedImagesRef.current = previous;
+      setSelectedImages(previous);
+      setSubmitMessage(result.error.message);
+      return;
+    }
+
+    const refreshedById = new Map(result.data.map((image) => [image.id, image] as const));
+    updateSelectedImagesFromRef((entries) =>
+      entries.map((entry) =>
+        entry.uploadedImage
+          ? {
+              ...entry,
+              uploadedImage: refreshedById.get(entry.uploadedImage.id) ?? entry.uploadedImage,
+            }
+          : entry,
+      ),
+    );
   }
 
   async function retrySelectedImage(id: string) {
@@ -1193,6 +1238,39 @@ function AddListingPage() {
                             <X className="h-4 w-4" />
                           </button>
                           <div className="p-2">
+                            <div className="mb-2 flex items-center gap-1">
+                              <button
+                                type="button"
+                                disabled={
+                                  index === 0 ||
+                                  submitting ||
+                                  reorderingImages ||
+                                  preview.state === "uploading"
+                                }
+                                onClick={() => void moveSelectedImage(preview.id, -1)}
+                                className="rawaj-icon-button h-8 w-8 disabled:opacity-35"
+                                aria-label={text("تحريك الصورة للأمام", "Move photo earlier")}
+                              >
+                                <ArrowUp className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={
+                                  index === selectedImagePreviews.length - 1 ||
+                                  submitting ||
+                                  reorderingImages ||
+                                  preview.state === "uploading"
+                                }
+                                onClick={() => void moveSelectedImage(preview.id, 1)}
+                                className="rawaj-icon-button h-8 w-8 disabled:opacity-35"
+                                aria-label={text("تحريك الصورة للخلف", "Move photo later")}
+                              >
+                                <ArrowDown className="h-3.5 w-3.5" />
+                              </button>
+                              <span className="ms-auto text-[9px] font-semibold text-muted-foreground">
+                                {text(`الترتيب ${index + 1}`, `Order ${index + 1}`)}
+                              </span>
+                            </div>
                             <p className="truncate font-bold">{preview.file.name}</p>
                             <p className="mt-1 text-muted-foreground">
                               {(preview.file.size / 1024 / 1024).toFixed(1)} MB

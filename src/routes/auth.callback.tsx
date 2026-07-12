@@ -33,6 +33,7 @@ function AuthCallbackPage() {
     let cancelled = false;
     let completionTimer: ReturnType<typeof setTimeout> | undefined;
     let expiryTimer: ReturnType<typeof setTimeout> | undefined;
+    let unsubscribeAuth: (() => void) | undefined;
 
     async function handleCallback() {
       const client = supabase;
@@ -77,6 +78,7 @@ function AuthCallbackPage() {
           finish(observedRecoveryEvent || event === "PASSWORD_RECOVERY");
         }
       });
+      unsubscribeAuth = () => listener.subscription.unsubscribe();
 
       try {
         if (code) {
@@ -130,6 +132,7 @@ function AuthCallbackPage() {
       cancelled = true;
       clearTimeout(completionTimer);
       clearTimeout(expiryTimer);
+      unsubscribeAuth?.();
     };
   }, [callbackContext.isRecovery, callbackContext.returnTo, navigate, text]);
 
