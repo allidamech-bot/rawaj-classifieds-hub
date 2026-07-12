@@ -14,18 +14,23 @@ const client = createClient(supabaseUrl, serviceRoleKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 const listingIds = manifest.listings.map((listing) => listing.id);
-const paths = manifest.listings.flatMap((listing) =>
-  Array.from({ length: listing.count }, (_, index) =>
-    `${manifest.batch}/${listing.category}/${listing.slug}/${String(index + 1).padStart(2, "0")}.png`,
-  ),
-);
-
-const { error: rowDeleteError } = await client
+const { data: imageRows, error: readError } = await client
   .from("listing_images")
-  .delete()
-  .in("listing_id", listingIds)
-  .in("storage_path", paths);
-if (rowDeleteError) throw rowDeleteError;
+  .select("id, listing_id, storage_path")
+  .in("listing_id", listingIds);
+if (readError) throw readError;
+
+const managedRows = (imageRows ?? []).filter((row) => {
+  const path = row.storage_path ?? "";
+  return path.startsWith(`${manifest.batch}/`) || path.includes(`/${manifest.batch}-`);
+});
+const paths = [...new Set(managedRows.map((row) => row.storage_path).filter(Boolean))];
+const rowIds = managedRows.map((row) => row.id);
+
+if (rowIds.length > 0) {
+  const { error: rowDeleteError } = await client.from("listing_images").delete().in("id", rowIds);
+  if (rowDeleteError) throw rowDeleteError;
+}
 
 for (let index = 0; index < paths.length; index += 100) {
   const { error: storageError } = await client.storage
@@ -36,9 +41,13 @@ for (let index = 0; index < paths.length; index += 100) {
 
 const { data: remaining, error: remainingError } = await client
   .from("listing_images")
-  .select("id")
-  .in("storage_path", paths);
+  .select("id, storage_path")
+  .in("listing_id", listingIds);
 if (remainingError) throw remainingError;
-if ((remaining ?? []).length > 0) throw new Error("Demo media cleanup incomplete.");
+const remainingManaged = (remaining ?? []).filter((row) => {
+  const path = row.storage_path ?? "";
+  return path.startsWith(`${manifest.batch}/`) || path.includes(`/${manifest.batch}-`);
+});
+if (remainingManaged.length > 0) throw new Error("Demo media cleanup incomplete.");
 
 console.log(`RAWAJ demo media cleanup complete: ${paths.length} storage paths removed.`);

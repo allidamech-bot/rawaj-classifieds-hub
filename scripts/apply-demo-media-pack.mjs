@@ -17,26 +17,35 @@ const client = createClient(supabaseUrl, serviceRoleKey, {
 const listingIds = manifest.listings.map((listing) => listing.id);
 const { data: listings, error: listingError } = await client
   .from("listings")
-  .select("id, details")
+  .select("id, owner_id, details")
   .in("id", listingIds);
 
 if (listingError) throw listingError;
 if ((listings ?? []).length !== listingIds.length) {
   throw new Error(`Expected ${listingIds.length} seeded listings, found ${(listings ?? []).length}. Run the listing seed first.`);
 }
+
+const listingById = new Map();
 for (const listing of listings) {
   const marker = listing.details?._rawaj_seed;
   if (marker?.batch !== manifest.batch || marker?.kind !== "launch_demo" || marker?.removable !== true) {
     throw new Error(`Listing ${listing.id} is not a removable ${manifest.batch} demo listing.`);
   }
+  if (!listing.owner_id) throw new Error(`Listing ${listing.id} has no owner_id.`);
+  listingById.set(listing.id, listing);
 }
 
 const rows = [];
+const legacyPaths = [];
 for (let listingIndex = 0; listingIndex < manifest.listings.length; listingIndex += 1) {
   const listing = manifest.listings[listingIndex];
+  const databaseListing = listingById.get(listing.id);
   for (let sortOrder = 0; sortOrder < listing.count; sortOrder += 1) {
     const suffix = String(sortOrder + 1).padStart(2, "0");
-    const storagePath = `${manifest.batch}/${listing.category}/${listing.slug}/${suffix}.png`;
+    // Storage SELECT policy expects folder segment 2 to be the listing UUID:
+    // <owner_id>/<listing_id>/<filename>
+    const storagePath = `${databaseListing.owner_id}/${listing.id}/${manifest.batch}-${suffix}.png`;
+    legacyPaths.push(`${manifest.batch}/${listing.category}/${listing.slug}/${suffix}.png`);
     const buffer = renderDemoPng({
       category: listing.category,
       kind: listing.kind,
@@ -60,10 +69,18 @@ for (let listingIndex = 0; listingIndex < manifest.listings.length; listingIndex
   }
 }
 
-const paths = rows.map((row) => row.storage_path);
-const { error: deleteError } = await client.from("listing_images").delete().in("storage_path", paths);
+const currentPaths = rows.map((row) => row.storage_path);
+const allManagedPaths = [...legacyPaths, ...currentPaths];
+const { error: deleteError } = await client.from("listing_images").delete().in("storage_path", allManagedPaths);
 if (deleteError) throw deleteError;
 const { error: insertError } = await client.from("listing_images").insert(rows);
 if (insertError) throw insertError;
 
-console.log(`RAWAJ demo media complete: ${rows.length} images linked to ${listingIds.length} listings.`);
+for (let index = 0; index < legacyPaths.length; index += 100) {
+  const { error: cleanupError } = await client.storage
+    .from(manifest.bucket)
+    .remove(legacyPaths.slice(index, index + 100));
+  if (cleanupError) throw new Error(`Legacy media cleanup failed: ${cleanupError.message}`);
+}
+
+console.log(`RAWAJ demo media complete: ${rows.length} images linked to ${listingIds.length} listings with public-signable paths.`);
