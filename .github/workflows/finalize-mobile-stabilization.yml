@@ -1,0 +1,90 @@
+name: Finalize Mobile Stabilization
+
+on:
+  push:
+    branches:
+      - agent/android-release-readiness-1-0-3
+    paths:
+      - scripts/finalize-mobile-stabilization.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/android-release-readiness-1-0-3
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Remove temporary patch machinery
+        run: |
+          rm -f \
+            scripts/apply-mobile-stabilization.mjs \
+            scripts/mobile-stabilization-patch-utils.mjs \
+            scripts/mobile-stabilization-patch-core.mjs \
+            scripts/mobile-stabilization-patch-chat.mjs \
+            scripts/mobile-stabilization-patch-listing.mjs \
+            scripts/mobile-stabilization-patch-tests.mjs \
+            scripts/finalize-mobile-stabilization.trigger \
+            .github/workflows/finalize-mobile-stabilization.yml
+
+      - name: Format permanent stabilization files
+        run: |
+          npx prettier --write \
+            package.json \
+            src/components/native/NativePullToRefresh.tsx \
+            src/lib/use-online-presence.ts \
+            src/routes/chats.tsx \
+            src/features/communication/CommunicationExperience.tsx \
+            src/routes/add-listing.tsx \
+            src/routes/index.tsx \
+            src/routes/__root.tsx \
+            src/mobile-app-stabilization.css \
+            scripts/mobile-app-stabilization.test.mjs \
+            scripts/android-release-readiness.test.mjs \
+            scripts/launch-readiness-batch-7.test.mjs
+
+      - name: Fix lintable source files
+        run: |
+          npx eslint --fix \
+            src/components/native/NativePullToRefresh.tsx \
+            src/lib/use-online-presence.ts \
+            src/routes/chats.tsx \
+            src/features/communication/CommunicationExperience.tsx \
+            src/routes/add-listing.tsx \
+            src/routes/index.tsx \
+            src/routes/__root.tsx \
+            scripts/mobile-app-stabilization.test.mjs \
+            scripts/android-release-readiness.test.mjs \
+            scripts/launch-readiness-batch-7.test.mjs
+
+      - name: Validate stabilization contract
+        run: npm run test:mobile-app-stabilization
+
+      - name: Typecheck
+        run: npm run typecheck -- --pretty false
+
+      - name: Validate patch whitespace
+        run: git diff --check
+
+      - name: Commit finalized patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Finalize RAWAJ mobile stabilization"
+          git push origin HEAD:agent/android-release-readiness-1-0-3
