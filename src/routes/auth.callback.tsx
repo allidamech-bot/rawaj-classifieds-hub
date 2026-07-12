@@ -14,6 +14,14 @@ export const Route = createFileRoute("/auth/callback")({
 
 type CallbackStatus = "loading" | "success" | "error";
 
+function cleanOneTimeCallbackParams() {
+  const url = new URL(window.location.href);
+  for (const key of ["code", "error", "error_code", "error_description"]) {
+    url.searchParams.delete(key);
+  }
+  window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
 function AuthCallbackPage() {
   const { text } = useUiPreferences();
   const navigate = useNavigate();
@@ -52,6 +60,10 @@ function AuthCallbackPage() {
 
       const searchParams = new URLSearchParams(window.location.search);
       const code = searchParams.get("code");
+      const providerError =
+        searchParams.get("error_description") ??
+        searchParams.get("error_code") ??
+        searchParams.get("error");
       let observedRecoveryEvent = false;
       let completed = false;
 
@@ -59,6 +71,7 @@ function AuthCallbackPage() {
         if (cancelled || completed) return;
         completed = true;
         clearTimeout(expiryTimer);
+        cleanOneTimeCallbackParams();
         setStatus("success");
         completionTimer = setTimeout(() => {
           if (cancelled) return;
@@ -71,6 +84,13 @@ function AuthCallbackPage() {
         }, 650);
       };
 
+      if (providerError) {
+        cleanOneTimeCallbackParams();
+        setStatus("error");
+        setErrorMsg(providerError);
+        return;
+      }
+
       const { data: listener } = client.auth.onAuthStateChange((event, session) => {
         if (cancelled || !session) return;
         if (event === "PASSWORD_RECOVERY") observedRecoveryEvent = true;
@@ -81,6 +101,13 @@ function AuthCallbackPage() {
       unsubscribeAuth = () => listener.subscription.unsubscribe();
 
       try {
+        const { data: existing, error: existingError } = await client.auth.getSession();
+        if (existingError) throw existingError;
+        if (existing.session) {
+          finish(observedRecoveryEvent || callbackContext.isRecovery);
+          return;
+        }
+
         if (code) {
           const { error: exchangeError } = await client.auth.exchangeCodeForSession(code);
           if (exchangeError) throw exchangeError;
@@ -114,6 +141,7 @@ function AuthCallbackPage() {
         }, 20000);
       } catch (error) {
         if (cancelled) return;
+        cleanOneTimeCallbackParams();
         listener.subscription.unsubscribe();
         setStatus("error");
         setErrorMsg(
