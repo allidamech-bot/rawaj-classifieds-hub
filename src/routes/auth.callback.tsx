@@ -101,16 +101,22 @@ function AuthCallbackPage() {
       unsubscribeAuth = () => listener.subscription.unsubscribe();
 
       try {
-        const { data: existing, error: existingError } = await client.auth.getSession();
-        if (existingError) throw existingError;
-        if (existing.session) {
-          finish(observedRecoveryEvent || callbackContext.isRecovery);
-          return;
-        }
-
         if (code) {
           const { error: exchangeError } = await client.auth.exchangeCodeForSession(code);
-          if (exchangeError) throw exchangeError;
+          if (exchangeError) {
+            const { data: existing, error: existingError } = await client.auth.getSession();
+            if (existingError) throw existingError;
+            if (!existing.session) throw exchangeError;
+            finish(observedRecoveryEvent || callbackContext.isRecovery);
+            return;
+          }
+        } else {
+          const { data: existing, error: existingError } = await client.auth.getSession();
+          if (existingError) throw existingError;
+          if (existing.session) {
+            finish(observedRecoveryEvent || callbackContext.isRecovery);
+            return;
+          }
         }
 
         const { data, error } = await client.auth.getSession();
