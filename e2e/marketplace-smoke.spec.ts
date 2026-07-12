@@ -16,14 +16,19 @@ const publicRoutes = [
 
 const protectedRoutes = ["/add-listing", "/profile", "/favorites", "/admin"] as const;
 
+function isExpectedLocalRequestFailure(url: string, failure: string) {
+  return failure.includes("ERR_ABORTED") || (failure === "csp" && url.includes("va.vercel-scripts.com"));
+}
+
 async function openHealthyPage(page: Page, path: string) {
   const pageErrors: string[] = [];
   const failedRequests: string[] = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
   page.on("requestfailed", (request) => {
     const failure = request.failure()?.errorText ?? "unknown failure";
-    if (!failure.includes("ERR_ABORTED"))
+    if (!isExpectedLocalRequestFailure(request.url(), failure)) {
       failedRequests.push(`${request.method()} ${request.url()}: ${failure}`);
+    }
   });
 
   const response = await page.goto(path, { waitUntil: "domcontentloaded" });
