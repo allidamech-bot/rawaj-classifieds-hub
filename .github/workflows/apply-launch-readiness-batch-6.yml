@@ -39,7 +39,7 @@ jobs:
       - name: Generate route tree and production bundles
         run: npm run build
 
-      - name: Format and lint Batch 6 source
+      - name: Apply automatic formatting
         run: |
           npx eslint --fix \
             scripts/home-discovery-v3.test.mjs \
@@ -51,14 +51,19 @@ jobs:
             'src/routes/categories.$slug.tsx' \
             src/routes/governorates.tsx \
             'src/routes/governorates.$slug.tsx' \
-            'src/routes/sitemap[.]xml.ts'
+            'src/routes/sitemap[.]xml.ts' || true
           npx prettier --write package.json public/robots.txt
+
+      - name: Lint Batch 6 tests
+        run: npx eslint --quiet scripts/home-discovery-v3.test.mjs scripts/launch-readiness-batch-6.test.mjs
+
+      - name: Lint Batch 6 API and SEO
+        run: npx eslint --quiet src/lib/api/listings.ts src/lib/seo.ts
+
+      - name: Lint Batch 6 route components
+        run: |
           npx eslint --quiet \
-            scripts/home-discovery-v3.test.mjs \
-            scripts/launch-readiness-batch-6.test.mjs \
             src/features/home/CategoryWorlds.tsx \
-            src/lib/api/listings.ts \
-            src/lib/seo.ts \
             src/routes/categories.tsx \
             'src/routes/categories.$slug.tsx' \
             src/routes/governorates.tsx \
