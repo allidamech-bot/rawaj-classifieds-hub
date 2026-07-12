@@ -88,18 +88,22 @@ test("RAWAJ owns a safe-zone launcher icon and one seamless system hand-off", as
   assert.ok(logoAsset.size > 10_000);
 });
 
-test("RAWAJ launch intro is native, animated, readiness-aware, and fresh-activity only", () => {
+test("RAWAJ launch intro is native, premium-motion, readiness-aware, and fresh-activity only", () => {
   assert.match(mainActivity, /savedInstanceState == null/);
   assert.match(mainActivity, /R\.drawable\.rawaj_intro_background/);
   assert.match(mainActivity, /R\.drawable\.rawaj_logo_mark/);
   assert.match(mainActivity, /arabicName\.setText\("رواج"\)/);
+  assert.match(mainActivity, /tagline\.setText\("السوق الأقرب إليك"\)/);
   assert.match(mainActivity, /englishName\.setText\("R A W A J"\)/);
-  assert.match(mainActivity, /setScaleX\(0\.76f\)/);
-  assert.match(mainActivity, /setStartDelay\(180L\)/);
+  assert.match(mainActivity, /final View outerRing/);
+  assert.match(mainActivity, /final View innerRing/);
+  assert.match(mainActivity, /new OvershootInterpolator\(0\.72f\)/);
+  assert.match(mainActivity, /setScaleX\(0\.56f\)/);
+  assert.match(mainActivity, /setStartDelay\(170L\)/);
   assert.match(mainActivity, /INTRO_MIN_VISIBLE_MS = 650L/);
   assert.match(mainActivity, /INTRO_MAX_VISIBLE_MS = 2400L/);
   assert.match(mainActivity, /isWebContentReady\(webView\)/);
-  assert.match(mainActivity, /setDuration\(220L\)/);
+  assert.match(mainActivity, /setDuration\(240L\)/);
   assert.match(mainActivity, /root\.removeView\(overlay\)/);
 });
 
