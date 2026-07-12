@@ -137,7 +137,7 @@ function SupportPage() {
         <TrustHubHero
           mode="support"
           signedIn={auth.status === "signedIn"}
-          displayName={auth.profile?.displayName}
+          displayName={auth.profile?.displayName ?? undefined}
           location={auth.profile?.cityArea || auth.profile?.governorate || undefined}
           avatarUrl={auth.profile?.avatarUrl}
           verified={auth.profile?.verificationStatus === "verified"}
