@@ -9,7 +9,9 @@ export const Route = createFileRoute("/category/$slug")({
   loader: async ({ params }) => {
     const categoriesResult = await fetchPublicCategories();
     if (!categoriesResult.ok) throw notFound();
-    const category = categoriesResult.data.find((item) => item.slug === params.slug && item.isActive);
+    const category = categoriesResult.data.find(
+      (item) => item.slug === params.slug && item.isActive,
+    );
     if (!category) throw notFound();
 
     const listingsResult = await fetchPublicListings({ category: category.slug }, null, 12);

@@ -2,16 +2,23 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [categoryRoute, governorateRoute, landingPage, categoryWorlds, sitemap, packageJson, qualityGate] =
-  await Promise.all([
-    readFile(new URL("../src/routes/category.$slug.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/syria.$slug.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/seo/MarketplaceLandingPage.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/home/CategoryWorlds.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/sitemap[.]xml.ts", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
-  ]);
+const [
+  categoryRoute,
+  governorateRoute,
+  landingPage,
+  categoryWorlds,
+  sitemap,
+  packageJson,
+  qualityGate,
+] = await Promise.all([
+  readFile(new URL("../src/routes/category.$slug.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/syria.$slug.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/seo/MarketplaceLandingPage.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/home/CategoryWorlds.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/sitemap[.]xml.ts", import.meta.url), "utf8"),
+  readFile(new URL("../package.json", import.meta.url), "utf8"),
+  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+]);
 
 test("category landing pages resolve active categories and expose canonical SEO", () => {
   assert.match(categoryRoute, /createFileRoute\("\/category\/\$slug"\)/);
@@ -25,7 +32,10 @@ test("governorate landing pages resolve active governorates and expose canonical
   assert.match(governorateRoute, /createFileRoute\("\/syria\/\$slug"\)/);
   assert.match(governorateRoute, /fetchPublicGovernorates/);
   assert.match(governorateRoute, /fetchPublicListings\(\{ governorate: governorate\.id \}/);
-  assert.match(governorateRoute, /path: loaderData \? `\/syria\/\$\{loaderData\.governorate\.slug\}`/);
+  assert.match(
+    governorateRoute,
+    /path: loaderData \? `\/syria\/\$\{loaderData\.governorate\.slug\}`/,
+  );
   assert.match(governorateRoute, /noindex: !loaderData/);
 });
 
