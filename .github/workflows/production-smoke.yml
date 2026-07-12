@@ -1,0 +1,72 @@
+name: Production Smoke
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "e2e/**"
+      - "playwright.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/production-smoke.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: production-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      E2E_BASE_URL: https://rawa-j.com
+      PRODUCTION_SMOKE: "1"
+      EXPECTED_COMMIT_SHA: ${{ github.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Wait for matching production deployment
+        run: |
+          for attempt in {1..30}; do
+            html="$(curl --fail --silent --show-error --max-time 15 https://rawa-j.com/ || true)"
+            if printf '%s' "$html" | grep -Fq "name=\"rawaj-build-commit\" content=\"$EXPECTED_COMMIT_SHA\""; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "RAWAJ production did not deploy commit $EXPECTED_COMMIT_SHA in time" >&2
+          exit 1
+
+      - name: Run production smoke tests
+        run: npx playwright test e2e/production-smoke.spec.ts
+
+      - name: Upload production diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-smoke-report-${{ github.run_id }}
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 14

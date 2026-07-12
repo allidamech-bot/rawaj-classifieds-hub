@@ -18,6 +18,7 @@ import { ExistingConversationBanner } from "@/features/listing-detail/ExistingCo
 import { ViewedBeforeBanner } from "@/features/listing-detail/ViewedBeforeBanner";
 import { DraftRecoveryBanner } from "@/features/listing-studio/DraftRecoveryBanner";
 import { AuthProvider } from "@/lib/auth";
+import { rawajBuildInfo } from "@/lib/build-info";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { buildSiteStructuredData, createSeo, jsonLdScript } from "@/lib/seo";
 import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
@@ -126,6 +127,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
         { name: "theme-color", content: "#123f38" },
         { name: "author", content: "RAWAJ" },
+        { name: "rawaj-build-commit", content: rawajBuildInfo.commitSha },
+        { name: "rawaj-build-environment", content: rawajBuildInfo.environment },
         ...seo.meta,
       ],
       links: [
