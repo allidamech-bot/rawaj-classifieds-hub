@@ -53,6 +53,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          find .output -maxdepth 5 -type f | sort > /tmp/rawaj-output-files.txt
           npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/rawaj-preview.log 2>&1 &
           preview_pid=$!
           cleanup() {
@@ -83,6 +84,18 @@ jobs:
             mkdir -p ".output/public/$route"
             cp /tmp/rawaj-index.html ".output/public/$route/index.html"
           done
+
+      - name: Upload bundled preview diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawaj-bundled-preview-diagnostics
+          path: |
+            /tmp/rawaj-preview.log
+            /tmp/rawaj-output-files.txt
+            /tmp/rawaj-index.html
+          if-no-files-found: warn
+          retention-days: 1
 
       - name: Sync bundled branch preview into Android debug configuration
         env:
