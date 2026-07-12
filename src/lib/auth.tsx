@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
+import { NativeAppRuntime } from "@/components/native/NativeAppRuntime";
 import {
   canAccessAdmin,
   canAccessOwnerControls,
@@ -12,9 +13,15 @@ import {
 import { AuthContext, type AuthContextValue } from "./auth-context";
 import type { AuthStatus } from "./auth-status";
 import { sanitizeAuthReturnTo } from "./auth-return";
+import {
+  createAuthCallbackUrl,
+  isNativeRawajApp,
+  openExternalUrl,
+} from "./native-runtime";
 import { getSupabaseAuthUnavailableReason, isSupabaseConfigured, supabase } from "./supabase";
 
 const rolePriority: UserRole[] = ["owner", "admin", "moderator", "seller", "user"];
+const REFRESH_EARLY_SECONDS = 60;
 
 const unavailableReason = getSupabaseAuthUnavailableReason();
 
@@ -161,8 +168,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     let active = true;
+    let currentUserId: string | null = null;
+    let reconcilePromise: Promise<void> | null = null;
 
     async function loadProfile(client: SupabaseClient, user: User | null) {
+      currentUserId = user?.id ?? null;
       if (!user) {
         setProfile(null);
         setReason(null);
@@ -183,24 +193,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    async function loadSession(client: SupabaseClient) {
+    async function clearRejectedSession(client: SupabaseClient): Promise<boolean> {
+      const { error: clearError } = await client.auth.signOut({ scope: "local" });
+      if (!active || clearError) return false;
+      currentUserId = null;
+      setSession(null);
+      setProfile(null);
+      setStatus("signedOut");
+      setReason(null);
+      return true;
+    }
+
+    async function applySession(nextSession: Session | null) {
+      if (!active) return;
+      setSession(nextSession);
+      setStatus(nextSession ? "signedIn" : "signedOut");
+      const nextUserId = nextSession?.user.id ?? null;
+      if (nextUserId !== currentUserId) {
+        await loadProfile(client, nextSession?.user ?? null);
+      }
+    }
+
+    async function loadSession() {
       const { data, error } = await client.auth.getSession();
       if (!active) return;
 
       if (error) {
-        if (isRejectedRefreshTokenError(error)) {
-          const { error: clearError } = await client.auth.signOut({ scope: "local" });
-          if (!active) return;
-
-          if (!clearError) {
-            setSession(null);
-            setProfile(null);
-            setStatus("signedOut");
-            setReason(null);
-            return;
-          }
-        }
-
+        if (isRejectedRefreshTokenError(error) && (await clearRejectedSession(client))) return;
         setSession(null);
         setProfile(null);
         setStatus("authError");
@@ -208,22 +227,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      setSession(data.session);
-      setStatus(data.session ? "signedIn" : "signedOut");
-      await loadProfile(client, data.session?.user ?? null);
+      await applySession(data.session);
     }
 
-    void loadSession(client);
+    async function reconcileForegroundSession() {
+      if (!active || document.visibilityState === "hidden" || reconcilePromise) return;
+
+      reconcilePromise = (async () => {
+        const { data, error } = await client.auth.getSession();
+        if (!active) return;
+
+        if (error) {
+          if (isRejectedRefreshTokenError(error) && (await clearRejectedSession(client))) return;
+          setStatus("authError");
+          setReason(error.message);
+          return;
+        }
+
+        let nextSession = data.session;
+        const expiresSoon =
+          nextSession?.expires_at !== undefined &&
+          nextSession.expires_at <= Math.floor(Date.now() / 1000) + REFRESH_EARLY_SECONDS;
+
+        if (expiresSoon) {
+          const { data: refreshed, error: refreshError } = await client.auth.refreshSession();
+          if (!active) return;
+          if (refreshError) {
+            if (
+              isRejectedRefreshTokenError(refreshError) &&
+              (await clearRejectedSession(client))
+            ) {
+              return;
+            }
+            setStatus("authError");
+            setReason(refreshError.message);
+            return;
+          }
+          nextSession = refreshed.session;
+        }
+
+        await applySession(nextSession);
+      })().finally(() => {
+        reconcilePromise = null;
+      });
+
+      await reconcilePromise;
+    }
+
+    void loadSession();
 
     const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
-      setStatus(nextSession ? "signedIn" : "signedOut");
-      void loadProfile(client, nextSession?.user ?? null);
+      void applySession(nextSession);
     });
+    const handleForeground = () => void reconcileForegroundSession();
+    document.addEventListener("visibilitychange", handleForeground);
+    window.addEventListener("focus", handleForeground);
 
     return () => {
       active = false;
       listener.subscription.unsubscribe();
+      document.removeEventListener("visibilitychange", handleForeground);
+      window.removeEventListener("focus", handleForeground);
     };
   }, []);
 
@@ -272,18 +336,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const safeReturnTo = sanitizeAuthReturnTo(returnTo, "/more");
-      const callbackUrl = new URL("/auth/callback", window.location.origin);
-      callbackUrl.searchParams.set("returnTo", safeReturnTo);
+      const native = isNativeRawajApp();
+      const callbackUrl = createAuthCallbackUrl(safeReturnTo);
 
-      const { error } = await client.auth.signInWithOAuth({
+      const { data, error } = await client.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: callbackUrl.toString(),
+          redirectTo: callbackUrl,
+          skipBrowserRedirect: native,
         },
       });
 
       if (error) return { error: error.message };
-      return { error: null };
+      if (!native) return { error: null };
+      if (!data.url) return { error: "تعذر تجهيز رابط تسجيل الدخول باستخدام Google." };
+
+      try {
+        await openExternalUrl(data.url);
+        return { error: null };
+      } catch (openError) {
+        return {
+          error:
+            openError instanceof Error
+              ? openError.message
+              : "تعذر فتح متصفح تسجيل الدخول باستخدام Google.",
+        };
+      }
     };
 
     const permissions = effectiveRolePermissions(profile);
@@ -318,5 +396,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [profile, reason, session, status]);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      <NativeAppRuntime />
+      {children}
+    </AuthContext.Provider>
+  );
 }
