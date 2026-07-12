@@ -27,8 +27,8 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install matching Capacitor plugins
-        run: npm install --save-exact @capacitor/app@8.4.1 @capacitor/browser@8.4.1
+      - name: Install Capacitor native auth plugins
+        run: npm install --save-exact @capacitor/app@8.1.0 @capacitor/browser@8.0.3
 
       - name: Remove one-time workflow
         run: rm .github/workflows/install-native-auth-plugins-once.yml
