@@ -4,6 +4,8 @@ const fallbackSiteUrl = "https://rawa-j.com";
 const defaultTitle = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
 const defaultDescription =
   "سوق إعلانات مبوبة في سوريا لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة آمنة ومنظمة.";
+const defaultSocialImage = "/brand/rawaj-mark-transparent-512.png";
+const siteName = "RAWAJ / رواج";
 
 type OgType = "website" | "article" | "profile";
 
@@ -46,8 +48,7 @@ export function createSeo(options: SeoOptions = {}) {
   const title = options.title?.trim() || defaultTitle;
   const description = plainText(options.description || defaultDescription);
   const url = absoluteUrl(options.path ?? "/");
-  const image = options.image ? absoluteUrl(options.image) : null;
-  const twitterCard = image ? "summary_large_image" : "summary";
+  const image = absoluteUrl(options.image || defaultSocialImage);
 
   return {
     meta: [
@@ -57,11 +58,16 @@ export function createSeo(options: SeoOptions = {}) {
       { property: "og:description", content: description },
       { property: "og:type", content: options.type ?? "website" },
       { property: "og:url", content: url },
-      ...(image ? [{ property: "og:image", content: image }] : []),
-      { name: "twitter:card", content: twitterCard },
+      { property: "og:site_name", content: siteName },
+      { property: "og:locale", content: "ar_SY" },
+      { property: "og:locale:alternate", content: "en_US" },
+      { property: "og:image", content: image },
+      { property: "og:image:alt", content: `${title} — ${siteName}` },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: title },
       { name: "twitter:description", content: description },
-      ...(image ? [{ name: "twitter:image", content: image }] : []),
+      { name: "twitter:image", content: image },
+      { name: "twitter:image:alt", content: `${title} — ${siteName}` },
       ...(options.noindex ? [{ name: "robots", content: "noindex, nofollow" }] : []),
     ],
     links: [{ rel: "canonical", href: url }],
@@ -78,14 +84,14 @@ export function buildSiteStructuredData() {
       {
         "@type": "Organization",
         "@id": organizationId,
-        name: "RAWAJ / رواج",
+        name: siteName,
         url: absoluteUrl("/"),
         logo: absoluteUrl("/brand/rawaj-mark-transparent-192.png"),
       },
       {
         "@type": "WebSite",
         "@id": websiteId,
-        name: "RAWAJ / رواج",
+        name: siteName,
         url: absoluteUrl("/"),
         inLanguage: ["ar", "en"],
         publisher: { "@id": organizationId },
