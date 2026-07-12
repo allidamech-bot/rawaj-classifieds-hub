@@ -189,6 +189,9 @@ jobs:
       - name: Launch readiness Batch 2 contract
         run: npm run test:launch-readiness-batch-2
 
+      - name: Launch readiness Batch 4 contract
+        run: npm run test:launch-readiness-batch-4
+
       - name: Desktop Experience V1 contract
         run: node --test scripts/desktop-experience-v1.test.mjs
 

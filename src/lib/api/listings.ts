@@ -40,6 +40,7 @@ import {
 import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
 import { isListingPastExpiry, publicListingExpiryFilter } from "@/lib/api/listing-expiry";
 import { publicListingSelect } from "@/lib/api/public-fields";
+import { selectPrimaryListingImages } from "@/lib/api/primary-listing-images";
 import { buildListingImagePath, listingImagesBucket, validateImageFile } from "@/lib/api/storage";
 
 const signedImageUrlExpiresInSeconds = 900;
@@ -488,7 +489,7 @@ async function readListingImagesByListingIds(
     .order("sort_order");
 
   if (error) return [];
-  return signListingImages(client, ((data ?? []) as Record<string, unknown>[]).map(mapImage));
+  return ((data ?? []) as Record<string, unknown>[]).map(mapImage);
 }
 
 export async function hydrateListingsWithPrimaryImages(
@@ -503,16 +504,15 @@ export async function hydrateListingsWithPrimaryImages(
   );
   if (images.length === 0) return listings;
 
-  const firstImageByListing = new Map<string, ListingImage>();
-  for (const image of images) {
-    if (!firstImageByListing.has(image.listingId)) {
-      firstImageByListing.set(image.listingId, image);
-    }
-  }
+  const primaryImages = selectPrimaryListingImages(images);
+  const signedPrimaryImages = await signListingImages(client, primaryImages);
+  const primaryImageByListing = new Map(
+    signedPrimaryImages.map((image) => [image.listingId, image] as const),
+  );
 
   return listings.map((listing) => ({
     ...listing,
-    primaryImageUrl: firstImageByListing.get(listing.id)?.publicUrl ?? null,
+    primaryImageUrl: primaryImageByListing.get(listing.id)?.publicUrl ?? null,
   }));
 }
 
