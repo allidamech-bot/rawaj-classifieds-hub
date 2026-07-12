@@ -83,7 +83,7 @@ export function SearchResultsToolbar({
   text,
 }: SearchResultsToolbarProps) {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
-  const [recentSearches, setRecentSearches] = useState<string[]>(readRecentSearches);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   useEffect(() => {
     function focusSearch(event: KeyboardEvent) {
@@ -92,6 +92,7 @@ export function SearchResultsToolbar({
         target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
       if (event.key === "/" && !editable) {
         event.preventDefault();
+        setRecentSearches(readRecentSearches());
         searchInputRef.current?.focus();
       }
     }
@@ -140,6 +141,7 @@ export function SearchResultsToolbar({
           <input
             ref={searchInputRef}
             value={query}
+            onFocus={() => setRecentSearches(readRecentSearches())}
             onChange={(event) => onQueryChange(event.target.value)}
             onBlur={() => rememberSearch(query)}
             onKeyDown={(event) => {
