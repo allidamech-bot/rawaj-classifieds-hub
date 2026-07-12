@@ -1,0 +1,59 @@
+name: Fix Batch 5 lint
+
+on:
+  push:
+    branches:
+      - agent/launch-readiness-batch-5
+    paths:
+      - .github/workflows/fix-batch5-lint.yml
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
+    paths:
+      - .github/workflows/fix-batch5-lint.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/launch-readiness-batch-5
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fix and verify Batch 5 source
+        run: |
+          npx eslint --fix src/server.ts scripts/launch-readiness-batch-5.test.mjs
+          npx prettier --write package.json
+          npx eslint --quiet src/server.ts scripts/launch-readiness-batch-5.test.mjs
+
+      - name: Run focused security contracts
+        run: |
+          npm run test:launch-readiness-batch-5
+          npm run test:public-data-security
+          node scripts/admin-security-regression.mjs
+          npm run typecheck -- --pretty false
+
+      - name: Commit source fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/server.ts scripts/launch-readiness-batch-5.test.mjs package.json
+          git diff --cached --quiet || git commit -m "Fix Batch 5 lint findings"
+          git push origin HEAD:agent/launch-readiness-batch-5
