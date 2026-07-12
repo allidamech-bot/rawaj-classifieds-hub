@@ -34,9 +34,11 @@ import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ListingsIndexRouteImport } from './routes/listings.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as SyriaSlugRouteImport } from './routes/syria.$slug'
 import { Route as SellerIdRouteImport } from './routes/seller.$id'
 import { Route as ProfileListingsRouteImport } from './routes/profile/listings'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
+import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminVerificationsRouteImport } from './routes/admin.verifications'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -178,6 +180,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const SyriaSlugRoute = SyriaSlugRouteImport.update({
+  id: '/syria/$slug',
+  path: '/syria/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SellerIdRoute = SellerIdRouteImport.update({
   id: '/seller/$id',
   path: '/seller/$id',
@@ -192,6 +199,11 @@ const ListingsIdRoute = ListingsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ListingsRoute,
+} as any)
+const CategorySlugRoute = CategorySlugRouteImport.update({
+  id: '/category/$slug',
+  path: '/category/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
@@ -307,9 +319,11 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/category/$slug': typeof CategorySlugRoute
   '/listings/$id': typeof ListingsIdRoute
   '/profile/listings': typeof ProfileListingsRouteWithChildren
   '/seller/$id': typeof SellerIdRoute
+  '/syria/$slug': typeof SyriaSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/listings/': typeof ListingsIndexRoute
   '/profile/listings/$id': typeof ProfileListingsIdRoute
@@ -350,9 +364,11 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/category/$slug': typeof CategorySlugRoute
   '/listings/$id': typeof ListingsIdRoute
   '/profile/listings': typeof ProfileListingsRouteWithChildren
   '/seller/$id': typeof SellerIdRoute
+  '/syria/$slug': typeof SyriaSlugRoute
   '/admin': typeof AdminIndexRoute
   '/listings': typeof ListingsIndexRoute
   '/profile/listings/$id': typeof ProfileListingsIdRoute
@@ -396,9 +412,11 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/category/$slug': typeof CategorySlugRoute
   '/listings/$id': typeof ListingsIdRoute
   '/profile/listings': typeof ProfileListingsRouteWithChildren
   '/seller/$id': typeof SellerIdRoute
+  '/syria/$slug': typeof SyriaSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/listings/': typeof ListingsIndexRoute
   '/profile/listings/$id': typeof ProfileListingsIdRoute
@@ -443,9 +461,11 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/verifications'
     | '/auth/callback'
+    | '/category/$slug'
     | '/listings/$id'
     | '/profile/listings'
     | '/seller/$id'
+    | '/syria/$slug'
     | '/admin/'
     | '/listings/'
     | '/profile/listings/$id'
@@ -486,9 +506,11 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/verifications'
     | '/auth/callback'
+    | '/category/$slug'
     | '/listings/$id'
     | '/profile/listings'
     | '/seller/$id'
+    | '/syria/$slug'
     | '/admin'
     | '/listings'
     | '/profile/listings/$id'
@@ -531,9 +553,11 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/verifications'
     | '/auth/callback'
+    | '/category/$slug'
     | '/listings/$id'
     | '/profile/listings'
     | '/seller/$id'
+    | '/syria/$slug'
     | '/admin/'
     | '/listings/'
     | '/profile/listings/$id'
@@ -564,7 +588,9 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   VerificationRoute: typeof VerificationRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  CategorySlugRoute: typeof CategorySlugRoute
   SellerIdRoute: typeof SellerIdRoute
+  SyriaSlugRoute: typeof SyriaSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -744,6 +770,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/syria/$slug': {
+      id: '/syria/$slug'
+      path: '/syria/$slug'
+      fullPath: '/syria/$slug'
+      preLoaderRoute: typeof SyriaSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/seller/$id': {
       id: '/seller/$id'
       path: '/seller/$id'
@@ -764,6 +797,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/listings/$id'
       preLoaderRoute: typeof ListingsIdRouteImport
       parentRoute: typeof ListingsRoute
+    }
+    '/category/$slug': {
+      id: '/category/$slug'
+      path: '/category/$slug'
+      fullPath: '/category/$slug'
+      preLoaderRoute: typeof CategorySlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -971,7 +1011,9 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   VerificationRoute: VerificationRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  CategorySlugRoute: CategorySlugRoute,
   SellerIdRoute: SellerIdRoute,
+  SyriaSlugRoute: SyriaSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
