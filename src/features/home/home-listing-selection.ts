@@ -21,7 +21,11 @@ export function selectDiverseListings<T extends HomeListingCandidate>(
   const categoryCounts = new Map<string, number>();
   const stableSoftLimit = Math.max(1, Math.floor(softCategoryLimit));
 
-  for (let threshold = 1; threshold <= stableSoftLimit && selected.length < targetSize; threshold += 1) {
+  for (
+    let threshold = 1;
+    threshold <= stableSoftLimit && selected.length < targetSize;
+    threshold += 1
+  ) {
     for (const listing of listings) {
       if (selected.length >= targetSize) break;
       if (selectedIds.has(listing.id)) continue;
