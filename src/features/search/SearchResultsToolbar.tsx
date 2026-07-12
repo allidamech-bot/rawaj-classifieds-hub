@@ -83,11 +83,7 @@ export function SearchResultsToolbar({
   text,
 }: SearchResultsToolbarProps) {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
-
-  useEffect(() => {
-    setRecentSearches(readRecentSearches());
-  }, []);
+  const [recentSearches, setRecentSearches] = useState<string[]>(readRecentSearches);
 
   useEffect(() => {
     function focusSearch(event: KeyboardEvent) {
