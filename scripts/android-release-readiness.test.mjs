@@ -15,7 +15,7 @@ const [
   nativePlugin,
   nativeErrorPage,
   buildGradle,
-  qualityGate,
+  androidWorkflow,
 ] = await Promise.all([
   readFile(new URL("../src/lib/auth.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/auth.callback.tsx", import.meta.url), "utf8"),
@@ -38,7 +38,7 @@ const [
   ),
   readFile(new URL("../public/native-error.html", import.meta.url), "utf8"),
   readFile(new URL("../android/app/build.gradle", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  readFile(new URL("../.github/workflows/android-release-readiness.yml", import.meta.url), "utf8"),
 ]);
 
 test("Google OAuth uses a PKCE callback owned by the Android app", () => {
@@ -126,10 +126,10 @@ test("Play identity and version remain unchanged during readiness work", () => {
   assert.match(buildGradle, /versionName "1\.0\.3"/);
 });
 
-test("Quality Gate validates both the web bundle and native Android artifacts", () => {
-  assert.match(qualityGate, /Android release readiness contract/);
-  assert.match(qualityGate, /npm run test:android-release-readiness/);
-  assert.match(qualityGate, /actions\/setup-java@v4/);
-  assert.match(qualityGate, /npx cap sync android/);
-  assert.match(qualityGate, /\.\/gradlew assembleDebug bundleRelease --no-daemon/);
+test("Android CI validates the web bundle and native artifacts before approval", () => {
+  assert.match(androidWorkflow, /Android release readiness contract/);
+  assert.match(androidWorkflow, /npm run test:android-release-readiness/);
+  assert.match(androidWorkflow, /actions\/setup-java@v4/);
+  assert.match(androidWorkflow, /npx cap sync android/);
+  assert.match(androidWorkflow, /\.\/gradlew assembleDebug bundleRelease --no-daemon/);
 });
