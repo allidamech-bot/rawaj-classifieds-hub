@@ -71,8 +71,8 @@ export function CategoryWorlds({ categories, language, text }: CategoryWorldsPro
           return (
             <Link
               key={category.id}
-              to="/listings"
-              search={{ category: category.id }}
+              to="/category/$slug"
+              params={{ slug: category.slug }}
               className="rawaj-category-world"
               data-size={index < 2 ? "large" : "compact"}
               data-tone={worldTones[index % worldTones.length]}
