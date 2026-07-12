@@ -60,7 +60,9 @@ function readRecentSearches() {
   try {
     const parsed = JSON.parse(window.localStorage.getItem(RECENT_SEARCHES_KEY) ?? "[]");
     return Array.isArray(parsed)
-      ? parsed.filter((item): item is string => typeof item === "string").slice(0, MAX_RECENT_SEARCHES)
+      ? parsed
+          .filter((item): item is string => typeof item === "string")
+          .slice(0, MAX_RECENT_SEARCHES)
       : [];
   } catch {
     return [];
@@ -189,7 +191,10 @@ export function SearchResultsToolbar({
       </div>
 
       {recentSearches.length > 0 ? (
-        <div className="rawaj-search-toolbar__recent" aria-label={text("عمليات البحث الأخيرة", "Recent searches")}>
+        <div
+          className="rawaj-search-toolbar__recent"
+          aria-label={text("عمليات البحث الأخيرة", "Recent searches")}
+        >
           <History aria-hidden="true" />
           <span>{text("الأخيرة", "Recent")}</span>
           <div>
@@ -245,7 +250,11 @@ export function SearchResultsToolbar({
           </button>
         </div>
 
-        <Link to="/saved-searches" search={emptySavedSearchParams} className="rawaj-search-toolbar__saved">
+        <Link
+          to="/saved-searches"
+          search={emptySavedSearchParams}
+          className="rawaj-search-toolbar__saved"
+        >
           <Bookmark aria-hidden="true" />
           <span>{text("عمليات البحث", "Saved searches")}</span>
         </Link>
