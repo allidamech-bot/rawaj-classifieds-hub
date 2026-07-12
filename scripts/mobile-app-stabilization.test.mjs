@@ -18,7 +18,10 @@ const [
   readFile(new URL("../src/routes/index.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/native/NativePullToRefresh.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/lib/use-online-presence.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/mobile-app-stabilization.css", import.meta.url), "utf8"),

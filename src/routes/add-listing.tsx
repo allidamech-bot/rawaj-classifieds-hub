@@ -1511,7 +1511,10 @@ function AddListingPage() {
                             >
                               {text("المحتوى المحظور", "Prohibited content")}
                             </Link>
-                            <Link to="/privacy" className="text-primary underline underline-offset-4">
+                            <Link
+                              to="/privacy"
+                              className="text-primary underline underline-offset-4"
+                            >
                               {text("سياسة الخصوصية", "Privacy Policy")}
                             </Link>
                           </div>

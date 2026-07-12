@@ -73,8 +73,7 @@ function ChatsPage() {
     [conversations, search.conversation],
   );
   const selectedConversation =
-    targetResolution.kind === "selected" ||
-    (isDesktop && targetResolution.kind === "default")
+    targetResolution.kind === "selected" || (isDesktop && targetResolution.kind === "default")
       ? targetResolution.conversation
       : null;
   const missingConversationTarget = targetResolution.kind === "missing";
@@ -89,10 +88,7 @@ function ChatsPage() {
       ].some((value) => value.toLocaleLowerCase(language === "ar" ? "ar" : "en").includes(query)),
     );
   }, [conversationQuery, conversations, language]);
-  const { onlineUserIds } = useOnlinePresence(
-    auth.profile?.id,
-    auth.status === "signedIn",
-  );
+  const { onlineUserIds } = useOnlinePresence(auth.profile?.id, auth.status === "signedIn");
 
   useConversationMessagesRealtime({
     conversationId: selectedConversation?.id ?? null,
@@ -630,22 +626,10 @@ function ChatsPage() {
   );
 }
 
-function Avatar({
-  name,
-  url,
-  online,
-}: {
-  name: string;
-  url: string | null;
-  online: boolean;
-}) {
+function Avatar({ name, url, online }: { name: string; url: string | null; online: boolean }) {
   return (
     <span className="rawaj-chat-avatar" data-online={online}>
-      {url ? (
-        <img src={url} alt={name} loading="lazy" decoding="async" />
-      ) : (
-        name.slice(0, 1)
-      )}
+      {url ? <img src={url} alt={name} loading="lazy" decoding="async" /> : name.slice(0, 1)}
       <i aria-hidden="true" />
     </span>
   );
