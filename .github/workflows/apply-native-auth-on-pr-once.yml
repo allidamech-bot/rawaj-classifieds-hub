@@ -28,29 +28,53 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Apply native auth release patch
-        run: python scripts/apply-native-auth-release-audit.py
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Format and validate
+      - name: Apply, format, and validate
+        id: audit
+        shell: bash
         run: |
-          npx eslint --fix src/lib/native-auth.ts src/lib/auth.tsx src/routes/login.tsx scripts/native-mobile-auth.test.mjs
-          npm run test:native-mobile-auth
+          set +e
+          {
+            python scripts/apply-native-auth-release-audit.py &&
+            npm ci &&
+            npx eslint --fix src/lib/native-auth.ts src/lib/auth.tsx src/routes/login.tsx scripts/native-mobile-auth.test.mjs &&
+            npm run test:native-mobile-auth
+          } 2>&1 | tee /tmp/native-auth-pr-audit.log
+          status=${PIPESTATUS[0]}
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
 
-      - name: Remove temporary audit machinery
+      - name: Record result
+        shell: bash
         run: |
-          rm scripts/apply-native-auth-release-audit.py
-          rm .github/workflows/apply-native-auth-release-audit-once.yml
-          rm .github/workflows/apply-native-auth-release-audit-retry-once.yml
-          rm .github/workflows/apply-native-auth-on-pr-once.yml
+          status="${{ steps.audit.outputs.status }}"
+          if [ "$status" = "0" ]; then
+            {
+              echo "PASS"
+              echo "Native auth patch, formatting, and contract validation completed successfully."
+            } > native-auth-pr-audit-result.txt
+            rm scripts/apply-native-auth-release-audit.py
+            rm .github/workflows/apply-native-auth-release-audit-once.yml
+            rm .github/workflows/apply-native-auth-release-audit-retry-once.yml
+            rm .github/workflows/apply-native-auth-on-pr-once.yml
+          else
+            {
+              echo "FAIL"
+              echo "Native auth PR audit exited with status $status."
+              echo
+              echo "Last 220 log lines:"
+              tail -n 220 /tmp/native-auth-pr-audit.log
+            } > native-auth-pr-audit-result.txt
+          fi
 
-      - name: Commit implementation
+      - name: Commit implementation and diagnostics
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Fix native authentication return flow"
+          git commit -m "Record native authentication PR audit"
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
+
+      - name: Enforce result
+        if: steps.audit.outputs.status != '0'
+        run: exit 1
