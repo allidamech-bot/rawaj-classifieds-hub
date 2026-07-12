@@ -41,9 +41,24 @@ jobs:
       - name: Apply implementation patch
         run: node scripts/apply-launch-readiness-batch-2.mjs
 
+      - name: Evolve auth account compatibility contract
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'scripts/auth-account-v2.test.mjs';
+          let source = fs.readFileSync(path, 'utf8');
+          const before = '  assert.match(profile, /to="\\/support"/);';
+          const after = '  assert.match(profile, /createAccountDeletionRequest/);\n  assert.match(profile, /changeOwnPassword/);';
+          if (!source.includes(before)) throw new Error('Legacy support-link contract not found');
+          source = source.replace(before, after);
+          fs.writeFileSync(path, source);
+          NODE
+
       - name: Format and lint Batch 2 changes
         run: |
           npx eslint --fix \
+            scripts/auth-account-v2.test.mjs \
             scripts/launch-readiness-batch-2.test.mjs \
             src/lib/auth-context.ts \
             src/lib/auth.tsx \
@@ -57,6 +72,7 @@ jobs:
             src/routes/notifications.tsx
           npx prettier --write package.json .github/workflows/quality-gate.yml
           npx eslint --quiet \
+            scripts/auth-account-v2.test.mjs \
             scripts/launch-readiness-batch-2.test.mjs \
             src/lib/auth-context.ts \
             src/lib/auth.tsx \
