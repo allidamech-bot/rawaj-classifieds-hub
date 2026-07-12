@@ -8,8 +8,10 @@ const [
   chats,
   communication,
   presence,
+  unreadActivity,
   addListing,
   styles,
+  chatStyles,
   androidStyles,
   mainActivity,
   launcherAdaptive,
@@ -23,8 +25,10 @@ const [
     "utf8",
   ),
   readFile(new URL("../src/lib/use-online-presence.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/unread-activity.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/mobile-app-stabilization.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/chat-native-v3.css", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/res/values/styles.xml", import.meta.url), "utf8"),
   readFile(
     new URL(
@@ -51,20 +55,28 @@ test("native home supports pull-to-refresh without recreating the Activity", () 
   assert.match(pullToRefresh, /REFRESH_THRESHOLD = 64/);
 });
 
-test("mobile chats open from the participant list and never collapse into a blank view", () => {
+test("mobile chats are inbox-first and never render an empty message canvas", () => {
   assert.doesNotMatch(chats, /search: \{ conversation: result\.data\[0\]\.id \}/);
-  assert.match(chats, /rawaj-chat-state/);
+  assert.match(chats, /mobileThreadOpen/);
+  assert.match(chats, /!mobileThreadOpen \?/);
+  assert.match(chats, /rawaj-chat-inbox/);
+  assert.match(chats, /rawaj-chat-thread/);
+  assert.match(chats, /returnToConversationList/);
   assert.match(chats, /onlineUserIds\.has/);
   assert.match(chats, /messagesEndRef/);
   assert.match(communication, /Open conversation with/);
-  assert.match(styles, /rawaj-route-chats/);
+  assert.match(chatStyles, /html\[data-chat-thread-open="true"\] \.rawaj-mobile-dock/);
 });
 
-test("chat presence and incoming messages are live when Supabase realtime is available", () => {
+test("chat presence incoming messages and unread badges update through Supabase realtime", () => {
   assert.match(presence, /presenceState\(\)/);
   assert.match(presence, /channel\.track/);
+  assert.match(presence, /useConversationActivityRealtime/);
   assert.match(presence, /table: "conversation_messages"/);
   assert.match(presence, /event: "INSERT"/);
+  assert.match(unreadActivity, /table: "notifications"/);
+  assert.match(unreadActivity, /recipient_id=eq\.\$\{profileId\}/);
+  assert.match(communication, /rawaj-conversation-summary__unread/);
 });
 
 test("listing submission requires explicit, auditable legal acceptance", () => {
