@@ -1,12 +1,6 @@
 name: Apply launch readiness Batch 4
 
 on:
-  push:
-    branches:
-      - agent/launch-readiness-batch-4
-    paths:
-      - .github/workflows/apply-launch-readiness-batch-4.yml
-      - scripts/apply-launch-readiness-batch-4.mjs
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
     branches:
@@ -56,12 +50,17 @@ jobs:
             src/lib/api/primary-listing-images.ts \
             src/lib/api/references.ts
 
-      - name: Run focused performance regressions
-        run: |
-          npm run test:launch-readiness-batch-4
-          npm run test:home-ssr
-          node --test scripts/home-hydration-ad-media.test.mjs
-          npm run typecheck -- --pretty false
+      - name: Launch readiness Batch 4 contract
+        run: npm run test:launch-readiness-batch-4
+
+      - name: Home SSR compatibility
+        run: npm run test:home-ssr
+
+      - name: Home hydration and ad media compatibility
+        run: node --test scripts/home-hydration-ad-media.test.mjs
+
+      - name: Typecheck performance changes
+        run: npm run typecheck -- --pretty false
 
       - name: Commit source implementation
         run: |
