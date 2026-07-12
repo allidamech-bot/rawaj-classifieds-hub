@@ -230,6 +230,7 @@ function NotificationsPage() {
 
     const target = result.data;
     if (!target) return;
+    if (!notification.readAt) await markOne(notification.id);
 
     if (target.kind === "listing") {
       void navigate({ to: "/listings/$id", params: { id: target.listingId } });

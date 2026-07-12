@@ -102,7 +102,7 @@ export function StorefrontIdentityHero({
         <div className="rawaj-storefront-identity__topline">
           <span>
             {mode === "owner"
-              ? text("مساحة متجري", "My store workspace")
+              ? text("إدارة إعلاناتي", "My listings workspace")
               : text("واجهة على رواج", "RAWAJ storefront")}
           </span>
           {verified ? (

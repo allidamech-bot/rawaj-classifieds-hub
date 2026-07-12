@@ -36,3 +36,4 @@ export * from "@/lib/api/safety-cases";
 export * from "@/lib/api/safety-case-details";
 export * from "@/lib/api/owner-system-controls";
 export * from "@/lib/api/profile";
+export * from "@/lib/api/account-security";

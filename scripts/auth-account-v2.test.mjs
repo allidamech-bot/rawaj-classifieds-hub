@@ -45,7 +45,8 @@ test("account center shares identity, shortcuts, editor and safety while preserv
   assert.match(profile, /fetchCurrentUserListings/);
   assert.match(profile, /fetchMyVerificationRequests/);
   assert.match(profile, /auth\.signOut\(\)/);
-  assert.match(profile, /to="\/support"/);
+  assert.match(profile, /createAccountDeletionRequest/);
+  assert.match(profile, /changeOwnPassword/);
 });
 
 test("shared account components expose factual identity and protected navigation", () => {

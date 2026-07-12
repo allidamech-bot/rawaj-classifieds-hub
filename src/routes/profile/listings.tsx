@@ -118,17 +118,13 @@ function MyListingsPage() {
   if (auth.status !== "signedIn") {
     return (
       <>
-        <PageHeader
-          title={text("إعلاناتي / متجري", "My listings / store")}
-          to="/profile"
-          backMode="history"
-        />
+        <PageHeader title={text("إعلاناتي", "My listings")} to="/profile" backMode="history" />
         <main className="container-wide mobile-page-bottom pt-4">
           <Panel
             title={text("تسجيل الدخول مطلوب", "Login required")}
             body={text(
-              "سجل الدخول لعرض واجهة متجرك والإعلانات المرتبطة بحسابك.",
-              "Log in to view your store and listings linked to your account.",
+              "سجل الدخول لإدارة الإعلانات المرتبطة بحسابك وعرض متجرك العام بصورة منفصلة.",
+              "Log in to manage listings linked to your account and open your public store separately.",
             )}
           />
         </main>
@@ -147,11 +143,7 @@ function MyListingsPage() {
 
   return (
     <>
-      <PageHeader
-        title={text("إعلاناتي / متجري", "My listings / store")}
-        to="/profile"
-        backMode="history"
-      />
+      <PageHeader title={text("إعلاناتي", "My listings")} to="/profile" backMode="history" />
       <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner container-wide mobile-page-bottom space-y-5 pb-8 pt-3 sm:pt-5">
         <StorefrontIdentityHero
           mode="owner"
