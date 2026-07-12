@@ -1,0 +1,1 @@
+This phase is intentionally interaction-focused: faster search access, query recovery, local recent-search reuse, active-state clarity, responsive polish, and permanent regression coverage. It does not add unsupported autocomplete data, map functionality, ranking claims, or backend persistence.

@@ -1,6 +1,20 @@
 import { Link } from "@tanstack/react-router";
-import { Bookmark, Filter, Grid2X2, List, Map, Search, SlidersHorizontal } from "lucide-react";
+import {
+  Bookmark,
+  Filter,
+  Grid2X2,
+  History,
+  List,
+  Map,
+  Search,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import type { ListingsSort, ListingsView } from "@/features/listings/listings-search-schema";
+
+const RECENT_SEARCHES_KEY = "rawaj_recent_listing_searches_v1";
+const MAX_RECENT_SEARCHES = 5;
 
 const emptySavedSearchParams = {
   q: "",
@@ -41,6 +55,20 @@ interface SearchResultsToolbarProps {
   text: (ar: string, en: string) => string;
 }
 
+function readRecentSearches() {
+  if (typeof window === "undefined") return [];
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(RECENT_SEARCHES_KEY) ?? "[]");
+    return Array.isArray(parsed)
+      ? parsed
+          .filter((item): item is string => typeof item === "string")
+          .slice(0, MAX_RECENT_SEARCHES)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 export function SearchResultsToolbar({
   title,
   pathLabel,
@@ -56,9 +84,37 @@ export function SearchResultsToolbar({
   onOpenFilters,
   text,
 }: SearchResultsToolbarProps) {
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  useEffect(() => {
+    function focusSearch(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const editable =
+        target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
+      if (event.key === "/" && !editable) {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    }
+    window.addEventListener("keydown", focusSearch);
+    return () => window.removeEventListener("keydown", focusSearch);
+  }, []);
+
+  function rememberSearch(value: string) {
+    const normalized = value.trim();
+    if (normalized.length < 2 || typeof window === "undefined") return;
+    const next = [normalized, ...recentSearches.filter((item) => item !== normalized)].slice(
+      0,
+      MAX_RECENT_SEARCHES,
+    );
+    setRecentSearches(next);
+    window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+  }
+
   return (
     <section
-      className="rawaj-search-toolbar"
+      className="rawaj-search-toolbar rawaj-search-toolbar-v2"
       aria-labelledby="rawaj-results-title"
       data-state-contract="url-backed"
       data-view={view}
@@ -69,7 +125,7 @@ export function SearchResultsToolbar({
           <h1 id="rawaj-results-title">{title}</h1>
           {pathLabel ? <span>{pathLabel}</span> : null}
         </div>
-        <strong aria-live="polite" aria-atomic="true">
+        <strong aria-live="polite" aria-atomic="true" data-loading={loading || undefined}>
           {loading
             ? text("جارٍ التحميل", "Loading")
             : text(`${resultCount} نتيجة`, `${resultCount} results`)}
@@ -84,24 +140,72 @@ export function SearchResultsToolbar({
         <label className="rawaj-search-toolbar__search">
           <Search aria-hidden="true" />
           <input
+            ref={searchInputRef}
             value={query}
+            onFocus={() => setRecentSearches(readRecentSearches())}
             onChange={(event) => onQueryChange(event.target.value)}
+            onBlur={() => rememberSearch(query)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") rememberSearch(query);
+            }}
             placeholder={text("ابحث ضمن النتائج...", "Search within results...")}
             aria-label={text("بحث في الإعلانات", "Search listings")}
+            aria-describedby="rawaj-search-shortcut"
+            list="rawaj-recent-searches"
             type="search"
           />
+          {query ? (
+            <button
+              type="button"
+              className="rawaj-search-toolbar__clear-query"
+              onClick={() => {
+                onQueryChange("");
+                searchInputRef.current?.focus();
+              }}
+              aria-label={text("مسح البحث", "Clear search")}
+            >
+              <X aria-hidden="true" />
+            </button>
+          ) : (
+            <kbd id="rawaj-search-shortcut" aria-label={text("اختصار البحث", "Search shortcut")}>
+              /
+            </kbd>
+          )}
+          <datalist id="rawaj-recent-searches">
+            {recentSearches.map((item) => (
+              <option key={item} value={item} />
+            ))}
+          </datalist>
         </label>
         <button
           type="button"
           onClick={onOpenFilters}
           className="rawaj-search-toolbar__filter"
           aria-label={text("فتح الفلاتر", "Open filters")}
+          aria-haspopup="dialog"
         >
           <SlidersHorizontal aria-hidden="true" />
           <span>{text("فلترة", "Filters")}</span>
           {activeFilterCount > 0 ? <b>{activeFilterCount}</b> : null}
         </button>
       </div>
+
+      {recentSearches.length > 0 ? (
+        <div
+          className="rawaj-search-toolbar__recent"
+          aria-label={text("عمليات البحث الأخيرة", "Recent searches")}
+        >
+          <History aria-hidden="true" />
+          <span>{text("الأخيرة", "Recent")}</span>
+          <div>
+            {recentSearches.map((item) => (
+              <button key={item} type="button" onClick={() => onQueryChange(item)}>
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div className="rawaj-search-toolbar__controls">
         <label className="rawaj-search-toolbar__sort">
