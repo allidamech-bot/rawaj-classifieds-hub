@@ -1,6 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const PRODUCTION_SERVER_URL = "https://rawa-j.com";
+const bundledPreview = process.env.RAWAJ_ANDROID_BUNDLED_PREVIEW === "1";
 const requestedServerUrl = process.env.RAWAJ_ANDROID_SERVER_URL?.trim();
 
 function resolveAndroidServerUrl() {
@@ -23,12 +24,19 @@ const config: CapacitorConfig = {
   appName: "RAWAJ",
   webDir: ".output/public",
   backgroundColor: "#080605",
-  server: {
-    url: serverUrl,
-    cleartext: false,
-    allowNavigation,
-    errorPath: "native-error.html",
-  },
+  server: bundledPreview
+    ? {
+        androidScheme: "https",
+        cleartext: false,
+        allowNavigation: ["rawa-j.com", "*.rawa-j.com"],
+        errorPath: "native-error.html",
+      }
+    : {
+        url: serverUrl,
+        cleartext: false,
+        allowNavigation,
+        errorPath: "native-error.html",
+      },
 };
 
 export default config;
