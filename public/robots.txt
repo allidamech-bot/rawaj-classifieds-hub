@@ -10,6 +10,9 @@ Disallow: /profile
 Disallow: /profile/
 Disallow: /add-listing
 Disallow: /login
+Disallow: /reset-password
+Disallow: /auth/callback
+Disallow: /verification
 Disallow: /favorites
 Disallow: /saved-searches
 Disallow: /promotion
