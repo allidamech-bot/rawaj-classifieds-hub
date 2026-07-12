@@ -132,6 +132,8 @@ test("Play identity and version remain unchanged during readiness work", () => {
 test("Android CI validates the web bundle and native artifacts before approval", () => {
   assert.match(androidWorkflow, /Android release readiness contract/);
   assert.match(androidWorkflow, /npm run test:android-release-readiness/);
+  assert.match(androidWorkflow, /Mobile app stabilization contract/);
+  assert.match(androidWorkflow, /npm run test:mobile-app-stabilization/);
   assert.match(androidWorkflow, /actions\/setup-java@v4/);
   assert.match(androidWorkflow, /npx cap sync android/);
   assert.match(androidWorkflow, /\.\/gradlew assembleDebug bundleRelease --no-daemon/);
