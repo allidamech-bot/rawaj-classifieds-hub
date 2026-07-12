@@ -17,7 +17,9 @@ const publicRoutes = [
 const protectedRoutes = ["/add-listing", "/profile", "/favorites", "/admin"] as const;
 
 function isExpectedLocalRequestFailure(url: string, failure: string) {
-  return failure.includes("ERR_ABORTED") || (failure === "csp" && url.includes("va.vercel-scripts.com"));
+  return (
+    failure.includes("ERR_ABORTED") || (failure === "csp" && url.includes("va.vercel-scripts.com"))
+  );
 }
 
 async function openHealthyPage(page: Page, path: string) {
