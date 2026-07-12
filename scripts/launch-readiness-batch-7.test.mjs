@@ -2,23 +2,16 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [
-  capacitor,
-  manifest,
-  strings,
-  buildGradle,
-  rootGitignore,
-  androidGitignore,
-  qualityGate,
-] = await Promise.all([
-  readFile(new URL("../capacitor.config.ts", import.meta.url), "utf8"),
-  readFile(new URL("../android/app/src/main/AndroidManifest.xml", import.meta.url), "utf8"),
-  readFile(new URL("../android/app/src/main/res/values/strings.xml", import.meta.url), "utf8"),
-  readFile(new URL("../android/app/build.gradle", import.meta.url), "utf8"),
-  readFile(new URL("../.gitignore", import.meta.url), "utf8"),
-  readFile(new URL("../android/.gitignore", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
-]);
+const [capacitor, manifest, strings, buildGradle, rootGitignore, androidGitignore, qualityGate] =
+  await Promise.all([
+    readFile(new URL("../capacitor.config.ts", import.meta.url), "utf8"),
+    readFile(new URL("../android/app/src/main/AndroidManifest.xml", import.meta.url), "utf8"),
+    readFile(new URL("../android/app/src/main/res/values/strings.xml", import.meta.url), "utf8"),
+    readFile(new URL("../android/app/build.gradle", import.meta.url), "utf8"),
+    readFile(new URL("../.gitignore", import.meta.url), "utf8"),
+    readFile(new URL("../android/.gitignore", import.meta.url), "utf8"),
+    readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  ]);
 
 test("Capacitor uses the production RAWAJ origin without cleartext traffic", () => {
   assert.match(capacitor, /appId:\s*"com\.rawaj\.marketplace"/);
