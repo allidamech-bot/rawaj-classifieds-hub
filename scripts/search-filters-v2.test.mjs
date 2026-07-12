@@ -4,9 +4,15 @@ import test from "node:test";
 
 const [root, toolbar, css, gate] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/search/SearchResultsToolbar.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/search/SearchResultsToolbar.tsx", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/search-filters-v2.css", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  readFile(
+    new URL("../.github/workflows/quality-gate.yml", import.meta.url),
+    "utf8",
+  ),
 ]);
 
 test("Search and Filters V2 loads after V1 and before desktop overrides", () => {
@@ -39,7 +45,10 @@ test("V2 visual layer is responsive, safe-area aware, and reduced-motion safe", 
   assert.match(css, /env\(safe-area-inset-bottom\)/);
   assert.match(css, /@media \(max-width: 389px\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.doesNotMatch(css, /margin-left|margin-right|padding-left|padding-right/);
+  assert.doesNotMatch(
+    css,
+    /margin-left|margin-right|padding-left|padding-right/,
+  );
 });
 
 test("quality gate permanently runs Search and Filters V2 read-only", () => {
