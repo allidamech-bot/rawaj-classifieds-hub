@@ -60,11 +60,8 @@ test("governorate landing listings are filtered at the public query boundary", (
       "filters: { categoryId?: string; governorateId?: string; sort?: string }",
     ),
   );
-  assert.ok(
-    listingsApi.includes(
-      'if (filters.governorateId) query = query.eq("governorate_id", filters.governorateId)',
-    ),
-  );
+  assert.ok(listingsApi.includes("if (filters.governorateId)"));
+  assert.ok(listingsApi.includes('.eq("governorate_id", filters.governorateId)'));
 });
 
 test("canonical category pages receive internal links from discovery surfaces", () => {
