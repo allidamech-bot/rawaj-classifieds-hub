@@ -186,6 +186,9 @@ jobs:
       - name: Communication Center V2 contract
         run: node --test scripts/communication-center-v2.test.mjs
 
+      - name: Launch readiness Batch 2 contract
+        run: npm run test:launch-readiness-batch-2
+
       - name: Desktop Experience V1 contract
         run: node --test scripts/desktop-experience-v1.test.mjs
 

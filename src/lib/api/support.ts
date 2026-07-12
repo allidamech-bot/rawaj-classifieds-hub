@@ -56,6 +56,45 @@ export async function createSupportRequest(
   return { ok: true, data: mapSupportRequest(data as Record<string, unknown>) };
 }
 
+const ACCOUNT_DELETION_SUBJECT = "طلب حذف حساب رواج";
+
+export async function createAccountDeletionRequest(
+  userId: string | null,
+): Promise<ClassifiedsResult<SupportRequest>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لطلب حذف الحساب." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+  const { data: existing, error: existingError } = await clientResult.data
+    .from("support_requests")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("subject", ACCOUNT_DELETION_SUBJECT)
+    .in("status", ["new", "under_review"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existingError) {
+    return { ok: false, error: mapError(existingError, "account_deletion_request_lookup") };
+  }
+  if (existing) {
+    return { ok: true, data: mapSupportRequest(existing as Record<string, unknown>) };
+  }
+
+  return createSupportRequest(userId, {
+    type: "other",
+    subject: ACCOUNT_DELETION_SUBJECT,
+    message:
+      "أطلب حذف حسابي وبياناته الشخصية من منصة رواج. أفهم أن الإدارة ستراجع الطلب وتتحقق من الالتزامات والعمليات المفتوحة قبل تنفيذ الحذف الآمن.",
+  });
+}
+
 export async function fetchMySupportRequests(
   userId: string | null,
 ): Promise<ClassifiedsResult<SupportRequest[]>> {

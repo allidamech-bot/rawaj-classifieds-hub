@@ -211,8 +211,8 @@ export function AccountQuickLinks() {
       <AccountQuickLink
         to="/profile/listings"
         icon={FileSpreadsheet}
-        title={text("متجري", "My store")}
-        description={text("الإعلانات والحالات", "Listings and statuses")}
+        title={text("إعلاناتي", "My listings")}
+        description={text("الإدارة والحالات", "Management and statuses")}
       />
       <AccountQuickLink
         to="/chats"

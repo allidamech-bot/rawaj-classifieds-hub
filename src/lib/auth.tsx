@@ -30,6 +30,7 @@ const signedOutState: AuthContextValue = {
   canAccessOwnerControls: false,
   emailConfirmed: false,
   signOut: async () => ({ error: null }),
+  refreshProfile: async () => ({ error: null }),
   signInWithGoogle: async () => ({ error: null }),
 };
 
@@ -244,6 +245,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: null };
     };
 
+    const refreshProfile = async () => {
+      const client = supabase;
+      const user = session?.user ?? null;
+      if (!client || !user) {
+        return { error: unavailableReason ?? "يجب تسجيل الدخول لتحديث بيانات الحساب." };
+      }
+
+      try {
+        const nextProfile = await fetchProfile(client, user);
+        setProfile(nextProfile);
+        setReason(null);
+        setStatus("signedIn");
+        return { error: null };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "تعذّر تحديث بيانات الحساب.";
+        setReason(message);
+        return { error: message };
+      }
+    };
+
     const signInWithGoogle = async (returnTo?: string) => {
       const client = supabase;
       if (!client) {
@@ -275,6 +296,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         reason: unavailableReason,
         emailConfirmed: false,
         signOut,
+        refreshProfile,
         signInWithGoogle,
       };
     }
@@ -291,6 +313,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       canAccessOwnerControls: canAccessOwnerControls(profile),
       emailConfirmed: Boolean(session?.user?.email_confirmed_at),
       signOut,
+      refreshProfile,
       signInWithGoogle,
     };
   }, [profile, reason, session, status]);

@@ -4,12 +4,14 @@ import {
   BadgeCheck,
   Camera,
   FileSpreadsheet,
-  LifeBuoy,
+  KeyRound,
+  LockKeyhole,
   LogIn,
   LogOut,
   Pencil,
   Plus,
   ShieldCheck,
+  Trash2,
   User,
   XCircle,
 } from "lucide-react";
@@ -21,6 +23,8 @@ import {
   accountSectionIcons,
 } from "@/features/account/AccountExperience";
 import {
+  changeOwnPassword,
+  createAccountDeletionRequest,
   fetchCurrentUserListings,
   fetchMyVerificationRequests,
   removeProfileMedia,
@@ -73,6 +77,13 @@ function ProfilePage() {
   const [settingsPreferredContact, setSettingsPreferredContact] = useState("");
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsNotice, setSettingsNotice] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordNotice, setPasswordNotice] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deletionSaving, setDeletionSaving] = useState(false);
+  const [deletionNotice, setDeletionNotice] = useState("");
   const [mediaSaving, setMediaSaving] = useState<"avatar" | "cover" | null>(null);
   const [verificationRequests, setVerificationRequests] = useState<SellerVerificationRequest[]>([]);
   const [verificationLoading, setVerificationLoading] = useState(false);
@@ -104,6 +115,44 @@ function ProfilePage() {
     if (result.error) setLogoutError(result.error);
   }
 
+  async function handleChangePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPasswordNotice("");
+    if (newPassword !== confirmPassword) {
+      setPasswordNotice(text("كلمتا المرور غير متطابقتين.", "Passwords do not match."));
+      return;
+    }
+
+    setPasswordSaving(true);
+    const result = await changeOwnPassword(profileId ?? null, newPassword);
+    setPasswordSaving(false);
+    if (!result.ok) {
+      setPasswordNotice(result.error.message);
+      return;
+    }
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordNotice(text("تم تغيير كلمة المرور بنجاح.", "Password changed successfully."));
+  }
+
+  async function handleAccountDeletionRequest() {
+    setDeletionSaving(true);
+    setDeletionNotice("");
+    const result = await createAccountDeletionRequest(profileId ?? null);
+    setDeletionSaving(false);
+    if (!result.ok) {
+      setDeletionNotice(result.error.message);
+      return;
+    }
+    setDeleteConfirmOpen(false);
+    setDeletionNotice(
+      text(
+        "تم تسجيل طلب حذف الحساب. ستراجعه الإدارة قبل تنفيذ الحذف الآمن.",
+        "Your account deletion request was recorded and will be reviewed before secure deletion.",
+      ),
+    );
+  }
+
   async function handleSaveProfileBasics(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSettingsNotice("");
@@ -121,10 +170,18 @@ function ProfilePage() {
       preferredContactMethod: settingsPreferredContact || null,
     });
     setSettingsSaving(false);
+    if (!result.ok) {
+      setSettingsNotice(result.error.message);
+      return;
+    }
+    const refreshResult = await auth.refreshProfile();
     setSettingsNotice(
-      result.ok
-        ? text("تم حفظ معلومات الحساب.", "Account information saved.")
-        : result.error.message,
+      refreshResult.error
+        ? text(
+            "تم الحفظ، لكن تعذر تحديث العرض فوراً. أعد فتح الصفحة عند الحاجة.",
+            "Saved, but the view could not refresh immediately. Reopen the page if needed.",
+          )
+        : text("تم حفظ معلومات الحساب وتحديثها.", "Account information saved and refreshed."),
     );
   }
 
@@ -139,13 +196,18 @@ function ProfilePage() {
       oldPath: kind === "avatar" ? auth.profile?.avatarPath : auth.profile?.coverPath,
     });
     setMediaSaving(null);
+    if (!result.ok) {
+      setSettingsNotice(result.error.message);
+      return;
+    }
+    const refreshResult = await auth.refreshProfile();
     setSettingsNotice(
-      result.ok
+      refreshResult.error
         ? text(
-            "تم حفظ الصورة. قد تحتاج لتحديث الصفحة إذا لم تظهر فوراً.",
-            "Image saved. Refresh if it does not appear immediately.",
+            "تم حفظ الصورة، لكن تعذر تحديث العرض فوراً.",
+            "Image saved, but the view could not refresh immediately.",
           )
-        : result.error.message,
+        : text("تم حفظ الصورة وتحديث الحساب.", "Image saved and account refreshed."),
     );
   }
 
@@ -158,10 +220,18 @@ function ProfilePage() {
       kind === "avatar" ? auth.profile?.avatarPath : auth.profile?.coverPath,
     );
     setMediaSaving(null);
+    if (!result.ok) {
+      setSettingsNotice(result.error.message);
+      return;
+    }
+    const refreshResult = await auth.refreshProfile();
     setSettingsNotice(
-      result.ok
-        ? text("تمت إزالة الصورة من الحساب.", "Image removed from account.")
-        : result.error.message,
+      refreshResult.error
+        ? text(
+            "تمت إزالة الصورة، لكن تعذر تحديث العرض فوراً.",
+            "Image removed, but the view could not refresh immediately.",
+          )
+        : text("تمت إزالة الصورة وتحديث الحساب.", "Image removed and account refreshed."),
     );
   }
 
@@ -237,7 +307,7 @@ function ProfilePage() {
                 </a>
                 <Link to="/profile/listings">
                   <FileSpreadsheet className="h-4 w-4" />
-                  {text("متجري", "My store")}
+                  {text("إعلاناتي", "My listings")}
                 </Link>
                 <Link to="/verification">
                   <BadgeCheck className="h-4 w-4" />
@@ -266,8 +336,8 @@ function ProfilePage() {
           eyebrow={text("الهوية والتواصل", "Identity and contact")}
           title={text("معلومات الحساب", "Account information")}
           description={text(
-            "حدّث الصور والاسم والموقع ووسائل التواصل التي تستخدمها في متجرك وإعلاناتك.",
-            "Update the images, name, location, and contact methods used by your store and listings.",
+            "حدّث هوية حسابك ومعلوماته. تظهر واجهة المتجر العامة والإعلانات في مساحة منفصلة.",
+            "Update your account identity and details. Your public store and listings live in a separate workspace.",
           )}
           icon={accountSectionIcons.identity}
         >
@@ -410,6 +480,162 @@ function ProfilePage() {
           )}
         </AccountSection>
 
+        <AccountSection
+          eyebrow={text("الأمان والخصوصية", "Security and privacy")}
+          title={text("حماية الحساب والتحكم بالبيانات", "Account protection and data control")}
+          description={text(
+            "غيّر كلمة المرور وراجع طريقة ظهور بيانات التواصل واطلب حذف الحساب من مكان واحد.",
+            "Change your password, review contact visibility, and request account deletion from one place.",
+          )}
+          icon={accountSectionIcons.security}
+          tone="security"
+        >
+          {auth.status === "signedIn" ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <form
+                onSubmit={(event) => void handleChangePassword(event)}
+                className="rounded-2xl bg-muted-surface p-4 hairline"
+              >
+                <h3 className="inline-flex items-center gap-2 text-sm font-extrabold">
+                  <KeyRound className="h-4 w-4 text-primary" />
+                  {text("تغيير كلمة المرور", "Change password")}
+                </h3>
+                <div className="mt-3 grid gap-3">
+                  <label className="block">
+                    <span className="text-xs font-bold text-muted-foreground">
+                      {text("كلمة المرور الجديدة", "New password")}
+                    </span>
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      maxLength={72}
+                      required
+                      value={newPassword}
+                      onChange={(event) => setNewPassword(event.target.value)}
+                      className="input mt-1"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-xs font-bold text-muted-foreground">
+                      {text("تأكيد كلمة المرور", "Confirm password")}
+                    </span>
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      maxLength={72}
+                      required
+                      value={confirmPassword}
+                      onChange={(event) => setConfirmPassword(event.target.value)}
+                      className="input mt-1"
+                    />
+                  </label>
+                </div>
+                <button
+                  type="submit"
+                  disabled={passwordSaving}
+                  className="mt-3 inline-flex min-h-10 items-center justify-center rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground disabled:opacity-60"
+                >
+                  {passwordSaving
+                    ? text("جارٍ التغيير", "Changing")
+                    : text("حفظ كلمة المرور", "Save password")}
+                </button>
+                {passwordNotice ? (
+                  <p className="mt-3 rounded-xl bg-card p-3 text-xs font-semibold hairline">
+                    {passwordNotice}
+                  </p>
+                ) : null}
+              </form>
+
+              <div className="space-y-4">
+                <section className="rounded-2xl bg-muted-surface p-4 hairline">
+                  <h3 className="inline-flex items-center gap-2 text-sm font-extrabold">
+                    <LockKeyhole className="h-4 w-4 text-primary" />
+                    {text("خصوصية التواصل", "Contact privacy")}
+                  </h3>
+                  <p className="mt-2 text-xs leading-6 text-muted-foreground">
+                    {text(
+                      "رقم الهاتف وواتساب لا يظهران في صفحة البائع العامة. ظهور وسيلة التواصل يحدده صاحب الحساب داخل إعدادات كل إعلان.",
+                      "Phone and WhatsApp are not shown on the public seller page. Contact visibility is controlled per listing by the account owner.",
+                    )}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Link
+                      to="/profile/listings"
+                      className="inline-flex rounded-xl bg-card px-3 py-2 text-xs font-bold hairline"
+                    >
+                      {text("إدارة الإعلانات", "Manage listings")}
+                    </Link>
+                    <Link
+                      to="/notifications"
+                      className="inline-flex rounded-xl bg-card px-3 py-2 text-xs font-bold hairline"
+                    >
+                      {text("إعدادات التنبيهات", "Notification settings")}
+                    </Link>
+                  </div>
+                </section>
+
+                <section className="rounded-2xl bg-destructive/5 p-4 hairline">
+                  <h3 className="inline-flex items-center gap-2 text-sm font-extrabold text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                    {text("حذف الحساب", "Delete account")}
+                  </h3>
+                  <p className="mt-2 text-xs leading-6 text-muted-foreground">
+                    {text(
+                      "يسجل هذا الإجراء طلب حذف رسمي قابل للتتبع. تراجع الإدارة الالتزامات والعمليات المفتوحة قبل تنفيذ الحذف الآمن.",
+                      "This records a traceable deletion request. The team reviews open obligations and activity before secure deletion.",
+                    )}
+                  </p>
+                  {deleteConfirmOpen ? (
+                    <div className="mt-3 rounded-xl bg-card p-3 hairline">
+                      <p className="text-xs font-bold">
+                        {text(
+                          "هل تريد تسجيل طلب حذف الحساب الآن؟",
+                          "Record an account deletion request now?",
+                        )}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          disabled={deletionSaving}
+                          onClick={() => void handleAccountDeletionRequest()}
+                          className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground disabled:opacity-60"
+                        >
+                          {deletionSaving
+                            ? text("جارٍ التسجيل", "Recording")
+                            : text("تأكيد طلب الحذف", "Confirm deletion request")}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={deletionSaving}
+                          onClick={() => setDeleteConfirmOpen(false)}
+                          className="rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
+                        >
+                          {text("إلغاء", "Cancel")}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setDeleteConfirmOpen(true)}
+                      className="mt-3 rounded-xl bg-card px-3 py-2 text-xs font-bold text-destructive hairline"
+                    >
+                      {text("طلب حذف الحساب", "Request account deletion")}
+                    </button>
+                  )}
+                  {deletionNotice ? (
+                    <p className="mt-3 rounded-xl bg-card p-3 text-xs font-semibold hairline">
+                      {deletionNotice}
+                    </p>
+                  ) : null}
+                </section>
+              </div>
+            </div>
+          ) : null}
+        </AccountSection>
+
         <section className="rawaj-account-overview-grid">
           <section className="rawaj-account-card">
             <div className="mb-3 flex items-center justify-between gap-2">
@@ -528,32 +754,6 @@ function ProfilePage() {
             </Link>
           </section>
         </section>
-
-        <section className="rawaj-account-card">
-          <div className="flex items-start gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted-surface text-primary">
-              <ShieldCheck className="h-5 w-5" />
-            </span>
-            <div>
-              <h2 className="text-sm font-extrabold">
-                {text("مراجعة الحساب أو حذفه", "Account review or deletion")}
-              </h2>
-              <p className="mt-1 text-xs leading-6 text-muted-foreground">
-                {text(
-                  "لحذف الحساب أو مراجعة بياناته، أرسل طلباً عبر الدعم ليتم التعامل معه بطريقة آمنة.",
-                  "To delete the account or review its data, send a support request so it can be handled safely.",
-                )}
-              </p>
-              <Link
-                to="/support"
-                className="mt-3 inline-flex items-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
-              >
-                <LifeBuoy className="h-4 w-4" />
-                {text("طلب مراجعة الحساب", "Request account review")}
-              </Link>
-            </div>
-          </div>
-        </section>
       </main>
     </>
   );
@@ -668,7 +868,8 @@ function accountStatusLabel(
   status: string | null | undefined,
   text: (ar: string, en: string) => string,
 ) {
-  if (status === "suspended") return text("موقوف", "Suspended");
+  if (status === "frozen" || status === "suspended") return text("مجمّد", "Frozen");
+  if (status === "disabled" || status === "blocked") return text("معطّل", "Disabled");
   if (status === "pending_review") return text("قيد المراجعة", "Pending review");
   return text("نشط", "Active");
 }
