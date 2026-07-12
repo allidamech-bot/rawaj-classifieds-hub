@@ -39,6 +39,7 @@ supabase/.temp/
 .env
 
 # Android signing credentials and local release material
+# Keep upload keys and their password-bearing property files outside version control.
 *.jks
 *.keystore
 *.p12
