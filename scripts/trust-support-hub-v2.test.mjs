@@ -41,6 +41,7 @@ test("more hub keeps account admin language session and navigation behavior", ()
   assert.match(more, /<TrustHubHero/);
   assert.match(more, /primaryShortcuts/);
   assert.match(more, /secondaryShortcuts/);
+  assert.match(more, /const unreadTotal = counts\.messages \+ counts\.notifications/);
   assert.match(more, /toggleLanguage/);
   assert.match(more, /auth\.canAccessOwnerControls/);
   assert.match(more, /auth\.signOut\(\)/);
