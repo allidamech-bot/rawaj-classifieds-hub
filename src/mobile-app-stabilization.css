@@ -1,0 +1,196 @@
+/* RAWAJ mobile stabilization — Android fields, chat states, and presence. */
+
+.input {
+  direction: inherit;
+  text-align: start;
+}
+
+input.input,
+select.input {
+  height: 3rem;
+  min-height: 3rem;
+  padding-block: 0;
+  line-height: normal;
+  vertical-align: middle;
+}
+
+select.input {
+  text-align-last: start;
+}
+
+textarea.input {
+  min-height: 7rem;
+  padding-block: 0.75rem;
+  line-height: 1.8;
+}
+
+.rawaj-route-chats {
+  min-height: 100dvh;
+  background: var(--color-background);
+}
+
+.rawaj-chat-state {
+  display: grid;
+  min-height: 15rem;
+  place-items: center;
+  align-content: center;
+  gap: 0.55rem;
+  border: 1px dashed color-mix(in srgb, var(--color-primary) 15%, var(--color-border));
+  border-radius: 1.15rem;
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      color-mix(in srgb, var(--rawaj-orange) 8%, transparent),
+      transparent 42%
+    ),
+    var(--rawaj-surface-warm);
+  padding: 1.4rem 1rem;
+  text-align: center;
+}
+
+.rawaj-chat-state > svg {
+  width: 2rem;
+  height: 2rem;
+  color: var(--rawaj-orange);
+}
+
+.rawaj-chat-state strong {
+  color: var(--color-primary);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.rawaj-chat-state p {
+  max-width: 28rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.62rem;
+  line-height: 1.8;
+}
+
+.rawaj-chat-state a,
+.rawaj-chat-state button {
+  display: inline-flex;
+  min-height: 2.65rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--color-primary);
+  padding-inline: 1rem;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 850;
+}
+
+.rawaj-chat-state[data-tone="error"] {
+  border-color: color-mix(in srgb, var(--color-destructive) 28%, var(--color-border));
+}
+
+.rawaj-chat-state[data-tone="error"] > svg {
+  color: var(--color-destructive);
+}
+
+.rawaj-chat-state--loading {
+  min-height: 11rem;
+}
+
+.rawaj-conversation-summary__presence,
+.rawaj-message-header__presence {
+  display: inline-flex !important;
+  width: fit-content;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.48rem;
+  font-weight: 800;
+}
+
+.rawaj-conversation-summary__presence {
+  margin-top: 0.08rem;
+}
+
+.rawaj-conversation-summary__presence i,
+.rawaj-message-header__presence > span {
+  width: 0.42rem;
+  height: 0.42rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #9aa1aa;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #9aa1aa 16%, transparent);
+}
+
+.rawaj-conversation-summary__presence[data-online="true"],
+.rawaj-message-header__presence[data-online="true"] {
+  color: #238267;
+}
+
+.rawaj-conversation-summary__presence[data-online="true"] i,
+.rawaj-message-header__presence[data-online="true"] > span {
+  background: #2ba77f;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #2ba77f 18%, transparent);
+}
+
+.rawaj-conversation-summary[data-selected="true"] .rawaj-conversation-summary__presence {
+  color: color-mix(in srgb, white 78%, transparent);
+}
+
+.rawaj-chat-avatar {
+  position: relative;
+  display: grid;
+  width: 2.7rem;
+  height: 2.7rem;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: visible;
+  border: 2px solid var(--rawaj-surface-card);
+  border-radius: 0.9rem;
+  background: linear-gradient(145deg, #f1c67c, #ef8e58);
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 900;
+  box-shadow: var(--shadow-xs);
+}
+
+.rawaj-chat-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.75rem;
+  object-fit: cover;
+}
+
+.rawaj-chat-avatar i {
+  position: absolute;
+  inset-inline-end: -0.08rem;
+  bottom: -0.08rem;
+  width: 0.68rem;
+  height: 0.68rem;
+  border: 2px solid var(--rawaj-surface-card);
+  border-radius: 999px;
+  background: #9aa1aa;
+}
+
+.rawaj-chat-avatar[data-online="true"] i {
+  background: #2ba77f;
+}
+
+.rawaj-message-header__presence {
+  margin-top: 0.12rem;
+}
+
+@media (max-width: 1023px) {
+  .rawaj-message-workspace {
+    min-height: calc(100dvh - 12rem);
+  }
+
+  .rawaj-conversation-sidebar,
+  .rawaj-message-panel {
+    min-height: calc(100dvh - 13rem);
+  }
+
+  .rawaj-conversation-sidebar {
+    padding-bottom: 1rem;
+  }
+
+  .rawaj-message-stream {
+    min-height: 20rem;
+  }
+}
