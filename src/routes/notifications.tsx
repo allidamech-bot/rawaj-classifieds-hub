@@ -1,5 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Bookmark, CheckCheck, Heart, LoaderCircle, MessageCircle, ScrollText, Sparkles } from "lucide-react";
+import {
+  Bookmark,
+  CheckCheck,
+  Heart,
+  LoaderCircle,
+  MessageCircle,
+  ScrollText,
+  Sparkles,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -34,7 +42,12 @@ const followUpLinks = [
   { to: "/chats", labelAr: "الرسائل", labelEn: "Messages", icon: MessageCircle },
   { to: "/profile/listings", labelAr: "إعلاناتي", labelEn: "My listings", icon: ScrollText },
   { to: "/favorites", labelAr: "المفضلة", labelEn: "Favorites", icon: Heart },
-  { to: "/saved-searches", labelAr: "عمليات البحث المحفوظة", labelEn: "Saved searches", icon: Bookmark },
+  {
+    to: "/saved-searches",
+    labelAr: "عمليات البحث المحفوظة",
+    labelEn: "Saved searches",
+    icon: Bookmark,
+  },
   { to: "/promotion", labelAr: "طلبات الترويج", labelEn: "Promotion requests", icon: Sparkles },
 ] as const;
 
@@ -110,7 +123,11 @@ function NotificationsPage() {
     setUnreadTotal(
       unreadResult.ok
         ? unreadResult.data
-        : Math.max(loadedUnread, counts.notifications, pageResult.data.hasMore && loadedUnread === 0 ? 1 : 0),
+        : Math.max(
+            loadedUnread,
+            counts.notifications,
+            pageResult.data.hasMore && loadedUnread === 0 ? 1 : 0,
+          ),
     );
     if (!unreadResult.ok) {
       setActionMessage(
@@ -158,12 +175,17 @@ function NotificationsPage() {
     setPaginationError(null);
 
     try {
-      const result = await fetchMyNotificationsPage(currentProfileId, offset, NOTIFICATIONS_PAGE_SIZE);
+      const result = await fetchMyNotificationsPage(
+        currentProfileId,
+        offset,
+        NOTIFICATIONS_PAGE_SIZE,
+      );
       if (
         parentRequestId !== notificationsRequestIdRef.current ||
         paginationRequestId !== paginationRequestIdRef.current ||
         currentProfileId !== auth.profile?.id
-      ) return;
+      )
+        return;
       if (!result.ok) {
         setPaginationError(result.error);
         return;
@@ -197,7 +219,9 @@ function NotificationsPage() {
       }
       readNotificationIdsRef.current.add(notificationId);
       const readAt = new Date().toISOString();
-      setNotifications((current) => current.map((item) => item.id === notificationId ? { ...item, readAt } : item));
+      setNotifications((current) =>
+        current.map((item) => (item.id === notificationId ? { ...item, readAt } : item)),
+      );
       if (wasUnread) setUnreadTotal((current) => Math.max(0, current - 1));
       void refreshUnreadActivity();
       return true;
@@ -247,7 +271,12 @@ function NotificationsPage() {
       const target = result.data;
       if (!target) {
         if (!notification.readAt) await markOne(notification.id);
-        setActionMessage(text("لم يعد الهدف المرتبط بهذا التنبيه متاحًا.", "The item linked to this notification is no longer available."));
+        setActionMessage(
+          text(
+            "لم يعد الهدف المرتبط بهذا التنبيه متاحًا.",
+            "The item linked to this notification is no longer available.",
+          ),
+        );
         return;
       }
       if (!notification.readAt) await markOne(notification.id);
@@ -269,7 +298,8 @@ function NotificationsPage() {
     }
   }
 
-  const hasUnreadEvidence = unreadTotal > 0 || notifications.some((item) => !item.readAt) || hasMore;
+  const hasUnreadEvidence =
+    unreadTotal > 0 || notifications.some((item) => !item.readAt) || hasMore;
 
   return (
     <>
@@ -284,17 +314,35 @@ function NotificationsPage() {
               unreadMessages={counts.messages}
               unreadNotifications={unreadTotal}
               actions={
-                <button type="button" disabled={!hasUnreadEvidence || markingAll} onClick={() => void markAll()} aria-busy={markingAll}>
-                  {markingAll ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <CheckCheck aria-hidden="true" />}
-                  {markingAll ? text("جارٍ التحديث", "Updating") : text("قراءة الكل", "Mark all read")}
+                <button
+                  type="button"
+                  disabled={!hasUnreadEvidence || markingAll}
+                  onClick={() => void markAll()}
+                  aria-busy={markingAll}
+                >
+                  {markingAll ? (
+                    <LoaderCircle className="animate-spin" aria-hidden="true" />
+                  ) : (
+                    <CheckCheck aria-hidden="true" />
+                  )}
+                  {markingAll
+                    ? text("جارٍ التحديث", "Updating")
+                    : text("قراءة الكل", "Mark all read")}
                 </button>
               }
             />
 
             {actionMessage ? (
-              <div role="status" className="rounded-xl bg-amber-500/10 p-3 text-center text-xs font-semibold text-foreground hairline">
+              <div
+                role="status"
+                className="rounded-xl bg-amber-500/10 p-3 text-center text-xs font-semibold text-foreground hairline"
+              >
                 {actionMessage}
-                {!unreadCountExact ? <span className="ms-1 text-muted-foreground">{text("العدد الظاهر تقريبي.", "Displayed count is approximate.")}</span> : null}
+                {!unreadCountExact ? (
+                  <span className="ms-1 text-muted-foreground">
+                    {text("العدد الظاهر تقريبي.", "Displayed count is approximate.")}
+                  </span>
+                ) : null}
               </div>
             ) : null}
 
@@ -302,14 +350,28 @@ function NotificationsPage() {
               <CommunicationSectionHeader
                 eyebrow={text("السجل", "Timeline")}
                 title={text("تنبيهات الحساب", "Account notifications")}
-                description={text("التنبيهات الحقيقية المرتبطة بحسابك وإعلاناتك مرتبة من الأحدث.", "Real notifications linked to your account and listings, ordered newest first.")}
+                description={text(
+                  "التنبيهات الحقيقية المرتبطة بحسابك وإعلاناتك مرتبة من الأحدث.",
+                  "Real notifications linked to your account and listings, ordered newest first.",
+                )}
               />
               {loading ? (
                 <Panel title={text("جارٍ تحميل التنبيهات", "Loading notifications")} />
               ) : loadError ? (
-                <Panel title={text("تعذر تحميل التنبيهات", "Could not load notifications")} body={loadError.message} actionLabel={text("إعادة المحاولة", "Try again")} onAction={() => void loadNotifications()} />
+                <Panel
+                  title={text("تعذر تحميل التنبيهات", "Could not load notifications")}
+                  body={loadError.message}
+                  actionLabel={text("إعادة المحاولة", "Try again")}
+                  onAction={() => void loadNotifications()}
+                />
               ) : notifications.length === 0 ? (
-                <Panel title={text("لا توجد تنبيهات حالياً", "No notifications right now")} body={text("ستظهر هنا تنبيهات الحساب والإعلانات والرسائل عند توفرها.", "Account, listing, and message notifications will appear here when available.")} />
+                <Panel
+                  title={text("لا توجد تنبيهات حالياً", "No notifications right now")}
+                  body={text(
+                    "ستظهر هنا تنبيهات الحساب والإعلانات والرسائل عند توفرها.",
+                    "Account, listing, and message notifications will appear here when available.",
+                  )}
+                />
               ) : (
                 <div className="rawaj-notification-list">
                   {notifications.map((notification) => {
@@ -329,10 +391,21 @@ function NotificationsPage() {
                       />
                     );
                   })}
-                  {paginationError ? <div className="rounded-xl bg-destructive/10 p-3 text-center text-xs font-semibold text-destructive">{paginationError.message}</div> : null}
+                  {paginationError ? (
+                    <div className="rounded-xl bg-destructive/10 p-3 text-center text-xs font-semibold text-destructive">
+                      {paginationError.message}
+                    </div>
+                  ) : null}
                   {hasMore ? (
-                    <button type="button" disabled={loadingMore} onClick={() => void loadMoreNotifications()} className="w-full rounded-xl bg-muted-surface px-4 py-3 text-xs font-bold transition hover:bg-muted disabled:opacity-60 hairline">
-                      {loadingMore ? text("جارٍ تحميل المزيد...", "Loading more...") : text("تحميل تنبيهات أقدم", "Load older notifications")}
+                    <button
+                      type="button"
+                      disabled={loadingMore}
+                      onClick={() => void loadMoreNotifications()}
+                      className="w-full rounded-xl bg-muted-surface px-4 py-3 text-xs font-bold transition hover:bg-muted disabled:opacity-60 hairline"
+                    >
+                      {loadingMore
+                        ? text("جارٍ تحميل المزيد...", "Loading more...")
+                        : text("تحميل تنبيهات أقدم", "Load older notifications")}
                     </button>
                   ) : null}
                 </div>
@@ -341,15 +414,23 @@ function NotificationsPage() {
           </section>
         )}
 
-        <div className="rawaj-notification-preferences"><NotificationPreferencesPanel /></div>
+        <div className="rawaj-notification-preferences">
+          <NotificationPreferencesPanel />
+        </div>
         <section className="rawaj-communication-follow-up">
           <h2 className="text-sm font-extrabold">{text("متابعة سريعة", "Quick follow-up")}</h2>
           <div className="rawaj-communication-follow-up__grid">
             {followUpLinks.map((item) => {
               const Icon = item.icon;
               return (
-                <Link key={item.to} to={item.to} className="flex items-center gap-3 rounded-xl bg-muted-surface p-3 text-sm font-bold transition hover:bg-muted hairline">
-                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-card text-primary hairline"><Icon className="h-4 w-4" /></span>
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className="flex items-center gap-3 rounded-xl bg-muted-surface p-3 text-sm font-bold transition hover:bg-muted hairline"
+                >
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-card text-primary hairline">
+                    <Icon className="h-4 w-4" />
+                  </span>
                   {text(item.labelAr, item.labelEn)}
                 </Link>
               );
@@ -363,13 +444,22 @@ function NotificationsPage() {
 
 function isNavigableNotification(notification: NotificationItem) {
   const target = notification.targetType?.toLowerCase();
-  return Boolean(notification.targetId && (target === "listing" || target === "conversation" || target === "seller"));
+  return Boolean(
+    notification.targetId &&
+    (target === "listing" || target === "conversation" || target === "seller"),
+  );
 }
 
 function localizedNotification(notification: NotificationItem, language: "ar" | "en") {
   if (language === "ar") return { title: notification.titleAr, body: notification.bodyAr };
-  const title = metadataString(notification.metadata, "title_en") || metadataString(notification.metadata, "titleEn") || notification.titleAr;
-  const body = metadataString(notification.metadata, "body_en") || metadataString(notification.metadata, "bodyEn") || notification.bodyAr;
+  const title =
+    metadataString(notification.metadata, "title_en") ||
+    metadataString(notification.metadata, "titleEn") ||
+    notification.titleAr;
+  const body =
+    metadataString(notification.metadata, "body_en") ||
+    metadataString(notification.metadata, "bodyEn") ||
+    notification.bodyAr;
   return { title, body };
 }
 
@@ -378,16 +468,37 @@ function metadataString(metadata: Record<string, unknown>, key: string) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
-function Panel({ title, body, actionLabel, onAction }: { title: string; body?: string; actionLabel?: string; onAction?: () => void }) {
+function Panel({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <div className="mt-4 rounded-2xl bg-muted-surface p-5 text-center hairline">
       <p className="text-sm font-bold">{title}</p>
       {body ? <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p> : null}
-      {actionLabel && onAction ? <button type="button" onClick={onAction} className="mt-3 rounded-xl bg-card px-4 py-2 text-xs font-bold hairline">{actionLabel}</button> : null}
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-3 rounded-xl bg-card px-4 py-2 text-xs font-bold hairline"
+        >
+          {actionLabel}
+        </button>
+      ) : null}
     </div>
   );
 }
 
 function formatNotificationDate(value: string, language: "ar" | "en") {
-  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
+  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
 }

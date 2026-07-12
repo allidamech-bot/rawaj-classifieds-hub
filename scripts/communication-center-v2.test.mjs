@@ -2,19 +2,29 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, shared, notificationCard, chats, notifications, activity, css, qualityGate] = await Promise.all([
-  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/notifications/NotificationTimelineCard.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/notifications.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/activity.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
-]);
+const [root, shared, notificationCard, chats, notifications, activity, css, qualityGate] =
+  await Promise.all([
+    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+    readFile(
+      new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../src/features/notifications/NotificationTimelineCard.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/notifications.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/activity.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
+    readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  ]);
 
 test("communication center stylesheet loads after messaging and activity foundations", () => {
-  assert.match(root, /import communicationCenterV2Css from "\.\.\/communication-center-v2\.css\?url"/);
+  assert.match(
+    root,
+    /import communicationCenterV2Css from "\.\.\/communication-center-v2\.css\?url"/,
+  );
   const messaging = root.indexOf("href: messagingSignatureCss");
   const communication = root.indexOf("href: communicationCenterV2Css");
   assert.notEqual(messaging, -1);
@@ -31,7 +41,8 @@ test("shared communication components avoid unsupported presence and read claims
     "CommunicationSearch",
     "CommunicationSectionHeader",
     "CommunicationSignedOut",
-  ]) assert.match(shared, new RegExp(`export function ${component}`));
+  ])
+    assert.match(shared, new RegExp(`export function ${component}`));
   assert.doesNotMatch(shared, /online now|last seen|typing now|message read by/i);
 });
 
@@ -49,7 +60,8 @@ test("messages preserve workspace report block and read contracts", () => {
     /createMessageReport/,
     /blockConversationParticipant/,
     /resolveConversationTarget/,
-  ]) assert.match(chats, contract);
+  ])
+    assert.match(chats, contract);
 });
 
 test("notifications separate loading failures from action failures", () => {
@@ -82,7 +94,8 @@ test("notifications preserve pagination read and target recovery", () => {
     /openingTargetIds\.has\(notification\.id\)/,
     /لم يعد الهدف المرتبط بهذا التنبيه متاحًا/,
     /await markOne\(notification\.id\)/,
-  ]) assert.match(notifications, contract);
+  ])
+    assert.match(notifications, contract);
 });
 
 test("notifications localize from metadata with safe Arabic fallback", () => {

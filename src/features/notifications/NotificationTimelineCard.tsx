@@ -36,7 +36,10 @@ export function NotificationTimelineCard({
       </span>
       {navigable ? (
         opening ? (
-          <LoaderCircle className="rawaj-notification-timeline__chevron animate-spin" aria-hidden="true" />
+          <LoaderCircle
+            className="rawaj-notification-timeline__chevron animate-spin"
+            aria-hidden="true"
+          />
         ) : (
           <ChevronLeft
             className="rawaj-notification-timeline__chevron rtl:rotate-180"
@@ -64,7 +67,11 @@ export function NotificationTimelineCard({
           disabled={markingRead}
           aria-busy={markingRead}
         >
-          {markingRead ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <Check aria-hidden="true" />}
+          {markingRead ? (
+            <LoaderCircle className="animate-spin" aria-hidden="true" />
+          ) : (
+            <Check aria-hidden="true" />
+          )}
           {markingRead ? text("جارٍ التحديث", "Updating") : text("تحديد كمقروء", "Mark read")}
         </button>
       ) : null}
