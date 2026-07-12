@@ -13,11 +13,7 @@ import {
 import { AuthContext, type AuthContextValue } from "./auth-context";
 import type { AuthStatus } from "./auth-status";
 import { sanitizeAuthReturnTo } from "./auth-return";
-import {
-  createAuthCallbackUrl,
-  isNativeRawajApp,
-  openExternalUrl,
-} from "./native-runtime";
+import { createAuthCallbackUrl, isNativeRawajApp, openExternalUrl } from "./native-runtime";
 import { getSupabaseAuthUnavailableReason, isSupabaseConfigured, supabase } from "./supabase";
 
 const rolePriority: UserRole[] = ["owner", "admin", "moderator", "seller", "user"];
@@ -172,8 +168,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let reconcilePromise: Promise<void> | null = null;
 
     async function loadProfile(client: SupabaseClient, user: User | null) {
-      currentUserId = user?.id ?? null;
       if (!user) {
+        currentUserId = null;
         setProfile(null);
         setReason(null);
         return;
@@ -182,11 +178,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const nextProfile = await fetchProfile(client, user);
         if (!active) return;
+        currentUserId = user.id;
         setProfile(nextProfile);
         setReason(null);
         setStatus("signedIn");
       } catch (error) {
         if (!active) return;
+        currentUserId = null;
         setProfile(null);
         setStatus("authError");
         setReason(error instanceof Error ? error.message : "تعذّر تحميل بيانات الحساب.");
@@ -253,10 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const { data: refreshed, error: refreshError } = await client.auth.refreshSession();
           if (!active) return;
           if (refreshError) {
-            if (
-              isRejectedRefreshTokenError(refreshError) &&
-              (await clearRejectedSession(client))
-            ) {
+            if (isRejectedRefreshTokenError(refreshError) && (await clearRejectedSession(client))) {
               return;
             }
             setStatus("authError");
