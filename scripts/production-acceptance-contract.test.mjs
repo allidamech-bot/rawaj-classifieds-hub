@@ -3,10 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const [workflow, spec, packageSource, qualityGate] = await Promise.all([
-  readFile(
-    new URL("../.github/workflows/production-acceptance.yml", import.meta.url),
-    "utf8",
-  ),
+  readFile(new URL("../.github/workflows/production-acceptance.yml", import.meta.url), "utf8"),
   readFile(new URL("../e2e/production-acceptance.spec.ts", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
@@ -36,10 +33,7 @@ test("authenticated production acceptance remains read-only", () => {
     "/notifications",
     "/promotion",
   ]) {
-    assert.ok(
-      spec.includes(`"${path}"`),
-      `Missing authenticated acceptance route ${path}`,
-    );
+    assert.ok(spec.includes(`"${path}"`), `Missing authenticated acceptance route ${path}`);
   }
 
   assert.ok(spec.includes(`input[type="email"]`));
