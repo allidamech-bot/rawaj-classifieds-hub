@@ -1,0 +1,40 @@
+name: Apply launch readiness Batch 1
+
+on:
+  push:
+    branches:
+      - agent/launch-readiness-batch-1
+    paths:
+      - .github/workflows/apply-launch-readiness-batch-1.yml
+      - scripts/apply-launch-readiness-batch-1.mjs
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/launch-readiness-batch-1
+          fetch-depth: 0
+
+      - name: Apply implementation patch
+        run: node scripts/apply-launch-readiness-batch-1.mjs
+
+      - name: Run focused regression contracts
+        run: node --test scripts/auth-recovery.test.mjs scripts/listing-studio-image-parity.test.mjs scripts/launch-readiness-batch-1.test.mjs
+
+      - name: Remove one-time automation
+        run: rm .github/workflows/apply-launch-readiness-batch-1.yml scripts/apply-launch-readiness-batch-1.mjs
+
+      - name: Commit implementation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Fix critical launch journeys"
+          git push origin HEAD:agent/launch-readiness-batch-1
