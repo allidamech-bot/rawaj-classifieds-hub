@@ -28,6 +28,7 @@ import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import trustSupportHubV2Css from "../trust-support-hub-v2.css?url";
 import authAccountFoundationCss from "../auth-account-foundation.css?url";
 import authAccountV2Css from "../auth-account-v2.css?url";
+import chatNativeV3Css from "../chat-native-v3.css?url";
 import communicationCenterV2Css from "../communication-center-v2.css?url";
 import designSystemV2Css from "../design-system-v2.css?url";
 import desktopExperienceV1Css from "../desktop-experience-v1.css?url";
@@ -170,6 +171,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: listingDetailV3Css },
         { rel: "stylesheet", href: desktopExperienceV1Css },
         { rel: "stylesheet", href: launchReadinessVisualPolishCss },
+        { rel: "stylesheet", href: chatNativeV3Css },
         { rel: "icon", href: "/favicon.ico" },
         { rel: "manifest", href: "/manifest.webmanifest" },
         { rel: "apple-touch-icon", href: "/brand/rawaj-mark-transparent-192.png" },
