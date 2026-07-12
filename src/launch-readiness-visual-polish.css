@@ -1,0 +1,87 @@
+/* Launch Readiness Batch 3 — populated marketplace density and overflow safeguards. */
+
+.rawaj-adaptive-card__media > img,
+.rawaj-featured-card__media > img {
+  object-position: center;
+}
+
+.rawaj-adaptive-card__price {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rawaj-adaptive-card__title,
+.rawaj-featured-card__content h3 {
+  overflow-wrap: anywhere;
+}
+
+.rawaj-featured-card__content h3 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.rawaj-featured-card__location {
+  min-width: 0;
+}
+
+.rawaj-featured-card__location span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rawaj-latest-discovery__grid > * {
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .rawaj-home-v3 {
+    gap: clamp(1.35rem, 4.5vw, 1.75rem);
+  }
+
+  .rawaj-featured-showcase .rawaj-featured-card {
+    min-height: 24rem;
+  }
+
+  .rawaj-featured-showcase__rail {
+    padding-bottom: 0.25rem;
+    scroll-padding-inline: 0.25rem;
+  }
+
+  .rawaj-latest-discovery .rawaj-adaptive-card__body {
+    padding: 0.72rem;
+  }
+
+  .rawaj-latest-discovery .rawaj-adaptive-card__facts {
+    gap: 0.3rem;
+    margin-top: 0.5rem;
+  }
+
+  .rawaj-latest-discovery .rawaj-adaptive-card__facts > div {
+    padding: 0.38rem 0.25rem;
+  }
+
+  .rawaj-latest-discovery .rawaj-adaptive-card__meta {
+    gap: 0.3rem;
+    padding-top: 0.55rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .rawaj-featured-showcase .rawaj-featured-card {
+    min-height: 34rem;
+  }
+}
+
+@media (max-width: 359px) {
+  .rawaj-latest-discovery .rawaj-adaptive-card__category {
+    max-width: 5.5rem;
+  }
+
+  .rawaj-latest-discovery .rawaj-adaptive-card__body {
+    padding: 0.64rem;
+  }
+}
