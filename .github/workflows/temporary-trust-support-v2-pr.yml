@@ -24,7 +24,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Align integration script with current More hub
+      - name: Align integration script with current routes
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -40,6 +40,7 @@ jobs:
               "'<div className=\"grid grid-cols-2 gap-3\">'": "'<div className=\"grid grid-cols-1 gap-3 sm:grid-cols-2\">'",
               "'<section className=\"grid grid-cols-3 gap-2.5\">'": "'<section className=\"mt-4 grid grid-cols-3 gap-2.5 sm:gap-3\">'",
               "'<div className=\"space-y-3\">'": "'<div className=\"mt-7 grid gap-4 lg:grid-cols-2\">'",
+              "map_end = s.index('        ))}', map_start) + len('        ))}')": "map_start = s.index('        {sections.map((s) => (', hero_start)\nmap_end = s.index('        ))}', map_start) + len('        ))}')",
           }
           for old, new in replacements.items():
               if old not in source:
