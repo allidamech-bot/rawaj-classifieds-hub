@@ -41,8 +41,23 @@ jobs:
           npx eslint --fix src/lib/api/references.ts scripts/launch-readiness-batch-4.test.mjs
           npx eslint --quiet src/lib/api/references.ts scripts/launch-readiness-batch-4.test.mjs
 
-      - name: Batch 4 cache contract
-        run: npm run test:launch-readiness-batch-4
+      - name: Primary image selection contract
+        run: node --test --test-name-pattern="primary image selection" scripts/launch-readiness-batch-4.test.mjs
+
+      - name: Listing collection signing contract
+        run: node --test --test-name-pattern="listing collections" scripts/launch-readiness-batch-4.test.mjs
+
+      - name: Listing gallery signing contract
+        run: node --test --test-name-pattern="listing detail gallery" scripts/launch-readiness-batch-4.test.mjs
+
+      - name: Separate public reference cache contract
+        run: node --test --test-name-pattern="public categories and governorates" scripts/launch-readiness-batch-4.test.mjs
+
+      - name: Shared subset request contract
+        run: node --test --test-name-pattern="combined references" scripts/launch-readiness-batch-4.test.mjs
+
+      - name: Quality Gate wiring contract
+        run: node --test --test-name-pattern="part of local and GitHub" scripts/launch-readiness-batch-4.test.mjs
 
       - name: Home SSR compatibility
         run: npm run test:home-ssr
