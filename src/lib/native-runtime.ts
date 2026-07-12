@@ -26,9 +26,11 @@ export function createAuthCallbackUrl(
 }
 
 export function isRawajWebUrl(url: URL): boolean {
+  const sameAppOrigin = typeof window !== "undefined" && url.origin === window.location.origin;
   return (
-    url.protocol === "https:" &&
-    (url.hostname === "rawa-j.com" || url.hostname.endsWith(".rawa-j.com"))
+    sameAppOrigin ||
+    (url.protocol === "https:" &&
+      (url.hostname === "rawa-j.com" || url.hostname.endsWith(".rawa-j.com")))
   );
 }
 
