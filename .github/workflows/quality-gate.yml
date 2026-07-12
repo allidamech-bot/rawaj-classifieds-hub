@@ -168,6 +168,9 @@ jobs:
       - name: Listing Detail V2 contract
         run: node --test scripts/listing-detail-v2.test.mjs
 
+      - name: Listing Detail V3 contract
+        run: npm run test:listing-detail-v3
+
       - name: Listing Studio V2 contract
         run: node --test scripts/listing-studio-v2.test.mjs
 
