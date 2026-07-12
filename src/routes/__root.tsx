@@ -199,7 +199,10 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="ar" dir="rtl">
       <head>
         <HeadContent />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: siteStructuredData }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: siteStructuredData }}
+        />
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
