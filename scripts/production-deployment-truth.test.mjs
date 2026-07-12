@@ -2,16 +2,25 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [viteConfig, buildInfo, panel, adminRoute, productionWorkflow, productionSpec, browserSpec] =
-  await Promise.all([
-    readFile(new URL("../vite.config.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/build-info.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/components/DeploymentTruthPanel.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/admin.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../.github/workflows/production-smoke.yml", import.meta.url), "utf8"),
-    readFile(new URL("../e2e/production-smoke.spec.ts", import.meta.url), "utf8"),
-    readFile(new URL("../e2e/marketplace-smoke.spec.ts", import.meta.url), "utf8"),
-  ]);
+const [
+  viteConfig,
+  buildInfo,
+  panel,
+  adminRoute,
+  rootRoute,
+  productionWorkflow,
+  productionSpec,
+  browserSpec,
+] = await Promise.all([
+  readFile(new URL("../vite.config.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/build-info.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/DeploymentTruthPanel.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/admin.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../.github/workflows/production-smoke.yml", import.meta.url), "utf8"),
+  readFile(new URL("../e2e/production-smoke.spec.ts", import.meta.url), "utf8"),
+  readFile(new URL("../e2e/marketplace-smoke.spec.ts", import.meta.url), "utf8"),
+]);
 
 test("build metadata is embedded from Vercel or CI truth", () => {
   assert.match(viteConfig, /VERCEL_GIT_COMMIT_SHA/);
@@ -19,6 +28,8 @@ test("build metadata is embedded from Vercel or CI truth", () => {
   assert.match(viteConfig, /VERCEL_ENV/);
   assert.match(viteConfig, /__RAWAJ_BUILD_INFO__/);
   assert.match(buildInfo, /rawajBuildInfo/);
+  assert.match(rootRoute, /name: "rawaj-build-commit"/);
+  assert.match(rootRoute, /content: rawajBuildInfo\.commitSha/);
 });
 
 test("owner controls expose the build identity panel", () => {
@@ -32,13 +43,15 @@ test("owner controls expose the build identity panel", () => {
 test("main deployments trigger a real RAWAJ production smoke workflow", () => {
   assert.match(productionWorkflow, /E2E_BASE_URL:\s*https:\/\/rawa-j\.com/);
   assert.match(productionWorkflow, /PRODUCTION_SMOKE:\s*"1"/);
+  assert.match(productionWorkflow, /EXPECTED_COMMIT_SHA:\s*\$\{\{ github\.sha \}\}/);
   assert.match(productionWorkflow, /branches:\s*\n\s*- main/);
   assert.match(productionWorkflow, /workflow_dispatch:/);
-  assert.match(productionWorkflow, /Wait for production deployment/);
+  assert.match(productionWorkflow, /Wait for matching production deployment/);
+  assert.match(productionWorkflow, /rawaj-build-commit/);
   assert.match(productionWorkflow, /production-smoke\.spec\.ts/);
 });
 
-test("production health covers discovery, policy, console, and network failures", () => {
+test("production health covers identity, discovery, policy, console, and network failures", () => {
   for (const path of [
     "/categories",
     "/listings",
@@ -53,6 +66,8 @@ test("production health covers discovery, policy, console, and network failures"
   ]) {
     assert.ok(productionSpec.includes(path), `Missing production route contract for ${path}`);
   }
+  assert.match(productionSpec, /EXPECTED_COMMIT_SHA/);
+  assert.match(productionSpec, /rawaj-build-commit/);
   assert.match(productionSpec, /page\.on\("pageerror"/);
   assert.match(productionSpec, /page\.on\("console"/);
   assert.match(productionSpec, /page\.on\("requestfailed"/);
