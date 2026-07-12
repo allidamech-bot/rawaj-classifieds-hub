@@ -16,6 +16,10 @@ type PublicListingSitemapRow = {
   updated_at: string;
 };
 
+type PublicSlugRow = {
+  slug: string;
+};
+
 const staticEntries: SitemapEntry[] = [
   { loc: absoluteUrl("/"), changefreq: "daily", priority: 1 },
   { loc: absoluteUrl("/listings"), changefreq: "hourly", priority: 0.9 },
@@ -31,8 +35,11 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const dynamicEntries = await readDynamicMarketplaceEntries();
-        const xml = buildSitemapXml([...staticEntries, ...dynamicEntries]);
+        const [marketplaceEntries, referenceEntries] = await Promise.all([
+          readDynamicMarketplaceEntries(),
+          readPublicReferenceEntries(),
+        ]);
+        const xml = buildSitemapXml([...staticEntries, ...referenceEntries, ...marketplaceEntries]);
 
         return new Response(xml, {
           headers: {
@@ -45,6 +52,38 @@ export const Route = createFileRoute("/sitemap.xml")({
     },
   },
 });
+
+async function readPublicReferenceEntries(): Promise<SitemapEntry[]> {
+  const clientResult = getClient();
+  if (!clientResult.ok) return [];
+
+  const [categoriesResult, governoratesResult] = await Promise.all([
+    clientResult.data.from("categories").select("slug").eq("is_active", true).order("sort_order"),
+    clientResult.data.from("governorates").select("slug").eq("is_active", true).order("sort_order"),
+  ]);
+
+  const categoryEntries: SitemapEntry[] = categoriesResult.error
+    ? []
+    : ((categoriesResult.data ?? []) as PublicSlugRow[])
+        .filter((row) => row.slug)
+        .map((row) => ({
+          loc: absoluteUrl(`/category/${encodeURIComponent(row.slug)}`),
+          changefreq: "daily",
+          priority: 0.8,
+        }));
+
+  const governorateEntries: SitemapEntry[] = governoratesResult.error
+    ? []
+    : ((governoratesResult.data ?? []) as PublicSlugRow[])
+        .filter((row) => row.slug)
+        .map((row) => ({
+          loc: absoluteUrl(`/syria/${encodeURIComponent(row.slug)}`),
+          changefreq: "daily",
+          priority: 0.8,
+        }));
+
+  return [...categoryEntries, ...governorateEntries];
+}
 
 async function readDynamicMarketplaceEntries(): Promise<SitemapEntry[]> {
   const clientResult = getClient();
