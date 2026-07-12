@@ -21,7 +21,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run build
+      - run: npx tsr generate
       - name: Commit generated route tree
         run: |
           if git diff --quiet -- src/routeTree.gen.ts; then
