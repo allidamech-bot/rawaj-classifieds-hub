@@ -50,6 +50,18 @@ export function isSupportedAuthCallbackUrl(rawUrl: string) {
   }
 }
 
+export function nativeAuthCallbackFingerprint(rawUrl: string) {
+  if (!isSupportedAuthCallbackUrl(rawUrl)) return null;
+
+  let hash = 2166136261;
+  for (let index = 0; index < rawUrl.length; index += 1) {
+    hash ^= rawUrl.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return Math.abs(hash >>> 0).toString(36);
+}
+
 function callbackParams(rawUrl: string) {
   const url = new URL(rawUrl);
   const params = new URLSearchParams(url.search);
