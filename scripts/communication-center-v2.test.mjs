@@ -101,8 +101,8 @@ test("notifications preserve pagination read and target recovery", () => {
 test("notifications localize from metadata with safe Arabic fallback", () => {
   assert.match(notifications, /metadataString\(notification\.metadata, "title_en"\)/);
   assert.match(notifications, /metadataString\(notification\.metadata, "body_en"\)/);
-  assert.match(notifications, /\|\| notification\.titleAr/);
-  assert.match(notifications, /\|\| notification\.bodyAr/);
+  assert.match(notifications, /\|\|\s+notification\.titleAr/);
+  assert.match(notifications, /\|\|\s+notification\.bodyAr/);
 });
 
 test("activity center previews real notifications and conversations", () => {
