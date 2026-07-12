@@ -1,0 +1,63 @@
+name: Refine Mobile Chat
+
+on:
+  push:
+    branches:
+      - agent/android-release-readiness-1-0-3
+    paths:
+      - scripts/refine-mobile-chat.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  refine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/android-release-readiness-1-0-3
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply refinement
+        run: node scripts/refine-mobile-chat.mjs
+
+      - name: Format and lint
+        run: |
+          npx prettier --write src/routes/chats.tsx src/mobile-app-stabilization.css
+          npx eslint --fix src/routes/chats.tsx
+
+      - name: Validate focused contracts
+        run: |
+          npm run test:chat-workspace
+          npm run test:mobile-app-stabilization
+          npm run typecheck -- --pretty false
+
+      - name: Remove one-shot machinery
+        run: |
+          rm -f \
+            scripts/refine-mobile-chat.mjs \
+            scripts/refine-mobile-chat.trigger \
+            .github/workflows/refine-mobile-chat.yml
+
+      - name: Validate patch whitespace
+        run: git diff --check
+
+      - name: Commit refinement
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Refine RAWAJ mobile chat experience"
+          git push origin HEAD:agent/android-release-readiness-1-0-3
