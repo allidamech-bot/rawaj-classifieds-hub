@@ -8,6 +8,7 @@ on:
     paths:
       - .github/workflows/refine-batch4-reference-cache.yml
       - scripts/refine-batch4-reference-cache.mjs
+      - scripts/refine-batch4-governorate-reader.mjs
 
 permissions:
   contents: write
@@ -34,7 +35,9 @@ jobs:
         run: npm ci
 
       - name: Apply cache refinement
-        run: node scripts/refine-batch4-reference-cache.mjs
+        run: |
+          node scripts/refine-batch4-reference-cache.mjs
+          node scripts/refine-batch4-governorate-reader.mjs
 
       - name: Format and lint refined cache
         run: |
