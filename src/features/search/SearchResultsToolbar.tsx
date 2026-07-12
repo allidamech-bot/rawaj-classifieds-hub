@@ -11,10 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type {
-  ListingsSort,
-  ListingsView,
-} from "@/features/listings/listings-search-schema";
+import type { ListingsSort, ListingsView } from "@/features/listings/listings-search-schema";
 
 const RECENT_SEARCHES_KEY = "rawaj_recent_listing_searches_v1";
 const MAX_RECENT_SEARCHES = 5;
@@ -61,13 +58,9 @@ interface SearchResultsToolbarProps {
 function readRecentSearches() {
   if (typeof window === "undefined") return [];
   try {
-    const parsed = JSON.parse(
-      window.localStorage.getItem(RECENT_SEARCHES_KEY) ?? "[]",
-    );
+    const parsed = JSON.parse(window.localStorage.getItem(RECENT_SEARCHES_KEY) ?? "[]");
     return Array.isArray(parsed)
-      ? parsed
-          .filter((item): item is string => typeof item === "string")
-          .slice(0, MAX_RECENT_SEARCHES)
+      ? parsed.filter((item): item is string => typeof item === "string").slice(0, MAX_RECENT_SEARCHES)
       : [];
   } catch {
     return [];
@@ -96,9 +89,7 @@ export function SearchResultsToolbar({
     function focusSearch(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null;
       const editable =
-        target?.tagName === "INPUT" ||
-        target?.tagName === "TEXTAREA" ||
-        target?.isContentEditable;
+        target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
       if (event.key === "/" && !editable) {
         event.preventDefault();
         searchInputRef.current?.focus();
@@ -111,10 +102,10 @@ export function SearchResultsToolbar({
   function rememberSearch(value: string) {
     const normalized = value.trim();
     if (normalized.length < 2 || typeof window === "undefined") return;
-    const next = [
-      normalized,
-      ...recentSearches.filter((item) => item !== normalized),
-    ].slice(0, MAX_RECENT_SEARCHES);
+    const next = [normalized, ...recentSearches.filter((item) => item !== normalized)].slice(
+      0,
+      MAX_RECENT_SEARCHES,
+    );
     setRecentSearches(next);
     window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
   }
@@ -132,11 +123,7 @@ export function SearchResultsToolbar({
           <h1 id="rawaj-results-title">{title}</h1>
           {pathLabel ? <span>{pathLabel}</span> : null}
         </div>
-        <strong
-          aria-live="polite"
-          aria-atomic="true"
-          data-loading={loading || undefined}
-        >
+        <strong aria-live="polite" aria-atomic="true" data-loading={loading || undefined}>
           {loading
             ? text("جارٍ التحميل", "Loading")
             : text(`${resultCount} نتيجة`, `${resultCount} results`)}
@@ -159,10 +146,7 @@ export function SearchResultsToolbar({
             onKeyDown={(event) => {
               if (event.key === "Enter") rememberSearch(query);
             }}
-            placeholder={text(
-              "ابحث ضمن النتائج...",
-              "Search within results...",
-            )}
+            placeholder={text("ابحث ضمن النتائج...", "Search within results...")}
             aria-label={text("بحث في الإعلانات", "Search listings")}
             aria-describedby="rawaj-search-shortcut"
             list="rawaj-recent-searches"
@@ -181,10 +165,7 @@ export function SearchResultsToolbar({
               <X aria-hidden="true" />
             </button>
           ) : (
-            <kbd
-              id="rawaj-search-shortcut"
-              aria-label={text("اختصار البحث", "Search shortcut")}
-            >
+            <kbd id="rawaj-search-shortcut" aria-label={text("اختصار البحث", "Search shortcut")}>
               /
             </kbd>
           )}
@@ -208,19 +189,12 @@ export function SearchResultsToolbar({
       </div>
 
       {recentSearches.length > 0 ? (
-        <div
-          className="rawaj-search-toolbar__recent"
-          aria-label={text("عمليات البحث الأخيرة", "Recent searches")}
-        >
+        <div className="rawaj-search-toolbar__recent" aria-label={text("عمليات البحث الأخيرة", "Recent searches")}>
           <History aria-hidden="true" />
           <span>{text("الأخيرة", "Recent")}</span>
           <div>
             {recentSearches.map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => onQueryChange(item)}
-              >
+              <button key={item} type="button" onClick={() => onQueryChange(item)}>
                 {item}
               </button>
             ))}
@@ -231,29 +205,20 @@ export function SearchResultsToolbar({
       <div className="rawaj-search-toolbar__controls">
         <label className="rawaj-search-toolbar__sort">
           <Filter aria-hidden="true" />
-          <span className="sr-only">
-            {text("ترتيب النتائج", "Sort results")}
-          </span>
+          <span className="sr-only">{text("ترتيب النتائج", "Sort results")}</span>
           <select
             value={sort}
-            onChange={(event) =>
-              onSortChange(event.target.value as ListingsSort)
-            }
+            onChange={(event) => onSortChange(event.target.value as ListingsSort)}
             aria-label={text("ترتيب النتائج", "Sort results")}
           >
             <option value="latest">{text("الأحدث", "Latest")}</option>
             <option value="cheapest">{text("الأرخص", "Lowest price")}</option>
-            <option value="expensive">
-              {text("الأعلى سعرًا", "Highest price")}
-            </option>
+            <option value="expensive">{text("الأعلى سعرًا", "Highest price")}</option>
             <option value="featured">{text("المميز", "Featured")}</option>
           </select>
         </label>
 
-        <div
-          className="rawaj-search-toolbar__views"
-          aria-label={text("طريقة العرض", "View mode")}
-        >
+        <div className="rawaj-search-toolbar__views" aria-label={text("طريقة العرض", "View mode")}>
           <button
             type="button"
             onClick={() => onViewChange("grid")}
@@ -280,11 +245,7 @@ export function SearchResultsToolbar({
           </button>
         </div>
 
-        <Link
-          to="/saved-searches"
-          search={emptySavedSearchParams}
-          className="rawaj-search-toolbar__saved"
-        >
+        <Link to="/saved-searches" search={emptySavedSearchParams} className="rawaj-search-toolbar__saved">
           <Bookmark aria-hidden="true" />
           <span>{text("عمليات البحث", "Saved searches")}</span>
         </Link>
