@@ -1,7 +1,6 @@
 import { Capacitor, registerPlugin } from "@capacitor/core";
 
-const RAWAJ_ORIGIN = "https://rawa-j.com";
-const RAWAJ_AUTH_SCHEME = "com.rawaj.marketplace";
+const RAWAJ_AUTH_CALLBACK = "com.rawaj.marketplace://auth/callback";
 
 interface RawajNativePlugin {
   openExternal(options: { url: string }): Promise<void>;
@@ -18,7 +17,7 @@ export function createAuthCallbackUrl(
   options: { recovery?: boolean } = {},
 ): string {
   const callbackUrl = isNativeRawajApp()
-    ? new URL(`${RAWAJ_AUTH_SCHEME}://auth/callback`)
+    ? new URL(RAWAJ_AUTH_CALLBACK)
     : new URL("/auth/callback", window.location.origin);
 
   if (options.recovery) callbackUrl.searchParams.set("type", "recovery");
@@ -40,8 +39,4 @@ export async function openExternalUrl(url: string): Promise<void> {
   }
 
   window.location.assign(url);
-}
-
-export function rawajOrigin(): string {
-  return RAWAJ_ORIGIN;
 }
