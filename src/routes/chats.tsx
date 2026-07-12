@@ -59,7 +59,6 @@ function ChatsPage() {
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState("");
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
-  const [blockReason, setBlockReason] = useState("");
   const [viewingConversationOnMobile, setViewingConversationOnMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -270,7 +269,7 @@ function ChatsPage() {
       conversationId: selectedConversation.id,
       blockerUserId: auth.profile.id,
       blockedUserId: selectedConversation.otherParticipant.userId,
-      reason: blockReason || null,
+      reason: null,
     });
     setNotice(
       result.ok
@@ -297,6 +296,26 @@ function ChatsPage() {
     void navigate({ to: "/chats", search: {}, replace: true });
   }
 
+  if (auth.status === "loading") {
+    return (
+      <>
+        <PageHeader title={text("المحادثات", "Messages")} />
+        <main className="rawaj-communication-v2 container-wide mobile-page-bottom pt-4">
+          <div className="rawaj-chat-state rawaj-chat-state--loading">
+            <RefreshCw className="animate-spin" aria-hidden="true" />
+            <strong>{text("جارٍ تجهيز محادثاتك", "Preparing your messages")}</strong>
+            <p>
+              {text(
+                "نستعيد جلسة حسابك وقائمة المحادثات بأمان.",
+                "Restoring your account session and conversations securely.",
+              )}
+            </p>
+          </div>
+        </main>
+      </>
+    );
+  }
+
   if (auth.status !== "signedIn") {
     return (
       <>
@@ -312,15 +331,19 @@ function ChatsPage() {
     <>
       <PageHeader title={text("المحادثات", "Messages")} />
       <main className="rawaj-communication-v2 rawaj-communication-v2--messages container-wide mobile-page-bottom space-y-4 pt-4">
-        <CommunicationCenterHero
-          mode="messages"
-          unreadMessages={conversations.reduce(
-            (total, conversation) => total + conversation.unreadCount,
-            0,
-          )}
-          conversationCount={conversations.length}
-        />
-        <CommunicationSafetyNote />
+        {(isDesktop || !viewingConversationOnMobile) && (
+          <>
+            <CommunicationCenterHero
+              mode="messages"
+              unreadMessages={conversations.reduce(
+                (total, conversation) => total + conversation.unreadCount,
+                0,
+              )}
+              conversationCount={conversations.length}
+            />
+            <CommunicationSafetyNote />
+          </>
+        )}
 
         <div className="rawaj-message-workspace">
           <aside
@@ -386,7 +409,10 @@ function ChatsPage() {
                     selected={selectedConversation?.id === conversation.id}
                     online={onlineUserIds.has(conversation.otherParticipant.userId)}
                     onSelect={() => {
-                      if (!isDesktop) setViewingConversationOnMobile(true);
+                      if (!isDesktop) {
+                        setViewingConversationOnMobile(true);
+                        window.requestAnimationFrame(() => window.scrollTo({ top: 0 }));
+                      }
                       void navigate({
                         to: "/chats",
                         search: { conversation: conversation.id },
@@ -450,7 +476,10 @@ function ChatsPage() {
                     {!isDesktop && viewingConversationOnMobile && (
                       <button
                         type="button"
-                        onClick={() => setViewingConversationOnMobile(false)}
+                        onClick={() => {
+                          setViewingConversationOnMobile(false);
+                          window.requestAnimationFrame(() => window.scrollTo({ top: 0 }));
+                        }}
                         className="inline-flex items-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
                         aria-label={text("المحادثات", "Conversations")}
                       >
@@ -566,13 +595,6 @@ function ChatsPage() {
                   onSubmit={(event) => void handleSend(event)}
                   className="rawaj-message-composer"
                 >
-                  <input
-                    value={blockReason}
-                    onChange={(event) => setBlockReason(event.target.value)}
-                    maxLength={300}
-                    placeholder={text("سبب الحظر اختياري", "Optional block reason")}
-                    className="rawaj-message-composer__block-reason mb-2"
-                  />
                   {selectedConversation.status === "active" ? (
                     <div className="mb-2">
                       <p className="mb-1.5 text-[10px] font-bold text-muted-foreground">

@@ -177,6 +177,38 @@ textarea.input {
 }
 
 @media (max-width: 1023px) {
+  .rawaj-route-chats .container-wide {
+    padding-inline: 0.75rem;
+  }
+
+  .rawaj-communication-v2--messages .rawaj-communication-hero {
+    border-radius: 1.2rem;
+    padding: 0.85rem;
+  }
+
+  .rawaj-communication-v2--messages .rawaj-communication-hero__copy h1 {
+    margin-top: 0.45rem;
+    font-size: 1.1rem;
+  }
+
+  .rawaj-communication-v2--messages .rawaj-communication-hero__copy > span {
+    display: -webkit-box;
+    overflow: hidden;
+    margin-top: 0.35rem;
+    font-size: 0.6rem;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .rawaj-communication-v2--messages .rawaj-communication-hero__metrics,
+  .rawaj-communication-v2--messages .rawaj-communication-hero__actions {
+    margin-top: 0.65rem;
+  }
+
+  .rawaj-communication-v2--messages .rawaj-communication-safety {
+    padding: 0.7rem;
+  }
+
   .rawaj-message-workspace {
     min-height: calc(100dvh - 12rem);
   }
