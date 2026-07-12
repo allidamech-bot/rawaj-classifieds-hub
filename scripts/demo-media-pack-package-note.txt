@@ -1,6 +1,0 @@
-Intended package scripts:
-- demo:media:apply = node scripts/apply-demo-media-pack.mjs
-- demo:media:remove = node scripts/remove-demo-media-pack.mjs
-- test:demo-listings-media = node --test scripts/demo-listings-media-pack.test.mjs
-
-This note is temporary and must not be merged; package.json integration is handled before merge.
