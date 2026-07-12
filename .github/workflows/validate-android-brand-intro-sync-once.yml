@@ -1,0 +1,92 @@
+name: Validate Synced Android Brand Intro Once
+
+on:
+  push:
+    branches:
+      - agent/android-brand-intro-1-0-3
+    paths:
+      - ".github/workflows/validate-android-brand-intro-sync-once.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  android-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/android-brand-intro-1-0-3
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install and build web application
+        run: |
+          npm ci
+          npm run build
+
+      - name: Synchronize Capacitor Android project
+        run: npx cap sync android
+
+      - name: Build Android and capture result
+        id: native_build
+        shell: bash
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          set +e
+          ./gradlew :app:assembleDebug :app:bundleRelease --no-daemon 2>&1 | tee /tmp/rawaj-android-build.log
+          status=${PIPESTATUS[0]}
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Record native validation
+        shell: bash
+        run: |
+          status="${{ steps.native_build.outputs.status }}"
+          if [ "$status" = "0" ]; then
+            {
+              echo "PASS"
+              echo "npm build, Capacitor Android sync, assembleDebug, and bundleRelease completed successfully."
+            } > android-brand-intro-build-validation.txt
+          else
+            {
+              echo "FAIL"
+              echo "Synced Android native build exited with status $status."
+              echo
+              echo "Last 180 log lines:"
+              tail -n 180 /tmp/rawaj-android-build.log
+            } > android-brand-intro-build-validation.txt
+          fi
+
+      - name: Remove one-time workflow
+        run: rm .github/workflows/validate-android-brand-intro-sync-once.yml
+
+      - name: Commit native validation result
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add android-brand-intro-build-validation.txt .github/workflows/validate-android-brand-intro-sync-once.yml
+          git commit -m "Record synced Android brand intro validation"
+          git push origin HEAD:agent/android-brand-intro-1-0-3
+
+      - name: Enforce native build result
+        if: steps.native_build.outputs.status != '0'
+        run: exit 1
