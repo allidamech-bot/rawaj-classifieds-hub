@@ -7,6 +7,7 @@ const config: CapacitorConfig = {
   server: {
     url: "https://rawa-j.com",
     cleartext: false,
+    allowNavigation: ["rawa-j.com", "*.rawa-j.com"],
   },
 };
 
