@@ -13,8 +13,16 @@
   z-index: -1;
   height: 34rem;
   background:
-    radial-gradient(circle at 88% 7%, color-mix(in srgb, var(--rawaj-orange) 10%, transparent), transparent 29%),
-    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--rawaj-gold) 12%, transparent), transparent 27%);
+    radial-gradient(
+      circle at 88% 7%,
+      color-mix(in srgb, var(--rawaj-orange) 10%, transparent),
+      transparent 29%
+    ),
+    radial-gradient(
+      circle at 8% 0%,
+      color-mix(in srgb, var(--rawaj-gold) 12%, transparent),
+      transparent 27%
+    );
   pointer-events: none;
 }
 
@@ -24,7 +32,11 @@
   border: 1px solid color-mix(in srgb, white 10%, transparent);
   border-radius: clamp(1.5rem, 5vw, 2.3rem);
   background:
-    radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--rawaj-gold) 24%, transparent), transparent 28%),
+    radial-gradient(
+      circle at 88% 8%,
+      color-mix(in srgb, var(--rawaj-gold) 24%, transparent),
+      transparent 28%
+    ),
     linear-gradient(145deg, #082f2a, var(--color-primary) 54%, #1f5d50);
   padding: clamp(1rem, 4vw, 1.8rem);
   color: white;
@@ -173,7 +185,9 @@
   scrollbar-width: none;
 }
 
-.rawaj-trust-hero__actions::-webkit-scrollbar { display: none; }
+.rawaj-trust-hero__actions::-webkit-scrollbar {
+  display: none;
+}
 
 .rawaj-trust-hero__actions a,
 .rawaj-trust-hero__actions button {
@@ -425,7 +439,9 @@
   box-shadow: 0 12px 28px color-mix(in srgb, var(--rawaj-orange) 24%, transparent);
 }
 
-.rawaj-support-panel button[type="submit"]:disabled { opacity: 0.5; }
+.rawaj-support-panel button[type="submit"]:disabled {
+  opacity: 0.5;
+}
 
 .rawaj-support-notice {
   border-radius: 0.9rem;
@@ -577,9 +593,21 @@
   padding: 0.65rem;
 }
 
-.rawaj-support-faq details + details { margin-top: 0.45rem; }
-.rawaj-support-faq summary { cursor: pointer; color: var(--color-primary); font-size: 0.62rem; font-weight: 850; }
-.rawaj-support-faq details p { margin-top: 0.4rem; color: var(--color-muted-foreground); font-size: 0.55rem; line-height: 1.7; }
+.rawaj-support-faq details + details {
+  margin-top: 0.45rem;
+}
+.rawaj-support-faq summary {
+  cursor: pointer;
+  color: var(--color-primary);
+  font-size: 0.62rem;
+  font-weight: 850;
+}
+.rawaj-support-faq details p {
+  margin-top: 0.4rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.55rem;
+  line-height: 1.7;
+}
 
 .rawaj-safety-guide {
   overflow: hidden;
@@ -684,8 +712,12 @@
 }
 
 @media (max-width: 389px) {
-  .rawaj-trust-hero__identity h1 { font-size: 1.2rem; }
-  .rawaj-safety-actions { grid-template-columns: minmax(0, 1fr); }
+  .rawaj-trust-hero__identity h1 {
+    font-size: 1.2rem;
+  }
+  .rawaj-safety-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

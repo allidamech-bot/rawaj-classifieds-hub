@@ -197,12 +197,7 @@ export function SupportRequestTimeline({
     return (
       <div className="rawaj-trust-empty">
         <CircleHelp aria-hidden="true" />
-        <p>
-          {text(
-            "لا توجد طلبات دعم محفوظة حتى الآن.",
-            "No stored support requests yet.",
-          )}
-        </p>
+        <p>{text("لا توجد طلبات دعم محفوظة حتى الآن.", "No stored support requests yet.")}</p>
       </div>
     );
   }
@@ -236,13 +231,7 @@ export function TrustLinkCard({
   tone = "default",
 }: {
   to:
-    | "/support"
-    | "/safety"
-    | "/privacy"
-    | "/terms"
-    | "/prohibited"
-    | "/verification"
-    | "/promotion";
+    "/support" | "/safety" | "/privacy" | "/terms" | "/prohibited" | "/verification" | "/promotion";
   icon: LucideIcon;
   title: string;
   description: string;
