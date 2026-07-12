@@ -14,7 +14,7 @@ export const Route = createFileRoute("/category/$slug")({
     );
     if (!category) throw notFound();
 
-    const listingsResult = await fetchPublicListings({ category: category.slug }, null, 12);
+    const listingsResult = await fetchPublicListings({ categoryId: category.id }, null, 12);
     return {
       category,
       listings: listingsResult.ok ? listingsResult.data.items : [],
