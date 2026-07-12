@@ -38,8 +38,23 @@ jobs:
       - name: Listing image parity contract
         run: node --test scripts/listing-studio-image-parity.test.mjs
 
-      - name: Launch readiness Batch 1 contract
-        run: node --test scripts/launch-readiness-batch-1.test.mjs
+      - name: Direct registration contract
+        run: node --test --test-name-pattern="new accounts" scripts/launch-readiness-batch-1.test.mjs
+
+      - name: Callback cleanup contract
+        run: node --test --test-name-pattern="authentication callback" scripts/launch-readiness-batch-1.test.mjs
+
+      - name: Owner deletion contract
+        run: node --test --test-name-pattern="owner deletion" scripts/launch-readiness-batch-1.test.mjs
+
+      - name: Persisted image ordering contract
+        run: node --test --test-name-pattern="listing image ordering" scripts/launch-readiness-batch-1.test.mjs
+
+      - name: Studio order controls contract
+        run: node --test --test-name-pattern="create and edit studios" scripts/launch-readiness-batch-1.test.mjs
+
+      - name: Quality Gate wiring contract
+        run: node --test --test-name-pattern="permanent Quality Gate inputs" scripts/launch-readiness-batch-1.test.mjs
 
       - name: Remove one-time automation
         run: rm .github/workflows/apply-launch-readiness-batch-1.yml scripts/apply-launch-readiness-batch-1.mjs
