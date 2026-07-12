@@ -1,0 +1,71 @@
+name: Apply launch readiness Batch 4
+
+on:
+  push:
+    branches:
+      - agent/launch-readiness-batch-4
+    paths:
+      - .github/workflows/apply-launch-readiness-batch-4.yml
+      - scripts/apply-launch-readiness-batch-4.mjs
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
+    paths:
+      - .github/workflows/apply-launch-readiness-batch-4.yml
+      - scripts/apply-launch-readiness-batch-4.mjs
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/launch-readiness-batch-4
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply performance patch
+        run: node scripts/apply-launch-readiness-batch-4.mjs
+
+      - name: Format and lint changed source
+        run: |
+          npx eslint --fix \
+            scripts/launch-readiness-batch-4.test.mjs \
+            src/lib/api/listings.ts \
+            src/lib/api/primary-listing-images.ts \
+            src/lib/api/references.ts
+          npx prettier --write package.json
+          npx eslint --quiet \
+            scripts/launch-readiness-batch-4.test.mjs \
+            src/lib/api/listings.ts \
+            src/lib/api/primary-listing-images.ts \
+            src/lib/api/references.ts
+
+      - name: Run focused performance regressions
+        run: |
+          npm run test:launch-readiness-batch-4
+          npm run test:home-ssr
+          node --test scripts/home-hydration-ad-media.test.mjs
+          npm run typecheck -- --pretty false
+
+      - name: Commit source implementation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json scripts/launch-readiness-batch-4.test.mjs src/lib/api/listings.ts src/lib/api/primary-listing-images.ts src/lib/api/references.ts
+          git commit -m "Reduce marketplace image and reference requests"
+          git push origin HEAD:agent/launch-readiness-batch-4
