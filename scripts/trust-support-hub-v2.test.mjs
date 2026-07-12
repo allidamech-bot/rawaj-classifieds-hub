@@ -54,6 +54,7 @@ test("more hub keeps account admin language session and navigation behavior", ()
 test("support keeps stored request submission and history with shared timeline", () => {
   assert.match(support, /rawaj-support-v2/);
   assert.match(support, /<TrustHubHero/);
+  assert.match(support, /displayName=\{auth\.profile\?\.displayName \?\? undefined\}/);
   assert.match(support, /<SupportRequestTimeline/);
   assert.match(support, /createSupportRequest/);
   assert.match(support, /fetchMySupportRequests/);
