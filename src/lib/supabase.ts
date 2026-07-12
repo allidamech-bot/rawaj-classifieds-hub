@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
@@ -12,12 +13,15 @@ const hasSupabaseAnonKey = hasUsableEnvValue(supabaseAnonKey, "YOUR_SUPABASE_ANO
 
 export const isSupabaseConfigured = hasSupabaseUrl && hasSupabaseAnonKey;
 
+const isNativeRuntime = typeof window !== "undefined" && Capacitor.isNativePlatform();
+
 export const supabase: SupabaseClient | null = isSupabaseConfigured
   ? createClient(supabaseUrl!, supabaseAnonKey!, {
       auth: {
+        flowType: "pkce",
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true,
+        detectSessionInUrl: !isNativeRuntime,
       },
     })
   : null;
