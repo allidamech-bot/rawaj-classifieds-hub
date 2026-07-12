@@ -21,7 +21,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx prettier --write src/routes/category.\$slug.tsx src/routes/syria.\$slug.tsx scripts/launch-readiness-batch-8.test.mjs
+      - name: Format final Batch 8 files
+        run: npx prettier --write src/routes/category.\$slug.tsx src/routes/syria.\$slug.tsx scripts/launch-readiness-batch-8.test.mjs
       - name: Commit formatting
         run: |
           if git diff --quiet; then
