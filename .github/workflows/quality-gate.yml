@@ -114,6 +114,9 @@ jobs:
       - name: Production deployment truth contract
         run: npm run test:deployment-truth
 
+      - name: Production acceptance safety contract
+        run: npm run test:production-acceptance-contract
+
       - name: Public data security contract
         run: npm run test:public-data-security
 
