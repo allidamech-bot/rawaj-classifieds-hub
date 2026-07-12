@@ -279,8 +279,8 @@ await replaceOnce(
     >`,
   `      aria-current={selected ? "true" : undefined}
       aria-label={text(
-        \\`فتح المحادثة مع \\${conversation.otherParticipant.displayName}\\`,
-        \\`Open conversation with \\${conversation.otherParticipant.displayName}\\`,
+        "فتح المحادثة مع " + conversation.otherParticipant.displayName,
+        "Open conversation with " + conversation.otherParticipant.displayName,
       )}
     >`,
   "conversation summary accessible label",
