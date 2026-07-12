@@ -1,3 +1,4 @@
+# Manual, read-only verification of authenticated journeys on the live RAWAJ domain.
 name: Production Acceptance
 
 on:
