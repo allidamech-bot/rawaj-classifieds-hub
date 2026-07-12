@@ -1,6 +1,0 @@
-
-> typecheck
-> tsc --noEmit --pretty false
-
-src/routes/category.$slug.tsx(17,56): error TS2561: Object literal may only specify known properties, but 'category' does not exist in type 'ListingFilters'. Did you mean to write 'categoryId'?
-src/routes/syria.$slug.tsx(17,56): error TS2561: Object literal may only specify known properties, but 'governorate' does not exist in type 'ListingFilters'. Did you mean to write 'governorateId'?
