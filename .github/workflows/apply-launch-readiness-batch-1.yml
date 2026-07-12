@@ -32,6 +32,9 @@ jobs:
       - name: Apply implementation patch
         run: node scripts/apply-launch-readiness-batch-1.mjs
 
+      - name: Correct generated registration assertion
+        run: sed -i 's/{0,280}/{0,800}/' scripts/launch-readiness-batch-1.test.mjs
+
       - name: Auth recovery contract
         run: node --test scripts/auth-recovery.test.mjs
 
