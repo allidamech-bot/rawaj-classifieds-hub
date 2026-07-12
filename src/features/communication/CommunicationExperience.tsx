@@ -157,6 +157,7 @@ export function ConversationSummaryItem({
       onClick={onSelect}
       className="rawaj-conversation-summary"
       data-selected={selected}
+      data-unread={conversation.unreadCount > 0}
       aria-current={selected ? "true" : undefined}
       aria-label={text(
         "فتح المحادثة مع " + conversation.otherParticipant.displayName,
@@ -168,7 +169,14 @@ export function ConversationSummaryItem({
         url={conversation.otherParticipant.avatarUrl}
       />
       <span className="rawaj-conversation-summary__copy">
-        <strong>{conversation.otherParticipant.displayName}</strong>
+        <span className="rawaj-conversation-summary__name-row">
+          <strong>{conversation.otherParticipant.displayName}</strong>
+          {conversation.unreadCount > 0 ? (
+            <b className="rawaj-conversation-summary__unread">
+              {conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}
+            </b>
+          ) : null}
+        </span>
         <span className="rawaj-conversation-summary__presence" data-online={online}>
           <i aria-hidden="true" />
           {online ? text("متصل الآن", "Online now") : text("غير متصل", "Offline")}
@@ -178,7 +186,7 @@ export function ConversationSummaryItem({
       </span>
       <span className="rawaj-conversation-summary__meta">
         {conversation.unreadCount > 0 ? (
-          <b>{conversation.unreadCount}</b>
+          <ChevronLeft className="rtl:rotate-180" aria-hidden="true" />
         ) : (
           <Check aria-hidden="true" />
         )}
