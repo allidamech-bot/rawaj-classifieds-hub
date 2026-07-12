@@ -5,12 +5,14 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { fetchMyConversations } from "@/lib/api/messaging";
 import { fetchUnreadNotificationsCount } from "@/lib/api/notifications";
 import { UNREAD_ACTIVITY_CHANGED_EVENT } from "@/lib/unread-activity-events";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/use-auth";
 
 export interface UnreadActivityCounts {
@@ -42,9 +44,11 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [counts, setCounts] = useState<UnreadActivityCounts>(EMPTY_COUNTS);
   const [loading, setLoading] = useState(false);
+  const refreshRequestRef = useRef(0);
   const profileId = auth.profile?.id ?? null;
 
   const refresh = useCallback(async () => {
+    const requestId = ++refreshRequestRef.current;
     if (auth.status !== "signedIn" || !profileId) {
       setCounts(EMPTY_COUNTS);
       setLoading(false);
@@ -56,6 +60,8 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
       fetchMyConversations(profileId),
       fetchUnreadNotificationsCount(profileId),
     ]);
+
+    if (requestId !== refreshRequestRef.current) return;
 
     const messages = conversationsResult.ok
       ? conversationsResult.data.reduce(
@@ -82,11 +88,53 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
     const handleRefresh = () => void refresh();
     window.addEventListener(UNREAD_ACTIVITY_CHANGED_EVENT, handleRefresh);
     window.addEventListener("focus", handleRefresh);
+    window.addEventListener("online", handleRefresh);
+    document.addEventListener("visibilitychange", handleRefresh);
     return () => {
       window.removeEventListener(UNREAD_ACTIVITY_CHANGED_EVENT, handleRefresh);
       window.removeEventListener("focus", handleRefresh);
+      window.removeEventListener("online", handleRefresh);
+      document.removeEventListener("visibilitychange", handleRefresh);
     };
   }, [refresh]);
+
+  useEffect(() => {
+    const client = supabase;
+    if (!client || auth.status !== "signedIn" || !profileId) return;
+
+    const channel = client
+      .channel(`rawaj-unread-${profileId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${profileId}`,
+        },
+        () => void refresh(),
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${profileId}`,
+        },
+        () => void refresh(),
+      )
+      .subscribe();
+
+    const fallbackTimer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void refresh();
+    }, 60_000);
+
+    return () => {
+      window.clearInterval(fallbackTimer);
+      void client.removeChannel(channel);
+    };
+  }, [auth.status, profileId, refresh]);
 
   const value = useMemo(() => ({ counts, loading, refresh }), [counts, loading, refresh]);
   return <UnreadActivityContext.Provider value={value}>{children}</UnreadActivityContext.Provider>;
