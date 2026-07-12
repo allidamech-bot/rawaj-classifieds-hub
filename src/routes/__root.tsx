@@ -181,47 +181,84 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     };
   },
   shellComponent: RootShell,
+  component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
-  component: RootComponent,
 });
 
-function RootComponent() {
-  return <Outlet />;
-}
-
 function RootShell({ children }: { children: ReactNode }) {
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const queryClient = new QueryClient();
-  const siteStructuredData = jsonLdScript(buildSiteStructuredData());
-
   return (
     <html lang="ar" dir="rtl">
       <head>
         <HeadContent />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: siteStructuredData }}
-        />
       </head>
       <body>
-        <QueryClientProvider client={queryClient}>
-          <UiPreferencesProvider>
-            <AuthProvider>
-              <UnreadActivityProvider>
-                <AppShell>
-                  <DraftRecoveryBanner />
-                  <ExistingConversationBanner />
-                  <ViewedBeforeBanner />
-                  {children}
-                </AppShell>
-              </UnreadActivityProvider>
-            </AuthProvider>
-          </UiPreferencesProvider>
-        </QueryClientProvider>
+        {children}
+        <script {...jsonLdScript(buildSiteStructuredData())} />
         <Analytics />
         <Scripts />
       </body>
     </html>
+  );
+}
+
+function HtmlAttributes() {
+  const { language } = useUiPreferences();
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.lang = language === "en" ? "en" : "ar";
+    root.dir = language === "en" ? "ltr" : "rtl";
+  }, [language]);
+
+  return null;
+}
+
+function personalSpaceRouteClass(pathname: string) {
+  if (pathname === "/favorites") return "rawaj-route-favorites";
+  if (pathname === "/saved-searches") return "rawaj-route-saved-searches";
+  if (pathname === "/activity") return "rawaj-route-activity";
+  if (pathname === "/chats") return "rawaj-route-chats";
+  if (pathname === "/notifications") return "rawaj-route-notifications";
+  if (pathname === "/more") return "rawaj-route-more";
+  if (pathname === "/profile" || pathname === "/profile/") return "rawaj-route-profile";
+  return "";
+}
+
+function RootComponent() {
+  const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const showDraftRecovery = pathname === "/add-listing";
+  const routeScopeClass = personalSpaceRouteClass(pathname);
+  const listingDetailMatch = pathname.match(/^\/listings\/([^/]+)$/);
+  const listingDetailId = listingDetailMatch?.[1]
+    ? decodeURIComponent(listingDetailMatch[1])
+    : null;
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <UiPreferencesProvider>
+        <AuthProvider>
+          <UnreadActivityProvider>
+            <HtmlAttributes />
+            <AppShell
+              pathname={pathname}
+              routeClassName={routeScopeClass}
+              announcements={
+                <>
+                  {showDraftRecovery ? <DraftRecoveryBanner /> : null}
+                  {listingDetailId ? <ViewedBeforeBanner listingId={listingDetailId} /> : null}
+                  {listingDetailId ? (
+                    <ExistingConversationBanner listingId={listingDetailId} />
+                  ) : null}
+                </>
+              }
+            >
+              <Outlet />
+            </AppShell>
+          </UnreadActivityProvider>
+        </AuthProvider>
+      </UiPreferencesProvider>
+    </QueryClientProvider>
   );
 }
