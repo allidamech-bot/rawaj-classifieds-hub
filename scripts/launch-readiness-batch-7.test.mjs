@@ -32,7 +32,10 @@ const [
   ),
   readFile(new URL("../android/app/src/main/res/values/styles.xml", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/res/drawable/splash.xml", import.meta.url), "utf8"),
-  readFile(new URL("../android/app/src/main/res/mipmap-anydpi/rawaj_launcher.xml", import.meta.url), "utf8"),
+  readFile(
+    new URL("../android/app/src/main/res/mipmap-anydpi/rawaj_launcher.xml", import.meta.url),
+    "utf8",
+  ),
   readFile(
     new URL("../android/app/src/main/res/mipmap-anydpi-v26/rawaj_launcher.xml", import.meta.url),
     "utf8",
