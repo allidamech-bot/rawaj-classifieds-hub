@@ -51,6 +51,7 @@ jobs:
       - name: Integrate Trust Support Hub V2
         run: python scripts/temporary-integrate-trust-support-v2.py
       - name: Format integrated product files
+        continue-on-error: true
         run: >-
           npx prettier --write
           scripts/trust-support-hub-v2.test.mjs
