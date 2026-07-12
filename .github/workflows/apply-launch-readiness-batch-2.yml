@@ -69,13 +69,20 @@ jobs:
             src/routes/profile/listings.tsx \
             src/routes/notifications.tsx
 
-      - name: Run focused Batch 2 regressions
-        run: |
-          npm run test:auth-recovery
-          node --test scripts/auth-account-v2.test.mjs
-          node --test scripts/seller-storefront-v2.test.mjs
-          node --test scripts/communication-center-v2.test.mjs
-          npm run test:launch-readiness-batch-2
+      - name: Auth recovery compatibility
+        run: npm run test:auth-recovery
+
+      - name: Auth and account compatibility
+        run: node --test scripts/auth-account-v2.test.mjs
+
+      - name: Seller storefront compatibility
+        run: node --test scripts/seller-storefront-v2.test.mjs
+
+      - name: Communication center compatibility
+        run: node --test scripts/communication-center-v2.test.mjs
+
+      - name: Launch readiness Batch 2 contract
+        run: npm run test:launch-readiness-batch-2
 
       - name: Remove one-time automation
         run: rm .github/workflows/apply-launch-readiness-batch-2.yml scripts/apply-launch-readiness-batch-2.mjs
