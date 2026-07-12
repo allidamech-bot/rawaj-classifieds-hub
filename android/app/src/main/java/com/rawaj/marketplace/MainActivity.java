@@ -23,8 +23,8 @@ public class MainActivity extends BridgeActivity {
     private static final String RAWAJ_ORIGIN = "https://rawa-j.com";
     private static final String RAWAJ_HOST = "rawa-j.com";
     private static final String RAWAJ_AUTH_SCHEME = "com.rawaj.marketplace";
-    private static final long INTRO_MIN_VISIBLE_MS = 1800L;
-    private static final long INTRO_MAX_VISIBLE_MS = 8000L;
+    private static final long INTRO_MIN_VISIBLE_MS = 650L;
+    private static final long INTRO_MAX_VISIBLE_MS = 2400L;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,7 +131,7 @@ public class MainActivity extends BridgeActivity {
 
         final FrameLayout logoStage = new FrameLayout(this);
         final LinearLayout.LayoutParams logoStageParams =
-            new LinearLayout.LayoutParams(dp(300), dp(300));
+            new LinearLayout.LayoutParams(dp(220), dp(220));
 
         final View glow = new View(this);
         glow.setBackgroundResource(R.drawable.rawaj_logo_glow);
@@ -155,14 +155,14 @@ public class MainActivity extends BridgeActivity {
         logo.setScaleY(0.76f);
         logo.setTranslationY(dp(22));
         final FrameLayout.LayoutParams logoParams =
-            new FrameLayout.LayoutParams(dp(246), dp(246), Gravity.CENTER);
+            new FrameLayout.LayoutParams(dp(176), dp(176), Gravity.CENTER);
         logoStage.addView(logo, logoParams);
         content.addView(logoStage, logoStageParams);
 
         final TextView arabicName = new TextView(this);
         arabicName.setText("رواج");
         arabicName.setTextColor(getColor(R.color.rawaj_intro_ivory));
-        arabicName.setTextSize(58f);
+        arabicName.setTextSize(46f);
         arabicName.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
         arabicName.setGravity(Gravity.CENTER);
         arabicName.setShadowLayer(dp(18), 0f, dp(3), Color.rgb(196, 105, 19));
@@ -179,7 +179,7 @@ public class MainActivity extends BridgeActivity {
         final TextView englishName = new TextView(this);
         englishName.setText("R A W A J");
         englishName.setTextColor(getColor(R.color.rawaj_intro_gold));
-        englishName.setTextSize(15f);
+        englishName.setTextSize(13f);
         englishName.setTypeface(Typeface.create("serif", Typeface.NORMAL));
         englishName.setGravity(Gravity.CENTER);
         englishName.setAlpha(0f);
@@ -214,7 +214,7 @@ public class MainActivity extends BridgeActivity {
             .alpha(0.9f)
             .scaleX(1.08f)
             .scaleY(1.08f)
-            .setDuration(900L)
+            .setDuration(520L)
             .setInterpolator(new DecelerateInterpolator())
             .start();
 
@@ -224,7 +224,7 @@ public class MainActivity extends BridgeActivity {
             .scaleX(1f)
             .scaleY(1f)
             .translationY(0f)
-            .setDuration(680L)
+            .setDuration(420L)
             .setInterpolator(new DecelerateInterpolator())
             .start();
 
@@ -232,8 +232,8 @@ public class MainActivity extends BridgeActivity {
             .animate()
             .alpha(1f)
             .translationY(0f)
-            .setStartDelay(420L)
-            .setDuration(520L)
+            .setStartDelay(180L)
+            .setDuration(300L)
             .setInterpolator(new DecelerateInterpolator())
             .start();
 
@@ -241,8 +241,8 @@ public class MainActivity extends BridgeActivity {
             .animate()
             .alpha(1f)
             .translationY(0f)
-            .setStartDelay(590L)
-            .setDuration(480L)
+            .setStartDelay(300L)
+            .setDuration(260L)
             .setInterpolator(new DecelerateInterpolator())
             .start();
 
@@ -275,7 +275,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private boolean isWebContentReady(WebView webView) {
-        if (webView == null || webView.getProgress() < 90) {
+        if (webView == null || webView.getProgress() < 70) {
             return false;
         }
         final String url = webView.getUrl();
@@ -291,7 +291,7 @@ public class MainActivity extends BridgeActivity {
         overlay
             .animate()
             .alpha(0f)
-            .setDuration(380L)
+            .setDuration(220L)
             .setInterpolator(new DecelerateInterpolator())
             .withEndAction(
                 () -> {

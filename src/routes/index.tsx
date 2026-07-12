@@ -1,6 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { useCallback, useState, type FormEvent } from "react";
 import { AppHeader } from "@/components/AppHeader";
+import { NativePullToRefresh } from "@/components/native/NativePullToRefresh";
 import { EmptyState, PageContainer, PageTransition } from "@/components/shell/spatial-primitives";
 import { CategoryWorlds } from "@/features/home/CategoryWorlds";
 import { DiscoveryHero } from "@/features/home/DiscoveryHero";
@@ -35,6 +36,7 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const navigate = useNavigate();
+  const router = useRouter();
   const { language, text } = useUiPreferences();
   const { listings, categories, listingLoadFailed } = Route.useLoaderData();
   const [searchValue, setSearchValue] = useState("");
@@ -57,8 +59,13 @@ function HomePage() {
     void navigate({ to: "/listings", search: q ? { q } : {} });
   }
 
+  const refreshHome = useCallback(async () => {
+    await router.invalidate();
+  }, [router]);
+
   return (
     <>
+      <NativePullToRefresh onRefresh={refreshHome} />
       <AppHeader />
       <main className="rawaj-home-v3-main">
         <PageTransition>

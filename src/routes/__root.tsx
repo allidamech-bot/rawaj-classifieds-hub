@@ -44,6 +44,7 @@ import listingStudioV3Css from "../listing-studio-v3.css?url";
 import listingsResultsCss from "../listings-results.css?url";
 import marketplaceDiscoveryCss from "../marketplace-discovery.css?url";
 import marketplaceSystemCss from "../marketplace-system.css?url";
+import mobileAppStabilizationCss from "../mobile-app-stabilization.css?url";
 import messagingSignatureCss from "../messaging-signature.css?url";
 import myStoreBrandPolishCss from "../my-store-brand-polish.css?url";
 import myStoreHeaderRefinementCss from "../my-store-header-refinement.css?url";
@@ -153,6 +154,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: listingStudioV3Css },
         { rel: "stylesheet", href: messagingSignatureCss },
         { rel: "stylesheet", href: communicationCenterV2Css },
+        { rel: "stylesheet", href: mobileAppStabilizationCss },
         { rel: "stylesheet", href: marketplaceSystemCss },
         { rel: "stylesheet", href: myStoreHeaderRefinementCss },
         { rel: "stylesheet", href: myStoreBrandPolishCss },

@@ -142,12 +142,15 @@ export function CommunicationSafetyNote() {
 export function ConversationSummaryItem({
   conversation,
   selected,
+  online,
   onSelect,
 }: {
   conversation: Conversation;
   selected: boolean;
+  online: boolean;
   onSelect: () => void;
 }) {
+  const { text } = useUiPreferences();
   return (
     <button
       type="button"
@@ -155,6 +158,10 @@ export function ConversationSummaryItem({
       className="rawaj-conversation-summary"
       data-selected={selected}
       aria-current={selected ? "true" : undefined}
+      aria-label={text(
+        "فتح المحادثة مع " + conversation.otherParticipant.displayName,
+        "Open conversation with " + conversation.otherParticipant.displayName,
+      )}
     >
       <ParticipantAvatar
         name={conversation.otherParticipant.displayName}
@@ -162,6 +169,10 @@ export function ConversationSummaryItem({
       />
       <span className="rawaj-conversation-summary__copy">
         <strong>{conversation.otherParticipant.displayName}</strong>
+        <span className="rawaj-conversation-summary__presence" data-online={online}>
+          <i aria-hidden="true" />
+          {online ? text("متصل الآن", "Online now") : text("غير متصل", "Offline")}
+        </span>
         <small>{conversation.listingTitle}</small>
         {conversation.lastMessagePreview ? <p>{conversation.lastMessagePreview}</p> : null}
       </span>

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Ban, Flag, MessageCircle, Send } from "lucide-react";
+import { Ban, Flag, MessageCircle, RefreshCw, Send } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
@@ -22,6 +22,7 @@ import type { ClassifiedsError, Conversation, ConversationMessage } from "@/lib/
 import { resolveConversationTarget } from "@/lib/journey-target-resolution";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
+import { useConversationMessagesRealtime, useOnlinePresence } from "@/lib/use-online-presence";
 
 const chatsSearchSchema = z.object({
   conversation: z.string().optional(),
@@ -61,6 +62,7 @@ function ChatsPage() {
   const [blockReason, setBlockReason] = useState("");
   const [viewingConversationOnMobile, setViewingConversationOnMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const messagesRequestIdRef = useRef(0);
   const conversationsRequestIdRef = useRef(0);
   const selectedConversationIdRef = useRef<string | null>(null);
@@ -71,7 +73,8 @@ function ChatsPage() {
     [conversations, search.conversation],
   );
   const selectedConversation =
-    targetResolution.kind === "selected" || targetResolution.kind === "default"
+    targetResolution.kind === "selected" ||
+    (isDesktop && targetResolution.kind === "default")
       ? targetResolution.conversation
       : null;
   const missingConversationTarget = targetResolution.kind === "missing";
@@ -86,6 +89,28 @@ function ChatsPage() {
       ].some((value) => value.toLocaleLowerCase(language === "ar" ? "ar" : "en").includes(query)),
     );
   }, [conversationQuery, conversations, language]);
+  const { onlineUserIds } = useOnlinePresence(
+    auth.profile?.id,
+    auth.status === "signedIn",
+  );
+
+  useConversationMessagesRealtime({
+    conversationId: selectedConversation?.id ?? null,
+    enabled: auth.status === "signedIn" && Boolean(selectedConversation),
+    onMessage: (message) => {
+      setMessages((current) =>
+        current.some((item) => item.id === message.id) ? current : [...current, message],
+      );
+      if (
+        auth.profile?.id &&
+        selectedConversation?.id &&
+        message.senderUserId !== auth.profile.id
+      ) {
+        void markConversationRead(auth.profile.id, selectedConversation.id);
+      }
+      void loadConversations();
+    },
+  });
 
   useEffect(() => {
     selectedConversationIdRef.current = selectedConversation?.id ?? null;
@@ -110,6 +135,13 @@ function ChatsPage() {
   }, [search.conversation]);
 
   useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      block: "end",
+      behavior: loadingMessages ? "auto" : "smooth",
+    });
+  }, [loadingMessages, messages.length, selectedConversation?.id]);
+
+  useEffect(() => {
     if (!isDesktop && search.conversation && conversations.length > 0) {
       const exists = conversations.some((conversation) => conversation.id === search.conversation);
       if (exists && autoOpenedConversationRef.current !== search.conversation) {
@@ -129,13 +161,6 @@ function ChatsPage() {
     if (requestId !== conversationsRequestIdRef.current || profileId !== auth.profile?.id) return;
     if (result.ok) {
       setConversations(result.data);
-      if (!search.conversation && result.data[0]) {
-        void navigate({
-          to: "/chats",
-          search: { conversation: result.data[0].id },
-          replace: true,
-        });
-      }
     } else {
       setConversations([]);
       setConversationError(result.error);
@@ -321,16 +346,37 @@ function ChatsPage() {
               label={text("بحث في المحادثات", "Search conversations")}
             />
             {loadingConversations ? (
-              <PanelText>{text("جاري تحميل المحادثات.", "Loading conversations.")}</PanelText>
+              <div className="rawaj-chat-state rawaj-chat-state--loading">
+                <RefreshCw className="animate-spin" aria-hidden="true" />
+                <strong>{text("جاري تحميل محادثاتك", "Loading your conversations")}</strong>
+                <p>
+                  {text(
+                    "نرتب الرسائل والأطراف المرتبطة بإعلاناتك.",
+                    "Preparing your listing conversations.",
+                  )}
+                </p>
+              </div>
             ) : conversationError ? (
-              <PanelText>{conversationError.message}</PanelText>
+              <div className="rawaj-chat-state" data-tone="error">
+                <RefreshCw aria-hidden="true" />
+                <strong>{text("تعذر تحميل المحادثات", "Could not load conversations")}</strong>
+                <p>{conversationError.message}</p>
+                <button type="button" onClick={() => void loadConversations()}>
+                  {text("إعادة المحاولة", "Try again")}
+                </button>
+              </div>
             ) : conversations.length === 0 ? (
-              <PanelText>
-                {text(
-                  "لا توجد محادثات بعد. افتح إعلانا معتمدا وابدأ محادثة من صفحة الإعلان.",
-                  "No conversations yet. Open an approved listing and start a conversation from it.",
-                )}
-              </PanelText>
+              <div className="rawaj-chat-state">
+                <MessageCircle aria-hidden="true" />
+                <strong>{text("ابدأ أول محادثة", "Start your first conversation")}</strong>
+                <p>
+                  {text(
+                    "افتح إعلاناً واضغط مراسلة البائع. ستظهر المحادثات هنا مرتبة مع حالة الاتصال وآخر رسالة.",
+                    "Open a listing and message the seller. Conversations will appear here with presence and the latest message.",
+                  )}
+                </p>
+                <Link to="/listings">{text("تصفح الإعلانات", "Browse listings")}</Link>
+              </div>
             ) : filteredConversations.length === 0 ? (
               <PanelText>
                 {text("لا توجد محادثات تطابق بحثك.", "No conversations match your search.")}
@@ -342,6 +388,7 @@ function ChatsPage() {
                     key={conversation.id}
                     conversation={conversation}
                     selected={selectedConversation?.id === conversation.id}
+                    online={onlineUserIds.has(conversation.otherParticipant.userId)}
                     onSelect={() => {
                       if (!isDesktop) setViewingConversationOnMobile(true);
                       void navigate({
@@ -417,11 +464,23 @@ function ChatsPage() {
                     <Avatar
                       name={selectedConversation.otherParticipant.displayName}
                       url={selectedConversation.otherParticipant.avatarUrl}
+                      online={onlineUserIds.has(selectedConversation.otherParticipant.userId)}
                     />
                     <div className="rawaj-message-header__copy">
                       <h2 className="truncate text-sm font-extrabold">
                         {selectedConversation.otherParticipant.displayName}
                       </h2>
+                      <p
+                        className="rawaj-message-header__presence"
+                        data-online={onlineUserIds.has(
+                          selectedConversation.otherParticipant.userId,
+                        )}
+                      >
+                        <span aria-hidden="true" />
+                        {onlineUserIds.has(selectedConversation.otherParticipant.userId)
+                          ? text("متصل الآن", "Online now")
+                          : text("غير متصل", "Offline")}
+                      </p>
                       {selectedConversation.listingId ? (
                         <Link
                           to="/listings/$id"
@@ -504,6 +563,7 @@ function ChatsPage() {
                       );
                     })
                   )}
+                  <div ref={messagesEndRef} aria-hidden="true" />
                 </div>
 
                 <form
@@ -570,20 +630,23 @@ function ChatsPage() {
   );
 }
 
-function Avatar({ name, url }: { name: string; url: string | null }) {
+function Avatar({
+  name,
+  url,
+  online,
+}: {
+  name: string;
+  url: string | null;
+  online: boolean;
+}) {
   return (
-    <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-card text-sm font-bold text-primary hairline">
+    <span className="rawaj-chat-avatar" data-online={online}>
       {url ? (
-        <img
-          src={url}
-          alt={name}
-          loading="lazy"
-          decoding="async"
-          className="h-full w-full object-cover"
-        />
+        <img src={url} alt={name} loading="lazy" decoding="async" />
       ) : (
         name.slice(0, 1)
       )}
+      <i aria-hidden="true" />
     </span>
   );
 }
