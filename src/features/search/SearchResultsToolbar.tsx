@@ -92,7 +92,6 @@ export function SearchResultsToolbar({
         target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
       if (event.key === "/" && !editable) {
         event.preventDefault();
-        setRecentSearches(readRecentSearches());
         searchInputRef.current?.focus();
       }
     }
