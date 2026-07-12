@@ -92,7 +92,7 @@ test("RAWAJ owns the native icon and system splash", async () => {
   assert.ok(logoAsset.size > 10_000);
 });
 
-test("RAWAJ launch intro is native, animated, and shown only on a fresh activity", () => {
+test("RAWAJ launch intro is native, animated, readiness-aware, and fresh-activity only", () => {
   assert.match(mainActivity, /savedInstanceState == null/);
   assert.match(mainActivity, /R\.drawable\.rawaj_intro_background/);
   assert.match(mainActivity, /R\.drawable\.rawaj_logo_mark/);
@@ -100,7 +100,9 @@ test("RAWAJ launch intro is native, animated, and shown only on a fresh activity
   assert.match(mainActivity, /englishName\.setText\("R A W A J"\)/);
   assert.match(mainActivity, /setScaleX\(0\.76f\)/);
   assert.match(mainActivity, /setStartDelay\(420L\)/);
-  assert.match(mainActivity, /setStartDelay\(1800L\)/);
+  assert.match(mainActivity, /INTRO_MIN_VISIBLE_MS = 1800L/);
+  assert.match(mainActivity, /INTRO_MAX_VISIBLE_MS = 8000L/);
+  assert.match(mainActivity, /isWebContentReady\(webView\)/);
   assert.match(mainActivity, /setDuration\(380L\)/);
   assert.match(mainActivity, /root\.removeView\(overlay\)/);
 });
