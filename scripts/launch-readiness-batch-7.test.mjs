@@ -2,11 +2,21 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [capacitor, manifest, strings, buildGradle, qualityGate] = await Promise.all([
+const [
+  capacitor,
+  manifest,
+  strings,
+  buildGradle,
+  rootGitignore,
+  androidGitignore,
+  qualityGate,
+] = await Promise.all([
   readFile(new URL("../capacitor.config.ts", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/AndroidManifest.xml", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/res/values/strings.xml", import.meta.url), "utf8"),
   readFile(new URL("../android/app/build.gradle", import.meta.url), "utf8"),
+  readFile(new URL("../.gitignore", import.meta.url), "utf8"),
+  readFile(new URL("../android/.gitignore", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
 ]);
 
@@ -38,6 +48,17 @@ test("Android release is prepared for Play version 1.0.2", () => {
   assert.match(buildGradle, /versionName "1\.0\.2"/);
   assert.doesNotMatch(buildGradle, /versionCode 2/);
   assert.doesNotMatch(buildGradle, /versionName "1\.0\.1"/);
+});
+
+test("Android signing credentials cannot be committed accidentally", () => {
+  for (const ignoreSource of [rootGitignore, androidGitignore]) {
+    assert.match(ignoreSource, /^\*\.jks$/m);
+    assert.match(ignoreSource, /^\*\.keystore$/m);
+    assert.match(ignoreSource, /^\*\.p12$/m);
+    assert.match(ignoreSource, /^keystore\.properties$/m);
+    assert.match(ignoreSource, /^signing\.properties$/m);
+    assert.match(ignoreSource, /^key\.properties$/m);
+  }
 });
 
 test("Batch 7 is permanently part of the Quality Gate", () => {
