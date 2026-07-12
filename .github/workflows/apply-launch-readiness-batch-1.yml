@@ -32,8 +32,14 @@ jobs:
       - name: Apply implementation patch
         run: node scripts/apply-launch-readiness-batch-1.mjs
 
-      - name: Run focused regression contracts
-        run: node --test scripts/auth-recovery.test.mjs scripts/listing-studio-image-parity.test.mjs scripts/launch-readiness-batch-1.test.mjs
+      - name: Auth recovery contract
+        run: node --test scripts/auth-recovery.test.mjs
+
+      - name: Listing image parity contract
+        run: node --test scripts/listing-studio-image-parity.test.mjs
+
+      - name: Launch readiness Batch 1 contract
+        run: node --test scripts/launch-readiness-batch-1.test.mjs
 
       - name: Remove one-time automation
         run: rm .github/workflows/apply-launch-readiness-batch-1.yml scripts/apply-launch-readiness-batch-1.mjs
