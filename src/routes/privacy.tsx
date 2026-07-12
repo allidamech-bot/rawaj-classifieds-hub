@@ -17,43 +17,43 @@ export const Route = createFileRoute("/privacy")({
 const sections = [
   {
     h: "خصوصية رَوَاج",
-    p: "يعتمد رَوَاج على مصدر بيانات آمن للحسابات والأدوار، ويعرض بيانات المستخدم وفق ما يلزم لتشغيل الإعلانات والمراجعة والسلامة.",
+    p: "يعتمد رَوَاج على أنظمة آمنة لإدارة الحسابات والصلاحيات، ولا يعرض بيانات المستخدم إلا بالقدر اللازم لتشغيل الإعلانات والمراجعة والتواصل والسلامة.",
   },
   {
     h: "البيانات التي نعالجها",
-    p: "قد نعالج بيانات الحساب، بيانات التواصل التي تختار إظهارها، بيانات الإعلانات وصورها، الرسائل أو المفضلة أو عمليات البحث عند استخدامها، البلاغات، طلبات الدعم، ومعلومات الجهاز/الجلسة لأغراض الأمان.",
+    p: "قد نعالج بيانات الحساب، بيانات التواصل التي تختار إظهارها، بيانات الإعلانات وصورها، الرسائل أو المفضلة أو عمليات البحث عند استخدامها، البلاغات، طلبات الدعم، ومعلومات الجهاز أو الجلسة لأغراض التشغيل والأمان.",
   },
   {
     h: "كيف نستخدم البيانات",
-    p: "لتشغيل المنصة، عرض الإعلانات للمستخدمين المناسبين، تسهيل التواصل بين البائع والمشتري، مكافحة الاحتيال، وتحسين تجربة الاستخدام. لن نبيع بياناتك لطرف ثالث.",
+    p: "نستخدم البيانات لتشغيل المنصة، عرض الإعلانات المناسبة، تسهيل التواصل بين البائع والمشتري، مكافحة الاحتيال، معالجة البلاغات وطلبات الدعم، وتحسين تجربة الاستخدام. لا نبيع بياناتك الشخصية لأطراف ثالثة.",
   },
   {
     h: "ظهور بيانات التواصل",
-    p: "يمكن ضبط ظهور رقم الهاتف أو واتساب أو تفضيل الرسائل الداخلية وفق إعدادات الحساب والإعلان.",
+    p: "يمكن ضبط ظهور رقم الهاتف أو واتساب أو تفضيل الرسائل الداخلية وفق إعدادات الحساب والإعلان. أنت مسؤول عن المعلومات التي تختار نشرها علناً داخل إعلانك.",
   },
   {
     h: "تحكمك ببياناتك",
-    p: "يمكنك طلب تعديل بياناتك، حذف إعلاناتك، حظر مستخدمين، أو حذف حسابك وفق الضوابط المتاحة وسياسات الأمان.",
+    p: "يمكنك تعديل بيانات حسابك المتاحة، حذف إعلاناتك وفق حالتها، حظر مستخدمين، أو تقديم طلب لحذف حسابك. قد نحتفظ ببعض السجلات عند الحاجة للامتثال أو الأمان أو منع إساءة الاستخدام.",
   },
   {
     h: "أمان البيانات",
-    p: "سنطبّق إجراءات أمنية معقولة لحماية بياناتك بعد إطلاق النسخة الكاملة، بما يشمل التشفير وحدود الوصول. لا يوجد نظام كامل الحماية، ويبقى المستخدم مسؤولاً عن حماية كلمة المرور.",
+    p: "نستخدم إجراءات تقنية وتنظيمية معقولة لحماية البيانات، بما في ذلك الاتصالات المشفرة وحدود الوصول والصلاحيات. لا يوجد نظام آمن بالكامل، ويبقى المستخدم مسؤولاً عن حماية كلمة مروره وجهازه.",
   },
   {
     h: "ملفات الارتباط والتخزين المحلي",
-    p: "قد نستخدم تخزيناً محلياً بسيطاً (Local Storage) في المتصفح لحفظ تفضيلات بسيطة مثل المحافظة المختارة أو وضع الواجهة. لا يتم استخدامه لتتبّع شخصي.",
+    p: "قد نستخدم ملفات ارتباط أو تخزيناً محلياً في المتصفح لحفظ الجلسة والتفضيلات الضرورية، مثل اللغة أو المحافظة المختارة أو وضع الواجهة، ولتشغيل خصائص الأمان. قد تستخدم خدمات القياس المفعلة بيانات تقنية مجمعة لتحسين الأداء.",
   },
   {
     h: "البيانات المتعلقة بالأطفال",
-    p: "المنصة مخصصة للبالغين. لا نقوم بجمع بيانات قاصرين عمداً.",
+    p: "المنصة مخصصة للبالغين القادرين قانوناً على استخدام خدمات الإعلانات المبوبة. لا نجمع عن علم بيانات شخصية من أطفال، ويمكن الإبلاغ عن أي حساب أو محتوى يثير هذا القلق عبر صفحة الدعم.",
   },
   {
     h: "تعديل السياسة",
-    p: "قد نقوم بتحديث هذه السياسة عند إطلاق النسخة الكاملة من رَوَاج. سيتم إعلام المستخدمين بأي تغيير جوهري.",
+    p: "قد نحدّث هذه السياسة مع تطور المنصة أو المتطلبات التنظيمية. سننشر النسخة المحدثة وتاريخ سريانها، وقد نعرض إشعاراً إضافياً عند وجود تغيير جوهري.",
   },
   {
     h: "التواصل بخصوص الخصوصية",
-    p: "لأي استفسار حول بياناتك يمكنك التواصل مع فريق رَوَاج عبر صفحة الدعم. سنرد على طلبات الخصوصية بعد تفعيل الخدمة الفعلية.",
+    p: "لأي استفسار أو طلب يتعلق ببياناتك، تواصل مع فريق رَوَاج عبر صفحة الدعم. تتم مراجعة طلبات الخصوصية والتحقق من هوية صاحب الحساب قبل تنفيذ الإجراءات الحساسة.",
   },
 ];
 
@@ -66,8 +66,8 @@ function PrivacyPage() {
       <main className="container-wide mobile-page-bottom pt-4">
         <p className="mb-4 text-xs text-muted-foreground">
           {text(
-            "هذه السياسة توضّح طريقة تعامل رَوَاج مع البيانات ضمن تجربة الاستخدام الحالية.",
-            "This policy explains how RAWAJ handles data in the current product experience.",
+            "آخر تحديث: 12 تموز 2026. توضّح هذه السياسة كيفية تعامل رَوَاج مع البيانات أثناء تشغيل المنصة.",
+            "Last updated: July 12, 2026. This policy explains how RAWAJ handles data while operating the platform.",
           )}
         </p>
         <div className="space-y-3">
@@ -89,35 +89,35 @@ function privacyText(value: string, language: Language) {
   if (language === "ar") return value;
   const labels: Record<string, string> = {
     "خصوصية رَوَاج": "RAWAJ privacy",
-    "يعتمد رَوَاج على مصدر بيانات آمن للحسابات والأدوار، ويعرض بيانات المستخدم وفق ما يلزم لتشغيل الإعلانات والمراجعة والسلامة.":
-      "RAWAJ protects account access and shows user data only as needed for listings, review, and safety.",
+    "يعتمد رَوَاج على أنظمة آمنة لإدارة الحسابات والصلاحيات، ولا يعرض بيانات المستخدم إلا بالقدر اللازم لتشغيل الإعلانات والمراجعة والتواصل والسلامة.":
+      "RAWAJ uses secure systems to manage accounts and permissions and shows user data only as needed for listings, moderation, communication, and safety.",
     "البيانات التي نعالجها": "Data we process",
-    "قد نعالج بيانات الحساب، بيانات التواصل التي تختار إظهارها، بيانات الإعلانات وصورها، الرسائل أو المفضلة أو عمليات البحث عند استخدامها، البلاغات، طلبات الدعم، ومعلومات الجهاز/الجلسة لأغراض الأمان.":
-      "We may process account data, contact data you choose to show, listing data and images, messages, favorites or saved searches when used, reports, support requests, and device/session data for safety.",
+    "قد نعالج بيانات الحساب، بيانات التواصل التي تختار إظهارها، بيانات الإعلانات وصورها، الرسائل أو المفضلة أو عمليات البحث عند استخدامها، البلاغات، طلبات الدعم، ومعلومات الجهاز أو الجلسة لأغراض التشغيل والأمان.":
+      "We may process account data, contact data you choose to show, listing data and images, messages, favorites or saved searches when used, reports, support requests, and device or session data for operation and safety.",
     "كيف نستخدم البيانات": "How we use data",
-    "لتشغيل المنصة، عرض الإعلانات للمستخدمين المناسبين، تسهيل التواصل بين البائع والمشتري، مكافحة الاحتيال، وتحسين تجربة الاستخدام. لن نبيع بياناتك لطرف ثالث.":
-      "To operate the platform, show relevant listings, support buyer-seller communication, reduce fraud, and improve experience. We will not sell your data to third parties.",
+    "نستخدم البيانات لتشغيل المنصة، عرض الإعلانات المناسبة، تسهيل التواصل بين البائع والمشتري، مكافحة الاحتيال، معالجة البلاغات وطلبات الدعم، وتحسين تجربة الاستخدام. لا نبيع بياناتك الشخصية لأطراف ثالثة.":
+      "We use data to operate the platform, show relevant listings, support buyer-seller communication, reduce fraud, handle reports and support requests, and improve the experience. We do not sell your personal data to third parties.",
     "ظهور بيانات التواصل": "Visibility of contact data",
-    "يمكن ضبط ظهور رقم الهاتف أو واتساب أو تفضيل الرسائل الداخلية وفق إعدادات الحساب والإعلان.":
-      "Phone, WhatsApp, or internal-message preferences can be controlled through account and listing settings.",
+    "يمكن ضبط ظهور رقم الهاتف أو واتساب أو تفضيل الرسائل الداخلية وفق إعدادات الحساب والإعلان. أنت مسؤول عن المعلومات التي تختار نشرها علناً داخل إعلانك.":
+      "Phone, WhatsApp, or internal-message preferences can be controlled through account and listing settings. You are responsible for information you choose to publish publicly in a listing.",
     "تحكمك ببياناتك": "Your data controls",
-    "يمكنك طلب تعديل بياناتك، حذف إعلاناتك، حظر مستخدمين، أو حذف حسابك وفق الضوابط المتاحة وسياسات الأمان.":
-      "You can request data edits, listing removal, user blocking, or account deletion under available controls and safety policies.",
+    "يمكنك تعديل بيانات حسابك المتاحة، حذف إعلاناتك وفق حالتها، حظر مستخدمين، أو تقديم طلب لحذف حسابك. قد نحتفظ ببعض السجلات عند الحاجة للامتثال أو الأمان أو منع إساءة الاستخدام.":
+      "You can edit available account data, remove listings according to their status, block users, or submit an account-deletion request. Some records may be retained when needed for compliance, safety, or abuse prevention.",
     "أمان البيانات": "Data security",
-    "سنطبّق إجراءات أمنية معقولة لحماية بياناتك بعد إطلاق النسخة الكاملة، بما يشمل التشفير وحدود الوصول. لا يوجد نظام كامل الحماية، ويبقى المستخدم مسؤولاً عن حماية كلمة المرور.":
-      "We will apply reasonable security controls after full launch, including encryption and access limits. No system is perfectly secure, and users remain responsible for protecting passwords.",
+    "نستخدم إجراءات تقنية وتنظيمية معقولة لحماية البيانات، بما في ذلك الاتصالات المشفرة وحدود الوصول والصلاحيات. لا يوجد نظام آمن بالكامل، ويبقى المستخدم مسؤولاً عن حماية كلمة مروره وجهازه.":
+      "We use reasonable technical and organizational safeguards, including encrypted connections and access controls. No system is completely secure, and users remain responsible for protecting their passwords and devices.",
     "ملفات الارتباط والتخزين المحلي": "Cookies and local storage",
-    "قد نستخدم تخزيناً محلياً بسيطاً (Local Storage) في المتصفح لحفظ تفضيلات بسيطة مثل المحافظة المختارة أو وضع الواجهة. لا يتم استخدامه لتتبّع شخصي.":
-      "We may use simple browser local storage for preferences such as selected governorate or interface mode. It is not used for personal tracking.",
+    "قد نستخدم ملفات ارتباط أو تخزيناً محلياً في المتصفح لحفظ الجلسة والتفضيلات الضرورية، مثل اللغة أو المحافظة المختارة أو وضع الواجهة، ولتشغيل خصائص الأمان. قد تستخدم خدمات القياس المفعلة بيانات تقنية مجمعة لتحسين الأداء.":
+      "We may use cookies or browser local storage to maintain sessions and necessary preferences such as language, selected governorate, or interface mode, and to operate security features. Enabled analytics services may use aggregated technical data to improve performance.",
     "البيانات المتعلقة بالأطفال": "Children's data",
-    "المنصة مخصصة للبالغين. لا نقوم بجمع بيانات قاصرين عمداً.":
-      "The platform is intended for adults. We do not knowingly collect data from minors.",
+    "المنصة مخصصة للبالغين القادرين قانوناً على استخدام خدمات الإعلانات المبوبة. لا نجمع عن علم بيانات شخصية من أطفال، ويمكن الإبلاغ عن أي حساب أو محتوى يثير هذا القلق عبر صفحة الدعم.":
+      "The platform is intended for adults legally able to use classified-ad services. We do not knowingly collect children's personal data, and concerns can be reported through the support page.",
     "تعديل السياسة": "Policy changes",
-    "قد نقوم بتحديث هذه السياسة عند إطلاق النسخة الكاملة من رَوَاج. سيتم إعلام المستخدمين بأي تغيير جوهري.":
-      "We may update this policy when RAWAJ's full version launches. Material changes will be communicated.",
+    "قد نحدّث هذه السياسة مع تطور المنصة أو المتطلبات التنظيمية. سننشر النسخة المحدثة وتاريخ سريانها، وقد نعرض إشعاراً إضافياً عند وجود تغيير جوهري.":
+      "We may update this policy as the platform or regulatory requirements evolve. We will publish the updated version and its effective date and may provide an additional notice for material changes.",
     "التواصل بخصوص الخصوصية": "Privacy contact",
-    "لأي استفسار حول بياناتك يمكنك التواصل مع فريق رَوَاج عبر صفحة الدعم. سنرد على طلبات الخصوصية بعد تفعيل الخدمة الفعلية.":
-      "For data questions, contact RAWAJ through support. Privacy requests will be handled after the service is fully enabled.",
+    "لأي استفسار أو طلب يتعلق ببياناتك، تواصل مع فريق رَوَاج عبر صفحة الدعم. تتم مراجعة طلبات الخصوصية والتحقق من هوية صاحب الحساب قبل تنفيذ الإجراءات الحساسة.":
+      "For questions or requests about your data, contact RAWAJ through the support page. Privacy requests are reviewed and account ownership is verified before sensitive actions are taken.",
   };
   return labels[value] ?? value;
 }
