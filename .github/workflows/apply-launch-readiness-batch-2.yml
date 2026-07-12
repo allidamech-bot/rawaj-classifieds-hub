@@ -7,6 +7,13 @@ on:
     paths:
       - .github/workflows/apply-launch-readiness-batch-2.yml
       - scripts/apply-launch-readiness-batch-2.mjs
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
+    paths:
+      - .github/workflows/apply-launch-readiness-batch-2.yml
+      - scripts/apply-launch-readiness-batch-2.mjs
 
 permissions:
   contents: write
