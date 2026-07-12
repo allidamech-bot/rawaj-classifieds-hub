@@ -7,6 +7,7 @@ import { DiscoveryHero } from "@/features/home/DiscoveryHero";
 import { FeaturedListingShowcase } from "@/features/home/FeaturedListingShowcase";
 import { HomeTrustStrip } from "@/features/home/HomeTrustStrip";
 import { LatestDiscovery } from "@/features/home/LatestDiscovery";
+import { selectDiverseListings } from "@/features/home/home-listing-selection";
 import { fetchPublicCategories, fetchPublicListings } from "@/lib/classifieds-api";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -38,11 +39,17 @@ function HomePage() {
   const { listings, categories, listingLoadFailed } = Route.useLoaderData();
   const [searchValue, setSearchValue] = useState("");
 
-  const featuredListings = listings.filter((listing) => listing.isFeatured).slice(0, 4);
+  const featuredListings = selectDiverseListings(
+    listings.filter((listing) => listing.isFeatured),
+    4,
+    1,
+  );
   const featuredListingIds = new Set(featuredListings.map((listing) => listing.id));
-  const latestListings = listings
-    .filter((listing) => !featuredListingIds.has(listing.id))
-    .slice(0, 12);
+  const latestListings = selectDiverseListings(
+    listings.filter((listing) => !featuredListingIds.has(listing.id)),
+    12,
+    2,
+  );
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

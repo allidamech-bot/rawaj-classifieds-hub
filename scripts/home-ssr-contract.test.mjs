@@ -12,8 +12,9 @@ test("home marketplace data is loaded before render", () => {
   assert.doesNotMatch(home, /useEffect\(\(\) => \{[\s\S]*fetchPublicListings/);
 });
 
-test("featured cards are excluded from latest cards", () => {
+test("featured cards are excluded from latest cards and category diversity is preserved", () => {
   assert.match(home, /const featuredListingIds = new Set/);
   assert.match(home, /!featuredListingIds\.has\(listing\.id\)/);
-  assert.match(home, /\.slice\(0, 12\)/);
+  assert.match(home, /selectDiverseListings\(/);
+  assert.match(home, /12,\s*2,/);
 });
