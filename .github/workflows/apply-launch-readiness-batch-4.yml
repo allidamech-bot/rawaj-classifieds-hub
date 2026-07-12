@@ -22,6 +22,7 @@ jobs:
   apply:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Check out feature branch
         uses: actions/checkout@v4
