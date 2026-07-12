@@ -1,6 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
 const productionOnly = !process.env.PRODUCTION_SMOKE;
+const expectedCommitSha = process.env.EXPECTED_COMMIT_SHA ?? "";
 
 async function expectHealthyDocument(page: Page, path: string) {
   const pageErrors: string[] = [];
@@ -39,6 +40,15 @@ async function expectTextEndpoint(request: APIRequestContext, path: string, cont
 
 test.describe("RAWAJ production launch health", () => {
   test.skip(productionOnly, "Production smoke runs only with PRODUCTION_SMOKE=1");
+
+  test("production serves the expected merged commit", async ({ page }) => {
+    expect(expectedCommitSha, "EXPECTED_COMMIT_SHA is required for production smoke").not.toBe("");
+    await expectHealthyDocument(page, "/");
+    const deployedCommit = await page
+      .locator('meta[name="rawaj-build-commit"]')
+      .getAttribute("content");
+    expect(deployedCommit).toBe(expectedCommitSha);
+  });
 
   for (const path of [
     "/",
