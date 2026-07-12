@@ -40,11 +40,13 @@ const [
   ),
 ]);
 
-test("Capacitor uses the production RAWAJ origin without cleartext traffic", () => {
+test("Capacitor defaults to the production RAWAJ origin and permits only HTTPS previews", () => {
   assert.match(capacitor, /appId:\s*"com\.rawaj\.marketplace"/);
-  assert.match(capacitor, /url:\s*"https:\/\/rawa-j\.com"/);
+  assert.match(capacitor, /PRODUCTION_SERVER_URL = "https:\/\/rawa-j\.com"/);
+  assert.match(capacitor, /if \(!requestedServerUrl\) return PRODUCTION_SERVER_URL/);
+  assert.match(capacitor, /parsed\.protocol !== "https:"/);
   assert.match(capacitor, /cleartext:\s*false/);
-  assert.match(capacitor, /allowNavigation:\s*\["rawa-j\.com", "\*\.rawa-j\.com"\]/);
+  assert.match(capacitor, /new Set\(\["rawa-j\.com", "\*\.rawa-j\.com", serverHost\]\)/);
 });
 
 test("Android launch configuration protects app data and supports RAWAJ links", () => {
