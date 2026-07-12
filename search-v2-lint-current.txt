@@ -1,0 +1,9 @@
+
+/home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/src/features/search/SearchResultsToolbar.tsx
+   63:15  error  Replace `.filter((item):·item·is·string·=>·typeof·item·===·"string")` with `⏎··········.filter((item):·item·is·string·=>·typeof·item·===·"string")⏎··········`                                                                                               prettier/prettier
+  192:13  error  Replace `·className="rawaj-search-toolbar__recent"·aria-label={text("عمليات·البحث·الأخيرة",·"Recent·searches")}` with `⏎··········className="rawaj-search-toolbar__recent"⏎··········aria-label={text("عمليات·البحث·الأخيرة",·"Recent·searches")}⏎········`  prettier/prettier
+  248:14  error  Replace `·to="/saved-searches"·search={emptySavedSearchParams}·className="rawaj-search-toolbar__saved"` with `⏎··········to="/saved-searches"⏎··········search={emptySavedSearchParams}⏎··········className="rawaj-search-toolbar__saved"⏎········`          prettier/prettier
+
+✖ 3 problems (3 errors, 0 warnings)
+  3 errors and 0 warnings potentially fixable with the `--fix` option.
+
