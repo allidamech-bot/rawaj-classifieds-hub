@@ -1,0 +1,57 @@
+name: Temporary Search Filters V2 Integration
+
+on:
+  push:
+    branches:
+      - design/search-filters-v2
+    paths:
+      - .github/workflows/temp-integrate-search-filters-v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: design/search-filters-v2
+      - name: Integrate permanent Search V2 assets
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          root = Path('src/routes/__root.tsx')
+          text = root.read_text()
+          marker = 'import searchFiltersV1Css from "../search-filters-v1.css?url";'
+          addition = marker + '\nimport searchFiltersV2Css from "../search-filters-v2.css?url";'
+          if 'searchFiltersV2Css' not in text:
+              text = text.replace(marker, addition)
+          link_marker = '        { rel: "stylesheet", href: searchFiltersV1Css },'
+          link_addition = link_marker + '\n        { rel: "stylesheet", href: searchFiltersV2Css },'
+          if 'href: searchFiltersV2Css' not in text:
+              text = text.replace(link_marker, link_addition)
+          root.write_text(text)
+
+          gate = Path('.github/workflows/quality-gate.yml')
+          text = gate.read_text()
+          marker = '      - name: Search and Filters V1 contract\n        run: node --test scripts/search-filters-v1.test.mjs'
+          addition = marker + '\n\n      - name: Search and Filters V2 contract\n        run: node --test scripts/search-filters-v2.test.mjs'
+          if 'Search and Filters V2 contract' not in text:
+              text = text.replace(marker, addition)
+          gate.write_text(text)
+          PY
+          npx prettier --write src/routes/__root.tsx src/features/search/SearchResultsToolbar.tsx scripts/search-filters-v2.test.mjs .github/workflows/quality-gate.yml
+          npm ci
+          npx eslint --quiet src/features/search/SearchResultsToolbar.tsx
+          node --test scripts/search-filters-v2.test.mjs
+          npm run typecheck -- --pretty false
+      - name: Commit integration and remove temporary workflow
+        run: |
+          rm .github/workflows/temp-integrate-search-filters-v2.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/__root.tsx src/features/search/SearchResultsToolbar.tsx scripts/search-filters-v2.test.mjs .github/workflows/quality-gate.yml .github/workflows/temp-integrate-search-filters-v2.yml
+          git commit -m "Integrate Search and Filters V2"
+          git push origin HEAD:design/search-filters-v2
