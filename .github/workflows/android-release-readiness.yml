@@ -16,8 +16,6 @@ jobs:
   android:
     runs-on: ubuntu-latest
     timeout-minutes: 35
-    env:
-      RAWAJ_ANDROID_PREVIEW_URL: https://rawaj-classifieds-hub-git-agent-and-f3d17b-alidaamishs-projects.vercel.app
 
     steps:
       - name: Checkout
@@ -51,12 +49,47 @@ jobs:
       - name: Production web build
         run: npm run build
 
-      - name: Sync branch preview into Android debug configuration
+      - name: Create self-contained branch preview shell
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/rawaj-preview.log 2>&1 &
+          preview_pid=$!
+          cleanup() {
+            kill "$preview_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ready=""
+          for attempt in $(seq 1 45); do
+            if curl --fail --silent --show-error http://127.0.0.1:4173/ > /tmp/rawaj-index.html; then
+              ready="yes"
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "$ready" != "yes" ]; then
+            cat /tmp/rawaj-preview.log
+            exit 1
+          fi
+
+          test -s /tmp/rawaj-index.html
+          grep -q '<html' /tmp/rawaj-index.html
+          grep -q '_build' /tmp/rawaj-index.html
+          cp /tmp/rawaj-index.html .output/public/index.html
+
+          for route in auth/callback login chats profile more notifications activity add-listing; do
+            mkdir -p ".output/public/$route"
+            cp /tmp/rawaj-index.html ".output/public/$route/index.html"
+          done
+
+      - name: Sync bundled branch preview into Android debug configuration
         env:
-          RAWAJ_ANDROID_SERVER_URL: ${{ env.RAWAJ_ANDROID_PREVIEW_URL }}
+          RAWAJ_ANDROID_BUNDLED_PREVIEW: "1"
         run: npx cap sync android
 
-      - name: Assemble branch-preview debug APK
+      - name: Assemble bundled branch-preview debug APK
         working-directory: android
         run: |
           chmod +x gradlew
@@ -69,10 +102,10 @@ jobs:
         working-directory: android
         run: ./gradlew bundleRelease --no-daemon
 
-      - name: Upload branch-preview APK for real-device testing
+      - name: Upload bundled branch-preview APK for real-device testing
         uses: actions/upload-artifact@v4
         with:
-          name: rawaj-android-1.0.3-preview-debug-apk
+          name: rawaj-android-1.0.3-bundled-preview-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 7
