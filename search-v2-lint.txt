@@ -1,0 +1,23 @@
+
+/home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/scripts/search-filters-v2.test.mjs
+   7:12  error  Replace `⏎····new·URL("../src/features/search/SearchResultsToolbar.tsx",·import.meta.url),⏎····"utf8",⏎··` with `new·URL("../src/features/search/SearchResultsToolbar.tsx",·import.meta.url),·"utf8"`  prettier/prettier
+  12:12  error  Replace `⏎····new·URL("../.github/workflows/quality-gate.yml",·import.meta.url),⏎····"utf8",⏎··` with `new·URL("../.github/workflows/quality-gate.yml",·import.meta.url),·"utf8"`                      prettier/prettier
+  48:23  error  Replace `⏎····css,⏎····/margin-left|margin-right|padding-left|padding-right/,⏎··` with `css,·/margin-left|margin-right|padding-left|padding-right/`                                                    prettier/prettier
+
+/home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/src/features/search/SearchResultsToolbar.tsx
+   14:14  error  Replace `⏎··ListingsSort,⏎··ListingsView,⏎` with `·ListingsSort,·ListingsView·`                                                                                                                                                                             prettier/prettier
+   64:31  error  Replace `⏎······window.localStorage.getItem(RECENT_SEARCHES_KEY)·??·"[]",⏎····` with `window.localStorage.getItem(RECENT_SEARCHES_KEY)·??·"[]"`                                                                                                             prettier/prettier
+   99:39  error  Replace `⏎········target?.tagName·===·"TEXTAREA"·||⏎·······` with `·target?.tagName·===·"TEXTAREA"·||`                                                                                                                                                      prettier/prettier
+  114:19  error  Replace `⏎······normalized,⏎······...recentSearches.filter((item)·=>·item·!==·normalized),⏎····].slice(0,·MAX_RECENT_SEARCHES` with `normalized,·...recentSearches.filter((item)·=>·item·!==·normalized)].slice(⏎······0,⏎······MAX_RECENT_SEARCHES,⏎····`  prettier/prettier
+  135:16  error  Replace `⏎··········aria-live="polite"⏎··········aria-atomic="true"⏎··········data-loading={loading·||·undefined}⏎········` with `·aria-live="polite"·aria-atomic="true"·data-loading={loading·||·undefined}`                                               prettier/prettier
+  162:31  error  Replace `⏎··············"ابحث·ضمن·النتائج...",⏎··············"Search·within·results...",⏎············` with `"ابحث·ضمن·النتائج...",·"Search·within·results..."`                                                                                             prettier/prettier
+  184:17  error  Replace `⏎··············id="rawaj-search-shortcut"⏎··············aria-label={text("اختصار·البحث",·"Search·shortcut")}⏎············` with `·id="rawaj-search-shortcut"·aria-label={text("اختصار·البحث",·"Search·shortcut")}`                                 prettier/prettier
+  219:22  error  Replace `⏎················key={item}⏎················type="button"⏎················onClick={()·=>·onQueryChange(item)}⏎··············` with `·key={item}·type="button"·onClick={()·=>·onQueryChange(item)}`                                                 prettier/prettier
+  234:37  error  Replace `⏎············{text("ترتيب·النتائج",·"Sort·results")}⏎··········` with `{text("ترتيب·النتائج",·"Sort·results")}`                                                                                                                                    prettier/prettier
+  239:33  error  Replace `⏎··············onSortChange(event.target.value·as·ListingsSort)⏎············` with `·onSortChange(event.target.value·as·ListingsSort)`                                                                                                             prettier/prettier
+  246:39  error  Replace `⏎··············{text("الأعلى·سعرًا",·"Highest·price")}⏎············` with `{text("الأعلى·سعرًا",·"Highest·price")}`                                                                                                                                prettier/prettier
+  253:13  error  Replace `⏎··········className="rawaj-search-toolbar__views"⏎··········aria-label={text("طريقة·العرض",·"View·mode")}⏎········` with `·className="rawaj-search-toolbar__views"·aria-label={text("طريقة·العرض",·"View·mode")}`                                 prettier/prettier
+
+✖ 15 problems (15 errors, 0 warnings)
+  15 errors and 0 warnings potentially fixable with the `--fix` option.
+
