@@ -1,8 +1,21 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import ts from "typescript";
 
-const [root, home, hero, worlds, showcase, featuredCard, latest, trust, css] = await Promise.all([
+const [
+  root,
+  home,
+  hero,
+  worlds,
+  showcase,
+  featuredCard,
+  latest,
+  trust,
+  css,
+  selectionSource,
+  visualPolishCss,
+] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/index.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/home/DiscoveryHero.tsx", import.meta.url), "utf8"),
@@ -15,7 +28,19 @@ const [root, home, hero, worlds, showcase, featuredCard, latest, trust, css] = a
   readFile(new URL("../src/features/home/LatestDiscovery.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/home/HomeTrustStrip.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/home-discovery-v3.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/home/home-listing-selection.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/launch-readiness-visual-polish.css", import.meta.url), "utf8"),
 ]);
+
+const transpiledSelection = ts.transpileModule(selectionSource, {
+  compilerOptions: {
+    module: ts.ModuleKind.ES2022,
+    target: ts.ScriptTarget.ES2022,
+  },
+}).outputText;
+const { selectDiverseListings } = await import(
+  `data:text/javascript;base64,${Buffer.from(transpiledSelection).toString("base64")}`
+);
 
 test("home discovery V3 styles load after marketplace V2", () => {
   assert.match(root, /import homeDiscoveryV3Css from "\.\.\/home-discovery-v3\.css\?url";/);
@@ -24,6 +49,18 @@ test("home discovery V3 styles load after marketplace V2", () => {
   assert.notEqual(marketplaceIndex, -1);
   assert.notEqual(discoveryIndex, -1);
   assert.ok(discoveryIndex > marketplaceIndex);
+});
+
+test("launch visual polish loads last so populated-card safeguards win", () => {
+  assert.match(
+    root,
+    /import launchReadinessVisualPolishCss from "\.\.\/launch-readiness-visual-polish\.css\?url";/,
+  );
+  const adaptiveIndex = root.indexOf("href: adaptiveListingCardsCss");
+  const desktopIndex = root.indexOf("href: desktopExperienceV1Css");
+  const polishIndex = root.indexOf("href: launchReadinessVisualPolishCss");
+  assert.ok(polishIndex > adaptiveIndex);
+  assert.ok(polishIndex > desktopIndex);
 });
 
 test("home composes the new discovery flow from real loader data", () => {
@@ -63,11 +100,46 @@ test("featured inventory uses the adaptive editorial showcase", () => {
   assert.match(featuredCard, /listingLocationDisplay\(listing, language\)/);
 });
 
-test("latest discovery excludes showcased ids and keeps standard real cards", () => {
+test("populated home selection distributes categories before filling remaining slots", () => {
+  const candidates = [
+    { id: "a1", categoryId: "cars" },
+    { id: "a2", categoryId: "cars" },
+    { id: "a3", categoryId: "cars" },
+    { id: "b1", categoryId: "homes" },
+    { id: "c1", categoryId: "phones" },
+    { id: "d1", categoryId: "services" },
+    { id: "b2", categoryId: "homes" },
+  ];
+
+  assert.deepEqual(
+    selectDiverseListings(candidates, 4, 1).map((listing) => listing.id),
+    ["a1", "b1", "c1", "d1"],
+  );
+  assert.deepEqual(
+    selectDiverseListings(candidates, 6, 2).map((listing) => listing.id),
+    ["a1", "b1", "c1", "d1", "a2", "b2"],
+  );
+  assert.deepEqual(selectDiverseListings(candidates, 20, 2).length, candidates.length);
+});
+
+test("latest discovery excludes showcased ids and uses diverse standard real cards", () => {
   assert.match(home, /const featuredListingIds = new Set/);
   assert.match(home, /!featuredListingIds\.has\(listing\.id\)/);
-  assert.match(home, /\.slice\(0, 12\)/);
+  assert.match(home, /selectDiverseListings\(/);
+  assert.match(home, /12,\s*2,/);
   assert.match(latest, /<RealListingCard key=\{listing\.id\} listing=\{listing\}/);
+});
+
+test("populated cards guard mobile density, long copy, and image crop", () => {
+  assert.match(visualPolishCss, /\.rawaj-featured-card__content h3/);
+  assert.match(visualPolishCss, /-webkit-line-clamp: 3/);
+  assert.match(visualPolishCss, /\.rawaj-featured-card__location span/);
+  assert.match(visualPolishCss, /text-overflow: ellipsis/);
+  assert.match(visualPolishCss, /object-position: center/);
+  assert.match(visualPolishCss, /@media \(max-width: 767px\)/);
+  assert.match(visualPolishCss, /min-height: 24rem/);
+  assert.match(visualPolishCss, /@media \(min-width: 768px\)/);
+  assert.match(visualPolishCss, /min-height: 34rem/);
 });
 
 test("trust strip links to the safety guide", () => {
