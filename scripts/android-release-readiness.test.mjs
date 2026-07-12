@@ -123,6 +123,19 @@ test("Slow or offline startup keeps RAWAJ branded and recoverable", () => {
   assert.match(nativeAppRuntime, /window\.location\.reload\(\)/);
 });
 
+test("Android device tests can target a branch preview without changing production release routing", () => {
+  assert.match(capacitor, /PRODUCTION_SERVER_URL = "https:\/\/rawa-j\.com"/);
+  assert.match(capacitor, /process\.env\.RAWAJ_ANDROID_SERVER_URL/);
+  assert.match(capacitor, /if \(!requestedServerUrl\) return PRODUCTION_SERVER_URL/);
+  assert.match(capacitor, /parsed\.protocol !== "https:"/);
+  assert.match(capacitor, /const serverHost = new URL\(serverUrl\)\.hostname/);
+  assert.match(androidWorkflow, /RAWAJ_ANDROID_PREVIEW_URL:/);
+  assert.match(androidWorkflow, /RAWAJ_ANDROID_SERVER_URL: \$\{\{ env\.RAWAJ_ANDROID_PREVIEW_URL \}\}/);
+  assert.match(androidWorkflow, /Assemble branch-preview debug APK/);
+  assert.match(androidWorkflow, /Restore production Android configuration/);
+  assert.match(androidWorkflow, /rawaj-android-1\.0\.3-preview-debug-apk/);
+});
+
 test("Play identity and version remain unchanged during readiness work", () => {
   assert.match(buildGradle, /applicationId "com\.rawaj\.marketplace"/);
   assert.match(buildGradle, /versionCode 4/);
@@ -136,5 +149,6 @@ test("Android CI validates the web bundle and native artifacts before approval",
   assert.match(androidWorkflow, /npm run test:mobile-app-stabilization/);
   assert.match(androidWorkflow, /actions\/setup-java@v4/);
   assert.match(androidWorkflow, /npx cap sync android/);
-  assert.match(androidWorkflow, /\.\/gradlew assembleDebug bundleRelease --no-daemon/);
+  assert.match(androidWorkflow, /\.\/gradlew assembleDebug --no-daemon/);
+  assert.match(androidWorkflow, /\.\/gradlew bundleRelease --no-daemon/);
 });
