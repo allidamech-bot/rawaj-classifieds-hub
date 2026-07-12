@@ -1,11 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Ban, Flag, MessageCircle, RefreshCw, Send } from "lucide-react";
+import {
+  ArrowRight,
+  Ban,
+  Flag,
+  MessageCircle,
+  MoreVertical,
+  RefreshCw,
+  Search,
+  Send,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import {
-  CommunicationCenterHero,
-  CommunicationSafetyNote,
   CommunicationSearch,
   CommunicationSignedOut,
   ConversationSummaryItem,
@@ -20,9 +27,10 @@ import {
 } from "@/lib/classifieds-api";
 import type { ClassifiedsError, Conversation, ConversationMessage } from "@/lib/classifieds-types";
 import { resolveConversationTarget } from "@/lib/journey-target-resolution";
+import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
-import { useConversationMessagesRealtime, useOnlinePresence } from "@/lib/use-online-presence";
+import { useConversationActivityRealtime, useOnlinePresence } from "@/lib/use-online-presence";
 
 const chatsSearchSchema = z.object({
   conversation: z.string().optional(),
@@ -38,7 +46,7 @@ const quickReplies = [
 export const Route = createFileRoute("/chats")({
   validateSearch: chatsSearchSchema,
   head: () => ({
-    meta: [{ title: "المحادثات | رواجا" }, { name: "robots", content: "noindex, nofollow" }],
+    meta: [{ title: "المحادثات | رواج" }, { name: "robots", content: "noindex, nofollow" }],
   }),
   component: ChatsPage,
 });
@@ -59,13 +67,12 @@ function ChatsPage() {
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState("");
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
-  const [viewingConversationOnMobile, setViewingConversationOnMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const messagesRequestIdRef = useRef(0);
   const conversationsRequestIdRef = useRef(0);
   const selectedConversationIdRef = useRef<string | null>(null);
-  const autoOpenedConversationRef = useRef<string | null>(null);
 
   const targetResolution = useMemo(
     () => resolveConversationTarget(conversations, search.conversation),
@@ -76,6 +83,11 @@ function ChatsPage() {
       ? targetResolution.conversation
       : null;
   const missingConversationTarget = targetResolution.kind === "missing";
+  const mobileThreadOpen = !isDesktop && targetResolution.kind === "selected";
+  const totalUnread = conversations.reduce(
+    (total, conversation) => total + Math.max(0, conversation.unreadCount),
+    0,
+  );
   const filteredConversations = useMemo(() => {
     const query = conversationQuery.trim().toLocaleLowerCase(language === "ar" ? "ar" : "en");
     if (!query) return conversations;
@@ -89,33 +101,43 @@ function ChatsPage() {
   }, [conversationQuery, conversations, language]);
   const { onlineUserIds } = useOnlinePresence(auth.profile?.id, auth.status === "signedIn");
 
-  useConversationMessagesRealtime({
-    conversationId: selectedConversation?.id ?? null,
-    enabled: auth.status === "signedIn" && Boolean(selectedConversation),
+  useConversationActivityRealtime({
+    userId: auth.profile?.id ?? null,
+    enabled: auth.status === "signedIn",
     onMessage: (message) => {
-      setMessages((current) =>
-        current.some((item) => item.id === message.id) ? current : [...current, message],
-      );
-      if (
-        auth.profile?.id &&
-        selectedConversation?.id &&
-        message.senderUserId !== auth.profile.id
-      ) {
-        void markConversationRead(auth.profile.id, selectedConversation.id);
+      const currentUserId = auth.profile?.id;
+      const currentConversationId = selectedConversationIdRef.current;
+      const currentThreadVisible =
+        currentConversationId === message.conversationId && document.visibilityState === "visible";
+
+      if (currentConversationId === message.conversationId) {
+        setMessages((current) =>
+          current.some((item) => item.id === message.id) ? current : [...current, message],
+        );
       }
+
+      if (currentUserId && message.senderUserId !== currentUserId && currentThreadVisible) {
+        void markConversationRead(currentUserId, message.conversationId).then(() => {
+          setConversations((current) =>
+            current.map((conversation) =>
+              conversation.id === message.conversationId
+                ? { ...conversation, unreadCount: 0 }
+                : conversation,
+            ),
+          );
+        });
+      }
+
+      emitUnreadActivityChanged();
       void loadConversations();
     },
   });
 
   useEffect(() => {
     selectedConversationIdRef.current = selectedConversation?.id ?? null;
+    setActionsOpen(false);
+    setNotice("");
   }, [selectedConversation?.id]);
-
-  useEffect(() => {
-    if (!selectedConversation && !missingConversationTarget) {
-      setViewingConversationOnMobile(false);
-    }
-  }, [missingConversationTarget, selectedConversation]);
 
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)");
@@ -126,8 +148,11 @@ function ChatsPage() {
   }, []);
 
   useEffect(() => {
-    autoOpenedConversationRef.current = null;
-  }, [search.conversation]);
+    document.documentElement.dataset.chatThreadOpen = mobileThreadOpen ? "true" : "false";
+    return () => {
+      delete document.documentElement.dataset.chatThreadOpen;
+    };
+  }, [mobileThreadOpen]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -135,16 +160,6 @@ function ChatsPage() {
       behavior: loadingMessages ? "auto" : "smooth",
     });
   }, [loadingMessages, messages.length, selectedConversation?.id]);
-
-  useEffect(() => {
-    if (!isDesktop && search.conversation && conversations.length > 0) {
-      const exists = conversations.some((conversation) => conversation.id === search.conversation);
-      if (exists && autoOpenedConversationRef.current !== search.conversation) {
-        autoOpenedConversationRef.current = search.conversation;
-        setViewingConversationOnMobile(true);
-      }
-    }
-  }, [isDesktop, search.conversation, conversations]);
 
   async function loadConversations() {
     const profileId = auth.profile?.id ?? null;
@@ -175,7 +190,16 @@ function ChatsPage() {
       setMessages(result.data);
       const markResult = await markConversationRead(profileId, conversationId);
       if (requestId !== messagesRequestIdRef.current) return;
-      if (!markResult.ok) setNotice(markResult.error.message);
+      if (!markResult.ok) {
+        setNotice(markResult.error.message);
+      } else {
+        setConversations((current) =>
+          current.map((conversation) =>
+            conversation.id === conversationId ? { ...conversation, unreadCount: 0 } : conversation,
+          ),
+        );
+        emitUnreadActivityChanged();
+      }
     } else {
       setMessages([]);
       setMessageError(result.error);
@@ -228,15 +252,15 @@ function ChatsPage() {
     setSending(true);
     const result = await sendConversationMessage(profileId, conversationId, cleanBody);
     setSending(false);
-    if (selectedConversationIdRef.current !== conversationId || auth.profile?.id !== profileId)
-      return;
+    if (selectedConversationIdRef.current !== conversationId || auth.profile?.id !== profileId) return;
     if (!result.ok) {
       setMessageError(result.error);
       return;
     }
     setBody("");
-    setMessages((current) => [...current, result.data]);
-    setNotice(text("تم إرسال الرسالة.", "Message sent."));
+    setMessages((current) =>
+      current.some((message) => message.id === result.data.id) ? current : [...current, result.data],
+    );
     await loadConversations();
   }
 
@@ -260,10 +284,7 @@ function ChatsPage() {
 
   async function handleBlock() {
     if (!auth.profile?.id || !selectedConversation) return;
-    if (
-      !confirm(text("حظر هذا المستخدم في هذه المحادثة؟", "Block this user in this conversation?"))
-    )
-      return;
+    if (!confirm(text("حظر هذا المستخدم في هذه المحادثة؟", "Block this user?"))) return;
     setNotice("");
     const result = await blockConversationParticipant({
       conversationId: selectedConversation.id,
@@ -273,334 +294,283 @@ function ChatsPage() {
     });
     setNotice(
       result.ok
-        ? text(
-            "تم حظر المحادثة. لن تقبل رسائل جديدة.",
-            "Conversation blocked. New messages are no longer allowed.",
-          )
+        ? text("تم حظر المحادثة. لن تقبل رسائل جديدة.", "Conversation blocked.")
         : result.error.message,
     );
+    setActionsOpen(false);
     if (result.ok) await loadConversations();
   }
 
-  function openFirstAvailableConversation() {
-    const firstConversation = conversations[0];
-    if (firstConversation) {
-      if (!isDesktop) setViewingConversationOnMobile(true);
-      void navigate({
-        to: "/chats",
-        search: { conversation: firstConversation.id },
-        replace: true,
-      });
-      return;
-    }
-    void navigate({ to: "/chats", search: {}, replace: true });
+  function openConversation(conversationId: string) {
+    void navigate({
+      to: "/chats",
+      search: { conversation: conversationId },
+    });
+  }
+
+  function returnToConversationList() {
+    void navigate({
+      to: "/chats",
+      search: {},
+      replace: true,
+    });
   }
 
   if (auth.status === "loading") {
     return (
-      <>
-        <PageHeader title={text("المحادثات", "Messages")} />
-        <main className="rawaj-communication-v2 container-wide mobile-page-bottom pt-4">
-          <div className="rawaj-chat-state rawaj-chat-state--loading">
-            <RefreshCw className="animate-spin" aria-hidden="true" />
-            <strong>{text("جارٍ تجهيز محادثاتك", "Preparing your messages")}</strong>
-            <p>
-              {text(
-                "نستعيد جلسة حسابك وقائمة المحادثات بأمان.",
-                "Restoring your account session and conversations securely.",
-              )}
-            </p>
-          </div>
+      <div className="rawaj-chat-screen" data-view="list">
+        <PageHeader title={text("المحادثات", "Messages")} back={false} />
+        <main className="container-wide mobile-page-bottom pt-3">
+          <ChatState
+            loading
+            title={text("جارٍ تجهيز محادثاتك", "Preparing your messages")}
+            description={text(
+              "نستعيد جلسة حسابك وقائمة المحادثات بأمان.",
+              "Restoring your account session and conversations securely.",
+            )}
+          />
         </main>
-      </>
+      </div>
     );
   }
 
   if (auth.status !== "signedIn") {
     return (
-      <>
-        <PageHeader title={text("المحادثات", "Messages")} />
-        <main className="rawaj-communication-v2 container-wide mobile-page-bottom pt-4">
+      <div className="rawaj-chat-screen" data-view="list">
+        <PageHeader title={text("المحادثات", "Messages")} back={false} />
+        <main className="container-wide mobile-page-bottom pt-3">
           <CommunicationSignedOut returnTo="/chats" />
         </main>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <PageHeader title={text("المحادثات", "Messages")} />
-      <main className="rawaj-communication-v2 rawaj-communication-v2--messages container-wide mobile-page-bottom space-y-4 pt-4">
-        {(isDesktop || !viewingConversationOnMobile) && (
-          <>
-            <CommunicationCenterHero
-              mode="messages"
-              unreadMessages={conversations.reduce(
-                (total, conversation) => total + conversation.unreadCount,
-                0,
-              )}
-              conversationCount={conversations.length}
-            />
-            <CommunicationSafetyNote />
-          </>
-        )}
+    <div className="rawaj-chat-screen" data-view={mobileThreadOpen ? "thread" : "list"}>
+      {!mobileThreadOpen ? <PageHeader title={text("المحادثات", "Messages")} back={false} /> : null}
 
-        <div className="rawaj-message-workspace">
-          <aside
-            className={`rawaj-conversation-sidebar ${
-              !isDesktop && viewingConversationOnMobile ? "hidden" : ""
-            }`}
-          >
-            <div className="rawaj-conversation-sidebar__heading">
-              <h2>
-                <MessageCircle aria-hidden="true" />
-                {text("المحادثات", "Conversations")}
-              </h2>
-              <span>{filteredConversations.length}</span>
-            </div>
-            <CommunicationSearch
-              value={conversationQuery}
-              onChange={setConversationQuery}
-              placeholder={text("ابحث باسم أو إعلان أو رسالة", "Search conversations")}
-              label={text("بحث في المحادثات", "Search conversations")}
-            />
-            {loadingConversations ? (
-              <div className="rawaj-chat-state rawaj-chat-state--loading">
-                <RefreshCw className="animate-spin" aria-hidden="true" />
-                <strong>{text("جاري تحميل محادثاتك", "Loading your conversations")}</strong>
-                <p>
-                  {text(
-                    "نرتب الرسائل والأطراف المرتبطة بإعلاناتك.",
-                    "Preparing your listing conversations.",
-                  )}
-                </p>
-              </div>
-            ) : conversationError ? (
-              <div className="rawaj-chat-state" data-tone="error">
-                <RefreshCw aria-hidden="true" />
-                <strong>{text("تعذر تحميل المحادثات", "Could not load conversations")}</strong>
-                <p>{conversationError.message}</p>
-                <button type="button" onClick={() => void loadConversations()}>
-                  {text("إعادة المحاولة", "Try again")}
-                </button>
-              </div>
-            ) : conversations.length === 0 ? (
-              <div className="rawaj-chat-state">
-                <MessageCircle aria-hidden="true" />
-                <strong>{text("ابدأ أول محادثة", "Start your first conversation")}</strong>
-                <p>
-                  {text(
-                    "افتح إعلاناً واضغط مراسلة البائع. ستظهر المحادثات هنا مرتبة مع حالة الاتصال وآخر رسالة.",
-                    "Open a listing and message the seller. Conversations will appear here with presence and the latest message.",
-                  )}
-                </p>
-                <Link to="/listings">{text("تصفح الإعلانات", "Browse listings")}</Link>
-              </div>
-            ) : filteredConversations.length === 0 ? (
-              <PanelText>
-                {text("لا توجد محادثات تطابق بحثك.", "No conversations match your search.")}
-              </PanelText>
-            ) : (
-              <div className="rawaj-conversation-list">
-                {filteredConversations.map((conversation) => (
-                  <ConversationSummaryItem
-                    key={conversation.id}
-                    conversation={conversation}
-                    selected={selectedConversation?.id === conversation.id}
-                    online={onlineUserIds.has(conversation.otherParticipant.userId)}
-                    onSelect={() => {
-                      if (!isDesktop) {
-                        setViewingConversationOnMobile(true);
-                        window.requestAnimationFrame(() => window.scrollTo({ top: 0 }));
-                      }
-                      void navigate({
-                        to: "/chats",
-                        search: { conversation: conversation.id },
-                      });
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </aside>
-
-          <section
-            className={`rawaj-message-panel ${
-              !isDesktop && !viewingConversationOnMobile && !missingConversationTarget
-                ? "hidden"
-                : ""
-            }`}
-          >
-            {missingConversationTarget ? (
-              <div className="grid flex-1 place-items-center p-6 text-center">
-                <div className="max-w-md">
-                  <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-warning/10 text-warning">
-                    <MessageCircle className="h-6 w-6" />
-                  </span>
-                  <h2 className="mt-4 text-base font-extrabold">
-                    {text("المحادثة غير متاحة", "Conversation unavailable")}
-                  </h2>
-                  <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                    {text(
-                      "الرابط المطلوب لا يشير إلى محادثة متاحة في حسابك. لم نفتح أي محادثة أخرى بدلًا منها.",
-                      "The requested link does not point to an available conversation in your account. No other conversation was opened instead.",
-                    )}
+      <main
+        className={`rawaj-chat-app container-wide ${
+          mobileThreadOpen ? "rawaj-chat-app--thread" : "mobile-page-bottom"
+        }`}
+      >
+        <div className="rawaj-chat-layout">
+          {!mobileThreadOpen ? (
+            <aside className="rawaj-chat-inbox" aria-label={text("قائمة المحادثات", "Conversation list")}>
+              <header className="rawaj-chat-inbox__header">
+                <div>
+                  <span>{text("صندوق الرسائل", "Inbox")}</span>
+                  <h1>{text("محادثاتك", "Your conversations")}</h1>
+                  <p>
+                    {totalUnread > 0
+                      ? text(
+                          `${totalUnread} رسالة بانتظارك`,
+                          `${totalUnread} unread messages`,
+                        )
+                      : text("كل رسائلك مقروءة", "You are all caught up")}
                   </p>
-                  <div className="mt-5 flex flex-wrap justify-center gap-2">
-                    {conversations.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={openFirstAvailableConversation}
-                        className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-                      >
-                        {text("فتح محادثة متاحة", "Open an available conversation")}
-                      </button>
-                    )}
-                    <Link
-                      to="/listings"
-                      className="rounded-xl bg-muted-surface px-4 py-2 text-xs font-bold text-foreground hairline"
-                    >
-                      {text("تصفح الإعلانات", "Browse listings")}
-                    </Link>
-                  </div>
                 </div>
-              </div>
-            ) : !selectedConversation ? (
-              <div className="grid flex-1 place-items-center p-6 text-center">
-                <PanelText>{text("اختر محادثة لعرض الرسائل.", "Choose a conversation.")}</PanelText>
-              </div>
-            ) : (
-              <>
-                <header className="rawaj-message-header">
-                  <div className="rawaj-message-header__row">
-                    {!isDesktop && viewingConversationOnMobile && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setViewingConversationOnMobile(false);
-                          window.requestAnimationFrame(() => window.scrollTo({ top: 0 }));
-                        }}
-                        className="inline-flex items-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
-                        aria-label={text("المحادثات", "Conversations")}
-                      >
-                        ← {text("المحادثات", "Conversations")}
-                      </button>
+                <div className="rawaj-chat-inbox__count" data-has-unread={totalUnread > 0}>
+                  <MessageCircle aria-hidden="true" />
+                  <strong>{conversations.length}</strong>
+                </div>
+              </header>
+
+              <CommunicationSearch
+                value={conversationQuery}
+                onChange={setConversationQuery}
+                placeholder={text("ابحث عن شخص أو إعلان", "Search people or listings")}
+                label={text("بحث في المحادثات", "Search conversations")}
+              />
+
+              <div className="rawaj-chat-inbox__body">
+                {loadingConversations && conversations.length === 0 ? (
+                  <ChatState
+                    loading
+                    title={text("جاري تحميل المحادثات", "Loading conversations")}
+                    description={text("لحظات ونرتب أحدث الرسائل.", "Preparing your latest messages.")}
+                  />
+                ) : conversationError ? (
+                  <ChatState
+                    error
+                    title={text("تعذر تحميل المحادثات", "Could not load conversations")}
+                    description={conversationError.message}
+                    actionLabel={text("إعادة المحاولة", "Try again")}
+                    onAction={() => void loadConversations()}
+                  />
+                ) : conversations.length === 0 ? (
+                  <ChatState
+                    title={text("لا توجد محادثات بعد", "No conversations yet")}
+                    description={text(
+                      "افتح أي إعلان واضغط مراسلة البائع، وستظهر المحادثة هنا مباشرة.",
+                      "Open a listing and message the seller. The conversation will appear here.",
                     )}
-                    <Avatar
+                    actionLabel={text("تصفح الإعلانات", "Browse listings")}
+                    actionTo="/listings"
+                  />
+                ) : filteredConversations.length === 0 ? (
+                  <ChatState
+                    search
+                    title={text("لا توجد نتيجة", "No results")}
+                    description={text(
+                      "جرّب اسمًا آخر أو كلمة من عنوان الإعلان.",
+                      "Try another name or a word from the listing title.",
+                    )}
+                  />
+                ) : (
+                  <div className="rawaj-conversation-list">
+                    {filteredConversations.map((conversation) => (
+                      <ConversationSummaryItem
+                        key={conversation.id}
+                        conversation={conversation}
+                        selected={selectedConversation?.id === conversation.id}
+                        online={onlineUserIds.has(conversation.otherParticipant.userId)}
+                        onSelect={() => openConversation(conversation.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </aside>
+          ) : null}
+
+          {(isDesktop || mobileThreadOpen || missingConversationTarget) && (
+            <section className="rawaj-chat-thread" aria-label={text("المحادثة", "Conversation")}>
+              {missingConversationTarget ? (
+                <ChatState
+                  error
+                  title={text("المحادثة غير متاحة", "Conversation unavailable")}
+                  description={text(
+                    "قد تكون المحادثة حُذفت أو لا تتبع هذا الحساب.",
+                    "This conversation may have been removed or does not belong to this account.",
+                  )}
+                  actionLabel={text("العودة للمحادثات", "Back to conversations")}
+                  onAction={returnToConversationList}
+                />
+              ) : !selectedConversation ? (
+                <div className="rawaj-chat-thread__placeholder">
+                  <span>
+                    <MessageCircle aria-hidden="true" />
+                  </span>
+                  <h2>{text("اختر محادثة", "Choose a conversation")}</h2>
+                  <p>{text("ستظهر الرسائل هنا.", "Messages will appear here.")}</p>
+                </div>
+              ) : (
+                <>
+                  <header className="rawaj-chat-thread__header">
+                    <button
+                      type="button"
+                      onClick={returnToConversationList}
+                      className="rawaj-chat-thread__back lg:hidden"
+                      aria-label={text("العودة إلى المحادثات", "Back to conversations")}
+                    >
+                      <ArrowRight className="rtl:rotate-180" aria-hidden="true" />
+                    </button>
+
+                    <ChatAvatar
                       name={selectedConversation.otherParticipant.displayName}
                       url={selectedConversation.otherParticipant.avatarUrl}
                       online={onlineUserIds.has(selectedConversation.otherParticipant.userId)}
                     />
-                    <div className="rawaj-message-header__copy">
-                      <h2 className="truncate text-sm font-extrabold">
-                        {selectedConversation.otherParticipant.displayName}
-                      </h2>
-                      <p
-                        className="rawaj-message-header__presence"
-                        data-online={onlineUserIds.has(
-                          selectedConversation.otherParticipant.userId,
-                        )}
+
+                    <div className="rawaj-chat-thread__identity">
+                      <h2>{selectedConversation.otherParticipant.displayName}</h2>
+                      <span
+                        className="rawaj-chat-thread__presence"
+                        data-online={onlineUserIds.has(selectedConversation.otherParticipant.userId)}
                       >
-                        <span aria-hidden="true" />
+                        <i aria-hidden="true" />
                         {onlineUserIds.has(selectedConversation.otherParticipant.userId)
                           ? text("متصل الآن", "Online now")
                           : text("غير متصل", "Offline")}
-                      </p>
-                      {selectedConversation.listingId ? (
-                        <Link
-                          to="/listings/$id"
-                          params={{ id: selectedConversation.listingId }}
-                          className="truncate text-xs font-semibold text-primary"
-                        >
-                          {selectedConversation.listingTitle}
-                        </Link>
-                      ) : (
-                        <span className="block truncate text-xs font-semibold text-muted-foreground">
-                          {selectedConversation.listingTitle} ·{" "}
-                          {text("إعلان محذوف", "Deleted listing")}
-                        </span>
-                      )}
+                      </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => void handleBlock()}
-                      aria-label={text("حظر المستخدم", "Block user")}
-                      className="inline-flex items-center gap-1 rounded-xl bg-destructive/10 px-3 py-2 text-[11px] font-bold text-destructive"
-                    >
-                      <Ban className="h-3.5 w-3.5" />
-                      {text("حظر", "Block")}
-                    </button>
+
+                    <div className="rawaj-chat-thread__actions">
+                      <button
+                        type="button"
+                        onClick={() => setActionsOpen((current) => !current)}
+                        aria-label={text("خيارات المحادثة", "Conversation options")}
+                        aria-expanded={actionsOpen}
+                      >
+                        <MoreVertical aria-hidden="true" />
+                      </button>
+                      {actionsOpen ? (
+                        <div role="menu">
+                          <button type="button" role="menuitem" onClick={() => void handleBlock()}>
+                            <Ban aria-hidden="true" />
+                            {text("حظر المستخدم", "Block user")}
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  </header>
+
+                  <div className="rawaj-chat-thread__listing">
+                    <span>{text("حول الإعلان", "About listing")}</span>
+                    {selectedConversation.listingId ? (
+                      <Link to="/listings/$id" params={{ id: selectedConversation.listingId }}>
+                        {selectedConversation.listingTitle}
+                      </Link>
+                    ) : (
+                      <strong>{selectedConversation.listingTitle}</strong>
+                    )}
                   </div>
-                  {selectedConversation.status === "archived" && (
-                    <p className="mt-3 rounded-xl bg-warning/10 p-2 text-xs font-semibold text-warning">
-                      {text(
-                        "تم حذف الإعلان. احتفظنا بالمحادثة كسجل ولا يمكن إرسال رسائل جديدة.",
-                        "The listing was deleted. This conversation is preserved as history and cannot receive new messages.",
-                      )}
-                    </p>
-                  )}
-                  {selectedConversation.status === "blocked" && (
-                    <p className="mt-3 rounded-xl bg-destructive/10 p-2 text-xs font-semibold text-destructive">
-                      {text(
-                        "هذه المحادثة محظورة ولا تقبل رسائل جديدة.",
-                        "This conversation is blocked and cannot receive new messages.",
-                      )}
-                    </p>
-                  )}
-                </header>
 
-                <div className="rawaj-message-stream">
-                  {loadingMessages ? (
-                    <PanelText>{text("جاري تحميل الرسائل.", "Loading messages.")}</PanelText>
-                  ) : messageError ? (
-                    <PanelText>{messageError.message}</PanelText>
-                  ) : messages.length === 0 ? (
-                    <PanelText>
-                      {text(
-                        "لا توجد رسائل بعد. اكتب أول رسالة حقيقية لهذه المحادثة.",
-                        "No messages yet. Write the first real message in this conversation.",
-                      )}
-                    </PanelText>
-                  ) : (
-                    messages.map((message) => {
-                      const mine = message.senderUserId === auth.profile?.id;
-                      return (
-                        <article key={message.id} className="rawaj-message-bubble" data-mine={mine}>
-                          <p className="whitespace-pre-line break-words">{message.body}</p>
-                          <p className="rawaj-message-bubble__time">
-                            {formatDateTime(message.createdAt, language)}
-                          </p>
-                          {!mine && (
-                            <button
-                              type="button"
-                              disabled={reportingMessageId === message.id}
-                              onClick={() => void handleReport(message)}
-                              aria-label={text("إبلاغ عن هذه الرسالة", "Report this message")}
-                              className="rawaj-message-bubble__report"
-                            >
-                              <Flag className="h-3 w-3" />
-                              {reportingMessageId === message.id
-                                ? text("جارٍ الإبلاغ", "Reporting")
-                                : text("إبلاغ", "Report")}
-                            </button>
+                  {selectedConversation.status !== "active" ? (
+                    <div className="rawaj-chat-thread__status" data-status={selectedConversation.status}>
+                      {selectedConversation.status === "blocked"
+                        ? text("هذه المحادثة محظورة ولا تقبل رسائل جديدة.", "This conversation is blocked.")
+                        : text(
+                            "الإعلان لم يعد متاحًا، لكن المحادثة محفوظة كسجل.",
+                            "The listing is unavailable, but the conversation is preserved.",
                           )}
-                        </article>
-                      );
-                    })
-                  )}
-                  <div ref={messagesEndRef} aria-hidden="true" />
-                </div>
+                    </div>
+                  ) : null}
 
-                <form
-                  onSubmit={(event) => void handleSend(event)}
-                  className="rawaj-message-composer"
-                >
-                  {selectedConversation.status === "active" ? (
-                    <div className="mb-2">
-                      <p className="mb-1.5 text-[10px] font-bold text-muted-foreground">
-                        {text("ردود سريعة", "Quick replies")}
-                      </p>
-                      <div className="rawaj-quick-replies">
+                  <div className="rawaj-chat-messages">
+                    {loadingMessages ? (
+                      <PanelText loading>{text("جاري تحميل الرسائل", "Loading messages")}</PanelText>
+                    ) : messageError ? (
+                      <PanelText error>{messageError.message}</PanelText>
+                    ) : messages.length === 0 ? (
+                      <div className="rawaj-chat-messages__empty">
+                        <MessageCircle aria-hidden="true" />
+                        <strong>{text("ابدأ المحادثة", "Start the conversation")}</strong>
+                        <p>{text("اكتب أول رسالة بوضوح واحترام.", "Write the first message clearly.")}</p>
+                      </div>
+                    ) : (
+                      messages.map((message) => {
+                        const mine = message.senderUserId === auth.profile?.id;
+                        return (
+                          <article key={message.id} className="rawaj-message-bubble" data-mine={mine}>
+                            <p className="whitespace-pre-line break-words">{message.body}</p>
+                            <div className="rawaj-message-bubble__meta">
+                              <time>{formatDateTime(message.createdAt, language)}</time>
+                              {!mine ? (
+                                <button
+                                  type="button"
+                                  disabled={reportingMessageId === message.id}
+                                  onClick={() => void handleReport(message)}
+                                  aria-label={text("إبلاغ عن الرسالة", "Report message")}
+                                >
+                                  <Flag aria-hidden="true" />
+                                  {reportingMessageId === message.id
+                                    ? text("جارٍ الإبلاغ", "Reporting")
+                                    : text("إبلاغ", "Report")}
+                                </button>
+                              ) : null}
+                            </div>
+                          </article>
+                        );
+                      })
+                    )}
+                    <div ref={messagesEndRef} aria-hidden="true" />
+                  </div>
+
+                  <form onSubmit={(event) => void handleSend(event)} className="rawaj-chat-composer">
+                    {selectedConversation.status === "active" ? (
+                      <div className="rawaj-chat-quick-replies">
                         {quickReplies.map((reply) => (
                           <button
                             key={reply.en}
@@ -611,44 +581,91 @@ function ChatsPage() {
                           </button>
                         ))}
                       </div>
+                    ) : null}
+
+                    <div className="rawaj-chat-composer__row">
+                      <textarea
+                        value={body}
+                        onChange={(event) => setBody(event.target.value)}
+                        maxLength={2000}
+                        rows={1}
+                        placeholder={text("اكتب رسالة...", "Write a message...")}
+                        aria-label={text("اكتب رسالة", "Write a message")}
+                      />
+                      <button
+                        type="submit"
+                        disabled={
+                          sending ||
+                          body.trim().length === 0 ||
+                          selectedConversation.status !== "active"
+                        }
+                        aria-label={sending ? text("جاري الإرسال", "Sending") : text("إرسال", "Send")}
+                      >
+                        {sending ? (
+                          <RefreshCw className="animate-spin" aria-hidden="true" />
+                        ) : (
+                          <Send aria-hidden="true" />
+                        )}
+                      </button>
                     </div>
-                  ) : null}
-                  <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-                    <textarea
-                      value={body}
-                      onChange={(event) => setBody(event.target.value)}
-                      maxLength={2000}
-                      rows={2}
-                      placeholder={text("اكتب رسالة...", "Write a message...")}
-                      aria-label={text("اكتب رسالة...", "Write a message...")}
-                    />
-                    <button
-                      type="submit"
-                      disabled={
-                        sending ||
-                        body.trim().length === 0 ||
-                        selectedConversation.status !== "active"
-                      }
-                      className="rawaj-message-composer__send"
-                    >
-                      <Send className="h-4 w-4" />
-                      {sending ? text("جاري الإرسال", "Sending") : text("إرسال", "Send")}
-                    </button>
-                  </div>
-                  {notice && (
-                    <p className="mt-2 text-xs font-semibold text-emerald-trust">{notice}</p>
-                  )}
-                </form>
-              </>
-            )}
-          </section>
+                    {notice ? <p className="rawaj-chat-composer__notice">{notice}</p> : null}
+                  </form>
+                </>
+              )}
+            </section>
+          )}
         </div>
       </main>
-    </>
+    </div>
   );
 }
 
-function Avatar({ name, url, online }: { name: string; url: string | null; online: boolean }) {
+function ChatState({
+  title,
+  description,
+  loading = false,
+  error = false,
+  search = false,
+  actionLabel,
+  actionTo,
+  onAction,
+}: {
+  title: string;
+  description: string;
+  loading?: boolean;
+  error?: boolean;
+  search?: boolean;
+  actionLabel?: string;
+  actionTo?: "/listings";
+  onAction?: () => void;
+}) {
+  const Icon = loading ? RefreshCw : search ? Search : MessageCircle;
+  return (
+    <div className="rawaj-chat-state" data-tone={error ? "error" : "neutral"}>
+      <span>
+        <Icon className={loading ? "animate-spin" : ""} aria-hidden="true" />
+      </span>
+      <strong>{title}</strong>
+      <p>{description}</p>
+      {actionLabel && actionTo ? <Link to={actionTo}>{actionLabel}</Link> : null}
+      {actionLabel && onAction ? (
+        <button type="button" onClick={onAction}>
+          {actionLabel}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function ChatAvatar({
+  name,
+  url,
+  online,
+}: {
+  name: string;
+  url: string | null;
+  online: boolean;
+}) {
   return (
     <span className="rawaj-chat-avatar" data-online={online}>
       {url ? <img src={url} alt={name} loading="lazy" decoding="async" /> : name.slice(0, 1)}
@@ -657,18 +674,27 @@ function Avatar({ name, url, online }: { name: string; url: string | null; onlin
   );
 }
 
-function PanelText({ children }: { children: React.ReactNode }) {
+function PanelText({
+  children,
+  loading = false,
+  error = false,
+}: {
+  children: string;
+  loading?: boolean;
+  error?: boolean;
+}) {
   return (
-    <p className="rounded-xl bg-muted-surface p-3 text-xs leading-6 text-muted-foreground">
-      {children}
-    </p>
+    <div className="rawaj-chat-panel-text" data-error={error}>
+      {loading ? <RefreshCw className="animate-spin" aria-hidden="true" /> : null}
+      <span>{children}</span>
+    </div>
   );
 }
 
-function formatDateTime(value: string, language: "ar" | "en") {
+function formatDateTime(value: string, language: string) {
   if (!value) return "";
   return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
-    dateStyle: "short",
-    timeStyle: "short",
+    hour: "numeric",
+    minute: "2-digit",
   }).format(new Date(value));
 }
