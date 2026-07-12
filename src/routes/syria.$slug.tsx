@@ -14,11 +14,7 @@ export const Route = createFileRoute("/syria/$slug")({
     );
     if (!governorate) throw notFound();
 
-    const listingsResult = await fetchPublicListings(
-      { governorateId: governorate.id },
-      null,
-      12,
-    );
+    const listingsResult = await fetchPublicListings({ governorateId: governorate.id }, null, 12);
     return {
       governorate,
       listings: listingsResult.ok ? listingsResult.data.items : [],
