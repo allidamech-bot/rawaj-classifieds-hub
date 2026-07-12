@@ -19,7 +19,12 @@ export const Route = createFileRoute("/safety")({
   component: SafetyPage,
 });
 
-const sections: { icon: typeof ShoppingCart; title: string; items: string[]; tone?: "warn" }[] = [
+const sections: {
+  icon: typeof ShoppingCart;
+  title: string;
+  items: string[];
+  tone?: "warn";
+}[] = [
   {
     icon: ShoppingCart,
     title: "أمان المشتري",
@@ -85,8 +90,11 @@ function SafetyPage() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground">
-          {text("هل تحتاج مساعدة؟", "Need help?")} {" "}
-          <Link to="/support" className="font-bold text-primary underline-offset-2 hover:underline">
+          {text("هل تحتاج مساعدة؟", "Need help?")}{" "}
+          <Link
+            to="/support"
+            className="font-bold text-primary underline-offset-2 hover:underline"
+          >
             {text("تواصل مع الدعم", "Contact support")}
           </Link>
         </p>
