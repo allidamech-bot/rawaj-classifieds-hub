@@ -27,29 +27,52 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Apply audited native auth patch
-        run: python scripts/apply-native-auth-release-audit.py
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Format changed sources
-        run: npx eslint --fix src/lib/native-auth.ts src/lib/auth.tsx src/routes/login.tsx scripts/native-mobile-auth.test.mjs
-
-      - name: Run native auth contract
-        run: npm run test:native-mobile-auth
-
-      - name: Remove temporary patch machinery
+      - name: Apply and validate audited native auth patch
+        id: audit
+        shell: bash
         run: |
-          rm scripts/apply-native-auth-release-audit.py
-          rm .github/workflows/apply-native-auth-release-audit-once.yml
-          rm .github/workflows/apply-native-auth-release-audit-retry-once.yml
+          set +e
+          {
+            python scripts/apply-native-auth-release-audit.py &&
+            npm ci &&
+            npx eslint --fix src/lib/native-auth.ts src/lib/auth.tsx src/routes/login.tsx scripts/native-mobile-auth.test.mjs &&
+            npm run test:native-mobile-auth
+          } 2>&1 | tee /tmp/native-auth-audit.log
+          status=${PIPESTATUS[0]}
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
 
-      - name: Commit audited native auth implementation
+      - name: Record audit result
+        shell: bash
+        run: |
+          status="${{ steps.audit.outputs.status }}"
+          if [ "$status" = "0" ]; then
+            {
+              echo "PASS"
+              echo "Native Google OAuth, recovery links, confirmation links, callback persistence, lint, and contract validation completed successfully."
+            } > native-auth-audit-result.txt
+            rm scripts/apply-native-auth-release-audit.py
+            rm .github/workflows/apply-native-auth-release-audit-once.yml
+            rm .github/workflows/apply-native-auth-release-audit-retry-once.yml
+          else
+            {
+              echo "FAIL"
+              echo "Native authentication release audit exited with status $status."
+              echo
+              echo "Last 200 log lines:"
+              tail -n 200 /tmp/native-auth-audit.log
+            } > native-auth-audit-result.txt
+          fi
+
+      - name: Commit audit result and implementation
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Fix native authentication return flow"
+          git commit -m "Record native authentication release audit"
           git push origin HEAD:agent/android-release-candidate-audit-1-0-3
+
+      - name: Enforce audit result
+        if: steps.audit.outputs.status != '0'
+        run: exit 1
