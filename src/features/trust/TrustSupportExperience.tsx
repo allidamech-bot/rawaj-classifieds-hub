@@ -68,13 +68,23 @@ export function TrustHubHero({
       <div className="rawaj-trust-hero__identity">
         {mode === "more" ? (
           <div className="rawaj-trust-hero__avatar">
-            {avatarUrl ? <img src={avatarUrl} alt={displayName ?? ""} decoding="async" /> : <Icon aria-hidden="true" />}
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={displayName ?? ""} decoding="async" />
+            ) : (
+              <Icon aria-hidden="true" />
+            )}
           </div>
         ) : (
-          <span className="rawaj-trust-hero__symbol"><Icon aria-hidden="true" /></span>
+          <span className="rawaj-trust-hero__symbol">
+            <Icon aria-hidden="true" />
+          </span>
         )}
         <div>
-          <p>{mode === "more" ? text("مركز المزيد", "More hub") : text("الثقة والمساعدة", "Trust and help")}</p>
+          <p>
+            {mode === "more"
+              ? text("مركز المزيد", "More hub")
+              : text("الثقة والمساعدة", "Trust and help")}
+          </p>
           <h1>{mode === "more" && displayName ? displayName : title}</h1>
           {mode === "more" && displayName ? <strong>{title}</strong> : null}
           {location ? <small>{location}</small> : null}
@@ -82,15 +92,39 @@ export function TrustHubHero({
       </div>
       <p className="rawaj-trust-hero__description">{description}</p>
       <div className="rawaj-trust-hero__badges">
-        <span><ShieldCheck aria-hidden="true" />{text("إرشادات أمان واضحة", "Clear safety guidance")}</span>
-        <span><MessageSquareText aria-hidden="true" />{text("طلبات دعم محفوظة", "Stored support requests")}</span>
-        {verified ? <span><BadgeCheck aria-hidden="true" />{text("حساب موثّق", "Verified account")}</span> : null}
-        {unreadActivity > 0 ? <b>{unreadActivity} {text("بحاجة لانتباه", "need attention")}</b> : null}
+        <span>
+          <ShieldCheck aria-hidden="true" />
+          {text("إرشادات أمان واضحة", "Clear safety guidance")}
+        </span>
+        <span>
+          <MessageSquareText aria-hidden="true" />
+          {text("طلبات دعم محفوظة", "Stored support requests")}
+        </span>
+        {verified ? (
+          <span>
+            <BadgeCheck aria-hidden="true" />
+            {text("حساب موثّق", "Verified account")}
+          </span>
+        ) : null}
+        {unreadActivity > 0 ? (
+          <b>
+            {unreadActivity} {text("بحاجة لانتباه", "need attention")}
+          </b>
+        ) : null}
       </div>
       <nav className="rawaj-trust-hero__actions">
-        <Link to="/support"><LifeBuoy aria-hidden="true" />{text("الدعم", "Support")}</Link>
-        <Link to="/safety"><ShieldAlert aria-hidden="true" />{text("الأمان", "Safety")}</Link>
-        <Link to="/privacy"><LockKeyhole aria-hidden="true" />{text("الخصوصية", "Privacy")}</Link>
+        <Link to="/support">
+          <LifeBuoy aria-hidden="true" />
+          {text("الدعم", "Support")}
+        </Link>
+        <Link to="/safety">
+          <ShieldAlert aria-hidden="true" />
+          {text("الأمان", "Safety")}
+        </Link>
+        <Link to="/privacy">
+          <LockKeyhole aria-hidden="true" />
+          {text("الخصوصية", "Privacy")}
+        </Link>
         {actions}
       </nav>
     </section>
@@ -110,7 +144,11 @@ export function TrustSectionHeader({
 }) {
   return (
     <header className="rawaj-trust-section-header">
-      <div><p>{eyebrow}</p><h2>{title}</h2>{description ? <span>{description}</span> : null}</div>
+      <div>
+        <p>{eyebrow}</p>
+        <h2>{title}</h2>
+        {description ? <span>{description}</span> : null}
+      </div>
       {action ? <div>{action}</div> : null}
     </header>
   );
@@ -129,9 +167,19 @@ export function SafetyGuideCard({
 }) {
   return (
     <section className="rawaj-safety-guide" data-warning={warning}>
-      <header><span><Icon aria-hidden="true" /></span><h2>{title}</h2></header>
+      <header>
+        <span>
+          <Icon aria-hidden="true" />
+        </span>
+        <h2>{title}</h2>
+      </header>
       <ul>
-        {items.map((item) => <li key={item}><ShieldCheck aria-hidden="true" />{item}</li>)}
+        {items.map((item) => (
+          <li key={item}>
+            <ShieldCheck aria-hidden="true" />
+            {item}
+          </li>
+        ))}
       </ul>
     </section>
   );
@@ -146,16 +194,31 @@ export function SupportRequestTimeline({
 }) {
   const { text } = useUiPreferences();
   if (requests.length === 0) {
-    return <div className="rawaj-trust-empty"><CircleHelp aria-hidden="true" /><p>{text("لا توجد طلبات دعم محفوظة حتى الآن.", "No stored support requests yet.")}</p></div>;
+    return (
+      <div className="rawaj-trust-empty">
+        <CircleHelp aria-hidden="true" />
+        <p>
+          {text(
+            "لا توجد طلبات دعم محفوظة حتى الآن.",
+            "No stored support requests yet.",
+          )}
+        </p>
+      </div>
+    );
   }
 
   return (
     <div className="rawaj-support-timeline">
       {requests.slice(0, 5).map((request) => (
         <article key={request.id} data-status={request.status}>
-          <span className="rawaj-support-timeline__icon"><FileWarning aria-hidden="true" /></span>
+          <span className="rawaj-support-timeline__icon">
+            <FileWarning aria-hidden="true" />
+          </span>
           <div>
-            <header><h3>{request.subject}</h3><b>{supportStatusLabel(request.status, language)}</b></header>
+            <header>
+              <h3>{request.subject}</h3>
+              <b>{supportStatusLabel(request.status, language)}</b>
+            </header>
             <p>{request.message}</p>
             {request.adminNote ? <blockquote>{request.adminNote}</blockquote> : null}
           </div>
@@ -172,7 +235,14 @@ export function TrustLinkCard({
   description,
   tone = "default",
 }: {
-  to: "/support" | "/safety" | "/privacy" | "/terms" | "/prohibited" | "/verification" | "/promotion";
+  to:
+    | "/support"
+    | "/safety"
+    | "/privacy"
+    | "/terms"
+    | "/prohibited"
+    | "/verification"
+    | "/promotion";
   icon: LucideIcon;
   title: string;
   description: string;
@@ -180,8 +250,13 @@ export function TrustLinkCard({
 }) {
   return (
     <Link to={to} className="rawaj-trust-link-card" data-tone={tone}>
-      <span><Icon aria-hidden="true" /></span>
-      <div><strong>{title}</strong><p>{description}</p></div>
+      <span>
+        <Icon aria-hidden="true" />
+      </span>
+      <div>
+        <strong>{title}</strong>
+        <p>{description}</p>
+      </div>
       <ChevronLeft className="rtl:rotate-180" aria-hidden="true" />
     </Link>
   );
