@@ -13,6 +13,7 @@ test("desktop layer loads after page-specific redesign styles", () => {
   const desktopIndex = root.indexOf("href: desktopExperienceV1Css");
   assert.ok(desktopIndex > root.indexOf("href: listingDetailV2Css"));
   assert.ok(desktopIndex > root.indexOf("href: communicationCenterV2Css"));
+  assert.ok(desktopIndex > root.indexOf("href: trustSupportHubV2Css"));
 });
 
 test("desktop composition defines coherent content and sidebar geometry", () => {
