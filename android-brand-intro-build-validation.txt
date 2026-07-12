@@ -1,2 +1,0 @@
-PASS
-npm build, Capacitor Android sync, assembleDebug, and bundleRelease completed successfully.
