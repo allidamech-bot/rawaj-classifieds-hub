@@ -81,9 +81,10 @@ test("search overlay preserves listings search and filter behavior", () => {
   assert.match(hero, /search=\{\{ q: shortcut\.query \}\}/);
 });
 
-test("category worlds use live categories and asymmetric sizing", () => {
+test("category worlds use live categories, canonical pages, and asymmetric sizing", () => {
   assert.match(worlds, /categories\.slice\(0, 6\)/);
-  assert.match(worlds, /search=\{\{ category: category\.id \}\}/);
+  assert.match(worlds, /to="\/categories\/\$slug"/);
+  assert.match(worlds, /params=\{\{ slug: category\.slug \}\}/);
   assert.match(worlds, /data-size=\{index < 2 \? "large" : "compact"\}/);
   assert.match(css, /\.rawaj-category-world\[data-size="large"\]/);
   assert.match(css, /grid-column: span 2/);
