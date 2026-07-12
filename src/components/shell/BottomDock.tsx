@@ -78,6 +78,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
             <Link
               key={item.to}
               to={item.to}
+              search={item.to === "/chats" ? {} : undefined}
               data-active={active}
               data-primary={item.primary === true}
               className={`rawaj-dock-item relative flex min-h-[3.7rem] min-w-0 flex-col items-center justify-end gap-1 rounded-[0.95rem] px-1 pb-1.5 pt-1 active:scale-[0.98] ${
