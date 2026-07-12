@@ -913,7 +913,12 @@ function ManageListingPage() {
                         </button>
                         <button
                           type="button"
-                          disabled={index === images.length - 1 || imagesLoading || uploading || reorderingImages}
+                          disabled={
+                            index === images.length - 1 ||
+                            imagesLoading ||
+                            uploading ||
+                            reorderingImages
+                          }
                           onClick={() => void moveExistingImage(image.id, 1)}
                           className="rawaj-chip min-h-9 justify-center px-2 disabled:opacity-35"
                           aria-label={text("تحريك الصورة للخلف", "Move photo later")}
@@ -1010,7 +1015,11 @@ function ManageListingPage() {
                             </button>
                             <button
                               type="button"
-                              disabled={index === selectedImages.length - 1 || uploading || preview.state === "uploading"}
+                              disabled={
+                                index === selectedImages.length - 1 ||
+                                uploading ||
+                                preview.state === "uploading"
+                              }
                               onClick={() => moveSelectedPendingImage(preview.id, 1)}
                               className="rawaj-icon-button h-8 w-8 disabled:opacity-35"
                               aria-label={text("تحريك الصورة للخلف", "Move photo later")}

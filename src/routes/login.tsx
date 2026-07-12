@@ -207,10 +207,7 @@ function LoginPage() {
     if (mode === "register") {
       if (result.data.session) {
         setMessage(
-          text(
-            "تم إنشاء الحساب. جارٍ إدخالك إلى رواج.",
-            "Account created. Opening RAWAJ now.",
-          ),
+          text("تم إنشاء الحساب. جارٍ إدخالك إلى رواج.", "Account created. Opening RAWAJ now."),
         );
         void navigate({ to: returnTo });
         return;

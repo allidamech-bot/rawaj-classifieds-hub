@@ -432,7 +432,10 @@ function AddListingPage() {
     updateSelectedImagesFromRef((entries) =>
       entries.map((entry) =>
         entry.uploadedImage
-          ? { ...entry, uploadedImage: refreshedById.get(entry.uploadedImage.id) ?? entry.uploadedImage }
+          ? {
+              ...entry,
+              uploadedImage: refreshedById.get(entry.uploadedImage.id) ?? entry.uploadedImage,
+            }
           : entry,
       ),
     );
@@ -1238,7 +1241,12 @@ function AddListingPage() {
                             <div className="mb-2 flex items-center gap-1">
                               <button
                                 type="button"
-                                disabled={index === 0 || submitting || reorderingImages || preview.state === "uploading"}
+                                disabled={
+                                  index === 0 ||
+                                  submitting ||
+                                  reorderingImages ||
+                                  preview.state === "uploading"
+                                }
                                 onClick={() => void moveSelectedImage(preview.id, -1)}
                                 className="rawaj-icon-button h-8 w-8 disabled:opacity-35"
                                 aria-label={text("تحريك الصورة للأمام", "Move photo earlier")}
@@ -1247,7 +1255,12 @@ function AddListingPage() {
                               </button>
                               <button
                                 type="button"
-                                disabled={index === selectedImagePreviews.length - 1 || submitting || reorderingImages || preview.state === "uploading"}
+                                disabled={
+                                  index === selectedImagePreviews.length - 1 ||
+                                  submitting ||
+                                  reorderingImages ||
+                                  preview.state === "uploading"
+                                }
                                 onClick={() => void moveSelectedImage(preview.id, 1)}
                                 className="rawaj-icon-button h-8 w-8 disabled:opacity-35"
                                 aria-label={text("تحريك الصورة للخلف", "Move photo later")}

@@ -32,7 +32,8 @@ export async function reorderListingImages(
   if (
     normalized.some(
       (item) => !item.id || !Number.isInteger(item.sortOrder) || item.sortOrder < 0,
-    ) || uniqueIds.size !== normalized.length
+    ) ||
+    uniqueIds.size !== normalized.length
   ) {
     return {
       ok: false,
@@ -71,10 +72,7 @@ export async function reorderListingImages(
     sortOrder: rowNumber(row, "sort_order"),
   }));
   const currentIds = new Set(current.map((item) => item.id));
-  if (
-    current.length !== normalized.length ||
-    normalized.some((item) => !currentIds.has(item.id))
-  ) {
+  if (current.length !== normalized.length || normalized.some((item) => !currentIds.has(item.id))) {
     return {
       ok: false,
       error: {
