@@ -23,7 +23,7 @@ const [
 test("category landing pages resolve active categories and expose canonical SEO", () => {
   assert.match(categoryRoute, /createFileRoute\("\/category\/\$slug"\)/);
   assert.match(categoryRoute, /fetchPublicCategories/);
-  assert.match(categoryRoute, /fetchPublicListings\(\{ category: category\.slug \}/);
+  assert.match(categoryRoute, /fetchPublicListings\(\{ categoryId: category\.id \}/);
   assert.match(categoryRoute, /path: loaderData \? `\/category\/\$\{loaderData\.category\.slug\}`/);
   assert.match(categoryRoute, /noindex: !loaderData/);
 });
@@ -31,7 +31,7 @@ test("category landing pages resolve active categories and expose canonical SEO"
 test("governorate landing pages resolve active governorates and expose canonical SEO", () => {
   assert.match(governorateRoute, /createFileRoute\("\/syria\/\$slug"\)/);
   assert.match(governorateRoute, /fetchPublicGovernorates/);
-  assert.match(governorateRoute, /fetchPublicListings\(\{ governorate: governorate\.id \}/);
+  assert.match(governorateRoute, /governorateId: governorate\.id/);
   assert.match(
     governorateRoute,
     /path: loaderData \? `\/syria\/\$\{loaderData\.governorate\.slug\}`/,
