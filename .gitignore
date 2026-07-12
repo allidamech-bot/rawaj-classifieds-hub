@@ -38,6 +38,15 @@ supabase/.temp/
 # Local env files
 .env
 
+# Android signing credentials and local release material
+# Keep upload keys and their password-bearing property files outside version control.
+*.jks
+*.keystore
+*.p12
+keystore.properties
+signing.properties
+key.properties
+
 # RAWAJ location taxonomy raw/generated artifacts
 data/locations/sources/
 data/locations/syria-ocha-location-nodes.json
