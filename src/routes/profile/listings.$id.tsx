@@ -12,6 +12,7 @@ import {
   ListingStudioTrustStrip,
 } from "@/features/listing-studio/listing-studio";
 import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
+import { ListingTaxonomySelector } from "@/features/listing-studio/ListingTaxonomySelector";
 import {
   detectCategoryFieldKind,
   mergeCategoryDetails,
@@ -25,15 +26,18 @@ import {
   normalizeContactValue,
 } from "@/lib/content-safety";
 import {
+  assignOwnerListingTaxonomy,
   deleteListingImage,
   deleteOwnerListing,
   fetchListingImages,
+  fetchOwnerListingTaxonomyAssignment,
   isOwnerDeletableStatus,
   reorderListingImages,
   fetchOwnerListingDetail,
   fetchPublicCategories,
   fetchPublicGovernorates,
   fetchPublicSubcategories,
+  fetchPublicTaxonomyNodes,
   submitOwnerListingForReview,
   updateOwnerListing,
   uploadListingImage,
@@ -46,10 +50,12 @@ import type {
   ClassifiedSubcategory,
   ListingCondition,
   ListingImage,
+  TaxonomyNode,
 } from "@/lib/classifieds-types";
 import { categoryName, governorateName } from "@/lib/i18n";
 import { fetchListingLocationNodeId } from "@/lib/api/listing-location-read";
 import { listingStatusLabel } from "@/lib/status-labels";
+import { resolveTaxonomyListingSearch } from "@/lib/taxonomy";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 import type { PriceType } from "@/types";
@@ -88,6 +94,7 @@ function ManageListingPage() {
   const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
   const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
   const [subcategories, setSubcategories] = useState<ClassifiedSubcategory[]>([]);
+  const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>([]);
   const [saving, setSaving] = useState(false);
   const [savingError, setSavingError] = useState<string | null>(null);
   const [savingSuccess, setSavingSuccess] = useState<string | null>(null);
@@ -106,6 +113,7 @@ function ManageListingPage() {
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [subcategoryId, setSubcategoryId] = useState<string | null>(null);
+  const [taxonomyNodeId, setTaxonomyNodeId] = useState("");
   const [governorateId, setGovernorateId] = useState("");
   const [district, setDistrict] = useState("");
   const [locationNodeId, setLocationNodeId] = useState("");
@@ -119,6 +127,7 @@ function ManageListingPage() {
   const [categoryDetails, setCategoryDetails] = useState<CategorySpecificDetails>({});
 
   const category = categories.find((item) => item.id === categoryId);
+  const selectedTaxonomyNode = taxonomyNodes.find((item) => item.id === taxonomyNodeId);
   const categoryFieldKind = detectCategoryFieldKind(category, listing);
   const governorate = governorates.find((item) => item.id === governorateId);
   const currentSubcategories = useMemo(
@@ -132,7 +141,7 @@ function ManageListingPage() {
   const isDeletable = Boolean(listing && isOwnerDeletableStatus(listing.status));
   const studioScore =
     [
-      Boolean(categoryId),
+      taxonomyNodes.length > 0 ? Boolean(selectedTaxonomyNode?.isLeaf) : Boolean(categoryId),
       title.trim().length >= 8,
       description.trim().length >= 30,
       Boolean(price) || priceType !== "fixed",
@@ -148,15 +157,18 @@ function ManageListingPage() {
       setLoading(true);
       setSetupError(null);
 
-      const [listingResult, locationResult, refsResult] = await Promise.all([
-        fetchOwnerListingDetail(profileId, id),
-        fetchListingLocationNodeId(profileId, id),
-        Promise.all([
-          fetchPublicCategories(),
-          fetchPublicGovernorates(),
-          fetchPublicSubcategories(),
-        ]),
-      ]);
+      const [listingResult, locationResult, taxonomyAssignmentResult, refsResult] =
+        await Promise.all([
+          fetchOwnerListingDetail(profileId, id),
+          fetchListingLocationNodeId(profileId, id),
+          fetchOwnerListingTaxonomyAssignment(profileId, id),
+          Promise.all([
+            fetchPublicCategories(),
+            fetchPublicGovernorates(),
+            fetchPublicSubcategories(),
+            fetchPublicTaxonomyNodes(),
+          ]),
+        ]);
 
       if (cancelled) return;
       if (!refsResult[0].ok) {
@@ -185,6 +197,17 @@ function ManageListingPage() {
       setCategories(refsResult[0].data);
       setGovernorates(refsResult[1].data);
       setSubcategories(refsResult[2].data);
+      if (refsResult[3].ok) setTaxonomyNodes(refsResult[3].data);
+
+      const fallbackTaxonomyNodeId = readDetailString(
+        listingResult.data.details,
+        "_taxonomy_node_id",
+      );
+      setTaxonomyNodeId(
+        taxonomyAssignmentResult.ok
+          ? (taxonomyAssignmentResult.data?.taxonomyNodeId ?? fallbackTaxonomyNodeId)
+          : fallbackTaxonomyNodeId,
+      );
 
       setTitle(listingResult.data.title);
       setDescription(listingResult.data.description);
@@ -265,6 +288,10 @@ function ManageListingPage() {
       return;
     }
 
+    const details = { ...validation.details };
+    if (taxonomyNodeId) details._taxonomy_node_id = taxonomyNodeId;
+    else delete details._taxonomy_node_id;
+
     const result = await updateOwnerListing(auth.profile?.id ?? null, listing.id, {
       categoryId: categoryId || undefined,
       subcategoryId: subcategoryId ?? null,
@@ -277,8 +304,22 @@ function ManageListingPage() {
       districtAr: locationNodeId ? `@${locationNodeId}` : district || undefined,
       contactName: contactName.trim() || undefined,
       contactOptions: contact,
-      details: validation.details,
+      details,
     });
+
+    if (result.ok && taxonomyNodeId) {
+      const taxonomyResult = await assignOwnerListingTaxonomy(
+        auth.profile?.id ?? null,
+        result.data.id,
+        taxonomyNodeId,
+      );
+      if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
+        setSaving(false);
+        setListing(result.data);
+        setSavingError(taxonomyResult.error.message);
+        return;
+      }
+    }
 
     setSaving(false);
     if (result.ok) {
@@ -293,6 +334,7 @@ function ManageListingPage() {
     auth.profile?.id,
     categoryId,
     subcategoryId,
+    taxonomyNodeId,
     governorateId,
     title,
     description,
@@ -334,6 +376,10 @@ function ManageListingPage() {
       return;
     }
 
+    const details = { ...validation.details };
+    if (taxonomyNodeId) details._taxonomy_node_id = taxonomyNodeId;
+    else delete details._taxonomy_node_id;
+
     const saveResult = await updateOwnerListing(auth.profile?.id ?? null, listing.id, {
       categoryId: categoryId || undefined,
       subcategoryId: subcategoryId ?? null,
@@ -346,13 +392,27 @@ function ManageListingPage() {
       districtAr: locationNodeId ? `@${locationNodeId}` : district || undefined,
       contactName: contactName.trim() || undefined,
       contactOptions: contact,
-      details: validation.details,
+      details,
     });
 
     if (!saveResult.ok) {
       setResubmitting(false);
       setSavingError(saveResult.error.message);
       return;
+    }
+
+    if (taxonomyNodeId) {
+      const taxonomyResult = await assignOwnerListingTaxonomy(
+        auth.profile?.id ?? null,
+        saveResult.data.id,
+        taxonomyNodeId,
+      );
+      if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
+        setResubmitting(false);
+        setListing(saveResult.data);
+        setSavingError(taxonomyResult.error.message);
+        return;
+      }
     }
 
     const result = await submitOwnerListingForReview(auth.profile?.id ?? null, saveResult.data.id);
@@ -371,6 +431,7 @@ function ManageListingPage() {
     auth.profile?.id,
     categoryId,
     subcategoryId,
+    taxonomyNodeId,
     governorateId,
     title,
     description,
@@ -750,42 +811,71 @@ function ManageListingPage() {
             </ListingStudioSection>
 
             <ListingStudioSection title={text("القسم والموقع", "Category and location")}>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Field label={text("القسم", "Category")}>
-                  <select
-                    value={categoryId}
-                    onChange={(e) => {
-                      setCategoryId(e.target.value);
-                      setSubcategoryId(null);
+              {taxonomyNodes.length > 0 ? (
+                <div className={!isEditable ? "pointer-events-none opacity-70" : ""}>
+                  <ListingTaxonomySelector
+                    nodes={taxonomyNodes}
+                    selectedNodeId={taxonomyNodeId}
+                    language={language}
+                    text={text}
+                    onSelect={(node, path) => {
+                      if (!isEditable) return;
+                      setTaxonomyNodeId(node.id);
+                      if (!node.isLeaf) {
+                        setCategoryId("");
+                        setSubcategoryId(null);
+                        setCategoryDetails({});
+                        return;
+                      }
+                      const search = resolveTaxonomyListingSearch(node, path);
+                      setCategoryId(search.category ?? "");
+                      setSubcategoryId(search.taxonomyLegacySubcategoryId ?? null);
                       setCategoryDetails({});
                     }}
-                    className="input"
-                    disabled={!isEditable}
-                  >
-                    <option value="">{text("اختر", "Choose")}</option>
-                    {categories.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {categoryName(item.id, item.nameAr, language)}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label={text("القسم الفرعي", "Subcategory")}>
-                  <select
-                    value={subcategoryId ?? ""}
-                    onChange={(e) => setSubcategoryId(e.target.value || null)}
-                    className="input"
-                    disabled={!isEditable || !categoryId}
-                  >
-                    <option value="">{text("اختر", "Choose")}</option>
-                    {currentSubcategories.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.nameAr}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-              </div>
+                  />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <Field label={text("القسم", "Category")}>
+                    <select
+                      value={categoryId}
+                      onChange={(e) => {
+                        setCategoryId(e.target.value);
+                        setSubcategoryId(null);
+                        setTaxonomyNodeId("");
+                        setCategoryDetails({});
+                      }}
+                      className="input"
+                      disabled={!isEditable}
+                    >
+                      <option value="">{text("اختر", "Choose")}</option>
+                      {categories.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {categoryName(item.id, item.nameAr, language)}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label={text("القسم الفرعي", "Subcategory")}>
+                    <select
+                      value={subcategoryId ?? ""}
+                      onChange={(e) => {
+                        setSubcategoryId(e.target.value || null);
+                        setTaxonomyNodeId("");
+                      }}
+                      className="input"
+                      disabled={!isEditable || !categoryId}
+                    >
+                      <option value="">{text("اختر", "Choose")}</option>
+                      {currentSubcategories.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.nameAr}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+              )}
               <div className="mt-3">
                 <Field label={text("الموقع", "Location")}>
                   <CanonicalLocationSelector
@@ -1125,7 +1215,13 @@ function ManageListingPage() {
             <ListingStudioQualityPanel
               score={studioScore}
               checks={[
-                { label: text("القسم محدد", "Category selected"), done: Boolean(categoryId) },
+                {
+                  label: text("القسم محدد", "Category selected"),
+                  done:
+                    taxonomyNodes.length > 0
+                      ? Boolean(selectedTaxonomyNode?.isLeaf)
+                      : Boolean(categoryId),
+                },
                 { label: text("عنوان واضح", "Clear title"), done: title.trim().length >= 8 },
                 {
                   label: text("وصف كافٍ", "Useful description"),
