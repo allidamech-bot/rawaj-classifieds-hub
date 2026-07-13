@@ -8,14 +8,8 @@ import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
 import { buildOwnerUpdateRpcArgs } from "@/lib/api/listing-write-contract";
 import { getClient, mapError, rowString } from "@/lib/api/shared";
 
-const ownerUpdateRequests = new Map<
-  string,
-  Promise<ClassifiedsResult<ClassifiedListing>>
->();
-const ownerSubmitRequests = new Map<
-  string,
-  Promise<ClassifiedsResult<ClassifiedListing>>
->();
+const ownerUpdateRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();
+const ownerSubmitRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();
 
 export function updateOwnerListing(
   userId: string | null,
@@ -27,11 +21,7 @@ export function updateOwnerListing(
   const pending = ownerUpdateRequests.get(requestKey);
   if (pending) return pending;
 
-  const request = runOwnerListingUpdate(
-    userId,
-    cleanListingId,
-    payload,
-  ).finally(() => {
+  const request = runOwnerListingUpdate(userId, cleanListingId, payload).finally(() => {
     ownerUpdateRequests.delete(requestKey);
   });
   ownerUpdateRequests.set(requestKey, request);
@@ -91,8 +81,7 @@ async function runOwnerListingUpdate(
 
   const patch: Record<string, unknown> = {};
   if (payload.categoryId) patch.category_id = payload.categoryId;
-  if (payload.subcategoryId !== undefined)
-    patch.subcategory_id = payload.subcategoryId;
+  if (payload.subcategoryId !== undefined) patch.subcategory_id = payload.subcategoryId;
   if (payload.governorateId) patch.governorate_id = payload.governorateId;
   if (payload.title?.trim()) patch.title = payload.title.trim();
   if (payload.description !== undefined)
@@ -117,19 +106,14 @@ async function runOwnerListingUpdate(
     }
   }
 
-  if (payload.contactName !== undefined)
-    patch.contact_name = payload.contactName;
+  if (payload.contactName !== undefined) patch.contact_name = payload.contactName;
   if (payload.contactOptions) patch.contact_options = payload.contactOptions;
   if (payload.details !== undefined) patch.details = payload.details;
 
   const rpcArgs = buildOwnerUpdateRpcArgs(cleanListingId, patch);
-  const { data, error } = await clientResult.data.rpc(
-    "rawaj_owner_update_listing_v2",
-    rpcArgs,
-  );
+  const { data, error } = await clientResult.data.rpc("rawaj_owner_update_listing_v2", rpcArgs);
 
-  if (error)
-    return { ok: false, error: mapError(error, "owner_listing_update") };
+  if (error) return { ok: false, error: mapError(error, "owner_listing_update") };
 
   const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);
   if (refreshed.ok) return refreshed;
@@ -192,15 +176,11 @@ async function runOwnerListingSubmit(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data.rpc(
-    "rawaj_submit_listing_for_review",
-    {
-      p_listing_id: cleanListingId,
-    },
-  );
+  const { data, error } = await clientResult.data.rpc("rawaj_submit_listing_for_review", {
+    p_listing_id: cleanListingId,
+  });
 
-  if (error)
-    return { ok: false, error: mapError(error, "owner_listing_submit") };
+  if (error) return { ok: false, error: mapError(error, "owner_listing_submit") };
 
   const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);
   if (refreshed.ok) {
@@ -245,9 +225,7 @@ function stableValue(value: unknown): unknown {
   return value;
 }
 
-function submitStatusMismatch(
-  status: ClassifiedListing["status"],
-): ClassifiedsResult<never> {
+function submitStatusMismatch(status: ClassifiedListing["status"]): ClassifiedsResult<never> {
   return {
     ok: false,
     error: {
