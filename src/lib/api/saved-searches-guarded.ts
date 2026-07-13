@@ -8,7 +8,18 @@ import {
 } from "@/lib/api/saved-searches";
 import { runDeduplicatedRequest } from "@/lib/api/request-dedup";
 
-const pendingSavedSearchWrites = new Map<string, Promise<unknown>>();
+const pendingSavedSearchCreates = new Map<
+  string,
+  ReturnType<typeof baseCreateSavedSearch>
+>();
+const pendingSavedSearchFrequencyUpdates = new Map<
+  string,
+  ReturnType<typeof baseUpdateSavedSearchAlertFrequency>
+>();
+const pendingSavedSearchDeletes = new Map<
+  string,
+  ReturnType<typeof baseDeleteSavedSearch>
+>();
 
 export function createSavedSearch(
   userId: Parameters<typeof baseCreateSavedSearch>[0],
@@ -20,9 +31,9 @@ export function createSavedSearch(
     payload.filters,
     payload.alertFrequency ?? "weekly",
   ]);
-  return runDeduplicatedRequest(key, pendingSavedSearchWrites, () =>
+  return runDeduplicatedRequest(key, pendingSavedSearchCreates, () =>
     baseCreateSavedSearch(userId, payload),
-  ) as ReturnType<typeof baseCreateSavedSearch>;
+  );
 }
 
 export function updateSavedSearchAlertFrequency(
@@ -33,9 +44,9 @@ export function updateSavedSearchAlertFrequency(
   const cleanId = savedSearchId.trim();
   return runDeduplicatedRequest(
     JSON.stringify([userId ?? "anonymous", cleanId, frequency]),
-    pendingSavedSearchWrites,
+    pendingSavedSearchFrequencyUpdates,
     () => baseUpdateSavedSearchAlertFrequency(userId, cleanId, frequency),
-  ) as ReturnType<typeof baseUpdateSavedSearchAlertFrequency>;
+  );
 }
 
 export function deleteSavedSearch(
@@ -45,9 +56,9 @@ export function deleteSavedSearch(
   const cleanId = savedSearchId.trim();
   return runDeduplicatedRequest(
     JSON.stringify([userId ?? "anonymous", cleanId, "delete"]),
-    pendingSavedSearchWrites,
+    pendingSavedSearchDeletes,
     () => baseDeleteSavedSearch(userId, cleanId),
-  ) as ReturnType<typeof baseDeleteSavedSearch>;
+  );
 }
 
 export { fetchSavedSearches, recordSavedSearchAlertMatch, touchSavedSearchAlertChecked };
