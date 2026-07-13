@@ -12,16 +12,21 @@ export function buildListingStructuredData(listing: ClassifiedListing): Record<s
     url: absoluteUrl(`/listings/${listing.id}`),
     category: listing.categoryNameAr,
     areaServed: listing.governorateNameAr,
-    datePosted: listing.createdAt,
   };
 
   if (listing.primaryImageUrl) data.image = [absoluteUrl(listing.primaryImageUrl)];
 
   if (kind === "vehicles") {
+    const make = detailValue(listing, "car_make", "make");
     addDefined(data, {
       vehicleModelDate: detailValue(listing, "year"),
       model: detailValue(listing, "car_model", "model"),
-      brand: detailValue(listing, "car_make", "make"),
+      brand: make
+        ? {
+            "@type": "Brand",
+            name: make,
+          }
+        : undefined,
       mileageFromOdometer: numericProperty(detailNumber(listing, "mileage_km"), "KMT"),
       fuelType: detailValue(listing, "fuel_type"),
       vehicleTransmission: detailValue(listing, "transmission"),
@@ -34,19 +39,32 @@ export function buildListingStructuredData(listing: ClassifiedListing): Record<s
       numberOfBedrooms: detailNumber(listing, "bedrooms"),
       numberOfBathroomsTotal: detailNumber(listing, "bathrooms"),
       accommodationCategory: detailValue(listing, "property_type"),
+      address: listing.governorateNameAr
+        ? postalAddress(listing.governorateNameAr, listing.districtAr)
+        : undefined,
     });
   } else if (kind === "jobs") {
+    const isRemote = detailValue(listing, "work_location") === "remote";
     addDefined(data, {
+      title: listing.title,
+      datePosted: listing.createdAt,
       employmentType: detailValue(listing, "employment_type", "job_type"),
-      jobLocationType:
-        detailValue(listing, "work_location") === "remote" ? "TELECOMMUTE" : undefined,
+      jobLocationType: isRemote ? "TELECOMMUTE" : undefined,
+      jobLocation:
+        !isRemote && listing.governorateNameAr
+          ? {
+              "@type": "Place",
+              address: postalAddress(listing.governorateNameAr, listing.districtAr),
+            }
+          : undefined,
       validThrough: listing.expiresAt ?? undefined,
-      applicantLocationRequirements: listing.governorateNameAr
-        ? {
-            "@type": "AdministrativeArea",
-            name: listing.governorateNameAr,
-          }
-        : undefined,
+      applicantLocationRequirements:
+        isRemote && listing.governorateNameAr
+          ? {
+              "@type": "AdministrativeArea",
+              name: listing.governorateNameAr,
+            }
+          : undefined,
     });
   } else if (kind === "services") {
     addDefined(data, {
@@ -110,6 +128,15 @@ function numericProperty(value: number | undefined, unitCode: string) {
     "@type": "QuantitativeValue",
     value,
     unitCode,
+  };
+}
+
+function postalAddress(addressRegion: string, addressLocality?: string | null) {
+  return {
+    "@type": "PostalAddress",
+    addressCountry: "SY",
+    addressRegion,
+    ...(addressLocality?.trim() ? { addressLocality: addressLocality.trim() } : {}),
   };
 }
 
