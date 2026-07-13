@@ -2,36 +2,22 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [
-  root,
-  shared,
-  createRoute,
-  manageRoute,
-  storage,
-  writes,
-  lifecycle,
-  css,
-  gate,
-] = await Promise.all([
-  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-  readFile(
-    new URL("../src/features/listing-studio/listing-studio.tsx", import.meta.url),
-    "utf8",
-  ),
-  readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/profile/listings.$id.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/api/storage.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/api/listing-write-rpc.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/api/listing-lifecycle.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/listing-studio-v3.css", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
-]);
+const [root, shared, createRoute, manageRoute, storage, writes, lifecycle, css, gate] =
+  await Promise.all([
+    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/features/listing-studio/listing-studio.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/profile/listings.$id.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/api/storage.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/api/listing-write-rpc.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/api/listing-lifecycle.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/listing-studio-v3.css", import.meta.url), "utf8"),
+    readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  ]);
 
 test("V3 stylesheet loads after V2", () => {
   assert.match(root, /listingStudioV3Css/);
-  assert.ok(
-    root.indexOf("href: listingStudioV3Css") > root.indexOf("href: listingStudioV2Css"),
-  );
+  assert.ok(root.indexOf("href: listingStudioV3Css") > root.indexOf("href: listingStudioV2Css"));
 });
 
 test("shared studio supports guided navigation, trust and readiness", () => {
@@ -55,10 +41,7 @@ test("manage flow uses the same V3 workspace and preserves permissions", () => {
   assert.match(manageRoute, /rawaj-listing-studio-v3/);
   assert.match(manageRoute, /<ListingStudioTrustStrip/);
   assert.match(manageRoute, /<ListingStudioCompletionCard/);
-  assert.match(
-    manageRoute,
-    /listing\?\.status === "draft" \|\| listing\?\.status === "rejected"/,
-  );
+  assert.match(manageRoute, /listing\?\.status === "draft" \|\| listing\?\.status === "rejected"/);
   assert.match(manageRoute, /submitOwnerListingForReview/);
   assert.match(manageRoute, /deleteOwnerListing/);
 });
@@ -69,8 +52,7 @@ test("listing media validators reject empty files before storage work", () => {
   assert.match(storage, /ملف صورة الحساب فارغ أو تالف/);
   assert.match(storage, /ملف الإيصال فارغ أو تالف/);
   assert.ok(
-    storage.indexOf("file.size <= 0") <
-      storage.indexOf("validateImageMimeType(file.type)"),
+    storage.indexOf("file.size <= 0") < storage.indexOf("validateImageMimeType(file.type)"),
   );
 });
 
