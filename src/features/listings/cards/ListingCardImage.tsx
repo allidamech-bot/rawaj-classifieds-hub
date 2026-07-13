@@ -28,13 +28,7 @@ export function ListingCardImage({
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   if (!src || failedSrc === src) {
-    return (
-      <PlaceholderArt
-        type={placeholder}
-        aspect={placeholderAspect}
-        className={className}
-      />
-    );
+    return <PlaceholderArt type={placeholder} aspect={placeholderAspect} className={className} />;
   }
 
   return (
