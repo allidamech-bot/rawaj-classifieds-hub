@@ -4,7 +4,7 @@ const arabicDiacritics = /[\u0640\u064B-\u065F\u0670\u06D6-\u06ED]/g;
 const whitespace = /\s+/g;
 const normalizedSearchSupport = new WeakMap<SupabaseClient, boolean>();
 
-export function normalizeArabicSearchTerm(value: string) {
+export function normalizeArabicSearchTerm(value: string): string {
   return value
     .toLocaleLowerCase("ar")
     .replace(arabicDiacritics, "")
@@ -18,7 +18,7 @@ export function normalizeArabicSearchTerm(value: string) {
     .trim();
 }
 
-export async function supportsNormalizedListingSearch(client: SupabaseClient) {
+export async function supportsNormalizedListingSearch(client: SupabaseClient): Promise<boolean> {
   const cached = normalizedSearchSupport.get(client);
   if (cached !== undefined) return cached;
 
