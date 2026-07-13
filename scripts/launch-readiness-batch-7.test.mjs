@@ -102,8 +102,8 @@ test("RAWAJ launch intro is native, premium-motion, readiness-aware, and fresh-a
   assert.match(mainActivity, /new OvershootInterpolator\(0\.72f\)/);
   assert.match(mainActivity, /setScaleX\(0\.56f\)/);
   assert.match(mainActivity, /setStartDelay\(170L\)/);
-  assert.match(mainActivity, /INTRO_MIN_VISIBLE_MS = 650L/);
-  assert.match(mainActivity, /INTRO_MAX_VISIBLE_MS = 2400L/);
+  assert.match(mainActivity, /INTRO_MIN_VISIBLE_MS = 1400L/);
+  assert.match(mainActivity, /INTRO_MAX_VISIBLE_MS = 3000L/);
   assert.match(mainActivity, /isWebContentReady\(webView\)/);
   assert.match(mainActivity, /setDuration\(240L\)/);
   assert.match(mainActivity, /root\.removeView\(overlay\)/);
