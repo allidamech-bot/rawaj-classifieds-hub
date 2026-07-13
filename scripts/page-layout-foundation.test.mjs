@@ -17,7 +17,7 @@ test("page layout exposes canonical width and rhythm tokens", () => {
     "--rawaj-section-gap",
     "--rawaj-stack-gap",
   ]) {
-    assert.match(foundation, new RegExp(`${token.replaceAll("-", "\\-")}\\s*:`));
+    assert.match(foundation, new RegExp(`${token}\\s*:`));
   }
 });
 
@@ -32,5 +32,8 @@ test("shared containers use one width and gutter contract", () => {
 test("mobile edge-to-edge sections reset at tablet width", () => {
   assert.match(foundation, /rawaj-edge-to-edge-mobile/);
   assert.match(foundation, /margin-inline:\s*calc\(var\(--rawaj-page-gutter\) \* -1\)/);
-  assert.match(foundation, /@media \(min-width:\s*640px\)[\s\S]*rawaj-edge-to-edge-mobile[\s\S]*margin-inline:\s*0/);
+  assert.match(
+    foundation,
+    /@media \(min-width:\s*640px\)[\s\S]*rawaj-edge-to-edge-mobile[\s\S]*margin-inline:\s*0/,
+  );
 });
