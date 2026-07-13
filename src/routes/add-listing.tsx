@@ -14,6 +14,7 @@ import {
   ListingStudioTrustStrip,
 } from "@/features/listing-studio/listing-studio";
 import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
+import { ListingTaxonomySelector } from "@/features/listing-studio/ListingTaxonomySelector";
 import {
   carMakeOptions,
   detectCategoryFieldKind,
@@ -27,10 +28,12 @@ import {
   normalizeContactValue,
 } from "@/lib/content-safety";
 import {
+  assignOwnerListingTaxonomy,
   createOwnerDraftListing,
   deleteListingImage,
   fetchPublicCategories,
   fetchPublicGovernorates,
+  fetchPublicTaxonomyNodes,
   reorderListingImages,
   submitOwnerListingForReview,
   updateOwnerListing,
@@ -43,6 +46,7 @@ import type {
   ClassifiedsError,
   ListingImage,
   ListingCondition,
+  TaxonomyNode,
 } from "@/lib/classifieds-types";
 
 type ImageUploadState = "pending" | "uploading" | "uploaded" | "failed";
@@ -72,6 +76,7 @@ interface StaleUploadCleanupRecord {
   failure: string | null;
 }
 import { categoryName, governorateName } from "@/lib/i18n";
+import { resolveTaxonomyListingSearch } from "@/lib/taxonomy";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 import type { PriceType } from "@/types";
@@ -92,6 +97,7 @@ function AddListingPage() {
   const [step, setStep] = useState(0);
   const [furthestStep, setFurthestStep] = useState(0);
   const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
+  const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>([]);
   const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
   const [loading, setLoading] = useState(true);
   const [setupError, setSetupError] = useState<ClassifiedsError | null>(null);
@@ -109,6 +115,8 @@ function AddListingPage() {
   const [imageSelectionMessage, setImageSelectionMessage] = useState<string | null>(null);
   const [reorderingImages, setReorderingImages] = useState(false);
   const [categoryId, setCategoryId] = useState("");
+  const [subcategoryId, setSubcategoryId] = useState("");
+  const [taxonomyNodeId, setTaxonomyNodeId] = useState("");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [priceType, setPriceType] = useState<PriceType>("fixed");
@@ -137,6 +145,7 @@ function AddListingPage() {
   const lastAutosaveSignatureRef = useRef("");
 
   const category = categories.find((item) => item.id === categoryId);
+  const selectedTaxonomyNode = taxonomyNodes.find((item) => item.id === taxonomyNodeId);
   const categoryFieldKind = detectCategoryFieldKind(category);
   const governorate = governorates.find((item) => item.id === governorateId);
   const normalizedPrice = normalizeNumericInput(price);
@@ -145,13 +154,24 @@ function AddListingPage() {
   const score = useMemo(
     () =>
       [
-        !!categoryId,
+        taxonomyNodes.length > 0 ? Boolean(selectedTaxonomyNode?.isLeaf) : !!categoryId,
         title.trim().length >= 8,
         description.trim().length >= 30,
         !!price || priceType !== "fixed",
         !!locationNodeId || (!!governorateId && !!district),
       ].filter(Boolean).length * 20,
-    [categoryId, title, description, price, priceType, governorateId, district, locationNodeId],
+    [
+      categoryId,
+      selectedTaxonomyNode?.isLeaf,
+      taxonomyNodes.length,
+      title,
+      description,
+      price,
+      priceType,
+      governorateId,
+      district,
+      locationNodeId,
+    ],
   );
   const steps = [
     text("ماذا تبيع؟", "What are you selling?"),
@@ -574,6 +594,7 @@ function AddListingPage() {
   function buildCurrentListingPayload(details: Record<string, unknown>) {
     return {
       categoryId,
+      subcategoryId: subcategoryId || null,
       governorateId,
       title: title.trim(),
       description: description.trim(),
@@ -592,6 +613,7 @@ function AddListingPage() {
     const normalizedWhatsapp = normalizeContactValue(whatsapp);
     const details = mergeCategoryDetails(
       {
+        ...(taxonomyNodeId ? { _taxonomy_node_id: taxonomyNodeId } : {}),
         ...(contact.phone && isSafePhoneValue(normalizedPhone) ? { phone: normalizedPhone } : {}),
         ...(contact.whatsapp && isSafePhoneValue(normalizedWhatsapp)
           ? { whatsapp: normalizedWhatsapp }
@@ -603,6 +625,7 @@ function AddListingPage() {
 
     return {
       categoryId,
+      subcategoryId: subcategoryId || null,
       governorateId,
       title: title.trim(),
       description: description.trim(),
@@ -616,6 +639,8 @@ function AddListingPage() {
     };
   }, [
     categoryId,
+    subcategoryId,
+    taxonomyNodeId,
     governorateId,
     title,
     description,
@@ -683,6 +708,18 @@ function AddListingPage() {
           : await createOwnerDraftListing(profileId, autosavePayload);
 
         if (result.ok) {
+          if (taxonomyNodeId) {
+            const taxonomyResult = await assignOwnerListingTaxonomy(
+              profileId,
+              result.data.id,
+              taxonomyNodeId,
+            );
+            if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
+              setAutosaveState("failed");
+              setAutosaveError(taxonomyResult.error.message);
+              return;
+            }
+          }
           draftListingRef.current = result.data;
           setDraftListing(result.data);
           setCreatedListingId(result.data.id);
@@ -722,9 +759,10 @@ function AddListingPage() {
     async function load() {
       setLoading(true);
       setSetupError(null);
-      const [categoriesResult, governoratesResult] = await Promise.all([
+      const [categoriesResult, governoratesResult, taxonomyResult] = await Promise.all([
         fetchPublicCategories(),
         fetchPublicGovernorates(),
+        fetchPublicTaxonomyNodes(),
       ]);
       if (cancelled) return;
       if (!categoriesResult.ok) setSetupError(categoriesResult.error);
@@ -732,6 +770,7 @@ function AddListingPage() {
       else {
         setCategories(categoriesResult.data);
         setGovernorates(governoratesResult.data);
+        if (taxonomyResult.ok) setTaxonomyNodes(taxonomyResult.data);
       }
       setLoading(false);
     }
@@ -795,6 +834,7 @@ function AddListingPage() {
 
       const details = mergeCategoryDetails(
         {
+          ...(taxonomyNodeId ? { _taxonomy_node_id: taxonomyNodeId } : {}),
           ...(contact.phone ? { phone: normalizedPhone } : {}),
           ...(contact.whatsapp ? { whatsapp: normalizedWhatsapp } : {}),
           ...(contentCheck.flags.length > 0 ? { content_flags: contentCheck.flags } : {}),
@@ -814,6 +854,18 @@ function AddListingPage() {
         return;
       }
       const listingDraft = result.data;
+
+      if (taxonomyNodeId) {
+        const taxonomyResult = await assignOwnerListingTaxonomy(
+          auth.profile?.id ?? null,
+          listingDraft.id,
+          taxonomyNodeId,
+        );
+        if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
+          setSubmitMessage(taxonomyResult.error.message);
+          return;
+        }
+      }
 
       draftListingRef.current = listingDraft;
       setDraftListing(listingDraft);
@@ -1138,19 +1190,43 @@ function AddListingPage() {
                       "Start with the closest category so the right fields appear.",
                     )}
                   >
-                    <div className="rawaj-studio-category-grid">
-                      {categories.map((item) => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => setCategoryId(item.id)}
-                          data-selected={categoryId === item.id}
-                          className={`relative min-h-14 rounded-[1rem] border p-3 text-start text-sm font-semibold transition active:scale-[0.985] ${categoryId === item.id ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(16,43,70,0.13)]" : "border-border/75 bg-card/80 text-foreground hover:border-gold/40 hover:bg-card"}`}
-                        >
-                          {categoryName(item.id, item.nameAr, language)}
-                        </button>
-                      ))}
-                    </div>
+                    {taxonomyNodes.length > 0 ? (
+                      <ListingTaxonomySelector
+                        nodes={taxonomyNodes}
+                        selectedNodeId={taxonomyNodeId}
+                        language={language}
+                        text={text}
+                        onSelect={(node, path) => {
+                          setTaxonomyNodeId(node.id);
+                          if (!node.isLeaf) {
+                            setCategoryId("");
+                            setSubcategoryId("");
+                            return;
+                          }
+                          const search = resolveTaxonomyListingSearch(node, path);
+                          setCategoryId(search.category ?? "");
+                          setSubcategoryId(search.taxonomyLegacySubcategoryId ?? "");
+                        }}
+                      />
+                    ) : (
+                      <div className="rawaj-studio-category-grid">
+                        {categories.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              setCategoryId(item.id);
+                              setSubcategoryId("");
+                              setTaxonomyNodeId("");
+                            }}
+                            data-selected={categoryId === item.id}
+                            className={`relative min-h-14 rounded-[1rem] border p-3 text-start text-sm font-semibold transition active:scale-[0.985] ${categoryId === item.id ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(16,43,70,0.13)]" : "border-border/75 bg-card/80 text-foreground hover:border-gold/40 hover:bg-card"}`}
+                          >
+                            {categoryName(item.id, item.nameAr, language)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </Card>
                   <Card title={text("عنوان الإعلان", "Listing title")}>
                     <Field

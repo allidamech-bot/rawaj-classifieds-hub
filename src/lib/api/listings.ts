@@ -601,6 +601,7 @@ async function createListingWithStatus(
   const insertPayload = {
     owner_id: userId,
     category_id: payload.categoryId,
+    subcategory_id: payload.subcategoryId ?? null,
     governorate_id: locationWrite.data.governorateId,
     title,
     description,

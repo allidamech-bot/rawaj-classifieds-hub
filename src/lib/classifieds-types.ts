@@ -513,6 +513,7 @@ export interface NotificationItem {
 
 export interface CreateListingPayload {
   categoryId: string;
+  subcategoryId?: string | null;
   governorateId: string;
   title: string;
   description: string;
