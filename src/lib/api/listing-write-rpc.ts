@@ -8,23 +8,48 @@ import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
 import { buildOwnerUpdateRpcArgs } from "@/lib/api/listing-write-contract";
 import { getClient, mapError, rowString } from "@/lib/api/shared";
 
-export async function updateOwnerListing(
+const ownerUpdateRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();
+const ownerSubmitRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();
+
+export function updateOwnerListing(
   userId: string | null,
   listingId: string,
+  payload: UpdateListingPayload,
+): Promise<ClassifiedsResult<ClassifiedListing>> {
+  const cleanListingId = listingId.trim();
+  const requestKey = `${userId ?? "anonymous"}:${cleanListingId}:${stablePayloadKey(payload)}`;
+  const pending = ownerUpdateRequests.get(requestKey);
+  if (pending) return pending;
+
+  const request = runOwnerListingUpdate(userId, cleanListingId, payload).finally(() => {
+    ownerUpdateRequests.delete(requestKey);
+  });
+  ownerUpdateRequests.set(requestKey, request);
+  return request;
+}
+
+async function runOwnerListingUpdate(
+  userId: string | null,
+  cleanListingId: string,
   payload: UpdateListingPayload,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
   if (!userId) {
     return {
       ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لتعديل الإعلان." },
+      error: {
+        code: "auth_required",
+        message: "يجب تسجيل الدخول لتعديل الإعلان.",
+      },
     };
   }
 
-  const cleanListingId = listingId.trim();
   if (!cleanListingId) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+      error: {
+        code: "validation_error",
+        message: "تعذر تحديد الإعلان المطلوب.",
+      },
     };
   }
 
@@ -39,11 +64,18 @@ export async function updateOwnerListing(
     .in("status", ["draft", "rejected"])
     .maybeSingle();
 
-  if (existingError) return { ok: false, error: mapError(existingError, "owner_listing_update") };
+  if (existingError)
+    return {
+      ok: false,
+      error: mapError(existingError, "owner_listing_update"),
+    };
   if (!existing) {
     return {
       ok: false,
-      error: { code: "permission_denied", message: "لا يمكن تعديل هذا الإعلان حالياً." },
+      error: {
+        code: "permission_denied",
+        message: "لا يمكن تعديل هذا الإعلان حالياً.",
+      },
     };
   }
 
@@ -99,22 +131,43 @@ export async function updateOwnerListing(
   };
 }
 
-export async function submitOwnerListingForReview(
+export function submitOwnerListingForReview(
   userId: string | null,
   listingId: string,
+): Promise<ClassifiedsResult<ClassifiedListing>> {
+  const cleanListingId = listingId.trim();
+  const requestKey = `${userId ?? "anonymous"}:${cleanListingId}`;
+  const pending = ownerSubmitRequests.get(requestKey);
+  if (pending) return pending;
+
+  const request = runOwnerListingSubmit(userId, cleanListingId).finally(() => {
+    ownerSubmitRequests.delete(requestKey);
+  });
+  ownerSubmitRequests.set(requestKey, request);
+  return request;
+}
+
+async function runOwnerListingSubmit(
+  userId: string | null,
+  cleanListingId: string,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
   if (!userId) {
     return {
       ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال الإعلان للمراجعة." },
+      error: {
+        code: "auth_required",
+        message: "يجب تسجيل الدخول لإرسال الإعلان للمراجعة.",
+      },
     };
   }
 
-  const cleanListingId = listingId.trim();
   if (!cleanListingId) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+      error: {
+        code: "validation_error",
+        message: "تعذر تحديد الإعلان المطلوب.",
+      },
     };
   }
 
@@ -148,6 +201,26 @@ export async function submitOwnerListingForReview(
       operation: "owner_listing_submit",
     },
   };
+}
+
+function stablePayloadKey(payload: UpdateListingPayload): string {
+  return JSON.stringify(
+    Object.entries(payload)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, value]) => [key, stableValue(value)]),
+  );
+}
+
+function stableValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stableValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, nested]) => [key, stableValue(nested)]),
+    );
+  }
+  return value;
 }
 
 function submitStatusMismatch(status: ClassifiedListing["status"]): ClassifiedsResult<never> {

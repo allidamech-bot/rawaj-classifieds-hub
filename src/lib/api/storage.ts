@@ -34,11 +34,17 @@ export function validateReceiptExtension(filename: string): boolean {
 }
 
 export function validateImageFile(file: File): { ok: boolean; error?: string } {
+  if (file.size <= 0) {
+    return { ok: false, error: "ملف الصورة فارغ أو تالف." };
+  }
   if (!validateImageMimeType(file.type)) {
     return { ok: false, error: "الصيغ المسموحة للصور: JPG أو PNG أو WebP." };
   }
   if (!validateImageExtension(file.name)) {
-    return { ok: false, error: "امتداد الملف غير صالح. استخدم jpg أو png أو webp." };
+    return {
+      ok: false,
+      error: "امتداد الملف غير صالح. استخدم jpg أو png أو webp.",
+    };
   }
   if (file.size > MAX_IMAGE_SIZE_BYTES) {
     return { ok: false, error: "حجم الصورة يجب ألا يتجاوز 5MB." };
@@ -46,12 +52,24 @@ export function validateImageFile(file: File): { ok: boolean; error?: string } {
   return { ok: true };
 }
 
-export function validateReceiptFile(file: File): { ok: boolean; error?: string } {
+export function validateReceiptFile(file: File): {
+  ok: boolean;
+  error?: string;
+} {
+  if (file.size <= 0) {
+    return { ok: false, error: "ملف الإيصال فارغ أو تالف." };
+  }
   if (!validateReceiptMimeType(file.type)) {
-    return { ok: false, error: "الصيغ المسموحة للإيصال: JPG أو PNG أو WebP أو PDF." };
+    return {
+      ok: false,
+      error: "الصيغ المسموحة للإيصال: JPG أو PNG أو WebP أو PDF.",
+    };
   }
   if (!validateReceiptExtension(file.name)) {
-    return { ok: false, error: "امتداد الملف غير صالح. استخدم jpg أو png أو webp أو pdf." };
+    return {
+      ok: false,
+      error: "امتداد الملف غير صالح. استخدم jpg أو png أو webp أو pdf.",
+    };
   }
   if (file.size > MAX_RECEIPT_SIZE_BYTES) {
     return { ok: false, error: "حجم الإيصال يجب ألا يتجاوز 8MB." };
@@ -59,12 +77,21 @@ export function validateReceiptFile(file: File): { ok: boolean; error?: string }
   return { ok: true };
 }
 
-export function validateProfileImageFile(file: File): { ok: boolean; error?: string } {
+export function validateProfileImageFile(file: File): {
+  ok: boolean;
+  error?: string;
+} {
+  if (file.size <= 0) {
+    return { ok: false, error: "ملف صورة الحساب فارغ أو تالف." };
+  }
   if (!validateImageMimeType(file.type)) {
     return { ok: false, error: "الصيغ المسموحة للصور: JPG أو PNG أو WebP." };
   }
   if (!validateImageExtension(file.name)) {
-    return { ok: false, error: "امتداد الملف غير صالح. استخدم jpg أو png أو webp." };
+    return {
+      ok: false,
+      error: "امتداد الملف غير صالح. استخدم jpg أو png أو webp.",
+    };
   }
   if (file.size > MAX_PROFILE_IMAGE_SIZE_BYTES) {
     return { ok: false, error: "حجم صورة الملف يجب ألا يتجاوز 3MB." };
