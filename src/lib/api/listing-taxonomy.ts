@@ -8,6 +8,48 @@ export interface ListingTaxonomyAssignment {
   updatedAt: string;
 }
 
+function mapAssignment(row: Record<string, unknown>): ListingTaxonomyAssignment {
+  return {
+    listingId: String(row.listing_id ?? ""),
+    taxonomyNodeId: String(row.taxonomy_node_id ?? ""),
+    assignmentSource: row.assignment_source === "explicit" ? "explicit" : "legacy_derived",
+    updatedAt: String(row.updated_at ?? ""),
+  };
+}
+
+export async function fetchOwnerListingTaxonomyAssignment(
+  userId: string | null,
+  listingId: string,
+): Promise<ClassifiedsResult<ListingTaxonomyAssignment | null>> {
+  if (!userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لقراءة تصنيف الإعلان." },
+    };
+  }
+
+  const normalizedListingId = listingId.trim();
+  if (!normalizedListingId) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data
+    .from("listing_taxonomy_assignments")
+    .select("listing_id, taxonomy_node_id, assignment_source, updated_at")
+    .eq("listing_id", normalizedListingId)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) return { ok: false, error: mapError(error, "owner_listing_taxonomy_read") };
+  return { ok: true, data: data ? mapAssignment(data as Record<string, unknown>) : null };
+}
+
 export async function assignOwnerListingTaxonomy(
   userId: string | null,
   listingId: string,
@@ -50,13 +92,5 @@ export async function assignOwnerListingTaxonomy(
     };
   }
 
-  return {
-    ok: true,
-    data: {
-      listingId: String(row.listing_id ?? ""),
-      taxonomyNodeId: String(row.taxonomy_node_id ?? ""),
-      assignmentSource: row.assignment_source === "explicit" ? "explicit" : "legacy_derived",
-      updatedAt: String(row.updated_at ?? ""),
-    },
-  };
+  return { ok: true, data: mapAssignment(row) };
 }
