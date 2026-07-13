@@ -8,7 +8,6 @@ import {
   Store,
   User,
 } from "lucide-react";
-import { useState } from "react";
 import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
 import type { Language } from "@/lib/ui-preferences";
 
@@ -20,12 +19,6 @@ interface ListingSellerProfileCardProps {
   onMessage: () => void;
   language: Language;
   text: (ar: string, en: string) => string;
-}
-
-interface SellerAvatarProps {
-  avatarUrl: string | null;
-  displayName: string;
-  loading: boolean;
 }
 
 export function ListingSellerProfileCard({
@@ -41,7 +34,6 @@ export function ListingSellerProfileCard({
   const joinedLabel = seller?.joinedAt ? formatJoinedDate(seller.joinedAt, language) : null;
   const rating = seller?.ratingSummary.average;
   const ratingCount = seller?.ratingSummary.count ?? 0;
-  const avatarUrl = seller?.avatarUrl ?? null;
 
   return (
     <section
@@ -50,12 +42,21 @@ export function ListingSellerProfileCard({
       data-profile-contract="public-seller-data"
     >
       <div className="rawaj-detail-seller__identity">
-        <SellerAvatar
-          key={avatarUrl ?? "seller-avatar-fallback"}
-          avatarUrl={avatarUrl}
-          displayName={displayName}
-          loading={loading}
-        />
+        <div className="rawaj-detail-seller__avatar relative" data-loading={loading}>
+          <User aria-hidden="true" />
+          {seller?.avatarUrl ? (
+            <img
+              className="absolute inset-0 h-full w-full object-cover"
+              src={seller.avatarUrl}
+              alt={displayName}
+              loading="lazy"
+              decoding="async"
+              width={64}
+              height={64}
+              onError={(event) => event.currentTarget.remove()}
+            />
+          ) : null}
+        </div>
         <div className="min-w-0 flex-1">
           <p>{text("البائع", "Seller")}</p>
           <div className="rawaj-detail-seller__name-row">
@@ -109,28 +110,6 @@ export function ListingSellerProfileCard({
         </button>
       </div>
     </section>
-  );
-}
-
-function SellerAvatar({ avatarUrl, displayName, loading }: SellerAvatarProps) {
-  const [avatarFailed, setAvatarFailed] = useState(false);
-
-  return (
-    <div className="rawaj-detail-seller__avatar" data-loading={loading}>
-      {avatarUrl && !avatarFailed ? (
-        <img
-          src={avatarUrl}
-          alt={displayName}
-          loading="lazy"
-          decoding="async"
-          width={64}
-          height={64}
-          onError={() => setAvatarFailed(true)}
-        />
-      ) : (
-        <User aria-hidden="true" />
-      )}
-    </div>
   );
 }
 
