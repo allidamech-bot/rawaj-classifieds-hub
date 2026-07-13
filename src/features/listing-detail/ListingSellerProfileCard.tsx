@@ -8,6 +8,7 @@ import {
   Store,
   User,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
 import type { Language } from "@/lib/ui-preferences";
 
@@ -34,6 +35,12 @@ export function ListingSellerProfileCard({
   const joinedLabel = seller?.joinedAt ? formatJoinedDate(seller.joinedAt, language) : null;
   const rating = seller?.ratingSummary.average;
   const ratingCount = seller?.ratingSummary.count ?? 0;
+  const avatarUrl = seller?.avatarUrl ?? null;
+  const [avatarFailed, setAvatarFailed] = useState(false);
+
+  useEffect(() => {
+    setAvatarFailed(false);
+  }, [avatarUrl]);
 
   return (
     <section
@@ -43,8 +50,16 @@ export function ListingSellerProfileCard({
     >
       <div className="rawaj-detail-seller__identity">
         <div className="rawaj-detail-seller__avatar" data-loading={loading}>
-          {seller?.avatarUrl ? (
-            <img src={seller.avatarUrl} alt={displayName} loading="lazy" decoding="async" />
+          {avatarUrl && !avatarFailed ? (
+            <img
+              src={avatarUrl}
+              alt={displayName}
+              loading="lazy"
+              decoding="async"
+              width={64}
+              height={64}
+              onError={() => setAvatarFailed(true)}
+            />
           ) : (
             <User aria-hidden="true" />
           )}
