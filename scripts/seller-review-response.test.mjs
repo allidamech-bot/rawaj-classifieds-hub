@@ -11,16 +11,21 @@ const repairMigrationPath = new URL(
   import.meta.url,
 );
 const apiPath = new URL("../src/lib/api/reviews.ts", import.meta.url);
+const guardedApiPath = new URL("../src/lib/api/reviews-guarded.ts", import.meta.url);
+const aggregateApiPath = new URL("../src/lib/classifieds-api.ts", import.meta.url);
 const cardPath = new URL("../src/features/reviews/SellerReviewCard.tsx", import.meta.url);
 const sellerRoutePath = new URL("../src/routes/seller.$id.tsx", import.meta.url);
 
-const [migration, repairMigration, api, card, sellerRoute] = await Promise.all([
-  readFile(migrationPath, "utf8"),
-  readFile(repairMigrationPath, "utf8"),
-  readFile(apiPath, "utf8"),
-  readFile(cardPath, "utf8"),
-  readFile(sellerRoutePath, "utf8"),
-]);
+const [migration, repairMigration, api, guardedApi, aggregateApi, card, sellerRoute] =
+  await Promise.all([
+    readFile(migrationPath, "utf8"),
+    readFile(repairMigrationPath, "utf8"),
+    readFile(apiPath, "utf8"),
+    readFile(guardedApiPath, "utf8"),
+    readFile(aggregateApiPath, "utf8"),
+    readFile(cardPath, "utf8"),
+    readFile(sellerRoutePath, "utf8"),
+  ]);
 
 test("seller review responses are stored with bounded public fields", () => {
   assert.match(migration, /add column if not exists seller_response text null/);
@@ -90,4 +95,14 @@ test("seller storefront displays responses publicly and gates response managemen
   assert.match(card, /setSellerReviewResponse\(review\.id, responseText\)/);
   assert.match(card, /Seller response/);
   assert.match(card, /canManageResponse \?/);
+});
+
+test("seller review creation and responses deduplicate identical concurrent writes", () => {
+  assert.match(aggregateApi, /reviews-guarded/);
+  assert.match(guardedApi, /pendingReviewCreates/);
+  assert.match(guardedApi, /pendingReviewResponses/);
+  assert.match(guardedApi, /function runOnce/);
+  assert.match(guardedApi, /if \(pending\) return pending/);
+  assert.match(guardedApi, /baseCreateSellerReview/);
+  assert.match(guardedApi, /baseSetSellerReviewResponse/);
 });
