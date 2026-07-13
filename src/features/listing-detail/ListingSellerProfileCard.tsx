@@ -8,6 +8,7 @@ import {
   Store,
   User,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
 import type { Language } from "@/lib/ui-preferences";
 
@@ -43,11 +44,21 @@ export function ListingSellerProfileCard({
     >
       <div className="rawaj-detail-seller__identity">
         <div className="rawaj-detail-seller__avatar" data-loading={loading}>
-          {seller?.avatarUrl ? (
-            <img src={seller.avatarUrl} alt={displayName} loading="lazy" decoding="async" />
-          ) : (
-            <User aria-hidden="true" />
-          )}
+          <Avatar className="h-full w-full bg-transparent">
+            {seller?.avatarUrl ? (
+              <AvatarImage
+                src={seller.avatarUrl}
+                alt={displayName}
+                loading="lazy"
+                decoding="async"
+                width={64}
+                height={64}
+              />
+            ) : null}
+            <AvatarFallback className="bg-transparent">
+              <User aria-hidden="true" />
+            </AvatarFallback>
+          </Avatar>
         </div>
         <div className="min-w-0 flex-1">
           <p>{text("البائع", "Seller")}</p>
