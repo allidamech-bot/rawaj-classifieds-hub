@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpLeft, BadgePercent, Clock3, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { PlaceholderArt } from "@/components/PlaceholderArt";
+import { ListingCardImage } from "@/features/listings/cards/ListingCardImage";
 import { fetchActivePriceDropOffers, type ListingPriceDropOffer } from "@/lib/classifieds-api";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
@@ -154,17 +154,15 @@ function PriceDropOfferCard({ offer }: { offer: ListingPriceDropOffer }) {
   return (
     <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-product-card group block">
       <div className="rawaj-product-media aspect-[16/9]">
-        {listing.primaryImageUrl ? (
-          <img
-            src={listing.primaryImageUrl}
-            alt={listing.title}
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]"
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
-        )}
+        <ListingCardImage
+          src={listing.primaryImageUrl}
+          alt={listing.title}
+          placeholder={listing.categoryPlaceholder ?? "misc"}
+          placeholderAspect="wide"
+          width={640}
+          height={360}
+          className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]"
+        />
         <span className="absolute start-2.5 top-2.5 rounded-full bg-destructive px-2.5 py-1 text-[10px] font-extrabold text-destructive-foreground shadow-soft">
           -{formatDiscountPercent(offer.discountPercent)}%
         </span>

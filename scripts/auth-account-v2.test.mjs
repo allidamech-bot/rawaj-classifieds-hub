@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, shared, login, profile, css, qualityGate] = await Promise.all([
+const [root, shared, login, profile, profileApi, css, qualityGate] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/account/AccountExperience.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/login.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/profile.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/profile.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/auth-account-v2.css", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
 ]);
@@ -47,6 +48,31 @@ test("account center shares identity, shortcuts, editor and safety while preserv
   assert.match(profile, /auth\.signOut\(\)/);
   assert.match(profile, /createAccountDeletionRequest/);
   assert.match(profile, /changeOwnPassword/);
+});
+
+test("profile media replacement validates files and never deletes the old image before linking the new one", () => {
+  assert.match(profileApi, /allowedImageTypes = \["image\/jpeg", "image\/png", "image\/webp"\]/);
+  assert.match(profileApi, /maxProfileImageSizeBytes = 3 \* 1024 \* 1024/);
+  assert.match(profileApi, /upsert: false/);
+  const uploadIndex = profileApi.indexOf(".upload(storagePath, file");
+  const profileUpdateIndex = profileApi.indexOf(".update(updatePayload)");
+  const oldMediaCleanupIndex = profileApi.indexOf(".remove([oldPath])");
+  assert.ok(uploadIndex >= 0);
+  assert.ok(profileUpdateIndex > uploadIndex);
+  assert.ok(oldMediaCleanupIndex > profileUpdateIndex);
+  assert.match(profileApi, /Failed to clean up unlinked profile media upload/);
+  assert.match(profileApi, /oldPath\.startsWith\(`\$\{userId\}\/\$\{kind\}\/`\)/);
+});
+
+test("profile media removal clears the database reference before best-effort storage cleanup", () => {
+  const removalFunctionIndex = profileApi.indexOf("export async function removeProfileMedia");
+  const removalSection = profileApi.slice(removalFunctionIndex);
+  const profileUpdateIndex = removalSection.indexOf(".update(updatePayload)");
+  const storageCleanupIndex = removalSection.indexOf(".remove([path])");
+  assert.ok(profileUpdateIndex >= 0);
+  assert.ok(storageCleanupIndex > profileUpdateIndex);
+  assert.match(removalSection, /path\.startsWith\(`\$\{userId\}\/\$\{kind\}\/`\)/);
+  assert.match(removalSection, /Failed to clean up profile media after profile reference removal/);
 });
 
 test("account identity media falls back and accepts refreshed URLs", () => {

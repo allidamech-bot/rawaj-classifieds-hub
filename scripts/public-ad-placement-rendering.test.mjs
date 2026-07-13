@@ -22,13 +22,23 @@ test("public ad slot loads device-targeted active placements and renders one ban
   assert.match(slot, /rel="noopener noreferrer sponsored"/);
 });
 
-test("broken public ad media is removed without blocking future refreshed URLs", () => {
+test("broken public ad media is removed while preserving stable banner dimensions", () => {
   assert.match(slot, /useState<string \| null>\(null\)/);
   assert.match(slot, /failedImageUrl === placement\.imageUrl/);
   assert.match(slot, /onError=\{\(\) => setFailedImageUrl\(placement\.imageUrl\)\}/);
+  assert.match(slot, /loading="lazy"/);
+  assert.match(slot, /decoding="async"/);
+  assert.match(slot, /width=\{1600\}/);
+  assert.match(slot, /height=\{500\}/);
+  assert.match(slot, /draggable=\{false\}/);
 });
 
-test("public ad API uses the safe active-placement RPC and repairs media URLs", () => {
+test("public ad API deduplicates active-placement reads and repairs media URLs", () => {
+  assert.match(api, /ACTIVE_PLACEMENT_CACHE_TTL_MS = 60_000/);
+  assert.match(api, /activePlacementCache/);
+  assert.match(api, /activePlacementRequests/);
+  assert.match(api, /const pending = activePlacementRequests\.get\(cacheKey\)/);
+  assert.match(api, /if \(pending\) return pending/);
   assert.match(api, /rawaj_fetch_active_ad_placements/);
   assert.match(api, /normalizeAdPlacementMediaUrl/);
   assert.match(api, /p_placement_page: placementPage/);

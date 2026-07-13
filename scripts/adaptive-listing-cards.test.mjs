@@ -20,6 +20,7 @@ const [
   favoritesRoute,
   favoriteCard,
   homeShowcase,
+  offersRoute,
   css,
 ] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
@@ -54,6 +55,7 @@ const [
   readFile(new URL("../src/routes/favorites.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/favorites/FavoriteListingCard.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/home/FeaturedListingShowcase.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/offers.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/adaptive-listing-cards.css", import.meta.url), "utf8"),
 ]);
 
@@ -110,13 +112,32 @@ test("shared cards preserve media, state, links, action slot, location, and time
   assert.match(shared, /formatDate\(listing\.createdAt, language\)/);
 });
 
-test("listing card images fall back cleanly when a media URL fails", () => {
+test("listing card images fall back cleanly and reserve stable media space", () => {
   assert.match(cardImage, /onError=\{\(\) => setFailedSrc\(src\)\}/);
   assert.match(cardImage, /failedSrc === src/);
-  assert.match(cardImage, /<PlaceholderArt type=\{placeholder\} aspect="standard" \/>/);
+  assert.match(cardImage, /placeholderAspect = "standard"/);
+  assert.match(
+    cardImage,
+    /<PlaceholderArt[\s\S]*type=\{placeholder\}[\s\S]*aspect=\{placeholderAspect\}[\s\S]*className=\{className\}/,
+  );
   assert.match(cardImage, /useState<string \| null>\(null\)/);
+  assert.match(cardImage, /loading=\{loading\}/);
+  assert.match(cardImage, /fetchPriority=\{fetchPriority\}/);
+  assert.match(cardImage, /decoding="async"/);
+  assert.match(cardImage, /width=\{width\}/);
+  assert.match(cardImage, /height=\{height\}/);
+  assert.match(cardImage, /draggable=\{false\}/);
+  assert.match(cardImage, /className=\{className\}/);
   assert.doesNotMatch(cardImage, /useEffect/);
   assert.match(featured, /<ListingCardImage/);
+});
+
+test("offer cards reuse the resilient media path with wide intrinsic dimensions", () => {
+  assert.match(offersRoute, /<ListingCardImage/);
+  assert.match(offersRoute, /placeholderAspect="wide"/);
+  assert.match(offersRoute, /width=\{640\}/);
+  assert.match(offersRoute, /height=\{360\}/);
+  assert.doesNotMatch(offersRoute, /listing\.primaryImageUrl \? \(/);
 });
 
 test("compact and featured variants replace route-local card duplication", () => {

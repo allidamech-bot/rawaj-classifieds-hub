@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Languages, LogIn, MapPin, Plus, User, UserCog } from "lucide-react";
 
 import { NotificationTrigger } from "@/components/NotificationTrigger";
+import { OfflineNotice } from "@/components/OfflineNotice";
 import { PublicAdPlacementSlot } from "@/components/PublicAdPlacementSlot";
 import type { AdPlacementPage } from "@/lib/api/ad-placements";
 import { resolvePrimaryNavigationSection } from "@/lib/primary-navigation";
@@ -147,6 +148,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
           </div>
         </div>
       </header>
+      <OfflineNotice />
       <PublicAdPlacementSlot placementPage={resolveAdPlacementPage(pathname)} />
     </>
   );
@@ -160,6 +162,9 @@ function Logo() {
           src="/brand/rawaj-mark-transparent-header.png"
           alt=""
           decoding="async"
+          width={32}
+          height={32}
+          draggable={false}
           className="h-7 w-auto object-contain sm:h-8"
         />
       </span>
