@@ -9,10 +9,7 @@ import {
   User,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type {
-  ClassifiedListing,
-  PublicSellerProfile,
-} from "@/lib/classifieds-types";
+import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
 import type { Language } from "@/lib/ui-preferences";
 
 interface ListingSellerProfileCardProps {
@@ -34,11 +31,8 @@ export function ListingSellerProfileCard({
   language,
   text,
 }: ListingSellerProfileCardProps) {
-  const displayName =
-    seller?.businessName?.trim() || seller?.displayName?.trim() || fallbackName;
-  const joinedLabel = seller?.joinedAt
-    ? formatJoinedDate(seller.joinedAt, language)
-    : null;
+  const displayName = seller?.businessName?.trim() || seller?.displayName?.trim() || fallbackName;
+  const joinedLabel = seller?.joinedAt ? formatJoinedDate(seller.joinedAt, language) : null;
   const rating = seller?.ratingSummary.average;
   const ratingCount = seller?.ratingSummary.count ?? 0;
 
@@ -86,9 +80,7 @@ export function ListingSellerProfileCard({
           <div>
             <Star aria-hidden="true" />
             <strong>{rating.toFixed(1)}</strong>
-            <span>
-              {text(`${ratingCount} تقييم`, `${ratingCount} reviews`)}
-            </span>
+            <span>{text(`${ratingCount} تقييم`, `${ratingCount} reviews`)}</span>
           </div>
         ) : null}
         {seller ? (
@@ -107,9 +99,7 @@ export function ListingSellerProfileCard({
         ) : null}
       </div>
 
-      {seller?.bio ? (
-        <p className="rawaj-detail-seller__bio">{seller.bio}</p>
-      ) : null}
+      {seller?.bio ? <p className="rawaj-detail-seller__bio">{seller.bio}</p> : null}
 
       <div className="rawaj-detail-seller__actions">
         <Link to="/seller/$id" params={{ id: listing.ownerId }}>
