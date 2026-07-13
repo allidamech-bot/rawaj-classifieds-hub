@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [errors, login, callback, reset] = await Promise.all([
+const [errors, authReturn, login, callback, reset] = await Promise.all([
   readFile(new URL("../src/lib/auth-errors.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/auth-return.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/login.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/auth.callback.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/reset-password.tsx", import.meta.url), "utf8"),
@@ -21,6 +22,15 @@ test("account failures are translated into safe bilingual messages", () => {
     /authErrorMessage\(result\.error, mode === "login" \? "login" : "register", text\)/,
   );
   assert.doesNotMatch(login, /: result\.error\.message/);
+});
+
+test("authentication return destinations reject unsafe fallback and oversized input", () => {
+  assert.match(authReturn, /DEFAULT_AUTH_RETURN_TO/);
+  assert.match(authReturn, /MAX_AUTH_RETURN_LENGTH = 2048/);
+  assert.match(authReturn, /controlCharactersPattern/);
+  assert.match(authReturn, /const normalizedFallback = safeFallback\(fallback\)/);
+  assert.match(authReturn, /trimmed\.length > MAX_AUTH_RETURN_LENGTH/);
+  assert.doesNotMatch(authReturn, /typeof value !== "string"\) return fallback/);
 });
 
 test("expired recovery links reopen the forgot-password form directly", () => {
