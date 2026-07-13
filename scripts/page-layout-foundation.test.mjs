@@ -17,23 +17,28 @@ test("page layout exposes canonical width and rhythm tokens", () => {
     "--rawaj-section-gap",
     "--rawaj-stack-gap",
   ]) {
-    assert.match(foundation, new RegExp(`${token}\\s*:`));
+    assert.ok(foundation.includes(`${token}:`), `Missing ${token}`);
   }
 });
 
 test("shared containers use one width and gutter contract", () => {
   assert.match(foundation, /\.rawaj-page-container,\s*\n\.container-wide/);
-  assert.match(foundation, /width:\s*min\(100%,\s*var\(--rawaj-page-max\)\)/);
-  assert.match(foundation, /padding-inline:\s*var\(--rawaj-page-gutter\)/);
-  assert.match(foundation, /rawaj-page-container--reading/);
-  assert.match(foundation, /rawaj-page-container--form/);
+  assert.ok(
+    foundation.includes("width: min(100%, var(--rawaj-page-max));"),
+  );
+  assert.ok(
+    foundation.includes("padding-inline: var(--rawaj-page-gutter);"),
+  );
+  assert.ok(foundation.includes(".rawaj-page-container--reading"));
+  assert.ok(foundation.includes(".rawaj-page-container--form"));
 });
 
 test("mobile edge-to-edge sections reset at tablet width", () => {
-  assert.match(foundation, /rawaj-edge-to-edge-mobile/);
-  assert.match(
-    foundation,
-    /margin-inline:\s*calc\(var\(--rawaj-page-gutter\) \* -1\)/,
+  assert.ok(foundation.includes(".rawaj-edge-to-edge-mobile"));
+  assert.ok(
+    foundation.includes(
+      "margin-inline: calc(var(--rawaj-page-gutter) * -1);",
+    ),
   );
   assert.match(
     foundation,
