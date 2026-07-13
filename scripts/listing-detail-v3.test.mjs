@@ -2,25 +2,37 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [rootRoute, detailRoute, mediaExperience, mediaViewer, mediaState, v2Css, v3Css] =
-  await Promise.all([
-    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/features/listing-detail/useListingMediaState.ts", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8"),
-    readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8"),
-  ]);
+const [
+  rootRoute,
+  detailRoute,
+  mediaExperience,
+  mediaViewer,
+  mediaState,
+  sellerCard,
+  v2Css,
+  v3Css,
+] = await Promise.all([
+  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/useListingMediaState.ts", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingSellerProfileCard.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8"),
+]);
 
 const layeredCss = `${v2Css}\n${v3Css}`;
 
@@ -74,6 +86,19 @@ test("listing detail media replaces broken signed URLs with category artwork", (
   assert.match(mediaViewer, /failedUrls\.has\(currentUrl\)/);
   assert.match(mediaViewer, /onError=\{\(\) => onImageError\(currentUrl\)\}/);
   assert.match(mediaViewer, /<PlaceholderArt type=\{placeholder\} aspect="standard" \/>/);
+});
+
+test("listing seller avatar replaces broken public identity images", () => {
+  assert.match(sellerCard, /const avatarUrl = seller\?\.avatarUrl \?\? null/);
+  assert.match(sellerCard, /const \[avatarFailed, setAvatarFailed\] = useState\(false\)/);
+  assert.match(sellerCard, /setAvatarFailed\(false\)/);
+  assert.match(sellerCard, /avatarUrl && !avatarFailed/);
+  assert.match(sellerCard, /onError=\{\(\) => setAvatarFailed\(true\)\}/);
+  assert.match(sellerCard, /loading="lazy"/);
+  assert.match(sellerCard, /decoding="async"/);
+  assert.match(sellerCard, /width=\{64\}/);
+  assert.match(sellerCard, /height=\{64\}/);
+  assert.match(sellerCard, /<User aria-hidden="true" \/>/);
 });
 
 test("full media viewer is excluded from the initial listing-detail bundle", () => {
