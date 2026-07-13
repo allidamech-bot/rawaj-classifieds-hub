@@ -64,6 +64,15 @@
   --space-12: 3rem;
   --space-16: 4rem;
 
+  /* Canonical page geometry */
+  --rawaj-page-gutter: clamp(1rem, 4vw, 1.5rem);
+  --rawaj-page-gutter-wide: clamp(1.25rem, 3vw, 2rem);
+  --rawaj-page-max: 88rem;
+  --rawaj-reading-max: 48rem;
+  --rawaj-form-max: 42rem;
+  --rawaj-section-gap: clamp(1.5rem, 4vw, 3rem);
+  --rawaj-stack-gap: clamp(0.875rem, 2.5vw, 1.5rem);
+
   /* Radius scale */
   --radius-input: 0.75rem;
   --radius-button: 0.875rem;
@@ -198,6 +207,35 @@ textarea,
   overflow: hidden;
 }
 
+/* Shared page width and vertical-rhythm primitives. */
+.rawaj-page-container,
+.container-wide {
+  width: min(100%, var(--rawaj-page-max));
+  margin-inline: auto;
+  padding-inline: var(--rawaj-page-gutter);
+}
+
+.rawaj-page-container--reading {
+  width: min(100%, var(--rawaj-reading-max));
+}
+
+.rawaj-page-container--form {
+  width: min(100%, var(--rawaj-form-max));
+}
+
+.rawaj-page-section + .rawaj-page-section {
+  margin-top: var(--rawaj-section-gap);
+}
+
+.rawaj-content-stack {
+  display: grid;
+  gap: var(--rawaj-stack-gap);
+}
+
+.rawaj-edge-to-edge-mobile {
+  margin-inline: calc(var(--rawaj-page-gutter) * -1);
+}
+
 @media (max-width: 1023px) {
   button:not(.rawaj-inline-control),
   a.rawaj-touch-target,
@@ -211,6 +249,17 @@ textarea,
   .rawaj-search-toolbar__recent button {
     min-width: var(--rawaj-touch-target);
     min-height: var(--rawaj-touch-target);
+  }
+}
+
+@media (min-width: 640px) {
+  .rawaj-page-container,
+  .container-wide {
+    padding-inline: var(--rawaj-page-gutter-wide);
+  }
+
+  .rawaj-edge-to-edge-mobile {
+    margin-inline: 0;
   }
 }
 
