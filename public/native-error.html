@@ -65,7 +65,8 @@
       </section>
     </main>
     <script>
-      const retry = () => window.location.replace("https://rawa-j.com");
+      const retryTarget = window.location.origin === "https://localhost" ? "/" : "https://rawa-j.com";
+      const retry = () => window.location.replace(retryTarget);
       document.getElementById("retry").addEventListener("click", retry);
       window.addEventListener("online", retry);
     </script>
