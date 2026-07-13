@@ -31,21 +31,25 @@ export function ListingTaxonomySelector({
   const parentPath = selected?.isLeaf ? path.slice(0, -1) : path;
   const parent = parentPath[parentPath.length - 1];
   const options = parent ? getTaxonomyChildren(index, parent.id) : getTaxonomyRootNodes(index);
-  const directionIcon = language === "ar" ? ChevronLeft : ChevronRight;
-  const DirectionIcon = directionIcon;
+  const DirectionIcon = language === "ar" ? ChevronLeft : ChevronRight;
 
   function choose(node: TaxonomyNode) {
     onSelect(node, getTaxonomyPath(index, node));
   }
 
   return (
-    <div className="space-y-4" data-listing-taxonomy-selector="true">
+    <div
+      className="space-y-4"
+      data-listing-taxonomy-selector="true"
+      aria-label={text("اختيار تصنيف الإعلان", "Choose listing category")}
+    >
       {path.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-muted/35 p-3 text-xs">
           {path.map((node, indexInPath) => (
             <button
               key={node.id}
               type="button"
+              aria-current={node.id === selectedNodeId ? "step" : undefined}
               className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 font-semibold hover:bg-background"
               onClick={() => choose(node)}
             >
@@ -57,7 +61,10 @@ export function ListingTaxonomySelector({
       )}
 
       {selected?.isLeaf ? (
-        <div className="flex items-start gap-3 rounded-2xl border border-primary/25 bg-primary/8 p-4">
+        <div
+          className="flex items-start gap-3 rounded-2xl border border-primary/25 bg-primary/8 p-4"
+          role="status"
+        >
           <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
             <Check className="h-4 w-4" />
           </span>
