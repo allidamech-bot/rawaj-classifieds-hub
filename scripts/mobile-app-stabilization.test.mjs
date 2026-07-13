@@ -93,11 +93,11 @@ test("Android fields keep Arabic text vertically centered", () => {
   assert.match(styles, /padding-block: 0/);
 });
 
-test("Android uses one fast launch experience and a safe-zone launcher mark", () => {
+test("Android uses one polished launch experience and a safe-zone launcher mark", () => {
   assert.match(androidStyles, /@drawable\/rawaj_splash_transparent/);
   assert.doesNotMatch(androidStyles, /@drawable\/splash/);
-  assert.match(mainActivity, /INTRO_MIN_VISIBLE_MS = 650L/);
-  assert.match(mainActivity, /INTRO_MAX_VISIBLE_MS = 2400L/);
+  assert.match(mainActivity, /INTRO_MIN_VISIBLE_MS = 1400L/);
+  assert.match(mainActivity, /INTRO_MAX_VISIBLE_MS = 3000L/);
   assert.match(launcherAdaptive, /@drawable\/rawaj_launcher_foreground/);
   assert.match(launcherLegacy, /android:width="38dp"/);
 });
