@@ -117,7 +117,8 @@ test("listing card images fall back cleanly when a media URL fails", () => {
   assert.match(cardImage, /onError=\{\(\) => setFailedSrc\(src\)\}/);
   assert.match(cardImage, /failedSrc === src/);
   assert.match(cardImage, /<PlaceholderArt type=\{placeholder\} aspect="standard" \/>/);
-  assert.match(cardImage, /if \(failedSrc && failedSrc !== src\) setFailedSrc\(null\)/);
+  assert.match(cardImage, /useState<string \| null>\(null\)/);
+  assert.doesNotMatch(cardImage, /useEffect/);
   assert.match(featured, /<ListingCardImage/);
 });
 
