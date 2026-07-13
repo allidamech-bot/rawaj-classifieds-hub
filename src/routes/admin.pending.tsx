@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Clock, FileCheck, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ResilientImage } from "@/components/media/ResilientImage";
 import {
   adminFetchPendingListings,
   adminModerateListing,
@@ -209,12 +210,14 @@ function PendingPage() {
                 />
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => void moderate(listing, "approved")}
                     className="rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground"
                   >
                     {text("اعتماد", "Approve")}
                   </button>
                   <button
+                    type="button"
                     onClick={() => void moderate(listing, "rejected")}
                     className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground"
                   >
@@ -374,23 +377,24 @@ function PendingListingDetails({
           <p className="text-xs text-muted-foreground">{text("لا توجد صور", "No images")}</p>
         ) : (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {images.map((image) =>
-              image.publicUrl ? (
-                <img
-                  key={image.id}
-                  src={image.publicUrl}
-                  alt={image.altAr ?? listing.title}
-                  className="aspect-square w-full rounded-lg object-cover hairline"
-                />
-              ) : (
-                <div
-                  key={image.id}
-                  className="grid aspect-square place-items-center rounded-lg bg-card p-2 text-[10px] text-muted-foreground hairline"
-                >
-                  {text("رابط الصورة غير متاح", "Image URL unavailable")}
+            {images.map((image) => {
+              const fallback = (
+                <div className="grid aspect-square place-items-center rounded-lg bg-card p-2 text-center text-[10px] text-muted-foreground hairline">
+                  {text("تعذر عرض الصورة", "Image unavailable")}
                 </div>
-              ),
-            )}
+              );
+              return (
+                <ResilientImage
+                  key={image.id}
+                  src={image.publicUrl ?? undefined}
+                  alt={image.altAr ?? listing.title}
+                  width={320}
+                  height={320}
+                  className="aspect-square w-full rounded-lg object-cover hairline"
+                  fallback={fallback}
+                />
+              );
+            })}
           </div>
         )}
       </div>
