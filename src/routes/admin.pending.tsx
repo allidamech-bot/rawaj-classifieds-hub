@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Clock, FileCheck, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ResilientImage } from "@/components/media/ResilientImage";
 import {
   adminFetchPendingListings,
   adminModerateListing,
@@ -156,14 +157,11 @@ function PendingPage() {
                 <div>
                   <h3 className="text-sm font-extrabold">{listing.title}</h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {listing.id} ·{" "}
-                    {categoryName(
+                    {listing.id} · {categoryName(
                       listing.categoryId,
                       listing.categoryNameAr ?? undefined,
                       language,
-                    )}{" "}
-                    ·{" "}
-                    {governorateName(
+                    )} · {governorateName(
                       listing.governorateId,
                       listing.governorateNameAr ?? undefined,
                       language,
@@ -209,12 +207,14 @@ function PendingPage() {
                 />
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => void moderate(listing, "approved")}
                     className="rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground"
                   >
                     {text("اعتماد", "Approve")}
                   </button>
                   <button
+                    type="button"
                     onClick={() => void moderate(listing, "rejected")}
                     className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground"
                   >
@@ -311,14 +311,8 @@ function PendingListingDetails({
             listing.currency,
           )}
         />
-        <DetailItem
-          label={text("الحالة", "Condition")}
-          value={uiLabel(listing.condition, language)}
-        />
-        <DetailItem
-          label={text("اسم التواصل", "Contact name")}
-          value={listing.contactName ?? "-"}
-        />
+        <DetailItem label={text("الحالة", "Condition")} value={uiLabel(listing.condition, language)} />
+        <DetailItem label={text("اسم التواصل", "Contact name")} value={listing.contactName ?? "-"} />
         <DetailItem
           label={text("خيارات التواصل", "Contact options")}
           value={contactOptionsLabel(listing.contactOptions, text)}
@@ -337,10 +331,7 @@ function PendingListingDetails({
           <p className="mb-1 font-bold">{text("أعلام السلامة", "Safety flags")}</p>
           <div className="flex flex-wrap gap-1.5">
             {contentFlags.map((flag) => (
-              <span
-                key={flag}
-                className="rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline"
-              >
+              <span key={flag} className="rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline">
                 {flag}
               </span>
             ))}
@@ -367,30 +358,29 @@ function PendingListingDetails({
       <div className="mt-3">
         <p className="mb-1 text-xs font-bold">{text("الصور", "Images")}</p>
         {imagesLoading ? (
-          <p className="text-xs text-muted-foreground">
-            {text("جارٍ تحميل الصور", "Loading images")}
-          </p>
+          <p className="text-xs text-muted-foreground">{text("جارٍ تحميل الصور", "Loading images")}</p>
         ) : images.length === 0 ? (
           <p className="text-xs text-muted-foreground">{text("لا توجد صور", "No images")}</p>
         ) : (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {images.map((image) =>
-              image.publicUrl ? (
-                <img
-                  key={image.id}
-                  src={image.publicUrl}
-                  alt={image.altAr ?? listing.title}
-                  className="aspect-square w-full rounded-lg object-cover hairline"
-                />
-              ) : (
-                <div
-                  key={image.id}
-                  className="grid aspect-square place-items-center rounded-lg bg-card p-2 text-[10px] text-muted-foreground hairline"
-                >
-                  {text("رابط الصورة غير متاح", "Image URL unavailable")}
+            {images.map((image) => {
+              const fallback = (
+                <div className="grid aspect-square place-items-center rounded-lg bg-card p-2 text-center text-[10px] text-muted-foreground hairline">
+                  {text("تعذر عرض الصورة", "Image unavailable")}
                 </div>
-              ),
-            )}
+              );
+              return (
+                <ResilientImage
+                  key={image.id}
+                  src={image.publicUrl ?? undefined}
+                  alt={image.altAr ?? listing.title}
+                  width={320}
+                  height={320}
+                  className="aspect-square w-full rounded-lg object-cover hairline"
+                  fallback={fallback}
+                />
+              );
+            })}
           </div>
         )}
       </div>
