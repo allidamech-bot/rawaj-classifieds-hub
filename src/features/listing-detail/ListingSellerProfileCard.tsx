@@ -8,7 +8,10 @@ import {
   Store,
   User,
 } from "lucide-react";
-import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
+import type {
+  ClassifiedListing,
+  PublicSellerProfile,
+} from "@/lib/classifieds-types";
 import type { Language } from "@/lib/ui-preferences";
 
 interface ListingSellerProfileCardProps {
@@ -30,8 +33,11 @@ export function ListingSellerProfileCard({
   language,
   text,
 }: ListingSellerProfileCardProps) {
-  const displayName = seller?.businessName?.trim() || seller?.displayName?.trim() || fallbackName;
-  const joinedLabel = seller?.joinedAt ? formatJoinedDate(seller.joinedAt, language) : null;
+  const displayName =
+    seller?.businessName?.trim() || seller?.displayName?.trim() || fallbackName;
+  const joinedLabel = seller?.joinedAt
+    ? formatJoinedDate(seller.joinedAt, language)
+    : null;
   const rating = seller?.ratingSummary.average;
   const ratingCount = seller?.ratingSummary.count ?? 0;
 
@@ -42,7 +48,10 @@ export function ListingSellerProfileCard({
       data-profile-contract="public-seller-data"
     >
       <div className="rawaj-detail-seller__identity">
-        <div className="rawaj-detail-seller__avatar relative" data-loading={loading}>
+        <div
+          className="rawaj-detail-seller__avatar relative"
+          data-loading={loading}
+        >
           <User aria-hidden="true" />
           {seller?.avatarUrl ? (
             <img
