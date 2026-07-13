@@ -1,7 +1,9 @@
 package com.rawaj.marketplace;
 
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -15,9 +17,74 @@ import java.util.Set;
 
 @CapacitorPlugin(name = "RawajNative")
 public class RawajNativePlugin extends Plugin {
+    private static final String AUTH_STORAGE_NAME = "rawaj_native_auth_storage";
     private static final Set<String> ALLOWED_EXTERNAL_SCHEMES = new HashSet<>(
         Arrays.asList("http", "https", "tel", "mailto", "sms", "geo", "market", "whatsapp")
     );
+
+    private SharedPreferences authStorage() {
+        return getContext().getSharedPreferences(AUTH_STORAGE_NAME, Context.MODE_PRIVATE);
+    }
+
+    private String requiredStorageKey(PluginCall call) {
+        final String key = call.getString("key");
+        if (key == null || key.trim().isEmpty()) {
+            call.reject("A storage key is required.");
+            return null;
+        }
+        return key;
+    }
+
+    @PluginMethod
+    public void getAuthStorage(PluginCall call) {
+        final String key = requiredStorageKey(call);
+        if (key == null) {
+            return;
+        }
+
+        final JSObject result = new JSObject();
+        final String value = authStorage().getString(key, null);
+        if (value == null) {
+            result.put("value", JSObject.NULL);
+        } else {
+            result.put("value", value);
+        }
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void setAuthStorage(PluginCall call) {
+        final String key = requiredStorageKey(call);
+        if (key == null) {
+            return;
+        }
+
+        final String value = call.getString("value");
+        if (value == null) {
+            call.reject("A storage value is required.");
+            return;
+        }
+
+        if (!authStorage().edit().putString(key, value).commit()) {
+            call.reject("Unable to persist the auth session.");
+            return;
+        }
+        call.resolve(new JSObject());
+    }
+
+    @PluginMethod
+    public void removeAuthStorage(PluginCall call) {
+        final String key = requiredStorageKey(call);
+        if (key == null) {
+            return;
+        }
+
+        if (!authStorage().edit().remove(key).commit()) {
+            call.reject("Unable to remove the auth session.");
+            return;
+        }
+        call.resolve(new JSObject());
+    }
 
     @PluginMethod
     public void openExternal(PluginCall call) {
