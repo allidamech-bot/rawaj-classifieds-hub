@@ -56,10 +56,17 @@ export async function resolveListingLocationWrite(
   if (!mappedGovernorate.ok) return mappedGovernorate;
 
   const canonicalGovernorateId = mappedGovernorate.data;
-  if (governorateId && canonicalGovernorateId && canonicalGovernorateId !== governorateId) {
+  if (
+    governorateId &&
+    canonicalGovernorateId &&
+    canonicalGovernorateId !== governorateId
+  ) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "الموقع المحدد لا يتبع المحافظة المختارة." },
+      error: {
+        code: "validation_error",
+        message: "الموقع المحدد لا يتبع المحافظة المختارة.",
+      },
     };
   }
 
@@ -117,7 +124,10 @@ async function resolveCanonicalLocationContext(
     if (!data) {
       return {
         ok: false,
-        error: { code: "validation_error", message: "الموقع المحدد غير صالح أو لم يعد متاحًا." },
+        error: {
+          code: "validation_error",
+          message: "الموقع المحدد غير صالح أو لم يعد متاحًا.",
+        },
       };
     }
 
@@ -141,7 +151,10 @@ async function resolveCanonicalLocationContext(
   if (currentId) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "تسلسل الموقع المحدد أعمق من الحد المسموح." },
+      error: {
+        code: "validation_error",
+        message: "تسلسل الموقع المحدد أعمق من الحد المسموح.",
+      },
     };
   }
 
