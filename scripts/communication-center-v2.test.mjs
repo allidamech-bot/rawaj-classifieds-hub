@@ -46,6 +46,20 @@ test("shared communication components avoid unsupported presence and read claims
   assert.doesNotMatch(shared, /online now|last seen|typing now|message read by/i);
 });
 
+test("participant avatars reserve space and recover from broken identity media", () => {
+  for (const contract of [
+    /AvatarImage/,
+    /AvatarFallback/,
+    /loading="lazy"/,
+    /decoding="async"/,
+    /width=\{44\}/,
+    /height=\{44\}/,
+    /name\.slice\(0, 1\)/,
+  ])
+    assert.match(shared, contract);
+  assert.doesNotMatch(shared, /url \? <img/);
+});
+
 test("messages preserve workspace report block and read contracts", () => {
   for (const contract of [
     /rawaj-communication-v2--messages/,
