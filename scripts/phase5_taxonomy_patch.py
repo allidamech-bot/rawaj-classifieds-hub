@@ -1,0 +1,163 @@
+from pathlib import Path
+
+
+def replace_once(path: str, old: str, new: str):
+    file = Path(path)
+    text = file.read_text()
+    if old not in text:
+        raise SystemExit(f"Missing expected block in {path}: {old[:100]!r}")
+    file.write_text(text.replace(old, new, 1))
+
+
+replace_once(
+    "src/lib/classifieds-types.ts",
+    "export interface CreateListingPayload {\n  categoryId: string;\n  governorateId: string;",
+    "export interface CreateListingPayload {\n  categoryId: string;\n  subcategoryId?: string | null;\n  governorateId: string;",
+)
+replace_once(
+    "src/lib/api/listings.ts",
+    "    category_id: payload.categoryId,\n    governorate_id: locationWrite.data.governorateId,",
+    "    category_id: payload.categoryId,\n    subcategory_id: payload.subcategoryId ?? null,\n    governorate_id: locationWrite.data.governorateId,",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    'import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";\n',
+    'import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";\nimport { ListingTaxonomySelector } from "@/features/listing-studio/ListingTaxonomySelector";\n',
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "  createOwnerDraftListing,\n  deleteListingImage,\n  fetchPublicCategories,\n  fetchPublicGovernorates,",
+    "  assignOwnerListingTaxonomy,\n  createOwnerDraftListing,\n  deleteListingImage,\n  fetchPublicCategories,\n  fetchPublicGovernorates,\n  fetchPublicTaxonomyNodes,",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "  ListingImage,\n  ListingCondition,\n} from \"@/lib/classifieds-types\";",
+    "  ListingImage,\n  ListingCondition,\n  TaxonomyNode,\n} from \"@/lib/classifieds-types\";",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    'import { categoryName, governorateName } from "@/lib/i18n";\n',
+    'import { categoryName, governorateName } from "@/lib/i18n";\nimport { resolveTaxonomyListingSearch } from "@/lib/taxonomy";\n',
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "  const [categories, setCategories] = useState<ClassifiedCategory[]>([]);\n  const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);",
+    "  const [categories, setCategories] = useState<ClassifiedCategory[]>([]);\n  const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>([]);\n  const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    '  const [categoryId, setCategoryId] = useState("");\n  const [title, setTitle] = useState("");',
+    '  const [categoryId, setCategoryId] = useState("");\n  const [subcategoryId, setSubcategoryId] = useState("");\n  const [taxonomyNodeId, setTaxonomyNodeId] = useState("");\n  const [title, setTitle] = useState("");',
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "  const category = categories.find((item) => item.id === categoryId);\n  const categoryFieldKind = detectCategoryFieldKind(category);",
+    "  const category = categories.find((item) => item.id === categoryId);\n  const selectedTaxonomyNode = taxonomyNodes.find((item) => item.id === taxonomyNodeId);\n  const categoryFieldKind = detectCategoryFieldKind(category);",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "        !!categoryId,\n        title.trim().length >= 8,",
+    "        taxonomyNodes.length > 0 ? Boolean(selectedTaxonomyNode?.isLeaf) : !!categoryId,\n        title.trim().length >= 8,",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "    [categoryId, title, description, price, priceType, governorateId, district, locationNodeId],",
+    "    [categoryId, selectedTaxonomyNode?.isLeaf, taxonomyNodes.length, title, description, price, priceType, governorateId, district, locationNodeId],",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "    return {\n      categoryId,\n      governorateId,",
+    "    return {\n      categoryId,\n      subcategoryId: subcategoryId || null,\n      governorateId,",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "      {\n        ...(contact.phone && isSafePhoneValue(normalizedPhone) ? { phone: normalizedPhone } : {}),",
+    "      {\n        ...(taxonomyNodeId ? { _taxonomy_node_id: taxonomyNodeId } : {}),\n        ...(contact.phone && isSafePhoneValue(normalizedPhone) ? { phone: normalizedPhone } : {}),",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "    return {\n      categoryId,\n      governorateId,\n      title: title.trim(),",
+    "    return {\n      categoryId,\n      subcategoryId: subcategoryId || null,\n      governorateId,\n      title: title.trim(),",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "    categoryId,\n    governorateId,\n    title,",
+    "    categoryId,\n    subcategoryId,\n    taxonomyNodeId,\n    governorateId,\n    title,",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "        if (result.ok) {\n          draftListingRef.current = result.data;\n          setDraftListing(result.data);\n          setCreatedListingId(result.data.id);\n        }",
+    "        if (result.ok) {\n          if (taxonomyNodeId) {\n            const taxonomyResult = await assignOwnerListingTaxonomy(profileId, result.data.id, taxonomyNodeId);\n            if (!taxonomyResult.ok && taxonomyResult.error.code !== \"schema_missing\") {\n              setAutosaveState(\"failed\");\n              setAutosaveError(taxonomyResult.error.message);\n              return;\n            }\n          }\n          draftListingRef.current = result.data;\n          setDraftListing(result.data);\n          setCreatedListingId(result.data.id);\n        }",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "      const [categoriesResult, governoratesResult] = await Promise.all([\n        fetchPublicCategories(),\n        fetchPublicGovernorates(),\n      ]);",
+    "      const [categoriesResult, governoratesResult, taxonomyResult] = await Promise.all([\n        fetchPublicCategories(),\n        fetchPublicGovernorates(),\n        fetchPublicTaxonomyNodes(),\n      ]);",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "        setCategories(categoriesResult.data);\n        setGovernorates(governoratesResult.data);",
+    "        setCategories(categoriesResult.data);\n        setGovernorates(governoratesResult.data);\n        if (taxonomyResult.ok) setTaxonomyNodes(taxonomyResult.data);",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "          ...(contact.phone ? { phone: normalizedPhone } : {}),",
+    "          ...(taxonomyNodeId ? { _taxonomy_node_id: taxonomyNodeId } : {}),\n          ...(contact.phone ? { phone: normalizedPhone } : {}),",
+)
+replace_once(
+    "src/routes/add-listing.tsx",
+    "      const listingDraft = result.data;\n\n      draftListingRef.current = listingDraft;",
+    "      const listingDraft = result.data;\n\n      if (taxonomyNodeId) {\n        const taxonomyResult = await assignOwnerListingTaxonomy(auth.profile?.id ?? null, listingDraft.id, taxonomyNodeId);\n        if (!taxonomyResult.ok && taxonomyResult.error.code !== \"schema_missing\") {\n          setSubmitMessage(taxonomyResult.error.message);\n          return;\n        }\n      }\n\n      draftListingRef.current = listingDraft;",
+)
+
+old_grid = '''                    <div className="rawaj-studio-category-grid">
+                      {categories.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setCategoryId(item.id)}
+                          data-selected={categoryId === item.id}
+                          className={`relative min-h-14 rounded-[1rem] border p-3 text-start text-sm font-semibold transition active:scale-[0.985] ${categoryId === item.id ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(16,43,70,0.13)]" : "border-border/75 bg-card/80 text-foreground hover:border-gold/40 hover:bg-card"}`}
+                        >
+                          {categoryName(item.id, item.nameAr, language)}
+                        </button>
+                      ))}
+                    </div>'''
+new_grid = '''                    {taxonomyNodes.length > 0 ? (
+                      <ListingTaxonomySelector
+                        nodes={taxonomyNodes}
+                        selectedNodeId={taxonomyNodeId}
+                        language={language}
+                        text={text}
+                        onSelect={(node, path) => {
+                          setTaxonomyNodeId(node.id);
+                          if (!node.isLeaf) {
+                            setCategoryId("");
+                            setSubcategoryId("");
+                            return;
+                          }
+                          const search = resolveTaxonomyListingSearch(node, path);
+                          setCategoryId(search.category ?? "");
+                          setSubcategoryId(search.taxonomyLegacySubcategoryId ?? "");
+                        }}
+                      />
+                    ) : (
+                      <div className="rawaj-studio-category-grid">
+                        {categories.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              setCategoryId(item.id);
+                              setSubcategoryId("");
+                              setTaxonomyNodeId("");
+                            }}
+                            data-selected={categoryId === item.id}
+                            className={`relative min-h-14 rounded-[1rem] border p-3 text-start text-sm font-semibold transition active:scale-[0.985] ${categoryId === item.id ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(16,43,70,0.13)]" : "border-border/75 bg-card/80 text-foreground hover:border-gold/40 hover:bg-card"}`}
+                          >
+                            {categoryName(item.id, item.nameAr, language)}
+                          </button>
+                        ))}
+                      </div>
+                    )}'''
+replace_once("src/routes/add-listing.tsx", old_grid, new_grid)
