@@ -51,7 +51,10 @@ test("account center shares identity, shortcuts, editor and safety while preserv
 });
 
 test("profile media replacement validates files and never deletes the old image before linking the new one", () => {
-  assert.match(profileApi, /allowedImageTypes = \["image\/jpeg", "image\/png", "image\/webp"\]/);
+  assert.match(
+    profileApi,
+    /allowedImageTypes = \["image\/jpeg", "image\/png", "image\/webp"\]/,
+  );
   assert.match(profileApi, /maxProfileImageSizeBytes = 3 \* 1024 \* 1024/);
   assert.match(profileApi, /upsert: false/);
   const uploadIndex = profileApi.indexOf(".upload(storagePath, file");
