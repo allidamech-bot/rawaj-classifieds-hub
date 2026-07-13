@@ -64,13 +64,25 @@ test("media experience keeps swipe, fullscreen, keyboard, zoom, and accessible c
   assert.match(mediaViewer, /DialogPrimitive\.Description/);
 });
 
+test("listing detail media replaces broken signed URLs with category artwork", () => {
+  assert.match(mediaState, /useState<Set<string>>\(\(\) => new Set\(\)\)/);
+  assert.match(mediaState, /const markImageFailed = useCallback/);
+  assert.match(mediaState, /next\.add\(url\)/);
+  assert.match(mediaExperience, /failedUrls\.has\(selectedUrl\)/);
+  assert.match(mediaExperience, /onError=\{\(\) => markImageFailed\(selectedUrl\)\}/);
+  assert.match(mediaExperience, /<PlaceholderArt type=\{placeholder\} aspect="wide" \/>/);
+  assert.match(mediaViewer, /failedUrls\.has\(currentUrl\)/);
+  assert.match(mediaViewer, /onError=\{\(\) => onImageError\(currentUrl\)\}/);
+  assert.match(mediaViewer, /<PlaceholderArt type=\{placeholder\} aspect="standard" \/>/);
+});
+
 test("full media viewer is excluded from the initial listing-detail bundle", () => {
   assert.match(mediaExperience, /lazy\(\(\) => import\("\.\/ListingMediaViewer"\)\)/);
   assert.match(mediaExperience, /viewerOpen \? \(/);
   assert.match(mediaExperience, /<Suspense fallback=\{null\}>/);
   assert.doesNotMatch(mediaExperience, /@radix-ui\/react-dialog/);
   assert.match(mediaViewer, /@radix-ui\/react-dialog/);
-  assert.match(mediaViewer, /loading="lazy" decoding="async"/);
+  assert.match(mediaViewer, /loading="lazy"/);
 });
 
 test("listing media orchestration stays separate from reusable interaction state", () => {
