@@ -164,7 +164,7 @@ test("Android device tests bundle the branch UI without changing production rele
   assert.match(androidWorkflow, /Restore production Android configuration/);
   assert.match(androidWorkflow, /rawaj-android-1\.0\.3-bundled-preview-apk/);
 
-  assert.match(preparePreview, /RAWAJ_ORIGIN = \\"https:\/\/localhost\\"/);
+  assert.match(preparePreview, /RAWAJ_ORIGIN = "https:\/\/localhost"/);
   assert.match(preparePreview, /forceBundledPreviewOrigin/);
   assert.match(preparePreview, /localPreviewUrl/);
   assert.doesNotMatch(preparePreview, /clearCache\(true\)/);
