@@ -68,13 +68,20 @@ test("media experience supports swipe, thumbnails, keyboard navigation, zoom, an
   assert.match(viewer, /rawaj-media-viewer__rail/);
 });
 
-test("seller profile uses real public profile data and no invented trust claims", () => {
+test("seller profile uses real public profile data and resilient identity media", () => {
   assert.match(route, /fetchPublicSellerProfile\(initialListing\.ownerId\)/);
   assert.match(route, /<ListingSellerProfileCard/);
   assert.match(seller, /seller\?\.verified/);
   assert.match(seller, /seller\?\.ratingSummary\.average/);
   assert.match(seller, /seller\.approvedListingCount/);
   assert.match(seller, /seller\?\.joinedAt/);
+  assert.match(seller, /AvatarImage/);
+  assert.match(seller, /AvatarFallback/);
+  assert.match(seller, /loading="lazy"/);
+  assert.match(seller, /decoding="async"/);
+  assert.match(seller, /width=\{64\}/);
+  assert.match(seller, /height=\{64\}/);
+  assert.match(seller, /<User aria-hidden="true" \/>/);
   assert.doesNotMatch(seller, /response time|sales completed|top seller/i);
 });
 
