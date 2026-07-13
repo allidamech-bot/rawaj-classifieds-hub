@@ -25,10 +25,7 @@ const [
   readFile(new URL("../src/lib/api/promotions-guarded.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/reports-guarded.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/support-guarded.ts", import.meta.url), "utf8"),
-  readFile(
-    new URL("../src/lib/api/admin-listing-moderation-guarded.ts", import.meta.url),
-    "utf8",
-  ),
+  readFile(new URL("../src/lib/api/admin-listing-moderation-guarded.ts", import.meta.url), "utf8"),
 ]);
 
 test("activity center combines real notification and conversation reads", () => {
