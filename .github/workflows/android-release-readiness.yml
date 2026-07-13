@@ -54,7 +54,11 @@ jobs:
         run: |
           set -euo pipefail
           find .output -maxdepth 5 -type f | sort > /tmp/rawaj-output-files.txt
-          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/rawaj-preview.log 2>&1 &
+          npx --yes wrangler@latest dev \
+            --config .output/server/wrangler.json \
+            --port 4173 \
+            --ip 127.0.0.1 \
+            > /tmp/rawaj-preview.log 2>&1 &
           preview_pid=$!
           cleanup() {
             kill "$preview_pid" 2>/dev/null || true
@@ -62,7 +66,7 @@ jobs:
           trap cleanup EXIT
 
           ready=""
-          for attempt in $(seq 1 45); do
+          for attempt in $(seq 1 75); do
             if curl --fail --silent --show-error http://127.0.0.1:4173/ > /tmp/rawaj-index.html; then
               ready="yes"
               break
@@ -77,7 +81,7 @@ jobs:
 
           test -s /tmp/rawaj-index.html
           grep -q '<html' /tmp/rawaj-index.html
-          grep -q '_build' /tmp/rawaj-index.html
+          grep -q '/assets/' /tmp/rawaj-index.html
           cp /tmp/rawaj-index.html .output/public/index.html
 
           for route in auth/callback login chats profile more notifications activity add-listing; do
@@ -94,6 +98,8 @@ jobs:
             /tmp/rawaj-preview.log
             /tmp/rawaj-output-files.txt
             /tmp/rawaj-index.html
+            .output/server/wrangler.json
+            .output/server/index.mjs
           if-no-files-found: warn
           retention-days: 1
 
