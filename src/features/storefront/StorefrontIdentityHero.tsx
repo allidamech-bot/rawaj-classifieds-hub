@@ -10,7 +10,7 @@ import {
   Store,
   type LucideIcon,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface StorefrontMetric {
@@ -60,6 +60,11 @@ export function StorefrontIdentityHero({
   extraActions,
 }: StorefrontIdentityHeroProps) {
   const { language, text } = useUiPreferences();
+  const [failedCoverUrl, setFailedCoverUrl] = useState<string | null>(null);
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
+  const showCover = Boolean(coverUrl && failedCoverUrl !== coverUrl);
+  const showAvatar = Boolean(avatarUrl && failedAvatarUrl !== avatarUrl);
+  const avatarFallback = displayName.trim().slice(0, 1).toUpperCase() || "R";
   const joinedLabel = joinedAt
     ? new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
         month: "short",
@@ -93,7 +98,14 @@ export function StorefrontIdentityHero({
       aria-labelledby="rawaj-storefront-name"
     >
       <div className="rawaj-storefront-identity__media">
-        {coverUrl ? <img src={coverUrl} alt="" decoding="async" /> : null}
+        {showCover ? (
+          <img
+            src={coverUrl ?? undefined}
+            alt=""
+            decoding="async"
+            onError={() => setFailedCoverUrl(coverUrl ?? null)}
+          />
+        ) : null}
         <div className="rawaj-storefront-identity__pattern" aria-hidden="true" />
         <div className="rawaj-storefront-identity__scrim" aria-hidden="true" />
       </div>
@@ -115,10 +127,15 @@ export function StorefrontIdentityHero({
 
         <div className="rawaj-storefront-identity__main">
           <div className="rawaj-storefront-identity__avatar">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt={displayName} decoding="async" />
+            {showAvatar ? (
+              <img
+                src={avatarUrl ?? undefined}
+                alt={displayName}
+                decoding="async"
+                onError={() => setFailedAvatarUrl(avatarUrl ?? null)}
+              />
             ) : (
-              <span>{displayName.slice(0, 1).toUpperCase()}</span>
+              <span>{avatarFallback}</span>
             )}
           </div>
 
