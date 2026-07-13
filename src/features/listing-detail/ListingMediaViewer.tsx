@@ -1,13 +1,18 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PlaceholderArt } from "@/components/PlaceholderArt";
 import type { ListingImage } from "@/lib/classifieds-types";
+import type { PlaceholderType } from "@/types";
 
 interface ListingMediaViewerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   images: ListingImage[];
   title: string;
+  placeholder: PlaceholderType;
+  failedUrls: Set<string>;
+  onImageError: (url: string) => void;
   selectedIndex: number;
   onSelectedIndexChange: (index: number) => void;
   text: (ar: string, en: string) => string;
@@ -18,6 +23,9 @@ export default function ListingMediaViewer({
   onOpenChange,
   images,
   title,
+  placeholder,
+  failedUrls,
+  onImageError,
   selectedIndex,
   onSelectedIndexChange,
   text,
@@ -25,6 +33,7 @@ export default function ListingMediaViewer({
   const [zoom, setZoom] = useState(1);
   const touchStartX = useRef<number | null>(null);
   const currentImage = images[selectedIndex] ?? images[0] ?? null;
+  const currentUrl = currentImage?.publicUrl ?? null;
 
   const goTo = useCallback(
     (index: number) => {
@@ -102,15 +111,18 @@ export default function ListingMediaViewer({
           </header>
 
           <div className="rawaj-media-viewer__canvas">
-            {currentImage?.publicUrl ? (
+            {currentUrl && !failedUrls.has(currentUrl) ? (
               <img
-                src={currentImage.publicUrl}
-                alt={currentImage.altAr ?? title}
+                src={currentUrl}
+                alt={currentImage?.altAr ?? title}
                 style={{ transform: `scale(${zoom})` }}
                 decoding="async"
                 draggable={false}
+                onError={() => onImageError(currentUrl)}
               />
-            ) : null}
+            ) : (
+              <PlaceholderArt type={placeholder} aspect="wide" />
+            )}
           </div>
 
           {images.length > 1 ? (
@@ -132,16 +144,29 @@ export default function ListingMediaViewer({
                 <ChevronLeft className="rtl:rotate-180" aria-hidden="true" />
               </button>
               <div className="rawaj-media-viewer__rail">
-                {images.map((image, index) => (
-                  <button
-                    key={image.id}
-                    type="button"
-                    onClick={() => goTo(index)}
-                    aria-pressed={selectedIndex === index}
-                  >
-                    <img src={image.publicUrl ?? ""} alt="" loading="lazy" decoding="async" />
-                  </button>
-                ))}
+                {images.map((image, index) => {
+                  const imageUrl = image.publicUrl ?? "";
+                  return (
+                    <button
+                      key={image.id}
+                      type="button"
+                      onClick={() => goTo(index)}
+                      aria-pressed={selectedIndex === index}
+                    >
+                      {failedUrls.has(imageUrl) ? (
+                        <PlaceholderArt type={placeholder} aspect="standard" />
+                      ) : (
+                        <img
+                          src={imageUrl}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          onError={() => onImageError(imageUrl)}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </>
           ) : null}
