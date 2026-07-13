@@ -1,8 +1,0 @@
-
-/home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/src/lib/search-normalization.ts
-  3:28  error  Unexpected combined character in character class  no-misleading-character-class
-
-✖ 1 problem (1 error, 0 warnings)
-
-
-exit_code=1
