@@ -2,25 +2,28 @@ const blockedReturnPrefixes = ["/auth/callback", "/login", "/reset-password"];
 const DEFAULT_AUTH_RETURN_TO = "/more";
 const MAX_AUTH_RETURN_LENGTH = 2048;
 
-function isBlockedAuthReturnPath(pathname: string) {
+function isBlockedAuthReturnPath(pathname: string): boolean {
   return blockedReturnPrefixes.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }
 
-function containsControlCharacter(value: string) {
+function containsControlCharacter(value: string): boolean {
   return Array.from(value).some((character) => {
     const codePoint = character.codePointAt(0) ?? 0;
     return codePoint <= 31 || codePoint === 127;
   });
 }
 
-function safeFallback(value: unknown) {
+function safeFallback(value: unknown): string {
   if (value === DEFAULT_AUTH_RETURN_TO) return DEFAULT_AUTH_RETURN_TO;
   return sanitizeAuthReturnTo(value, DEFAULT_AUTH_RETURN_TO);
 }
 
-export function sanitizeAuthReturnTo(value: unknown, fallback = DEFAULT_AUTH_RETURN_TO) {
+export function sanitizeAuthReturnTo(
+  value: unknown,
+  fallback = DEFAULT_AUTH_RETURN_TO,
+): string {
   const normalizedFallback = safeFallback(fallback);
   if (typeof value !== "string") return normalizedFallback;
   const trimmed = value.trim();
@@ -45,7 +48,7 @@ export function sanitizeAuthReturnTo(value: unknown, fallback = DEFAULT_AUTH_RET
   }
 }
 
-export function currentAuthReturnTo() {
+export function currentAuthReturnTo(): string {
   if (typeof window === "undefined") return "/";
   return `${window.location.pathname}${window.location.search}${window.location.hash}`;
 }
