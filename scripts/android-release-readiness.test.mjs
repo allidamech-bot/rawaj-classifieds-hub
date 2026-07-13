@@ -67,10 +67,7 @@ test("Native auth sessions survive WebView reloads and app restarts", () => {
   assert.match(nativeRuntime, /RawajNative\.removeAuthStorage/);
   assert.match(nativeRuntime, /legacyValue/);
   assert.match(nativePlugin, /AUTH_STORAGE_NAME = "rawaj_native_auth_storage"/);
-  assert.match(
-    nativePlugin,
-    /getSharedPreferences\(AUTH_STORAGE_NAME, Context\.MODE_PRIVATE\)/,
-  );
+  assert.match(nativePlugin, /getSharedPreferences\(AUTH_STORAGE_NAME, Context\.MODE_PRIVATE\)/);
   assert.match(nativePlugin, /public void getAuthStorage/);
   assert.match(nativePlugin, /public void setAuthStorage/);
   assert.match(nativePlugin, /public void removeAuthStorage/);
@@ -121,16 +118,7 @@ test("Android back navigation preserves WebView history", () => {
 
 test("External communication and map links leave the WebView through a strict native bridge", () => {
   assert.match(nativePlugin, /@CapacitorPlugin\(name = "RawajNative"\)/);
-  for (const scheme of [
-    "http",
-    "https",
-    "tel",
-    "mailto",
-    "sms",
-    "geo",
-    "market",
-    "whatsapp",
-  ]) {
+  for (const scheme of ["http", "https", "tel", "mailto", "sms", "geo", "market", "whatsapp"]) {
     assert.match(nativePlugin, new RegExp(`"${scheme}"`));
   }
   assert.match(nativePlugin, /Intent\.ACTION_VIEW/);
