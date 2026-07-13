@@ -84,8 +84,10 @@
   --radius-pill: 999px;
 
   /* Elevation */
-  --shadow-soft: 0 1px 2px rgba(11, 45, 41, 0.04), 0 8px 24px rgba(11, 45, 41, 0.05);
-  --shadow-raised: 0 4px 12px rgba(11, 45, 41, 0.07), 0 16px 36px rgba(11, 45, 41, 0.09);
+  --shadow-soft:
+    0 1px 2px rgba(11, 45, 41, 0.04), 0 8px 24px rgba(11, 45, 41, 0.05);
+  --shadow-raised:
+    0 4px 12px rgba(11, 45, 41, 0.07), 0 16px 36px rgba(11, 45, 41, 0.09);
   --shadow-overlay: 0 20px 60px rgba(11, 45, 41, 0.18);
 
   /* Motion */
@@ -180,7 +182,9 @@ textarea,
 }
 
 .rawaj-app-shell[data-shell-dock="true"] {
-  --rawaj-shell-bottom-reserve: calc(var(--dock-height) + var(--rawaj-safe-bottom) + 1rem);
+  --rawaj-shell-bottom-reserve: calc(
+    var(--dock-height) + var(--rawaj-safe-bottom) + 1rem
+  );
 }
 
 .rawaj-app-shell[data-shell-sticky-action="true"] {
