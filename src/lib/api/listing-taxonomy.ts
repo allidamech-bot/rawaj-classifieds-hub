@@ -55,8 +55,7 @@ export async function assignOwnerListingTaxonomy(
     data: {
       listingId: String(row.listing_id ?? ""),
       taxonomyNodeId: String(row.taxonomy_node_id ?? ""),
-      assignmentSource:
-        row.assignment_source === "explicit" ? "explicit" : "legacy_derived",
+      assignmentSource: row.assignment_source === "explicit" ? "explicit" : "legacy_derived",
       updatedAt: String(row.updated_at ?? ""),
     },
   };

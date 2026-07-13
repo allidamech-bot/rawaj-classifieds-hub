@@ -30,9 +30,7 @@ export function ListingTaxonomySelector({
   const path = getTaxonomyPath(index, selected);
   const parentPath = selected?.isLeaf ? path.slice(0, -1) : path;
   const parent = parentPath[parentPath.length - 1];
-  const options = parent
-    ? getTaxonomyChildren(index, parent.id)
-    : getTaxonomyRootNodes(index);
+  const options = parent ? getTaxonomyChildren(index, parent.id) : getTaxonomyRootNodes(index);
   const directionIcon = language === "ar" ? ChevronLeft : ChevronRight;
   const DirectionIcon = directionIcon;
 
