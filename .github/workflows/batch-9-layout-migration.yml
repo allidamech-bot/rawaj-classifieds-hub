@@ -1,0 +1,51 @@
+name: Batch 9 layout migration
+
+on:
+  push:
+    branches:
+      - refactor/secondary-account-surfaces-batch-9
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refactor/secondary-account-surfaces-batch-9
+          fetch-depth: 0
+      - name: Apply canonical page rhythm
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              Path('src/routes/saved-searches.tsx'): [
+                  ('container-wide mobile-page-bottom space-y-4 pt-4', 'container-wide rawaj-content-stack mobile-page-bottom pt-4'),
+                  ('container-wide mobile-page-bottom pt-10', 'container-wide rawaj-content-stack mobile-page-bottom pt-10'),
+              ],
+              Path('src/routes/notifications.tsx'): [
+                  ('rawaj-communication-v2 rawaj-communication-v2--notifications container-wide mobile-page-bottom space-y-5 pt-4', 'rawaj-communication-v2 rawaj-communication-v2--notifications container-wide rawaj-content-stack mobile-page-bottom pt-4'),
+              ],
+          }
+
+          for path, pairs in replacements.items():
+              text = path.read_text()
+              for old, new in pairs:
+                  if old not in text:
+                      raise SystemExit(f'Missing expected class string in {path}: {old}')
+                  text = text.replace(old, new, 1)
+              path.write_text(text)
+          PY
+          rm .github/workflows/batch-9-layout-migration.yml
+      - name: Commit migration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/favorites.tsx src/routes/saved-searches.tsx src/routes/notifications.tsx .github/workflows/batch-9-layout-migration.yml
+          git diff --cached --check
+          git commit -m "Align secondary account surfaces with canonical rhythm"
+          git push origin HEAD:refactor/secondary-account-surfaces-batch-9
