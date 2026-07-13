@@ -69,7 +69,8 @@ test("app shell owns viewport, keyboard and bottom-reservation behavior", () => 
   assert.match(appShell, /data-shell-dock=\{config\.showDock\}/);
   assert.match(appShell, /data-shell-sticky-action=\{config\.reserveStickyAction\}/);
   assert.match(appShell, /data-keyboard-open=\{keyboardOpen\}/);
-  assert.match(appShell, /<main className="rawaj-app-shell__content"/);
+  assert.match(appShell, /className="rawaj-app-shell__content"/);
+  assert.doesNotMatch(appShell, /<main className="rawaj-app-shell__content"/);
 
   assert.match(foundation, /data-shell-dock="true"/);
   assert.match(foundation, /data-shell-sticky-action="true"/);
