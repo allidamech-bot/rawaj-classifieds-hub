@@ -1,8 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 
 import { SiteFooter } from "@/components/SiteFooter";
-import { resolveAppShellConfig } from "@/lib/primary-navigation";
 import { BottomDock } from "@/components/shell/BottomDock";
+import { resolveAppShellConfig } from "@/lib/primary-navigation";
 
 interface AppShellProps {
   pathname: string;
@@ -17,7 +17,7 @@ function isEditableElement(target: Element | null) {
   return target.matches("input, textarea, select, [role='textbox']");
 }
 
-function useKeyboardState() {
+function useViewportState() {
   const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   useEffect(() => {
@@ -27,6 +27,7 @@ function useKeyboardState() {
 
     const update = () => {
       const mobileViewport = window.matchMedia("(max-width: 1023px)").matches;
+      const viewportHeight = viewport?.height ?? window.innerHeight;
       const inset = viewport
         ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
         : 0;
@@ -34,6 +35,7 @@ function useKeyboardState() {
       const nextOpen = mobileViewport && (focusedEditable || inset > 120);
 
       root.style.setProperty("--keyboard-inset", `${Math.round(inset)}px`);
+      root.style.setProperty("--app-viewport-height", `${Math.round(viewportHeight)}px`);
       root.dataset.keyboardOpen = nextOpen ? "true" : "false";
       setKeyboardOpen(nextOpen);
     };
@@ -47,6 +49,7 @@ function useKeyboardState() {
     viewport?.addEventListener("resize", scheduleUpdate);
     viewport?.addEventListener("scroll", scheduleUpdate);
     window.addEventListener("resize", scheduleUpdate);
+    window.addEventListener("orientationchange", scheduleUpdate);
     document.addEventListener("focusin", scheduleUpdate);
     document.addEventListener("focusout", scheduleUpdate);
 
@@ -55,9 +58,11 @@ function useKeyboardState() {
       viewport?.removeEventListener("resize", scheduleUpdate);
       viewport?.removeEventListener("scroll", scheduleUpdate);
       window.removeEventListener("resize", scheduleUpdate);
+      window.removeEventListener("orientationchange", scheduleUpdate);
       document.removeEventListener("focusin", scheduleUpdate);
       document.removeEventListener("focusout", scheduleUpdate);
       root.style.removeProperty("--keyboard-inset");
+      root.style.removeProperty("--app-viewport-height");
       delete root.dataset.keyboardOpen;
     };
   }, []);
@@ -72,19 +77,21 @@ export function AppShell({
   routeClassName = "",
 }: AppShellProps) {
   const config = resolveAppShellConfig(pathname);
-  const keyboardOpen = useKeyboardState();
+  const keyboardOpen = useViewportState();
 
   return (
     <div
       className={`rawaj-app-shell ${routeClassName}`.trim()}
       data-shell-mode={config.mode}
       data-shell-dock={config.showDock}
+      data-shell-footer={config.showFooter}
+      data-shell-header={config.showHeader}
       data-shell-sticky-action={config.reserveStickyAction}
       data-keyboard-open={keyboardOpen}
     >
       <div className="rawaj-app-shell__page" data-shell-region="page-canvas">
         {announcements ? (
-          <div className="rawaj-app-shell__announcements" data-shell-region="toast-region">
+          <div className="rawaj-app-shell__announcements" data-shell-region="announcement-region">
             {announcements}
           </div>
         ) : null}
