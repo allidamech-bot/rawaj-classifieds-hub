@@ -67,8 +67,4 @@ export function adminModeratePromotionRequest(
   );
 }
 
-export {
-  adminFetchPromotionRequests,
-  createPromotionReceiptSignedUrl,
-  fetchMyPromotionRequests,
-};
+export { adminFetchPromotionRequests, createPromotionReceiptSignedUrl, fetchMyPromotionRequests };
