@@ -25,6 +25,12 @@ export async function resolveListingLocationWrite(
 ): Promise<ClassifiedsResult<ListingLocationWrite>> {
   const value = districtValue?.trim() ?? "";
   if (!value.startsWith("@")) {
+    if (value && !governorateId) {
+      return {
+        ok: false,
+        error: { code: "validation_error", message: "اختر المحافظة قبل تحديد المنطقة." },
+      };
+    }
     return {
       ok: true,
       data: {
@@ -90,7 +96,12 @@ async function resolveCanonicalLocationContext(
   const visited = new Set<string>();
 
   for (let depth = 0; currentId && depth < 16; depth += 1) {
-    if (visited.has(currentId)) break;
+    if (visited.has(currentId)) {
+      return {
+        ok: false,
+        error: { code: "validation_error", message: "تسلسل الموقع المحدد غير صالح." },
+      };
+    }
     visited.add(currentId);
 
     const { data, error } = await client
@@ -127,10 +138,24 @@ async function resolveCanonicalLocationContext(
     currentId = rowNullableString(row, "parent_id");
   }
 
+  if (currentId) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تسلسل الموقع المحدد أعمق من الحد المسموح." },
+    };
+  }
+
+  if (!selectedId || !selectedNameAr) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر قراءة الموقع المحدد." },
+    };
+  }
+
   return {
     ok: true,
     data: {
-      id: selectedId || nodeId,
+      id: selectedId,
       selectedNameAr,
       governorateId,
       governorateNameAr,
