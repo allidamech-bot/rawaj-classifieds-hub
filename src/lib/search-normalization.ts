@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const arabicDiacritics = /[\u0640\u064B-\u065F\u0670\u06D6-\u06ED]/g;
+const arabicDiacritics = new RegExp("[\\u0640\\u064B-\\u065F\\u0670\\u06D6-\\u06ED]", "g");
 const whitespace = /\s+/g;
 const normalizedSearchSupport = new WeakMap<SupabaseClient, boolean>();
 
