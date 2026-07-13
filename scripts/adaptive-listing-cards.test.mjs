@@ -44,10 +44,7 @@ const [
     new URL("../src/features/listings/cards/ListingCardShared.tsx", import.meta.url),
     "utf8",
   ),
-  readFile(
-    new URL("../src/features/listings/cards/ListingCardImage.tsx", import.meta.url),
-    "utf8",
-  ),
+  readFile(new URL("../src/features/listings/cards/ListingCardImage.tsx", import.meta.url), "utf8"),
   readFile(
     new URL("../src/features/listings/cards/listing-card-utils.ts", import.meta.url),
     "utf8",
