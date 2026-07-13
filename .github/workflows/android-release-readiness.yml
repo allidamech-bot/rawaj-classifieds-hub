@@ -103,150 +103,22 @@ jobs:
           if-no-files-found: warn
           retention-days: 1
 
+      - name: Validate bundled preview helper scripts
+        run: |
+          python -m py_compile \
+            scripts/prepare_android_bundled_preview.py \
+            scripts/verify_android_bundled_preview.py
+
       - name: Sync bundled branch preview into Android debug configuration
         env:
           RAWAJ_ANDROID_BUNDLED_PREVIEW: "1"
         run: npx cap sync android
 
       - name: Lock bundled preview to local origin
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path("android/app/src/main/java/com/rawaj/marketplace/MainActivity.java")
-          source = path.read_text(encoding="utf-8")
-
-          production_origin = 'private static final String RAWAJ_ORIGIN = "https://rawa-j.com";'
-          preview_origin = 'private static final String RAWAJ_ORIGIN = "https://localhost";'
-          if production_origin not in source:
-              raise SystemExit("RAWAJ_ORIGIN production constant was not found")
-          source = source.replace(production_origin, preview_origin, 1)
-
-          create_marker = '''        super.onCreate(savedInstanceState);
-
-        routeIncomingIntent(getIntent());'''
-          create_replacement = '''        super.onCreate(savedInstanceState);
-
-        forceBundledPreviewOrigin();
-        routeIncomingIntent(getIntent());'''
-          if create_marker not in source:
-              raise SystemExit("MainActivity onCreate marker was not found")
-          source = source.replace(create_marker, create_replacement, 1)
-
-          intent_marker = '''    @Override
-    protected void onNewIntent(Intent intent) {'''
-          intent_replacement = '''    @Override
-    protected void onResume() {
-        super.onResume();
-        forceBundledPreviewOrigin();
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {'''
-          if intent_marker not in source:
-              raise SystemExit("MainActivity onNewIntent marker was not found")
-          source = source.replace(intent_marker, intent_replacement, 1)
-
-          route_marker = '''    private void routeIncomingIntent(Intent intent) {'''
-          helpers = '''    private String localPreviewUrl(Uri uri) {
-        final Uri.Builder builder = Uri.parse(RAWAJ_ORIGIN).buildUpon();
-        final String path = uri.getEncodedPath();
-        builder.encodedPath(path == null || path.isEmpty() ? "/" : path);
-        builder.encodedQuery(uri.getEncodedQuery());
-        builder.encodedFragment(uri.getEncodedFragment());
-        return builder.build().toString();
-    }
-
-    private void forceBundledPreviewOrigin() {
-        final WebView webView = getBridge() == null ? null : getBridge().getWebView();
-        if (webView == null) {
-            return;
-        }
-
-        final long[] delays = new long[] { 0L, 250L, 750L, 1500L };
-        for (long delay : delays) {
-            webView.postDelayed(
-                () -> {
-                    final String currentUrl = webView.getUrl();
-                    if (currentUrl == null || currentUrl.trim().isEmpty()) {
-                        return;
-                    }
-
-                    final Uri currentUri = Uri.parse(currentUrl);
-                    final String host = currentUri.getHost() == null
-                        ? ""
-                        : currentUri.getHost().toLowerCase(Locale.ROOT);
-                    if (!RAWAJ_HOST.equals(host) && !host.endsWith("." + RAWAJ_HOST)) {
-                        return;
-                    }
-
-                    final String localUrl = localPreviewUrl(currentUri);
-                    if (!localUrl.equals(currentUrl)) {
-                        webView.stopLoading();
-                        webView.loadUrl(localUrl);
-                        webView.postDelayed(webView::clearHistory, 350L);
-                    }
-                },
-                delay
-            );
-        }
-    }
-
-    private void routeIncomingIntent(Intent intent) {'''
-          if route_marker not in source:
-              raise SystemExit("MainActivity routeIncomingIntent marker was not found")
-          source = source.replace(route_marker, helpers, 1)
-
-          remote_return = '''            return uri.toString();'''
-          local_return = '''            return localPreviewUrl(uri);'''
-          if remote_return not in source:
-              raise SystemExit("MainActivity HTTPS deep-link return was not found")
-          source = source.replace(remote_return, local_return, 1)
-
-          path.write_text(source, encoding="utf-8")
-          PY
+        run: python scripts/prepare_android_bundled_preview.py
 
       - name: Verify bundled preview identity and payload
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          config_path = Path("android/app/src/main/assets/capacitor.config.json")
-          config = json.loads(config_path.read_text(encoding="utf-8"))
-          server = config.get("server", {})
-          if "url" in server:
-              raise SystemExit("Bundled preview unexpectedly contains server.url")
-
-          main_activity = Path(
-              "android/app/src/main/java/com/rawaj/marketplace/MainActivity.java"
-          ).read_text(encoding="utf-8")
-          required_native = [
-              'RAWAJ_ORIGIN = "https://localhost"',
-              "forceBundledPreviewOrigin()",
-              "localPreviewUrl(Uri uri)",
-          ]
-          for marker in required_native:
-              if marker not in main_activity:
-                  raise SystemExit(f"Bundled MainActivity is missing {marker}")
-          if "clearCache(true)" in main_activity:
-              raise SystemExit("Bundled preview must not clear WebView storage or auth state")
-
-          assets = Path("android/app/src/main/assets/public/assets")
-          javascript = "\n".join(
-              path.read_text(encoding="utf-8", errors="ignore")
-              for path in assets.glob("*.js")
-          )
-          if "rawaj-chat-inbox" not in javascript:
-              raise SystemExit("Bundled APK does not contain the new chat inbox UI")
-          if "rawaj-message-workspace" in javascript:
-              raise SystemExit("Bundled APK still contains the retired chat workspace UI")
-          if "getAuthStorage" not in javascript or "rawajAuthStorage" not in javascript:
-              raise SystemExit("Bundled APK does not contain durable native auth storage")
-          PY
+        run: python scripts/verify_android_bundled_preview.py
 
       - name: Assemble bundled branch-preview debug APK
         working-directory: android
