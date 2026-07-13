@@ -21,6 +21,10 @@ const selectorSource = readFileSync(
   new URL("../src/features/locations/CanonicalLocationSelector.tsx", import.meta.url),
   "utf8",
 );
+const locationWriteSource = readFileSync(
+  new URL("../src/lib/api/listing-location-write.ts", import.meta.url),
+  "utf8",
+);
 const sortOrderMigration = readFileSync(
   new URL(
     "../supabase/migrations/202607100005_backfill_syria_location_type_sort_order.sql",
@@ -100,6 +104,16 @@ test("guards cascading location levels against stale child responses", () => {
   assert.match(selectorSource, /childRequestSequenceRef = useRef\(0\)/);
   assert.match(selectorSource, /requestSequence !== childRequestSequenceRef\.current/);
   assert.match(selectorSource, /childRequestSequenceRef\.current \+= 1/);
+});
+
+test("rejects malformed canonical ancestry and legacy districts without a governorate", () => {
+  assert.match(locationWriteSource, /if \(visited\.has\(currentId\)\)/);
+  assert.match(locationWriteSource, /تسلسل الموقع المحدد غير صالح/);
+  assert.match(locationWriteSource, /if \(currentId\)/);
+  assert.match(locationWriteSource, /أعمق من الحد المسموح/);
+  assert.match(locationWriteSource, /if \(!selectedId \|\| !selectedNameAr\)/);
+  assert.match(locationWriteSource, /if \(value && !governorateId\)/);
+  assert.match(locationWriteSource, /اختر المحافظة قبل تحديد المنطقة/);
 });
 
 test("uses stable type-aware sort weights for source data", () => {
