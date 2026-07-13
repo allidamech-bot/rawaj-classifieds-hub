@@ -29,13 +29,8 @@ import type {
 } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized } from "@/lib/i18n";
 import { listingLocationDisplay } from "@/lib/listing-location-display";
-import {
-  absoluteUrl,
-  buildBreadcrumbStructuredData,
-  createSeo,
-  jsonLdScript,
-  plainText,
-} from "@/lib/seo";
+import { buildListingStructuredData } from "@/lib/listing-structured-data";
+import { buildBreadcrumbStructuredData, createSeo, jsonLdScript, plainText } from "@/lib/seo";
 import { phoneHref, whatsappHref } from "@/lib/contact-phone";
 import { listingStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
@@ -634,33 +629,6 @@ function SectionHeading({ title, subtitle }: { title: string; subtitle: string }
       <p>{subtitle}</p>
     </div>
   );
-}
-
-function buildListingStructuredData(listing: ClassifiedListing) {
-  const data: Record<string, unknown> = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: listing.title,
-    description: plainText(listing.description, 300),
-    url: absoluteUrl(`/listings/${listing.id}`),
-    category: listing.categoryNameAr,
-    areaServed: listing.governorateNameAr,
-  };
-
-  if (listing.primaryImageUrl) data.image = [absoluteUrl(listing.primaryImageUrl)];
-  if (listing.price !== null) {
-    data.offers = {
-      "@type": "Offer",
-      price: listing.price,
-      priceCurrency: listing.currency,
-      availability: listing.reservedAt
-        ? "https://schema.org/LimitedAvailability"
-        : "https://schema.org/InStock",
-      url: absoluteUrl(`/listings/${listing.id}`),
-    };
-  }
-
-  return data;
 }
 
 function Badge({ children }: { children: ReactNode }) {
