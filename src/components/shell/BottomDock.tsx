@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Grid3X3, Home, MessageCircle, Plus, User } from "lucide-react";
 
+import { CHAT_INBOX_TARGET } from "@/lib/journey-target-resolution";
 import {
   resolvePrimaryNavigationSection,
   shouldShowBottomNav,
@@ -78,9 +79,12 @@ export function BottomDock({ pathname }: BottomDockProps) {
             <Link
               key={item.to}
               to={item.to}
-              search={item.to === "/chats" ? {} : undefined}
+              search={
+                item.to === "/chats" ? { conversation: CHAT_INBOX_TARGET } : undefined
+              }
               data-active={active}
               data-primary={item.primary === true}
+              data-chat-inbox-entry={item.to === "/chats" ? "true" : undefined}
               className={`rawaj-dock-item relative flex min-h-[3.7rem] min-w-0 flex-col items-center justify-end gap-1 rounded-[0.95rem] px-1 pb-1.5 pt-1 active:scale-[0.98] ${
                 item.primary ? "text-brand-orange" : ""
               }`}
