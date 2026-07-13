@@ -75,6 +75,12 @@ test("seller profile uses real public profile data and no invented trust claims"
   assert.match(seller, /seller\?\.ratingSummary\.average/);
   assert.match(seller, /seller\.approvedListingCount/);
   assert.match(seller, /seller\?\.joinedAt/);
+  assert.match(seller, /rawaj-detail-seller__avatar relative/);
+  assert.match(seller, /<User aria-hidden="true" \/>/);
+  assert.match(seller, /absolute inset-0 h-full w-full object-cover/);
+  assert.match(seller, /event\.currentTarget\.remove\(\)/);
+  assert.match(seller, /width=\{64\}/);
+  assert.match(seller, /height=\{64\}/);
   assert.doesNotMatch(seller, /response time|sales completed|top seller/i);
 });
 
