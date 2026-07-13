@@ -2,17 +2,16 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, navigation, shell, header, offlineNotice, dock, primitives, css] =
-  await Promise.all([
-    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/primary-navigation.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/components/shell/AppShell.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/components/OfflineNotice.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/components/shell/BottomDock.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/components/shell/spatial-primitives.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/spatial-app-shell.css", import.meta.url), "utf8"),
-  ]);
+const [root, navigation, shell, header, offlineNotice, dock, primitives, css] = await Promise.all([
+  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/primary-navigation.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/shell/AppShell.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/OfflineNotice.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/shell/BottomDock.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/shell/spatial-primitives.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/spatial-app-shell.css", import.meta.url), "utf8"),
+]);
 
 test("root renders every route through the Spatial App Shell", () => {
   assert.match(root, /import \{ AppShell \} from "@\/components\/shell\/AppShell";/);
