@@ -2,14 +2,17 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [chatRoute, communicationComponents, communicationCss] = await Promise.all([
-  readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
-  readFile(
-    new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
-    "utf8",
-  ),
-  readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
-]);
+const [chatRoute, communicationComponents, communicationCss, guardedMessaging, api] =
+  await Promise.all([
+    readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
+    readFile(
+      new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/api/messaging-guarded.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
+  ]);
 
 test("conversation search filters only the already-loaded user conversation list", () => {
   assert.match(chatRoute, /conversationQuery/);
@@ -47,4 +50,16 @@ test("existing message safety controls remain present", () => {
   assert.match(chatRoute, /createMessageReport/);
   assert.match(chatRoute, /blockConversationParticipant/);
   assert.match(chatRoute, /selectedConversation\.status !== "active"/);
+});
+
+test("conversation starts, reports and blocks deduplicate identical concurrent writes", () => {
+  assert.match(api, /messaging-guarded/);
+  assert.match(guardedMessaging, /pendingConversationStarts/);
+  assert.match(guardedMessaging, /pendingMessageReports/);
+  assert.match(guardedMessaging, /pendingParticipantBlocks/);
+  assert.match(guardedMessaging, /function runOnce/);
+  assert.match(guardedMessaging, /if \(pending\) return pending/);
+  assert.match(guardedMessaging, /baseStartListingConversation/);
+  assert.match(guardedMessaging, /baseCreateMessageReport/);
+  assert.match(guardedMessaging, /baseBlockConversationParticipant/);
 });
