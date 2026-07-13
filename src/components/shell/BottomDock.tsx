@@ -79,9 +79,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
             <Link
               key={item.to}
               to={item.to}
-              search={
-                item.to === "/chats" ? { conversation: CHAT_INBOX_TARGET } : undefined
-              }
+              search={item.to === "/chats" ? { conversation: CHAT_INBOX_TARGET } : undefined}
               data-active={active}
               data-primary={item.primary === true}
               data-chat-inbox-entry={item.to === "/chats" ? "true" : undefined}
