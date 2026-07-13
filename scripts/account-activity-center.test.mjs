@@ -67,7 +67,9 @@ test("favorites and saved searches route through guarded APIs", () => {
   assert.match(api, /favorites-guarded/);
   assert.match(api, /saved-searches-guarded/);
   assert.match(favorites, /pendingFavoriteWrites/);
-  assert.match(savedSearches, /pendingSavedSearchWrites/);
+  assert.match(savedSearches, /pendingSavedSearchCreates/);
+  assert.match(savedSearches, /pendingSavedSearchFrequencyUpdates/);
+  assert.match(savedSearches, /pendingSavedSearchDeletes/);
 });
 
 test("promotion, report, support, and moderation writes route through guarded APIs", () => {
