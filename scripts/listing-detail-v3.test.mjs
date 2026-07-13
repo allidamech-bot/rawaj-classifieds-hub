@@ -2,11 +2,15 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [rootRoute, detailRoute, mediaExperience, v2Css, v3Css] = await Promise.all([
+const [rootRoute, detailRoute, mediaExperience, mediaViewer, v2Css, v3Css] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
   readFile(
     new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url),
     "utf8",
   ),
   readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8"),
@@ -44,11 +48,20 @@ test("media experience keeps swipe, fullscreen, keyboard, zoom, and accessible c
   assert.match(mediaExperience, /onTouchStart=\{handleTouchStart\}/);
   assert.match(mediaExperience, /onTouchEnd=\{handleTouchEnd\}/);
   assert.match(mediaExperience, /setViewerOpen\(true\)/);
-  assert.match(mediaExperience, /event\.key === "ArrowLeft"/);
-  assert.match(mediaExperience, /Math\.min\(3, value \+ 0\.5\)/);
+  assert.match(mediaViewer, /event\.key === "ArrowLeft"/);
+  assert.match(mediaViewer, /Math\.min\(3, value \+ 0\.5\)/);
   assert.match(mediaExperience, /aria-pressed=\{favorite\}/);
-  assert.match(mediaExperience, /DialogPrimitive\.Title/);
-  assert.match(mediaExperience, /DialogPrimitive\.Description/);
+  assert.match(mediaViewer, /DialogPrimitive\.Title/);
+  assert.match(mediaViewer, /DialogPrimitive\.Description/);
+});
+
+test("full media viewer is excluded from the initial listing-detail bundle", () => {
+  assert.match(mediaExperience, /lazy\(\(\) => import\("\.\/ListingMediaViewer"\)\)/);
+  assert.match(mediaExperience, /viewerOpen \? \(/);
+  assert.match(mediaExperience, /<Suspense fallback=\{null\}>/);
+  assert.doesNotMatch(mediaExperience, /@radix-ui\/react-dialog/);
+  assert.match(mediaViewer, /@radix-ui\/react-dialog/);
+  assert.match(mediaViewer, /loading="lazy" decoding="async"/);
 });
 
 test("layered V2 and V3 CSS retains mobile-first, bidirectional, safe-area, and motion contracts", () => {

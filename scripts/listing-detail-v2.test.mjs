@@ -2,32 +2,37 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, route, media, seller, dock, safety, similar, css, navigation] = await Promise.all([
-  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
-  readFile(
-    new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
-    "utf8",
-  ),
-  readFile(
-    new URL("../src/features/listing-detail/ListingSellerProfileCard.tsx", import.meta.url),
-    "utf8",
-  ),
-  readFile(
-    new URL("../src/features/listing-detail/ListingContactDock.tsx", import.meta.url),
-    "utf8",
-  ),
-  readFile(
-    new URL("../src/features/listing-detail/ListingSafetyAndAlert.tsx", import.meta.url),
-    "utf8",
-  ),
-  readFile(
-    new URL("../src/features/listing-detail/SimilarListingsRail.tsx", import.meta.url),
-    "utf8",
-  ),
-  readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/primary-navigation.ts", import.meta.url), "utf8"),
-]);
+const [root, route, media, viewer, seller, dock, safety, similar, css, navigation] =
+  await Promise.all([
+    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
+    readFile(
+      new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../src/features/listing-detail/ListingSellerProfileCard.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../src/features/listing-detail/ListingContactDock.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../src/features/listing-detail/ListingSafetyAndAlert.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../src/features/listing-detail/SimilarListingsRail.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/primary-navigation.ts", import.meta.url), "utf8"),
+  ]);
 
 test("listing detail V2 styles load after marketplace presentation styles", () => {
   assert.match(root, /import listingDetailV2Css from "\.\.\/listing-detail-v2\.css\?url";/);
@@ -53,13 +58,14 @@ test("listing detail starts with immersive media instead of a page header", () =
 test("media experience supports swipe, thumbnails, keyboard navigation, zoom, and full screen", () => {
   assert.match(media, /onTouchStart/);
   assert.match(media, /onTouchEnd/);
-  assert.match(media, /ArrowLeft/);
-  assert.match(media, /ArrowRight/);
-  assert.match(media, /setZoom/);
-  assert.match(media, /DialogPrimitive\.Content/);
-  assert.match(media, /rawaj-media-viewer__rail/);
   assert.match(media, /fetchPriority="high"/);
   assert.match(media, /loading="lazy"/);
+  assert.match(media, /lazy\(\(\) => import\("\.\/ListingMediaViewer"\)\)/);
+  assert.match(viewer, /ArrowLeft/);
+  assert.match(viewer, /ArrowRight/);
+  assert.match(viewer, /setZoom/);
+  assert.match(viewer, /DialogPrimitive\.Content/);
+  assert.match(viewer, /rawaj-media-viewer__rail/);
 });
 
 test("seller profile uses real public profile data and no invented trust claims", () => {
