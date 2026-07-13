@@ -33,6 +33,16 @@ test("public and owner storefronts share one factual identity component", () => 
   assert.doesNotMatch(shared, /response time|transactions completed|sales count/i);
 });
 
+test("storefront identity media falls back without blocking refreshed URLs", () => {
+  assert.match(shared, /useState<string \| null>\(null\)/);
+  assert.match(shared, /failedCoverUrl !== coverUrl/);
+  assert.match(shared, /failedAvatarUrl !== avatarUrl/);
+  assert.match(shared, /onError=\{\(\) => setFailedCoverUrl\(coverUrl \?\? null\)\}/);
+  assert.match(shared, /onError=\{\(\) => setFailedAvatarUrl\(avatarUrl \?\? null\)\}/);
+  assert.match(shared, /displayName\.trim\(\)\.slice\(0, 1\)\.toUpperCase\(\) \|\| "R"/);
+  assert.doesNotMatch(shared, /useEffect/);
+});
+
 test("public seller uses adaptive cards and preserves review privacy contracts", () => {
   assert.match(publicRoute, /rawaj-storefront-v2/);
   assert.match(publicRoute, /<StorefrontIdentityHero/);
