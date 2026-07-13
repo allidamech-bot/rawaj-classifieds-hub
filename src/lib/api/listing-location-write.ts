@@ -55,18 +55,11 @@ export async function resolveListingLocationWrite(
   const resolved = await resolveCanonicalLocationContext(client, nodeId);
   if (!resolved.ok) return resolved;
 
-  const mappedGovernorate = await resolveLegacyGovernorateId(
-    client,
-    resolved.data,
-  );
+  const mappedGovernorate = await resolveLegacyGovernorateId(client, resolved.data);
   if (!mappedGovernorate.ok) return mappedGovernorate;
 
   const canonicalGovernorateId = mappedGovernorate.data;
-  if (
-    governorateId &&
-    canonicalGovernorateId &&
-    canonicalGovernorateId !== governorateId
-  ) {
+  if (governorateId && canonicalGovernorateId && canonicalGovernorateId !== governorateId) {
     return {
       ok: false,
       error: {
@@ -205,11 +198,7 @@ async function resolveLegacyGovernorateId(
 
   const candidates = (data ?? []) as Record<string, unknown>[];
   const wanted = new Set(
-    [
-      context.governorateSlug,
-      context.governorateNameAr,
-      context.governorateNameEn,
-    ]
+    [context.governorateSlug, context.governorateNameAr, context.governorateNameEn]
       .map(normalizeLocationKey)
       .filter(Boolean),
   );
