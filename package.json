@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "check": "npm run test:location-classification && npm run test:location-presentation && npm run test:listings-filters && npm run test:listing-detail-v3 && npm run test:demo-listings-seed && npm run test:demo-listings-media && npm run test:review-eligibility && npm run test:review-response && npm run test:review-report && npm run test:review-traits && npm run test:price-drop && npm run test:reservation && npm run test:chat-workspace && npm run test:auth-recovery && npm run test:android-release-readiness && npm run test:mobile-app-stabilization && npm run test:listing-studio-images && npm run test:launch-readiness-batch-1 && npm run test:launch-readiness-batch-2 && npm run test:launch-readiness-batch-4 && npm run test:launch-readiness-batch-5 && npm run test:launch-readiness-batch-6 && npm run test:launch-readiness-batch-8 && npm run test:activity-center && npm run test:seo-discovery && npm run test:semantic-seo && npm run test:verification-documents && npm run test:deployment-truth && npm run test:production-acceptance-contract && npm run test:public-data-security && npm run test:home-ssr && npm run lint && npm run typecheck && npm run build",
+    "check": "npm run test:location-classification && npm run test:location-presentation && npm run test:listings-filters && npm run test:listing-detail-v3 && npm run test:demo-listings-seed && npm run test:demo-listings-media && npm run test:review-eligibility && npm run test:review-response && npm run test:review-report && npm run test:review-traits && npm run test:price-drop && npm run test:reservation && npm run test:chat-workspace && npm run test:auth-recovery && npm run test:android-release-readiness && npm run test:mobile-app-stabilization && npm run test:listing-studio-images && npm run test:launch-readiness-batch-1 && npm run test:launch-readiness-batch-2 && npm run test:launch-readiness-batch-4 && npm run test:launch-readiness-batch-5 && npm run test:launch-readiness-batch-6 && npm run test:launch-readiness-batch-8 && npm run test:activity-center && npm run test:seo-discovery && npm run test:semantic-seo && npm run test:verification-documents && npm run test:deployment-truth && npm run test:production-acceptance-contract && npm run test:public-data-security && npm run test:supabase-authorization-contract && npm run test:home-ssr && npm run lint && npm run typecheck && npm run build",
     "test:listing-system": "node scripts/listing-system-regression.mjs",
     "test:listing-detail-v3": "node --test scripts/listing-detail-v3.test.mjs",
     "test:demo-listings-seed": "node --test scripts/demo-listings-seed.test.mjs",
@@ -49,6 +49,8 @@
     "locations:syria:validate": "node scripts/prepare-syria-ocha-geojson-locations-v2.mjs --dry-run && npm run locations:syria:type-coverage && node scripts/apply-syria-location-bundle.mjs",
     "locations:syria:apply": "npm run locations:syria:type-coverage && node scripts/apply-syria-location-bundle.mjs --apply",
     "test:public-data-security": "node --test scripts/public-data-security.test.mjs",
+    "test:supabase-authorization-contract": "node --test scripts/supabase-authorization-matrix-contract.test.mjs",
+    "test:supabase-authorization-matrix": "node scripts/supabase-authorization-matrix.mjs",
     "test:e2e": "playwright test",
     "test:home-ssr": "node --test scripts/home-ssr-contract.test.mjs"
   },

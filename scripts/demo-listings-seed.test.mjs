@@ -1,12 +1,8 @@
-/* eslint-disable */
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const seedPath = new URL(
-  "../supabase/demo-data/seed_launch_demo_listings.sql",
-  import.meta.url,
-);
+const seedPath = new URL("../supabase/demo-data/seed_launch_demo_listings.sql", import.meta.url);
 const cleanupPath = new URL(
   "../supabase/demo-data/remove_launch_demo_listings.sql",
   import.meta.url,
@@ -18,11 +14,27 @@ const [seed, cleanup, readme] = await Promise.all([
   readFile(cleanupPath, "utf8"),
   readFile(readmePath, "utf8"),
 ]);
+const sharedCard = await readFile(
+  new URL("../src/features/listings/cards/ListingCardShared.tsx", import.meta.url),
+  "utf8",
+);
+const featuredCard = await readFile(
+  new URL("../src/features/listings/cards/FeaturedShowcaseCard.tsx", import.meta.url),
+  "utf8",
+);
+const listingDetail = await readFile(
+  new URL("../src/routes/listings.$id.tsx", import.meta.url),
+  "utf8",
+);
+const demoGuard = await readFile(new URL("../src/lib/demo-listing.ts", import.meta.url), "utf8");
+const applyMedia = await readFile(new URL("./apply-demo-media-pack.mjs", import.meta.url), "utf8");
+const removeMedia = await readFile(
+  new URL("./remove-demo-media-pack.mjs", import.meta.url),
+  "utf8",
+);
 
 const batch = "launch-catalog-v1";
-const reservedIds = [...seed.matchAll(/'((?:da100001)-[0-9a-f-]{27})'/g)].map(
-  (match) => match[1],
-);
+const reservedIds = [...seed.matchAll(/'((?:da100001)-[0-9a-f-]{27})'/g)].map((match) => match[1]);
 const categories = [
   "cars",
   "realestate",
@@ -51,10 +63,7 @@ test("seed has a stable removable batch marker", () => {
   assert.match(seed, /'launch_demo'/);
   assert.match(seed, /'removable', true/);
   assert.match(seed, /on conflict \(id\) do update/);
-  assert.match(
-    seed,
-    /where public\.listings\.details #>> '\{_rawaj_seed,batch\}' = v_batch/,
-  );
+  assert.match(seed, /where public\.listings\.details #>> '\{_rawaj_seed,batch\}' = v_batch/);
 });
 
 test("seed contains 26 deterministic unique listing ids", () => {
@@ -69,10 +78,29 @@ test("seed covers every top-level marketplace category", () => {
 });
 
 test("seed fails closed when owner or references are unavailable", () => {
+  assert.match(seed, /current_setting\('rawaj\.environment', true\)/);
+  assert.match(seed, /not in \('development', 'staging'\)/);
   assert.match(seed, /no auth user found/);
   assert.match(seed, /must be an active owner\/admin/);
   assert.match(seed, /missing active categories/);
   assert.match(seed, /missing active governorates/);
+});
+
+test("demo media scripts require explicit non-production intent", () => {
+  assert.match(applyMedia, /RAWAJ_DEMO_ENVIRONMENT/);
+  assert.match(applyMedia, /\["development", "staging"\]/);
+  assert.match(removeMedia, /RAWAJ_DEMO_CLEANUP_BATCH/);
+  assert.match(removeMedia, /cleanupBatch !== manifest\.batch/);
+});
+
+test("public demo listings are always visibly labeled", () => {
+  assert.match(demoGuard, /seed\.batch === RAWAJ_DEMO_BATCH/);
+  assert.match(demoGuard, /listing\.id\.startsWith\("da100001-"\)/);
+  for (const surface of [sharedCard, featuredCard, listingDetail]) {
+    assert.match(surface, /isLaunchDemoListing/);
+    assert.match(surface, /إعلان تجريبي/);
+    assert.match(surface, /Demo listing/);
+  }
 });
 
 test("cleanup targets only the tagged removable batch", () => {

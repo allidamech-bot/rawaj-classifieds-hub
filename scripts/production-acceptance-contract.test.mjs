@@ -16,8 +16,12 @@ test("production acceptance is manual-only and uses dedicated secrets", () => {
   assert.match(workflow, /secrets\.RAWAJ_ACCEPTANCE_EMAIL/);
   assert.match(workflow, /secrets\.RAWAJ_ACCEPTANCE_PASSWORD/);
   assert.match(workflow, /Validate dedicated acceptance credentials/);
+  assert.match(workflow, /::add-mask::\$RAWAJ_ACCEPTANCE_EMAIL/);
+  assert.match(workflow, /::add-mask::\$RAWAJ_ACCEPTANCE_PASSWORD/);
   assert.match(workflow, /E2E_BASE_URL:\s*https:\/\/rawa-j\.com/);
   assert.match(workflow, /EXPECTED_COMMIT_SHA/);
+  assert.match(workflow, /--compressed/);
+  assert.match(workflow, /does not match the checked-out main commit/);
   assert.match(workflow, /production-acceptance\.spec\.ts/);
   assert.match(workflow, /--project=mobile-chromium --workers=1/);
 });

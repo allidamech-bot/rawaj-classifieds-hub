@@ -6,6 +6,11 @@ const manifestUrl = new URL("../supabase/demo-data/demo-media-manifest.json", im
 const manifest = JSON.parse(await readFile(manifestUrl, "utf8"));
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const demoEnvironment = process.env.RAWAJ_DEMO_ENVIRONMENT?.trim().toLowerCase();
+
+if (!demoEnvironment || !["development", "staging"].includes(demoEnvironment)) {
+  throw new Error("RAWAJ_DEMO_ENVIRONMENT must be development or staging. Production demo media is forbidden.");
+}
 
 if (!supabaseUrl || !serviceRoleKey) {
   throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.");

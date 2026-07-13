@@ -11,6 +11,10 @@ declare
   v_owner_id uuid;
   v_missing text;
 begin
+  if coalesce(current_setting('rawaj.environment', true), '') not in ('development', 'staging') then
+    raise exception 'RAWAJ demo seed aborted: set rawaj.environment to development or staging for this session';
+  end if;
+
   select u.id
     into v_owner_id
   from auth.users u

@@ -69,15 +69,20 @@ test.describe("RAWAJ production launch health", () => {
 
   test("production category and governorate landing routes are discoverable", async ({ page }) => {
     await expectHealthyDocument(page, "/categories");
-    const categoryHref = await page.locator('a[href^="/category/"]').first().getAttribute("href");
-    expect(categoryHref, "No active category landing URL was rendered").toBeTruthy();
-    await expectHealthyDocument(page, categoryHref!);
+    const directoryHref = await page
+      .locator('a[href^="/categories?node="], a[href^="/listings?"]')
+      .first()
+      .getAttribute("href");
+    expect(directoryHref, "No navigable category directory target was rendered").toBeTruthy();
 
     const sitemapResponse = await page.request.get("/sitemap.xml");
     expect(sitemapResponse.status()).toBeLessThan(400);
     const sitemap = await sitemapResponse.text();
+    const categoryMatch = sitemap.match(/https:\/\/rawa-j\.com\/category\/[^<]+/);
     const governorateMatch = sitemap.match(/https:\/\/rawa-j\.com\/syria\/[^<]+/);
+    expect(categoryMatch, "No category landing URL exists in sitemap.xml").toBeTruthy();
     expect(governorateMatch, "No governorate landing URL exists in sitemap.xml").toBeTruthy();
+    await expectHealthyDocument(page, new URL(categoryMatch![0]).pathname);
     await expectHealthyDocument(page, new URL(governorateMatch![0]).pathname);
   });
 

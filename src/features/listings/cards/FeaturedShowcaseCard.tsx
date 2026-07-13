@@ -3,6 +3,7 @@ import { ArrowUpRight, MapPin, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
+import { isLaunchDemoListing } from "@/lib/demo-listing";
 import { categoryName, formatPriceLocalized } from "@/lib/i18n";
 import { listingLocationDisplay } from "@/lib/listing-location-display";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -22,6 +23,7 @@ export function FeaturedShowcaseCard({
 }) {
   const { language, text } = useUiPreferences();
   const variant = resolveListingCardVariant(listing);
+  const demo = isLaunchDemoListing(listing);
   const facts =
     variant === "vehicle"
       ? vehicleCardFacts(listing, language)
@@ -35,6 +37,7 @@ export function FeaturedShowcaseCard({
       data-card-variant="featured"
       data-content-variant={variant}
       data-reserved={Boolean(listing.reservedAt)}
+      data-demo={demo}
     >
       <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-featured-card__link">
         <div className="rawaj-featured-card__media">
@@ -52,7 +55,11 @@ export function FeaturedShowcaseCard({
           <div className="rawaj-featured-card__scrim" />
           <span className="rawaj-featured-card__badge">
             <Sparkles aria-hidden="true" />
-            {listing.reservedAt ? text("محجوز", "Reserved") : text("مميز", "Featured")}
+            {demo
+              ? text("إعلان تجريبي", "Demo listing")
+              : listing.reservedAt
+                ? text("محجوز", "Reserved")
+                : text("مميز", "Featured")}
           </span>
         </div>
 

@@ -3,6 +3,7 @@ import { Clock, MapPin } from "lucide-react";
 import type { ReactNode } from "react";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
+import { isLaunchDemoListing } from "@/lib/demo-listing";
 import { categoryName, formatPriceLocalized } from "@/lib/i18n";
 import { listingLocationDisplay } from "@/lib/listing-location-display";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -32,6 +33,7 @@ export function ListingCardFrame({
   children,
 }: ListingCardFrameProps) {
   const { text } = useUiPreferences();
+  const demo = isLaunchDemoListing(listing);
 
   return (
     <article
@@ -39,6 +41,7 @@ export function ListingCardFrame({
       data-card-variant={variant}
       data-featured={listing.isFeatured}
       data-reserved={Boolean(listing.reservedAt)}
+      data-demo={demo}
     >
       <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-adaptive-card__link">
         <div className={cn("rawaj-adaptive-card__media", mediaClassName)}>
@@ -53,7 +56,11 @@ export function ListingCardFrame({
           ) : (
             <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="standard" />
           )}
-          {listing.reservedAt ? (
+          {demo ? (
+            <span className="rawaj-adaptive-card__status" data-tone="demo">
+              {text("إعلان تجريبي", "Demo listing")}
+            </span>
+          ) : listing.reservedAt ? (
             <span className="rawaj-adaptive-card__status" data-tone="reserved">
               {text("محجوز", "Reserved")}
             </span>

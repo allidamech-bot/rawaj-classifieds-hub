@@ -46,15 +46,31 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Wait for matching production deployment
+        shell: bash
         run: |
+          set -euo pipefail
+          if ! [[ "$EXPECTED_COMMIT_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "EXPECTED_COMMIT_SHA must be an exact 40-character commit SHA." >&2
+            exit 1
+          fi
+
           for attempt in {1..30}; do
-            html="$(curl --fail --silent --show-error --max-time 15 https://rawa-j.com/ || true)"
-            if printf '%s' "$html" | grep -Fq "name=\"rawaj-build-commit\" content=\"$EXPECTED_COMMIT_SHA\""; then
+            if curl --fail --silent --show-error --compressed --max-time 15 \
+              --dump-header /tmp/rawaj-production-headers.txt \
+              --output /tmp/rawaj-production-index.html \
+              https://rawa-j.com/; then
+              deployed_sha="$(grep -oE 'name="rawaj-build-commit" content="[0-9a-f]{40}"' /tmp/rawaj-production-index.html | head -n 1 | cut -d '"' -f 4 || true)"
+            else
+              deployed_sha=""
+            fi
+            if [ "$deployed_sha" = "$EXPECTED_COMMIT_SHA" ]; then
               exit 0
             fi
             sleep 10
           done
-          echo "RAWAJ production did not deploy commit $EXPECTED_COMMIT_SHA in time" >&2
+          echo "RAWAJ production did not deploy the expected commit in time." >&2
+          echo "Expected: $EXPECTED_COMMIT_SHA" >&2
+          echo "Observed: ${deployed_sha:-missing build metadata}" >&2
           exit 1
 
       - name: Run production smoke tests
@@ -68,5 +84,7 @@ jobs:
           path: |
             playwright-report
             test-results
+            /tmp/rawaj-production-index.html
+            /tmp/rawaj-production-headers.txt
           if-no-files-found: ignore
           retention-days: 14

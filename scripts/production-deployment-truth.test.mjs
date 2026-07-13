@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
 const [
@@ -44,10 +44,13 @@ test("main deployments trigger a real RAWAJ production smoke workflow", () => {
   assert.match(productionWorkflow, /E2E_BASE_URL:\s*https:\/\/rawa-j\.com/);
   assert.match(productionWorkflow, /PRODUCTION_SMOKE:\s*"1"/);
   assert.match(productionWorkflow, /EXPECTED_COMMIT_SHA:\s*\$\{\{ github\.sha \}\}/);
+  assert.doesNotMatch(productionWorkflow, /expected_commit_sha:/);
   assert.match(productionWorkflow, /branches:\s*\n\s*- main/);
   assert.match(productionWorkflow, /workflow_dispatch:/);
   assert.match(productionWorkflow, /Wait for matching production deployment/);
   assert.match(productionWorkflow, /rawaj-build-commit/);
+  assert.match(productionWorkflow, /--compressed/);
+  assert.match(productionWorkflow, /rawaj-production-index\.html/);
   assert.match(productionWorkflow, /production-smoke\.spec\.ts/);
 });
 
@@ -71,8 +74,18 @@ test("production health covers identity, discovery, policy, console, and network
   assert.match(productionSpec, /page\.on\("pageerror"/);
   assert.match(productionSpec, /page\.on\("console"/);
   assert.match(productionSpec, /page\.on\("requestfailed"/);
-  assert.ok(productionSpec.includes("/category/"), "Missing category landing discovery check");
+  assert.match(productionSpec, /category\\\//, "Missing category landing discovery check");
+  assert.ok(
+    productionSpec.includes('a[href^="/categories?node="], a[href^="/listings?"]'),
+    "Missing live category-directory navigation check",
+  );
   assert.ok(productionSpec.includes("syria"), "Missing governorate landing discovery check");
+});
+
+test("obsolete self-mutating listing workflow cannot return", async () => {
+  await assert.rejects(
+    access(new URL("../.github/workflows/listing-public-read-finalize.yml", import.meta.url)),
+  );
 });
 
 test("local browser smoke retains legal and controlled not-found coverage", () => {

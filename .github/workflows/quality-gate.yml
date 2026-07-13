@@ -120,6 +120,9 @@ jobs:
       - name: Public data security contract
         run: npm run test:public-data-security
 
+      - name: Supabase authorization matrix contract
+        run: npm run test:supabase-authorization-contract
+
       - name: Admin security regression contract
         run: node scripts/admin-security-regression.mjs
 

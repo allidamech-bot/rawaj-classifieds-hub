@@ -29,6 +29,7 @@ import type {
 } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized } from "@/lib/i18n";
 import { listingLocationDisplay } from "@/lib/listing-location-display";
+import { isLaunchDemoListing } from "@/lib/demo-listing";
 import {
   absoluteUrl,
   buildBreadcrumbStructuredData,
@@ -383,6 +384,7 @@ function ListingDetailsPage() {
   const categoryFieldKind = detectCategoryFieldKind(null, listing);
   const categoryRows = categoryDetailDisplayRows(categoryFieldKind, listing.details, text);
   const locationLabel = listingLocationDisplay(listing, language);
+  const demoListing = isLaunchDemoListing(listing);
   const phone = detailString(listing, ["phone", "mobile", "contact_phone", "رقم الهاتف", "الهاتف"]);
   const whatsapp = detailString(listing, [
     "whatsapp",
@@ -463,6 +465,7 @@ function ListingDetailsPage() {
             <article className="rawaj-detail-v2__content">
               <section className="rawaj-detail-summary">
                 <div className="rawaj-detail-summary__badges">
+                  {demoListing ? <Badge>{text("إعلان تجريبي", "Demo listing")}</Badge> : null}
                   {listing.isFeatured ? <Badge>{text("مميز", "Featured")}</Badge> : null}
                   <span>{listingCategory}</span>
                   <span>

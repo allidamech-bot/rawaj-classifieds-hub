@@ -27,9 +27,10 @@ The UI does not display this marker. It exists only for safe operational control
 
 ## Install
 
-1. Open Supabase SQL Editor for the intended project.
-2. Review `seed_launch_demo_listings.sql`, especially `v_owner_email`.
-3. Run the complete file once.
+1. Use development or staging only. Production execution is intentionally blocked.
+2. In the same SQL Editor session, run `select set_config('rawaj.environment', 'staging', false);` (or `development`).
+3. Review `seed_launch_demo_listings.sql`, especially `v_owner_email`.
+4. Run the complete file once.
 4. Confirm the final result returns exactly 26 rows.
 5. Check the public home, listings results, category filters, seller page, and listing detail page.
 
@@ -39,11 +40,15 @@ The seed is idempotent. Re-running it updates only the deterministic rows belong
 
 Run `remove_launch_demo_listings.sql` as one complete statement. It deletes only rows matching all three controls: batch, kind, and removable flag. Foreign-key cascades clean dependent rows associated with those listings.
 
+For the media cleanup script, set `RAWAJ_DEMO_CLEANUP_BATCH=launch-catalog-v1`. The script refuses to run without that exact batch acknowledgement.
+
 After removal, the final query must return `0`.
 
 ## Safety rules
 
 - Never move these files into `supabase/migrations`.
+- Never set `rawaj.environment` to `production`; the seed accepts only development or staging.
+- Media installation requires `RAWAJ_DEMO_ENVIRONMENT=development` or `staging` and rejects Production.
 - Never remove the `_rawaj_seed` marker from a seeded row.
 - Never assign a real customer's listing one of the reserved IDs beginning with `da100001-`.
 - Do not mix real customer data into this batch.

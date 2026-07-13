@@ -153,5 +153,11 @@ test("Android CI validates the web bundle and native artifacts before approval",
   assert.match(androidWorkflow, /actions\/setup-java@v4/);
   assert.match(androidWorkflow, /npx cap sync android/);
   assert.match(androidWorkflow, /\.\/gradlew assembleDebug --no-daemon/);
+  assert.match(androidWorkflow, /Verify debug APK signature/);
+  assert.match(androidWorkflow, /apksigner.*verify --verbose --print-certs/s);
+  assert.match(androidWorkflow, /Verified using v\[23\] scheme/);
   assert.match(androidWorkflow, /\.\/gradlew bundleRelease --no-daemon/);
+  assert.match(androidWorkflow, /app-release\.aab/);
+  assert.match(androidWorkflow, /Verify release AAB exists without publishing/);
+  assert.doesNotMatch(androidWorkflow, /google.?play|play.?store|publishBundle|upload.*aab/i);
 });

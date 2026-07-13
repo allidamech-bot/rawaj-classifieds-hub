@@ -64,7 +64,9 @@ The Android workflow must complete:
 - production web build
 - `npx cap sync android`
 - `assembleDebug`
+- `apksigner verify` proves the device-test APK carries the Android debug signature
 - `bundleRelease`
+- the release AAB must exist and be inspected in CI, but it is never uploaded by this workflow
 
 ## Real-device or emulator acceptance
 

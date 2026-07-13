@@ -82,6 +82,11 @@
   color: #203531;
 }
 
+.rawaj-adaptive-card__status[data-tone="demo"] {
+  background: color-mix(in srgb, var(--warning) 92%, white);
+  color: var(--warning-foreground);
+}
+
 .rawaj-adaptive-card__status[data-tone="reserved"] {
   background: color-mix(in srgb, var(--color-warning) 92%, transparent);
   color: var(--color-warning-foreground);

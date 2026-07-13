@@ -5,6 +5,11 @@ const manifestUrl = new URL("../supabase/demo-data/demo-media-manifest.json", im
 const manifest = JSON.parse(await readFile(manifestUrl, "utf8"));
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const cleanupBatch = process.env.RAWAJ_DEMO_CLEANUP_BATCH?.trim();
+
+if (cleanupBatch !== manifest.batch) {
+  throw new Error(`RAWAJ_DEMO_CLEANUP_BATCH must equal ${manifest.batch} for explicit cleanup approval.`);
+}
 
 if (!supabaseUrl || !serviceRoleKey) {
   throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.");

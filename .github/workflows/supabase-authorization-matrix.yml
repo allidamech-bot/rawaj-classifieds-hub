@@ -1,0 +1,51 @@
+name: Supabase Authorization Matrix
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Use read-only for Production evidence; staging-mutation only for disposable staging fixtures"
+        required: true
+        default: read-only
+        type: choice
+        options:
+          - read-only
+          - staging-mutation
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-authorization-matrix
+  cancel-in-progress: false
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: authorization-matrix-staging
+    env:
+      SUPABASE_URL: ${{ secrets.RAWAJ_MATRIX_SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.RAWAJ_MATRIX_SUPABASE_ANON_KEY }}
+      RAWAJ_AUTH_MATRIX_ACCOUNTS: ${{ secrets.RAWAJ_AUTH_MATRIX_ACCOUNTS }}
+      RAWAJ_AUTH_MATRIX_FIXTURES: ${{ secrets.RAWAJ_AUTH_MATRIX_FIXTURES }}
+      RAWAJ_AUTH_MATRIX_MODE: ${{ inputs.mode }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Validate dedicated matrix configuration
+        shell: bash
+        run: |
+          for name in SUPABASE_URL SUPABASE_ANON_KEY RAWAJ_AUTH_MATRIX_ACCOUNTS RAWAJ_AUTH_MATRIX_FIXTURES; do
+            if [ -z "${!name}" ]; then
+              echo "Missing protected authorization-matrix configuration: $name" >&2
+              exit 1
+            fi
+          done
+      - run: npm ci
+      - name: Execute Supabase authorization matrix
+        run: npm run test:supabase-authorization-matrix
