@@ -4,9 +4,28 @@ import test from "node:test";
 
 const activityPath = new URL("../src/routes/activity.tsx", import.meta.url);
 const morePath = new URL("../src/routes/more.tsx", import.meta.url);
-const [activityRoute, moreRoute] = await Promise.all([
+const [
+  activityRoute,
+  moreRoute,
+  api,
+  helper,
+  favorites,
+  savedSearches,
+  promotions,
+  reports,
+  support,
+  moderation,
+] = await Promise.all([
   readFile(activityPath, "utf8"),
   readFile(morePath, "utf8"),
+  readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/request-dedup.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/favorites-guarded.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/saved-searches-guarded.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/promotions-guarded.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/reports-guarded.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/support-guarded.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/admin-listing-moderation-guarded.ts", import.meta.url), "utf8"),
 ]);
 
 test("activity center combines real notification and conversation reads", () => {
@@ -32,4 +51,31 @@ test("legacy full message and notification routes remain reachable", () => {
   assert.match(activityRoute, /to: "\/notifications" \| "\/chats"/);
   assert.match(activityRoute, /to="\/chats"/);
   assert.match(activityRoute, /to="\/notifications"/);
+});
+
+test("phase 36 to 40 writes use one shared in-flight deduplication contract", () => {
+  assert.match(helper, /runDeduplicatedRequest/);
+  assert.match(helper, /const pending = requests\.get\(key\)/);
+  assert.match(helper, /if \(pending\) return pending/);
+  assert.match(helper, /requests\.delete\(key\)/);
+});
+
+test("favorites and saved searches route through guarded APIs", () => {
+  assert.match(api, /favorites-guarded/);
+  assert.match(api, /saved-searches-guarded/);
+  assert.match(favorites, /pendingFavoriteWrites/);
+  assert.match(savedSearches, /pendingSavedSearchCreates/);
+  assert.match(savedSearches, /pendingSavedSearchFrequencyUpdates/);
+  assert.match(savedSearches, /pendingSavedSearchDeletes/);
+});
+
+test("promotion, report, support, and moderation writes route through guarded APIs", () => {
+  assert.match(api, /promotions-guarded/);
+  assert.match(api, /reports-guarded/);
+  assert.match(api, /support-guarded/);
+  assert.match(api, /admin-listing-moderation-guarded/);
+  assert.match(promotions, /pendingPromotionModeration/);
+  assert.match(reports, /pendingReportModeration/);
+  assert.match(support, /pendingSupportRequests/);
+  assert.match(moderation, /pendingAdminListingModeration/);
 });
