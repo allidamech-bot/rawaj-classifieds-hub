@@ -7,7 +7,11 @@ const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_PROFILE_IMAGE_SIZE_BYTES = 3 * 1024 * 1024;
 const MAX_RECEIPT_SIZE_BYTES = 8 * 1024 * 1024;
 
-export const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"] as const;
+export const allowedImageTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
 export const allowedReceiptTypes = [
   "image/jpeg",
   "image/png",
@@ -16,11 +20,15 @@ export const allowedReceiptTypes = [
 ] as const;
 
 export function validateImageMimeType(mimeType: string): boolean {
-  return allowedImageTypes.includes(mimeType as (typeof allowedImageTypes)[number]);
+  return allowedImageTypes.includes(
+    mimeType as (typeof allowedImageTypes)[number],
+  );
 }
 
 export function validateReceiptMimeType(mimeType: string): boolean {
-  return allowedReceiptTypes.includes(mimeType as (typeof allowedReceiptTypes)[number]);
+  return allowedReceiptTypes.includes(
+    mimeType as (typeof allowedReceiptTypes)[number],
+  );
 }
 
 export function validateImageExtension(filename: string): boolean {
@@ -30,7 +38,9 @@ export function validateImageExtension(filename: string): boolean {
 
 export function validateReceiptExtension(filename: string): boolean {
   const extension = filename.split(".").pop()?.toLowerCase();
-  return extension ? ["jpg", "jpeg", "png", "webp", "pdf"].includes(extension) : false;
+  return extension
+    ? ["jpg", "jpeg", "png", "webp", "pdf"].includes(extension)
+    : false;
 }
 
 export function validateImageFile(file: File): { ok: boolean; error?: string } {
@@ -41,7 +51,10 @@ export function validateImageFile(file: File): { ok: boolean; error?: string } {
     return { ok: false, error: "الصيغ المسموحة للصور: JPG أو PNG أو WebP." };
   }
   if (!validateImageExtension(file.name)) {
-    return { ok: false, error: "امتداد الملف غير صالح. استخدم jpg أو png أو webp." };
+    return {
+      ok: false,
+      error: "امتداد الملف غير صالح. استخدم jpg أو png أو webp.",
+    };
   }
   if (file.size > MAX_IMAGE_SIZE_BYTES) {
     return { ok: false, error: "حجم الصورة يجب ألا يتجاوز 5MB." };
@@ -49,15 +62,24 @@ export function validateImageFile(file: File): { ok: boolean; error?: string } {
   return { ok: true };
 }
 
-export function validateReceiptFile(file: File): { ok: boolean; error?: string } {
+export function validateReceiptFile(file: File): {
+  ok: boolean;
+  error?: string;
+} {
   if (file.size <= 0) {
     return { ok: false, error: "ملف الإيصال فارغ أو تالف." };
   }
   if (!validateReceiptMimeType(file.type)) {
-    return { ok: false, error: "الصيغ المسموحة للإيصال: JPG أو PNG أو WebP أو PDF." };
+    return {
+      ok: false,
+      error: "الصيغ المسموحة للإيصال: JPG أو PNG أو WebP أو PDF.",
+    };
   }
   if (!validateReceiptExtension(file.name)) {
-    return { ok: false, error: "امتداد الملف غير صالح. استخدم jpg أو png أو webp أو pdf." };
+    return {
+      ok: false,
+      error: "امتداد الملف غير صالح. استخدم jpg أو png أو webp أو pdf.",
+    };
   }
   if (file.size > MAX_RECEIPT_SIZE_BYTES) {
     return { ok: false, error: "حجم الإيصال يجب ألا يتجاوز 8MB." };
@@ -65,7 +87,10 @@ export function validateReceiptFile(file: File): { ok: boolean; error?: string }
   return { ok: true };
 }
 
-export function validateProfileImageFile(file: File): { ok: boolean; error?: string } {
+export function validateProfileImageFile(file: File): {
+  ok: boolean;
+  error?: string;
+} {
   if (file.size <= 0) {
     return { ok: false, error: "ملف صورة الحساب فارغ أو تالف." };
   }
@@ -73,7 +98,10 @@ export function validateProfileImageFile(file: File): { ok: boolean; error?: str
     return { ok: false, error: "الصيغ المسموحة للصور: JPG أو PNG أو WebP." };
   }
   if (!validateImageExtension(file.name)) {
-    return { ok: false, error: "امتداد الملف غير صالح. استخدم jpg أو png أو webp." };
+    return {
+      ok: false,
+      error: "امتداد الملف غير صالح. استخدم jpg أو png أو webp.",
+    };
   }
   if (file.size > MAX_PROFILE_IMAGE_SIZE_BYTES) {
     return { ok: false, error: "حجم صورة الملف يجب ألا يتجاوز 3MB." };
@@ -83,18 +111,31 @@ export function validateProfileImageFile(file: File): { ok: boolean; error?: str
 
 function normalizedImageExtension(filename: string): string {
   const extension = filename.split(".").pop()?.toLowerCase();
-  return extension && ["jpg", "jpeg", "png", "webp"].includes(extension) ? extension : "jpg";
+  return extension && ["jpg", "jpeg", "png", "webp"].includes(extension)
+    ? extension
+    : "jpg";
 }
 
-export function buildListingImagePath(userId: string, listingId: string, filename: string): string {
+export function buildListingImagePath(
+  userId: string,
+  listingId: string,
+  filename: string,
+): string {
   return `${userId}/${listingId}/${crypto.randomUUID()}.${normalizedImageExtension(filename)}`;
 }
 
-export function buildProfileMediaPath(userId: string, kind: string, filename: string): string {
+export function buildProfileMediaPath(
+  userId: string,
+  kind: string,
+  filename: string,
+): string {
   return `${userId}/${kind}/${crypto.randomUUID()}.${normalizedImageExtension(filename)}`;
 }
 
-export function buildAdPlacementMediaPath(userId: string, filename: string): string {
+export function buildAdPlacementMediaPath(
+  userId: string,
+  filename: string,
+): string {
   return `${userId}/${crypto.randomUUID()}.${normalizedImageExtension(filename)}`;
 }
 
@@ -105,12 +146,17 @@ export function buildPromotionReceiptPath(
 ): string {
   const safeExtension = filename.split(".").pop()?.toLowerCase();
   const normalizedExtension =
-    safeExtension && ["jpg", "jpeg", "png", "webp", "pdf"].includes(safeExtension)
+    safeExtension &&
+    ["jpg", "jpeg", "png", "webp", "pdf"].includes(safeExtension)
       ? safeExtension
       : "jpg";
   return `${userId}/${requestId}/${crypto.randomUUID()}.${normalizedExtension}`;
 }
 
-export function isPathOwnedByUser(path: string, userId: string, kind: string): boolean {
+export function isPathOwnedByUser(
+  path: string,
+  userId: string,
+  kind: string,
+): boolean {
   return path.startsWith(`${userId}/${kind}/`);
 }
