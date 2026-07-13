@@ -3,6 +3,7 @@ export * from "@/lib/api/references";
 export * from "@/lib/api/locations";
 export * from "@/lib/api/listings";
 export { submitOwnerListingForReview, updateOwnerListing } from "@/lib/api/listing-write-rpc";
+export * from "@/lib/api/listing-taxonomy";
 export * from "@/lib/api/listing-lifecycle";
 export * from "@/lib/api/listing-image-order";
 export * from "@/lib/api/listing-reservation";
