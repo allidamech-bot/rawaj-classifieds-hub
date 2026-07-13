@@ -28,7 +28,10 @@ export async function resolveListingLocationWrite(
     if (value && !governorateId) {
       return {
         ok: false,
-        error: { code: "validation_error", message: "اختر المحافظة قبل تحديد المنطقة." },
+        error: {
+          code: "validation_error",
+          message: "اختر المحافظة قبل تحديد المنطقة.",
+        },
       };
     }
     return {
@@ -52,7 +55,10 @@ export async function resolveListingLocationWrite(
   const resolved = await resolveCanonicalLocationContext(client, nodeId);
   if (!resolved.ok) return resolved;
 
-  const mappedGovernorate = await resolveLegacyGovernorateId(client, resolved.data);
+  const mappedGovernorate = await resolveLegacyGovernorateId(
+    client,
+    resolved.data,
+  );
   if (!mappedGovernorate.ok) return mappedGovernorate;
 
   const canonicalGovernorateId = mappedGovernorate.data;
@@ -74,7 +80,10 @@ export async function resolveListingLocationWrite(
   if (!effectiveGovernorateId) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد محافظة الموقع المختار." },
+      error: {
+        code: "validation_error",
+        message: "تعذر تحديد محافظة الموقع المختار.",
+      },
     };
   }
 
@@ -106,7 +115,10 @@ async function resolveCanonicalLocationContext(
     if (visited.has(currentId)) {
       return {
         ok: false,
-        error: { code: "validation_error", message: "تسلسل الموقع المحدد غير صالح." },
+        error: {
+          code: "validation_error",
+          message: "تسلسل الموقع المحدد غير صالح.",
+        },
       };
     }
     visited.add(currentId);
@@ -193,7 +205,11 @@ async function resolveLegacyGovernorateId(
 
   const candidates = (data ?? []) as Record<string, unknown>[];
   const wanted = new Set(
-    [context.governorateSlug, context.governorateNameAr, context.governorateNameEn]
+    [
+      context.governorateSlug,
+      context.governorateNameAr,
+      context.governorateNameEn,
+    ]
       .map(normalizeLocationKey)
       .filter(Boolean),
   );
