@@ -14,19 +14,13 @@ const [
   seoDiscovery,
   semanticSeo,
 ] = await Promise.all([
-  readFile(
-    new URL("../docs/phases-41-50-release-readiness.md", import.meta.url),
-    "utf8",
-  ),
+  readFile(new URL("../docs/phases-41-50-release-readiness.md", import.meta.url), "utf8"),
   readFile(new URL("../src/server.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/manifest.webmanifest", import.meta.url), "utf8"),
   readFile(new URL("../capacitor.config.ts", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
-  readFile(
-    new URL("../.github/workflows/quality-gate.yml", import.meta.url),
-    "utf8",
-  ),
+  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
   readFile(new URL("./public-data-security.test.mjs", import.meta.url), "utf8"),
   readFile(new URL("./seo-discovery.test.mjs", import.meta.url), "utf8"),
   readFile(new URL("./semantic-seo.test.mjs", import.meta.url), "utf8"),
@@ -48,14 +42,8 @@ test("phase 41 keeps server and public-data security controls permanent", () => 
   }
   assert.match(server, /isSensitiveAuthPath/);
   assert.match(server, /no-store, max-age=0/);
-  assert.match(
-    publicSecurity,
-    /public listing allowlist excludes moderation-only fields/,
-  );
-  assert.match(
-    publicSecurity,
-    /JSON-LD serialization neutralizes script-breaking characters/,
-  );
+  assert.match(publicSecurity, /public listing allowlist excludes moderation-only fields/);
+  assert.match(publicSecurity, /JSON-LD serialization neutralizes script-breaking characters/);
 });
 
 test("phase 42 retains canonical indexing and honest semantic SEO contracts", () => {
@@ -91,10 +79,7 @@ test("phase 47 keeps installable PWA and narrow Capacitor production identity", 
   assert.match(capacitor, /appId: "com\.rawaj\.marketplace"/);
   assert.match(capacitor, /url: "https:\/\/rawa-j\.com"/);
   assert.match(capacitor, /cleartext: false/);
-  assert.match(
-    capacitor,
-    /allowNavigation: \["rawa-j\.com", "\*\.rawa-j\.com"\]/,
-  );
+  assert.match(capacitor, /allowNavigation: \["rawa-j\.com", "\*\.rawa-j\.com"\]/);
 });
 
 test("phase 48 keeps analytics, error capture and deployment diagnosis attached", () => {
