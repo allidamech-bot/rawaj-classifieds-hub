@@ -44,23 +44,27 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
         className="rawaj-app-header sticky top-0 z-30 text-foreground"
         data-shell-region="header-region"
       >
-        <div className="rawaj-floating-header-shell container-wide flex min-h-[3.75rem] items-center gap-2 py-1.5 sm:min-h-16 sm:gap-3 sm:py-2 lg:min-h-[4.5rem] lg:gap-4">
-          <Link to="/" className="order-1 flex min-w-0 items-center gap-2 sm:gap-3">
+        <div className="rawaj-floating-header-shell container-wide flex min-h-14 items-center gap-2 py-1.5 sm:min-h-[3.75rem] sm:gap-3 lg:min-h-16 lg:gap-4 lg:py-2">
+          <Link
+            to="/"
+            className="order-1 flex min-w-0 items-center gap-2 sm:gap-3"
+            aria-label={text("العودة إلى الرئيسية", "Back to home")}
+          >
             <Logo />
           </Link>
 
           {compact && title ? (
-            <h1 className="order-2 ms-1 flex-1 truncate font-display text-sm font-extrabold text-primary sm:text-base lg:hidden">
+            <h1 className="order-2 ms-1 flex-1 truncate font-display text-sm font-bold text-primary sm:text-base lg:hidden">
               {title}
             </h1>
           ) : (
             <Link
               to="/listings"
               search={{ open_filters: true }}
-              className="rawaj-header-location order-2 hidden min-h-10 items-center gap-1.5 rounded-xl px-2.5 text-[10px] font-bold sm:inline-flex lg:px-3 lg:text-[11px]"
+              className="rawaj-header-location order-2 hidden min-h-11 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold md:inline-flex lg:px-3.5"
               aria-label={text("تصفح الإعلانات في كل سوريا", "Browse listings across Syria")}
             >
-              <MapPin className="h-3.5 w-3.5 text-brand-orange" strokeWidth={2.2} />
+              <MapPin className="h-4 w-4 text-brand-orange" strokeWidth={2.1} />
               <span>{text("كل سوريا", "All Syria")}</span>
             </Link>
           )}
@@ -76,7 +80,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
                   key={item.to}
                   to={item.to}
                   data-active={active}
-                  className="rawaj-header-nav-item inline-flex min-h-10 items-center rounded-xl px-4 py-2 text-[13px] font-bold"
+                  className="rawaj-header-nav-item inline-flex min-h-11 items-center rounded-xl px-4 py-2 text-[13px] font-semibold"
                   aria-current={active ? "page" : undefined}
                 >
                   {item.label}
@@ -90,7 +94,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
           <div className="order-3 flex shrink-0 items-center gap-1.5 sm:gap-2">
             <Link
               to="/add-listing"
-              className="rawaj-header-cta hidden min-h-11 items-center gap-2 rounded-[var(--rawaj-radius-button)] bg-brand-orange px-4 text-[12px] font-extrabold text-white shadow-[0_9px_22px_rgba(244,95,56,0.22)] transition hover:bg-brand-orange/92 lg:inline-flex"
+              className="rawaj-header-cta hidden min-h-11 items-center gap-2 rounded-[var(--rawaj-radius-button)] bg-brand-orange px-4 text-xs font-bold text-white shadow-[0_8px_20px_rgba(244,95,56,0.18)] transition hover:bg-brand-orange/92 lg:inline-flex"
             >
               <Plus className="h-4 w-4" strokeWidth={2.2} />
               {text("أضف إعلان", "Post listing")}
@@ -101,9 +105,9 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
               onClick={toggleLanguage}
               aria-label={text("تبديل اللغة", "Switch language")}
               title={text("العربية / English", "English / العربية")}
-              className="rawaj-header-action hidden min-h-11 shrink-0 items-center gap-1.5 rounded-[var(--rawaj-radius-button)] px-3 text-[10px] font-semibold sm:inline-flex"
+              className="rawaj-header-action hidden min-h-11 shrink-0 items-center gap-1.5 rounded-[var(--rawaj-radius-button)] px-3 text-xs font-medium lg:inline-flex"
             >
-              <Languages className="h-3.5 w-3.5" strokeWidth={1.9} />
+              <Languages className="h-4 w-4" strokeWidth={1.9} />
               <span>{language === "ar" ? "English" : "العربية"}</span>
             </button>
 
@@ -150,24 +154,20 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
 
 function Logo() {
   return (
-    <span className="rawaj-brand-lockup flex items-center gap-2.5 sm:gap-3">
-      <span className="rawaj-brand-mark grid h-10 w-10 shrink-0 place-items-center">
+    <span className="rawaj-brand-lockup flex items-center gap-2 sm:gap-2.5">
+      <span className="rawaj-brand-mark grid h-9 w-9 shrink-0 place-items-center sm:h-10 sm:w-10">
         <img
           src="/brand/rawaj-mark-transparent-header.png"
-          alt="RAWAJ"
+          alt=""
           decoding="async"
           className="h-7 w-auto object-contain sm:h-8"
         />
       </span>
 
       <span className="flex items-center gap-1.5 leading-none sm:gap-2">
-        <span className="font-display text-[17px] font-extrabold text-primary sm:text-[18px]">
-          رواج
-        </span>
+        <span className="font-display text-base font-bold text-primary sm:text-[18px]">رواج</span>
         <span className="rawaj-brand-divider h-4 w-px sm:h-5" aria-hidden="true" />
-        <span className="text-[8px] font-extrabold tracking-[0.22em] text-brand-orange sm:text-[9px]">
-          RAWAJ
-        </span>
+        <span className="text-[11px] font-bold tracking-[0.16em] text-brand-orange">RAWAJ</span>
       </span>
     </span>
   );
