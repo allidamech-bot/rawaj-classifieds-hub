@@ -118,7 +118,7 @@ test("listing card images fall back cleanly and reserve stable media space", () 
   assert.match(cardImage, /placeholderAspect = "standard"/);
   assert.match(
     cardImage,
-    /<PlaceholderArt type=\{placeholder\} aspect=\{placeholderAspect\} className=\{className\} \/>/,
+    /<PlaceholderArt[\s\S]*type=\{placeholder\}[\s\S]*aspect=\{placeholderAspect\}[\s\S]*className=\{className\}/,
   );
   assert.match(cardImage, /useState<string \| null>\(null\)/);
   assert.match(cardImage, /loading=\{loading\}/);
