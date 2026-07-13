@@ -15,7 +15,7 @@ import {
   User,
   type LucideIcon,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export function AuthExperienceAside({ mode }: { mode: "login" | "register" | "forgot" }) {
@@ -154,16 +154,33 @@ export function AccountIdentityHero({
   actions: ReactNode;
 }) {
   const { text } = useUiPreferences();
+  const [failedCoverUrl, setFailedCoverUrl] = useState<string | null>(null);
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
+  const showCover = Boolean(coverUrl && failedCoverUrl !== coverUrl);
+  const showAvatar = Boolean(avatarUrl && failedAvatarUrl !== avatarUrl);
+
   return (
     <section className="rawaj-account-identity" data-signed-in={signedIn}>
       <div className="rawaj-account-identity__cover">
-        {coverUrl ? <img src={coverUrl} alt="" decoding="async" /> : null}
+        {showCover ? (
+          <img
+            src={coverUrl ?? undefined}
+            alt=""
+            decoding="async"
+            onError={() => setFailedCoverUrl(coverUrl ?? null)}
+          />
+        ) : null}
         <div aria-hidden="true" />
       </div>
       <div className="rawaj-account-identity__content">
         <div className="rawaj-account-identity__avatar">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt={displayName} decoding="async" />
+          {showAvatar ? (
+            <img
+              src={avatarUrl ?? undefined}
+              alt={displayName}
+              decoding="async"
+              onError={() => setFailedAvatarUrl(avatarUrl ?? null)}
+            />
           ) : (
             <User aria-hidden="true" />
           )}
