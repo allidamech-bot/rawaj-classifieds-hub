@@ -5,11 +5,13 @@ import test from "node:test";
 const seoPath = new URL("../src/lib/seo.ts", import.meta.url);
 const rootPath = new URL("../src/routes/__root.tsx", import.meta.url);
 const listingPath = new URL("../src/routes/listings.$id.tsx", import.meta.url);
+const listingStructuredDataPath = new URL("../src/lib/listing-structured-data.ts", import.meta.url);
 
-const [seo, rootRoute, listingRoute] = await Promise.all([
+const [seo, rootRoute, listingRoute, listingStructuredData] = await Promise.all([
   readFile(seoPath, "utf8"),
   readFile(rootPath, "utf8"),
   readFile(listingPath, "utf8"),
+  readFile(listingStructuredDataPath, "utf8"),
 ]);
 
 test("site structured data exposes organization, website and real listings search", () => {
@@ -38,8 +40,23 @@ test("listing detail emits breadcrumb structured data with real route targets", 
   assert.match(listingRoute, /path: `\/listings\/\$\{listing\.id\}`/);
 });
 
+test("listing structured data uses honest category-specific schema types", () => {
+  assert.match(listingStructuredData, /return "RealEstateListing"/);
+  assert.match(listingStructuredData, /return "Vehicle"/);
+  assert.match(listingStructuredData, /return "JobPosting"/);
+  assert.match(listingStructuredData, /return "Service"/);
+  assert.match(listingStructuredData, /return "Product"/);
+  assert.match(listingRoute, /buildListingStructuredData\(listing\)/);
+});
+
 test("listing offer availability reflects reservation state", () => {
-  assert.match(listingRoute, /listing\.reservedAt/);
-  assert.match(listingRoute, /https:\/\/schema\.org\/LimitedAvailability/);
-  assert.match(listingRoute, /https:\/\/schema\.org\/InStock/);
+  assert.match(listingStructuredData, /listing\.reservedAt/);
+  assert.match(listingStructuredData, /https:\/\/schema\.org\/LimitedAvailability/);
+  assert.match(listingStructuredData, /https:\/\/schema\.org\/InStock/);
+});
+
+test("job postings do not inherit commerce offers", () => {
+  assert.match(listingStructuredData, /kind !== "jobs" && listing\.price !== null/);
+  assert.match(listingStructuredData, /employmentType/);
+  assert.match(listingStructuredData, /validThrough/);
 });
