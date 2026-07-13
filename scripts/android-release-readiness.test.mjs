@@ -55,6 +55,22 @@ test("Google OAuth uses a PKCE callback owned by the Android app", () => {
   assert.match(auth, /await openExternalUrl\(data\.url\)/);
 });
 
+test("Native auth sessions survive WebView reloads and app restarts", () => {
+  assert.match(supabase, /storage:\s*isNativeRuntime \? rawajAuthStorage : undefined/);
+  assert.match(nativeRuntime, /export const rawajAuthStorage/);
+  assert.match(nativeRuntime, /RawajNative\.getAuthStorage/);
+  assert.match(nativeRuntime, /RawajNative\.setAuthStorage/);
+  assert.match(nativeRuntime, /RawajNative\.removeAuthStorage/);
+  assert.match(nativeRuntime, /legacyValue/);
+  assert.match(nativePlugin, /AUTH_STORAGE_NAME = "rawaj_native_auth_storage"/);
+  assert.match(nativePlugin, /getSharedPreferences\(AUTH_STORAGE_NAME, Context\.MODE_PRIVATE\)/);
+  assert.match(nativePlugin, /public void getAuthStorage/);
+  assert.match(nativePlugin, /public void setAuthStorage/);
+  assert.match(nativePlugin, /public void removeAuthStorage/);
+  assert.match(nativePlugin, /\.commit\(\)/);
+  assert.doesNotMatch(nativePlugin, /Log\.|System\.out|println/);
+});
+
 test("OAuth callback exchanges the code inside the WebView and removes one-time parameters", () => {
   assert.match(callback, /exchangeCodeForSession\(code\)/);
   assert.match(callback, /client\.auth\.getSession\(\)/);
@@ -105,6 +121,8 @@ test("External communication and map links leave the WebView through a strict na
   assert.match(nativePlugin, /Intent\.CATEGORY_BROWSABLE/);
   assert.match(nativePlugin, /This URL scheme is not allowed/);
   assert.match(nativeAppRuntime, /target\.closest<HTMLAnchorElement>\("a\[href\]"\)/);
+  assert.match(nativeAppRuntime, /localizeBundledPreviewUrl/);
+  assert.match(nativeAppRuntime, /window\.location\.origin !== "https:\/\/localhost"/);
   assert.match(nativeAppRuntime, /!isRawajWebUrl\(url\)/);
   assert.match(nativeAppRuntime, /window\.open =/);
   assert.match(nativeRuntime, /url\.origin === window\.location\.origin/);
@@ -118,7 +136,8 @@ test("Slow or offline startup keeps RAWAJ branded and recoverable", () => {
   assert.match(mainActivity, /webView\.getProgress\(\) < 70/);
   assert.match(mainActivity, /savedInstanceState == null/);
   assert.match(nativeErrorPage, /تعذر فتح رواج/);
-  assert.match(nativeErrorPage, /window\.location\.replace\("https:\/\/rawa-j\.com"\)/);
+  assert.match(nativeErrorPage, /window\.location\.origin === "https:\/\/localhost"/);
+  assert.match(nativeErrorPage, /window\.location\.replace\(retryTarget\)/);
   assert.match(nativeErrorPage, /window\.addEventListener\("online", retry\)/);
   assert.match(nativeAppRuntime, /navigator\.onLine/);
   assert.match(nativeAppRuntime, /window\.location\.reload\(\)/);
@@ -134,9 +153,19 @@ test("Android device tests bundle the branch UI without changing production rele
   assert.match(androidWorkflow, /--config \.output\/server\/wrangler\.json/);
   assert.match(androidWorkflow, /cp \/tmp\/rawaj-index\.html \.output\/public\/index\.html/);
   assert.match(androidWorkflow, /RAWAJ_ANDROID_BUNDLED_PREVIEW:\s*"1"/);
+  assert.match(androidWorkflow, /Lock bundled preview to local origin/);
+  assert.match(androidWorkflow, /RAWAJ_ORIGIN = \\"https:\/\/localhost\\"/);
+  assert.match(androidWorkflow, /forceBundledPreviewOrigin/);
+  assert.match(androidWorkflow, /localPreviewUrl/);
+  assert.match(androidWorkflow, /Verify bundled preview identity and payload/);
+  assert.match(androidWorkflow, /Bundled preview unexpectedly contains server\.url/);
+  assert.match(androidWorkflow, /rawaj-chat-inbox/);
+  assert.match(androidWorkflow, /rawaj-message-workspace/);
+  assert.match(androidWorkflow, /getAuthStorage/);
   assert.match(androidWorkflow, /Assemble bundled branch-preview debug APK/);
   assert.match(androidWorkflow, /Restore production Android configuration/);
   assert.match(androidWorkflow, /rawaj-android-1\.0\.3-bundled-preview-apk/);
+  assert.doesNotMatch(androidWorkflow, /clearCache\(true\)/);
 });
 
 test("Play identity and version remain unchanged during readiness work", () => {
