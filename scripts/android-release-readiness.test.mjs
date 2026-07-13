@@ -130,7 +130,8 @@ test("Android device tests bundle the branch UI without changing production rele
   assert.match(capacitor, /androidScheme:\s*"https"/);
   assert.match(capacitor, /url:\s*serverUrl/);
   assert.match(androidWorkflow, /Create self-contained branch preview shell/);
-  assert.match(androidWorkflow, /npm run preview -- --host 127\.0\.0\.1 --port 4173/);
+  assert.match(androidWorkflow, /wrangler@latest dev/);
+  assert.match(androidWorkflow, /--config \.output\/server\/wrangler\.json/);
   assert.match(androidWorkflow, /cp \/tmp\/rawaj-index\.html \.output\/public\/index\.html/);
   assert.match(androidWorkflow, /RAWAJ_ANDROID_BUNDLED_PREVIEW:\s*"1"/);
   assert.match(androidWorkflow, /Assemble bundled branch-preview debug APK/);
