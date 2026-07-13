@@ -43,9 +43,4 @@ export function adminModerateReport(
   );
 }
 
-export {
-  adminFetchPendingListings,
-  adminFetchReports,
-  fromDbReportStatus,
-  toDbReportStatus,
-};
+export { adminFetchPendingListings, adminFetchReports, fromDbReportStatus, toDbReportStatus };
