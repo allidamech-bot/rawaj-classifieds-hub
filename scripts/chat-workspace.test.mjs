@@ -2,15 +2,17 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [chatRoute, communicationComponents, chatCss, bottomDock] = await Promise.all([
-  readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
-  readFile(
-    new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
-    "utf8",
-  ),
-  readFile(new URL("../src/chat-native-v3.css", import.meta.url), "utf8"),
-  readFile(new URL("../src/components/shell/BottomDock.tsx", import.meta.url), "utf8"),
-]);
+const [chatRoute, communicationComponents, chatCss, bottomDock, targetResolution] =
+  await Promise.all([
+    readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
+    readFile(
+      new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../src/chat-native-v3.css", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/shell/BottomDock.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/journey-target-resolution.ts", import.meta.url), "utf8"),
+  ]);
 
 test("conversation search filters only the already-loaded user conversation list", () => {
   assert.match(chatRoute, /conversationQuery/);
@@ -25,11 +27,18 @@ test("conversation search filters only the already-loaded user conversation list
 });
 
 test("mobile navigation always enters the inbox and never preserves an open thread", () => {
-  assert.match(bottomDock, /search=\{item\.to === "\/chats" \? \{\} : undefined\}/);
+  assert.match(bottomDock, /CHAT_INBOX_TARGET/);
+  assert.match(
+    bottomDock,
+    /search=\{[\s\S]*item\.to === "\/chats"[\s\S]*conversation: CHAT_INBOX_TARGET/,
+  );
+  assert.match(bottomDock, /data-chat-inbox-entry/);
+  assert.match(targetResolution, /export const CHAT_INBOX_TARGET = "__inbox__"/);
+  assert.match(targetResolution, /requestedId === CHAT_INBOX_TARGET/);
+  assert.match(targetResolution, /return \{ kind: "default", conversation: firstConversation \}/);
   assert.match(chatRoute, /targetResolution\.kind === "selected"/);
   assert.match(chatRoute, /mobileThreadOpen/);
   assert.match(chatRoute, /returnToConversationList/);
-  assert.match(chatRoute, /search: \{\}/);
   assert.doesNotMatch(chatRoute, /search: \{ conversation: result\.data\[0\]\.id \}/);
 });
 
