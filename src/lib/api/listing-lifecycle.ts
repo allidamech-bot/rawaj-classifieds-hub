@@ -5,36 +5,57 @@ import type { ClassifiedListing, ClassifiedsResult } from "@/lib/classifieds-typ
 
 export type OwnerCloseListingStatus = "sold" | "rented" | "unavailable";
 
-async function runOwnerTransition(
+const ownerLifecycleRequests = new Map<
+  string,
+  Promise<ClassifiedsResult<ClassifiedListing>>
+>();
+
+function runOnce(
+  key: string,
+  operation: () => Promise<ClassifiedsResult<ClassifiedListing>>,
+): Promise<ClassifiedsResult<ClassifiedListing>> {
+  const pending = ownerLifecycleRequests.get(key);
+  if (pending) return pending;
+
+  const request = operation().finally(() => {
+    ownerLifecycleRequests.delete(key);
+  });
+  ownerLifecycleRequests.set(key, request);
+  return request;
+}
+
+function runOwnerTransition(
   userId: string | null,
   listingId: string,
   action: OwnerCloseListingStatus | "reactivate",
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث حالة الإعلان." },
-    };
-  }
-
   const cleanListingId = listingId.trim();
-  if (!cleanListingId) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
-    };
-  }
+  return runOnce(`${userId ?? "anonymous"}:${cleanListingId}:transition:${action}`, async () => {
+    if (!userId) {
+      return {
+        ok: false,
+        error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث حالة الإعلان." },
+      };
+    }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
+    if (!cleanListingId) {
+      return {
+        ok: false,
+        error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+      };
+    }
 
-  const { error } = await clientResult.data.rpc("rawaj_owner_transition_listing", {
-    p_listing_id: cleanListingId,
-    p_action: action,
+    const clientResult = getClient();
+    if (!clientResult.ok) return clientResult;
+
+    const { error } = await clientResult.data.rpc("rawaj_owner_transition_listing", {
+      p_listing_id: cleanListingId,
+      p_action: action,
+    });
+    if (error) return { ok: false, error: mapError(error) };
+
+    return fetchOwnerListingDetail(userId, cleanListingId);
   });
-  if (error) return { ok: false, error: mapError(error) };
-
-  return fetchOwnerListingDetail(userId, cleanListingId);
 }
 
 export function closeOwnerListing(
@@ -52,64 +73,68 @@ export function reactivateOwnerListing(
   return runOwnerTransition(userId, listingId, "reactivate");
 }
 
-export async function setOwnerListingExpiry(
+export function setOwnerListingExpiry(
   userId: string | null,
   listingId: string,
   option: ListingExpiryOption,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث مدة الإعلان." },
-    };
-  }
-
   const cleanListingId = listingId.trim();
-  if (!cleanListingId) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
-    };
-  }
+  return runOnce(`${userId ?? "anonymous"}:${cleanListingId}:expiry:${option}`, async () => {
+    if (!userId) {
+      return {
+        ok: false,
+        error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث مدة الإعلان." },
+      };
+    }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
+    if (!cleanListingId) {
+      return {
+        ok: false,
+        error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+      };
+    }
 
-  const { error } = await clientResult.data.rpc("rawaj_owner_set_listing_expiry", {
-    p_listing_id: cleanListingId,
-    p_expiry_days: option === "never" ? null : option,
+    const clientResult = getClient();
+    if (!clientResult.ok) return clientResult;
+
+    const { error } = await clientResult.data.rpc("rawaj_owner_set_listing_expiry", {
+      p_listing_id: cleanListingId,
+      p_expiry_days: option === "never" ? null : option,
+    });
+    if (error) return { ok: false, error: mapError(error) };
+
+    return fetchOwnerListingDetail(userId, cleanListingId);
   });
-  if (error) return { ok: false, error: mapError(error) };
-
-  return fetchOwnerListingDetail(userId, cleanListingId);
 }
 
-export async function confirmOwnerListingAvailability(
+export function confirmOwnerListingAvailability(
   userId: string | null,
   listingId: string,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لتأكيد توفر الإعلان." },
-    };
-  }
-
   const cleanListingId = listingId.trim();
-  if (!cleanListingId) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
-    };
-  }
+  return runOnce(`${userId ?? "anonymous"}:${cleanListingId}:availability`, async () => {
+    if (!userId) {
+      return {
+        ok: false,
+        error: { code: "auth_required", message: "يجب تسجيل الدخول لتأكيد توفر الإعلان." },
+      };
+    }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
+    if (!cleanListingId) {
+      return {
+        ok: false,
+        error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+      };
+    }
 
-  const { error } = await clientResult.data.rpc("rawaj_owner_confirm_listing_availability", {
-    p_listing_id: cleanListingId,
+    const clientResult = getClient();
+    if (!clientResult.ok) return clientResult;
+
+    const { error } = await clientResult.data.rpc("rawaj_owner_confirm_listing_availability", {
+      p_listing_id: cleanListingId,
+    });
+    if (error) return { ok: false, error: mapError(error) };
+
+    return fetchOwnerListingDetail(userId, cleanListingId);
   });
-  if (error) return { ok: false, error: mapError(error) };
-
-  return fetchOwnerListingDetail(userId, cleanListingId);
 }
