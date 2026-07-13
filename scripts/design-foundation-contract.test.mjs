@@ -34,6 +34,10 @@ test("canonical design foundation exposes required semantic contracts", () => {
     "--rawaj-warning",
     "--rawaj-danger",
     "--rawaj-touch-target",
+    "--rawaj-orange",
+    "--rawaj-surface-card",
+    "--rawaj-surface-sage",
+    "--shadow-card",
   ];
 
   for (const token of requiredTokens) {
@@ -43,4 +47,12 @@ test("canonical design foundation exposes required semantic contracts", () => {
   assert.match(foundation, /min-height:\s*100dvh/);
   assert.match(foundation, /env\(safe-area-inset-bottom/);
   assert.match(foundation, /prefers-reduced-motion/);
+});
+
+test("legacy mobile UI is normalized to readable text and touch targets", () => {
+  assert.match(foundation, /rawaj-bottom-dock__label/);
+  assert.match(foundation, /rawaj-search-toolbar__recent/);
+  assert.match(foundation, /font-size:\s*max\(0\.75rem,\s*11px\)/);
+  assert.match(foundation, /min-width:\s*var\(--rawaj-touch-target\)/);
+  assert.match(foundation, /min-height:\s*var\(--rawaj-touch-target\)/);
 });

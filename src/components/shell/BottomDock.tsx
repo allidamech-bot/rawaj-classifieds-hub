@@ -99,14 +99,14 @@ export function BottomDock({ pathname }: BottomDockProps) {
                   strokeWidth={active || item.primary ? 2.2 : 1.8}
                 />
                 {badgeCount > 0 ? (
-                  <span className="rawaj-notification-badge absolute -end-1.5 -top-1.5 grid min-h-4 min-w-4 place-items-center rounded-full px-1 text-[8px] font-bold leading-none ring-2 ring-card">
+                  <span className="rawaj-bottom-dock__badge rawaj-notification-badge absolute -end-1.5 -top-1.5 grid min-h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold leading-none ring-2 ring-card">
                     {badgeCount > 99 ? "99+" : badgeCount}
                   </span>
                 ) : null}
               </span>
               <span
-                className={`max-w-full truncate text-[9.5px] leading-none ${
-                  active || item.primary ? "font-extrabold" : "font-semibold"
+                className={`rawaj-bottom-dock__label max-w-full truncate text-[11px] leading-tight ${
+                  active || item.primary ? "font-bold" : "font-medium"
                 }`}
               >
                 {label}
