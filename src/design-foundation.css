@@ -45,6 +45,15 @@
   --input: #c8d5ce;
   --ring: var(--rawaj-accent-orange);
 
+  /* Compatibility aliases used by legacy visual layers during retirement */
+  --rawaj-orange: var(--rawaj-accent-orange);
+  --rawaj-gold: var(--rawaj-accent-gold);
+  --rawaj-ink: var(--rawaj-text-primary);
+  --rawaj-ink-muted: var(--rawaj-text-secondary);
+  --rawaj-surface-card: var(--rawaj-card-background);
+  --rawaj-surface-sage: var(--rawaj-muted-surface);
+  --shadow-card: var(--shadow-soft);
+
   /* Spacing scale */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -137,10 +146,30 @@ textarea,
   touch-action: manipulation;
 }
 
+/* Accessibility normalization for legacy layers that still use 9–10px UI text. */
+.rawaj-search-toolbar__heading p,
+.rawaj-search-toolbar__heading div > span,
+.rawaj-search-toolbar__recent,
+.rawaj-bottom-dock__label,
+.rawaj-bottom-dock__badge,
+.rawaj-listing-card__meta,
+.rawaj-listing-card__eyebrow {
+  font-size: max(0.75rem, 11px);
+  line-height: 1.4;
+}
+
 @media (max-width: 1023px) {
   button:not(.rawaj-inline-control),
   a.rawaj-touch-target,
   [role="button"].rawaj-touch-target {
+    min-height: var(--rawaj-touch-target);
+  }
+
+  .rawaj-bottom-dock a,
+  .rawaj-bottom-dock button,
+  .rawaj-search-toolbar__clear-query,
+  .rawaj-search-toolbar__recent button {
+    min-width: var(--rawaj-touch-target);
     min-height: var(--rawaj-touch-target);
   }
 }
