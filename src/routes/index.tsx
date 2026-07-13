@@ -22,6 +22,7 @@ export const Route = createFileRoute("/")({
       fetchPublicListings({}, null, 18),
       fetchPublicCategories(),
     ]);
+
     return {
       listings: listingsResult.ok ? listingsResult.data.items : [],
       categories: categoriesResult.ok ? categoriesResult.data : [],
