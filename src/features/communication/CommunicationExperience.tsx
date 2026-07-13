@@ -181,14 +181,7 @@ export function ParticipantAvatar({ name, url }: { name: string; url: string | n
   return (
     <Avatar className="rawaj-participant-avatar">
       {url ? (
-        <AvatarImage
-          src={url}
-          alt={name}
-          loading="lazy"
-          decoding="async"
-          width={44}
-          height={44}
-        />
+        <AvatarImage src={url} alt={name} loading="lazy" decoding="async" width={44} height={44} />
       ) : null}
       <AvatarFallback>{name.slice(0, 1)}</AvatarFallback>
     </Avatar>
