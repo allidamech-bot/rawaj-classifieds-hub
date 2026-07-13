@@ -36,7 +36,7 @@ def main() -> None:
         """    @Override
     protected void onNewIntent(Intent intent) {""",
         """    @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         forceBundledPreviewOrigin();
     }
