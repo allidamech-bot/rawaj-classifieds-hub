@@ -30,6 +30,9 @@ export function ListingCardImage({
       loading={loading}
       fetchPriority={fetchPriority}
       decoding="async"
+      width={640}
+      height={480}
+      draggable={false}
       onError={() => setFailedSrc(src)}
     />
   );
