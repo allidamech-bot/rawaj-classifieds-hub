@@ -12,6 +12,20 @@ const EXTERNAL_SCHEMES = new Set([
   "whatsapp:",
 ]);
 
+function isProductionRawajUrl(url: URL): boolean {
+  return (
+    url.protocol === "https:" &&
+    (url.hostname === "rawa-j.com" || url.hostname.endsWith(".rawa-j.com"))
+  );
+}
+
+function localizeBundledPreviewUrl(url: URL): URL | null {
+  if (typeof window === "undefined" || window.location.origin !== "https://localhost") return null;
+  if (!isProductionRawajUrl(url)) return null;
+
+  return new URL(`${url.pathname}${url.search}${url.hash}`, window.location.origin);
+}
+
 function shouldOpenExternally(url: URL): boolean {
   if (!EXTERNAL_SCHEMES.has(url.protocol)) return false;
   if (url.protocol === "http:" || url.protocol === "https:") return !isRawajWebUrl(url);
@@ -45,6 +59,13 @@ export function NativeAppRuntime() {
         return;
       }
 
+      const localPreviewUrl = localizeBundledPreviewUrl(url);
+      if (localPreviewUrl) {
+        event.preventDefault();
+        window.location.assign(localPreviewUrl.toString());
+        return;
+      }
+
       if (!shouldOpenExternally(url)) return;
       event.preventDefault();
       void openExternalUrl(url.toString()).catch((error) => {
@@ -57,6 +78,12 @@ export function NativeAppRuntime() {
       if (url) {
         try {
           const resolved = new URL(url.toString(), window.location.href);
+          const localPreviewUrl = localizeBundledPreviewUrl(resolved);
+          if (localPreviewUrl) {
+            window.location.assign(localPreviewUrl.toString());
+            return null;
+          }
+
           if (shouldOpenExternally(resolved)) {
             void openExternalUrl(resolved.toString()).catch((error) => {
               console.error("Unable to open external window", error);
