@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, MapPin, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
-import { PlaceholderArt } from "@/components/PlaceholderArt";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized } from "@/lib/i18n";
 import { listingLocationDisplay } from "@/lib/listing-location-display";
@@ -12,6 +11,7 @@ import {
   resolveListingCardVariant,
   vehicleCardFacts,
 } from "./listing-card-utils";
+import { ListingCardImage } from "./ListingCardImage";
 
 export function FeaturedShowcaseCard({
   listing,
@@ -38,17 +38,13 @@ export function FeaturedShowcaseCard({
     >
       <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-featured-card__link">
         <div className="rawaj-featured-card__media">
-          {listing.primaryImageUrl ? (
-            <img
-              src={listing.primaryImageUrl}
-              alt={listing.title}
-              loading="eager"
-              fetchPriority="high"
-              decoding="async"
-            />
-          ) : (
-            <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="standard" />
-          )}
+          <ListingCardImage
+            src={listing.primaryImageUrl}
+            alt={listing.title}
+            placeholder={listing.categoryPlaceholder ?? "misc"}
+            loading="eager"
+            fetchPriority="high"
+          />
           <div className="rawaj-featured-card__scrim" />
           <span className="rawaj-featured-card__badge">
             <Sparkles aria-hidden="true" />
