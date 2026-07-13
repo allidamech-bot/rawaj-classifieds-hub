@@ -61,6 +61,9 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
           alt={text("إعلان ترويجي", "Promotional advertisement")}
           loading="lazy"
           decoding="async"
+          width={1600}
+          height={500}
+          draggable={false}
           onError={() => setFailedImageUrl(placement.imageUrl)}
           className="aspect-[3.2/1] w-full object-cover sm:aspect-[5/1]"
         />
