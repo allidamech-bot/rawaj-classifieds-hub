@@ -36,7 +36,11 @@ export function FeaturedShowcaseCard({
       data-content-variant={variant}
       data-reserved={Boolean(listing.reservedAt)}
     >
-      <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-featured-card__link">
+      <Link
+        to="/listings/$id"
+        params={{ id: listing.id }}
+        className="rawaj-featured-card__link"
+      >
         <div className="rawaj-featured-card__media">
           <ListingCardImage
             src={listing.primaryImageUrl}
@@ -48,7 +52,9 @@ export function FeaturedShowcaseCard({
           <div className="rawaj-featured-card__scrim" />
           <span className="rawaj-featured-card__badge">
             <Sparkles aria-hidden="true" />
-            {listing.reservedAt ? text("محجوز", "Reserved") : text("مميز", "Featured")}
+            {listing.reservedAt
+              ? text("محجوز", "Reserved")
+              : text("مميز", "Featured")}
           </span>
         </div>
 
@@ -82,7 +88,9 @@ export function FeaturedShowcaseCard({
           </span>
         </div>
       </Link>
-      {action ? <div className="rawaj-featured-card__action">{action}</div> : null}
+      {action ? (
+        <div className="rawaj-featured-card__action">{action}</div>
+      ) : null}
     </article>
   );
 }
