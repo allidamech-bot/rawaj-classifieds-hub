@@ -16,6 +16,10 @@ import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
 import { publicListingSelect } from "@/lib/api/public-fields";
 import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
 import { readReferences } from "@/lib/api/references";
+import {
+  normalizeArabicSearchTerm,
+  supportsNormalizedListingSearch,
+} from "@/lib/search-normalization";
 
 export async function fetchPublicListingsLocationAware(
   filters: ListingFilters = {},
@@ -27,6 +31,11 @@ export async function fetchPublicListingsLocationAware(
   const client = clientResult.data;
   const references = await readReferences(client);
   if (!references.ok) return { ok: false, error: references.error };
+
+  const rawSearchTerm = filters.query?.trim() ?? "";
+  const useNormalizedSearch = rawSearchTerm
+    ? await supportsNormalizedListingSearch(client)
+    : false;
 
   let query = client
     .from("listings")
@@ -70,9 +79,14 @@ export async function fetchPublicListingsLocationAware(
 
   query = applyDetailFilters(query, filters);
 
-  if (filters.query?.trim()) {
-    const term = escapePostgrestSearchTerm(filters.query.trim());
-    query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
+  if (rawSearchTerm) {
+    const normalizedTerm = useNormalizedSearch
+      ? normalizeArabicSearchTerm(rawSearchTerm)
+      : rawSearchTerm;
+    const term = escapePostgrestSearchTerm(normalizedTerm);
+    query = useNormalizedSearch
+      ? query.ilike("search_text_normalized", `%${term}%`)
+      : query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
   }
 
   const sort = filters.sort ?? "latest";
