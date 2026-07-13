@@ -8,7 +8,7 @@ import {
   Store,
   User,
 } from "lucide-react";
-import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type {
   ClassifiedListing,
   PublicSellerProfile,
@@ -41,9 +41,6 @@ export function ListingSellerProfileCard({
     : null;
   const rating = seller?.ratingSummary.average;
   const ratingCount = seller?.ratingSummary.count ?? 0;
-  const avatarUrl = seller?.avatarUrl ?? null;
-  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
-  const showAvatar = Boolean(avatarUrl && failedAvatarUrl !== avatarUrl);
 
   return (
     <section
@@ -53,19 +50,21 @@ export function ListingSellerProfileCard({
     >
       <div className="rawaj-detail-seller__identity">
         <div className="rawaj-detail-seller__avatar" data-loading={loading}>
-          {showAvatar ? (
-            <img
-              src={avatarUrl ?? undefined}
-              alt={displayName}
-              loading="lazy"
-              decoding="async"
-              width={64}
-              height={64}
-              onError={() => setFailedAvatarUrl(avatarUrl)}
-            />
-          ) : (
-            <User aria-hidden="true" />
-          )}
+          <Avatar className="h-full w-full bg-transparent">
+            {seller?.avatarUrl ? (
+              <AvatarImage
+                src={seller.avatarUrl}
+                alt={displayName}
+                loading="lazy"
+                decoding="async"
+                width={64}
+                height={64}
+              />
+            ) : null}
+            <AvatarFallback className="bg-transparent">
+              <User aria-hidden="true" />
+            </AvatarFallback>
+          </Avatar>
         </div>
         <div className="min-w-0 flex-1">
           <p>{text("البائع", "Seller")}</p>
