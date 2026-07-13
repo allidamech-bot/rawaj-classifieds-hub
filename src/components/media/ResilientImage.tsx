@@ -1,6 +1,7 @@
 import { useState, type ImgHTMLAttributes, type ReactNode } from "react";
 
-interface ResilientImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "onError"> {
+interface ResilientImageProps
+  extends Omit<ImgHTMLAttributes<HTMLImageElement>, "onError"> {
   fallback: ReactNode;
 }
 
