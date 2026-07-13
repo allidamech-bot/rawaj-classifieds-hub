@@ -23,41 +23,98 @@ const [
   css,
 ] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listings/RealListingCard.tsx", import.meta.url), "utf8"),
   readFile(
-    new URL("../src/features/listings/cards/AdaptiveListingCard.tsx", import.meta.url),
-    "utf8",
-  ),
-  readFile(new URL("../src/features/listings/cards/ProductCard.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listings/cards/VehicleCard.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listings/cards/PropertyCard.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listings/cards/CompactCard.tsx", import.meta.url), "utf8"),
-  readFile(
-    new URL("../src/features/listings/cards/FeaturedShowcaseCard.tsx", import.meta.url),
+    new URL("../src/features/listings/RealListingCard.tsx", import.meta.url),
     "utf8",
   ),
   readFile(
-    new URL("../src/features/listings/cards/ListingCardSkeleton.tsx", import.meta.url),
+    new URL(
+      "../src/features/listings/cards/AdaptiveListingCard.tsx",
+      import.meta.url,
+    ),
     "utf8",
   ),
   readFile(
-    new URL("../src/features/listings/cards/ListingCardShared.tsx", import.meta.url),
+    new URL("../src/features/listings/cards/ProductCard.tsx", import.meta.url),
     "utf8",
   ),
   readFile(
-    new URL("../src/features/listings/cards/ListingCardImage.tsx", import.meta.url),
+    new URL("../src/features/listings/cards/VehicleCard.tsx", import.meta.url),
     "utf8",
   ),
   readFile(
-    new URL("../src/features/listings/cards/listing-card-utils.ts", import.meta.url),
+    new URL("../src/features/listings/cards/PropertyCard.tsx", import.meta.url),
     "utf8",
   ),
-  readFile(new URL("../src/features/listings/listings-components.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/listings.index.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/listings/cards/CompactCard.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL(
+      "../src/features/listings/cards/FeaturedShowcaseCard.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+  readFile(
+    new URL(
+      "../src/features/listings/cards/ListingCardSkeleton.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+  readFile(
+    new URL(
+      "../src/features/listings/cards/ListingCardShared.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+  readFile(
+    new URL(
+      "../src/features/listings/cards/ListingCardImage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+  readFile(
+    new URL(
+      "../src/features/listings/cards/listing-card-utils.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+  readFile(
+    new URL(
+      "../src/features/listings/listings-components.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/routes/listings.index.tsx", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/routes/favorites.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/favorites/FavoriteListingCard.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/home/FeaturedListingShowcase.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/adaptive-listing-cards.css", import.meta.url), "utf8"),
+  readFile(
+    new URL(
+      "../src/features/favorites/FavoriteListingCard.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+  readFile(
+    new URL(
+      "../src/features/home/FeaturedListingShowcase.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/adaptive-listing-cards.css", import.meta.url),
+    "utf8",
+  ),
 ]);
 
 test("adaptive card styles load after home discovery layers", () => {
@@ -73,7 +130,10 @@ test("adaptive card styles load after home discovery layers", () => {
 });
 
 test("one compatibility entry point resolves product, vehicle, and property cards", () => {
-  assert.match(compatibility, /<AdaptiveListingCard listing=\{listing\} action=\{action\}/);
+  assert.match(
+    compatibility,
+    /<AdaptiveListingCard listing=\{listing\} action=\{action\}/,
+  );
   assert.match(adaptive, /resolveListingCardVariant\(listing\)/);
   assert.match(adaptive, /<VehicleCard listing=\{listing\}/);
   assert.match(adaptive, /<PropertyCard listing=\{listing\}/);
@@ -94,7 +154,13 @@ test("vehicle and property cards expose only factual category details", () => {
   for (const key of ["year", "mileage_km", "transmission", "fuel_type"]) {
     assert.match(utils, new RegExp(key));
   }
-  for (const key of ["area_sqm", "bedrooms", "rooms", "property_type", "listing_purpose"]) {
+  for (const key of [
+    "area_sqm",
+    "bedrooms",
+    "rooms",
+    "property_type",
+    "listing_purpose",
+  ]) {
     assert.match(utils, new RegExp(key));
   }
   assert.match(product, /productCardFacts\(listing, language\)/);
@@ -116,7 +182,10 @@ test("shared cards preserve media, state, links, action slot, location, and time
 test("listing card images fall back cleanly when a media URL fails", () => {
   assert.match(cardImage, /onError=\{\(\) => setFailedSrc\(src\)\}/);
   assert.match(cardImage, /failedSrc === src/);
-  assert.match(cardImage, /<PlaceholderArt type=\{placeholder\} aspect="standard" \/>/);
+  assert.match(
+    cardImage,
+    /<PlaceholderArt type=\{placeholder\} aspect="standard" \/>/,
+  );
   assert.match(cardImage, /useState<string \| null>\(null\)/);
   assert.doesNotMatch(cardImage, /useEffect/);
   assert.match(featured, /<ListingCardImage/);
@@ -127,7 +196,10 @@ test("compact and featured variants replace route-local card duplication", () =>
   assert.match(featured, /data-card-variant="featured"/);
   assert.match(featured, /resolveListingCardVariant\(listing\)/);
   assert.match(homeShowcase, /<FeaturedShowcaseCard listing=\{primary\}/);
-  assert.match(homeShowcase, /<CompactCard key=\{listing\.id\} listing=\{listing\}/);
+  assert.match(
+    homeShowcase,
+    /<CompactCard key=\{listing\.id\} listing=\{listing\}/,
+  );
   assert.match(favoriteCard, /<CompactCard/);
   assert.match(favoritesRoute, /<FavoriteListingCard/);
 });
@@ -136,8 +208,14 @@ test("results use matching skeletons before adaptive real cards", () => {
   assert.match(listingsRoute, /<ListingCardSkeleton/);
   assert.match(listingsRoute, /categoryFieldKind === "vehicles"/);
   assert.match(listingsRoute, /categoryFieldKind === "real_estate"/);
-  assert.match(listingsRoute, /<RealListingCard key=\{listing\.id\} listing=\{listing\}/);
-  assert.match(skeleton, /data-card-variant=\{compact \? "compact" : variant\}/);
+  assert.match(
+    listingsRoute,
+    /<RealListingCard key=\{listing\.id\} listing=\{listing\}/,
+  );
+  assert.match(
+    skeleton,
+    /data-card-variant=\{compact \? "compact" : variant\}/,
+  );
   assert.match(css, /rawaj-card-skeleton-shimmer/);
 });
 
