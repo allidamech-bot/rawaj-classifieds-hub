@@ -89,17 +89,14 @@ test("listing detail media replaces broken signed URLs with category artwork", (
 });
 
 test("listing seller avatar replaces broken public identity images", () => {
-  assert.match(sellerCard, /const avatarUrl = seller\?\.avatarUrl \?\? null/);
-  assert.match(sellerCard, /key=\{avatarUrl \?\? "seller-avatar-fallback"\}/);
-  assert.match(sellerCard, /function SellerAvatar/);
-  assert.match(sellerCard, /const \[avatarFailed, setAvatarFailed\] = useState\(false\)/);
-  assert.match(sellerCard, /avatarUrl && !avatarFailed/);
-  assert.match(sellerCard, /onError=\{\(\) => setAvatarFailed\(true\)\}/);
+  assert.match(sellerCard, /rawaj-detail-seller__avatar relative/);
+  assert.match(sellerCard, /<User aria-hidden="true" \/>/);
+  assert.match(sellerCard, /className="absolute inset-0 h-full w-full object-cover"/);
+  assert.match(sellerCard, /onError=\{\(event\) => event\.currentTarget\.remove\(\)\}/);
   assert.match(sellerCard, /loading="lazy"/);
   assert.match(sellerCard, /decoding="async"/);
   assert.match(sellerCard, /width=\{64\}/);
   assert.match(sellerCard, /height=\{64\}/);
-  assert.match(sellerCard, /<User aria-hidden="true" \/>/);
 });
 
 test("full media viewer is excluded from the initial listing-detail bundle", () => {
