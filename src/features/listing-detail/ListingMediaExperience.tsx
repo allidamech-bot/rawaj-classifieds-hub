@@ -1,8 +1,9 @@
 import { ArrowLeft, ChevronLeft, ChevronRight, Heart, Maximize2, Share2 } from "lucide-react";
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense } from "react";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import type { ListingImage } from "@/lib/classifieds-types";
 import type { PlaceholderType } from "@/types";
+import { useListingMediaState } from "./useListingMediaState";
 
 const ListingMediaViewer = lazy(() => import("./ListingMediaViewer"));
 
@@ -29,42 +30,19 @@ export function ListingMediaExperience({
   onToggleFavorite,
   text,
 }: ListingMediaExperienceProps) {
-  const visibleImages = images.filter((image) => image.publicUrl);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [viewerOpen, setViewerOpen] = useState(false);
-  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
-  const touchStartX = useRef<number | null>(null);
-
-  useEffect(() => {
-    setSelectedIndex(0);
-    setLoadedUrl(null);
-  }, [images]);
-
-  const goTo = useCallback(
-    (index: number) => {
-      if (visibleImages.length === 0) return;
-      const next = (index + visibleImages.length) % visibleImages.length;
-      setSelectedIndex(next);
-      setLoadedUrl(null);
-    },
-    [visibleImages.length],
-  );
-
-  const handleTouchStart = (event: React.TouchEvent) => {
-    touchStartX.current = event.touches[0]?.clientX ?? null;
-  };
-
-  const handleTouchEnd = (event: React.TouchEvent) => {
-    if (touchStartX.current === null) return;
-    const endX = event.changedTouches[0]?.clientX ?? touchStartX.current;
-    const delta = endX - touchStartX.current;
-    touchStartX.current = null;
-    if (Math.abs(delta) < 42) return;
-    goTo(selectedIndex + (delta < 0 ? 1 : -1));
-  };
-
-  const selectedImage = visibleImages[selectedIndex] ?? visibleImages[0] ?? null;
-  const selectedUrl = selectedImage?.publicUrl ?? null;
+  const {
+    visibleImages,
+    selectedIndex,
+    selectedImage,
+    selectedUrl,
+    loadedUrl,
+    setLoadedUrl,
+    viewerOpen,
+    setViewerOpen,
+    goTo,
+    handleTouchStart,
+    handleTouchEnd,
+  } = useListingMediaState(images);
 
   return (
     <>

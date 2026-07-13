@@ -2,20 +2,25 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [rootRoute, detailRoute, mediaExperience, mediaViewer, v2Css, v3Css] = await Promise.all([
-  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
-  readFile(
-    new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
-    "utf8",
-  ),
-  readFile(
-    new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url),
-    "utf8",
-  ),
-  readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8"),
-  readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8"),
-]);
+const [rootRoute, detailRoute, mediaExperience, mediaViewer, mediaState, v2Css, v3Css] =
+  await Promise.all([
+    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
+    readFile(
+      new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../src/features/listing-detail/useListingMediaState.ts", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8"),
+    readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8"),
+  ]);
 
 const layeredCss = `${v2Css}\n${v3Css}`;
 
@@ -45,9 +50,13 @@ test("Listing Detail V3 preserves the complete listing experience", () => {
 });
 
 test("media experience keeps swipe, fullscreen, keyboard, zoom, and accessible controls", () => {
+  assert.match(mediaExperience, /useListingMediaState\(images\)/);
   assert.match(mediaExperience, /onTouchStart=\{handleTouchStart\}/);
   assert.match(mediaExperience, /onTouchEnd=\{handleTouchEnd\}/);
   assert.match(mediaExperience, /setViewerOpen\(true\)/);
+  assert.match(mediaState, /SWIPE_THRESHOLD_PX = 42/);
+  assert.match(mediaState, /const goTo = useCallback/);
+  assert.match(mediaState, /setSelectedIndex\(next\)/);
   assert.match(mediaViewer, /event\.key === "ArrowLeft"/);
   assert.match(mediaViewer, /Math\.min\(3, value \+ 0\.5\)/);
   assert.match(mediaExperience, /aria-pressed=\{favorite\}/);
@@ -62,6 +71,15 @@ test("full media viewer is excluded from the initial listing-detail bundle", () 
   assert.doesNotMatch(mediaExperience, /@radix-ui\/react-dialog/);
   assert.match(mediaViewer, /@radix-ui\/react-dialog/);
   assert.match(mediaViewer, /loading="lazy" decoding="async"/);
+});
+
+test("listing media orchestration stays separate from reusable interaction state", () => {
+  assert.match(mediaExperience, /from "\.\/useListingMediaState"/);
+  assert.doesNotMatch(mediaExperience, /useState\(/);
+  assert.doesNotMatch(mediaExperience, /useRef\(/);
+  assert.doesNotMatch(mediaExperience, /useEffect\(/);
+  assert.match(mediaState, /useMemo\(\(\) => images\.filter/);
+  assert.match(mediaState, /setLoadedUrl\(null\)/);
 });
 
 test("layered V2 and V3 CSS retains mobile-first, bidirectional, safe-area, and motion contracts", () => {
