@@ -90,8 +90,9 @@ test("listing detail media replaces broken signed URLs with category artwork", (
 
 test("listing seller avatar replaces broken public identity images", () => {
   assert.match(sellerCard, /const avatarUrl = seller\?\.avatarUrl \?\? null/);
+  assert.match(sellerCard, /key=\{avatarUrl \?\? "seller-avatar-fallback"\}/);
+  assert.match(sellerCard, /function SellerAvatar/);
   assert.match(sellerCard, /const \[avatarFailed, setAvatarFailed\] = useState\(false\)/);
-  assert.match(sellerCard, /setAvatarFailed\(false\)/);
   assert.match(sellerCard, /avatarUrl && !avatarFailed/);
   assert.match(sellerCard, /onError=\{\(\) => setAvatarFailed\(true\)\}/);
   assert.match(sellerCard, /loading="lazy"/);
