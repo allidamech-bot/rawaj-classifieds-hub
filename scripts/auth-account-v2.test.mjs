@@ -49,6 +49,16 @@ test("account center shares identity, shortcuts, editor and safety while preserv
   assert.match(profile, /changeOwnPassword/);
 });
 
+test("account identity media falls back and accepts refreshed URLs", () => {
+  assert.match(shared, /useState<string \| null>\(null\)/);
+  assert.match(shared, /failedCoverUrl !== coverUrl/);
+  assert.match(shared, /failedAvatarUrl !== avatarUrl/);
+  assert.match(shared, /onError=\{\(\) => setFailedCoverUrl\(coverUrl \?\? null\)\}/);
+  assert.match(shared, /onError=\{\(\) => setFailedAvatarUrl\(avatarUrl \?\? null\)\}/);
+  assert.match(shared, /<User aria-hidden="true" \/>/);
+  assert.doesNotMatch(shared, /useEffect/);
+});
+
 test("shared account components expose factual identity and protected navigation", () => {
   assert.match(shared, /export function AuthExperienceAside/);
   assert.match(shared, /export function AuthExperienceHeader/);
