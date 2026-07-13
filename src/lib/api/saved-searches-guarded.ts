@@ -8,18 +8,12 @@ import {
 } from "@/lib/api/saved-searches";
 import { runDeduplicatedRequest } from "@/lib/api/request-dedup";
 
-const pendingSavedSearchCreates = new Map<
-  string,
-  ReturnType<typeof baseCreateSavedSearch>
->();
+const pendingSavedSearchCreates = new Map<string, ReturnType<typeof baseCreateSavedSearch>>();
 const pendingSavedSearchFrequencyUpdates = new Map<
   string,
   ReturnType<typeof baseUpdateSavedSearchAlertFrequency>
 >();
-const pendingSavedSearchDeletes = new Map<
-  string,
-  ReturnType<typeof baseDeleteSavedSearch>
->();
+const pendingSavedSearchDeletes = new Map<string, ReturnType<typeof baseDeleteSavedSearch>>();
 
 export function createSavedSearch(
   userId: Parameters<typeof baseCreateSavedSearch>[0],
