@@ -35,9 +35,7 @@ export function createListingPromotionRequest(
   );
 }
 
-export function uploadPromotionReceipt(
-  payload: Parameters<typeof baseUploadPromotionReceipt>[0],
-) {
+export function uploadPromotionReceipt(payload: Parameters<typeof baseUploadPromotionReceipt>[0]) {
   const key = JSON.stringify([
     payload.userId ?? "anonymous",
     payload.requestId.trim(),
