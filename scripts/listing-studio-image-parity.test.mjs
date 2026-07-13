@@ -54,7 +54,9 @@ test("listing images are resized, metadata-stripped and uploaded as processed fi
   assert.match(processing, /canvasToBlob\(canvas, "image\/webp", LISTING_IMAGE_QUALITY\)/);
   assert.match(processing, /new File\(\[blob\], `\$\{baseName\}\.webp`/);
   assert.match(listingsApi, /prepareListingImageForUpload\(file\)/);
+  assert.match(listingsApi, /validateImageFile\(preparedFile\)/);
   assert.match(listingsApi, /upload\(storagePath, preparedFile/);
+  assert.match(listingsApi, /cacheControl: "31536000"/);
   assert.match(listingsApi, /contentType: preparedFile\.type/);
 });
 
