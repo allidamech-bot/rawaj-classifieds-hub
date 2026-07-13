@@ -27,7 +27,7 @@ test("account failures are translated into safe bilingual messages", () => {
 test("authentication return destinations reject unsafe fallback and oversized input", () => {
   assert.match(authReturn, /DEFAULT_AUTH_RETURN_TO/);
   assert.match(authReturn, /MAX_AUTH_RETURN_LENGTH = 2048/);
-  assert.match(authReturn, /controlCharactersPattern/);
+  assert.match(authReturn, /containsControlCharacter/);
   assert.match(authReturn, /const normalizedFallback = safeFallback\(fallback\)/);
   assert.match(authReturn, /trimmed\.length > MAX_AUTH_RETURN_LENGTH/);
   assert.doesNotMatch(authReturn, /typeof value !== "string"\) return fallback/);
