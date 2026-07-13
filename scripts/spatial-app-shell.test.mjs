@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, navigation, shell, header, dock, primitives, css] = await Promise.all([
+const [root, navigation, shell, header, offlineNotice, dock, primitives, css] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/primary-navigation.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/components/shell/AppShell.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/OfflineNotice.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/shell/BottomDock.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/shell/spatial-primitives.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/spatial-app-shell.css", import.meta.url), "utf8"),
@@ -55,14 +56,29 @@ test("shell centralizes keyboard, safe regions, and reserved action space", () =
   assert.match(shell, /<BottomDock pathname=\{pathname\} \/>/);
 });
 
-test("floating navigation includes location, chats, and independent unread badges", () => {
+test("floating navigation includes location, chats, stable branding, and offline feedback", () => {
   assert.match(header, /rawaj-floating-header-shell/);
   assert.match(header, /MapPin/);
   assert.match(header, /كل سوريا/);
+  assert.match(header, /<OfflineNotice \/>/);
+  assert.match(header, /width=\{32\}/);
+  assert.match(header, /height=\{32\}/);
+  assert.match(header, /draggable=\{false\}/);
   assert.match(dock, /to: "\/chats"/);
   assert.match(dock, /counts\.messages/);
   assert.match(dock, /counts\.notifications/);
   assert.doesNotMatch(dock, /section: "offers"/);
+});
+
+test("offline notice reacts to browser connectivity without changing server markup", () => {
+  assert.match(offlineNotice, /useState\(true\)/);
+  assert.match(offlineNotice, /navigator\.onLine/);
+  assert.match(offlineNotice, /addEventListener\("online", updateConnectionState\)/);
+  assert.match(offlineNotice, /addEventListener\("offline", updateConnectionState\)/);
+  assert.match(offlineNotice, /removeEventListener\("online", updateConnectionState\)/);
+  assert.match(offlineNotice, /removeEventListener\("offline", updateConnectionState\)/);
+  assert.match(offlineNotice, /role="status"/);
+  assert.match(offlineNotice, /aria-live="polite"/);
 });
 
 test("shared Spatial primitives remain page agnostic", () => {
