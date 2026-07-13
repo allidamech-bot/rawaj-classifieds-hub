@@ -122,9 +122,24 @@ jobs:
 
       - name: Assemble bundled branch-preview debug APK
         working-directory: android
+        shell: bash
         run: |
+          set -o pipefail
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon 2>&1 | tee /tmp/rawaj-assemble-debug.log
+
+      - name: Upload Android compile diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawaj-android-compile-diagnostics
+          path: |
+            /tmp/rawaj-assemble-debug.log
+            android/app/src/main/java/com/rawaj/marketplace/MainActivity.java
+            android/app/src/main/java/com/rawaj/marketplace/RawajNativePlugin.java
+            android/app/src/main/assets/capacitor.config.json
+          if-no-files-found: warn
+          retention-days: 1
 
       - name: Verify debug APK signature
         shell: bash
