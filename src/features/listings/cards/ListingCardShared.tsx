@@ -40,7 +40,11 @@ export function ListingCardFrame({
       data-featured={listing.isFeatured}
       data-reserved={Boolean(listing.reservedAt)}
     >
-      <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-adaptive-card__link">
+      <Link
+        to="/listings/$id"
+        params={{ id: listing.id }}
+        className="rawaj-adaptive-card__link"
+      >
         <div className={cn("rawaj-adaptive-card__media", mediaClassName)}>
           <ListingCardImage
             src={listing.primaryImageUrl}
@@ -61,17 +65,28 @@ export function ListingCardFrame({
         </div>
         {children}
       </Link>
-      {action ? <div className="rawaj-adaptive-card__action">{action}</div> : null}
+      {action ? (
+        <div className="rawaj-adaptive-card__action">{action}</div>
+      ) : null}
     </article>
   );
 }
 
-export function ListingCardHeading({ listing }: { listing: ClassifiedListing }) {
+export function ListingCardHeading({
+  listing,
+}: {
+  listing: ClassifiedListing;
+}) {
   const { language } = useUiPreferences();
   return (
     <div className="rawaj-adaptive-card__heading">
       <strong className="rawaj-adaptive-card__price">
-        {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
+        {formatPriceLocalized(
+          listing.price ?? 0,
+          listing.priceType,
+          language,
+          listing.currency,
+        )}
       </strong>
       <span className="rawaj-adaptive-card__category">
         {categoryName(listing.categoryId, listing.categoryNameAr, language)}
