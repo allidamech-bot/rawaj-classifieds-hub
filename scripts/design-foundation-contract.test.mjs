@@ -4,6 +4,10 @@ import test from "node:test";
 
 const rootRoute = await readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8");
 const foundation = await readFile(new URL("../src/design-foundation.css", import.meta.url), "utf8");
+const appShell = await readFile(
+  new URL("../src/components/shell/AppShell.tsx", import.meta.url),
+  "utf8",
+);
 
 test("canonical design foundation is loaded after legacy visual layers", () => {
   const foundationLink = rootRoute.indexOf('{ rel: "stylesheet", href: designFoundationCss }');
@@ -38,6 +42,8 @@ test("canonical design foundation exposes required semantic contracts", () => {
     "--rawaj-surface-card",
     "--rawaj-surface-sage",
     "--shadow-card",
+    "--app-viewport-height",
+    "--rawaj-shell-bottom-reserve",
   ];
 
   for (const token of requiredTokens) {
@@ -55,4 +61,18 @@ test("legacy mobile UI is normalized to readable text and touch targets", () => 
   assert.match(foundation, /font-size:\s*max\(0\.75rem,\s*11px\)/);
   assert.match(foundation, /min-width:\s*var\(--rawaj-touch-target\)/);
   assert.match(foundation, /min-height:\s*var\(--rawaj-touch-target\)/);
+});
+
+test("app shell owns viewport, keyboard and bottom-reservation behavior", () => {
+  assert.match(appShell, /--app-viewport-height/);
+  assert.match(appShell, /orientationchange/);
+  assert.match(appShell, /data-shell-dock=\{config\.showDock\}/);
+  assert.match(appShell, /data-shell-sticky-action=\{config\.reserveStickyAction\}/);
+  assert.match(appShell, /data-keyboard-open=\{keyboardOpen\}/);
+  assert.match(appShell, /<main className="rawaj-app-shell__content"/);
+
+  assert.match(foundation, /data-shell-dock="true"/);
+  assert.match(foundation, /data-shell-sticky-action="true"/);
+  assert.match(foundation, /data-shell-mode="conversation"/);
+  assert.match(foundation, /data-keyboard-open="true"/);
 });
