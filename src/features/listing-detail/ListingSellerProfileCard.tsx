@@ -8,6 +8,7 @@ import {
   Store,
   User,
 } from "lucide-react";
+import { useState } from "react";
 import type {
   ClassifiedListing,
   PublicSellerProfile,
@@ -40,6 +41,9 @@ export function ListingSellerProfileCard({
     : null;
   const rating = seller?.ratingSummary.average;
   const ratingCount = seller?.ratingSummary.count ?? 0;
+  const avatarUrl = seller?.avatarUrl ?? null;
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
+  const showAvatar = Boolean(avatarUrl && failedAvatarUrl !== avatarUrl);
 
   return (
     <section
@@ -48,23 +52,20 @@ export function ListingSellerProfileCard({
       data-profile-contract="public-seller-data"
     >
       <div className="rawaj-detail-seller__identity">
-        <div
-          className="rawaj-detail-seller__avatar relative"
-          data-loading={loading}
-        >
-          <User aria-hidden="true" />
-          {seller?.avatarUrl ? (
+        <div className="rawaj-detail-seller__avatar" data-loading={loading}>
+          {showAvatar ? (
             <img
-              className="absolute inset-0 h-full w-full object-cover"
-              src={seller.avatarUrl}
+              src={avatarUrl ?? undefined}
               alt={displayName}
               loading="lazy"
               decoding="async"
               width={64}
               height={64}
-              onError={(event) => event.currentTarget.remove()}
+              onError={() => setFailedAvatarUrl(avatarUrl)}
             />
-          ) : null}
+          ) : (
+            <User aria-hidden="true" />
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <p>{text("البائع", "Seller")}</p>
