@@ -1,0 +1,56 @@
+name: Temporary Format Diagnostics
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    if: github.head_ref == 'agent/android-release-readiness-1-0-3'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format recently changed source files
+        run: |
+          npx prettier --write \
+            src/components/shell/BottomDock.tsx \
+            src/components/native/NativeAppRuntime.tsx \
+            src/lib/journey-target-resolution.ts \
+            src/lib/native-runtime.ts \
+            src/lib/supabase.ts \
+            scripts/chat-workspace.test.mjs \
+            scripts/android-release-readiness.test.mjs
+
+      - name: Verify formatted diff
+        run: git diff --check
+
+      - name: Upload formatted files
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawaj-temporary-formatted-files
+          path: |
+            src/components/shell/BottomDock.tsx
+            src/components/native/NativeAppRuntime.tsx
+            src/lib/journey-target-resolution.ts
+            src/lib/native-runtime.ts
+            src/lib/supabase.ts
+            scripts/chat-workspace.test.mjs
+            scripts/android-release-readiness.test.mjs
+          if-no-files-found: error
+          retention-days: 1
