@@ -14,13 +14,19 @@ const [
   seoDiscovery,
   semanticSeo,
 ] = await Promise.all([
-  readFile(new URL("../docs/phases-41-50-release-readiness.md", import.meta.url), "utf8"),
+  readFile(
+    new URL("../docs/phases-41-50-release-readiness.md", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/server.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/manifest.webmanifest", import.meta.url), "utf8"),
   readFile(new URL("../capacitor.config.ts", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  readFile(
+    new URL("../.github/workflows/quality-gate.yml", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("./public-data-security.test.mjs", import.meta.url), "utf8"),
   readFile(new URL("./seo-discovery.test.mjs", import.meta.url), "utf8"),
   readFile(new URL("./semantic-seo.test.mjs", import.meta.url), "utf8"),
@@ -42,8 +48,14 @@ test("phase 41 keeps server and public-data security controls permanent", () => 
   }
   assert.match(server, /isSensitiveAuthPath/);
   assert.match(server, /no-store, max-age=0/);
-  assert.match(publicSecurity, /public listing allowlist excludes moderation-only fields/);
-  assert.match(publicSecurity, /JSON-LD serialization neutralizes script-breaking characters/);
+  assert.match(
+    publicSecurity,
+    /public listing allowlist excludes moderation-only fields/,
+  );
+  assert.match(
+    publicSecurity,
+    /JSON-LD serialization neutralizes script-breaking characters/,
+  );
 });
 
 test("phase 42 retains canonical indexing and honest semantic SEO contracts", () => {
@@ -61,7 +73,10 @@ test("phases 43 to 46 remain represented by production, responsive and accessibi
   assert.match(qualityGate, /Adaptive Listing Cards contract/);
   assert.match(qualityGate, /Desktop Experience V1 contract/);
   assert.match(qualityGate, /Spatial App Shell contract/);
-  assert.match(qualityGate, /Header Navigation contract|Header navigation contract|Header.*contract/);
+  assert.match(
+    qualityGate,
+    /Header Navigation contract|Header navigation contract|Header.*contract/,
+  );
   assert.match(qualityGate, /Bottom Dock.*contract/);
 });
 
@@ -76,7 +91,10 @@ test("phase 47 keeps installable PWA and narrow Capacitor production identity", 
   assert.match(capacitor, /appId: "com\.rawaj\.marketplace"/);
   assert.match(capacitor, /url: "https:\/\/rawa-j\.com"/);
   assert.match(capacitor, /cleartext: false/);
-  assert.match(capacitor, /allowNavigation: \["rawa-j\.com", "\*\.rawa-j\.com"\]/);
+  assert.match(
+    capacitor,
+    /allowNavigation: \["rawa-j\.com", "\*\.rawa-j\.com"\]/,
+  );
 });
 
 test("phase 48 keeps analytics, error capture and deployment diagnosis attached", () => {
@@ -93,8 +111,14 @@ test("phases 49 and 50 define one executable matrix and honest rollback boundary
   assert.match(packageConfig.scripts.check, /npm run typecheck/);
   assert.match(packageConfig.scripts.check, /npm run build/);
   assert.match(qualityGate, /Production build/);
-  assert.match(truth, /Production acceptance remains manual-only, read-only and commit-identity checked/);
+  assert.match(
+    truth,
+    /Production acceptance remains manual-only, read-only and commit-identity checked/,
+  );
   assert.match(truth, /redeploying the last verified production commit/);
   assert.match(truth, /Database rollback is never assumed/);
-  assert.match(truth, /does not claim completion of the later production and real-phone release gate/);
+  assert.match(
+    truth,
+    /does not claim completion of the later production and real-phone release gate/,
+  );
 });
