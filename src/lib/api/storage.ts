@@ -34,6 +34,9 @@ export function validateReceiptExtension(filename: string): boolean {
 }
 
 export function validateImageFile(file: File): { ok: boolean; error?: string } {
+  if (file.size <= 0) {
+    return { ok: false, error: "ملف الصورة فارغ أو تالف." };
+  }
   if (!validateImageMimeType(file.type)) {
     return { ok: false, error: "الصيغ المسموحة للصور: JPG أو PNG أو WebP." };
   }
@@ -47,6 +50,9 @@ export function validateImageFile(file: File): { ok: boolean; error?: string } {
 }
 
 export function validateReceiptFile(file: File): { ok: boolean; error?: string } {
+  if (file.size <= 0) {
+    return { ok: false, error: "ملف الإيصال فارغ أو تالف." };
+  }
   if (!validateReceiptMimeType(file.type)) {
     return { ok: false, error: "الصيغ المسموحة للإيصال: JPG أو PNG أو WebP أو PDF." };
   }
@@ -60,6 +66,9 @@ export function validateReceiptFile(file: File): { ok: boolean; error?: string }
 }
 
 export function validateProfileImageFile(file: File): { ok: boolean; error?: string } {
+  if (file.size <= 0) {
+    return { ok: false, error: "ملف صورة الحساب فارغ أو تالف." };
+  }
   if (!validateImageMimeType(file.type)) {
     return { ok: false, error: "الصيغ المسموحة للصور: JPG أو PNG أو WebP." };
   }
