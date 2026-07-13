@@ -1,12 +1,18 @@
 const blockedReturnPrefixes = ["/auth/callback", "/login", "/reset-password"];
 const DEFAULT_AUTH_RETURN_TO = "/more";
 const MAX_AUTH_RETURN_LENGTH = 2048;
-const controlCharactersPattern = /[\u0000-\u001f\u007f]/;
 
 function isBlockedAuthReturnPath(pathname: string) {
   return blockedReturnPrefixes.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
+}
+
+function containsControlCharacter(value: string) {
+  return Array.from(value).some((character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return codePoint <= 31 || codePoint === 127;
+  });
 }
 
 function safeFallback(value: unknown) {
@@ -21,7 +27,7 @@ export function sanitizeAuthReturnTo(value: unknown, fallback = DEFAULT_AUTH_RET
   if (
     !trimmed ||
     trimmed.length > MAX_AUTH_RETURN_LENGTH ||
-    controlCharactersPattern.test(trimmed) ||
+    containsControlCharacter(trimmed) ||
     !trimmed.startsWith("/") ||
     trimmed.startsWith("//")
   )
