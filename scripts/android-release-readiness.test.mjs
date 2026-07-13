@@ -16,6 +16,8 @@ const [
   nativeErrorPage,
   buildGradle,
   androidWorkflow,
+  preparePreview,
+  verifyPreview,
 ] = await Promise.all([
   readFile(new URL("../src/lib/auth.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/auth.callback.tsx", import.meta.url), "utf8"),
@@ -42,6 +44,8 @@ const [
   readFile(new URL("../public/native-error.html", import.meta.url), "utf8"),
   readFile(new URL("../android/app/build.gradle", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/android-release-readiness.yml", import.meta.url), "utf8"),
+  readFile(new URL("./prepare_android_bundled_preview.py", import.meta.url), "utf8"),
+  readFile(new URL("./verify_android_bundled_preview.py", import.meta.url), "utf8"),
 ]);
 
 test("Google OAuth uses a PKCE callback owned by the Android app", () => {
@@ -63,7 +67,10 @@ test("Native auth sessions survive WebView reloads and app restarts", () => {
   assert.match(nativeRuntime, /RawajNative\.removeAuthStorage/);
   assert.match(nativeRuntime, /legacyValue/);
   assert.match(nativePlugin, /AUTH_STORAGE_NAME = "rawaj_native_auth_storage"/);
-  assert.match(nativePlugin, /getSharedPreferences\(AUTH_STORAGE_NAME, Context\.MODE_PRIVATE\)/);
+  assert.match(
+    nativePlugin,
+    /getSharedPreferences\(AUTH_STORAGE_NAME, Context\.MODE_PRIVATE\)/,
+  );
   assert.match(nativePlugin, /public void getAuthStorage/);
   assert.match(nativePlugin, /public void setAuthStorage/);
   assert.match(nativePlugin, /public void removeAuthStorage/);
@@ -114,7 +121,16 @@ test("Android back navigation preserves WebView history", () => {
 
 test("External communication and map links leave the WebView through a strict native bridge", () => {
   assert.match(nativePlugin, /@CapacitorPlugin\(name = "RawajNative"\)/);
-  for (const scheme of ["http", "https", "tel", "mailto", "sms", "geo", "market", "whatsapp"]) {
+  for (const scheme of [
+    "http",
+    "https",
+    "tel",
+    "mailto",
+    "sms",
+    "geo",
+    "market",
+    "whatsapp",
+  ]) {
     assert.match(nativePlugin, new RegExp(`"${scheme}"`));
   }
   assert.match(nativePlugin, /Intent\.ACTION_VIEW/);
@@ -154,18 +170,21 @@ test("Android device tests bundle the branch UI without changing production rele
   assert.match(androidWorkflow, /cp \/tmp\/rawaj-index\.html \.output\/public\/index\.html/);
   assert.match(androidWorkflow, /RAWAJ_ANDROID_BUNDLED_PREVIEW:\s*"1"/);
   assert.match(androidWorkflow, /Lock bundled preview to local origin/);
-  assert.match(androidWorkflow, /RAWAJ_ORIGIN = \\"https:\/\/localhost\\"/);
-  assert.match(androidWorkflow, /forceBundledPreviewOrigin/);
-  assert.match(androidWorkflow, /localPreviewUrl/);
-  assert.match(androidWorkflow, /Verify bundled preview identity and payload/);
-  assert.match(androidWorkflow, /Bundled preview unexpectedly contains server\.url/);
-  assert.match(androidWorkflow, /rawaj-chat-inbox/);
-  assert.match(androidWorkflow, /rawaj-message-workspace/);
-  assert.match(androidWorkflow, /getAuthStorage/);
+  assert.match(androidWorkflow, /python scripts\/prepare_android_bundled_preview\.py/);
+  assert.match(androidWorkflow, /python scripts\/verify_android_bundled_preview\.py/);
   assert.match(androidWorkflow, /Assemble bundled branch-preview debug APK/);
   assert.match(androidWorkflow, /Restore production Android configuration/);
   assert.match(androidWorkflow, /rawaj-android-1\.0\.3-bundled-preview-apk/);
-  assert.doesNotMatch(androidWorkflow, /clearCache\(true\)/);
+
+  assert.match(preparePreview, /RAWAJ_ORIGIN = \\"https:\/\/localhost\\"/);
+  assert.match(preparePreview, /forceBundledPreviewOrigin/);
+  assert.match(preparePreview, /localPreviewUrl/);
+  assert.doesNotMatch(preparePreview, /clearCache\(true\)/);
+
+  assert.match(verifyPreview, /Bundled preview unexpectedly contains server\.url/);
+  assert.match(verifyPreview, /rawaj-chat-inbox/);
+  assert.match(verifyPreview, /rawaj-message-workspace/);
+  assert.match(verifyPreview, /getAuthStorage/);
 });
 
 test("Play identity and version remain unchanged during readiness work", () => {
