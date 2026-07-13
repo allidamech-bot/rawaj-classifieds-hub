@@ -304,7 +304,7 @@ function NotificationsPage() {
   return (
     <>
       <PageHeader title={text("التنبيهات", "Notifications")} to="/more" backMode="history" />
-      <main className="rawaj-communication-v2 rawaj-communication-v2--notifications container-wide mobile-page-bottom space-y-5 pt-4">
+      <main className="rawaj-communication-v2 rawaj-communication-v2--notifications container-wide rawaj-content-stack mobile-page-bottom pt-4">
         {auth.status !== "signedIn" ? (
           <CommunicationSignedOut returnTo="/notifications" />
         ) : (
