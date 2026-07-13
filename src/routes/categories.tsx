@@ -141,7 +141,7 @@ function CategoriesPage() {
   return (
     <>
       <PageHeader title={text("الأقسام", "Categories")} />
-      <main className="rawaj-categories-v2 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+      <main className="rawaj-categories-v2 container-wide rawaj-content-stack mobile-page-bottom pb-8 pt-3 sm:pt-5">
         <section className="rawaj-categories-v2__hero rounded-[1.55rem] sm:rounded-[1.9rem]">
           <div className="p-4 sm:p-6">
             <div className="flex items-start gap-3">
