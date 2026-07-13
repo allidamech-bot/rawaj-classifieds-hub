@@ -62,7 +62,7 @@ function HomePage() {
       <AppHeader />
       <main className="rawaj-home-v3-main">
         <PageTransition>
-          <PageContainer className="rawaj-home-v3 py-3 sm:py-5 lg:py-7">
+          <PageContainer className="rawaj-home-v3 rawaj-content-stack py-3 sm:py-5 lg:py-7">
             <DiscoveryHero
               searchValue={searchValue}
               onSearchValueChange={setSearchValue}
