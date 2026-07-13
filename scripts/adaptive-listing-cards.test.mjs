@@ -13,6 +13,7 @@ const [
   featured,
   skeleton,
   shared,
+  cardImage,
   utils,
   legacyComponents,
   listingsRoute,
@@ -43,6 +44,7 @@ const [
     new URL("../src/features/listings/cards/ListingCardShared.tsx", import.meta.url),
     "utf8",
   ),
+  readFile(new URL("../src/features/listings/cards/ListingCardImage.tsx", import.meta.url), "utf8"),
   readFile(
     new URL("../src/features/listings/cards/listing-card-utils.ts", import.meta.url),
     "utf8",
@@ -100,12 +102,21 @@ test("shared cards preserve media, state, links, action slot, location, and time
   assert.match(shared, /params=\{\{ id: listing\.id \}\}/);
   assert.match(shared, /loading=\{imageLoading\}/);
   assert.match(shared, /listing\.primaryImageUrl/);
-  assert.match(shared, /PlaceholderArt/);
+  assert.match(shared, /<ListingCardImage/);
   assert.match(shared, /data-tone="reserved"/);
   assert.match(shared, /data-tone="featured"/);
   assert.match(shared, /rawaj-adaptive-card__action/);
   assert.match(shared, /listingLocationDisplay\(listing, language\)/);
   assert.match(shared, /formatDate\(listing\.createdAt, language\)/);
+});
+
+test("listing card images fall back cleanly when a media URL fails", () => {
+  assert.match(cardImage, /onError=\{\(\) => setFailedSrc\(src\)\}/);
+  assert.match(cardImage, /failedSrc === src/);
+  assert.match(cardImage, /<PlaceholderArt type=\{placeholder\} aspect="standard" \/>/);
+  assert.match(cardImage, /useState<string \| null>\(null\)/);
+  assert.doesNotMatch(cardImage, /useEffect/);
+  assert.match(featured, /<ListingCardImage/);
 });
 
 test("compact and featured variants replace route-local card duplication", () => {

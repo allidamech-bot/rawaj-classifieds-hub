@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Clock, MapPin } from "lucide-react";
 import type { ReactNode } from "react";
-import { PlaceholderArt } from "@/components/PlaceholderArt";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized } from "@/lib/i18n";
 import { listingLocationDisplay } from "@/lib/listing-location-display";
@@ -9,6 +8,7 @@ import { useUiPreferences } from "@/lib/ui-preferences";
 import { cn } from "@/lib/utils";
 import { formatDate } from "../listings-components";
 import type { ListingCardFact } from "./listing-card-utils";
+import { ListingCardImage } from "./ListingCardImage";
 
 interface ListingCardFrameProps {
   listing: ClassifiedListing;
@@ -42,17 +42,13 @@ export function ListingCardFrame({
     >
       <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-adaptive-card__link">
         <div className={cn("rawaj-adaptive-card__media", mediaClassName)}>
-          {listing.primaryImageUrl ? (
-            <img
-              src={listing.primaryImageUrl}
-              alt={listing.title}
-              loading={imageLoading}
-              fetchPriority={imagePriority}
-              decoding="async"
-            />
-          ) : (
-            <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="standard" />
-          )}
+          <ListingCardImage
+            src={listing.primaryImageUrl}
+            alt={listing.title}
+            placeholder={listing.categoryPlaceholder ?? "misc"}
+            loading={imageLoading}
+            fetchPriority={imagePriority}
+          />
           {listing.reservedAt ? (
             <span className="rawaj-adaptive-card__status" data-tone="reserved">
               {text("محجوز", "Reserved")}
