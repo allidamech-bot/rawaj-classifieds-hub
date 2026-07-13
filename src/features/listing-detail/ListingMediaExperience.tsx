@@ -37,12 +37,15 @@ export function ListingMediaExperience({
     selectedUrl,
     loadedUrl,
     setLoadedUrl,
+    failedUrls,
+    markImageFailed,
     viewerOpen,
     setViewerOpen,
     goTo,
     handleTouchStart,
     handleTouchEnd,
   } = useListingMediaState(images);
+  const selectedImageFailed = selectedUrl ? failedUrls.has(selectedUrl) : false;
 
   return (
     <>
@@ -53,7 +56,7 @@ export function ListingMediaExperience({
         onTouchEnd={handleTouchEnd}
       >
         <div className="rawaj-detail-media__stage">
-          {selectedUrl ? (
+          {selectedUrl && !selectedImageFailed ? (
             <>
               <div
                 className="rawaj-detail-media__skeleton"
@@ -66,6 +69,7 @@ export function ListingMediaExperience({
                 decoding="async"
                 fetchPriority="high"
                 onLoad={() => setLoadedUrl(selectedUrl)}
+                onError={() => markImageFailed(selectedUrl)}
                 className="rawaj-detail-media__image"
               />
             </>
@@ -147,17 +151,30 @@ export function ListingMediaExperience({
             className="rawaj-detail-media__thumbnails"
             aria-label={text("مصغرات الصور", "Thumbnails")}
           >
-            {visibleImages.map((image, index) => (
-              <button
-                key={image.id}
-                type="button"
-                onClick={() => goTo(index)}
-                aria-pressed={selectedIndex === index}
-                aria-label={text(`عرض الصورة ${index + 1}`, `View image ${index + 1}`)}
-              >
-                <img src={image.publicUrl ?? ""} alt="" loading="lazy" decoding="async" />
-              </button>
-            ))}
+            {visibleImages.map((image, index) => {
+              const imageUrl = image.publicUrl ?? "";
+              return (
+                <button
+                  key={image.id}
+                  type="button"
+                  onClick={() => goTo(index)}
+                  aria-pressed={selectedIndex === index}
+                  aria-label={text(`عرض الصورة ${index + 1}`, `View image ${index + 1}`)}
+                >
+                  {failedUrls.has(imageUrl) ? (
+                    <PlaceholderArt type={placeholder} aspect="standard" />
+                  ) : (
+                    <img
+                      src={imageUrl}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      onError={() => markImageFailed(imageUrl)}
+                    />
+                  )}
+                </button>
+              );
+            })}
           </div>
         ) : null}
 
@@ -171,6 +188,9 @@ export function ListingMediaExperience({
             onOpenChange={setViewerOpen}
             images={visibleImages}
             title={title}
+            placeholder={placeholder}
+            failedUrls={failedUrls}
+            onImageError={markImageFailed}
             selectedIndex={selectedIndex}
             onSelectedIndexChange={goTo}
             text={text}

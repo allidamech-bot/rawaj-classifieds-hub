@@ -9,6 +9,7 @@ export function useListingMediaState(images: ListingImage[]) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
+  const [failedUrls, setFailedUrls] = useState<Set<string>>(() => new Set());
   const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
@@ -25,6 +26,15 @@ export function useListingMediaState(images: ListingImage[]) {
     },
     [visibleImages.length],
   );
+
+  const markImageFailed = useCallback((url: string) => {
+    setFailedUrls((current) => {
+      if (current.has(url)) return current;
+      const next = new Set(current);
+      next.add(url);
+      return next;
+    });
+  }, []);
 
   const handleTouchStart = useCallback((event: TouchEvent<HTMLElement>) => {
     touchStartX.current = event.touches[0]?.clientX ?? null;
@@ -52,6 +62,8 @@ export function useListingMediaState(images: ListingImage[]) {
     selectedUrl,
     loadedUrl,
     setLoadedUrl,
+    failedUrls,
+    markImageFailed,
     viewerOpen,
     setViewerOpen,
     goTo,
