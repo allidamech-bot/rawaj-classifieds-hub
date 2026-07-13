@@ -1,7 +1,10 @@
 import { fetchOwnerListingDetail } from "@/lib/api/listings";
 import { getClient, mapError } from "@/lib/api/shared";
 import type { ListingExpiryOption } from "@/lib/api/listing-expiry";
-import type { ClassifiedListing, ClassifiedsResult } from "@/lib/classifieds-types";
+import type {
+  ClassifiedListing,
+  ClassifiedsResult,
+} from "@/lib/classifieds-types";
 
 export type OwnerCloseListingStatus = "sold" | "rented" | "unavailable";
 
@@ -36,24 +39,33 @@ function runOwnerTransition(
       if (!userId) {
         return {
           ok: false,
-          error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث حالة الإعلان." },
+          error: {
+            code: "auth_required",
+            message: "يجب تسجيل الدخول لتحديث حالة الإعلان.",
+          },
         };
       }
 
       if (!cleanListingId) {
         return {
           ok: false,
-          error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+          error: {
+            code: "validation_error",
+            message: "تعذر تحديد الإعلان المطلوب.",
+          },
         };
       }
 
       const clientResult = getClient();
       if (!clientResult.ok) return clientResult;
 
-      const { error } = await clientResult.data.rpc("rawaj_owner_transition_listing", {
-        p_listing_id: cleanListingId,
-        p_action: action,
-      });
+      const { error } = await clientResult.data.rpc(
+        "rawaj_owner_transition_listing",
+        {
+          p_listing_id: cleanListingId,
+          p_action: action,
+        },
+      );
       if (error) return { ok: false, error: mapError(error) };
 
       return fetchOwnerListingDetail(userId, cleanListingId);
@@ -88,24 +100,33 @@ export function setOwnerListingExpiry(
       if (!userId) {
         return {
           ok: false,
-          error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث مدة الإعلان." },
+          error: {
+            code: "auth_required",
+            message: "يجب تسجيل الدخول لتحديث مدة الإعلان.",
+          },
         };
       }
 
       if (!cleanListingId) {
         return {
           ok: false,
-          error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+          error: {
+            code: "validation_error",
+            message: "تعذر تحديد الإعلان المطلوب.",
+          },
         };
       }
 
       const clientResult = getClient();
       if (!clientResult.ok) return clientResult;
 
-      const { error } = await clientResult.data.rpc("rawaj_owner_set_listing_expiry", {
-        p_listing_id: cleanListingId,
-        p_expiry_days: option === "never" ? null : option,
-      });
+      const { error } = await clientResult.data.rpc(
+        "rawaj_owner_set_listing_expiry",
+        {
+          p_listing_id: cleanListingId,
+          p_expiry_days: option === "never" ? null : option,
+        },
+      );
       if (error) return { ok: false, error: mapError(error) };
 
       return fetchOwnerListingDetail(userId, cleanListingId);
@@ -124,23 +145,32 @@ export function confirmOwnerListingAvailability(
       if (!userId) {
         return {
           ok: false,
-          error: { code: "auth_required", message: "يجب تسجيل الدخول لتأكيد توفر الإعلان." },
+          error: {
+            code: "auth_required",
+            message: "يجب تسجيل الدخول لتأكيد توفر الإعلان.",
+          },
         };
       }
 
       if (!cleanListingId) {
         return {
           ok: false,
-          error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+          error: {
+            code: "validation_error",
+            message: "تعذر تحديد الإعلان المطلوب.",
+          },
         };
       }
 
       const clientResult = getClient();
       if (!clientResult.ok) return clientResult;
 
-      const { error } = await clientResult.data.rpc("rawaj_owner_confirm_listing_availability", {
-        p_listing_id: cleanListingId,
-      });
+      const { error } = await clientResult.data.rpc(
+        "rawaj_owner_confirm_listing_availability",
+        {
+          p_listing_id: cleanListingId,
+        },
+      );
       if (error) return { ok: false, error: mapError(error) };
 
       return fetchOwnerListingDetail(userId, cleanListingId);
