@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "baseline": {
     "branch": "main",
-    "commit": "d87508320dc00a999e884f24fc32f94a2b2c905d",
-    "lastMergedPullRequest": 300,
+    "commit": "7c451222605c79f4453a5bdede2efc7fb0608301",
+    "lastMergedPullRequest": 303,
     "capturedAt": "2026-07-13"
   },
   "classificationDefinitions": {
@@ -126,7 +126,8 @@
       "202607100011_verification_documents_v2.sql",
       "202607110015_ad_placement_media_contract.sql",
       "202607110016_promotion_status_notifications.sql",
-      "202607130001_canonical_listing_taxonomy_assignments.sql"
+      "202607130001_canonical_listing_taxonomy_assignments.sql",
+      "202607130002_arabic_listing_search_normalization.sql"
     ],
     "superseded": [
       "202606290002_classifieds_foundation.sql"
