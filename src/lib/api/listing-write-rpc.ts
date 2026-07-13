@@ -84,8 +84,7 @@ async function runOwnerListingUpdate(
   if (payload.subcategoryId !== undefined) patch.subcategory_id = payload.subcategoryId;
   if (payload.governorateId) patch.governorate_id = payload.governorateId;
   if (payload.title?.trim()) patch.title = payload.title.trim();
-  if (payload.description !== undefined)
-    patch.description = payload.description?.trim() ?? null;
+  if (payload.description !== undefined) patch.description = payload.description?.trim() ?? null;
   if (payload.price !== undefined) patch.price = payload.price;
   if (payload.priceType) patch.price_type = payload.priceType;
   if (payload.condition) patch.listing_condition = payload.condition;
@@ -93,8 +92,7 @@ async function runOwnerListingUpdate(
   if (payload.districtAr !== undefined) {
     const locationWrite = await resolveListingLocationWrite(
       clientResult.data,
-      payload.governorateId ??
-        rowString(existing as Record<string, unknown>, "governorate_id"),
+      payload.governorateId ?? rowString(existing as Record<string, unknown>, "governorate_id"),
       payload.districtAr,
     );
     if (!locationWrite.ok) return locationWrite;
