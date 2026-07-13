@@ -62,7 +62,10 @@ export function BottomDock({ pathname }: BottomDockProps) {
       data-shell-region="bottom-dock-region"
       aria-label={text("التنقل الرئيسي", "Primary navigation")}
     >
-      <div className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid max-w-[31rem] grid-cols-5 items-end px-1.5 pb-1 pt-1.5">
+      <div
+        className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid max-w-[31rem] grid-cols-5 items-end px-1.5 pb-1 pt-1.5"
+        role="list"
+      >
         {items.map((item) => {
           const active = activeSection === item.section;
           const Icon = item.icon;
@@ -73,17 +76,27 @@ export function BottomDock({ pathname }: BottomDockProps) {
               : item.section === "account"
                 ? counts.notifications
                 : 0;
+          const accessibleLabel =
+            badgeCount > 0
+              ? text(
+                  `${label}، ${badgeCount > 99 ? "أكثر من 99" : badgeCount} غير مقروء`,
+                  `${label}, ${badgeCount > 99 ? "more than 99" : badgeCount} unread`,
+                )
+              : label;
 
           return (
             <Link
               key={item.to}
               to={item.to}
+              preload="intent"
+              role="listitem"
               data-active={active}
               data-primary={item.primary === true}
-              className={`rawaj-dock-item relative flex min-h-[3.7rem] min-w-0 flex-col items-center justify-end gap-1 rounded-[0.95rem] px-1 pb-1.5 pt-1 active:scale-[0.98] ${
+              data-badge-count={badgeCount > 0 ? badgeCount : undefined}
+              className={`rawaj-dock-item relative flex min-h-[3.7rem] min-w-0 flex-col items-center justify-end gap-1 rounded-[0.95rem] px-1 pb-1.5 pt-1 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
                 item.primary ? "text-brand-orange" : ""
               }`}
-              aria-label={label}
+              aria-label={accessibleLabel}
               aria-current={active ? "page" : undefined}
             >
               <span
@@ -95,11 +108,15 @@ export function BottomDock({ pathname }: BottomDockProps) {
                 }`}
               >
                 <Icon
+                  aria-hidden="true"
                   className={item.primary ? "h-6 w-6" : "h-5 w-5"}
                   strokeWidth={active || item.primary ? 2.2 : 1.8}
                 />
                 {badgeCount > 0 ? (
-                  <span className="rawaj-bottom-dock__badge rawaj-notification-badge absolute -end-1.5 -top-1.5 grid min-h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold leading-none ring-2 ring-card">
+                  <span
+                    aria-hidden="true"
+                    className="rawaj-bottom-dock__badge rawaj-notification-badge absolute -end-1.5 -top-1.5 grid min-h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold leading-none ring-2 ring-card"
+                  >
                     {badgeCount > 99 ? "99+" : badgeCount}
                   </span>
                 ) : null}
@@ -112,7 +129,10 @@ export function BottomDock({ pathname }: BottomDockProps) {
                 {label}
               </span>
               {active && !item.primary ? (
-                <span className="rawaj-dock-active-indicator absolute inset-x-4 bottom-0 h-0.5 rounded-full" />
+                <span
+                  aria-hidden="true"
+                  className="rawaj-dock-active-indicator absolute inset-x-4 bottom-0 h-0.5 rounded-full"
+                />
               ) : null}
             </Link>
           );
