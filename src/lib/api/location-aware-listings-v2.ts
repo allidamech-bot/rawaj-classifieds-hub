@@ -39,9 +39,7 @@ export async function fetchPublicListingsCanonicalAware(
   if (!references.ok) return { ok: false, error: references.error };
 
   const rawSearchTerm = filters.query?.trim() ?? "";
-  const useNormalizedSearch = rawSearchTerm
-    ? await supportsNormalizedListingSearch(client)
-    : false;
+  const useNormalizedSearch = rawSearchTerm ? await supportsNormalizedListingSearch(client) : false;
 
   let query = client
     .from("listings")

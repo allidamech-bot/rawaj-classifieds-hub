@@ -129,9 +129,7 @@
       "202607130001_canonical_listing_taxonomy_assignments.sql",
       "202607130002_arabic_listing_search_normalization.sql"
     ],
-    "superseded": [
-      "202606290002_classifieds_foundation.sql"
-    ],
+    "superseded": ["202606290002_classifieds_foundation.sql"],
     "reconciliation": [
       "202607020004_fix_verification_status_enum_cast.sql",
       "202607050001_reconcile_listing_image_storage_visibility.sql",
