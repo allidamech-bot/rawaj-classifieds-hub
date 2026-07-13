@@ -96,9 +96,9 @@ export function AppShell({
           </div>
         ) : null}
 
-        <main className="rawaj-app-shell__content" data-shell-region="page-content">
+        <div className="rawaj-app-shell__content" data-shell-region="page-content">
           {children}
-        </main>
+        </div>
 
         {config.showFooter ? <SiteFooter /> : null}
       </div>
