@@ -31,10 +31,8 @@ export function createSupportRequest(
 export function createAccountDeletionRequest(
   userId: Parameters<typeof baseCreateAccountDeletionRequest>[0],
 ) {
-  return runDeduplicatedRequest(
-    userId ?? "anonymous",
-    pendingAccountDeletionRequests,
-    () => baseCreateAccountDeletionRequest(userId),
+  return runDeduplicatedRequest(userId ?? "anonymous", pendingAccountDeletionRequests, () =>
+    baseCreateAccountDeletionRequest(userId),
   );
 }
 
