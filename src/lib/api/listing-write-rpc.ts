@@ -27,7 +27,11 @@ export function updateOwnerListing(
   const pending = ownerUpdateRequests.get(requestKey);
   if (pending) return pending;
 
-  const request = runOwnerListingUpdate(userId, cleanListingId, payload).finally(() => {
+  const request = runOwnerListingUpdate(
+    userId,
+    cleanListingId,
+    payload,
+  ).finally(() => {
     ownerUpdateRequests.delete(requestKey);
   });
   ownerUpdateRequests.set(requestKey, request);
