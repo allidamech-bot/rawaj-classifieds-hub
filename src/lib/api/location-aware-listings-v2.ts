@@ -17,6 +17,10 @@ import {
   getClient,
   mapError,
 } from "@/lib/api/shared";
+import {
+  normalizeArabicSearchTerm,
+  supportsNormalizedListingSearch,
+} from "@/lib/search-normalization";
 
 export async function fetchPublicListingsCanonicalAware(
   filters: ListingFilters = {},
@@ -33,6 +37,9 @@ export async function fetchPublicListingsCanonicalAware(
   if (!idsResult.ok) return idsResult;
   const references = await readReferences(client);
   if (!references.ok) return { ok: false, error: references.error };
+
+  const rawSearchTerm = filters.query?.trim() ?? "";
+  const useNormalizedSearch = rawSearchTerm ? await supportsNormalizedListingSearch(client) : false;
 
   let query = client
     .from("listings")
@@ -65,9 +72,14 @@ export async function fetchPublicListingsCanonicalAware(
   ];
   for (const [column, value] of exact) if (value?.trim()) query = query.eq(column, value);
   if (filters.rooms !== undefined) query = query.eq("details->>rooms", String(filters.rooms));
-  if (filters.query?.trim()) {
-    const term = escapePostgrestSearchTerm(filters.query.trim());
-    query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
+  if (rawSearchTerm) {
+    const normalizedTerm = useNormalizedSearch
+      ? normalizeArabicSearchTerm(rawSearchTerm)
+      : rawSearchTerm;
+    const term = escapePostgrestSearchTerm(normalizedTerm);
+    query = useNormalizedSearch
+      ? query.ilike("search_text_normalized", `%${term}%`)
+      : query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
   }
 
   const sort = filters.sort ?? "latest";
