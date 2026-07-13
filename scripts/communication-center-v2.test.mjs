@@ -47,16 +47,13 @@ test("shared communication components avoid unsupported presence and read claims
 });
 
 test("participant avatars reserve space and recover from broken identity media", () => {
-  for (const contract of [
-    /AvatarImage/,
-    /AvatarFallback/,
-    /loading="lazy"/,
-    /decoding="async"/,
-    /width=\{44\}/,
-    /height=\{44\}/,
-    /name\.slice\(0, 1\)/,
-  ])
-    assert.match(shared, contract);
+  assert.match(shared, /AvatarImage/);
+  assert.match(shared, /AvatarFallback/);
+  assert.match(shared, /loading="lazy"/);
+  assert.match(shared, /decoding="async"/);
+  assert.match(shared, /width=\{44\}/);
+  assert.match(shared, /height=\{44\}/);
+  assert.match(shared, /name\.slice\(0, 1\)/);
   assert.doesNotMatch(shared, /url \? <img/);
 });
 
