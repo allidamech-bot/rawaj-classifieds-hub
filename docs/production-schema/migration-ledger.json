@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "baseline": {
     "branch": "main",
-    "commit": "a9a53981ab82de385604f4145e0975aaace97b40",
-    "lastMergedPullRequest": 209,
-    "capturedAt": "2026-07-10"
+    "commit": "2d9440fc650c2f9de389d60841a7fbf42863bb32",
+    "lastMergedPullRequest": 299,
+    "capturedAt": "2026-07-13"
   },
   "classificationDefinitions": {
     "canonical": "Part of the intended clean-install schema history.",
@@ -47,7 +47,6 @@
   "classifications": {
     "canonical": [
       "202606290001_auth_roles_foundation.sql",
-      "202606290002_classifieds_foundation.sql",
       "202606300001_core_marketplace_schema_rls.sql",
       "202607010001_notifications_profile_roles_contract.sql",
       "202607010002_support_requests_contract.sql",
@@ -127,6 +126,9 @@
       "202607100011_verification_documents_v2.sql",
       "202607110015_ad_placement_media_contract.sql",
       "202607110016_promotion_status_notifications.sql"
+    ],
+    "superseded": [
+      "202606290002_classifieds_foundation.sql"
     ],
     "reconciliation": [
       "202607020004_fix_verification_status_enum_cast.sql",
