@@ -20,10 +20,7 @@ function safeFallback(value: unknown): string {
   return sanitizeAuthReturnTo(value, DEFAULT_AUTH_RETURN_TO);
 }
 
-export function sanitizeAuthReturnTo(
-  value: unknown,
-  fallback = DEFAULT_AUTH_RETURN_TO,
-): string {
+export function sanitizeAuthReturnTo(value: unknown, fallback = DEFAULT_AUTH_RETURN_TO): string {
   const normalizedFallback = safeFallback(fallback);
   if (typeof value !== "string") return normalizedFallback;
   const trimmed = value.trim();
