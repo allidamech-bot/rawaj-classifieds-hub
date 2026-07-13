@@ -1,5 +1,7 @@
 import type { Conversation } from "@/lib/classifieds-types";
 
+export const CHAT_INBOX_TARGET = "__inbox__";
+
 export type ConversationTargetResolution =
   | { kind: "selected"; conversation: Conversation }
   | { kind: "missing"; requestedConversationId: string }
@@ -11,6 +13,13 @@ export function resolveConversationTarget(
   requestedConversationId?: string,
 ): ConversationTargetResolution {
   const requestedId = requestedConversationId?.trim();
+
+  if (requestedId === CHAT_INBOX_TARGET) {
+    const firstConversation = conversations[0];
+    if (firstConversation) return { kind: "default", conversation: firstConversation };
+    return { kind: "empty" };
+  }
+
   if (requestedId) {
     const selected = conversations.find((conversation) => conversation.id === requestedId);
     if (selected) return { kind: "selected", conversation: selected };
@@ -30,7 +39,9 @@ export interface JourneyTarget {
 }
 
 export type JourneyTargetFallback =
-  { kind: "browse_listings" } | { kind: "open_messages" } | { kind: "open_profile" };
+  | { kind: "browse_listings" }
+  | { kind: "open_messages" }
+  | { kind: "open_profile" };
 
 export function fallbackForMissingJourneyTarget(target: JourneyTarget): JourneyTargetFallback {
   switch (target.kind) {
