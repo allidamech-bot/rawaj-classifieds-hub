@@ -1,13 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const arabicDiacritics = new RegExp("[\\u0640\\u064B-\\u065F\\u0670\\u06D6-\\u06ED]", "g");
+const combiningMarks = /\p{M}/gu;
+const arabicTatweel = /\u0640/g;
 const whitespace = /\s+/g;
 const normalizedSearchSupport = new WeakMap<SupabaseClient, boolean>();
 
 export function normalizeArabicSearchTerm(value: string): string {
   return value
     .toLocaleLowerCase("ar")
-    .replace(arabicDiacritics, "")
+    .normalize("NFD")
+    .replace(combiningMarks, "")
+    .replace(arabicTatweel, "")
     .replace(/[أإآٱ]/g, "ا")
     .replace(/ى/g, "ي")
     .replace(/ؤ/g, "و")
