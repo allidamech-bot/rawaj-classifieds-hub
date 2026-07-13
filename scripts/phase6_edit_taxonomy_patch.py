@@ -113,20 +113,11 @@ replace_once(
     "    if (taxonomyNodeId) {\n      const taxonomyResult = await assignOwnerListingTaxonomy(\n        auth.profile?.id ?? null,\n        saveResult.data.id,\n        taxonomyNodeId,\n      );\n      if (!taxonomyResult.ok && taxonomyResult.error.code !== \"schema_missing\") {\n        setResubmitting(false);\n        setListing(saveResult.data);\n        setSavingError(taxonomyResult.error.message);\n        return;\n      }\n    }\n\n    const result = await submitOwnerListingForReview(auth.profile?.id ?? null, saveResult.data.id);",
 )
 
-# Replace second dependency occurrence only, after handleResubmit.
-file = Path(path)
-text = file.read_text()
-needle = "    subcategoryId,\n    governorateId,"
-first = text.find(needle)
-second = text.find(needle, first + 1)
-if second == -1:
-    raise SystemExit("Missing second resubmit dependency block")
-text = text[:second] + text[second:].replace(
-    needle,
+replace_once(
+    path,
+    "    subcategoryId,\n    governorateId,",
     "    subcategoryId,\n    taxonomyNodeId,\n    governorateId,",
-    1,
 )
-file.write_text(text)
 
 old_category = '''              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Field label={text("القسم", "Category")}>
