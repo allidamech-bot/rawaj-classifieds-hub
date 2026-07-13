@@ -50,8 +50,4 @@ export function deleteSavedSearch(
   ) as ReturnType<typeof baseDeleteSavedSearch>;
 }
 
-export {
-  fetchSavedSearches,
-  recordSavedSearchAlertMatch,
-  touchSavedSearchAlertChecked,
-};
+export { fetchSavedSearches, recordSavedSearchAlertMatch, touchSavedSearchAlertChecked };
