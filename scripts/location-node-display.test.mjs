@@ -18,10 +18,7 @@ const generatorSource = readFileSync(
   "utf8",
 );
 const selectorSource = readFileSync(
-  new URL(
-    "../src/features/locations/CanonicalLocationSelector.tsx",
-    import.meta.url,
-  ),
+  new URL("../src/features/locations/CanonicalLocationSelector.tsx", import.meta.url),
   "utf8",
 );
 const locationWriteSource = readFileSync(
@@ -55,30 +52,15 @@ test("does not present an unclassified locality as a proven city or village", ()
     nameEn: "Tal Dahab",
   };
 
-  assert.equal(
-    getLocationNodeOptionLabel(node, "ar"),
-    "تل الذهب — تجمّع سكاني",
-  );
+  assert.equal(getLocationNodeOptionLabel(node, "ar"), "تل الذهب — تجمّع سكاني");
   assert.equal(getLocationNodeOptionLabel(node, "en"), "Tal Dahab — Community");
 });
 
 test("guides customers through known administrative hierarchy levels", () => {
-  assert.equal(
-    getLocationLevelPrompt([{ nodeType: "governorate" }], "ar"),
-    "اختر المحافظة",
-  );
-  assert.equal(
-    getLocationLevelPrompt([{ nodeType: "district" }], "ar"),
-    "اختر المنطقة",
-  );
-  assert.equal(
-    getLocationLevelPrompt([{ nodeType: "subdistrict" }], "ar"),
-    "اختر الناحية",
-  );
-  assert.equal(
-    getLocationLevelPrompt([{ nodeType: "neighborhood" }], "ar"),
-    "اختر الحي",
-  );
+  assert.equal(getLocationLevelPrompt([{ nodeType: "governorate" }], "ar"), "اختر المحافظة");
+  assert.equal(getLocationLevelPrompt([{ nodeType: "district" }], "ar"), "اختر المنطقة");
+  assert.equal(getLocationLevelPrompt([{ nodeType: "subdistrict" }], "ar"), "اختر الناحية");
+  assert.equal(getLocationLevelPrompt([{ nodeType: "neighborhood" }], "ar"), "اختر الحي");
 });
 
 test("uses concise names when a location level has one clear node type", () => {
@@ -91,18 +73,9 @@ test("uses concise names when a location level has one clear node type", () => {
     { nodeType: "locality", nameAr: "عين النور", nameEn: "Ain Al Nour" },
   ];
 
-  assert.equal(
-    getLocationLevelOptionLabel(governorates[0], governorates, "ar"),
-    "دمشق",
-  );
-  assert.equal(
-    getLocationLevelOptionLabel(localities[0], localities, "ar"),
-    "تل الذهب",
-  );
-  assert.equal(
-    getLocationLevelOptionLabel(governorates[1], governorates, "en"),
-    "Aleppo",
-  );
+  assert.equal(getLocationLevelOptionLabel(governorates[0], governorates, "ar"), "دمشق");
+  assert.equal(getLocationLevelOptionLabel(localities[0], localities, "ar"), "تل الذهب");
+  assert.equal(getLocationLevelOptionLabel(governorates[1], governorates, "en"), "Aleppo");
 });
 
 test("keeps type labels when a location level mixes real node types", () => {
@@ -111,14 +84,8 @@ test("keeps type labels when a location level mixes real node types", () => {
     { nodeType: "town", nameAr: "مثال البلدة", nameEn: "Example Town" },
   ];
 
-  assert.equal(
-    getLocationLevelOptionLabel(mixed[0], mixed, "ar"),
-    "مثال المدينة — مدينة",
-  );
-  assert.equal(
-    getLocationLevelOptionLabel(mixed[1], mixed, "en"),
-    "Example Town — Town",
-  );
+  assert.equal(getLocationLevelOptionLabel(mixed[0], mixed, "ar"), "مثال المدينة — مدينة");
+  assert.equal(getLocationLevelOptionLabel(mixed[1], mixed, "en"), "Example Town — Town");
 });
 
 test("uses an honest mixed populated-place prompt without inventing classifications", () => {
@@ -129,22 +96,13 @@ test("uses an honest mixed populated-place prompt without inventing classificati
     { nodeType: "locality" },
   ];
 
-  assert.equal(
-    getLocationLevelPrompt(nodes, "ar"),
-    "اختر المدينة أو البلدة أو القرية أو التجمّع",
-  );
-  assert.equal(
-    getLocationLevelPrompt(nodes, "en"),
-    "Choose city, town, village, or community",
-  );
+  assert.equal(getLocationLevelPrompt(nodes, "ar"), "اختر المدينة أو البلدة أو القرية أو التجمّع");
+  assert.equal(getLocationLevelPrompt(nodes, "en"), "Choose city, town, village, or community");
 });
 
 test("guards cascading location levels against stale child responses", () => {
   assert.match(selectorSource, /childRequestSequenceRef = useRef\(0\)/);
-  assert.match(
-    selectorSource,
-    /requestSequence !== childRequestSequenceRef\.current/,
-  );
+  assert.match(selectorSource, /requestSequence !== childRequestSequenceRef\.current/);
   assert.match(selectorSource, /childRequestSequenceRef\.current \+= 1/);
 });
 
@@ -171,10 +129,7 @@ test("uses stable type-aware sort weights for source data", () => {
 });
 
 test("keeps generator and production backfill wired to type-aware ordering", () => {
-  assert.match(
-    generatorSource,
-    /sort_order: getLocationNodeSourceSortOrder\(type\)/,
-  );
+  assert.match(generatorSource, /sort_order: getLocationNodeSourceSortOrder\(type\)/);
   assert.match(sortOrderMigration, /when 'governorate' then 100/);
   assert.match(sortOrderMigration, /when 'neighborhood' then 700/);
   assert.match(sortOrderMigration, /when 'locality' then 800/);
