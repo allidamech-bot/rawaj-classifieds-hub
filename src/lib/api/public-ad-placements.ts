@@ -17,10 +17,7 @@ const activePlacementCache = new Map<
   string,
   { expiresAt: number; result: ClassifiedsResult<PublicAdPlacement[]> }
 >();
-const activePlacementRequests = new Map<
-  string,
-  Promise<ClassifiedsResult<PublicAdPlacement[]>>
->();
+const activePlacementRequests = new Map<string, Promise<ClassifiedsResult<PublicAdPlacement[]>>>();
 
 export async function fetchActiveAdPlacements(
   placementPage: AdPlacementPage,
