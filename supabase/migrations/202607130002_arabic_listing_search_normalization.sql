@@ -1,5 +1,6 @@
 -- RAWAJ Phase 8: Arabic-normalized listing search.
 -- Source-controlled only. Review and apply explicitly in Supabase Production.
+-- The application capability-probes this column and keeps legacy search until deployment.
 
 create extension if not exists pg_trgm;
 
