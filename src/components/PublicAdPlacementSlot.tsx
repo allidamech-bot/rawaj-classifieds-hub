@@ -19,6 +19,7 @@ interface LoadedPlacement {
 export function PublicAdPlacementSlot({ placementPage }: Props) {
   const { text } = useUiPreferences();
   const [loaded, setLoaded] = useState<LoadedPlacement | null>(null);
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!placementPage) return;
@@ -42,7 +43,7 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
   }, [placementPage]);
 
   const placement = loaded?.page === placementPage ? loaded.placement : null;
-  if (!placementPage || !placement) return null;
+  if (!placementPage || !placement || failedImageUrl === placement.imageUrl) return null;
 
   return (
     <aside className="container-wide mt-3" aria-label={text("مساحة إعلانية", "Advertisement")}>
@@ -60,6 +61,7 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
           alt={text("إعلان ترويجي", "Promotional advertisement")}
           loading="lazy"
           decoding="async"
+          onError={() => setFailedImageUrl(placement.imageUrl)}
           className="aspect-[3.2/1] w-full object-cover sm:aspect-[5/1]"
         />
       </a>
