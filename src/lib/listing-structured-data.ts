@@ -22,10 +22,7 @@ export function buildListingStructuredData(listing: ClassifiedListing): Record<s
       vehicleModelDate: detailValue(listing, "year"),
       model: detailValue(listing, "car_model", "model"),
       brand: detailValue(listing, "car_make", "make"),
-      mileageFromOdometer: numericProperty(
-        detailNumber(listing, "mileage_km"),
-        "KMT",
-      ),
+      mileageFromOdometer: numericProperty(detailNumber(listing, "mileage_km"), "KMT"),
       fuelType: detailValue(listing, "fuel_type"),
       vehicleTransmission: detailValue(listing, "transmission"),
       color: detailValue(listing, "color"),

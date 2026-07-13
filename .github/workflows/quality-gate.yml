@@ -4,40 +4,220 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: quality-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  phase17-integration:
-    if: github.head_ref == 'feature/phase-17-semantic-listing-types'
+  validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          ref: feature/phase-17-semantic-listing-types
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
+          fetch-depth: 2
+          show-progress: false
+
+      - name: Canonical migration ledger and collision check
+        run: node scripts/check-migration-ledger.mjs
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - name: Integrate and format semantic listing data
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint changed source files
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          python scripts/phase17_semantic_patch.py
-          npx prettier --write \
-            'src/routes/listings.$id.tsx' \
-            src/lib/listing-structured-data.ts \
-            scripts/semantic-seo.test.mjs
-      - name: Restore workflow and remove patcher
-        run: |
-          git fetch origin main --depth=1
-          git checkout origin/main -- .github/workflows/quality-gate.yml
-          rm scripts/phase17_semantic_patch.py
-      - name: Commit integration
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src scripts .github/workflows/quality-gate.yml
-          git commit -m "Integrate category-aware listing structured data"
-          git push origin HEAD:feature/phase-17-semantic-listing-types
+          base="$BASE_SHA"
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="$(git rev-parse HEAD^)"
+          fi
+
+          if ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            git fetch --no-tags --depth=1 origin "$base"
+          fi
+
+          mapfile -t files < <(
+            git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- \
+              '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
+          )
+
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No changed JS/TS source files to lint."
+            exit 0
+          fi
+
+          printf 'Linting %s\n' "${files[@]}"
+          npx eslint --quiet "${files[@]}"
+
+      - name: Syria location classification contract
+        run: npm run test:location-classification
+
+      - name: Syria location discovery and presentation contract
+        run: npm run test:location-presentation
+
+      - name: Listings mobile category switch contract
+        run: npm run test:listings-filters
+
+      - name: Seller review eligibility contract
+        run: npm run test:review-eligibility
+
+      - name: Seller review response contract
+        run: npm run test:review-response
+
+      - name: Seller review report contract
+        run: npm run test:review-report
+
+      - name: Seller review traits contract
+        run: npm run test:review-traits
+
+      - name: Listing price drop contract
+        run: npm run test:price-drop
+
+      - name: Listing reservation contract
+        run: npm run test:reservation
+
+      - name: Chat workspace contract
+        run: npm run test:chat-workspace
+
+      - name: Listing studio image parity contract
+        run: npm run test:listing-studio-images
+
+      - name: Account activity center contract
+        run: npm run test:activity-center
+
+      - name: SEO discovery contract
+        run: npm run test:seo-discovery
+
+      - name: Semantic SEO contract
+        run: npm run test:semantic-seo
+
+      - name: Verification documents V2 contract
+        run: npm run test:verification-documents
+
+      - name: Production deployment truth contract
+        run: npm run test:deployment-truth
+
+      - name: Production acceptance safety contract
+        run: npm run test:production-acceptance-contract
+
+      - name: Public data security contract
+        run: npm run test:public-data-security
+
+      - name: Admin security regression contract
+        run: node scripts/admin-security-regression.mjs
+
+      - name: Home SSR contract
+        run: npm run test:home-ssr
+
+      - name: Offers SSR contract
+        run: node --test scripts/offers-ssr.test.mjs
+
+      - name: Dynamic sitemap contract
+        run: node --test scripts/dynamic-sitemap.test.mjs
+
+      - name: Contact phone normalization contract
+        run: node --test scripts/contact-phone.test.mjs
+
+      - name: Authentication recovery contract
+        run: node --test scripts/auth-recovery.test.mjs
+
+      - name: Hydration and ad media contract
+        run: node --test scripts/home-hydration-ad-media.test.mjs
+
+      - name: Public ad placement rendering contract
+        run: node --test scripts/public-ad-placement-rendering.test.mjs
+
+      - name: Vercel Analytics integration contract
+        run: node --test scripts/vercel-analytics.test.mjs
+
+      - name: Promotion status notification contract
+        run: node --test scripts/promotion-status-notifications.test.mjs
+
+      - name: Design system V2 contract
+        run: node --test scripts/design-system-v2.test.mjs
+
+      - name: Marketplace core V2 contract
+        run: node --test scripts/marketplace-core-v2.test.mjs
+
+      - name: Home Discovery V3 contract
+        run: node --test scripts/home-discovery-v3.test.mjs
+
+      - name: Adaptive Listing Cards contract
+        run: node --test scripts/adaptive-listing-cards.test.mjs
+
+      - name: Search and Filters V1 contract
+        run: node --test scripts/search-filters-v1.test.mjs
+
+      - name: Search and Filters V2 contract
+        run: node --test scripts/search-filters-v2.test.mjs
+
+      - name: Listing Detail V2 contract
+        run: node --test scripts/listing-detail-v2.test.mjs
+
+      - name: Listing Detail V3 contract
+        run: npm run test:listing-detail-v3
+
+      - name: Listing Studio V2 contract
+        run: node --test scripts/listing-studio-v2.test.mjs
+
+      - name: Listing Studio V3 contract
+        run: node --test scripts/listing-studio-v3.test.mjs
+
+      - name: Seller Storefront V2 contract
+        run: node --test scripts/seller-storefront-v2.test.mjs
+
+      - name: Auth and Account V2 contract
+        run: node --test scripts/auth-account-v2.test.mjs
+
+      - name: Communication Center V2 contract
+        run: node --test scripts/communication-center-v2.test.mjs
+
+      - name: Launch readiness Batch 2 contract
+        run: npm run test:launch-readiness-batch-2
+
+      - name: Launch readiness Batch 4 contract
+        run: npm run test:launch-readiness-batch-4
+
+      - name: Launch readiness Batch 5 contract
+        run: npm run test:launch-readiness-batch-5
+
+      - name: Launch readiness Batch 6 contract
+        run: npm run test:launch-readiness-batch-6
+
+      - name: Launch readiness Batch 7 contract
+        run: node --test scripts/launch-readiness-batch-7.test.mjs
+
+      - name: Launch readiness Batch 8 contract
+        run: npm run test:launch-readiness-batch-8
+
+      - name: Desktop Experience V1 contract
+        run: node --test scripts/desktop-experience-v1.test.mjs
+
+      - name: Spatial App Shell contract
+        run: node --test scripts/spatial-app-shell.test.mjs
+
+      - name: Typecheck
+        run: npm run typecheck -- --pretty false
+
+      - name: Listing system regression contract
+        run: npm run test:listing-system
+
+      - name: Production build
+        run: npm run build
