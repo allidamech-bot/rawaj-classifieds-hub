@@ -43,6 +43,7 @@ export async function fetchOwnerListingTaxonomyAssignment(
     .from("listing_taxonomy_assignments")
     .select("listing_id, taxonomy_node_id, assignment_source, updated_at")
     .eq("listing_id", normalizedListingId)
+    .limit(1)
     .maybeSingle();
 
   if (error) return { ok: false, error: mapError(error, "owner_listing_taxonomy_read") };
