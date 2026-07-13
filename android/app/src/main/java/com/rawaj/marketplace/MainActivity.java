@@ -25,8 +25,8 @@ public class MainActivity extends BridgeActivity {
     private static final String RAWAJ_ORIGIN = "https://rawa-j.com";
     private static final String RAWAJ_HOST = "rawa-j.com";
     private static final String RAWAJ_AUTH_SCHEME = "com.rawaj.marketplace";
-    private static final long INTRO_MIN_VISIBLE_MS = 650L;
-    private static final long INTRO_MAX_VISIBLE_MS = 2400L;
+    private static final long INTRO_MIN_VISIBLE_MS = 1400L;
+    private static final long INTRO_MAX_VISIBLE_MS = 3000L;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -135,8 +135,8 @@ test("External communication and map links leave the WebView through a strict na
 test("Slow or offline startup keeps RAWAJ branded and recoverable", () => {
   assert.match(capacitor, /backgroundColor:\s*"#080605"/);
   assert.match(capacitor, /errorPath:\s*"native-error\.html"/);
-  assert.match(mainActivity, /INTRO_MIN_VISIBLE_MS = 650L/);
-  assert.match(mainActivity, /INTRO_MAX_VISIBLE_MS = 2400L/);
+  assert.match(mainActivity, /INTRO_MIN_VISIBLE_MS = 1400L/);
+  assert.match(mainActivity, /INTRO_MAX_VISIBLE_MS = 3000L/);
   assert.match(mainActivity, /webView\.getProgress\(\) < 70/);
   assert.match(mainActivity, /savedInstanceState == null/);
   assert.match(nativeErrorPage, /تعذر فتح رواج/);
