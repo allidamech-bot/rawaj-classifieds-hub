@@ -42,6 +42,7 @@ import { isListingPastExpiry, publicListingExpiryFilter } from "@/lib/api/listin
 import { publicListingSelect } from "@/lib/api/public-fields";
 import { selectPrimaryListingImages } from "@/lib/api/primary-listing-images";
 import { buildListingImagePath, listingImagesBucket, validateImageFile } from "@/lib/api/storage";
+import { prepareListingImageForUpload } from "@/lib/listing-image-processing";
 
 const signedImageUrlExpiresInSeconds = 900;
 
@@ -724,6 +725,15 @@ export async function uploadListingImage({
     return { ok: false, error: { code: "validation_error", message: validation.error! } };
   }
 
+  const preparedFile = await prepareListingImageForUpload(file);
+  const preparedValidation = validateImageFile(preparedFile);
+  if (!preparedValidation.ok) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: preparedValidation.error! },
+    };
+  }
+
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
@@ -743,13 +753,13 @@ export async function uploadListingImage({
     };
   }
 
-  const storagePath = buildListingImagePath(userId, listing.id, file.name);
+  const storagePath = buildListingImagePath(userId, listing.id, preparedFile.name);
 
   const uploadResult = await clientResult.data.storage
     .from(listingImagesBucket)
-    .upload(storagePath, file, {
-      cacheControl: "3600",
-      contentType: file.type,
+    .upload(storagePath, preparedFile, {
+      cacheControl: "31536000",
+      contentType: preparedFile.type,
       upsert: false,
     });
 
