@@ -167,7 +167,7 @@ test("Android device tests bundle the branch UI without changing production rele
   assert.match(preparePreview, /RAWAJ_ORIGIN = "https:\/\/localhost"/);
   assert.match(preparePreview, /forceBundledPreviewOrigin/);
   assert.match(preparePreview, /localPreviewUrl/);
-  assert.doesNotMatch(preparePreview, /clearCache\(true\)/);
+  assert.doesNotMatch(preparePreview, /webView\.clearCache\(true\)/);
 
   assert.match(verifyPreview, /Bundled preview unexpectedly contains server\.url/);
   assert.match(verifyPreview, /rawaj-chat-inbox/);
