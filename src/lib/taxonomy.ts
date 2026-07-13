@@ -232,11 +232,7 @@ function composeTaxonomyClassification(path: TaxonomyNode[]) {
 
   for (const node of path) {
     if (node.legacyCategoryId) result.category = node.legacyCategoryId;
-  }
-
-  const targetNode = path[path.length - 1];
-  if (targetNode?.legacySubcategoryId) {
-    result.legacySubcategory = targetNode.legacySubcategoryId;
+    if (node.legacySubcategoryId) result.legacySubcategory = node.legacySubcategoryId;
   }
 
   for (const node of path) {
