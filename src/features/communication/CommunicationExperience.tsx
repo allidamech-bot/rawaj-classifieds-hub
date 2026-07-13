@@ -12,8 +12,9 @@ import {
   Store,
   type LucideIcon,
 } from "lucide-react";
-import type { Conversation, NotificationItem } from "@/lib/classifieds-types";
 import type { ReactNode } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { Conversation, NotificationItem } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export function CommunicationCenterHero({
@@ -178,9 +179,12 @@ export function ConversationSummaryItem({
 
 export function ParticipantAvatar({ name, url }: { name: string; url: string | null }) {
   return (
-    <span className="rawaj-participant-avatar">
-      {url ? <img src={url} alt={name} loading="lazy" decoding="async" /> : name.slice(0, 1)}
-    </span>
+    <Avatar className="rawaj-participant-avatar">
+      {url ? (
+        <AvatarImage src={url} alt={name} loading="lazy" decoding="async" width={44} height={44} />
+      ) : null}
+      <AvatarFallback>{name.slice(0, 1)}</AvatarFallback>
+    </Avatar>
   );
 }
 
