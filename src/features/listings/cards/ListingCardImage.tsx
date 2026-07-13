@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import type { PlaceholderType } from "@/types";
 
@@ -18,10 +18,6 @@ export function ListingCardImage({
   fetchPriority,
 }: ListingCardImageProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (failedSrc && failedSrc !== src) setFailedSrc(null);
-  }, [failedSrc, src]);
 
   if (!src || failedSrc === src) {
     return <PlaceholderArt type={placeholder} aspect="standard" />;
