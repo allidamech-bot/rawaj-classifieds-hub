@@ -61,7 +61,14 @@ test("saved-search route preserves loaded searches when scanning or refresh fail
     routeSource,
     /Saved searches loaded, but new matches could not be scanned right now/,
   );
-  assert.doesNotMatch(routeSource, /setLoadError\(result\.error\);[\s\S]{0,80}setItems\(\[\]\)/);
+  assert.match(
+    routeSource,
+    /if \(!result\.ok\) \{[\s\S]*setLoadError\(result\.error\);[\s\S]*setLoading\(false\);[\s\S]*return;/,
+  );
+  assert.match(
+    routeSource,
+    /if \(refreshed\.ok\) \{[\s\S]*setItems\(refreshed\.data\);[\s\S]*\} else \{[\s\S]*setScanMessage/,
+  );
 });
 
 test("saved-search route rejects stale account and route responses", () => {
@@ -71,10 +78,20 @@ test("saved-search route rejects stale account and route responses", () => {
   assert.match(routeSource, /return \(\) => \{[\s\S]*loadRequestIdRef\.current \+= 1;[\s\S]*\};/);
 });
 
-test("saved-search mutation failures do not become page load failures", () => {
-  assert.match(routeSource, /setMessage\(result\.error\.message\)/);
-  assert.doesNotMatch(routeSource, /setLoadError\(result\.error\)[\s\S]*changeAlertFrequency/);
-  assert.doesNotMatch(routeSource, /setLoadError\(result\.error\)[\s\S]*removeSavedSearch/);
+test("saved-search mutation failures use action messaging", () => {
+  const frequencyStart = routeSource.indexOf("async function changeAlertFrequency");
+  const removeStart = routeSource.indexOf("async function removeSavedSearch");
+  const signedOutStart = routeSource.indexOf('if (auth.status === "loading")');
+  assert.ok(frequencyStart >= 0);
+  assert.ok(removeStart > frequencyStart);
+  assert.ok(signedOutStart > removeStart);
+
+  const frequencySection = routeSource.slice(frequencyStart, removeStart);
+  const removeSection = routeSource.slice(removeStart, signedOutStart);
+  assert.match(frequencySection, /setMessage\(result\.error\.message\)/);
+  assert.doesNotMatch(frequencySection, /setLoadError/);
+  assert.match(removeSection, /setMessage\(result\.error\.message\)/);
+  assert.doesNotMatch(removeSection, /setLoadError/);
 });
 
 test("background saved-search alert contract is part of the activity Quality Gate", () => {
