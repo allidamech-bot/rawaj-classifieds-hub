@@ -30,7 +30,7 @@
     "test:chat-workspace": "node --test scripts/chat-workspace.test.mjs",
     "test:auth-recovery": "node --test scripts/auth-recovery.test.mjs",
     "test:listing-studio-images": "node --test scripts/listing-studio-image-parity.test.mjs",
-    "test:listing-image-content-reliability": "node --test scripts/listing-image-content-reliability.test.mjs",
+    "test:listing-image-content-reliability": "node --test scripts/listing-image-content-reliability.test.mjs scripts/listing-image-upload-concurrency.test.mjs",
     "test:listing-draft-create-guard": "node --test scripts/listing-draft-create-guard.test.mjs",
     "test:launch-readiness-batch-1": "node --test scripts/launch-readiness-batch-1.test.mjs",
     "test:launch-readiness-batch-2": "node --test scripts/launch-readiness-batch-2.test.mjs",

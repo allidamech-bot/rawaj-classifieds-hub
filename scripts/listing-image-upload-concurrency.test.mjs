@@ -9,7 +9,10 @@ const [queueSource, studioSource, packageSource] = await Promise.all([
 ]);
 
 test("bounded task queue never starts more workers than requested items or concurrency", () => {
-  assert.match(queueSource, /Math\.min\(items\.length, Math\.max\(1, Math\.floor\(concurrency\)\)\)/);
+  assert.match(
+    queueSource,
+    /Math\.min\(items\.length, Math\.max\(1, Math\.floor\(concurrency\)\)\)/,
+  );
   assert.match(queueSource, /let nextIndex = 0/);
   assert.match(queueSource, /nextIndex \+= 1/);
   assert.match(queueSource, /Promise\.all\(Array\.from\(\{ length: workerCount \}/);
@@ -28,10 +31,16 @@ test("concurrent image uploads preserve per-image stale cleanup and failure stat
   assert.match(studioSource, /registerStaleUploadCleanup/);
   assert.match(studioSource, /state: "failed" as const/);
   assert.match(studioSource, /state: "uploaded" as const/);
-  assert.match(studioSource, /finally \{[\s\S]*clearImageUploadOperation\(currentEntry\.id, operation\)/);
+  assert.match(
+    studioSource,
+    /finally \{[\s\S]*clearImageUploadOperation\(currentEntry\.id, operation\)/,
+  );
 });
 
 test("image concurrency contract is part of the existing image reliability gate", () => {
   const packageJson = JSON.parse(packageSource);
-  assert.match(packageJson.scripts["test:listing-image-content-reliability"], /listing-image-upload-concurrency\.test\.mjs/);
+  assert.match(
+    packageJson.scripts["test:listing-image-content-reliability"],
+    /listing-image-upload-concurrency\.test\.mjs/,
+  );
 });
