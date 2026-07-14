@@ -88,10 +88,9 @@ function ChatsPage() {
     );
   }, [conversationQuery, conversations, language]);
 
+  const isConversationPanelVisible = isDesktop || viewingConversationOnMobile;
   const liveConversationId =
-    selectedConversation && (isDesktop || viewingConversationOnMobile)
-      ? selectedConversation.id
-      : null;
+    selectedConversation && isConversationPanelVisible ? selectedConversation.id : null;
 
   useLiveChatWorkspace({
     signedIn: auth.status === "signedIn",
@@ -191,7 +190,7 @@ function ChatsPage() {
   }, [auth.status, auth.profile?.id]);
 
   useEffect(() => {
-    if (auth.status !== "signedIn" || !selectedConversation) {
+    if (auth.status !== "signedIn" || !selectedConversation || !isConversationPanelVisible) {
       messagesRequestIdRef.current += 1;
       setMessages([]);
       setMessageError(null);
@@ -199,7 +198,7 @@ function ChatsPage() {
       return;
     }
     void loadMessages(selectedConversation.id);
-  }, [auth.status, selectedConversation?.id]);
+  }, [auth.status, isConversationPanelVisible, selectedConversation?.id]);
 
   async function handleSend(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

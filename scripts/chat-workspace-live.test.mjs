@@ -50,10 +50,28 @@ test("live chat deduplicates reads and ignores stale account or conversation res
 
 test("the chat route activates live sync only while the conversation panel is visible", () => {
   assert.match(routeSource, /useLiveChatWorkspace/);
-  assert.match(routeSource, /isDesktop \|\| viewingConversationOnMobile/);
+  assert.match(
+    routeSource,
+    /isConversationPanelVisible = isDesktop \|\| viewingConversationOnMobile/,
+  );
   assert.match(routeSource, /selectedConversationId: liveConversationId/);
   assert.match(routeSource, /setConversations/);
   assert.match(routeSource, /setMessages/);
+});
+
+test("mobile chat list view cannot load or mark a selected conversation read", () => {
+  assert.match(
+    routeSource,
+    /auth\.status !== "signedIn" \|\| !selectedConversation \|\| !isConversationPanelVisible/,
+  );
+  assert.match(
+    routeSource,
+    /\[auth\.status, isConversationPanelVisible, selectedConversation\?\.id\]/,
+  );
+  assert.ok(
+    routeSource.indexOf("!isConversationPanelVisible") <
+      routeSource.indexOf("void loadMessages(selectedConversation.id)"),
+  );
 });
 
 test("the live chat contract is permanently included in the chat Quality Gate", () => {
