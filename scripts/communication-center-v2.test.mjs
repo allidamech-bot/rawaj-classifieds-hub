@@ -86,6 +86,7 @@ test("notifications separate loading failures from action failures", () => {
 test("notifications preserve successful snapshots across refresh failures", () => {
   assert.match(notifications, /const \[hasLoaded, setHasLoaded\]/);
   assert.match(notifications, /const loadedProfileIdRef = useRef<string \| null>\(null\)/);
+  assert.match(notifications, /setHasLoaded\(true\)/);
   assert.match(notifications, /loading && !hasLoaded/);
   assert.match(notifications, /loadError && !hasLoaded/);
   assert.match(notifications, /onAction=\{\(\) => void loadNotifications\(\)\}/);
