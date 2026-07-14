@@ -111,7 +111,13 @@ export function SellerFollowButton({
       data-error={error ? "true" : "false"}
     >
       <Icon aria-hidden="true" />
-      <span>{busy ? text("جارٍ الحفظ", "Saving") : loading ? text("جارٍ التحميل", "Loading") : visibleLabel}</span>
+      <span>
+        {busy
+          ? text("جارٍ الحفظ", "Saving")
+          : loading
+            ? text("جارٍ التحميل", "Loading")
+            : visibleLabel}
+      </span>
     </button>
   );
 }

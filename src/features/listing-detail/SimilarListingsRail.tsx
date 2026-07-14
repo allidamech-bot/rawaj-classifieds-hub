@@ -43,9 +43,7 @@ export function SimilarListingsRail({
 
     if (result.ok) {
       const currentListingId = currentListingIdFromLocation();
-      setRecentItems(
-        result.data.filter((item) => item.listingId !== currentListingId).slice(0, 6),
-      );
+      setRecentItems(result.data.filter((item) => item.listingId !== currentListingId).slice(0, 6));
     } else {
       setRecentError(result.error.message);
     }
@@ -132,7 +130,11 @@ export function SimilarListingsRail({
           {recentError ? (
             <div className="mb-3 flex items-center justify-between gap-3 rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">
               <span>{recentError}</span>
-              <button type="button" onClick={() => void loadRecent()} className="shrink-0 underline">
+              <button
+                type="button"
+                onClick={() => void loadRecent()}
+                className="shrink-0 underline"
+              >
                 {text("إعادة المحاولة", "Try again")}
               </button>
             </div>

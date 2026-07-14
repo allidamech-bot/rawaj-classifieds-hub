@@ -83,7 +83,10 @@ function writeLocalRecentViews(rows: LocalRecentListingView[]) {
   if (!canUseLocalStorage()) return;
 
   try {
-    window.localStorage.setItem(localRecentViewsKey, JSON.stringify(rows.slice(0, maxLocalRecentViews)));
+    window.localStorage.setItem(
+      localRecentViewsKey,
+      JSON.stringify(rows.slice(0, maxLocalRecentViews)),
+    );
   } catch {
     // Browsing remains functional when storage is blocked or full.
   }
@@ -121,9 +124,7 @@ function isCompatibilityError(error: { code?: string | null } | null): boolean {
   return ["42P01", "42703", "42883", "PGRST202", "PGRST204"].includes(error?.code ?? "");
 }
 
-async function recordAuthenticatedRecentView(
-  listingId: string,
-): Promise<ClassifiedsResult<null>> {
+async function recordAuthenticatedRecentView(listingId: string): Promise<ClassifiedsResult<null>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 

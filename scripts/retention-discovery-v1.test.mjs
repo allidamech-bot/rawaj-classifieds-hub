@@ -44,7 +44,11 @@ test("seller follow edges stay private while counts remain public", async () => 
 });
 
 test("recent views work for guests and synchronize after sign in", async () => {
-  const [api, media, rail] = await Promise.all([read(apiPath), read(mediaPath), read(discoveryRailPath)]);
+  const [api, media, rail] = await Promise.all([
+    read(apiPath),
+    read(mediaPath),
+    read(discoveryRailPath),
+  ]);
 
   assert.match(api, /rawaj_recent_listing_views_v1/);
   assert.match(api, /recordLocalRecentView/);

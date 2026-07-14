@@ -1,10 +1,7 @@
 import { ArrowLeft, ChevronLeft, ChevronRight, Heart, Maximize2, Share2 } from "lucide-react";
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
-import {
-  recordRecentListingView,
-  syncAnonymousRecentListingViews,
-} from "@/lib/classifieds-api";
+import { recordRecentListingView, syncAnonymousRecentListingViews } from "@/lib/classifieds-api";
 import type { ListingImage } from "@/lib/classifieds-types";
 import { useAuth } from "@/lib/use-auth";
 import type { PlaceholderType } from "@/types";
