@@ -4,9 +4,9 @@ import type {
   ClassifiedListing,
   ClassifiedsError,
   ListingCursor,
-  PaginatedListingsResponse,
   PublicSellerSearchResult,
 } from "@/lib/classifieds-types";
+import { useFilterDraftSessionActive } from "@/features/search/filter-draft-session";
 import { buildListingFilters, type ListingFilterInputs } from "./listings-filters";
 
 export interface ListingsResultsInputs extends ListingFilterInputs {
@@ -51,13 +51,20 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
   const [nextCursor, setNextCursor] = useState<ListingCursor | null>(null);
   const [loading, setLoading] = useState(true);
   const filterVersionRef = useRef(0);
+  const lastCompletedFilterKeyRef = useRef<string | null>(null);
+  const filterDraftActive = useFilterDraftSessionActive();
 
   useEffect(() => {
+    if (filterDraftActive) return;
     if (!referencesLoaded) return;
     if (taxonomyAvailable && searchTaxonomy && !selectedTaxonomyNode) return;
     if (hasInvalidCategory) return;
     if (hasInvalidSubcategory) return;
     if (hasPriceContradiction) return;
+
+    const filters = buildListingFilters(filterInputs);
+    const filterKey = JSON.stringify(filters);
+    if (lastCompletedFilterKeyRef.current === filterKey) return;
 
     filterVersionRef.current += 1;
     const version = filterVersionRef.current;
@@ -70,12 +77,14 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
 
     async function loadListings() {
       const [result, sellerResult] = await Promise.all([
-        fetchPublicListings(buildListingFilters(filterInputs), null, 30),
+        fetchPublicListings(filters, null, 30),
         searchPublicSellers(filterInputs.debouncedQ),
       ]);
 
       if (cancelled) return;
       if (version !== filterVersionRef.current) return;
+
+      lastCompletedFilterKeyRef.current = filterKey;
 
       if (!result.ok) {
         setError(result.error);
@@ -103,6 +112,7 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
       cancelled = true;
     };
   }, [
+    filterDraftActive,
     referencesLoaded,
     taxonomyAvailable,
     selectedTaxonomyNode,
