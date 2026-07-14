@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, shared, publicRoute, ownerRoute, css, qualityGate] = await Promise.all([
+import {
+  PublicSellerProfileLoadError,
+  guardPublicSellerProfileResult,
+  isUnavailableSellerProfileError,
+} from "../src/lib/api/seller-profile-load-guard.ts";
+
+const [root, shared, publicRoute, ownerRoute, css, qualityGate, barrel] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(
     new URL("../src/features/storefront/StorefrontIdentityHero.tsx", import.meta.url),
@@ -12,7 +18,12 @@ const [root, shared, publicRoute, ownerRoute, css, qualityGate] = await Promise.
   readFile(new URL("../src/routes/profile/listings.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/seller-storefront-v2.css", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
 ]);
+
+const sellerLoadError = {
+  message: "Temporary seller profile read failure",
+};
 
 test("seller storefront V2 stylesheet loads after existing storefront layers", () => {
   assert.match(root, /import sellerStorefrontV2Css from "\.\.\/seller-storefront-v2\.css\?url"/);
@@ -51,6 +62,54 @@ test("public seller uses adaptive cards and preserves review privacy contracts",
   assert.match(publicRoute, /fetchSellerReviewEligibility/);
   assert.match(publicRoute, /createSellerReview/);
   assert.match(publicRoute, /buildSellerStructuredData/);
+});
+
+test("only genuine unavailable seller outcomes remain eligible for the 404 path", () => {
+  assert.equal(isUnavailableSellerProfileError({ ...sellerLoadError, code: "not_found" }), true);
+  assert.equal(
+    isUnavailableSellerProfileError({ ...sellerLoadError, code: "validation_error" }),
+    true,
+  );
+  assert.equal(isUnavailableSellerProfileError({ ...sellerLoadError, code: "unknown" }), false);
+  assert.equal(
+    isUnavailableSellerProfileError({ ...sellerLoadError, code: "schema_missing" }),
+    false,
+  );
+
+  const unavailableResult = {
+    ok: false,
+    error: { code: "not_found", message: "Seller unavailable" },
+  };
+  assert.equal(guardPublicSellerProfileResult(unavailableResult), unavailableResult);
+  assert.match(publicRoute, /if \(!seller\.ok\) throw notFound\(\)/);
+  assert.match(publicRoute, /notFoundComponent:/);
+});
+
+test("transient seller profile failures reach the retryable route error boundary", () => {
+  const retryableError = {
+    code: "unknown",
+    message: "Network request failed",
+    operation: "public_seller_profile_read",
+  };
+
+  assert.throws(
+    () => guardPublicSellerProfileResult({ ok: false, error: retryableError }),
+    (error) => {
+      assert.ok(error instanceof PublicSellerProfileLoadError);
+      assert.equal(error.code, retryableError.code);
+      assert.equal(error.operation, retryableError.operation);
+      assert.equal(error.message, retryableError.message);
+      return true;
+    },
+  );
+
+  assert.match(
+    barrel,
+    /export \{ fetchPublicSellerProfileGuarded as fetchPublicSellerProfile \} from "@\/lib\/api\/seller-profile-read-guarded"/,
+  );
+  assert.match(publicRoute, /await fetchPublicSellerProfile\(params\.id\)/);
+  assert.match(publicRoute, /errorComponent: \(\{ reset \}\) => <SellerError reset=\{reset\} \/>/);
+  assert.match(publicRoute, /إعادة المحاولة/);
 });
 
 test("owner store shares the identity system and preserves lifecycle operations", () => {
