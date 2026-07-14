@@ -23,7 +23,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: |
+      - name: Format idempotent draft files
+        run: |
           npx prettier --write \
             .github/workflows/quality-gate.yml \
             docs/production-schema/migration-ledger.json \
