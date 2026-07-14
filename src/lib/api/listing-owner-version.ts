@@ -18,7 +18,10 @@ export function readOwnerListingVersion(
   return ownerListingVersions.get(versionKey(userId, listingId)) ?? null;
 }
 
-export function forgetOwnerListingVersion(userId: string | null, listingId: string): void {
+export function forgetOwnerListingVersion(
+  userId: string | null,
+  listingId: string,
+): void {
   if (!userId || !listingId.trim()) return;
   ownerListingVersions.delete(versionKey(userId, listingId));
 }
