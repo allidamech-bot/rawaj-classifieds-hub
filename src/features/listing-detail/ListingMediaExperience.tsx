@@ -1,7 +1,12 @@
 import { ArrowLeft, ChevronLeft, ChevronRight, Heart, Maximize2, Share2 } from "lucide-react";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
+import {
+  recordRecentListingView,
+  syncAnonymousRecentListingViews,
+} from "@/lib/classifieds-api";
 import type { ListingImage } from "@/lib/classifieds-types";
+import { useAuth } from "@/lib/use-auth";
 import type { PlaceholderType } from "@/types";
 import { useListingMediaState } from "./useListingMediaState";
 
@@ -30,6 +35,8 @@ export function ListingMediaExperience({
   onToggleFavorite,
   text,
 }: ListingMediaExperienceProps) {
+  const auth = useAuth();
+  const recordedViewKeyRef = useRef("");
   const {
     visibleImages,
     selectedIndex,
@@ -46,6 +53,28 @@ export function ListingMediaExperience({
     handleTouchEnd,
   } = useListingMediaState(images);
   const selectedImageFailed = selectedUrl ? failedUrls.has(selectedUrl) : false;
+
+  useEffect(() => {
+    if (auth.status === "loading" || typeof window === "undefined") return;
+
+    const match = window.location.pathname.match(/^\/listings\/([^/]+)\/?$/);
+    const listingId = match?.[1] ? decodeURIComponent(match[1]).trim() : "";
+    if (!listingId) return;
+
+    const userId = auth.profile?.id ?? auth.user?.id ?? null;
+    const recordKey = `${userId ?? "guest"}:${listingId}`;
+    if (recordedViewKeyRef.current === recordKey) return;
+
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        if (userId) await syncAnonymousRecentListingViews(userId);
+        const result = await recordRecentListingView(userId, listingId);
+        if (result.ok) recordedViewKeyRef.current = recordKey;
+      })();
+    }, 900);
+
+    return () => window.clearTimeout(timer);
+  }, [auth.profile?.id, auth.status, auth.user?.id]);
 
   return (
     <>
