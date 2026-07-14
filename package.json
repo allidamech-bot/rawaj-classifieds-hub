@@ -16,7 +16,7 @@
     "test:bottom-dock-navigation": "node --test scripts/bottom-dock-navigation-contract.test.mjs",
     "test:listing-system": "node scripts/listing-system-regression.mjs && npm run test:listing-owner-stale-write",
     "test:listing-owner-stale-write": "node --test scripts/listing-owner-stale-write.test.mjs",
-    "test:listing-detail-v3": "node --test scripts/listing-detail-v3.test.mjs",
+    "test:listing-detail-v3": "node --test scripts/listing-detail-v3.test.mjs scripts/listing-detail-load-recovery.test.mjs",
     "test:demo-listings-seed": "node --test scripts/demo-listings-seed.test.mjs",
     "test:demo-listings-media": "node --test scripts/demo-listings-media-pack.test.mjs",
     "demo:media:apply": "node scripts/apply-demo-media-pack.mjs",
