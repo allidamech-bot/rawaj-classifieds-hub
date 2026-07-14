@@ -74,6 +74,18 @@ test("home composes the new discovery flow from real loader data", () => {
   assert.doesNotMatch(home, /mockListings|fakeListings|sampleListings/i);
 });
 
+test("home discovery exposes partial read failures and retries the route loader", () => {
+  assert.match(home, /categoryLoadFailed: !categoriesResult\.ok/);
+  assert.match(home, /listingLoadFailed: !listingsResult\.ok/);
+  assert.match(home, /categoryLoadFailed \? \(/);
+  assert.match(home, /listingLoadFailed \? \(/);
+  assert.match(home, /تعذر تحميل أقسام السوق/);
+  assert.match(home, /تعذر تحميل إعلانات السوق/);
+  assert.match(home, /router\.invalidate\(\)/);
+  assert.match(home, /إعادة المحاولة/);
+  assert.doesNotMatch(home, /<CategoryWorlds categories=\{\[\]\}/);
+});
+
 test("search overlay preserves listings search and filter behavior", () => {
   assert.match(hero, /rawaj-search-overlay/);
   assert.match(hero, /to="\/listings"/);
