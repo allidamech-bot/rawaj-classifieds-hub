@@ -3,6 +3,7 @@ import { ArrowUpLeft, Clock3, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RealListingCard } from "@/features/listings/RealListingCard";
 import { ListingCardSkeleton } from "@/features/listings/cards";
+import { ListingViewTracker } from "@/features/retention/ListingViewTracker";
 import {
   clearRecentListingViews,
   fetchRecentListingViews,
@@ -32,6 +33,7 @@ export function SimilarListingsRail({
   const recentRequestIdRef = useRef(0);
   const clearInFlightRef = useRef(false);
   const userId = auth.profile?.id ?? auth.user?.id ?? null;
+  const currentListingId = currentListingIdFromLocation();
 
   const loadRecent = useCallback(async () => {
     if (auth.status === "loading") return;
@@ -42,13 +44,14 @@ export function SimilarListingsRail({
     if (requestId !== recentRequestIdRef.current) return;
 
     if (result.ok) {
-      const currentListingId = currentListingIdFromLocation();
-      setRecentItems(result.data.filter((item) => item.listingId !== currentListingId).slice(0, 6));
+      setRecentItems(
+        result.data.filter((item) => item.listingId !== currentListingId).slice(0, 6),
+      );
     } else {
       setRecentError(result.error.message);
     }
     setRecentLoading(false);
-  }, [auth.status, userId]);
+  }, [auth.status, currentListingId, userId]);
 
   useEffect(() => {
     void loadRecent();
@@ -74,10 +77,12 @@ export function SimilarListingsRail({
 
   const showSimilar = loading || listings.length > 0;
   const showRecent = recentLoading || recentItems.length > 0 || Boolean(recentError);
-  if (!showSimilar && !showRecent) return null;
+  const viewTracker = currentListingId ? <ListingViewTracker listingId={currentListingId} /> : null;
+  if (!showSimilar && !showRecent) return viewTracker;
 
   return (
     <>
+      {viewTracker}
       {showSimilar ? (
         <section className="rawaj-detail-similar" aria-labelledby="rawaj-detail-similar-title">
           <div className="rawaj-detail-similar__heading">
