@@ -4,6 +4,7 @@ export * from "@/lib/api/locations";
 export * from "@/lib/api/listings";
 export { fetchOwnerListingDetail } from "@/lib/api/listing-owner-read-guarded";
 export { createOwnerDraftListing } from "@/lib/api/listing-draft-create-guarded";
+export { completeOwnerDraftCreationFlow } from "@/lib/api/listing-draft-creation-flow";
 export {
   submitOwnerListingForReview,
   updateOwnerListing,

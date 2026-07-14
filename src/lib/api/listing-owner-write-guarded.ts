@@ -1,3 +1,4 @@
+import { completeOwnerDraftCreationFlow } from "@/lib/api/listing-draft-creation-flow";
 import {
   submitOwnerListingForReview as submitOwnerListingForReviewBase,
   updateOwnerListing as updateOwnerListingBase,
@@ -39,6 +40,9 @@ export async function submitOwnerListingForReview(
   listingId: string,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
   const result = await submitOwnerListingForReviewBase(userId, listingId);
-  if (result.ok) rememberOwnerListingVersion(userId, result.data);
+  if (result.ok) {
+    rememberOwnerListingVersion(userId, result.data);
+    completeOwnerDraftCreationFlow(userId, result.data.id);
+  }
   return result;
 }

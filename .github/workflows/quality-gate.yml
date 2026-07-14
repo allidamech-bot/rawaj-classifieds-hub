@@ -108,6 +108,9 @@ jobs:
       - name: Listing image content reliability contract
         run: npm run test:listing-image-content-reliability
 
+      - name: Listing draft creation integrity contract
+        run: npm run test:listing-draft-create-guard
+
       - name: Account activity center contract
         run: npm run test:activity-center
 
