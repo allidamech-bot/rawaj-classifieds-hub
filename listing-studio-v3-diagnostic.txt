@@ -1,0 +1,687 @@
+TAP version 13
+# Subtest: V3 stylesheet loads after V2
+ok 1 - V3 stylesheet loads after V2
+  ---
+  duration_ms: 1.484773
+  type: 'test'
+  ...
+# Subtest: shared studio supports guided navigation, trust and readiness
+ok 2 - shared studio supports guided navigation, trust and readiness
+  ---
+  duration_ms: 0.248088
+  type: 'test'
+  ...
+# Subtest: create flow is guided without weakening draft and image contracts
+ok 3 - create flow is guided without weakening draft and image contracts
+  ---
+  duration_ms: 0.179967
+  type: 'test'
+  ...
+# Subtest: manage flow uses the same V3 workspace and preserves permissions
+ok 4 - manage flow uses the same V3 workspace and preserves permissions
+  ---
+  duration_ms: 0.152846
+  type: 'test'
+  ...
+# Subtest: listing media validators reject empty files before storage work
+ok 5 - listing media validators reject empty files before storage work
+  ---
+  duration_ms: 0.151705
+  type: 'test'
+  ...
+# Subtest: owner writes and lifecycle transitions deduplicate concurrent identical requests
+not ok 6 - owner writes and lifecycle transitions deduplicate concurrent identical requests
+  ---
+  duration_ms: 7.509761
+  type: 'test'
+  location: '/home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/scripts/listing-studio-v3.test.mjs:59:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /stablePayloadKey\(\s*payload\s*\)/. Input:
+    
+    'import type {\n' +
+      '  ClassifiedListing,\n' +
+      '  ClassifiedsResult,\n' +
+      '  UpdateListingPayload,\n' +
+      '} from "@/lib/classifieds-types";\n' +
+      'import { fetchOwnerListingDetail, mapListing } from "@/lib/api/listings";\n' +
+      'import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";\n' +
+      'import {\n' +
+      '  buildOwnerUpdateRpcArgs,\n' +
+      '  buildOwnerUpdateRpcArgsV3,\n' +
+      '} from "@/lib/api/listing-write-contract";\n' +
+      'import { getClient, mapError, rowString } from "@/lib/api/shared";\n' +
+      '\n' +
+      'const ownerUpdateRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();\n' +
+      'const ownerSubmitRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();\n' +
+      '\n' +
+      'export function updateOwnerListing(\n' +
+      '  userId: string | null,\n' +
+      '  listingId: string,\n' +
+      '  payload: UpdateListingPayload,\n' +
+      '  expectedUpdatedAt: string,\n' +
+      '): Promise<ClassifiedsResult<ClassifiedListing>> {\n' +
+      '  const cleanListingId = listingId.trim();\n' +
+      '  const cleanExpectedUpdatedAt = expectedUpdatedAt.trim();\n' +
+      '  const requestKey = `${userId ?? "anonymous"}:${cleanListingId}:${cleanExpectedUpdatedAt}:${stablePayloadKey(\n' +
+      '    payload,\n' +
+      '  )}`;\n' +
+      '  const pending = ownerUpdateRequests.get(requestKey);\n' +
+      '  if (pending) return pending;\n' +
+      '\n' +
+      '  const request = runOwnerListingUpdate(\n' +
+      '    userId,\n' +
+      '    cleanListingId,\n' +
+      '    payload,\n' +
+      '    cleanExpectedUpdatedAt,\n' +
+      '  ).finally(() => {\n' +
+      '    ownerUpdateRequests.delete(requestKey);\n' +
+      '  });\n' +
+      '  ownerUpdateRequests.set(requestKey, request);\n' +
+      '  return request;\n' +
+      '}\n' +
+      '\n' +
+      'async function runOwnerListingUpdate(\n' +
+      '  userId: string | null,\n' +
+      '  cleanListingId: string,\n' +
+      '  payload: UpdateListingPayload,\n' +
+      '  expectedUpdatedAt: string,\n' +
+      '): Promise<ClassifiedsResult<ClassifiedListing>> {\n' +
+      '  if (!userId) {\n' +
+      '    return {\n' +
+      '      ok: false,\n' +
+      '      error: {\n' +
+      '        code: "auth_required",\n' +
+      '        message: "يجب تسجيل الدخول لتعديل الإعلان.",\n' +
+      '      },\n' +
+      '    };\n' +
+      '  }\n' +
+      '\n' +
+      '  if (!cleanListingId) {\n' +
+      '    return {\n' +
+      '      ok: false,\n' +
+      '      error: {\n' +
+      '        code: "validation_error",\n' +
+      '        message: "تعذر تحديد الإعلان المطلوب.",\n' +
+      '      },\n' +
+      '    };\n' +
+      '  }\n' +
+      '\n' +
+      '  if (!expectedUpdatedAt) {\n' +
+      '    return staleOwnerUpdateResult();\n' +
+      '  }\n' +
+      '\n' +
+      '  const clientResult = getClient();\n' +
+      '  if (!clientResult.ok) return clientResult;\n' +
+      '\n' +
+      '  const { data: existing, error: existingError } = await clientResult.data\n' +
+      '    .from("listings")\n' +
+      '    .select("*")\n' +
+      '    .eq("id", cleanListingId)\n' +
+      '    .eq("owner_id", userId)\n' +
+      '    .in("status", ["draft", "rejected"])\n' +
+      '    .maybeSingle();\n' +
+      '\n' +
+      '  if (existingError)\n' +
+      '    return {\n' +
+      '      ok: false,\n' +
+      '      error: mapError(existingError, "owner_listing_update"),\n' +
+      '    };\n' +
+      '  if (!existing) {\n' +
+      '    return {\n' +
+      '      ok: false,\n' +
+      '      error: {\n' +
+      '        code: "permission_denied",\n' +
+      '        message: "لا يمكن تعديل هذا الإعلان حالياً.",\n' +
+      '      },\n' +
+      '    };\n' +
+      '  }\n' +
+      '\n' +
+      '  const patch: Record<string, unknown> = {};\n' +
+      '  if (payload.categoryId) patch.category_id = payload.categoryId;\n' +
+      '  if (payload.subcategoryId !== undefined) {\n' +
+      '    patch.subcategory_id = payload.subcategoryId;\n' +
+      '  }\n' +
+      '  if (payload.governorateId) patch.governorate_id = payload.governorateId;\n' +
+      '  if (payload.title?.trim()) patch.title = payload.title.trim();\n' +
+      '  if (payload.description !== undefined) {\n' +
+      '    patch.description = payload.description?.trim() ?? null;\n' +
+      '  }\n' +
+      '  if (payload.price !== undefined) patch.price = payload.price;\n' +
+      '  if (payload.priceType) patch.price_type = payload.priceType;\n' +
+      '  if (payload.condition) patch.listing_condition = payload.condition;\n' +
+      '\n' +
+      '  if (payload.districtAr !== undefined) {\n' +
+      '    const locationWrite = await resolveListingLocationWrite(\n' +
+      '      clientResult.data,\n' +
+      '      payload.governorateId ?? rowString(existing as Record<string, unknown>, "governorate_id"),\n' +
+      '      payload.districtAr,\n' +
+      '    );\n' +
+      '    if (!locationWrite.ok) return locationWrite;\n' +
+      '\n' +
+      '    patch.governorate_id = locationWrite.data.governorateId;\n' +
+      '    patch.district_ar = locationWrite.data.districtAr;\n' +
+      '    if (locationWrite.data.locationNodeId !== undefined) {\n' +
+      '      patch.location_node_id = locationWrite.data.locationNodeId;\n' +
+      '    }\n' +
+      '  }\n' +
+      '\n' +
+      '  if (payload.contactName !== undefined) {\n' +
+      '    patch.contact_name = payload.contactName;\n' +
+      '  }\n' +
+      '  if (payload.contactOptions) patch.contact_options = payload.contactOptions;\n' +
+      '  if (payload.details !== undefined) patch.details = payload.details;\n' +
+      '\n' +
+      '  const rpcArgsV3 = buildOwnerUpdateRpcArgsV3(cleanListingId, patch, expectedUpdatedAt);\n' +
+      '  let response = await clientResult.data.rpc("rawaj_owner_update_listing_v3", rpcArgsV3);\n' +
+      '\n' +
+      '  if (response.error && isMissingOwnerUpdateV3(response.error)) {\n' +
+      '    response = await clientResult.data.rpc(\n' +
+      '      "rawaj_owner_update_listing_v2",\n' +
+      '      buildOwnerUpdateRpcArgs(cleanListingId, patch),\n' +
+      '    );\n' +
+      '  }\n' +
+      '\n' +
+      '  const { data, error } = response;\n' +
+      '  if (error) {\n' +
+      '    if (isStaleOwnerUpdateError(error)) return staleOwnerUpdateResult();\n' +
+      '    return { ok: false, error: mapError(error, "owner_listing_update") };\n' +
+      '  }\n' +
+      '\n' +
+      '  const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);\n' +
+      '  if (refreshed.ok) return refreshed;\n' +
+      '\n' +
+      '  const row = ((data ?? []) as Record<string, unknown>[])[0];\n' +
+      '  if (row) {\n' +
+      '    return { ok: true, data: mapListing(row) };\n' +
+      '  }\n' +
+      '\n' +
+      '  return {\n' +
+      '    ok: false,\n' +
+      '    error: {\n' +
+      '      code: "unknown",\n' +
+      '      message: "تم التعديل دون نتيجة قابلة للتحقق.",\n' +
+      '      operation: "owner_listing_update",\n' +
+      '    },\n' +
+      '  };\n' +
+      '}\n' +
+      '\n' +
+      'export function submitOwnerListingForReview(\n' +
+      '  userId: string | null,\n' +
+      '  listingId: string,\n' +
+      '): Promise<ClassifiedsResult<ClassifiedListing>> {\n' +
+      '  const cleanListingId = listingId.trim();\n' +
+      '  const requestKey = `${userId ?? "anonymous"}:${cleanListingId}`;\n' +
+      '  const pending = ownerSubmitRequests.get(requestKey);\n' +
+      '  if (pending) return pending;\n' +
+      '\n' +
+      '  const request = runOwnerListingSubmit(userId, cleanListingId).finally(() => {\n' +
+      '    ownerSubmitRequests.delete(requestKey);\n' +
+      '  });\n' +
+      '  ownerSubmitRequests.set(requestKey, request);\n' +
+      '  return request;\n' +
+      '}\n' +
+      '\n' +
+      'async function runOwnerListingSubmit(\n' +
+      '  userId: string | null,\n' +
+      '  cleanListingId: string,\n' +
+      '): Promise<ClassifiedsResult<ClassifiedListing>> {\n' +
+      '  if (!userId) {\n' +
+      '    return {\n' +
+      '      ok: false,\n' +
+      '      error: {\n' +
+      '        code: "auth_required",\n' +
+      '        message: "يجب تسجيل الدخول لإرسال الإعلان للمراجعة.",\n' +
+      '      },\n' +
+      '    };\n' +
+      '  }\n' +
+      '\n' +
+      '  if (!cleanListingId) {\n' +
+      '    return {\n' +
+      '      ok: false,\n' +
+      '      error: {\n' +
+      '        code: "validation_error",\n' +
+      '        message: "تعذر تحديد الإعلان المطلوب.",\n' +
+      '      },\n' +
+      '    };\n' +
+      '  }\n' +
+      '\n' +
+      '  const clientResult = getClient();\n' +
+      '  if (!clientResult.ok) return clientResult;\n' +
+      '\n' +
+      '  const { data, error } = await clientResult.data.rpc("rawaj_submit_listing_for_review", {\n' +
+      '    p_listing_id: cleanListingId,\n' +
+      '  });\n' +
+      '\n' +
+      '  if (error) {\n' +
+      '    return { ok: false, error: mapError(error, "owner_listing_submit") };\n' +
+      '  }\n' +
+      '\n' +
+      '  const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);\n' +
+      '  if (refreshed.ok) {\n' +
+      '    if (refreshed.data.status === "pending_review") return refreshed;\n' +
+      '    return submitStatusMismatch(refreshed.data.status);\n' +
+      '  }\n' +
+      '\n' +
+      '  const row = ((data ?? []) as Record<string, unknown>[])[0];\n' +
+      '  if (row) {\n' +
+      '    const listing = mapListing(row);\n' +
+      '    if (listing.status === "pending_review") return { ok: true, data: listing };\n' +
+      '    return submitStatusMismatch(listing.status);\n' +
+      '  }\n' +
+      '\n' +
+      '  return {\n' +
+      '    ok: false,\n' +
+      '    error: {\n' +
+      '      code: "unknown",\n' +
+      '      message: "تم إرسال الطلب دون نتيجة إعلان قابلة للتحقق.",\n' +
+      '      operation: "owner_listing_submit",\n' +
+      '    },\n' +
+      '  };\n' +
+      '}\n' +
+      '\n' +
+      'function isMissingOwnerUpdateV3(error: {\n' +
+      '  code?: string;\n' +
+      '  message?: string;\n' +
+      '  details?: string;\n' +
+      '}): boolean {\n' +
+      '  const message = error.message ?? "";\n' +
+      '  const details = error.details ?? "";\n' +
+      '  return (\n' +
+      '    error.code === "PGRST202" ||\n' +
+      '    error.code === "42883" ||\n' +
+      '    message.includes("rawaj_owner_update_listing_v3") ||\n' +
+      '    details.includes("rawaj_owner_update_listing_v3")\n' +
+      '  );\n' +
+      '}\n' +
+      '\n' +
+      'function isStaleOwnerUpdateError(error: { message?: string; details?: string }): boolean {\n' +
+      '  return `${error.message ?? ""} ${error.details ?? ""}`.includes("stale_owner_update");\n' +
+      '}\n' +
+      '\n' +
+      'function staleOwnerUpdateResult(): ClassifiedsResult<never> {\n' +
+      '  return {\n' +
+      '    ok: false,\n' +
+      '    error: {\n' +
+      '      code: "status_mismatch",\n' +
+      '      message:\n' +
+      '        "تم تعديل الإعلان من مكان آخر بعد فتح هذه الصفحة. أعد تحميل أحدث نسخة قبل حفظ تعديلاتك.",\n' +
+      '      operation: "owner_listing_update",\n' +
+      '    },\n' +
+      '  };\n' +
+      '}\n' +
+      '\n' +
+      'function stablePayloadKey(payload: UpdateListingPayload): string {\n' +
+      '  return JSON.stringify(\n' +
+      '    Object.entries(payload)\n' +
+      '      .sort(([left], [right]) => left.localeCompare(right))\n' +
+      '      .map(([key, value]) => [key, stableValue(value)]),\n' +
+      '  );\n' +
+      '}\n' +
+      '\n' +
+      'function stableValue(value: unknown): unknown {\n' +
+      '  if (Array.isArray(value)) return value.map(stableValue);\n' +
+      '  if (value && typeof value === "object") {\n' +
+      '    return Object.fromEntries(\n' +
+      '      Object.entries(value as Record<string, unknown>)\n' +
+      '        .sort(([left], [right]) => left.localeCompare(right))\n' +
+      '        .map(([key, nested]) => [key, stableValue(nested)]),\n' +
+      '    );\n' +
+      '  }\n' +
+      '  return value;\n' +
+      '}\n' +
+      '\n' +
+      'function submitStatusMismatch(status: ClassifiedListing["status"]): ClassifiedsResult<never> {\n' +
+      '  return {\n' +
+      '    ok: false,\n' +
+      '    error: {\n' +
+      '      code: "status_mismatch",\n' +
+      '      message:\n' +
+      '        "لم يؤكد الخادم انتقال الإعلان إلى قائمة المراجعة. بقي الإعلان محفوظاً دون تأكيد الإرسال.",\n' +
+      '      details: `Expected pending_review after submit RPC, received ${status}.`,\n' +
+      '      operation: "owner_listing_submit",\n' +
+      '    },\n' +
+      '  };\n' +
+      '}\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    import type {
+      ClassifiedListing,
+      ClassifiedsResult,
+      UpdateListingPayload,
+    } from "@/lib/classifieds-types";
+    import { fetchOwnerListingDetail, mapListing } from "@/lib/api/listings";
+    import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
+    import {
+      buildOwnerUpdateRpcArgs,
+      buildOwnerUpdateRpcArgsV3,
+    } from "@/lib/api/listing-write-contract";
+    import { getClient, mapError, rowString } from "@/lib/api/shared";
+    
+    const ownerUpdateRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();
+    const ownerSubmitRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();
+    
+    export function updateOwnerListing(
+      userId: string | null,
+      listingId: string,
+      payload: UpdateListingPayload,
+      expectedUpdatedAt: string,
+    ): Promise<ClassifiedsResult<ClassifiedListing>> {
+      const cleanListingId = listingId.trim();
+      const cleanExpectedUpdatedAt = expectedUpdatedAt.trim();
+      const requestKey = `${userId ?? "anonymous"}:${cleanListingId}:${cleanExpectedUpdatedAt}:${stablePayloadKey(
+        payload,
+      )}`;
+      const pending = ownerUpdateRequests.get(requestKey);
+      if (pending) return pending;
+    
+      const request = runOwnerListingUpdate(
+        userId,
+        cleanListingId,
+        payload,
+        cleanExpectedUpdatedAt,
+      ).finally(() => {
+        ownerUpdateRequests.delete(requestKey);
+      });
+      ownerUpdateRequests.set(requestKey, request);
+      return request;
+    }
+    
+    async function runOwnerListingUpdate(
+      userId: string | null,
+      cleanListingId: string,
+      payload: UpdateListingPayload,
+      expectedUpdatedAt: string,
+    ): Promise<ClassifiedsResult<ClassifiedListing>> {
+      if (!userId) {
+        return {
+          ok: false,
+          error: {
+            code: "auth_required",
+            message: "يجب تسجيل الدخول لتعديل الإعلان.",
+          },
+        };
+      }
+    
+      if (!cleanListingId) {
+        return {
+          ok: false,
+          error: {
+            code: "validation_error",
+            message: "تعذر تحديد الإعلان المطلوب.",
+          },
+        };
+      }
+    
+      if (!expectedUpdatedAt) {
+        return staleOwnerUpdateResult();
+      }
+    
+      const clientResult = getClient();
+      if (!clientResult.ok) return clientResult;
+    
+      const { data: existing, error: existingError } = await clientResult.data
+        .from("listings")
+        .select("*")
+        .eq("id", cleanListingId)
+        .eq("owner_id", userId)
+        .in("status", ["draft", "rejected"])
+        .maybeSingle();
+    
+      if (existingError)
+        return {
+          ok: false,
+          error: mapError(existingError, "owner_listing_update"),
+        };
+      if (!existing) {
+        return {
+          ok: false,
+          error: {
+            code: "permission_denied",
+            message: "لا يمكن تعديل هذا الإعلان حالياً.",
+          },
+        };
+      }
+    
+      const patch: Record<string, unknown> = {};
+      if (payload.categoryId) patch.category_id = payload.categoryId;
+      if (payload.subcategoryId !== undefined) {
+        patch.subcategory_id = payload.subcategoryId;
+      }
+      if (payload.governorateId) patch.governorate_id = payload.governorateId;
+      if (payload.title?.trim()) patch.title = payload.title.trim();
+      if (payload.description !== undefined) {
+        patch.description = payload.description?.trim() ?? null;
+      }
+      if (payload.price !== undefined) patch.price = payload.price;
+      if (payload.priceType) patch.price_type = payload.priceType;
+      if (payload.condition) patch.listing_condition = payload.condition;
+    
+      if (payload.districtAr !== undefined) {
+        const locationWrite = await resolveListingLocationWrite(
+          clientResult.data,
+          payload.governorateId ?? rowString(existing as Record<string, unknown>, "governorate_id"),
+          payload.districtAr,
+        );
+        if (!locationWrite.ok) return locationWrite;
+    
+        patch.governorate_id = locationWrite.data.governorateId;
+        patch.district_ar = locationWrite.data.districtAr;
+        if (locationWrite.data.locationNodeId !== undefined) {
+          patch.location_node_id = locationWrite.data.locationNodeId;
+        }
+      }
+    
+      if (payload.contactName !== undefined) {
+        patch.contact_name = payload.contactName;
+      }
+      if (payload.contactOptions) patch.contact_options = payload.contactOptions;
+      if (payload.details !== undefined) patch.details = payload.details;
+    
+      const rpcArgsV3 = buildOwnerUpdateRpcArgsV3(cleanListingId, patch, expectedUpdatedAt);
+      let response = await clientResult.data.rpc("rawaj_owner_update_listing_v3", rpcArgsV3);
+    
+      if (response.error && isMissingOwnerUpdateV3(response.error)) {
+        response = await clientResult.data.rpc(
+          "rawaj_owner_update_listing_v2",
+          buildOwnerUpdateRpcArgs(cleanListingId, patch),
+        );
+      }
+    
+      const { data, error } = response;
+      if (error) {
+        if (isStaleOwnerUpdateError(error)) return staleOwnerUpdateResult();
+        return { ok: false, error: mapError(error, "owner_listing_update") };
+      }
+    
+      const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);
+      if (refreshed.ok) return refreshed;
+    
+      const row = ((data ?? []) as Record<string, unknown>[])[0];
+      if (row) {
+        return { ok: true, data: mapListing(row) };
+      }
+    
+      return {
+        ok: false,
+        error: {
+          code: "unknown",
+          message: "تم التعديل دون نتيجة قابلة للتحقق.",
+          operation: "owner_listing_update",
+        },
+      };
+    }
+    
+    export function submitOwnerListingForReview(
+      userId: string | null,
+      listingId: string,
+    ): Promise<ClassifiedsResult<ClassifiedListing>> {
+      const cleanListingId = listingId.trim();
+      const requestKey = `${userId ?? "anonymous"}:${cleanListingId}`;
+      const pending = ownerSubmitRequests.get(requestKey);
+      if (pending) return pending;
+    
+      const request = runOwnerListingSubmit(userId, cleanListingId).finally(() => {
+        ownerSubmitRequests.delete(requestKey);
+      });
+      ownerSubmitRequests.set(requestKey, request);
+      return request;
+    }
+    
+    async function runOwnerListingSubmit(
+      userId: string | null,
+      cleanListingId: string,
+    ): Promise<ClassifiedsResult<ClassifiedListing>> {
+      if (!userId) {
+        return {
+          ok: false,
+          error: {
+            code: "auth_required",
+            message: "يجب تسجيل الدخول لإرسال الإعلان للمراجعة.",
+          },
+        };
+      }
+    
+      if (!cleanListingId) {
+        return {
+          ok: false,
+          error: {
+            code: "validation_error",
+            message: "تعذر تحديد الإعلان المطلوب.",
+          },
+        };
+      }
+    
+      const clientResult = getClient();
+      if (!clientResult.ok) return clientResult;
+    
+      const { data, error } = await clientResult.data.rpc("rawaj_submit_listing_for_review", {
+        p_listing_id: cleanListingId,
+      });
+    
+      if (error) {
+        return { ok: false, error: mapError(error, "owner_listing_submit") };
+      }
+    
+      const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);
+      if (refreshed.ok) {
+        if (refreshed.data.status === "pending_review") return refreshed;
+        return submitStatusMismatch(refreshed.data.status);
+      }
+    
+      const row = ((data ?? []) as Record<string, unknown>[])[0];
+      if (row) {
+        const listing = mapListing(row);
+        if (listing.status === "pending_review") return { ok: true, data: listing };
+        return submitStatusMismatch(listing.status);
+      }
+    
+      return {
+        ok: false,
+        error: {
+          code: "unknown",
+          message: "تم إرسال الطلب دون نتيجة إعلان قابلة للتحقق.",
+          operation: "owner_listing_submit",
+        },
+      };
+    }
+    
+    function isMissingOwnerUpdateV3(error: {
+      code?: string;
+      message?: string;
+      details?: string;
+    }): boolean {
+      const message = error.message ?? "";
+      const details = error.details ?? "";
+      return (
+        error.code === "PGRST202" ||
+        error.code === "42883" ||
+        message.includes("rawaj_owner_update_listing_v3") ||
+        details.includes("rawaj_owner_update_listing_v3")
+      );
+    }
+    
+    function isStaleOwnerUpdateError(error: { message?: string; details?: string }): boolean {
+      return `${error.message ?? ""} ${error.details ?? ""}`.includes("stale_owner_update");
+    }
+    
+    function staleOwnerUpdateResult(): ClassifiedsResult<never> {
+      return {
+        ok: false,
+        error: {
+          code: "status_mismatch",
+          message:
+            "تم تعديل الإعلان من مكان آخر بعد فتح هذه الصفحة. أعد تحميل أحدث نسخة قبل حفظ تعديلاتك.",
+          operation: "owner_listing_update",
+        },
+      };
+    }
+    
+    function stablePayloadKey(payload: UpdateListingPayload): string {
+      return JSON.stringify(
+        Object.entries(payload)
+          .sort(([left], [right]) => left.localeCompare(right))
+          .map(([key, value]) => [key, stableValue(value)]),
+      );
+    }
+    
+    function stableValue(value: unknown): unknown {
+      if (Array.isArray(value)) return value.map(stableValue);
+      if (value && typeof value === "object") {
+        return Object.fromEntries(
+          Object.entries(value as Record<string, unknown>)
+            .sort(([left], [right]) => left.localeCompare(right))
+            .map(([key, nested]) => [key, stableValue(nested)]),
+        );
+      }
+      return value;
+    }
+    
+    function submitStatusMismatch(status: ClassifiedListing["status"]): ClassifiedsResult<never> {
+      return {
+        ok: false,
+        error: {
+          code: "status_mismatch",
+          message:
+            "لم يؤكد الخادم انتقال الإعلان إلى قائمة المراجعة. بقي الإعلان محفوظاً دون تأكيد الإرسال.",
+          details: `Expected pending_review after submit RPC, received ${status}.`,
+          operation: "owner_listing_submit",
+        },
+      };
+    }
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/scripts/listing-studio-v3.test.mjs:64:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: V3 remains sticky, mobile-first and motion safe
+ok 7 - V3 remains sticky, mobile-first and motion safe
+  ---
+  duration_ms: 0.146658
+  type: 'test'
+  ...
+# Subtest: quality gate runs V3 read-only
+ok 8 - quality gate runs V3 read-only
+  ---
+  duration_ms: 0.111675
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 7
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 123.753453
+EXIT_STATUS=1
