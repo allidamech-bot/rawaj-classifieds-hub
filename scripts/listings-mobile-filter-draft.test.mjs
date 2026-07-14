@@ -39,7 +39,19 @@ test("draft edits cannot clear or refetch the visible listing results", () => {
   assert.ok(listingFetch > suspensionGuard);
   assert.match(resultsSource, /lastCompletedFilterKeyRef/);
   assert.match(resultsSource, /if \(lastCompletedFilterKeyRef\.current === filterKey\) return;/);
-  assert.match(resultsSource, /lastCompletedFilterKeyRef\.current = filterKey;/);
+});
+
+test("only successful listing loads suppress an identical repeat request", () => {
+  const failureBranch = resultsSource.indexOf("if (!result.ok)");
+  const successBranch = resultsSource.indexOf("} else {", failureBranch);
+  const completedKeyWrite = resultsSource.indexOf(
+    "lastCompletedFilterKeyRef.current = filterKey;",
+    failureBranch,
+  );
+
+  assert.ok(failureBranch >= 0);
+  assert.ok(successBranch > failureBranch);
+  assert.ok(completedKeyWrite > successBranch);
 });
 
 test("draft edits cannot start or complete pagination requests", () => {
