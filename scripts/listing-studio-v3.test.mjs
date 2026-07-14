@@ -61,7 +61,7 @@ test("owner writes and lifecycle transitions deduplicate concurrent identical re
   assert.match(writes, /ownerSubmitRequests/);
   assert.match(writes, /const pending = ownerUpdateRequests\.get\(requestKey\)/);
   assert.match(writes, /const pending = ownerSubmitRequests\.get\(requestKey\)/);
-  assert.match(writes, /stablePayloadKey\(\s*payload\s*\)/);
+  assert.match(writes, /stablePayloadKey\(\s*payload,?\s*\)/);
   assert.match(writes, /\.finally\(\(\) => \{/);
   assert.match(lifecycle, /ownerLifecycleRequests/);
   assert.match(lifecycle, /function runOnce/);
