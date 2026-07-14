@@ -123,6 +123,12 @@ jobs:
       - name: Performance and observability release contract
         run: npm run test:phases-54-56
 
+      - name: Phases 57-69 release readiness contract
+        run: npm run test:phases-57-69
+
+      - name: Bilingual copy quality
+        run: npm run copy:quality
+
       - name: Admin security regression contract
         run: node scripts/admin-security-regression.mjs
 
