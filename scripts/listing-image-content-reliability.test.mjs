@@ -19,6 +19,35 @@ test("listing image content is verified by real file signatures", () => {
   assert.match(processing, /file\.type !== detectedType/);
 });
 
+test("source dimensions are parsed from JPG, PNG, and WebP headers before decoding", () => {
+  assert.match(processing, /readListingImageDimensions/);
+  assert.match(processing, /readPngDimensions/);
+  assert.match(processing, /matchesAscii\(bytes, 12, "IHDR"\)/);
+  assert.match(processing, /view\.getUint32\(16\)/);
+  assert.match(processing, /readJpegDimensions/);
+  assert.match(processing, /isJpegStartOfFrame/);
+  assert.match(processing, /view\.getUint16\(offset \+ 5\)/);
+  assert.match(processing, /readWebpDimensions/);
+  assert.match(processing, /chunkType === "VP8X"/);
+  assert.match(processing, /chunkType === "VP8 "/);
+  assert.match(processing, /chunkType === "VP8L"/);
+  assert.ok(
+    processing.indexOf("readListingImageDimensions(file, detectedType)") <
+      processing.indexOf('createImageBitmap(file, { imageOrientation: "from-image" })'),
+  );
+});
+
+test("oversized decoded dimensions are rejected before canvas allocation", () => {
+  assert.match(processing, /MAX_LISTING_IMAGE_SOURCE_DIMENSION = 12_000/);
+  assert.match(processing, /MAX_LISTING_IMAGE_SOURCE_PIXELS = 50_000_000/);
+  assert.match(processing, /dimensions\.width \* dimensions\.height/);
+  assert.match(processing, /أبعاد الصورة كبيرة جداً للمعالجة الآمنة/);
+  assert.ok(
+    processing.indexOf("dimensions.width > MAX_LISTING_IMAGE_SOURCE_DIMENSION") <
+      processing.indexOf('createImageBitmap(file, { imageOrientation: "from-image" })'),
+  );
+});
+
 test("decodable image content is checked before and after processing", () => {
   assert.match(processing, /validateListingImageContent/);
   assert.match(processing, /createImageBitmap\(file, \{ imageOrientation: "from-image" \}\)/);
