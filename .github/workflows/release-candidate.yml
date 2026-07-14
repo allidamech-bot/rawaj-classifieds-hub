@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/release-candidate.yml"
       - ".github/workflows/quality-gate.yml"
+      - "e2e/release-core-journeys.spec.ts"
       - "scripts/bottom-dock-navigation-contract.test.mjs"
   workflow_dispatch:
     inputs:
