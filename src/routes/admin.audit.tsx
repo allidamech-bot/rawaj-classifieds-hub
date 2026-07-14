@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Activity, Filter, ScrollText } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { adminFetchAuditLogs, type AdminAuditLogEntry } from "@/lib/classifieds-api";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -27,54 +27,78 @@ function AdminAuditPage() {
   const [entries, setEntries] = useState<AdminAuditLogEntry[]>([]);
   const [actionPrefix, setActionPrefix] = useState("");
   const [offset, setOffset] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [hasMore, setHasMore] = useState(false);
-  const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const requestIdRef = useRef(0);
+  const loadMoreInFlightRef = useRef(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadFirstPage = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
-    void adminFetchAuditLogs(canViewAuditLogs, {
+    setLoadError("");
+    const result = await adminFetchAuditLogs(canViewAuditLogs, {
       limit: PAGE_SIZE,
       offset: 0,
       actionPrefix: actionPrefix || null,
-    }).then((result) => {
-      if (cancelled) return;
-      setLoading(false);
-      setOffset(0);
-      if (!result.ok) {
-        setError(result.error.message);
-        setEntries([]);
-        setHasMore(false);
-        return;
-      }
-      setError("");
-      setEntries(result.data);
-      setHasMore(result.data.length === PAGE_SIZE);
     });
-    return () => {
-      cancelled = true;
-    };
-  }, [actionPrefix, canViewAuditLogs]);
-
-  async function loadMore() {
-    if (loadingMore || !hasMore) return;
-    const nextOffset = offset + PAGE_SIZE;
-    setLoadingMore(true);
-    const result = await adminFetchAuditLogs(canViewAuditLogs, {
-      limit: PAGE_SIZE,
-      offset: nextOffset,
-      actionPrefix: actionPrefix || null,
-    });
-    setLoadingMore(false);
+    if (requestId !== requestIdRef.current) return;
+    setLoading(false);
+    setOffset(0);
     if (!result.ok) {
-      setError(result.error.message);
+      setLoadError(result.error.message);
       return;
     }
-    setEntries((current) => [...current, ...result.data]);
-    setOffset(nextOffset);
+    setEntries(result.data);
     setHasMore(result.data.length === PAGE_SIZE);
+    setHasLoaded(true);
+  }, [actionPrefix, canViewAuditLogs]);
+
+  useEffect(() => {
+    requestIdRef.current += 1;
+    loadMoreInFlightRef.current = false;
+    setEntries([]);
+    setHasLoaded(false);
+    setHasMore(false);
+    setLoadError("");
+    void loadFirstPage();
+    return () => {
+      requestIdRef.current += 1;
+      loadMoreInFlightRef.current = false;
+    };
+  }, [loadFirstPage]);
+
+  async function loadMore() {
+    if (loadMoreInFlightRef.current || loadingMore || !hasMore) return;
+    loadMoreInFlightRef.current = true;
+    const requestId = requestIdRef.current;
+    const nextOffset = offset + PAGE_SIZE;
+    setLoadingMore(true);
+    setLoadError("");
+    try {
+      const result = await adminFetchAuditLogs(canViewAuditLogs, {
+        limit: PAGE_SIZE,
+        offset: nextOffset,
+        actionPrefix: actionPrefix || null,
+      });
+      if (requestId !== requestIdRef.current) return;
+      if (!result.ok) {
+        setLoadError(result.error.message);
+        return;
+      }
+      setEntries((current) => {
+        const byId = new Map(current.map((entry) => [entry.id, entry]));
+        for (const entry of result.data) byId.set(entry.id, entry);
+        return [...byId.values()];
+      });
+      setOffset(nextOffset);
+      setHasMore(result.data.length === PAGE_SIZE);
+    } finally {
+      loadMoreInFlightRef.current = false;
+      if (requestId === requestIdRef.current) setLoadingMore(false);
+    }
   }
 
   return (
@@ -117,14 +141,24 @@ function AdminAuditPage() {
         </label>
       </section>
 
-      {error && (
+      {loadError && hasLoaded ? (
         <p className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive hairline">
-          {error}
+          {loadError}
+          <button type="button" onClick={() => void loadFirstPage()} className="ms-2 underline">
+            {text("إعادة المحاولة", "Try again")}
+          </button>
         </p>
-      )}
+      ) : null}
 
-      {loading ? (
+      {loading && !hasLoaded ? (
         <StatePanel title={text("جارٍ تحميل سجل التدقيق...", "Loading audit log...")} />
+      ) : loadError && !hasLoaded ? (
+        <StatePanel
+          title={text("تعذر تحميل سجل التدقيق", "Could not load audit log")}
+          body={loadError}
+          actionLabel={text("إعادة المحاولة", "Try again")}
+          onAction={() => void loadFirstPage()}
+        />
       ) : entries.length === 0 ? (
         <StatePanel
           title={text("لا توجد إجراءات مسجلة لهذا الفلتر", "No recorded actions for this filter")}
@@ -191,9 +225,31 @@ function AuditEntryCard({ entry }: { entry: AdminAuditLogEntry }) {
   );
 }
 
-function StatePanel({ title }: { title: string }) {
+function StatePanel({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
-    <div className="rounded-2xl bg-card p-8 text-center text-sm font-bold hairline">{title}</div>
+    <div className="rounded-2xl bg-card p-8 text-center hairline">
+      <p className="text-sm font-bold">{title}</p>
+      {body ? <p className="mt-2 text-xs text-muted-foreground">{body}</p> : null}
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-3 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+        >
+          {actionLabel}
+        </button>
+      ) : null}
+    </div>
   );
 }
 

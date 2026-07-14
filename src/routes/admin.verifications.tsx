@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BadgeCheck, ExternalLink, FileKey2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   adminCreateVerificationDocumentSignedUrl,
   adminFetchVerificationRequests,
@@ -22,70 +22,114 @@ function AdminVerificationsPage() {
   const [requests, setRequests] = useState<SellerVerificationRequest[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [documentUrls, setDocumentUrls] = useState<Record<string, string>>({});
+  const [documentErrors, setDocumentErrors] = useState<Record<string, string>>({});
   const [loadingDocumentId, setLoadingDocumentId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<ClassifiedsError | null>(null);
-  const [notice, setNotice] = useState("");
+  const [workingRequestId, setWorkingRequestId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<ClassifiedsError | null>(null);
+  const [actionMessage, setActionMessage] = useState("");
+  const loadRequestIdRef = useRef(0);
+  const documentInFlightRef = useRef<Set<string>>(new Set());
+  const actionInFlightRef = useRef<Set<string>>(new Set());
 
-  async function load() {
+  const load = useCallback(async () => {
+    const requestId = ++loadRequestIdRef.current;
     setLoading(true);
-    setError(null);
+    setLoadError(null);
     const result = await adminFetchVerificationRequests(canManageVerifications);
-    if (result.ok) {
-      setRequests(result.data);
-      setNotes(Object.fromEntries(result.data.map((item) => [item.id, item.adminNote ?? ""])));
-      setDocumentUrls({});
-    } else {
-      setRequests([]);
-      setError(result.error);
-    }
+    if (requestId !== loadRequestIdRef.current) return;
     setLoading(false);
-  }
-
-  useEffect(() => {
-    void load();
+    if (!result.ok) {
+      setLoadError(result.error);
+      return;
+    }
+    setRequests(result.data);
+    setNotes((current) => ({
+      ...current,
+      ...Object.fromEntries(
+        result.data.map((item) => [item.id, current[item.id] ?? item.adminNote ?? ""]),
+      ),
+    }));
+    setHasLoaded(true);
   }, [canManageVerifications]);
 
+  useEffect(() => {
+    loadRequestIdRef.current += 1;
+    setRequests([]);
+    setHasLoaded(false);
+    setLoadError(null);
+    setDocumentUrls({});
+    setDocumentErrors({});
+    void load();
+    return () => {
+      loadRequestIdRef.current += 1;
+      documentInFlightRef.current.clear();
+      actionInFlightRef.current.clear();
+    };
+  }, [load]);
+
   async function loadSecureDocument(request: SellerVerificationRequest) {
-    if (!request.documentPath || loadingDocumentId) return;
-    setNotice("");
+    if (!request.documentPath || documentInFlightRef.current.has(request.id)) return;
+    documentInFlightRef.current.add(request.id);
+    setActionMessage("");
+    setDocumentErrors((current) => ({ ...current, [request.id]: "" }));
     setLoadingDocumentId(request.id);
-    const result = await adminCreateVerificationDocumentSignedUrl(
-      canManageVerifications,
-      request.documentPath,
-    );
-    setLoadingDocumentId(null);
+    try {
+      const result = await adminCreateVerificationDocumentSignedUrl(
+        canManageVerifications,
+        request.documentPath,
+      );
 
-    if (!result.ok) {
-      setNotice(result.error.message);
-      return;
+      if (!result.ok) {
+        setDocumentErrors((current) => ({ ...current, [request.id]: result.error.message }));
+        return;
+      }
+      if (!result.data) {
+        setDocumentErrors((current) => ({
+          ...current,
+          [request.id]: text(
+            "لا توجد وثيقة مرتبطة بهذا الطلب.",
+            "No evidence is linked to this request.",
+          ),
+        }));
+        return;
+      }
+      setDocumentUrls((current) => ({ ...current, [request.id]: result.data as string }));
+    } finally {
+      documentInFlightRef.current.delete(request.id);
+      setLoadingDocumentId((current) => (current === request.id ? null : current));
     }
-
-    if (!result.data) {
-      setNotice(text("لا توجد وثيقة مرتبطة بهذا الطلب.", "No evidence is linked to this request."));
-      return;
-    }
-
-    setDocumentUrls((current) => ({ ...current, [request.id]: result.data as string }));
   }
 
   async function moderate(request: SellerVerificationRequest, status: "approved" | "rejected") {
-    setNotice("");
-    const result = await adminModerateVerificationRequest(canManageVerifications, {
-      requestId: request.id,
-      status,
-      adminNote: notes[request.id] ?? null,
-      expectedUpdatedAt: request.updatedAt,
-    });
-    if (result.ok) {
-      setNotice(
+    if (actionInFlightRef.current.has(request.id)) return;
+    actionInFlightRef.current.add(request.id);
+    setWorkingRequestId(request.id);
+    setActionMessage("");
+    try {
+      const result = await adminModerateVerificationRequest(canManageVerifications, {
+        requestId: request.id,
+        status,
+        adminNote: notes[request.id] ?? null,
+        expectedUpdatedAt: request.updatedAt,
+      });
+      if (!result.ok) {
+        setActionMessage(result.error.message);
+        return;
+      }
+      setRequests((current) =>
+        current.map((item) => (item.id === request.id ? { ...item, status } : item)),
+      );
+      setActionMessage(
         status === "approved"
           ? text("تم توثيق الحساب.", "Account verified.")
           : text("تم رفض طلب التوثيق.", "Verification rejected."),
       );
       await load();
-    } else {
-      setNotice(result.error.message);
+    } finally {
+      actionInFlightRef.current.delete(request.id);
+      setWorkingRequestId((current) => (current === request.id ? null : current));
     }
   }
 
@@ -102,17 +146,30 @@ function AdminVerificationsPage() {
             "Review the request and private evidence through a temporary link. Public verified status appears after approval only.",
           )}
         </p>
-        {notice ? (
-          <p className="mt-3 rounded-xl bg-muted-surface p-2 text-xs font-semibold">{notice}</p>
+        {actionMessage ? (
+          <p className="mt-3 rounded-xl bg-muted-surface p-2 text-xs font-semibold">
+            {actionMessage}
+          </p>
         ) : null}
       </section>
 
-      {loading ? (
+      {loadError && hasLoaded ? (
+        <Panel
+          title={text("تعذر تحديث طلبات التوثيق", "Could not refresh verification requests")}
+          body={loadError.message}
+          actionLabel={text("إعادة المحاولة", "Try again")}
+          onAction={() => void load()}
+        />
+      ) : null}
+
+      {loading && !hasLoaded ? (
         <Panel title={text("جارٍ تحميل طلبات التوثيق", "Loading verification requests")} />
-      ) : error ? (
+      ) : loadError && !hasLoaded ? (
         <Panel
           title={text("تعذر تحميل طلبات التوثيق", "Could not load verification requests")}
-          body={error.message}
+          body={loadError.message}
+          actionLabel={text("إعادة المحاولة", "Try again")}
+          onAction={() => void load()}
         />
       ) : requests.length === 0 ? (
         <Panel title={text("لا توجد طلبات توثيق حالياً", "No verification requests right now")} />
@@ -167,7 +224,9 @@ function AdminVerificationsPage() {
                       >
                         {loadingDocumentId === request.id
                           ? text("جارٍ إنشاء رابط خاص", "Creating private link")
-                          : text("تحميل الوثيقة بأمان", "Load secure document")}
+                          : documentErrors[request.id]
+                            ? text("إعادة محاولة فتح الوثيقة", "Retry secure document")
+                            : text("تحميل الوثيقة بأمان", "Load secure document")}
                       </button>
                     )
                   ) : (
@@ -176,6 +235,11 @@ function AdminVerificationsPage() {
                     </span>
                   )}
                 </div>
+                {documentErrors[request.id] ? (
+                  <p className="mt-2 text-[10px] font-semibold text-destructive">
+                    {documentErrors[request.id]}
+                  </p>
+                ) : null}
                 {documentUrls[request.id] ? (
                   <p className="mt-2 text-[10px] text-muted-foreground">
                     {text(
@@ -223,11 +287,30 @@ function AdminVerificationsPage() {
   );
 }
 
-function Panel({ title, body }: { title: string; body?: string }) {
+function Panel({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <section className="rounded-2xl bg-card p-8 text-center hairline">
       <p className="text-sm font-bold">{title}</p>
       {body ? <p className="mt-1 text-xs text-muted-foreground">{body}</p> : null}
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-3 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+        >
+          {actionLabel}
+        </button>
+      ) : null}
     </section>
   );
 }
