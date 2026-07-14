@@ -41,6 +41,30 @@ test("activity center keeps tab state in the URL and conversation deep links", (
   assert.match(activityRoute, /search=\{\{ conversation: conversation\.id \}\}/);
 });
 
+test("activity feeds recover independently without erasing successful snapshots", () => {
+  assert.match(activityRoute, /const \[hasLoadedNotifications, setHasLoadedNotifications\]/);
+  assert.match(activityRoute, /const \[hasLoadedConversations, setHasLoadedConversations\]/);
+  assert.match(activityRoute, /const loadNotifications = useCallback/);
+  assert.match(activityRoute, /const loadConversations = useCallback/);
+  assert.match(activityRoute, /notificationError && !hasLoadedNotifications/);
+  assert.match(activityRoute, /conversationError && !hasLoadedConversations/);
+  assert.match(activityRoute, /onRetry=\{\(\) => void loadNotifications\(\)\}/);
+  assert.match(activityRoute, /onRetry=\{\(\) => void loadConversations\(\)\}/);
+  assert.doesNotMatch(activityRoute, /setNotifications\(\[\]\);[\s\S]{0,120}setNotificationError/);
+  assert.doesNotMatch(activityRoute, /setConversations\(\[\]\);[\s\S]{0,120}setConversationError/);
+});
+
+test("activity requests reject stale account and route responses", () => {
+  assert.match(activityRoute, /const notificationRequestIdRef = useRef\(0\)/);
+  assert.match(activityRoute, /const conversationRequestIdRef = useRef\(0\)/);
+  assert.match(activityRoute, /requestId !== notificationRequestIdRef\.current/);
+  assert.match(activityRoute, /requestId !== conversationRequestIdRef\.current/);
+  assert.match(
+    activityRoute,
+    /return \(\) => \{[\s\S]*notificationRequestIdRef\.current \+= 1;[\s\S]*conversationRequestIdRef\.current \+= 1;/,
+  );
+});
+
 test("account hub exposes one activity shortcut with combined unread count", () => {
   assert.match(moreRoute, /to: "\/activity"/);
   assert.match(moreRoute, /counts\.messages \+ counts\.notifications/);
