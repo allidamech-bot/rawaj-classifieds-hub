@@ -51,10 +51,13 @@ const total = (items) => items.reduce((sum, item) => sum + item.bytes, 0);
 const largest = (items) => Math.max(0, ...items.map((item) => item.bytes));
 const formatKib = (bytes) => `${(bytes / KIB).toFixed(1)} KiB`;
 
-assert.ok(javascript.length >= budgets.minimumJavaScriptChunks, [
-  `Expected at least ${budgets.minimumJavaScriptChunks} JavaScript chunks to preserve route/vendor splitting.`,
-  `Found ${javascript.length} in ${buildRoot}.`,
-].join(" "));
+assert.ok(
+  javascript.length >= budgets.minimumJavaScriptChunks,
+  [
+    `Expected at least ${budgets.minimumJavaScriptChunks} JavaScript chunks to preserve route/vendor splitting.`,
+    `Found ${javascript.length} in ${buildRoot}.`,
+  ].join(" "),
+);
 assert.ok(
   largest(javascript) <= budgets.maximumSingleJavaScriptBytes,
   `Largest JavaScript asset ${formatKib(largest(javascript))} exceeds ${formatKib(budgets.maximumSingleJavaScriptBytes)}.`,
