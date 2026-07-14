@@ -32,7 +32,7 @@ export function createOwnerDraftListing(
     return existing.promise;
   }
 
-  let record: DraftCreationRequest;
+  const record = { expiresAt: null } as DraftCreationRequest;
   const request = createOwnerDraftListingBase(userId, payload)
     .then((result) => {
       if (!result.ok) {
@@ -48,7 +48,7 @@ export function createOwnerDraftListing(
       throw error;
     });
 
-  record = { promise: request, expiresAt: null };
+  record.promise = request;
   ownerDraftCreationRequests.set(requestKey, record);
 
   return request;
