@@ -6,7 +6,7 @@ import {
   PublicListingDetailLoadError,
   guardPublicListingDetailResult,
   isUnavailableListingDetailError,
-} from "../src/lib/api/listing-detail-read-guarded.ts";
+} from "../src/lib/api/listing-detail-load-guard.ts";
 
 const [barrelSource, routeSource, rootSource, packageSource] = await Promise.all([
   readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
