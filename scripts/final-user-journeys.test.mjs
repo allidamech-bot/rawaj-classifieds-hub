@@ -1,0 +1,67 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
+
+const [more, addListing, manageListing, listingDetail, seller, chats, packageJson, qualityGate] =
+  await Promise.all([
+    readFile(new URL("../src/routes/more.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/profile/listings.$id.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/seller.$id.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../package.json", import.meta.url), "utf8"),
+    readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  ]);
+
+test("session actions are synchronously deduplicated", () => {
+  assert.match(more, /const logoutInFlightRef = useRef\(false\)/);
+  assert.match(more, /if \(logoutInFlightRef\.current\) return/);
+  assert.match(more, /finally \{/);
+  assert.match(more, /disabled: loggingOut/);
+});
+
+test("listing create and edit setup loads expose retry and stale-read guards", () => {
+  assert.match(addListing, /const setupRequestIdRef = useRef\(0\)/);
+  assert.match(addListing, /const loadSetup = useCallback/);
+  assert.match(addListing, /onClick=\{\(\) => void loadSetup\(\)\}/);
+  assert.match(manageListing, /const setupRequestIdRef = useRef\(0\)/);
+  assert.match(manageListing, /const imagesRequestIdRef = useRef\(0\)/);
+  assert.match(manageListing, /const saveInFlightRef = useRef\(false\)/);
+  assert.match(manageListing, /const resubmitInFlightRef = useRef\(false\)/);
+  assert.match(manageListing, /const deleteInFlightRef = useRef\(false\)/);
+  assert.match(manageListing, /Retry photos|إعادة تحميل الصور/);
+});
+
+test("public listing actions cannot be duplicated", () => {
+  assert.match(listingDetail, /const reportInFlightRef = useRef\(false\)/);
+  assert.match(listingDetail, /const messageInFlightRef = useRef\(false\)/);
+  assert.match(listingDetail, /const alertInFlightRef = useRef\(false\)/);
+  assert.match(listingDetail, /reportInFlightRef\.current = false/);
+  assert.match(listingDetail, /messageInFlightRef\.current = false/);
+});
+
+test("seller review eligibility is retryable and review writes are deduplicated", () => {
+  assert.match(seller, /const loadEligibility = useCallback/);
+  assert.match(seller, /const eligibilityRequestIdRef = useRef\(0\)/);
+  assert.match(seller, /const reviewInFlightRef = useRef\(false\)/);
+  assert.match(seller, /onClick=\{\(\) => void loadEligibility\(\)\}/);
+  assert.match(seller, /reviewInFlightRef\.current = false/);
+});
+
+test("chat refresh failures preserve snapshots and sensitive writes are deduplicated", () => {
+  assert.doesNotMatch(chats, /setConversations\(\[\]\);
+\s*setConversationError\(result\.error\)/);
+  assert.doesNotMatch(chats, /setMessages\(\[\]\);
+\s*setMessageError\(result\.error\)/);
+  assert.match(chats, /const sendInFlightRef = useRef\(false\)/);
+  assert.match(chats, /const reportInFlightRef = useRef<Set<string>>\(new Set\(\)\)/);
+  assert.match(chats, /const blockInFlightRef = useRef\(false\)/);
+  assert.match(chats, /finally \{/);
+});
+
+test("final user journey contract remains in package and Quality Gate", () => {
+  assert.match(packageJson, /"test:final-user-journeys"/);
+  assert.match(qualityGate, /Final user journeys contract/);
+  assert.match(qualityGate, /npm run test:final-user-journeys/);
+});

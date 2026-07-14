@@ -15,8 +15,7 @@ import {
   User,
   UserCog,
 } from "lucide-react";
-import type { ComponentType, ReactNode } from "react";
-import { useState } from "react";
+import { useRef, useState, type ComponentType, type ReactNode } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { TrustHubHero, TrustSectionHeader } from "@/features/trust/TrustSupportExperience";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -52,6 +51,7 @@ type AccountRow = {
   onClick?: () => void;
   icon: ComponentType<{ className?: string }>;
   destructive?: boolean;
+  disabled?: boolean;
 };
 
 const primaryShortcuts: (AccountRow & { world: string })[] = [
@@ -106,6 +106,8 @@ function MorePage() {
   const unreadTotal = counts.messages + counts.notifications;
   const { user } = auth;
   const [logoutError, setLogoutError] = useState("");
+  const [loggingOut, setLoggingOut] = useState(false);
+  const logoutInFlightRef = useRef(false);
   const isArabic = language === "ar";
   const profile = auth.profile;
   const displayName =
@@ -115,9 +117,17 @@ function MorePage() {
     text("حساب رواج", "RAWAJ account");
 
   async function handleLogout() {
+    if (logoutInFlightRef.current) return;
+    logoutInFlightRef.current = true;
+    setLoggingOut(true);
     setLogoutError("");
-    const result = await auth.signOut();
-    if (result.error) setLogoutError(result.error);
+    try {
+      const result = await auth.signOut();
+      if (result.error) setLogoutError(result.error);
+    } finally {
+      logoutInFlightRef.current = false;
+      setLoggingOut(false);
+    }
   }
 
   const settingsRows: AccountRow[] = [
@@ -248,13 +258,14 @@ function MorePage() {
             <AccountSection title={text("الجلسة", "Session")} quiet>
               <AccountItem
                 row={{
-                  titleAr: "تسجيل الخروج",
-                  titleEn: "Log out",
-                  hintAr: "الخروج من هذا الحساب",
-                  hintEn: "Sign out of this account",
+                  titleAr: loggingOut ? "جارٍ تسجيل الخروج" : "تسجيل الخروج",
+                  titleEn: loggingOut ? "Signing out" : "Log out",
+                  hintAr: loggingOut ? "يتم إنهاء الجلسة بأمان" : "الخروج من هذا الحساب",
+                  hintEn: loggingOut ? "Ending this session safely" : "Sign out of this account",
                   icon: LogOut,
                   onClick: handleLogout,
                   destructive: true,
+                  disabled: loggingOut,
                 }}
                 text={text}
               />
@@ -376,7 +387,7 @@ function AccountItem({
   );
 
   const rowClass =
-    "flex min-h-12 w-full items-center justify-between gap-3 rounded-xl px-2 py-2.5 text-start transition hover:bg-card/65 active:scale-[0.985]";
+    "flex min-h-12 w-full items-center justify-between gap-3 rounded-xl px-2 py-2.5 text-start transition hover:bg-card/65 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-50";
 
   if (row.to) {
     return (
@@ -387,7 +398,7 @@ function AccountItem({
   }
 
   return (
-    <button type="button" onClick={row.onClick} className={rowClass}>
+    <button type="button" onClick={row.onClick} disabled={row.disabled} className={rowClass}>
       {content}
     </button>
   );
