@@ -38,9 +38,5 @@ function subscribeToFilterDraftState(listener: FilterDraftListener) {
 }
 
 export function useFilterDraftSessionActive() {
-  return useSyncExternalStore(
-    subscribeToFilterDraftState,
-    isFilterDraftSessionActive,
-    () => false,
-  );
+  return useSyncExternalStore(subscribeToFilterDraftState, isFilterDraftSessionActive, () => false);
 }
