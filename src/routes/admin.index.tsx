@@ -12,7 +12,7 @@ import {
   UserCog,
   Users,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   adminFetchCommandCenterMetrics,
   type AdminCommandCenterMetrics,
@@ -45,30 +45,46 @@ function AdminOverview() {
   const { text } = useUiPreferences();
   const canViewCommandCenterMetrics = auth.hasPermission("canManageUsers");
   const [metrics, setMetrics] = useState<AdminCommandCenterMetrics>(EMPTY_METRICS);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState("");
+  const requestIdRef = useRef(0);
+
+  const loadMetrics = useCallback(async () => {
+    if (!canViewCommandCenterMetrics) return;
+    const requestId = ++requestIdRef.current;
+    setLoading(true);
+    setError("");
+    const result = await adminFetchCommandCenterMetrics(canViewCommandCenterMetrics);
+    if (requestId !== requestIdRef.current) return;
+    if (!result.ok) {
+      setError(result.error.message);
+      setLoading(false);
+      return;
+    }
+    setMetrics(result.data);
+    setHasLoaded(true);
+    setLoading(false);
+  }, [canViewCommandCenterMetrics]);
 
   useEffect(() => {
+    requestIdRef.current += 1;
     if (!canViewCommandCenterMetrics) {
+      setMetrics(EMPTY_METRICS);
       setLoading(false);
+      setHasLoaded(false);
       setError("");
       return;
     }
-
-    let cancelled = false;
-    void adminFetchCommandCenterMetrics(canViewCommandCenterMetrics).then((result) => {
-      if (cancelled) return;
-      setLoading(false);
-      if (!result.ok) {
-        setError(result.error.message);
-        return;
-      }
-      setMetrics(result.data);
-    });
+    setMetrics(EMPTY_METRICS);
+    setLoading(false);
+    setHasLoaded(false);
+    setError("");
+    void loadMetrics();
     return () => {
-      cancelled = true;
+      requestIdRef.current += 1;
     };
-  }, [canViewCommandCenterMetrics]);
+  }, [canViewCommandCenterMetrics, loadMetrics]);
 
   if (!canViewCommandCenterMetrics) {
     return (
@@ -84,6 +100,29 @@ function AdminOverview() {
           )}
         </p>
       </section>
+    );
+  }
+
+  if (loading && !hasLoaded) {
+    return (
+      <AdminLoadState
+        title={text("جارٍ تحميل مركز القيادة", "Loading command center")}
+        body={text(
+          "يتم الآن جلب المؤشرات التشغيلية الحقيقية.",
+          "Real operational metrics are being loaded.",
+        )}
+      />
+    );
+  }
+
+  if (error && !hasLoaded) {
+    return (
+      <AdminLoadState
+        title={text("تعذر تحميل مؤشرات الإدارة", "Could not load admin metrics")}
+        body={error}
+        actionLabel={text("إعادة المحاولة", "Try again")}
+        onAction={() => void loadMetrics()}
+      />
     );
   }
 
@@ -127,72 +166,46 @@ function AdminOverview() {
         </div>
       </section>
 
-      {error && (
-        <p className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive hairline">
-          {error}
-        </p>
-      )}
+      {error ? (
+        <div className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive hairline">
+          <p>{error}</p>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => void loadMetrics()}
+            className="mt-2 rounded-lg bg-card px-3 py-1.5 font-bold text-foreground hairline disabled:opacity-60"
+          >
+            {loading ? text("جارٍ التحديث", "Refreshing") : text("إعادة المحاولة", "Try again")}
+          </button>
+        </div>
+      ) : null}
 
       <section>
         <SectionTitle icon={Activity} title={text("نبض التشغيل", "Operations pulse")} />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <MetricCard
-            label={text("إجمالي المستخدمين", "Total users")}
-            value={formatMetric(metrics.totalUsers, loading)}
-          />
-          <MetricCard
-            label={text("المستخدمون النشطون", "Active users")}
-            value={formatMetric(metrics.activeUsers, loading)}
-          />
+          <MetricCard label={text("إجمالي المستخدمين", "Total users")} value={metrics.totalUsers} />
+          <MetricCard label={text("المستخدمون النشطون", "Active users")} value={metrics.activeUsers} />
           <MetricCard
             label={text("إجمالي طوابير العمل", "Total queue load")}
-            value={formatMetric(queueLoad, loading)}
+            value={queueLoad}
             attention={queueLoad > 0}
           />
           <MetricCard
             label={text("القيود النشطة", "Active restrictions")}
-            value={formatMetric(metrics.activeRestrictions, loading)}
+            value={metrics.activeRestrictions}
             attention={metrics.activeRestrictions > 0}
           />
         </div>
       </section>
 
       <section>
-        <SectionTitle
-          icon={ShieldCheck}
-          title={text("السلامة والمراجعة", "Safety and moderation")}
-        />
+        <SectionTitle icon={ShieldCheck} title={text("السلامة والمراجعة", "Safety and moderation")} />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <QueueCard
-            icon={FileCheck}
-            label={text("إعلانات للمراجعة", "Listings to review")}
-            value={metrics.pendingListings}
-            to="/admin/pending"
-          />
-          <QueueCard
-            icon={Flag}
-            label={text("بلاغات إعلانات", "Listing reports")}
-            value={metrics.openListingReports}
-            to="/admin/reports"
-          />
-          <QueueCard
-            icon={MessageSquareWarning}
-            label={text("بلاغات رسائل", "Message reports")}
-            value={metrics.openMessageReports}
-            to="/admin/message-reports"
-          />
-          <QueueCard
-            icon={BadgeCheck}
-            label={text("طلبات توثيق", "Verification requests")}
-            value={metrics.pendingVerifications}
-            to="/admin/verifications"
-          />
-          <QueueCard
-            icon={Sparkles}
-            label={text("طلبات ترويج", "Promotion requests")}
-            value={metrics.pendingPromotions}
-            to="/admin/promotions"
-          />
+          <QueueCard icon={FileCheck} label={text("إعلانات للمراجعة", "Listings to review")} value={metrics.pendingListings} to="/admin/pending" />
+          <QueueCard icon={Flag} label={text("بلاغات إعلانات", "Listing reports")} value={metrics.openListingReports} to="/admin/reports" />
+          <QueueCard icon={MessageSquareWarning} label={text("بلاغات رسائل", "Message reports")} value={metrics.openMessageReports} to="/admin/message-reports" />
+          <QueueCard icon={BadgeCheck} label={text("طلبات توثيق", "Verification requests")} value={metrics.pendingVerifications} to="/admin/verifications" />
+          <QueueCard icon={Sparkles} label={text("طلبات ترويج", "Promotion requests")} value={metrics.pendingPromotions} to="/admin/promotions" />
         </div>
       </section>
 
@@ -203,10 +216,7 @@ function AdminOverview() {
             <MiniMetric label={text("محظور", "Banned")} value={metrics.disabledUsers} />
             <MiniMetric label={text("قيود", "Restrictions")} value={metrics.activeRestrictions} />
           </div>
-          <CommandLink
-            to="/admin/users"
-            label={text("فتح إدارة المستخدمين", "Open user management")}
-          />
+          <CommandLink to="/admin/users" label={text("فتح إدارة المستخدمين", "Open user management")} />
         </CommandCard>
 
         <CommandCard icon={UserCog} title={text("الطاقم والصلاحيات", "Staff and permissions")}>
@@ -225,43 +235,37 @@ function AdminOverview() {
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <QuickLink
-          icon={ShieldCheck}
-          title={text("مركز السلامة", "Safety center")}
-          body={text(
-            "تجميع طوابير البلاغات ومخاطر الحسابات.",
-            "Unified report and account-risk queues.",
-          )}
-          to="/admin/safety"
-        />
-        <QuickLink
-          icon={Activity}
-          title={text("سجل التدقيق", "Audit log")}
-          body={text("تتبع الإجراءات الإدارية الحساسة.", "Trace sensitive administrative actions.")}
-          to="/admin/audit"
-        />
-        <QuickLink
-          icon={LockKeyhole}
-          title={text("المستخدمون والقيود", "Users and restrictions")}
-          body={text(
-            "إيقاف، حظر، استعادة وقيود دقيقة.",
-            "Suspend, ban, restore, and granular controls.",
-          )}
-          to="/admin/users"
-        />
-        <QuickLink
-          icon={Sparkles}
-          title={text("الترويج", "Promotions")}
-          body={text("مراجعة طلبات إبراز الإعلانات.", "Review listing promotion requests.")}
-          to="/admin/promotions"
-        />
+        <QuickLink icon={ShieldCheck} title={text("مركز السلامة", "Safety center")} body={text("تجميع طوابير البلاغات ومخاطر الحسابات.", "Unified report and account-risk queues.")} to="/admin/safety" />
+        <QuickLink icon={Activity} title={text("سجل التدقيق", "Audit log")} body={text("تتبع الإجراءات الإدارية الحساسة.", "Trace sensitive administrative actions.")} to="/admin/audit" />
+        <QuickLink icon={LockKeyhole} title={text("المستخدمون والقيود", "Users and restrictions")} body={text("إيقاف، حظر، استعادة وقيود دقيقة.", "Suspend, ban, restore, and granular controls.")} to="/admin/users" />
+        <QuickLink icon={Sparkles} title={text("الترويج", "Promotions")} body={text("مراجعة طلبات إبراز الإعلانات.", "Review listing promotion requests.")} to="/admin/promotions" />
       </section>
     </div>
   );
 }
 
-function formatMetric(value: number, loading: boolean) {
-  return loading ? "…" : value.toLocaleString();
+function AdminLoadState({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
+  return (
+    <section className="rounded-2xl bg-card p-8 text-center hairline">
+      <p className="text-sm font-bold">{title}</p>
+      {body ? <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p> : null}
+      {actionLabel && onAction ? (
+        <button type="button" onClick={onAction} className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">
+          {actionLabel}
+        </button>
+      ) : null}
+    </section>
+  );
 }
 
 function SectionTitle({ icon: Icon, title }: { icon: typeof Crown; title: string }) {
@@ -273,39 +277,18 @@ function SectionTitle({ icon: Icon, title }: { icon: typeof Crown; title: string
   );
 }
 
-function MetricCard({
-  label,
-  value,
-  attention = false,
-}: {
-  label: string;
-  value: string;
-  attention?: boolean;
-}) {
+function MetricCard({ label, value, attention = false }: { label: string; value: number; attention?: boolean }) {
   return (
     <div className={`rounded-2xl p-4 hairline ${attention ? "bg-warning/10" : "bg-card"}`}>
-      <div className="text-2xl font-extrabold">{value}</div>
+      <div className="text-2xl font-extrabold">{value.toLocaleString()}</div>
       <p className="mt-1 text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }
 
-function QueueCard({
-  icon: Icon,
-  label,
-  value,
-  to,
-}: {
-  icon: typeof Crown;
-  label: string;
-  value: number;
-  to: string;
-}) {
+function QueueCard({ icon: Icon, label, value, to }: { icon: typeof Crown; label: string; value: number; to: string }) {
   return (
-    <Link
-      to={to as "/admin"}
-      className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface"
-    >
+    <Link to={to as "/admin"} className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface">
       <div className="flex items-center justify-between gap-3">
         <span className="grid h-9 w-9 place-items-center rounded-xl bg-muted-surface text-primary">
           <Icon className="h-4 w-4" />
@@ -317,15 +300,7 @@ function QueueCard({
   );
 }
 
-function CommandCard({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: typeof Crown;
-  title: string;
-  children: React.ReactNode;
-}) {
+function CommandCard({ icon: Icon, title, children }: { icon: typeof Crown; title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-2xl bg-card p-5 hairline">
       <SectionTitle icon={Icon} title={title} />
@@ -345,31 +320,15 @@ function MiniMetric({ label, value }: { label: string; value: number }) {
 
 function CommandLink({ to, label }: { to: string; label: string }) {
   return (
-    <Link
-      to={to as "/admin"}
-      className="mt-4 inline-flex rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
-    >
+    <Link to={to as "/admin"} className="mt-4 inline-flex rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">
       {label}
     </Link>
   );
 }
 
-function QuickLink({
-  icon: Icon,
-  title,
-  body,
-  to,
-}: {
-  icon: typeof Crown;
-  title: string;
-  body: string;
-  to: string;
-}) {
+function QuickLink({ icon: Icon, title, body, to }: { icon: typeof Crown; title: string; body: string; to: string }) {
   return (
-    <Link
-      to={to as "/admin"}
-      className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface"
-    >
+    <Link to={to as "/admin"} className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface">
       <Icon className="h-5 w-5 text-primary" />
       <h3 className="mt-3 text-sm font-extrabold">{title}</h3>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">{body}</p>
