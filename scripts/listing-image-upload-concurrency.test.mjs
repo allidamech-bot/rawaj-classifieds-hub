@@ -8,10 +8,11 @@ const [queueSource, studioSource, packageSource] = await Promise.all([
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
 
-test("bounded task queue never starts more workers than requested items or concurrency", () => {
+test("bounded task queue normalizes invalid concurrency and never exceeds its limits", () => {
+  assert.match(queueSource, /Number\.isFinite\(concurrency\) \? Math\.floor\(concurrency\) : 1/);
   assert.match(
     queueSource,
-    /Math\.min\(items\.length, Math\.max\(1, Math\.floor\(concurrency\)\)\)/,
+    /Math\.min\(items\.length, Math\.max\(1, normalizedConcurrency\)\)/,
   );
   assert.match(queueSource, /let nextIndex = 0/);
   assert.match(queueSource, /nextIndex \+= 1/);
