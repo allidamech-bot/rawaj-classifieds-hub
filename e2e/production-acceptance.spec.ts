@@ -13,6 +13,9 @@ const authenticatedRoutes = [
   "/saved-searches",
   "/chats",
   "/notifications",
+  "/activity",
+  "/more",
+  "/verification",
   "/promotion",
 ] as const;
 

@@ -1,0 +1,106 @@
+name: Release Candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_commit_sha:
+        description: Exact 40-character commit SHA to certify
+        required: true
+        type: string
+      run_production_acceptance:
+        description: Run authenticated read-only acceptance against rawa-j.com
+        required: true
+        default: false
+        type: boolean
+
+concurrency:
+  group: release-candidate-${{ inputs.expected_commit_sha }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      EXPECTED_COMMIT_SHA: ${{ inputs.expected_commit_sha }}
+
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.expected_commit_sha }}
+          fetch-depth: 1
+          show-progress: false
+
+      - name: Verify candidate identity
+        shell: bash
+        run: |
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$EXPECTED_COMMIT_SHA"
+          test "${#EXPECTED_COMMIT_SHA}" -eq 40
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Full repository quality gate
+        run: npm run check
+
+      - name: Enforce built asset budgets
+        run: npm run performance:budget
+
+      - name: Install cross-browser engines
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Run cross-browser release journeys
+        run: npm run test:release:browsers
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Synchronize Android project
+        run: npx cap sync android
+
+      - name: Assemble Android debug candidate
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Run authenticated Production acceptance
+        if: ${{ inputs.run_production_acceptance }}
+        env:
+          E2E_BASE_URL: https://rawa-j.com
+          PRODUCTION_ACCEPTANCE: "1"
+          RAWAJ_ACCEPTANCE_EMAIL: ${{ secrets.RAWAJ_ACCEPTANCE_EMAIL }}
+          RAWAJ_ACCEPTANCE_PASSWORD: ${{ secrets.RAWAJ_ACCEPTANCE_PASSWORD }}
+        run: npx playwright test e2e/production-acceptance.spec.ts --project=mobile-chromium
+
+      - name: Generate release candidate manifest
+        env:
+          PRODUCTION_ACCEPTANCE: ${{ inputs.run_production_acceptance && '1' || '0' }}
+        run: npm run release:manifest
+
+      - name: Upload release candidate artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawaj-rc-${{ inputs.expected_commit_sha }}
+          path: |
+            .output/public
+            android/app/build/outputs/apk/debug/app-debug.apk
+            release-candidate-manifest.json
+            playwright-report
+          if-no-files-found: error
+          retention-days: 30
