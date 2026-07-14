@@ -20,7 +20,9 @@ test("bottom dock exposes stable navigation and accessibility contracts", () => 
 });
 
 test("bottom dock retains exactly five primary destinations", () => {
-  const destinationMatches = dock.match(/to:\s*"\/(?:categories|add-listing|chats|more)?"/g) ?? [];
+  const itemsSource = dock.match(/const items: NavItem\[\] = \[([\s\S]*?)\n\];/)?.[1] ?? "";
+  const destinationMatches =
+    itemsSource.match(/\bto:\s*"\/(?:categories|add-listing|chats|more)?"/g) ?? [];
   assert.equal(destinationMatches.length, 5);
-  assert.match(dock, /section:\s*"addListing"[\s\S]*primary:\s*true/);
+  assert.match(itemsSource, /section:\s*"addListing"[\s\S]*primary:\s*true/);
 });
