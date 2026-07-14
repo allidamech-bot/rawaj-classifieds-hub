@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - feature/bounded-listing-image-uploads
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
