@@ -12,6 +12,7 @@ const [root, shared, more, support, safety, css, qualityGate] = await Promise.al
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
 ]);
 
+// Recovery invariants intentionally cover both history reads and request submission.
 test("trust support V2 stylesheet loads after account and support foundations", () => {
   assert.match(root, /import trustSupportHubV2Css from "\.\.\/trust-support-hub-v2\.css\?url"/);
   const account = root.indexOf("href: activityMoreFoundationCss");
@@ -62,6 +63,21 @@ test("support keeps stored request submission and history with shared timeline",
   assert.match(support, /supportStatusLabel|SupportRequestTimeline/);
   assert.match(support, /No stored support requests yet|لا توجد طلبات دعم/);
   assert.doesNotMatch(support, /instant reply|reply within/i);
+});
+
+test("support history recovers without erasing successful requests or duplicating submissions", () => {
+  assert.match(support, /const \[requestsHasLoaded, setRequestsHasLoaded\]/);
+  assert.match(support, /const requestsRequestIdRef = useRef\(0\)/);
+  assert.match(support, /const submitInFlightRef = useRef\(false\)/);
+  assert.match(support, /const loadRequests = useCallback/);
+  assert.match(support, /requestsError && !requestsHasLoaded/);
+  assert.match(support, /onRetry=\{\(\) => void loadRequests\(\)\}/);
+  assert.match(support, /if \(submitInFlightRef\.current\) return/);
+  assert.match(support, /finally \{[\s\S]*submitInFlightRef\.current = false/);
+  assert.doesNotMatch(
+    support,
+    /setRequests\(\[\]\);[\s\S]{0,100}setRequestsError\(result\.error\)/,
+  );
 });
 
 test("safety uses shared factual guide cards and keeps platform payment disclaimer", () => {

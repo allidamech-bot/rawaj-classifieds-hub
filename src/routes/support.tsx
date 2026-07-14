@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronDown, ShieldAlert } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   SupportRequestTimeline,
@@ -81,53 +81,92 @@ function SupportPage() {
   const [relatedListingId, setRelatedListingId] = useState("");
   const [requests, setRequests] = useState<SupportRequest[]>([]);
   const [requestsError, setRequestsError] = useState<ClassifiedsError | null>(null);
+  const [requestsLoading, setRequestsLoading] = useState(false);
+  const [requestsHasLoaded, setRequestsHasLoaded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState("");
+  const requestsRequestIdRef = useRef(0);
+  const submitInFlightRef = useRef(false);
+  const profileId = auth.profile?.id ?? null;
+
+  const loadRequests = useCallback(async () => {
+    if (!profileId) return;
+    const currentProfileId = profileId;
+    const requestId = ++requestsRequestIdRef.current;
+    setRequestsLoading(true);
+    setRequestsError(null);
+
+    const result = await fetchMySupportRequests(currentProfileId);
+    if (requestId !== requestsRequestIdRef.current || currentProfileId !== auth.profile?.id) return;
+
+    if (result.ok) {
+      setRequests(result.data);
+      setRequestsHasLoaded(true);
+    } else {
+      setRequestsError(result.error);
+    }
+    setRequestsLoading(false);
+  }, [auth.profile?.id, profileId]);
 
   useEffect(() => {
-    if (auth.status !== "signedIn") return;
-    let cancelled = false;
-
-    async function loadRequests() {
+    requestsRequestIdRef.current += 1;
+    if (auth.status !== "signedIn" || !profileId) {
+      setRequests([]);
       setRequestsError(null);
-      const result = await fetchMySupportRequests(auth.profile?.id ?? null);
-      if (cancelled) return;
-      if (result.ok) setRequests(result.data);
-      else {
-        setRequests([]);
-        setRequestsError(result.error);
-      }
-    }
-
-    void loadRequests();
-    return () => {
-      cancelled = true;
-    };
-  }, [auth.profile?.id, auth.status]);
-
-  async function submitRequest(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setNotice("");
-    setSubmitting(true);
-    const result = await createSupportRequest(auth.profile?.id ?? null, {
-      type: requestType,
-      subject,
-      message,
-      relatedListingId: relatedListingId || null,
-    });
-    setSubmitting(false);
-
-    if (!result.ok) {
-      setNotice(result.error.message);
+      setRequestsLoading(false);
+      setRequestsHasLoaded(false);
+      submitInFlightRef.current = false;
       return;
     }
 
-    setRequests((current) => [result.data, ...current]);
-    setSubject("");
-    setMessage("");
-    setRelatedListingId("");
-    setRequestType("technical_issue");
-    setNotice(text("تم إرسال طلب الدعم للمراجعة.", "Support request submitted for review."));
+    setRequests([]);
+    setRequestsError(null);
+    setRequestsLoading(false);
+    setRequestsHasLoaded(false);
+    void loadRequests();
+
+    return () => {
+      requestsRequestIdRef.current += 1;
+      submitInFlightRef.current = false;
+    };
+  }, [auth.status, loadRequests, profileId]);
+
+  async function submitRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (submitInFlightRef.current) return;
+    submitInFlightRef.current = true;
+    setNotice("");
+    setSubmitting(true);
+    const currentProfileId = profileId;
+
+    try {
+      const result = await createSupportRequest(currentProfileId, {
+        type: requestType,
+        subject,
+        message,
+        relatedListingId: relatedListingId || null,
+      });
+
+      if (currentProfileId !== auth.profile?.id) return;
+      if (!result.ok) {
+        setNotice(result.error.message);
+        return;
+      }
+
+      setRequests((current) => [
+        result.data,
+        ...current.filter((item) => item.id !== result.data.id),
+      ]);
+      setRequestsHasLoaded(true);
+      setSubject("");
+      setMessage("");
+      setRelatedListingId("");
+      setRequestType("technical_issue");
+      setNotice(text("تم إرسال طلب الدعم للمراجعة.", "Support request submitted for review."));
+    } finally {
+      submitInFlightRef.current = false;
+      if (currentProfileId === auth.profile?.id) setSubmitting(false);
+    }
   }
 
   return (
@@ -204,7 +243,7 @@ function SupportPage() {
                       rows={5}
                     />
                   </label>
-                  <button type="submit" disabled={submitting}>
+                  <button type="submit" disabled={submitting} aria-busy={submitting}>
                     {submitting
                       ? text("جار الإرسال", "Submitting")
                       : text("إرسال الطلب", "Submit request")}
@@ -231,10 +270,27 @@ function SupportPage() {
                     "Your latest stored support requests and review status.",
                   )}
                 />
-                {requestsError ? (
-                  <p className="rawaj-support-notice">{requestsError.message}</p>
+                {requestsLoading && !requestsHasLoaded ? (
+                  <p className="rawaj-support-notice">
+                    {text("جارٍ تحميل طلبات الدعم", "Loading support requests")}
+                  </p>
+                ) : requestsError && !requestsHasLoaded ? (
+                  <SupportHistoryError
+                    message={requestsError.message}
+                    retryLabel={text("إعادة المحاولة", "Try again")}
+                    onRetry={() => void loadRequests()}
+                  />
                 ) : (
-                  <SupportRequestTimeline requests={requests} language={language} />
+                  <>
+                    {requestsError ? (
+                      <SupportHistoryError
+                        message={requestsError.message}
+                        retryLabel={text("إعادة المحاولة", "Try again")}
+                        onRetry={() => void loadRequests()}
+                      />
+                    ) : null}
+                    <SupportRequestTimeline requests={requests} language={language} />
+                  </>
                 )}
               </section>
             ) : null}
@@ -318,6 +374,29 @@ function SupportPage() {
         </div>
       </main>
     </>
+  );
+}
+
+function SupportHistoryError({
+  message,
+  retryLabel,
+  onRetry,
+}: {
+  message: string;
+  retryLabel: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="rawaj-support-notice">
+      <p>{message}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-2 rounded-lg bg-card px-3 py-1.5 text-xs font-bold hairline"
+      >
+        {retryLabel}
+      </button>
+    </div>
   );
 }
 
