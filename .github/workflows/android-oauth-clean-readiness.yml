@@ -1,0 +1,79 @@
+name: Android OAuth Clean Readiness
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "android/**"
+      - "capacitor.config.ts"
+      - "public/native-error.html"
+      - "src/components/native/**"
+      - "src/lib/auth.tsx"
+      - "src/lib/native-runtime.ts"
+      - "src/lib/supabase.ts"
+      - "src/routes/auth.callback.tsx"
+      - "src/routes/login.tsx"
+      - "scripts/android-oauth-clean.test.mjs"
+      - "package.json"
+      - ".github/workflows/android-oauth-clean-readiness.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: android-oauth-clean-readiness-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Android OAuth contract
+        run: npm run test:android-oauth-clean
+      - name: Changed native web lint
+        run: |
+          npx eslint --quiet \
+            capacitor.config.ts \
+            src/lib/native-runtime.ts \
+            src/components/native/NativeAppRuntime.tsx \
+            src/lib/auth.tsx \
+            src/lib/supabase.ts \
+            src/routes/auth.callback.tsx \
+            src/routes/login.tsx \
+            scripts/android-oauth-clean.test.mjs
+      - name: TypeScript and production build
+        run: |
+          npm run typecheck -- --pretty false
+          npm run build
+          npx cap sync android
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Build debug APK and release AAB
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          ./gradlew bundleRelease --no-daemon
+          test -f app/build/outputs/apk/debug/app-debug.apk
+          test -f app/build/outputs/bundle/release/app-release.aab
+      - name: Upload Android validation artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawaj-android-oauth-clean-${{ github.sha }}
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 14
