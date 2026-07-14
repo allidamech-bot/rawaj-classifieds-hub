@@ -35,11 +35,14 @@ test("unread activity has a visible online polling fallback", () => {
   assert.match(activitySource, /addEventListener\("visibilitychange", refreshWhenAvailable\)/);
 });
 
-test("unread refreshes are deduplicated and stale account results are ignored", () => {
-  assert.match(activitySource, /refreshInFlightRef = useRef<Promise<void> \| null>\(null\)/);
+test("unread refreshes are deduplicated per profile and stale account results are ignored", () => {
+  assert.match(activitySource, /interface InFlightUnreadRefresh/);
+  assert.match(activitySource, /refreshInFlightRef = useRef<InFlightUnreadRefresh \| null>\(null\)/);
   assert.match(activitySource, /const activeRefresh = refreshInFlightRef\.current/);
-  assert.match(activitySource, /if \(activeRefresh\) return activeRefresh/);
+  assert.match(activitySource, /activeRefresh\?\.profileId === profileId/);
+  assert.match(activitySource, /return activeRefresh\.promise/);
   assert.match(activitySource, /activeProfileRef\.current !== profileId/);
+  assert.match(activitySource, /refreshInFlightRef\.current = \{ profileId, promise: request \}/);
   assert.match(activitySource, /refreshInFlightRef\.current = null/);
 });
 
