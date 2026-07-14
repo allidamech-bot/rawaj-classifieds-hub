@@ -72,6 +72,7 @@ expect(
   adminShell.includes("auth.hasPermission(tab.permission)"),
 );
 
+// These invariants keep the six admin recovery stages permanent in the security gate.
 expect(
   "admin overview preserves successful metrics and exposes retry",
   adminOverview.includes("const [hasLoaded, setHasLoaded]") &&
@@ -118,7 +119,9 @@ expect(
     adminMessageReports.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
     adminMessageReports.includes("actionInFlightRef.current.has(report.id)") &&
     adminMessageReports.includes("loadError && !hasLoaded") &&
-    !/setLoadError\(result\.error\);[\s\S]{0,120}setReports\(\[\]\)/.test(adminMessageReports),
+    !/setLoadError\(result\.error\);[\s\S]{0,120}setReports\(\[\]\)/.test(
+      adminMessageReports,
+    ),
 );
 expect(
   "user management separates load and action errors and deduplicates sensitive writes",
