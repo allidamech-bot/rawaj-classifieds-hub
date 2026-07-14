@@ -64,6 +64,18 @@ test("support keeps stored request submission and history with shared timeline",
   assert.doesNotMatch(support, /instant reply|reply within/i);
 });
 
+test("support history recovers without erasing successful requests or duplicating submissions", () => {
+  assert.match(support, /const \[requestsHasLoaded, setRequestsHasLoaded\]/);
+  assert.match(support, /const requestsRequestIdRef = useRef\(0\)/);
+  assert.match(support, /const submitInFlightRef = useRef\(false\)/);
+  assert.match(support, /const loadRequests = useCallback/);
+  assert.match(support, /requestsError && !requestsHasLoaded/);
+  assert.match(support, /onRetry=\{\(\) => void loadRequests\(\)\}/);
+  assert.match(support, /if \(submitInFlightRef\.current\) return/);
+  assert.match(support, /finally \{[\s\S]*submitInFlightRef\.current = false/);
+  assert.doesNotMatch(support, /setRequests\(\[\]\);[\s\S]{0,100}setRequestsError\(result\.error\)/);
+});
+
 test("safety uses shared factual guide cards and keeps platform payment disclaimer", () => {
   assert.match(safety, /rawaj-safety-v2/);
   assert.match(safety, /<TrustHubHero/);
