@@ -1,23 +1,27 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 import { MarketplaceLandingPage } from "@/features/seo/MarketplaceLandingPage";
+import { requirePublicMarketplaceLandingData } from "@/lib/api/marketplace-landing-load-guard";
 import { fetchPublicGovernorates, fetchPublicListings } from "@/lib/classifieds-api";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/syria/$slug")({
   loader: async ({ params }) => {
-    const governoratesResult = await fetchPublicGovernorates();
-    if (!governoratesResult.ok) throw notFound();
-    const governorate = governoratesResult.data.find(
-      (item) => item.slug === params.slug && item.isActive,
+    const governorates = requirePublicMarketplaceLandingData(
+      await fetchPublicGovernorates(),
+      "public_governorates_read",
     );
+    const governorate = governorates.find((item) => item.slug === params.slug && item.isActive);
     if (!governorate) throw notFound();
 
-    const listingsResult = await fetchPublicListings({ governorateId: governorate.id }, null, 12);
+    const listings = requirePublicMarketplaceLandingData(
+      await fetchPublicListings({ governorateId: governorate.id }, null, 12),
+      "public_governorate_listings_read",
+    );
     return {
       governorate,
-      listings: listingsResult.ok ? listingsResult.data.items : [],
+      listings: listings.items,
     };
   },
   head: ({ loaderData }) =>
