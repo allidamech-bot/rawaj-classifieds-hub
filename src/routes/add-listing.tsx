@@ -27,6 +27,7 @@ import {
   isSafePhoneValue,
   normalizeContactValue,
 } from "@/lib/content-safety";
+import { runBoundedTasks } from "@/lib/bounded-task-queue";
 import {
   assignOwnerListingTaxonomy,
   createOwnerDraftListing,
@@ -82,6 +83,7 @@ import { useAuth } from "@/lib/use-auth";
 import type { PriceType } from "@/types";
 
 const MAX_IMAGES = 6;
+const IMAGE_UPLOAD_CONCURRENCY = 2;
 
 export const Route = createFileRoute("/add-listing")({
   head: () => ({
@@ -873,92 +875,94 @@ function AddListingPage() {
 
       const imageErrors: string[] = [];
       const cleanupErrors: string[] = [];
-      const submitUploadAttemptedImageIds = new Set<string>();
 
-      while (true) {
-        await waitForAllImageUploadsInFlight();
+      await waitForAllImageUploadsInFlight();
+      const submitUploadEntries = selectedImagesRef.current.filter(
+        (entry) => entry.state !== "uploaded",
+      );
 
-        const currentEntry = selectedImagesRef.current.find(
-          (entry) => entry.state !== "uploaded" && !submitUploadAttemptedImageIds.has(entry.id),
-        );
-        if (!currentEntry) break;
+      await runBoundedTasks(submitUploadEntries, IMAGE_UPLOAD_CONCURRENCY, async (queuedEntry) => {
+        const currentEntry = selectedImagesRef.current.find((entry) => entry.id === queuedEntry.id);
+        if (!currentEntry || currentEntry.state === "uploaded") return;
 
-        submitUploadAttemptedImageIds.add(currentEntry.id);
         const operation = beginImageUploadOperation(currentEntry.id);
+        try {
+          const latestBeforeUpload = selectedImagesRef.current.find(
+            (entry) => entry.id === currentEntry.id,
+          );
+          if (!latestBeforeUpload) return;
 
-        const latestBeforeUpload = selectedImagesRef.current.find(
-          (entry) => entry.id === currentEntry.id,
-        );
-        if (!latestBeforeUpload) {
-          clearImageUploadOperation(currentEntry.id, operation);
-          continue;
-        }
+          const uploadResult = await uploadListingImage({
+            userId: auth.profile?.id ?? null,
+            listing: listingDraft,
+            file: latestBeforeUpload.file,
+            sortOrder: selectedImagesRef.current.findIndex((entry) => entry.id === currentEntry.id),
+            altAr: title.trim(),
+          });
 
-        const uploadResult = await uploadListingImage({
-          userId: auth.profile?.id ?? null,
-          listing: listingDraft,
-          file: latestBeforeUpload.file,
-          sortOrder: selectedImagesRef.current.findIndex((entry) => entry.id === currentEntry.id),
-          altAr: title.trim(),
-        });
+          const latestAfterUpload = selectedImagesRef.current.find(
+            (entry) => entry.id === currentEntry.id,
+          );
+          const isCurrentOperation =
+            Boolean(latestAfterUpload) && isCurrentImageUploadOperation(currentEntry.id, operation);
 
-        const latestAfterUpload = selectedImagesRef.current.find(
-          (entry) => entry.id === currentEntry.id,
-        );
-        const isCurrentOperation =
-          Boolean(latestAfterUpload) && isCurrentImageUploadOperation(currentEntry.id, operation);
-
-        if (!isCurrentOperation) {
-          if (uploadResult.ok) {
-            const cleanupFailure = await registerStaleUploadCleanup({
-              draftId: listingDraft.id,
-              imageId: currentEntry.id,
-              userId: auth.profile?.id ?? null,
-              uploadedImage: uploadResult.data,
-            });
-            if (cleanupFailure) {
-              cleanupErrors.push(cleanupFailure);
+          if (!isCurrentOperation) {
+            if (uploadResult.ok) {
+              const cleanupFailure = await registerStaleUploadCleanup({
+                draftId: listingDraft.id,
+                imageId: currentEntry.id,
+                userId: auth.profile?.id ?? null,
+                uploadedImage: uploadResult.data,
+              });
+              if (cleanupFailure) cleanupErrors.push(cleanupFailure);
             }
-          }
-          clearImageUploadOperation(currentEntry.id, operation);
-          continue;
-        }
-
-        if (!uploadResult.ok) {
-          imageErrors.push(uploadResult.error.message);
-        }
-
-        updateSelectedImagesFromRef((current) => {
-          const currentImage = current.find((item) => item.id === currentEntry.id);
-          if (!currentImage || currentImage.attempt !== operation) {
-            return current;
+            return;
           }
 
-          if (!uploadResult.ok) {
+          if (!uploadResult.ok) imageErrors.push(uploadResult.error.message);
+
+          updateSelectedImagesFromRef((current) => {
+            const currentImage = current.find((item) => item.id === currentEntry.id);
+            if (!currentImage || currentImage.attempt !== operation) return current;
+
+            if (!uploadResult.ok) {
+              return current.map((item) =>
+                item.id === currentEntry.id
+                  ? {
+                      ...item,
+                      state: "failed" as const,
+                      error: uploadResult.error.message,
+                    }
+                  : item,
+              );
+            }
+
             return current.map((item) =>
               item.id === currentEntry.id
                 ? {
                     ...item,
-                    state: "failed" as const,
-                    error: uploadResult.error.message,
+                    state: "uploaded" as const,
+                    uploadedImage: uploadResult.data,
                   }
                 : item,
             );
+          });
+        } catch (error: unknown) {
+          const failure = error instanceof Error ? error.message : uploadFallbackMessage();
+          imageErrors.push(failure);
+          if (isCurrentImageUploadOperation(currentEntry.id, operation)) {
+            updateSelectedImagesFromRef((current) =>
+              current.map((item) =>
+                item.id === currentEntry.id
+                  ? { ...item, state: "failed" as const, error: failure }
+                  : item,
+              ),
+            );
           }
-
-          return current.map((item) =>
-            item.id === currentEntry.id
-              ? {
-                  ...item,
-                  state: "uploaded" as const,
-                  uploadedImage: uploadResult.data,
-                }
-              : item,
-          );
-        });
-
-        clearImageUploadOperation(currentEntry.id, operation);
-      }
+        } finally {
+          clearImageUploadOperation(currentEntry.id, operation);
+        }
+      });
 
       await waitForAllImageUploadsInFlight();
 
