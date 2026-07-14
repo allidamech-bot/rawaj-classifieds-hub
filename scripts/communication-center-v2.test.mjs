@@ -90,8 +90,14 @@ test("notifications preserve successful snapshots across refresh failures", () =
   assert.match(notifications, /loadError && !hasLoaded/);
   assert.match(notifications, /onAction=\{\(\) => void loadNotifications\(\)\}/);
   assert.match(notifications, /actionLabel=\{text\("إعادة المحاولة", "Try again"\)\}/);
-  assert.doesNotMatch(notifications, /setLoadError\(pageResult\.error\);[\s\S]{0,160}setNotifications\(\[\]\)/);
-  assert.doesNotMatch(notifications, /setLoadError\(pageResult\.error\);[\s\S]{0,160}setUnreadTotal\(0\)/);
+  assert.doesNotMatch(
+    notifications,
+    /setLoadError\(pageResult\.error\);[\s\S]{0,160}setNotifications\(\[\]\)/,
+  );
+  assert.doesNotMatch(
+    notifications,
+    /setLoadError\(pageResult\.error\);[\s\S]{0,160}setUnreadTotal\(0\)/,
+  );
 });
 
 test("notification account changes reset snapshots while ordinary refreshes preserve them", () => {
