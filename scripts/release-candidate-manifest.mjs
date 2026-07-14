@@ -10,7 +10,11 @@ const [androidGradle, capacitorConfig, packageSource] = await Promise.all([
 
 const gitSha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 const expectedCommitSha = process.env.EXPECTED_COMMIT_SHA || gitSha;
-assert.equal(gitSha, expectedCommitSha, "The checked-out commit does not match EXPECTED_COMMIT_SHA.");
+assert.equal(
+  gitSha,
+  expectedCommitSha,
+  "The checked-out commit does not match EXPECTED_COMMIT_SHA.",
+);
 
 const match = (source, pattern, label) => {
   const value = source.match(pattern)?.[1];
@@ -46,7 +50,8 @@ const manifest = {
   acceptance: {
     repositoryQualityGate: "required",
     crossBrowserReleaseSuite: "required",
-    productionAcceptance: process.env.PRODUCTION_ACCEPTANCE === "1" ? "executed" : "external-run-required",
+    productionAcceptance:
+      process.env.PRODUCTION_ACCEPTANCE === "1" ? "executed" : "external-run-required",
     physicalAndroidDevice: "external-evidence-required",
     playConsoleAndReleaseSigning: "external-evidence-required",
   },
