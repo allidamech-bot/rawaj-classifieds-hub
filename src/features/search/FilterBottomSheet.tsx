@@ -1,11 +1,12 @@
 import { ChevronUp, X } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   BottomSheet,
   BottomSheetContent,
   BottomSheetDescription,
   BottomSheetTitle,
 } from "@/components/shell/spatial-primitives";
+import { beginFilterDraftSession } from "@/features/search/filter-draft-session";
 
 interface FilterBottomSheetProps {
   open: boolean;
@@ -27,6 +28,11 @@ export function FilterBottomSheet({
   text,
 }: FilterBottomSheetProps) {
   const [activeSnapPoint, setActiveSnapPoint] = useState<number | string | null>(0.62);
+
+  useEffect(() => {
+    if (!open) return;
+    return beginFilterDraftSession();
+  }, [open]);
 
   return (
     <BottomSheet
