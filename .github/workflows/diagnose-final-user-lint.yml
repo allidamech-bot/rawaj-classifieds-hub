@@ -1,0 +1,53 @@
+name: Diagnose final user journey lint
+
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: diagnose-final-user-lint-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/close-final-user-journey-gaps
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capture lint output
+        id: lint
+        shell: bash
+        run: |
+          set +e
+          npx eslint --quiet \
+            src/routes/more.tsx \
+            src/routes/add-listing.tsx \
+            'src/routes/profile/listings.$id.tsx' \
+            'src/routes/listings.$id.tsx' \
+            'src/routes/seller.$id.tsx' \
+            src/routes/chats.tsx \
+            scripts/final-user-journeys.test.mjs > final-user-lint.log 2>&1
+          status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: final-user-lint-diagnostics
+          path: final-user-lint.log
+          if-no-files-found: error
+          retention-days: 1
+      - name: Fail when lint fails
+        if: steps.lint.outputs.status != '0'
+        run: exit 1
