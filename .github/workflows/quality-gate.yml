@@ -13,46 +13,10 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  patch-bounded-image-upload:
-    if: github.event_name == 'pull_request' && github.head_ref == 'feature/bounded-listing-image-uploads'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: feature/bounded-listing-image-uploads
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: python scripts/temporary-bounded-image-upload-patch.py
-      - run: |
-          npx prettier --write \
-            package.json \
-            scripts/listing-image-upload-concurrency.test.mjs \
-            src/lib/bounded-task-queue.ts \
-            src/routes/add-listing.tsx
-      - shell: bash
-        run: |
-          if git diff --quiet; then exit 0; fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            package.json \
-            scripts/listing-image-upload-concurrency.test.mjs \
-            src/lib/bounded-task-queue.ts \
-            src/routes/add-listing.tsx
-          git commit -m "Bound listing image upload concurrency"
-          git push origin HEAD:feature/bounded-listing-image-uploads
-
   validate:
-    needs: patch-bounded-image-upload
-    if: always() && (needs.patch-bounded-image-upload.result == 'success' || needs.patch-bounded-image-upload.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
