@@ -1,4 +1,8 @@
-import { createOwnerDraftListing as createOwnerDraftListingBase } from "@/lib/api/listings";
+import { createOwnerDraftListingIdempotent } from "@/lib/api/listing-draft-create-rpc";
+import {
+  readOrCreateOwnerDraftCreationRequestId,
+  rememberOwnerDraftCreationListing,
+} from "@/lib/api/listing-draft-creation-flow";
 import { rememberOwnerListingVersion } from "@/lib/api/listing-owner-version";
 import type {
   ClassifiedListing,
@@ -17,9 +21,9 @@ const ownerDraftCreationRequests = new Map<string, DraftCreationRequest>();
 
 /**
  * Prevents duplicate draft rows when autosave and an explicit submit race with
- * the same owner payload in one browser runtime. In-flight requests never
- * expire; successful results remain reusable briefly so a repeated click
- * cannot create a second draft before React state receives the first draft id.
+ * the same owner payload in one browser runtime. The creation request id also
+ * survives a page reload so the database can return the same draft after an
+ * ambiguous response or repeated request.
  */
 export function createOwnerDraftListing(
   userId: string | null,
@@ -27,20 +31,24 @@ export function createOwnerDraftListing(
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
   pruneExpiredDraftCreationRequests();
 
-  const requestKey = `${userId ?? "anonymous"}:${stablePayloadKey(payload)}`;
+  const creationRequestId = userId ? readOrCreateOwnerDraftCreationRequestId(userId) : "anonymous";
+  const requestKey = `${userId ?? "anonymous"}:${creationRequestId}:${stablePayloadKey(payload)}`;
   const existing = ownerDraftCreationRequests.get(requestKey);
   if (existing && (existing.expiresAt === null || existing.expiresAt > Date.now())) {
     return existing.promise;
   }
 
   const record = { expiresAt: null } as DraftCreationRequest;
-  const request = createOwnerDraftListingBase(userId, payload)
+  const request = createOwnerDraftListingIdempotent(userId, payload, creationRequestId)
     .then((result) => {
       if (!result.ok) {
         ownerDraftCreationRequests.delete(requestKey);
         return result;
       }
 
+      if (userId) {
+        rememberOwnerDraftCreationListing(userId, creationRequestId, result.data.id);
+      }
       rememberOwnerListingVersion(userId, result.data);
       record.expiresAt = Date.now() + SUCCESS_REUSE_WINDOW_MS;
       return result;
