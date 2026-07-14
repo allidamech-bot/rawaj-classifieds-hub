@@ -50,8 +50,14 @@ test("activity feeds recover independently without erasing successful snapshots"
   assert.match(activityRoute, /conversationError && !hasLoadedConversations/);
   assert.match(activityRoute, /onRetry=\{\(\) => void loadNotifications\(\)\}/);
   assert.match(activityRoute, /onRetry=\{\(\) => void loadConversations\(\)\}/);
-  assert.doesNotMatch(activityRoute, /setNotifications\(\[\]\);[\s\S]{0,120}setNotificationError/);
-  assert.doesNotMatch(activityRoute, /setConversations\(\[\]\);[\s\S]{0,120}setConversationError/);
+  assert.match(
+    activityRoute,
+    /if \(result\.ok\) \{[\s\S]*setNotifications\(result\.data\.items\)[\s\S]*\} else \{[\s\S]*setNotificationError\(result\.error\)/,
+  );
+  assert.match(
+    activityRoute,
+    /if \(result\.ok\) \{[\s\S]*setConversations\(result\.data\.slice\(0, 8\)\)[\s\S]*\} else \{[\s\S]*setConversationError\(result\.error\)/,
+  );
 });
 
 test("activity requests reject stale account and route responses", () => {
