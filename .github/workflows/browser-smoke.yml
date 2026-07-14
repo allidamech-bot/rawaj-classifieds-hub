@@ -51,7 +51,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run browser smoke tests
-        run: npm run test:e2e
+        run: npm run test:e2e:smoke
 
       - name: Upload browser diagnostics
         if: failure()
