@@ -24,28 +24,45 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Apply and validate final user journey batch
+        shell: bash
         run: |
-          python .github/final-user-journeys-patch.py
-          npx prettier --write \
-            src/routes/more.tsx \
-            src/routes/add-listing.tsx \
-            'src/routes/profile/listings.$id.tsx' \
-            'src/routes/listings.$id.tsx' \
-            'src/routes/seller.$id.tsx' \
-            src/routes/chats.tsx \
-            scripts/final-user-journeys.test.mjs \
-            package.json \
-            .github/workflows/quality-gate.yml
-          npx eslint --quiet \
-            src/routes/more.tsx \
-            src/routes/add-listing.tsx \
-            'src/routes/profile/listings.$id.tsx' \
-            'src/routes/listings.$id.tsx' \
-            'src/routes/seller.$id.tsx' \
-            src/routes/chats.tsx \
-            scripts/final-user-journeys.test.mjs
-          npm run test:final-user-journeys
-          npm run typecheck -- --pretty false
+          set +e
+          {
+            python .github/final-user-journeys-patch.py
+            npx prettier --write \
+              src/routes/more.tsx \
+              src/routes/add-listing.tsx \
+              'src/routes/profile/listings.$id.tsx' \
+              'src/routes/listings.$id.tsx' \
+              'src/routes/seller.$id.tsx' \
+              src/routes/chats.tsx \
+              scripts/final-user-journeys.test.mjs \
+              package.json \
+              .github/workflows/quality-gate.yml
+            npx eslint --quiet \
+              src/routes/more.tsx \
+              src/routes/add-listing.tsx \
+              'src/routes/profile/listings.$id.tsx' \
+              'src/routes/listings.$id.tsx' \
+              'src/routes/seller.$id.tsx' \
+              src/routes/chats.tsx \
+              scripts/final-user-journeys.test.mjs
+            npm run test:final-user-journeys
+            npm run typecheck -- --pretty false
+          } > /tmp/final-user-journeys.log 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            cp /tmp/final-user-journeys.log .github/final-user-journeys-error.txt
+            git config user.name github-actions[bot]
+            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git add .github/final-user-journeys-error.txt
+            git commit -m 'Record final user journey patch failure'
+            git push origin HEAD:feature/close-final-user-journey-gaps
+            cat /tmp/final-user-journeys.log
+            exit "$status"
+          fi
+          rm -f .github/final-user-journeys-error.txt
           rm .github/final-user-journeys-patch.py
           rm .github/workflows/apply-final-user-journeys.yml
           git config user.name github-actions[bot]
@@ -61,6 +78,7 @@ jobs:
             package.json \
             .github/workflows/quality-gate.yml \
             .github/final-user-journeys-patch.py \
-            .github/workflows/apply-final-user-journeys.yml
+            .github/workflows/apply-final-user-journeys.yml \
+            .github/final-user-journeys-error.txt
           git commit -m 'Close final user journey recovery gaps'
           git push origin HEAD:feature/close-final-user-journey-gaps
