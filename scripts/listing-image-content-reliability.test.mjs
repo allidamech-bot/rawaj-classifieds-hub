@@ -50,6 +50,8 @@ test("unfinished storage writes survive navigation in a bounded browser journal"
   assert.match(journal, /typeof window === "undefined"/);
   assert.match(journal, /window\.localStorage/);
   assert.match(journal, /isOwnedListingImagePath/);
+  assert.match(journal, /activeListingImageUploads\.add\(storagePath\)/);
+  assert.match(journal, /!activeListingImageUploads\.has\(record\.storagePath\)/);
   assert.match(
     guardedUpload,
     /rememberPendingListingImageUpload\(userId, listing\.id, storagePath\)/,
@@ -71,8 +73,10 @@ test("upload journal clears only after a database link or confirmed storage clea
   assert.match(guardedUpload, /if \(!orphanCleanup\.ok\)/);
   assert.match(
     guardedUpload,
-    /if \(!removeResult\.error\) clearPendingListingImageUpload\(storagePath\)/,
+    /if \(removeResult\.error\) releasePendingListingImageUpload\(storagePath\);/,
   );
+  assert.match(guardedUpload, /else clearPendingListingImageUpload\(storagePath\);/);
+  assert.match(guardedUpload, /releasePendingListingImageUpload\(storagePath\)/);
   assert.ok(
     guardedUpload.indexOf(".insert({") <
       guardedUpload.lastIndexOf("clearPendingListingImageUpload(storagePath)"),
