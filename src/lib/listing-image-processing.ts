@@ -31,21 +31,14 @@ export function fitListingImageDimensions(
   };
 }
 
-export async function detectListingImageMimeType(
-  file: Blob,
-): Promise<ListingImageMimeType | null> {
-  const bytes = new Uint8Array(
-    await file.slice(0, LISTING_IMAGE_SIGNATURE_BYTES).arrayBuffer(),
-  );
+export async function detectListingImageMimeType(file: Blob): Promise<ListingImageMimeType | null> {
+  const bytes = new Uint8Array(await file.slice(0, LISTING_IMAGE_SIGNATURE_BYTES).arrayBuffer());
 
   if (matchesBytes(bytes, [0xff, 0xd8, 0xff])) return "image/jpeg";
   if (matchesBytes(bytes, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) {
     return "image/png";
   }
-  if (
-    matchesAscii(bytes, 0, "RIFF") &&
-    matchesAscii(bytes, 8, "WEBP")
-  ) {
+  if (matchesAscii(bytes, 0, "RIFF") && matchesAscii(bytes, 8, "WEBP")) {
     return "image/webp";
   }
 

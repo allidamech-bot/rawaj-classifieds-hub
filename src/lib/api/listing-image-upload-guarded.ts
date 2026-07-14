@@ -1,11 +1,11 @@
-import type { ClassifiedsResult, ListingImage, ListingImageUploadPayload } from "@/lib/classifieds-types";
+import type {
+  ClassifiedsResult,
+  ListingImage,
+  ListingImageUploadPayload,
+} from "@/lib/classifieds-types";
 import { fetchListingImages, mapImage } from "@/lib/api/listings";
 import { getClient, mapError, mapStorageError } from "@/lib/api/shared";
-import {
-  buildListingImagePath,
-  listingImagesBucket,
-  validateImageFile,
-} from "@/lib/api/storage";
+import { buildListingImagePath, listingImagesBucket, validateImageFile } from "@/lib/api/storage";
 import { uploadListingImageObjectWithRetry } from "@/lib/api/listing-image-upload-retry";
 import {
   prepareListingImageForUpload,
@@ -33,7 +33,7 @@ export async function uploadListingImage({
     };
   }
 
-  if (!['draft', 'rejected'].includes(listing.status)) {
+  if (!["draft", "rejected"].includes(listing.status)) {
     return {
       ok: false,
       error: { code: "permission_denied", message: "لا يمكن تعديل صور إعلان بعد اعتماده." },
