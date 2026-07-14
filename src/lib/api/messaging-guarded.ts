@@ -17,13 +17,20 @@ const pendingConversationStarts = new Map<
   string,
   ReturnType<typeof baseStartListingConversation>
 >();
-const pendingMessageReports = new Map<string, ReturnType<typeof baseCreateMessageReport>>();
+const pendingMessageReports = new Map<
+  string,
+  ReturnType<typeof baseCreateMessageReport>
+>();
 const pendingParticipantBlocks = new Map<
   string,
   ReturnType<typeof baseBlockConversationParticipant>
 >();
 
-function runOnce<T>(key: string, requests: Map<string, Promise<T>>, operation: () => Promise<T>) {
+function runOnce<T>(
+  key: string,
+  requests: Map<string, Promise<T>>,
+  operation: () => Promise<T>,
+) {
   const pending = requests.get(key);
   if (pending) return pending;
 
@@ -34,7 +41,10 @@ function runOnce<T>(key: string, requests: Map<string, Promise<T>>, operation: (
   return request;
 }
 
-export function startListingConversation(userId: string | null, listingId: string) {
+export function startListingConversation(
+  userId: string | null,
+  listingId: string,
+) {
   const cleanListingId = listingId.trim();
   return runOnce(
     JSON.stringify([userId ?? "anonymous", cleanListingId]),
@@ -54,7 +64,9 @@ export async function sendConversationMessage(
   return result;
 }
 
-export function createMessageReport(payload: Parameters<typeof baseCreateMessageReport>[0]) {
+export function createMessageReport(
+  payload: Parameters<typeof baseCreateMessageReport>[0],
+) {
   const key = JSON.stringify([
     payload.reporterUserId ?? "anonymous",
     payload.messageId.trim(),
@@ -62,7 +74,9 @@ export function createMessageReport(payload: Parameters<typeof baseCreateMessage
     payload.reason.trim(),
     payload.details?.trim() ?? "",
   ]);
-  return runOnce(key, pendingMessageReports, () => baseCreateMessageReport(payload));
+  return runOnce(key, pendingMessageReports, () =>
+    baseCreateMessageReport(payload),
+  );
 }
 
 export function blockConversationParticipant(
@@ -74,7 +88,9 @@ export function blockConversationParticipant(
     payload.blockedUserId.trim(),
     payload.reason?.trim() ?? "",
   ]);
-  return runOnce(key, pendingParticipantBlocks, () => baseBlockConversationParticipant(payload));
+  return runOnce(key, pendingParticipantBlocks, () =>
+    baseBlockConversationParticipant(payload),
+  );
 }
 
 export {
