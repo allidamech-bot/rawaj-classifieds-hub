@@ -1,0 +1,78 @@
+name: Finalize idempotent message send
+
+on:
+  push:
+    branches:
+      - feature/idempotent-message-send
+    paths:
+      - .github/workflows/finalize-idempotent-message-send.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/idempotent-message-send
+          fetch-depth: 0
+      - name: Clear successful attempts before stale view guards
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          route_path = Path('src/routes/chats.tsx')
+          route = route_path.read_text(encoding='utf-8')
+          old = '''    const result = await sendConversationMessage(profileId, conversationId, cleanBody, requestId);
+              setSending(false);
+              if (selectedConversationIdRef.current !== conversationId || auth.profile?.id !== profileId)
+                return;
+              if (!result.ok) {
+                setMessageError(result.error);
+                return;
+              }
+              completeMessageSendRequest(profileId, conversationId, requestId);
+              setBody("");
+          '''
+          new = '''    const result = await sendConversationMessage(profileId, conversationId, cleanBody, requestId);
+              setSending(false);
+              if (result.ok) completeMessageSendRequest(profileId, conversationId, requestId);
+              if (selectedConversationIdRef.current !== conversationId || auth.profile?.id !== profileId)
+                return;
+              if (!result.ok) {
+                setMessageError(result.error);
+                return;
+              }
+              setBody("");
+          '''
+          if old not in route:
+              raise SystemExit('Message send completion anchor not found')
+          route_path.write_text(route.replace(old, new, 1), encoding='utf-8')
+
+          test_path = Path('scripts/message-send-idempotency.test.mjs')
+          source = test_path.read_text(encoding='utf-8')
+          anchor = '''  assert.match(routeSource, /completeMessageSendRequest\\(profileId, conversationId, requestId\\)/);
+              assert.match(routeSource, /current\\.some\\(\\(message\\) => message\\.id === result\\.data\\.id\\)/);
+          '''
+          replacement = '''  assert.match(routeSource, /completeMessageSendRequest\\(profileId, conversationId, requestId\\)/);
+              assert.ok(
+                routeSource.indexOf("completeMessageSendRequest(profileId, conversationId, requestId)") <
+                  routeSource.indexOf("selectedConversationIdRef.current !== conversationId"),
+              );
+              assert.match(routeSource, /current\\.some\\(\\(message\\) => message\\.id === result\\.data\\.id\\)/);
+          '''
+          if anchor not in source:
+              raise SystemExit('Message send contract anchor not found')
+          test_path.write_text(source.replace(anchor, replacement, 1), encoding='utf-8')
+
+          Path('.github/workflows/finalize-idempotent-message-send.yml').unlink()
+          PY
+          npx prettier --write src/routes/chats.tsx scripts/message-send-idempotency.test.mjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/chats.tsx scripts/message-send-idempotency.test.mjs .github/workflows/finalize-idempotent-message-send.yml
+          git commit -m "Finalize message retry cleanup"
+          git push origin HEAD:feature/idempotent-message-send
