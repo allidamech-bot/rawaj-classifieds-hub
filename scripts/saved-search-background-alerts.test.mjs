@@ -57,7 +57,10 @@ test("saved-search route preserves loaded searches when scanning or refresh fail
   assert.match(routeSource, /loadError && !hasLoaded/);
   assert.match(routeSource, /onAction=\{\(\) => void loadSavedSearches\(\)\}/);
   assert.match(routeSource, /actionLabel=\{text\("إعادة المحاولة", "Try again"\)\}/);
-  assert.match(routeSource, /Saved searches loaded, but new matches could not be scanned right now/);
+  assert.match(
+    routeSource,
+    /Saved searches loaded, but new matches could not be scanned right now/,
+  );
   assert.doesNotMatch(routeSource, /setLoadError\(result\.error\);[\s\S]{0,80}setItems\(\[\]\)/);
 });
 
@@ -65,10 +68,7 @@ test("saved-search route rejects stale account and route responses", () => {
   assert.match(routeSource, /const loadRequestIdRef = useRef\(0\)/);
   assert.match(routeSource, /requestId !== loadRequestIdRef\.current/);
   assert.match(routeSource, /currentProfileId !== auth\.profile\?\.id/);
-  assert.match(
-    routeSource,
-    /return \(\) => \{[\s\S]*loadRequestIdRef\.current \+= 1;[\s\S]*\};/,
-  );
+  assert.match(routeSource, /return \(\) => \{[\s\S]*loadRequestIdRef\.current \+= 1;[\s\S]*\};/);
 });
 
 test("saved-search mutation failures do not become page load failures", () => {
