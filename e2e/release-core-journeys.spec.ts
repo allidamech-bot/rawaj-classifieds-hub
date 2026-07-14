@@ -94,7 +94,9 @@ test("reduced-motion mobile rendering does not widen the viewport", async ({ pag
   await page.emulateMedia({ reducedMotion: "reduce" });
 
   for (const path of ["/", "/listings", "/add-listing", "/chats"] as const) {
-    await expectHealthyRoute(page, path);
+    const response = await page.goto(path, { waitUntil: "load" });
+    expect(response?.status() ?? 200, `${path} returned a server failure`).toBeLessThan(500);
+    await expect(page.locator("main")).toBeVisible();
     const dimensions = await page.evaluate(() => ({
       viewport: document.documentElement.clientWidth,
       document: document.documentElement.scrollWidth,
