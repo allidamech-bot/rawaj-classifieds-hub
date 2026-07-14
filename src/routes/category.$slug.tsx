@@ -2,22 +2,26 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 import { MarketplaceLandingPage } from "@/features/seo/MarketplaceLandingPage";
 import { fetchPublicCategories, fetchPublicListings } from "@/lib/classifieds-api";
+import { requirePublicMarketplaceLandingData } from "@/lib/api/marketplace-landing-load-guard";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/category/$slug")({
   loader: async ({ params }) => {
-    const categoriesResult = await fetchPublicCategories();
-    if (!categoriesResult.ok) throw notFound();
-    const category = categoriesResult.data.find(
-      (item) => item.slug === params.slug && item.isActive,
+    const categories = requirePublicMarketplaceLandingData(
+      await fetchPublicCategories(),
+      "public_categories_read",
     );
+    const category = categories.find((item) => item.slug === params.slug && item.isActive);
     if (!category) throw notFound();
 
-    const listingsResult = await fetchPublicListings({ categoryId: category.id }, null, 12);
+    const listings = requirePublicMarketplaceLandingData(
+      await fetchPublicListings({ categoryId: category.id }, null, 12),
+      "public_category_listings_read",
+    );
     return {
       category,
-      listings: listingsResult.ok ? listingsResult.data.items : [],
+      listings: listings.items,
     };
   },
   head: ({ loaderData }) =>
