@@ -27,19 +27,20 @@ test("recent listing history is private and public visibility guarded", async ()
 
 test("seller follow edges stay private while counts remain public", async () => {
   const migration = await read(migrationPath);
+  const summaryReturnColumns =
+    migration.match(
+      /create or replace function public\.rawaj_get_seller_follow_summary_v1[\s\S]*?returns table\s*\(([\s\S]*?)\)\s*language/i,
+    )?.[1] ?? "";
 
   assert.match(migration, /create table if not exists public\.seller_follows/i);
   assert.match(migration, /constraint seller_follows_not_self/i);
   assert.match(migration, /using \(auth\.uid\(\) = follower_user_id\)/i);
   assert.match(migration, /rawaj_set_seller_follow_v1/i);
   assert.match(migration, /rawaj_get_seller_follow_summary_v1/i);
-  assert.match(migration, /follower_count bigint/i);
-  assert.match(migration, /is_following boolean/i);
+  assert.match(summaryReturnColumns, /follower_count bigint/i);
+  assert.match(summaryReturnColumns, /is_following boolean/i);
+  assert.doesNotMatch(summaryReturnColumns, /follower_user_id/i);
   assert.match(migration, /revoke all on table public\.seller_follows from anon/i);
-  assert.doesNotMatch(
-    migration.match(/create or replace function public\.rawaj_get_seller_follow_summary_v1[\s\S]*?\$\$;/i)?.[0] ?? "",
-    /returns table[\s\S]*follower_user_id/i,
-  );
 });
 
 test("recent views work for guests and synchronize after sign in", async () => {
