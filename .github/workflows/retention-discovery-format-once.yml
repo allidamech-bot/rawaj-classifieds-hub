@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - ".github/workflows/retention-discovery-format-once.yml"
+      - "scripts/retention-discovery-v1.test.mjs"
 
 permissions:
   contents: write
