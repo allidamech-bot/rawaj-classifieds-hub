@@ -10,6 +10,7 @@ import {
   CommunicationSignedOut,
   ConversationSummaryItem,
 } from "@/features/communication/CommunicationExperience";
+import { useLiveChatWorkspace } from "@/features/communication/useLiveChatWorkspace";
 import {
   blockConversationParticipant,
   createMessageReport,
@@ -86,6 +87,19 @@ function ChatsPage() {
       ].some((value) => value.toLocaleLowerCase(language === "ar" ? "ar" : "en").includes(query)),
     );
   }, [conversationQuery, conversations, language]);
+
+  const liveConversationId =
+    selectedConversation && (isDesktop || viewingConversationOnMobile)
+      ? selectedConversation.id
+      : null;
+
+  useLiveChatWorkspace({
+    signedIn: auth.status === "signedIn",
+    profileId: auth.profile?.id ?? null,
+    selectedConversationId: liveConversationId,
+    setConversations,
+    setMessages,
+  });
 
   useEffect(() => {
     selectedConversationIdRef.current = selectedConversation?.id ?? null;
