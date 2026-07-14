@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BadgeCheck, FileKey2, FileText, Upload } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   createSellerVerificationRequest,
@@ -14,8 +14,6 @@ import type {
 } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
-
-const verificationFileAccept = "image/jpeg,image/png,image/webp,application/pdf";
 
 export const Route = createFileRoute("/verification")({
   head: () => ({
@@ -33,11 +31,15 @@ function VerificationPage() {
   const [businessName, setBusinessName] = useState("");
   const [documentType, setDocumentType] = useState<VerificationDocumentType | "">("");
   const [documentFile, setDocumentFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [requestsLoading, setRequestsLoading] = useState(false);
+  const [hasLoadedRequests, setHasLoadedRequests] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<ClassifiedsError | null>(null);
+  const [requestsError, setRequestsError] = useState<ClassifiedsError | null>(null);
   const [notice, setNotice] = useState("");
   const [noticeKind, setNoticeKind] = useState<"success" | "error" | "">("");
+  const requestsRequestIdRef = useRef(0);
+  const submissionRequestIdRef = useRef(0);
+  const submitInFlightRef = useRef(false);
   const profileId = auth.profile?.id ?? null;
   const hasPendingRequest = requests.some(
     (request) => request.status === "pending_review" || String(request.status) === "pending",
@@ -45,20 +47,57 @@ function VerificationPage() {
   const availableDocumentTypes = documentTypeOptions(requestType);
   const businessNameValid = requestType !== "business" || businessName.trim().length >= 3;
 
-  async function loadRequests() {
+  const loadRequests = useCallback(async () => {
     if (!profileId) return;
-    setLoading(true);
-    setError(null);
+
+    const requestId = ++requestsRequestIdRef.current;
+    setRequestsLoading(true);
+    setRequestsError(null);
     const result = await fetchMyVerificationRequests(profileId);
-    if (result.ok) setRequests(result.data);
-    else setError(result.error);
-    setLoading(false);
-  }
+    if (requestId !== requestsRequestIdRef.current) return;
+
+    if (result.ok) {
+      setRequests(result.data);
+      setHasLoadedRequests(true);
+    } else {
+      setRequestsError(result.error);
+    }
+    setRequestsLoading(false);
+  }, [profileId]);
 
   useEffect(() => {
-    if (auth.status !== "signedIn") return;
+    if (auth.status !== "signedIn" || !profileId) {
+      requestsRequestIdRef.current += 1;
+      submissionRequestIdRef.current += 1;
+      submitInFlightRef.current = false;
+      setRequests([]);
+      setRequestsLoading(false);
+      setHasLoadedRequests(false);
+      setSaving(false);
+      setRequestsError(null);
+      setNotice("");
+      setNoticeKind("");
+      return;
+    }
+
+    requestsRequestIdRef.current += 1;
+    submissionRequestIdRef.current += 1;
+    submitInFlightRef.current = false;
+    setRequests([]);
+    setRequestsLoading(false);
+    setHasLoadedRequests(false);
+    setSaving(false);
+    setRequestsError(null);
+    setNotice("");
+    setNoticeKind("");
     void loadRequests();
-  }, [auth.status, profileId]);
+
+    return () => {
+      requestsRequestIdRef.current += 1;
+      submissionRequestIdRef.current += 1;
+      submitInFlightRef.current = false;
+    };
+  }, [auth.status, loadRequests, profileId]);
 
   function changeRequestType(next: VerificationRequestType) {
     setRequestType(next);
@@ -71,8 +110,21 @@ function VerificationPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitInFlightRef.current) return;
+
     setNotice("");
     setNoticeKind("");
+
+    if (!hasLoadedRequests || requestsLoading) {
+      setNotice(
+        text(
+          "تعذر التأكد من حالة طلباتك السابقة. أعد تحميل السجل قبل إرسال طلب جديد.",
+          "We could not confirm your previous request status. Reload the history before submitting a new request.",
+        ),
+      );
+      setNoticeKind("error");
+      return;
+    }
 
     if (hasPendingRequest) {
       setNotice(
@@ -81,6 +133,7 @@ function VerificationPage() {
           "You already have a verification request under review.",
         ),
       );
+      setNoticeKind("error");
       return;
     }
 
@@ -98,33 +151,56 @@ function VerificationPage() {
       return;
     }
 
+    const submissionRequestId = ++submissionRequestIdRef.current;
+    submitInFlightRef.current = true;
     setSaving(true);
-    const result = await createSellerVerificationRequest({
-      userId: profileId,
-      requestType,
-      legalName,
-      businessName: requestType === "business" ? businessName : null,
-      documentType,
-      documentFile,
-    });
-    setSaving(false);
+    try {
+      const result = await createSellerVerificationRequest({
+        userId: profileId,
+        requestType,
+        legalName,
+        businessName: requestType === "business" ? businessName : null,
+        documentType,
+        documentFile,
+      });
+      if (submissionRequestId !== submissionRequestIdRef.current) return;
 
-    if (result.ok) {
+      if (result.ok) {
+        setRequests((current) => [
+          result.data,
+          ...current.filter((request) => request.id !== result.data.id),
+        ]);
+        setHasLoadedRequests(true);
+        setNotice(
+          text(
+            "تم رفع الوثيقة الخاصة وإرسال طلب التوثيق للمراجعة اليدوية.",
+            "Private evidence uploaded and verification request sent for manual review.",
+          ),
+        );
+        setNoticeKind("success");
+        setLegalName("");
+        setBusinessName("");
+        setDocumentType("");
+        setDocumentFile(null);
+        await loadRequests();
+      } else {
+        setNotice(result.error.message);
+        setNoticeKind("error");
+      }
+    } catch {
+      if (submissionRequestId !== submissionRequestIdRef.current) return;
       setNotice(
         text(
-          "تم رفع الوثيقة الخاصة وإرسال طلب التوثيق للمراجعة اليدوية.",
-          "Private evidence uploaded and verification request sent for manual review.",
+          "تعذر إرسال طلب التوثيق بسبب خطأ غير متوقع. أعد المحاولة.",
+          "The verification request could not be submitted because of an unexpected error. Try again.",
         ),
       );
-      setNoticeKind("success");
-      setLegalName("");
-      setBusinessName("");
-      setDocumentType("");
-      setDocumentFile(null);
-      await loadRequests();
-    } else {
-      setNotice(result.error.message);
       setNoticeKind("error");
+    } finally {
+      if (submissionRequestId === submissionRequestIdRef.current) {
+        submitInFlightRef.current = false;
+        setSaving(false);
+      }
     }
   }
 
@@ -267,6 +343,20 @@ function VerificationPage() {
             )}
           </p>
 
+          {!hasLoadedRequests ? (
+            <p className="mt-3 rounded-xl bg-gold/10 p-3 text-xs font-bold text-gold-foreground hairline">
+              {requestsLoading
+                ? text(
+                    "جارٍ التحقق من طلباتك السابقة قبل السماح بالإرسال.",
+                    "Checking your previous requests before submission is enabled.",
+                  )
+                : text(
+                    "يجب استرداد سجل طلباتك بنجاح قبل إرسال طلب جديد.",
+                    "Your request history must load successfully before a new request can be submitted.",
+                  )}
+            </p>
+          ) : null}
+
           {hasPendingRequest ? (
             <p className="mt-3 rounded-xl bg-gold/10 p-3 text-xs font-bold text-gold-foreground hairline">
               {text(
@@ -279,6 +369,8 @@ function VerificationPage() {
           <button
             disabled={
               saving ||
+              requestsLoading ||
+              !hasLoadedRequests ||
               hasPendingRequest ||
               legalName.trim().length < 3 ||
               !businessNameValid ||
@@ -312,48 +404,78 @@ function VerificationPage() {
             <FileText className="h-4 w-4 text-primary" />
             {text("طلباتي السابقة", "My previous requests")}
           </h2>
-          {loading ? (
+          {requestsLoading && !hasLoadedRequests ? (
             <p className="mt-2 text-xs text-muted-foreground">{text("جارٍ التحميل", "Loading")}</p>
-          ) : error ? (
-            <p className="mt-2 text-xs font-semibold text-destructive">{error.message}</p>
-          ) : requests.length === 0 ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              {text("لا توجد طلبات توثيق بعد.", "No verification requests yet.")}
-            </p>
+          ) : requestsError && !hasLoadedRequests ? (
+            <RecoveryNotice
+              title={text("تعذر تحميل طلبات التوثيق", "Could not load verification requests")}
+              body={requestsError.message}
+              actionLabel={text("إعادة المحاولة", "Try again")}
+              onAction={() => void loadRequests()}
+              actionDisabled={requestsLoading}
+            />
           ) : (
-            <div className="mt-3 grid gap-2">
-              {requests.map((request) => (
-                <article
-                  key={request.id}
-                  className="rounded-xl bg-muted-surface p-3 text-xs hairline"
-                >
-                  <p className="font-bold">{request.legalName}</p>
-                  <p className="mt-1 text-muted-foreground">
-                    {statusLabel(request.status, text)} · {typeLabel(request.requestType, text)}
-                  </p>
-                  {request.businessName ? (
-                    <p className="mt-1 text-muted-foreground">{request.businessName}</p>
-                  ) : null}
-                  {request.documentType ? (
-                    <p className="mt-1 text-muted-foreground">
-                      {verificationDocumentTypeLabel(request.documentType, text)}
-                    </p>
-                  ) : null}
-                  {request.documentPath ? (
-                    <p className="mt-1 text-[10px] font-bold text-emerald-trust">
-                      {text("وثيقة خاصة مرفقة", "Private evidence attached")}
-                    </p>
-                  ) : (
-                    <p className="mt-1 text-[10px] text-muted-foreground">
-                      {text("طلب قديم بلا وثيقة مرفقة", "Legacy request without attached evidence")}
-                    </p>
+            <>
+              {requestsError ? (
+                <RecoveryNotice
+                  title={text(
+                    "تعذر تحديث طلبات التوثيق",
+                    "Could not refresh verification requests",
                   )}
-                  {request.adminNote ? (
-                    <p className="mt-1 text-muted-foreground">{request.adminNote}</p>
-                  ) : null}
-                </article>
-              ))}
-            </div>
+                  body={requestsError.message}
+                  actionLabel={text("إعادة المحاولة", "Try again")}
+                  onAction={() => void loadRequests()}
+                  actionDisabled={requestsLoading}
+                />
+              ) : null}
+              {requestsLoading ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {text("جارٍ تحديث السجل", "Refreshing history")}
+                </p>
+              ) : null}
+              {requests.length === 0 ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {text("لا توجد طلبات توثيق بعد.", "No verification requests yet.")}
+                </p>
+              ) : (
+                <div className="mt-3 grid gap-2">
+                  {requests.map((request) => (
+                    <article
+                      key={request.id}
+                      className="rounded-xl bg-muted-surface p-3 text-xs hairline"
+                    >
+                      <p className="font-bold">{request.legalName}</p>
+                      <p className="mt-1 text-muted-foreground">
+                        {statusLabel(request.status, text)} · {typeLabel(request.requestType, text)}
+                      </p>
+                      {request.businessName ? (
+                        <p className="mt-1 text-muted-foreground">{request.businessName}</p>
+                      ) : null}
+                      {request.documentType ? (
+                        <p className="mt-1 text-muted-foreground">
+                          {verificationDocumentTypeLabel(request.documentType, text)}
+                        </p>
+                      ) : null}
+                      {request.documentPath ? (
+                        <p className="mt-1 text-[10px] font-bold text-emerald-trust">
+                          {text("وثيقة خاصة مرفقة", "Private evidence attached")}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          {text(
+                            "طلب قديم بلا وثيقة مرفقة",
+                            "Legacy request without attached evidence",
+                          )}
+                        </p>
+                      )}
+                      {request.adminNote ? (
+                        <p className="mt-1 text-muted-foreground">{request.adminNote}</p>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </section>
       </main>
@@ -367,6 +489,35 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="mb-1 block text-xs font-bold text-muted-foreground">{label}</span>
       {children}
     </label>
+  );
+}
+
+function RecoveryNotice({
+  title,
+  body,
+  actionLabel,
+  onAction,
+  actionDisabled,
+}: {
+  title: string;
+  body: string;
+  actionLabel: string;
+  onAction: () => void;
+  actionDisabled?: boolean;
+}) {
+  return (
+    <div className="mt-3 rounded-xl bg-destructive/10 p-3 text-destructive hairline">
+      <p className="text-xs font-bold">{title}</p>
+      <p className="mt-1 text-xs leading-5">{body}</p>
+      <button
+        type="button"
+        onClick={onAction}
+        disabled={actionDisabled}
+        className="mt-3 inline-flex min-h-10 items-center rounded-xl bg-card px-4 py-2 text-xs font-bold text-foreground hairline disabled:opacity-60"
+      >
+        {actionLabel}
+      </button>
+    </div>
   );
 }
 

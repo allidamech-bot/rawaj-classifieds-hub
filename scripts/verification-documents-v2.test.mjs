@@ -72,6 +72,42 @@ test("verification types and user UI require controlled evidence", () => {
   assert.match(userRoute, /documentFile/);
 });
 
+test("verification history failures recover without becoming an empty history", () => {
+  assert.match(userRoute, /const \[hasLoadedRequests, setHasLoadedRequests\]/);
+  assert.match(userRoute, /const \[requestsError, setRequestsError\]/);
+  assert.match(userRoute, /const loadRequests = useCallback/);
+  assert.match(userRoute, /requestsError && !hasLoadedRequests/);
+  assert.match(userRoute, /onAction=\{\(\) => void loadRequests\(\)\}/);
+  assert.match(userRoute, /actionLabel=\{text\("إعادة المحاولة", "Try again"\)\}/);
+  assert.doesNotMatch(userRoute, /window\.location\.reload\(\)/);
+});
+
+test("verification history ignores stale responses and invalidates pending work", () => {
+  assert.match(userRoute, /const requestsRequestIdRef = useRef\(0\)/);
+  assert.match(userRoute, /const submissionRequestIdRef = useRef\(0\)/);
+  assert.match(userRoute, /if \(requestId !== requestsRequestIdRef\.current\) return;/);
+  assert.match(
+    userRoute,
+    /return \(\) => \{[\s\S]*requestsRequestIdRef\.current \+= 1;[\s\S]*submissionRequestIdRef\.current \+= 1;/,
+  );
+});
+
+test("verification submission waits for authoritative history and blocks repeat clicks", () => {
+  assert.match(userRoute, /const submitInFlightRef = useRef\(false\)/);
+  assert.match(userRoute, /if \(submitInFlightRef\.current\) return;/);
+  assert.match(userRoute, /if \(!hasLoadedRequests \|\| requestsLoading\)/);
+  assert.match(userRoute, /!hasLoadedRequests \|\|/);
+  assert.match(userRoute, /hasPendingRequest \|\|/);
+});
+
+test("successful verification submission survives a failed history refresh", () => {
+  assert.match(userRoute, /setRequests\(\(current\) => \[/);
+  assert.match(userRoute, /result\.data,/);
+  assert.match(userRoute, /request\.id !== result\.data\.id/);
+  assert.match(userRoute, /setHasLoadedRequests\(true\)/);
+  assert.match(userRoute, /await loadRequests\(\)/);
+});
+
 test("admin document access is permission gated and signed", () => {
   assert.match(api, /adminCreateVerificationDocumentSignedUrl/);
   assert.match(api, /if \(!canManageVerifications\)/);
