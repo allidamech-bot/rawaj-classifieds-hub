@@ -19,6 +19,10 @@ import {
   markConversationRead,
   sendConversationMessage,
 } from "@/lib/classifieds-api";
+import {
+  completeMessageSendRequest,
+  readOrCreateMessageSendRequestId,
+} from "@/lib/api/message-send-request";
 import type { ClassifiedsError, Conversation, ConversationMessage } from "@/lib/classifieds-types";
 import { resolveConversationTarget } from "@/lib/journey-target-resolution";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -216,10 +220,11 @@ function ChatsPage() {
     const conversationId = selectedConversation.id;
     const cleanBody = body.trim();
     if (!cleanBody) return;
+    const requestId = readOrCreateMessageSendRequestId(profileId, conversationId, cleanBody);
     setNotice("");
     setMessageError(null);
     setSending(true);
-    const result = await sendConversationMessage(profileId, conversationId, cleanBody);
+    const result = await sendConversationMessage(profileId, conversationId, cleanBody, requestId);
     setSending(false);
     if (selectedConversationIdRef.current !== conversationId || auth.profile?.id !== profileId)
       return;
@@ -227,8 +232,13 @@ function ChatsPage() {
       setMessageError(result.error);
       return;
     }
+    completeMessageSendRequest(profileId, conversationId, requestId);
     setBody("");
-    setMessages((current) => [...current, result.data]);
+    setMessages((current) =>
+      current.some((message) => message.id === result.data.id)
+        ? current
+        : [...current, result.data],
+    );
     setNotice(text("تم إرسال الرسالة.", "Message sent."));
     await loadConversations();
   }

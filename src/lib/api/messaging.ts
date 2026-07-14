@@ -103,10 +103,14 @@ export async function fetchConversationMessages(
   return { ok: true, data: rows.map(mapMessage) };
 }
 
+const MESSAGE_REQUEST_UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export async function sendConversationMessage(
   userId: string | null,
   conversationId: string,
   body: string,
+  clientRequestId: string,
 ): Promise<ClassifiedsResult<ConversationMessage>> {
   if (!userId) {
     return {
@@ -117,18 +121,30 @@ export async function sendConversationMessage(
 
   const cleanConversationId = conversationId.trim();
   const cleanBody = body.trim();
+  const cleanRequestId = clientRequestId.trim();
   if (!cleanConversationId || cleanBody.length < 1 || cleanBody.length > 2000) {
     return {
       ok: false,
       error: { code: "validation_error", message: "اكتب رسالة بين 1 و2000 حرف." },
     };
   }
+  if (!MESSAGE_REQUEST_UUID_PATTERN.test(cleanRequestId)) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد محاولة إرسال الرسالة." },
+    };
+  }
 
-  const sendKey = JSON.stringify([userId, cleanConversationId, cleanBody]);
+  const sendKey = JSON.stringify([userId, cleanRequestId]);
   const existingSend = pendingMessageSends.get(sendKey);
   if (existingSend) return existingSend;
 
-  const sendPromise = performConversationMessageSend(userId, cleanConversationId, cleanBody);
+  const sendPromise = performConversationMessageSend(
+    userId,
+    cleanConversationId,
+    cleanBody,
+    cleanRequestId,
+  );
   pendingMessageSends.set(sendKey, sendPromise);
 
   try {
@@ -144,11 +160,54 @@ async function performConversationMessageSend(
   userId: string,
   conversationId: string,
   cleanBody: string,
+  clientRequestId: string,
 ): Promise<ClassifiedsResult<ConversationMessage>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data
+  const response = await clientResult.data.rpc("rawaj_send_conversation_message_v2", {
+    p_conversation_id: conversationId,
+    p_client_request_id: clientRequestId,
+    p_body: cleanBody,
+  });
+
+  if (!response.error) {
+    const row = ((response.data ?? []) as Record<string, unknown>[])[0];
+    if (row) return { ok: true, data: mapMessage(row) };
+    return {
+      ok: false,
+      error: {
+        code: "unknown",
+        message: "تم إرسال طلب الرسالة دون نتيجة قابلة للتحقق.",
+        operation: "conversation_message_send",
+      },
+    };
+  }
+
+  if (!isMissingMessageSendV2(response.error)) {
+    if (isMessageRequestPayloadMismatch(response.error)) {
+      return {
+        ok: false,
+        error: {
+          code: "validation_error",
+          message: "تغير محتوى محاولة الإرسال. أعد كتابة الرسالة ثم أرسلها مجدداً.",
+          operation: "conversation_message_send",
+        },
+      };
+    }
+    return { ok: false, error: mapError(response.error, "conversation_message_send") };
+  }
+
+  return performLegacyConversationMessageSend(clientResult.data, userId, conversationId, cleanBody);
+}
+
+async function performLegacyConversationMessageSend(
+  client: SupabaseClient,
+  userId: string,
+  conversationId: string,
+  cleanBody: string,
+): Promise<ClassifiedsResult<ConversationMessage>> {
+  const { data, error } = await client
     .from("conversation_messages")
     .insert({
       conversation_id: conversationId,
@@ -158,8 +217,29 @@ async function performConversationMessageSend(
     .select("*")
     .single();
 
-  if (error) return { ok: false, error: mapError(error) };
+  if (error) return { ok: false, error: mapError(error, "conversation_message_send") };
   return { ok: true, data: mapMessage(data as Record<string, unknown>) };
+}
+
+function isMissingMessageSendV2(error: {
+  code?: string;
+  message?: string;
+  details?: string;
+}): boolean {
+  const message = error.message ?? "";
+  const details = error.details ?? "";
+  return (
+    error.code === "PGRST202" ||
+    error.code === "42883" ||
+    message.includes("rawaj_send_conversation_message_v2") ||
+    details.includes("rawaj_send_conversation_message_v2")
+  );
+}
+
+function isMessageRequestPayloadMismatch(error: { message?: string; details?: string }): boolean {
+  return `${error.message ?? ""} ${error.details ?? ""}`.includes(
+    "message_request_payload_mismatch",
+  );
 }
 
 export async function markConversationRead(

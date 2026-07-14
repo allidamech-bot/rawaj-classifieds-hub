@@ -7,10 +7,11 @@ import {
   fetchMyConversations,
   fromDbMessageReportStatus,
   markConversationRead,
-  sendConversationMessage,
+  sendConversationMessage as baseSendConversationMessage,
   startListingConversation as baseStartListingConversation,
   toDbMessageReportStatus,
 } from "@/lib/api/messaging";
+import { completeMessageSendRequest } from "@/lib/api/message-send-request";
 
 const pendingConversationStarts = new Map<
   string,
@@ -40,6 +41,17 @@ export function startListingConversation(userId: string | null, listingId: strin
     pendingConversationStarts,
     () => baseStartListingConversation(userId, cleanListingId),
   );
+}
+
+export async function sendConversationMessage(
+  ...args: Parameters<typeof baseSendConversationMessage>
+): ReturnType<typeof baseSendConversationMessage> {
+  const result = await baseSendConversationMessage(...args);
+  const [userId, conversationId, , requestId] = args;
+  if (result.ok && userId) {
+    completeMessageSendRequest(userId, conversationId, requestId);
+  }
+  return result;
 }
 
 export function createMessageReport(payload: Parameters<typeof baseCreateMessageReport>[0]) {
@@ -72,6 +84,5 @@ export {
   fetchMyConversations,
   fromDbMessageReportStatus,
   markConversationRead,
-  sendConversationMessage,
   toDbMessageReportStatus,
 };
