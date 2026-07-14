@@ -22,7 +22,8 @@ test("owner draft creation reuses one in-flight request for an identical payload
 test("successful draft creation starts a bounded duplicate-click reuse window", () => {
   assert.match(guardedSource, /SUCCESS_REUSE_WINDOW_MS = 30_000/);
   assert.match(guardedSource, /record\.expiresAt = Date\.now\(\) \+ SUCCESS_REUSE_WINDOW_MS/);
-  assert.match(guardedSource, /record = \{ promise: request, expiresAt: null \}/);
+  assert.match(guardedSource, /const record = \{ expiresAt: null \} as DraftCreationRequest/);
+  assert.match(guardedSource, /record\.promise = request/);
   assert.match(
     guardedSource,
     /if \(!result\.ok\) \{\s*ownerDraftCreationRequests\.delete\(requestKey\)/,
