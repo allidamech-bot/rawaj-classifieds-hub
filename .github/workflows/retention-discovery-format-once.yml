@@ -42,8 +42,7 @@ jobs:
             src/features/retention/SellerFollowButton.tsx \
             src/features/storefront/StorefrontIdentityHero.tsx \
             src/lib/api/retention-discovery.ts \
-            src/lib/classifieds-api.ts \
-            supabase/migrations/202607150001_retention_discovery_v1.sql
+            src/lib/classifieds-api.ts
       - name: Focused validation
         run: |
           npm run test:retention-discovery
