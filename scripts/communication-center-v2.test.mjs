@@ -83,6 +83,33 @@ test("notifications separate loading failures from action failures", () => {
   assert.doesNotMatch(notifications, /const \[error, setError\]/);
 });
 
+test("notifications preserve successful snapshots across refresh failures", () => {
+  assert.match(notifications, /const \[hasLoaded, setHasLoaded\]/);
+  assert.match(notifications, /const loadedProfileIdRef = useRef<string \| null>\(null\)/);
+  assert.match(notifications, /setHasLoaded\(true\)/);
+  assert.match(notifications, /loading && !hasLoaded/);
+  assert.match(notifications, /loadError && !hasLoaded/);
+  assert.match(notifications, /onAction=\{\(\) => void loadNotifications\(\)\}/);
+  assert.match(notifications, /actionLabel=\{text\("إعادة المحاولة", "Try again"\)\}/);
+  assert.doesNotMatch(
+    notifications,
+    /setLoadError\(pageResult\.error\);[\s\S]{0,160}setNotifications\(\[\]\)/,
+  );
+  assert.doesNotMatch(
+    notifications,
+    /setLoadError\(pageResult\.error\);[\s\S]{0,160}setUnreadTotal\(0\)/,
+  );
+});
+
+test("notification account changes reset snapshots while ordinary refreshes preserve them", () => {
+  assert.match(notifications, /loadedProfileIdRef\.current !== profileId/);
+  assert.match(notifications, /loadedProfileIdRef\.current = profileId/);
+  assert.match(
+    notifications,
+    /return \(\) => \{[\s\S]*notificationsRequestIdRef\.current \+= 1;[\s\S]*paginationRequestIdRef\.current \+= 1;/,
+  );
+});
+
 test("notifications expose accurate activity and visible async states", () => {
   assert.match(notifications, /useUnreadActivityCounts/);
   assert.match(notifications, /unreadMessages=\{counts\.messages\}/);

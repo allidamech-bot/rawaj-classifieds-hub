@@ -58,6 +58,7 @@ function NotificationsPage() {
   const { counts, refresh: refreshUnreadActivity } = useUnreadActivityCounts();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [unreadTotal, setUnreadTotal] = useState(0);
@@ -74,6 +75,7 @@ function NotificationsPage() {
   const paginationRequestIdRef = useRef(0);
   const readNotificationIdsRef = useRef<Set<string>>(new Set());
   const markAllReadAtRef = useRef<string | null>(null);
+  const loadedProfileIdRef = useRef<string | null>(null);
 
   const applyKnownReadState = useCallback((items: NotificationItem[]) => {
     const markAllReadAt = markAllReadAtRef.current;
@@ -107,9 +109,6 @@ function NotificationsPage() {
 
     if (!pageResult.ok) {
       setLoadError(pageResult.error);
-      setNotifications([]);
-      setHasMore(false);
-      setUnreadTotal(0);
       setUnreadCountExact(false);
       setLoading(false);
       return;
@@ -118,6 +117,7 @@ function NotificationsPage() {
     const nextItems = applyKnownReadState(pageResult.data.items);
     const loadedUnread = nextItems.filter((item) => !item.readAt).length;
     setNotifications(nextItems);
+    setHasLoaded(true);
     setHasMore(pageResult.data.hasMore);
     setUnreadCountExact(unreadResult.ok);
     setUnreadTotal(
@@ -141,14 +141,16 @@ function NotificationsPage() {
   }, [applyKnownReadState, counts.notifications, profileId, text]);
 
   useEffect(() => {
-    if (auth.status !== "signedIn") {
+    if (auth.status !== "signedIn" || !profileId) {
       notificationsRequestIdRef.current += 1;
       paginationRequestIdRef.current += 1;
       loadMoreInFlightRef.current = false;
       readNotificationIdsRef.current = new Set();
       markAllReadAtRef.current = null;
+      loadedProfileIdRef.current = null;
       setNotifications([]);
       setLoading(false);
+      setHasLoaded(false);
       setLoadingMore(false);
       setHasMore(false);
       setUnreadTotal(0);
@@ -161,8 +163,36 @@ function NotificationsPage() {
       setMarkingAll(false);
       return;
     }
+
+    if (loadedProfileIdRef.current !== profileId) {
+      notificationsRequestIdRef.current += 1;
+      paginationRequestIdRef.current += 1;
+      loadMoreInFlightRef.current = false;
+      readNotificationIdsRef.current = new Set();
+      markAllReadAtRef.current = null;
+      loadedProfileIdRef.current = profileId;
+      setNotifications([]);
+      setLoading(false);
+      setHasLoaded(false);
+      setLoadingMore(false);
+      setHasMore(false);
+      setUnreadTotal(0);
+      setUnreadCountExact(true);
+      setLoadError(null);
+      setPaginationError(null);
+      setActionMessage(null);
+      setOpeningTargetIds(new Set());
+      setMarkingReadIds(new Set());
+      setMarkingAll(false);
+    }
+
     void loadNotifications();
-  }, [auth.status, loadNotifications]);
+    return () => {
+      notificationsRequestIdRef.current += 1;
+      paginationRequestIdRef.current += 1;
+      loadMoreInFlightRef.current = false;
+    };
+  }, [auth.status, loadNotifications, profileId]);
 
   async function loadMoreNotifications() {
     if (!profileId || loading || loadingMore || loadMoreInFlightRef.current || !hasMore) return;
@@ -355,60 +385,74 @@ function NotificationsPage() {
                   "Real notifications linked to your account and listings, ordered newest first.",
                 )}
               />
-              {loading ? (
+              {loading && !hasLoaded ? (
                 <Panel title={text("جارٍ تحميل التنبيهات", "Loading notifications")} />
-              ) : loadError ? (
+              ) : loadError && !hasLoaded ? (
                 <Panel
                   title={text("تعذر تحميل التنبيهات", "Could not load notifications")}
                   body={loadError.message}
                   actionLabel={text("إعادة المحاولة", "Try again")}
                   onAction={() => void loadNotifications()}
-                />
-              ) : notifications.length === 0 ? (
-                <Panel
-                  title={text("لا توجد تنبيهات حالياً", "No notifications right now")}
-                  body={text(
-                    "ستظهر هنا تنبيهات الحساب والإعلانات والرسائل عند توفرها.",
-                    "Account, listing, and message notifications will appear here when available.",
-                  )}
+                  actionDisabled={loading}
                 />
               ) : (
-                <div className="rawaj-notification-list">
-                  {notifications.map((notification) => {
-                    const localized = localizedNotification(notification, language);
-                    return (
-                      <NotificationTimelineCard
-                        key={notification.id}
-                        notification={notification}
-                        title={localized.title}
-                        body={localized.body}
-                        navigable={isNavigableNotification(notification)}
-                        opening={openingTargetIds.has(notification.id)}
-                        markingRead={markingReadIds.has(notification.id)}
-                        onOpen={() => void openNotificationTarget(notification)}
-                        onMarkRead={() => void markOne(notification.id)}
-                        dateLabel={formatNotificationDate(notification.createdAt, language)}
-                      />
-                    );
-                  })}
-                  {paginationError ? (
-                    <div className="rounded-xl bg-destructive/10 p-3 text-center text-xs font-semibold text-destructive">
-                      {paginationError.message}
+                <>
+                  {loadError ? (
+                    <RecoveryNotice
+                      title={text("تعذر تحديث التنبيهات", "Could not refresh notifications")}
+                      body={loadError.message}
+                      actionLabel={text("إعادة المحاولة", "Try again")}
+                      onAction={() => void loadNotifications()}
+                      actionDisabled={loading}
+                    />
+                  ) : null}
+                  {notifications.length === 0 ? (
+                    <Panel
+                      title={text("لا توجد تنبيهات حالياً", "No notifications right now")}
+                      body={text(
+                        "ستظهر هنا تنبيهات الحساب والإعلانات والرسائل عند توفرها.",
+                        "Account, listing, and message notifications will appear here when available.",
+                      )}
+                    />
+                  ) : (
+                    <div className="rawaj-notification-list">
+                      {notifications.map((notification) => {
+                        const localized = localizedNotification(notification, language);
+                        return (
+                          <NotificationTimelineCard
+                            key={notification.id}
+                            notification={notification}
+                            title={localized.title}
+                            body={localized.body}
+                            navigable={isNavigableNotification(notification)}
+                            opening={openingTargetIds.has(notification.id)}
+                            markingRead={markingReadIds.has(notification.id)}
+                            onOpen={() => void openNotificationTarget(notification)}
+                            onMarkRead={() => void markOne(notification.id)}
+                            dateLabel={formatNotificationDate(notification.createdAt, language)}
+                          />
+                        );
+                      })}
+                      {paginationError ? (
+                        <div className="rounded-xl bg-destructive/10 p-3 text-center text-xs font-semibold text-destructive">
+                          {paginationError.message}
+                        </div>
+                      ) : null}
+                      {hasMore ? (
+                        <button
+                          type="button"
+                          disabled={loadingMore}
+                          onClick={() => void loadMoreNotifications()}
+                          className="w-full rounded-xl bg-muted-surface px-4 py-3 text-xs font-bold transition hover:bg-muted disabled:opacity-60 hairline"
+                        >
+                          {loadingMore
+                            ? text("جارٍ تحميل المزيد...", "Loading more...")
+                            : text("تحميل تنبيهات أقدم", "Load older notifications")}
+                        </button>
+                      ) : null}
                     </div>
-                  ) : null}
-                  {hasMore ? (
-                    <button
-                      type="button"
-                      disabled={loadingMore}
-                      onClick={() => void loadMoreNotifications()}
-                      className="w-full rounded-xl bg-muted-surface px-4 py-3 text-xs font-bold transition hover:bg-muted disabled:opacity-60 hairline"
-                    >
-                      {loadingMore
-                        ? text("جارٍ تحميل المزيد...", "Loading more...")
-                        : text("تحميل تنبيهات أقدم", "Load older notifications")}
-                    </button>
-                  ) : null}
-                </div>
+                  )}
+                </>
               )}
             </section>
           </section>
@@ -473,11 +517,13 @@ function Panel({
   body,
   actionLabel,
   onAction,
+  actionDisabled,
 }: {
   title: string;
   body?: string;
   actionLabel?: string;
   onAction?: () => void;
+  actionDisabled?: boolean;
 }) {
   return (
     <div className="mt-4 rounded-2xl bg-muted-surface p-5 text-center hairline">
@@ -487,11 +533,41 @@ function Panel({
         <button
           type="button"
           onClick={onAction}
-          className="mt-3 rounded-xl bg-card px-4 py-2 text-xs font-bold hairline"
+          disabled={actionDisabled}
+          className="mt-3 rounded-xl bg-card px-4 py-2 text-xs font-bold disabled:opacity-60 hairline"
         >
           {actionLabel}
         </button>
       ) : null}
+    </div>
+  );
+}
+
+function RecoveryNotice({
+  title,
+  body,
+  actionLabel,
+  onAction,
+  actionDisabled,
+}: {
+  title: string;
+  body: string;
+  actionLabel: string;
+  onAction: () => void;
+  actionDisabled?: boolean;
+}) {
+  return (
+    <div className="mt-4 rounded-xl bg-destructive/10 p-4 text-destructive hairline">
+      <p className="text-xs font-bold">{title}</p>
+      <p className="mt-1 text-xs leading-5">{body}</p>
+      <button
+        type="button"
+        onClick={onAction}
+        disabled={actionDisabled}
+        className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-card px-4 py-2 text-xs font-bold text-foreground disabled:opacity-60 hairline"
+      >
+        {actionLabel}
+      </button>
     </div>
   );
 }
