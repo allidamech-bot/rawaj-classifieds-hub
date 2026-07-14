@@ -43,6 +43,7 @@ test("live chat deduplicates reads and ignores stale account or conversation res
   assert.match(hookSource, /return activeRefresh\.promise/);
   assert.match(hookSource, /activeScopeRef\.current !== scopeKey/);
   assert.match(hookSource, /inFlightRefreshRef\.current = \{ scopeKey, promise: request \}/);
+  assert.match(hookSource, /refreshedConversation\.unreadCount <= 0/);
   assert.match(hookSource, /markConversationRead\(profileId, conversationId\)/);
   assert.match(hookSource, /conversation\.unreadCount !== 0/);
 });
