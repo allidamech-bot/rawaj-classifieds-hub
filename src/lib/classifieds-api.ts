@@ -8,6 +8,7 @@ export {
   submitOwnerListingForReview,
   updateOwnerListing,
 } from "@/lib/api/listing-owner-write-guarded";
+export { uploadListingImage } from "@/lib/api/listing-image-upload-guarded";
 export * from "@/lib/api/listing-taxonomy";
 export * from "@/lib/api/listing-lifecycle";
 export * from "@/lib/api/listing-image-order";
