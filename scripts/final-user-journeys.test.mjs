@@ -50,10 +50,11 @@ test("seller review eligibility is retryable and review writes are deduplicated"
 });
 
 test("chat refresh failures preserve snapshots and sensitive writes are deduplicated", () => {
-  assert.doesNotMatch(chats, /setConversations\(\[\]\);
-\s*setConversationError\(result\.error\)/);
-  assert.doesNotMatch(chats, /setMessages\(\[\]\);
-\s*setMessageError\(result\.error\)/);
+  assert.equal(
+    chats.includes("setConversations([]);\n      setConversationError(result.error)"),
+    false,
+  );
+  assert.equal(chats.includes("setMessages([]);\n      setMessageError(result.error)"), false);
   assert.match(chats, /const sendInFlightRef = useRef\(false\)/);
   assert.match(chats, /const reportInFlightRef = useRef<Set<string>>\(new Set\(\)\)/);
   assert.match(chats, /const blockInFlightRef = useRef\(false\)/);
