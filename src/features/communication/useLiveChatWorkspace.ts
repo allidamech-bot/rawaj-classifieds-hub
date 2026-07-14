@@ -1,0 +1,170 @@
+import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } from "react";
+import {
+  fetchConversationMessages,
+  fetchMyConversations,
+  markConversationRead,
+} from "@/lib/api/messaging";
+import { getClient } from "@/lib/api/shared";
+import type { Conversation, ConversationMessage } from "@/lib/classifieds-types";
+import { useUnreadActivityCounts } from "@/lib/unread-activity";
+
+const LIVE_CHAT_EVENT_DEBOUNCE_MS = 150;
+const LIVE_CHAT_FALLBACK_POLL_MS = 60 * 1000;
+
+interface LiveChatWorkspaceOptions {
+  signedIn: boolean;
+  profileId: string | null;
+  selectedConversationId: string | null;
+  setConversations: Dispatch<SetStateAction<Conversation[]>>;
+  setMessages: Dispatch<SetStateAction<ConversationMessage[]>>;
+}
+
+interface InFlightChatRefresh {
+  scopeKey: string;
+  promise: Promise<void>;
+}
+
+function buildScopeKey(profileId: string, conversationId: string | null) {
+  return `${profileId}:${conversationId ?? "conversation-list"}`;
+}
+
+export function useLiveChatWorkspace({
+  signedIn,
+  profileId,
+  selectedConversationId,
+  setConversations,
+  setMessages,
+}: LiveChatWorkspaceOptions) {
+  const { counts } = useUnreadActivityCounts();
+  const activeScopeRef = useRef<string | null>(null);
+  const inFlightRefreshRef = useRef<InFlightChatRefresh | null>(null);
+  const previousUnreadMessagesRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const scopeKey = signedIn && profileId ? buildScopeKey(profileId, selectedConversationId) : null;
+    activeScopeRef.current = scopeKey;
+
+    return () => {
+      if (activeScopeRef.current === scopeKey) activeScopeRef.current = null;
+    };
+  }, [profileId, selectedConversationId, signedIn]);
+
+  const refreshWorkspace = useCallback(async () => {
+    if (!signedIn || !profileId) return;
+
+    const conversationId = selectedConversationId;
+    const scopeKey = buildScopeKey(profileId, conversationId);
+    const activeRefresh = inFlightRefreshRef.current;
+    if (activeRefresh?.scopeKey === scopeKey) return activeRefresh.promise;
+
+    let request: Promise<void>;
+    request = (async () => {
+      const [conversationsResult, messagesResult] = await Promise.all([
+        fetchMyConversations(profileId),
+        conversationId
+          ? fetchConversationMessages(profileId, conversationId)
+          : Promise.resolve(null),
+      ]);
+
+      if (activeScopeRef.current !== scopeKey) return;
+
+      if (conversationsResult.ok) {
+        setConversations(conversationsResult.data);
+      }
+
+      if (!conversationId || !messagesResult?.ok) return;
+
+      setMessages(messagesResult.data);
+      const readResult = await markConversationRead(profileId, conversationId);
+      if (!readResult.ok || activeScopeRef.current !== scopeKey) return;
+
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id === conversationId && conversation.unreadCount !== 0
+            ? { ...conversation, unreadCount: 0 }
+            : conversation,
+        ),
+      );
+    })().finally(() => {
+      if (inFlightRefreshRef.current?.promise === request) {
+        inFlightRefreshRef.current = null;
+      }
+    });
+
+    inFlightRefreshRef.current = { scopeKey, promise: request };
+    return request;
+  }, [profileId, selectedConversationId, setConversations, setMessages, signedIn]);
+
+  useEffect(() => {
+    if (!signedIn || !profileId) {
+      previousUnreadMessagesRef.current = null;
+      return;
+    }
+
+    const previousUnreadMessages = previousUnreadMessagesRef.current;
+    previousUnreadMessagesRef.current = counts.messages;
+    if (previousUnreadMessages === null || previousUnreadMessages === counts.messages) return;
+
+    void refreshWorkspace();
+  }, [counts.messages, profileId, refreshWorkspace, signedIn]);
+
+  useEffect(() => {
+    if (!signedIn || !profileId || typeof window === "undefined") return;
+
+    const clientResult = getClient();
+    let realtimeTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const refreshWhenAvailable = () => {
+      if (document.visibilityState === "hidden" || navigator.onLine === false) return;
+      void refreshWorkspace();
+    };
+
+    const scheduleRealtimeRefresh = () => {
+      if (document.visibilityState === "hidden" || navigator.onLine === false) return;
+      if (realtimeTimer !== null) clearTimeout(realtimeTimer);
+      realtimeTimer = setTimeout(
+        refreshWhenAvailable,
+        LIVE_CHAT_EVENT_DEBOUNCE_MS,
+      );
+    };
+
+    const interval = window.setInterval(refreshWhenAvailable, LIVE_CHAT_FALLBACK_POLL_MS);
+    window.addEventListener("online", refreshWhenAvailable);
+    document.addEventListener("visibilitychange", refreshWhenAvailable);
+
+    const channel =
+      clientResult.ok && selectedConversationId
+        ? clientResult.data
+            .channel(`rawaj-live-chat:${profileId}:${selectedConversationId}`)
+            .on(
+              "postgres_changes",
+              {
+                event: "*",
+                schema: "public",
+                table: "conversation_messages",
+                filter: `conversation_id=eq.${selectedConversationId}`,
+              },
+              scheduleRealtimeRefresh,
+            )
+            .on(
+              "postgres_changes",
+              {
+                event: "*",
+                schema: "public",
+                table: "conversations",
+                filter: `id=eq.${selectedConversationId}`,
+              },
+              scheduleRealtimeRefresh,
+            )
+            .subscribe()
+        : null;
+
+    return () => {
+      if (realtimeTimer !== null) clearTimeout(realtimeTimer);
+      window.clearInterval(interval);
+      window.removeEventListener("online", refreshWhenAvailable);
+      document.removeEventListener("visibilitychange", refreshWhenAvailable);
+      if (channel && clientResult.ok) void clientResult.data.removeChannel(channel);
+    };
+  }, [profileId, refreshWorkspace, selectedConversationId, signedIn]);
+}
