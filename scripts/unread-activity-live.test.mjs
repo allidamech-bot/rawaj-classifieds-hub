@@ -29,7 +29,10 @@ test("notification bursts are debounced before unread counts refresh", () => {
 
 test("unread activity has a visible online polling fallback", () => {
   assert.match(activitySource, /UNREAD_ACTIVITY_POLL_MS = 60 \* 1000/);
-  assert.match(activitySource, /window\.setInterval\(refreshWhenAvailable, UNREAD_ACTIVITY_POLL_MS\)/);
+  assert.match(
+    activitySource,
+    /window\.setInterval\(refreshWhenAvailable, UNREAD_ACTIVITY_POLL_MS\)/,
+  );
   assert.match(activitySource, /navigator\.onLine === false/);
   assert.match(activitySource, /addEventListener\("online", refreshWhenAvailable\)/);
   assert.match(activitySource, /addEventListener\("visibilitychange", refreshWhenAvailable\)/);
@@ -37,7 +40,10 @@ test("unread activity has a visible online polling fallback", () => {
 
 test("unread refreshes are deduplicated per profile and stale account results are ignored", () => {
   assert.match(activitySource, /interface InFlightUnreadRefresh/);
-  assert.match(activitySource, /refreshInFlightRef = useRef<InFlightUnreadRefresh \| null>\(null\)/);
+  assert.match(
+    activitySource,
+    /refreshInFlightRef = useRef<InFlightUnreadRefresh \| null>\(null\)/,
+  );
   assert.match(activitySource, /const activeRefresh = refreshInFlightRef\.current/);
   assert.match(activitySource, /activeRefresh\?\.profileId === profileId/);
   assert.match(activitySource, /return activeRefresh\.promise/);
