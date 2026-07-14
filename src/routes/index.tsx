@@ -1,7 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { EmptyState, PageContainer, PageTransition } from "@/components/shell/spatial-primitives";
+import { Button } from "@/components/ui/button";
 import { CategoryWorlds } from "@/features/home/CategoryWorlds";
 import { DiscoveryHero } from "@/features/home/DiscoveryHero";
 import { FeaturedListingShowcase } from "@/features/home/FeaturedListingShowcase";
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/")({
       listings: listingsResult.ok ? listingsResult.data.items : [],
       categories: categoriesResult.ok ? categoriesResult.data : [],
       listingLoadFailed: !listingsResult.ok,
+      categoryLoadFailed: !categoriesResult.ok,
     };
   },
   head: () => createSeo({ title: HOME_TITLE, description: HOME_DESCRIPTION, path: "/" }),
@@ -35,8 +37,9 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const navigate = useNavigate();
+  const router = useRouter();
   const { language, text } = useUiPreferences();
-  const { listings, categories, listingLoadFailed } = Route.useLoaderData();
+  const { listings, categories, listingLoadFailed, categoryLoadFailed } = Route.useLoaderData();
   const [searchValue, setSearchValue] = useState("");
 
   const featuredListings = selectDiverseListings(
@@ -57,6 +60,10 @@ function HomePage() {
     void navigate({ to: "/listings", search: q ? { q } : {} });
   }
 
+  const retryAction = (
+    <Button onClick={() => void router.invalidate()}>{text("إعادة المحاولة", "Try again")}</Button>
+  );
+
   return (
     <>
       <AppHeader />
@@ -70,16 +77,29 @@ function HomePage() {
               text={text}
             />
 
-            <CategoryWorlds categories={categories} language={language} text={text} />
+            {categoryLoadFailed ? (
+              <EmptyState
+                className="rawaj-home-load-state"
+                title={text("تعذر تحميل أقسام السوق", "Marketplace categories could not be loaded")}
+                description={text(
+                  "الإعلانات ما زالت متاحة. أعد المحاولة لاستعادة التنقل السريع بين الأقسام.",
+                  "Listings remain available. Try again to restore quick category navigation.",
+                )}
+                action={retryAction}
+              />
+            ) : (
+              <CategoryWorlds categories={categories} language={language} text={text} />
+            )}
 
             {listingLoadFailed ? (
               <EmptyState
                 className="rawaj-home-load-state"
                 title={text("تعذر تحميل إعلانات السوق", "Marketplace listings could not be loaded")}
                 description={text(
-                  "الأقسام ما زالت متاحة. حاول فتح السوق مرة أخرى بعد قليل.",
-                  "Categories remain available. Try opening the marketplace again shortly.",
+                  "الأقسام ما زالت متاحة. أعد المحاولة لتحميل أحدث الإعلانات.",
+                  "Categories remain available. Try again to load the latest listings.",
                 )}
+                action={retryAction}
               />
             ) : (
               <>
