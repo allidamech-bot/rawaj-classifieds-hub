@@ -46,7 +46,7 @@
     "test:production-acceptance-contract": "node --test scripts/production-acceptance-contract.test.mjs",
     "test:location-classification": "node --test scripts/syria-location-type-classification.test.mjs",
     "test:location-presentation": "node --test scripts/location-node-display.test.mjs scripts/syria-location-search-aliases.test.mjs scripts/syria-location-alias-backfill.test.mjs",
-    "test:listings-filters": "node --test scripts/listings-mobile-category-switch.test.mjs",
+    "test:listings-filters": "node --test scripts/listings-mobile-category-switch.test.mjs scripts/listings-mobile-filter-draft.test.mjs",
     "format": "prettier --write .",
     "locations:syria:build": "node scripts/prepare-syria-ocha-geojson-locations-v2.mjs",
     "locations:syria:type-coverage": "node scripts/validate-syria-location-type-coverage.mjs",
