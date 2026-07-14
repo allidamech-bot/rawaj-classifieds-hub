@@ -1,4 +1,7 @@
-import { createOwnerDraftListing as createOwnerDraftListingLegacy, mapListing } from "@/lib/api/listings";
+import {
+  createOwnerDraftListing as createOwnerDraftListingLegacy,
+  mapListing,
+} from "@/lib/api/listings";
 import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
 import { getClient, mapError } from "@/lib/api/shared";
 import type {
@@ -85,6 +88,16 @@ export async function createOwnerDraftListingIdempotent(
     if (isMissingOwnerDraftCreateV2(response.error)) {
       return createOwnerDraftListingLegacy(userId, payload);
     }
+    if (isCompletedOwnerDraftCreation(response.error)) {
+      return {
+        ok: false,
+        error: {
+          code: "status_mismatch",
+          message: "اكتملت جلسة إنشاء هذا الإعلان مسبقاً. افتح صفحة إضافة إعلان جديدة.",
+          operation: "owner_listing_create",
+        },
+      };
+    }
     return { ok: false, error: mapError(response.error, "owner_listing_create") };
   }
 
@@ -114,4 +127,8 @@ function isMissingOwnerDraftCreateV2(error: {
     message.includes("rawaj_create_owner_draft_v2") ||
     details.includes("rawaj_create_owner_draft_v2")
   );
+}
+
+function isCompletedOwnerDraftCreation(error: { message?: string; details?: string }): boolean {
+  return `${error.message ?? ""} ${error.details ?? ""}`.includes("creation_request_completed");
 }
