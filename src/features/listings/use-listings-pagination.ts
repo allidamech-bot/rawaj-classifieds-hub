@@ -1,6 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import { fetchPublicListings } from "@/lib/classifieds-api";
 import type { ClassifiedListing, ClassifiedsError, ListingCursor } from "@/lib/classifieds-types";
+import {
+  isFilterDraftSessionActive,
+  useFilterDraftSessionActive,
+} from "@/features/search/filter-draft-session";
 import { buildListingFilters, type ListingFilterInputs } from "./listings-filters";
 
 export interface ListingsPaginationInputs extends ListingFilterInputs {
@@ -52,8 +56,10 @@ export function useListingsPagination(inputs: ListingsPaginationInputs): Listing
   } = inputs;
   const [loadingMore, setLoadingMore] = useState(false);
   const loadingMoreRef = useRef(false);
+  const filterDraftActive = useFilterDraftSessionActive();
 
   const loadMore = useCallback(async () => {
+    if (filterDraftActive || isFilterDraftSessionActive()) return;
     if (!nextCursor || loadingMoreRef.current) return;
     if (hasPriceContradiction) return;
     loadingMoreRef.current = true;
@@ -92,7 +98,7 @@ export function useListingsPagination(inputs: ListingsPaginationInputs): Listing
       30,
     );
 
-    if (activeVersion !== filterVersionRef.current) {
+    if (isFilterDraftSessionActive() || activeVersion !== filterVersionRef.current) {
       loadingMoreRef.current = false;
       setLoadingMore(false);
       return;
@@ -110,6 +116,7 @@ export function useListingsPagination(inputs: ListingsPaginationInputs): Listing
     loadingMoreRef.current = false;
     setLoadingMore(false);
   }, [
+    filterDraftActive,
     nextCursor,
     hasPriceContradiction,
     filterVersionRef,
