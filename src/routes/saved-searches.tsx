@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, Bookmark, Search, Trash2 } from "lucide-react";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   createSavedSearch,
@@ -69,52 +69,97 @@ function SavedSearchesPage() {
   const [items, setItems] = useState<SavedSearch[]>([]);
   const [localItems, setLocalItems] = useState<LocalSearch[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<ClassifiedsError | null>(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<ClassifiedsError | null>(null);
   const [name, setName] = useState("");
   const [keyword, setKeyword] = useState("");
   const [frequency, setFrequency] = useState<LocalSearch["frequency"]>("weekly");
   const [message, setMessage] = useState("");
   const [savingFrequencyId, setSavingFrequencyId] = useState<string | null>(null);
   const [scanMessage, setScanMessage] = useState("");
+  const loadRequestIdRef = useRef(0);
+  const profileId = auth.profile?.id ?? null;
 
-  useEffect(() => {
-    if (auth.status !== "signedIn") return;
-    let cancelled = false;
+  const loadSavedSearches = useCallback(async () => {
+    if (!profileId) return;
 
-    async function load() {
-      setLoading(true);
-      setError(null);
-      const userId = auth.profile?.id ?? null;
-      const result = await fetchSavedSearches(userId);
-      if (cancelled) return;
-      if (result.ok) {
-        setItems(result.data);
-        const scanResult = await scanDueSavedSearchAlerts(userId);
-        if (cancelled) return;
-        if (scanResult.ok) {
-          if (scanResult.data.createdNotifications > 0) {
-            setScanMessage(
-              text(
-                `تم العثور على ${scanResult.data.createdNotifications} نتيجة جديدة وإضافتها إلى إشعاراتك.`,
-                `${scanResult.data.createdNotifications} new matches were added to your notifications.`,
-              ),
-            );
-          }
-          const refreshed = await fetchSavedSearches(userId);
-          if (!cancelled && refreshed.ok) setItems(refreshed.data);
-        }
-      } else {
-        setError(result.error);
-        setItems([]);
-      }
+    const currentProfileId = profileId;
+    const requestId = ++loadRequestIdRef.current;
+    setLoading(true);
+    setLoadError(null);
+    const result = await fetchSavedSearches(currentProfileId);
+    if (requestId !== loadRequestIdRef.current || currentProfileId !== auth.profile?.id) return;
+
+    if (!result.ok) {
+      setLoadError(result.error);
       setLoading(false);
+      return;
     }
 
-    void load();
+    setItems(result.data);
+    setHasLoaded(true);
+    setLoading(false);
+
+    const scanResult = await scanDueSavedSearchAlerts(currentProfileId);
+    if (requestId !== loadRequestIdRef.current || currentProfileId !== auth.profile?.id) return;
+    if (!scanResult.ok) {
+      setScanMessage(
+        text(
+          "تم تحميل عمليات البحث، لكن تعذر فحص النتائج الجديدة الآن.",
+          "Saved searches loaded, but new matches could not be scanned right now.",
+        ),
+      );
+      return;
+    }
+
+    if (scanResult.data.createdNotifications > 0) {
+      setScanMessage(
+        text(
+          `تم العثور على ${scanResult.data.createdNotifications} نتيجة جديدة وإضافتها إلى إشعاراتك.`,
+          `${scanResult.data.createdNotifications} new matches were added to your notifications.`,
+        ),
+      );
+    }
+
+    const refreshed = await fetchSavedSearches(currentProfileId);
+    if (requestId !== loadRequestIdRef.current || currentProfileId !== auth.profile?.id) return;
+    if (refreshed.ok) {
+      setItems(refreshed.data);
+    } else {
+      setScanMessage(
+        text(
+          "تم فحص التنبيهات، لكن تعذر تحديث تفاصيل عمليات البحث فورًا.",
+          "Alerts were scanned, but saved-search details could not refresh immediately.",
+        ),
+      );
+    }
+  }, [auth.profile?.id, profileId, text]);
+
+  useEffect(() => {
+    if (auth.status !== "signedIn" || !profileId) {
+      loadRequestIdRef.current += 1;
+      setItems([]);
+      setLoading(false);
+      setHasLoaded(false);
+      setLoadError(null);
+      setMessage("");
+      setScanMessage("");
+      return;
+    }
+
+    loadRequestIdRef.current += 1;
+    setItems([]);
+    setLoading(false);
+    setHasLoaded(false);
+    setLoadError(null);
+    setMessage("");
+    setScanMessage("");
+    void loadSavedSearches();
+
     return () => {
-      cancelled = true;
+      loadRequestIdRef.current += 1;
     };
-  }, [auth.status, auth.profile?.id]);
+  }, [auth.status, loadSavedSearches, profileId]);
 
   function buildListingFilters(): ListingFilters {
     const filters: ListingFilters = {};
@@ -167,7 +212,7 @@ function SavedSearchesPage() {
     setMessage("");
     const label = name.trim() || text("بحث محفوظ", "Saved search");
     const filters = buildListingFilters();
-    const result = await createSavedSearch(auth.profile?.id ?? null, {
+    const result = await createSavedSearch(profileId, {
       nameAr: label,
       filters,
       alertFrequency: frequency,
@@ -175,6 +220,7 @@ function SavedSearchesPage() {
 
     if (result.ok) {
       setItems((current) => [result.data, ...current]);
+      setHasLoaded(true);
       setMessage(text("تم حفظ البحث في حسابك.", "Search saved to your account."));
     } else {
       setLocalItems((current) => [
@@ -193,7 +239,6 @@ function SavedSearchesPage() {
           "Could not save this search to the account, so it was saved for this session only.",
         ),
       );
-      setError(result.error);
     }
     setName("");
     setKeyword("");
@@ -231,11 +276,10 @@ function SavedSearchesPage() {
     setItems((current) =>
       current.map((item) => (item.id === id ? { ...item, alertFrequency: next } : item)),
     );
-    const result = await updateSavedSearchAlertFrequency(auth.profile?.id ?? null, id, next);
+    const result = await updateSavedSearchAlertFrequency(profileId, id, next);
     setSavingFrequencyId(null);
     if (!result.ok) {
       setItems(previous);
-      setError(result.error);
       setMessage(result.error.message);
       return;
     }
@@ -245,9 +289,8 @@ function SavedSearchesPage() {
 
   async function removeSavedSearch(id: string) {
     setMessage("");
-    const result = await deleteSavedSearch(auth.profile?.id ?? null, id);
+    const result = await deleteSavedSearch(profileId, id);
     if (!result.ok) {
-      setError(result.error);
       setMessage(result.error.message);
       return;
     }
@@ -343,67 +386,81 @@ function SavedSearchesPage() {
           </button>
         </form>
 
-        {scanMessage && (
+        {scanMessage ? (
           <p className="rounded-xl bg-emerald-trust/10 p-3 text-xs font-semibold text-foreground">
             {scanMessage}
           </p>
-        )}
+        ) : null}
 
-        {message && (
+        {message ? (
           <p className="rounded-xl bg-muted-surface p-3 text-xs font-semibold text-foreground hairline">
             {message}
           </p>
-        )}
+        ) : null}
 
-        {loading ? (
+        {loading && !hasLoaded ? (
           <Panel title={text("جارٍ تحميل عمليات البحث", "Loading saved searches")} />
-        ) : error && items.length === 0 && localItems.length === 0 ? (
+        ) : loadError && !hasLoaded && localItems.length === 0 ? (
           <Panel
             title={text("تعذر تحميل عمليات البحث", "Could not load saved searches")}
-            body={error.message}
-            actionLabel={text("تصفح الإعلانات", "Browse listings")}
-            actionTo="/listings"
-          />
-        ) : items.length === 0 && localItems.length === 0 ? (
-          <Panel
-            title={text("لا توجد عمليات بحث محفوظة", "No saved searches")}
-            body={text(
-              "احفظ بحثك الأول من النموذج أعلاه أو ابدأ من صفحة الإعلانات.",
-              "Save your first search from the form above or start from listings.",
-            )}
-            actionLabel={text("ابدأ البحث", "Start searching")}
-            actionTo="/listings"
+            body={loadError.message}
+            actionLabel={text("إعادة المحاولة", "Try again")}
+            onAction={() => void loadSavedSearches()}
+            actionDisabled={loading}
           />
         ) : (
-          <ul className="space-y-2">
-            {localItems.map((item) => (
-              <SearchRow
-                key={item.id}
-                id={item.id}
-                name={item.nameAr}
-                createdAt={item.createdAt}
-                filters={item.filters}
-                frequency={item.frequency}
-                local
-                onRemove={() =>
-                  setLocalItems((current) => current.filter((entry) => entry.id !== item.id))
-                }
+          <>
+            {loadError ? (
+              <RecoveryNotice
+                title={text("تعذر تحديث عمليات البحث", "Could not refresh saved searches")}
+                body={loadError.message}
+                actionLabel={text("إعادة المحاولة", "Try again")}
+                onAction={() => void loadSavedSearches()}
+                actionDisabled={loading}
               />
-            ))}
-            {items.map((item) => (
-              <SearchRow
-                key={item.id}
-                id={item.id}
-                name={item.nameAr}
-                createdAt={item.createdAt}
-                filters={item.filters as Record<string, unknown>}
-                frequency={item.alertFrequency}
-                frequencyDisabled={savingFrequencyId === item.id}
-                onFrequencyChange={(next) => void changeAlertFrequency(item.id, next)}
-                onRemove={() => void removeSavedSearch(item.id)}
+            ) : null}
+            {items.length === 0 && localItems.length === 0 ? (
+              <Panel
+                title={text("لا توجد عمليات بحث محفوظة", "No saved searches")}
+                body={text(
+                  "احفظ بحثك الأول من النموذج أعلاه أو ابدأ من صفحة الإعلانات.",
+                  "Save your first search from the form above or start from listings.",
+                )}
+                actionLabel={text("ابدأ البحث", "Start searching")}
+                actionTo="/listings"
               />
-            ))}
-          </ul>
+            ) : (
+              <ul className="space-y-2">
+                {localItems.map((item) => (
+                  <SearchRow
+                    key={item.id}
+                    id={item.id}
+                    name={item.nameAr}
+                    createdAt={item.createdAt}
+                    filters={item.filters}
+                    frequency={item.frequency}
+                    local
+                    onRemove={() =>
+                      setLocalItems((current) => current.filter((entry) => entry.id !== item.id))
+                    }
+                  />
+                ))}
+                {items.map((item) => (
+                  <SearchRow
+                    key={item.id}
+                    id={item.id}
+                    name={item.nameAr}
+                    createdAt={item.createdAt}
+                    filters={item.filters as Record<string, unknown>}
+                    frequency={item.alertFrequency}
+                    frequencyDisabled={savingFrequencyId === item.id}
+                    onFrequencyChange={(next) => void changeAlertFrequency(item.id, next)}
+                    onRemove={() => void removeSavedSearch(item.id)}
+                  />
+                ))}
+              </ul>
+            )}
+          </>
         )}
       </main>
     </>
@@ -581,12 +638,16 @@ function Panel({
   actionLabel,
   actionTo,
   actionSearch,
+  onAction,
+  actionDisabled,
 }: {
   title: string;
   body?: string;
   actionLabel?: string;
   actionTo?: string;
   actionSearch?: Record<string, string>;
+  onAction?: () => void;
+  actionDisabled?: boolean;
 }) {
   const { language } = useUiPreferences();
   return (
@@ -596,23 +657,65 @@ function Panel({
       </span>
       <p className="mt-3 text-sm font-bold">{title}</p>
       {body && <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p>}
-      {actionLabel && actionTo && (
+      {actionLabel ? (
         <div className="mt-5 flex flex-wrap justify-center gap-2">
-          <Link
-            to={actionTo}
-            search={actionSearch}
-            className="inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground"
-          >
-            {actionLabel}
-          </Link>
-          <Link
-            to="/categories"
-            className="inline-block rounded-xl bg-muted-surface px-5 py-2 text-sm font-bold text-foreground"
-          >
-            {uiLabel("تصفح الأقسام", language)}
-          </Link>
+          {onAction ? (
+            <button
+              type="button"
+              onClick={onAction}
+              disabled={actionDisabled}
+              className="inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground disabled:opacity-60"
+            >
+              {actionLabel}
+            </button>
+          ) : actionTo ? (
+            <Link
+              to={actionTo}
+              search={actionSearch}
+              className="inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground"
+            >
+              {actionLabel}
+            </Link>
+          ) : null}
+          {actionTo ? (
+            <Link
+              to="/categories"
+              className="inline-block rounded-xl bg-muted-surface px-5 py-2 text-sm font-bold text-foreground"
+            >
+              {uiLabel("تصفح الأقسام", language)}
+            </Link>
+          ) : null}
         </div>
-      )}
+      ) : null}
+    </div>
+  );
+}
+
+function RecoveryNotice({
+  title,
+  body,
+  actionLabel,
+  onAction,
+  actionDisabled,
+}: {
+  title: string;
+  body: string;
+  actionLabel: string;
+  onAction: () => void;
+  actionDisabled?: boolean;
+}) {
+  return (
+    <div className="rounded-xl bg-destructive/10 p-4 text-destructive hairline">
+      <p className="text-xs font-bold">{title}</p>
+      <p className="mt-1 text-xs leading-5">{body}</p>
+      <button
+        type="button"
+        onClick={onAction}
+        disabled={actionDisabled}
+        className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-card px-4 py-2 text-xs font-bold text-foreground hairline disabled:opacity-60"
+      >
+        {actionLabel}
+      </button>
     </div>
   );
 }
