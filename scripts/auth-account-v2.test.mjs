@@ -60,8 +60,14 @@ test("profile overview loads recover independently without erasing successful sn
   assert.match(profile, /verificationError && !verificationHasLoaded/);
   assert.match(profile, /onAction=\{\(\) => void reloadListings\(\)\}/);
   assert.match(profile, /onAction=\{\(\) => void loadVerificationRequests\(\)\}/);
-  assert.doesNotMatch(profile, /setMyListingsError\(result\.error\);[\s\S]{0,80}setMyListings\(\[\]\)/);
-  assert.doesNotMatch(profile, /setVerificationError\(result\.error\);[\s\S]{0,80}setVerificationRequests\(\[\]\)/);
+  assert.doesNotMatch(
+    profile,
+    /setMyListingsError\(result\.error\);[\s\S]{0,80}setMyListings\(\[\]\)/,
+  );
+  assert.doesNotMatch(
+    profile,
+    /setVerificationError\(result\.error\);[\s\S]{0,80}setVerificationRequests\(\[\]\)/,
+  );
 });
 
 test("profile overview requests reject stale account and route responses", () => {

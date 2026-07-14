@@ -130,10 +130,7 @@ function ProfilePage() {
     setVerificationLoading(true);
     setVerificationError(null);
     const result = await fetchMyVerificationRequests(currentProfileId);
-    if (
-      requestId !== verificationRequestIdRef.current ||
-      currentProfileId !== auth.profile?.id
-    )
+    if (requestId !== verificationRequestIdRef.current || currentProfileId !== auth.profile?.id)
       return;
 
     if (result.ok) {
