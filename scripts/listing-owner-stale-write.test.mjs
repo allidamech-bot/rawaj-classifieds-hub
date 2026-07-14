@@ -26,46 +26,28 @@ const apiBarrelSource = await readFile(
   "utf8",
 );
 
-test(
-  "database owner update boundary locks and compares the expected listing version",
-  () => {
-    assert.match(migration, /rawaj_owner_update_listing_v3/);
-    assert.match(migration, /p_expected_updated_at timestamptz/);
-    assert.match(migration, /for update;/);
-    assert.match(
-      migration,
-      /v_current_updated_at is distinct from p_expected_updated_at/,
-    );
-    assert.match(migration, /raise exception 'stale_owner_update'/);
-    assert.match(migration, /grant execute[\s\S]*to authenticated/);
-  },
-);
+test("database owner update boundary locks and compares the expected listing version", () => {
+  assert.match(migration, /rawaj_owner_update_listing_v3/);
+  assert.match(migration, /p_expected_updated_at timestamptz/);
+  assert.match(migration, /for update;/);
+  assert.match(migration, /v_current_updated_at is distinct from p_expected_updated_at/);
+  assert.match(migration, /raise exception 'stale_owner_update'/);
+  assert.match(migration, /grant execute[\s\S]*to authenticated/);
+});
 
-test(
-  "client owner update sends the remembered updated_at version to v3",
-  () => {
-    assert.match(rpcSource, /buildOwnerUpdateRpcArgsV3/);
-    assert.match(rpcSource, /rawaj_owner_update_listing_v3/);
-    assert.match(rpcSource, /expectedUpdatedAt/);
-    assert.match(rpcSource, /isStaleOwnerUpdateError/);
-    assert.match(guardedWriteSource, /readOwnerListingVersion/);
-    assert.match(
-      guardedWriteSource,
-      /updateOwnerListingBase[\s\S]*expectedUpdatedAt/,
-    );
-  },
-);
+test("client owner update sends the remembered updated_at version to v3", () => {
+  assert.match(rpcSource, /buildOwnerUpdateRpcArgsV3/);
+  assert.match(rpcSource, /rawaj_owner_update_listing_v3/);
+  assert.match(rpcSource, /expectedUpdatedAt/);
+  assert.match(rpcSource, /isStaleOwnerUpdateError/);
+  assert.match(guardedWriteSource, /readOwnerListingVersion/);
+  assert.match(guardedWriteSource, /updateOwnerListingBase[\s\S]*expectedUpdatedAt/);
+});
 
 test("owner reads and successful writes refresh the version snapshot", () => {
   assert.match(guardedReadSource, /rememberOwnerListingVersion/);
-  assert.match(
-    guardedWriteSource,
-    /if \(result\.ok\) rememberOwnerListingVersion/,
-  );
-  assert.match(
-    apiBarrelSource,
-    /fetchOwnerListingDetail.*listing-owner-read-guarded/,
-  );
+  assert.match(guardedWriteSource, /if \(result\.ok\) rememberOwnerListingVersion/);
+  assert.match(apiBarrelSource, /fetchOwnerListingDetail.*listing-owner-read-guarded/);
   assert.match(
     apiBarrelSource,
     /submitOwnerListingForReview,[\s\S]*updateOwnerListing,[\s\S]*listing-owner-write-guarded/,

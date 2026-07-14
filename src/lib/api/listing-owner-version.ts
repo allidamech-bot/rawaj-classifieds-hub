@@ -10,18 +10,12 @@ export function rememberOwnerListingVersion(
   ownerListingVersions.set(versionKey(userId, listing.id), listing.updatedAt);
 }
 
-export function readOwnerListingVersion(
-  userId: string | null,
-  listingId: string,
-): string | null {
+export function readOwnerListingVersion(userId: string | null, listingId: string): string | null {
   if (!userId || !listingId.trim()) return null;
   return ownerListingVersions.get(versionKey(userId, listingId)) ?? null;
 }
 
-export function forgetOwnerListingVersion(
-  userId: string | null,
-  listingId: string,
-): void {
+export function forgetOwnerListingVersion(userId: string | null, listingId: string): void {
   if (!userId || !listingId.trim()) return;
   ownerListingVersions.delete(versionKey(userId, listingId));
 }

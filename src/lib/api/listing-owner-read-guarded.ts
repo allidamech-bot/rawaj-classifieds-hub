@@ -1,6 +1,4 @@
-import {
-  fetchOwnerListingDetail as fetchOwnerListingDetailBase,
-} from "@/lib/api/listings";
+import { fetchOwnerListingDetail as fetchOwnerListingDetailBase } from "@/lib/api/listings";
 import { rememberOwnerListingVersion } from "@/lib/api/listing-owner-version";
 import type { ClassifiedListing, ClassifiedsResult } from "@/lib/classifieds-types";
 

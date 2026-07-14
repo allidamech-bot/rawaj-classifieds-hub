@@ -29,12 +29,7 @@ export async function updateOwnerListing(
     };
   }
 
-  const result = await updateOwnerListingBase(
-    userId,
-    listingId,
-    payload,
-    expectedUpdatedAt,
-  );
+  const result = await updateOwnerListingBase(userId, listingId, payload, expectedUpdatedAt);
   if (result.ok) rememberOwnerListingVersion(userId, result.data);
   return result;
 }
