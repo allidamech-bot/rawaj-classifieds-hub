@@ -1,0 +1,52 @@
+name: Apply live chat workspace integration
+
+on:
+  push:
+    branches:
+      - feature/live-chat-workspace
+    paths:
+      - .github/workflows/apply-live-chat-workspace.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/live-chat-workspace
+          fetch-depth: 0
+      - name: Patch chat route and remove temporary workflow
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          route_path = Path("src/routes/chats.tsx")
+          source = route_path.read_text(encoding="utf-8")
+
+          import_anchor = '} from "@/features/communication/CommunicationExperience";\n'
+          import_line = 'import { useLiveChatWorkspace } from "@/features/communication/useLiveChatWorkspace";\n'
+          if import_line not in source:
+              if import_anchor not in source:
+                  raise SystemExit("CommunicationExperience import anchor not found")
+              source = source.replace(import_anchor, import_anchor + import_line, 1)
+
+          hook_anchor = '  }, [conversationQuery, conversations, language]);\n'
+          hook_block = '''  const liveConversationId =\n    selectedConversation && (isDesktop || viewingConversationOnMobile)\n      ? selectedConversation.id\n      : null;\n\n  useLiveChatWorkspace({\n    signedIn: auth.status === "signedIn",\n    profileId: auth.profile?.id ?? null,\n    selectedConversationId: liveConversationId,\n    setConversations,\n    setMessages,\n  });\n'''
+          if hook_block not in source:
+              if hook_anchor not in source:
+                  raise SystemExit("Conversation filter anchor not found")
+              source = source.replace(hook_anchor, hook_anchor + "\n" + hook_block, 1)
+
+          route_path.write_text(source, encoding="utf-8")
+          Path(".github/workflows/apply-live-chat-workspace.yml").unlink()
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/chats.tsx .github/workflows/apply-live-chat-workspace.yml
+          git commit -m "Integrate live chat workspace"
+          git push origin HEAD:feature/live-chat-workspace
