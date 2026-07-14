@@ -11,8 +11,14 @@ import {
 } from "@/lib/api/listing-write-contract";
 import { getClient, mapError, rowString } from "@/lib/api/shared";
 
-const ownerUpdateRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();
-const ownerSubmitRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();
+const ownerUpdateRequests = new Map<
+  string,
+  Promise<ClassifiedsResult<ClassifiedListing>>
+>();
+const ownerSubmitRequests = new Map<
+  string,
+  Promise<ClassifiedsResult<ClassifiedListing>>
+>();
 
 export function updateOwnerListing(
   userId: string | null,
@@ -22,7 +28,9 @@ export function updateOwnerListing(
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
   const cleanListingId = listingId.trim();
   const cleanExpectedUpdatedAt = expectedUpdatedAt.trim();
-  const requestKey = `${userId ?? "anonymous"}:${cleanListingId}:${cleanExpectedUpdatedAt}:${stablePayloadKey(payload)}`;
+  const requestKey = `${userId ?? "anonymous"}:${cleanListingId}:${cleanExpectedUpdatedAt}:${stablePayloadKey(
+    payload,
+  )}`;
   const pending = ownerUpdateRequests.get(requestKey);
   if (pending) return pending;
 
@@ -96,10 +104,14 @@ async function runOwnerListingUpdate(
 
   const patch: Record<string, unknown> = {};
   if (payload.categoryId) patch.category_id = payload.categoryId;
-  if (payload.subcategoryId !== undefined) patch.subcategory_id = payload.subcategoryId;
+  if (payload.subcategoryId !== undefined) {
+    patch.subcategory_id = payload.subcategoryId;
+  }
   if (payload.governorateId) patch.governorate_id = payload.governorateId;
   if (payload.title?.trim()) patch.title = payload.title.trim();
-  if (payload.description !== undefined) patch.description = payload.description?.trim() ?? null;
+  if (payload.description !== undefined) {
+    patch.description = payload.description?.trim() ?? null;
+  }
   if (payload.price !== undefined) patch.price = payload.price;
   if (payload.priceType) patch.price_type = payload.priceType;
   if (payload.condition) patch.listing_condition = payload.condition;
@@ -107,7 +119,8 @@ async function runOwnerListingUpdate(
   if (payload.districtAr !== undefined) {
     const locationWrite = await resolveListingLocationWrite(
       clientResult.data,
-      payload.governorateId ?? rowString(existing as Record<string, unknown>, "governorate_id"),
+      payload.governorateId ??
+        rowString(existing as Record<string, unknown>, "governorate_id"),
       payload.districtAr,
     );
     if (!locationWrite.ok) return locationWrite;
@@ -119,7 +132,9 @@ async function runOwnerListingUpdate(
     }
   }
 
-  if (payload.contactName !== undefined) patch.contact_name = payload.contactName;
+  if (payload.contactName !== undefined) {
+    patch.contact_name = payload.contactName;
+  }
   if (payload.contactOptions) patch.contact_options = payload.contactOptions;
   if (payload.details !== undefined) patch.details = payload.details;
 
@@ -128,7 +143,10 @@ async function runOwnerListingUpdate(
     patch,
     expectedUpdatedAt,
   );
-  let response = await clientResult.data.rpc("rawaj_owner_update_listing_v3", rpcArgsV3);
+  let response = await clientResult.data.rpc(
+    "rawaj_owner_update_listing_v3",
+    rpcArgsV3,
+  );
 
   if (response.error && isMissingOwnerUpdateV3(response.error)) {
     response = await clientResult.data.rpc(
@@ -204,11 +222,16 @@ async function runOwnerListingSubmit(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data.rpc("rawaj_submit_listing_for_review", {
-    p_listing_id: cleanListingId,
-  });
+  const { data, error } = await clientResult.data.rpc(
+    "rawaj_submit_listing_for_review",
+    {
+      p_listing_id: cleanListingId,
+    },
+  );
 
-  if (error) return { ok: false, error: mapError(error, "owner_listing_submit") };
+  if (error) {
+    return { ok: false, error: mapError(error, "owner_listing_submit") };
+  }
 
   const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);
   if (refreshed.ok) {
@@ -248,8 +271,13 @@ function isMissingOwnerUpdateV3(error: {
   );
 }
 
-function isStaleOwnerUpdateError(error: { message?: string; details?: string }): boolean {
-  return `${error.message ?? ""} ${error.details ?? ""}`.includes("stale_owner_update");
+function isStaleOwnerUpdateError(error: {
+  message?: string;
+  details?: string;
+}): boolean {
+  return `${error.message ?? ""} ${error.details ?? ""}`.includes(
+    "stale_owner_update",
+  );
 }
 
 function staleOwnerUpdateResult(): ClassifiedsResult<never> {
@@ -284,7 +312,9 @@ function stableValue(value: unknown): unknown {
   return value;
 }
 
-function submitStatusMismatch(status: ClassifiedListing["status"]): ClassifiedsResult<never> {
+function submitStatusMismatch(
+  status: ClassifiedListing["status"],
+): ClassifiedsResult<never> {
   return {
     ok: false,
     error: {
