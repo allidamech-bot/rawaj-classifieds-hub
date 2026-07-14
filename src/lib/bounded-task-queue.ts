@@ -5,13 +5,8 @@ export async function runBoundedTasks<T>(
 ): Promise<void> {
   if (items.length === 0) return;
 
-  const normalizedConcurrency = Number.isFinite(concurrency)
-    ? Math.floor(concurrency)
-    : 1;
-  const workerCount = Math.min(
-    items.length,
-    Math.max(1, normalizedConcurrency),
-  );
+  const normalizedConcurrency = Number.isFinite(concurrency) ? Math.floor(concurrency) : 1;
+  const workerCount = Math.min(items.length, Math.max(1, normalizedConcurrency));
   let nextIndex = 0;
 
   async function runWorker(): Promise<void> {
