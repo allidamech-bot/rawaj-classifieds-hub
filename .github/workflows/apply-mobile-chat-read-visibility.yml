@@ -1,0 +1,51 @@
+name: Apply mobile chat read visibility fix
+
+on:
+  push:
+    branches:
+      - fix/mobile-chat-read-visibility
+    paths:
+      - .github/workflows/apply-mobile-chat-read-visibility.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/mobile-chat-read-visibility
+          fetch-depth: 0
+      - name: Patch chat visibility guard and remove temporary workflow
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          route_path = Path("src/routes/chats.tsx")
+          source = route_path.read_text(encoding="utf-8")
+
+          old_visibility = '''  const liveConversationId =\n    selectedConversation && (isDesktop || viewingConversationOnMobile)\n      ? selectedConversation.id\n      : null;\n'''
+          new_visibility = '''  const isConversationPanelVisible = isDesktop || viewingConversationOnMobile;\n  const liveConversationId =\n    selectedConversation && isConversationPanelVisible ? selectedConversation.id : null;\n'''
+          if old_visibility not in source:
+              raise SystemExit("Live conversation visibility anchor not found")
+          source = source.replace(old_visibility, new_visibility, 1)
+
+          old_effect = '''  useEffect(() => {\n    if (auth.status !== "signedIn" || !selectedConversation) {\n      messagesRequestIdRef.current += 1;\n      setMessages([]);\n      setMessageError(null);\n      setLoadingMessages(false);\n      return;\n    }\n    void loadMessages(selectedConversation.id);\n  }, [auth.status, selectedConversation?.id]);\n'''
+          new_effect = '''  useEffect(() => {\n    if (\n      auth.status !== "signedIn" ||\n      !selectedConversation ||\n      !isConversationPanelVisible\n    ) {\n      messagesRequestIdRef.current += 1;\n      setMessages([]);\n      setMessageError(null);\n      setLoadingMessages(false);\n      return;\n    }\n    void loadMessages(selectedConversation.id);\n  }, [auth.status, isConversationPanelVisible, selectedConversation?.id]);\n'''
+          if old_effect not in source:
+              raise SystemExit("Message loading effect anchor not found")
+          source = source.replace(old_effect, new_effect, 1)
+
+          route_path.write_text(source, encoding="utf-8")
+          Path(".github/workflows/apply-mobile-chat-read-visibility.yml").unlink()
+          PY
+
+          npx prettier --write src/routes/chats.tsx
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/chats.tsx .github/workflows/apply-mobile-chat-read-visibility.yml
+          git commit -m "Guard mobile chat read visibility"
+          git push origin HEAD:fix/mobile-chat-read-visibility
