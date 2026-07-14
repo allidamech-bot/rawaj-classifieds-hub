@@ -149,6 +149,7 @@
   }''',
         'ad placements actions',
     )
+    text = text.replace('    setError("");', '    setActionError("");')
     text = replace_once(text, '      {error && <Notice tone="error">{error}</Notice>}', '      {actionError && <Notice tone="error">{actionError}</Notice>}\n      {loadError && hasLoaded ? (\n        <Notice tone="error">\n          {loadError} {" "}\n          <button type="button" onClick={() => void refresh()} className="underline">\n            {text("إعادة المحاولة", "Try again")}\n          </button>\n        </Notice>\n      ) : null}', 'ad placements errors')
     text = replace_once(
         text,
