@@ -261,11 +261,7 @@ const serializationClient = createClient("https://example.supabase.co", "test-an
 });
 await serializationClient.rpc(
   "rawaj_owner_update_listing_v3",
-  buildOwnerUpdateRpcArgsV3(
-    "listing-id",
-    undefined,
-    "2026-07-14T00:00:00.000Z",
-  ),
+  buildOwnerUpdateRpcArgsV3("listing-id", undefined, "2026-07-14T00:00:00.000Z"),
 );
 
 const parsedRpcBody = serializedRpcBody ? JSON.parse(serializedRpcBody) : null;
