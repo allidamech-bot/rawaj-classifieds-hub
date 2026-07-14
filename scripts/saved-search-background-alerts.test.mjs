@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [scannerSource, rootSource, packageSource, qualityGateSource] = await Promise.all([
+const [scannerSource, rootSource, packageSource] = await Promise.all([
   readFile(
     new URL(
       "../src/features/saved-searches/SavedSearchAlertBackgroundScanner.tsx",
@@ -12,7 +12,6 @@ const [scannerSource, rootSource, packageSource, qualityGateSource] = await Prom
   ),
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
 ]);
 
 test("saved-search alerts scan automatically for signed-in users", () => {
@@ -50,16 +49,11 @@ test("background scans deduplicate work and update unread activity only after su
   assert.match(scannerSource, /inFlightScans\.delete\(userId\)/);
 });
 
-test("background saved-search alert contract is permanently gated", () => {
+test("background saved-search alert contract is part of the activity Quality Gate", () => {
   const packageJson = JSON.parse(packageSource);
   assert.match(
-    packageJson.scripts.check,
-    /npm run test:saved-search-background-alerts/,
-  );
-  assert.match(
-    packageJson.scripts["test:saved-search-background-alerts"],
+    packageJson.scripts["test:activity-center"],
     /saved-search-background-alerts\.test\.mjs/,
   );
-  assert.match(qualityGateSource, /Saved search background alerts contract/);
-  assert.match(qualityGateSource, /npm run test:saved-search-background-alerts/);
+  assert.match(packageJson.scripts.check, /npm run test:activity-center/);
 });
