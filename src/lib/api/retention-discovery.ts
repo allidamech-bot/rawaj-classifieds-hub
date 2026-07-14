@@ -131,7 +131,19 @@ async function recordAuthenticatedRecentView(
     p_listing_id: listingId,
   });
 
-  if (error) return { ok: false, error: mapError(error, "record_recent_listing_view") };
+  if (error) {
+    if (isCompatibilityError(error)) {
+      return {
+        ok: false,
+        error: {
+          code: "schema_missing",
+          message: "سجل المشاهدة غير متاح على هذه البيئة بعد.",
+          operation: "record_recent_listing_view",
+        },
+      };
+    }
+    return { ok: false, error: mapError(error, "record_recent_listing_view") };
+  }
   if (data !== true) {
     return {
       ok: false,
@@ -178,7 +190,7 @@ export async function syncAnonymousRecentListingViews(
   let synced = 0;
   for (const row of localRows) {
     const result = await recordAuthenticatedRecentView(row.listingId);
-    if (!result.ok) return result;
+    if (!result.ok) return { ok: false, error: result.error };
     synced += 1;
   }
 
