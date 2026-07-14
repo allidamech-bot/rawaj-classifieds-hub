@@ -1,0 +1,33 @@
+name: Format support recovery
+
+on:
+  push:
+    branches:
+      - feature/recover-support-history
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/recover-support-history
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Format support files
+        run: npx eslint --fix src/routes/support.tsx scripts/trust-support-hub-v2.test.mjs
+      - name: Commit formatting and remove formatter
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/format-support-recovery.yml
+          git add src/routes/support.tsx scripts/trust-support-hub-v2.test.mjs
+          git commit -m "Format support recovery files"
+          git push origin HEAD:feature/recover-support-history
