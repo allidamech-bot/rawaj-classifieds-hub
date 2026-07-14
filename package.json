@@ -29,6 +29,7 @@
     "test:reservation": "node --test scripts/listing-reservation.test.mjs",
     "test:chat-workspace": "node --test scripts/chat-workspace.test.mjs scripts/chat-workspace-live.test.mjs scripts/message-send-idempotency.test.mjs",
     "test:auth-recovery": "node --test scripts/auth-recovery.test.mjs",
+    "test:android-oauth-clean": "node --test scripts/android-oauth-clean.test.mjs",
     "test:listing-studio-images": "node --test scripts/listing-studio-image-parity.test.mjs",
     "test:listing-image-content-reliability": "node --test scripts/listing-image-content-reliability.test.mjs scripts/listing-image-upload-concurrency.test.mjs",
     "test:listing-draft-create-guard": "node --test scripts/listing-draft-create-guard.test.mjs",

@@ -27,14 +27,20 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="rawa-j.com" />
+                <data
+                    android:scheme="https"
+                    android:host="rawa-j.com"
+                    android:pathPrefix="/" />
             </intent-filter>
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="@string/custom_url_scheme" />
+                <data
+                    android:scheme="@string/custom_url_scheme"
+                    android:host="auth"
+                    android:path="/callback" />
             </intent-filter>
 
         </activity>
@@ -49,8 +55,6 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
     </application>
-
-    <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
 </manifest>
