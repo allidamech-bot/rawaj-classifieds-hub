@@ -115,7 +115,7 @@ begin
     return false;
   end if;
 
-  insert into public.recent_listing_views (
+  insert into public.recent_listing_views as existing (
     user_id,
     listing_id,
     first_viewed_at,
@@ -126,7 +126,7 @@ begin
   on conflict (user_id, listing_id)
   do update set
     viewed_at = excluded.viewed_at,
-    view_count = least(public.recent_listing_views.view_count + 1, 2147483647);
+    view_count = least(existing.view_count + 1, 2147483647);
 
   return true;
 end;
@@ -232,16 +232,27 @@ stable
 security definer
 set search_path = public, pg_temp
 as $$
+  with public_seller as (
+    select 1
+    from public.listings l
+    where l.owner_id = p_seller_user_id
+      and l.status = 'approved'
+      and l.archived_at is null
+      and (l.expires_at is null or l.expires_at > now())
+    limit 1
+  )
   select
-    count(*)::bigint as follower_count,
-    exists (
-      select 1
-      from public.seller_follows own_follow
-      where own_follow.seller_user_id = p_seller_user_id
-        and own_follow.follower_user_id = auth.uid()
-    ) as is_following
+    count(follows.seller_user_id)::bigint as follower_count,
+    exists (select 1 from public_seller)
+      and exists (
+        select 1
+        from public.seller_follows own_follow
+        where own_follow.seller_user_id = p_seller_user_id
+          and own_follow.follower_user_id = auth.uid()
+      ) as is_following
   from public.seller_follows follows
-  where follows.seller_user_id = p_seller_user_id;
+  where follows.seller_user_id = p_seller_user_id
+    and exists (select 1 from public_seller);
 $$;
 
 create or replace function public.rawaj_list_followed_sellers_v1(p_limit integer default 12)
@@ -315,6 +326,6 @@ comment on table public.recent_listing_views is
 comment on table public.seller_follows is
   'Private follower-to-seller edges. Public surfaces receive counts only through a controlled RPC.';
 comment on function public.rawaj_get_seller_follow_summary_v1(uuid) is
-  'Returns only a seller follower count and whether the current user follows that seller; follower identities remain private.';
+  'Returns only a public seller follower count and whether the current user follows that seller; follower identities remain private.';
 
 commit;
