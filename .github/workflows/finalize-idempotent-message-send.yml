@@ -1,3 +1,4 @@
+# Retry trigger after the implementation commit settled.
 name: Finalize idempotent message send
 
 on:
