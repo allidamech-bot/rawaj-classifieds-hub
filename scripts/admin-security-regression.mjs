@@ -12,9 +12,12 @@ const migrations = readdirSync(join(root, "supabase", "migrations"))
 
 const authTypes = read("src/lib/auth-types.ts");
 const adminShell = read("src/routes/admin.tsx");
+const adminOverview = read("src/routes/admin.index.tsx");
 const adminUsers = read("src/routes/admin.users.tsx");
 const adminPending = read("src/routes/admin.pending.tsx");
+const adminReports = read("src/routes/admin.reports.tsx");
 const adminReviews = read("src/routes/admin.reviews.tsx");
+const adminMessageReports = read("src/routes/admin.message-reports.tsx");
 const bottomDock = read("src/components/shell/BottomDock.tsx");
 const primaryNavigation = read("src/lib/primary-navigation.ts");
 
@@ -67,6 +70,69 @@ expect(
 expect(
   "admin navigation filters by permission",
   adminShell.includes("auth.hasPermission(tab.permission)"),
+);
+
+expect(
+  "admin overview preserves successful metrics and exposes retry",
+  adminOverview.includes("const [hasLoaded, setHasLoaded]") &&
+    adminOverview.includes("const requestIdRef = useRef(0)") &&
+    adminOverview.includes("const loadMetrics = useCallback") &&
+    adminOverview.includes("error && !hasLoaded") &&
+    adminOverview.includes("onAction={() => void loadMetrics()}") &&
+    !/setError\(result\.error\.message\);[\s\S]{0,160}setMetrics\(EMPTY_METRICS\)/.test(
+      adminOverview,
+    ),
+);
+expect(
+  "pending listing queue preserves successful data and deduplicates decisions",
+  adminPending.includes("const [hasLoaded, setHasLoaded]") &&
+    adminPending.includes("const loadRequestIdRef = useRef(0)") &&
+    adminPending.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
+    adminPending.includes("actionInFlightRef.current.has(actionKey)") &&
+    adminPending.includes("imagesError") &&
+    adminPending.includes("onRetryImages") &&
+    !/setError\(result\.error\);[\s\S]{0,120}setListings\(\[\]\)/.test(adminPending),
+);
+expect(
+  "listing report queue separates load and action failures",
+  adminReports.includes("const [hasLoaded, setHasLoaded]") &&
+    adminReports.includes("const [loadError, setLoadError]") &&
+    adminReports.includes("const [actionMessage, setActionMessage]") &&
+    adminReports.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
+    adminReports.includes("loadError && !hasLoaded") &&
+    !/setLoadError\(result\.error\);[\s\S]{0,120}setReports\(\[\]\)/.test(adminReports),
+);
+expect(
+  "seller review queue preserves data and deduplicates moderation",
+  adminReviews.includes("const [hasLoaded, setHasLoaded]") &&
+    adminReviews.includes("const [loadError, setLoadError]") &&
+    adminReviews.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
+    adminReviews.includes("actionInFlightRef.current.has(review.id)") &&
+    adminReviews.includes("loadError && !hasLoaded") &&
+    !/setLoadError\(result\.error\);[\s\S]{0,120}setReviews\(\[\]\)/.test(adminReviews),
+);
+expect(
+  "message report queue preserves data and deduplicates moderation",
+  adminMessageReports.includes("const [hasLoaded, setHasLoaded]") &&
+    adminMessageReports.includes("const [loadError, setLoadError]") &&
+    adminMessageReports.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
+    adminMessageReports.includes("actionInFlightRef.current.has(report.id)") &&
+    adminMessageReports.includes("loadError && !hasLoaded") &&
+    !/setLoadError\(result\.error\);[\s\S]{0,120}setReports\(\[\]\)/.test(
+      adminMessageReports,
+    ),
+);
+expect(
+  "user management separates load and action errors and deduplicates sensitive writes",
+  adminUsers.includes("const [hasLoaded, setHasLoaded]") &&
+    adminUsers.includes("const [loadError, setLoadError]") &&
+    adminUsers.includes("const [actionError, setActionError]") &&
+    adminUsers.includes("const actionInFlightRef = useRef(false)") &&
+    adminUsers.includes("if (actionInFlightRef.current) return") &&
+    adminUsers.includes("const refreshUsers = useCallback") &&
+    adminUsers.includes("loadError && !hasLoaded") &&
+    adminUsers.includes("finally {") &&
+    !/setLoadError\(result\.error\.message\);[\s\S]{0,120}setUsers\(\[\]\)/.test(adminUsers),
 );
 
 for (const permission of [
