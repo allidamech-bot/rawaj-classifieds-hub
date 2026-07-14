@@ -1,13 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LifeBuoy, Sparkles } from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type FormEvent,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   createListingPromotionRequest,
@@ -45,17 +38,12 @@ function PromotionPage() {
   const [requests, setRequests] = useState<ListingPromotionRequest[]>([]);
   const [listingsLoading, setListingsLoading] = useState(false);
   const [requestsLoading, setRequestsLoading] = useState(false);
-  const [listingsError, setListingsError] = useState<ClassifiedsError | null>(
-    null,
-  );
-  const [requestsError, setRequestsError] = useState<ClassifiedsError | null>(
-    null,
-  );
+  const [listingsError, setListingsError] = useState<ClassifiedsError | null>(null);
+  const [requestsError, setRequestsError] = useState<ClassifiedsError | null>(null);
   const [hasLoadedListings, setHasLoadedListings] = useState(false);
   const [hasLoadedRequests, setHasLoadedRequests] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState("");
-  const [promotionType, setPromotionType] =
-    useState<PromotionType>("featured_home");
+  const [promotionType, setPromotionType] = useState<PromotionType>("featured_home");
   const [requestedDays, setRequestedDays] = useState(7);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
@@ -69,11 +57,7 @@ function PromotionPage() {
     () => listings.filter((listing) => listing.status === "approved"),
     [listings],
   );
-  const promotionOptions: Array<{
-    value: PromotionType;
-    label: string;
-    description: string;
-  }> = [
+  const promotionOptions: Array<{ value: PromotionType; label: string; description: string }> = [
     {
       value: "featured_home",
       label: text("الصفحة الرئيسية", "Home page"),
@@ -238,11 +222,7 @@ function PromotionPage() {
   if (auth.status !== "signedIn") {
     return (
       <>
-        <PageHeader
-          title={text("ترويج إعلان", "Promote listing")}
-          to="/more"
-          backMode="history"
-        />
+        <PageHeader title={text("ترويج إعلان", "Promote listing")} to="/more" backMode="history" />
         <main className="container-wide mobile-page-bottom pt-4">
           <section className="rounded-2xl bg-card p-8 text-center hairline">
             <Sparkles className="mx-auto h-7 w-7 text-gold" />
@@ -269,11 +249,7 @@ function PromotionPage() {
 
   return (
     <>
-      <PageHeader
-        title={text("ترويج إعلان", "Promote listing")}
-        to="/more"
-        backMode="history"
-      />
+      <PageHeader title={text("ترويج إعلان", "Promote listing")} to="/more" backMode="history" />
       <main className="container-wide mobile-page-bottom space-y-5 pt-4">
         <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-soft">
           <h2 className="text-lg font-extrabold">
@@ -301,10 +277,7 @@ function PromotionPage() {
           <>
             {listingsError ? (
               <RecoveryNotice
-                title={text(
-                  "تعذر تحديث إعلاناتك",
-                  "Could not refresh your listings",
-                )}
+                title={text("تعذر تحديث إعلاناتك", "Could not refresh your listings")}
                 body={listingsError.message}
                 actionLabel={text("إعادة المحاولة", "Try again")}
                 onAction={() => void loadListings()}
@@ -326,10 +299,7 @@ function PromotionPage() {
           <>
             {listingsError ? (
               <RecoveryNotice
-                title={text(
-                  "تعذر تحديث إعلاناتك",
-                  "Could not refresh your listings",
-                )}
+                title={text("تعذر تحديث إعلاناتك", "Could not refresh your listings")}
                 body={listingsError.message}
                 actionLabel={text("إعادة المحاولة", "Try again")}
                 onAction={() => void loadListings()}
@@ -344,9 +314,7 @@ function PromotionPage() {
                 <Field label={text("الإعلان", "Listing")}>
                   <select
                     value={selectedListingId}
-                    onChange={(event) =>
-                      setSelectedListingId(event.target.value)
-                    }
+                    onChange={(event) => setSelectedListingId(event.target.value)}
                     className="input"
                   >
                     {approvedListings.map((listing) => (
@@ -359,9 +327,7 @@ function PromotionPage() {
                 <Field label={text("موضع الترويج", "Promotion placement")}>
                   <select
                     value={promotionType}
-                    onChange={(event) =>
-                      setPromotionType(event.target.value as PromotionType)
-                    }
+                    onChange={(event) => setPromotionType(event.target.value as PromotionType)}
                     className="input"
                   >
                     {promotionOptions.map((option) => (
@@ -371,19 +337,13 @@ function PromotionPage() {
                     ))}
                   </select>
                   <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-                    {
-                      promotionOptions.find(
-                        (option) => option.value === promotionType,
-                      )?.description
-                    }
+                    {promotionOptions.find((option) => option.value === promotionType)?.description}
                   </p>
                 </Field>
                 <Field label={text("المدة", "Duration")}>
                   <select
                     value={requestedDays}
-                    onChange={(event) =>
-                      setRequestedDays(Number(event.target.value))
-                    }
+                    onChange={(event) => setRequestedDays(Number(event.target.value))}
                     className="input"
                   >
                     {durationOptions.map((days) => (
@@ -393,12 +353,7 @@ function PromotionPage() {
                     ))}
                   </select>
                 </Field>
-                <Field
-                  label={text(
-                    "طريقة دفع مرجعية اختيارية",
-                    "Optional payment method note",
-                  )}
-                >
+                <Field label={text("طريقة دفع مرجعية اختيارية", "Optional payment method note")}>
                   <input
                     value={paymentMethod}
                     onChange={(event) => setPaymentMethod(event.target.value)}
@@ -406,14 +361,10 @@ function PromotionPage() {
                     className="input"
                   />
                 </Field>
-                <Field
-                  label={text("مرجع دفع اختياري", "Optional payment reference")}
-                >
+                <Field label={text("مرجع دفع اختياري", "Optional payment reference")}>
                   <input
                     value={paymentReference}
-                    onChange={(event) =>
-                      setPaymentReference(event.target.value)
-                    }
+                    onChange={(event) => setPaymentReference(event.target.value)}
                     maxLength={160}
                     className="input"
                   />
@@ -422,15 +373,11 @@ function PromotionPage() {
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp,application/pdf"
-                    onChange={(event) =>
-                      setReceiptFile(event.target.files?.[0] ?? null)
-                    }
+                    onChange={(event) => setReceiptFile(event.target.files?.[0] ?? null)}
                     className="input"
                   />
                   {receiptFile && (
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      {receiptFile.name}
-                    </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{receiptFile.name}</p>
                   )}
                 </Field>
               </div>
@@ -458,9 +405,7 @@ function PromotionPage() {
         )}
 
         <section className="rounded-2xl bg-card p-4 hairline">
-          <h3 className="text-sm font-extrabold">
-            {text("طلباتك", "Your requests")}
-          </h3>
+          <h3 className="text-sm font-extrabold">{text("طلباتك", "Your requests")}</h3>
           {requestsLoading && !hasLoadedRequests ? (
             <p className="mt-2 text-xs text-muted-foreground">
               {text("جارٍ تحميل طلباتك", "Loading your requests")}
@@ -477,10 +422,7 @@ function PromotionPage() {
             <>
               {requestsError ? (
                 <RecoveryNotice
-                  title={text(
-                    "تعذر تحديث طلباتك",
-                    "Could not refresh your requests",
-                  )}
+                  title={text("تعذر تحديث طلباتك", "Could not refresh your requests")}
                   body={requestsError.message}
                   actionLabel={text("إعادة المحاولة", "Try again")}
                   onAction={() => void loadRequests()}
@@ -489,10 +431,7 @@ function PromotionPage() {
               ) : null}
               {requests.length === 0 ? (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {text(
-                    "لا توجد طلبات ترويج بعد.",
-                    "No promotion requests yet.",
-                  )}
+                  {text("لا توجد طلبات ترويج بعد.", "No promotion requests yet.")}
                 </p>
               ) : (
                 <div className="mt-3 grid gap-2">
@@ -501,18 +440,14 @@ function PromotionPage() {
                       key={request.id}
                       className="rounded-xl bg-muted-surface p-3 text-xs hairline"
                     >
-                      <p className="font-bold">
-                        {request.listingTitle ?? request.listingId}
-                      </p>
+                      <p className="font-bold">{request.listingTitle ?? request.listingId}</p>
                       <p className="mt-1 text-muted-foreground">
                         {promotionStatusLabel(request.status, text)} ·{" "}
-                        {promotionTypeLabel(request.promotionType, text)} ·{" "}
-                        {request.requestedDays} {text("يوم", "days")}
+                        {promotionTypeLabel(request.promotionType, text)} · {request.requestedDays}{" "}
+                        {text("يوم", "days")}
                       </p>
                       {request.adminNote && (
-                        <p className="mt-1 text-muted-foreground">
-                          {request.adminNote}
-                        </p>
+                        <p className="mt-1 text-muted-foreground">{request.adminNote}</p>
                       )}
                     </div>
                   ))}
@@ -534,18 +469,10 @@ function PromotionPage() {
   );
 }
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-bold text-muted-foreground">
-        {label}
-      </span>
+      <span className="mb-1 block text-xs font-bold text-muted-foreground">{label}</span>
       {children}
     </label>
   );
@@ -622,13 +549,9 @@ function promotionStatusLabel(
   return text("قيد المراجعة", "Pending review");
 }
 
-function promotionTypeLabel(
-  type: PromotionType,
-  text: (ar: string, en: string) => string,
-) {
+function promotionTypeLabel(type: PromotionType, text: (ar: string, en: string) => string) {
   if (type === "top_category") return text("أعلى القسم", "Top category");
-  if (type === "highlighted")
-    return text("إبراز داخل النتائج", "Highlighted in results");
+  if (type === "highlighted") return text("إبراز داخل النتائج", "Highlighted in results");
   if (type === "urgent") return text("موضع مميز", "Priority placement");
   return text("الصفحة الرئيسية", "Home page");
 }
