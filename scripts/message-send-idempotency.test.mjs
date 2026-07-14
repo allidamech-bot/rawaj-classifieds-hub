@@ -36,6 +36,7 @@ test("the database makes one client message request idempotent", () => {
     migrationSource,
     /grant execute on function public\.rawaj_send_conversation_message_v2\(uuid, uuid, text\) to authenticated/,
   );
+  assert.match(migrationSource, /notify pgrst, 'reload schema'/);
 });
 
 test("the client sends through the idempotent RPC with a legacy compatibility fallback", () => {
