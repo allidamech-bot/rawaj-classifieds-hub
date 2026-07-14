@@ -55,7 +55,10 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
   const profileId = auth.profile?.id ?? null;
   const activeProfileRef = useRef<string | null>(null);
   const refreshInFlightRef = useRef<InFlightUnreadRefresh | null>(null);
-  activeProfileRef.current = auth.status === "signedIn" ? profileId : null;
+
+  useEffect(() => {
+    activeProfileRef.current = auth.status === "signedIn" ? profileId : null;
+  }, [auth.status, profileId]);
 
   const refresh = useCallback(async () => {
     if (auth.status !== "signedIn" || !profileId) {
@@ -67,8 +70,11 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
     const activeRefresh = refreshInFlightRef.current;
     if (activeRefresh?.profileId === profileId) return activeRefresh.promise;
 
-    let request: Promise<void>;
-    request = (async () => {
+    const refreshRecord: InFlightUnreadRefresh = {
+      profileId,
+      promise: Promise.resolve(),
+    };
+    const request = (async () => {
       setLoading(true);
       try {
         const [conversationsResult, notificationsResult] = await Promise.all([
@@ -95,10 +101,11 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
         if (activeProfileRef.current === profileId) setLoading(false);
       }
     })().finally(() => {
-      if (refreshInFlightRef.current?.promise === request) refreshInFlightRef.current = null;
+      if (refreshInFlightRef.current === refreshRecord) refreshInFlightRef.current = null;
     });
 
-    refreshInFlightRef.current = { profileId, promise: request };
+    refreshRecord.promise = request;
+    refreshInFlightRef.current = refreshRecord;
     return request;
   }, [auth.status, profileId]);
 
