@@ -44,9 +44,7 @@ export function SimilarListingsRail({
     if (requestId !== recentRequestIdRef.current) return;
 
     if (result.ok) {
-      setRecentItems(
-        result.data.filter((item) => item.listingId !== currentListingId).slice(0, 6),
-      );
+      setRecentItems(result.data.filter((item) => item.listingId !== currentListingId).slice(0, 6));
     } else {
       setRecentError(result.error.message);
     }

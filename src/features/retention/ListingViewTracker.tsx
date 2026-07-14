@@ -1,8 +1,5 @@
 import { useEffect, useRef } from "react";
-import {
-  recordRecentListingView,
-  syncAnonymousRecentListingViews,
-} from "@/lib/classifieds-api";
+import { recordRecentListingView, syncAnonymousRecentListingViews } from "@/lib/classifieds-api";
 import { useAuth } from "@/lib/use-auth";
 
 interface ListingViewTrackerProps {
