@@ -120,6 +120,9 @@ jobs:
       - name: Public data security contract
         run: npm run test:public-data-security
 
+      - name: Performance and observability release contract
+        run: npm run test:phases-54-56
+
       - name: Admin security regression contract
         run: node scripts/admin-security-regression.mjs
 
@@ -221,3 +224,6 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+      - name: Performance budget
+        run: npm run performance:budget
