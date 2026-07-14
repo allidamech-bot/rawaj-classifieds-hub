@@ -7,6 +7,7 @@ import { fetchListingImages, mapImage } from "@/lib/api/listings";
 import {
   cleanupPendingListingImageUploads,
   clearPendingListingImageUpload,
+  releasePendingListingImageUpload,
   rememberPendingListingImageUpload,
 } from "@/lib/api/listing-image-upload-journal";
 import { getClient, mapError, mapStorageError } from "@/lib/api/shared";
@@ -116,6 +117,7 @@ export async function uploadListingImage({
       }),
     );
   } catch (error: unknown) {
+    releasePendingListingImageUpload(storagePath);
     return {
       ok: false,
       error: mapStorageError({
@@ -125,6 +127,7 @@ export async function uploadListingImage({
   }
 
   if (uploadResult.error) {
+    releasePendingListingImageUpload(storagePath);
     return { ok: false, error: mapStorageError(uploadResult.error) };
   }
 
@@ -143,7 +146,8 @@ export async function uploadListingImage({
     const removeResult = await clientResult.data.storage
       .from(listingImagesBucket)
       .remove([storagePath]);
-    if (!removeResult.error) clearPendingListingImageUpload(storagePath);
+    if (removeResult.error) releasePendingListingImageUpload(storagePath);
+    else clearPendingListingImageUpload(storagePath);
     return { ok: false, error: mapError(error) };
   }
 
