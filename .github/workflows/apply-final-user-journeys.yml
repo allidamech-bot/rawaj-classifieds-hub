@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: final-user-journeys-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -24,6 +28,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Apply and validate final user journey batch
+        id: apply
         shell: bash
         run: |
           set +e
@@ -49,22 +54,31 @@ jobs:
               scripts/final-user-journeys.test.mjs
             npm run test:final-user-journeys
             npm run typecheck -- --pretty false
-          } > /tmp/final-user-journeys.log 2>&1
+          } > final-user-journeys.log 2>&1
           status=$?
           set -e
-          if [ "$status" -ne 0 ]; then
-            cp /tmp/final-user-journeys.log .github/final-user-journeys-error.txt
-            git config user.name github-actions[bot]
-            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-            git add .github/final-user-journeys-error.txt
-            git commit -m 'Record final user journey patch failure'
-            git push origin HEAD:feature/close-final-user-journey-gaps
-            cat /tmp/final-user-journeys.log
-            exit "$status"
-          fi
-          rm -f .github/final-user-journeys-error.txt
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Upload failure diagnostics
+        if: steps.apply.outputs.status != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-user-journeys-failure
+          path: final-user-journeys.log
+          if-no-files-found: error
+          retention-days: 1
+      - name: Fail invalid batch
+        if: steps.apply.outputs.status != '0'
+        run: |
+          cat final-user-journeys.log
+          exit 1
+      - name: Commit focused result and remove temporary files
+        if: steps.apply.outputs.status == '0'
+        shell: bash
+        run: |
           rm .github/final-user-journeys-patch.py
           rm .github/workflows/apply-final-user-journeys.yml
+          rm -f .github/final-user-journeys-error.txt final-user-journeys.log
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add \
