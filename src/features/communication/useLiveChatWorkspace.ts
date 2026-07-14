@@ -58,8 +58,7 @@ export function useLiveChatWorkspace({
     const activeRefresh = inFlightRefreshRef.current;
     if (activeRefresh?.scopeKey === scopeKey) return activeRefresh.promise;
 
-    let request: Promise<void>;
-    request = (async () => {
+    const request = (async () => {
       const [conversationsResult, messagesResult] = await Promise.all([
         fetchMyConversations(profileId),
         conversationId
