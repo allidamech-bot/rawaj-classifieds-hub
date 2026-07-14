@@ -28,12 +28,11 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re, base64, gzip
-          workflow = Path('.github/workflows/patch-admin-extended-recovery.yml').read_text()
-          match = re.search(r"echo '([^']+)' \| base64", workflow)
-          if not match:
-              raise SystemExit('embedded patch not found')
-          Path('/tmp/recover_admin_extended.py').write_bytes(gzip.decompress(base64.b64decode(match.group(1))))
+          import base64, gzip
+          payload = Path('.github/admin-extended-patch.b64').read_text().strip()
+          Path('/tmp/recover_admin_extended.py').write_bytes(
+              gzip.decompress(base64.b64decode(payload))
+          )
           PY
           set +e
           python /tmp/recover_admin_extended.py > /tmp/admin-patch-output.txt 2>&1
@@ -72,6 +71,7 @@ jobs:
         shell: bash
         run: |
           rm -f .github/admin-extended-recovery-error.txt
+          rm .github/admin-extended-patch.b64
           rm .github/workflows/patch-admin-extended-recovery.yml
           rm .github/workflows/run-admin-extended-recovery-pr.yml
           rm .github/admin-extended-recovery.trigger
