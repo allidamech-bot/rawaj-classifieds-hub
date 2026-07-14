@@ -4,7 +4,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { createClient } from "@supabase/supabase-js";
-import { buildOwnerUpdateRpcArgs } from "../src/lib/api/listing-write-contract.ts";
+import {
+  buildOwnerUpdateRpcArgs,
+  buildOwnerUpdateRpcArgsV3,
+} from "../src/lib/api/listing-write-contract.ts";
 
 const root = process.cwd();
 const read = (path) => readFileSync(join(root, path), "utf8");
@@ -42,6 +45,9 @@ const migration39 = read(
 );
 const ownerUpdateRuntimeMigration = read(
   "supabase/migrations/202607090002_owner_update_rpc_runtime_v2.sql",
+);
+const staleOwnerUpdateMigration = read(
+  "supabase/migrations/202607140001_owner_listing_stale_write_protection.sql",
 );
 
 requireText(locationWrite, '.from("governorates")', "canonical governorate mapping");
@@ -92,13 +98,23 @@ requireText(addListing, "updateOwnerListing(", "autosave and submit preparation 
 requireText(editListing, "updateOwnerListing(", "manual edit canonical update");
 requireText(
   listingWriteRpc,
-  'rpc("rawaj_owner_update_listing_v2", rpcArgs)',
-  "versioned canonical owner-update RPC",
+  'rpc("rawaj_owner_update_listing_v3"',
+  "stale-safe canonical owner-update RPC",
+);
+requireText(
+  listingWriteRpc,
+  '"rawaj_owner_update_listing_v2"',
+  "temporary owner-update compatibility fallback",
+);
+requireText(
+  listingWriteRpc,
+  "buildOwnerUpdateRpcArgsV3(",
+  "stale-safe owner-update argument invariant",
 );
 requireText(
   listingWriteRpc,
   "buildOwnerUpdateRpcArgs(cleanListingId, patch)",
-  "owner-update argument invariant",
+  "compatibility owner-update argument invariant",
 );
 forbidText(
   listingWriteRpc,
@@ -180,6 +196,27 @@ requireText(
   "versioned owner-update authenticated grant",
 );
 requireText(
+  staleOwnerUpdateMigration,
+  "rawaj_owner_update_listing_v3",
+  "stale-safe owner-update database route",
+);
+requireText(
+  staleOwnerUpdateMigration,
+  "p_expected_updated_at timestamptz",
+  "stale-safe expected version argument",
+);
+requireText(staleOwnerUpdateMigration, "for update;", "stale-safe row lock");
+requireText(
+  staleOwnerUpdateMigration,
+  "v_current_updated_at is distinct from p_expected_updated_at",
+  "stale-safe version comparison",
+);
+requireText(
+  staleOwnerUpdateMigration,
+  "raise exception 'stale_owner_update'",
+  "stale-safe conflict signal",
+);
+requireText(
   listingWriteRpc,
   'status === "pending_review"',
   "submit success requires pending-review status",
@@ -195,6 +232,21 @@ if (
   failures.push("empty owner-update patch is not normalized to explicit {}");
 }
 
+const staleSafeArgs = buildOwnerUpdateRpcArgsV3(
+  " listing-id ",
+  undefined,
+  " 2026-07-14T00:00:00.000Z ",
+);
+if (
+  !isDeepStrictEqual(staleSafeArgs, {
+    p_listing_id: "listing-id",
+    p_patch: {},
+    p_expected_updated_at: "2026-07-14T00:00:00.000Z",
+  })
+) {
+  failures.push("stale-safe owner-update arguments are not normalized");
+}
+
 let serializedRpcBody = null;
 const serializationClient = createClient("https://example.supabase.co", "test-anon-key", {
   global: {
@@ -208,8 +260,8 @@ const serializationClient = createClient("https://example.supabase.co", "test-an
   },
 });
 await serializationClient.rpc(
-  "rawaj_owner_update_listing_v2",
-  buildOwnerUpdateRpcArgs("listing-id", undefined),
+  "rawaj_owner_update_listing_v3",
+  buildOwnerUpdateRpcArgsV3("listing-id", undefined, "2026-07-14T00:00:00.000Z"),
 );
 
 const parsedRpcBody = serializedRpcBody ? JSON.parse(serializedRpcBody) : null;
@@ -217,6 +269,7 @@ if (
   !isDeepStrictEqual(parsedRpcBody, {
     p_listing_id: "listing-id",
     p_patch: {},
+    p_expected_updated_at: "2026-07-14T00:00:00.000Z",
   })
 ) {
   failures.push(`Supabase serialized unexpected owner-update body: ${serializedRpcBody}`);

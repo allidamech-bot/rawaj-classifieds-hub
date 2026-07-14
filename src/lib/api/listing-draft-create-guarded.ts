@@ -1,4 +1,5 @@
 import { createOwnerDraftListing as createOwnerDraftListingBase } from "@/lib/api/listings";
+import { rememberOwnerListingVersion } from "@/lib/api/listing-owner-version";
 import type {
   ClassifiedListing,
   ClassifiedsResult,
@@ -40,6 +41,7 @@ export function createOwnerDraftListing(
         return result;
       }
 
+      rememberOwnerListingVersion(userId, result.data);
       record.expiresAt = Date.now() + SUCCESS_REUSE_WINDOW_MS;
       return result;
     })

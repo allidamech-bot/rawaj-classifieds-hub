@@ -5,7 +5,10 @@ import type {
 } from "@/lib/classifieds-types";
 import { fetchOwnerListingDetail, mapListing } from "@/lib/api/listings";
 import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
-import { buildOwnerUpdateRpcArgs } from "@/lib/api/listing-write-contract";
+import {
+  buildOwnerUpdateRpcArgs,
+  buildOwnerUpdateRpcArgsV3,
+} from "@/lib/api/listing-write-contract";
 import { getClient, mapError, rowString } from "@/lib/api/shared";
 
 const ownerUpdateRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();
@@ -15,13 +18,22 @@ export function updateOwnerListing(
   userId: string | null,
   listingId: string,
   payload: UpdateListingPayload,
+  expectedUpdatedAt: string,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
   const cleanListingId = listingId.trim();
-  const requestKey = `${userId ?? "anonymous"}:${cleanListingId}:${stablePayloadKey(payload)}`;
+  const cleanExpectedUpdatedAt = expectedUpdatedAt.trim();
+  const requestKey = `${userId ?? "anonymous"}:${cleanListingId}:${cleanExpectedUpdatedAt}:${stablePayloadKey(
+    payload,
+  )}`;
   const pending = ownerUpdateRequests.get(requestKey);
   if (pending) return pending;
 
-  const request = runOwnerListingUpdate(userId, cleanListingId, payload).finally(() => {
+  const request = runOwnerListingUpdate(
+    userId,
+    cleanListingId,
+    payload,
+    cleanExpectedUpdatedAt,
+  ).finally(() => {
     ownerUpdateRequests.delete(requestKey);
   });
   ownerUpdateRequests.set(requestKey, request);
@@ -32,6 +44,7 @@ async function runOwnerListingUpdate(
   userId: string | null,
   cleanListingId: string,
   payload: UpdateListingPayload,
+  expectedUpdatedAt: string,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
   if (!userId) {
     return {
@@ -51,6 +64,10 @@ async function runOwnerListingUpdate(
         message: "تعذر تحديد الإعلان المطلوب.",
       },
     };
+  }
+
+  if (!expectedUpdatedAt) {
+    return staleOwnerUpdateResult();
   }
 
   const clientResult = getClient();
@@ -81,10 +98,14 @@ async function runOwnerListingUpdate(
 
   const patch: Record<string, unknown> = {};
   if (payload.categoryId) patch.category_id = payload.categoryId;
-  if (payload.subcategoryId !== undefined) patch.subcategory_id = payload.subcategoryId;
+  if (payload.subcategoryId !== undefined) {
+    patch.subcategory_id = payload.subcategoryId;
+  }
   if (payload.governorateId) patch.governorate_id = payload.governorateId;
   if (payload.title?.trim()) patch.title = payload.title.trim();
-  if (payload.description !== undefined) patch.description = payload.description?.trim() ?? null;
+  if (payload.description !== undefined) {
+    patch.description = payload.description?.trim() ?? null;
+  }
   if (payload.price !== undefined) patch.price = payload.price;
   if (payload.priceType) patch.price_type = payload.priceType;
   if (payload.condition) patch.listing_condition = payload.condition;
@@ -104,14 +125,27 @@ async function runOwnerListingUpdate(
     }
   }
 
-  if (payload.contactName !== undefined) patch.contact_name = payload.contactName;
+  if (payload.contactName !== undefined) {
+    patch.contact_name = payload.contactName;
+  }
   if (payload.contactOptions) patch.contact_options = payload.contactOptions;
   if (payload.details !== undefined) patch.details = payload.details;
 
-  const rpcArgs = buildOwnerUpdateRpcArgs(cleanListingId, patch);
-  const { data, error } = await clientResult.data.rpc("rawaj_owner_update_listing_v2", rpcArgs);
+  const rpcArgsV3 = buildOwnerUpdateRpcArgsV3(cleanListingId, patch, expectedUpdatedAt);
+  let response = await clientResult.data.rpc("rawaj_owner_update_listing_v3", rpcArgsV3);
 
-  if (error) return { ok: false, error: mapError(error, "owner_listing_update") };
+  if (response.error && isMissingOwnerUpdateV3(response.error)) {
+    response = await clientResult.data.rpc(
+      "rawaj_owner_update_listing_v2",
+      buildOwnerUpdateRpcArgs(cleanListingId, patch),
+    );
+  }
+
+  const { data, error } = response;
+  if (error) {
+    if (isStaleOwnerUpdateError(error)) return staleOwnerUpdateResult();
+    return { ok: false, error: mapError(error, "owner_listing_update") };
+  }
 
   const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);
   if (refreshed.ok) return refreshed;
@@ -178,7 +212,9 @@ async function runOwnerListingSubmit(
     p_listing_id: cleanListingId,
   });
 
-  if (error) return { ok: false, error: mapError(error, "owner_listing_submit") };
+  if (error) {
+    return { ok: false, error: mapError(error, "owner_listing_submit") };
+  }
 
   const refreshed = await fetchOwnerListingDetail(userId, cleanListingId);
   if (refreshed.ok) {
@@ -199,6 +235,37 @@ async function runOwnerListingSubmit(
       code: "unknown",
       message: "تم إرسال الطلب دون نتيجة إعلان قابلة للتحقق.",
       operation: "owner_listing_submit",
+    },
+  };
+}
+
+function isMissingOwnerUpdateV3(error: {
+  code?: string;
+  message?: string;
+  details?: string;
+}): boolean {
+  const message = error.message ?? "";
+  const details = error.details ?? "";
+  return (
+    error.code === "PGRST202" ||
+    error.code === "42883" ||
+    message.includes("rawaj_owner_update_listing_v3") ||
+    details.includes("rawaj_owner_update_listing_v3")
+  );
+}
+
+function isStaleOwnerUpdateError(error: { message?: string; details?: string }): boolean {
+  return `${error.message ?? ""} ${error.details ?? ""}`.includes("stale_owner_update");
+}
+
+function staleOwnerUpdateResult(): ClassifiedsResult<never> {
+  return {
+    ok: false,
+    error: {
+      code: "status_mismatch",
+      message:
+        "تم تعديل الإعلان من مكان آخر بعد فتح هذه الصفحة. أعد تحميل أحدث نسخة قبل حفظ تعديلاتك.",
+      operation: "owner_listing_update",
     },
   };
 }

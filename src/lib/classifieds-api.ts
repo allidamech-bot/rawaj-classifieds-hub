@@ -2,8 +2,12 @@ export * from "@/lib/api/shared";
 export * from "@/lib/api/references";
 export * from "@/lib/api/locations";
 export * from "@/lib/api/listings";
+export { fetchOwnerListingDetail } from "@/lib/api/listing-owner-read-guarded";
 export { createOwnerDraftListing } from "@/lib/api/listing-draft-create-guarded";
-export { submitOwnerListingForReview, updateOwnerListing } from "@/lib/api/listing-write-rpc";
+export {
+  submitOwnerListingForReview,
+  updateOwnerListing,
+} from "@/lib/api/listing-owner-write-guarded";
 export * from "@/lib/api/listing-taxonomy";
 export * from "@/lib/api/listing-lifecycle";
 export * from "@/lib/api/listing-image-order";
