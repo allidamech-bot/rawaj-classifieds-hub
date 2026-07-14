@@ -12,3 +12,11 @@ test("verified price drops are loaded before offers render", () => {
   assert.doesNotMatch(offers, /useState<ListingPriceDropOffer/);
   assert.doesNotMatch(offers, /جاري تحميل التخفيضات الحقيقية/);
 });
+
+test("offers load errors retry the route loader in place", () => {
+  assert.match(offers, /useRouter\(\)/);
+  assert.match(offers, /actionLabel=\{text\("إعادة المحاولة", "Try again"\)\}/);
+  assert.match(offers, /onAction=\{\(\) => void router\.invalidate\(\)\}/);
+  assert.match(offers, /onClick=\{onAction\}/);
+  assert.doesNotMatch(offers, /window\.location\.reload\(\)/);
+});

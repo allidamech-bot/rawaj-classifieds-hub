@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ArrowUpLeft, BadgePercent, Clock3, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { ListingCardImage } from "@/features/listings/cards/ListingCardImage";
@@ -23,6 +23,7 @@ export const Route = createFileRoute("/offers")({
 });
 
 function OffersPage() {
+  const router = useRouter();
   const { text } = useUiPreferences();
   const { offers, error } = Route.useLoaderData();
 
@@ -106,6 +107,8 @@ function OffersPage() {
               <OffersState
                 title={text("تعذر تحميل العروض", "Could not load offers")}
                 body={error.message}
+                actionLabel={text("إعادة المحاولة", "Try again")}
+                onAction={() => void router.invalidate()}
               />
             ) : offers.length === 0 ? (
               <OffersState
@@ -196,7 +199,17 @@ function PriceDropOfferCard({ offer }: { offer: ListingPriceDropOffer }) {
   );
 }
 
-function OffersState({ title, body }: { title: string; body?: string }) {
+function OffersState({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <section className="rawaj-offers-empty mt-5 overflow-hidden rounded-[1.5rem] p-6 text-center sm:p-8">
       <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand-orange text-white">
@@ -205,6 +218,15 @@ function OffersState({ title, body }: { title: string; body?: string }) {
       <h3 className="mt-3 text-sm font-extrabold text-primary">{title}</h3>
       {body ? (
         <p className="mx-auto mt-1 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p>
+      ) : null}
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+        >
+          {actionLabel}
+        </button>
       ) : null}
     </section>
   );
