@@ -1,0 +1,52 @@
+name: Fix live chat package lock alignment
+
+on:
+  push:
+    branches:
+      - feature/live-chat-workspace
+    paths:
+      - .github/workflows/fix-live-chat-package.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/live-chat-workspace
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Restore package lock alignment and format changed files
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          package_path = Path("package.json")
+          package_source = package_path.read_text(encoding="utf-8")
+          old = '"eslint-plugin-react-hooks": "^7.0.1"'
+          new = '"eslint-plugin-react-hooks": "^5.2.0"'
+          if old not in package_source:
+              raise SystemExit("Unexpected eslint-plugin-react-hooks version")
+          package_path.write_text(package_source.replace(old, new, 1), encoding="utf-8")
+          PY
+
+          npm ci
+          npx prettier --write \
+            package.json \
+            scripts/chat-workspace-live.test.mjs \
+            src/features/communication/useLiveChatWorkspace.ts \
+            src/routes/chats.tsx
+
+          rm .github/workflows/fix-live-chat-package.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json scripts/chat-workspace-live.test.mjs src/features/communication/useLiveChatWorkspace.ts src/routes/chats.tsx .github/workflows/fix-live-chat-package.yml
+          git commit -m "Align live chat package and formatting"
+          git push origin HEAD:feature/live-chat-workspace
