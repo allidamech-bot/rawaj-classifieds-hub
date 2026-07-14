@@ -5,7 +5,7 @@ import test from "node:test";
 const migrationPath = "supabase/migrations/202607150001_retention_discovery_v1.sql";
 const apiPath = "src/lib/api/retention-discovery.ts";
 const followButtonPath = "src/features/retention/SellerFollowButton.tsx";
-const mediaPath = "src/features/listing-detail/ListingMediaExperience.tsx";
+const viewTrackerPath = "src/features/retention/ListingViewTracker.tsx";
 const sellerCardPath = "src/features/listing-detail/ListingSellerProfileCard.tsx";
 const storefrontPath = "src/features/storefront/StorefrontIdentityHero.tsx";
 const discoveryRailPath = "src/features/listing-detail/SimilarListingsRail.tsx";
@@ -50,9 +50,9 @@ test("seller follow edges stay private while counts remain public", async () => 
 });
 
 test("recent views work for guests and synchronize after sign in", async () => {
-  const [api, media, rail] = await Promise.all([
+  const [api, tracker, rail] = await Promise.all([
     read(apiPath),
-    read(mediaPath),
+    read(viewTrackerPath),
     read(discoveryRailPath),
   ]);
 
@@ -62,8 +62,10 @@ test("recent views work for guests and synchronize after sign in", async () => {
   assert.match(api, /rawaj_record_recent_listing_view_v1/);
   assert.match(api, /fetchRecentListingViews/);
   assert.match(api, /clearRecentListingViews/);
-  assert.match(media, /syncAnonymousRecentListingViews\(userId\)/);
-  assert.match(media, /recordRecentListingView\(userId, listingId\)/);
+  assert.match(tracker, /syncAnonymousRecentListingViews\(userId\)/);
+  assert.match(tracker, /recordRecentListingView\(userId, cleanListingId\)/);
+  assert.match(tracker, /return null/);
+  assert.match(rail, /<ListingViewTracker listingId=\{currentListingId\}/);
   assert.match(rail, /شوهد مؤخرًا/);
   assert.match(rail, /مسح السجل/);
 });
