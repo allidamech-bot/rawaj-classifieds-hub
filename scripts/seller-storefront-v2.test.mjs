@@ -112,7 +112,7 @@ test("transient seller profile failures reach the retryable route error boundary
   assert.match(publicRoute, /إعادة المحاولة/);
 });
 
-test("owner store shares the identity system and preserves lifecycle operations", () => {
+test("owner store shares identity and preserves lifecycle operations", () => {
   assert.match(ownerRoute, /rawaj-storefront-v2--owner/);
   assert.match(ownerRoute, /<StorefrontIdentityHero/);
   assert.match(ownerRoute, /rawaj-storefront-owner-tabs/);
@@ -124,6 +124,33 @@ test("owner store shares the identity system and preserves lifecycle operations"
   assert.match(ownerRoute, /setOwnerListingExpiry/);
   assert.match(ownerRoute, /setOwnerListingReserved/);
   assert.match(ownerRoute, /deleteOwnerListing/);
+});
+
+test("owner listings and public store metadata recover independently", () => {
+  assert.match(ownerRoute, /const \[listingsHasLoaded, setListingsHasLoaded\]/);
+  assert.match(ownerRoute, /const \[sellerHasLoaded, setSellerHasLoaded\]/);
+  assert.match(ownerRoute, /const \[listingsError, setListingsError\]/);
+  assert.match(ownerRoute, /const \[sellerError, setSellerError\]/);
+  assert.match(ownerRoute, /const loadListings = useCallback/);
+  assert.match(ownerRoute, /const loadSellerProfile = useCallback/);
+  assert.match(ownerRoute, /listingsError && !listingsHasLoaded/);
+  assert.match(ownerRoute, /sellerError && !sellerHasLoaded/);
+  assert.match(ownerRoute, /onAction=\{\(\) => void loadListings\(\)\}/);
+  assert.match(ownerRoute, /onAction=\{\(\) => void loadSellerProfile\(\)\}/);
+  assert.match(ownerRoute, /setListingsHasLoaded\(true\)/);
+  assert.match(ownerRoute, /setSellerHasLoaded\(true\)/);
+});
+
+test("owner store requests reject stale account and route responses", () => {
+  assert.match(ownerRoute, /const listingsRequestIdRef = useRef\(0\)/);
+  assert.match(ownerRoute, /const sellerRequestIdRef = useRef\(0\)/);
+  assert.match(ownerRoute, /requestId !== listingsRequestIdRef\.current/);
+  assert.match(ownerRoute, /requestId !== sellerRequestIdRef\.current/);
+  assert.match(ownerRoute, /currentProfileId !== auth\.profile\?\.id/);
+  assert.match(
+    ownerRoute,
+    /return \(\) => \{[\s\S]*listingsRequestIdRef\.current \+= 1;[\s\S]*sellerRequestIdRef\.current \+= 1;/,
+  );
 });
 
 test("storefront CSS is mobile-first, responsive, RTL-neutral and reduced-motion safe", () => {
