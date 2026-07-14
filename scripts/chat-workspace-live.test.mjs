@@ -50,7 +50,10 @@ test("live chat deduplicates reads and ignores stale account or conversation res
 
 test("the chat route activates live sync only while the conversation panel is visible", () => {
   assert.match(routeSource, /useLiveChatWorkspace/);
-  assert.match(routeSource, /isConversationPanelVisible = isDesktop \|\| viewingConversationOnMobile/);
+  assert.match(
+    routeSource,
+    /isConversationPanelVisible = isDesktop \|\| viewingConversationOnMobile/,
+  );
   assert.match(routeSource, /selectedConversationId: liveConversationId/);
   assert.match(routeSource, /setConversations/);
   assert.match(routeSource, /setMessages/);
