@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { ExistingConversationBanner } from "@/features/listing-detail/ExistingConversationBanner";
 import { ViewedBeforeBanner } from "@/features/listing-detail/ViewedBeforeBanner";
 import { DraftRecoveryBanner } from "@/features/listing-studio/DraftRecoveryBanner";
+import { SavedSearchAlertBackgroundScanner } from "@/features/saved-searches/SavedSearchAlertBackgroundScanner";
 import { AuthProvider } from "@/lib/auth";
 import { rawajBuildInfo } from "@/lib/build-info";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
@@ -242,6 +243,7 @@ function RootComponent() {
       <UiPreferencesProvider>
         <AuthProvider>
           <UnreadActivityProvider>
+            <SavedSearchAlertBackgroundScanner />
             <HtmlAttributes />
             <AppShell
               pathname={pathname}
