@@ -12,34 +12,19 @@ const [
   packageSource,
 ] = await Promise.all([
   readFile(new URL("../src/lib/api/messaging.ts", import.meta.url), "utf8"),
-  readFile(
-    new URL("../src/lib/api/messaging-guarded.ts", import.meta.url),
-    "utf8",
-  ),
-  readFile(
-    new URL("../src/lib/api/message-send-request.ts", import.meta.url),
-    "utf8",
-  ),
+  readFile(new URL("../src/lib/api/messaging-guarded.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/message-send-request.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
   readFile(
-    new URL(
-      "../supabase/migrations/202607140003_idempotent_message_send.sql",
-      import.meta.url,
-    ),
+    new URL("../supabase/migrations/202607140003_idempotent_message_send.sql", import.meta.url),
     "utf8",
   ),
-  readFile(
-    new URL("../docs/production-schema/migration-ledger.json", import.meta.url),
-    "utf8",
-  ),
+  readFile(new URL("../docs/production-schema/migration-ledger.json", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
 
 test("the database makes one client message request idempotent", () => {
-  assert.match(
-    migrationSource,
-    /add column if not exists client_request_id uuid/,
-  );
+  assert.match(migrationSource, /add column if not exists client_request_id uuid/);
   assert.match(
     migrationSource,
     /on public\.conversation_messages \(sender_user_id, client_request_id\)/,
@@ -60,10 +45,7 @@ test("the client sends through the idempotent RPC with a legacy compatibility fa
   assert.match(messagingSource, /p_client_request_id: clientRequestId/);
   assert.match(messagingSource, /isMissingMessageSendV2/);
   assert.match(messagingSource, /performLegacyConversationMessageSend/);
-  assert.match(
-    messagingSource,
-    /JSON\.stringify\(\[userId, cleanRequestId\]\)/,
-  );
+  assert.match(messagingSource, /JSON\.stringify\(\[userId, cleanRequestId\]\)/);
 });
 
 test("a failed or ambiguous browser attempt reuses its request UUID after reload", () => {
@@ -71,18 +53,12 @@ test("a failed or ambiguous browser attempt reuses its request UUID after reload
   assert.match(requestSource, /window\.sessionStorage/);
   assert.match(requestSource, /existing && existing\.body === cleanBody/);
   assert.match(requestSource, /return existing\.requestId/);
-  assert.match(
-    requestSource,
-    /MESSAGE_SEND_MAX_AGE_MS = 24 \* 60 \* 60 \* 1000/,
-  );
+  assert.match(requestSource, /MESSAGE_SEND_MAX_AGE_MS = 24 \* 60 \* 60 \* 1000/);
   assert.match(requestSource, /completeMessageSendRequest/);
 });
 
 test("successful sends clear retry state before route scope can become stale", () => {
-  assert.match(
-    messagingGuardedSource,
-    /sendConversationMessage as baseSendConversationMessage/,
-  );
+  assert.match(messagingGuardedSource, /sendConversationMessage as baseSendConversationMessage/);
   assert.match(
     messagingGuardedSource,
     /const result = await baseSendConversationMessage\(\.\.\.args\)/,
@@ -96,26 +72,13 @@ test("successful sends clear retry state before route scope can become stale", (
 
 test("the chat route reuses one attempt and deduplicates rendered rows", () => {
   assert.match(routeSource, /readOrCreateMessageSendRequestId/);
-  assert.match(
-    routeSource,
-    /sendConversationMessage\([\s\S]*cleanBody,[\s\S]*requestId/,
-  );
-  assert.match(
-    routeSource,
-    /current\.some\(\(message\) => message\.id === result\.data\.id\)/,
-  );
+  assert.match(routeSource, /sendConversationMessage\([\s\S]*cleanBody,[\s\S]*requestId/);
+  assert.match(routeSource, /current\.some\(\(message\) => message\.id === result\.data\.id\)/);
 });
 
 test("the migration and contract are permanently registered", () => {
   const ledger = JSON.parse(ledgerSource);
-  assert.ok(
-    ledger.classifications.canonical.includes(
-      "202607140003_idempotent_message_send.sql",
-    ),
-  );
+  assert.ok(ledger.classifications.canonical.includes("202607140003_idempotent_message_send.sql"));
   const packageJson = JSON.parse(packageSource);
-  assert.match(
-    packageJson.scripts["test:chat-workspace"],
-    /message-send-idempotency\.test\.mjs/,
-  );
+  assert.match(packageJson.scripts["test:chat-workspace"], /message-send-idempotency\.test\.mjs/);
 });

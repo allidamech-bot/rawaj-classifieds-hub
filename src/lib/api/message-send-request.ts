@@ -1,7 +1,6 @@
 const MESSAGE_SEND_STORAGE_PREFIX = "rawaj:message-send-request:v1";
 const MESSAGE_SEND_MAX_AGE_MS = 24 * 60 * 60 * 1000;
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 interface MessageSendAttempt {
   requestId: string;
@@ -20,9 +19,7 @@ export function readOrCreateMessageSendRequestId(
   const cleanConversationId = conversationId.trim();
   const cleanBody = body.trim();
   if (!cleanUserId || !cleanConversationId || !cleanBody) {
-    throw new Error(
-      "Message send requests require a user, conversation, and body.",
-    );
+    throw new Error("Message send requests require a user, conversation, and body.");
   }
 
   const key = attemptKey(cleanUserId, cleanConversationId);
@@ -68,9 +65,7 @@ function readAttempt(key: string): MessageSendAttempt | null {
   const storage = readStorage();
   if (!storage) return null;
   try {
-    const parsed: unknown = JSON.parse(
-      storage.getItem(storageKey(key)) ?? "null",
-    );
+    const parsed: unknown = JSON.parse(storage.getItem(storageKey(key)) ?? "null");
     if (!isMessageSendAttempt(parsed) || !isFreshAttempt(parsed)) {
       storage.removeItem(storageKey(key));
       return null;
@@ -130,18 +125,12 @@ function isMessageSendAttempt(value: unknown): value is MessageSendAttempt {
 }
 
 function createUuid(): string {
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
-  ) {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
   }
 
   const bytes = new Uint8Array(16);
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.getRandomValues === "function"
-  ) {
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
     crypto.getRandomValues(bytes);
   } else {
     for (let index = 0; index < bytes.length; index += 1) {
