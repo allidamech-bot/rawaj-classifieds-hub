@@ -28,6 +28,14 @@ export default defineConfig({
       name: "desktop-chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      name: "desktop-firefox",
+      use: { ...devices["Desktop Firefox"], browserName: "firefox" },
+    },
+    {
+      name: "mobile-webkit",
+      use: { ...devices["iPhone 13"], browserName: "webkit" },
+    },
   ],
   webServer: usesExternalServer
     ? undefined
