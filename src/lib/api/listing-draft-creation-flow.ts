@@ -1,5 +1,8 @@
 const FLOW_STORAGE_PREFIX = "rawaj:listing-draft-creation-flow:v1";
+const FLOW_QUERY_PARAM = "draftFlow";
 const FLOW_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 interface OwnerDraftCreationFlow {
   requestId: string;
@@ -13,16 +16,17 @@ export function readOrCreateOwnerDraftCreationRequestId(userId: string): string 
   const cleanUserId = userId.trim();
   if (!cleanUserId) throw new Error("Draft creation requires an authenticated user id.");
 
-  const existing = readOwnerDraftCreationFlow(cleanUserId);
+  const requestId = readFlowRequestIdFromUrl() ?? createAndAttachFlowRequestId();
+  const existing = readOwnerDraftCreationFlow(cleanUserId, requestId);
   if (existing) return existing.requestId;
 
   const flow: OwnerDraftCreationFlow = {
-    requestId: createUuid(),
+    requestId,
     listingId: null,
     createdAt: Date.now(),
   };
   writeOwnerDraftCreationFlow(cleanUserId, flow);
-  return flow.requestId;
+  return requestId;
 }
 
 export function rememberOwnerDraftCreationListing(
@@ -33,45 +37,53 @@ export function rememberOwnerDraftCreationListing(
   const cleanUserId = userId.trim();
   const cleanRequestId = requestId.trim();
   const cleanListingId = listingId.trim();
-  if (!cleanUserId || !cleanRequestId || !cleanListingId) return;
+  if (!cleanUserId || !UUID_PATTERN.test(cleanRequestId) || !cleanListingId) return;
 
-  const current = readOwnerDraftCreationFlow(cleanUserId);
-  if (!current || current.requestId !== cleanRequestId) return;
+  const current = readOwnerDraftCreationFlow(cleanUserId, cleanRequestId);
+  if (!current) return;
   writeOwnerDraftCreationFlow(cleanUserId, { ...current, listingId: cleanListingId });
 }
 
 export function completeOwnerDraftCreationFlow(userId: string | null, listingId: string): void {
   const cleanUserId = userId?.trim() ?? "";
   const cleanListingId = listingId.trim();
-  if (!cleanUserId || !cleanListingId) return;
+  const requestId = readFlowRequestIdFromUrl();
+  if (!cleanUserId || !cleanListingId || !requestId) return;
 
-  const current = readOwnerDraftCreationFlow(cleanUserId);
+  const current = readOwnerDraftCreationFlow(cleanUserId, requestId);
   if (!current || current.listingId !== cleanListingId) return;
 
-  memoryFlows.delete(cleanUserId);
+  memoryFlows.delete(flowMemoryKey(cleanUserId, requestId));
   const storage = readFlowStorage();
-  if (!storage) return;
-  try {
-    storage.removeItem(flowStorageKey(cleanUserId));
-  } catch {
-    // A completed server-side draft remains valid even if browser storage is unavailable.
+  if (storage) {
+    try {
+      storage.removeItem(flowStorageKey(cleanUserId, requestId));
+    } catch {
+      // A completed server-side draft remains valid even if browser storage is unavailable.
+    }
   }
+  removeFlowRequestIdFromUrl(requestId);
 }
 
-function readOwnerDraftCreationFlow(userId: string): OwnerDraftCreationFlow | null {
-  const memory = memoryFlows.get(userId);
+function readOwnerDraftCreationFlow(
+  userId: string,
+  requestId: string,
+): OwnerDraftCreationFlow | null {
+  const memoryKey = flowMemoryKey(userId, requestId);
+  const memory = memoryFlows.get(memoryKey);
   if (memory && isFreshFlow(memory)) return memory;
-  if (memory) memoryFlows.delete(userId);
+  if (memory) memoryFlows.delete(memoryKey);
 
   const storage = readFlowStorage();
   if (!storage) return null;
   try {
-    const parsed: unknown = JSON.parse(storage.getItem(flowStorageKey(userId)) ?? "null");
+    const key = flowStorageKey(userId, requestId);
+    const parsed: unknown = JSON.parse(storage.getItem(key) ?? "null");
     if (!isOwnerDraftCreationFlow(parsed) || !isFreshFlow(parsed)) {
-      storage.removeItem(flowStorageKey(userId));
+      storage.removeItem(key);
       return null;
     }
-    memoryFlows.set(userId, parsed);
+    memoryFlows.set(memoryKey, parsed);
     return parsed;
   } catch {
     return null;
@@ -79,13 +91,48 @@ function readOwnerDraftCreationFlow(userId: string): OwnerDraftCreationFlow | nu
 }
 
 function writeOwnerDraftCreationFlow(userId: string, flow: OwnerDraftCreationFlow): void {
-  memoryFlows.set(userId, flow);
+  memoryFlows.set(flowMemoryKey(userId, flow.requestId), flow);
   const storage = readFlowStorage();
   if (!storage) return;
   try {
-    storage.setItem(flowStorageKey(userId), JSON.stringify(flow));
+    storage.setItem(flowStorageKey(userId, flow.requestId), JSON.stringify(flow));
   } catch {
     // In-memory idempotency remains available when session storage is blocked or full.
+  }
+}
+
+function readFlowRequestIdFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const value = new URL(window.location.href).searchParams.get(FLOW_QUERY_PARAM)?.trim() ?? "";
+    return UUID_PATTERN.test(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function createAndAttachFlowRequestId(): string {
+  const requestId = createUuid();
+  if (typeof window === "undefined") return requestId;
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set(FLOW_QUERY_PARAM, requestId);
+    window.history.replaceState(window.history.state, "", url);
+  } catch {
+    // In-memory idempotency still protects this mounted page when URL replacement is unavailable.
+  }
+  return requestId;
+}
+
+function removeFlowRequestIdFromUrl(requestId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get(FLOW_QUERY_PARAM) !== requestId) return;
+    url.searchParams.delete(FLOW_QUERY_PARAM);
+    window.history.replaceState(window.history.state, "", url);
+  } catch {
+    // The completed database flow does not depend on URL cleanup succeeding.
   }
 }
 
@@ -98,8 +145,12 @@ function readFlowStorage(): Storage | null {
   }
 }
 
-function flowStorageKey(userId: string): string {
-  return `${FLOW_STORAGE_PREFIX}:${userId}`;
+function flowMemoryKey(userId: string, requestId: string): string {
+  return `${userId}:${requestId}`;
+}
+
+function flowStorageKey(userId: string, requestId: string): string {
+  return `${FLOW_STORAGE_PREFIX}:${userId}:${requestId}`;
 }
 
 function isFreshFlow(flow: OwnerDraftCreationFlow): boolean {
@@ -111,6 +162,7 @@ function isOwnerDraftCreationFlow(value: unknown): value is OwnerDraftCreationFl
   const record = value as Record<string, unknown>;
   return (
     typeof record.requestId === "string" &&
+    UUID_PATTERN.test(record.requestId) &&
     (typeof record.listingId === "string" || record.listingId === null) &&
     typeof record.createdAt === "number" &&
     Number.isFinite(record.createdAt) &&
