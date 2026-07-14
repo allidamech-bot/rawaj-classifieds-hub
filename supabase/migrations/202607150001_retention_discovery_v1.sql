@@ -326,6 +326,6 @@ comment on table public.recent_listing_views is
 comment on table public.seller_follows is
   'Private follower-to-seller edges. Public surfaces receive counts only through a controlled RPC.';
 comment on function public.rawaj_get_seller_follow_summary_v1(uuid) is
-  'Returns only a public seller follower count and whether the current user follows that seller; follower identities remain private.';
+  'Returns a follower count and current-user follow state only for sellers with public live listings; follower identities remain private.';
 
 commit;
