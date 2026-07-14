@@ -84,13 +84,12 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
       if (cancelled) return;
       if (version !== filterVersionRef.current) return;
 
-      lastCompletedFilterKeyRef.current = filterKey;
-
       if (!result.ok) {
         setError(result.error);
         setItems([]);
         setNextCursor(null);
       } else {
+        lastCompletedFilterKeyRef.current = filterKey;
         setItems(result.data.items);
         setNextCursor(result.data.nextCursor);
       }
