@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ExternalLink, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   adminFetchPromotionRequests,
   adminModeratePromotionRequest,
@@ -29,58 +29,98 @@ function PromotionsPage() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [receiptUrls, setReceiptUrls] = useState<Record<string, string | null>>({});
   const [receiptErrors, setReceiptErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<ClassifiedsError | null>(null);
-  const [notice, setNotice] = useState("");
-  async function load() {
-    setLoading(true);
-    setError(null);
-    const result = await adminFetchPromotionRequests(canManagePromotions);
-    if (result.ok) {
-      setRequests(result.data);
-      setNotes(Object.fromEntries(result.data.map((item) => [item.id, item.adminNote ?? ""])));
-      const receiptEntries = await Promise.all(
-        result.data.map(async (item) => {
-          if (!item.proofPath) return [item.id, { url: null, error: "" }] as const;
-          const signed = await createPromotionReceiptSignedUrl(item.proofPath);
-          return [
-            item.id,
-            { url: signed.ok ? signed.data : null, error: signed.ok ? "" : signed.error.message },
-          ] as const;
-        }),
-      );
-      setReceiptUrls(Object.fromEntries(receiptEntries.map(([id, value]) => [id, value.url])));
-      setReceiptErrors(Object.fromEntries(receiptEntries.map(([id, value]) => [id, value.error])));
-    } else {
-      setRequests([]);
-      setReceiptUrls({});
-      setReceiptErrors({});
-      setError(result.error);
-    }
-    setLoading(false);
-  }
+  const [receiptLoadingId, setReceiptLoadingId] = useState<string | null>(null);
+  const [workingRequestId, setWorkingRequestId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<ClassifiedsError | null>(null);
+  const [actionMessage, setActionMessage] = useState("");
+  const loadRequestIdRef = useRef(0);
+  const receiptInFlightRef = useRef<Set<string>>(new Set());
+  const actionInFlightRef = useRef<Set<string>>(new Set());
 
-  useEffect(() => {
-    void load();
+  const load = useCallback(async () => {
+    const requestId = ++loadRequestIdRef.current;
+    setLoading(true);
+    setLoadError(null);
+    const result = await adminFetchPromotionRequests(canManagePromotions);
+    if (requestId !== loadRequestIdRef.current) return;
+    setLoading(false);
+    if (!result.ok) {
+      setLoadError(result.error);
+      return;
+    }
+    setRequests(result.data);
+    setNotes((current) => ({
+      ...current,
+      ...Object.fromEntries(
+        result.data.map((item) => [item.id, current[item.id] ?? item.adminNote ?? ""]),
+      ),
+    }));
+    setHasLoaded(true);
   }, [canManagePromotions]);
 
+  useEffect(() => {
+    loadRequestIdRef.current += 1;
+    setRequests([]);
+    setHasLoaded(false);
+    setLoadError(null);
+    setReceiptUrls({});
+    setReceiptErrors({});
+    void load();
+    return () => {
+      loadRequestIdRef.current += 1;
+      receiptInFlightRef.current.clear();
+      actionInFlightRef.current.clear();
+    };
+  }, [load]);
+
+  async function loadReceipt(request: ListingPromotionRequest) {
+    if (!request.proofPath || receiptInFlightRef.current.has(request.id)) return;
+    receiptInFlightRef.current.add(request.id);
+    setReceiptLoadingId(request.id);
+    setReceiptErrors((current) => ({ ...current, [request.id]: "" }));
+    try {
+      const result = await createPromotionReceiptSignedUrl(request.proofPath);
+      if (!result.ok) {
+        setReceiptErrors((current) => ({ ...current, [request.id]: result.error.message }));
+        return;
+      }
+      setReceiptUrls((current) => ({ ...current, [request.id]: result.data }));
+    } finally {
+      receiptInFlightRef.current.delete(request.id);
+      setReceiptLoadingId((current) => (current === request.id ? null : current));
+    }
+  }
+
   async function moderate(request: ListingPromotionRequest, status: "approved" | "rejected") {
-    setNotice("");
-    const result = await adminModeratePromotionRequest(canManagePromotions, {
-      requestId: request.id,
-      status,
-      adminNote: notes[request.id] ?? null,
-      expectedUpdatedAt: request.updatedAt,
-    });
-    if (result.ok) {
-      setNotice(
+    if (actionInFlightRef.current.has(request.id)) return;
+    actionInFlightRef.current.add(request.id);
+    setWorkingRequestId(request.id);
+    setActionMessage("");
+    try {
+      const result = await adminModeratePromotionRequest(canManagePromotions, {
+        requestId: request.id,
+        status,
+        adminNote: notes[request.id] ?? null,
+        expectedUpdatedAt: request.updatedAt,
+      });
+      if (!result.ok) {
+        setActionMessage(result.error.message);
+        return;
+      }
+      setRequests((current) =>
+        current.map((item) => (item.id === request.id ? { ...item, status } : item)),
+      );
+      setActionMessage(
         status === "approved"
           ? text("تم اعتماد الترويج.", "Promotion approved.")
           : text("تم رفض الترويج.", "Promotion rejected."),
       );
       await load();
-    } else {
-      setNotice(result.error.message);
+    } finally {
+      actionInFlightRef.current.delete(request.id);
+      setWorkingRequestId((current) => (current === request.id ? null : current));
     }
   }
 
@@ -97,17 +137,30 @@ function PromotionsPage() {
             "Approval marks the listing featured for the requested period after manual review. Review notes and receipts before deciding.",
           )}
         </p>
-        {notice && (
-          <p className="mt-3 rounded-xl bg-muted-surface p-2 text-xs font-semibold">{notice}</p>
+        {actionMessage && (
+          <p className="mt-3 rounded-xl bg-muted-surface p-2 text-xs font-semibold">
+            {actionMessage}
+          </p>
         )}
       </section>
 
-      {loading ? (
+      {loadError && hasLoaded ? (
+        <Panel
+          title={text("تعذر تحديث طلبات الترويج", "Could not refresh promotion requests")}
+          body={loadError.message}
+          actionLabel={text("إعادة المحاولة", "Try again")}
+          onAction={() => void load()}
+        />
+      ) : null}
+
+      {loading && !hasLoaded ? (
         <Panel title={text("جارٍ تحميل طلبات الترويج", "Loading promotion requests")} />
-      ) : error ? (
+      ) : loadError && !hasLoaded ? (
         <Panel
           title={text("تعذر تحميل طلبات الترويج", "Could not load promotion requests")}
-          body={error.message}
+          body={loadError.message}
+          actionLabel={text("إعادة المحاولة", "Try again")}
+          onAction={() => void load()}
         />
       ) : requests.length === 0 ? (
         <Panel title={text("لا توجد طلبات ترويج حالياً", "No promotion requests right now")} />
@@ -143,17 +196,18 @@ function PromotionsPage() {
                           {text("عرض الإيصال", "View receipt")}
                         </a>
                       ) : (
-                        <span className="rounded-lg bg-muted-surface px-2 py-1 font-bold text-muted-foreground hairline">
-                          {receiptErrors[request.id]
-                            ? text(
-                                "تعذر فتح الإيصال حالياً. تحقق من صلاحية الوصول أو أعد المحاولة.",
-                                "Could not open the receipt right now. Check access permission or try again.",
-                              )
-                            : text(
-                                "إيصال مرفوع - رابط العرض غير متاح",
-                                "Receipt uploaded - view link unavailable",
-                              )}
-                        </span>
+                        <button
+                          type="button"
+                          disabled={receiptLoadingId === request.id}
+                          onClick={() => void loadReceipt(request)}
+                          className="rounded-lg bg-muted-surface px-2 py-1 font-bold text-muted-foreground hairline disabled:opacity-60"
+                        >
+                          {receiptLoadingId === request.id
+                            ? text("جارٍ إنشاء رابط الإيصال", "Creating receipt link")
+                            : receiptErrors[request.id]
+                              ? text("إعادة محاولة فتح الإيصال", "Retry receipt")
+                              : text("فتح الإيصال بأمان", "Open receipt securely")}
+                        </button>
                       )
                     ) : (
                       <span className="rounded-lg bg-muted-surface px-2 py-1 font-bold text-muted-foreground hairline">
@@ -199,11 +253,30 @@ function PromotionsPage() {
   );
 }
 
-function Panel({ title, body }: { title: string; body?: string }) {
+function Panel({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <section className="rounded-2xl bg-card p-8 text-center hairline">
-      <p className="text-sm font-bold">{title}</p>
+      <p className="text-sm font-bold">{title}</p>{" "}
       {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-3 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+        >
+          {actionLabel}
+        </button>
+      ) : null}
     </section>
   );
 }

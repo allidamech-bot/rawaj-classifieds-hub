@@ -12,7 +12,7 @@ import {
   UserCog,
   Wrench,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ownerFetchSystemControls,
   ownerSetSystemControl,
@@ -90,66 +90,79 @@ function OwnerControlsPage() {
   const canManage = auth.hasPermission("canManageSystemSettings");
   const [controls, setControls] = useState<OwnerSystemControlSummary[]>([]);
   const [reason, setReason] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [busyKey, setBusyKey] = useState<OwnerSystemControlKey | null>(null);
-  const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [notice, setNotice] = useState("");
+  const requestIdRef = useRef(0);
+  const toggleInFlightRef = useRef<Set<OwnerSystemControlKey>>(new Set());
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
+    setLoadError("");
     const result = await ownerFetchSystemControls(canManage);
+    if (requestId !== requestIdRef.current) return;
     setLoading(false);
     if (!result.ok) {
-      setError(result.error.message);
+      setLoadError(result.error.message);
       return;
     }
     setControls(result.data);
-    setError("");
-  }
-
-  useEffect(() => {
-    let cancelled = false;
-    void ownerFetchSystemControls(canManage).then((result) => {
-      if (cancelled) return;
-      setLoading(false);
-      if (!result.ok) {
-        setError(result.error.message);
-        return;
-      }
-      setControls(result.data);
-    });
-    return () => {
-      cancelled = true;
-    };
+    setHasLoaded(true);
   }, [canManage]);
 
+  useEffect(() => {
+    requestIdRef.current += 1;
+    setControls([]);
+    setHasLoaded(false);
+    setLoadError("");
+    void refresh();
+    return () => {
+      requestIdRef.current += 1;
+      toggleInFlightRef.current.clear();
+    };
+  }, [refresh]);
+
   async function toggle(control: OwnerSystemControlSummary) {
-    if (busyKey) return;
+    if (toggleInFlightRef.current.has(control.key)) return;
+    toggleInFlightRef.current.add(control.key);
     setBusyKey(control.key);
-    setError("");
+    setActionError("");
     setNotice("");
-
-    const result = await ownerSetSystemControl(canManage, {
-      key: control.key,
-      enabled: !control.enabled,
-      reason,
-      expectedVersion: control.version,
-    });
-
-    setBusyKey(null);
-    if (!result.ok) {
-      setError(result.error.message);
-      return;
+    const nextEnabled = !control.enabled;
+    try {
+      const result = await ownerSetSystemControl(canManage, {
+        key: control.key,
+        enabled: nextEnabled,
+        reason,
+        expectedVersion: control.version,
+      });
+      if (!result.ok) {
+        setActionError(result.error.message);
+        return;
+      }
+      setControls((current) =>
+        current.map((item) =>
+          item.key === control.key
+            ? { ...item, enabled: nextEnabled, reason, version: item.version + 1 }
+            : item,
+        ),
+      );
+      setReason("");
+      setNotice(
+        text(
+          "تم تغيير مفتاح النظام وتسجيل العملية في سجل التدقيق.",
+          "System control changed and audited.",
+        ),
+      );
+      await refresh();
+    } finally {
+      toggleInFlightRef.current.delete(control.key);
+      setBusyKey((current) => (current === control.key ? null : current));
     }
-
-    setReason("");
-    setNotice(
-      text(
-        "تم تغيير مفتاح النظام وتسجيل العملية في سجل التدقيق.",
-        "System control changed and audited.",
-      ),
-    );
-    await refresh();
   }
 
   if (!canManage) {
@@ -210,7 +223,15 @@ function OwnerControlsPage() {
         </div>
       </section>
 
-      {error && <Notice tone="error">{error}</Notice>}
+      {actionError && <Notice tone="error">{actionError}</Notice>}
+      {loadError && hasLoaded ? (
+        <Notice tone="error">
+          {loadError}{" "}
+          <button type="button" onClick={() => void refresh()} className="underline">
+            {text("إعادة المحاولة", "Try again")}
+          </button>
+        </Notice>
+      ) : null}
       {notice && <Notice tone="success">{notice}</Notice>}
 
       <section className="rounded-2xl bg-card p-5 hairline">
@@ -228,8 +249,22 @@ function OwnerControlsPage() {
       </section>
 
       <section className="grid gap-3 md:grid-cols-2">
-        {loading ? (
+        {loading && !hasLoaded ? (
           <p className="text-xs text-muted-foreground">{text("جارٍ التحميل...", "Loading...")}</p>
+        ) : loadError && !hasLoaded ? (
+          <div className="rounded-2xl bg-card p-5 text-center hairline md:col-span-2">
+            <p className="text-sm font-bold">
+              {text("تعذر تحميل مفاتيح النظام", "Could not load system controls")}
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">{loadError}</p>
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              className="mt-3 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+            >
+              {text("إعادة المحاولة", "Try again")}
+            </button>
+          </div>
         ) : (
           controls.map((control) => (
             <ControlCard

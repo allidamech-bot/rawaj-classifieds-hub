@@ -13,7 +13,7 @@ import {
   Smartphone,
   Upload,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   ownerFetchAdPlacements,
   ownerSaveAdPlacement,
@@ -75,40 +75,45 @@ function AdPlacementsPage() {
   const canManage = auth.hasPermission("canManageAdPlacements");
   const [placements, setPlacements] = useState<AdPlacementSummary[]>([]);
   const [form, setForm] = useState<PlacementFormState>(emptyForm);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [notice, setNotice] = useState("");
   const [statusReason, setStatusReason] = useState("");
+  const requestIdRef = useRef(0);
+  const mutationInFlightRef = useRef(false);
+  const uploadInFlightRef = useRef(false);
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
+    setLoadError("");
     const result = await ownerFetchAdPlacements(canManage);
+    if (requestId !== requestIdRef.current) return;
     setLoading(false);
     if (!result.ok) {
-      setError(result.error.message);
+      setLoadError(result.error.message);
       return;
     }
     setPlacements(result.data);
-    setError("");
-  }
+    setHasLoaded(true);
+  }, [canManage]);
 
   useEffect(() => {
-    let cancelled = false;
-    void ownerFetchAdPlacements(canManage).then((result) => {
-      if (cancelled) return;
-      setLoading(false);
-      if (!result.ok) {
-        setError(result.error.message);
-        return;
-      }
-      setPlacements(result.data);
-    });
+    requestIdRef.current += 1;
+    setPlacements([]);
+    setHasLoaded(false);
+    setLoadError("");
+    void refresh();
     return () => {
-      cancelled = true;
+      requestIdRef.current += 1;
+      mutationInFlightRef.current = false;
+      uploadInFlightRef.current = false;
     };
-  }, [canManage]);
+  }, [refresh]);
 
   const selected = useMemo(
     () => placements.find((placement) => placement.id === form.id) ?? null,
@@ -130,99 +135,115 @@ function AdPlacementsPage() {
       targetMobile: placement.targetMobile,
       targetDesktop: placement.targetDesktop,
     });
-    setError("");
+    setActionError("");
     setNotice("");
   }
 
   function resetForm() {
     setForm(emptyForm);
     setStatusReason("");
-    setError("");
+    setActionError("");
     setNotice("");
   }
 
   async function handleImageSelection(file: File | undefined) {
-    if (!file || uploadingImage) return;
+    if (!file || uploadInFlightRef.current) return;
+    uploadInFlightRef.current = true;
     setUploadingImage(true);
-    setError("");
+    setActionError("");
     setNotice("");
-    const result = await ownerUploadAdPlacementImage(canManage, auth.profile?.id ?? null, file);
-    setUploadingImage(false);
-    if (!result.ok) {
-      setError(result.error.message);
-      return;
+    try {
+      const result = await ownerUploadAdPlacementImage(canManage, auth.profile?.id ?? null, file);
+      if (!result.ok) {
+        setActionError(result.error.message);
+        return;
+      }
+      setForm((value) => ({ ...value, imageUrl: result.data }));
+      setNotice(text("تم رفع صورة الإعلان بنجاح.", "Ad image uploaded successfully."));
+    } finally {
+      uploadInFlightRef.current = false;
+      setUploadingImage(false);
     }
-    setForm((value) => ({ ...value, imageUrl: result.data }));
-    setNotice(text("تم رفع صورة الإعلان بنجاح.", "Ad image uploaded successfully."));
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (saving || uploadingImage) return;
+    if (mutationInFlightRef.current || uploadInFlightRef.current) return;
     if (!form.imageUrl) {
-      setError(text("اختر صورة الإعلان أولاً.", "Choose an ad image first."));
+      setActionError(text("اختر صورة الإعلان أولاً.", "Choose an ad image first."));
       return;
     }
+    mutationInFlightRef.current = true;
     setSaving(true);
-    setError("");
+    setActionError("");
     setNotice("");
-
-    const result = await ownerSaveAdPlacement(canManage, {
-      id: form.id,
-      expectedVersion: form.expectedVersion,
-      name: form.name,
-      placementPage: form.placementPage,
-      imageUrl: form.imageUrl,
-      destinationUrl: form.destinationUrl,
-      startsAt: fromLocalDateTimeInput(form.startsAt),
-      endsAt: fromLocalDateTimeInput(form.endsAt),
-      status: form.status,
-      priority: Number(form.priority || 0),
-      targetMobile: form.targetMobile,
-      targetDesktop: form.targetDesktop,
-    });
-
-    setSaving(false);
-    if (!result.ok) {
-      setError(result.error.message);
-      return;
+    try {
+      const result = await ownerSaveAdPlacement(canManage, {
+        id: form.id,
+        expectedVersion: form.expectedVersion,
+        name: form.name,
+        placementPage: form.placementPage,
+        imageUrl: form.imageUrl,
+        destinationUrl: form.destinationUrl,
+        startsAt: fromLocalDateTimeInput(form.startsAt),
+        endsAt: fromLocalDateTimeInput(form.endsAt),
+        status: form.status,
+        priority: Number(form.priority || 0),
+        targetMobile: form.targetMobile,
+        targetDesktop: form.targetDesktop,
+      });
+      if (!result.ok) {
+        setActionError(result.error.message);
+        return;
+      }
+      setNotice(
+        form.id
+          ? text("تم تحديث المساحة الإعلانية وتسجيل العملية.", "Placement updated and audited.")
+          : text("تم إنشاء المساحة الإعلانية وتسجيل العملية.", "Placement created and audited."),
+      );
+      setForm(emptyForm);
+      setStatusReason("");
+      await refresh();
+    } finally {
+      mutationInFlightRef.current = false;
+      setSaving(false);
     }
-
-    setNotice(
-      form.id
-        ? text("تم تحديث المساحة الإعلانية وتسجيل العملية.", "Placement updated and audited.")
-        : text("تم إنشاء المساحة الإعلانية وتسجيل العملية.", "Placement created and audited."),
-    );
-    setForm(emptyForm);
-    setStatusReason("");
-    await refresh();
   }
 
   async function changeStatus(placement: AdPlacementSummary, status: AdPlacementStatus) {
+    if (mutationInFlightRef.current) return;
     const reason = statusReason.trim();
     if (reason.length < 3) {
-      setError(
+      setActionError(
         text("اكتب سبباً واضحاً لتغيير الحالة.", "Enter a clear reason for the status change."),
       );
       return;
     }
+    mutationInFlightRef.current = true;
     setSaving(true);
-    setError("");
+    setActionError("");
     setNotice("");
-    const result = await ownerSetAdPlacementStatus(canManage, {
-      id: placement.id,
-      status,
-      expectedVersion: placement.version,
-      reason,
-    });
-    setSaving(false);
-    if (!result.ok) {
-      setError(result.error.message);
-      return;
+    try {
+      const result = await ownerSetAdPlacementStatus(canManage, {
+        id: placement.id,
+        status,
+        expectedVersion: placement.version,
+        reason,
+      });
+      if (!result.ok) {
+        setActionError(result.error.message);
+        return;
+      }
+      setPlacements((current) =>
+        current.map((item) => (item.id === placement.id ? { ...item, status } : item)),
+      );
+      setStatusReason("");
+      setNotice(text("تم تغيير الحالة وتسجيل السبب.", "Status changed and reason audited."));
+      await refresh();
+    } finally {
+      mutationInFlightRef.current = false;
+      setSaving(false);
     }
-    setStatusReason("");
-    setNotice(text("تم تغيير الحالة وتسجيل السبب.", "Status changed and reason audited."));
-    await refresh();
   }
 
   if (!canManage) {
@@ -263,7 +284,15 @@ function AdPlacementsPage() {
         </div>
       </section>
 
-      {error && <Notice tone="error">{error}</Notice>}
+      {actionError && <Notice tone="error">{actionError}</Notice>}
+      {loadError && hasLoaded ? (
+        <Notice tone="error">
+          {loadError}{" "}
+          <button type="button" onClick={() => void refresh()} className="underline">
+            {text("إعادة المحاولة", "Try again")}
+          </button>
+        </Notice>
+      ) : null}
       {notice && <Notice tone="success">{notice}</Notice>}
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
@@ -491,10 +520,21 @@ function AdPlacementsPage() {
           />
         </div>
 
-        {loading ? (
+        {loading && !hasLoaded ? (
           <p className="mt-4 text-xs text-muted-foreground">
             {text("جارٍ التحميل...", "Loading...")}
           </p>
+        ) : loadError && !hasLoaded ? (
+          <div className="mt-4 rounded-xl bg-destructive/10 p-4 text-xs text-destructive">
+            <p>{loadError}</p>
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              className="mt-2 font-bold underline"
+            >
+              {text("إعادة المحاولة", "Try again")}
+            </button>
+          </div>
         ) : placements.length === 0 ? (
           <p className="mt-4 text-xs text-muted-foreground">
             {text("لا توجد مساحات إعلانية بعد.", "No ad placements yet.")}

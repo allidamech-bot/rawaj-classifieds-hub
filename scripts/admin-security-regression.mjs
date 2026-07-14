@@ -18,6 +18,12 @@ const adminPending = read("src/routes/admin.pending.tsx");
 const adminReports = read("src/routes/admin.reports.tsx");
 const adminReviews = read("src/routes/admin.reviews.tsx");
 const adminMessageReports = read("src/routes/admin.message-reports.tsx");
+const adminListings = read("src/routes/admin.listings.tsx");
+const adminVerifications = read("src/routes/admin.verifications.tsx");
+const adminPromotions = read("src/routes/admin.promotions.tsx");
+const adminAudit = read("src/routes/admin.audit.tsx");
+const adminOwnerControls = read("src/routes/admin.owner-controls.tsx");
+const adminAdPlacements = read("src/routes/admin.ad-placements.tsx");
 const bottomDock = read("src/components/shell/BottomDock.tsx");
 const primaryNavigation = read("src/lib/primary-navigation.ts");
 
@@ -133,6 +139,64 @@ expect(
     adminUsers.includes("loadError && !hasLoaded") &&
     adminUsers.includes("finally {") &&
     !/setLoadError\(result\.error\.message\);[\s\S]{0,120}setUsers\(\[\]\)/.test(adminUsers),
+);
+
+expect(
+  "listing console preserves data and deduplicates decisions",
+  adminListings.includes("const [hasLoaded, setHasLoaded]") &&
+    adminListings.includes("const loadRequestIdRef = useRef(0)") &&
+    adminListings.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
+    adminListings.includes("actionInFlightRef.current.has(actionKey)") &&
+    adminListings.includes("loadError && !hasLoaded") &&
+    !/setLoadError\(result\.error\.message\);[\s\S]{0,120}setListings\(\[\]\)/.test(adminListings),
+);
+expect(
+  "verification moderation recovers reads documents and actions independently",
+  adminVerifications.includes("const [hasLoaded, setHasLoaded]") &&
+    adminVerifications.includes("const [documentErrors, setDocumentErrors]") &&
+    adminVerifications.includes("const documentInFlightRef = useRef<Set<string>>(new Set())") &&
+    adminVerifications.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
+    adminVerifications.includes("loadError && !hasLoaded") &&
+    !/setLoadError\(result\.error\);[\s\S]{0,120}setRequests\(\[\]\)/.test(adminVerifications),
+);
+expect(
+  "promotion moderation decouples receipts and sensitive actions",
+  adminPromotions.includes("const [hasLoaded, setHasLoaded]") &&
+    adminPromotions.includes("async function loadReceipt") &&
+    adminPromotions.includes("const receiptInFlightRef = useRef<Set<string>>(new Set())") &&
+    adminPromotions.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
+    adminPromotions.includes("loadError && !hasLoaded") &&
+    !adminPromotions.includes("const receiptEntries = await Promise.all"),
+);
+expect(
+  "audit pagination retries and deduplicates without losing entries",
+  adminAudit.includes("const [hasLoaded, setHasLoaded]") &&
+    adminAudit.includes("const requestIdRef = useRef(0)") &&
+    adminAudit.includes("const loadMoreInFlightRef = useRef(false)") &&
+    adminAudit.includes("const byId = new Map") &&
+    adminAudit.includes("loadError && !hasLoaded") &&
+    !/setLoadError\(result\.error\.message\);[\s\S]{0,120}setEntries\(\[\]\)/.test(adminAudit),
+);
+expect(
+  "owner controls preserve state and deduplicate emergency writes",
+  adminOwnerControls.includes("const [hasLoaded, setHasLoaded]") &&
+    adminOwnerControls.includes("const [loadError, setLoadError]") &&
+    adminOwnerControls.includes("const [actionError, setActionError]") &&
+    adminOwnerControls.includes(
+      "const toggleInFlightRef = useRef<Set<OwnerSystemControlKey>>(new Set())",
+    ) &&
+    adminOwnerControls.includes("toggleInFlightRef.current.has(control.key)") &&
+    adminOwnerControls.includes("loadError && !hasLoaded"),
+);
+expect(
+  "ad placement management separates loading uploads and mutations",
+  adminAdPlacements.includes("const [hasLoaded, setHasLoaded]") &&
+    adminAdPlacements.includes("const [loadError, setLoadError]") &&
+    adminAdPlacements.includes("const [actionError, setActionError]") &&
+    adminAdPlacements.includes("const mutationInFlightRef = useRef(false)") &&
+    adminAdPlacements.includes("const uploadInFlightRef = useRef(false)") &&
+    adminAdPlacements.includes("loadError && !hasLoaded") &&
+    adminAdPlacements.includes("finally {"),
 );
 
 for (const permission of [
