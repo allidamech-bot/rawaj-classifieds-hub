@@ -50,7 +50,10 @@ test("unfinished storage writes survive navigation in a bounded browser journal"
   assert.match(journal, /typeof window === "undefined"/);
   assert.match(journal, /window\.localStorage/);
   assert.match(journal, /isOwnedListingImagePath/);
-  assert.match(guardedUpload, /rememberPendingListingImageUpload\(userId, listing\.id, storagePath\)/);
+  assert.match(
+    guardedUpload,
+    /rememberPendingListingImageUpload\(userId, listing\.id, storagePath\)/,
+  );
 });
 
 test("orphan cleanup verifies database references before deleting storage objects", () => {

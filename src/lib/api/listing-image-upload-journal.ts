@@ -173,11 +173,7 @@ function isPendingListingImageUpload(value: unknown): value is PendingListingIma
   );
 }
 
-function isOwnedListingImagePath(
-  userId: string,
-  listingId: string,
-  storagePath: string,
-): boolean {
+function isOwnedListingImagePath(userId: string, listingId: string, storagePath: string): boolean {
   const cleanUserId = userId.trim();
   const cleanListingId = listingId.trim();
   return (
