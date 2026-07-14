@@ -50,6 +50,28 @@ test("account center shares identity, shortcuts, editor and safety while preserv
   assert.match(profile, /changeOwnPassword/);
 });
 
+test("profile overview loads recover independently without erasing successful snapshots", () => {
+  assert.match(profile, /const \[myListingsHasLoaded, setMyListingsHasLoaded\]/);
+  assert.match(profile, /const \[verificationHasLoaded, setVerificationHasLoaded\]/);
+  assert.match(profile, /const \[verificationError, setVerificationError\]/);
+  assert.match(profile, /const reloadListings = useCallback/);
+  assert.match(profile, /const loadVerificationRequests = useCallback/);
+  assert.match(profile, /myListingsError && !myListingsHasLoaded/);
+  assert.match(profile, /verificationError && !verificationHasLoaded/);
+  assert.match(profile, /onAction=\{\(\) => void reloadListings\(\)\}/);
+  assert.match(profile, /onAction=\{\(\) => void loadVerificationRequests\(\)\}/);
+  assert.doesNotMatch(profile, /setMyListingsError\(result\.error\);[\s\S]{0,80}setMyListings\(\[\]\)/);
+  assert.doesNotMatch(profile, /setVerificationError\(result\.error\);[\s\S]{0,80}setVerificationRequests\(\[\]\)/);
+});
+
+test("profile overview requests reject stale account and route responses", () => {
+  assert.match(profile, /const listingsRequestIdRef = useRef\(0\)/);
+  assert.match(profile, /const verificationRequestIdRef = useRef\(0\)/);
+  assert.match(profile, /requestId !== listingsRequestIdRef\.current/);
+  assert.match(profile, /requestId !== verificationRequestIdRef\.current/);
+  assert.match(profile, /currentProfileId !== auth\.profile\?\.id/);
+});
+
 test("profile media replacement validates files and never deletes the old image before linking the new one", () => {
   assert.match(profileApi, /allowedImageTypes = \["image\/jpeg", "image\/png", "image\/webp"\]/);
   assert.match(profileApi, /maxProfileImageSizeBytes = 3 \* 1024 \* 1024/);
