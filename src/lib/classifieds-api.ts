@@ -24,6 +24,7 @@ export * from "@/lib/api/listing-price-context";
 export * from "@/lib/api/price-drops";
 export { fetchPublicListingsCanonicalAware as fetchPublicListings } from "@/lib/api/location-aware-listings-v2";
 export * from "@/lib/api/seller";
+export { fetchPublicSellerProfileGuarded as fetchPublicSellerProfile } from "@/lib/api/seller-profile-read-guarded";
 export * from "@/lib/api/messaging-guarded";
 export * from "@/lib/api/favorites-guarded";
 export * from "@/lib/api/saved-searches-guarded";
