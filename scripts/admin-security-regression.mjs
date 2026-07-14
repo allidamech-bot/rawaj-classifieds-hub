@@ -73,6 +73,7 @@ expect(
 );
 
 // These invariants keep the six admin recovery stages permanent in the security gate.
+// This source-only touch launches the formatted branch through the complete CI sequence.
 expect(
   "admin overview preserves successful metrics and exposes retry",
   adminOverview.includes("const [hasLoaded, setHasLoaded]") &&
