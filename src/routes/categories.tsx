@@ -76,6 +76,7 @@ function CategoriesPage() {
   const [query, setQuery] = useState(search.q ?? "");
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<ClassifiedsError | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     setQuery(search.q ?? "");
@@ -121,7 +122,7 @@ function CategoriesPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadAttempt]);
 
   const taxonomyIndex = useMemo(() => buildTaxonomyIndex(taxonomyNodes), [taxonomyNodes]);
   const currentNode = findTaxonomyNode(taxonomyIndex, search.node);
@@ -193,6 +194,8 @@ function CategoriesPage() {
           <Panel
             title={text("تعذر تحميل الأقسام", "Could not load categories")}
             body={fetchError.message}
+            actionLabel={text("إعادة المحاولة", "Try again")}
+            onAction={() => setLoadAttempt((attempt) => attempt + 1)}
           />
         ) : hasInvalidNode ? (
           <Panel
@@ -575,7 +578,17 @@ function iconForTaxonomy(iconKey: string | null) {
   }
 }
 
-function Panel({ title, body }: { title: string; body?: string }) {
+function Panel({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <div className="rawaj-surface mt-4 rounded-[1.4rem] p-8 text-center text-sm sm:rounded-3xl">
       <span className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-muted-surface text-gold">
@@ -585,6 +598,15 @@ function Panel({ title, body }: { title: string; body?: string }) {
       {body && (
         <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-muted-foreground">{body}</p>
       )}
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+        >
+          {actionLabel}
+        </button>
+      ) : null}
     </div>
   );
 }
