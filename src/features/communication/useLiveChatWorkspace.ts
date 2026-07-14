@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import {
   fetchConversationMessages,
   fetchMyConversations,
@@ -77,7 +71,8 @@ export function useLiveChatWorkspace({
 
       const refreshedConversation =
         conversationsResult.ok && conversationId
-          ? conversationsResult.data.find((conversation) => conversation.id === conversationId) ?? null
+          ? (conversationsResult.data.find((conversation) => conversation.id === conversationId) ??
+            null)
           : null;
 
       if (conversationsResult.ok) {

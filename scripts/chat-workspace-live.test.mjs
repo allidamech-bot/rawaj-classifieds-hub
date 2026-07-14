@@ -12,7 +12,10 @@ const [hookSource, routeSource, packageSource] = await Promise.all([
 ]);
 
 test("the visible chat subscribes to message and conversation changes", () => {
-  assert.match(hookSource, /channel\(`rawaj-live-chat:\$\{profileId\}:\$\{selectedConversationId\}`\)/);
+  assert.match(
+    hookSource,
+    /channel\(`rawaj-live-chat:\$\{profileId\}:\$\{selectedConversationId\}`\)/,
+  );
   assert.match(hookSource, /table: "conversation_messages"/);
   assert.match(hookSource, /filter: `conversation_id=eq\.\$\{selectedConversationId\}`/);
   assert.match(hookSource, /table: "conversations"/);
@@ -24,7 +27,10 @@ test("live chat refreshes are debounced, bounded, and visibility aware", () => {
   assert.match(hookSource, /LIVE_CHAT_EVENT_DEBOUNCE_MS = 150/);
   assert.match(hookSource, /LIVE_CHAT_FALLBACK_POLL_MS = 60 \* 1000/);
   assert.match(hookSource, /setTimeout\([\s\S]*LIVE_CHAT_EVENT_DEBOUNCE_MS/);
-  assert.match(hookSource, /window\.setInterval\(refreshWhenAvailable, LIVE_CHAT_FALLBACK_POLL_MS\)/);
+  assert.match(
+    hookSource,
+    /window\.setInterval\(refreshWhenAvailable, LIVE_CHAT_FALLBACK_POLL_MS\)/,
+  );
   assert.match(hookSource, /document\.visibilityState === "hidden"/);
   assert.match(hookSource, /navigator\.onLine === false/);
   assert.match(hookSource, /addEventListener\("online", refreshWhenAvailable\)/);
