@@ -1,0 +1,79 @@
+name: Retention Discovery Format Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/retention-discovery-format-once.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: retention-discovery-format-once-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  format-and-validate:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Format retention package
+        run: |
+          npx prettier --write \
+            .github/workflows/quality-gate.yml \
+            docs/production-schema/migration-ledger.json \
+            package.json \
+            scripts/retention-discovery-v1.test.mjs \
+            src/features/listing-detail/ListingMediaExperience.tsx \
+            src/features/listing-detail/ListingSellerProfileCard.tsx \
+            src/features/listing-detail/SimilarListingsRail.tsx \
+            src/features/retention/ListingViewTracker.tsx \
+            src/features/retention/SellerFollowButton.tsx \
+            src/features/storefront/StorefrontIdentityHero.tsx \
+            src/lib/api/retention-discovery.ts \
+            src/lib/classifieds-api.ts
+      - name: Listing Detail V3 contract
+        run: npm run test:listing-detail-v3
+      - name: Retention contract
+        run: npm run test:retention-discovery
+      - name: Changed-file ESLint
+        run: |
+          npx eslint --quiet \
+            scripts/retention-discovery-v1.test.mjs \
+            src/features/listing-detail/ListingMediaExperience.tsx \
+            src/features/listing-detail/ListingSellerProfileCard.tsx \
+            src/features/listing-detail/SimilarListingsRail.tsx \
+            src/features/retention/ListingViewTracker.tsx \
+            src/features/retention/SellerFollowButton.tsx \
+            src/features/storefront/StorefrontIdentityHero.tsx \
+            src/lib/api/retention-discovery.ts \
+            src/lib/classifieds-api.ts
+      - name: TypeScript
+        run: npm run typecheck -- --pretty false
+      - name: Remove one-shot workflow
+        run: rm .github/workflows/retention-discovery-format-once.yml
+      - name: Commit formatted package
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            rm -f .github/workflows/retention-discovery-format-once.yml
+            git add -A
+          fi
+          git commit -m "chore: format isolated retention tracking"
+          git push origin HEAD:"$HEAD_REF"
