@@ -199,7 +199,12 @@ function PendingPage() {
       {error && hasLoaded ? (
         <div className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive hairline">
           <p>{error.message}</p>
-          <button type="button" disabled={loading} onClick={() => void loadPending()} className="mt-2 rounded-lg bg-card px-3 py-1.5 text-foreground hairline disabled:opacity-60">
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => void loadPending()}
+            className="mt-2 rounded-lg bg-card px-3 py-1.5 text-foreground hairline disabled:opacity-60"
+          >
             {loading ? text("جارٍ التحديث", "Refreshing") : text("إعادة المحاولة", "Try again")}
           </button>
         </div>
@@ -232,10 +237,22 @@ function PendingPage() {
                   <div>
                     <h3 className="text-sm font-extrabold">{listing.title}</h3>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {listing.id} · {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)} · {governorateName(listing.governorateId, listing.governorateNameAr ?? undefined, language)}
+                      {listing.id} ·{" "}
+                      {categoryName(
+                        listing.categoryId,
+                        listing.categoryNameAr ?? undefined,
+                        language,
+                      )}{" "}
+                      ·{" "}
+                      {governorateName(
+                        listing.governorateId,
+                        listing.governorateNameAr ?? undefined,
+                        language,
+                      )}
                     </p>
                     <p className="mt-1 text-[11px] text-muted-foreground">
-                      {text("صاحب الإعلان:", "Listing owner:")} {listing.ownerId} · {text("الإرسال:", "Submitted:")} {formatDate(listing.createdAt, language)}
+                      {text("صاحب الإعلان:", "Listing owner:")} {listing.ownerId} ·{" "}
+                      {text("الإرسال:", "Submitted:")} {formatDate(listing.createdAt, language)}
                     </p>
                   </div>
                   <span className="inline-flex items-center gap-1 rounded-md bg-warning/15 px-2 py-1 text-[10px] font-bold text-warning">
@@ -243,8 +260,14 @@ function PendingPage() {
                     {uiLabel(listing.status, language)}
                   </span>
                 </div>
-                <button type="button" onClick={() => void toggleDetails(listing.id)} className="mt-3 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold text-foreground">
-                  {expandedListingId === listing.id ? text("إخفاء التفاصيل", "Hide details") : text("عرض التفاصيل الكاملة", "View full details")}
+                <button
+                  type="button"
+                  onClick={() => void toggleDetails(listing.id)}
+                  className="mt-3 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold text-foreground"
+                >
+                  {expandedListingId === listing.id
+                    ? text("إخفاء التفاصيل", "Hide details")
+                    : text("عرض التفاصيل الكاملة", "View full details")}
                 </button>
                 {expandedListingId === listing.id ? (
                   <PendingListingDetails
@@ -259,15 +282,32 @@ function PendingPage() {
                   <input
                     value={rejectReasons[listing.id] ?? ""}
                     disabled={actionBusy}
-                    onChange={(event) => setRejectReasons((current) => ({ ...current, [listing.id]: event.target.value }))}
+                    onChange={(event) =>
+                      setRejectReasons((current) => ({
+                        ...current,
+                        [listing.id]: event.target.value,
+                      }))
+                    }
                     placeholder={text("سبب الرفض عند الحاجة", "Rejection reason when needed")}
                     className="rounded-xl bg-muted-surface px-3 py-2 text-xs outline-none hairline disabled:opacity-60"
                   />
                   <div className="flex gap-2">
-                    <button type="button" disabled={actionBusy} aria-busy={actionBusy} onClick={() => void moderate(listing, "approved")} className="rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground disabled:opacity-60">
+                    <button
+                      type="button"
+                      disabled={actionBusy}
+                      aria-busy={actionBusy}
+                      onClick={() => void moderate(listing, "approved")}
+                      className="rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground disabled:opacity-60"
+                    >
                       {actionBusy ? text("جارٍ التحديث", "Updating") : text("اعتماد", "Approve")}
                     </button>
-                    <button type="button" disabled={actionBusy} aria-busy={actionBusy} onClick={() => void moderate(listing, "rejected")} className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground disabled:opacity-60">
+                    <button
+                      type="button"
+                      disabled={actionBusy}
+                      aria-busy={actionBusy}
+                      onClick={() => void moderate(listing, "rejected")}
+                      className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground disabled:opacity-60"
+                    >
                       {actionBusy ? text("جارٍ التحديث", "Updating") : text("رفض", "Reject")}
                     </button>
                   </div>
@@ -281,13 +321,27 @@ function PendingPage() {
   );
 }
 
-function Panel({ title, body, actionLabel, onAction }: { title: string; body?: string; actionLabel?: string; onAction?: () => void }) {
+function Panel({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <div className="rounded-2xl bg-card p-8 text-center hairline">
       <p className="text-sm font-bold">{title}</p>
       {body ? <p className="mt-1 text-xs text-muted-foreground">{body}</p> : null}
       {actionLabel && onAction ? (
-        <button type="button" onClick={onAction} className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+        >
           {actionLabel}
         </button>
       ) : null}
@@ -295,10 +349,26 @@ function Panel({ title, body, actionLabel, onAction }: { title: string; body?: s
   );
 }
 
-function PendingListingDetails({ listing, images, imagesLoading, imagesError, onRetryImages }: { listing: ClassifiedListing; images: ListingImage[]; imagesLoading: boolean; imagesError: string | null; onRetryImages: () => void }) {
+function PendingListingDetails({
+  listing,
+  images,
+  imagesLoading,
+  imagesError,
+  onRetryImages,
+}: {
+  listing: ClassifiedListing;
+  images: ListingImage[];
+  imagesLoading: boolean;
+  imagesError: string | null;
+  onRetryImages: () => void;
+}) {
   const { language, text } = useUiPreferences();
   const hiddenDetailKeys = new Set(["phone", "whatsapp", "content_flags"]);
-  const categoryRows = categoryDetailDisplayRows(detectCategoryFieldKind(null, listing), listing.details, text);
+  const categoryRows = categoryDetailDisplayRows(
+    detectCategoryFieldKind(null, listing),
+    listing.details,
+    text,
+  );
   const detailsEntries = Object.entries(listing.details).filter(
     ([key, value]) =>
       !hiddenDetailKeys.has(key) &&
@@ -333,49 +403,97 @@ function PendingListingDetails({ listing, images, imagesLoading, imagesError, on
     <section className="mt-3 rounded-xl bg-muted-surface p-3 hairline">
       <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
         <DetailItem label={text("العنوان", "Title")} value={listing.title} />
-        <DetailItem label={text("القسم", "Category")} value={categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)} />
-        <DetailItem label={text("المحافظة", "Governorate")} value={governorateName(listing.governorateId, listing.governorateNameAr ?? undefined, language)} />
+        <DetailItem
+          label={text("القسم", "Category")}
+          value={categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
+        />
+        <DetailItem
+          label={text("المحافظة", "Governorate")}
+          value={governorateName(
+            listing.governorateId,
+            listing.governorateNameAr ?? undefined,
+            language,
+          )}
+        />
         <DetailItem label={text("المنطقة", "District")} value={listing.districtAr ?? "-"} />
-        <DetailItem label={text("السعر", "Price")} value={formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)} />
-        <DetailItem label={text("الحالة", "Condition")} value={uiLabel(listing.condition, language)} />
-        <DetailItem label={text("اسم التواصل", "Contact name")} value={listing.contactName ?? "-"} />
-        <DetailItem label={text("خيارات التواصل", "Contact options")} value={contactOptionsLabel(listing.contactOptions, text)} />
+        <DetailItem
+          label={text("السعر", "Price")}
+          value={formatPriceLocalized(
+            listing.price ?? 0,
+            listing.priceType,
+            language,
+            listing.currency,
+          )}
+        />
+        <DetailItem
+          label={text("الحالة", "Condition")}
+          value={uiLabel(listing.condition, language)}
+        />
+        <DetailItem
+          label={text("اسم التواصل", "Contact name")}
+          value={listing.contactName ?? "-"}
+        />
+        <DetailItem
+          label={text("خيارات التواصل", "Contact options")}
+          value={contactOptionsLabel(listing.contactOptions, text)}
+        />
         {phone ? <DetailItem label={text("رقم الهاتف", "Phone number")} value={phone} /> : null}
-        {whatsapp ? <DetailItem label={text("رقم واتساب", "WhatsApp number")} value={whatsapp} /> : null}
+        {whatsapp ? (
+          <DetailItem label={text("رقم واتساب", "WhatsApp number")} value={whatsapp} />
+        ) : null}
       </div>
       <div className="mt-3">
         <p className="mb-1 text-xs font-bold">{text("الوصف", "Description")}</p>
-        <p className="whitespace-pre-line rounded-lg bg-card p-3 text-xs leading-6">{listing.description || "-"}</p>
+        <p className="whitespace-pre-line rounded-lg bg-card p-3 text-xs leading-6">
+          {listing.description || "-"}
+        </p>
       </div>
       {contentFlags.length > 0 ? (
         <div className="mt-3 rounded-lg bg-warning/10 p-3 text-xs leading-6 text-foreground hairline">
           <p className="mb-1 font-bold">{text("أعلام السلامة", "Safety flags")}</p>
           <div className="flex flex-wrap gap-1.5">
-            {contentFlags.map((flag) => <span key={flag} className="rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline">{flag}</span>)}
+            {contentFlags.map((flag) => (
+              <span
+                key={flag}
+                className="rounded-md bg-card px-2 py-1 text-[10px] font-bold hairline"
+              >
+                {flag}
+              </span>
+            ))}
           </div>
         </div>
       ) : null}
       {categoryRows.length > 0 ? (
         <div className="mt-3 grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
-          {categoryRows.map(([label, value]) => <DetailItem key={label} label={label} value={displayValue(value)} />)}
+          {categoryRows.map(([label, value]) => (
+            <DetailItem key={label} label={label} value={displayValue(value)} />
+          ))}
         </div>
       ) : null}
       {detailsEntries.length > 0 ? (
         <div className="mt-3">
           <p className="mb-1 text-xs font-bold">{text("تفاصيل إضافية", "Additional details")}</p>
           <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
-            {detailsEntries.map(([key, value]) => <DetailItem key={key} label={key} value={displayValue(value)} />)}
+            {detailsEntries.map(([key, value]) => (
+              <DetailItem key={key} label={key} value={displayValue(value)} />
+            ))}
           </div>
         </div>
       ) : null}
       <div className="mt-3">
         <p className="mb-1 text-xs font-bold">{text("الصور", "Images")}</p>
         {imagesLoading ? (
-          <p className="text-xs text-muted-foreground">{text("جارٍ تحميل الصور", "Loading images")}</p>
+          <p className="text-xs text-muted-foreground">
+            {text("جارٍ تحميل الصور", "Loading images")}
+          </p>
         ) : imagesError ? (
           <div className="rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
             <p>{imagesError}</p>
-            <button type="button" onClick={onRetryImages} className="mt-2 rounded-lg bg-card px-3 py-1.5 font-bold text-foreground hairline">
+            <button
+              type="button"
+              onClick={onRetryImages}
+              className="mt-2 rounded-lg bg-card px-3 py-1.5 font-bold text-foreground hairline"
+            >
               {text("إعادة تحميل الصور", "Retry images")}
             </button>
           </div>
@@ -384,8 +502,22 @@ function PendingListingDetails({ listing, images, imagesLoading, imagesError, on
         ) : (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {images.map((image) => {
-              const fallback = <div className="grid aspect-square place-items-center rounded-lg bg-card p-2 text-center text-[10px] text-muted-foreground hairline">{text("تعذر عرض الصورة", "Image unavailable")}</div>;
-              return <ResilientImage key={image.id} src={image.publicUrl ?? undefined} alt={image.altAr ?? listing.title} width={320} height={320} className="aspect-square w-full rounded-lg object-cover hairline" fallback={fallback} />;
+              const fallback = (
+                <div className="grid aspect-square place-items-center rounded-lg bg-card p-2 text-center text-[10px] text-muted-foreground hairline">
+                  {text("تعذر عرض الصورة", "Image unavailable")}
+                </div>
+              );
+              return (
+                <ResilientImage
+                  key={image.id}
+                  src={image.publicUrl ?? undefined}
+                  alt={image.altAr ?? listing.title}
+                  width={320}
+                  height={320}
+                  className="aspect-square w-full rounded-lg object-cover hairline"
+                  fallback={fallback}
+                />
+              );
             })}
           </div>
         )}
@@ -395,7 +527,11 @@ function PendingListingDetails({ listing, images, imagesLoading, imagesError, on
 }
 
 function Badge({ children }: { children: React.ReactNode }) {
-  return <span className="rounded-full bg-muted-surface px-2 py-1 text-[10px] font-bold hairline">{children}</span>;
+  return (
+    <span className="rounded-full bg-muted-surface px-2 py-1 text-[10px] font-bold hairline">
+      {children}
+    </span>
+  );
 }
 
 function DetailItem({ label, value }: { label: string; value: string }) {
@@ -414,7 +550,9 @@ function detailString(details: Record<string, unknown>, key: string) {
 
 function detailStringArray(details: Record<string, unknown>, key: string) {
   const value = details[key];
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
 }
 
 function displayValue(value: unknown): string {
@@ -425,14 +563,26 @@ function displayValue(value: unknown): string {
   return "-";
 }
 
-function contactOptionsLabel(options: Record<string, boolean>, text: (ar: string, en: string) => string) {
-  const labels: Record<string, string> = { message: text("رسائل", "Messages"), phone: text("هاتف", "Phone"), whatsapp: text("واتساب", "WhatsApp") };
-  const enabled = Object.entries(options).filter(([, value]) => value).map(([key]) => labels[key] ?? key);
+function contactOptionsLabel(
+  options: Record<string, boolean>,
+  text: (ar: string, en: string) => string,
+) {
+  const labels: Record<string, string> = {
+    message: text("رسائل", "Messages"),
+    phone: text("هاتف", "Phone"),
+    whatsapp: text("واتساب", "WhatsApp"),
+  };
+  const enabled = Object.entries(options)
+    .filter(([, value]) => value)
+    .map(([key]) => labels[key] ?? key);
   return enabled.length > 0 ? enabled.join("، ") : "-";
 }
 
 function formatDate(value: string, language: Language) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en", { dateStyle: "medium", timeStyle: "short" }).format(date);
+  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
 }

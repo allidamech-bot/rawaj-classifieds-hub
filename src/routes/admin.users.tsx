@@ -170,7 +170,9 @@ function UsersPage() {
               <Users className="h-5 w-5" />
             </span>
             <div>
-              <h2 className="text-base font-extrabold">{text("إدارة المستخدمين", "User management")}</h2>
+              <h2 className="text-base font-extrabold">
+                {text("إدارة المستخدمين", "User management")}
+              </h2>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
                 {text(
                   "بحث وإيقاف وحظر واستعادة وتقييد الحسابات من مصدر محمي مع سجل تدقيق.",
@@ -341,12 +343,16 @@ function UsersPage() {
               </div>
 
               <div className="mt-5 border-t border-border/70 pt-5">
-                <h3 className="text-sm font-extrabold">{text("قيود دقيقة", "Granular restrictions")}</h3>
+                <h3 className="text-sm font-extrabold">
+                  {text("قيود دقيقة", "Granular restrictions")}
+                </h3>
                 <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
                   <select
                     value={restrictionType}
                     disabled={busy}
-                    onChange={(event) => setRestrictionType(event.target.value as UserRestrictionType)}
+                    onChange={(event) =>
+                      setRestrictionType(event.target.value as UserRestrictionType)
+                    }
                     className="h-11 rounded-xl bg-card px-3 text-sm hairline disabled:opacity-60"
                   >
                     {restrictionOptions.map((option) => (
@@ -451,7 +457,15 @@ function UsersPage() {
   );
 }
 
-function UserCard({ user, selected, onSelect }: { user: AdminUserSummary; selected: boolean; onSelect: () => void }) {
+function UserCard({
+  user,
+  selected,
+  onSelect,
+}: {
+  user: AdminUserSummary;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   return (
     <button
       type="button"
@@ -463,12 +477,16 @@ function UserCard({ user, selected, onSelect }: { user: AdminUserSummary; select
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-sm font-extrabold">{user.displayName || user.email || user.id}</h3>
+            <h3 className="truncate text-sm font-extrabold">
+              {user.displayName || user.email || user.id}
+            </h3>
             {user.roles.includes("owner") ? <ShieldCheck className="h-4 w-4 text-gold" /> : null}
           </div>
           <p className="mt-1 truncate text-xs text-muted-foreground">{user.email || user.id}</p>
         </div>
-        <span className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold">{user.accountStatus}</span>
+        <span className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold">
+          {user.accountStatus}
+        </span>
       </div>
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
         <Metric value={user.listingCount} label="Listings" />
@@ -477,7 +495,9 @@ function UserCard({ user, selected, onSelect }: { user: AdminUserSummary; select
       </div>
       <div className="mt-3 flex flex-wrap gap-1.5">
         {[...user.roles, ...user.activeRestrictions].map((item) => (
-          <span key={item} className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold">{item}</span>
+          <span key={item} className="rounded-md bg-muted-surface px-2 py-1 text-[10px] font-bold">
+            {item}
+          </span>
         ))}
       </div>
     </button>
@@ -493,14 +513,28 @@ function Metric({ value, label }: { value: number; label: string }) {
   );
 }
 
-function ControlButton({ icon: Icon, label, disabled, danger = false, onClick }: { icon: typeof Ban; label: string; disabled: boolean; danger?: boolean; onClick: () => void }) {
+function ControlButton({
+  icon: Icon,
+  label,
+  disabled,
+  danger = false,
+  onClick,
+}: {
+  icon: typeof Ban;
+  label: string;
+  disabled: boolean;
+  danger?: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
       disabled={disabled}
       onClick={onClick}
       className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-bold disabled:opacity-50 ${
-        danger ? "bg-destructive text-destructive-foreground" : "bg-muted-surface text-foreground hairline"
+        danger
+          ? "bg-destructive text-destructive-foreground"
+          : "bg-muted-surface text-foreground hairline"
       }`}
     >
       <Icon className="h-4 w-4" />
@@ -509,32 +543,80 @@ function ControlButton({ icon: Icon, label, disabled, danger = false, onClick }:
   );
 }
 
-function StaffRoleButton({ active, label, disabled, onAssign, onRemove }: { active: boolean; label: string; disabled: boolean; onAssign: () => void; onRemove: () => void }) {
+function StaffRoleButton({
+  active,
+  label,
+  disabled,
+  onAssign,
+  onRemove,
+}: {
+  active: boolean;
+  label: string;
+  disabled: boolean;
+  onAssign: () => void;
+  onRemove: () => void;
+}) {
   return (
-    <button type="button" disabled={disabled} onClick={active ? onRemove : onAssign} className="rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold disabled:opacity-50 hairline">
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={active ? onRemove : onAssign}
+      className="rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold disabled:opacity-50 hairline"
+    >
       {active ? `Remove ${label}` : `Assign ${label}`}
     </button>
   );
 }
 
-function RecoveryNotice({ message, busy, retryLabel, refreshingLabel, onRetry }: { message: string; busy: boolean; retryLabel: string; refreshingLabel: string; onRetry: () => void }) {
+function RecoveryNotice({
+  message,
+  busy,
+  retryLabel,
+  refreshingLabel,
+  onRetry,
+}: {
+  message: string;
+  busy: boolean;
+  retryLabel: string;
+  refreshingLabel: string;
+  onRetry: () => void;
+}) {
   return (
     <div className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive hairline">
       <p>{message}</p>
-      <button type="button" disabled={busy} onClick={onRetry} className="mt-2 rounded-lg bg-card px-3 py-1.5 text-foreground hairline disabled:opacity-60">
+      <button
+        type="button"
+        disabled={busy}
+        onClick={onRetry}
+        className="mt-2 rounded-lg bg-card px-3 py-1.5 text-foreground hairline disabled:opacity-60"
+      >
         {busy ? refreshingLabel : retryLabel}
       </button>
     </div>
   );
 }
 
-function Panel({ title, body, actionLabel, onAction }: { title: string; body?: string; actionLabel?: string; onAction?: () => void }) {
+function Panel({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <section className="rounded-2xl bg-card p-5 text-center hairline">
       <p className="text-sm font-bold">{title}</p>
       {body ? <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p> : null}
       {actionLabel && onAction ? (
-        <button type="button" onClick={onAction} className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+        >
           {actionLabel}
         </button>
       ) : null}
@@ -543,6 +625,9 @@ function Panel({ title, body, actionLabel, onAction }: { title: string; body?: s
 }
 
 function Notice({ children, tone }: { children: React.ReactNode; tone: "error" | "success" }) {
-  const toneClass = tone === "error" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success";
-  return <div className={`rounded-xl p-3 text-xs font-semibold hairline ${toneClass}`}>{children}</div>;
+  const toneClass =
+    tone === "error" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success";
+  return (
+    <div className={`rounded-xl p-3 text-xs font-semibold hairline ${toneClass}`}>{children}</div>
+  );
 }

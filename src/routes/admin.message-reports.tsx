@@ -168,13 +168,19 @@ function AdminMessageReportsPage() {
                   <div>
                     <h3 className="text-sm font-extrabold">{report.reason}</h3>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {text("المبلّغ:", "Reporter:")} {report.reporterDisplayName ?? report.reporterUserId}
+                      {text("المبلّغ:", "Reporter:")}{" "}
+                      {report.reporterDisplayName ?? report.reporterUserId}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {text("المبلّغ عنه:", "Reported:")} {report.reportedDisplayName ?? report.reportedUserId}
+                      {text("المبلّغ عنه:", "Reported:")}{" "}
+                      {report.reportedDisplayName ?? report.reportedUserId}
                     </p>
                     {report.listingId ? (
-                      <Link to="/listings/$id" params={{ id: report.listingId }} className="mt-1 inline-flex text-xs font-bold text-primary">
+                      <Link
+                        to="/listings/$id"
+                        params={{ id: report.listingId }}
+                        className="mt-1 inline-flex text-xs font-bold text-primary"
+                      >
                         {report.listingTitle ?? report.listingId}
                       </Link>
                     ) : null}
@@ -232,24 +238,55 @@ function formatReportedMessageBody(body: string | null | undefined, fallback: st
   return `${normalized.slice(0, 500)}...`;
 }
 
-function RecoveryNotice({ message, busy, retryLabel, refreshingLabel, onRetry }: { message: string; busy: boolean; retryLabel: string; refreshingLabel: string; onRetry: () => void }) {
+function RecoveryNotice({
+  message,
+  busy,
+  retryLabel,
+  refreshingLabel,
+  onRetry,
+}: {
+  message: string;
+  busy: boolean;
+  retryLabel: string;
+  refreshingLabel: string;
+  onRetry: () => void;
+}) {
   return (
     <div className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive hairline">
       <p>{message}</p>
-      <button type="button" disabled={busy} onClick={onRetry} className="mt-2 rounded-lg bg-card px-3 py-1.5 text-foreground hairline disabled:opacity-60">
+      <button
+        type="button"
+        disabled={busy}
+        onClick={onRetry}
+        className="mt-2 rounded-lg bg-card px-3 py-1.5 text-foreground hairline disabled:opacity-60"
+      >
         {busy ? refreshingLabel : retryLabel}
       </button>
     </div>
   );
 }
 
-function Panel({ title, body, actionLabel, onAction }: { title: string; body?: string; actionLabel?: string; onAction?: () => void }) {
+function Panel({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <section className="rounded-2xl bg-card p-8 text-center hairline">
       <p className="text-sm font-bold">{title}</p>
       {body ? <p className="mt-1 text-xs text-muted-foreground">{body}</p> : null}
       {actionLabel && onAction ? (
-        <button type="button" onClick={onAction} className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+        >
           {actionLabel}
         </button>
       ) : null}

@@ -90,7 +90,8 @@ function ReportsPage() {
         status,
         assignedTo: auth.profile.id,
         adminNote: notes[report.id] ?? null,
-        resolvedAt: status === "resolved" || status === "rejected" ? new Date().toISOString() : null,
+        resolvedAt:
+          status === "resolved" || status === "rejected" ? new Date().toISOString() : null,
         expectedUpdatedAt: report.updatedAt,
       });
       if (!result.ok) {
@@ -192,7 +193,8 @@ function ReportsPage() {
                   {text("رقم البلاغ:", "Report ID:")} {report.id}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {text("الإعلان:", "Listing:")} {report.listingId} · {text("المبلّغ:", "Reporter:")} {report.reporterId}
+                  {text("الإعلان:", "Listing:")} {report.listingId} ·{" "}
+                  {text("المبلّغ:", "Reporter:")} {report.reporterId}
                 </p>
                 <p className="mt-2 text-xs leading-6">{report.reason}</p>
                 <textarea
@@ -206,13 +208,31 @@ function ReportsPage() {
                   className="mt-3 w-full rounded-xl bg-muted-surface px-3 py-2 text-xs outline-none hairline disabled:opacity-60"
                 />
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button" disabled={busy} aria-busy={busy} onClick={() => void moderate(report, "under_review")} className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    aria-busy={busy}
+                    onClick={() => void moderate(report, "under_review")}
+                    className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
+                  >
                     {busy ? text("جارٍ التحديث", "Updating") : text("قيد المراجعة", "Under review")}
                   </button>
-                  <button type="button" disabled={busy} aria-busy={busy} onClick={() => void moderate(report, "resolved")} className="rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground disabled:opacity-60">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    aria-busy={busy}
+                    onClick={() => void moderate(report, "resolved")}
+                    className="rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground disabled:opacity-60"
+                  >
                     {busy ? text("جارٍ التحديث", "Updating") : text("تم الحل", "Resolved")}
                   </button>
-                  <button type="button" disabled={busy} aria-busy={busy} onClick={() => void moderate(report, "rejected")} className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground disabled:opacity-60">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    aria-busy={busy}
+                    onClick={() => void moderate(report, "rejected")}
+                    className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground disabled:opacity-60"
+                  >
                     {busy ? text("جارٍ التحديث", "Updating") : text("رفض البلاغ", "Reject report")}
                   </button>
                 </div>
@@ -225,24 +245,55 @@ function ReportsPage() {
   );
 }
 
-function RecoveryNotice({ message, busy, retryLabel, refreshingLabel, onRetry }: { message: string; busy: boolean; retryLabel: string; refreshingLabel: string; onRetry: () => void }) {
+function RecoveryNotice({
+  message,
+  busy,
+  retryLabel,
+  refreshingLabel,
+  onRetry,
+}: {
+  message: string;
+  busy: boolean;
+  retryLabel: string;
+  refreshingLabel: string;
+  onRetry: () => void;
+}) {
   return (
     <div className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive hairline">
       <p>{message}</p>
-      <button type="button" disabled={busy} onClick={onRetry} className="mt-2 rounded-lg bg-card px-3 py-1.5 text-foreground hairline disabled:opacity-60">
+      <button
+        type="button"
+        disabled={busy}
+        onClick={onRetry}
+        className="mt-2 rounded-lg bg-card px-3 py-1.5 text-foreground hairline disabled:opacity-60"
+      >
         {busy ? refreshingLabel : retryLabel}
       </button>
     </div>
   );
 }
 
-function Panel({ title, body, actionLabel, onAction }: { title: string; body?: string; actionLabel?: string; onAction?: () => void }) {
+function Panel({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <div className="rounded-2xl bg-card p-8 text-center hairline">
       <p className="text-sm font-bold">{title}</p>
       {body ? <p className="mt-1 text-xs text-muted-foreground">{body}</p> : null}
       {actionLabel && onAction ? (
-        <button type="button" onClick={onAction} className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+        >
           {actionLabel}
         </button>
       ) : null}
@@ -251,5 +302,9 @@ function Panel({ title, body, actionLabel, onAction }: { title: string; body?: s
 }
 
 function Badge({ children }: { children: React.ReactNode }) {
-  return <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">{children}</span>;
+  return (
+    <span className="rounded-md bg-muted-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+      {children}
+    </span>
+  );
 }

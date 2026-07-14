@@ -118,9 +118,7 @@ expect(
     adminMessageReports.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
     adminMessageReports.includes("actionInFlightRef.current.has(report.id)") &&
     adminMessageReports.includes("loadError && !hasLoaded") &&
-    !/setLoadError\(result\.error\);[\s\S]{0,120}setReports\(\[\]\)/.test(
-      adminMessageReports,
-    ),
+    !/setLoadError\(result\.error\);[\s\S]{0,120}setReports\(\[\]\)/.test(adminMessageReports),
 );
 expect(
   "user management separates load and action errors and deduplicates sensitive writes",

@@ -184,7 +184,10 @@ function AdminOverview() {
         <SectionTitle icon={Activity} title={text("نبض التشغيل", "Operations pulse")} />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <MetricCard label={text("إجمالي المستخدمين", "Total users")} value={metrics.totalUsers} />
-          <MetricCard label={text("المستخدمون النشطون", "Active users")} value={metrics.activeUsers} />
+          <MetricCard
+            label={text("المستخدمون النشطون", "Active users")}
+            value={metrics.activeUsers}
+          />
           <MetricCard
             label={text("إجمالي طوابير العمل", "Total queue load")}
             value={queueLoad}
@@ -199,13 +202,41 @@ function AdminOverview() {
       </section>
 
       <section>
-        <SectionTitle icon={ShieldCheck} title={text("السلامة والمراجعة", "Safety and moderation")} />
+        <SectionTitle
+          icon={ShieldCheck}
+          title={text("السلامة والمراجعة", "Safety and moderation")}
+        />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <QueueCard icon={FileCheck} label={text("إعلانات للمراجعة", "Listings to review")} value={metrics.pendingListings} to="/admin/pending" />
-          <QueueCard icon={Flag} label={text("بلاغات إعلانات", "Listing reports")} value={metrics.openListingReports} to="/admin/reports" />
-          <QueueCard icon={MessageSquareWarning} label={text("بلاغات رسائل", "Message reports")} value={metrics.openMessageReports} to="/admin/message-reports" />
-          <QueueCard icon={BadgeCheck} label={text("طلبات توثيق", "Verification requests")} value={metrics.pendingVerifications} to="/admin/verifications" />
-          <QueueCard icon={Sparkles} label={text("طلبات ترويج", "Promotion requests")} value={metrics.pendingPromotions} to="/admin/promotions" />
+          <QueueCard
+            icon={FileCheck}
+            label={text("إعلانات للمراجعة", "Listings to review")}
+            value={metrics.pendingListings}
+            to="/admin/pending"
+          />
+          <QueueCard
+            icon={Flag}
+            label={text("بلاغات إعلانات", "Listing reports")}
+            value={metrics.openListingReports}
+            to="/admin/reports"
+          />
+          <QueueCard
+            icon={MessageSquareWarning}
+            label={text("بلاغات رسائل", "Message reports")}
+            value={metrics.openMessageReports}
+            to="/admin/message-reports"
+          />
+          <QueueCard
+            icon={BadgeCheck}
+            label={text("طلبات توثيق", "Verification requests")}
+            value={metrics.pendingVerifications}
+            to="/admin/verifications"
+          />
+          <QueueCard
+            icon={Sparkles}
+            label={text("طلبات ترويج", "Promotion requests")}
+            value={metrics.pendingPromotions}
+            to="/admin/promotions"
+          />
         </div>
       </section>
 
@@ -216,7 +247,10 @@ function AdminOverview() {
             <MiniMetric label={text("محظور", "Banned")} value={metrics.disabledUsers} />
             <MiniMetric label={text("قيود", "Restrictions")} value={metrics.activeRestrictions} />
           </div>
-          <CommandLink to="/admin/users" label={text("فتح إدارة المستخدمين", "Open user management")} />
+          <CommandLink
+            to="/admin/users"
+            label={text("فتح إدارة المستخدمين", "Open user management")}
+          />
         </CommandCard>
 
         <CommandCard icon={UserCog} title={text("الطاقم والصلاحيات", "Staff and permissions")}>
@@ -235,10 +269,36 @@ function AdminOverview() {
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <QuickLink icon={ShieldCheck} title={text("مركز السلامة", "Safety center")} body={text("تجميع طوابير البلاغات ومخاطر الحسابات.", "Unified report and account-risk queues.")} to="/admin/safety" />
-        <QuickLink icon={Activity} title={text("سجل التدقيق", "Audit log")} body={text("تتبع الإجراءات الإدارية الحساسة.", "Trace sensitive administrative actions.")} to="/admin/audit" />
-        <QuickLink icon={LockKeyhole} title={text("المستخدمون والقيود", "Users and restrictions")} body={text("إيقاف، حظر، استعادة وقيود دقيقة.", "Suspend, ban, restore, and granular controls.")} to="/admin/users" />
-        <QuickLink icon={Sparkles} title={text("الترويج", "Promotions")} body={text("مراجعة طلبات إبراز الإعلانات.", "Review listing promotion requests.")} to="/admin/promotions" />
+        <QuickLink
+          icon={ShieldCheck}
+          title={text("مركز السلامة", "Safety center")}
+          body={text(
+            "تجميع طوابير البلاغات ومخاطر الحسابات.",
+            "Unified report and account-risk queues.",
+          )}
+          to="/admin/safety"
+        />
+        <QuickLink
+          icon={Activity}
+          title={text("سجل التدقيق", "Audit log")}
+          body={text("تتبع الإجراءات الإدارية الحساسة.", "Trace sensitive administrative actions.")}
+          to="/admin/audit"
+        />
+        <QuickLink
+          icon={LockKeyhole}
+          title={text("المستخدمون والقيود", "Users and restrictions")}
+          body={text(
+            "إيقاف، حظر، استعادة وقيود دقيقة.",
+            "Suspend, ban, restore, and granular controls.",
+          )}
+          to="/admin/users"
+        />
+        <QuickLink
+          icon={Sparkles}
+          title={text("الترويج", "Promotions")}
+          body={text("مراجعة طلبات إبراز الإعلانات.", "Review listing promotion requests.")}
+          to="/admin/promotions"
+        />
       </section>
     </div>
   );
@@ -260,7 +320,11 @@ function AdminLoadState({
       <p className="text-sm font-bold">{title}</p>
       {body ? <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p> : null}
       {actionLabel && onAction ? (
-        <button type="button" onClick={onAction} className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+        >
           {actionLabel}
         </button>
       ) : null}
@@ -277,7 +341,15 @@ function SectionTitle({ icon: Icon, title }: { icon: typeof Crown; title: string
   );
 }
 
-function MetricCard({ label, value, attention = false }: { label: string; value: number; attention?: boolean }) {
+function MetricCard({
+  label,
+  value,
+  attention = false,
+}: {
+  label: string;
+  value: number;
+  attention?: boolean;
+}) {
   return (
     <div className={`rounded-2xl p-4 hairline ${attention ? "bg-warning/10" : "bg-card"}`}>
       <div className="text-2xl font-extrabold">{value.toLocaleString()}</div>
@@ -286,9 +358,22 @@ function MetricCard({ label, value, attention = false }: { label: string; value:
   );
 }
 
-function QueueCard({ icon: Icon, label, value, to }: { icon: typeof Crown; label: string; value: number; to: string }) {
+function QueueCard({
+  icon: Icon,
+  label,
+  value,
+  to,
+}: {
+  icon: typeof Crown;
+  label: string;
+  value: number;
+  to: string;
+}) {
   return (
-    <Link to={to as "/admin"} className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface">
+    <Link
+      to={to as "/admin"}
+      className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface"
+    >
       <div className="flex items-center justify-between gap-3">
         <span className="grid h-9 w-9 place-items-center rounded-xl bg-muted-surface text-primary">
           <Icon className="h-4 w-4" />
@@ -300,7 +385,15 @@ function QueueCard({ icon: Icon, label, value, to }: { icon: typeof Crown; label
   );
 }
 
-function CommandCard({ icon: Icon, title, children }: { icon: typeof Crown; title: string; children: React.ReactNode }) {
+function CommandCard({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: typeof Crown;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="rounded-2xl bg-card p-5 hairline">
       <SectionTitle icon={Icon} title={title} />
@@ -320,15 +413,31 @@ function MiniMetric({ label, value }: { label: string; value: number }) {
 
 function CommandLink({ to, label }: { to: string; label: string }) {
   return (
-    <Link to={to as "/admin"} className="mt-4 inline-flex rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">
+    <Link
+      to={to as "/admin"}
+      className="mt-4 inline-flex rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+    >
       {label}
     </Link>
   );
 }
 
-function QuickLink({ icon: Icon, title, body, to }: { icon: typeof Crown; title: string; body: string; to: string }) {
+function QuickLink({
+  icon: Icon,
+  title,
+  body,
+  to,
+}: {
+  icon: typeof Crown;
+  title: string;
+  body: string;
+  to: string;
+}) {
   return (
-    <Link to={to as "/admin"} className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface">
+    <Link
+      to={to as "/admin"}
+      className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface"
+    >
       <Icon className="h-5 w-5 text-primary" />
       <h3 className="mt-3 text-sm font-extrabold">{title}</h3>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">{body}</p>
