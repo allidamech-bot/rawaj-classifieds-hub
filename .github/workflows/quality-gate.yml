@@ -195,6 +195,9 @@ jobs:
       - name: Listing Detail V3 contract
         run: npm run test:listing-detail-v3
 
+      - name: Retention and Discovery V1 contract
+        run: npm run test:retention-discovery
+
       - name: Listing Studio V2 contract
         run: node --test scripts/listing-studio-v2.test.mjs
 
