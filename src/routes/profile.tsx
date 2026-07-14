@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import {
   BadgeCheck,
   Camera,
@@ -65,6 +65,7 @@ function ProfilePage() {
   const [myListings, setMyListings] = useState<ClassifiedListing[]>([]);
   const [myListingsError, setMyListingsError] = useState<ClassifiedsError | null>(null);
   const [myListingsLoading, setMyListingsLoading] = useState(false);
+  const [myListingsHasLoaded, setMyListingsHasLoaded] = useState(false);
   const [settingsDisplayName, setSettingsDisplayName] = useState("");
   const [settingsFirstName, setSettingsFirstName] = useState("");
   const [settingsLastName, setSettingsLastName] = useState("");
@@ -87,8 +88,11 @@ function ProfilePage() {
   const [mediaSaving, setMediaSaving] = useState<"avatar" | "cover" | null>(null);
   const [verificationRequests, setVerificationRequests] = useState<SellerVerificationRequest[]>([]);
   const [verificationLoading, setVerificationLoading] = useState(false);
-  const [verificationNotice, setVerificationNotice] = useState("");
-  const profileId = auth.profile?.id;
+  const [verificationHasLoaded, setVerificationHasLoaded] = useState(false);
+  const [verificationError, setVerificationError] = useState<ClassifiedsError | null>(null);
+  const listingsRequestIdRef = useRef(0);
+  const verificationRequestIdRef = useRef(0);
+  const profileId = auth.profile?.id ?? null;
   const displayName = auth.profile?.displayName || auth.profile?.email || text("زائر", "Guest");
   const recentListings = myListings.slice(0, 3);
 
@@ -99,15 +103,44 @@ function ProfilePage() {
     }, 80);
   }, []);
 
-  async function reloadListings() {
+  const reloadListings = useCallback(async () => {
     if (!profileId) return;
-    const result = await fetchCurrentUserListings(profileId);
-    if (result.ok) setMyListings(result.data);
-    else {
-      setMyListings([]);
+
+    const currentProfileId = profileId;
+    const requestId = ++listingsRequestIdRef.current;
+    setMyListingsLoading(true);
+    setMyListingsError(null);
+    const result = await fetchCurrentUserListings(currentProfileId);
+    if (requestId !== listingsRequestIdRef.current || currentProfileId !== auth.profile?.id) return;
+
+    if (result.ok) {
+      setMyListings(result.data);
+      setMyListingsHasLoaded(true);
+    } else {
       setMyListingsError(result.error);
     }
-  }
+    setMyListingsLoading(false);
+  }, [auth.profile?.id, profileId]);
+
+  const loadVerificationRequests = useCallback(async () => {
+    if (!profileId) return;
+
+    const currentProfileId = profileId;
+    const requestId = ++verificationRequestIdRef.current;
+    setVerificationLoading(true);
+    setVerificationError(null);
+    const result = await fetchMyVerificationRequests(currentProfileId);
+    if (requestId !== verificationRequestIdRef.current || currentProfileId !== auth.profile?.id)
+      return;
+
+    if (result.ok) {
+      setVerificationRequests(result.data);
+      setVerificationHasLoaded(true);
+    } else {
+      setVerificationError(result.error);
+    }
+    setVerificationLoading(false);
+  }, [auth.profile?.id, profileId]);
 
   async function handleLogout() {
     setLogoutError("");
@@ -124,7 +157,7 @@ function ProfilePage() {
     }
 
     setPasswordSaving(true);
-    const result = await changeOwnPassword(profileId ?? null, newPassword);
+    const result = await changeOwnPassword(profileId, newPassword);
     setPasswordSaving(false);
     if (!result.ok) {
       setPasswordNotice(result.error.message);
@@ -138,7 +171,7 @@ function ProfilePage() {
   async function handleAccountDeletionRequest() {
     setDeletionSaving(true);
     setDeletionNotice("");
-    const result = await createAccountDeletionRequest(profileId ?? null);
+    const result = await createAccountDeletionRequest(profileId);
     setDeletionSaving(false);
     if (!result.ok) {
       setDeletionNotice(result.error.message);
@@ -157,7 +190,7 @@ function ProfilePage() {
     event.preventDefault();
     setSettingsNotice("");
     setSettingsSaving(true);
-    const result = await updateOwnProfileBasics(profileId ?? null, {
+    const result = await updateOwnProfileBasics(profileId, {
       firstName: settingsFirstName,
       lastName: settingsLastName,
       displayName: settingsDisplayName || null,
@@ -190,7 +223,7 @@ function ProfilePage() {
     setSettingsNotice("");
     setMediaSaving(kind);
     const result = await uploadProfileMedia({
-      userId: profileId ?? null,
+      userId: profileId,
       kind,
       file,
       oldPath: kind === "avatar" ? auth.profile?.avatarPath : auth.profile?.coverPath,
@@ -215,7 +248,7 @@ function ProfilePage() {
     setSettingsNotice("");
     setMediaSaving(kind);
     const result = await removeProfileMedia(
-      profileId ?? null,
+      profileId,
       kind,
       kind === "avatar" ? auth.profile?.avatarPath : auth.profile?.coverPath,
     );
@@ -233,15 +266,6 @@ function ProfilePage() {
           )
         : text("تمت إزالة الصورة وتحديث الحساب.", "Image removed and account refreshed."),
     );
-  }
-
-  async function loadVerificationRequests() {
-    if (!profileId) return;
-    setVerificationLoading(true);
-    const result = await fetchMyVerificationRequests(profileId);
-    if (result.ok) setVerificationRequests(result.data);
-    else setVerificationNotice(result.error.message);
-    setVerificationLoading(false);
   }
 
   useEffect(() => {
@@ -265,24 +289,48 @@ function ProfilePage() {
   }, [auth.profile, auth.status]);
 
   useEffect(() => {
-    if (auth.status !== "signedIn" || !profileId) return;
-    let cancelled = false;
-    async function loadListings() {
-      setMyListingsLoading(true);
+    if (auth.status !== "signedIn" || !profileId) {
+      listingsRequestIdRef.current += 1;
+      setMyListings([]);
+      setMyListingsLoading(false);
+      setMyListingsHasLoaded(false);
       setMyListingsError(null);
-      await reloadListings();
-      if (!cancelled) setMyListingsLoading(false);
+      return;
     }
-    void loadListings();
+
+    listingsRequestIdRef.current += 1;
+    setMyListings([]);
+    setMyListingsLoading(false);
+    setMyListingsHasLoaded(false);
+    setMyListingsError(null);
+    void reloadListings();
+
     return () => {
-      cancelled = true;
+      listingsRequestIdRef.current += 1;
     };
-  }, [auth.status, profileId]);
+  }, [auth.status, profileId, reloadListings]);
 
   useEffect(() => {
-    if (auth.status !== "signedIn" || !profileId) return;
+    if (auth.status !== "signedIn" || !profileId) {
+      verificationRequestIdRef.current += 1;
+      setVerificationRequests([]);
+      setVerificationLoading(false);
+      setVerificationHasLoaded(false);
+      setVerificationError(null);
+      return;
+    }
+
+    verificationRequestIdRef.current += 1;
+    setVerificationRequests([]);
+    setVerificationLoading(false);
+    setVerificationHasLoaded(false);
+    setVerificationError(null);
     void loadVerificationRequests();
-  }, [auth.status, profileId]);
+
+    return () => {
+      verificationRequestIdRef.current += 1;
+    };
+  }, [auth.status, loadVerificationRequests, profileId]);
 
   return (
     <>
@@ -641,50 +689,71 @@ function ProfilePage() {
             <div className="mb-3 flex items-center justify-between gap-2">
               <h2 className="text-sm font-extrabold">{text("إعلاناتي", "My listings")}</h2>
               <span className="rounded-full bg-muted-surface px-2.5 py-1 text-[11px] font-bold">
-                {myListingsLoading
+                {myListingsLoading && !myListingsHasLoaded
                   ? text("تحميل", "Loading")
                   : text(`${myListings.length} إعلان`, `${myListings.length} listings`)}
               </span>
             </div>
-            {myListingsError ? (
+            {myListingsLoading && !myListingsHasLoaded ? (
               <p className="rounded-xl bg-muted-surface p-3 text-xs text-muted-foreground">
-                {myListingsError.message}
+                {text("جارٍ تحميل إعلانات حسابك.", "Loading your account listings.")}
               </p>
-            ) : recentListings.length === 0 ? (
-              <p className="rounded-xl bg-muted-surface p-3 text-xs text-muted-foreground">
-                {text("لا توجد إعلانات في حسابك بعد.", "No listings in your account yet.")}
-              </p>
+            ) : myListingsError && !myListingsHasLoaded ? (
+              <OverviewRecovery
+                title={text("تعذر تحميل إعلاناتك", "Could not load your listings")}
+                body={myListingsError.message}
+                actionLabel={text("إعادة المحاولة", "Try again")}
+                onAction={() => void reloadListings()}
+                disabled={myListingsLoading}
+              />
             ) : (
-              <div className="space-y-2">
-                {recentListings.map((listing) => (
-                  <article
-                    key={listing.id}
-                    className="rounded-xl bg-muted-surface p-3 text-xs hairline"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="truncate font-bold">{listing.title}</h3>
-                        <p className="mt-1 text-muted-foreground">
-                          {categoryName(
-                            listing.categoryId,
-                            listing.categoryNameAr ?? undefined,
-                            language,
-                          )}{" "}
-                          ·{" "}
-                          {governorateName(
-                            listing.governorateId,
-                            listing.governorateNameAr ?? undefined,
-                            language,
-                          )}
-                        </p>
-                      </div>
-                      <span className="shrink-0 rounded-md bg-card px-2 py-0.5 text-[10px] font-bold hairline">
-                        {listingStatusLabel(listing.status, language)}
-                      </span>
-                    </div>
-                  </article>
-                ))}
-              </div>
+              <>
+                {myListingsError ? (
+                  <OverviewRecovery
+                    title={text("تعذر تحديث إعلاناتك", "Could not refresh your listings")}
+                    body={myListingsError.message}
+                    actionLabel={text("إعادة المحاولة", "Try again")}
+                    onAction={() => void reloadListings()}
+                    disabled={myListingsLoading}
+                  />
+                ) : null}
+                {recentListings.length === 0 ? (
+                  <p className="rounded-xl bg-muted-surface p-3 text-xs text-muted-foreground">
+                    {text("لا توجد إعلانات في حسابك بعد.", "No listings in your account yet.")}
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {recentListings.map((listing) => (
+                      <article
+                        key={listing.id}
+                        className="rounded-xl bg-muted-surface p-3 text-xs hairline"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h3 className="truncate font-bold">{listing.title}</h3>
+                            <p className="mt-1 text-muted-foreground">
+                              {categoryName(
+                                listing.categoryId,
+                                listing.categoryNameAr ?? undefined,
+                                language,
+                              )}{" "}
+                              ·{" "}
+                              {governorateName(
+                                listing.governorateId,
+                                listing.governorateNameAr ?? undefined,
+                                language,
+                              )}
+                            </p>
+                          </div>
+                          <span className="shrink-0 rounded-md bg-card px-2 py-0.5 text-[10px] font-bold hairline">
+                            {listingStatusLabel(listing.status, language)}
+                          </span>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
             <div className="mt-3 grid grid-cols-2 gap-2">
               <Link
@@ -723,28 +792,49 @@ function ProfilePage() {
                 "Verification happens after admin review. Additional documents may be requested when needed.",
               )}
             </p>
-            {verificationLoading ? (
+            {verificationLoading && !verificationHasLoaded ? (
               <p className="mt-3 text-xs text-muted-foreground">
                 {text("جارٍ تحميل طلباتك", "Loading your requests")}
               </p>
-            ) : verificationRequests.length > 0 ? (
-              <div className="mt-3 space-y-2">
-                {verificationRequests.slice(0, 2).map((request) => (
-                  <div
-                    key={request.id}
-                    className="rounded-xl bg-muted-surface p-3 text-xs hairline"
-                  >
-                    <p className="font-bold">{request.legalName}</p>
-                    <p className="mt-1 text-muted-foreground">
-                      {verificationStatusLabel(request.status, text)} ·{" "}
-                      {verificationTypeLabel(request.requestType, text)}
-                    </p>
+            ) : verificationError && !verificationHasLoaded ? (
+              <OverviewRecovery
+                title={text("تعذر تحميل طلبات التوثيق", "Could not load verification requests")}
+                body={verificationError.message}
+                actionLabel={text("إعادة المحاولة", "Try again")}
+                onAction={() => void loadVerificationRequests()}
+                disabled={verificationLoading}
+              />
+            ) : (
+              <>
+                {verificationError ? (
+                  <OverviewRecovery
+                    title={text(
+                      "تعذر تحديث طلبات التوثيق",
+                      "Could not refresh verification requests",
+                    )}
+                    body={verificationError.message}
+                    actionLabel={text("إعادة المحاولة", "Try again")}
+                    onAction={() => void loadVerificationRequests()}
+                    disabled={verificationLoading}
+                  />
+                ) : null}
+                {verificationRequests.length > 0 ? (
+                  <div className="mt-3 space-y-2">
+                    {verificationRequests.slice(0, 2).map((request) => (
+                      <div
+                        key={request.id}
+                        className="rounded-xl bg-muted-surface p-3 text-xs hairline"
+                      >
+                        <p className="font-bold">{request.legalName}</p>
+                        <p className="mt-1 text-muted-foreground">
+                          {verificationStatusLabel(request.status, text)} ·{" "}
+                          {verificationTypeLabel(request.requestType, text)}
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : null}
-            {verificationNotice && (
-              <p className="mt-3 text-xs text-muted-foreground">{verificationNotice}</p>
+                ) : null}
+              </>
             )}
             <Link
               to="/verification"
@@ -756,6 +846,35 @@ function ProfilePage() {
         </section>
       </main>
     </>
+  );
+}
+
+function OverviewRecovery({
+  title,
+  body,
+  actionLabel,
+  onAction,
+  disabled,
+}: {
+  title: string;
+  body: string;
+  actionLabel: string;
+  onAction: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="mt-3 rounded-xl bg-destructive/10 p-3 text-destructive hairline">
+      <p className="text-xs font-bold">{title}</p>
+      <p className="mt-1 text-xs leading-5">{body}</p>
+      <button
+        type="button"
+        onClick={onAction}
+        disabled={disabled}
+        className="mt-3 inline-flex min-h-10 items-center rounded-xl bg-card px-3 py-2 text-xs font-bold text-foreground disabled:opacity-60 hairline"
+      >
+        {actionLabel}
+      </button>
+    </div>
   );
 }
 
