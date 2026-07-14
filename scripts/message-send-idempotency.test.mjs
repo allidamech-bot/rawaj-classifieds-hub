@@ -2,18 +2,26 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [messagingSource, requestSource, routeSource, migrationSource, ledgerSource, packageSource] =
-  await Promise.all([
-    readFile(new URL("../src/lib/api/messaging.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/api/message-send-request.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
-    readFile(
-      new URL("../supabase/migrations/202607140003_idempotent_message_send.sql", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../docs/production-schema/migration-ledger.json", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-  ]);
+const [
+  messagingSource,
+  messagingGuardedSource,
+  requestSource,
+  routeSource,
+  migrationSource,
+  ledgerSource,
+  packageSource,
+] = await Promise.all([
+  readFile(new URL("../src/lib/api/messaging.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/messaging-guarded.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/message-send-request.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../supabase/migrations/202607140003_idempotent_message_send.sql", import.meta.url),
+    "utf8",
+  ),
+  readFile(new URL("../docs/production-schema/migration-ledger.json", import.meta.url), "utf8"),
+  readFile(new URL("../package.json", import.meta.url), "utf8"),
+]);
 
 test("the database makes one client message request idempotent", () => {
   assert.match(migrationSource, /add column if not exists client_request_id uuid/);
@@ -49,10 +57,19 @@ test("a failed or ambiguous browser attempt reuses its request UUID after reload
   assert.match(requestSource, /completeMessageSendRequest/);
 });
 
-test("the chat route reuses then completes one send attempt and deduplicates rendered rows", () => {
+test("successful sends clear retry state before route scope can become stale", () => {
+  assert.match(messagingGuardedSource, /sendConversationMessage as baseSendConversationMessage/);
+  assert.match(messagingGuardedSource, /const result = await baseSendConversationMessage\(\.\.\.args\)/);
+  assert.match(messagingGuardedSource, /if \(result\.ok && userId\)/);
+  assert.match(
+    messagingGuardedSource,
+    /completeMessageSendRequest\(userId, conversationId, requestId\)/,
+  );
+});
+
+test("the chat route reuses one attempt and deduplicates rendered rows", () => {
   assert.match(routeSource, /readOrCreateMessageSendRequestId/);
   assert.match(routeSource, /sendConversationMessage\([\s\S]*cleanBody,[\s\S]*requestId/);
-  assert.match(routeSource, /completeMessageSendRequest\(profileId, conversationId, requestId\)/);
   assert.match(routeSource, /current\.some\(\(message\) => message\.id === result\.data\.id\)/);
 });
 
