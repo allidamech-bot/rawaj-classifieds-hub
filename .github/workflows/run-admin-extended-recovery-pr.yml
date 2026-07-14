@@ -35,7 +35,20 @@ jobs:
               raise SystemExit('embedded patch not found')
           Path('/tmp/recover_admin_extended.py').write_bytes(gzip.decompress(base64.b64decode(match.group(1))))
           PY
-          python /tmp/recover_admin_extended.py
+          set +e
+          python /tmp/recover_admin_extended.py > /tmp/admin-patch-output.txt 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            cp /tmp/admin-patch-output.txt .github/admin-extended-recovery-error.txt
+            git config user.name github-actions[bot]
+            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git add .github/admin-extended-recovery-error.txt
+            git commit -m 'Record admin recovery patch failure'
+            git push origin HEAD:feature/recover-admin-extended-queues
+            cat /tmp/admin-patch-output.txt
+            exit "$status"
+          fi
       - name: Format and validate focused files
         run: |
           npx prettier --write \
@@ -58,6 +71,7 @@ jobs:
       - name: Commit focused result and remove temporary files
         shell: bash
         run: |
+          rm -f .github/admin-extended-recovery-error.txt
           rm .github/workflows/patch-admin-extended-recovery.yml
           rm .github/workflows/run-admin-extended-recovery-pr.yml
           rm .github/admin-extended-recovery.trigger
