@@ -2,17 +2,21 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [sheetSource, sessionSource, resultsSource, paginationSource, packageSource] =
-  await Promise.all([
-    readFile(new URL("../src/features/search/FilterBottomSheet.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/search/filter-draft-session.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/listings/use-listings-results.ts", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/features/listings/use-listings-pagination.ts", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-  ]);
+const [
+  sheetSource,
+  sessionSource,
+  resultsSource,
+  paginationSource,
+  componentsSource,
+  packageSource,
+] = await Promise.all([
+  readFile(new URL("../src/features/search/FilterBottomSheet.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/search/filter-draft-session.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/listings/use-listings-results.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/listings/use-listings-pagination.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/listings/listings-components.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../package.json", import.meta.url), "utf8"),
+]);
 
 test("the mobile filter sheet owns an explicit draft session", () => {
   assert.match(sheetSource, /beginFilterDraftSession/);
@@ -65,6 +69,17 @@ test("draft edits cannot start or complete pagination requests", () => {
     paginationSource,
     /if \(isFilterDraftSessionActive\(\) \|\| activeVersion !== filterVersionRef\.current\)/,
   );
+});
+
+test("listings load errors can retry the current filtered URL without removing the fallback exit", () => {
+  assert.match(
+    componentsSource,
+    /title\.startsWith\("تعذر "\) \|\| title\.startsWith\("Could not "\)/,
+  );
+  assert.match(componentsSource, /window\.location\.reload\(\)/);
+  assert.match(componentsSource, /text\("إعادة المحاولة", "Try again"\)/);
+  assert.match(componentsSource, /actionLabel && actionTo/);
+  assert.match(componentsSource, /bg-muted-surface text-foreground hairline/);
 });
 
 test("transactional mobile filter coverage is part of the listings Quality Gate", () => {

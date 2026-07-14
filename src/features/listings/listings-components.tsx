@@ -334,18 +334,38 @@ export function StateCard({
   actionLabel?: string;
   actionTo?: string;
 }) {
+  const { text } = useUiPreferences();
+  const retryableLoadError = title.startsWith("تعذر ") || title.startsWith("Could not ");
+
   return (
     <div className="mt-6 rounded-2xl bg-card p-6 text-center hairline">
       <p className="text-sm font-semibold text-foreground">{title}</p>
       <p className="mt-1 text-xs text-muted-foreground">{body}</p>
-      {actionLabel && actionTo && (
-        <Link
-          to={actionTo}
-          className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-        >
-          {actionLabel}
-        </Link>
-      )}
+      {retryableLoadError || (actionLabel && actionTo) ? (
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          {retryableLoadError ? (
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+            >
+              {text("إعادة المحاولة", "Try again")}
+            </button>
+          ) : null}
+          {actionLabel && actionTo ? (
+            <Link
+              to={actionTo}
+              className={`rounded-xl px-4 py-2 text-xs font-bold ${
+                retryableLoadError
+                  ? "bg-muted-surface text-foreground hairline"
+                  : "bg-primary text-primary-foreground"
+              }`}
+            >
+              {actionLabel}
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
