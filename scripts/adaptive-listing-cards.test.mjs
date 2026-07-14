@@ -150,6 +150,27 @@ test("compact and featured variants replace route-local card duplication", () =>
   assert.match(favoritesRoute, /<FavoriteListingCard/);
 });
 
+test("favorites preserve successful snapshots and recover failed reads in place", () => {
+  assert.match(favoritesRoute, /const \[hasLoaded, setHasLoaded\]/);
+  assert.match(favoritesRoute, /const loadFavorites = useCallback/);
+  assert.match(favoritesRoute, /error && !hasLoaded/);
+  assert.match(favoritesRoute, /onAction=\{\(\) => void loadFavorites\(\)\}/);
+  assert.match(favoritesRoute, /actionLabel=\{text\("إعادة المحاولة", "Try again"\)\}/);
+  assert.match(favoritesRoute, /const \[actionMessage, setActionMessage\]/);
+  assert.doesNotMatch(favoritesRoute, /setError\(result\.error\);[\s\S]{0,80}setItems\(\[\]\)/);
+  assert.doesNotMatch(favoritesRoute, /window\.location\.reload\(\)/);
+});
+
+test("favorites reject stale account and route responses", () => {
+  assert.match(favoritesRoute, /const loadRequestIdRef = useRef\(0\)/);
+  assert.match(favoritesRoute, /requestId !== loadRequestIdRef\.current/);
+  assert.match(favoritesRoute, /currentProfileId !== auth\.profile\?\.id/);
+  assert.match(
+    favoritesRoute,
+    /return \(\) => \{[\s\S]*loadRequestIdRef\.current \+= 1;[\s\S]*\};/,
+  );
+});
+
 test("results use matching skeletons before adaptive real cards", () => {
   assert.match(listingsRoute, /<ListingCardSkeleton/);
   assert.match(listingsRoute, /categoryFieldKind === "vehicles"/);
