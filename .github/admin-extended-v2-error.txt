@@ -1,0 +1,44 @@
+/tmp/admin-extended-v2.py:1184: SyntaxWarning: invalid escape sequence '\('
+  anchor = '''expect(
+/tmp/admin-extended-v2.py:1197: SyntaxWarning: invalid escape sequence '\('
+  additions = '''
+INTERNAL VALIDATION START
+$ npx prettier --write src/routes/admin.listings.tsx src/routes/admin.verifications.tsx src/routes/admin.promotions.tsx src/routes/admin.audit.tsx src/routes/admin.owner-controls.tsx src/routes/admin.ad-placements.tsx scripts/admin-security-regression.mjs
+src/routes/admin.listings.tsx 186ms
+src/routes/admin.verifications.tsx 51ms
+src/routes/admin.promotions.tsx 50ms
+[90msrc/routes/admin.audit.tsx[39m 27ms (unchanged)
+src/routes/admin.owner-controls.tsx 35ms
+src/routes/admin.ad-placements.tsx 70ms
+scripts/admin-security-regression.mjs 44ms
+
+$ npx eslint src/routes/admin.listings.tsx src/routes/admin.verifications.tsx src/routes/admin.promotions.tsx src/routes/admin.audit.tsx src/routes/admin.owner-controls.tsx src/routes/admin.ad-placements.tsx
+
+/home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/src/routes/admin.listings.tsx
+  83:25  warning  The ref value 'actionInFlightRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'actionInFlightRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+/home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/src/routes/admin.owner-controls.tsx
+  125:25  warning  The ref value 'toggleInFlightRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'toggleInFlightRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+/home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/src/routes/admin.promotions.tsx
+  73:26  warning  The ref value 'receiptInFlightRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'receiptInFlightRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+  74:25  warning  The ref value 'actionInFlightRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'actionInFlightRef.current' to a variable inside the effect, and use that variable in the cleanup function    react-hooks/exhaustive-deps
+
+/home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/src/routes/admin.verifications.tsx
+  67:27  warning  The ref value 'documentInFlightRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'documentInFlightRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+  68:25  warning  The ref value 'actionInFlightRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'actionInFlightRef.current' to a variable inside the effect, and use that variable in the cleanup function      react-hooks/exhaustive-deps
+
+✖ 6 problems (0 errors, 6 warnings)
+
+
+$ node scripts/admin-security-regression.mjs
+Admin security regression passed (45 invariants).
+
+$ npm run typecheck
+
+> typecheck
+> tsc --noEmit
+
+src/routes/admin.ad-placements.tsx(138,5): error TS2304: Cannot find name 'setError'.
+src/routes/admin.ad-placements.tsx(145,5): error TS2304: Cannot find name 'setError'.
+
