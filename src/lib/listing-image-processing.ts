@@ -1,6 +1,8 @@
 const MAX_LISTING_IMAGE_DIMENSION = 2048;
 const LISTING_IMAGE_QUALITY = 0.84;
 const LISTING_IMAGE_SIGNATURE_BYTES = 16;
+const MAX_LISTING_IMAGE_SOURCE_DIMENSION = 12_000;
+const MAX_LISTING_IMAGE_SOURCE_PIXELS = 50_000_000;
 
 export type ListingImageMimeType = "image/jpeg" | "image/png" | "image/webp";
 
@@ -12,6 +14,7 @@ export interface ListingImageDimensions {
 export interface ListingImageContentValidation {
   ok: boolean;
   detectedType?: ListingImageMimeType;
+  dimensions?: ListingImageDimensions;
   error?: string;
 }
 
@@ -45,6 +48,19 @@ export async function detectListingImageMimeType(file: Blob): Promise<ListingIma
   return null;
 }
 
+export async function readListingImageDimensions(
+  file: Blob,
+  detectedType?: ListingImageMimeType,
+): Promise<ListingImageDimensions | null> {
+  const type = detectedType ?? (await detectListingImageMimeType(file));
+  if (!type) return null;
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (type === "image/png") return readPngDimensions(bytes);
+  if (type === "image/jpeg") return readJpegDimensions(bytes);
+  return readWebpDimensions(bytes);
+}
+
 export async function validateListingImageContent(
   file: File,
 ): Promise<ListingImageContentValidation> {
@@ -73,6 +89,34 @@ export async function validateListingImageContent(
     };
   }
 
+  let dimensions: ListingImageDimensions | null;
+  try {
+    dimensions = await readListingImageDimensions(file, detectedType);
+  } catch {
+    dimensions = null;
+  }
+
+  if (!dimensions) {
+    return {
+      ok: false,
+      detectedType,
+      error: "تعذر قراءة أبعاد الصورة من محتوى الملف.",
+    };
+  }
+
+  if (
+    dimensions.width > MAX_LISTING_IMAGE_SOURCE_DIMENSION ||
+    dimensions.height > MAX_LISTING_IMAGE_SOURCE_DIMENSION ||
+    dimensions.width * dimensions.height > MAX_LISTING_IMAGE_SOURCE_PIXELS
+  ) {
+    return {
+      ok: false,
+      detectedType,
+      dimensions,
+      error: "أبعاد الصورة كبيرة جداً للمعالجة الآمنة. اختر صورة بدقة أقل.",
+    };
+  }
+
   if (typeof createImageBitmap === "function") {
     let bitmap: ImageBitmap | null = null;
     try {
@@ -81,6 +125,7 @@ export async function validateListingImageContent(
         return {
           ok: false,
           detectedType,
+          dimensions,
           error: "أبعاد الصورة غير صالحة.",
         };
       }
@@ -88,6 +133,7 @@ export async function validateListingImageContent(
       return {
         ok: false,
         detectedType,
+        dimensions,
         error: "ملف الصورة تالف أو يتعذر فك ترميزه.",
       };
     } finally {
@@ -95,7 +141,7 @@ export async function validateListingImageContent(
     }
   }
 
-  return { ok: true, detectedType };
+  return { ok: true, detectedType, dimensions };
 }
 
 export async function prepareListingImageForUpload(file: File): Promise<File> {
@@ -132,6 +178,100 @@ export async function prepareListingImageForUpload(file: File): Promise<File> {
   } finally {
     bitmap?.close();
   }
+}
+
+function readPngDimensions(bytes: Uint8Array): ListingImageDimensions | null {
+  if (
+    bytes.length < 24 ||
+    !matchesBytes(bytes, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]) ||
+    !matchesAscii(bytes, 12, "IHDR")
+  ) {
+    return null;
+  }
+
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  return validDimensions(view.getUint32(16), view.getUint32(20));
+}
+
+function readJpegDimensions(bytes: Uint8Array): ListingImageDimensions | null {
+  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return null;
+
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let offset = 2;
+  while (offset + 3 < bytes.length) {
+    if (bytes[offset] !== 0xff) {
+      offset += 1;
+      continue;
+    }
+
+    while (offset < bytes.length && bytes[offset] === 0xff) offset += 1;
+    if (offset >= bytes.length) return null;
+
+    const marker = bytes[offset];
+    offset += 1;
+    if (marker === 0xd9 || marker === 0xda) return null;
+    if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd8)) continue;
+    if (offset + 1 >= bytes.length) return null;
+
+    const segmentLength = view.getUint16(offset);
+    if (segmentLength < 2 || offset + segmentLength > bytes.length) return null;
+
+    if (isJpegStartOfFrame(marker)) {
+      if (segmentLength < 7) return null;
+      return validDimensions(view.getUint16(offset + 5), view.getUint16(offset + 3));
+    }
+
+    offset += segmentLength;
+  }
+
+  return null;
+}
+
+function readWebpDimensions(bytes: Uint8Array): ListingImageDimensions | null {
+  if (bytes.length < 25 || !matchesAscii(bytes, 0, "RIFF") || !matchesAscii(bytes, 8, "WEBP")) {
+    return null;
+  }
+
+  const chunkType = asciiAt(bytes, 12, 4);
+  if (chunkType === "VP8X") {
+    if (bytes.length < 30) return null;
+    return validDimensions(readUint24Le(bytes, 24) + 1, readUint24Le(bytes, 27) + 1);
+  }
+
+  if (chunkType === "VP8 ") {
+    if (bytes.length < 30 || bytes[23] !== 0x9d || bytes[24] !== 0x01 || bytes[25] !== 0x2a) {
+      return null;
+    }
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    return validDimensions(view.getUint16(26, true) & 0x3fff, view.getUint16(28, true) & 0x3fff);
+  }
+
+  if (chunkType === "VP8L") {
+    if (bytes[20] !== 0x2f) return null;
+    const width = 1 + (bytes[21] | ((bytes[22] & 0x3f) << 8));
+    const height = 1 + ((bytes[22] >> 6) | (bytes[23] << 2) | ((bytes[24] & 0x0f) << 10));
+    return validDimensions(width, height);
+  }
+
+  return null;
+}
+
+function isJpegStartOfFrame(marker: number): boolean {
+  return marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker);
+}
+
+function validDimensions(width: number, height: number): ListingImageDimensions | null {
+  return Number.isInteger(width) && Number.isInteger(height) && width > 0 && height > 0
+    ? { width, height }
+    : null;
+}
+
+function readUint24Le(bytes: Uint8Array, offset: number): number {
+  return bytes[offset] | (bytes[offset + 1] << 8) | (bytes[offset + 2] << 16);
+}
+
+function asciiAt(bytes: Uint8Array, offset: number, length: number): string {
+  return String.fromCharCode(...bytes.slice(offset, offset + length));
 }
 
 function matchesBytes(bytes: Uint8Array, signature: number[]): boolean {
