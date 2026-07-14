@@ -1,8 +1,5 @@
 export type LovableErrorMechanism =
-  | "manual"
-  | "onerror"
-  | "unhandledrejection"
-  | "react_error_boundary";
+  "manual" | "onerror" | "unhandledrejection" | "react_error_boundary";
 
 export type LovableErrorOptions = {
   mechanism?: LovableErrorMechanism;
@@ -24,7 +21,8 @@ declare global {
   }
 }
 
-const SECRET_QUERY_PARAMETER = /([?&](?:access_token|refresh_token|token|code|key|secret)=)[^&#\s]+/gi;
+const SECRET_QUERY_PARAMETER =
+  /([?&](?:access_token|refresh_token|token|code|key|secret)=)[^&#\s]+/gi;
 const BEARER_TOKEN = /Bearer\s+[A-Za-z0-9._~+/=-]+/gi;
 const EMAIL_ADDRESS = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
 
