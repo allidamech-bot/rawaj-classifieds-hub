@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import {
   fetchConversationMessages,
   fetchMyConversations,
@@ -41,7 +47,8 @@ export function useLiveChatWorkspace({
   const previousUnreadMessagesRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const scopeKey = signedIn && profileId ? buildScopeKey(profileId, selectedConversationId) : null;
+    const scopeKey =
+      signedIn && profileId ? buildScopeKey(profileId, selectedConversationId) : null;
     activeScopeRef.current = scopeKey;
 
     return () => {
@@ -68,6 +75,11 @@ export function useLiveChatWorkspace({
 
       if (activeScopeRef.current !== scopeKey) return;
 
+      const refreshedConversation =
+        conversationsResult.ok && conversationId
+          ? conversationsResult.data.find((conversation) => conversation.id === conversationId) ?? null
+          : null;
+
       if (conversationsResult.ok) {
         setConversations(conversationsResult.data);
       }
@@ -75,6 +87,8 @@ export function useLiveChatWorkspace({
       if (!conversationId || !messagesResult?.ok) return;
 
       setMessages(messagesResult.data);
+      if (!refreshedConversation || refreshedConversation.unreadCount <= 0) return;
+
       const readResult = await markConversationRead(profileId, conversationId);
       if (!readResult.ok || activeScopeRef.current !== scopeKey) return;
 
@@ -122,10 +136,7 @@ export function useLiveChatWorkspace({
     const scheduleRealtimeRefresh = () => {
       if (document.visibilityState === "hidden" || navigator.onLine === false) return;
       if (realtimeTimer !== null) clearTimeout(realtimeTimer);
-      realtimeTimer = setTimeout(
-        refreshWhenAvailable,
-        LIVE_CHAT_EVENT_DEBOUNCE_MS,
-      );
+      realtimeTimer = setTimeout(refreshWhenAvailable, LIVE_CHAT_EVENT_DEBOUNCE_MS);
     };
 
     const interval = window.setInterval(refreshWhenAvailable, LIVE_CHAT_FALLBACK_POLL_MS);
