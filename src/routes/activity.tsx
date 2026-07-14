@@ -55,10 +55,7 @@ function ActivityCenterPage() {
     setNotificationsLoading(true);
     setNotificationError(null);
     const result = await fetchMyNotificationsPage(currentProfileId, 0, 8);
-    if (
-      requestId !== notificationRequestIdRef.current ||
-      currentProfileId !== auth.profile?.id
-    )
+    if (requestId !== notificationRequestIdRef.current || currentProfileId !== auth.profile?.id)
       return;
 
     if (result.ok) {
@@ -78,10 +75,7 @@ function ActivityCenterPage() {
     setConversationsLoading(true);
     setConversationError(null);
     const result = await fetchMyConversations(currentProfileId);
-    if (
-      requestId !== conversationRequestIdRef.current ||
-      currentProfileId !== auth.profile?.id
-    )
+    if (requestId !== conversationRequestIdRef.current || currentProfileId !== auth.profile?.id)
       return;
 
     if (result.ok) {
@@ -264,7 +258,9 @@ function ActivityCenterPage() {
                   />
                 ) : null}
                 {conversations.length === 0 ? (
-                  <ActivityState>{text("لا توجد محادثات بعد.", "No conversations yet.")}</ActivityState>
+                  <ActivityState>
+                    {text("لا توجد محادثات بعد.", "No conversations yet.")}
+                  </ActivityState>
                 ) : (
                   <div className="rawaj-activity-feed">
                     {conversations.map((conversation) => (
