@@ -44,11 +44,14 @@ test("unread refreshes are deduplicated per profile and stale account results ar
     activitySource,
     /refreshInFlightRef = useRef<InFlightUnreadRefresh \| null>\(null\)/,
   );
+  assert.match(activitySource, /activeProfileRef\.current = auth\.status === "signedIn"/);
   assert.match(activitySource, /const activeRefresh = refreshInFlightRef\.current/);
   assert.match(activitySource, /activeRefresh\?\.profileId === profileId/);
   assert.match(activitySource, /return activeRefresh\.promise/);
   assert.match(activitySource, /activeProfileRef\.current !== profileId/);
-  assert.match(activitySource, /refreshInFlightRef\.current = \{ profileId, promise: request \}/);
+  assert.match(activitySource, /const refreshRecord: InFlightUnreadRefresh/);
+  assert.match(activitySource, /refreshRecord\.promise = request/);
+  assert.match(activitySource, /refreshInFlightRef\.current = refreshRecord/);
   assert.match(activitySource, /refreshInFlightRef\.current = null/);
 });
 
