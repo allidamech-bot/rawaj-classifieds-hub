@@ -9,15 +9,15 @@ const SUCCESS_REUSE_WINDOW_MS = 30_000;
 
 interface DraftCreationRequest {
   promise: Promise<ClassifiedsResult<ClassifiedListing>>;
-  expiresAt: number;
+  expiresAt: number | null;
 }
 
 const ownerDraftCreationRequests = new Map<string, DraftCreationRequest>();
 
 /**
  * Prevents duplicate draft rows when autosave and an explicit submit race with
- * the same owner payload in one browser runtime. Successful results remain
- * reusable briefly so a repeated click immediately after the first response
+ * the same owner payload in one browser runtime. In-flight requests never
+ * expire; successful results remain reusable briefly so a repeated click
  * cannot create a second draft before React state receives the first draft id.
  */
 export function createOwnerDraftListing(
@@ -28,11 +28,19 @@ export function createOwnerDraftListing(
 
   const requestKey = `${userId ?? "anonymous"}:${stablePayloadKey(payload)}`;
   const existing = ownerDraftCreationRequests.get(requestKey);
-  if (existing && existing.expiresAt > Date.now()) return existing.promise;
+  if (existing && (existing.expiresAt === null || existing.expiresAt > Date.now())) {
+    return existing.promise;
+  }
 
+  let record: DraftCreationRequest;
   const request = createOwnerDraftListingBase(userId, payload)
     .then((result) => {
-      if (!result.ok) ownerDraftCreationRequests.delete(requestKey);
+      if (!result.ok) {
+        ownerDraftCreationRequests.delete(requestKey);
+        return result;
+      }
+
+      record.expiresAt = Date.now() + SUCCESS_REUSE_WINDOW_MS;
       return result;
     })
     .catch((error: unknown) => {
@@ -40,10 +48,8 @@ export function createOwnerDraftListing(
       throw error;
     });
 
-  ownerDraftCreationRequests.set(requestKey, {
-    promise: request,
-    expiresAt: Date.now() + SUCCESS_REUSE_WINDOW_MS,
-  });
+  record = { promise: request, expiresAt: null };
+  ownerDraftCreationRequests.set(requestKey, record);
 
   return request;
 }
@@ -51,7 +57,9 @@ export function createOwnerDraftListing(
 function pruneExpiredDraftCreationRequests() {
   const now = Date.now();
   for (const [key, request] of ownerDraftCreationRequests) {
-    if (request.expiresAt <= now) ownerDraftCreationRequests.delete(key);
+    if (request.expiresAt !== null && request.expiresAt <= now) {
+      ownerDraftCreationRequests.delete(key);
+    }
   }
 }
 
