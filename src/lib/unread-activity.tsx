@@ -62,7 +62,8 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
     const activeRefresh = refreshInFlightRef.current;
     if (activeRefresh) return activeRefresh;
 
-    const request = (async () => {
+    let request: Promise<void>;
+    request = (async () => {
       setLoading(true);
       try {
         const [conversationsResult, notificationsResult] = await Promise.all([
