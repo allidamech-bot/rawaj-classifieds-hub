@@ -129,7 +129,8 @@
       "202607130001_canonical_listing_taxonomy_assignments.sql",
       "202607130002_arabic_listing_search_normalization.sql",
       "202607140001_owner_listing_stale_write_protection.sql",
-      "202607140002_idempotent_owner_draft_creation.sql"
+      "202607140002_idempotent_owner_draft_creation.sql",
+      "202607140003_idempotent_message_send.sql"
     ],
     "superseded": ["202606290002_classifieds_foundation.sql"],
     "reconciliation": [
