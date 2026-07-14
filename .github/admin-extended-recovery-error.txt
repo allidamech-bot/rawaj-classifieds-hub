@@ -1,0 +1,11 @@
+/tmp/recover_admin_extended.py:1498: SyntaxWarning: invalid escape sequence '\('
+  additions = '''
+Traceback (most recent call last):
+  File "/tmp/recover_admin_extended.py", line 1556, in <module>
+    patch_verifications()
+  File "/tmp/recover_admin_extended.py", line 478, in patch_verifications
+    text = replace_once(
+           ^^^^^^^^^^^^^
+  File "/tmp/recover_admin_extended.py", line 17, in replace_once
+    raise RuntimeError(f"missing exact block: {label}")
+RuntimeError: missing exact block: verification approve disabled
