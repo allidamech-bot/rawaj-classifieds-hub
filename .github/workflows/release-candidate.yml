@@ -1,6 +1,11 @@
 name: Release Candidate
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/release-candidate.yml"
   workflow_dispatch:
     inputs:
       expected_commit_sha:
@@ -14,7 +19,7 @@ on:
         type: boolean
 
 concurrency:
-  group: release-candidate-${{ inputs.expected_commit_sha }}
+  group: release-candidate-${{ inputs.expected_commit_sha || github.sha }}
   cancel-in-progress: false
 
 permissions:
@@ -25,13 +30,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      EXPECTED_COMMIT_SHA: ${{ inputs.expected_commit_sha }}
+      EXPECTED_COMMIT_SHA: ${{ inputs.expected_commit_sha || github.sha }}
 
     steps:
       - name: Checkout exact candidate
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.expected_commit_sha }}
+          ref: ${{ inputs.expected_commit_sha || github.sha }}
           fetch-depth: 1
           show-progress: false
 
@@ -80,7 +85,7 @@ jobs:
           ./gradlew assembleDebug --no-daemon
 
       - name: Run authenticated Production acceptance
-        if: ${{ inputs.run_production_acceptance }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_production_acceptance }}
         env:
           E2E_BASE_URL: https://rawa-j.com
           PRODUCTION_ACCEPTANCE: "1"
@@ -90,13 +95,13 @@ jobs:
 
       - name: Generate release candidate manifest
         env:
-          PRODUCTION_ACCEPTANCE: ${{ inputs.run_production_acceptance && '1' || '0' }}
+          PRODUCTION_ACCEPTANCE: ${{ github.event_name == 'workflow_dispatch' && inputs.run_production_acceptance && '1' || '0' }}
         run: npm run release:manifest
 
       - name: Upload release candidate artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: rawaj-rc-${{ inputs.expected_commit_sha }}
+          name: rawaj-rc-${{ inputs.expected_commit_sha || github.sha }}
           path: |
             .output/public
             android/app/build/outputs/apk/debug/app-debug.apk
