@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heart, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { FavoriteListingCard } from "@/features/favorites/FavoriteListingCard";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
+import { FavoriteListingCard } from "@/features/favorites/FavoriteListingCard";
 import {
   fetchFavoriteJourneyItems,
   unfavoriteListing,
@@ -26,49 +26,66 @@ function FavoritesPage() {
   const { language, text } = useUiPreferences();
   const [items, setItems] = useState<FavoriteJourneyItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<ClassifiedsError | null>(null);
+  const [actionMessage, setActionMessage] = useState("");
   const removeInFlightRef = useRef<Set<string>>(new Set());
   const loadRequestIdRef = useRef(0);
+  const profileId = auth.profile?.id ?? null;
+
+  const loadFavorites = useCallback(async () => {
+    if (!profileId) return;
+
+    const currentProfileId = profileId;
+    const requestId = ++loadRequestIdRef.current;
+    setLoading(true);
+    setError(null);
+    const result = await fetchFavoriteJourneyItems(currentProfileId);
+    if (requestId !== loadRequestIdRef.current || currentProfileId !== auth.profile?.id) return;
+
+    if (result.ok) {
+      setItems(result.data);
+      setHasLoaded(true);
+    } else {
+      setError(result.error);
+    }
+    setLoading(false);
+  }, [auth.profile?.id, profileId]);
 
   useEffect(() => {
-    if (auth.status !== "signedIn") {
+    if (auth.status !== "signedIn" || !profileId) {
       loadRequestIdRef.current += 1;
       setItems([]);
       setLoading(false);
+      setHasLoaded(false);
+      setError(null);
+      setActionMessage("");
       return;
     }
-    let cancelled = false;
-    const requestId = ++loadRequestIdRef.current;
-    const profileId = auth.profile?.id ?? null;
 
-    async function load() {
-      setLoading(true);
-      setError(null);
-      const result = await fetchFavoriteJourneyItems(profileId);
-      if (cancelled || requestId !== loadRequestIdRef.current) return;
-      if (result.ok) setItems(result.data);
-      else {
-        setError(result.error);
-        setItems([]);
-      }
-      setLoading(false);
-    }
+    loadRequestIdRef.current += 1;
+    setItems([]);
+    setLoading(false);
+    setHasLoaded(false);
+    setError(null);
+    setActionMessage("");
+    void loadFavorites();
 
-    void load();
     return () => {
-      cancelled = true;
+      loadRequestIdRef.current += 1;
     };
-  }, [auth.status, auth.profile?.id]);
+  }, [auth.status, loadFavorites, profileId]);
 
   async function remove(listingId: string) {
     if (removeInFlightRef.current.has(listingId)) return;
-    const profileId = auth.profile?.id ?? null;
+    const currentProfileId = profileId;
     removeInFlightRef.current.add(listingId);
+    setActionMessage("");
     try {
-      const result = await unfavoriteListing(profileId, listingId);
-      if (profileId !== auth.profile?.id) return;
+      const result = await unfavoriteListing(currentProfileId, listingId);
+      if (currentProfileId !== auth.profile?.id) return;
       if (!result.ok) {
-        setError(result.error);
+        setActionMessage(result.error.message);
         return;
       }
       setItems((current) => current.filter((item) => item.listingId !== listingId));
@@ -131,93 +148,113 @@ function FavoritesPage() {
           </p>
         </section>
 
-        {loading ? (
+        {actionMessage ? (
+          <p className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive hairline">
+            {actionMessage}
+          </p>
+        ) : null}
+
+        {loading && !hasLoaded ? (
           <Panel title={text("جارٍ تحميل المفضلة", "Loading favorites")} />
-        ) : error ? (
+        ) : error && !hasLoaded ? (
           <Panel
             title={text("تعذر تحميل المفضلة", "Could not load favorites")}
             body={error.message}
-            actionLabel={text("تصفح الإعلانات", "Browse listings")}
-            actionTo="/listings"
-          />
-        ) : items.length === 0 ? (
-          <Panel
-            title={text("لا توجد إعلانات محفوظة", "No saved listings")}
-            body={text(
-              "ابدأ من صفحة الإعلانات واضغط القلب على أي إعلان تريد متابعته.",
-              "Start from listings and tap the heart on any listing you want to track.",
-            )}
-            actionLabel={text("تصفح الإعلانات", "Browse listings")}
-            actionTo="/listings"
+            actionLabel={text("إعادة المحاولة", "Try again")}
+            onAction={() => void loadFavorites()}
+            actionDisabled={loading}
           />
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {items.map((item) => {
-              const listing = item.availability === "available" ? item.listing : undefined;
+          <>
+            {error ? (
+              <RecoveryNotice
+                title={text("تعذر تحديث المفضلة", "Could not refresh favorites")}
+                body={error.message}
+                actionLabel={text("إعادة المحاولة", "Try again")}
+                onAction={() => void loadFavorites()}
+                actionDisabled={loading}
+              />
+            ) : null}
+            {items.length === 0 ? (
+              <Panel
+                title={text("لا توجد إعلانات محفوظة", "No saved listings")}
+                body={text(
+                  "ابدأ من صفحة الإعلانات واضغط القلب على أي إعلان تريد متابعته.",
+                  "Start from listings and tap the heart on any listing you want to track.",
+                )}
+                actionLabel={text("تصفح الإعلانات", "Browse listings")}
+                actionTo="/listings"
+              />
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {items.map((item) => {
+                  const listing = item.availability === "available" ? item.listing : undefined;
 
-              if (listing) {
-                return (
-                  <FavoriteListingCard
-                    key={item.listingId}
-                    listing={listing}
-                    onRemove={() => void remove(item.listingId)}
-                  />
-                );
-              }
+                  if (listing) {
+                    return (
+                      <FavoriteListingCard
+                        key={item.listingId}
+                        listing={listing}
+                        onRemove={() => void remove(item.listingId)}
+                      />
+                    );
+                  }
 
-              return (
-                <article
-                  key={item.listingId}
-                  className="rounded-2xl bg-card p-4 opacity-85 hairline"
-                >
-                  <div className="grid grid-cols-[96px_1fr] gap-3">
-                    <div className="overflow-hidden rounded-xl opacity-70" aria-hidden="true">
-                      <PlaceholderArt type="misc" aspect="square" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-extrabold">{item.snapshot.title}</p>
-                      <span className="mt-1 inline-flex rounded-full bg-warning/10 px-2 py-1 text-[10px] font-bold text-warning">
-                        {text("غير متاح", "Unavailable")}
-                      </span>
-                      <p className="mt-2 text-xs font-bold text-foreground">
-                        {formatSnapshotPrice(
-                          item.snapshot.price,
-                          item.snapshot.currency,
-                          language,
-                          text,
-                        )}
-                      </p>
-                      <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-                        {text(
-                          "هذا الإعلان لم يعد متاحًا. احتفظنا بتفاصيله الأساسية لتعرف ما الذي حفظته.",
-                          "This listing is no longer available. We kept its basic details so you know what you saved.",
-                        )}
-                      </p>
-                      <p className="mt-1 text-[11px] text-muted-foreground">
-                        {formatDate(item.snapshot.createdAt, language)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex items-center gap-2">
-                    <Link
-                      to="/listings"
-                      className="flex-1 rounded-xl bg-primary px-3 py-2 text-center text-xs font-bold text-primary-foreground"
+                  return (
+                    <article
+                      key={item.listingId}
+                      className="rounded-2xl bg-card p-4 opacity-85 hairline"
                     >
-                      {text("تصفح بدائل", "Browse alternatives")}
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => void remove(item.listingId)}
-                      className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive"
-                      aria-label={text("إزالة من المفضلة", "Remove from favorites")}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+                      <div className="grid grid-cols-[96px_1fr] gap-3">
+                        <div className="overflow-hidden rounded-xl opacity-70" aria-hidden="true">
+                          <PlaceholderArt type="misc" aspect="square" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-extrabold">{item.snapshot.title}</p>
+                          <span className="mt-1 inline-flex rounded-full bg-warning/10 px-2 py-1 text-[10px] font-bold text-warning">
+                            {text("غير متاح", "Unavailable")}
+                          </span>
+                          <p className="mt-2 text-xs font-bold text-foreground">
+                            {formatSnapshotPrice(
+                              item.snapshot.price,
+                              item.snapshot.currency,
+                              language,
+                              text,
+                            )}
+                          </p>
+                          <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                            {text(
+                              "هذا الإعلان لم يعد متاحًا. احتفظنا بتفاصيله الأساسية لتعرف ما الذي حفظته.",
+                              "This listing is no longer available. We kept its basic details so you know what you saved.",
+                            )}
+                          </p>
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            {formatDate(item.snapshot.createdAt, language)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-center gap-2">
+                        <Link
+                          to="/listings"
+                          className="flex-1 rounded-xl bg-primary px-3 py-2 text-center text-xs font-bold text-primary-foreground"
+                        >
+                          {text("تصفح بدائل", "Browse alternatives")}
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => void remove(item.listingId)}
+                          className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive"
+                          aria-label={text("إزالة من المفضلة", "Remove from favorites")}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </main>
     </>
@@ -260,12 +297,16 @@ function Panel({
   actionLabel,
   actionTo,
   actionSearch,
+  onAction,
+  actionDisabled,
 }: {
   title: string;
   body?: string;
   actionLabel?: string;
   actionTo?: string;
   actionSearch?: Record<string, string>;
+  onAction?: () => void;
+  actionDisabled?: boolean;
 }) {
   const { language } = useUiPreferences();
   return (
@@ -275,23 +316,65 @@ function Panel({
       </span>
       <p className="mt-3 text-sm font-bold">{title}</p>
       {body && <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p>}
-      {actionLabel && actionTo && (
+      {actionLabel ? (
         <div className="mt-5 flex flex-wrap justify-center gap-2">
-          <Link
-            to={actionTo}
-            search={actionSearch}
-            className="inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground"
-          >
-            {actionLabel}
-          </Link>
-          <Link
-            to="/add-listing"
-            className="inline-block rounded-xl bg-muted-surface px-5 py-2 text-sm font-bold text-foreground"
-          >
-            {uiLabel("أضف إعلاناً", language)}
-          </Link>
+          {onAction ? (
+            <button
+              type="button"
+              onClick={onAction}
+              disabled={actionDisabled}
+              className="inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground disabled:opacity-60"
+            >
+              {actionLabel}
+            </button>
+          ) : actionTo ? (
+            <Link
+              to={actionTo}
+              search={actionSearch}
+              className="inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground"
+            >
+              {actionLabel}
+            </Link>
+          ) : null}
+          {actionTo ? (
+            <Link
+              to="/add-listing"
+              className="inline-block rounded-xl bg-muted-surface px-5 py-2 text-sm font-bold text-foreground"
+            >
+              {uiLabel("أضف إعلاناً", language)}
+            </Link>
+          ) : null}
         </div>
-      )}
+      ) : null}
+    </div>
+  );
+}
+
+function RecoveryNotice({
+  title,
+  body,
+  actionLabel,
+  onAction,
+  actionDisabled,
+}: {
+  title: string;
+  body: string;
+  actionLabel: string;
+  onAction: () => void;
+  actionDisabled?: boolean;
+}) {
+  return (
+    <div className="rounded-xl bg-destructive/10 p-4 text-destructive hairline">
+      <p className="text-xs font-bold">{title}</p>
+      <p className="mt-1 text-xs leading-5">{body}</p>
+      <button
+        type="button"
+        onClick={onAction}
+        disabled={actionDisabled}
+        className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-card px-4 py-2 text-xs font-bold text-foreground hairline disabled:opacity-60"
+      >
+        {actionLabel}
+      </button>
     </div>
   );
 }
