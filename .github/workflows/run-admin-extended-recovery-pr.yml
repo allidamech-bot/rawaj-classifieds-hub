@@ -28,20 +28,24 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import base64, gzip
+          import base64, gzip, re
           payload = Path('.github/admin-extended-patch.b64').read_text().strip()
           target = Path('/tmp/recover_admin_extended.py')
           target.write_bytes(gzip.decompress(base64.b64decode(payload)))
           source = target.read_text()
-          needle = '''    if old not in text:
-              raise RuntimeError(f"missing exact block: {label}")'''
-          replacement = '''    if old not in text:
-              if label in {"verification approve disabled", "verification reject disabled"}:
-                  return text
-              raise RuntimeError(f"missing exact block: {label}")'''
-          if needle not in source:
-              raise SystemExit('replace_once guard not found')
-          target.write_text(source.replace(needle, replacement, 1))
+          wrapper = '''
+_original_replace_once = replace_once
+
+def replace_once(text, old, new, label):
+    if label in {"verification approve disabled", "verification reject disabled"} and old not in text:
+        return text
+    return _original_replace_once(text, old, new, label)
+
+'''
+          source, count = re.subn(r'(?m)^patch_listings\(\)$', wrapper + 'patch_listings()', source, count=1)
+          if count != 1:
+              raise SystemExit('patch entrypoint not found')
+          target.write_text(source)
           PY
           set +e
           python /tmp/recover_admin_extended.py > /tmp/admin-patch-output.txt 2>&1
