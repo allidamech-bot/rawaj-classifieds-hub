@@ -60,6 +60,8 @@ test("profile overview loads recover independently without erasing successful sn
   assert.match(profile, /verificationError && !verificationHasLoaded/);
   assert.match(profile, /onAction=\{\(\) => void reloadListings\(\)\}/);
   assert.match(profile, /onAction=\{\(\) => void loadVerificationRequests\(\)\}/);
+  assert.match(profile, /setMyListingsHasLoaded\(true\)/);
+  assert.match(profile, /setVerificationHasLoaded\(true\)/);
   assert.doesNotMatch(
     profile,
     /setMyListingsError\(result\.error\);[\s\S]{0,80}setMyListings\(\[\]\)/,
