@@ -12,7 +12,7 @@ import {
   UserCog,
   Users,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   adminFetchCommandCenterMetrics,
   type AdminCommandCenterMetrics,
@@ -45,30 +45,46 @@ function AdminOverview() {
   const { text } = useUiPreferences();
   const canViewCommandCenterMetrics = auth.hasPermission("canManageUsers");
   const [metrics, setMetrics] = useState<AdminCommandCenterMetrics>(EMPTY_METRICS);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState("");
+  const requestIdRef = useRef(0);
+
+  const loadMetrics = useCallback(async () => {
+    if (!canViewCommandCenterMetrics) return;
+    const requestId = ++requestIdRef.current;
+    setLoading(true);
+    setError("");
+    const result = await adminFetchCommandCenterMetrics(canViewCommandCenterMetrics);
+    if (requestId !== requestIdRef.current) return;
+    if (!result.ok) {
+      setError(result.error.message);
+      setLoading(false);
+      return;
+    }
+    setMetrics(result.data);
+    setHasLoaded(true);
+    setLoading(false);
+  }, [canViewCommandCenterMetrics]);
 
   useEffect(() => {
+    requestIdRef.current += 1;
     if (!canViewCommandCenterMetrics) {
+      setMetrics(EMPTY_METRICS);
       setLoading(false);
+      setHasLoaded(false);
       setError("");
       return;
     }
-
-    let cancelled = false;
-    void adminFetchCommandCenterMetrics(canViewCommandCenterMetrics).then((result) => {
-      if (cancelled) return;
-      setLoading(false);
-      if (!result.ok) {
-        setError(result.error.message);
-        return;
-      }
-      setMetrics(result.data);
-    });
+    setMetrics(EMPTY_METRICS);
+    setLoading(false);
+    setHasLoaded(false);
+    setError("");
+    void loadMetrics();
     return () => {
-      cancelled = true;
+      requestIdRef.current += 1;
     };
-  }, [canViewCommandCenterMetrics]);
+  }, [canViewCommandCenterMetrics, loadMetrics]);
 
   if (!canViewCommandCenterMetrics) {
     return (
@@ -84,6 +100,29 @@ function AdminOverview() {
           )}
         </p>
       </section>
+    );
+  }
+
+  if (loading && !hasLoaded) {
+    return (
+      <AdminLoadState
+        title={text("جارٍ تحميل مركز القيادة", "Loading command center")}
+        body={text(
+          "يتم الآن جلب المؤشرات التشغيلية الحقيقية.",
+          "Real operational metrics are being loaded.",
+        )}
+      />
+    );
+  }
+
+  if (error && !hasLoaded) {
+    return (
+      <AdminLoadState
+        title={text("تعذر تحميل مؤشرات الإدارة", "Could not load admin metrics")}
+        body={error}
+        actionLabel={text("إعادة المحاولة", "Try again")}
+        onAction={() => void loadMetrics()}
+      />
     );
   }
 
@@ -127,31 +166,36 @@ function AdminOverview() {
         </div>
       </section>
 
-      {error && (
-        <p className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive hairline">
-          {error}
-        </p>
-      )}
+      {error ? (
+        <div className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive hairline">
+          <p>{error}</p>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => void loadMetrics()}
+            className="mt-2 rounded-lg bg-card px-3 py-1.5 font-bold text-foreground hairline disabled:opacity-60"
+          >
+            {loading ? text("جارٍ التحديث", "Refreshing") : text("إعادة المحاولة", "Try again")}
+          </button>
+        </div>
+      ) : null}
 
       <section>
         <SectionTitle icon={Activity} title={text("نبض التشغيل", "Operations pulse")} />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <MetricCard
-            label={text("إجمالي المستخدمين", "Total users")}
-            value={formatMetric(metrics.totalUsers, loading)}
-          />
+          <MetricCard label={text("إجمالي المستخدمين", "Total users")} value={metrics.totalUsers} />
           <MetricCard
             label={text("المستخدمون النشطون", "Active users")}
-            value={formatMetric(metrics.activeUsers, loading)}
+            value={metrics.activeUsers}
           />
           <MetricCard
             label={text("إجمالي طوابير العمل", "Total queue load")}
-            value={formatMetric(queueLoad, loading)}
+            value={queueLoad}
             attention={queueLoad > 0}
           />
           <MetricCard
             label={text("القيود النشطة", "Active restrictions")}
-            value={formatMetric(metrics.activeRestrictions, loading)}
+            value={metrics.activeRestrictions}
             attention={metrics.activeRestrictions > 0}
           />
         </div>
@@ -260,8 +304,32 @@ function AdminOverview() {
   );
 }
 
-function formatMetric(value: number, loading: boolean) {
-  return loading ? "…" : value.toLocaleString();
+function AdminLoadState({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
+  return (
+    <section className="rounded-2xl bg-card p-8 text-center hairline">
+      <p className="text-sm font-bold">{title}</p>
+      {body ? <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p> : null}
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+        >
+          {actionLabel}
+        </button>
+      ) : null}
+    </section>
+  );
 }
 
 function SectionTitle({ icon: Icon, title }: { icon: typeof Crown; title: string }) {
@@ -279,12 +347,12 @@ function MetricCard({
   attention = false,
 }: {
   label: string;
-  value: string;
+  value: number;
   attention?: boolean;
 }) {
   return (
     <div className={`rounded-2xl p-4 hairline ${attention ? "bg-warning/10" : "bg-card"}`}>
-      <div className="text-2xl font-extrabold">{value}</div>
+      <div className="text-2xl font-extrabold">{value.toLocaleString()}</div>
       <p className="mt-1 text-xs text-muted-foreground">{label}</p>
     </div>
   );

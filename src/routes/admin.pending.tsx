@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Clock, FileCheck, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ResilientImage } from "@/components/media/ResilientImage";
 import {
   adminFetchPendingListings,
@@ -23,31 +23,60 @@ function PendingPage() {
   const { language, text } = useUiPreferences();
   const canModerateListings = auth.hasPermission("canModerateListings");
   const [listings, setListings] = useState<ClassifiedListing[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [message, setMessage] = useState("");
   const [rejectReasons, setRejectReasons] = useState<Record<string, string>>({});
   const [expandedListingId, setExpandedListingId] = useState<string | null>(null);
   const [imagesByListingId, setImagesByListingId] = useState<Record<string, ListingImage[]>>({});
-  const [imagesLoadingId, setImagesLoadingId] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Record<string, ClassifiedsError | null>>({});
+  const [imagesLoadingIds, setImagesLoadingIds] = useState<Set<string>>(new Set());
+  const [actionBusyIds, setActionBusyIds] = useState<Set<string>>(new Set());
+  const loadRequestIdRef = useRef(0);
+  const actionInFlightRef = useRef<Set<string>>(new Set());
 
-  async function loadPending() {
+  const loadPending = useCallback(async () => {
+    if (!canModerateListings) return;
+    const requestId = ++loadRequestIdRef.current;
     setLoading(true);
     setError(null);
     const result = await adminFetchPendingListings(canModerateListings);
-    if (result.ok) setListings(result.data);
-    else {
+    if (requestId !== loadRequestIdRef.current) return;
+    if (result.ok) {
+      setListings(result.data);
+      setHasLoaded(true);
+    } else {
       setError(result.error);
-      setListings([]);
     }
     setLoading(false);
-  }
-
-  useEffect(() => {
-    void loadPending();
   }, [canModerateListings]);
 
+  useEffect(() => {
+    loadRequestIdRef.current += 1;
+    actionInFlightRef.current.clear();
+    setActionBusyIds(new Set());
+    if (!canModerateListings) {
+      setListings([]);
+      setLoading(false);
+      setHasLoaded(false);
+      setError(null);
+      return;
+    }
+    setListings([]);
+    setLoading(false);
+    setHasLoaded(false);
+    setError(null);
+    void loadPending();
+    return () => {
+      loadRequestIdRef.current += 1;
+      actionInFlightRef.current.clear();
+    };
+  }, [canModerateListings, loadPending]);
+
   async function moderate(listing: ClassifiedListing, status: "approved" | "rejected") {
+    const actionKey = listing.id;
+    if (actionInFlightRef.current.has(actionKey)) return;
     setMessage("");
     if (!auth.profile?.id) {
       setMessage(
@@ -59,35 +88,68 @@ function PendingPage() {
       setMessage(text("أدخل سبب الرفض قبل تحديث الإعلان.", "Add a rejection reason first."));
       return;
     }
-    const result = await adminModerateListing(canModerateListings, {
-      listingId: listing.id,
-      status,
-      reviewerId: auth.profile.id,
-      rejectionReason: status === "rejected" ? rejectReasons[listing.id] : null,
-      expectedUpdatedAt: listing.updatedAt,
-    });
-    if (!result.ok) {
-      setMessage(result.error.message);
-      return;
+
+    actionInFlightRef.current.add(actionKey);
+    setActionBusyIds((current) => new Set(current).add(actionKey));
+    try {
+      const result = await adminModerateListing(canModerateListings, {
+        listingId: listing.id,
+        status,
+        reviewerId: auth.profile.id,
+        rejectionReason: status === "rejected" ? rejectReasons[listing.id] : null,
+        expectedUpdatedAt: listing.updatedAt,
+      });
+      if (!result.ok) {
+        setMessage(result.error.message);
+        return;
+      }
+      setListings((current) => current.filter((item) => item.id !== listing.id));
+      setExpandedListingId((current) => (current === listing.id ? null : current));
+      setRejectReasons((current) => {
+        const next = { ...current };
+        delete next[listing.id];
+        return next;
+      });
+      setMessage(
+        status === "approved"
+          ? text("تم اعتماد الإعلان.", "Listing approved.")
+          : text("تم رفض الإعلان.", "Listing rejected."),
+      );
+    } finally {
+      actionInFlightRef.current.delete(actionKey);
+      setActionBusyIds((current) => {
+        const next = new Set(current);
+        next.delete(actionKey);
+        return next;
+      });
     }
-    setMessage(
-      status === "approved"
-        ? text("تم اعتماد الإعلان.", "Listing approved.")
-        : text("تم رفض الإعلان.", "Listing rejected."),
-    );
-    await loadPending();
+  }
+
+  async function loadImages(listingId: string) {
+    if (imagesLoadingIds.has(listingId)) return;
+    setImagesLoadingIds((current) => new Set(current).add(listingId));
+    setImageErrors((current) => ({ ...current, [listingId]: null }));
+    try {
+      const result = await fetchListingImages(listingId);
+      if (result.ok) {
+        setImagesByListingId((current) => ({ ...current, [listingId]: result.data }));
+      } else {
+        setImageErrors((current) => ({ ...current, [listingId]: result.error }));
+      }
+    } finally {
+      setImagesLoadingIds((current) => {
+        const next = new Set(current);
+        next.delete(listingId);
+        return next;
+      });
+    }
   }
 
   async function toggleDetails(listingId: string) {
     const nextId = expandedListingId === listingId ? null : listingId;
     setExpandedListingId(nextId);
-    if (!nextId || imagesByListingId[nextId]) return;
-    setImagesLoadingId(nextId);
-    const result = await fetchListingImages(nextId);
-    setImagesLoadingId(null);
-    if (result.ok) {
-      setImagesByListingId((current) => ({ ...current, [nextId]: result.data }));
-    }
+    if (!nextId || (imagesByListingId[nextId] && !imageErrors[nextId])) return;
+    await loadImages(nextId);
   }
 
   if (!canModerateListings) {
@@ -129,17 +191,33 @@ function PendingPage() {
             </Link>
           </div>
         </div>
-        {message && (
+        {message ? (
           <p className="mt-3 rounded-xl bg-muted-surface p-2 text-xs font-semibold">{message}</p>
-        )}
+        ) : null}
       </section>
 
-      {loading ? (
+      {error && hasLoaded ? (
+        <div className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive hairline">
+          <p>{error.message}</p>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => void loadPending()}
+            className="mt-2 rounded-lg bg-card px-3 py-1.5 text-foreground hairline disabled:opacity-60"
+          >
+            {loading ? text("جارٍ التحديث", "Refreshing") : text("إعادة المحاولة", "Try again")}
+          </button>
+        </div>
+      ) : null}
+
+      {loading && !hasLoaded ? (
         <Panel title={text("جارٍ تحميل طابور المراجعة", "Loading review queue")} />
-      ) : error ? (
+      ) : error && !hasLoaded ? (
         <Panel
           title={text("تعذر تحميل طابور المراجعة", "Could not load review queue")}
           body={error.message}
+          actionLabel={text("إعادة المحاولة", "Try again")}
+          onAction={() => void loadPending()}
         />
       ) : listings.length === 0 ? (
         <Panel
@@ -151,93 +229,122 @@ function PendingPage() {
         />
       ) : (
         <div className="grid grid-cols-1 gap-3">
-          {listings.map((listing) => (
-            <article key={listing.id} className="rounded-2xl bg-card p-4 hairline">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <h3 className="text-sm font-extrabold">{listing.title}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {listing.id} ·{" "}
-                    {categoryName(
-                      listing.categoryId,
-                      listing.categoryNameAr ?? undefined,
-                      language,
-                    )}{" "}
-                    ·{" "}
-                    {governorateName(
-                      listing.governorateId,
-                      listing.governorateNameAr ?? undefined,
-                      language,
-                    )}
-                  </p>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    {text("صاحب الإعلان:", "Listing owner:")} {listing.ownerId} ·{" "}
-                    {text("الإرسال:", "Submitted:")} {formatDate(listing.createdAt, language)}
-                  </p>
+          {listings.map((listing) => {
+            const actionBusy = actionBusyIds.has(listing.id);
+            return (
+              <article key={listing.id} className="rounded-2xl bg-card p-4 hairline">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-extrabold">{listing.title}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {listing.id} ·{" "}
+                      {categoryName(
+                        listing.categoryId,
+                        listing.categoryNameAr ?? undefined,
+                        language,
+                      )}{" "}
+                      ·{" "}
+                      {governorateName(
+                        listing.governorateId,
+                        listing.governorateNameAr ?? undefined,
+                        language,
+                      )}
+                    </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      {text("صاحب الإعلان:", "Listing owner:")} {listing.ownerId} ·{" "}
+                      {text("الإرسال:", "Submitted:")} {formatDate(listing.createdAt, language)}
+                    </p>
+                  </div>
+                  <span className="inline-flex items-center gap-1 rounded-md bg-warning/15 px-2 py-1 text-[10px] font-bold text-warning">
+                    <Clock className="h-3 w-3" />
+                    {uiLabel(listing.status, language)}
+                  </span>
                 </div>
-                <span className="inline-flex items-center gap-1 rounded-md bg-warning/15 px-2 py-1 text-[10px] font-bold text-warning">
-                  <Clock className="h-3 w-3" />
-                  {uiLabel(listing.status, language)}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => void toggleDetails(listing.id)}
-                className="mt-3 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold text-foreground"
-              >
-                {expandedListingId === listing.id
-                  ? text("إخفاء التفاصيل", "Hide details")
-                  : text("عرض التفاصيل الكاملة", "View full details")}
-              </button>
-              {expandedListingId === listing.id && (
-                <PendingListingDetails
-                  listing={listing}
-                  images={imagesByListingId[listing.id] ?? []}
-                  imagesLoading={imagesLoadingId === listing.id}
-                />
-              )}
-              <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
-                <input
-                  value={rejectReasons[listing.id] ?? ""}
-                  onChange={(event) =>
-                    setRejectReasons((current) => ({
-                      ...current,
-                      [listing.id]: event.target.value,
-                    }))
-                  }
-                  placeholder={text("سبب الرفض عند الحاجة", "Rejection reason when needed")}
-                  className="rounded-xl bg-muted-surface px-3 py-2 text-xs outline-none hairline"
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void moderate(listing, "approved")}
-                    className="rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground"
-                  >
-                    {text("اعتماد", "Approve")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void moderate(listing, "rejected")}
-                    className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground"
-                  >
-                    {text("رفض", "Reject")}
-                  </button>
+                <button
+                  type="button"
+                  onClick={() => void toggleDetails(listing.id)}
+                  className="mt-3 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold text-foreground"
+                >
+                  {expandedListingId === listing.id
+                    ? text("إخفاء التفاصيل", "Hide details")
+                    : text("عرض التفاصيل الكاملة", "View full details")}
+                </button>
+                {expandedListingId === listing.id ? (
+                  <PendingListingDetails
+                    listing={listing}
+                    images={imagesByListingId[listing.id] ?? []}
+                    imagesLoading={imagesLoadingIds.has(listing.id)}
+                    imagesError={imageErrors[listing.id]?.message ?? null}
+                    onRetryImages={() => void loadImages(listing.id)}
+                  />
+                ) : null}
+                <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+                  <input
+                    value={rejectReasons[listing.id] ?? ""}
+                    disabled={actionBusy}
+                    onChange={(event) =>
+                      setRejectReasons((current) => ({
+                        ...current,
+                        [listing.id]: event.target.value,
+                      }))
+                    }
+                    placeholder={text("سبب الرفض عند الحاجة", "Rejection reason when needed")}
+                    className="rounded-xl bg-muted-surface px-3 py-2 text-xs outline-none hairline disabled:opacity-60"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={actionBusy}
+                      aria-busy={actionBusy}
+                      onClick={() => void moderate(listing, "approved")}
+                      className="rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground disabled:opacity-60"
+                    >
+                      {actionBusy ? text("جارٍ التحديث", "Updating") : text("اعتماد", "Approve")}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={actionBusy}
+                      aria-busy={actionBusy}
+                      onClick={() => void moderate(listing, "rejected")}
+                      className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground disabled:opacity-60"
+                    >
+                      {actionBusy ? text("جارٍ التحديث", "Updating") : text("رفض", "Reject")}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
 
-function Panel({ title, body }: { title: string; body?: string }) {
+function Panel({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <div className="rounded-2xl bg-card p-8 text-center hairline">
       <p className="text-sm font-bold">{title}</p>
-      {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
+      {body ? <p className="mt-1 text-xs text-muted-foreground">{body}</p> : null}
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+        >
+          {actionLabel}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -246,10 +353,14 @@ function PendingListingDetails({
   listing,
   images,
   imagesLoading,
+  imagesError,
+  onRetryImages,
 }: {
   listing: ClassifiedListing;
   images: ListingImage[];
   imagesLoading: boolean;
+  imagesError: string | null;
+  onRetryImages: () => void;
 }) {
   const { language, text } = useUiPreferences();
   const hiddenDetailKeys = new Set(["phone", "whatsapp", "content_flags"]);
@@ -326,8 +437,10 @@ function PendingListingDetails({
           label={text("خيارات التواصل", "Contact options")}
           value={contactOptionsLabel(listing.contactOptions, text)}
         />
-        {phone && <DetailItem label={text("رقم الهاتف", "Phone number")} value={phone} />}
-        {whatsapp && <DetailItem label={text("رقم واتساب", "WhatsApp number")} value={whatsapp} />}
+        {phone ? <DetailItem label={text("رقم الهاتف", "Phone number")} value={phone} /> : null}
+        {whatsapp ? (
+          <DetailItem label={text("رقم واتساب", "WhatsApp number")} value={whatsapp} />
+        ) : null}
       </div>
       <div className="mt-3">
         <p className="mb-1 text-xs font-bold">{text("الوصف", "Description")}</p>
@@ -335,7 +448,7 @@ function PendingListingDetails({
           {listing.description || "-"}
         </p>
       </div>
-      {contentFlags.length > 0 && (
+      {contentFlags.length > 0 ? (
         <div className="mt-3 rounded-lg bg-warning/10 p-3 text-xs leading-6 text-foreground hairline">
           <p className="mb-1 font-bold">{text("أعلام السلامة", "Safety flags")}</p>
           <div className="flex flex-wrap gap-1.5">
@@ -349,15 +462,15 @@ function PendingListingDetails({
             ))}
           </div>
         </div>
-      )}
-      {categoryRows.length > 0 && (
+      ) : null}
+      {categoryRows.length > 0 ? (
         <div className="mt-3 grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
           {categoryRows.map(([label, value]) => (
             <DetailItem key={label} label={label} value={displayValue(value)} />
           ))}
         </div>
-      )}
-      {detailsEntries.length > 0 && (
+      ) : null}
+      {detailsEntries.length > 0 ? (
         <div className="mt-3">
           <p className="mb-1 text-xs font-bold">{text("تفاصيل إضافية", "Additional details")}</p>
           <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
@@ -366,13 +479,24 @@ function PendingListingDetails({
             ))}
           </div>
         </div>
-      )}
+      ) : null}
       <div className="mt-3">
         <p className="mb-1 text-xs font-bold">{text("الصور", "Images")}</p>
         {imagesLoading ? (
           <p className="text-xs text-muted-foreground">
             {text("جارٍ تحميل الصور", "Loading images")}
           </p>
+        ) : imagesError ? (
+          <div className="rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
+            <p>{imagesError}</p>
+            <button
+              type="button"
+              onClick={onRetryImages}
+              className="mt-2 rounded-lg bg-card px-3 py-1.5 font-bold text-foreground hairline"
+            >
+              {text("إعادة تحميل الصور", "Retry images")}
+            </button>
+          </div>
         ) : images.length === 0 ? (
           <p className="text-xs text-muted-foreground">{text("لا توجد صور", "No images")}</p>
         ) : (

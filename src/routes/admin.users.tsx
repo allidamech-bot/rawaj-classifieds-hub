@@ -9,7 +9,7 @@ import {
   UserRoundCheck,
   Users,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AccountStatus } from "@/lib/auth-types";
 import {
   adminFetchUsers,
@@ -46,8 +46,10 @@ function UsersPage() {
   const auth = useAuth();
   const canManageUsers = auth.hasPermission("canManageUsers");
   const [users, setUsers] = useState<AdminUserSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [notice, setNotice] = useState("");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | AccountStatus>("all");
@@ -55,34 +57,57 @@ function UsersPage() {
   const [reason, setReason] = useState("");
   const [restrictionType, setRestrictionType] = useState<UserRestrictionType>("posting");
   const [busy, setBusy] = useState(false);
+  const requestIdRef = useRef(0);
+  const actionInFlightRef = useRef(false);
 
-  async function refreshUsers() {
+  const refreshUsers = useCallback(async () => {
+    if (!canManageUsers) return false;
+    const requestId = ++requestIdRef.current;
     setLoading(true);
+    setLoadError("");
     const result = await adminFetchUsers(canManageUsers);
-    setLoading(false);
+    if (requestId !== requestIdRef.current) return false;
     if (!result.ok) {
-      setError(result.error.message);
-      return;
+      setLoadError(result.error.message);
+      setLoading(false);
+      return false;
     }
     setUsers(result.data);
-    setError("");
-  }
+    setHasLoaded(true);
+    setLoading(false);
+    return true;
+  }, [canManageUsers]);
 
   useEffect(() => {
-    let cancelled = false;
-    void adminFetchUsers(canManageUsers).then((result) => {
-      if (cancelled) return;
+    requestIdRef.current += 1;
+    actionInFlightRef.current = false;
+    setBusy(false);
+    if (!canManageUsers) {
+      setUsers([]);
       setLoading(false);
-      if (!result.ok) {
-        setError(result.error.message);
-        return;
-      }
-      setUsers(result.data);
-    });
+      setHasLoaded(false);
+      setLoadError("");
+      setActionError("");
+      return;
+    }
+    setUsers([]);
+    setLoading(false);
+    setHasLoaded(false);
+    setLoadError("");
+    setActionError("");
+    void refreshUsers();
     return () => {
-      cancelled = true;
+      requestIdRef.current += 1;
+      actionInFlightRef.current = false;
     };
-  }, [canManageUsers]);
+  }, [canManageUsers, refreshUsers]);
+
+  useEffect(() => {
+    if (selectedUserId && !users.some((user) => user.id === selectedUserId)) {
+      setSelectedUserId(null);
+      setReason("");
+    }
+  }, [selectedUserId, users]);
 
   const filteredUsers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -99,19 +124,32 @@ function UsersPage() {
   const reasonReady = reason.trim().length >= 3;
 
   async function runAction(action: () => Promise<{ ok: boolean; error?: { message: string } }>) {
-    if (busy) return;
+    if (actionInFlightRef.current) return;
+    actionInFlightRef.current = true;
     setBusy(true);
-    setError("");
+    setActionError("");
     setNotice("");
-    const result = await action();
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.error?.message ?? text("تعذر تنفيذ الإجراء.", "Action failed."));
-      return;
+    try {
+      const result = await action();
+      if (!result.ok) {
+        setActionError(result.error?.message ?? text("تعذر تنفيذ الإجراء.", "Action failed."));
+        return;
+      }
+      setReason("");
+      setNotice(text("تم تنفيذ الإجراء وتسجيله.", "Action completed and audited."));
+      const refreshed = await refreshUsers();
+      if (!refreshed) {
+        setNotice(
+          text(
+            "تم تنفيذ الإجراء، لكن تعذر تحديث قائمة المستخدمين فوراً.",
+            "The action completed, but the user list could not refresh immediately.",
+          ),
+        );
+      }
+    } finally {
+      actionInFlightRef.current = false;
+      setBusy(false);
     }
-    setReason("");
-    setNotice(text("تم تنفيذ الإجراء وتسجيله.", "Action completed and audited."));
-    await refreshUsers();
   }
 
   if (!canManageUsers) {
@@ -143,11 +181,11 @@ function UsersPage() {
               </p>
             </div>
           </div>
-          {auth.canAccessOwnerControls && (
+          {auth.canAccessOwnerControls ? (
             <span className="rounded-lg bg-gold/15 px-3 py-2 text-xs font-bold hairline">
               {text("صلاحية المالك", "Owner authority")}
             </span>
-          )}
+          ) : null}
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_180px]">
@@ -174,13 +212,35 @@ function UsersPage() {
         </div>
       </section>
 
-      {error && <Notice tone="error">{error}</Notice>}
-      {notice && <Notice tone="success">{notice}</Notice>}
+      {loadError && hasLoaded ? (
+        <RecoveryNotice
+          message={loadError}
+          busy={loading}
+          retryLabel={text("إعادة المحاولة", "Try again")}
+          refreshingLabel={text("جارٍ التحديث", "Refreshing")}
+          onRetry={() => void refreshUsers()}
+        />
+      ) : null}
+      {actionError ? <Notice tone="error">{actionError}</Notice> : null}
+      {notice ? <Notice tone="success">{notice}</Notice> : null}
 
-      {loading ? (
-        <section className="rounded-2xl bg-card p-5 text-sm text-muted-foreground hairline">
-          {text("جارٍ تحميل المستخدمين...", "Loading users...")}
-        </section>
+      {loading && !hasLoaded ? (
+        <Panel title={text("جارٍ تحميل المستخدمين...", "Loading users...")} />
+      ) : loadError && !hasLoaded ? (
+        <Panel
+          title={text("تعذر تحميل المستخدمين", "Could not load users")}
+          body={loadError}
+          actionLabel={text("إعادة المحاولة", "Try again")}
+          onAction={() => void refreshUsers()}
+        />
+      ) : filteredUsers.length === 0 ? (
+        <Panel
+          title={text("لا توجد نتائج مطابقة", "No matching users")}
+          body={text(
+            "جرّب تغيير عبارة البحث أو فلتر الحالة.",
+            "Try changing the search text or status filter.",
+          )}
+        />
       ) : (
         <section className="grid gap-3 lg:grid-cols-2">
           {filteredUsers.map((user) => (
@@ -188,13 +248,17 @@ function UsersPage() {
               key={user.id}
               user={user}
               selected={selectedUserId === user.id}
-              onSelect={() => setSelectedUserId(user.id)}
+              onSelect={() => {
+                setSelectedUserId(user.id);
+                setActionError("");
+                setNotice("");
+              }}
             />
           ))}
         </section>
       )}
 
-      {selectedUser && (
+      {selectedUser ? (
         <section className="rounded-2xl bg-card p-5 hairline shadow-soft">
           <div className="flex items-start gap-3">
             <UserCog className="mt-0.5 h-5 w-5 text-primary" />
@@ -219,13 +283,14 @@ function UsersPage() {
                 <span className="text-xs font-bold">{text("سبب الإجراء", "Action reason")}</span>
                 <textarea
                   value={reason}
+                  disabled={busy}
                   onChange={(event) => setReason(event.target.value)}
                   rows={3}
                   placeholder={text(
                     "اكتب سبباً واضحاً ليُحفظ مع سجل التدقيق.",
                     "Enter a clear reason for the audit trail.",
                   )}
-                  className="mt-2 w-full rounded-xl bg-muted-surface p-3 text-sm outline-none hairline"
+                  className="mt-2 w-full rounded-xl bg-muted-surface p-3 text-sm outline-none hairline disabled:opacity-60"
                 />
               </label>
 
@@ -258,7 +323,7 @@ function UsersPage() {
                     )
                   }
                 />
-                {auth.canAccessOwnerControls && (
+                {auth.canAccessOwnerControls ? (
                   <ControlButton
                     icon={Ban}
                     label={text("حظر كامل", "Full ban")}
@@ -274,7 +339,7 @@ function UsersPage() {
                       )
                     }
                   />
-                )}
+                ) : null}
               </div>
 
               <div className="mt-5 border-t border-border/70 pt-5">
@@ -284,10 +349,11 @@ function UsersPage() {
                 <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
                   <select
                     value={restrictionType}
+                    disabled={busy}
                     onChange={(event) =>
                       setRestrictionType(event.target.value as UserRestrictionType)
                     }
-                    className="h-11 rounded-xl bg-card px-3 text-sm hairline"
+                    className="h-11 rounded-xl bg-card px-3 text-sm hairline disabled:opacity-60"
                   >
                     {restrictionOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -330,7 +396,7 @@ function UsersPage() {
                 </div>
               </div>
 
-              {auth.canAccessOwnerControls && (
+              {auth.canAccessOwnerControls ? (
                 <div className="mt-5 border-t border-border/70 pt-5">
                   <h3 className="text-sm font-extrabold">{text("إدارة الطاقم", "Staff roles")}</h3>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -382,11 +448,11 @@ function UsersPage() {
                     />
                   </div>
                 </div>
-              )}
+              ) : null}
             </>
           )}
         </section>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -414,7 +480,7 @@ function UserCard({
             <h3 className="truncate text-sm font-extrabold">
               {user.displayName || user.email || user.id}
             </h3>
-            {user.roles.includes("owner") && <ShieldCheck className="h-4 w-4 text-gold" />}
+            {user.roles.includes("owner") ? <ShieldCheck className="h-4 w-4 text-gold" /> : null}
           </div>
           <p className="mt-1 truncate text-xs text-muted-foreground">{user.email || user.id}</p>
         </div>
@@ -499,6 +565,62 @@ function StaffRoleButton({
     >
       {active ? `Remove ${label}` : `Assign ${label}`}
     </button>
+  );
+}
+
+function RecoveryNotice({
+  message,
+  busy,
+  retryLabel,
+  refreshingLabel,
+  onRetry,
+}: {
+  message: string;
+  busy: boolean;
+  retryLabel: string;
+  refreshingLabel: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive hairline">
+      <p>{message}</p>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={onRetry}
+        className="mt-2 rounded-lg bg-card px-3 py-1.5 text-foreground hairline disabled:opacity-60"
+      >
+        {busy ? refreshingLabel : retryLabel}
+      </button>
+    </div>
+  );
+}
+
+function Panel({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
+  return (
+    <section className="rounded-2xl bg-card p-5 text-center hairline">
+      <p className="text-sm font-bold">{title}</p>
+      {body ? <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p> : null}
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+        >
+          {actionLabel}
+        </button>
+      ) : null}
+    </section>
   );
 }
 
