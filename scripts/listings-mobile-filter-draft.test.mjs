@@ -5,14 +5,8 @@ import test from "node:test";
 const [sheetSource, sessionSource, resultsSource, paginationSource, packageSource] =
   await Promise.all([
     readFile(new URL("../src/features/search/FilterBottomSheet.tsx", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/features/search/filter-draft-session.ts", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/features/listings/use-listings-results.ts", import.meta.url),
-      "utf8",
-    ),
+    readFile(new URL("../src/features/search/filter-draft-session.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/features/listings/use-listings-results.ts", import.meta.url), "utf8"),
     readFile(
       new URL("../src/features/listings/use-listings-pagination.ts", import.meta.url),
       "utf8",
