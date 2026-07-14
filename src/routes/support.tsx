@@ -153,7 +153,10 @@ function SupportPage() {
         return;
       }
 
-      setRequests((current) => [result.data, ...current.filter((item) => item.id !== result.data.id)]);
+      setRequests((current) => [
+        result.data,
+        ...current.filter((item) => item.id !== result.data.id),
+      ]);
       setRequestsHasLoaded(true);
       setSubject("");
       setMessage("");

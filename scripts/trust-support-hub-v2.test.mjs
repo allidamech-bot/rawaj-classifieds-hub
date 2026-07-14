@@ -73,7 +73,10 @@ test("support history recovers without erasing successful requests or duplicatin
   assert.match(support, /onRetry=\{\(\) => void loadRequests\(\)\}/);
   assert.match(support, /if \(submitInFlightRef\.current\) return/);
   assert.match(support, /finally \{[\s\S]*submitInFlightRef\.current = false/);
-  assert.doesNotMatch(support, /setRequests\(\[\]\);[\s\S]{0,100}setRequestsError\(result\.error\)/);
+  assert.doesNotMatch(
+    support,
+    /setRequests\(\[\]\);[\s\S]{0,100}setRequestsError\(result\.error\)/,
+  );
 });
 
 test("safety uses shared factual guide cards and keeps platform payment disclaimer", () => {
