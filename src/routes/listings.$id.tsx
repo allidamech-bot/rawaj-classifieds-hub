@@ -79,6 +79,9 @@ function ListingDetailsPage() {
   const favoriteInFlightRef = useRef(false);
   const favoriteRequestIdRef = useRef(0);
   const imageRequestIdRef = useRef(0);
+  const reportInFlightRef = useRef(false);
+  const messageInFlightRef = useRef(false);
+  const alertInFlightRef = useRef(false);
 
   useEffect(() => {
     setListing(initialListing);
@@ -222,18 +225,23 @@ function ListingDetailsPage() {
       setActionMessage(text("يجب تسجيل الدخول لإرسال بلاغ.", "Log in to report a listing."));
       return;
     }
-
-    const result = await createListingReport(
-      auth.profile?.id ?? null,
-      id,
-      "suspicious_listing",
-      "بلاغ سريع من صفحة الإعلان.",
-    );
-    setActionMessage(
-      result.ok
-        ? text("تم إرسال البلاغ للمراجعة.", "Report sent for review.")
-        : result.error.message,
-    );
+    if (reportInFlightRef.current) return;
+    reportInFlightRef.current = true;
+    try {
+      const result = await createListingReport(
+        auth.profile?.id ?? null,
+        id,
+        "suspicious_listing",
+        "بلاغ سريع من صفحة الإعلان.",
+      );
+      setActionMessage(
+        result.ok
+          ? text("تم إرسال البلاغ للمراجعة.", "Report sent for review.")
+          : result.error.message,
+      );
+    } finally {
+      reportInFlightRef.current = false;
+    }
   }
 
   async function messageSeller() {
@@ -242,12 +250,11 @@ function ListingDetailsPage() {
       setActionMessage(text("يجب تسجيل الدخول لبدء محادثة.", "Log in to start a conversation."));
       return;
     }
-
+    if (messageInFlightRef.current) return;
     if (listing?.ownerId === auth.profile?.id) {
       setActionMessage(text("لا يمكنك بدء محادثة مع نفسك.", "You cannot message yourself."));
       return;
     }
-
     if (!listing || listing.status !== "approved") {
       setActionMessage(
         text(
@@ -257,14 +264,17 @@ function ListingDetailsPage() {
       );
       return;
     }
-
-    const result = await startListingConversation(auth.profile?.id ?? null, listing.id);
-    if (!result.ok) {
-      setActionMessage(result.error.message);
-      return;
+    messageInFlightRef.current = true;
+    try {
+      const result = await startListingConversation(auth.profile?.id ?? null, listing.id);
+      if (!result.ok) {
+        setActionMessage(result.error.message);
+        return;
+      }
+      void navigate({ to: "/chats", search: { conversation: result.data } });
+    } finally {
+      messageInFlightRef.current = false;
     }
-
-    void navigate({ to: "/chats", search: { conversation: result.data } });
   }
 
   async function shareListing() {
@@ -304,6 +314,8 @@ function ListingDetailsPage() {
       return;
     }
 
+    if (alertInFlightRef.current) return;
+    alertInFlightRef.current = true;
     setAlertBusy(true);
     const result = await createSavedSearch(auth.profile?.id ?? null, {
       nameAr: `نتائج مشابهة بسعر ${listing.price}`,
@@ -316,6 +328,7 @@ function ListingDetailsPage() {
       alertFrequency: "daily",
     });
     setAlertBusy(false);
+    alertInFlightRef.current = false;
 
     if (!result.ok) {
       setActionMessage(result.error.message);

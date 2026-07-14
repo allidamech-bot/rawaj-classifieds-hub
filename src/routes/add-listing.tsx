@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Camera, Info, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -145,6 +145,7 @@ function AddListingPage() {
   const autosaveRequestIdRef = useRef(0);
   const autosaveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const lastAutosaveSignatureRef = useRef("");
+  const setupRequestIdRef = useRef(0);
 
   const category = categories.find((item) => item.id === categoryId);
   const selectedTaxonomyNode = taxonomyNodes.find((item) => item.id === taxonomyNodeId);
@@ -756,31 +757,36 @@ function AddListingPage() {
     };
   }, [auth.status, auth.profile?.id, autosavePayload, locationNodeId]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
-      setSetupError(null);
-      const [categoriesResult, governoratesResult, taxonomyResult] = await Promise.all([
-        fetchPublicCategories(),
-        fetchPublicGovernorates(),
-        fetchPublicTaxonomyNodes(),
-      ]);
-      if (cancelled) return;
-      if (!categoriesResult.ok) setSetupError(categoriesResult.error);
-      else if (!governoratesResult.ok) setSetupError(governoratesResult.error);
-      else {
-        setCategories(categoriesResult.data);
-        setGovernorates(governoratesResult.data);
-        if (taxonomyResult.ok) setTaxonomyNodes(taxonomyResult.data);
-      }
-      setLoading(false);
+  const loadSetup = useCallback(async () => {
+    const requestId = ++setupRequestIdRef.current;
+    setLoading(true);
+    setSetupError(null);
+    const [categoriesResult, governoratesResult, taxonomyResult] = await Promise.all([
+      fetchPublicCategories(),
+      fetchPublicGovernorates(),
+      fetchPublicTaxonomyNodes(),
+    ]);
+    if (requestId !== setupRequestIdRef.current) return;
+    setLoading(false);
+    if (!categoriesResult.ok) {
+      setSetupError(categoriesResult.error);
+      return;
     }
-    void load();
-    return () => {
-      cancelled = true;
-    };
+    if (!governoratesResult.ok) {
+      setSetupError(governoratesResult.error);
+      return;
+    }
+    setCategories(categoriesResult.data);
+    setGovernorates(governoratesResult.data);
+    setTaxonomyNodes(taxonomyResult.ok ? taxonomyResult.data : []);
   }, []);
+
+  useEffect(() => {
+    void loadSetup();
+    return () => {
+      setupRequestIdRef.current += 1;
+    };
+  }, [loadSetup]);
 
   async function submitListing() {
     if (submittingRef.current) return;
@@ -1162,6 +1168,13 @@ function AddListingPage() {
         ) : setupError ? (
           <Card title={text("تعذر تجهيز نموذج النشر", "Could not prepare posting form")}>
             <p className="text-sm text-muted-foreground">{setupError.message}</p>
+            <button
+              type="button"
+              onClick={() => void loadSetup()}
+              className="rawaj-button-primary mt-4 px-4 py-2"
+            >
+              {text("إعادة المحاولة", "Try again")}
+            </button>
           </Card>
         ) : (
           <div className="rawaj-studio-shell">

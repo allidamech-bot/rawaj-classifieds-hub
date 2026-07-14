@@ -70,6 +70,9 @@ function ChatsPage() {
   const conversationsRequestIdRef = useRef(0);
   const selectedConversationIdRef = useRef<string | null>(null);
   const autoOpenedConversationRef = useRef<string | null>(null);
+  const sendInFlightRef = useRef(false);
+  const reportInFlightRef = useRef<Set<string>>(new Set());
+  const blockInFlightRef = useRef(false);
 
   const targetResolution = useMemo(
     () => resolveConversationTarget(conversations, search.conversation),
@@ -154,7 +157,6 @@ function ChatsPage() {
         });
       }
     } else {
-      setConversations([]);
       setConversationError(result.error);
     }
     setLoadingConversations(false);
@@ -174,7 +176,6 @@ function ChatsPage() {
       if (requestId !== messagesRequestIdRef.current) return;
       if (!markResult.ok) setNotice(markResult.error.message);
     } else {
-      setMessages([]);
       setMessageError(result.error);
     }
     setLoadingMessages(false);
@@ -206,7 +207,7 @@ function ChatsPage() {
 
   async function handleSend(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!auth.profile?.id || !selectedConversation || sending) return;
+    if (!auth.profile?.id || !selectedConversation || sendInFlightRef.current) return;
     if (selectedConversation.status !== "active") {
       setNotice(
         text(
@@ -221,68 +222,84 @@ function ChatsPage() {
     const cleanBody = body.trim();
     if (!cleanBody) return;
     const requestId = readOrCreateMessageSendRequestId(profileId, conversationId, cleanBody);
+    sendInFlightRef.current = true;
     setNotice("");
     setMessageError(null);
     setSending(true);
-    const result = await sendConversationMessage(profileId, conversationId, cleanBody, requestId);
-    setSending(false);
-    if (selectedConversationIdRef.current !== conversationId || auth.profile?.id !== profileId)
-      return;
-    if (!result.ok) {
-      setMessageError(result.error);
-      return;
+    try {
+      const result = await sendConversationMessage(profileId, conversationId, cleanBody, requestId);
+      if (selectedConversationIdRef.current !== conversationId || auth.profile?.id !== profileId)
+        return;
+      if (!result.ok) {
+        setMessageError(result.error);
+        return;
+      }
+      completeMessageSendRequest(profileId, conversationId, requestId);
+      setBody("");
+      setMessages((current) =>
+        current.some((message) => message.id === result.data.id)
+          ? current
+          : [...current, result.data],
+      );
+      setNotice(text("تم إرسال الرسالة.", "Message sent."));
+      await loadConversations();
+    } finally {
+      sendInFlightRef.current = false;
+      setSending(false);
     }
-    completeMessageSendRequest(profileId, conversationId, requestId);
-    setBody("");
-    setMessages((current) =>
-      current.some((message) => message.id === result.data.id)
-        ? current
-        : [...current, result.data],
-    );
-    setNotice(text("تم إرسال الرسالة.", "Message sent."));
-    await loadConversations();
   }
 
   async function handleReport(message: ConversationMessage) {
-    if (!auth.profile?.id || !selectedConversation) return;
+    if (!auth.profile?.id || !selectedConversation || reportInFlightRef.current.has(message.id))
+      return;
+    reportInFlightRef.current.add(message.id);
     setReportingMessageId(message.id);
     setNotice("");
-    const result = await createMessageReport({
-      messageId: message.id,
-      conversationId: selectedConversation.id,
-      reporterUserId: auth.profile.id,
-      reason: "abusive_or_suspicious",
-    });
-    setReportingMessageId(null);
-    setNotice(
-      result.ok
-        ? text("تم إرسال بلاغ الرسالة للمراجعة.", "Message report sent for review.")
-        : result.error.message,
-    );
+    try {
+      const result = await createMessageReport({
+        messageId: message.id,
+        conversationId: selectedConversation.id,
+        reporterUserId: auth.profile.id,
+        reason: "abusive_or_suspicious",
+      });
+      setNotice(
+        result.ok
+          ? text("تم إرسال بلاغ الرسالة للمراجعة.", "Message report sent for review.")
+          : result.error.message,
+      );
+    } finally {
+      reportInFlightRef.current.delete(message.id);
+      setReportingMessageId((current) => (current === message.id ? null : current));
+    }
   }
 
   async function handleBlock() {
-    if (!auth.profile?.id || !selectedConversation) return;
+    if (!auth.profile?.id || !selectedConversation || blockInFlightRef.current) return;
     if (
       !confirm(text("حظر هذا المستخدم في هذه المحادثة؟", "Block this user in this conversation?"))
     )
       return;
+    blockInFlightRef.current = true;
     setNotice("");
-    const result = await blockConversationParticipant({
-      conversationId: selectedConversation.id,
-      blockerUserId: auth.profile.id,
-      blockedUserId: selectedConversation.otherParticipant.userId,
-      reason: blockReason || null,
-    });
-    setNotice(
-      result.ok
-        ? text(
-            "تم حظر المحادثة. لن تقبل رسائل جديدة.",
-            "Conversation blocked. New messages are no longer allowed.",
-          )
-        : result.error.message,
-    );
-    if (result.ok) await loadConversations();
+    try {
+      const result = await blockConversationParticipant({
+        conversationId: selectedConversation.id,
+        blockerUserId: auth.profile.id,
+        blockedUserId: selectedConversation.otherParticipant.userId,
+        reason: blockReason || null,
+      });
+      setNotice(
+        result.ok
+          ? text(
+              "تم حظر المحادثة. لن تقبل رسائل جديدة.",
+              "Conversation blocked. New messages are no longer allowed.",
+            )
+          : result.error.message,
+      );
+      if (result.ok) await loadConversations();
+    } finally {
+      blockInFlightRef.current = false;
+    }
   }
 
   function openFirstAvailableConversation() {

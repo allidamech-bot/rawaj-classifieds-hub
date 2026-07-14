@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { MessageSquare, ShieldAlert, Star } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { SellerReviewCard } from "@/features/reviews/SellerReviewCard";
 import { AdaptiveListingCard } from "@/features/listings/cards/AdaptiveListingCard";
@@ -160,80 +160,84 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
   const [eligibilityState, setEligibilityState] = useState<ReviewEligibilityUiState>("idle");
+  const eligibilityRequestIdRef = useRef(0);
+  const reviewInFlightRef = useRef(false);
   const isOwnProfile = auth.status === "signedIn" && auth.profile?.id === seller.id;
   const shouldCheckEligibility = auth.status === "signedIn" && !isOwnProfile;
 
-  useEffect(() => {
+  const loadEligibility = useCallback(async () => {
     if (!shouldCheckEligibility) {
+      eligibilityRequestIdRef.current += 1;
       setEligibilityState("idle");
       return;
     }
-
-    let cancelled = false;
+    const requestId = ++eligibilityRequestIdRef.current;
     setEligibilityState("loading");
     setNotice("");
-
-    void fetchSellerReviewEligibility(seller.id).then((result) => {
-      if (cancelled) return;
-      if (!result.ok) {
-        setEligibilityState("error");
-        return;
-      }
-
-      if (result.data.eligible) {
-        setEligibilityState("eligible");
-        return;
-      }
-
-      if (result.data.reason === "existing_review") {
-        setEligibilityState("existing_review");
-        return;
-      }
-
-      if (result.data.reason === "no_qualifying_interaction") {
-        setEligibilityState("no_qualifying_interaction");
-        return;
-      }
-
+    const result = await fetchSellerReviewEligibility(seller.id);
+    if (requestId !== eligibilityRequestIdRef.current) return;
+    if (!result.ok) {
       setEligibilityState("error");
-    });
+      return;
+    }
+    if (result.data.eligible) {
+      setEligibilityState("eligible");
+      return;
+    }
+    if (result.data.reason === "existing_review") {
+      setEligibilityState("existing_review");
+      return;
+    }
+    if (result.data.reason === "no_qualifying_interaction") {
+      setEligibilityState("no_qualifying_interaction");
+      return;
+    }
+    setEligibilityState("error");
+  }, [seller.id, shouldCheckEligibility]);
 
+  useEffect(() => {
+    void loadEligibility();
     return () => {
-      cancelled = true;
+      eligibilityRequestIdRef.current += 1;
     };
-  }, [auth.profile?.id, auth.status, seller.id, shouldCheckEligibility]);
+  }, [loadEligibility]);
 
   async function submitReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (eligibilityState !== "eligible") return;
+    if (eligibilityState !== "eligible" || reviewInFlightRef.current) return;
+    reviewInFlightRef.current = true;
     setNotice("");
     setSaving(true);
-    const result = await createSellerReview({
-      sellerUserId: seller.id,
-      reviewerUserId: auth.profile?.id ?? null,
-      rating,
-      comment,
-      traits: selectedTraits,
-    });
-    setSaving(false);
-    if (result.ok) {
-      setComment("");
-      setRating(5);
-      setSelectedTraits([]);
-      setEligibilityState("existing_review");
-      setNotice(
-        text(
-          "تم إرسال التقييم للمراجعة قبل ظهوره للعامة.",
-          "Review submitted for moderation before public display.",
-        ),
-      );
-    } else {
-      setNotice(result.error.message);
-      if (result.error.code === "permission_denied") {
-        setEligibilityState("no_qualifying_interaction");
-      } else if (result.error.code === "status_mismatch") {
+    try {
+      const result = await createSellerReview({
+        sellerUserId: seller.id,
+        reviewerUserId: auth.profile?.id ?? null,
+        rating,
+        comment,
+        traits: selectedTraits,
+      });
+      if (result.ok) {
+        setComment("");
+        setRating(5);
+        setSelectedTraits([]);
         setEligibilityState("existing_review");
+        setNotice(
+          text(
+            "تم إرسال التقييم للمراجعة قبل ظهوره للعامة.",
+            "Review submitted for moderation before public display.",
+          ),
+        );
+      } else {
+        setNotice(result.error.message);
+        if (result.error.code === "permission_denied") {
+          setEligibilityState("no_qualifying_interaction");
+        } else if (result.error.code === "status_mismatch") {
+          setEligibilityState("existing_review");
+        }
       }
+    } finally {
+      reviewInFlightRef.current = false;
+      setSaving(false);
     }
   }
 
@@ -346,6 +350,9 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
                 "Review eligibility could not be verified. An unprotected review form was not opened.",
               )}
             </p>
+            <button type="button" onClick={() => void loadEligibility()} className="mt-2 underline">
+              {text("إعادة المحاولة", "Try again")}
+            </button>
           </div>
         ) : (
           <form onSubmit={(event) => void submitReview(event)} className="mt-4 space-y-2">

@@ -107,7 +107,14 @@ function ManageListingPage() {
   const selectedImagesRef = useRef<EditUploadImageEntry[]>([]);
   const imagesRef = useRef<ListingImage[]>([]);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [imagesError, setImagesError] = useState<string | null>(null);
   const [reorderingImages, setReorderingImages] = useState(false);
+  const setupRequestIdRef = useRef(0);
+  const imagesRequestIdRef = useRef(0);
+  const saveInFlightRef = useRef(false);
+  const resubmitInFlightRef = useRef(false);
+  const deleteInFlightRef = useRef(false);
+  const uploadAllInFlightRef = useRef(false);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -148,98 +155,94 @@ function ManageListingPage() {
       Boolean(locationNodeId) || Boolean(governorateId && district),
     ].filter(Boolean).length * 20;
 
-  useEffect(() => {
+  const loadSetup = useCallback(async () => {
     if (auth.status !== "signedIn" || !auth.profile?.id) return;
     const profileId = auth.profile.id;
-    let cancelled = false;
+    const requestId = ++setupRequestIdRef.current;
+    setLoading(true);
+    setSetupError(null);
 
-    async function load() {
-      setLoading(true);
-      setSetupError(null);
+    const [listingResult, locationResult, taxonomyAssignmentResult, refsResult] = await Promise.all(
+      [
+        fetchOwnerListingDetail(profileId, id),
+        fetchListingLocationNodeId(profileId, id),
+        fetchOwnerListingTaxonomyAssignment(profileId, id),
+        Promise.all([
+          fetchPublicCategories(),
+          fetchPublicGovernorates(),
+          fetchPublicSubcategories(),
+          fetchPublicTaxonomyNodes(),
+        ]),
+      ],
+    );
 
-      const [listingResult, locationResult, taxonomyAssignmentResult, refsResult] =
-        await Promise.all([
-          fetchOwnerListingDetail(profileId, id),
-          fetchListingLocationNodeId(profileId, id),
-          fetchOwnerListingTaxonomyAssignment(profileId, id),
-          Promise.all([
-            fetchPublicCategories(),
-            fetchPublicGovernorates(),
-            fetchPublicSubcategories(),
-            fetchPublicTaxonomyNodes(),
-          ]),
-        ]);
-
-      if (cancelled) return;
-      if (!refsResult[0].ok) {
-        setSetupError(refsResult[0].error);
-        setLoading(false);
-        return;
-      }
-      if (!refsResult[1].ok) {
-        setSetupError(refsResult[1].error);
-        setLoading(false);
-        return;
-      }
-      if (!refsResult[2].ok) {
-        setSetupError(refsResult[2].error);
-        setLoading(false);
-        return;
-      }
-
-      if (!listingResult.ok) {
-        setSetupError(listingResult.error);
-        setLoading(false);
-        return;
-      }
-
-      setListing(listingResult.data);
-      setCategories(refsResult[0].data);
-      setGovernorates(refsResult[1].data);
-      setSubcategories(refsResult[2].data);
-      if (refsResult[3].ok) setTaxonomyNodes(refsResult[3].data);
-
-      const fallbackTaxonomyNodeId = readDetailString(
-        listingResult.data.details,
-        "_taxonomy_node_id",
-      );
-      setTaxonomyNodeId(
-        taxonomyAssignmentResult.ok
-          ? (taxonomyAssignmentResult.data?.taxonomyNodeId ?? fallbackTaxonomyNodeId)
-          : fallbackTaxonomyNodeId,
-      );
-
-      setTitle(listingResult.data.title);
-      setDescription(listingResult.data.description);
-      setCategoryId(listingResult.data.categoryId);
-      setSubcategoryId(listingResult.data.subcategoryId);
-      setGovernorateId(listingResult.data.governorateId);
-      setDistrict(listingResult.data.districtAr ?? "");
-      setLocationNodeId(locationResult.ok ? (locationResult.data ?? "") : "");
-      setPrice(listingResult.data.price?.toString() ?? "");
-      setPriceType(listingResult.data.priceType);
-      setCondition(listingResult.data.condition);
-      setContactName(listingResult.data.contactName ?? "");
-      setPhone(readDetailString(listingResult.data.details, "phone"));
-      setWhatsapp(readDetailString(listingResult.data.details, "whatsapp"));
-      setCategoryDetails(readCategoryDetails(listingResult.data.details));
-      setContact(
-        Object.keys(listingResult.data.contactOptions || {}).length > 0
-          ? {
-              phone: Boolean(listingResult.data.contactOptions.phone),
-              whatsapp: Boolean(listingResult.data.contactOptions.whatsapp),
-            }
-          : { phone: true, whatsapp: false },
-      );
-
-      setLoading(false);
+    if (requestId !== setupRequestIdRef.current) return;
+    setLoading(false);
+    if (!refsResult[0].ok) {
+      setSetupError(refsResult[0].error);
+      return;
+    }
+    if (!refsResult[1].ok) {
+      setSetupError(refsResult[1].error);
+      return;
+    }
+    if (!refsResult[2].ok) {
+      setSetupError(refsResult[2].error);
+      return;
+    }
+    if (!listingResult.ok) {
+      setSetupError(listingResult.error);
+      return;
     }
 
-    void load();
+    setListing(listingResult.data);
+    setCategories(refsResult[0].data);
+    setGovernorates(refsResult[1].data);
+    setSubcategories(refsResult[2].data);
+    setTaxonomyNodes(refsResult[3].ok ? refsResult[3].data : []);
+
+    const fallbackTaxonomyNodeId = readDetailString(
+      listingResult.data.details,
+      "_taxonomy_node_id",
+    );
+    setTaxonomyNodeId(
+      taxonomyAssignmentResult.ok
+        ? (taxonomyAssignmentResult.data?.taxonomyNodeId ?? fallbackTaxonomyNodeId)
+        : fallbackTaxonomyNodeId,
+    );
+    setTitle(listingResult.data.title);
+    setDescription(listingResult.data.description);
+    setCategoryId(listingResult.data.categoryId);
+    setSubcategoryId(listingResult.data.subcategoryId);
+    setGovernorateId(listingResult.data.governorateId);
+    setDistrict(listingResult.data.districtAr ?? "");
+    setLocationNodeId(locationResult.ok ? (locationResult.data ?? "") : "");
+    setPrice(listingResult.data.price?.toString() ?? "");
+    setPriceType(listingResult.data.priceType);
+    setCondition(listingResult.data.condition);
+    setContactName(listingResult.data.contactName ?? "");
+    setPhone(readDetailString(listingResult.data.details, "phone"));
+    setWhatsapp(readDetailString(listingResult.data.details, "whatsapp"));
+    setCategoryDetails(readCategoryDetails(listingResult.data.details));
+    setContact(
+      Object.keys(listingResult.data.contactOptions || {}).length > 0
+        ? {
+            phone: Boolean(listingResult.data.contactOptions.phone),
+            whatsapp: Boolean(listingResult.data.contactOptions.whatsapp),
+          }
+        : { phone: true, whatsapp: false },
+    );
+  }, [auth.profile?.id, auth.status, id]);
+
+  useEffect(() => {
+    setupRequestIdRef.current += 1;
+    setListing(null);
+    setSetupError(null);
+    void loadSetup();
     return () => {
-      cancelled = true;
+      setupRequestIdRef.current += 1;
     };
-  }, [auth.status, id, auth.profile?.id]);
+  }, [loadSetup]);
 
   useEffect(() => {
     selectedImagesRef.current = selectedImages;
@@ -256,16 +259,25 @@ function ManageListingPage() {
     [],
   );
 
-  async function loadImages() {
+  const loadImages = useCallback(async () => {
     if (!auth.profile?.id) return;
+    const requestId = ++imagesRequestIdRef.current;
     setImagesLoading(true);
+    setImagesError(null);
     const result = await fetchListingImages(id);
-    if (result.ok) setImages(result.data);
+    if (requestId !== imagesRequestIdRef.current) return;
     setImagesLoading(false);
-  }
+    if (!result.ok) {
+      setImagesError(result.error.message);
+      return;
+    }
+    imagesRef.current = result.data;
+    setImages(result.data);
+  }, [auth.profile?.id, id]);
 
   const handleSave = useCallback(async () => {
-    if (!listing || !isEditable) return;
+    if (!listing || !isEditable || saveInFlightRef.current) return;
+    saveInFlightRef.current = true;
     setSaving(true);
     setSavingError(null);
     setSavingSuccess(null);
@@ -353,7 +365,8 @@ function ManageListingPage() {
   ]);
 
   const handleResubmit = useCallback(async () => {
-    if (!listing || !isResubmittable) return;
+    if (!listing || !isResubmittable || resubmitInFlightRef.current) return;
+    resubmitInFlightRef.current = true;
     setResubmitting(true);
     setSavingError(null);
     setSavingSuccess(null);
@@ -450,9 +463,10 @@ function ManageListingPage() {
   ]);
 
   const handleDelete = useCallback(async () => {
-    if (!listing || !isDeletable) return;
+    if (!listing || !isDeletable || deleteInFlightRef.current) return;
     if (!confirm(text("حذف الإعلان نهائياً؟", "Delete this listing permanently?"))) return;
 
+    deleteInFlightRef.current = true;
     setDeleting(true);
     const result = await deleteOwnerListing(auth.profile?.id ?? null, listing.id);
     setDeleting(false);
@@ -466,7 +480,26 @@ function ManageListingPage() {
   useEffect(() => {
     if (!listing) return;
     void loadImages();
-  }, [listing]);
+    return () => {
+      imagesRequestIdRef.current += 1;
+    };
+  }, [listing, loadImages]);
+
+  useEffect(() => {
+    if (!saving) saveInFlightRef.current = false;
+  }, [saving]);
+
+  useEffect(() => {
+    if (!resubmitting) resubmitInFlightRef.current = false;
+  }, [resubmitting]);
+
+  useEffect(() => {
+    if (!deleting) deleteInFlightRef.current = false;
+  }, [deleting]);
+
+  useEffect(() => {
+    if (!uploading) uploadAllInFlightRef.current = false;
+  }, [uploading]);
 
   function handleImageSelection(files: FileList | null) {
     const nextFiles = Array.from(files ?? []);
@@ -568,7 +601,8 @@ function ManageListingPage() {
   }
 
   async function handleUploadImages() {
-    if (!listing || selectedImagesRef.current.length === 0) return;
+    if (!listing || selectedImagesRef.current.length === 0 || uploadAllInFlightRef.current) return;
+    uploadAllInFlightRef.current = true;
     setUploading(true);
     setUploadError(null);
     for (const entry of [...selectedImagesRef.current]) {
@@ -649,9 +683,18 @@ function ManageListingPage() {
               {setupError?.message ??
                 text("تعذر تحميل هذا الإعلان.", "Could not load this listing.")}
             </p>
-            <Link to="/profile" className="rawaj-button-primary mt-4 px-4 py-2">
-              {text("العودة لحسابي", "Back to my account")}
-            </Link>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => void loadSetup()}
+                className="rawaj-button-primary px-4 py-2"
+              >
+                {text("إعادة المحاولة", "Try again")}
+              </button>
+              <Link to="/profile" className="rawaj-chip px-4 py-2">
+                {text("العودة لحسابي", "Back to my account")}
+              </Link>
+            </div>
           </div>
         </main>
       </>
@@ -737,6 +780,16 @@ function ManageListingPage() {
         {savingError && (
           <div className="mb-4">
             <ListingStudioMessage tone="danger">{savingError}</ListingStudioMessage>
+          </div>
+        )}
+        {imagesError && (
+          <div className="mb-4">
+            <ListingStudioMessage tone="danger">
+              <span>{imagesError}</span>{" "}
+              <button type="button" onClick={() => void loadImages()} className="underline">
+                {text("إعادة تحميل الصور", "Retry photos")}
+              </button>
+            </ListingStudioMessage>
           </div>
         )}
 
