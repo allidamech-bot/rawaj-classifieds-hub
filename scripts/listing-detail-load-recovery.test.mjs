@@ -20,22 +20,10 @@ const baseError = {
 };
 
 test("only genuine unavailable listing outcomes remain eligible for the 404 recovery path", () => {
-  assert.equal(
-    isUnavailableListingDetailError({ ...baseError, code: "not_found" }),
-    true,
-  );
-  assert.equal(
-    isUnavailableListingDetailError({ ...baseError, code: "validation_error" }),
-    true,
-  );
-  assert.equal(
-    isUnavailableListingDetailError({ ...baseError, code: "unknown" }),
-    false,
-  );
-  assert.equal(
-    isUnavailableListingDetailError({ ...baseError, code: "schema_missing" }),
-    false,
-  );
+  assert.equal(isUnavailableListingDetailError({ ...baseError, code: "not_found" }), true);
+  assert.equal(isUnavailableListingDetailError({ ...baseError, code: "validation_error" }), true);
+  assert.equal(isUnavailableListingDetailError({ ...baseError, code: "unknown" }), false);
+  assert.equal(isUnavailableListingDetailError({ ...baseError, code: "schema_missing" }), false);
   assert.equal(
     isUnavailableListingDetailError({ ...baseError, code: "supabase_unconfigured" }),
     false,
