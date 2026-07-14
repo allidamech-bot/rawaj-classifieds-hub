@@ -12,6 +12,7 @@ const [root, shared, more, support, safety, css, qualityGate] = await Promise.al
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
 ]);
 
+// Recovery invariants intentionally cover both history reads and request submission.
 test("trust support V2 stylesheet loads after account and support foundations", () => {
   assert.match(root, /import trustSupportHubV2Css from "\.\.\/trust-support-hub-v2\.css\?url"/);
   const account = root.indexOf("href: activityMoreFoundationCss");
