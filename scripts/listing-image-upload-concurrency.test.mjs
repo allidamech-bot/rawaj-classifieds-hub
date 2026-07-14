@@ -3,29 +3,17 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const [queueSource, studioSource, packageSource] = await Promise.all([
-  readFile(
-    new URL("../src/lib/bounded-task-queue.ts", import.meta.url),
-    "utf8",
-  ),
+  readFile(new URL("../src/lib/bounded-task-queue.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
 
 test("bounded task queue normalizes invalid concurrency and never exceeds its limits", () => {
-  assert.match(
-    queueSource,
-    /Number\.isFinite\(concurrency\) \? Math\.floor\(concurrency\) : 1/,
-  );
-  assert.match(
-    queueSource,
-    /Math\.min\(items\.length, Math\.max\(1, normalizedConcurrency\)\)/,
-  );
+  assert.match(queueSource, /Number\.isFinite\(concurrency\) \? Math\.floor\(concurrency\) : 1/);
+  assert.match(queueSource, /Math\.min\(items\.length, Math\.max\(1, normalizedConcurrency\)\)/);
   assert.match(queueSource, /let nextIndex = 0/);
   assert.match(queueSource, /nextIndex \+= 1/);
-  assert.match(
-    queueSource,
-    /Promise\.all\(Array\.from\(\{ length: workerCount \}/,
-  );
+  assert.match(queueSource, /Promise\.all\(Array\.from\(\{ length: workerCount \}/);
 });
 
 test("listing submission uploads at most two images concurrently", () => {
@@ -33,17 +21,11 @@ test("listing submission uploads at most two images concurrently", () => {
   assert.match(studioSource, /runBoundedTasks\(/);
   assert.match(studioSource, /submitUploadEntries/);
   assert.match(studioSource, /await waitForAllImageUploadsInFlight\(\)/);
-  assert.match(
-    studioSource,
-    /sortOrder: selectedImagesRef\.current\.findIndex/,
-  );
+  assert.match(studioSource, /sortOrder: selectedImagesRef\.current\.findIndex/);
 });
 
 test("concurrent image uploads preserve per-image stale cleanup and failure state", () => {
-  assert.match(
-    studioSource,
-    /isCurrentImageUploadOperation\(currentEntry\.id, operation\)/,
-  );
+  assert.match(studioSource, /isCurrentImageUploadOperation\(currentEntry\.id, operation\)/);
   assert.match(studioSource, /registerStaleUploadCleanup/);
   assert.match(studioSource, /state: "failed" as const/);
   assert.match(studioSource, /state: "uploaded" as const/);
