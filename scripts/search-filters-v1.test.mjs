@@ -85,6 +85,15 @@ test("categories retain taxonomy behavior inside a spatial directory", () => {
   assert.match(categories, /taxonomyListingUrlSearch/);
 });
 
+test("category directory load failures can retry all reference reads in place", () => {
+  assert.match(categories, /const \[loadAttempt, setLoadAttempt\] = useState\(0\)/);
+  assert.match(categories, /\}, \[loadAttempt\]\);/);
+  assert.match(categories, /actionLabel=\{text\("إعادة المحاولة", "Try again"\)\}/);
+  assert.match(categories, /setLoadAttempt\(\(attempt\) => attempt \+ 1\)/);
+  assert.match(categories, /onClick=\{onAction\}/);
+  assert.doesNotMatch(categories, /window\.location\.reload\(\)/);
+});
+
 test("empty results provide useful next actions", () => {
   assert.match(route, /<SearchEmptyState/);
   assert.match(empty, /to="\/categories"/);
