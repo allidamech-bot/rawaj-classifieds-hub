@@ -62,7 +62,9 @@ test("orphan cleanup verifies database references before deleting storage object
   assert.match(journal, /\.from\("listing_images"\)/);
   assert.match(journal, /\.select\("storage_path"\)/);
   assert.match(journal, /\.in\("storage_path", candidatePaths\)/);
-  assert.ok(journal.indexOf('.from("listing_images")') < journal.indexOf(".remove(orphanPaths)"));
+  assert.ok(
+    journal.indexOf('.from("listing_images")') < journal.indexOf(".remove(orphanPaths)"),
+  );
   assert.match(journal, /\.from\(listingImagesBucket\)/);
   assert.match(journal, /\.remove\(orphanPaths\)/);
   assert.match(journal, /const clearedPaths = new Set\(referencedPaths\)/);
