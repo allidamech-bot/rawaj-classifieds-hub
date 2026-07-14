@@ -27,6 +27,11 @@ interface UnreadActivityContextValue {
   refresh: () => Promise<void>;
 }
 
+interface InFlightUnreadRefresh {
+  profileId: string;
+  promise: Promise<void>;
+}
+
 const EMPTY_COUNTS: UnreadActivityCounts = {
   messages: 0,
   notifications: 0,
@@ -49,7 +54,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const profileId = auth.profile?.id ?? null;
   const activeProfileRef = useRef<string | null>(null);
-  const refreshInFlightRef = useRef<Promise<void> | null>(null);
+  const refreshInFlightRef = useRef<InFlightUnreadRefresh | null>(null);
   activeProfileRef.current = auth.status === "signedIn" ? profileId : null;
 
   const refresh = useCallback(async () => {
@@ -60,7 +65,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
     }
 
     const activeRefresh = refreshInFlightRef.current;
-    if (activeRefresh) return activeRefresh;
+    if (activeRefresh?.profileId === profileId) return activeRefresh.promise;
 
     let request: Promise<void>;
     request = (async () => {
@@ -90,10 +95,10 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
         if (activeProfileRef.current === profileId) setLoading(false);
       }
     })().finally(() => {
-      if (refreshInFlightRef.current === request) refreshInFlightRef.current = null;
+      if (refreshInFlightRef.current?.promise === request) refreshInFlightRef.current = null;
     });
 
-    refreshInFlightRef.current = request;
+    refreshInFlightRef.current = { profileId, promise: request };
     return request;
   }, [auth.status, profileId]);
 
