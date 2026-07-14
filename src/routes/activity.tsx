@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Bell, MessageCircle } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -36,53 +36,89 @@ function ActivityCenterPage() {
   const { counts } = useUnreadActivityCounts();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [conversationsLoading, setConversationsLoading] = useState(false);
+  const [hasLoadedNotifications, setHasLoadedNotifications] = useState(false);
+  const [hasLoadedConversations, setHasLoadedConversations] = useState(false);
   const [notificationError, setNotificationError] = useState<ClassifiedsError | null>(null);
   const [conversationError, setConversationError] = useState<ClassifiedsError | null>(null);
-  const requestIdRef = useRef(0);
+  const notificationRequestIdRef = useRef(0);
+  const conversationRequestIdRef = useRef(0);
   const profileId = auth.profile?.id ?? null;
   const activeTab: ActivityTab = search.tab ?? "notifications";
 
+  const loadNotifications = useCallback(async () => {
+    if (!profileId) return;
+
+    const currentProfileId = profileId;
+    const requestId = ++notificationRequestIdRef.current;
+    setNotificationsLoading(true);
+    setNotificationError(null);
+    const result = await fetchMyNotificationsPage(currentProfileId, 0, 8);
+    if (requestId !== notificationRequestIdRef.current || currentProfileId !== auth.profile?.id)
+      return;
+
+    if (result.ok) {
+      setNotifications(result.data.items);
+      setHasLoadedNotifications(true);
+    } else {
+      setNotificationError(result.error);
+    }
+    setNotificationsLoading(false);
+  }, [auth.profile?.id, profileId]);
+
+  const loadConversations = useCallback(async () => {
+    if (!profileId) return;
+
+    const currentProfileId = profileId;
+    const requestId = ++conversationRequestIdRef.current;
+    setConversationsLoading(true);
+    setConversationError(null);
+    const result = await fetchMyConversations(currentProfileId);
+    if (requestId !== conversationRequestIdRef.current || currentProfileId !== auth.profile?.id)
+      return;
+
+    if (result.ok) {
+      setConversations(result.data.slice(0, 8));
+      setHasLoadedConversations(true);
+    } else {
+      setConversationError(result.error);
+    }
+    setConversationsLoading(false);
+  }, [auth.profile?.id, profileId]);
+
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
-      requestIdRef.current += 1;
+      notificationRequestIdRef.current += 1;
+      conversationRequestIdRef.current += 1;
       setNotifications([]);
       setConversations([]);
-      setLoading(false);
+      setNotificationsLoading(false);
+      setConversationsLoading(false);
+      setHasLoadedNotifications(false);
+      setHasLoadedConversations(false);
       setNotificationError(null);
       setConversationError(null);
       return;
     }
 
-    const currentProfileId = profileId;
-    const requestId = ++requestIdRef.current;
-    setLoading(true);
+    notificationRequestIdRef.current += 1;
+    conversationRequestIdRef.current += 1;
+    setNotifications([]);
+    setConversations([]);
+    setNotificationsLoading(false);
+    setConversationsLoading(false);
+    setHasLoadedNotifications(false);
+    setHasLoadedConversations(false);
     setNotificationError(null);
     setConversationError(null);
+    void Promise.all([loadNotifications(), loadConversations()]);
 
-    void Promise.all([
-      fetchMyNotificationsPage(currentProfileId, 0, 8),
-      fetchMyConversations(currentProfileId),
-    ]).then(([notificationResult, conversationResult]) => {
-      if (requestId !== requestIdRef.current || currentProfileId !== auth.profile?.id) return;
-
-      if (notificationResult.ok) {
-        setNotifications(notificationResult.data.items);
-      } else {
-        setNotifications([]);
-        setNotificationError(notificationResult.error);
-      }
-
-      if (conversationResult.ok) {
-        setConversations(conversationResult.data.slice(0, 8));
-      } else {
-        setConversations([]);
-        setConversationError(conversationResult.error);
-      }
-
-      setLoading(false);
-    });
-  }, [auth.status, auth.profile?.id, profileId]);
+    return () => {
+      notificationRequestIdRef.current += 1;
+      conversationRequestIdRef.current += 1;
+    };
+  }, [auth.status, loadConversations, loadNotifications, profileId]);
 
   function selectTab(tab: ActivityTab) {
     void navigate({
@@ -140,42 +176,59 @@ function ActivityCenterPage() {
               to="/notifications"
               action={text("عرض الكل", "View all")}
             />
-            {loading ? (
+            {notificationsLoading && !hasLoadedNotifications ? (
               <ActivityState>{text("جارٍ تحميل النشاط.", "Loading activity.")}</ActivityState>
-            ) : notificationError ? (
-              <ActivityState>{notificationError.message}</ActivityState>
-            ) : notifications.length === 0 ? (
-              <ActivityState>
-                {text("لا توجد إشعارات محفوظة حاليًا.", "No saved notifications right now.")}
-              </ActivityState>
+            ) : notificationError && !hasLoadedNotifications ? (
+              <ActivityRecovery
+                message={notificationError.message}
+                actionLabel={text("إعادة المحاولة", "Try again")}
+                onRetry={() => void loadNotifications()}
+                disabled={notificationsLoading}
+              />
             ) : (
-              <div className="rawaj-activity-feed">
-                {notifications.map((notification) => (
-                  <article
-                    key={notification.id}
-                    className="rawaj-notification-timeline"
-                    data-read={Boolean(notification.readAt)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span
-                        className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${notification.readAt ? "bg-border" : "bg-gold"}`}
-                        aria-hidden="true"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <h2 className="text-sm font-bold">{notification.titleAr}</h2>
-                        {notification.bodyAr ? (
-                          <p className="mt-1 line-clamp-2 text-xs leading-6 text-muted-foreground">
-                            {notification.bodyAr}
-                          </p>
-                        ) : null}
-                        <p className="mt-1 text-[10px] text-muted-foreground">
-                          {formatDateTime(notification.createdAt, language)}
-                        </p>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
+              <>
+                {notificationError ? (
+                  <ActivityRecovery
+                    message={notificationError.message}
+                    actionLabel={text("إعادة المحاولة", "Try again")}
+                    onRetry={() => void loadNotifications()}
+                    disabled={notificationsLoading}
+                  />
+                ) : null}
+                {notifications.length === 0 ? (
+                  <ActivityState>
+                    {text("لا توجد إشعارات محفوظة حاليًا.", "No saved notifications right now.")}
+                  </ActivityState>
+                ) : (
+                  <div className="rawaj-activity-feed">
+                    {notifications.map((notification) => (
+                      <article
+                        key={notification.id}
+                        className="rawaj-notification-timeline"
+                        data-read={Boolean(notification.readAt)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span
+                            className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${notification.readAt ? "bg-border" : "bg-gold"}`}
+                            aria-hidden="true"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <h2 className="text-sm font-bold">{notification.titleAr}</h2>
+                            {notification.bodyAr ? (
+                              <p className="mt-1 line-clamp-2 text-xs leading-6 text-muted-foreground">
+                                {notification.bodyAr}
+                              </p>
+                            ) : null}
+                            <p className="mt-1 text-[10px] text-muted-foreground">
+                              {formatDateTime(notification.createdAt, language)}
+                            </p>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </section>
         ) : (
@@ -185,37 +238,56 @@ function ActivityCenterPage() {
               to="/chats"
               action={text("فتح الرسائل", "Open messages")}
             />
-            {loading ? (
+            {conversationsLoading && !hasLoadedConversations ? (
               <ActivityState>{text("جارٍ تحميل النشاط.", "Loading activity.")}</ActivityState>
-            ) : conversationError ? (
-              <ActivityState>{conversationError.message}</ActivityState>
-            ) : conversations.length === 0 ? (
-              <ActivityState>{text("لا توجد محادثات بعد.", "No conversations yet.")}</ActivityState>
+            ) : conversationError && !hasLoadedConversations ? (
+              <ActivityRecovery
+                message={conversationError.message}
+                actionLabel={text("إعادة المحاولة", "Try again")}
+                onRetry={() => void loadConversations()}
+                disabled={conversationsLoading}
+              />
             ) : (
-              <div className="rawaj-activity-feed">
-                {conversations.map((conversation) => (
-                  <Link
-                    key={conversation.id}
-                    to="/chats"
-                    search={{ conversation: conversation.id }}
-                    className="rawaj-activity-conversation"
-                  >
-                    <ParticipantAvatar
-                      name={conversation.otherParticipant.displayName}
-                      url={conversation.otherParticipant.avatarUrl}
-                    />
-                    <span className="rawaj-activity-conversation__copy">
-                      <strong className="block truncate text-sm">
-                        {conversation.otherParticipant.displayName}
-                      </strong>
-                      <span className="block truncate text-[11px] text-muted-foreground">
-                        {conversation.lastMessagePreview || conversation.listingTitle}
-                      </span>
-                    </span>
-                    {conversation.unreadCount > 0 ? <b>{conversation.unreadCount}</b> : null}
-                  </Link>
-                ))}
-              </div>
+              <>
+                {conversationError ? (
+                  <ActivityRecovery
+                    message={conversationError.message}
+                    actionLabel={text("إعادة المحاولة", "Try again")}
+                    onRetry={() => void loadConversations()}
+                    disabled={conversationsLoading}
+                  />
+                ) : null}
+                {conversations.length === 0 ? (
+                  <ActivityState>
+                    {text("لا توجد محادثات بعد.", "No conversations yet.")}
+                  </ActivityState>
+                ) : (
+                  <div className="rawaj-activity-feed">
+                    {conversations.map((conversation) => (
+                      <Link
+                        key={conversation.id}
+                        to="/chats"
+                        search={{ conversation: conversation.id }}
+                        className="rawaj-activity-conversation"
+                      >
+                        <ParticipantAvatar
+                          name={conversation.otherParticipant.displayName}
+                          url={conversation.otherParticipant.avatarUrl}
+                        />
+                        <span className="rawaj-activity-conversation__copy">
+                          <strong className="block truncate text-sm">
+                            {conversation.otherParticipant.displayName}
+                          </strong>
+                          <span className="block truncate text-[11px] text-muted-foreground">
+                            {conversation.lastMessagePreview || conversation.listingTitle}
+                          </span>
+                        </span>
+                        {conversation.unreadCount > 0 ? <b>{conversation.unreadCount}</b> : null}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </section>
         )}
@@ -270,6 +342,32 @@ function ActivitySectionHeader({
 
 function ActivityState({ children }: { children: React.ReactNode }) {
   return <p className="rawaj-communication-state">{children}</p>;
+}
+
+function ActivityRecovery({
+  message,
+  actionLabel,
+  onRetry,
+  disabled,
+}: {
+  message: string;
+  actionLabel: string;
+  onRetry: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="rawaj-communication-state space-y-3">
+      <p>{message}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        disabled={disabled}
+        className="inline-flex min-h-11 items-center rounded-xl bg-card px-4 py-2 text-xs font-bold text-foreground hairline disabled:opacity-60"
+      >
+        {actionLabel}
+      </button>
+    </div>
+  );
 }
 
 function formatDateTime(value: string, language: "ar" | "en") {
