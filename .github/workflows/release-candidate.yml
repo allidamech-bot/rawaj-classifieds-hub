@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - ".github/workflows/release-candidate.yml"
+      - ".github/workflows/quality-gate.yml"
       - "scripts/bottom-dock-navigation-contract.test.mjs"
   workflow_dispatch:
     inputs:
