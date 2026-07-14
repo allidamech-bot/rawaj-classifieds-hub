@@ -1,8 +1,7 @@
 const FLOW_STORAGE_PREFIX = "rawaj:listing-draft-creation-flow:v1";
 const FLOW_QUERY_PARAM = "draftFlow";
 const FLOW_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 interface OwnerDraftCreationFlow {
   requestId: string;

@@ -49,7 +49,10 @@ test("one add-listing URL flow keeps a durable UUID across reloads", () => {
 
 test("guarded draft creation sends the flow UUID and remembers its listing", () => {
   assert.match(guardedSource, /readOrCreateOwnerDraftCreationRequestId\(userId\)/);
-  assert.match(guardedSource, /createOwnerDraftListingIdempotent\(userId, payload, creationRequestId\)/);
+  assert.match(
+    guardedSource,
+    /createOwnerDraftListingIdempotent\(userId, payload, creationRequestId\)/,
+  );
   assert.match(
     guardedSource,
     /rememberOwnerDraftCreationListing\(userId, creationRequestId, result\.data\.id\)/,
@@ -62,7 +65,10 @@ test("database draft creation is unique per owner and flow request", () => {
   assert.match(migration, /\(owner_id, creation_request_id\)/);
   assert.match(migration, /where creation_request_id is not null/);
   assert.match(migration, /rawaj_create_owner_draft_v2/);
-  assert.match(migration, /where l\.owner_id = v_actor[\s\S]*l\.creation_request_id = p_creation_request_id/);
+  assert.match(
+    migration,
+    /where l\.owner_id = v_actor[\s\S]*l\.creation_request_id = p_creation_request_id/,
+  );
   assert.match(migration, /for update;/);
   assert.match(migration, /when unique_violation/);
   assert.match(migration, /rawaj_owner_update_listing\(v_listing\.id, v_patch\)/);
