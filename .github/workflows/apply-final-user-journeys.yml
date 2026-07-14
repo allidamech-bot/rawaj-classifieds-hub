@@ -90,9 +90,9 @@ jobs:
             src/routes/chats.tsx \
             scripts/final-user-journeys.test.mjs \
             package.json \
-            .github/workflows/quality-gate.yml \
+            .github/workflows/quality-gate.yml
+          git add -u -- \
             .github/final-user-journeys-patch.py \
-            .github/workflows/apply-final-user-journeys.yml \
-            .github/final-user-journeys-error.txt
+            .github/workflows/apply-final-user-journeys.yml
           git commit -m 'Close final user journey recovery gaps'
           git push origin HEAD:feature/close-final-user-journey-gaps
