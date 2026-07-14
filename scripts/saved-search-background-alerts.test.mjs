@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [scannerSource, rootSource, packageSource] = await Promise.all([
+const [scannerSource, routeSource, rootSource, packageSource] = await Promise.all([
   readFile(
     new URL(
       "../src/features/saved-searches/SavedSearchAlertBackgroundScanner.tsx",
@@ -10,6 +10,7 @@ const [scannerSource, rootSource, packageSource] = await Promise.all([
     ),
     "utf8",
   ),
+  readFile(new URL("../src/routes/saved-searches.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
@@ -47,6 +48,33 @@ test("background scans deduplicate work and update unread activity only after su
   assert.match(scannerSource, /result\.data\.createdNotifications > 0/);
   assert.match(scannerSource, /emitUnreadActivityChanged\(\)/);
   assert.match(scannerSource, /inFlightScans\.delete\(userId\)/);
+});
+
+test("saved-search route preserves loaded searches when scanning or refresh fails", () => {
+  assert.match(routeSource, /const \[hasLoaded, setHasLoaded\]/);
+  assert.match(routeSource, /const \[loadError, setLoadError\]/);
+  assert.match(routeSource, /const loadSavedSearches = useCallback/);
+  assert.match(routeSource, /loadError && !hasLoaded/);
+  assert.match(routeSource, /onAction=\{\(\) => void loadSavedSearches\(\)\}/);
+  assert.match(routeSource, /actionLabel=\{text\("إعادة المحاولة", "Try again"\)\}/);
+  assert.match(routeSource, /Saved searches loaded, but new matches could not be scanned right now/);
+  assert.doesNotMatch(routeSource, /setLoadError\(result\.error\);[\s\S]{0,80}setItems\(\[\]\)/);
+});
+
+test("saved-search route rejects stale account and route responses", () => {
+  assert.match(routeSource, /const loadRequestIdRef = useRef\(0\)/);
+  assert.match(routeSource, /requestId !== loadRequestIdRef\.current/);
+  assert.match(routeSource, /currentProfileId !== auth\.profile\?\.id/);
+  assert.match(
+    routeSource,
+    /return \(\) => \{[\s\S]*loadRequestIdRef\.current \+= 1;[\s\S]*\};/,
+  );
+});
+
+test("saved-search mutation failures do not become page load failures", () => {
+  assert.match(routeSource, /setMessage\(result\.error\.message\)/);
+  assert.doesNotMatch(routeSource, /setLoadError\(result\.error\)[\s\S]*changeAlertFrequency/);
+  assert.doesNotMatch(routeSource, /setLoadError\(result\.error\)[\s\S]*removeSavedSearch/);
 });
 
 test("background saved-search alert contract is part of the activity Quality Gate", () => {
