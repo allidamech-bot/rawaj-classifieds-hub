@@ -5,6 +5,7 @@ import { listingImagesBucket } from "@/lib/api/storage";
 const JOURNAL_STORAGE_KEY = "rawaj:listing-image-upload-journal:v1";
 const DEFAULT_ORPHAN_MIN_AGE_MS = 15 * 60 * 1000;
 const MAX_JOURNAL_RECORDS = 50;
+const activeListingImageUploads = new Set<string>();
 
 interface PendingListingImageUpload {
   userId: string;
@@ -24,15 +25,22 @@ export function rememberPendingListingImageUpload(
   listingId: string,
   storagePath: string,
 ): void {
-  const storage = readJournalStorage();
-  if (!storage || !isOwnedListingImagePath(userId, listingId, storagePath)) return;
+  if (!isOwnedListingImagePath(userId, listingId, storagePath)) return;
+  activeListingImageUploads.add(storagePath);
 
+  const storage = readJournalStorage();
+  if (!storage) return;
   const records = readJournal(storage).filter((record) => record.storagePath !== storagePath);
   records.push({ userId, listingId, storagePath, createdAt: Date.now() });
   writeJournal(storage, records.slice(-MAX_JOURNAL_RECORDS));
 }
 
+export function releasePendingListingImageUpload(storagePath: string): void {
+  activeListingImageUploads.delete(storagePath);
+}
+
 export function clearPendingListingImageUpload(storagePath: string): void {
+  activeListingImageUploads.delete(storagePath);
   const storage = readJournalStorage();
   if (!storage || !storagePath.trim()) return;
   removeJournalPaths(storage, new Set([storagePath]));
@@ -52,6 +60,7 @@ export async function cleanupPendingListingImageUploads(
   const candidates = records.filter(
     (record) =>
       record.userId === userId &&
+      !activeListingImageUploads.has(record.storagePath) &&
       now - record.createdAt >= Math.max(0, minAgeMs) &&
       isOwnedListingImagePath(record.userId, record.listingId, record.storagePath),
   );
