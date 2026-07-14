@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   patch:
@@ -72,27 +72,20 @@ jobs:
         run: |
           cat final-user-journeys.log
           exit 1
-      - name: Commit focused result and remove temporary files
+      - name: Upload validated source bundle
         if: steps.apply.outputs.status == '0'
-        shell: bash
-        run: |
-          rm .github/final-user-journeys-patch.py
-          rm .github/workflows/apply-final-user-journeys.yml
-          rm -f .github/final-user-journeys-error.txt final-user-journeys.log
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add \
-            src/routes/more.tsx \
-            src/routes/add-listing.tsx \
-            'src/routes/profile/listings.$id.tsx' \
-            'src/routes/listings.$id.tsx' \
-            'src/routes/seller.$id.tsx' \
-            src/routes/chats.tsx \
-            scripts/final-user-journeys.test.mjs \
-            package.json \
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-user-journeys-validated
+          path: |
+            src/routes/more.tsx
+            src/routes/add-listing.tsx
+            src/routes/profile/listings.$id.tsx
+            src/routes/listings.$id.tsx
+            src/routes/seller.$id.tsx
+            src/routes/chats.tsx
+            scripts/final-user-journeys.test.mjs
+            package.json
             .github/workflows/quality-gate.yml
-          git add -u -- \
-            .github/final-user-journeys-patch.py \
-            .github/workflows/apply-final-user-journeys.yml
-          git commit -m 'Close final user journey recovery gaps'
-          git push origin HEAD:feature/close-final-user-journey-gaps
+          if-no-files-found: error
+          retention-days: 1
