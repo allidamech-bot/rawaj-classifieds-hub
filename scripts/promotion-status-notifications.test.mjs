@@ -42,7 +42,10 @@ test("promotion listings and request history recover independently in place", ()
   assert.match(promotionRoute, /const loadRequests = useCallback/);
   assert.match(promotionRoute, /onAction=\{\(\) => void loadListings\(\)\}/);
   assert.match(promotionRoute, /onAction=\{\(\) => void loadRequests\(\)\}/);
-  assert.match(promotionRoute, /actionLabel=\{text\("إعادة المحاولة", "Try again"\)\}/);
+  assert.match(
+    promotionRoute,
+    /actionLabel=\{text\("إعادة المحاولة", "Try again"\)\}/,
+  );
   assert.doesNotMatch(promotionRoute, /window\.location\.reload\(\)/);
 });
 
@@ -64,11 +67,20 @@ test("promotion load responses cannot overwrite a newer account or retry", () =>
 });
 
 test("a failed refresh preserves the last successful promotion snapshot", () => {
-  assert.match(promotionRoute, /const \[hasLoadedListings, setHasLoadedListings\]/);
-  assert.match(promotionRoute, /const \[hasLoadedRequests, setHasLoadedRequests\]/);
+  assert.match(
+    promotionRoute,
+    /const \[hasLoadedListings, setHasLoadedListings\]/,
+  );
+  assert.match(
+    promotionRoute,
+    /const \[hasLoadedRequests, setHasLoadedRequests\]/,
+  );
   assert.match(promotionRoute, /listingsError && !hasLoadedListings/);
   assert.match(promotionRoute, /requestsError && !hasLoadedRequests/);
   assert.match(promotionRoute, /listingsError \? \(/);
   assert.match(promotionRoute, /requestsError \? \(/);
-  assert.doesNotMatch(promotionRoute, /Promise\.all\(\[\s*fetchCurrentUserListings/);
+  assert.doesNotMatch(
+    promotionRoute,
+    /Promise\.all\(\[\s*fetchCurrentUserListings/,
+  );
 });
