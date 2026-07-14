@@ -1,9 +1,9 @@
 name: Retention Discovery Format Once
 
 on:
-  push:
+  pull_request:
     branches:
-      - feature/retention-discovery-v1
+      - main
     paths:
       - ".github/workflows/retention-discovery-format-once.yml"
 
@@ -11,17 +11,18 @@ permissions:
   contents: write
 
 concurrency:
-  group: retention-discovery-format-once
+  group: retention-discovery-format-once-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
 jobs:
   format-and-validate:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feature/retention-discovery-v1
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
@@ -59,13 +60,15 @@ jobs:
       - name: Remove one-shot workflow
         run: rm .github/workflows/retention-discovery-format-once.yml
       - name: Commit formatted package
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then
-            echo "No formatting changes were required."
-            exit 1
+            rm -f .github/workflows/retention-discovery-format-once.yml
+            git add -A
           fi
           git commit -m "chore: format and validate retention discovery package"
-          git push origin HEAD:feature/retention-discovery-v1
+          git push origin HEAD:"$HEAD_REF"
