@@ -24,6 +24,7 @@ concurrency:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   certify:
@@ -109,3 +110,25 @@ jobs:
             playwright-report
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish release candidate evidence
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+        shell: bash
+        run: |
+          short_sha="${EXPECTED_COMMIT_SHA:0:12}"
+          title="RAWAJ RC ${short_sha} — ${JOB_STATUS}"
+          body=$(cat <<EOF
+          ## RAWAJ Release Candidate evidence
+
+          - Commit: \`${EXPECTED_COMMIT_SHA}\`
+          - Result: **${JOB_STATUS}**
+          - Workflow run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          - Web, browser, Android, and manifest artifacts are attached to the workflow run when the result is successful.
+          - Authenticated Production Acceptance: ${{ github.event_name == 'workflow_dispatch' && inputs.run_production_acceptance && 'executed' || 'external run still required' }}
+          - Physical Android device, release signing, Play Console, real App Links certificate fingerprint, and Supabase dashboard evidence remain external gates.
+          EOF
+          )
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
