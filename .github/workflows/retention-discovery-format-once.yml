@@ -1,0 +1,71 @@
+name: Retention Discovery Format Once
+
+on:
+  push:
+    branches:
+      - feature/retention-discovery-v1
+    paths:
+      - ".github/workflows/retention-discovery-format-once.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: retention-discovery-format-once
+  cancel-in-progress: false
+
+jobs:
+  format-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/retention-discovery-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Format retention package
+        run: |
+          npx prettier --write \
+            .github/workflows/quality-gate.yml \
+            docs/production-schema/migration-ledger.json \
+            package.json \
+            scripts/retention-discovery-v1.test.mjs \
+            src/features/listing-detail/ListingMediaExperience.tsx \
+            src/features/listing-detail/ListingSellerProfileCard.tsx \
+            src/features/listing-detail/SimilarListingsRail.tsx \
+            src/features/retention/SellerFollowButton.tsx \
+            src/features/storefront/StorefrontIdentityHero.tsx \
+            src/lib/api/retention-discovery.ts \
+            src/lib/classifieds-api.ts \
+            supabase/migrations/202607150001_retention_discovery_v1.sql
+      - name: Focused validation
+        run: |
+          npm run test:retention-discovery
+          npx eslint --quiet \
+            scripts/retention-discovery-v1.test.mjs \
+            src/features/listing-detail/ListingMediaExperience.tsx \
+            src/features/listing-detail/ListingSellerProfileCard.tsx \
+            src/features/listing-detail/SimilarListingsRail.tsx \
+            src/features/retention/SellerFollowButton.tsx \
+            src/features/storefront/StorefrontIdentityHero.tsx \
+            src/lib/api/retention-discovery.ts \
+            src/lib/classifieds-api.ts
+          npm run typecheck -- --pretty false
+      - name: Remove one-shot workflow
+        run: rm .github/workflows/retention-discovery-format-once.yml
+      - name: Commit formatted package
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No formatting changes were required."
+            exit 1
+          fi
+          git commit -m "chore: format and validate retention discovery package"
+          git push origin HEAD:feature/retention-discovery-v1
