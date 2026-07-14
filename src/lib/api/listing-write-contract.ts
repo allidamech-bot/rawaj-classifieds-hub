@@ -16,7 +16,8 @@ export function buildOwnerUpdateRpcArgs(
     throw new Error("Owner listing update RPC requires p_listing_id.");
   }
 
-  const p_patch = patch && typeof patch === "object" && !Array.isArray(patch) ? patch : {};
+  const p_patch =
+    patch && typeof patch === "object" && !Array.isArray(patch) ? patch : {};
 
   return { p_listing_id, p_patch };
 }
@@ -29,7 +30,9 @@ export function buildOwnerUpdateRpcArgsV3(
   const base = buildOwnerUpdateRpcArgs(listingId, patch);
   const p_expected_updated_at = expectedUpdatedAt.trim();
   if (!p_expected_updated_at) {
-    throw new Error("Owner listing update RPC requires p_expected_updated_at.");
+    throw new Error(
+      "Owner listing update RPC requires p_expected_updated_at.",
+    );
   }
 
   return { ...base, p_expected_updated_at };
