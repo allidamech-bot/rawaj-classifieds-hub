@@ -66,6 +66,12 @@ jobs:
           printf 'Linting %s\n' "${files[@]}"
           npx eslint --quiet "${files[@]}"
 
+      - name: Header Navigation contract
+        run: npm run test:header-navigation
+
+      - name: Bottom Dock Navigation contract
+        run: npm run test:bottom-dock-navigation
+
       - name: Syria location classification contract
         run: npm run test:location-classification
 
