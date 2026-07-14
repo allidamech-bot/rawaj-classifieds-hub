@@ -418,7 +418,10 @@ function VerificationPage() {
             <>
               {requestsError ? (
                 <RecoveryNotice
-                  title={text("تعذر تحديث طلبات التوثيق", "Could not refresh verification requests")}
+                  title={text(
+                    "تعذر تحديث طلبات التوثيق",
+                    "Could not refresh verification requests",
+                  )}
                   body={requestsError.message}
                   actionLabel={text("إعادة المحاولة", "Try again")}
                   onAction={() => void loadRequests()}
