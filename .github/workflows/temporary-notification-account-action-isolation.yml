@@ -33,11 +33,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Apply guarded notification isolation
-        run: |
-          node scripts/apply-notification-account-action-isolation.mjs
-          node scripts/apply-notification-preference-account-reset.mjs
-          node scripts/fix-notification-profile-ref-idempotency.mjs
+      - name: Normalize notification profile refs
+        run: node scripts/fix-notification-profile-ref-idempotency.mjs
 
       - name: Format and lint changed files
         run: |
@@ -58,34 +55,9 @@ jobs:
         run: node --test scripts/communication-center-v2.test.mjs
 
       - name: Typecheck
-        id: typecheck
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -o pipefail
-          npm run typecheck -- --pretty false 2>&1 | tee typecheck-diagnostic.txt
-
-      - name: Commit failing candidate and diagnostic
-        if: steps.typecheck.outcome == 'failure'
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            src/routes/notifications.tsx \
-            src/features/notifications/NotificationPreferencesPanel.tsx \
-            scripts/notification-account-action-isolation.test.mjs \
-            package.json \
-            typecheck-diagnostic.txt
-          git commit -m "chore: capture notification typecheck diagnostic"
-          git push origin HEAD:fix/notification-account-action-isolation
-
-      - name: Fail after diagnostic capture
-        if: steps.typecheck.outcome == 'failure'
-        run: exit 1
+        run: npm run typecheck -- --pretty false
 
       - name: Commit implementation
-        if: steps.typecheck.outcome == 'success'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -99,5 +71,5 @@ jobs:
             echo "No implementation changes to commit."
             exit 0
           fi
-          git commit -m "fix: isolate notification actions by account"
+          git commit -m "fix: normalize notification account guards"
           git push origin HEAD:fix/notification-account-action-isolation
