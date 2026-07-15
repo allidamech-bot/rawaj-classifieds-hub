@@ -9,6 +9,7 @@ const [
   reviewCard,
   sellerRoute,
   profile,
+  authProvider,
   offers,
   packageSource,
 ] = await Promise.all([
@@ -18,6 +19,7 @@ const [
   readFile(new URL("../src/features/reviews/SellerReviewCard.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/seller.$id.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/profile.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/auth.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/offers.tsx", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
@@ -61,6 +63,17 @@ test("profile mutations and refreshes remain bound to one account", () => {
   assert.match(profile, /mediaSavingProfilesRef = useRef<Set<string>>/);
   assert.match(profile, /if \(currentProfileId !== profileIdRef\.current\) return;/);
   assert.match(profile, /loadedProfileIdRef\.current = null/);
+});
+
+test("auth provider rejects stale session, profile, and refresh results", () => {
+  assert.match(authProvider, /sessionUserIdRef = useRef<string \| null>/);
+  assert.match(authProvider, /sessionRequestIdRef = useRef\(0\)/);
+  assert.match(authProvider, /profileRequestIdRef = useRef\(0\)/);
+  assert.match(authProvider, /requestId !== profileRequestIdRef\.current/);
+  assert.match(authProvider, /sessionUserIdRef\.current !== userId/);
+  assert.match(authProvider, /requestId !== sessionRequestIdRef\.current/);
+  assert.match(authProvider, /sessionRequestIdRef\.current \+= 1/);
+  assert.match(authProvider, /profileRequestIdRef\.current \+= 1/);
 });
 
 test("offers stay public and outside account isolation state", () => {
