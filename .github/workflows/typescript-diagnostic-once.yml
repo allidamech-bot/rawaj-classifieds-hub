@@ -1,0 +1,39 @@
+name: TypeScript Diagnostic Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/typescript-diagnostic-once.yml"
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm install @capacitor/push-notifications@^8.0.0 --save
+      - run: python scripts/apply-saved-search-push-integration.py
+      - name: Capture TypeScript diagnostics
+        run: |
+          set +e
+          npx tsc --noEmit --pretty false > typescript-diagnostics.txt 2>&1
+          status=$?
+          cat typescript-diagnostics.txt
+          echo "$status" > typescript-status.txt
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: push-typescript-diagnostics-${{ github.run_id }}
+          path: |
+            typescript-diagnostics.txt
+            typescript-status.txt
+          retention-days: 1
