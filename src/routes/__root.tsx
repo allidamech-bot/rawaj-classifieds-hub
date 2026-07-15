@@ -14,6 +14,10 @@ import { useEffect, type ReactNode } from "react";
 import { FeedbackState } from "@/components/feedback/FeedbackState";
 import { AppShell } from "@/components/shell/AppShell";
 import { Button } from "@/components/ui/button";
+import {
+  ListingComparisonDock,
+  ListingComparisonProvider,
+} from "@/features/comparison/listing-comparison";
 import { ExistingConversationBanner } from "@/features/listing-detail/ExistingConversationBanner";
 import { ViewedBeforeBanner } from "@/features/listing-detail/ViewedBeforeBanner";
 import { DraftRecoveryBanner } from "@/features/listing-studio/DraftRecoveryBanner";
@@ -30,6 +34,7 @@ import trustSupportHubV2Css from "../trust-support-hub-v2.css?url";
 import authAccountFoundationCss from "../auth-account-foundation.css?url";
 import authAccountV2Css from "../auth-account-v2.css?url";
 import communicationCenterV2Css from "../communication-center-v2.css?url";
+import comparisonFoundationCss from "../comparison-foundation.css?url";
 import designSystemV2Css from "../design-system-v2.css?url";
 import desktopExperienceV1Css from "../desktop-experience-v1.css?url";
 import designFoundationCss from "../design-foundation.css?url";
@@ -155,6 +160,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: listingStudioV3Css },
         { rel: "stylesheet", href: messagingSignatureCss },
         { rel: "stylesheet", href: communicationCenterV2Css },
+        { rel: "stylesheet", href: comparisonFoundationCss },
         { rel: "stylesheet", href: marketplaceSystemCss },
         { rel: "stylesheet", href: myStoreHeaderRefinementCss },
         { rel: "stylesheet", href: myStoreBrandPolishCss },
@@ -243,23 +249,26 @@ function RootComponent() {
       <UiPreferencesProvider>
         <AuthProvider>
           <UnreadActivityProvider>
-            <SavedSearchAlertBackgroundScanner />
-            <HtmlAttributes />
-            <AppShell
-              pathname={pathname}
-              routeClassName={routeScopeClass}
-              announcements={
-                <>
-                  {showDraftRecovery ? <DraftRecoveryBanner /> : null}
-                  {listingDetailId ? <ViewedBeforeBanner listingId={listingDetailId} /> : null}
-                  {listingDetailId ? (
-                    <ExistingConversationBanner listingId={listingDetailId} />
-                  ) : null}
-                </>
-              }
-            >
-              <Outlet />
-            </AppShell>
+            <ListingComparisonProvider>
+              <SavedSearchAlertBackgroundScanner />
+              <HtmlAttributes />
+              <AppShell
+                pathname={pathname}
+                routeClassName={routeScopeClass}
+                announcements={
+                  <>
+                    {showDraftRecovery ? <DraftRecoveryBanner /> : null}
+                    {listingDetailId ? <ViewedBeforeBanner listingId={listingDetailId} /> : null}
+                    {listingDetailId ? (
+                      <ExistingConversationBanner listingId={listingDetailId} />
+                    ) : null}
+                  </>
+                }
+              >
+                <Outlet />
+              </AppShell>
+              <ListingComparisonDock />
+            </ListingComparisonProvider>
           </UnreadActivityProvider>
         </AuthProvider>
       </UiPreferencesProvider>
