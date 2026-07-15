@@ -20,6 +20,7 @@ export * from "@/lib/api/draft-recovery";
 export * from "@/lib/api/listing-conversation-context";
 export * from "@/lib/api/notification-target-resolution";
 export * from "@/lib/api/notification-preferences";
+export * from "@/lib/api/push-notifications";
 export * from "@/lib/api/listing-price-context";
 export * from "@/lib/api/price-drops";
 export { fetchPublicListingsCanonicalAware as fetchPublicListings } from "@/lib/api/location-aware-listings-v2";
