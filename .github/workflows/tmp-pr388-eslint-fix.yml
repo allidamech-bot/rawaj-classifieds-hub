@@ -1,0 +1,57 @@
+name: Temporary PR 388 ESLint Fix
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/tmp-pr388-eslint-fix.yml"
+      - "src/lib/auth.tsx"
+      - "scripts/account-surface-action-isolation.test.mjs"
+
+concurrency:
+  group: temporary-pr-388-eslint-fix
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.head_ref == 'audit/account-surface-stale-data-isolation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: audit/account-surface-stale-data-isolation
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fix and verify changed sources
+        shell: bash
+        run: |
+          mapfile -t files < <(
+            git diff --name-only --diff-filter=ACMR origin/main...HEAD -- \
+              '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
+          )
+          npx eslint --fix "${files[@]}"
+          npx eslint --quiet "${files[@]}"
+
+      - name: Commit fixes and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/tmp-pr388-eslint-fix.yml
+          git add -A
+          git commit -m "style: satisfy account isolation lint"
+          git push origin HEAD:audit/account-surface-stale-data-isolation
