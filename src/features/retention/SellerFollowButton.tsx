@@ -111,19 +111,13 @@ export function SellerFollowButton({
     setError("");
     try {
       const result = await setSellerFollow(currentProfileId, currentSellerId, nextFollowing);
-      if (
-        currentProfileId !== profileIdRef.current ||
-        currentSellerId !== sellerIdRef.current
-      )
+      if (currentProfileId !== profileIdRef.current || currentSellerId !== sellerIdRef.current)
         return;
       if (result.ok) setSummary(result.data);
       else setError(result.error.message);
     } finally {
       writeScopesRef.current.delete(scopeKey);
-      if (
-        currentProfileId === profileIdRef.current &&
-        currentSellerId === sellerIdRef.current
-      )
+      if (currentProfileId === profileIdRef.current && currentSellerId === sellerIdRef.current)
         setBusy(false);
     }
   }
