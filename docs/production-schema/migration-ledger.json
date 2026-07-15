@@ -148,7 +148,8 @@
       "202607090003_reconcile_admin_listing_moderation_contract.sql",
       "202607100004_backfill_syria_source_location_aliases.sql",
       "202607100005_backfill_syria_location_type_sort_order.sql",
-      "202607100007_repair_seller_review_response_update_path.sql"
+      "202607100007_repair_seller_review_response_update_path.sql",
+      "202607160001_fix_ad_placement_version_ambiguity.sql"
     ],
     "manual": ["202607090004_reconcile_manual_production_hotfixes.sql"]
   }
