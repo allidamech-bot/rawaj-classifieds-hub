@@ -1,2 +1,0 @@
-Applied account-surface stale-result isolation patch.
-Expected one owner-listing key assertion, found 2

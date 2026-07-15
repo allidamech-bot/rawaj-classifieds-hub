@@ -1,0 +1,78 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
+
+const [
+  favorites,
+  savedSearches,
+  ownerListings,
+  reviewCard,
+  sellerRoute,
+  profile,
+  offers,
+  packageSource,
+] = await Promise.all([
+  readFile(new URL("../src/routes/favorites.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/saved-searches.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/profile/listings.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/reviews/SellerReviewCard.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/seller.$id.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/profile.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/offers.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../package.json", import.meta.url), "utf8"),
+]);
+
+test("favorites reject stale removals with account-scoped locks", () => {
+  assert.match(favorites, /profileIdRef = useRef<string \| null>/);
+  assert.match(favorites, /const scopeKey = \[currentProfileId, listingId\]\.join\(":"\)/);
+  assert.match(favorites, /currentProfileId !== profileIdRef\.current/);
+  assert.match(favorites, /removeInFlightRef\.current\.delete\(scopeKey\)/);
+});
+
+test("saved searches reset local state and isolate every account mutation", () => {
+  assert.match(savedSearches, /loadedProfileIdRef = useRef<string \| null>/);
+  assert.match(savedSearches, /setLocalItems\(\[\]\)/);
+  assert.match(savedSearches, /creatingSearchProfilesRef = useRef<Set<string>>/);
+  assert.match(savedSearches, /frequencyScopesRef = useRef<Set<string>>/);
+  assert.match(savedSearches, /deletingSearchScopesRef = useRef<Set<string>>/);
+  assert.match(savedSearches, /currentProfileId !== profileIdRef\.current/);
+});
+
+test("owner listing results are scoped to the initiating account", () => {
+  assert.match(ownerListings, /actionProfileId !== profileIdRef\.current/);
+  assert.ok(ownerListings.includes('key={`${profileId ?? "signed-out"}:${listing.id}`}'));
+  assert.match(ownerListings, /onDeleted\(userId, listing\.id\)/);
+  assert.match(ownerListings, /onChanged\(userId, result\.data\)/);
+});
+
+test("seller review actions and forms reject replacement accounts", () => {
+  assert.match(reviewCard, /responseScopesRef = useRef<Set<string>>/);
+  assert.match(reviewCard, /reportScopesRef = useRef<Set<string>>/);
+  assert.match(reviewCard, /currentProfileId !== profileIdRef\.current/);
+  assert.match(sellerRoute, /reviewSubmitProfilesRef = useRef<Set<string>>/);
+  assert.match(sellerRoute, /reviewerUserId: currentProfileId/);
+  assert.match(sellerRoute, /currentProfileId !== profileIdRef\.current/);
+});
+
+test("profile mutations and refreshes remain bound to one account", () => {
+  assert.match(profile, /settingsSavingProfilesRef = useRef<Set<string>>/);
+  assert.match(profile, /passwordSavingProfilesRef = useRef<Set<string>>/);
+  assert.match(profile, /deletionSavingProfilesRef = useRef<Set<string>>/);
+  assert.match(profile, /mediaSavingProfilesRef = useRef<Set<string>>/);
+  assert.match(profile, /if \(currentProfileId !== profileIdRef\.current\) return;/);
+  assert.match(profile, /loadedProfileIdRef\.current = null/);
+});
+
+test("offers stay public and outside account isolation state", () => {
+  assert.doesNotMatch(offers, /useAuth/);
+  assert.match(offers, /fetchActivePriceDropOffers/);
+});
+
+test("account surface isolation remains in the permanent activity contract", () => {
+  const packageJson = JSON.parse(packageSource);
+  assert.match(
+    packageJson.scripts["test:activity-center"],
+    /account-surface-action-isolation\.test\.mjs/,
+  );
+  assert.match(packageJson.scripts.check, /npm run test:activity-center/);
+});

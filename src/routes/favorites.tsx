@@ -32,6 +32,8 @@ function FavoritesPage() {
   const removeInFlightRef = useRef<Set<string>>(new Set());
   const loadRequestIdRef = useRef(0);
   const profileId = auth.profile?.id ?? null;
+  const profileIdRef = useRef<string | null>(profileId);
+  profileIdRef.current = profileId;
 
   const loadFavorites = useCallback(async () => {
     if (!profileId) return;
@@ -41,7 +43,7 @@ function FavoritesPage() {
     setLoading(true);
     setError(null);
     const result = await fetchFavoriteJourneyItems(currentProfileId);
-    if (requestId !== loadRequestIdRef.current || currentProfileId !== auth.profile?.id) return;
+    if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
 
     if (result.ok) {
       setItems(result.data);
@@ -77,20 +79,23 @@ function FavoritesPage() {
   }, [auth.status, loadFavorites, profileId]);
 
   async function remove(listingId: string) {
-    if (removeInFlightRef.current.has(listingId)) return;
     const currentProfileId = profileId;
-    removeInFlightRef.current.add(listingId);
+    if (!currentProfileId) return;
+    const scopeKey = [currentProfileId, listingId].join(":");
+    if (removeInFlightRef.current.has(scopeKey)) return;
+
+    removeInFlightRef.current.add(scopeKey);
     setActionMessage("");
     try {
       const result = await unfavoriteListing(currentProfileId, listingId);
-      if (currentProfileId !== auth.profile?.id) return;
+      if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setActionMessage(result.error.message);
         return;
       }
       setItems((current) => current.filter((item) => item.listingId !== listingId));
     } finally {
-      removeInFlightRef.current.delete(listingId);
+      removeInFlightRef.current.delete(scopeKey);
     }
   }
 

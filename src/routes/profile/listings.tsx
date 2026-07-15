@@ -60,6 +60,8 @@ function MyListingsPage() {
   const listingsRequestIdRef = useRef(0);
   const sellerRequestIdRef = useRef(0);
   const profileId = auth.profile?.id ?? null;
+  const profileIdRef = useRef<string | null>(profileId);
+  profileIdRef.current = profileId;
 
   useEffect(() => {
     if (search.tab) setActiveTab(search.tab);
@@ -73,7 +75,8 @@ function MyListingsPage() {
     setListingsLoading(true);
     setListingsError(null);
     const result = await fetchCurrentUserListings(currentProfileId);
-    if (requestId !== listingsRequestIdRef.current || currentProfileId !== auth.profile?.id) return;
+    if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+      return;
 
     if (result.ok) {
       setListings(result.data);
@@ -92,7 +95,8 @@ function MyListingsPage() {
     setSellerLoading(true);
     setSellerError(null);
     const result = await fetchPublicSellerProfile(currentProfileId);
-    if (requestId !== sellerRequestIdRef.current || currentProfileId !== auth.profile?.id) return;
+    if (requestId !== sellerRequestIdRef.current || currentProfileId !== profileIdRef.current)
+      return;
 
     if (result.ok) {
       setSellerProfile(result.data);
@@ -136,11 +140,13 @@ function MyListingsPage() {
     };
   }, [auth.status, loadListings, loadSellerProfile, profileId]);
 
-  function handleListingDeleted(listingId: string) {
+  function handleListingDeleted(actionProfileId: string | null, listingId: string) {
+    if (!actionProfileId || actionProfileId !== profileIdRef.current) return;
     setListings((prev) => prev.filter((listing) => listing.id !== listingId));
   }
 
-  function handleListingChanged(nextListing: ClassifiedListing) {
+  function handleListingChanged(actionProfileId: string | null, nextListing: ClassifiedListing) {
+    if (!actionProfileId || actionProfileId !== profileIdRef.current) return;
     setListings((prev) =>
       prev.map((listing) => (listing.id === nextListing.id ? nextListing : listing)),
     );
@@ -345,7 +351,7 @@ function MyListingsPage() {
               <div className="rawaj-storefront-owner-grid">
                 {visibleListings.map((listing) => (
                   <StoreListingCard
-                    key={listing.id}
+                    key={`${profileId ?? "signed-out"}:${listing.id}`}
                     listing={listing}
                     language={language}
                     userId={profileId}
@@ -390,8 +396,8 @@ function StoreListingCard({
   listing: ClassifiedListing;
   language: Language;
   userId: string | null;
-  onDeleted: (id: string) => void;
-  onChanged: (listing: ClassifiedListing) => void;
+  onDeleted: (profileId: string | null, id: string) => void;
+  onChanged: (profileId: string | null, listing: ClassifiedListing) => void;
 }) {
   const { text } = useUiPreferences();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -439,7 +445,7 @@ function StoreListingCard({
       return;
     }
     setShowDeleteConfirm(false);
-    onDeleted(listing.id);
+    onDeleted(userId, listing.id);
   }
 
   async function handleClose(targetStatus: OwnerCloseListingStatus) {
@@ -452,7 +458,7 @@ function StoreListingCard({
       setLifecycleError(result.error.message);
       return;
     }
-    onChanged(result.data);
+    onChanged(userId, result.data);
   }
 
   async function handleReservationToggle() {
@@ -465,7 +471,7 @@ function StoreListingCard({
       setReservationError(result.error.message);
       return;
     }
-    onChanged(result.data);
+    onChanged(userId, result.data);
   }
 
   async function handlePriceDrop() {
@@ -483,7 +489,7 @@ function StoreListingCard({
       setPriceDropError(result.error.message);
       return;
     }
-    onChanged(result.data);
+    onChanged(userId, result.data);
   }
 
   async function handleReactivate() {
@@ -496,7 +502,7 @@ function StoreListingCard({
       setLifecycleError(result.error.message);
       return;
     }
-    onChanged(result.data);
+    onChanged(userId, result.data);
   }
 
   async function handleExpiryUpdate() {
@@ -509,7 +515,7 @@ function StoreListingCard({
       setLifecycleError(result.error.message);
       return;
     }
-    onChanged(result.data);
+    onChanged(userId, result.data);
   }
 
   const lockedMessage = isClosedListingStatus(listing.status)
