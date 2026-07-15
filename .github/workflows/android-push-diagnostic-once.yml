@@ -1,0 +1,56 @@
+name: Android Push Diagnostic Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/android-push-diagnostic-once.yml"
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm install @capacitor/push-notifications@^8.0.0 --save
+      - name: Patch and integrate
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("scripts/apply-saved-search-push-integration.py")
+          text = path.read_text(encoding="utf-8")
+          text = text.replace(
+            '        \'        void navigate({ to: "/saved-searches" });\\n\'\n',
+            '        \'        void navigate({ to: "/saved-searches", search: { q: "", category: "", subcategory: "", gov: "", district: "", price_min: "", price_max: "", car_make: "", car_model: "", fuel: "", transmission: "", property_purpose: "", property_type: "", rooms: "", rental_duration: "", electronics_brand: "", detail_condition: "", employment_type: "", salary_type: "", sort: "latest" } });\\n\'\n',
+            1,
+          )
+          path.write_text(text, encoding="utf-8")
+          PY
+          python scripts/apply-saved-search-push-integration.py
+          mkdir -p .output/public
+          printf '<!doctype html><html lang="ar"><body></body></html>\n' > .output/public/index.html
+          npx cap sync android
+      - name: Capture Android compile diagnostics
+        working-directory: android
+        run: |
+          set +e
+          ./gradlew :app:assembleDebug --no-daemon --stacktrace > ../android-push-diagnostics.txt 2>&1
+          status=$?
+          cat ../android-push-diagnostics.txt
+          echo "$status" > ../android-push-status.txt
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-push-diagnostics-${{ github.run_id }}
+          path: |
+            android-push-diagnostics.txt
+            android-push-status.txt
+          retention-days: 1
