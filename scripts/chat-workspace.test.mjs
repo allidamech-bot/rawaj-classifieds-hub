@@ -37,10 +37,7 @@ test("conversation search keeps an explicit empty-result state and accessible to
 test("quick replies fill the active composer scope but never auto-send", () => {
   assert.match(chatRoute, /const quickReplies =/);
   assert.match(chatRoute, /selectedConversation\.status === "active"/);
-  assert.match(
-    chatRoute,
-    /setCurrentComposerBody\(language === "ar" \? reply\.ar : reply\.en\)/,
-  );
+  assert.match(chatRoute, /setCurrentComposerBody\(language === "ar" \? reply\.ar : reply\.en\)/);
   assert.match(chatRoute, /function setCurrentComposerBody/);
   assert.match(chatRoute, /Quick replies/);
   assert.match(chatRoute, /type="button"/);
