@@ -46,9 +46,10 @@ test("client exposes an eligibility read contract", () => {
 
 test("seller storefront fails closed until review eligibility is verified", () => {
   assert.match(sellerRoute, /fetchSellerReviewEligibility\(seller\.id\)/);
+  assert.match(sellerRoute, /if \(eligibilityState !== "eligible" \|\| !currentProfileId\) return;/);
   assert.match(
     sellerRoute,
-    /if \(eligibilityState !== "eligible" \|\| reviewSubmitProfilesRef\.current\.has\(currentProfileId\)\) return;/,
+    /if \(reviewSubmitProfilesRef\.current\.has\(currentProfileId\)\) return;/,
   );
   assert.match(sellerRoute, /eligibilityState === "error"/);
   assert.match(sellerRoute, /Reviews are temporarily unavailable/);
