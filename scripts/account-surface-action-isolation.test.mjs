@@ -10,6 +10,8 @@ const [
   sellerRoute,
   profile,
   authProvider,
+  activity,
+  support,
   offers,
   packageSource,
 ] = await Promise.all([
@@ -20,6 +22,8 @@ const [
   readFile(new URL("../src/routes/seller.$id.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/profile.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/auth.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/activity.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/support.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/offers.tsx", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
@@ -76,6 +80,23 @@ test("auth provider rejects stale session, profile, and refresh results", () => 
   assert.match(authProvider, /if \(accountChanged\) \{[\s\S]*setProfile\(null\)/);
   assert.match(authProvider, /sessionRequestIdRef\.current \+= 1/);
   assert.match(authProvider, /profileRequestIdRef\.current \+= 1/);
+});
+
+test("activity center reads compare results with the live account", () => {
+  assert.match(activity, /profileIdRef = useRef<string \| null>/);
+  assert.equal((activity.match(/currentProfileId !== profileIdRef\.current/g) ?? []).length, 2);
+  assert.doesNotMatch(activity, /currentProfileId !== auth\.profile\?\.id/);
+});
+
+test("support reads, form state, writes, and finalizers are account-scoped", () => {
+  assert.match(support, /loadedProfileIdRef = useRef<string \| null>/);
+  assert.match(support, /submitScopesRef = useRef<Set<string>>/);
+  assert.match(support, /submitScopesRef\.current\.has\(currentProfileId\)/);
+  assert.match(support, /const payload = \{/);
+  assert.match(support, /currentProfileId !== profileIdRef\.current/);
+  assert.match(support, /submitScopesRef\.current\.delete\(currentProfileId\)/);
+  assert.match(support, /if \(accountChanged\) \{[\s\S]*setSubject\(""\)/);
+  assert.doesNotMatch(support, /submitInFlightRef/);
 });
 
 test("offers stay public and outside account isolation state", () => {
