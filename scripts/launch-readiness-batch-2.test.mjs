@@ -73,7 +73,19 @@ test("account status labels cover the persisted frozen and disabled states", () 
 });
 
 test("opening a notification records it as read before navigation", () => {
-  assert.ok(notifications.includes("if (!notification.readAt) await markOne(notification.id);"));
+  const openTargetStart = notifications.indexOf(
+    "async function openNotificationTarget(notification: NotificationItem)",
+  );
+  const markReadIndex = notifications.indexOf("await markOne(notification.id)", openTargetStart);
+  const firstNavigationIndex = notifications.indexOf("void navigate(", openTargetStart);
+
+  assert.ok(openTargetStart >= 0);
+  assert.ok(markReadIndex > openTargetStart);
+  assert.ok(firstNavigationIndex > markReadIndex);
+  assert.match(
+    notifications,
+    /if \(!notification\.readAt\) \{[\s\S]*await markOne\(notification\.id\)/,
+  );
   assert.ok(notifications.includes("markAllNotificationsRead"));
   assert.ok(notifications.includes("resolveNotificationTarget"));
 });
