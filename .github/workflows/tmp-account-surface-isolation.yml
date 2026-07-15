@@ -52,20 +52,29 @@ jobs:
           path = Path("scripts/tmp-apply-account-surface-isolation.mjs")
           text = path.read_text(encoding="utf-8")
           lines = text.splitlines()
+
           seller_replacement = r'''  source = replaceExact(source, `<SellerReviewCard key={review.id} review={review} canManageResponse={isOwnProfile} />`, '<SellerReviewCard\n                key={`${profileId ?? "signed-out"}:${review.id}`}\n                review={review}\n                canManageResponse={isOwnProfile}\n              />', "seller review account key");'''
-          matches = [index for index, line in enumerate(lines) if "seller review account key" in line]
-          if len(matches) != 1:
-              raise SystemExit(f"Expected one seller review account key line, found {len(matches)}")
-          lines[matches[0]] = seller_replacement
+          seller_matches = [index for index, line in enumerate(lines) if "seller review account key" in line]
+          if len(seller_matches) != 1:
+              raise SystemExit(
+                  f"Expected one seller review account key line, found {len(seller_matches)}"
+              )
+          lines[seller_matches[0]] = seller_replacement
           text = "\n".join(lines) + "\n"
 
-          regression_needle = r'/key=\{\`\$\{profileId \?\? \"signed-out\"\}:\$\{listing\.id\}\`\}/'
-          regression_replacement = r'/profileId \?\? \"signed-out\".*listing\.id/'
-          if text.count(regression_needle) != 1:
-              raise SystemExit(
-                  f"Expected one owner listing key assertion, found {text.count(regression_needle)}"
-              )
-          text = text.replace(regression_needle, regression_replacement)
+          assertion_start_marker = "  assert.match(ownerListings, /key="
+          assertion_end_marker = ");\\n"
+          assertion_start = text.find(assertion_start_marker)
+          if assertion_start < 0:
+              raise SystemExit("Owner listing key assertion start was not found")
+          assertion_end = text.find(assertion_end_marker, assertion_start)
+          if assertion_end < 0:
+              raise SystemExit("Owner listing key assertion end was not found")
+          assertion_end += len(assertion_end_marker)
+          assertion_replacement = (
+              r'  assert.match(ownerListings, /profileId \?\? "signed-out".*listing\.id/);\n'
+          )
+          text = text[:assertion_start] + assertion_replacement + text[assertion_end:]
           path.write_text(text, encoding="utf-8")
           PY
 
