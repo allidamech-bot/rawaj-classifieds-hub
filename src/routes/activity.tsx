@@ -45,6 +45,8 @@ function ActivityCenterPage() {
   const notificationRequestIdRef = useRef(0);
   const conversationRequestIdRef = useRef(0);
   const profileId = auth.profile?.id ?? null;
+  const profileIdRef = useRef<string | null>(profileId);
+  profileIdRef.current = profileId;
   const activeTab: ActivityTab = search.tab ?? "notifications";
 
   const loadNotifications = useCallback(async () => {
@@ -55,7 +57,10 @@ function ActivityCenterPage() {
     setNotificationsLoading(true);
     setNotificationError(null);
     const result = await fetchMyNotificationsPage(currentProfileId, 0, 8);
-    if (requestId !== notificationRequestIdRef.current || currentProfileId !== auth.profile?.id)
+    if (
+      requestId !== notificationRequestIdRef.current ||
+      currentProfileId !== profileIdRef.current
+    )
       return;
 
     if (result.ok) {
@@ -65,7 +70,7 @@ function ActivityCenterPage() {
       setNotificationError(result.error);
     }
     setNotificationsLoading(false);
-  }, [auth.profile?.id, profileId]);
+  }, [profileId]);
 
   const loadConversations = useCallback(async () => {
     if (!profileId) return;
@@ -75,7 +80,10 @@ function ActivityCenterPage() {
     setConversationsLoading(true);
     setConversationError(null);
     const result = await fetchMyConversations(currentProfileId);
-    if (requestId !== conversationRequestIdRef.current || currentProfileId !== auth.profile?.id)
+    if (
+      requestId !== conversationRequestIdRef.current ||
+      currentProfileId !== profileIdRef.current
+    )
       return;
 
     if (result.ok) {
@@ -85,7 +93,7 @@ function ActivityCenterPage() {
       setConversationError(result.error);
     }
     setConversationsLoading(false);
-  }, [auth.profile?.id, profileId]);
+  }, [profileId]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
