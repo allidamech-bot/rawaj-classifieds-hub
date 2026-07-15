@@ -77,7 +77,7 @@ test("profile overview requests reject stale account and route responses", () =>
   assert.match(profile, /const verificationRequestIdRef = useRef\(0\)/);
   assert.match(profile, /requestId !== listingsRequestIdRef\.current/);
   assert.match(profile, /requestId !== verificationRequestIdRef\.current/);
-  assert.match(profile, /currentProfileId !== auth\.profile\?\.id/);
+  assert.match(profile, /currentProfileId !== profileIdRef\.current/);
 });
 
 test("profile media replacement validates files and never deletes the old image before linking the new one", () => {
