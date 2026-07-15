@@ -144,7 +144,7 @@ jobs:
 
       - name: Android debug compile
         working-directory: android
-        run: ./gradlew :app:assembleDebug --no-daemon
+        run: bash ./gradlew :app:assembleDebug --no-daemon
 
       - name: Remove temporary integration files
         run: |
@@ -153,6 +153,7 @@ jobs:
           rm -f .github/workflows/saved-search-push-finalize-once.yml
           rm -f .github/workflows/activity-diagnostic-once.yml
           rm -f .github/workflows/typescript-diagnostic-once.yml
+          rm -f .github/workflows/android-push-diagnostic-once.yml
           rm -f .github/workflows/fix-notification-search-once.yml
           rm -f scripts/apply-saved-search-push-integration.py
 
