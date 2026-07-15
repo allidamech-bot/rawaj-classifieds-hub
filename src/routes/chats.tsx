@@ -121,14 +121,31 @@ function ChatsPage() {
   });
 
   useEffect(() => {
-    profileIdRef.current = auth.profile?.id ?? null;
+    const nextProfileId = auth.profile?.id ?? null;
+    const previousProfileId = profileIdRef.current;
+    profileIdRef.current = nextProfileId;
+    if (previousProfileId === nextProfileId) return;
+
     setComposerDrafts({});
-    setSendingScopes(new Set());
-    sendInFlightScopesRef.current.clear();
     setConfirmedRisk(null);
     setBlockReason("");
     setNotice("");
-  }, [auth.profile?.id]);
+
+    if (previousProfileId !== null) {
+      conversationsRequestIdRef.current += 1;
+      messagesRequestIdRef.current += 1;
+      setConversations([]);
+      setMessages([]);
+      setConversationError(null);
+      setMessageError(null);
+      setLoadingConversations(false);
+      setLoadingMessages(false);
+      setViewingConversationOnMobile(false);
+      if (search.conversation) {
+        void navigate({ to: "/chats", search: {}, replace: true });
+      }
+    }
+  }, [auth.profile?.id, navigate, search.conversation]);
 
   useEffect(() => {
     selectedConversationIdRef.current = selectedConversation?.id ?? null;
