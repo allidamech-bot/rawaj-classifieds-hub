@@ -1,9 +1,10 @@
 import { useEffect } from "react";
+import { PushNotificationBridge } from "@/features/notifications/PushNotificationBridge";
 import { scanDueSavedSearchAlerts } from "@/lib/classifieds-api";
 import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
 import { useAuth } from "@/lib/use-auth";
 
-const SCAN_STORAGE_PREFIX = "rawaj:saved-search-background-scan:v1";
+const SCAN_STORAGE_PREFIX = "rawaj:saved-search-background-scan:v2";
 const SCAN_THROTTLE_MS = 6 * 60 * 60 * 1000;
 const SCAN_START_DELAY_MS = 1_500;
 
@@ -34,7 +35,7 @@ function rememberSuccessfulScan(userId: string, timestamp: number) {
   try {
     window.localStorage.setItem(scanStorageKey(userId), String(timestamp));
   } catch {
-    // Saved-search alerts remain best-effort when browser storage is unavailable.
+    // Server-side matching remains authoritative when browser storage is unavailable.
   }
 }
 
@@ -111,5 +112,5 @@ export function SavedSearchAlertBackgroundScanner() {
     };
   }, [auth.status, profileId]);
 
-  return null;
+  return <PushNotificationBridge />;
 }
