@@ -25,6 +25,7 @@ import {
   isSafePhoneValue,
   normalizeContactValue,
 } from "@/lib/content-safety";
+import { calculateListingQuality, listingQualityCheckLabel } from "@/lib/listing-quality";
 import {
   assignOwnerListingTaxonomy,
   deleteListingImage,
@@ -146,14 +147,40 @@ function ManageListingPage() {
   const isPendingReview = listing?.status === "pending_review";
   const isResubmittable = listing?.status === "draft" || listing?.status === "rejected";
   const isDeletable = Boolean(listing && isOwnerDeletableStatus(listing.status));
-  const studioScore =
+  const quality = useMemo(
+    () =>
+      calculateListingQuality({
+        categoryReady:
+          taxonomyNodes.length > 0 ? Boolean(selectedTaxonomyNode?.isLeaf) : Boolean(categoryId),
+        title,
+        description,
+        imageCount:
+          images.length + selectedImages.filter((entry) => entry.state !== "failed").length,
+        priceReady: priceType !== "fixed" || Number(price) > 0,
+        locationReady: Boolean(locationNodeId) || Boolean(governorateId && district),
+        categoryFieldKind,
+        categoryDetails,
+        condition,
+      }),
     [
-      taxonomyNodes.length > 0 ? Boolean(selectedTaxonomyNode?.isLeaf) : Boolean(categoryId),
-      title.trim().length >= 8,
-      description.trim().length >= 30,
-      Boolean(price) || priceType !== "fixed",
-      Boolean(locationNodeId) || Boolean(governorateId && district),
-    ].filter(Boolean).length * 20;
+      categoryDetails,
+      categoryFieldKind,
+      categoryId,
+      condition,
+      description,
+      district,
+      governorateId,
+      images.length,
+      locationNodeId,
+      price,
+      priceType,
+      selectedImages,
+      selectedTaxonomyNode?.isLeaf,
+      taxonomyNodes.length,
+      title,
+    ],
+  );
+  const studioScore = quality.score;
 
   const loadSetup = useCallback(async () => {
     if (auth.status !== "signedIn" || !auth.profile?.id) return;
@@ -1226,7 +1253,7 @@ function ManageListingPage() {
           <aside className="rawaj-studio-shell__aside">
             <ListingStudioCompletionCard
               score={studioScore}
-              ready={studioScore === 100}
+              ready={quality.ready}
               title={
                 isEditable
                   ? text("راجع التعديلات قبل الحفظ", "Review changes before saving")
@@ -1267,28 +1294,10 @@ function ManageListingPage() {
             />
             <ListingStudioQualityPanel
               score={studioScore}
-              checks={[
-                {
-                  label: text("القسم محدد", "Category selected"),
-                  done:
-                    taxonomyNodes.length > 0
-                      ? Boolean(selectedTaxonomyNode?.isLeaf)
-                      : Boolean(categoryId),
-                },
-                { label: text("عنوان واضح", "Clear title"), done: title.trim().length >= 8 },
-                {
-                  label: text("وصف كافٍ", "Useful description"),
-                  done: description.trim().length >= 30,
-                },
-                {
-                  label: text("السعر مكتمل", "Price completed"),
-                  done: Boolean(price) || priceType !== "fixed",
-                },
-                {
-                  label: text("الموقع مكتمل", "Location completed"),
-                  done: Boolean(locationNodeId) || Boolean(governorateId && district),
-                },
-              ]}
+              checks={quality.checks.map((check) => ({
+                label: listingQualityCheckLabel(check.key, text),
+                done: check.done,
+              }))}
               text={text}
             />
             <ListingStudioSection title={text("إجراءات", "Actions")}>

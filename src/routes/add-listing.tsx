@@ -27,6 +27,7 @@ import {
   isSafePhoneValue,
   normalizeContactValue,
 } from "@/lib/content-safety";
+import { calculateListingQuality, listingQualityCheckLabel } from "@/lib/listing-quality";
 import { runBoundedTasks } from "@/lib/bounded-task-queue";
 import {
   assignOwnerListingTaxonomy,
@@ -154,28 +155,38 @@ function AddListingPage() {
   const normalizedPrice = normalizeNumericInput(price);
   const canContinue = true;
   const canSubmit = step === 2;
-  const score = useMemo(
+  const quality = useMemo(
     () =>
-      [
-        taxonomyNodes.length > 0 ? Boolean(selectedTaxonomyNode?.isLeaf) : !!categoryId,
-        title.trim().length >= 8,
-        description.trim().length >= 30,
-        !!price || priceType !== "fixed",
-        !!locationNodeId || (!!governorateId && !!district),
-      ].filter(Boolean).length * 20,
+      calculateListingQuality({
+        categoryReady:
+          taxonomyNodes.length > 0 ? Boolean(selectedTaxonomyNode?.isLeaf) : Boolean(categoryId),
+        title,
+        description,
+        imageCount: selectedImages.filter((entry) => entry.state !== "failed").length,
+        priceReady: priceType !== "fixed" || Number(normalizedPrice) > 0,
+        locationReady: Boolean(locationNodeId) || Boolean(governorateId && district),
+        categoryFieldKind,
+        categoryDetails,
+        condition,
+      }),
     [
+      categoryDetails,
+      categoryFieldKind,
       categoryId,
+      condition,
+      description,
+      district,
+      governorateId,
+      locationNodeId,
+      normalizedPrice,
+      priceType,
+      selectedImages,
       selectedTaxonomyNode?.isLeaf,
       taxonomyNodes.length,
       title,
-      description,
-      price,
-      priceType,
-      governorateId,
-      district,
-      locationNodeId,
     ],
   );
+  const score = quality.score;
   const steps = [
     text("ماذا تبيع؟", "What are you selling?"),
     text("الصور والتفاصيل", "Photos and details"),
@@ -1642,14 +1653,14 @@ function AddListingPage() {
             <aside className="rawaj-studio-shell__aside">
               <ListingStudioCompletionCard
                 score={score}
-                ready={score === 100}
+                ready={quality.ready}
                 title={
-                  score === 100
+                  quality.ready
                     ? text("الإعلان جاهز للمراجعة", "Ready for review")
                     : text("أكمل الإعلان خطوة بخطوة", "Complete your listing step by step")
                 }
                 body={
-                  score === 100
+                  quality.ready
                     ? text("راجع المعاينة ثم أرسل الإعلان.", "Review the preview, then submit.")
                     : text(
                         "كل معلومة واضحة ترفع فرصة البيع.",
@@ -1681,22 +1692,10 @@ function AddListingPage() {
               />
               <ListingStudioQualityPanel
                 score={score}
-                checks={[
-                  { label: text("القسم محدد", "Category selected"), done: Boolean(categoryId) },
-                  { label: text("عنوان واضح", "Clear title"), done: title.trim().length >= 8 },
-                  {
-                    label: text("وصف كافٍ", "Useful description"),
-                    done: description.trim().length >= 30,
-                  },
-                  {
-                    label: text("السعر مكتمل", "Price completed"),
-                    done: Boolean(price) || priceType !== "fixed",
-                  },
-                  {
-                    label: text("الموقع مكتمل", "Location completed"),
-                    done: Boolean(locationNodeId) || Boolean(governorateId && district),
-                  },
-                ]}
+                checks={quality.checks.map((check) => ({
+                  label: listingQualityCheckLabel(check.key, text),
+                  done: check.done,
+                }))}
                 text={text}
               />
               <Card title={text("تنبيه", "Note")}>

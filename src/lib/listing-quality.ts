@@ -107,51 +107,61 @@ function hasMeaningfulCategoryDetails(
   condition: ListingCondition,
 ) {
   if (kind === "real_estate") {
-    return completedFields([
-      details.property_type,
-      details.listing_purpose,
-      details.area_sqm,
-      details.rooms ?? details.bedrooms,
-    ]) >= 2;
+    return (
+      completedFields([
+        details.property_type,
+        details.listing_purpose,
+        details.area_sqm,
+        details.rooms ?? details.bedrooms,
+      ]) >= 2
+    );
   }
 
   if (kind === "vehicles") {
-    return completedFields([
-      details.car_make ?? details.make,
-      details.car_model ?? details.model,
-      details.year,
-      details.mileage_km,
-      details.fuel_type,
-      details.transmission,
-    ]) >= 2;
+    return (
+      completedFields([
+        details.car_make ?? details.make,
+        details.car_model ?? details.model,
+        details.year,
+        details.mileage_km,
+        details.fuel_type,
+        details.transmission,
+      ]) >= 2
+    );
   }
 
   if (kind === "electronics") {
-    return completedFields([
-      details.electronics_brand,
-      details.electronics_model,
-      details.storage,
-      details.ram,
-      details.condition,
-    ]) >= 2;
+    return (
+      completedFields([
+        details.electronics_brand,
+        details.electronics_model,
+        details.storage,
+        details.ram,
+        details.condition,
+      ]) >= 2
+    );
   }
 
   if (kind === "jobs") {
-    return completedFields([
-      details.job_type ?? details.employment_type,
-      details.experience_level,
-      details.work_location,
-      details.salary_type,
-    ]) >= 2;
+    return (
+      completedFields([
+        details.job_type ?? details.employment_type,
+        details.experience_level,
+        details.work_location,
+        details.salary_type,
+      ]) >= 2
+    );
   }
 
   if (kind === "services") {
-    return completedFields([
-      details.service_type,
-      details.service_area,
-      details.delivery_time,
-      details.starting_price,
-    ]) >= 1;
+    return (
+      completedFields([
+        details.service_type,
+        details.service_area,
+        details.delivery_time,
+        details.starting_price,
+      ]) >= 1
+    );
   }
 
   return condition !== "not_applicable" || completedFields(Object.values(details)) > 0;

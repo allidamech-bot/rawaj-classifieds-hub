@@ -1,8 +1,5 @@
 export type MessageSafetyFlag =
-  | "external_link"
-  | "advance_payment"
-  | "credential_request"
-  | "off_platform_contact";
+  "external_link" | "advance_payment" | "credential_request" | "off_platform_contact";
 
 export type MessageSafetyLevel = "safe" | "caution" | "danger";
 
