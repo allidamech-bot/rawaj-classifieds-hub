@@ -156,7 +156,8 @@ function SupportPage() {
   async function submitRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const currentProfileId = profileId;
-    if (!currentProfileId || submitScopesRef.current.has(currentProfileId)) return;
+    if (!currentProfileId || submitScopesRef.current.has(currentProfileId))
+      return;
 
     const payload = {
       type: requestType,
