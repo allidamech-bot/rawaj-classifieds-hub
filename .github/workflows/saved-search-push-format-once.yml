@@ -60,7 +60,7 @@ jobs:
 
           ledger_path = Path("docs/production-schema/migration-ledger.json")
           ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
-          migrations = ledger["production_schema"]["migrations"]
+          migrations = ledger["classifications"]["canonical"]
           migration_name = "202607150002_saved_search_alerts_push_v1.sql"
           if migration_name not in migrations:
               migrations.append(migration_name)
