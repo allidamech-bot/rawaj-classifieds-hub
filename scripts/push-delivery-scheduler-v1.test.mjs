@@ -27,11 +27,25 @@ test("push delivery worker is scheduled and can be run manually", () => {
   assert.match(workflow, /timeout-minutes: 5/);
 });
 
-test("scheduler skips safely until its dedicated secret is configured", () => {
+test("scheduled runner cost is gated until explicit production activation", () => {
+  assert.match(
+    workflow,
+    /if: github\.event_name == 'workflow_dispatch' \|\| vars\.PUSH_SCHEDULER_ENABLED == 'true'/,
+  );
+  assert.match(
+    workflow,
+    /PUSH_SCHEDULER_ENABLED: \$\{\{ vars\.PUSH_SCHEDULER_ENABLED \}\}/,
+  );
+  assert.match(workflow, /PUSH_SCHEDULER_ENABLED.*true/s);
+});
+
+test("scheduler skips manual runs safely but fails an incomplete enabled configuration", () => {
   assert.match(workflow, /PUSH_CRON_SECRET: \$\{\{ secrets\.PUSH_CRON_SECRET \}\}/);
   assert.match(workflow, /if \[ -z "\$PUSH_CRON_SECRET" \]/);
+  assert.match(workflow, /if \[ "\$PUSH_SCHEDULER_ENABLED" = "true" \]/);
   assert.match(workflow, /enabled=false/);
   assert.match(workflow, /skipped safely/);
+  assert.match(workflow, /PUSH_SCHEDULER_ENABLED is true but PUSH_CRON_SECRET is not configured/);
   assert.doesNotMatch(workflow, /SUPABASE_SERVICE_ROLE_KEY/);
   assert.doesNotMatch(workflow, /FIREBASE_PRIVATE_KEY/);
 });
@@ -47,6 +61,8 @@ test("scheduler calls only the protected deployed worker with bounded retries", 
   assert.match(workflow, /--retry-all-errors/);
   assert.match(workflow, /--connect-timeout 15/);
   assert.match(workflow, /--max-time 120/);
+  assert.match(workflow, /curl_status=\$\?/);
+  assert.match(workflow, /if \[ "\$curl_status" -ne 0 \]/);
 });
 
 test("scheduler validates the worker response and emits a sanitized operational summary", () => {
