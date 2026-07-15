@@ -116,7 +116,7 @@ function NotificationsPage() {
 
     if (
       requestId !== notificationsRequestIdRef.current ||
-      currentProfileId !== profileIdRef.currentRef.current
+      currentProfileId !== profileIdRef.current
     )
       return;
 
@@ -226,7 +226,7 @@ function NotificationsPage() {
       if (
         parentRequestId !== notificationsRequestIdRef.current ||
         paginationRequestId !== paginationRequestIdRef.current ||
-        currentProfileId !== profileIdRef.currentRef.current
+        currentProfileId !== profileIdRef.current
       )
         return;
       if (!result.ok) {
