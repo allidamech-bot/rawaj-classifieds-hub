@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
+import {
+  CompareListingButton,
+  isListingComparisonEligible,
+} from "@/features/comparison/listing-comparison";
 import { AdaptiveListingCard } from "./cards";
 
 /**
@@ -13,5 +17,14 @@ export function RealListingCard({
   listing: ClassifiedListing;
   action?: ReactNode;
 }) {
-  return <AdaptiveListingCard listing={listing} action={action} />;
+  const comparisonEligible = isListingComparisonEligible(listing);
+  const cardAction =
+    comparisonEligible || action ? (
+      <div className="rawaj-listing-card-actions">
+        {comparisonEligible ? <CompareListingButton listing={listing} /> : null}
+        {action}
+      </div>
+    ) : undefined;
+
+  return <AdaptiveListingCard listing={listing} action={cardAction} />;
 }

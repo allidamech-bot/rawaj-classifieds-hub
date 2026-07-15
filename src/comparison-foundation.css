@@ -1,0 +1,288 @@
+.rawaj-listing-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.rawaj-compare-toggle {
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  color: var(--muted-foreground);
+  box-shadow: 0 0.5rem 1.5rem rgb(15 23 42 / 10%);
+  backdrop-filter: blur(12px);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.rawaj-compare-toggle:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--primary) 38%, var(--border));
+  color: var(--primary);
+}
+
+.rawaj-compare-toggle[data-active="true"] {
+  border-color: color-mix(in srgb, var(--primary) 52%, var(--border));
+  background: color-mix(in srgb, var(--primary) 13%, var(--card));
+  color: var(--primary);
+}
+
+.rawaj-compare-toggle svg,
+.rawaj-compare-dock svg,
+.rawaj-compare-dialog svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.rawaj-compare-dock {
+  position: fixed;
+  z-index: 44;
+  inset-inline: max(0.75rem, env(safe-area-inset-left)) max(0.75rem, env(safe-area-inset-right));
+  bottom: calc(5.75rem + env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  max-width: 32rem;
+  margin-inline: auto;
+  padding: 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--border));
+  border-radius: 1.3rem;
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  color: var(--card-foreground);
+  box-shadow: 0 1.25rem 3rem rgb(15 23 42 / 20%);
+  backdrop-filter: blur(18px);
+}
+
+.rawaj-compare-dock__open {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.35rem;
+  text-align: start;
+}
+
+.rawaj-compare-dock__open > span:not(.rawaj-compare-dock__icon) {
+  min-width: 0;
+}
+
+.rawaj-compare-dock__open strong,
+.rawaj-compare-dock__open small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rawaj-compare-dock__open strong {
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.rawaj-compare-dock__open small {
+  margin-top: 0.1rem;
+  color: var(--muted-foreground);
+  font-size: 0.74rem;
+}
+
+.rawaj-compare-dock__icon,
+.rawaj-compare-dock__clear {
+  display: grid;
+  width: 2.65rem;
+  height: 2.65rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.95rem;
+}
+
+.rawaj-compare-dock__icon {
+  background: color-mix(in srgb, var(--primary) 14%, var(--card));
+  color: var(--primary);
+}
+
+.rawaj-compare-dock__clear {
+  color: var(--muted-foreground);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.rawaj-compare-dock__clear:hover {
+  background: var(--muted);
+  color: var(--destructive);
+}
+
+.rawaj-compare-dock__message {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.15rem 0.4rem 0.2rem;
+  color: var(--muted-foreground);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.rawaj-compare-dialog {
+  width: min(74rem, calc(100% - 1rem));
+  max-width: 74rem;
+  max-height: calc(100dvh - 1rem);
+  padding: 1rem;
+  border-radius: 1.45rem;
+}
+
+.rawaj-compare-dialog__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--muted);
+}
+
+.rawaj-compare-dialog__summary > span {
+  font-weight: 800;
+}
+
+.rawaj-compare-dialog__summary button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted-foreground);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.rawaj-compare-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 1.2rem;
+  background: var(--card);
+  overscroll-behavior-inline: contain;
+}
+
+.rawaj-compare-table {
+  width: 100%;
+  min-width: 46rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.rawaj-compare-table th,
+.rawaj-compare-table td {
+  padding: 0.8rem;
+  border-inline-end: 1px solid var(--border);
+  border-block-end: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.rawaj-compare-table tr > :last-child {
+  border-inline-end: 0;
+}
+
+.rawaj-compare-table tbody tr:last-child > * {
+  border-block-end: 0;
+}
+
+.rawaj-compare-table thead th:first-child,
+.rawaj-compare-table tbody th {
+  width: 8.4rem;
+  background: color-mix(in srgb, var(--muted) 76%, var(--card));
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.rawaj-compare-table td {
+  color: var(--foreground);
+  font-size: 0.86rem;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.rawaj-compare-card {
+  position: relative;
+  min-width: 0;
+}
+
+.rawaj-compare-card > a {
+  display: grid;
+  gap: 0.45rem;
+  color: inherit;
+}
+
+.rawaj-compare-card__media {
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: 0.9rem;
+  background: var(--muted);
+}
+
+.rawaj-compare-card__media img,
+.rawaj-compare-card__media > * {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rawaj-compare-card span {
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.rawaj-compare-card strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.rawaj-compare-card__remove {
+  position: absolute;
+  z-index: 2;
+  inset-block-start: 0.35rem;
+  inset-inline-end: 0.35rem;
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 999px;
+  background: rgb(15 23 42 / 72%);
+  color: white;
+  backdrop-filter: blur(8px);
+}
+
+@media (min-width: 768px) {
+  .rawaj-compare-dock {
+    inset-inline-start: auto;
+    inset-inline-end: 1.5rem;
+    bottom: 1.5rem;
+    width: 26rem;
+    margin: 0;
+  }
+
+  .rawaj-compare-dialog {
+    padding: 1.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-compare-toggle,
+  .rawaj-compare-dock__clear {
+    transition: none;
+  }
+}
