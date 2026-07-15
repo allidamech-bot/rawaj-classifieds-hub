@@ -198,6 +198,9 @@ jobs:
       - name: Retention and Discovery V1 contract
         run: npm run test:retention-discovery
 
+      - name: Saved Search Alerts and Push V1 contract
+        run: npm run test:saved-search-push
+
       - name: Listing Studio V2 contract
         run: node --test scripts/listing-studio-v2.test.mjs
 
