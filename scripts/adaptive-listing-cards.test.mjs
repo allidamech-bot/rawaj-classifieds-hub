@@ -72,7 +72,11 @@ test("adaptive card styles load after home discovery layers", () => {
 });
 
 test("one compatibility entry point resolves product, vehicle, and property cards", () => {
-  assert.match(compatibility, /<AdaptiveListingCard listing=\{listing\} action=\{action\}/);
+  assert.match(compatibility, /const cardAction =/);
+  assert.match(
+    compatibility,
+    /<AdaptiveListingCard listing=\{listing\} action=\{cardAction\}/,
+  );
   assert.match(adaptive, /resolveListingCardVariant\(listing\)/);
   assert.match(adaptive, /<VehicleCard listing=\{listing\}/);
   assert.match(adaptive, /<PropertyCard listing=\{listing\}/);
