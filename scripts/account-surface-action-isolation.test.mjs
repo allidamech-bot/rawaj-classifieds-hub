@@ -12,6 +12,7 @@ const [
   authProvider,
   activity,
   support,
+  sellerFollow,
   offers,
   packageSource,
 ] = await Promise.all([
@@ -24,6 +25,7 @@ const [
   readFile(new URL("../src/lib/auth.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/activity.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/support.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/retention/SellerFollowButton.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/offers.tsx", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
@@ -97,6 +99,17 @@ test("support reads, form state, writes, and finalizers are account-scoped", () 
   assert.match(support, /submitScopesRef\.current\.delete\(currentProfileId\)/);
   assert.match(support, /if \(accountChanged\) \{[\s\S]*setSubject\(""\)/);
   assert.doesNotMatch(support, /submitInFlightRef/);
+});
+
+test("seller follow reads and writes are scoped to account and seller", () => {
+  assert.match(sellerFollow, /profileIdRef = useRef<string \| null>/);
+  assert.match(sellerFollow, /sellerIdRef = useRef\(sellerId\)/);
+  assert.match(sellerFollow, /writeScopesRef = useRef<Set<string>>/);
+  assert.match(sellerFollow, /const scopeKey = \[currentProfileId, currentSellerId\]\.join\(":"\)/);
+  assert.match(sellerFollow, /currentProfileId !== profileIdRef\.current/);
+  assert.match(sellerFollow, /currentSellerId !== sellerIdRef\.current/);
+  assert.match(sellerFollow, /writeScopesRef\.current\.delete\(scopeKey\)/);
+  assert.doesNotMatch(sellerFollow, /writeInFlightRef/);
 });
 
 test("offers stay public and outside account isolation state", () => {
