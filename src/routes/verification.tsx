@@ -39,8 +39,11 @@ function VerificationPage() {
   const [noticeKind, setNoticeKind] = useState<"success" | "error" | "">("");
   const requestsRequestIdRef = useRef(0);
   const submissionRequestIdRef = useRef(0);
-  const submitInFlightRef = useRef(false);
+  const loadedProfileIdRef = useRef<string | null>(null);
   const profileId = auth.profile?.id ?? null;
+  const profileIdRef = useRef<string | null>(profileId);
+  const submitScopesRef = useRef<Set<string>>(new Set());
+  profileIdRef.current = profileId;
   const hasPendingRequest = requests.some(
     (request) => request.status === "pending_review" || String(request.status) === "pending",
   );
@@ -48,13 +51,15 @@ function VerificationPage() {
   const businessNameValid = requestType !== "business" || businessName.trim().length >= 3;
 
   const loadRequests = useCallback(async () => {
-    if (!profileId) return;
+    const currentProfileId = profileId;
+    if (!currentProfileId) return;
 
     const requestId = ++requestsRequestIdRef.current;
     setRequestsLoading(true);
     setRequestsError(null);
-    const result = await fetchMyVerificationRequests(profileId);
-    if (requestId !== requestsRequestIdRef.current) return;
+    const result = await fetchMyVerificationRequests(currentProfileId);
+    if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+      return;
 
     if (result.ok) {
       setRequests(result.data);
@@ -66,11 +71,17 @@ function VerificationPage() {
   }, [profileId]);
 
   useEffect(() => {
+    requestsRequestIdRef.current += 1;
+    submissionRequestIdRef.current += 1;
+
     if (auth.status !== "signedIn" || !profileId) {
-      requestsRequestIdRef.current += 1;
-      submissionRequestIdRef.current += 1;
-      submitInFlightRef.current = false;
+      loadedProfileIdRef.current = null;
       setRequests([]);
+      setRequestType("personal");
+      setLegalName("");
+      setBusinessName("");
+      setDocumentType("");
+      setDocumentFile(null);
       setRequestsLoading(false);
       setHasLoadedRequests(false);
       setSaving(false);
@@ -80,22 +91,27 @@ function VerificationPage() {
       return;
     }
 
-    requestsRequestIdRef.current += 1;
-    submissionRequestIdRef.current += 1;
-    submitInFlightRef.current = false;
+    const accountChanged = loadedProfileIdRef.current !== profileId;
+    loadedProfileIdRef.current = profileId;
     setRequests([]);
     setRequestsLoading(false);
     setHasLoadedRequests(false);
-    setSaving(false);
     setRequestsError(null);
     setNotice("");
     setNoticeKind("");
+    if (accountChanged) {
+      setRequestType("personal");
+      setLegalName("");
+      setBusinessName("");
+      setDocumentType("");
+      setDocumentFile(null);
+      setSaving(false);
+    }
     void loadRequests();
 
     return () => {
       requestsRequestIdRef.current += 1;
       submissionRequestIdRef.current += 1;
-      submitInFlightRef.current = false;
     };
   }, [auth.status, loadRequests, profileId]);
 
@@ -110,7 +126,8 @@ function VerificationPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitInFlightRef.current) return;
+    const currentProfileId = profileId;
+    if (!currentProfileId || submitScopesRef.current.has(currentProfileId)) return;
 
     setNotice("");
     setNoticeKind("");
@@ -152,18 +169,23 @@ function VerificationPage() {
     }
 
     const submissionRequestId = ++submissionRequestIdRef.current;
-    submitInFlightRef.current = true;
+    const payload = {
+      userId: currentProfileId,
+      requestType,
+      legalName,
+      businessName: requestType === "business" ? businessName : null,
+      documentType,
+      documentFile,
+    };
+    submitScopesRef.current.add(currentProfileId);
     setSaving(true);
     try {
-      const result = await createSellerVerificationRequest({
-        userId: profileId,
-        requestType,
-        legalName,
-        businessName: requestType === "business" ? businessName : null,
-        documentType,
-        documentFile,
-      });
-      if (submissionRequestId !== submissionRequestIdRef.current) return;
+      const result = await createSellerVerificationRequest(payload);
+      if (
+        submissionRequestId !== submissionRequestIdRef.current ||
+        currentProfileId !== profileIdRef.current
+      )
+        return;
 
       if (result.ok) {
         setRequests((current) => [
@@ -188,7 +210,11 @@ function VerificationPage() {
         setNoticeKind("error");
       }
     } catch {
-      if (submissionRequestId !== submissionRequestIdRef.current) return;
+      if (
+        submissionRequestId !== submissionRequestIdRef.current ||
+        currentProfileId !== profileIdRef.current
+      )
+        return;
       setNotice(
         text(
           "تعذر إرسال طلب التوثيق بسبب خطأ غير متوقع. أعد المحاولة.",
@@ -197,10 +223,12 @@ function VerificationPage() {
       );
       setNoticeKind("error");
     } finally {
-      if (submissionRequestId === submissionRequestIdRef.current) {
-        submitInFlightRef.current = false;
+      submitScopesRef.current.delete(currentProfileId);
+      if (
+        submissionRequestId === submissionRequestIdRef.current &&
+        currentProfileId === profileIdRef.current
+      )
         setSaving(false);
-      }
     }
   }
 
@@ -253,7 +281,11 @@ function VerificationPage() {
           </p>
         </section>
 
-        <form onSubmit={(event) => void submit(event)} className="rounded-2xl bg-card p-4 hairline">
+        <form
+          key={profileId}
+          onSubmit={(event) => void submit(event)}
+          className="rounded-2xl bg-card p-4 hairline"
+        >
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label={text("نوع الطلب", "Request type")}>
               <select
@@ -441,7 +473,7 @@ function VerificationPage() {
                 <div className="mt-3 grid gap-2">
                   {requests.map((request) => (
                     <article
-                      key={request.id}
+                      key={`${profileId}:${request.id}`}
                       className="rounded-xl bg-muted-surface p-3 text-xs hairline"
                     >
                       <p className="font-bold">{request.legalName}</p>
@@ -524,7 +556,11 @@ function RecoveryNotice({
 function documentTypeOptions(type: VerificationRequestType) {
   if (type === "business") {
     return [
-      { value: "commercial_registration" as const, ar: "سجل تجاري", en: "Commercial registration" },
+      {
+        value: "commercial_registration" as const,
+        ar: "سجل تجاري",
+        en: "Commercial registration",
+      },
       { value: "business_license" as const, ar: "رخصة منشأة", en: "Business license" },
       { value: "tax_document" as const, ar: "وثيقة ضريبية", en: "Tax document" },
     ];
@@ -532,7 +568,11 @@ function documentTypeOptions(type: VerificationRequestType) {
   return [
     { value: "national_id" as const, ar: "هوية وطنية", en: "National ID" },
     { value: "passport" as const, ar: "جواز سفر", en: "Passport" },
-    { value: "other_government_id" as const, ar: "هوية حكومية أخرى", en: "Other government ID" },
+    {
+      value: "other_government_id" as const,
+      ar: "هوية حكومية أخرى",
+      en: "Other government ID",
+    },
   ];
 }
 
