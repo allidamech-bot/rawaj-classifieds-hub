@@ -38,6 +38,10 @@ export const Route = createFileRoute("/notifications")({
 
 const NOTIFICATIONS_PAGE_SIZE = 20;
 
+function notificationActionScope(profileId: string, notificationId: string) {
+  return [profileId, notificationId].join(":");
+}
+
 const followUpLinks = [
   { to: "/chats", labelAr: "الرسائل", labelEn: "Messages", icon: MessageCircle },
   { to: "/profile/listings", labelAr: "إعلاناتي", labelEn: "My listings", icon: ScrollText },
@@ -76,6 +80,11 @@ function NotificationsPage() {
   const readNotificationIdsRef = useRef<Set<string>>(new Set());
   const markAllReadAtRef = useRef<string | null>(null);
   const loadedProfileIdRef = useRef<string | null>(null);
+  const profileIdRef = useRef<string | null>(profileId);
+  const markingReadScopesRef = useRef<Set<string>>(new Set());
+  const openingTargetScopesRef = useRef<Set<string>>(new Set());
+  const markingAllProfilesRef = useRef<Set<string>>(new Set());
+  profileIdRef.current = profileId;
 
   const applyKnownReadState = useCallback((items: NotificationItem[]) => {
     const markAllReadAt = markAllReadAtRef.current;
@@ -105,7 +114,11 @@ function NotificationsPage() {
       fetchUnreadNotificationsCount(currentProfileId),
     ]);
 
-    if (requestId !== notificationsRequestIdRef.current || currentProfileId !== profileId) return;
+    if (
+      requestId !== notificationsRequestIdRef.current ||
+      currentProfileId !== profileIdRef.current
+    )
+      return;
 
     if (!pageResult.ok) {
       setLoadError(pageResult.error);
@@ -213,7 +226,7 @@ function NotificationsPage() {
       if (
         parentRequestId !== notificationsRequestIdRef.current ||
         paginationRequestId !== paginationRequestIdRef.current ||
-        currentProfileId !== auth.profile?.id
+        currentProfileId !== profileIdRef.current
       )
         return;
       if (!result.ok) {
@@ -235,14 +248,18 @@ function NotificationsPage() {
   }
 
   async function markOne(notificationId: string) {
-    if (!profileId || markingReadIds.has(notificationId)) return false;
     const currentProfileId = profileId;
+    if (!currentProfileId) return false;
+    const scopeKey = notificationActionScope(currentProfileId, notificationId);
+    if (markingReadScopesRef.current.has(scopeKey)) return false;
+
     const wasUnread = notifications.some((item) => item.id === notificationId && !item.readAt);
+    markingReadScopesRef.current.add(scopeKey);
     setMarkingReadIds((current) => new Set(current).add(notificationId));
     setActionMessage(null);
     try {
       const result = await markNotificationRead(currentProfileId, notificationId);
-      if (currentProfileId !== auth.profile?.id) return false;
+      if (currentProfileId !== profileIdRef.current) return false;
       if (!result.ok) {
         setActionMessage(result.error.message);
         return false;
@@ -256,22 +273,27 @@ function NotificationsPage() {
       void refreshUnreadActivity();
       return true;
     } finally {
-      setMarkingReadIds((current) => {
-        const next = new Set(current);
-        next.delete(notificationId);
-        return next;
-      });
+      markingReadScopesRef.current.delete(scopeKey);
+      if (currentProfileId === profileIdRef.current) {
+        setMarkingReadIds((current) => {
+          const next = new Set(current);
+          next.delete(notificationId);
+          return next;
+        });
+      }
     }
   }
 
   async function markAll() {
-    if (!profileId || markingAll) return;
     const currentProfileId = profileId;
+    if (!currentProfileId || markingAllProfilesRef.current.has(currentProfileId)) return;
+
+    markingAllProfilesRef.current.add(currentProfileId);
     setMarkingAll(true);
     setActionMessage(null);
     try {
       const result = await markAllNotificationsRead(currentProfileId);
-      if (currentProfileId !== auth.profile?.id) return;
+      if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setActionMessage(result.error.message);
         return;
@@ -284,23 +306,33 @@ function NotificationsPage() {
       setUnreadCountExact(true);
       void refreshUnreadActivity();
     } finally {
-      setMarkingAll(false);
+      markingAllProfilesRef.current.delete(currentProfileId);
+      if (currentProfileId === profileIdRef.current) setMarkingAll(false);
     }
   }
 
   async function openNotificationTarget(notification: NotificationItem) {
-    if (!profileId || openingTargetIds.has(notification.id)) return;
+    const currentProfileId = profileId;
+    if (!currentProfileId) return;
+    const scopeKey = notificationActionScope(currentProfileId, notification.id);
+    if (openingTargetScopesRef.current.has(scopeKey)) return;
+
+    openingTargetScopesRef.current.add(scopeKey);
     setOpeningTargetIds((current) => new Set(current).add(notification.id));
     setActionMessage(null);
     try {
-      const result = await resolveNotificationTarget(profileId, notification);
+      const result = await resolveNotificationTarget(currentProfileId, notification);
+      if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setActionMessage(result.error.message);
         return;
       }
       const target = result.data;
       if (!target) {
-        if (!notification.readAt) await markOne(notification.id);
+        if (!notification.readAt) {
+          await markOne(notification.id);
+          if (currentProfileId !== profileIdRef.current) return;
+        }
         setActionMessage(
           text(
             "لم يعد الهدف المرتبط بهذا التنبيه متاحًا.",
@@ -309,7 +341,10 @@ function NotificationsPage() {
         );
         return;
       }
-      if (!notification.readAt) await markOne(notification.id);
+      if (!notification.readAt) {
+        await markOne(notification.id);
+        if (currentProfileId !== profileIdRef.current) return;
+      }
       if (target.kind === "listing") {
         void navigate({ to: "/listings/$id", params: { id: target.listingId } });
       } else if (target.kind === "conversation" || target.kind === "conversation_missing") {
@@ -346,11 +381,14 @@ function NotificationsPage() {
         void navigate({ to: "/listings" });
       }
     } finally {
-      setOpeningTargetIds((current) => {
-        const next = new Set(current);
-        next.delete(notification.id);
-        return next;
-      });
+      openingTargetScopesRef.current.delete(scopeKey);
+      if (currentProfileId === profileIdRef.current) {
+        setOpeningTargetIds((current) => {
+          const next = new Set(current);
+          next.delete(notification.id);
+          return next;
+        });
+      }
     }
   }
 

@@ -108,13 +108,22 @@ export function NotificationPreferencesPanel() {
   const [pushMessage, setPushMessage] = useState("");
   const requestIdRef = useRef(0);
   const profileId = auth.profile?.id ?? null;
+  const profileIdRef = useRef<string | null>(profileId);
+  const savingPreferenceProfilesRef = useRef<Set<string>>(new Set());
+  const pushBusyProfilesRef = useRef<Set<string>>(new Set());
+  profileIdRef.current = profileId;
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
       requestIdRef.current += 1;
       setPreferences(null);
+      setPushCapability({ available: false, platform: "web" });
       setPushStatus(EMPTY_PUSH_STATUS);
       setLoading(false);
+      setSavingKey(null);
+      setPushBusy(false);
+      setError("");
+      setPushMessage("");
       return;
     }
 
@@ -125,11 +134,11 @@ export function NotificationPreferencesPanel() {
 
     void (async () => {
       const capability = await getNativePushCapability();
-      if (requestId !== requestIdRef.current) return;
+      if (requestId !== requestIdRef.current || profileId !== profileIdRef.current) return;
       setPushCapability(capability);
 
       const preferencesResult = await fetchNotificationPreferences(profileId);
-      if (requestId !== requestIdRef.current) return;
+      if (requestId !== requestIdRef.current || profileId !== profileIdRef.current) return;
       if (!preferencesResult.ok) {
         setLoading(false);
         setError(preferencesResult.error.message);
@@ -140,7 +149,7 @@ export function NotificationPreferencesPanel() {
       if (capability.available) {
         const deviceKey = getOrCreatePushDeviceKey();
         const statusResult = await fetchPushChannelStatus(profileId, deviceKey);
-        if (requestId !== requestIdRef.current) return;
+        if (requestId !== requestIdRef.current || profileId !== profileIdRef.current) return;
         if (statusResult.ok) setPushStatus(statusResult.data);
       }
       setLoading(false);
@@ -152,74 +161,96 @@ export function NotificationPreferencesPanel() {
   }, [auth.status, profileId]);
 
   async function handleToggle(key: NotificationPreferenceKey) {
-    if (!profileId || !preferences || savingKey) return;
+    const currentProfileId = profileId;
+    if (
+      !currentProfileId ||
+      !preferences ||
+      savingPreferenceProfilesRef.current.has(currentProfileId)
+    )
+      return;
+
     const nextEnabled = !preferences[key];
     const previous = preferences;
+    savingPreferenceProfilesRef.current.add(currentProfileId);
     setPreferences({ ...preferences, [key]: nextEnabled });
     setSavingKey(key);
     setError("");
-
-    const result = await updateNotificationPreference(profileId, key, nextEnabled);
-    setSavingKey(null);
-    if (!result.ok) {
-      setPreferences(previous);
-      setError(result.error.message);
-      return;
+    try {
+      const result = await updateNotificationPreference(currentProfileId, key, nextEnabled);
+      if (currentProfileId !== profileIdRef.current) return;
+      if (!result.ok) {
+        setPreferences(previous);
+        setError(result.error.message);
+        return;
+      }
+      setPreferences(result.data);
+    } finally {
+      savingPreferenceProfilesRef.current.delete(currentProfileId);
+      if (currentProfileId === profileIdRef.current) setSavingKey(null);
     }
-    setPreferences(result.data);
   }
 
   async function handlePushToggle() {
-    if (!profileId || !preferences || pushBusy) return;
+    const currentProfileId = profileId;
+    if (!currentProfileId || !preferences || pushBusyProfilesRef.current.has(currentProfileId))
+      return;
+
+    const currentPreferences = preferences;
+    const currentCapability = pushCapability;
+    pushBusyProfilesRef.current.add(currentProfileId);
     setPushBusy(true);
     setError("");
     setPushMessage("");
+    try {
+      if (currentPreferences.pushEnabled || pushStatus.registered) {
+        const result = await disableNativePush(currentProfileId);
+        if (currentProfileId !== profileIdRef.current) return;
+        if (!result.ok) {
+          setError(result.error.message);
+          return;
+        }
+        setPreferences({ ...currentPreferences, pushEnabled: false });
+        setPushStatus({ ...EMPTY_PUSH_STATUS, platform: currentCapability.platform });
+        setPushMessage(
+          text(
+            "تم إيقاف الإشعارات الفورية على هذا الجهاز.",
+            "Push notifications were disabled on this device.",
+          ),
+        );
+        return;
+      }
 
-    if (preferences.pushEnabled || pushStatus.registered) {
-      const result = await disableNativePush(profileId);
-      setPushBusy(false);
+      const result = await enableNativePush(currentProfileId, language, true);
+      if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setError(result.error.message);
         return;
       }
-      setPreferences({ ...preferences, pushEnabled: false });
-      setPushStatus({ ...EMPTY_PUSH_STATUS, platform: pushCapability.platform });
+
+      const enabled = result.data.permissionStatus === "granted" && result.data.registered;
+      setPreferences({ ...currentPreferences, pushEnabled: enabled });
+      setPushStatus({
+        pushEnabled: enabled,
+        registered: result.data.registered,
+        permissionStatus: result.data.permissionStatus,
+        platform: currentCapability.platform,
+        lastSeenAt: enabled ? new Date().toISOString() : null,
+      });
       setPushMessage(
-        text(
-          "تم إيقاف الإشعارات الفورية على هذا الجهاز.",
-          "Push notifications were disabled on this device.",
-        ),
+        enabled
+          ? text(
+              "تم تفعيل الإشعارات الفورية على هذا الجهاز.",
+              "Push notifications are enabled on this device.",
+            )
+          : text(
+              "لم يمنح الهاتف إذن الإشعارات. يمكنك تفعيله من إعدادات النظام.",
+              "Notification permission was not granted. You can enable it in system settings.",
+            ),
       );
-      return;
+    } finally {
+      pushBusyProfilesRef.current.delete(currentProfileId);
+      if (currentProfileId === profileIdRef.current) setPushBusy(false);
     }
-
-    const result = await enableNativePush(profileId, language, true);
-    setPushBusy(false);
-    if (!result.ok) {
-      setError(result.error.message);
-      return;
-    }
-
-    const enabled = result.data.permissionStatus === "granted" && result.data.registered;
-    setPreferences({ ...preferences, pushEnabled: enabled });
-    setPushStatus({
-      pushEnabled: enabled,
-      registered: result.data.registered,
-      permissionStatus: result.data.permissionStatus,
-      platform: pushCapability.platform,
-      lastSeenAt: enabled ? new Date().toISOString() : null,
-    });
-    setPushMessage(
-      enabled
-        ? text(
-            "تم تفعيل الإشعارات الفورية على هذا الجهاز.",
-            "Push notifications are enabled on this device.",
-          )
-        : text(
-            "لم يمنح الهاتف إذن الإشعارات. يمكنك تفعيله من إعدادات النظام.",
-            "Notification permission was not granted. You can enable it in system settings.",
-          ),
-    );
   }
 
   if (auth.status !== "signedIn") return null;

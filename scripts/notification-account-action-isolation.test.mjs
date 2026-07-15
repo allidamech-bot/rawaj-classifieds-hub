@@ -30,7 +30,10 @@ test("notification writes use synchronous account-scoped locks", () => {
 });
 
 test("notification action results and finalizers cannot mutate a replacement account", () => {
-  assert.match(notificationsRoute, /if \(currentProfileId !== profileIdRef\.current\) return false/);
+  assert.match(
+    notificationsRoute,
+    /if \(currentProfileId !== profileIdRef\.current\) return false/,
+  );
   assert.match(notificationsRoute, /if \(currentProfileId !== profileIdRef\.current\) return;/);
   assert.match(
     notificationsRoute,
@@ -52,7 +55,10 @@ test("notification targets are rechecked before messages or navigation", () => {
     "if (currentProfileId !== profileIdRef.current) return;",
     resolveIndex,
   );
-  const navigationIndex = notificationsRoute.indexOf('navigate({ to: "/listings/$id"', resolveIndex);
+  const navigationIndex = notificationsRoute.indexOf(
+    'navigate({ to: "/listings/$id"',
+    resolveIndex,
+  );
   assert.ok(resolveIndex >= 0);
   assert.ok(guardIndex > resolveIndex);
   assert.ok(navigationIndex > guardIndex);
