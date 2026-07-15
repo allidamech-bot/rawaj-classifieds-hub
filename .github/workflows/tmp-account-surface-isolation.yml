@@ -1,6 +1,12 @@
 name: Temporary Account Surface Isolation Patcher
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/tmp-apply-account-surface-isolation.mjs"
+      - ".github/workflows/tmp-account-surface-isolation.yml"
   push:
     branches:
       - audit/account-surface-stale-data-isolation
@@ -9,7 +15,7 @@ on:
       - ".github/workflows/tmp-account-surface-isolation.yml"
 
 concurrency:
-  group: temporary-account-surface-isolation
+  group: temporary-account-surface-isolation-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -17,6 +23,7 @@ permissions:
 
 jobs:
   apply:
+    if: github.event_name == 'push' || github.head_ref == 'audit/account-surface-stale-data-isolation'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
