@@ -29,27 +29,43 @@ export function SellerFollowButton({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const requestIdRef = useRef(0);
-  const writeInFlightRef = useRef(false);
   const profileId = auth.profile?.id ?? null;
+  const profileIdRef = useRef<string | null>(profileId);
+  const sellerIdRef = useRef(sellerId);
+  const writeScopesRef = useRef<Set<string>>(new Set());
+  profileIdRef.current = profileId;
+  sellerIdRef.current = sellerId;
   const isOwnProfile = auth.status === "signedIn" && profileId === sellerId;
 
   const loadSummary = useCallback(async () => {
+    const currentProfileId = profileId;
+    const currentSellerId = sellerId;
     const requestId = ++requestIdRef.current;
     setLoading(true);
     setError("");
-    const result = await fetchSellerFollowSummary(sellerId);
-    if (requestId !== requestIdRef.current) return;
+    const result = await fetchSellerFollowSummary(currentSellerId);
+    if (
+      requestId !== requestIdRef.current ||
+      currentProfileId !== profileIdRef.current ||
+      currentSellerId !== sellerIdRef.current
+    )
+      return;
     if (result.ok) setSummary(result.data);
     else setError(result.error.message);
     setLoading(false);
-  }, [sellerId]);
+  }, [profileId, sellerId]);
 
   useEffect(() => {
+    requestIdRef.current += 1;
+    setSummary(emptySummary);
+    setLoading(false);
+    setBusy(false);
+    setError("");
     void loadSummary();
     return () => {
       requestIdRef.current += 1;
     };
-  }, [auth.status, profileId, loadSummary]);
+  }, [auth.status, loadSummary, profileId, sellerId]);
 
   if (isOwnProfile) return null;
 
@@ -83,18 +99,32 @@ export function SellerFollowButton({
   }
 
   async function toggleFollow() {
-    if (writeInFlightRef.current || busy) return;
-    writeInFlightRef.current = true;
+    const currentProfileId = profileId;
+    const currentSellerId = sellerId;
+    if (!currentProfileId) return;
+    const scopeKey = [currentProfileId, currentSellerId].join(":");
+    if (writeScopesRef.current.has(scopeKey)) return;
+
+    const nextFollowing = !summary.isFollowing;
+    writeScopesRef.current.add(scopeKey);
     setBusy(true);
     setError("");
     try {
-      const result = await setSellerFollow(profileId, sellerId, !summary.isFollowing);
-      if (profileId !== auth.profile?.id) return;
+      const result = await setSellerFollow(currentProfileId, currentSellerId, nextFollowing);
+      if (
+        currentProfileId !== profileIdRef.current ||
+        currentSellerId !== sellerIdRef.current
+      )
+        return;
       if (result.ok) setSummary(result.data);
       else setError(result.error.message);
     } finally {
-      writeInFlightRef.current = false;
-      setBusy(false);
+      writeScopesRef.current.delete(scopeKey);
+      if (
+        currentProfileId === profileIdRef.current &&
+        currentSellerId === sellerIdRef.current
+      )
+        setBusy(false);
     }
   }
 
