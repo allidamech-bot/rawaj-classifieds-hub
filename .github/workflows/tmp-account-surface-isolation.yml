@@ -1,0 +1,68 @@
+name: Temporary Account Surface Isolation Patcher
+
+on:
+  push:
+    branches:
+      - audit/account-surface-stale-data-isolation
+    paths:
+      - "scripts/tmp-apply-account-surface-isolation.mjs"
+      - ".github/workflows/tmp-account-surface-isolation.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: audit/account-surface-stale-data-isolation
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply isolation patch
+        run: node scripts/tmp-apply-account-surface-isolation.mjs
+
+      - name: Format changed files
+        run: >-
+          npx prettier --write
+          src/routes/favorites.tsx
+          src/routes/saved-searches.tsx
+          src/routes/profile/listings.tsx
+          src/features/reviews/SellerReviewCard.tsx
+          'src/routes/seller.$id.tsx'
+          src/routes/profile.tsx
+          scripts/account-surface-action-isolation.test.mjs
+          package.json
+
+      - name: Focused regression contract
+        run: npm run test:activity-center
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Commit implementation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            src/routes/favorites.tsx \
+            src/routes/saved-searches.tsx \
+            src/routes/profile/listings.tsx \
+            src/features/reviews/SellerReviewCard.tsx \
+            'src/routes/seller.$id.tsx' \
+            src/routes/profile.tsx \
+            scripts/account-surface-action-isolation.test.mjs \
+            package.json
+          git commit -m "fix: isolate account surface actions"
+          git push origin HEAD:audit/account-surface-stale-data-isolation
