@@ -60,8 +60,20 @@ jobs:
                   f"Expected one seller review account key line, found {len(seller_matches)}"
               )
           lines[seller_matches[0]] = seller_replacement
-          text = "\n".join(lines) + "\n"
 
+          local_key_matches = [index for index, line in enumerate(lines) if "local saved search key" in line]
+          server_key_matches = [index for index, line in enumerate(lines) if "server saved search key" in line]
+          if len(local_key_matches) != 1 or len(server_key_matches) != 1:
+              raise SystemExit(
+                  "Expected one local and one server saved-search key patch line"
+              )
+          saved_key_replacement = r'''  source = replaceCount(source, "key={item.id}\n                    id={item.id}", "key={`${profileId ?? \"signed-out\"}:${item.id}`}\n                    id={item.id}", 2, "saved search account keys");'''
+          local_key_index = local_key_matches[0]
+          server_key_index = server_key_matches[0]
+          lines[local_key_index] = saved_key_replacement
+          lines.pop(server_key_index)
+
+          text = "\n".join(lines) + "\n"
           assertion_start_marker = "  assert.match(ownerListings, /key="
           assertion_end_marker = ");\\n"
           assertion_start = text.find(assertion_start_marker)
