@@ -249,7 +249,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => {
       sessionRequestIdRef.current += 1;
-      sessionUserIdRef.current = nextSession?.user.id ?? null;
+      const nextUserId = nextSession?.user.id ?? null;
+      const accountChanged = sessionUserIdRef.current !== nextUserId;
+      sessionUserIdRef.current = nextUserId;
+      if (accountChanged) {
+        profileRequestIdRef.current += 1;
+        setProfile(null);
+        setReason(null);
+      }
       setSession(nextSession);
       setStatus(nextSession ? "signedIn" : "signedOut");
       void loadProfile(client, nextSession?.user ?? null);
@@ -295,10 +302,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const requestId = ++profileRequestIdRef.current;
       try {
         const nextProfile = await fetchProfile(client, user);
-        if (
-          requestId !== profileRequestIdRef.current ||
-          sessionUserIdRef.current !== userId
-        ) {
+        if (requestId !== profileRequestIdRef.current || sessionUserIdRef.current !== userId) {
           return { error: null };
         }
         setProfile(nextProfile);
@@ -306,10 +310,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStatus("signedIn");
         return { error: null };
       } catch (error) {
-        if (
-          requestId !== profileRequestIdRef.current ||
-          sessionUserIdRef.current !== userId
-        ) {
+        if (requestId !== profileRequestIdRef.current || sessionUserIdRef.current !== userId) {
           return { error: null };
         }
         const message = error instanceof Error ? error.message : "تعذّر تحديث بيانات الحساب.";
