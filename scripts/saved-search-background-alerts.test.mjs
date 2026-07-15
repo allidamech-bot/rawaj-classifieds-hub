@@ -17,7 +17,7 @@ const [scannerSource, routeSource, rootSource, packageSource] = await Promise.al
 
 test("saved-search alerts flush automatically for signed-in users", () => {
   assert.match(scannerSource, /auth\.status !== "signedIn"/);
-  assert.match(scannerSource, /scanDueSavedSearchAlerts\(profileId\)/);
+  assert.match(scannerSource, /scanDueSavedSearchAlerts\(userId\)/);
   assert.match(scannerSource, /SavedSearchAlertBackgroundScanner/);
   assert.match(scannerSource, /<PushNotificationBridge \/>/);
   assert.match(rootSource, /<SavedSearchAlertBackgroundScanner \/>/);
