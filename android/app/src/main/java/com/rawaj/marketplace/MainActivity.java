@@ -1,28 +1,106 @@
 package com.rawaj.marketplace;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
+import android.webkit.WebView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.getcapacitor.BridgeActivity;
+import java.util.Locale;
 
 public class MainActivity extends BridgeActivity {
     private static final int INTRO_BACKGROUND_COLOR = Color.rgb(8, 6, 5);
+    private static final String RAWAJ_ORIGIN = "https://rawa-j.com";
+    private static final String RAWAJ_HOST = "rawa-j.com";
+    private static final String RAWAJ_AUTH_SCHEME = "com.rawaj.marketplace";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        registerPlugin(RawajNativePlugin.class);
         super.onCreate(savedInstanceState);
 
+        routeIncomingIntent(getIntent());
         if (savedInstanceState == null) {
             showRawajLaunchIntro();
         }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        routeIncomingIntent(intent);
+    }
+
+    @Override
+    public void onBackPressed() {
+        final WebView webView = getBridge() == null ? null : getBridge().getWebView();
+        if (webView != null && webView.canGoBack()) {
+            webView.goBack();
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    private void routeIncomingIntent(Intent intent) {
+        if (intent == null || !Intent.ACTION_VIEW.equals(intent.getAction())) {
+            return;
+        }
+
+        final String targetUrl = webUrlForDeepLink(intent.getData());
+        final WebView webView = getBridge() == null ? null : getBridge().getWebView();
+        if (targetUrl == null || webView == null) {
+            return;
+        }
+
+        webView.post(
+            () -> {
+                final String currentUrl = webView.getUrl();
+                if (!targetUrl.equals(currentUrl)) {
+                    webView.loadUrl(targetUrl);
+                }
+            }
+        );
+    }
+
+    private String webUrlForDeepLink(Uri uri) {
+        if (uri == null || uri.getScheme() == null) {
+            return null;
+        }
+
+        final String scheme = uri.getScheme().toLowerCase(Locale.ROOT);
+        final String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(Locale.ROOT);
+
+        if ("https".equals(scheme)) {
+            if (!RAWAJ_HOST.equals(host) && !host.endsWith("." + RAWAJ_HOST)) {
+                return null;
+            }
+            return uri.toString();
+        }
+
+        if (
+            RAWAJ_AUTH_SCHEME.equals(scheme) &&
+            "auth".equals(host) &&
+            "/callback".equals(uri.getPath())
+        ) {
+            return Uri.parse(RAWAJ_ORIGIN + "/auth/callback")
+                .buildUpon()
+                .encodedQuery(uri.getEncodedQuery())
+                .encodedFragment(uri.getEncodedFragment())
+                .build()
+                .toString();
+        }
+
+        return null;
     }
 
     private void showRawajLaunchIntro() {
