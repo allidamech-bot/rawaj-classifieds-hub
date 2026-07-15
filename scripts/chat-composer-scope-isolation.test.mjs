@@ -23,6 +23,18 @@ test("conversation switches cannot carry risk confirmations or block reasons", (
   assert.match(routeSource, /confirmedRisk\.body === body\.trim\(\)/);
 });
 
+test("account transitions clear private visible state without forgetting active send locks", () => {
+  assert.match(routeSource, /const previousProfileId = profileIdRef\.current/);
+  assert.match(routeSource, /if \(previousProfileId === nextProfileId\) return/);
+  assert.match(routeSource, /if \(previousProfileId !== null\)/);
+  assert.match(routeSource, /setConversations\(\[\]\)/);
+  assert.match(routeSource, /setMessages\(\[\]\)/);
+  assert.match(routeSource, /setViewingConversationOnMobile\(false\)/);
+  assert.match(routeSource, /navigate\(\{ to: "\/chats", search: \{\}, replace: true \}\)/);
+  assert.doesNotMatch(routeSource, /sendInFlightScopesRef\.current\.clear\(\)/);
+  assert.doesNotMatch(routeSource, /setSendingScopes\(new Set\(\)\)/);
+});
+
 test("quick replies and typing update only the active composer scope", () => {
   assert.match(routeSource, /function setCurrentComposerBody/);
   assert.match(routeSource, /updateComposerDraft\(composerScopeKey, value\)/);
