@@ -1,24 +1,23 @@
 name: Temporary quality and chat safety implementation
 
 on:
-  push:
+  pull_request:
     branches:
-      - feature/listing-quality-chat-safety-v1
-
-permissions:
-  contents: write
+      - main
 
 concurrency:
-  group: temporary-quality-chat-safety-implementation
+  group: temporary-quality-chat-safety-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   implement:
-    if: github.actor != 'github-actions[bot]'
+    if: github.head_ref == 'feature/listing-quality-chat-safety-v1' && github.actor != 'github-actions[bot]'
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout branch
+      - name: Checkout feature branch
         uses: actions/checkout@v4
         with:
           ref: feature/listing-quality-chat-safety-v1
@@ -33,63 +32,34 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Apply, format, and validate with diagnostics
-        id: implementation
-        shell: bash
+      - name: Apply guarded implementation
+        run: node scripts/apply-listing-quality-chat-safety-v1.mjs
+
+      - name: Format changed files
         run: |
-          set +e
-          mkdir -p docs
-          : > docs/temp-quality-chat-diagnostic.txt
-          {
-            echo "== patch =="
-            node scripts/apply-listing-quality-chat-safety-v1.mjs
-            patch_status=$?
-            echo "patch_status=$patch_status"
-            if [ "$patch_status" -eq 0 ]; then
-              echo "== format =="
-              npx prettier --write \
-                src/lib/listing-quality.ts \
-                src/lib/message-safety.ts \
-                src/routes/add-listing.tsx \
-                'src/routes/profile/listings.$id.tsx' \
-                src/routes/chats.tsx \
-                scripts/listing-quality-chat-safety-v1.test.mjs \
-                package.json \
-                .github/workflows/quality-gate.yml
-              format_status=$?
-              echo "format_status=$format_status"
+          npx prettier --write \
+            src/lib/listing-quality.ts \
+            src/lib/message-safety.ts \
+            src/routes/add-listing.tsx \
+            'src/routes/profile/listings.$id.tsx' \
+            src/routes/chats.tsx \
+            scripts/listing-quality-chat-safety-v1.test.mjs \
+            package.json \
+            .github/workflows/quality-gate.yml
+          npx eslint --fix \
+            src/lib/listing-quality.ts \
+            src/lib/message-safety.ts \
+            src/routes/add-listing.tsx \
+            'src/routes/profile/listings.$id.tsx' \
+            src/routes/chats.tsx \
+            scripts/listing-quality-chat-safety-v1.test.mjs
 
-              echo "== lint =="
-              npx eslint --fix \
-                src/lib/listing-quality.ts \
-                src/lib/message-safety.ts \
-                src/routes/add-listing.tsx \
-                'src/routes/profile/listings.$id.tsx' \
-                src/routes/chats.tsx \
-                scripts/listing-quality-chat-safety-v1.test.mjs
-              lint_status=$?
-              echo "lint_status=$lint_status"
+      - name: Validate focused contracts
+        run: |
+          npm run test:listing-quality-chat-safety
+          npm run typecheck -- --pretty false
 
-              echo "== focused test =="
-              npm run test:listing-quality-chat-safety
-              test_status=$?
-              echo "test_status=$test_status"
-
-              echo "== typecheck =="
-              npm run typecheck -- --pretty false
-              typecheck_status=$?
-              echo "typecheck_status=$typecheck_status"
-            else
-              format_status=99
-              lint_status=99
-              test_status=99
-              typecheck_status=99
-            fi
-            echo "final_statuses=$patch_status,$format_status,$lint_status,$test_status,$typecheck_status"
-          } 2>&1 | tee docs/temp-quality-chat-diagnostic.txt
-          exit 0
-
-      - name: Commit implementation or diagnostic
+      - name: Commit implementation
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -102,11 +72,10 @@ jobs:
             src/routes/chats.tsx \
             scripts/listing-quality-chat-safety-v1.test.mjs \
             package.json \
-            .github/workflows/quality-gate.yml \
-            docs/temp-quality-chat-diagnostic.txt
+            .github/workflows/quality-gate.yml
           if git diff --cached --quiet; then
-            echo "No implementation or diagnostic changes to commit."
+            echo "No implementation changes to commit."
             exit 0
           fi
-          git commit -m "chore: capture quality and chat safety implementation result"
+          git commit -m "feat: add listing quality and chat safety V1"
           git push origin HEAD:feature/listing-quality-chat-safety-v1
