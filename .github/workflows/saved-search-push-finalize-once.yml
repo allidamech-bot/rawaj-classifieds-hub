@@ -1,0 +1,120 @@
+name: Saved Search Push Finalize Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/saved-search-push-finalize-once.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: saved-search-push-finalize-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  finalize-and-validate:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install official Capacitor push plugin
+        run: npm install @capacitor/push-notifications@^8.0.0 --save
+
+      - name: Apply deterministic integration
+        run: python scripts/apply-saved-search-push-integration.py
+
+      - name: Sync Android native project
+        run: |
+          mkdir -p .output/public
+          printf '<!doctype html><html lang="ar"><body></body></html>\n' > .output/public/index.html
+          npx cap sync android
+          git ls-files -z android/app/src/main/assets/public | xargs -0 -r git checkout --
+          git clean -fd android/app/src/main/assets/public
+          rm -rf .output
+
+      - name: Format package
+        run: |
+          npx prettier --write \
+            .github/workflows/quality-gate.yml \
+            capacitor.config.ts \
+            docs/production-schema/migration-ledger.json \
+            package.json \
+            scripts/saved-search-push-v1.test.mjs \
+            src/features/notifications/NotificationPreferencesPanel.tsx \
+            src/features/notifications/PushNotificationBridge.tsx \
+            src/features/saved-searches/SavedSearchAlertBackgroundScanner.tsx \
+            src/lib/api/notification-preferences.ts \
+            src/lib/api/notification-target-resolution.ts \
+            src/lib/api/push-notifications.ts \
+            src/lib/api/saved-search-alerts.ts \
+            src/lib/classifieds-api.ts \
+            src/lib/native-push.ts \
+            src/routes/more.tsx \
+            src/routes/notifications.tsx \
+            src/routes/saved-searches.tsx \
+            supabase/functions/send-push-notifications/index.ts
+
+      - name: Saved Search Push contract
+        run: npm run test:saved-search-push
+
+      - name: Existing activity contracts
+        run: npm run test:activity-center
+
+      - name: Changed-file ESLint
+        run: |
+          npx eslint --quiet \
+            scripts/saved-search-push-v1.test.mjs \
+            src/features/notifications/NotificationPreferencesPanel.tsx \
+            src/features/notifications/PushNotificationBridge.tsx \
+            src/features/saved-searches/SavedSearchAlertBackgroundScanner.tsx \
+            src/lib/api/notification-preferences.ts \
+            src/lib/api/notification-target-resolution.ts \
+            src/lib/api/push-notifications.ts \
+            src/lib/api/saved-search-alerts.ts \
+            src/lib/classifieds-api.ts \
+            src/lib/native-push.ts \
+            src/routes/more.tsx \
+            src/routes/notifications.tsx \
+            src/routes/saved-searches.tsx
+
+      - name: TypeScript
+        run: npm run typecheck -- --pretty false
+
+      - name: Production build
+        run: npm run build
+
+      - name: Android debug compile
+        working-directory: android
+        run: ./gradlew :app:assembleDebug --no-daemon
+
+      - name: Remove temporary integration files
+        run: |
+          rm -f .github/workflows/saved-search-push-format-once.yml
+          rm -f .github/workflows/fix-saved-search-push-sync-once.yml
+          rm -f .github/workflows/saved-search-push-finalize-once.yml
+          rm -f scripts/apply-saved-search-push-integration.py
+
+      - name: Commit validated package
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: validate saved-search alerts and push package"
+          git push origin HEAD:"$HEAD_REF"
