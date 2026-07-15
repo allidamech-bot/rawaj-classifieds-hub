@@ -84,7 +84,10 @@ test("auth provider rejects stale session, profile, and refresh results", () => 
 
 test("activity center reads compare results with the live account", () => {
   assert.match(activity, /profileIdRef = useRef<string \| null>/);
-  assert.equal((activity.match(/currentProfileId !== profileIdRef\.current/g) ?? []).length, 2);
+  assert.equal(
+    (activity.match(/currentProfileId !== profileIdRef\.current/g) ?? []).length,
+    2,
+  );
   assert.doesNotMatch(activity, /currentProfileId !== auth\.profile\?\.id/);
 });
 
