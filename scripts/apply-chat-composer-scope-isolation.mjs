@@ -40,7 +40,7 @@ route = replaceOnce(
 route = replaceOnce(
   route,
   `  const missingConversationTarget = targetResolution.kind === "missing";\n  const messageSafety = useMemo(() => analyzeMessageSafety(body), [body]);`,
-  `  const missingConversationTarget = targetResolution.kind === "missing";\n  const composerScopeKey =\n    auth.profile?.id && selectedConversation?.id\n      ? \`${auth.profile.id}:${selectedConversation.id}\`\n      : null;\n  const body = composerScopeKey ? (composerDrafts[composerScopeKey] ?? "") : "";\n  const sending = composerScopeKey ? sendingScopes.has(composerScopeKey) : false;\n  const messageSafety = useMemo(() => analyzeMessageSafety(body), [body]);`,
+  `  const missingConversationTarget = targetResolution.kind === "missing";\n  const composerScopeKey =\n    auth.profile?.id && selectedConversation?.id\n      ? [auth.profile.id, selectedConversation.id].join(":")\n      : null;\n  const body = composerScopeKey ? (composerDrafts[composerScopeKey] ?? "") : "";\n  const sending = composerScopeKey ? sendingScopes.has(composerScopeKey) : false;\n  const messageSafety = useMemo(() => analyzeMessageSafety(body), [body]);`,
   "derived composer scope",
 );
 
