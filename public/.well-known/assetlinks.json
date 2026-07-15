@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.rawaj.marketplace",
+      "sha256_cert_fingerprints": [
+        "AB:54:CD:5C:5A:80:41:04:44:94:C0:F1:32:07:E5:DF:92:2F:F4:42:80:64:2F:27:53:FA:B4:FC:C9:C8:85:66"
+      ]
+    }
+  }
+]
