@@ -31,7 +31,9 @@ Deno.serve(async (request) => {
 
   try {
     const config = readConfig();
-    if (!timingSafeEqual(request.headers.get("x-cron-secret") ?? "", config.cronSecret)) {
+    const providedCronSecret = (request.headers.get("x-cron-secret") ?? "").trim();
+    const configuredCronSecret = config.cronSecret.trim();
+    if (!timingSafeEqual(providedCronSecret, configuredCronSecret)) {
       return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
     }
 
