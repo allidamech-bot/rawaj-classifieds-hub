@@ -1,0 +1,72 @@
+name: Temporary notification account action isolation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temporary-notification-account-action-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  implement:
+    if: github.head_ref == 'fix/notification-account-action-isolation' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/notification-account-action-isolation
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply guarded notification isolation
+        run: node scripts/apply-notification-account-action-isolation.mjs
+
+      - name: Format and lint changed files
+        run: |
+          npx prettier --write \
+            src/routes/notifications.tsx \
+            src/features/notifications/NotificationPreferencesPanel.tsx \
+            scripts/notification-account-action-isolation.test.mjs \
+            package.json
+          npx eslint --fix \
+            src/routes/notifications.tsx \
+            src/features/notifications/NotificationPreferencesPanel.tsx \
+            scripts/notification-account-action-isolation.test.mjs
+
+      - name: Validate notification contracts
+        run: |
+          npm run test:activity-center
+          node --test scripts/communication-center-v2.test.mjs
+          npm run typecheck -- --pretty false
+
+      - name: Commit implementation
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            src/routes/notifications.tsx \
+            src/features/notifications/NotificationPreferencesPanel.tsx \
+            scripts/notification-account-action-isolation.test.mjs \
+            package.json
+          if git diff --cached --quiet; then
+            echo "No implementation changes to commit."
+            exit 0
+          fi
+          git commit -m "fix: isolate notification actions by account"
+          git push origin HEAD:fix/notification-account-action-isolation
