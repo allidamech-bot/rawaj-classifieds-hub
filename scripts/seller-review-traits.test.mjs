@@ -84,10 +84,11 @@ test("review API validates and submits traits through the governed RPC", () => {
   assert.match(api, /traits: rowArray\(row, "traits"\)/);
 });
 
-test("seller storefront composes up to three traits with an optional comment", () => {
+test("seller storefront snapshots up to three traits for the initiating account", () => {
   assert.match(sellerRoute, /selectedTraits/);
   assert.match(sellerRoute, /selectedTraits\.length >= 3/);
-  assert.match(sellerRoute, /traits: selectedTraits/);
+  assert.match(sellerRoute, /const currentTraits = selectedTraits/);
+  assert.match(sellerRoute, /traits: currentTraits/);
   assert.match(sellerRoute, /Optional written comment/);
 });
 

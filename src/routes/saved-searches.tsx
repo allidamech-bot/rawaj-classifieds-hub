@@ -78,7 +78,13 @@ function SavedSearchesPage() {
   const [savingFrequencyId, setSavingFrequencyId] = useState<string | null>(null);
   const [scanMessage, setScanMessage] = useState("");
   const loadRequestIdRef = useRef(0);
+  const loadedProfileIdRef = useRef<string | null>(null);
   const profileId = auth.profile?.id ?? null;
+  const profileIdRef = useRef<string | null>(profileId);
+  const creatingSearchProfilesRef = useRef<Set<string>>(new Set());
+  const frequencyScopesRef = useRef<Set<string>>(new Set());
+  const deletingSearchScopesRef = useRef<Set<string>>(new Set());
+  profileIdRef.current = profileId;
 
   const loadSavedSearches = useCallback(async () => {
     if (!profileId) return;
@@ -88,7 +94,7 @@ function SavedSearchesPage() {
     setLoading(true);
     setLoadError(null);
     const result = await fetchSavedSearches(currentProfileId);
-    if (requestId !== loadRequestIdRef.current || currentProfileId !== auth.profile?.id) return;
+    if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
 
     if (!result.ok) {
       setLoadError(result.error);
@@ -101,7 +107,7 @@ function SavedSearchesPage() {
     setLoading(false);
 
     const scanResult = await scanDueSavedSearchAlerts(currentProfileId);
-    if (requestId !== loadRequestIdRef.current || currentProfileId !== auth.profile?.id) return;
+    if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
     if (!scanResult.ok) {
       setScanMessage(
         text(
@@ -122,7 +128,7 @@ function SavedSearchesPage() {
     }
 
     const refreshed = await fetchSavedSearches(currentProfileId);
-    if (requestId !== loadRequestIdRef.current || currentProfileId !== auth.profile?.id) return;
+    if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
     if (refreshed.ok) {
       setItems(refreshed.data);
     } else {
@@ -138,15 +144,23 @@ function SavedSearchesPage() {
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
       loadRequestIdRef.current += 1;
+      loadedProfileIdRef.current = null;
       setItems([]);
+      setLocalItems([]);
       setLoading(false);
       setHasLoaded(false);
       setLoadError(null);
+      setName("");
+      setKeyword("");
+      setFrequency("weekly");
+      setSavingFrequencyId(null);
       setMessage("");
       setScanMessage("");
       return;
     }
 
+    const profileChanged = loadedProfileIdRef.current !== profileId;
+    loadedProfileIdRef.current = profileId;
     loadRequestIdRef.current += 1;
     setItems([]);
     setLoading(false);
@@ -154,6 +168,13 @@ function SavedSearchesPage() {
     setLoadError(null);
     setMessage("");
     setScanMessage("");
+    if (profileChanged) {
+      setLocalItems([]);
+      setName("");
+      setKeyword("");
+      setFrequency("weekly");
+      setSavingFrequencyId(null);
+    }
     void loadSavedSearches();
 
     return () => {
@@ -209,39 +230,49 @@ function SavedSearchesPage() {
 
   async function addSavedSearch(event: FormEvent) {
     event.preventDefault();
-    setMessage("");
+    const currentProfileId = profileId;
+    if (!currentProfileId || creatingSearchProfilesRef.current.has(currentProfileId)) return;
+
     const label = name.trim() || text("بحث محفوظ", "Saved search");
     const filters = buildListingFilters();
-    const result = await createSavedSearch(profileId, {
-      nameAr: label,
-      filters,
-      alertFrequency: frequency,
-    });
+    const currentFrequency = frequency;
+    creatingSearchProfilesRef.current.add(currentProfileId);
+    setMessage("");
+    try {
+      const result = await createSavedSearch(currentProfileId, {
+        nameAr: label,
+        filters,
+        alertFrequency: currentFrequency,
+      });
+      if (currentProfileId !== profileIdRef.current) return;
 
-    if (result.ok) {
-      setItems((current) => [result.data, ...current]);
-      setHasLoaded(true);
-      setMessage(text("تم حفظ البحث في حسابك.", "Search saved to your account."));
-    } else {
-      setLocalItems((current) => [
-        {
-          id: `local-${Date.now()}`,
-          nameAr: label,
-          filters: toLocalFilters(filters),
-          createdAt: new Date().toISOString(),
-          frequency,
-        },
-        ...current,
-      ]);
-      setMessage(
-        text(
-          "تعذر حفظ البحث في الحساب، فتم حفظه لهذه الجلسة فقط.",
-          "Could not save this search to the account, so it was saved for this session only.",
-        ),
-      );
+      if (result.ok) {
+        setItems((current) => [result.data, ...current]);
+        setHasLoaded(true);
+        setMessage(text("تم حفظ البحث في حسابك.", "Search saved to your account."));
+      } else {
+        setLocalItems((current) => [
+          {
+            id: `local-${currentProfileId}-${Date.now()}`,
+            nameAr: label,
+            filters: toLocalFilters(filters),
+            createdAt: new Date().toISOString(),
+            frequency: currentFrequency,
+          },
+          ...current,
+        ]);
+        setMessage(
+          text(
+            "تعذر حفظ البحث في الحساب، فتم حفظه لهذه الجلسة فقط.",
+            "Could not save this search to the account, so it was saved for this session only.",
+          ),
+        );
+      }
+      setName("");
+      setKeyword("");
+    } finally {
+      creatingSearchProfilesRef.current.delete(currentProfileId);
     }
-    setName("");
-    setKeyword("");
   }
 
   function toLocalFilters(filters: ListingFilters): Record<string, string> {
@@ -270,33 +301,55 @@ function SavedSearchesPage() {
   }
 
   async function changeAlertFrequency(id: string, next: SavedSearchAlertFrequency) {
+    const currentProfileId = profileId;
+    if (!currentProfileId) return;
+    const scopeKey = [currentProfileId, id].join(":");
+    if (frequencyScopesRef.current.has(scopeKey)) return;
+
+    const previous = items;
+    frequencyScopesRef.current.add(scopeKey);
     setSavingFrequencyId(id);
     setMessage("");
-    const previous = items;
     setItems((current) =>
       current.map((item) => (item.id === id ? { ...item, alertFrequency: next } : item)),
     );
-    const result = await updateSavedSearchAlertFrequency(profileId, id, next);
-    setSavingFrequencyId(null);
-    if (!result.ok) {
-      setItems(previous);
-      setMessage(result.error.message);
-      return;
+    try {
+      const result = await updateSavedSearchAlertFrequency(currentProfileId, id, next);
+      if (currentProfileId !== profileIdRef.current) return;
+      if (!result.ok) {
+        setItems(previous);
+        setMessage(result.error.message);
+        return;
+      }
+      setItems((current) => current.map((item) => (item.id === id ? result.data : item)));
+      setMessage(text("تم تحديث تكرار التنبيه.", "Alert frequency updated."));
+    } finally {
+      frequencyScopesRef.current.delete(scopeKey);
+      if (currentProfileId === profileIdRef.current) setSavingFrequencyId(null);
     }
-    setItems((current) => current.map((item) => (item.id === id ? result.data : item)));
-    setMessage(text("تم تحديث تكرار التنبيه.", "Alert frequency updated."));
   }
 
   async function removeSavedSearch(id: string) {
-    setMessage("");
-    const result = await deleteSavedSearch(profileId, id);
-    if (!result.ok) {
-      setMessage(result.error.message);
-      return;
-    }
+    const currentProfileId = profileId;
+    if (!currentProfileId) return;
+    const scopeKey = [currentProfileId, id].join(":");
+    if (deletingSearchScopesRef.current.has(scopeKey)) return;
 
-    setItems((current) => current.filter((item) => item.id !== id));
-    setMessage(text("تم حذف البحث المحفوظ.", "Saved search removed."));
+    deletingSearchScopesRef.current.add(scopeKey);
+    setMessage("");
+    try {
+      const result = await deleteSavedSearch(currentProfileId, id);
+      if (currentProfileId !== profileIdRef.current) return;
+      if (!result.ok) {
+        setMessage(result.error.message);
+        return;
+      }
+
+      setItems((current) => current.filter((item) => item.id !== id));
+      setMessage(text("تم حذف البحث المحفوظ.", "Saved search removed."));
+    } finally {
+      deletingSearchScopesRef.current.delete(scopeKey);
+    }
   }
 
   if (auth.status === "loading") {
@@ -433,7 +486,7 @@ function SavedSearchesPage() {
               <ul className="space-y-2">
                 {localItems.map((item) => (
                   <SearchRow
-                    key={item.id}
+                    key={`${profileId ?? "signed-out"}:${item.id}`}
                     id={item.id}
                     name={item.nameAr}
                     createdAt={item.createdAt}
@@ -447,7 +500,7 @@ function SavedSearchesPage() {
                 ))}
                 {items.map((item) => (
                   <SearchRow
-                    key={item.id}
+                    key={`${profileId ?? "signed-out"}:${item.id}`}
                     id={item.id}
                     name={item.nameAr}
                     createdAt={item.createdAt}

@@ -48,9 +48,13 @@ test("seller storefront fails closed until review eligibility is verified", () =
   assert.match(sellerRoute, /fetchSellerReviewEligibility\(seller\.id\)/);
   assert.match(
     sellerRoute,
-    /if \(eligibilityState !== "eligible"(?: \|\| reviewInFlightRef\.current)?\) return;/,
+    /if \(eligibilityState !== "eligible" \|\| !currentProfileId\) return;/,
+  );
+  assert.match(
+    sellerRoute,
+    /if \(reviewSubmitProfilesRef\.current\.has\(currentProfileId\)\) return;/,
   );
   assert.match(sellerRoute, /eligibilityState === "error"/);
   assert.match(sellerRoute, /Reviews are temporarily unavailable/);
-  assert.match(sellerRoute, /const reviewInFlightRef = useRef\(false\)/);
+  assert.match(sellerRoute, /const reviewSubmitProfilesRef = useRef<Set<string>>\(new Set\(\)\)/);
 });

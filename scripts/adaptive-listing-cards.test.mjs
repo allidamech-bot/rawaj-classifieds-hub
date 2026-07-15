@@ -165,7 +165,7 @@ test("favorites preserve successful snapshots and recover failed reads in place"
 test("favorites reject stale account and route responses", () => {
   assert.match(favoritesRoute, /const loadRequestIdRef = useRef\(0\)/);
   assert.match(favoritesRoute, /requestId !== loadRequestIdRef\.current/);
-  assert.match(favoritesRoute, /currentProfileId !== auth\.profile\?\.id/);
+  assert.match(favoritesRoute, /currentProfileId !== profileIdRef\.current/);
   assert.match(
     favoritesRoute,
     /return \(\) => \{[\s\S]*loadRequestIdRef\.current \+= 1;[\s\S]*\};/,

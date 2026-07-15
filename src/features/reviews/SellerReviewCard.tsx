@@ -1,5 +1,5 @@
 import { Flag, MessageSquareReply, Trash2 } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   createSellerReviewReport,
   readSellerReviewResponse,
@@ -44,31 +44,60 @@ export function SellerReviewCard({
   const [reportSaving, setReportSaving] = useState(false);
   const [reportNotice, setReportNotice] = useState("");
   const [reported, setReported] = useState(false);
+  const profileId = auth.profile?.id ?? null;
+  const profileIdRef = useRef<string | null>(profileId);
+  const responseScopesRef = useRef<Set<string>>(new Set());
+  const reportScopesRef = useRef<Set<string>>(new Set());
+  profileIdRef.current = profileId;
+
+  useEffect(() => {
+    const response = readSellerReviewResponse(review);
+    setSavedResponse(response.sellerResponse);
+    setDraft(response.sellerResponse ?? "");
+    setSaving(false);
+    setNotice("");
+    setReportOpen(false);
+    setReportReason("abuse");
+    setReportDetails("");
+    setReportSaving(false);
+    setReportNotice("");
+    setReported(false);
+  }, [profileId, review]);
+
   const canReport =
     auth.status === "signedIn" &&
     Boolean(auth.profile?.id) &&
     auth.profile?.id !== review.reviewerUserId;
 
   async function persistResponse(responseText: string) {
-    if (saving) return;
+    const currentProfileId = profileId;
+    if (!currentProfileId || !canManageResponse) return;
+    const scopeKey = [currentProfileId, review.id].join(":");
+    if (responseScopesRef.current.has(scopeKey)) return;
+
+    responseScopesRef.current.add(scopeKey);
     setNotice("");
     setSaving(true);
-    const result = await setSellerReviewResponse(review.id, responseText);
-    setSaving(false);
+    try {
+      const result = await setSellerReviewResponse(review.id, responseText);
+      if (currentProfileId !== profileIdRef.current) return;
+      if (!result.ok) {
+        setNotice(result.error.message);
+        return;
+      }
 
-    if (!result.ok) {
-      setNotice(result.error.message);
-      return;
+      const response = readSellerReviewResponse(result.data);
+      setSavedResponse(response.sellerResponse);
+      setDraft(response.sellerResponse ?? "");
+      setNotice(
+        response.sellerResponse
+          ? text("تم حفظ رد البائع.", "Seller response saved.")
+          : text("تم حذف رد البائع.", "Seller response removed."),
+      );
+    } finally {
+      responseScopesRef.current.delete(scopeKey);
+      if (currentProfileId === profileIdRef.current) setSaving(false);
     }
-
-    const response = readSellerReviewResponse(result.data);
-    setSavedResponse(response.sellerResponse);
-    setDraft(response.sellerResponse ?? "");
-    setNotice(
-      response.sellerResponse
-        ? text("تم حفظ رد البائع.", "Seller response saved.")
-        : text("تم حذف رد البائع.", "Seller response removed."),
-    );
   }
 
   function submitResponse(event: FormEvent<HTMLFormElement>) {
@@ -78,27 +107,35 @@ export function SellerReviewCard({
 
   async function submitReport(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canReport || reportSaving || reported) return;
+    const currentProfileId = profileId;
+    if (!currentProfileId || !canReport || reported) return;
+    const scopeKey = [currentProfileId, review.id].join(":");
+    if (reportScopesRef.current.has(scopeKey)) return;
 
+    reportScopesRef.current.add(scopeKey);
     setReportNotice("");
     setReportSaving(true);
-    const result = await createSellerReviewReport(review.id, reportReason, reportDetails);
-    setReportSaving(false);
+    try {
+      const result = await createSellerReviewReport(review.id, reportReason, reportDetails);
+      if (currentProfileId !== profileIdRef.current) return;
+      if (!result.ok) {
+        setReportNotice(result.error.message);
+        return;
+      }
 
-    if (!result.ok) {
-      setReportNotice(result.error.message);
-      return;
+      setReported(true);
+      setReportOpen(false);
+      setReportDetails("");
+      setReportNotice(
+        text(
+          "تم إرسال البلاغ للمراجعة دون إخفاء التقييم تلقائيا.",
+          "Report submitted for review without automatically hiding the review.",
+        ),
+      );
+    } finally {
+      reportScopesRef.current.delete(scopeKey);
+      if (currentProfileId === profileIdRef.current) setReportSaving(false);
     }
-
-    setReported(true);
-    setReportOpen(false);
-    setReportDetails("");
-    setReportNotice(
-      text(
-        "تم إرسال البلاغ للمراجعة دون إخفاء التقييم تلقائيا.",
-        "Report submitted for review without automatically hiding the review.",
-      ),
-    );
   }
 
   return (

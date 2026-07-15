@@ -76,7 +76,7 @@ test("saved-search route preserves loaded searches when scanning or refresh fail
 test("saved-search route rejects stale account and route responses", () => {
   assert.match(routeSource, /const loadRequestIdRef = useRef\(0\)/);
   assert.match(routeSource, /requestId !== loadRequestIdRef\.current/);
-  assert.match(routeSource, /currentProfileId !== auth\.profile\?\.id/);
+  assert.match(routeSource, /currentProfileId !== profileIdRef\.current/);
   assert.match(routeSource, /return \(\) => \{[\s\S]*loadRequestIdRef\.current \+= 1;[\s\S]*\};/);
 });
 

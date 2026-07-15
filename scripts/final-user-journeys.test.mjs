@@ -41,12 +41,13 @@ test("public listing actions cannot be duplicated", () => {
   assert.match(listingDetail, /messageInFlightRef\.current = false/);
 });
 
-test("seller review eligibility is retryable and review writes are deduplicated", () => {
+test("seller review eligibility is retryable and review writes are account-scoped", () => {
   assert.match(seller, /const loadEligibility = useCallback/);
   assert.match(seller, /const eligibilityRequestIdRef = useRef\(0\)/);
-  assert.match(seller, /const reviewInFlightRef = useRef\(false\)/);
+  assert.match(seller, /const reviewSubmitProfilesRef = useRef<Set<string>>\(new Set\(\)\)/);
+  assert.match(seller, /reviewSubmitProfilesRef\.current\.has\(currentProfileId\)/);
+  assert.match(seller, /reviewSubmitProfilesRef\.current\.delete\(currentProfileId\)/);
   assert.match(seller, /onClick=\{\(\) => void loadEligibility\(\)\}/);
-  assert.match(seller, /reviewInFlightRef\.current = false/);
 });
 
 test("chat refresh failures preserve snapshots and sensitive writes are deduplicated", () => {

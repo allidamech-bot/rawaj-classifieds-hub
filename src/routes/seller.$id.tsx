@@ -161,12 +161,26 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   const [saving, setSaving] = useState(false);
   const [eligibilityState, setEligibilityState] = useState<ReviewEligibilityUiState>("idle");
   const eligibilityRequestIdRef = useRef(0);
-  const reviewInFlightRef = useRef(false);
-  const isOwnProfile = auth.status === "signedIn" && auth.profile?.id === seller.id;
-  const shouldCheckEligibility = auth.status === "signedIn" && !isOwnProfile;
+  const profileId = auth.profile?.id ?? null;
+  const profileIdRef = useRef<string | null>(profileId);
+  const reviewSubmitProfilesRef = useRef<Set<string>>(new Set());
+  profileIdRef.current = profileId;
+  const isOwnProfile = auth.status === "signedIn" && profileId === seller.id;
+  const shouldCheckEligibility = auth.status === "signedIn" && Boolean(profileId) && !isOwnProfile;
+
+  useEffect(() => {
+    eligibilityRequestIdRef.current += 1;
+    setRating(5);
+    setComment("");
+    setSelectedTraits([]);
+    setNotice("");
+    setSaving(false);
+    setEligibilityState("idle");
+  }, [profileId, seller.id]);
 
   const loadEligibility = useCallback(async () => {
-    if (!shouldCheckEligibility) {
+    const currentProfileId = profileId;
+    if (!shouldCheckEligibility || !currentProfileId) {
       eligibilityRequestIdRef.current += 1;
       setEligibilityState("idle");
       return;
@@ -175,7 +189,8 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
     setEligibilityState("loading");
     setNotice("");
     const result = await fetchSellerReviewEligibility(seller.id);
-    if (requestId !== eligibilityRequestIdRef.current) return;
+    if (requestId !== eligibilityRequestIdRef.current || currentProfileId !== profileIdRef.current)
+      return;
     if (!result.ok) {
       setEligibilityState("error");
       return;
@@ -193,7 +208,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
       return;
     }
     setEligibilityState("error");
-  }, [seller.id, shouldCheckEligibility]);
+  }, [profileId, seller.id, shouldCheckEligibility]);
 
   useEffect(() => {
     void loadEligibility();
@@ -204,18 +219,25 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
 
   async function submitReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (eligibilityState !== "eligible" || reviewInFlightRef.current) return;
-    reviewInFlightRef.current = true;
+    const currentProfileId = profileId;
+    if (eligibilityState !== "eligible" || !currentProfileId) return;
+    if (reviewSubmitProfilesRef.current.has(currentProfileId)) return;
+
+    const currentRating = rating;
+    const currentComment = comment;
+    const currentTraits = selectedTraits;
+    reviewSubmitProfilesRef.current.add(currentProfileId);
     setNotice("");
     setSaving(true);
     try {
       const result = await createSellerReview({
         sellerUserId: seller.id,
-        reviewerUserId: auth.profile?.id ?? null,
-        rating,
-        comment,
-        traits: selectedTraits,
+        reviewerUserId: currentProfileId,
+        rating: currentRating,
+        comment: currentComment,
+        traits: currentTraits,
       });
+      if (currentProfileId !== profileIdRef.current) return;
       if (result.ok) {
         setComment("");
         setRating(5);
@@ -236,8 +258,8 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
         }
       }
     } finally {
-      reviewInFlightRef.current = false;
-      setSaving(false);
+      reviewSubmitProfilesRef.current.delete(currentProfileId);
+      if (currentProfileId === profileIdRef.current) setSaving(false);
     }
   }
 
@@ -283,7 +305,11 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
         {seller.reviews.length > 0 ? (
           <div className="mt-4 space-y-2">
             {seller.reviews.slice(0, 3).map((review) => (
-              <SellerReviewCard key={review.id} review={review} canManageResponse={isOwnProfile} />
+              <SellerReviewCard
+                key={`${profileId ?? "signed-out"}:${review.id}`}
+                review={review}
+                canManageResponse={isOwnProfile}
+              />
             ))}
           </div>
         ) : null}

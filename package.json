@@ -41,7 +41,7 @@
     "test:launch-readiness-batch-6": "node --test scripts/launch-readiness-batch-6.test.mjs",
     "test:launch-readiness-batch-8": "node --test scripts/launch-readiness-batch-8.test.mjs",
     "test:final-user-journeys": "node --test scripts/final-user-journeys.test.mjs",
-    "test:activity-center": "node --test scripts/account-activity-center.test.mjs scripts/saved-search-background-alerts.test.mjs scripts/unread-activity-live.test.mjs scripts/notification-account-action-isolation.test.mjs",
+    "test:activity-center": "node --test scripts/account-activity-center.test.mjs scripts/saved-search-background-alerts.test.mjs scripts/unread-activity-live.test.mjs scripts/notification-account-action-isolation.test.mjs scripts/account-surface-action-isolation.test.mjs",
     "test:seo-discovery": "node --test scripts/seo-discovery.test.mjs",
     "test:semantic-seo": "node --test scripts/semantic-seo.test.mjs",
     "test:verification-documents": "node --test scripts/verification-documents-v2.test.mjs",

@@ -92,7 +92,14 @@ function ProfilePage() {
   const [verificationError, setVerificationError] = useState<ClassifiedsError | null>(null);
   const listingsRequestIdRef = useRef(0);
   const verificationRequestIdRef = useRef(0);
+  const loadedProfileIdRef = useRef<string | null>(null);
   const profileId = auth.profile?.id ?? null;
+  const profileIdRef = useRef<string | null>(profileId);
+  const settingsSavingProfilesRef = useRef<Set<string>>(new Set());
+  const passwordSavingProfilesRef = useRef<Set<string>>(new Set());
+  const deletionSavingProfilesRef = useRef<Set<string>>(new Set());
+  const mediaSavingProfilesRef = useRef<Set<string>>(new Set());
+  profileIdRef.current = profileId;
   const displayName = auth.profile?.displayName || auth.profile?.email || text("زائر", "Guest");
   const recentListings = myListings.slice(0, 3);
 
@@ -111,7 +118,8 @@ function ProfilePage() {
     setMyListingsLoading(true);
     setMyListingsError(null);
     const result = await fetchCurrentUserListings(currentProfileId);
-    if (requestId !== listingsRequestIdRef.current || currentProfileId !== auth.profile?.id) return;
+    if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+      return;
 
     if (result.ok) {
       setMyListings(result.data);
@@ -130,7 +138,7 @@ function ProfilePage() {
     setVerificationLoading(true);
     setVerificationError(null);
     const result = await fetchMyVerificationRequests(currentProfileId);
-    if (requestId !== verificationRequestIdRef.current || currentProfileId !== auth.profile?.id)
+    if (requestId !== verificationRequestIdRef.current || currentProfileId !== profileIdRef.current)
       return;
 
     if (result.ok) {
@@ -150,47 +158,67 @@ function ProfilePage() {
 
   async function handleChangePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const currentProfileId = profileId;
+    if (!currentProfileId || passwordSavingProfilesRef.current.has(currentProfileId)) return;
+
     setPasswordNotice("");
     if (newPassword !== confirmPassword) {
       setPasswordNotice(text("كلمتا المرور غير متطابقتين.", "Passwords do not match."));
       return;
     }
 
+    const currentPassword = newPassword;
+    passwordSavingProfilesRef.current.add(currentProfileId);
     setPasswordSaving(true);
-    const result = await changeOwnPassword(profileId, newPassword);
-    setPasswordSaving(false);
-    if (!result.ok) {
-      setPasswordNotice(result.error.message);
-      return;
+    try {
+      const result = await changeOwnPassword(currentProfileId, currentPassword);
+      if (currentProfileId !== profileIdRef.current) return;
+      if (!result.ok) {
+        setPasswordNotice(result.error.message);
+        return;
+      }
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordNotice(text("تم تغيير كلمة المرور بنجاح.", "Password changed successfully."));
+    } finally {
+      passwordSavingProfilesRef.current.delete(currentProfileId);
+      if (currentProfileId === profileIdRef.current) setPasswordSaving(false);
     }
-    setNewPassword("");
-    setConfirmPassword("");
-    setPasswordNotice(text("تم تغيير كلمة المرور بنجاح.", "Password changed successfully."));
   }
 
   async function handleAccountDeletionRequest() {
+    const currentProfileId = profileId;
+    if (!currentProfileId || deletionSavingProfilesRef.current.has(currentProfileId)) return;
+
+    deletionSavingProfilesRef.current.add(currentProfileId);
     setDeletionSaving(true);
     setDeletionNotice("");
-    const result = await createAccountDeletionRequest(profileId);
-    setDeletionSaving(false);
-    if (!result.ok) {
-      setDeletionNotice(result.error.message);
-      return;
+    try {
+      const result = await createAccountDeletionRequest(currentProfileId);
+      if (currentProfileId !== profileIdRef.current) return;
+      if (!result.ok) {
+        setDeletionNotice(result.error.message);
+        return;
+      }
+      setDeleteConfirmOpen(false);
+      setDeletionNotice(
+        text(
+          "تم تسجيل طلب حذف الحساب. ستراجعه الإدارة قبل تنفيذ الحذف الآمن.",
+          "Your account deletion request was recorded and will be reviewed before secure deletion.",
+        ),
+      );
+    } finally {
+      deletionSavingProfilesRef.current.delete(currentProfileId);
+      if (currentProfileId === profileIdRef.current) setDeletionSaving(false);
     }
-    setDeleteConfirmOpen(false);
-    setDeletionNotice(
-      text(
-        "تم تسجيل طلب حذف الحساب. ستراجعه الإدارة قبل تنفيذ الحذف الآمن.",
-        "Your account deletion request was recorded and will be reviewed before secure deletion.",
-      ),
-    );
   }
 
   async function handleSaveProfileBasics(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSettingsNotice("");
-    setSettingsSaving(true);
-    const result = await updateOwnProfileBasics(profileId, {
+    const currentProfileId = profileId;
+    if (!currentProfileId || settingsSavingProfilesRef.current.has(currentProfileId)) return;
+
+    const payload = {
       firstName: settingsFirstName,
       lastName: settingsLastName,
       displayName: settingsDisplayName || null,
@@ -201,75 +229,128 @@ function ProfilePage() {
       phone: settingsPhone || null,
       whatsapp: settingsWhatsapp || null,
       preferredContactMethod: settingsPreferredContact || null,
-    });
-    setSettingsSaving(false);
-    if (!result.ok) {
-      setSettingsNotice(result.error.message);
-      return;
+    };
+    settingsSavingProfilesRef.current.add(currentProfileId);
+    setSettingsNotice("");
+    setSettingsSaving(true);
+    try {
+      const result = await updateOwnProfileBasics(currentProfileId, payload);
+      if (currentProfileId !== profileIdRef.current) return;
+      if (!result.ok) {
+        setSettingsNotice(result.error.message);
+        return;
+      }
+      const refreshResult = await auth.refreshProfile();
+      if (currentProfileId !== profileIdRef.current) return;
+      setSettingsNotice(
+        refreshResult.error
+          ? text(
+              "تم الحفظ، لكن تعذر تحديث العرض فوراً. أعد فتح الصفحة عند الحاجة.",
+              "Saved, but the view could not refresh immediately. Reopen the page if needed.",
+            )
+          : text("تم حفظ معلومات الحساب وتحديثها.", "Account information saved and refreshed."),
+      );
+    } finally {
+      settingsSavingProfilesRef.current.delete(currentProfileId);
+      if (currentProfileId === profileIdRef.current) setSettingsSaving(false);
     }
-    const refreshResult = await auth.refreshProfile();
-    setSettingsNotice(
-      refreshResult.error
-        ? text(
-            "تم الحفظ، لكن تعذر تحديث العرض فوراً. أعد فتح الصفحة عند الحاجة.",
-            "Saved, but the view could not refresh immediately. Reopen the page if needed.",
-          )
-        : text("تم حفظ معلومات الحساب وتحديثها.", "Account information saved and refreshed."),
-    );
   }
 
   async function handleProfileMedia(kind: "avatar" | "cover", file: File | undefined) {
-    if (!file) return;
+    const currentProfileId = profileId;
+    if (!file || !currentProfileId || mediaSavingProfilesRef.current.has(currentProfileId)) return;
+
+    const oldPath = kind === "avatar" ? auth.profile?.avatarPath : auth.profile?.coverPath;
+    mediaSavingProfilesRef.current.add(currentProfileId);
     setSettingsNotice("");
     setMediaSaving(kind);
-    const result = await uploadProfileMedia({
-      userId: profileId,
-      kind,
-      file,
-      oldPath: kind === "avatar" ? auth.profile?.avatarPath : auth.profile?.coverPath,
-    });
-    setMediaSaving(null);
-    if (!result.ok) {
-      setSettingsNotice(result.error.message);
-      return;
+    try {
+      const result = await uploadProfileMedia({
+        userId: currentProfileId,
+        kind,
+        file,
+        oldPath,
+      });
+      if (currentProfileId !== profileIdRef.current) return;
+      if (!result.ok) {
+        setSettingsNotice(result.error.message);
+        return;
+      }
+      const refreshResult = await auth.refreshProfile();
+      if (currentProfileId !== profileIdRef.current) return;
+      setSettingsNotice(
+        refreshResult.error
+          ? text(
+              "تم حفظ الصورة، لكن تعذر تحديث العرض فوراً.",
+              "Image saved, but the view could not refresh immediately.",
+            )
+          : text("تم حفظ الصورة وتحديث الحساب.", "Image saved and account refreshed."),
+      );
+    } finally {
+      mediaSavingProfilesRef.current.delete(currentProfileId);
+      if (currentProfileId === profileIdRef.current) setMediaSaving(null);
     }
-    const refreshResult = await auth.refreshProfile();
-    setSettingsNotice(
-      refreshResult.error
-        ? text(
-            "تم حفظ الصورة، لكن تعذر تحديث العرض فوراً.",
-            "Image saved, but the view could not refresh immediately.",
-          )
-        : text("تم حفظ الصورة وتحديث الحساب.", "Image saved and account refreshed."),
-    );
   }
 
   async function handleRemoveProfileMedia(kind: "avatar" | "cover") {
+    const currentProfileId = profileId;
+    if (!currentProfileId || mediaSavingProfilesRef.current.has(currentProfileId)) return;
+
+    const oldPath = kind === "avatar" ? auth.profile?.avatarPath : auth.profile?.coverPath;
+    mediaSavingProfilesRef.current.add(currentProfileId);
     setSettingsNotice("");
     setMediaSaving(kind);
-    const result = await removeProfileMedia(
-      profileId,
-      kind,
-      kind === "avatar" ? auth.profile?.avatarPath : auth.profile?.coverPath,
-    );
-    setMediaSaving(null);
-    if (!result.ok) {
-      setSettingsNotice(result.error.message);
-      return;
+    try {
+      const result = await removeProfileMedia(currentProfileId, kind, oldPath);
+      if (currentProfileId !== profileIdRef.current) return;
+      if (!result.ok) {
+        setSettingsNotice(result.error.message);
+        return;
+      }
+      const refreshResult = await auth.refreshProfile();
+      if (currentProfileId !== profileIdRef.current) return;
+      setSettingsNotice(
+        refreshResult.error
+          ? text(
+              "تمت إزالة الصورة، لكن تعذر تحديث العرض فوراً.",
+              "Image removed, but the view could not refresh immediately.",
+            )
+          : text("تمت إزالة الصورة وتحديث الحساب.", "Image removed and account refreshed."),
+      );
+    } finally {
+      mediaSavingProfilesRef.current.delete(currentProfileId);
+      if (currentProfileId === profileIdRef.current) setMediaSaving(null);
     }
-    const refreshResult = await auth.refreshProfile();
-    setSettingsNotice(
-      refreshResult.error
-        ? text(
-            "تمت إزالة الصورة، لكن تعذر تحديث العرض فوراً.",
-            "Image removed, but the view could not refresh immediately.",
-          )
-        : text("تمت إزالة الصورة وتحديث الحساب.", "Image removed and account refreshed."),
-    );
   }
 
   useEffect(() => {
-    if (auth.status !== "signedIn") return;
+    if (auth.status !== "signedIn" || !profileId) {
+      loadedProfileIdRef.current = null;
+      setSettingsDisplayName("");
+      setSettingsFirstName("");
+      setSettingsLastName("");
+      setSettingsGovernorate("");
+      setSettingsCityArea("");
+      setSettingsBio("");
+      setSettingsBusinessName("");
+      setSettingsPhone("");
+      setSettingsWhatsapp("");
+      setSettingsPreferredContact("");
+      setSettingsSaving(false);
+      setSettingsNotice("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordSaving(false);
+      setPasswordNotice("");
+      setDeleteConfirmOpen(false);
+      setDeletionSaving(false);
+      setDeletionNotice("");
+      setMediaSaving(null);
+      return;
+    }
+
+    const accountChanged = loadedProfileIdRef.current !== profileId;
+    loadedProfileIdRef.current = profileId;
     setSettingsDisplayName(auth.profile?.displayName ?? "");
     setSettingsFirstName(
       auth.profile?.firstName ?? auth.profile?.displayName?.split(" ").filter(Boolean).at(0) ?? "",
@@ -286,7 +367,19 @@ function ProfilePage() {
     setSettingsPhone(auth.profile?.phone ?? "");
     setSettingsWhatsapp(auth.profile?.whatsapp ?? "");
     setSettingsPreferredContact(auth.profile?.preferredContactMethod ?? "");
-  }, [auth.profile, auth.status]);
+    if (accountChanged) {
+      setSettingsSaving(false);
+      setSettingsNotice("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordSaving(false);
+      setPasswordNotice("");
+      setDeleteConfirmOpen(false);
+      setDeletionSaving(false);
+      setDeletionNotice("");
+      setMediaSaving(null);
+    }
+  }, [auth.profile, auth.status, profileId]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
