@@ -59,11 +59,14 @@ function ChatsPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [conversationError, setConversationError] = useState<ClassifiedsError | null>(null);
   const [messageError, setMessageError] = useState<ClassifiedsError | null>(null);
-  const [body, setBody] = useState("");
+  const [composerDrafts, setComposerDrafts] = useState<Record<string, string>>({});
   const [conversationQuery, setConversationQuery] = useState("");
-  const [sending, setSending] = useState(false);
+  const [sendingScopes, setSendingScopes] = useState<Set<string>>(() => new Set());
   const [notice, setNotice] = useState("");
-  const [confirmedRiskBody, setConfirmedRiskBody] = useState<string | null>(null);
+  const [confirmedRisk, setConfirmedRisk] = useState<{
+    scopeKey: string;
+    body: string;
+  } | null>(null);
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
   const [blockReason, setBlockReason] = useState("");
   const [viewingConversationOnMobile, setViewingConversationOnMobile] = useState(false);
@@ -71,8 +74,9 @@ function ChatsPage() {
   const messagesRequestIdRef = useRef(0);
   const conversationsRequestIdRef = useRef(0);
   const selectedConversationIdRef = useRef<string | null>(null);
+  const profileIdRef = useRef<string | null>(auth.profile?.id ?? null);
   const autoOpenedConversationRef = useRef<string | null>(null);
-  const sendInFlightRef = useRef(false);
+  const sendInFlightScopesRef = useRef<Set<string>>(new Set());
   const reportInFlightRef = useRef<Set<string>>(new Set());
   const blockInFlightRef = useRef(false);
 
@@ -85,6 +89,12 @@ function ChatsPage() {
       ? targetResolution.conversation
       : null;
   const missingConversationTarget = targetResolution.kind === "missing";
+  const composerScopeKey =
+    auth.profile?.id && selectedConversation?.id
+      ? [auth.profile.id, selectedConversation.id].join(":")
+      : null;
+  const body = composerScopeKey ? (composerDrafts[composerScopeKey] ?? "") : "";
+  const sending = composerScopeKey ? sendingScopes.has(composerScopeKey) : false;
   const messageSafety = useMemo(() => analyzeMessageSafety(body), [body]);
   const filteredConversations = useMemo(() => {
     const query = conversationQuery.trim().toLocaleLowerCase(language === "ar" ? "ar" : "en");
@@ -111,7 +121,22 @@ function ChatsPage() {
   });
 
   useEffect(() => {
+    profileIdRef.current = auth.profile?.id ?? null;
+    setComposerDrafts({});
+    setSendingScopes(new Set());
+    sendInFlightScopesRef.current.clear();
+    setConfirmedRisk(null);
+    setBlockReason("");
+    setNotice("");
+  }, [auth.profile?.id]);
+
+  useEffect(() => {
     selectedConversationIdRef.current = selectedConversation?.id ?? null;
+    setConfirmedRisk(null);
+    setBlockReason("");
+    setNotice("");
+    setMessageError(null);
+    setReportingMessageId(null);
   }, [selectedConversation?.id]);
 
   useEffect(() => {
@@ -149,7 +174,8 @@ function ChatsPage() {
     setLoadingConversations(true);
     setConversationError(null);
     const result = await fetchMyConversations(profileId);
-    if (requestId !== conversationsRequestIdRef.current || profileId !== auth.profile?.id) return;
+    if (requestId !== conversationsRequestIdRef.current || profileId !== profileIdRef.current)
+      return;
     if (result.ok) {
       setConversations(result.data);
       if (!search.conversation && result.data[0]) {
@@ -172,11 +198,21 @@ function ChatsPage() {
     setLoadingMessages(true);
     setMessageError(null);
     const result = await fetchConversationMessages(profileId, conversationId);
-    if (requestId !== messagesRequestIdRef.current) return;
+    if (
+      requestId !== messagesRequestIdRef.current ||
+      profileId !== profileIdRef.current ||
+      conversationId !== selectedConversationIdRef.current
+    )
+      return;
     if (result.ok) {
       setMessages(result.data);
       const markResult = await markConversationRead(profileId, conversationId);
-      if (requestId !== messagesRequestIdRef.current) return;
+      if (
+        requestId !== messagesRequestIdRef.current ||
+        profileId !== profileIdRef.current ||
+        conversationId !== selectedConversationIdRef.current
+      )
+        return;
       if (!markResult.ok) setNotice(markResult.error.message);
     } else {
       setMessageError(result.error);
@@ -208,9 +244,47 @@ function ChatsPage() {
     void loadMessages(selectedConversation.id);
   }, [auth.status, isConversationPanelVisible, selectedConversation?.id]);
 
+  function updateComposerDraft(scopeKey: string, value: string) {
+    setComposerDrafts((current) => {
+      if (value.length === 0) {
+        if (!(scopeKey in current)) return current;
+        const next = { ...current };
+        delete next[scopeKey];
+        return next;
+      }
+      if (current[scopeKey] === value) return current;
+      return { ...current, [scopeKey]: value };
+    });
+  }
+
+  function clearComposerDraftIfUnchanged(scopeKey: string, submittedBody: string) {
+    setComposerDrafts((current) => {
+      if ((current[scopeKey] ?? "").trim() !== submittedBody) return current;
+      const next = { ...current };
+      delete next[scopeKey];
+      return next;
+    });
+  }
+
+  function setCurrentComposerBody(value: string) {
+    if (!composerScopeKey) return;
+    updateComposerDraft(composerScopeKey, value);
+    setConfirmedRisk(null);
+  }
+
   async function handleSend(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!auth.profile?.id || !selectedConversation || sendInFlightRef.current) return;
+    const profileId = auth.profile?.id ?? null;
+    const conversationId = selectedConversation?.id ?? null;
+    const scopeKey = composerScopeKey;
+    if (
+      !profileId ||
+      !selectedConversation ||
+      !conversationId ||
+      !scopeKey ||
+      sendInFlightScopesRef.current.has(scopeKey)
+    )
+      return;
     if (selectedConversation.status !== "active") {
       setNotice(
         text(
@@ -220,13 +294,14 @@ function ChatsPage() {
       );
       return;
     }
-    const profileId = auth.profile.id;
-    const conversationId = selectedConversation.id;
     const cleanBody = body.trim();
     if (!cleanBody) return;
     const safety = analyzeMessageSafety(cleanBody);
-    if (safety.requiresConfirmation && confirmedRiskBody !== cleanBody) {
-      setConfirmedRiskBody(cleanBody);
+    if (
+      safety.requiresConfirmation &&
+      (confirmedRisk?.scopeKey !== scopeKey || confirmedRisk.body !== cleanBody)
+    ) {
+      setConfirmedRisk({ scopeKey, body: cleanBody });
       setNotice(
         text(
           "تتضمن الرسالة طلب دفع أو بيانات حساسة. راجع التحذير ثم اضغط إرسال مرة ثانية للتأكيد.",
@@ -236,47 +311,59 @@ function ChatsPage() {
       return;
     }
     const requestId = readOrCreateMessageSendRequestId(profileId, conversationId, cleanBody);
-    sendInFlightRef.current = true;
+    sendInFlightScopesRef.current.add(scopeKey);
+    setSendingScopes((current) => new Set(current).add(scopeKey));
     setNotice("");
     setMessageError(null);
-    setSending(true);
     try {
       const result = await sendConversationMessage(profileId, conversationId, cleanBody, requestId);
-      if (selectedConversationIdRef.current !== conversationId || auth.profile?.id !== profileId)
-        return;
+      const stillCurrent =
+        profileIdRef.current === profileId && selectedConversationIdRef.current === conversationId;
       if (!result.ok) {
-        setMessageError(result.error);
+        if (stillCurrent) setMessageError(result.error);
         return;
       }
       completeMessageSendRequest(profileId, conversationId, requestId);
-      setBody("");
-      setConfirmedRiskBody(null);
-      setMessages((current) =>
-        current.some((message) => message.id === result.data.id)
-          ? current
-          : [...current, result.data],
-      );
-      setNotice(text("تم إرسال الرسالة.", "Message sent."));
-      await loadConversations();
+      clearComposerDraftIfUnchanged(scopeKey, cleanBody);
+      setConfirmedRisk((current) => (current?.scopeKey === scopeKey ? null : current));
+      if (stillCurrent) {
+        setMessages((current) =>
+          current.some((message) => message.id === result.data.id)
+            ? current
+            : [...current, result.data],
+        );
+        setNotice(text("تم إرسال الرسالة.", "Message sent."));
+      }
+      if (profileIdRef.current === profileId) await loadConversations();
     } finally {
-      sendInFlightRef.current = false;
-      setSending(false);
+      sendInFlightScopesRef.current.delete(scopeKey);
+      setSendingScopes((current) => {
+        const next = new Set(current);
+        next.delete(scopeKey);
+        return next;
+      });
     }
   }
 
   async function handleReport(message: ConversationMessage) {
-    if (!auth.profile?.id || !selectedConversation || reportInFlightRef.current.has(message.id))
-      return;
+    const profileId = auth.profile?.id ?? null;
+    const conversationId = selectedConversation?.id ?? null;
+    if (!profileId || !conversationId || reportInFlightRef.current.has(message.id)) return;
     reportInFlightRef.current.add(message.id);
     setReportingMessageId(message.id);
     setNotice("");
     try {
       const result = await createMessageReport({
         messageId: message.id,
-        conversationId: selectedConversation.id,
-        reporterUserId: auth.profile.id,
+        conversationId,
+        reporterUserId: profileId,
         reason: "abusive_or_suspicious",
       });
+      if (
+        profileIdRef.current !== profileId ||
+        selectedConversationIdRef.current !== conversationId
+      )
+        return;
       setNotice(
         result.ok
           ? text("تم إرسال بلاغ الرسالة للمراجعة.", "Message report sent for review.")
@@ -289,7 +376,11 @@ function ChatsPage() {
   }
 
   async function handleBlock() {
-    if (!auth.profile?.id || !selectedConversation || blockInFlightRef.current) return;
+    const profileId = auth.profile?.id ?? null;
+    const conversationId = selectedConversation?.id ?? null;
+    const blockedUserId = selectedConversation?.otherParticipant.userId ?? null;
+    const reason = blockReason || null;
+    if (!profileId || !conversationId || !blockedUserId || blockInFlightRef.current) return;
     if (
       !confirm(text("حظر هذا المستخدم في هذه المحادثة؟", "Block this user in this conversation?"))
     )
@@ -298,20 +389,24 @@ function ChatsPage() {
     setNotice("");
     try {
       const result = await blockConversationParticipant({
-        conversationId: selectedConversation.id,
-        blockerUserId: auth.profile.id,
-        blockedUserId: selectedConversation.otherParticipant.userId,
-        reason: blockReason || null,
+        conversationId,
+        blockerUserId: profileId,
+        blockedUserId,
+        reason,
       });
-      setNotice(
-        result.ok
-          ? text(
-              "تم حظر المحادثة. لن تقبل رسائل جديدة.",
-              "Conversation blocked. New messages are no longer allowed.",
-            )
-          : result.error.message,
-      );
-      if (result.ok) await loadConversations();
+      const stillCurrent =
+        profileIdRef.current === profileId && selectedConversationIdRef.current === conversationId;
+      if (stillCurrent) {
+        setNotice(
+          result.ok
+            ? text(
+                "تم حظر المحادثة. لن تقبل رسائل جديدة.",
+                "Conversation blocked. New messages are no longer allowed.",
+              )
+            : result.error.message,
+        );
+      }
+      if (result.ok && profileIdRef.current === profileId) await loadConversations();
     } finally {
       blockInFlightRef.current = false;
     }
@@ -583,8 +678,7 @@ function ChatsPage() {
                             key={reply.en}
                             type="button"
                             onClick={() => {
-                              setBody(language === "ar" ? reply.ar : reply.en);
-                              setConfirmedRiskBody(null);
+                              setCurrentComposerBody(language === "ar" ? reply.ar : reply.en);
                             }}
                           >
                             {language === "ar" ? reply.ar : reply.en}
@@ -631,8 +725,7 @@ function ChatsPage() {
                     <textarea
                       value={body}
                       onChange={(event) => {
-                        setBody(event.target.value);
-                        setConfirmedRiskBody(null);
+                        setCurrentComposerBody(event.target.value);
                       }}
                       maxLength={2000}
                       rows={2}
@@ -651,7 +744,9 @@ function ChatsPage() {
                       <Send className="h-4 w-4" />
                       {sending
                         ? text("جاري الإرسال", "Sending")
-                        : messageSafety.requiresConfirmation && confirmedRiskBody === body.trim()
+                        : messageSafety.requiresConfirmation &&
+                            confirmedRisk?.scopeKey === composerScopeKey &&
+                            confirmedRisk.body === body.trim()
                           ? text("تأكيد وإرسال", "Confirm and send")
                           : text("إرسال", "Send")}
                     </button>
