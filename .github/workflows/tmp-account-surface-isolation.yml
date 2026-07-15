@@ -93,6 +93,53 @@ jobs:
           : > tmp-account-surface-isolation.log
           node scripts/tmp-apply-account-surface-isolation.mjs >> tmp-account-surface-isolation.log 2>&1
           status=$?
+
+          if [ "$status" -eq 0 ]; then
+            python - <<'PY' >> tmp-account-surface-isolation.log 2>&1
+          from pathlib import Path
+
+          saved_search_test = Path("scripts/saved-search-background-alerts.test.mjs")
+          saved_search_source = saved_search_test.read_text(encoding="utf-8")
+          old_saved_search_assertion = (
+              r"  assert.match(routeSource, /currentProfileId !== auth\.profile\?\.id/);"
+          )
+          new_saved_search_assertion = (
+              r"  assert.match(routeSource, /currentProfileId !== profileIdRef\.current/);"
+          )
+          if saved_search_source.count(old_saved_search_assertion) != 1:
+              raise SystemExit("Expected one legacy saved-search stale-account assertion")
+          saved_search_test.write_text(
+              saved_search_source.replace(
+                  old_saved_search_assertion,
+                  new_saved_search_assertion,
+              ),
+              encoding="utf-8",
+          )
+
+          account_surface_test = Path("scripts/account-surface-action-isolation.test.mjs")
+          account_surface_lines = account_surface_test.read_text(encoding="utf-8").splitlines()
+          key_assertion_matches = [
+              index
+              for index, line in enumerate(account_surface_lines)
+              if "assert.match(ownerListings" in line and "profileId" in line
+          ]
+          if len(key_assertion_matches) != 1:
+              raise SystemExit(
+                  f"Expected one owner-listing key assertion, found {len(key_assertion_matches)}"
+              )
+          account_surface_lines[key_assertion_matches[0]] = (
+              "  assert.ok("
+              "ownerListings.includes('key={`${profileId ?? \"signed-out\"}:${listing.id}`}')"
+              ");"
+          )
+          account_surface_test.write_text(
+              "\n".join(account_surface_lines) + "\n",
+              encoding="utf-8",
+          )
+          PY
+            status=$?
+          fi
+
           if [ "$status" -eq 0 ]; then
             npx prettier --write \
               src/routes/favorites.tsx \
@@ -102,6 +149,7 @@ jobs:
               'src/routes/seller.$id.tsx' \
               src/routes/profile.tsx \
               scripts/account-surface-action-isolation.test.mjs \
+              scripts/saved-search-background-alerts.test.mjs \
               package.json >> tmp-account-surface-isolation.log 2>&1
             status=$?
           fi
@@ -130,6 +178,7 @@ jobs:
             'src/routes/seller.$id.tsx' \
             src/routes/profile.tsx \
             scripts/account-surface-action-isolation.test.mjs \
+            scripts/saved-search-background-alerts.test.mjs \
             package.json \
             tmp-account-surface-isolation-diagnostic.txt
           git commit -m "fix: isolate account surface actions"
