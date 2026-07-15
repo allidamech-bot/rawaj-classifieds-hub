@@ -82,7 +82,10 @@ test("opening a notification records it as read before navigation", () => {
   assert.ok(openTargetStart >= 0);
   assert.ok(markReadIndex > openTargetStart);
   assert.ok(firstNavigationIndex > markReadIndex);
-  assert.match(notifications, /if \(!notification\.readAt\) \{[\s\S]*await markOne\(notification\.id\)/);
+  assert.match(
+    notifications,
+    /if \(!notification\.readAt\) \{[\s\S]*await markOne\(notification\.id\)/,
+  );
   assert.ok(notifications.includes("markAllNotificationsRead"));
   assert.ok(notifications.includes("resolveNotificationTarget"));
 });
