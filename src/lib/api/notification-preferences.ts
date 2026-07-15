@@ -3,6 +3,7 @@ import type { ClassifiedsResult } from "@/lib/classifieds-types";
 
 export interface NotificationPreferences {
   userId: string;
+  pushEnabled: boolean;
   messagesEnabled: boolean;
   priceChangesEnabled: boolean;
   savedSearchMatchesEnabled: boolean;
@@ -14,10 +15,11 @@ export interface NotificationPreferences {
 
 export type NotificationPreferenceKey = Exclude<
   keyof NotificationPreferences,
-  "userId" | "updatedAt"
+  "userId" | "pushEnabled" | "updatedAt"
 >;
 
 const DEFAULT_NOTIFICATION_PREFERENCES: Omit<NotificationPreferences, "userId"> = {
+  pushEnabled: false,
   messagesEnabled: true,
   priceChangesEnabled: true,
   savedSearchMatchesEnabled: true,
@@ -68,6 +70,7 @@ export async function fetchNotificationPreferences(
     ok: true,
     data: {
       userId: rowString(row, "user_id", userId),
+      pushEnabled: rowBoolean(row, "push_enabled", false),
       messagesEnabled: rowBoolean(row, "messages_enabled", true),
       priceChangesEnabled: rowBoolean(row, "price_changes_enabled", true),
       savedSearchMatchesEnabled: rowBoolean(row, "saved_search_matches_enabled", true),
