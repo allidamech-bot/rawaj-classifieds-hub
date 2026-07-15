@@ -32,10 +32,7 @@ test("scheduled runner cost is gated until explicit production activation", () =
     workflow,
     /if: github\.event_name == 'workflow_dispatch' \|\| vars\.PUSH_SCHEDULER_ENABLED == 'true'/,
   );
-  assert.match(
-    workflow,
-    /PUSH_SCHEDULER_ENABLED: \$\{\{ vars\.PUSH_SCHEDULER_ENABLED \}\}/,
-  );
+  assert.match(workflow, /PUSH_SCHEDULER_ENABLED: \$\{\{ vars\.PUSH_SCHEDULER_ENABLED \}\}/);
   assert.match(workflow, /PUSH_SCHEDULER_ENABLED.*true/s);
 });
 
