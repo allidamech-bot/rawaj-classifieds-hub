@@ -5,13 +5,16 @@ import test from "node:test";
 import { calculateListingQuality } from "../src/lib/listing-quality.ts";
 import { analyzeMessageSafety } from "../src/lib/message-safety.ts";
 
-const [addListingRoute, manageListingRoute, chatsRoute, packageJson, qualityGate] =
+const [addListingRoute, manageListingRoute, chatsRoute, packageJson, focusedWorkflow] =
   await Promise.all([
     readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/routes/profile/listings.$id.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+    readFile(
+      new URL("../.github/workflows/listing-quality-chat-safety.yml", import.meta.url),
+      "utf8",
+    ),
   ]);
 
 test("listing quality uses weighted, category-aware checks", () => {
@@ -89,8 +92,10 @@ test("chat composer warns early and requires a deliberate second send for danger
   assert.doesNotMatch(chatsRoute, /sendConversationMessage[\s\S]{0,300}bypass/i);
 });
 
-test("quality and chat safety remain permanent Quality Gate contracts", () => {
+test("quality and chat safety remain permanent CI contracts", () => {
   assert.match(packageJson, /"test:listing-quality-chat-safety"/);
-  assert.match(qualityGate, /Listing Quality and Chat Safety V1 contract/);
-  assert.match(qualityGate, /npm run test:listing-quality-chat-safety/);
+  assert.match(packageJson, /npm run test:listing-quality-chat-safety/);
+  assert.match(focusedWorkflow, /Listing Quality and Chat Safety V1 contract/);
+  assert.match(focusedWorkflow, /npm run test:listing-quality-chat-safety/);
+  assert.match(focusedWorkflow, /npm run typecheck/);
 });
