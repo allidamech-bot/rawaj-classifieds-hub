@@ -46,6 +46,7 @@ supabase/.temp/
 keystore.properties
 signing.properties
 key.properties
+android/app/google-services.json
 
 # RAWAJ location taxonomy raw/generated artifacts
 data/locations/sources/
