@@ -72,6 +72,8 @@ test("auth provider rejects stale session, profile, and refresh results", () => 
   assert.match(authProvider, /requestId !== profileRequestIdRef\.current/);
   assert.match(authProvider, /sessionUserIdRef\.current !== userId/);
   assert.match(authProvider, /requestId !== sessionRequestIdRef\.current/);
+  assert.match(authProvider, /const accountChanged = sessionUserIdRef\.current !== nextUserId/);
+  assert.match(authProvider, /if \(accountChanged\) \{[\s\S]*setProfile\(null\)/);
   assert.match(authProvider, /sessionRequestIdRef\.current \+= 1/);
   assert.match(authProvider, /profileRequestIdRef\.current \+= 1/);
 });
