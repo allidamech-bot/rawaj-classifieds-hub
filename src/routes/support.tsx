@@ -86,8 +86,11 @@ function SupportPage() {
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState("");
   const requestsRequestIdRef = useRef(0);
-  const submitInFlightRef = useRef(false);
+  const loadedProfileIdRef = useRef<string | null>(null);
   const profileId = auth.profile?.id ?? null;
+  const profileIdRef = useRef<string | null>(profileId);
+  const submitScopesRef = useRef<Set<string>>(new Set());
+  profileIdRef.current = profileId;
 
   const loadRequests = useCallback(async () => {
     if (!profileId) return;
@@ -97,7 +100,11 @@ function SupportPage() {
     setRequestsError(null);
 
     const result = await fetchMySupportRequests(currentProfileId);
-    if (requestId !== requestsRequestIdRef.current || currentProfileId !== auth.profile?.id) return;
+    if (
+      requestId !== requestsRequestIdRef.current ||
+      currentProfileId !== profileIdRef.current
+    )
+      return;
 
     if (result.ok) {
       setRequests(result.data);
@@ -106,48 +113,64 @@ function SupportPage() {
       setRequestsError(result.error);
     }
     setRequestsLoading(false);
-  }, [auth.profile?.id, profileId]);
+  }, [profileId]);
 
   useEffect(() => {
     requestsRequestIdRef.current += 1;
     if (auth.status !== "signedIn" || !profileId) {
+      loadedProfileIdRef.current = null;
       setRequests([]);
       setRequestsError(null);
       setRequestsLoading(false);
       setRequestsHasLoaded(false);
-      submitInFlightRef.current = false;
+      setRequestType("technical_issue");
+      setSubject("");
+      setMessage("");
+      setRelatedListingId("");
+      setSubmitting(false);
+      setNotice("");
       return;
     }
 
+    const accountChanged = loadedProfileIdRef.current !== profileId;
+    loadedProfileIdRef.current = profileId;
     setRequests([]);
     setRequestsError(null);
     setRequestsLoading(false);
     setRequestsHasLoaded(false);
+    if (accountChanged) {
+      setRequestType("technical_issue");
+      setSubject("");
+      setMessage("");
+      setRelatedListingId("");
+      setSubmitting(false);
+      setNotice("");
+    }
     void loadRequests();
 
     return () => {
       requestsRequestIdRef.current += 1;
-      submitInFlightRef.current = false;
     };
   }, [auth.status, loadRequests, profileId]);
 
   async function submitRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitInFlightRef.current) return;
-    submitInFlightRef.current = true;
+    const currentProfileId = profileId;
+    if (!currentProfileId || submitScopesRef.current.has(currentProfileId)) return;
+
+    const payload = {
+      type: requestType,
+      subject,
+      message,
+      relatedListingId: relatedListingId || null,
+    };
+    submitScopesRef.current.add(currentProfileId);
     setNotice("");
     setSubmitting(true);
-    const currentProfileId = profileId;
 
     try {
-      const result = await createSupportRequest(currentProfileId, {
-        type: requestType,
-        subject,
-        message,
-        relatedListingId: relatedListingId || null,
-      });
-
-      if (currentProfileId !== auth.profile?.id) return;
+      const result = await createSupportRequest(currentProfileId, payload);
+      if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setNotice(result.error.message);
         return;
@@ -164,8 +187,8 @@ function SupportPage() {
       setRequestType("technical_issue");
       setNotice(text("تم إرسال طلب الدعم للمراجعة.", "Support request submitted for review."));
     } finally {
-      submitInFlightRef.current = false;
-      if (currentProfileId === auth.profile?.id) setSubmitting(false);
+      submitScopesRef.current.delete(currentProfileId);
+      if (currentProfileId === profileIdRef.current) setSubmitting(false);
     }
   }
 
