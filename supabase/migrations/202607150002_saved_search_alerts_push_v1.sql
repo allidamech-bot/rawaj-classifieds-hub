@@ -791,20 +791,20 @@ as $$
     coalesce(device.permission_status, 'prompt'),
     coalesce(device.platform, 'android'),
     device.last_seen_at
-  from (select auth.uid() as user_id) current_user
+  from (select auth.uid() as user_id) as auth_context
   left join public.notification_preferences preference
-    on preference.user_id = current_user.user_id
+    on preference.user_id = auth_context.user_id
   left join lateral (
     select registered_device.active,
            registered_device.permission_status,
            registered_device.platform,
            registered_device.last_seen_at
     from public.push_devices registered_device
-    where registered_device.user_id = current_user.user_id
+    where registered_device.user_id = auth_context.user_id
       and registered_device.device_key = btrim(coalesce(p_device_key, ''))
     limit 1
   ) device on true
-  where current_user.user_id is not null;
+  where auth_context.user_id is not null;
 $$;
 
 create or replace function public.rawaj_claim_push_deliveries_v1(
