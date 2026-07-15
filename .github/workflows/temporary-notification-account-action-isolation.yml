@@ -37,6 +37,7 @@ jobs:
         run: |
           node scripts/apply-notification-account-action-isolation.mjs
           node scripts/apply-notification-preference-account-reset.mjs
+          node scripts/fix-notification-profile-ref-idempotency.mjs
 
       - name: Format and lint changed files
         run: |
