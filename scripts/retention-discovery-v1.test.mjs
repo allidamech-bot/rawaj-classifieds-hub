@@ -70,7 +70,7 @@ test("recent views work for guests and synchronize after sign in", async () => {
   assert.match(rail, /مسح السجل/);
 });
 
-test("seller follow control is available on listing and storefront surfaces", async () => {
+test("seller follow control is available and account-scoped", async () => {
   const [api, button, sellerCard, storefront] = await Promise.all([
     read(apiPath),
     read(followButtonPath),
@@ -80,9 +80,12 @@ test("seller follow control is available on listing and storefront surfaces", as
 
   assert.match(api, /fetchSellerFollowSummary/);
   assert.match(api, /setSellerFollow/);
-  assert.match(button, /writeInFlightRef/);
+  assert.match(button, /writeScopesRef/);
+  assert.match(button, /profileIdRef/);
+  assert.match(button, /sellerIdRef/);
   assert.match(button, /aria-pressed=\{summary\.isFollowing\}/);
   assert.match(button, /to="\/login"/);
+  assert.doesNotMatch(button, /writeInFlightRef/);
   assert.match(sellerCard, /<SellerFollowButton sellerId=\{listing\.ownerId\}/);
   assert.match(storefront, /<SellerFollowButton sellerId=\{sellerId\}/);
 });
