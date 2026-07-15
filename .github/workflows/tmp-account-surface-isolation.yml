@@ -121,7 +121,7 @@ jobs:
           key_assertion_matches = [
               index
               for index, line in enumerate(account_surface_lines)
-              if "assert.match(ownerListings" in line and "profileId" in line
+              if "assert.match(ownerListings" in line and "signed-out" in line
           ]
           if len(key_assertion_matches) != 1:
               raise SystemExit(
