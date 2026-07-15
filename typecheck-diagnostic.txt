@@ -1,0 +1,6 @@
+
+> typecheck
+> tsc --noEmit --pretty false
+
+src/routes/notifications.tsx(119,41): error TS2551: Property 'currentRef' does not exist on type 'RefObject<string | null>'. Did you mean 'current'?
+src/routes/notifications.tsx(229,43): error TS2551: Property 'currentRef' does not exist on type 'RefObject<string | null>'. Did you mean 'current'?

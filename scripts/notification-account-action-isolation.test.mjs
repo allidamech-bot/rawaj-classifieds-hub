@@ -81,7 +81,10 @@ test("preference snapshots reset immediately when the account changes", () => {
   assert.match(preferencesPanel, /if \(loadedProfileIdRef\.current !== profileId\)/);
   assert.match(preferencesPanel, /loadedProfileIdRef\.current = profileId/);
   const transitionStart = preferencesPanel.indexOf("if (loadedProfileIdRef.current !== profileId)");
-  const requestStart = preferencesPanel.indexOf("const requestId = ++requestIdRef.current", transitionStart);
+  const requestStart = preferencesPanel.indexOf(
+    "const requestId = ++requestIdRef.current",
+    transitionStart,
+  );
   const resetIndex = preferencesPanel.indexOf("setPreferences(null)", transitionStart);
   assert.ok(transitionStart >= 0);
   assert.ok(resetIndex > transitionStart);

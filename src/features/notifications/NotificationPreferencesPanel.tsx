@@ -107,6 +107,7 @@ export function NotificationPreferencesPanel() {
   const [error, setError] = useState("");
   const [pushMessage, setPushMessage] = useState("");
   const requestIdRef = useRef(0);
+  const loadedProfileIdRef = useRef<string | null>(null);
   const profileId = auth.profile?.id ?? null;
   const profileIdRef = useRef<string | null>(profileId);
   const savingPreferenceProfilesRef = useRef<Set<string>>(new Set());
@@ -116,6 +117,7 @@ export function NotificationPreferencesPanel() {
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
       requestIdRef.current += 1;
+      loadedProfileIdRef.current = null;
       setPreferences(null);
       setPushCapability({ available: false, platform: "web" });
       setPushStatus(EMPTY_PUSH_STATUS);
@@ -125,6 +127,18 @@ export function NotificationPreferencesPanel() {
       setError("");
       setPushMessage("");
       return;
+    }
+
+    if (loadedProfileIdRef.current !== profileId) {
+      requestIdRef.current += 1;
+      loadedProfileIdRef.current = profileId;
+      setPreferences(null);
+      setPushCapability({ available: false, platform: "web" });
+      setPushStatus(EMPTY_PUSH_STATUS);
+      setSavingKey(null);
+      setPushBusy(false);
+      setError("");
+      setPushMessage("");
     }
 
     const requestId = ++requestIdRef.current;
