@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [workflow, worker, migration, packageJson, qualityGate] = await Promise.all([
+const [workflow, worker, migration, packageJson, contractWorkflow] = await Promise.all([
   readFile(new URL("../.github/workflows/push-delivery-scheduler.yml", import.meta.url), "utf8"),
   readFile(
     new URL("../supabase/functions/send-push-notifications/index.ts", import.meta.url),
@@ -13,7 +13,10 @@ const [workflow, worker, migration, packageJson, qualityGate] = await Promise.al
     "utf8",
   ),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  readFile(
+    new URL("../.github/workflows/push-delivery-scheduler-contract.yml", import.meta.url),
+    "utf8",
+  ),
 ]);
 
 test("push delivery worker is scheduled and can be run manually", () => {
@@ -78,9 +81,9 @@ test("database worker RPCs remain restricted to the service role", () => {
   assert.match(migration.slice(claimStart), /auth\.role\(\).*service_role/s);
 });
 
-test("push scheduler contract remains part of the Quality Gate", () => {
+test("push scheduler contract remains part of local and pull-request validation", () => {
   assert.match(packageJson, /"test:push-scheduler"/);
   assert.match(packageJson, /npm run test:push-scheduler/);
-  assert.match(qualityGate, /Push Delivery Scheduler V1 contract/);
-  assert.match(qualityGate, /npm run test:push-scheduler/);
+  assert.match(contractWorkflow, /Push Delivery Scheduler V1 contract/);
+  assert.match(contractWorkflow, /npm run test:push-scheduler/);
 });
