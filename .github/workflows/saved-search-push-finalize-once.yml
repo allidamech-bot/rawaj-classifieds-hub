@@ -35,6 +35,48 @@ jobs:
       - name: Install official Capacitor push plugin
         run: npm install @capacitor/push-notifications@^8.0.0 --save
 
+      - name: Patch required saved-search navigation state
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/apply-saved-search-push-integration.py")
+          text = path.read_text(encoding="utf-8")
+          old = '''        '      } else if (target.kind === "saved_search") {\\n'
+                  '        void navigate({ to: "/saved-searches" });\\n'
+          '''
+          new = '''        '      } else if (target.kind === "saved_search") {\\n'
+                  '        void navigate({\\n'
+                  '          to: "/saved-searches",\\n'
+                  '          search: {\\n'
+                  '            q: "",\\n'
+                  '            category: "",\\n'
+                  '            subcategory: "",\\n'
+                  '            gov: "",\\n'
+                  '            district: "",\\n'
+                  '            price_min: "",\\n'
+                  '            price_max: "",\\n'
+                  '            car_make: "",\\n'
+                  '            car_model: "",\\n'
+                  '            fuel: "",\\n'
+                  '            transmission: "",\\n'
+                  '            property_purpose: "",\\n'
+                  '            property_type: "",\\n'
+                  '            rooms: "",\\n'
+                  '            rental_duration: "",\\n'
+                  '            electronics_brand: "",\\n'
+                  '            detail_condition: "",\\n'
+                  '            employment_type: "",\\n'
+                  '            salary_type: "",\\n'
+                  '            sort: "latest",\\n'
+                  '          },\\n'
+                  '        });\\n'
+          '''
+          if old not in text:
+              raise SystemExit("Saved-search navigation template not found")
+          path.write_text(text.replace(old, new, 1), encoding="utf-8")
+          PY
+
       - name: Apply deterministic integration
         run: python scripts/apply-saved-search-push-integration.py
 
@@ -55,6 +97,7 @@ jobs:
             docs/production-schema/migration-ledger.json \
             package.json \
             scripts/saved-search-push-v1.test.mjs \
+            scripts/saved-search-background-alerts.test.mjs \
             src/features/notifications/NotificationPreferencesPanel.tsx \
             src/features/notifications/PushNotificationBridge.tsx \
             src/features/saved-searches/SavedSearchAlertBackgroundScanner.tsx \
@@ -79,6 +122,7 @@ jobs:
         run: |
           npx eslint --quiet \
             scripts/saved-search-push-v1.test.mjs \
+            scripts/saved-search-background-alerts.test.mjs \
             src/features/notifications/NotificationPreferencesPanel.tsx \
             src/features/notifications/PushNotificationBridge.tsx \
             src/features/saved-searches/SavedSearchAlertBackgroundScanner.tsx \
@@ -107,6 +151,9 @@ jobs:
           rm -f .github/workflows/saved-search-push-format-once.yml
           rm -f .github/workflows/fix-saved-search-push-sync-once.yml
           rm -f .github/workflows/saved-search-push-finalize-once.yml
+          rm -f .github/workflows/activity-diagnostic-once.yml
+          rm -f .github/workflows/typescript-diagnostic-once.yml
+          rm -f .github/workflows/fix-notification-search-once.yml
           rm -f scripts/apply-saved-search-push-integration.py
 
       - name: Commit validated package
