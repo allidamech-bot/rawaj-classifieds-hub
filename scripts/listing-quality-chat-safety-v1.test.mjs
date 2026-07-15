@@ -83,10 +83,12 @@ test("create and manage listing studios consume one shared quality contract", ()
   assert.match(manageListingRoute, /images\.length \+/);
 });
 
-test("chat composer warns early and requires a deliberate second send for dangerous text", () => {
+test("chat composer warns early and requires a scoped deliberate second send", () => {
   assert.match(chatsRoute, /analyzeMessageSafety/);
-  assert.match(chatsRoute, /confirmedRiskBody !== cleanBody/);
+  assert.match(chatsRoute, /confirmedRisk\?\.scopeKey !== scopeKey/);
+  assert.match(chatsRoute, /confirmedRisk\.body !== cleanBody/);
   assert.match(chatsRoute, /messageSafety\.requiresConfirmation/);
+  assert.match(chatsRoute, /confirmedRisk\?\.scopeKey === composerScopeKey/);
   assert.match(chatsRoute, /تأكيد وإرسال/);
   assert.match(chatsRoute, /role="status"/);
   assert.doesNotMatch(chatsRoute, /sendConversationMessage[\s\S]{0,300}bypass/i);
