@@ -36,17 +36,24 @@ jobs:
       - name: Apply guarded scope isolation
         run: node scripts/apply-chat-composer-scope-isolation.mjs
 
-      - name: Format and validate
+      - name: Format changed files
         run: |
           npx prettier --write \
             src/routes/chats.tsx \
             scripts/chat-composer-scope-isolation.test.mjs \
             package.json
+
+      - name: Lint changed files
+        run: |
           npx eslint --fix \
             src/routes/chats.tsx \
             scripts/chat-composer-scope-isolation.test.mjs
-          npm run test:chat-workspace
-          npm run typecheck -- --pretty false
+
+      - name: Run chat workspace contracts
+        run: npm run test:chat-workspace
+
+      - name: Typecheck
+        run: npm run typecheck -- --pretty false
 
       - name: Commit implementation
         shell: bash
