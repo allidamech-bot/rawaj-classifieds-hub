@@ -42,7 +42,7 @@ jobs:
         working-directory: android
         run: |
           set +e
-          ./gradlew :app:assembleDebug --no-daemon --stacktrace > ../android-push-diagnostics.txt 2>&1
+          bash ./gradlew :app:assembleDebug --no-daemon --stacktrace > ../android-push-diagnostics.txt 2>&1
           status=$?
           cat ../android-push-diagnostics.txt
           echo "$status" > ../android-push-status.txt
