@@ -8,6 +8,7 @@ export type ResolvedNotificationTarget =
   | { kind: "conversation"; conversationId: string }
   | { kind: "conversation_missing"; conversationId: string }
   | { kind: "seller"; sellerId: string }
+  | { kind: "saved_search"; savedSearchId: string }
   | { kind: "browse_listings" };
 
 export async function resolveNotificationTarget(
@@ -46,6 +47,10 @@ export async function resolveNotificationTarget(
       return { ok: true, data: { kind: "browse_listings" } };
     }
     return result;
+  }
+
+  if (targetType === "saved_search") {
+    return { ok: true, data: { kind: "saved_search", savedSearchId: targetId } };
   }
 
   return { ok: true, data: null };

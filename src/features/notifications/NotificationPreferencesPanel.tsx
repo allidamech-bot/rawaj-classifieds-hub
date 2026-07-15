@@ -1,11 +1,28 @@
-import { BellRing, Bookmark, Heart, MessageCircle, ScrollText, Sparkles } from "lucide-react";
+import {
+  BellRing,
+  Bookmark,
+  Heart,
+  MessageCircle,
+  ScrollText,
+  Smartphone,
+  Sparkles,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
   fetchNotificationPreferences,
+  fetchPushChannelStatus,
   updateNotificationPreference,
   type NotificationPreferenceKey,
   type NotificationPreferences,
+  type PushChannelStatus,
 } from "@/lib/classifieds-api";
+import {
+  disableNativePush,
+  enableNativePush,
+  getNativePushCapability,
+  getOrCreatePushDeviceKey,
+  type NativePushCapability,
+} from "@/lib/native-push";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -67,13 +84,28 @@ const preferenceItems = [
   icon: typeof BellRing;
 }>;
 
+const EMPTY_PUSH_STATUS: PushChannelStatus = {
+  pushEnabled: false,
+  registered: false,
+  permissionStatus: "prompt",
+  platform: "android",
+  lastSeenAt: null,
+};
+
 export function NotificationPreferencesPanel() {
   const auth = useAuth();
-  const { text } = useUiPreferences();
+  const { language, text } = useUiPreferences();
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
+  const [pushCapability, setPushCapability] = useState<NativePushCapability>({
+    available: false,
+    platform: "web",
+  });
+  const [pushStatus, setPushStatus] = useState<PushChannelStatus>(EMPTY_PUSH_STATUS);
   const [loading, setLoading] = useState(false);
   const [savingKey, setSavingKey] = useState<NotificationPreferenceKey | null>(null);
+  const [pushBusy, setPushBusy] = useState(false);
   const [error, setError] = useState("");
+  const [pushMessage, setPushMessage] = useState("");
   const requestIdRef = useRef(0);
   const profileId = auth.profile?.id ?? null;
 
@@ -81,6 +113,7 @@ export function NotificationPreferencesPanel() {
     if (auth.status !== "signedIn" || !profileId) {
       requestIdRef.current += 1;
       setPreferences(null);
+      setPushStatus(EMPTY_PUSH_STATUS);
       setLoading(false);
       return;
     }
@@ -88,15 +121,34 @@ export function NotificationPreferencesPanel() {
     const requestId = ++requestIdRef.current;
     setLoading(true);
     setError("");
-    void fetchNotificationPreferences(profileId).then((result) => {
+    setPushMessage("");
+
+    void (async () => {
+      const capability = await getNativePushCapability();
       if (requestId !== requestIdRef.current) return;
-      setLoading(false);
-      if (!result.ok) {
-        setError(result.error.message);
+      setPushCapability(capability);
+
+      const preferencesResult = await fetchNotificationPreferences(profileId);
+      if (requestId !== requestIdRef.current) return;
+      if (!preferencesResult.ok) {
+        setLoading(false);
+        setError(preferencesResult.error.message);
         return;
       }
-      setPreferences(result.data);
-    });
+      setPreferences(preferencesResult.data);
+
+      if (capability.available) {
+        const deviceKey = getOrCreatePushDeviceKey();
+        const statusResult = await fetchPushChannelStatus(profileId, deviceKey);
+        if (requestId !== requestIdRef.current) return;
+        if (statusResult.ok) setPushStatus(statusResult.data);
+      }
+      setLoading(false);
+    })();
+
+    return () => {
+      requestIdRef.current += 1;
+    };
   }, [auth.status, profileId]);
 
   async function handleToggle(key: NotificationPreferenceKey) {
@@ -117,7 +169,62 @@ export function NotificationPreferencesPanel() {
     setPreferences(result.data);
   }
 
+  async function handlePushToggle() {
+    if (!profileId || !preferences || pushBusy) return;
+    setPushBusy(true);
+    setError("");
+    setPushMessage("");
+
+    if (preferences.pushEnabled || pushStatus.registered) {
+      const result = await disableNativePush(profileId);
+      setPushBusy(false);
+      if (!result.ok) {
+        setError(result.error.message);
+        return;
+      }
+      setPreferences({ ...preferences, pushEnabled: false });
+      setPushStatus({ ...EMPTY_PUSH_STATUS, platform: pushCapability.platform });
+      setPushMessage(
+        text(
+          "تم إيقاف الإشعارات الفورية على هذا الجهاز.",
+          "Push notifications were disabled on this device.",
+        ),
+      );
+      return;
+    }
+
+    const result = await enableNativePush(profileId, language, true);
+    setPushBusy(false);
+    if (!result.ok) {
+      setError(result.error.message);
+      return;
+    }
+
+    const enabled = result.data.permissionStatus === "granted" && result.data.registered;
+    setPreferences({ ...preferences, pushEnabled: enabled });
+    setPushStatus({
+      pushEnabled: enabled,
+      registered: result.data.registered,
+      permissionStatus: result.data.permissionStatus,
+      platform: pushCapability.platform,
+      lastSeenAt: enabled ? new Date().toISOString() : null,
+    });
+    setPushMessage(
+      enabled
+        ? text(
+            "تم تفعيل الإشعارات الفورية على هذا الجهاز.",
+            "Push notifications are enabled on this device.",
+          )
+        : text(
+            "لم يمنح الهاتف إذن الإشعارات. يمكنك تفعيله من إعدادات النظام.",
+            "Notification permission was not granted. You can enable it in system settings.",
+          ),
+    );
+  }
+
   if (auth.status !== "signedIn") return null;
+
+  const pushEnabled = Boolean(preferences?.pushEnabled && pushStatus.registered);
 
   return (
     <section className="rounded-2xl bg-card p-4 shadow-soft hairline">
@@ -131,11 +238,68 @@ export function NotificationPreferencesPanel() {
           </h2>
           <p className="mt-1 text-xs leading-6 text-muted-foreground">
             {text(
-              "تحكم بفئات الإشعارات داخل رواج. لا نعرض قنوات بريد أو Push قبل توفر توصيل فعلي لها.",
-              "Control in-app notification categories. Email and push channels are not shown until real delivery exists.",
+              "تحكم بفئات الإشعارات داخل رواج، وفعّل Push من تطبيق الهاتف لتصلك التنبيهات حتى عند إغلاقه.",
+              "Control notification categories and enable push in the mobile app to receive alerts while it is closed.",
             )}
           </p>
         </div>
+      </div>
+
+      <div className="mt-4 rounded-2xl bg-muted-surface p-3 hairline">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-card text-primary hairline">
+              <Smartphone className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-extrabold">
+                {text("إشعارات الهاتف الفورية", "Mobile push notifications")}
+              </p>
+              <p className="mt-0.5 text-[10px] leading-5 text-muted-foreground">
+                {pushCapability.available
+                  ? pushEnabled
+                    ? text(
+                        "هذا الجهاز مسجل ويستقبل التنبيهات.",
+                        "This device is registered for push alerts.",
+                      )
+                    : pushStatus.permissionStatus === "denied"
+                      ? text(
+                          "الإذن مرفوض من إعدادات الهاتف.",
+                          "Permission is blocked in system settings.",
+                        )
+                      : text(
+                          "فعّلها لاستقبال الرسائل ونتائج البحث الجديدة.",
+                          "Enable push for messages and new saved-search matches.",
+                        )
+                  : text(
+                      "متاحة داخل تطبيق رواج على Android.",
+                      "Available in the RAWAJ Android app.",
+                    )}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={pushEnabled}
+            disabled={pushBusy || !pushCapability.available || loading || !preferences}
+            onClick={() => void handlePushToggle()}
+            className={`relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-50 ${
+              pushEnabled ? "bg-primary" : "bg-card hairline"
+            }`}
+            aria-label={text("إشعارات الهاتف الفورية", "Mobile push notifications")}
+          >
+            <span
+              className={`absolute top-1 h-5 w-5 rounded-full bg-card shadow-soft transition-all ${
+                pushEnabled ? "start-6" : "start-1"
+              }`}
+            />
+            <span className="sr-only">{pushBusy ? text("جارٍ الحفظ", "Saving") : ""}</span>
+          </button>
+        </div>
+        {pushMessage ? (
+          <p className="mt-2 text-[10px] font-semibold text-muted-foreground">{pushMessage}</p>
+        ) : null}
       </div>
 
       {loading ? (
@@ -185,11 +349,11 @@ export function NotificationPreferencesPanel() {
         </div>
       ) : null}
 
-      {error && (
+      {error ? (
         <p className="mt-3 rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">
           {error}
         </p>
-      )}
+      ) : null}
     </section>
   );
 }

@@ -15,10 +15,11 @@ const [scannerSource, routeSource, rootSource, packageSource] = await Promise.al
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
 
-test("saved-search alerts scan automatically for signed-in users", () => {
+test("saved-search alerts flush automatically for signed-in users", () => {
   assert.match(scannerSource, /auth\.status !== "signedIn"/);
   assert.match(scannerSource, /scanDueSavedSearchAlerts\(userId\)/);
   assert.match(scannerSource, /SavedSearchAlertBackgroundScanner/);
+  assert.match(scannerSource, /<PushNotificationBridge \/>/);
   assert.match(rootSource, /<SavedSearchAlertBackgroundScanner \/>/);
   assert.ok(
     rootSource.indexOf("<UnreadActivityProvider>") <
@@ -26,18 +27,19 @@ test("saved-search alerts scan automatically for signed-in users", () => {
   );
 });
 
-test("background scans are delayed, online-aware, and throttled", () => {
+test("background flushes are delayed, online-aware, and throttled", () => {
   assert.match(scannerSource, /SCAN_THROTTLE_MS = 6 \* 60 \* 60 \* 1000/);
   assert.match(scannerSource, /SCAN_START_DELAY_MS = 1_500/);
   assert.match(scannerSource, /requestIdleCallback/);
   assert.match(scannerSource, /setTimeout\(run, SCAN_START_DELAY_MS\)/);
   assert.match(scannerSource, /navigator\.onLine === false/);
   assert.match(scannerSource, /addEventListener\("online", handleOnline\)/);
-  assert.match(scannerSource, /rawaj:saved-search-background-scan:v1/);
+  assert.match(scannerSource, /rawaj:saved-search-background-scan:v2/);
   assert.match(scannerSource, /window\.localStorage\.setItem/);
+  assert.match(scannerSource, /Server-side matching remains authoritative/);
 });
 
-test("background scans deduplicate work and update unread activity only after success", () => {
+test("background flushes deduplicate work and update unread activity only after success", () => {
   assert.match(scannerSource, /const inFlightScans = new Map<string, Promise<void>>\(\)/);
   assert.match(scannerSource, /const activeScan = inFlightScans\.get\(userId\)/);
   assert.match(scannerSource, /if \(!result\.ok\) return/);

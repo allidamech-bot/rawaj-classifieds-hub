@@ -5,7 +5,7 @@ import {
   recordSavedSearchAlertMatch,
   touchSavedSearchAlertChecked,
 } from "@/lib/api/saved-searches";
-import { getClient } from "@/lib/api/shared";
+import { getClient, mapError, rowNumber, rowString } from "@/lib/api/shared";
 import type { ClassifiedsResult, SavedSearch } from "@/lib/classifieds-types";
 
 export interface SavedSearchAlertScanSummary {
@@ -21,6 +21,7 @@ const MAX_MATCHES_PER_SEARCH = 20;
 
 export async function scanDueSavedSearchAlerts(
   userId: string | null,
+  force = false,
 ): Promise<ClassifiedsResult<SavedSearchAlertScanSummary>> {
   if (!userId) {
     return {
@@ -29,6 +30,39 @@ export async function scanDueSavedSearchAlerts(
     };
   }
 
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const serverFlush = await clientResult.data.rpc("rawaj_flush_my_saved_search_alerts_v2", {
+    p_force: force,
+  });
+  if (!serverFlush.error) {
+    const row = Array.isArray(serverFlush.data)
+      ? (serverFlush.data[0] as Record<string, unknown> | undefined)
+      : undefined;
+    const checkedAt = rowString(row ?? {}, "checked_at", new Date().toISOString());
+    return {
+      ok: true,
+      data: {
+        checkedSearches: rowNumber(row ?? {}, "checked_searches", 0),
+        matchedListings: rowNumber(row ?? {}, "matched_listings", 0),
+        createdNotifications: rowNumber(row ?? {}, "created_notifications", 0),
+        skippedSearches: rowNumber(row ?? {}, "skipped_searches", 0),
+        checkedAt,
+      },
+    };
+  }
+
+  if (!isMissingServerFlush(serverFlush.error)) {
+    return { ok: false, error: mapError(serverFlush.error) };
+  }
+
+  return scanDueSavedSearchAlertsLegacy(userId);
+}
+
+async function scanDueSavedSearchAlertsLegacy(
+  userId: string,
+): Promise<ClassifiedsResult<SavedSearchAlertScanSummary>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   const client = clientResult.data;
@@ -97,6 +131,15 @@ export async function scanDueSavedSearchAlerts(
       checkedAt,
     },
   };
+}
+
+function isMissingServerFlush(error: { code?: string; message?: string }) {
+  const message = error.message?.toLowerCase() ?? "";
+  return (
+    error.code === "PGRST202" ||
+    error.code === "42883" ||
+    message.includes("rawaj_flush_my_saved_search_alerts_v2")
+  );
 }
 
 function isSavedSearchAlertDue(search: SavedSearch, now: number) {

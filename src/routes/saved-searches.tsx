@@ -347,8 +347,8 @@ function SavedSearchesPage() {
           </h2>
           <p className="mt-1 text-xs leading-6 text-muted-foreground">
             {text(
-              "أنشئ بحثاً باسم واضح واضبط تكرار تنبيه حقيقي داخل رواج. يتم الفحص بشكل محدود عند استخدامك لرواج، مع منع تكرار نفس الإعلان.",
-              "Create a clearly named search and set a real in-app alert cadence. RAWAJ runs bounded checks while you use the app and deduplicates the same listing.",
+              "أنشئ بحثاً باسم واضح واضبط تكرار التنبيه. يطابق الخادم الإعلانات الجديدة عند اعتمادها ويجمع النتائج دون تكرار.",
+              "Create a clearly named search and choose an alert cadence. The server matches newly approved listings and aggregates results without duplicates.",
             )}
           </p>
         </section>

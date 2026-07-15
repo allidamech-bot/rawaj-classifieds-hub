@@ -18,6 +18,7 @@ import {
 import { useRef, useState, type ComponentType, type ReactNode } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { TrustHubHero, TrustSectionHeader } from "@/features/trust/TrustSupportExperience";
+import { disableNativePush } from "@/lib/native-push";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 import { useAuth } from "@/lib/use-auth";
@@ -122,6 +123,9 @@ function MorePage() {
     setLoggingOut(true);
     setLogoutError("");
     try {
+      if (auth.profile?.id) {
+        await disableNativePush(auth.profile.id, false).catch(() => undefined);
+      }
       const result = await auth.signOut();
       if (result.error) setLogoutError(result.error);
     } finally {
