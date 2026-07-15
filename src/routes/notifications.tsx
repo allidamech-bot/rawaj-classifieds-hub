@@ -316,6 +316,32 @@ function NotificationsPage() {
         void navigate({ to: "/chats", search: { conversation: target.conversationId } });
       } else if (target.kind === "seller") {
         void navigate({ to: "/seller/$id", params: { id: target.sellerId } });
+      } else if (target.kind === "saved_search") {
+        void navigate({
+          to: "/saved-searches",
+          search: {
+            q: "",
+            category: "",
+            subcategory: "",
+            gov: "",
+            district: "",
+            price_min: "",
+            price_max: "",
+            car_make: "",
+            car_model: "",
+            fuel: "",
+            transmission: "",
+            property_purpose: "",
+            property_type: "",
+            rooms: "",
+            rental_duration: "",
+            electronics_brand: "",
+            detail_condition: "",
+            employment_type: "",
+            salary_type: "",
+            sort: "latest",
+          },
+        });
       } else if (target.kind === "browse_listings") {
         void navigate({ to: "/listings" });
       }
@@ -490,7 +516,10 @@ function isNavigableNotification(notification: NotificationItem) {
   const target = notification.targetType?.toLowerCase();
   return Boolean(
     notification.targetId &&
-    (target === "listing" || target === "conversation" || target === "seller"),
+    (target === "listing" ||
+      target === "conversation" ||
+      target === "seller" ||
+      target === "saved_search"),
   );
 }
 

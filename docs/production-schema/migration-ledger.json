@@ -131,7 +131,8 @@
       "202607140001_owner_listing_stale_write_protection.sql",
       "202607140002_idempotent_owner_draft_creation.sql",
       "202607140003_idempotent_message_send.sql",
-      "202607150001_retention_discovery_v1.sql"
+      "202607150001_retention_discovery_v1.sql",
+      "202607150002_saved_search_alerts_push_v1.sql"
     ],
     "superseded": ["202606290002_classifieds_foundation.sql"],
     "reconciliation": [

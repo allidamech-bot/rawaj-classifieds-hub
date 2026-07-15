@@ -1,10 +1,4 @@
-import {
-  getClient,
-  mapError,
-  rowBoolean,
-  rowNullableString,
-  rowString,
-} from "@/lib/api/shared";
+import { getClient, mapError, rowBoolean, rowNullableString, rowString } from "@/lib/api/shared";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 
 export interface PushChannelStatus {
@@ -72,8 +66,7 @@ export async function fetchPushChannelStatus(
     data: {
       pushEnabled: rowBoolean(row, "push_enabled", false),
       registered: rowBoolean(row, "registered", false),
-      permissionStatus:
-        permission === "granted" || permission === "denied" ? permission : "prompt",
+      permissionStatus: permission === "granted" || permission === "denied" ? permission : "prompt",
       platform: platform === "ios" || platform === "web" ? platform : "android",
       lastSeenAt: rowNullableString(row, "last_seen_at"),
     },

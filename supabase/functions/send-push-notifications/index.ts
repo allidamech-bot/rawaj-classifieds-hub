@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.87.1";
 interface PushDelivery {
   delivery_id: string;
   notification_id: string;
+  notification_type: string;
   device_id: string;
   device_token: string;
   title_ar: string;
@@ -169,7 +170,9 @@ async function createGoogleAccessToken(config: ReturnType<typeof readConfig>): P
   });
   const payload = (await response.json()) as GoogleAccessTokenResponse;
   if (!response.ok || !payload.access_token) {
-    throw new Error(payload.error_description || payload.error || "Could not obtain FCM access token");
+    throw new Error(
+      payload.error_description || payload.error || "Could not obtain FCM access token",
+    );
   }
   return payload.access_token;
 }
@@ -193,7 +196,7 @@ async function sendFcmMessage(
             token: delivery.device_token,
             notification: {
               title: delivery.title_ar,
-              body: delivery.body_ar || "لديك تحديث جديد في رواج",
+              body: safePushBody(delivery),
             },
             data: {
               notification_id: delivery.notification_id,
@@ -233,6 +236,26 @@ async function sendFcmMessage(
   }
 }
 
+function safePushBody(delivery: PushDelivery): string {
+  const type = delivery.notification_type.toLowerCase();
+  if (type.includes("message") || type.includes("conversation")) {
+    return "لديك رسالة جديدة على رواج";
+  }
+  if (type === "saved_search_match") return "توجد نتائج جديدة تطابق أحد بحوثك المحفوظة";
+  if (type.includes("price")) return "تغيّر سعر إعلان تتابعه على رواج";
+  if (type.includes("review")) return "لديك تحديث جديد متعلق بالتقييمات";
+  if (type.includes("promotion")) return "لديك تحديث جديد متعلق بالترويج";
+  if (
+    type.includes("listing") ||
+    type === "approved" ||
+    type === "rejected" ||
+    type === "expired"
+  ) {
+    return "لديك تحديث جديد على أحد إعلاناتك";
+  }
+  return "لديك تحديث جديد في رواج";
+}
+
 function isPermanentTokenError(status: number, body: string): boolean {
   const normalized = body.toUpperCase();
   return (
@@ -254,8 +277,7 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
 }
 
 function base64UrlEncode(value: string | ArrayBuffer): string {
-  const bytes =
-    typeof value === "string" ? new TextEncoder().encode(value) : new Uint8Array(value);
+  const bytes = typeof value === "string" ? new TextEncoder().encode(value) : new Uint8Array(value);
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");

@@ -94,6 +94,16 @@ export async function enableNativePush(
       };
     }
 
+    if (capability.platform === "android") {
+      await PushNotifications.createChannel({
+        id: "rawaj_activity",
+        name: "تنبيهات رواج",
+        description: "الرسائل ونتائج البحث وتحديثات الحساب",
+        importance: 4,
+        vibration: true,
+      });
+    }
+
     await ensureNativePushListeners(userId);
     const tokenResult = await waitForRegistrationToken(PushNotifications);
     if (!tokenResult.ok) return tokenResult;
@@ -126,10 +136,19 @@ export async function enableNativePush(
 
 export async function disableNativePush(
   userId: string | null,
+  disableChannel = true,
 ): Promise<ClassifiedsResult<boolean>> {
   const deviceKey = getOrCreatePushDeviceKey();
-  const result = await disablePushDevice(userId, deviceKey, true);
-  if (result.ok) await clearNativePushListeners();
+  const result = await disablePushDevice(userId, deviceKey, disableChannel);
+  if (result.ok) {
+    try {
+      const { PushNotifications } = await import("@capacitor/push-notifications");
+      await PushNotifications.unregister();
+    } catch {
+      // Database unlink remains authoritative when the native plugin is unavailable.
+    }
+    await clearNativePushListeners();
+  }
   return result;
 }
 
@@ -147,15 +166,18 @@ async function waitForRegistrationToken(
   let errorHandle: PluginListenerHandle | null = null;
   let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
 
-  try {
-    return await new Promise<ClassifiedsResult<string>>(async (resolve) => {
-      const finish = (result: ClassifiedsResult<string>) => {
-        if (timeoutHandle) clearTimeout(timeoutHandle);
-        void registrationHandle?.remove();
-        void errorHandle?.remove();
-        resolve(result);
-      };
+  return new Promise<ClassifiedsResult<string>>((resolve) => {
+    let finished = false;
+    const finish = (result: ClassifiedsResult<string>) => {
+      if (finished) return;
+      finished = true;
+      if (timeoutHandle) clearTimeout(timeoutHandle);
+      void registrationHandle?.remove();
+      void errorHandle?.remove();
+      resolve(result);
+    };
 
+    void (async () => {
       registrationHandle = await PushNotifications.addListener("registration", (token) => {
         const value = token.value?.trim();
         if (!value) {
@@ -187,10 +209,17 @@ async function waitForRegistrationToken(
       }, REGISTRATION_TIMEOUT_MS);
 
       await PushNotifications.register();
+    })().catch((error) => {
+      finish({
+        ok: false,
+        error: {
+          code: "unknown",
+          message: "فشل بدء تسجيل الإشعارات الفورية.",
+          details: error instanceof Error ? error.message : String(error),
+        },
+      });
     });
-  } finally {
-    if (timeoutHandle) clearTimeout(timeoutHandle);
-  }
+  });
 }
 
 async function ensureNativePushListeners(userId: string): Promise<void> {
@@ -204,11 +233,14 @@ async function ensureNativePushListeners(userId: string): Promise<void> {
     const received = await PushNotifications.addListener("pushNotificationReceived", () => {
       emitUnreadActivityChanged();
     });
-    const action = await PushNotifications.addListener("pushNotificationActionPerformed", (event) => {
-      emitUnreadActivityChanged();
-      if (typeof window === "undefined") return;
-      window.location.assign(resolvePushTarget(event.notification.data));
-    });
+    const action = await PushNotifications.addListener(
+      "pushNotificationActionPerformed",
+      (event) => {
+        emitUnreadActivityChanged();
+        if (typeof window === "undefined") return;
+        window.location.assign(resolvePushTarget(event.notification.data));
+      },
+    );
 
     activeListenerHandles = [received, action];
     activeListenerUserId = userId;

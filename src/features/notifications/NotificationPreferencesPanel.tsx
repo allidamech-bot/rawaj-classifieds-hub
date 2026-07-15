@@ -184,7 +184,12 @@ export function NotificationPreferencesPanel() {
       }
       setPreferences({ ...preferences, pushEnabled: false });
       setPushStatus({ ...EMPTY_PUSH_STATUS, platform: pushCapability.platform });
-      setPushMessage(text("تم إيقاف الإشعارات الفورية على هذا الجهاز.", "Push notifications were disabled on this device."));
+      setPushMessage(
+        text(
+          "تم إيقاف الإشعارات الفورية على هذا الجهاز.",
+          "Push notifications were disabled on this device.",
+        ),
+      );
       return;
     }
 
@@ -206,8 +211,14 @@ export function NotificationPreferencesPanel() {
     });
     setPushMessage(
       enabled
-        ? text("تم تفعيل الإشعارات الفورية على هذا الجهاز.", "Push notifications are enabled on this device.")
-        : text("لم يمنح الهاتف إذن الإشعارات. يمكنك تفعيله من إعدادات النظام.", "Notification permission was not granted. You can enable it in system settings."),
+        ? text(
+            "تم تفعيل الإشعارات الفورية على هذا الجهاز.",
+            "Push notifications are enabled on this device.",
+          )
+        : text(
+            "لم يمنح الهاتف إذن الإشعارات. يمكنك تفعيله من إعدادات النظام.",
+            "Notification permission was not granted. You can enable it in system settings.",
+          ),
     );
   }
 
@@ -241,15 +252,29 @@ export function NotificationPreferencesPanel() {
               <Smartphone className="h-4 w-4" />
             </span>
             <div className="min-w-0">
-              <p className="text-xs font-extrabold">{text("إشعارات الهاتف الفورية", "Mobile push notifications")}</p>
+              <p className="text-xs font-extrabold">
+                {text("إشعارات الهاتف الفورية", "Mobile push notifications")}
+              </p>
               <p className="mt-0.5 text-[10px] leading-5 text-muted-foreground">
                 {pushCapability.available
                   ? pushEnabled
-                    ? text("هذا الجهاز مسجل ويستقبل التنبيهات.", "This device is registered for push alerts.")
+                    ? text(
+                        "هذا الجهاز مسجل ويستقبل التنبيهات.",
+                        "This device is registered for push alerts.",
+                      )
                     : pushStatus.permissionStatus === "denied"
-                      ? text("الإذن مرفوض من إعدادات الهاتف.", "Permission is blocked in system settings.")
-                      : text("فعّلها لاستقبال الرسائل ونتائج البحث الجديدة.", "Enable push for messages and new saved-search matches.")
-                  : text("متاحة داخل تطبيق رواج على Android.", "Available in the RAWAJ Android app.")}
+                      ? text(
+                          "الإذن مرفوض من إعدادات الهاتف.",
+                          "Permission is blocked in system settings.",
+                        )
+                      : text(
+                          "فعّلها لاستقبال الرسائل ونتائج البحث الجديدة.",
+                          "Enable push for messages and new saved-search matches.",
+                        )
+                  : text(
+                      "متاحة داخل تطبيق رواج على Android.",
+                      "Available in the RAWAJ Android app.",
+                    )}
               </p>
             </div>
           </div>
@@ -272,7 +297,9 @@ export function NotificationPreferencesPanel() {
             <span className="sr-only">{pushBusy ? text("جارٍ الحفظ", "Saving") : ""}</span>
           </button>
         </div>
-        {pushMessage ? <p className="mt-2 text-[10px] font-semibold text-muted-foreground">{pushMessage}</p> : null}
+        {pushMessage ? (
+          <p className="mt-2 text-[10px] font-semibold text-muted-foreground">{pushMessage}</p>
+        ) : null}
       </div>
 
       {loading ? (

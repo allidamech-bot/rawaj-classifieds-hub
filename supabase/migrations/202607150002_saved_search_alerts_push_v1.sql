@@ -375,6 +375,7 @@ begin
       search.id,
       search.name_ar,
       search.alert_frequency,
+      search.created_at,
       search.last_alert_checked_at,
       count(match.listing_id)::integer as pending_count,
       (array_agg(match.listing_id order by match.matched_at desc))[1] as latest_listing_id,
@@ -389,14 +390,14 @@ begin
     where search.user_id = p_user_id
       and search.alert_frequency <> 'off'
       and coalesce(preference.saved_search_matches_enabled, true)
-    group by search.id, search.name_ar, search.alert_frequency, search.last_alert_checked_at
+    group by search.id, search.name_ar, search.alert_frequency, search.created_at, search.last_alert_checked_at
     order by min(match.matched_at)
   loop
     if not p_force
        and v_search.last_alert_checked_at is not null
        and (
-         (v_search.alert_frequency = 'daily' and v_search.last_alert_checked_at > v_now - interval '1 day')
-         or (v_search.alert_frequency = 'weekly' and v_search.last_alert_checked_at > v_now - interval '7 days')
+         (v_search.alert_frequency = 'daily' and coalesce(v_search.last_alert_checked_at, v_search.created_at) > v_now - interval '1 day')
+         or (v_search.alert_frequency = 'weekly' and coalesce(v_search.last_alert_checked_at, v_search.created_at) > v_now - interval '7 days')
        ) then
       v_skipped := v_skipped + 1;
       continue;
@@ -423,7 +424,9 @@ begin
         'saved_search_id', v_search.id,
         'match_count', v_search.pending_count,
         'listing_ids', to_jsonb(v_search.listing_ids),
-        'latest_listing_id', v_search.latest_listing_id
+        'latest_listing_id', v_search.latest_listing_id,
+        'title_en', 'New saved-search results',
+        'body_en', v_search.pending_count::text || ' new listings match "' || v_search.name_ar || '"'
       )
     )
     returning id into v_notification_id;
@@ -810,6 +813,7 @@ create or replace function public.rawaj_claim_push_deliveries_v1(
 returns table (
   delivery_id uuid,
   notification_id uuid,
+  notification_type text,
   device_id uuid,
   device_token text,
   title_ar text,
@@ -855,6 +859,7 @@ begin
   select
     claimed.id,
     claimed.notification_id,
+    notification.type,
     claimed.device_id,
     device.device_token,
     notification.title_ar,

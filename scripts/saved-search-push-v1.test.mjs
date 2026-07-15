@@ -23,7 +23,10 @@ const read = (path) => readFile(path, "utf8");
 test("saved-search matching is server-side, public-only, deduplicated, and cadence aware", async () => {
   const migration = await read(paths.migration);
 
-  assert.match(migration, /create or replace function public\.rawaj_listing_matches_saved_search_v2/i);
+  assert.match(
+    migration,
+    /create or replace function public\.rawaj_listing_matches_saved_search_v2/i,
+  );
   assert.match(migration, /p_listing\.status <> 'approved'/i);
   assert.match(migration, /p_listing\.archived_at is not null/i);
   assert.match(migration, /p_listing\.expires_at <= now\(\)/i);
@@ -47,7 +50,10 @@ test("push tokens and delivery queue remain private and service-role controlled"
   assert.match(migration, /create table if not exists public\.push_devices/i);
   assert.match(migration, /create table if not exists public\.notification_push_deliveries/i);
   assert.match(migration, /alter table public\.push_devices enable row level security/i);
-  assert.match(migration, /alter table public\.notification_push_deliveries enable row level security/i);
+  assert.match(
+    migration,
+    /alter table public\.notification_push_deliveries enable row level security/i,
+  );
   assert.match(migration, /revoke all on table public\.push_devices from anon, authenticated/i);
   assert.match(
     migration,
@@ -58,8 +64,14 @@ test("push tokens and delivery queue remain private and service-role controlled"
   assert.match(migration, /coalesce\(auth\.role\(\), ''\) <> 'service_role'/i);
   assert.match(migration, /for update of delivery skip locked/i);
   assert.match(migration, /attempt_count >= 5 then 'failed'/i);
-  assert.match(migration, /grant execute on function public\.rawaj_claim_push_deliveries_v1\(integer\) to service_role/i);
-  assert.match(migration, /grant execute on function public\.rawaj_mark_push_delivery_v1\(uuid, boolean, text, boolean\) to service_role/i);
+  assert.match(
+    migration,
+    /grant execute on function public\.rawaj_claim_push_deliveries_v1\(integer\) to service_role/i,
+  );
+  assert.match(
+    migration,
+    /grant execute on function public\.rawaj_mark_push_delivery_v1\(uuid, boolean, text, boolean\) to service_role/i,
+  );
 });
 
 test("native registration is explicit, permission-aware, and removed before logout", async () => {
@@ -116,7 +128,10 @@ test("push delivery uses authenticated FCM HTTP v1 and avoids leaking message bo
   assert.match(edgeFunction, /UNREGISTERED/);
   assert.doesNotMatch(edgeFunction, /console\.log\([^\n]*device_token/i);
   assert.match(androidManifest, /com\.google\.firebase\.messaging\.default_notification_icon/);
-  assert.match(androidManifest, /com\.google\.firebase\.messaging\.default_notification_channel_id/);
+  assert.match(
+    androidManifest,
+    /com\.google\.firebase\.messaging\.default_notification_channel_id/,
+  );
 });
 
 test("saved-search notifications navigate consistently in app and from native actions", async () => {
