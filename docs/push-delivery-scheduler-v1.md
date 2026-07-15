@@ -18,19 +18,19 @@ Run the already-deployed `send-push-notifications` Supabase Edge Function every 
 - Secret values are never printed or added to the workflow summary.
 - The worker itself keeps service-role and Firebase credentials inside Supabase Edge Function secrets.
 
-## Activation gate
+## Cost and activation gate
 
-The scheduled job is intentionally safe before configuration. When `PUSH_CRON_SECRET` is absent, it exits successfully with a clear “skipped safely” notice and performs no network call.
+Scheduled runner allocation is disabled by default. The scheduled job starts only when the repository variable `PUSH_SCHEDULER_ENABLED` is exactly `true`. Manual workflow dispatch remains available before activation so configuration can be checked without turning on recurring runs.
 
-To activate automatic delivery, configure the GitHub Actions repository secret named exactly:
+Activate automatic delivery in this order:
 
-```text
-PUSH_CRON_SECRET
-```
+1. Configure the GitHub Actions repository secret named exactly `PUSH_CRON_SECRET`.
+2. Use **Push Delivery Scheduler → Run workflow** and verify the summary reports HTTP 200 with `ok: true`.
+3. Configure the GitHub Actions repository variable `PUSH_SCHEDULER_ENABLED` with value `true`.
 
-Its value must match the existing `PUSH_CRON_SECRET` configured for the deployed Supabase Edge Function. Do not store the value in source control, issues, pull requests, screenshots, or logs.
+The secret value must match the existing `PUSH_CRON_SECRET` configured for the deployed Supabase Edge Function. Do not store it in source control, issues, pull requests, screenshots, or logs.
 
-After the secret is configured, run **Push Delivery Scheduler → Run workflow** once and verify the summary reports HTTP 200 with `ok: true`. Scheduled execution then continues every 15 minutes.
+When the activation variable is true but the secret is missing, the workflow fails clearly instead of pretending that scheduled delivery is operational. When neither is configured, scheduled events do not allocate a runner; a manually dispatched run skips safely and performs no network call.
 
 ## Operational summary
 
@@ -52,10 +52,10 @@ No device token, message body, credential, or private user data is written to th
 - Network failures use two bounded retries.
 - Connection timeout is 15 seconds.
 - Total request time is capped at 120 seconds.
-- HTTP failures and worker responses with `ok: false` fail the workflow.
+- Curl/network failures, HTTP failures, and worker responses with `ok: false` fail the workflow.
 - Database delivery rows retain their retry state; the next run can reclaim eligible work.
 - Concurrency prevents overlapping scheduler runs.
 
 ## Rollback
 
-Disable the workflow from GitHub Actions or remove the `PUSH_CRON_SECRET` repository secret. The notification and push queue data remain intact, and the worker can still be invoked manually for recovery.
+Set `PUSH_SCHEDULER_ENABLED` to `false` or remove the variable. The notification and push queue data remain intact, and the worker can still be invoked manually for recovery. Removing `PUSH_CRON_SECRET` additionally prevents manual delivery calls from GitHub Actions.
