@@ -59,9 +59,10 @@ jobs:
           npm run test:listing-quality-chat-safety
           npm run typecheck -- --pretty false
 
-      - name: Commit implementation
+      - name: Commit implementation without workflow mutation
         shell: bash
         run: |
+          git restore .github/workflows/quality-gate.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add \
@@ -71,8 +72,7 @@ jobs:
             'src/routes/profile/listings.$id.tsx' \
             src/routes/chats.tsx \
             scripts/listing-quality-chat-safety-v1.test.mjs \
-            package.json \
-            .github/workflows/quality-gate.yml
+            package.json
           if git diff --cached --quiet; then
             echo "No implementation changes to commit."
             exit 0
