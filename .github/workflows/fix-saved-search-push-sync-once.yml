@@ -1,23 +1,20 @@
 name: Fix Saved Search Push Sync Once
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
-    paths:
-      - ".github/workflows/fix-saved-search-push-sync-once.yml"
+      - feature/saved-search-alerts-push-v1
 
 permissions:
   contents: write
 
 jobs:
   patch-workflow:
-    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
       - name: Patch Capacitor sync step
         run: |
           python - <<'PY'
@@ -45,7 +42,7 @@ jobs:
         run: rm .github/workflows/fix-saved-search-push-sync-once.yml
       - name: Commit workflow correction
         env:
-          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_REF: ${{ github.ref_name }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
