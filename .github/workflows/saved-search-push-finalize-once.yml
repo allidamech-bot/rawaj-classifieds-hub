@@ -152,23 +152,24 @@ jobs:
         working-directory: android
         run: bash ./gradlew :app:assembleDebug --no-daemon
 
-      - name: Remove temporary integration files
-        run: |
-          rm -f .github/workflows/saved-search-push-format-once.yml
-          rm -f .github/workflows/fix-saved-search-push-sync-once.yml
-          rm -f .github/workflows/saved-search-push-finalize-once.yml
-          rm -f .github/workflows/activity-diagnostic-once.yml
-          rm -f .github/workflows/typescript-diagnostic-once.yml
-          rm -f .github/workflows/android-push-diagnostic-once.yml
-          rm -f .github/workflows/fix-notification-search-once.yml
-          rm -f scripts/apply-saved-search-push-integration.py
-
-      - name: Commit validated package
+      - name: Commit validated product package
         env:
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "chore: validate saved-search alerts and push package"
+          git add \
+            .github/workflows/quality-gate.yml \
+            android \
+            capacitor.config.ts \
+            docs/production-schema/migration-ledger.json \
+            package.json \
+            package-lock.json \
+            scripts/saved-search-push-v1.test.mjs \
+            scripts/saved-search-background-alerts.test.mjs \
+            src \
+            supabase/migrations/202607150002_saved_search_alerts_push_v1.sql \
+            supabase/functions/send-push-notifications/index.ts
+          git commit -m "feat: complete saved-search alerts and native push delivery"
+          git pull --rebase origin "$HEAD_REF"
           git push origin HEAD:"$HEAD_REF"
