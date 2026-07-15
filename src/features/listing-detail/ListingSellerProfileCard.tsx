@@ -9,6 +9,7 @@ import {
   User,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SellerFollowButton } from "@/features/retention/SellerFollowButton";
 import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
 import type { Language } from "@/lib/ui-preferences";
 
@@ -107,6 +108,7 @@ export function ListingSellerProfileCard({
           {text("زيارة متجر البائع", "Visit seller store")}
           <ChevronLeft className="rtl:rotate-180" aria-hidden="true" />
         </Link>
+        <SellerFollowButton sellerId={listing.ownerId} />
         <button type="button" onClick={onMessage}>
           <MessageCircle aria-hidden="true" />
           {text("مراسلة", "Message")}

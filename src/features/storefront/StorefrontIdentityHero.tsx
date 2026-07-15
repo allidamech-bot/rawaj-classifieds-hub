@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { SellerFollowButton } from "@/features/retention/SellerFollowButton";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface StorefrontMetric {
@@ -205,6 +206,7 @@ export function StorefrontIdentityHero({
                 <Store aria-hidden="true" />
                 {text("تصفح الإعلانات", "Browse listings")}
               </a>
+              <SellerFollowButton sellerId={sellerId} />
               <a href="#seller-reviews">
                 <Star aria-hidden="true" />
                 {text("التقييمات", "Reviews")}
