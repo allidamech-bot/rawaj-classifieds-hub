@@ -183,6 +183,9 @@ jobs:
       - name: Adaptive Listing Cards contract
         run: node --test scripts/adaptive-listing-cards.test.mjs
 
+      - name: Listing Comparison V1 contract
+        run: npm run test:listing-comparison
+
       - name: Search and Filters V1 contract
         run: node --test scripts/search-filters-v1.test.mjs
 
