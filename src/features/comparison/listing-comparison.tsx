@@ -284,7 +284,10 @@ export function ListingComparisonDock() {
 
   return (
     <>
-      <section className="rawaj-compare-dock" aria-label={text("مقارنة الإعلانات", "Listing comparison")}>
+      <section
+        className="rawaj-compare-dock"
+        aria-label={text("مقارنة الإعلانات", "Listing comparison")}
+      >
         <button type="button" className="rawaj-compare-dock__open" onClick={() => setOpen(true)}>
           <span className="rawaj-compare-dock__icon">
             <GitCompareArrows aria-hidden="true" />
@@ -348,7 +351,11 @@ export function ListingComparisonDock() {
                         >
                           <X aria-hidden="true" />
                         </button>
-                        <Link to="/listings/$id" params={{ id: entry.id }} onClick={() => setOpen(false)}>
+                        <Link
+                          to="/listings/$id"
+                          params={{ id: entry.id }}
+                          onClick={() => setOpen(false)}
+                        >
                           <div className="rawaj-compare-card__media">
                             <ListingCardImage
                               src={entry.listing.primaryImageUrl}
@@ -396,7 +403,9 @@ function buildComparisonRows(
   text: (ar: string, en: string) => string,
 ) {
   const factsByEntry = entries.map((entry) => comparisonFacts(entry.listing, language));
-  const factKeys = Array.from(new Set(factsByEntry.flatMap((facts) => facts.map((fact) => fact.key))));
+  const factKeys = Array.from(
+    new Set(factsByEntry.flatMap((facts) => facts.map((fact) => fact.key))),
+  );
 
   return [
     {
@@ -423,8 +432,7 @@ function buildComparisonRows(
     },
     ...factKeys.map((key) => ({
       key,
-      label:
-        factsByEntry.flatMap((facts) => facts).find((fact) => fact.key === key)?.label ?? key,
+      label: factsByEntry.flatMap((facts) => facts).find((fact) => fact.key === key)?.label ?? key,
       values: factsByEntry.map((facts) => facts.find((fact) => fact.key === key)?.value ?? ""),
     })),
   ];

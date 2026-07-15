@@ -3,10 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const [comparison, compatibility, root, css] = await Promise.all([
-  readFile(
-    new URL("../src/features/comparison/listing-comparison.tsx", import.meta.url),
-    "utf8",
-  ),
+  readFile(new URL("../src/features/comparison/listing-comparison.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/listings/RealListingCard.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/comparison-foundation.css", import.meta.url), "utf8"),
