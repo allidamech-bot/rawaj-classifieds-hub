@@ -100,10 +100,7 @@ function SupportPage() {
     setRequestsError(null);
 
     const result = await fetchMySupportRequests(currentProfileId);
-    if (
-      requestId !== requestsRequestIdRef.current ||
-      currentProfileId !== profileIdRef.current
-    )
+    if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current)
       return;
 
     if (result.ok) {
@@ -156,8 +153,7 @@ function SupportPage() {
   async function submitRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const currentProfileId = profileId;
-    if (!currentProfileId || submitScopesRef.current.has(currentProfileId))
-      return;
+    if (!currentProfileId || submitScopesRef.current.has(currentProfileId)) return;
 
     const payload = {
       type: requestType,
