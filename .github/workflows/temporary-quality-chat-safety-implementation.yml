@@ -33,136 +33,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Apply guarded implementation changes
-        shell: bash
-        run: |
-          node <<'NODE'
-          import { readFileSync, writeFileSync } from "node:fs";
+      - name: Apply guarded implementation
+        run: node scripts/apply-listing-quality-chat-safety-v1.mjs
 
-          function replaceExact(path, from, to, expected = 1) {
-            const source = readFileSync(path, "utf8");
-            const count = source.split(from).length - 1;
-            if (count !== expected) {
-              throw new Error(`${path}: expected ${expected} matches, found ${count}`);
-            }
-            writeFileSync(path, source.split(from).join(to));
-          }
-
-          replaceExact(
-            "src/routes/add-listing.tsx",
-            `} from "@/lib/content-safety";\nimport { runBoundedTasks } from "@/lib/bounded-task-queue";`,
-            `} from "@/lib/content-safety";\nimport {\n  calculateListingQuality,\n  listingQualityCheckLabel,\n} from "@/lib/listing-quality";\nimport { runBoundedTasks } from "@/lib/bounded-task-queue";`,
-          );
-
-          replaceExact(
-            "src/routes/add-listing.tsx",
-            `  const score = useMemo(\n    () =>\n      [\n        taxonomyNodes.length > 0 ? Boolean(selectedTaxonomyNode?.isLeaf) : !!categoryId,\n        title.trim().length >= 8,\n        description.trim().length >= 30,\n        !!price || priceType !== "fixed",\n        !!locationNodeId || (!!governorateId && !!district),\n      ].filter(Boolean).length * 20,\n    [\n      categoryId,\n      selectedTaxonomyNode?.isLeaf,\n      taxonomyNodes.length,\n      title,\n      description,\n      price,\n      priceType,\n      governorateId,\n      district,\n      locationNodeId,\n    ],\n  );`,
-            `  const quality = useMemo(\n    () =>\n      calculateListingQuality({\n        categoryReady:\n          taxonomyNodes.length > 0 ? Boolean(selectedTaxonomyNode?.isLeaf) : Boolean(categoryId),\n        title,\n        description,\n        imageCount: selectedImages.filter((entry) => entry.state !== "failed").length,\n        priceReady: priceType !== "fixed" || Number(normalizedPrice) > 0,\n        locationReady: Boolean(locationNodeId) || Boolean(governorateId && district),\n        categoryFieldKind,\n        categoryDetails,\n        condition,\n      }),\n    [\n      categoryDetails,\n      categoryFieldKind,\n      categoryId,\n      condition,\n      description,\n      district,\n      governorateId,\n      locationNodeId,\n      normalizedPrice,\n      priceType,\n      selectedImages,\n      selectedTaxonomyNode?.isLeaf,\n      taxonomyNodes.length,\n      title,\n    ],\n  );\n  const score = quality.score;`,
-          );
-
-          replaceExact(
-            "src/routes/add-listing.tsx",
-            `                checks={[\n                  { label: text("القسم محدد", "Category selected"), done: Boolean(categoryId) },\n                  { label: text("عنوان واضح", "Clear title"), done: title.trim().length >= 8 },\n                  {\n                    label: text("وصف كافٍ", "Useful description"),\n                    done: description.trim().length >= 30,\n                  },\n                  {\n                    label: text("السعر مكتمل", "Price completed"),\n                    done: Boolean(price) || priceType !== "fixed",\n                  },\n                  {\n                    label: text("الموقع مكتمل", "Location completed"),\n                    done: Boolean(locationNodeId) || Boolean(governorateId && district),\n                  },\n                ]}`,
-            `                checks={quality.checks.map((check) => ({\n                  label: listingQualityCheckLabel(check.key, text),\n                  done: check.done,\n                }))}`,
-          );
-          replaceExact("src/routes/add-listing.tsx", "score === 100", "quality.ready", 3);
-
-          replaceExact(
-            "src/routes/profile/listings.$id.tsx",
-            `} from "@/lib/content-safety";\nimport {`,
-            `} from "@/lib/content-safety";\nimport {\n  calculateListingQuality,\n  listingQualityCheckLabel,\n} from "@/lib/listing-quality";\nimport {`,
-          );
-
-          replaceExact(
-            "src/routes/profile/listings.$id.tsx",
-            `  const studioScore =\n    [\n      taxonomyNodes.length > 0 ? Boolean(selectedTaxonomyNode?.isLeaf) : Boolean(categoryId),\n      title.trim().length >= 8,\n      description.trim().length >= 30,\n      Boolean(price) || priceType !== "fixed",\n      Boolean(locationNodeId) || Boolean(governorateId && district),\n    ].filter(Boolean).length * 20;`,
-            `  const quality = useMemo(\n    () =>\n      calculateListingQuality({\n        categoryReady:\n          taxonomyNodes.length > 0 ? Boolean(selectedTaxonomyNode?.isLeaf) : Boolean(categoryId),\n        title,\n        description,\n        imageCount:\n          images.length + selectedImages.filter((entry) => entry.state !== "failed").length,\n        priceReady: priceType !== "fixed" || Number(price) > 0,\n        locationReady: Boolean(locationNodeId) || Boolean(governorateId && district),\n        categoryFieldKind,\n        categoryDetails,\n        condition,\n      }),\n    [\n      categoryDetails,\n      categoryFieldKind,\n      categoryId,\n      condition,\n      description,\n      district,\n      governorateId,\n      images.length,\n      locationNodeId,\n      price,\n      priceType,\n      selectedImages,\n      selectedTaxonomyNode?.isLeaf,\n      taxonomyNodes.length,\n      title,\n    ],\n  );\n  const studioScore = quality.score;`,
-          );
-
-          replaceExact(
-            "src/routes/profile/listings.$id.tsx",
-            `              checks={[\n                {\n                  label: text("القسم محدد", "Category selected"),\n                  done:\n                    taxonomyNodes.length > 0\n                      ? Boolean(selectedTaxonomyNode?.isLeaf)\n                      : Boolean(categoryId),\n                },\n                { label: text("عنوان واضح", "Clear title"), done: title.trim().length >= 8 },\n                {\n                  label: text("وصف كافٍ", "Useful description"),\n                  done: description.trim().length >= 30,\n                },\n                {\n                  label: text("السعر مكتمل", "Price completed"),\n                  done: Boolean(price) || priceType !== "fixed",\n                },\n                {\n                  label: text("الموقع مكتمل", "Location completed"),\n                  done: Boolean(locationNodeId) || Boolean(governorateId && district),\n                },\n              ]}`,
-            `              checks={quality.checks.map((check) => ({\n                label: listingQualityCheckLabel(check.key, text),\n                done: check.done,\n              }))}`,
-          );
-          replaceExact(
-            "src/routes/profile/listings.$id.tsx",
-            "ready={studioScore === 100}",
-            "ready={quality.ready}",
-          );
-
-          replaceExact(
-            "src/routes/chats.tsx",
-            `import { Ban, Flag, MessageCircle, Send } from "lucide-react";`,
-            `import { Ban, Flag, MessageCircle, Send, TriangleAlert } from "lucide-react";`,
-          );
-          replaceExact(
-            "src/routes/chats.tsx",
-            `import { resolveConversationTarget } from "@/lib/journey-target-resolution";`,
-            `import { resolveConversationTarget } from "@/lib/journey-target-resolution";\nimport { analyzeMessageSafety } from "@/lib/message-safety";`,
-          );
-          replaceExact(
-            "src/routes/chats.tsx",
-            `  const [notice, setNotice] = useState("");`,
-            `  const [notice, setNotice] = useState("");\n  const [confirmedRiskBody, setConfirmedRiskBody] = useState<string | null>(null);`,
-          );
-          replaceExact(
-            "src/routes/chats.tsx",
-            `  const filteredConversations = useMemo(() => {`,
-            `  const messageSafety = useMemo(() => analyzeMessageSafety(body), [body]);\n  const filteredConversations = useMemo(() => {`,
-          );
-          replaceExact(
-            "src/routes/chats.tsx",
-            `    const cleanBody = body.trim();\n    if (!cleanBody) return;\n    const requestId = readOrCreateMessageSendRequestId(profileId, conversationId, cleanBody);`,
-            `    const cleanBody = body.trim();\n    if (!cleanBody) return;\n    const safety = analyzeMessageSafety(cleanBody);\n    if (safety.requiresConfirmation && confirmedRiskBody !== cleanBody) {\n      setConfirmedRiskBody(cleanBody);\n      setNotice(\n        text(\n          "تتضمن الرسالة طلب دفع أو بيانات حساسة. راجع التحذير ثم اضغط إرسال مرة ثانية للتأكيد.",\n          "This message mentions payment or sensitive credentials. Review the warning, then press send again to confirm.",\n        ),\n      );\n      return;\n    }\n    const requestId = readOrCreateMessageSendRequestId(profileId, conversationId, cleanBody);`,
-          );
-          replaceExact(
-            "src/routes/chats.tsx",
-            `      setBody("");\n      setMessages((current) =>`,
-            `      setBody("");\n      setConfirmedRiskBody(null);\n      setMessages((current) =>`,
-          );
-          replaceExact(
-            "src/routes/chats.tsx",
-            `                            onClick={() => setBody(language === "ar" ? reply.ar : reply.en)}`,
-            `                            onClick={() => {\n                              setBody(language === "ar" ? reply.ar : reply.en);\n                              setConfirmedRiskBody(null);\n                            }}`,
-          );
-          replaceExact(
-            "src/routes/chats.tsx",
-            `                  <div className="grid gap-2 sm:grid-cols-[1fr_auto]">`,
-            `                  {messageSafety.level !== "safe" ? (\n                    <aside\n                      className={\`mb-2 flex items-start gap-2 rounded-xl border p-3 text-xs leading-5 \${\n                        messageSafety.level === "danger"\n                          ? "border-destructive/25 bg-destructive/8 text-destructive"\n                          : "border-warning/25 bg-warning/8 text-warning"\n                      }\`}\n                      role="status"\n                    >\n                      <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />\n                      <div>\n                        <strong>\n                          {messageSafety.level === "danger"\n                            ? text("راجع الرسالة قبل الإرسال", "Review before sending")\n                            : text("انتبه للرابط أو التواصل الخارجي", "Check links and off-platform contact")}\n                        </strong>\n                        <p>\n                          {messageSafety.level === "danger"\n                            ? text(\n                                "لا تشارك كلمة مرور أو رمز تحقق، ولا تحول مبلغاً قبل المعاينة والتحقق من الطرف الآخر.",\n                                "Never share passwords or verification codes, and do not transfer money before inspection and verification.",\n                              )\n                            : text(\n                                "افتح الروابط بحذر واحتفظ بتفاصيل الاتفاق داخل رواج قدر الإمكان.",\n                                "Open links carefully and keep agreement details inside RAWAJ whenever possible.",\n                              )}\n                        </p>\n                      </div>\n                    </aside>\n                  ) : null}\n                  <div className="grid gap-2 sm:grid-cols-[1fr_auto]">`,
-          );
-          replaceExact(
-            "src/routes/chats.tsx",
-            `                      onChange={(event) => setBody(event.target.value)}`,
-            `                      onChange={(event) => {\n                        setBody(event.target.value);\n                        setConfirmedRiskBody(null);\n                      }}`,
-          );
-          replaceExact(
-            "src/routes/chats.tsx",
-            `{sending ? text("جاري الإرسال", "Sending") : text("إرسال", "Send")}`,
-            `{sending\n                        ? text("جاري الإرسال", "Sending")\n                        : messageSafety.requiresConfirmation && confirmedRiskBody === body.trim()\n                          ? text("تأكيد وإرسال", "Confirm and send")\n                          : text("إرسال", "Send")}`,
-          );
-
-          const packagePath = "package.json";
-          const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
-          packageJson.scripts["test:listing-quality-chat-safety"] =
-            "node --test scripts/listing-quality-chat-safety-v1.test.mjs";
-          const comparisonCommand = "npm run test:listing-comparison";
-          const qualityCommand = "npm run test:listing-quality-chat-safety";
-          if (!packageJson.scripts.check.includes(qualityCommand)) {
-            packageJson.scripts.check = packageJson.scripts.check.replace(
-              comparisonCommand,
-              `${comparisonCommand} && ${qualityCommand}`,
-            );
-          }
-          writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
-
-          replaceExact(
-            ".github/workflows/quality-gate.yml",
-            `      - name: Listing Comparison V1 contract\n        run: npm run test:listing-comparison\n`,
-            `      - name: Listing Comparison V1 contract\n        run: npm run test:listing-comparison\n\n      - name: Listing Quality and Chat Safety V1 contract\n        run: npm run test:listing-quality-chat-safety\n`,
-          );
-          NODE
-
-      - name: Format and validate changed files
+      - name: Format changed files
         run: |
           npx prettier --write \
             src/lib/listing-quality.ts \
@@ -180,6 +54,9 @@ jobs:
             'src/routes/profile/listings.$id.tsx' \
             src/routes/chats.tsx \
             scripts/listing-quality-chat-safety-v1.test.mjs
+
+      - name: Validate focused contracts
+        run: |
           npm run test:listing-quality-chat-safety
           npm run typecheck -- --pretty false
 
