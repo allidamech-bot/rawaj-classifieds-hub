@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 import {
   canAccessAdmin,
@@ -148,11 +148,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [reason, setReason] = useState<string | null>(unavailableReason);
+  const sessionUserIdRef = useRef<string | null>(null);
+  const sessionRequestIdRef = useRef(0);
+  const profileRequestIdRef = useRef(0);
 
   useEffect(() => {
     const client = supabase;
 
     if (!client) {
+      sessionUserIdRef.current = null;
+      sessionRequestIdRef.current += 1;
+      profileRequestIdRef.current += 1;
       setStatus("authUnavailable");
       setSession(null);
       setProfile(null);
@@ -163,7 +169,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true;
 
     async function loadProfile(client: SupabaseClient, user: User | null) {
+      const requestId = ++profileRequestIdRef.current;
+      const userId = user?.id ?? null;
+
       if (!user) {
+        if (
+          !active ||
+          requestId !== profileRequestIdRef.current ||
+          sessionUserIdRef.current !== null
+        )
+          return;
         setProfile(null);
         setReason(null);
         return;
@@ -171,12 +186,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const nextProfile = await fetchProfile(client, user);
-        if (!active) return;
+        if (
+          !active ||
+          requestId !== profileRequestIdRef.current ||
+          sessionUserIdRef.current !== userId
+        )
+          return;
         setProfile(nextProfile);
         setReason(null);
         setStatus("signedIn");
       } catch (error) {
-        if (!active) return;
+        if (
+          !active ||
+          requestId !== profileRequestIdRef.current ||
+          sessionUserIdRef.current !== userId
+        )
+          return;
         setProfile(null);
         setStatus("authError");
         setReason(error instanceof Error ? error.message : "تعذّر تحميل بيانات الحساب.");
@@ -184,15 +209,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     async function loadSession(client: SupabaseClient) {
+      const requestId = ++sessionRequestIdRef.current;
       const { data, error } = await client.auth.getSession();
-      if (!active) return;
+      if (!active || requestId !== sessionRequestIdRef.current) return;
 
       if (error) {
         if (isRejectedRefreshTokenError(error)) {
           const { error: clearError } = await client.auth.signOut({ scope: "local" });
-          if (!active) return;
+          if (!active || requestId !== sessionRequestIdRef.current) return;
 
           if (!clearError) {
+            sessionUserIdRef.current = null;
+            profileRequestIdRef.current += 1;
             setSession(null);
             setProfile(null);
             setStatus("signedOut");
@@ -201,6 +229,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
+        sessionUserIdRef.current = null;
+        profileRequestIdRef.current += 1;
         setSession(null);
         setProfile(null);
         setStatus("authError");
@@ -208,14 +238,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      setSession(data.session);
-      setStatus(data.session ? "signedIn" : "signedOut");
-      await loadProfile(client, data.session?.user ?? null);
+      const nextSession = data.session;
+      sessionUserIdRef.current = nextSession?.user.id ?? null;
+      setSession(nextSession);
+      setStatus(nextSession ? "signedIn" : "signedOut");
+      await loadProfile(client, nextSession?.user ?? null);
     }
 
     void loadSession(client);
 
     const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => {
+      sessionRequestIdRef.current += 1;
+      sessionUserIdRef.current = nextSession?.user.id ?? null;
       setSession(nextSession);
       setStatus(nextSession ? "signedIn" : "signedOut");
       void loadProfile(client, nextSession?.user ?? null);
@@ -223,6 +257,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       active = false;
+      sessionRequestIdRef.current += 1;
+      profileRequestIdRef.current += 1;
       listener.subscription.unsubscribe();
     };
   }, []);
@@ -238,6 +274,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await client.auth.signOut();
       if (error) return { error: error.message };
 
+      sessionUserIdRef.current = null;
+      sessionRequestIdRef.current += 1;
+      profileRequestIdRef.current += 1;
       setSession(null);
       setProfile(null);
       setStatus("signedOut");
@@ -248,17 +287,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const refreshProfile = async () => {
       const client = supabase;
       const user = session?.user ?? null;
-      if (!client || !user) {
+      const userId = user?.id ?? null;
+      if (!client || !user || !userId || sessionUserIdRef.current !== userId) {
         return { error: unavailableReason ?? "يجب تسجيل الدخول لتحديث بيانات الحساب." };
       }
 
+      const requestId = ++profileRequestIdRef.current;
       try {
         const nextProfile = await fetchProfile(client, user);
+        if (
+          requestId !== profileRequestIdRef.current ||
+          sessionUserIdRef.current !== userId
+        ) {
+          return { error: null };
+        }
         setProfile(nextProfile);
         setReason(null);
         setStatus("signedIn");
         return { error: null };
       } catch (error) {
+        if (
+          requestId !== profileRequestIdRef.current ||
+          sessionUserIdRef.current !== userId
+        ) {
+          return { error: null };
+        }
         const message = error instanceof Error ? error.message : "تعذّر تحديث بيانات الحساب.";
         setReason(message);
         return { error: message };
