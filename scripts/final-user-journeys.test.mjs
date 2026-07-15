@@ -55,7 +55,8 @@ test("chat refresh failures preserve snapshots and sensitive writes are deduplic
     false,
   );
   assert.equal(chats.includes("setMessages([]);\n      setMessageError(result.error)"), false);
-  assert.match(chats, /const sendInFlightRef = useRef\(false\)/);
+  assert.match(chats, /const sendInFlightScopesRef = useRef<Set<string>>\(new Set\(\)\)/);
+  assert.match(chats, /sendInFlightScopesRef\.current\.has\(scopeKey\)/);
   assert.match(chats, /const reportInFlightRef = useRef<Set<string>>\(new Set\(\)\)/);
   assert.match(chats, /const blockInFlightRef = useRef\(false\)/);
   assert.match(chats, /finally \{/);
