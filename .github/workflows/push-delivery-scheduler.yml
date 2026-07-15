@@ -14,9 +14,11 @@ permissions:
 
 jobs:
   deliver:
+    if: github.event_name == 'workflow_dispatch' || vars.PUSH_SCHEDULER_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
+      PUSH_SCHEDULER_ENABLED: ${{ vars.PUSH_SCHEDULER_ENABLED }}
       PUSH_CRON_SECRET: ${{ secrets.PUSH_CRON_SECRET }}
       WORKER_URL: https://dpymopdckflnpmowhlyq.supabase.co/functions/v1/send-push-notifications
 
@@ -27,7 +29,11 @@ jobs:
         run: |
           if [ -z "$PUSH_CRON_SECRET" ]; then
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::PUSH_CRON_SECRET is not configured; the scheduled worker was skipped safely."
+            if [ "$PUSH_SCHEDULER_ENABLED" = "true" ]; then
+              echo "::error::PUSH_SCHEDULER_ENABLED is true but PUSH_CRON_SECRET is not configured."
+              exit 1
+            fi
+            echo "::notice::PUSH_CRON_SECRET is not configured; the manual worker run was skipped safely."
             {
               echo "## RAWAJ push scheduler"
               echo
@@ -41,7 +47,8 @@ jobs:
         if: steps.configuration.outputs.enabled == 'true'
         shell: bash
         run: |
-          http_code="$({
+          set +e
+          http_code="$(
             curl \
               --silent \
               --show-error \
@@ -57,8 +64,22 @@ jobs:
               --data '{"source":"github-actions-scheduler-v1"}' \
               --output worker-response.json \
               --write-out '%{http_code}' \
-              "$WORKER_URL"
-          } 2>worker-curl-error.log)"
+              "$WORKER_URL" \
+              2>worker-curl-error.log
+          )"
+          curl_status=$?
+          set -e
+
+          if [ "$curl_status" -ne 0 ]; then
+            echo "::error::Push worker network request failed with curl exit code ${curl_status}."
+            {
+              echo "## RAWAJ push scheduler"
+              echo
+              echo "Network request failed before a valid worker response was received."
+              echo "Curl exit code: ${curl_status}"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
 
           HTTP_CODE="$http_code" node <<'NODE'
           import { appendFileSync, readFileSync } from "node:fs";
@@ -68,10 +89,7 @@ jobs:
           try {
             payload = JSON.parse(readFileSync("worker-response.json", "utf8"));
           } catch {
-            const curlError = readFileSync("worker-curl-error.log", "utf8").trim();
-            throw new Error(
-              `Push worker returned an unreadable response (HTTP ${status}). ${curlError}`.trim(),
-            );
+            throw new Error(`Push worker returned an unreadable response (HTTP ${status}).`);
           }
 
           const flushed = payload?.flushed ?? null;
