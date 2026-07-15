@@ -57,10 +57,7 @@ function ActivityCenterPage() {
     setNotificationsLoading(true);
     setNotificationError(null);
     const result = await fetchMyNotificationsPage(currentProfileId, 0, 8);
-    if (
-      requestId !== notificationRequestIdRef.current ||
-      currentProfileId !== profileIdRef.current
-    )
+    if (requestId !== notificationRequestIdRef.current || currentProfileId !== profileIdRef.current)
       return;
 
     if (result.ok) {
@@ -80,10 +77,7 @@ function ActivityCenterPage() {
     setConversationsLoading(true);
     setConversationError(null);
     const result = await fetchMyConversations(currentProfileId);
-    if (
-      requestId !== conversationRequestIdRef.current ||
-      currentProfileId !== profileIdRef.current
-    )
+    if (requestId !== conversationRequestIdRef.current || currentProfileId !== profileIdRef.current)
       return;
 
     if (result.ok) {
