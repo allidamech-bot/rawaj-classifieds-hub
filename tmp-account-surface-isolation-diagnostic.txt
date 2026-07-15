@@ -1,11 +1,2515 @@
-file:///home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/scripts/tmp-apply-account-surface-isolation.mjs:13
-  if (source.indexOf(before, first + before.length) >= 0) throw new Error(`Duplicate ${label}`);
-                                                                ^
+Applied account-surface stale-result isolation patch.
+[90msrc/routes/favorites.tsx[39m 140ms (unchanged)
+[90msrc/routes/saved-searches.tsx[39m 131ms (unchanged)
+src/routes/profile/listings.tsx 123ms
+[90msrc/features/reviews/SellerReviewCard.tsx[39m 31ms (unchanged)
+src/routes/seller.$id.tsx 64ms
+src/routes/profile.tsx 93ms
+scripts/account-surface-action-isolation.test.mjs 24ms
+[90mpackage.json[39m 5ms (unchanged)
 
-Error: Duplicate local saved search key
-    at replaceExact (file:///home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/scripts/tmp-apply-account-surface-isolation.mjs:13:65)
-    at file:///home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/scripts/tmp-apply-account-surface-isolation.mjs:84:12
-    at patchFile (file:///home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/scripts/tmp-apply-account-surface-isolation.mjs:5:16)
-    at async file:///home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/scripts/tmp-apply-account-surface-isolation.mjs:46:1
+> test:activity-center
+> node --test scripts/account-activity-center.test.mjs scripts/saved-search-background-alerts.test.mjs scripts/unread-activity-live.test.mjs scripts/notification-account-action-isolation.test.mjs scripts/account-surface-action-isolation.test.mjs
 
-Node.js v22.23.1
+TAP version 13
+# Subtest: activity center combines real notification and conversation reads
+ok 1 - activity center combines real notification and conversation reads
+  ---
+  duration_ms: 1.174876
+  type: 'test'
+  ...
+# Subtest: activity center keeps tab state in the URL and conversation deep links
+ok 2 - activity center keeps tab state in the URL and conversation deep links
+  ---
+  duration_ms: 0.339892
+  type: 'test'
+  ...
+# Subtest: activity feeds recover independently without erasing successful snapshots
+ok 3 - activity feeds recover independently without erasing successful snapshots
+  ---
+  duration_ms: 0.597147
+  type: 'test'
+  ...
+# Subtest: activity requests reject stale account and route responses
+ok 4 - activity requests reject stale account and route responses
+  ---
+  duration_ms: 0.320042
+  type: 'test'
+  ...
+# Subtest: account hub exposes one activity shortcut with combined unread count
+ok 5 - account hub exposes one activity shortcut with combined unread count
+  ---
+  duration_ms: 0.222041
+  type: 'test'
+  ...
+# Subtest: legacy full message and notification routes remain reachable
+ok 6 - legacy full message and notification routes remain reachable
+  ---
+  duration_ms: 0.17848
+  type: 'test'
+  ...
+# Subtest: phase 36 to 40 writes use one shared in-flight deduplication contract
+ok 7 - phase 36 to 40 writes use one shared in-flight deduplication contract
+  ---
+  duration_ms: 0.244757
+  type: 'test'
+  ...
+# Subtest: favorites and saved searches route through guarded APIs
+ok 8 - favorites and saved searches route through guarded APIs
+  ---
+  duration_ms: 0.169301
+  type: 'test'
+  ...
+# Subtest: promotion, report, support, and moderation writes route through guarded APIs
+ok 9 - promotion, report, support, and moderation writes route through guarded APIs
+  ---
+  duration_ms: 0.522756
+  type: 'test'
+  ...
+# Subtest: favorites reject stale removals with account-scoped locks
+ok 10 - favorites reject stale removals with account-scoped locks
+  ---
+  duration_ms: 0.701649
+  type: 'test'
+  ...
+# Subtest: saved searches reset local state and isolate every account mutation
+ok 11 - saved searches reset local state and isolate every account mutation
+  ---
+  duration_ms: 0.193035
+  type: 'test'
+  ...
+# Subtest: owner listing results are scoped to the initiating account
+not ok 12 - owner listing results are scoped to the initiating account
+  ---
+  duration_ms: 2.596446
+  type: 'test'
+  location: '/home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/scripts/account-surface-action-isolation.test.mjs:41:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /profileId ?? "signed-out".*listing.id/. Input:
+    
+    'import { createFileRoute, Link } from "@tanstack/react-router";\n' +
+      'import { BadgePercent, BookmarkCheck, Eye, Pencil, Plus, Star, Trash2 } from "lucide-react";\n' +
+      'import { useCallback, useEffect, useMemo, useRef, useState } from "react";\n' +
+      'import { z } from "zod";\n' +
+      'import { PageHeader } from "@/components/PageHeader";\n' +
+      'import { PlaceholderArt } from "@/components/PlaceholderArt";\n' +
+      'import {\n' +
+      '  StorefrontIdentityHero,\n' +
+      '  StorefrontNotice,\n' +
+      '} from "@/features/storefront/StorefrontIdentityHero";\n' +
+      'import {\n' +
+      '  closeOwnerListing,\n' +
+      '  deleteOwnerListing,\n' +
+      '  fetchCurrentUserListings,\n' +
+      '  fetchPublicSellerProfile,\n' +
+      '  isOwnerDeletableStatus,\n' +
+      '  reactivateOwnerListing,\n' +
+      '  reduceOwnerListingPrice,\n' +
+      '  setOwnerListingExpiry,\n' +
+      '  setOwnerListingReserved,\n' +
+      '  type OwnerCloseListingStatus,\n' +
+      '} from "@/lib/classifieds-api";\n' +
+      'import type {\n' +
+      '  ClassifiedListing,\n' +
+      '  ClassifiedsError,\n' +
+      '  PublicSellerProfile,\n' +
+      '} from "@/lib/classifieds-types";\n' +
+      'import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";\n' +
+      'import { isClosedListingStatus, isReactivatableListingStatus } from "@/lib/listing-lifecycle-ui";\n' +
+      'import type { ListingExpiryOption } from "@/lib/api/listing-expiry";\n' +
+      'import { listingStatusLabel } from "@/lib/status-labels";\n' +
+      'import { useUiPreferences, type Language } from "@/lib/ui-preferences";\n' +
+      'import { useAuth } from "@/lib/use-auth";\n' +
+      '\n' +
+      'export const Route = createFileRoute("/profile/listings")({\n' +
+      '  validateSearch: z.object({\n' +
+      '    tab: z.enum(["approved", "pending", "needs_edit", "closed", "reviews"]).optional(),\n' +
+      '  }),\n' +
+      '  head: () => ({\n' +
+      '    meta: [{ title: "إعلاناتي | رواج" }, { name: "robots", content: "noindex, nofollow" }],\n' +
+      '  }),\n' +
+      '  component: MyListingsPage,\n' +
+      '});\n' +
+      '\n' +
+      'type StoreTab = "approved" | "pending" | "needs_edit" | "closed" | "reviews";\n' +
+      '\n' +
+      'function MyListingsPage() {\n' +
+      '  const search = Route.useSearch();\n' +
+      '  const auth = useAuth();\n' +
+      '  const { language, text } = useUiPreferences();\n' +
+      '  const [listings, setListings] = useState<ClassifiedListing[]>([]);\n' +
+      '  const [sellerProfile, setSellerProfile] = useState<PublicSellerProfile | null>(null);\n' +
+      '  const [listingsLoading, setListingsLoading] = useState(false);\n' +
+      '  const [listingsHasLoaded, setListingsHasLoaded] = useState(false);\n' +
+      '  const [listingsError, setListingsError] = useState<ClassifiedsError | null>(null);\n' +
+      '  const [sellerLoading, setSellerLoading] = useState(false);\n' +
+      '  const [sellerHasLoaded, setSellerHasLoaded] = useState(false);\n' +
+      '  const [sellerError, setSellerError] = useState<ClassifiedsError | null>(null);\n' +
+      '  const [activeTab, setActiveTab] = useState<StoreTab>(search.tab ?? "approved");\n' +
+      '  const listingsRequestIdRef = useRef(0);\n' +
+      '  const sellerRequestIdRef = useRef(0);\n' +
+      '  const profileId = auth.profile?.id ?? null;\n' +
+      '  const profileIdRef = useRef<string | null>(profileId);\n' +
+      '  profileIdRef.current = profileId;\n' +
+      '\n' +
+      '  useEffect(() => {\n' +
+      '    if (search.tab) setActiveTab(search.tab);\n' +
+      '  }, [search.tab]);\n' +
+      '\n' +
+      '  const loadListings = useCallback(async () => {\n' +
+      '    if (!profileId) return;\n' +
+      '\n' +
+      '    const currentProfileId = profileId;\n' +
+      '    const requestId = ++listingsRequestIdRef.current;\n' +
+      '    setListingsLoading(true);\n' +
+      '    setListingsError(null);\n' +
+      '    const result = await fetchCurrentUserListings(currentProfileId);\n' +
+      '    if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)\n' +
+      '      return;\n' +
+      '\n' +
+      '    if (result.ok) {\n' +
+      '      setListings(result.data);\n' +
+      '      setListingsHasLoaded(true);\n' +
+      '    } else {\n' +
+      '      setListingsError(result.error);\n' +
+      '    }\n' +
+      '    setListingsLoading(false);\n' +
+      '  }, [auth.profile?.id, profileId]);\n' +
+      '\n' +
+      '  const loadSellerProfile = useCallback(async () => {\n' +
+      '    if (!profileId) return;\n' +
+      '\n' +
+      '    const currentProfileId = profileId;\n' +
+      '    const requestId = ++sellerRequestIdRef.current;\n' +
+      '    setSellerLoading(true);\n' +
+      '    setSellerError(null);\n' +
+      '    const result = await fetchPublicSellerProfile(currentProfileId);\n' +
+      '    if (requestId !== sellerRequestIdRef.current || currentProfileId !== profileIdRef.current)\n' +
+      '      return;\n' +
+      '\n' +
+      '    if (result.ok) {\n' +
+      '      setSellerProfile(result.data);\n' +
+      '      setSellerHasLoaded(true);\n' +
+      '    } else {\n' +
+      '      setSellerError(result.error);\n' +
+      '    }\n' +
+      '    setSellerLoading(false);\n' +
+      '  }, [auth.profile?.id, profileId]);\n' +
+      '\n' +
+      '  useEffect(() => {\n' +
+      '    if (auth.status !== "signedIn" || !profileId) {\n' +
+      '      listingsRequestIdRef.current += 1;\n' +
+      '      sellerRequestIdRef.current += 1;\n' +
+      '      setListings([]);\n' +
+      '      setSellerProfile(null);\n' +
+      '      setListingsLoading(false);\n' +
+      '      setListingsHasLoaded(false);\n' +
+      '      setListingsError(null);\n' +
+      '      setSellerLoading(false);\n' +
+      '      setSellerHasLoaded(false);\n' +
+      '      setSellerError(null);\n' +
+      '      return;\n' +
+      '    }\n' +
+      '\n' +
+      '    listingsRequestIdRef.current += 1;\n' +
+      '    sellerRequestIdRef.current += 1;\n' +
+      '    setListings([]);\n' +
+      '    setSellerProfile(null);\n' +
+      '    setListingsLoading(false);\n' +
+      '    setListingsHasLoaded(false);\n' +
+      '    setListingsError(null);\n' +
+      '    setSellerLoading(false);\n' +
+      '    setSellerHasLoaded(false);\n' +
+      '    setSellerError(null);\n' +
+      '    void Promise.all([loadListings(), loadSellerProfile()]);\n' +
+      '\n' +
+      '    return () => {\n' +
+      '      listingsRequestIdRef.current += 1;\n' +
+      '      sellerRequestIdRef.current += 1;\n' +
+      '    };\n' +
+      '  }, [auth.status, loadListings, loadSellerProfile, profileId]);\n' +
+      '\n' +
+      '  function handleListingDeleted(actionProfileId: string | null, listingId: string) {\n' +
+      '    if (!actionProfileId || actionProfileId !== profileIdRef.current) return;\n' +
+      '    setListings((prev) => prev.filter((listing) => listing.id !== listingId));\n' +
+      '  }\n' +
+      '\n' +
+      '  function handleListingChanged(actionProfileId: string | null, nextListing: ClassifiedListing) {\n' +
+      '    if (!actionProfileId || actionProfileId !== profileIdRef.current) return;\n' +
+      '    setListings((prev) =>\n' +
+      '      prev.map((listing) => (listing.id === nextListing.id ? nextListing : listing)),\n' +
+      '    );\n' +
+      '  }\n' +
+      '\n' +
+      '  const grouped = useMemo(\n' +
+      '    () => ({\n' +
+      '      approved: listings.filter((listing) => listing.status === "approved"),\n' +
+      '      pending: listings.filter((listing) => listing.status === "pending_review"),\n' +
+      '      needs_edit: listings.filter(\n' +
+      '        (listing) => listing.status === "draft" || listing.status === "rejected",\n' +
+      '      ),\n' +
+      '      closed: listings.filter((listing) => isClosedListingStatus(listing.status)),\n' +
+      '    }),\n' +
+      '    [listings],\n' +
+      '  );\n' +
+      '  const latestDraft = useMemo(\n' +
+      '    () =>\n' +
+      '      listings\n' +
+      '        .filter((listing) => listing.status === "draft")\n' +
+      '        .sort((first, second) => second.updatedAt.localeCompare(first.updatedAt))[0] ?? null,\n' +
+      '    [listings],\n' +
+      '  );\n' +
+      '\n' +
+      '  if (auth.status !== "signedIn") {\n' +
+      '    return (\n' +
+      '      <>\n' +
+      '        <PageHeader title={text("إعلاناتي", "My listings")} to="/profile" backMode="history" />\n' +
+      '        <main className="container-wide mobile-page-bottom pt-4">\n' +
+      '          <Panel\n' +
+      '            title={text("تسجيل الدخول مطلوب", "Login required")}\n' +
+      '            body={text(\n' +
+      '              "سجل الدخول لإدارة الإعلانات المرتبطة بحسابك وعرض متجرك العام بصورة منفصلة.",\n' +
+      '              "Log in to manage listings linked to your account and open your public store separately.",\n' +
+      '            )}\n' +
+      '          />\n' +
+      '        </main>\n' +
+      '      </>\n' +
+      '    );\n' +
+      '  }\n' +
+      '\n' +
+      '  const visibleListings = grouped[activeTab === "reviews" ? "approved" : activeTab];\n' +
+      '  const displayName =\n' +
+      '    auth.profile?.businessName ||\n' +
+      '    auth.profile?.displayName ||\n' +
+      '    auth.profile?.email ||\n' +
+      '    text("متجري", "My store");\n' +
+      '  const ratingCount = sellerProfile?.ratingSummary.count ?? 0;\n' +
+      '  const ratingAverage = sellerProfile?.ratingSummary.average ?? null;\n' +
+      '\n' +
+      '  return (\n' +
+      '    <>\n' +
+      '      <PageHeader title={text("إعلاناتي", "My listings")} to="/profile" backMode="history" />\n' +
+      '      <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner container-wide mobile-page-bottom space-y-5 pb-8 pt-3 sm:pt-5">\n' +
+      '        <StorefrontIdentityHero\n' +
+      '          mode="owner"\n' +
+      '          sellerId={profileId ?? ""}\n' +
+      '          displayName={displayName}\n' +
+      '          secondaryName={auth.profile?.businessName ? auth.profile?.displayName : null}\n' +
+      '          avatarUrl={auth.profile?.avatarUrl}\n' +
+      '          coverUrl={auth.profile?.coverUrl}\n' +
+      '          bio={auth.profile?.bio}\n' +
+      '          location={auth.profile?.cityArea || auth.profile?.governorate}\n' +
+      '          verified={sellerProfile?.verified ?? false}\n' +
+      '          joinedAt={sellerProfile?.joinedAt}\n' +
+      '          ratingAverage={ratingAverage}\n' +
+      '          ratingCount={ratingCount}\n' +
+      '          approvedCount={grouped.approved.length}\n' +
+      '          pendingCount={grouped.pending.length}\n' +
+      '          needsEditCount={grouped.needs_edit.length}\n' +
+      '          closedCount={grouped.closed.length}\n' +
+      '        />\n' +
+      '\n' +
+      '        {latestDraft ? (\n' +
+      '          <StorefrontNotice\n' +
+      '            tone="draft"\n' +
+      '            title={text("لديك مسودة محفوظة", "You have a saved draft")}\n' +
+      '            description={`${latestDraft.title} · ${text("آخر حفظ", "Last saved")} ${formatSavedAt(\n' +
+      '              latestDraft.updatedAt,\n' +
+      '              language,\n' +
+      '            )}`}\n' +
+      '            action={\n' +
+      '              <>\n' +
+      '                <button type="button" onClick={() => setActiveTab("needs_edit")}>\n' +
+      '                  {text("عرض المسودات", "Show drafts")}\n' +
+      '                </button>\n' +
+      '                <Link to="/profile/listings/$id" params={{ id: latestDraft.id }}>\n' +
+      '                  {text("متابعة المسودة", "Resume draft")}\n' +
+      '                </Link>\n' +
+      '              </>\n' +
+      '            }\n' +
+      '          />\n' +
+      '        ) : null}\n' +
+      '\n' +
+      '        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">\n' +
+      '          <div className="rawaj-storefront-owner-tabs">\n' +
+      '            <TabButton\n' +
+      '              active={activeTab === "approved"}\n' +
+      '              label={text("الإعلانات المعتمدة", "Approved listings")}\n' +
+      '              count={grouped.approved.length}\n' +
+      '              onClick={() => setActiveTab("approved")}\n' +
+      '            />\n' +
+      '            <TabButton\n' +
+      '              active={activeTab === "pending"}\n' +
+      '              label={text("قيد المراجعة", "Pending review")}\n' +
+      '              count={grouped.pending.length}\n' +
+      '              onClick={() => setActiveTab("pending")}\n' +
+      '            />\n' +
+      '            <TabButton\n' +
+      '              active={activeTab === "needs_edit"}\n' +
+      '              label={text("تحتاج تعديل / مرفوضة", "Needs edit / rejected")}\n' +
+      '              count={grouped.needs_edit.length}\n' +
+      '              onClick={() => setActiveTab("needs_edit")}\n' +
+      '            />\n' +
+      '            <TabButton\n' +
+      '              active={activeTab === "closed"}\n' +
+      '             '... 25238 more characters
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    import { createFileRoute, Link } from "@tanstack/react-router";
+    import { BadgePercent, BookmarkCheck, Eye, Pencil, Plus, Star, Trash2 } from "lucide-react";
+    import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+    import { z } from "zod";
+    import { PageHeader } from "@/components/PageHeader";
+    import { PlaceholderArt } from "@/components/PlaceholderArt";
+    import {
+      StorefrontIdentityHero,
+      StorefrontNotice,
+    } from "@/features/storefront/StorefrontIdentityHero";
+    import {
+      closeOwnerListing,
+      deleteOwnerListing,
+      fetchCurrentUserListings,
+      fetchPublicSellerProfile,
+      isOwnerDeletableStatus,
+      reactivateOwnerListing,
+      reduceOwnerListingPrice,
+      setOwnerListingExpiry,
+      setOwnerListingReserved,
+      type OwnerCloseListingStatus,
+    } from "@/lib/classifieds-api";
+    import type {
+      ClassifiedListing,
+      ClassifiedsError,
+      PublicSellerProfile,
+    } from "@/lib/classifieds-types";
+    import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+    import { isClosedListingStatus, isReactivatableListingStatus } from "@/lib/listing-lifecycle-ui";
+    import type { ListingExpiryOption } from "@/lib/api/listing-expiry";
+    import { listingStatusLabel } from "@/lib/status-labels";
+    import { useUiPreferences, type Language } from "@/lib/ui-preferences";
+    import { useAuth } from "@/lib/use-auth";
+    
+    export const Route = createFileRoute("/profile/listings")({
+      validateSearch: z.object({
+        tab: z.enum(["approved", "pending", "needs_edit", "closed", "reviews"]).optional(),
+      }),
+      head: () => ({
+        meta: [{ title: "إعلاناتي | رواج" }, { name: "robots", content: "noindex, nofollow" }],
+      }),
+      component: MyListingsPage,
+    });
+    
+    type StoreTab = "approved" | "pending" | "needs_edit" | "closed" | "reviews";
+    
+    function MyListingsPage() {
+      const search = Route.useSearch();
+      const auth = useAuth();
+      const { language, text } = useUiPreferences();
+      const [listings, setListings] = useState<ClassifiedListing[]>([]);
+      const [sellerProfile, setSellerProfile] = useState<PublicSellerProfile | null>(null);
+      const [listingsLoading, setListingsLoading] = useState(false);
+      const [listingsHasLoaded, setListingsHasLoaded] = useState(false);
+      const [listingsError, setListingsError] = useState<ClassifiedsError | null>(null);
+      const [sellerLoading, setSellerLoading] = useState(false);
+      const [sellerHasLoaded, setSellerHasLoaded] = useState(false);
+      const [sellerError, setSellerError] = useState<ClassifiedsError | null>(null);
+      const [activeTab, setActiveTab] = useState<StoreTab>(search.tab ?? "approved");
+      const listingsRequestIdRef = useRef(0);
+      const sellerRequestIdRef = useRef(0);
+      const profileId = auth.profile?.id ?? null;
+      const profileIdRef = useRef<string | null>(profileId);
+      profileIdRef.current = profileId;
+    
+      useEffect(() => {
+        if (search.tab) setActiveTab(search.tab);
+      }, [search.tab]);
+    
+      const loadListings = useCallback(async () => {
+        if (!profileId) return;
+    
+        const currentProfileId = profileId;
+        const requestId = ++listingsRequestIdRef.current;
+        setListingsLoading(true);
+        setListingsError(null);
+        const result = await fetchCurrentUserListings(currentProfileId);
+        if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+          return;
+    
+        if (result.ok) {
+          setListings(result.data);
+          setListingsHasLoaded(true);
+        } else {
+          setListingsError(result.error);
+        }
+        setListingsLoading(false);
+      }, [auth.profile?.id, profileId]);
+    
+      const loadSellerProfile = useCallback(async () => {
+        if (!profileId) return;
+    
+        const currentProfileId = profileId;
+        const requestId = ++sellerRequestIdRef.current;
+        setSellerLoading(true);
+        setSellerError(null);
+        const result = await fetchPublicSellerProfile(currentProfileId);
+        if (requestId !== sellerRequestIdRef.current || currentProfileId !== profileIdRef.current)
+          return;
+    
+        if (result.ok) {
+          setSellerProfile(result.data);
+          setSellerHasLoaded(true);
+        } else {
+          setSellerError(result.error);
+        }
+        setSellerLoading(false);
+      }, [auth.profile?.id, profileId]);
+    
+      useEffect(() => {
+        if (auth.status !== "signedIn" || !profileId) {
+          listingsRequestIdRef.current += 1;
+          sellerRequestIdRef.current += 1;
+          setListings([]);
+          setSellerProfile(null);
+          setListingsLoading(false);
+          setListingsHasLoaded(false);
+          setListingsError(null);
+          setSellerLoading(false);
+          setSellerHasLoaded(false);
+          setSellerError(null);
+          return;
+        }
+    
+        listingsRequestIdRef.current += 1;
+        sellerRequestIdRef.current += 1;
+        setListings([]);
+        setSellerProfile(null);
+        setListingsLoading(false);
+        setListingsHasLoaded(false);
+        setListingsError(null);
+        setSellerLoading(false);
+        setSellerHasLoaded(false);
+        setSellerError(null);
+        void Promise.all([loadListings(), loadSellerProfile()]);
+    
+        return () => {
+          listingsRequestIdRef.current += 1;
+          sellerRequestIdRef.current += 1;
+        };
+      }, [auth.status, loadListings, loadSellerProfile, profileId]);
+    
+      function handleListingDeleted(actionProfileId: string | null, listingId: string) {
+        if (!actionProfileId || actionProfileId !== profileIdRef.current) return;
+        setListings((prev) => prev.filter((listing) => listing.id !== listingId));
+      }
+    
+      function handleListingChanged(actionProfileId: string | null, nextListing: ClassifiedListing) {
+        if (!actionProfileId || actionProfileId !== profileIdRef.current) return;
+        setListings((prev) =>
+          prev.map((listing) => (listing.id === nextListing.id ? nextListing : listing)),
+        );
+      }
+    
+      const grouped = useMemo(
+        () => ({
+          approved: listings.filter((listing) => listing.status === "approved"),
+          pending: listings.filter((listing) => listing.status === "pending_review"),
+          needs_edit: listings.filter(
+            (listing) => listing.status === "draft" || listing.status === "rejected",
+          ),
+          closed: listings.filter((listing) => isClosedListingStatus(listing.status)),
+        }),
+        [listings],
+      );
+      const latestDraft = useMemo(
+        () =>
+          listings
+            .filter((listing) => listing.status === "draft")
+            .sort((first, second) => second.updatedAt.localeCompare(first.updatedAt))[0] ?? null,
+        [listings],
+      );
+    
+      if (auth.status !== "signedIn") {
+        return (
+          <>
+            <PageHeader title={text("إعلاناتي", "My listings")} to="/profile" backMode="history" />
+            <main className="container-wide mobile-page-bottom pt-4">
+              <Panel
+                title={text("تسجيل الدخول مطلوب", "Login required")}
+                body={text(
+                  "سجل الدخول لإدارة الإعلانات المرتبطة بحسابك وعرض متجرك العام بصورة منفصلة.",
+                  "Log in to manage listings linked to your account and open your public store separately.",
+                )}
+              />
+            </main>
+          </>
+        );
+      }
+    
+      const visibleListings = grouped[activeTab === "reviews" ? "approved" : activeTab];
+      const displayName =
+        auth.profile?.businessName ||
+        auth.profile?.displayName ||
+        auth.profile?.email ||
+        text("متجري", "My store");
+      const ratingCount = sellerProfile?.ratingSummary.count ?? 0;
+      const ratingAverage = sellerProfile?.ratingSummary.average ?? null;
+    
+      return (
+        <>
+          <PageHeader title={text("إعلاناتي", "My listings")} to="/profile" backMode="history" />
+          <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner container-wide mobile-page-bottom space-y-5 pb-8 pt-3 sm:pt-5">
+            <StorefrontIdentityHero
+              mode="owner"
+              sellerId={profileId ?? ""}
+              displayName={displayName}
+              secondaryName={auth.profile?.businessName ? auth.profile?.displayName : null}
+              avatarUrl={auth.profile?.avatarUrl}
+              coverUrl={auth.profile?.coverUrl}
+              bio={auth.profile?.bio}
+              location={auth.profile?.cityArea || auth.profile?.governorate}
+              verified={sellerProfile?.verified ?? false}
+              joinedAt={sellerProfile?.joinedAt}
+              ratingAverage={ratingAverage}
+              ratingCount={ratingCount}
+              approvedCount={grouped.approved.length}
+              pendingCount={grouped.pending.length}
+              needsEditCount={grouped.needs_edit.length}
+              closedCount={grouped.closed.length}
+            />
+    
+            {latestDraft ? (
+              <StorefrontNotice
+                tone="draft"
+                title={text("لديك مسودة محفوظة", "You have a saved draft")}
+                description={`${latestDraft.title} · ${text("آخر حفظ", "Last saved")} ${formatSavedAt(
+                  latestDraft.updatedAt,
+                  language,
+                )}`}
+                action={
+                  <>
+                    <button type="button" onClick={() => setActiveTab("needs_edit")}>
+                      {text("عرض المسودات", "Show drafts")}
+                    </button>
+                    <Link to="/profile/listings/$id" params={{ id: latestDraft.id }}>
+                      {text("متابعة المسودة", "Resume draft")}
+                    </Link>
+                  </>
+                }
+              />
+            ) : null}
+    
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+              <div className="rawaj-storefront-owner-tabs">
+                <TabButton
+                  active={activeTab === "approved"}
+                  label={text("الإعلانات المعتمدة", "Approved listings")}
+                  count={grouped.approved.length}
+                  onClick={() => setActiveTab("approved")}
+                />
+                <TabButton
+                  active={activeTab === "pending"}
+                  label={text("قيد المراجعة", "Pending review")}
+                  count={grouped.pending.length}
+                  onClick={() => setActiveTab("pending")}
+                />
+                <TabButton
+                  active={activeTab === "needs_edit"}
+                  label={text("تحتاج تعديل / مرفوضة", "Needs edit / rejected")}
+                  count={grouped.needs_edit.length}
+                  onClick={() => setActiveTab("needs_edit")}
+                />
+                <TabButton
+                  active={activeTab === "closed"}
+                  label={text("مغلقة / منتهية", "Closed / expired")}
+                  count={grouped.closed.length}
+                  onClick={() => setActiveTab("closed")}
+                />
+                <TabButton
+                  active={activeTab === "reviews"}
+                  label={text("التقييمات", "Reviews")}
+                  count={ratingCount}
+                  onClick={() => setActiveTab("reviews")}
+                />
+              </div>
+              <Link to="/add-listing" className="rawaj-button-primary min-h-11 rounded-[1rem] px-4">
+                <Plus className="h-4 w-4" />
+                {text("إضافة إعلان", "Post listing")}
+              </Link>
+            </div>
+    
+            {sellerError && activeTab !== "reviews" ? (
+              <StorefrontNotice
+                tone="neutral"
+                title={text("تعذر تحديث بيانات المتجر", "Could not refresh store details")}
+                description={sellerError.message}
+                action={
+                  <button
+                    type="button"
+                    disabled={sellerLoading}
+                    onClick={() => void loadSellerProfile()}
+                  >
+                    {text("إعادة المحاولة", "Try again")}
+                  </button>
+                }
+              />
+            ) : null}
+    
+            {listingsLoading && !listingsHasLoaded ? (
+              <Panel title={text("جاري تحميل واجهة المتجر", "Loading store")} />
+            ) : listingsError && !listingsHasLoaded ? (
+              <Panel
+                title={text("تعذر تحميل إعلاناتك", "Could not load your listings")}
+                body={listingsError.message}
+                actionLabel={text("إعادة المحاولة", "Try again")}
+                onAction={() => void loadListings()}
+                actionDisabled={listingsLoading}
+              />
+            ) : activeTab === "reviews" ? (
+              sellerLoading && !sellerHasLoaded ? (
+                <Panel title={text("جاري تحميل التقييمات", "Loading reviews")} />
+              ) : sellerError && !sellerHasLoaded ? (
+                <Panel
+                  title={text("تعذر تحميل التقييمات", "Could not load reviews")}
+                  body={sellerError.message}
+                  actionLabel={text("إعادة المحاولة", "Try again")}
+                  onAction={() => void loadSellerProfile()}
+                  actionDisabled={sellerLoading}
+                />
+              ) : (
+                <ReviewsSection sellerProfile={sellerProfile} />
+              )
+            ) : (
+              <>
+                {listingsError ? (
+                  <StorefrontNotice
+                    tone="neutral"
+                    title={text("تعذر تحديث إعلاناتك", "Could not refresh your listings")}
+                    description={listingsError.message}
+                    action={
+                      <button
+                        type="button"
+                        disabled={listingsLoading}
+                        onClick={() => void loadListings()}
+                      >
+                        {text("إعادة المحاولة", "Try again")}
+                      </button>
+                    }
+                  />
+                ) : null}
+                {visibleListings.length === 0 ? (
+                  <Panel
+                    title={text("لا توجد عناصر في هذا القسم", "Nothing in this section")}
+                    body={text(
+                      "ستظهر الإعلانات هنا حسب حالتها الحقيقية من قاعدة البيانات.",
+                      "Listings appear here according to their current lifecycle status.",
+                    )}
+                  />
+                ) : (
+                  <div className="rawaj-storefront-owner-grid">
+                    {visibleListings.map((listing) => (
+                      <StoreListingCard
+                        key={`${profileId ?? "signed-out"}:${listing.id}`}
+                        listing={listing}
+                        language={language}
+                        userId={profileId}
+                        onDeleted={handleListingDeleted}
+                        onChanged={handleListingChanged}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </main>
+        </>
+      );
+    }
+    
+    function TabButton({
+      active,
+      label,
+      count,
+      onClick,
+    }: {
+      active: boolean;
+      label: string;
+      count: number;
+      onClick: () => void;
+    }) {
+      return (
+        <button type="button" onClick={onClick} data-active={active}>
+          {label} <span className="opacity-75">({count})</span>
+        </button>
+      );
+    }
+    
+    function StoreListingCard({
+      listing,
+      language,
+      userId,
+      onDeleted,
+      onChanged,
+    }: {
+      listing: ClassifiedListing;
+      language: Language;
+      userId: string | null;
+      onDeleted: (profileId: string | null, id: string) => void;
+      onChanged: (profileId: string | null, listing: ClassifiedListing) => void;
+    }) {
+      const { text } = useUiPreferences();
+      const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+      const [deleteError, setDeleteError] = useState("");
+      const [deleting, setDeleting] = useState(false);
+      const [lifecycleBusy, setLifecycleBusy] = useState(false);
+      const [lifecycleError, setLifecycleError] = useState("");
+      const [priceDropBusy, setPriceDropBusy] = useState(false);
+      const [priceDropError, setPriceDropError] = useState("");
+      const [reservationBusy, setReservationBusy] = useState(false);
+      const [reservationError, setReservationError] = useState("");
+      const [priceDropDraft, setPriceDropDraft] = useState(
+        listing.price && listing.price > 0 ? String(listing.price) : "",
+      );
+      const [expiryOption, setExpiryOption] = useState<ListingExpiryOption>(
+        listing.expiryDays ?? "never",
+      );
+    
+      useEffect(() => {
+        setExpiryOption(listing.expiryDays ?? "never");
+      }, [listing.expiryDays]);
+    
+      useEffect(() => {
+        setPriceDropDraft(listing.price && listing.price > 0 ? String(listing.price) : "");
+      }, [listing.price]);
+    
+      const canEdit = listing.status === "draft" || listing.status === "rejected";
+      const canDelete = isOwnerDeletableStatus(listing.status);
+      const canClose = listing.status === "approved";
+      const canManageReservation = listing.status === "approved";
+      const canReducePrice =
+        listing.status === "approved" &&
+        listing.price !== null &&
+        listing.price > 0 &&
+        (listing.priceType === "fixed" || listing.priceType === "negotiable");
+      const canReactivate = isReactivatableListingStatus(listing.status);
+    
+      async function handleConfirmDelete() {
+        setDeleteError("");
+        setDeleting(true);
+        const result = await deleteOwnerListing(userId, listing.id);
+        setDeleting(false);
+        if (!result.ok) {
+          setDeleteError(result.error.message);
+          return;
+        }
+        setShowDeleteConfirm(false);
+        onDeleted(userId, listing.id);
+      }
+    
+      async function handleClose(targetStatus: OwnerCloseListingStatus) {
+        if (lifecycleBusy) return;
+        setLifecycleError("");
+        setLifecycleBusy(true);
+        const result = await closeOwnerListing(userId, listing.id, targetStatus);
+        setLifecycleBusy(false);
+        if (!result.ok) {
+          setLifecycleError(result.error.message);
+          return;
+        }
+        onChanged(userId, result.data);
+      }
+    
+      async function handleReservationToggle() {
+        if (reservationBusy || !canManageReservation) return;
+        setReservationError("");
+        setReservationBusy(true);
+        const result = await setOwnerListingReserved(userId, listing.id, !listing.reservedAt);
+        setReservationBusy(false);
+        if (!result.ok) {
+          setReservationError(result.error.message);
+          return;
+        }
+        onChanged(userId, result.data);
+      }
+    
+      async function handlePriceDrop() {
+        if (priceDropBusy || !canReducePrice) return;
+        const nextPrice = Number(priceDropDraft);
+        setPriceDropError("");
+        if (!Number.isFinite(nextPrice) || nextPrice <= 0) {
+          setPriceDropError(text("أدخل سعراً جديداً صالحاً.", "Enter a valid new price."));
+          return;
+        }
+        setPriceDropBusy(true);
+        const result = await reduceOwnerListingPrice(userId, listing.id, nextPrice);
+        setPriceDropBusy(false);
+        if (!result.ok) {
+          setPriceDropError(result.error.message);
+          return;
+        }
+        onChanged(userId, result.data);
+      }
+    
+      async function handleReactivate() {
+        if (lifecycleBusy) return;
+        setLifecycleError("");
+        setLifecycleBusy(true);
+        const result = await reactivateOwnerListing(userId, listing.id);
+        setLifecycleBusy(false);
+        if (!result.ok) {
+          setLifecycleError(result.error.message);
+          return;
+        }
+        onChanged(userId, result.data);
+      }
+    
+      async function handleExpiryUpdate() {
+        if (lifecycleBusy || listing.status !== "approved") return;
+        setLifecycleError("");
+        setLifecycleBusy(true);
+        const result = await setOwnerListingExpiry(userId, listing.id, expiryOption);
+        setLifecycleBusy(false);
+        if (!result.ok) {
+          setLifecycleError(result.error.message);
+          return;
+        }
+        onChanged(userId, result.data);
+      }
+    
+      const lockedMessage = isClosedListingStatus(listing.status)
+        ? text(
+            "هذا الإعلان مغلق ولا يعدل من هنا. يمكنك إعادة تفعيله للحالات المدعومة.",
+            "This listing is closed and cannot be edited here. Supported states can be reactivated.",
+          )
+        : listing.status === "pending_review"
+          ? text(
+              "هذا الإعلان قيد المراجعة ولا يعدل حتى قرار الإدارة.",
+              "This listing is under review and cannot be edited until the admin decision.",
+            )
+          : text(
+              "الإعلان المعتمد ظاهر للزوار ولا يعدل من هنا.",
+              "Approved listings are public and are not edited here.",
+            );
+    
+      return (
+        <>
+          <article className="rawaj-owner-listing-card rawaj-product-card group">
+            <div className="rawaj-product-media">
+              <span className="rawaj-status-ribbon" data-status={listing.status}>
+                {listingStatusLabel(listing.status, language)}
+              </span>
+              {listing.primaryImageUrl ? (
+                <img
+                  src={listing.primaryImageUrl}
+                  alt={listing.title}
+                  loading="lazy"
+                  decoding="async"
+                  className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-[1.025]"
+                />
+              ) : (
+                <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
+              )}
+            </div>
+            <div className="space-y-2 p-4">
+              <div className="flex items-start justify-between gap-2">
+                <h2 className="line-clamp-2 text-sm font-bold leading-5 text-primary">
+                  {listing.title}
+                </h2>
+              </div>
+              {listing.status === "draft" && (
+                <p className="rounded-lg bg-gold/10 p-2 text-[11px] font-semibold text-primary">
+                  {text("مسودة محفوظة", "Saved draft")} · {text("آخر حفظ", "Last saved")}{" "}
+                  {formatSavedAt(listing.updatedAt, language)}
+                </p>
+              )}
+              {listing.reservedAt ? (
+                <p className="rounded-lg bg-warning/10 p-2 text-[11px] font-semibold text-foreground">
+                  {text("هذا الإعلان محجوز حالياً.", "This listing is currently reserved.")}
+                </p>
+              ) : null}
+              {listing.status === "approved" && (
+                <p className="rounded-lg bg-emerald-trust/10 p-2 text-[11px] font-semibold text-foreground">
+                  {listing.renewedAt
+                    ? `${text("آخر تأكيد للتوفر", "Availability last confirmed")}: ${formatSavedAt(listing.renewedAt, language)}`
+                    : text(
+                        "لم يتم تأكيد استمرار التوفر بعد.",
+                        "Availability has not been confirmed yet.",
+                      )}
+                </p>
+              )}
+              {listing.expiresAt && (
+                <p
+                  className={`rounded-lg p-2 text-[11px] font-semibold ${
+                    listing.status === "expired"
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-warning/10 text-foreground"
+                  }`}
+                >
+                  {listing.status === "expired"
+                    ? text("انتهى الإعلان", "Listing expired")
+                    : text("موعد انتهاء الإعلان", "Listing expiry")}
+                  : {formatSavedAt(listing.expiresAt, language)}
+                </p>
+              )}
+              <div className="text-lg font-bold text-foreground">
+                {formatPriceLocalized(
+                  listing.price ?? 0,
+                  listing.priceType,
+                  language,
+                  listing.currency,
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)} ·{" "}
+                {governorateName(
+                  listing.governorateId,
+                  listing.governorateNameAr ?? undefined,
+                  language,
+                )}
+              </p>
+              {listing.rejectionReason && (
+                <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
+                  {listing.rejectionReason}
+                </p>
+              )}
+              {lifecycleError && (
+                <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
+                  {lifecycleError}
+                </p>
+              )}
+              {priceDropError && (
+                <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
+                  {priceDropError}
+                </p>
+              )}
+              {reservationError && (
+                <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
+                  {reservationError}
+                </p>
+              )}
+              {canReducePrice ? (
+                <div className="rounded-xl bg-brand-orange/5 p-2.5 hairline">
+                  <p className="flex items-center gap-1.5 text-[10px] font-bold text-primary">
+                    <BadgePercent className="h-3.5 w-3.5 text-brand-orange" />
+                    {text("تخفيض سعر حقيقي", "Record a real price drop")}
+                  </p>
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      inputMode="decimal"
+                      value={priceDropDraft}
+                      onChange={(event) => setPriceDropDraft(event.target.value)}
+                      disabled={priceDropBusy}
+                      aria-label={text("السعر الجديد", "New price")}
+                      className="min-h-11 min-w-0 flex-1 rounded-xl bg-card px-3 py-2 text-xs font-bold outline-none hairline disabled:opacity-60"
+                    />
+                    <button
+                      type="button"
+                      disabled={priceDropBusy}
+                      onClick={() => void handlePriceDrop()}
+                      className="min-h-11 rounded-xl bg-brand-orange px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                    >
+                      {priceDropBusy ? text("جارٍ الحفظ", "Saving") : text("خفض السعر", "Drop price")}
+                    </button>
+                  </div>
+                  <p className="mt-1.5 text-[10px] leading-4 text-muted-foreground">
+                    {text(
+                      "يجب أن يقل السعر 1٪ على الأقل. سيظهر في العروض إذا بقي الإعلان عاماً والسعر الحالي يطابق التخفيض.",
+                      "Price must drop by at least 1%. It appears in Offers only while the listing stays public and the current price matches the reduction.",
+                    )}
+                  </p>
+                </div>
+              ) : null}
+              <div className="flex flex-wrap gap-2">
+                {listing.status === "approved" && (
+                  <Link
+                    to="/listings/$id"
+                    params={{ id: listing.id }}
+                    className="inline-flex items-center gap-1 rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold transition hover:bg-secondary"
+                  >
+                    <Eye className="h-3 w-3" />
+                    {text("عرض", "View")}
+                  </Link>
+                )}
+                {canEdit ? (
+                  <Link
+                    to="/profile/listings/$id"
+                    params={{ id: listing.id }}
+                    className="inline-flex items-center gap-1 rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold transition hover:bg-secondary"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    {listing.status === "draft"
+                      ? text("متابعة المسودة", "Resume draft")
+                      : text("تعديل", "Edit")}
+                  </Link>
+                ) : (
+                  <span className="inline-flex rounded-lg bg-muted-surface px-2 py-1 text-[10px] text-muted-foreground">
+                    {lockedMessage}
+                  </span>
+                )}
+                {canManageReservation ? (
+                  <button
+                    type="button"
+                    disabled={reservationBusy}
+                    onClick={() => void handleReservationToggle()}
+                    className={`inline-flex min-h-11 items-center gap-1.5 rounded-xl px-3 py-2 text-[10px] font-bold disabled:opacity-60 ${
+                      listing.reservedAt ? "bg-warning/12 text-warning" : "bg-primary/8 text-primary"
+                    }`}
+                  >
+                    <BookmarkCheck className="h-3.5 w-3.5" />
+                    {reservationBusy
+                      ? text("جارٍ التحديث", "Updating")
+                      : listing.reservedAt
+                        ? text("إلغاء الحجز", "Clear reservation")
+                        : text("وضع محجوز", "Mark reserved")}
+                  </button>
+                ) : null}
+                {canClose && (
+                  <>
+                    <select
+                      value={String(expiryOption)}
+                      disabled={lifecycleBusy}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setExpiryOption(value === "never" ? "never" : (Number(value) as 30 | 60 | 90));
+                      }}
+                      aria-label={text("مدة صلاحية الإعلان", "Listing expiry duration")}
+                      className="rounded-lg border border-border/70 bg-card px-2 py-1 text-[10px] font-bold text-foreground disabled:opacity-60"
+                    >
+                      <option value="30">{text("30 يوم", "30 days")}</option>
+                      <option value="60">{text("60 يوم", "60 days")}</option>
+                      <option value="90">{text("90 يوم", "90 days")}</option>
+                      <option value="never">{text("بدون انتهاء", "No automatic expiry")}</option>
+                    </select>
+                    <button
+                      type="button"
+                      disabled={lifecycleBusy}
+                      onClick={() => void handleExpiryUpdate()}
+                      className="rounded-lg bg-emerald-trust/10 px-2 py-1 text-[10px] font-bold text-emerald-trust disabled:opacity-60"
+                    >
+                      {lifecycleBusy
+                        ? text("جارٍ التحديث", "Updating")
+                        : text("تطبيق / تجديد المدة", "Apply / renew duration")}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={lifecycleBusy}
+                      onClick={() => void handleClose("sold")}
+                      className="rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold disabled:opacity-60"
+                    >
+                      {text("تم البيع", "Mark sold")}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={lifecycleBusy}
+                      onClick={() => void handleClose("rented")}
+                      className="rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold disabled:opacity-60"
+                    >
+                      {text("تم التأجير", "Mark rented")}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={lifecycleBusy}
+                      onClick={() => void handleClose("unavailable")}
+                      className="rounded-lg bg-warning/10 px-2 py-1 text-[10px] font-bold text-warning disabled:opacity-60"
+                    >
+                      {text("غير متاح", "Unavailable")}
+                    </button>
+                  </>
+                )}
+                {canReactivate && (
+                  <button
+                    type="button"
+                    disabled={lifecycleBusy}
+                    onClick={() => void handleReactivate()}
+                    className="rounded-lg bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground disabled:opacity-60"
+                  >
+                    {lifecycleBusy
+                      ? text("جارٍ الإرسال", "Submitting")
+                      : text("إعادة التفعيل للمراجعة", "Reactivate for review")}
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeleteError("");
+                      setShowDeleteConfirm(true);
+                    }}
+                    className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-2 py-1 text-[10px] font-bold text-destructive transition hover:bg-destructive/20"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    {listing.status === "draft"
+                      ? text("حذف المسودة", "Delete draft")
+                      : text("حذف", "Delete")}
+                  </button>
+                )}
+              </div>
+            </div>
+          </article>
+    
+          {showDeleteConfirm && (
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="delete-dialog-title"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-primary/45 p-4 backdrop-blur-sm"
+            >
+              <div
+                className="rawaj-color-card rawaj-world-orange w-full max-w-sm rounded-[1.5rem] p-6"
+                dir="rtl"
+              >
+                <h3 id="delete-dialog-title" className="text-base font-extrabold text-foreground">
+                  {listing.status === "draft" ? "حذف المسودة؟" : "حذف الإعلان؟"}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {listing.status === "draft"
+                    ? "سيتم حذف هذه المسودة نهائيًا. لا يمكن التراجع عن هذا الإجراء."
+                    : "سيتم حذف هذا الإعلان نهائيًا. لا يمكن التراجع عن هذا الإجراء."}
+                </p>
+                {deleteError && (
+                  <p className="mt-3 rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">
+                    {deleteError}
+                  </p>
+                )}
+                <div className="mt-5 flex gap-3">
+                  <button
+                    type="button"
+                    disabled={deleting}
+                    onClick={() => void handleConfirmDelete()}
+                    className="flex-1 rounded-xl bg-destructive px-4 py-2.5 text-xs font-bold text-white disabled:opacity-60"
+                  >
+                    {deleting
+                      ? "جارٍ الحذف…"
+                      : listing.status === "draft"
+                        ? "حذف المسودة"
+                        : "حذف الإعلان"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={deleting}
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setDeleteError("");
+                    }}
+                    className="flex-1 rounded-xl bg-muted-surface px-4 py-2.5 text-xs font-bold hairline disabled:opacity-60"
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+    
+    function ReviewsSection({ sellerProfile }: { sellerProfile: PublicSellerProfile | null }) {
+      const { language, text } = useUiPreferences();
+      const reviews = sellerProfile?.reviews ?? [];
+      if (reviews.length === 0) {
+        return (
+          <Panel
+            title={text("لا توجد تقييمات معتمدة بعد", "No approved reviews yet")}
+            body={text(
+              "تظهر هنا التقييمات المعتمدة فقط بعد المراجعة.",
+              "Only approved reviews appear here after moderation.",
+            )}
+          />
+        );
+      }
+    
+      return (
+        <section className="rawaj-storefront-owner-reviews grid gap-3">
+          {reviews.map((review) => (
+            <article key={review.id} className="rounded-2xl bg-card p-4 hairline">
+              <div className="flex items-center gap-1 text-gold">
+                {Array.from({ length: review.rating }).map((_, index) => (
+                  <Star key={index} className="h-4 w-4 fill-current" />
+                ))}
+              </div>
+              <p className="mt-2 whitespace-pre-line text-sm leading-7">{review.comment}</p>
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                {new Date(review.createdAt).toLocaleDateString(language === "ar" ? "ar-SY" : "en-US")}
+              </p>
+            </article>
+          ))}
+        </section>
+      );
+    }
+    
+    function Panel({
+      title,
+      body,
+      actionLabel,
+      onAction,
+      actionDisabled,
+    }: {
+      title: string;
+      body?: string;
+      actionLabel?: string;
+      onAction?: () => void;
+      actionDisabled?: boolean;
+    }) {
+      return (
+        <section className="rounded-2xl bg-card p-8 text-center hairline">
+          <p className="text-sm font-bold">{title}</p>
+          {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
+          {actionLabel && onAction ? (
+            <button
+              type="button"
+              onClick={onAction}
+              disabled={actionDisabled}
+              className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
+            >
+              {actionLabel}
+            </button>
+          ) : null}
+        </section>
+      );
+    }
+    
+    function formatSavedAt(value: string, language: Language) {
+      if (!value) return "";
+      return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(new Date(value));
+    }
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/scripts/account-surface-action-isolation.test.mjs:43:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: seller review actions and forms reject replacement accounts
+ok 13 - seller review actions and forms reject replacement accounts
+  ---
+  duration_ms: 0.203502
+  type: 'test'
+  ...
+# Subtest: profile mutations and refreshes remain bound to one account
+ok 14 - profile mutations and refreshes remain bound to one account
+  ---
+  duration_ms: 0.188667
+  type: 'test'
+  ...
+# Subtest: offers stay public and outside account isolation state
+ok 15 - offers stay public and outside account isolation state
+  ---
+  duration_ms: 0.182625
+  type: 'test'
+  ...
+# Subtest: account surface isolation remains in the permanent activity contract
+ok 16 - account surface isolation remains in the permanent activity contract
+  ---
+  duration_ms: 0.960963
+  type: 'test'
+  ...
+# Subtest: notification reads compare async results with the live account
+ok 17 - notification reads compare async results with the live account
+  ---
+  duration_ms: 1.220081
+  type: 'test'
+  ...
+# Subtest: notification writes use synchronous account-scoped locks
+ok 18 - notification writes use synchronous account-scoped locks
+  ---
+  duration_ms: 0.311907
+  type: 'test'
+  ...
+# Subtest: notification action results and finalizers cannot mutate a replacement account
+ok 19 - notification action results and finalizers cannot mutate a replacement account
+  ---
+  duration_ms: 0.379762
+  type: 'test'
+  ...
+# Subtest: notification targets are rechecked before messages or navigation
+ok 20 - notification targets are rechecked before messages or navigation
+  ---
+  duration_ms: 0.43245
+  type: 'test'
+  ...
+# Subtest: notification preferences reject stale loads and writes
+ok 21 - notification preferences reject stale loads and writes
+  ---
+  duration_ms: 0.224945
+  type: 'test'
+  ...
+# Subtest: preference snapshots reset immediately when the account changes
+ok 22 - preference snapshots reset immediately when the account changes
+  ---
+  duration_ms: 0.211655
+  type: 'test'
+  ...
+# Subtest: preference and push finalizers affect only the initiating account
+ok 23 - preference and push finalizers affect only the initiating account
+  ---
+  duration_ms: 0.253283
+  type: 'test'
+  ...
+# Subtest: notification account isolation remains in the permanent activity contract
+ok 24 - notification account isolation remains in the permanent activity contract
+  ---
+  duration_ms: 0.447601
+  type: 'test'
+  ...
+# Subtest: saved-search alerts flush automatically for signed-in users
+ok 25 - saved-search alerts flush automatically for signed-in users
+  ---
+  duration_ms: 0.740084
+  type: 'test'
+  ...
+# Subtest: background flushes are delayed, online-aware, and throttled
+ok 26 - background flushes are delayed, online-aware, and throttled
+  ---
+  duration_ms: 0.196903
+  type: 'test'
+  ...
+# Subtest: background flushes deduplicate work and update unread activity only after success
+ok 27 - background flushes deduplicate work and update unread activity only after success
+  ---
+  duration_ms: 0.132774
+  type: 'test'
+  ...
+# Subtest: saved-search route preserves loaded searches when scanning or refresh fails
+ok 28 - saved-search route preserves loaded searches when scanning or refresh fails
+  ---
+  duration_ms: 0.520148
+  type: 'test'
+  ...
+# Subtest: saved-search route rejects stale account and route responses
+not ok 29 - saved-search route rejects stale account and route responses
+  ---
+  duration_ms: 1.735511
+  type: 'test'
+  location: '/home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/scripts/saved-search-background-alerts.test.mjs:76:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /currentProfileId !== auth\.profile\?\.id/. Input:
+    
+    'import { createFileRoute, Link } from "@tanstack/react-router";\n' +
+      'import { Bell, Bookmark, Search, Trash2 } from "lucide-react";\n' +
+      'import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";\n' +
+      'import { PageHeader } from "@/components/PageHeader";\n' +
+      'import {\n' +
+      '  createSavedSearch,\n' +
+      '  deleteSavedSearch,\n' +
+      '  fetchSavedSearches,\n' +
+      '  scanDueSavedSearchAlerts,\n' +
+      '  updateSavedSearchAlertFrequency,\n' +
+      '} from "@/lib/classifieds-api";\n' +
+      'import type {\n' +
+      '  ClassifiedsError,\n' +
+      '  ListingFilters,\n' +
+      '  SavedSearch,\n' +
+      '  SavedSearchAlertFrequency,\n' +
+      '} from "@/lib/classifieds-types";\n' +
+      'import { uiLabel } from "@/lib/i18n";\n' +
+      'import { useUiPreferences, type Language } from "@/lib/ui-preferences";\n' +
+      'import { useAuth } from "@/lib/use-auth";\n' +
+      '\n' +
+      'export const Route = createFileRoute("/saved-searches")({\n' +
+      '  validateSearch: (search: Record<string, unknown>) => ({\n' +
+      '    q: typeof search.q === "string" ? search.q : "",\n' +
+      '    category: typeof search.category === "string" ? search.category : "",\n' +
+      '    subcategory: typeof search.subcategory === "string" ? search.subcategory : "",\n' +
+      '    gov: typeof search.gov === "string" ? search.gov : "",\n' +
+      '    district: typeof search.district === "string" ? search.district : "",\n' +
+      '    price_min: typeof search.price_min === "string" ? search.price_min : "",\n' +
+      '    price_max: typeof search.price_max === "string" ? search.price_max : "",\n' +
+      '    car_make: typeof search.car_make === "string" ? search.car_make : "",\n' +
+      '    car_model: typeof search.car_model === "string" ? search.car_model : "",\n' +
+      '    fuel: typeof search.fuel === "string" ? search.fuel : "",\n' +
+      '    transmission: typeof search.transmission === "string" ? search.transmission : "",\n' +
+      '    property_purpose: typeof search.property_purpose === "string" ? search.property_purpose : "",\n' +
+      '    property_type: typeof search.property_type === "string" ? search.property_type : "",\n' +
+      '    rooms: typeof search.rooms === "string" ? search.rooms : "",\n' +
+      '    rental_duration: typeof search.rental_duration === "string" ? search.rental_duration : "",\n' +
+      '    electronics_brand: typeof search.electronics_brand === "string" ? search.electronics_brand : "",\n' +
+      '    detail_condition: typeof search.detail_condition === "string" ? search.detail_condition : "",\n' +
+      '    employment_type: typeof search.employment_type === "string" ? search.employment_type : "",\n' +
+      '    salary_type: typeof search.salary_type === "string" ? search.salary_type : "",\n' +
+      '    sort:\n' +
+      '      search.sort === "cheapest" || search.sort === "expensive" || search.sort === "featured"\n' +
+      '        ? search.sort\n' +
+      '        : "latest",\n' +
+      '  }),\n' +
+      '  head: () => ({\n' +
+      '    meta: [\n' +
+      '      { title: "عمليات البحث المحفوظة | رَوَاج" },\n' +
+      '      { name: "robots", content: "noindex, nofollow" },\n' +
+      '    ],\n' +
+      '  }),\n' +
+      '  component: SavedSearchesPage,\n' +
+      '});\n' +
+      '\n' +
+      'type LocalSearch = {\n' +
+      '  id: string;\n' +
+      '  nameAr: string;\n' +
+      '  filters: Record<string, string>;\n' +
+      '  createdAt: string;\n' +
+      '  frequency: "daily" | "weekly" | "off";\n' +
+      '};\n' +
+      '\n' +
+      'function SavedSearchesPage() {\n' +
+      '  const auth = useAuth();\n' +
+      '  const { language, text } = useUiPreferences();\n' +
+      '  const search = Route.useSearch();\n' +
+      '  const [items, setItems] = useState<SavedSearch[]>([]);\n' +
+      '  const [localItems, setLocalItems] = useState<LocalSearch[]>([]);\n' +
+      '  const [loading, setLoading] = useState(false);\n' +
+      '  const [hasLoaded, setHasLoaded] = useState(false);\n' +
+      '  const [loadError, setLoadError] = useState<ClassifiedsError | null>(null);\n' +
+      '  const [name, setName] = useState("");\n' +
+      '  const [keyword, setKeyword] = useState("");\n' +
+      '  const [frequency, setFrequency] = useState<LocalSearch["frequency"]>("weekly");\n' +
+      '  const [message, setMessage] = useState("");\n' +
+      '  const [savingFrequencyId, setSavingFrequencyId] = useState<string | null>(null);\n' +
+      '  const [scanMessage, setScanMessage] = useState("");\n' +
+      '  const loadRequestIdRef = useRef(0);\n' +
+      '  const loadedProfileIdRef = useRef<string | null>(null);\n' +
+      '  const profileId = auth.profile?.id ?? null;\n' +
+      '  const profileIdRef = useRef<string | null>(profileId);\n' +
+      '  const creatingSearchProfilesRef = useRef<Set<string>>(new Set());\n' +
+      '  const frequencyScopesRef = useRef<Set<string>>(new Set());\n' +
+      '  const deletingSearchScopesRef = useRef<Set<string>>(new Set());\n' +
+      '  profileIdRef.current = profileId;\n' +
+      '\n' +
+      '  const loadSavedSearches = useCallback(async () => {\n' +
+      '    if (!profileId) return;\n' +
+      '\n' +
+      '    const currentProfileId = profileId;\n' +
+      '    const requestId = ++loadRequestIdRef.current;\n' +
+      '    setLoading(true);\n' +
+      '    setLoadError(null);\n' +
+      '    const result = await fetchSavedSearches(currentProfileId);\n' +
+      '    if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;\n' +
+      '\n' +
+      '    if (!result.ok) {\n' +
+      '      setLoadError(result.error);\n' +
+      '      setLoading(false);\n' +
+      '      return;\n' +
+      '    }\n' +
+      '\n' +
+      '    setItems(result.data);\n' +
+      '    setHasLoaded(true);\n' +
+      '    setLoading(false);\n' +
+      '\n' +
+      '    const scanResult = await scanDueSavedSearchAlerts(currentProfileId);\n' +
+      '    if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;\n' +
+      '    if (!scanResult.ok) {\n' +
+      '      setScanMessage(\n' +
+      '        text(\n' +
+      '          "تم تحميل عمليات البحث، لكن تعذر فحص النتائج الجديدة الآن.",\n' +
+      '          "Saved searches loaded, but new matches could not be scanned right now.",\n' +
+      '        ),\n' +
+      '      );\n' +
+      '      return;\n' +
+      '    }\n' +
+      '\n' +
+      '    if (scanResult.data.createdNotifications > 0) {\n' +
+      '      setScanMessage(\n' +
+      '        text(\n' +
+      '          `تم العثور على ${scanResult.data.createdNotifications} نتيجة جديدة وإضافتها إلى إشعاراتك.`,\n' +
+      '          `${scanResult.data.createdNotifications} new matches were added to your notifications.`,\n' +
+      '        ),\n' +
+      '      );\n' +
+      '    }\n' +
+      '\n' +
+      '    const refreshed = await fetchSavedSearches(currentProfileId);\n' +
+      '    if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;\n' +
+      '    if (refreshed.ok) {\n' +
+      '      setItems(refreshed.data);\n' +
+      '    } else {\n' +
+      '      setScanMessage(\n' +
+      '        text(\n' +
+      '          "تم فحص التنبيهات، لكن تعذر تحديث تفاصيل عمليات البحث فورًا.",\n' +
+      '          "Alerts were scanned, but saved-search details could not refresh immediately.",\n' +
+      '        ),\n' +
+      '      );\n' +
+      '    }\n' +
+      '  }, [auth.profile?.id, profileId, text]);\n' +
+      '\n' +
+      '  useEffect(() => {\n' +
+      '    if (auth.status !== "signedIn" || !profileId) {\n' +
+      '      loadRequestIdRef.current += 1;\n' +
+      '      loadedProfileIdRef.current = null;\n' +
+      '      setItems([]);\n' +
+      '      setLocalItems([]);\n' +
+      '      setLoading(false);\n' +
+      '      setHasLoaded(false);\n' +
+      '      setLoadError(null);\n' +
+      '      setName("");\n' +
+      '      setKeyword("");\n' +
+      '      setFrequency("weekly");\n' +
+      '      setSavingFrequencyId(null);\n' +
+      '      setMessage("");\n' +
+      '      setScanMessage("");\n' +
+      '      return;\n' +
+      '    }\n' +
+      '\n' +
+      '    const profileChanged = loadedProfileIdRef.current !== profileId;\n' +
+      '    loadedProfileIdRef.current = profileId;\n' +
+      '    loadRequestIdRef.current += 1;\n' +
+      '    setItems([]);\n' +
+      '    setLoading(false);\n' +
+      '    setHasLoaded(false);\n' +
+      '    setLoadError(null);\n' +
+      '    setMessage("");\n' +
+      '    setScanMessage("");\n' +
+      '    if (profileChanged) {\n' +
+      '      setLocalItems([]);\n' +
+      '      setName("");\n' +
+      '      setKeyword("");\n' +
+      '      setFrequency("weekly");\n' +
+      '      setSavingFrequencyId(null);\n' +
+      '    }\n' +
+      '    void loadSavedSearches();\n' +
+      '\n' +
+      '    return () => {\n' +
+      '      loadRequestIdRef.current += 1;\n' +
+      '    };\n' +
+      '  }, [auth.status, loadSavedSearches, profileId]);\n' +
+      '\n' +
+      '  function buildListingFilters(): ListingFilters {\n' +
+      '    const filters: ListingFilters = {};\n' +
+      '\n' +
+      '    const keywordValue = keyword.trim();\n' +
+      '    if (keywordValue) {\n' +
+      '      filters.query = keywordValue;\n' +
+      '    } else if (search.q) {\n' +
+      '      filters.query = search.q;\n' +
+      '    }\n' +
+      '\n' +
+      '    if (search.category) filters.categoryId = search.category;\n' +
+      '    if (search.subcategory) filters.subcategoryId = search.subcategory;\n' +
+      '    if (search.gov) filters.governorateId = search.gov;\n' +
+      '    if (search.district) filters.districtAr = search.district;\n' +
+      '\n' +
+      '    if (search.price_min !== "") {\n' +
+      '      const parsed = Number(search.price_min);\n' +
+      '      if (!Number.isNaN(parsed)) filters.priceMin = parsed;\n' +
+      '    }\n' +
+      '    if (search.price_max !== "") {\n' +
+      '      const parsed = Number(search.price_max);\n' +
+      '      if (!Number.isNaN(parsed)) filters.priceMax = parsed;\n' +
+      '    }\n' +
+      '\n' +
+      '    if (search.car_make) filters.carMake = search.car_make;\n' +
+      '    if (search.car_model) filters.carModel = search.car_model;\n' +
+      '    if (search.fuel) filters.fuelType = search.fuel;\n' +
+      '    if (search.transmission) filters.transmission = search.transmission;\n' +
+      '    if (search.property_purpose) filters.propertyPurpose = search.property_purpose;\n' +
+      '    if (search.property_type) filters.propertyType = search.property_type;\n' +
+      '    if (search.rooms !== "") {\n' +
+      '      const parsed = Number(search.rooms);\n' +
+      '      if (!Number.isNaN(parsed)) filters.rooms = parsed;\n' +
+      '    }\n' +
+      '    if (search.rental_duration) filters.rentalDuration = search.rental_duration;\n' +
+      '    if (search.electronics_brand) filters.electronicsBrand = search.electronics_brand;\n' +
+      '    if (search.detail_condition) filters.detailCondition = search.detail_condition;\n' +
+      '    if (search.employment_type) filters.employmentType = search.employment_type;\n' +
+      '    if (search.salary_type) filters.salaryType = search.salary_type;\n' +
+      '\n' +
+      '    if (search.sort !== "latest")\n' +
+      '      filters.sort = search.sort as "cheapest" | "expensive" | "featured";\n' +
+      '\n' +
+      '    return filters;\n' +
+      '  }\n' +
+      '\n' +
+      '  async function addSavedSearch(event: FormEvent) {\n' +
+      '    event.preventDefault();\n' +
+      '    const currentProfileId = profileId;\n' +
+      '    if (!currentProfileId || creatingSearchProfilesRef.current.has(currentProfileId)) return;\n' +
+      '\n' +
+      '    const label = name.trim() || text("بحث محفوظ", "Saved search");\n' +
+      '    const filters = buildListingFilters();\n' +
+      '    const currentFrequency = frequency;\n' +
+      '    creatingSearchProfilesRef.current.add(currentProfileId);\n' +
+      '    setMessage("");\n' +
+      '    try {\n' +
+      '      const result = await createSavedSearch(currentProfileId, {\n' +
+      '        nameAr: label,\n' +
+      '        filters,\n' +
+      '        alertFrequency: currentFrequency,\n' +
+      '      });\n' +
+      '      if (currentProfileId !== profileIdRef.current) return;\n' +
+      '\n' +
+      '      if (result.ok) {\n' +
+      '        setItems((current) => [result.data, ...current]);\n' +
+      '        setHasLoaded(true);\n' +
+      '        setMessage(text("تم حفظ البحث في حسابك.", "Search saved to your account."));\n' +
+      '      } else {\n' +
+      '        setLocalItems((current) => [\n' +
+      '          {\n' +
+      '            id: `local-${currentProfileId}-${Date.now()}`,\n' +
+      '            nameAr: label,\n' +
+      '            filters: toLocalFilters(filters),\n' +
+      '            createdAt: new Date().toISOString(),\n' +
+      '            frequency: currentFrequency,\n' +
+      '          },\n' +
+      '          ...curr'... 19666 more characters
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    import { createFileRoute, Link } from "@tanstack/react-router";
+    import { Bell, Bookmark, Search, Trash2 } from "lucide-react";
+    import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
+    import { PageHeader } from "@/components/PageHeader";
+    import {
+      createSavedSearch,
+      deleteSavedSearch,
+      fetchSavedSearches,
+      scanDueSavedSearchAlerts,
+      updateSavedSearchAlertFrequency,
+    } from "@/lib/classifieds-api";
+    import type {
+      ClassifiedsError,
+      ListingFilters,
+      SavedSearch,
+      SavedSearchAlertFrequency,
+    } from "@/lib/classifieds-types";
+    import { uiLabel } from "@/lib/i18n";
+    import { useUiPreferences, type Language } from "@/lib/ui-preferences";
+    import { useAuth } from "@/lib/use-auth";
+    
+    export const Route = createFileRoute("/saved-searches")({
+      validateSearch: (search: Record<string, unknown>) => ({
+        q: typeof search.q === "string" ? search.q : "",
+        category: typeof search.category === "string" ? search.category : "",
+        subcategory: typeof search.subcategory === "string" ? search.subcategory : "",
+        gov: typeof search.gov === "string" ? search.gov : "",
+        district: typeof search.district === "string" ? search.district : "",
+        price_min: typeof search.price_min === "string" ? search.price_min : "",
+        price_max: typeof search.price_max === "string" ? search.price_max : "",
+        car_make: typeof search.car_make === "string" ? search.car_make : "",
+        car_model: typeof search.car_model === "string" ? search.car_model : "",
+        fuel: typeof search.fuel === "string" ? search.fuel : "",
+        transmission: typeof search.transmission === "string" ? search.transmission : "",
+        property_purpose: typeof search.property_purpose === "string" ? search.property_purpose : "",
+        property_type: typeof search.property_type === "string" ? search.property_type : "",
+        rooms: typeof search.rooms === "string" ? search.rooms : "",
+        rental_duration: typeof search.rental_duration === "string" ? search.rental_duration : "",
+        electronics_brand: typeof search.electronics_brand === "string" ? search.electronics_brand : "",
+        detail_condition: typeof search.detail_condition === "string" ? search.detail_condition : "",
+        employment_type: typeof search.employment_type === "string" ? search.employment_type : "",
+        salary_type: typeof search.salary_type === "string" ? search.salary_type : "",
+        sort:
+          search.sort === "cheapest" || search.sort === "expensive" || search.sort === "featured"
+            ? search.sort
+            : "latest",
+      }),
+      head: () => ({
+        meta: [
+          { title: "عمليات البحث المحفوظة | رَوَاج" },
+          { name: "robots", content: "noindex, nofollow" },
+        ],
+      }),
+      component: SavedSearchesPage,
+    });
+    
+    type LocalSearch = {
+      id: string;
+      nameAr: string;
+      filters: Record<string, string>;
+      createdAt: string;
+      frequency: "daily" | "weekly" | "off";
+    };
+    
+    function SavedSearchesPage() {
+      const auth = useAuth();
+      const { language, text } = useUiPreferences();
+      const search = Route.useSearch();
+      const [items, setItems] = useState<SavedSearch[]>([]);
+      const [localItems, setLocalItems] = useState<LocalSearch[]>([]);
+      const [loading, setLoading] = useState(false);
+      const [hasLoaded, setHasLoaded] = useState(false);
+      const [loadError, setLoadError] = useState<ClassifiedsError | null>(null);
+      const [name, setName] = useState("");
+      const [keyword, setKeyword] = useState("");
+      const [frequency, setFrequency] = useState<LocalSearch["frequency"]>("weekly");
+      const [message, setMessage] = useState("");
+      const [savingFrequencyId, setSavingFrequencyId] = useState<string | null>(null);
+      const [scanMessage, setScanMessage] = useState("");
+      const loadRequestIdRef = useRef(0);
+      const loadedProfileIdRef = useRef<string | null>(null);
+      const profileId = auth.profile?.id ?? null;
+      const profileIdRef = useRef<string | null>(profileId);
+      const creatingSearchProfilesRef = useRef<Set<string>>(new Set());
+      const frequencyScopesRef = useRef<Set<string>>(new Set());
+      const deletingSearchScopesRef = useRef<Set<string>>(new Set());
+      profileIdRef.current = profileId;
+    
+      const loadSavedSearches = useCallback(async () => {
+        if (!profileId) return;
+    
+        const currentProfileId = profileId;
+        const requestId = ++loadRequestIdRef.current;
+        setLoading(true);
+        setLoadError(null);
+        const result = await fetchSavedSearches(currentProfileId);
+        if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+    
+        if (!result.ok) {
+          setLoadError(result.error);
+          setLoading(false);
+          return;
+        }
+    
+        setItems(result.data);
+        setHasLoaded(true);
+        setLoading(false);
+    
+        const scanResult = await scanDueSavedSearchAlerts(currentProfileId);
+        if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+        if (!scanResult.ok) {
+          setScanMessage(
+            text(
+              "تم تحميل عمليات البحث، لكن تعذر فحص النتائج الجديدة الآن.",
+              "Saved searches loaded, but new matches could not be scanned right now.",
+            ),
+          );
+          return;
+        }
+    
+        if (scanResult.data.createdNotifications > 0) {
+          setScanMessage(
+            text(
+              `تم العثور على ${scanResult.data.createdNotifications} نتيجة جديدة وإضافتها إلى إشعاراتك.`,
+              `${scanResult.data.createdNotifications} new matches were added to your notifications.`,
+            ),
+          );
+        }
+    
+        const refreshed = await fetchSavedSearches(currentProfileId);
+        if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+        if (refreshed.ok) {
+          setItems(refreshed.data);
+        } else {
+          setScanMessage(
+            text(
+              "تم فحص التنبيهات، لكن تعذر تحديث تفاصيل عمليات البحث فورًا.",
+              "Alerts were scanned, but saved-search details could not refresh immediately.",
+            ),
+          );
+        }
+      }, [auth.profile?.id, profileId, text]);
+    
+      useEffect(() => {
+        if (auth.status !== "signedIn" || !profileId) {
+          loadRequestIdRef.current += 1;
+          loadedProfileIdRef.current = null;
+          setItems([]);
+          setLocalItems([]);
+          setLoading(false);
+          setHasLoaded(false);
+          setLoadError(null);
+          setName("");
+          setKeyword("");
+          setFrequency("weekly");
+          setSavingFrequencyId(null);
+          setMessage("");
+          setScanMessage("");
+          return;
+        }
+    
+        const profileChanged = loadedProfileIdRef.current !== profileId;
+        loadedProfileIdRef.current = profileId;
+        loadRequestIdRef.current += 1;
+        setItems([]);
+        setLoading(false);
+        setHasLoaded(false);
+        setLoadError(null);
+        setMessage("");
+        setScanMessage("");
+        if (profileChanged) {
+          setLocalItems([]);
+          setName("");
+          setKeyword("");
+          setFrequency("weekly");
+          setSavingFrequencyId(null);
+        }
+        void loadSavedSearches();
+    
+        return () => {
+          loadRequestIdRef.current += 1;
+        };
+      }, [auth.status, loadSavedSearches, profileId]);
+    
+      function buildListingFilters(): ListingFilters {
+        const filters: ListingFilters = {};
+    
+        const keywordValue = keyword.trim();
+        if (keywordValue) {
+          filters.query = keywordValue;
+        } else if (search.q) {
+          filters.query = search.q;
+        }
+    
+        if (search.category) filters.categoryId = search.category;
+        if (search.subcategory) filters.subcategoryId = search.subcategory;
+        if (search.gov) filters.governorateId = search.gov;
+        if (search.district) filters.districtAr = search.district;
+    
+        if (search.price_min !== "") {
+          const parsed = Number(search.price_min);
+          if (!Number.isNaN(parsed)) filters.priceMin = parsed;
+        }
+        if (search.price_max !== "") {
+          const parsed = Number(search.price_max);
+          if (!Number.isNaN(parsed)) filters.priceMax = parsed;
+        }
+    
+        if (search.car_make) filters.carMake = search.car_make;
+        if (search.car_model) filters.carModel = search.car_model;
+        if (search.fuel) filters.fuelType = search.fuel;
+        if (search.transmission) filters.transmission = search.transmission;
+        if (search.property_purpose) filters.propertyPurpose = search.property_purpose;
+        if (search.property_type) filters.propertyType = search.property_type;
+        if (search.rooms !== "") {
+          const parsed = Number(search.rooms);
+          if (!Number.isNaN(parsed)) filters.rooms = parsed;
+        }
+        if (search.rental_duration) filters.rentalDuration = search.rental_duration;
+        if (search.electronics_brand) filters.electronicsBrand = search.electronics_brand;
+        if (search.detail_condition) filters.detailCondition = search.detail_condition;
+        if (search.employment_type) filters.employmentType = search.employment_type;
+        if (search.salary_type) filters.salaryType = search.salary_type;
+    
+        if (search.sort !== "latest")
+          filters.sort = search.sort as "cheapest" | "expensive" | "featured";
+    
+        return filters;
+      }
+    
+      async function addSavedSearch(event: FormEvent) {
+        event.preventDefault();
+        const currentProfileId = profileId;
+        if (!currentProfileId || creatingSearchProfilesRef.current.has(currentProfileId)) return;
+    
+        const label = name.trim() || text("بحث محفوظ", "Saved search");
+        const filters = buildListingFilters();
+        const currentFrequency = frequency;
+        creatingSearchProfilesRef.current.add(currentProfileId);
+        setMessage("");
+        try {
+          const result = await createSavedSearch(currentProfileId, {
+            nameAr: label,
+            filters,
+            alertFrequency: currentFrequency,
+          });
+          if (currentProfileId !== profileIdRef.current) return;
+    
+          if (result.ok) {
+            setItems((current) => [result.data, ...current]);
+            setHasLoaded(true);
+            setMessage(text("تم حفظ البحث في حسابك.", "Search saved to your account."));
+          } else {
+            setLocalItems((current) => [
+              {
+                id: `local-${currentProfileId}-${Date.now()}`,
+                nameAr: label,
+                filters: toLocalFilters(filters),
+                createdAt: new Date().toISOString(),
+                frequency: currentFrequency,
+              },
+              ...current,
+            ]);
+            setMessage(
+              text(
+                "تعذر حفظ البحث في الحساب، فتم حفظه لهذه الجلسة فقط.",
+                "Could not save this search to the account, so it was saved for this session only.",
+              ),
+            );
+          }
+          setName("");
+          setKeyword("");
+        } finally {
+          creatingSearchProfilesRef.current.delete(currentProfileId);
+        }
+      }
+    
+      function toLocalFilters(filters: ListingFilters): Record<string, string> {
+        const result: Record<string, string> = {};
+        if (filters.query) result.q = filters.query;
+        if (filters.categoryId) result.category = filters.categoryId;
+        if (filters.subcategoryId) result.subcategory = filters.subcategoryId;
+        if (filters.governorateId) result.gov = filters.governorateId;
+        if (filters.districtAr) result.district = filters.districtAr;
+        if (filters.priceMin !== undefined) result.price_min = String(filters.priceMin);
+        if (filters.priceMax !== undefined) result.price_max = String(filters.priceMax);
+        if (filters.carMake) result.car_make = filters.carMake;
+        if (filters.carModel) result.car_model = filters.carModel;
+        if (filters.fuelType) result.fuel = filters.fuelType;
+        if (filters.transmission) result.transmission = filters.transmission;
+        if (filters.propertyPurpose) result.property_purpose = filters.propertyPurpose;
+        if (filters.propertyType) result.property_type = filters.propertyType;
+        if (filters.rooms !== undefined) result.rooms = String(filters.rooms);
+        if (filters.rentalDuration) result.rental_duration = filters.rentalDuration;
+        if (filters.electronicsBrand) result.electronics_brand = filters.electronicsBrand;
+        if (filters.detailCondition) result.detail_condition = filters.detailCondition;
+        if (filters.employmentType) result.employment_type = filters.employmentType;
+        if (filters.salaryType) result.salary_type = filters.salaryType;
+        if (filters.sort) result.sort = filters.sort;
+        return result;
+      }
+    
+      async function changeAlertFrequency(id: string, next: SavedSearchAlertFrequency) {
+        const currentProfileId = profileId;
+        if (!currentProfileId) return;
+        const scopeKey = [currentProfileId, id].join(":");
+        if (frequencyScopesRef.current.has(scopeKey)) return;
+    
+        const previous = items;
+        frequencyScopesRef.current.add(scopeKey);
+        setSavingFrequencyId(id);
+        setMessage("");
+        setItems((current) =>
+          current.map((item) => (item.id === id ? { ...item, alertFrequency: next } : item)),
+        );
+        try {
+          const result = await updateSavedSearchAlertFrequency(currentProfileId, id, next);
+          if (currentProfileId !== profileIdRef.current) return;
+          if (!result.ok) {
+            setItems(previous);
+            setMessage(result.error.message);
+            return;
+          }
+          setItems((current) => current.map((item) => (item.id === id ? result.data : item)));
+          setMessage(text("تم تحديث تكرار التنبيه.", "Alert frequency updated."));
+        } finally {
+          frequencyScopesRef.current.delete(scopeKey);
+          if (currentProfileId === profileIdRef.current) setSavingFrequencyId(null);
+        }
+      }
+    
+      async function removeSavedSearch(id: string) {
+        const currentProfileId = profileId;
+        if (!currentProfileId) return;
+        const scopeKey = [currentProfileId, id].join(":");
+        if (deletingSearchScopesRef.current.has(scopeKey)) return;
+    
+        deletingSearchScopesRef.current.add(scopeKey);
+        setMessage("");
+        try {
+          const result = await deleteSavedSearch(currentProfileId, id);
+          if (currentProfileId !== profileIdRef.current) return;
+          if (!result.ok) {
+            setMessage(result.error.message);
+            return;
+          }
+    
+          setItems((current) => current.filter((item) => item.id !== id));
+          setMessage(text("تم حذف البحث المحفوظ.", "Saved search removed."));
+        } finally {
+          deletingSearchScopesRef.current.delete(scopeKey);
+        }
+      }
+    
+      if (auth.status === "loading") {
+        return (
+          <State
+            heading={text("جارٍ التحقق من الجلسة", "Checking session")}
+            body={text("نجهّز عمليات البحث الخاصة بك.", "Preparing your saved searches.")}
+          />
+        );
+      }
+    
+      if (auth.status === "signedOut") {
+        return (
+          <State
+            heading={text("تسجيل الدخول مطلوب", "Login required")}
+            body={text(
+              "سجّل الدخول لحفظ عمليات البحث والرجوع إليها بسرعة.",
+              "Log in to save searches and return to them quickly.",
+            )}
+            actionLabel={text("تسجيل الدخول", "Log in")}
+            actionTo="/login"
+            actionSearch={{ returnTo: "/saved-searches" }}
+          />
+        );
+      }
+    
+      if (auth.status === "authUnavailable") {
+        return (
+          <State
+            heading={text("البحث المحفوظ مرتبط بالحساب", "Saved search is account based")}
+            body={text(
+              "استخدم الفلاتر الآن، وعند توفر جلسة الحساب ستظهر عمليات البحث المحفوظة هنا.",
+              "Use filters now; when account session is available, saved searches appear here.",
+            )}
+            actionLabel={text("ابدأ البحث", "Start searching")}
+            actionTo="/listings"
+          />
+        );
+      }
+    
+      return (
+        <>
+          <PageHeader title={text("عمليات البحث المحفوظة", "Saved searches")} />
+          <main className="container-wide rawaj-content-stack mobile-page-bottom pt-4">
+            <section className="rounded-2xl bg-card p-4 hairline">
+              <h2 className="text-sm font-extrabold">
+                {text("احفظ فلاتر البحث المهمة", "Save important search filters")}
+              </h2>
+              <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                {text(
+                  "أنشئ بحثاً باسم واضح واضبط تكرار التنبيه. يطابق الخادم الإعلانات الجديدة عند اعتمادها ويجمع النتائج دون تكرار.",
+                  "Create a clearly named search and choose an alert cadence. The server matches newly approved listings and aggregates results without duplicates.",
+                )}
+              </p>
+            </section>
+    
+            <form
+              onSubmit={addSavedSearch}
+              className="grid grid-cols-1 gap-3 rounded-2xl bg-card p-4 hairline md:grid-cols-[1fr_1fr_180px_auto]"
+            >
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder={text("اسم البحث", "Search name")}
+                className="rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+              />
+              <input
+                value={keyword}
+                onChange={(event) => setKeyword(event.target.value)}
+                placeholder={text("كلمة البحث", "Search keyword")}
+                className="rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+              />
+              <select
+                value={frequency}
+                onChange={(event) => setFrequency(event.target.value as LocalSearch["frequency"])}
+                className="rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+              >
+                <option value="daily">{text("تنبيه يومي", "Daily alert")}</option>
+                <option value="weekly">{text("تنبيه أسبوعي", "Weekly alert")}</option>
+                <option value="off">{text("بدون تنبيه", "No alert")}</option>
+              </select>
+              <button
+                type="submit"
+                className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground"
+              >
+                {text("حفظ البحث", "Save search")}
+              </button>
+            </form>
+    
+            {scanMessage ? (
+              <p className="rounded-xl bg-emerald-trust/10 p-3 text-xs font-semibold text-foreground">
+                {scanMessage}
+              </p>
+            ) : null}
+    
+            {message ? (
+              <p className="rounded-xl bg-muted-surface p-3 text-xs font-semibold text-foreground hairline">
+                {message}
+              </p>
+            ) : null}
+    
+            {loading && !hasLoaded ? (
+              <Panel title={text("جارٍ تحميل عمليات البحث", "Loading saved searches")} />
+            ) : loadError && !hasLoaded && localItems.length === 0 ? (
+              <Panel
+                title={text("تعذر تحميل عمليات البحث", "Could not load saved searches")}
+                body={loadError.message}
+                actionLabel={text("إعادة المحاولة", "Try again")}
+                onAction={() => void loadSavedSearches()}
+                actionDisabled={loading}
+              />
+            ) : (
+              <>
+                {loadError ? (
+                  <RecoveryNotice
+                    title={text("تعذر تحديث عمليات البحث", "Could not refresh saved searches")}
+                    body={loadError.message}
+                    actionLabel={text("إعادة المحاولة", "Try again")}
+                    onAction={() => void loadSavedSearches()}
+                    actionDisabled={loading}
+                  />
+                ) : null}
+                {items.length === 0 && localItems.length === 0 ? (
+                  <Panel
+                    title={text("لا توجد عمليات بحث محفوظة", "No saved searches")}
+                    body={text(
+                      "احفظ بحثك الأول من النموذج أعلاه أو ابدأ من صفحة الإعلانات.",
+                      "Save your first search from the form above or start from listings.",
+                    )}
+                    actionLabel={text("ابدأ البحث", "Start searching")}
+                    actionTo="/listings"
+                  />
+                ) : (
+                  <ul className="space-y-2">
+                    {localItems.map((item) => (
+                      <SearchRow
+                        key={`${profileId ?? "signed-out"}:${item.id}`}
+                        id={item.id}
+                        name={item.nameAr}
+                        createdAt={item.createdAt}
+                        filters={item.filters}
+                        frequency={item.frequency}
+                        local
+                        onRemove={() =>
+                          setLocalItems((current) => current.filter((entry) => entry.id !== item.id))
+                        }
+                      />
+                    ))}
+                    {items.map((item) => (
+                      <SearchRow
+                        key={`${profileId ?? "signed-out"}:${item.id}`}
+                        id={item.id}
+                        name={item.nameAr}
+                        createdAt={item.createdAt}
+                        filters={item.filters as Record<string, unknown>}
+                        frequency={item.alertFrequency}
+                        frequencyDisabled={savingFrequencyId === item.id}
+                        onFrequencyChange={(next) => void changeAlertFrequency(item.id, next)}
+                        onRemove={() => void removeSavedSearch(item.id)}
+                      />
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+          </main>
+        </>
+      );
+    }
+    
+    function SearchRow({
+      id,
+      name,
+      createdAt,
+      filters,
+      frequency,
+      local = false,
+      frequencyDisabled = false,
+      onFrequencyChange,
+      onRemove,
+    }: {
+      id: string;
+      name: string;
+      createdAt: string;
+      filters: Record<string, unknown>;
+      frequency: SavedSearchAlertFrequency;
+      local?: boolean;
+      frequencyDisabled?: boolean;
+      onFrequencyChange?: (next: SavedSearchAlertFrequency) => void;
+      onRemove?: () => void;
+    }) {
+      const { language, text } = useUiPreferences();
+      return (
+        <li className="rounded-2xl bg-card p-4 hairline">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-gold" />
+                <span className="truncate text-sm font-bold">{name}</span>
+              </div>
+              <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                <span>{formatDate(createdAt, language)}</span>
+                {onFrequencyChange ? (
+                  <label className="inline-flex items-center gap-1">
+                    <Bell className="h-3 w-3" />
+                    <span className="sr-only">{text("تكرار التنبيه", "Alert frequency")}</span>
+                    <select
+                      value={frequency}
+                      disabled={frequencyDisabled}
+                      onChange={(event) =>
+                        onFrequencyChange(event.target.value as SavedSearchAlertFrequency)
+                      }
+                      className="rounded-lg border border-border/70 bg-card px-1.5 py-1 text-[10px] font-semibold text-foreground disabled:opacity-60"
+                    >
+                      <option value="daily">{text("يومي", "Daily")}</option>
+                      <option value="weekly">{text("أسبوعي", "Weekly")}</option>
+                      <option value="off">{text("متوقف", "Off")}</option>
+                    </select>
+                  </label>
+                ) : (
+                  <span className="inline-flex items-center gap-1">
+                    <Bell className="h-3 w-3" />
+                    {frequencyLabel(frequency, language)}
+                  </span>
+                )}
+                {local && <span>{text("محفوظ في هذه الجلسة", "Saved in this session")}</span>}
+              </div>
+            </div>
+            {onRemove && (
+              <button
+                type="button"
+                onClick={onRemove}
+                className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive"
+                aria-label={text("حذف البحث", "Remove search")}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <div className="mt-3">
+            <Link
+              to="/listings"
+              search={toListingSearch(filters)}
+              className="rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+            >
+              {text("فتح البحث", "Open search")}
+            </Link>
+          </div>
+        </li>
+      );
+    }
+    
+    function toListingSearch(filters: Record<string, unknown>) {
+      return {
+        q: stringFilter(filters.query) || stringFilter(filters.q) || undefined,
+        category: stringFilter(filters.categoryId) || stringFilter(filters.category) || undefined,
+        subcategory:
+          stringFilter(filters.subcategoryId) || stringFilter(filters.subcategory) || undefined,
+        gov: stringFilter(filters.governorateId) || stringFilter(filters.gov) || undefined,
+        district: stringFilter(filters.districtAr) || stringFilter(filters.district) || undefined,
+        price_min: numberFilter(filters.priceMin) ?? numberFilter(filters.price_min),
+        price_max: numberFilter(filters.priceMax) ?? numberFilter(filters.price_max),
+        car_make: stringFilter(filters.carMake) || stringFilter(filters.car_make) || undefined,
+        car_model: stringFilter(filters.carModel) || stringFilter(filters.car_model) || undefined,
+        fuel: stringFilter(filters.fuelType) || stringFilter(filters.fuel) || undefined,
+        transmission: stringFilter(filters.transmission) || undefined,
+        property_purpose:
+          stringFilter(filters.propertyPurpose) || stringFilter(filters.property_purpose) || undefined,
+        property_type:
+          stringFilter(filters.propertyType) || stringFilter(filters.property_type) || undefined,
+        rooms: numberFilter(filters.rooms) ?? numberFilter(filters.rooms),
+        rental_duration:
+          stringFilter(filters.rentalDuration) || stringFilter(filters.rental_duration) || undefined,
+        electronics_brand:
+          stringFilter(filters.electronicsBrand) ||
+          stringFilter(filters.electronics_brand) ||
+          undefined,
+        detail_condition:
+          stringFilter(filters.detailCondition) || stringFilter(filters.detail_condition) || undefined,
+        employment_type:
+          stringFilter(filters.employmentType) || stringFilter(filters.employment_type) || undefined,
+        salary_type: stringFilter(filters.salaryType) || stringFilter(filters.salary_type) || undefined,
+        sort: sortFilter(filters.sort),
+      };
+    }
+    
+    function stringFilter(value: unknown): string | undefined {
+      return typeof value === "string" && value.trim() ? value : undefined;
+    }
+    
+    function numberFilter(value: unknown): number | undefined {
+      if (typeof value === "number" && Number.isFinite(value)) return value;
+      if (typeof value === "string" && value.trim()) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : undefined;
+      }
+      return undefined;
+    }
+    
+    function sortFilter(value: unknown): "latest" | "cheapest" | "expensive" | "featured" | undefined {
+      return value === "latest" || value === "cheapest" || value === "expensive" || value === "featured"
+        ? value
+        : undefined;
+    }
+    
+    function State({
+      heading,
+      body,
+      actionLabel,
+      actionTo,
+      actionSearch,
+    }: {
+      heading: string;
+      body: string;
+      actionLabel?: string;
+      actionTo?: string;
+      actionSearch?: Record<string, string>;
+    }) {
+      const { text } = useUiPreferences();
+      return (
+        <>
+          <PageHeader title={text("عمليات البحث المحفوظة", "Saved searches")} />
+          <main className="container-wide rawaj-content-stack mobile-page-bottom pt-10">
+            <Panel
+              title={heading}
+              body={body}
+              actionLabel={actionLabel}
+              actionTo={actionTo}
+              actionSearch={actionSearch}
+            />
+          </main>
+        </>
+      );
+    }
+    
+    function Panel({
+      title,
+      body,
+      actionLabel,
+      actionTo,
+      actionSearch,
+      onAction,
+      actionDisabled,
+    }: {
+      title: string;
+      body?: string;
+      actionLabel?: string;
+      actionTo?: string;
+      actionSearch?: Record<string, string>;
+      onAction?: () => void;
+      actionDisabled?: boolean;
+    }) {
+      const { language } = useUiPreferences();
+      return (
+        <div className="rounded-2xl bg-card p-10 text-center hairline">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-muted-surface">
+            <Bookmark className="h-6 w-6 text-muted-foreground" />
+          </span>
+          <p className="mt-3 text-sm font-bold">{title}</p>
+          {body && <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p>}
+          {actionLabel ? (
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {onAction ? (
+                <button
+                  type="button"
+                  onClick={onAction}
+                  disabled={actionDisabled}
+                  className="inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground disabled:opacity-60"
+                >
+                  {actionLabel}
+                </button>
+              ) : actionTo ? (
+                <Link
+                  to={actionTo}
+                  search={actionSearch}
+                  className="inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground"
+                >
+                  {actionLabel}
+                </Link>
+              ) : null}
+              {actionTo ? (
+                <Link
+                  to="/categories"
+                  className="inline-block rounded-xl bg-muted-surface px-5 py-2 text-sm font-bold text-foreground"
+                >
+                  {uiLabel("تصفح الأقسام", language)}
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      );
+    }
+    
+    function RecoveryNotice({
+      title,
+      body,
+      actionLabel,
+      onAction,
+      actionDisabled,
+    }: {
+      title: string;
+      body: string;
+      actionLabel: string;
+      onAction: () => void;
+      actionDisabled?: boolean;
+    }) {
+      return (
+        <div className="rounded-xl bg-destructive/10 p-4 text-destructive hairline">
+          <p className="text-xs font-bold">{title}</p>
+          <p className="mt-1 text-xs leading-5">{body}</p>
+          <button
+            type="button"
+            onClick={onAction}
+            disabled={actionDisabled}
+            className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-card px-4 py-2 text-xs font-bold text-foreground hairline disabled:opacity-60"
+          >
+            {actionLabel}
+          </button>
+        </div>
+      );
+    }
+    
+    function frequencyLabel(value: LocalSearch["frequency"], language: Language) {
+      if (value === "daily") return language === "ar" ? "تنبيه يومي" : "Daily alert";
+      if (value === "weekly") return language === "ar" ? "تنبيه أسبوعي" : "Weekly alert";
+      return language === "ar" ? "بدون تنبيه" : "No alert";
+    }
+    
+    function formatDate(value: string, language: Language) {
+      return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+        dateStyle: "medium",
+      }).format(new Date(value));
+    }
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///home/runner/work/rawaj-classifieds-hub/rawaj-classifieds-hub/scripts/saved-search-background-alerts.test.mjs:79:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: saved-search mutation failures use action messaging
+ok 30 - saved-search mutation failures use action messaging
+  ---
+  duration_ms: 0.175724
+  type: 'test'
+  ...
+# Subtest: background saved-search alert contract is part of the activity Quality Gate
+ok 31 - background saved-search alert contract is part of the activity Quality Gate
+  ---
+  duration_ms: 0.324532
+  type: 'test'
+  ...
+# Subtest: unread activity subscribes to the signed-in user's notification changes
+ok 32 - unread activity subscribes to the signed-in user's notification changes
+  ---
+  duration_ms: 1.015702
+  type: 'test'
+  ...
+# Subtest: notification bursts are debounced before unread counts refresh
+ok 33 - notification bursts are debounced before unread counts refresh
+  ---
+  duration_ms: 0.262139
+  type: 'test'
+  ...
+# Subtest: unread activity has a visible online polling fallback
+ok 34 - unread activity has a visible online polling fallback
+  ---
+  duration_ms: 0.173258
+  type: 'test'
+  ...
+# Subtest: unread refreshes are deduplicated per profile and stale account results are ignored
+ok 35 - unread refreshes are deduplicated per profile and stale account results are ignored
+  ---
+  duration_ms: 0.30851
+  type: 'test'
+  ...
+# Subtest: live unread activity contract is part of the activity Quality Gate
+ok 36 - live unread activity contract is part of the activity Quality Gate
+  ---
+  duration_ms: 0.326636
+  type: 'test'
+  ...
+1..36
+# tests 36
+# suites 0
+# pass 34
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 132.535605
