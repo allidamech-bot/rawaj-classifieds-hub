@@ -171,5 +171,4 @@ jobs:
             supabase/migrations/202607150002_saved_search_alerts_push_v1.sql \
             supabase/functions/send-push-notifications/index.ts
           git commit -m "feat: complete saved-search alerts and native push delivery"
-          git pull --rebase origin "$HEAD_REF"
           git push origin HEAD:"$HEAD_REF"
