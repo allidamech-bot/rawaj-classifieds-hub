@@ -8,6 +8,10 @@ on:
       - "scripts/tmp-apply-account-surface-isolation.mjs"
       - ".github/workflows/tmp-account-surface-isolation.yml"
 
+concurrency:
+  group: temporary-account-surface-isolation
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -30,28 +34,39 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Apply isolation patch
-        run: node scripts/tmp-apply-account-surface-isolation.mjs
-
-      - name: Format changed files
-        run: >-
-          npx prettier --write
-          src/routes/favorites.tsx
-          src/routes/saved-searches.tsx
-          src/routes/profile/listings.tsx
-          src/features/reviews/SellerReviewCard.tsx
-          'src/routes/seller.$id.tsx'
-          src/routes/profile.tsx
-          scripts/account-surface-action-isolation.test.mjs
-          package.json
-
-      - name: Focused regression contract
-        run: npm run test:activity-center
-
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Apply, format, and validate
+        id: apply
+        shell: bash
+        run: |
+          set +e
+          : > tmp-account-surface-isolation.log
+          node scripts/tmp-apply-account-surface-isolation.mjs >> tmp-account-surface-isolation.log 2>&1
+          status=$?
+          if [ "$status" -eq 0 ]; then
+            npx prettier --write \
+              src/routes/favorites.tsx \
+              src/routes/saved-searches.tsx \
+              src/routes/profile/listings.tsx \
+              src/features/reviews/SellerReviewCard.tsx \
+              'src/routes/seller.$id.tsx' \
+              src/routes/profile.tsx \
+              scripts/account-surface-action-isolation.test.mjs \
+              package.json >> tmp-account-surface-isolation.log 2>&1
+            status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            npm run test:activity-center >> tmp-account-surface-isolation.log 2>&1
+            status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            npm run typecheck >> tmp-account-surface-isolation.log 2>&1
+            status=$?
+          fi
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
 
       - name: Commit implementation
+        if: steps.apply.outputs.status == '0'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -66,3 +81,13 @@ jobs:
             package.json
           git commit -m "fix: isolate account surface actions"
           git push origin HEAD:audit/account-surface-stale-data-isolation
+
+      - name: Commit diagnostic log
+        if: steps.apply.outputs.status != '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tmp-account-surface-isolation.log
+          git commit -m "diagnostic: capture account isolation patch failure"
+          git push origin HEAD:audit/account-surface-stale-data-isolation
+          exit 1
