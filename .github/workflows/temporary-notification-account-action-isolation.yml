@@ -50,11 +50,14 @@ jobs:
             src/features/notifications/NotificationPreferencesPanel.tsx \
             scripts/notification-account-action-isolation.test.mjs
 
-      - name: Validate notification contracts
-        run: |
-          npm run test:activity-center
-          node --test scripts/communication-center-v2.test.mjs
-          npm run typecheck -- --pretty false
+      - name: Activity center contracts
+        run: npm run test:activity-center
+
+      - name: Communication center contract
+        run: node --test scripts/communication-center-v2.test.mjs
+
+      - name: Typecheck
+        run: npm run typecheck -- --pretty false
 
       - name: Commit implementation
         shell: bash
