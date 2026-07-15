@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Ban, Flag, MessageCircle, Send } from "lucide-react";
+import { Ban, Flag, MessageCircle, Send, TriangleAlert } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
@@ -25,6 +25,7 @@ import {
 } from "@/lib/api/message-send-request";
 import type { ClassifiedsError, Conversation, ConversationMessage } from "@/lib/classifieds-types";
 import { resolveConversationTarget } from "@/lib/journey-target-resolution";
+import { analyzeMessageSafety } from "@/lib/message-safety";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -62,6 +63,7 @@ function ChatsPage() {
   const [conversationQuery, setConversationQuery] = useState("");
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState("");
+  const [confirmedRiskBody, setConfirmedRiskBody] = useState<string | null>(null);
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
   const [blockReason, setBlockReason] = useState("");
   const [viewingConversationOnMobile, setViewingConversationOnMobile] = useState(false);
@@ -83,6 +85,7 @@ function ChatsPage() {
       ? targetResolution.conversation
       : null;
   const missingConversationTarget = targetResolution.kind === "missing";
+  const messageSafety = useMemo(() => analyzeMessageSafety(body), [body]);
   const filteredConversations = useMemo(() => {
     const query = conversationQuery.trim().toLocaleLowerCase(language === "ar" ? "ar" : "en");
     if (!query) return conversations;
@@ -221,6 +224,17 @@ function ChatsPage() {
     const conversationId = selectedConversation.id;
     const cleanBody = body.trim();
     if (!cleanBody) return;
+    const safety = analyzeMessageSafety(cleanBody);
+    if (safety.requiresConfirmation && confirmedRiskBody !== cleanBody) {
+      setConfirmedRiskBody(cleanBody);
+      setNotice(
+        text(
+          "تتضمن الرسالة طلب دفع أو بيانات حساسة. راجع التحذير ثم اضغط إرسال مرة ثانية للتأكيد.",
+          "This message mentions payment or sensitive credentials. Review the warning, then press send again to confirm.",
+        ),
+      );
+      return;
+    }
     const requestId = readOrCreateMessageSendRequestId(profileId, conversationId, cleanBody);
     sendInFlightRef.current = true;
     setNotice("");
@@ -236,6 +250,7 @@ function ChatsPage() {
       }
       completeMessageSendRequest(profileId, conversationId, requestId);
       setBody("");
+      setConfirmedRiskBody(null);
       setMessages((current) =>
         current.some((message) => message.id === result.data.id)
           ? current
@@ -567,7 +582,10 @@ function ChatsPage() {
                           <button
                             key={reply.en}
                             type="button"
-                            onClick={() => setBody(language === "ar" ? reply.ar : reply.en)}
+                            onClick={() => {
+                              setBody(language === "ar" ? reply.ar : reply.en);
+                              setConfirmedRiskBody(null);
+                            }}
                           >
                             {language === "ar" ? reply.ar : reply.en}
                           </button>
@@ -575,10 +593,47 @@ function ChatsPage() {
                       </div>
                     </div>
                   ) : null}
+                  {messageSafety.level !== "safe" ? (
+                    <aside
+                      className={[
+                        "mb-2 flex items-start gap-2 rounded-xl border p-3 text-xs leading-5",
+                        messageSafety.level === "danger"
+                          ? "border-destructive/25 bg-destructive/10 text-destructive"
+                          : "border-warning/25 bg-warning/10 text-foreground",
+                      ].join(" ")}
+                      role="status"
+                    >
+                      <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                      <div>
+                        <strong>
+                          {messageSafety.level === "danger"
+                            ? text("راجع الرسالة قبل الإرسال", "Review before sending")
+                            : text(
+                                "انتبه للرابط أو التواصل الخارجي",
+                                "Check links and off-platform contact",
+                              )}
+                        </strong>
+                        <p>
+                          {messageSafety.level === "danger"
+                            ? text(
+                                "لا تشارك كلمة مرور أو رمز تحقق، ولا تحول مبلغاً قبل المعاينة والتحقق من الطرف الآخر.",
+                                "Never share passwords or verification codes, and do not transfer money before inspection and verification.",
+                              )
+                            : text(
+                                "افتح الروابط بحذر واحتفظ بتفاصيل الاتفاق داخل رواج قدر الإمكان.",
+                                "Open links carefully and keep agreement details inside RAWAJ whenever possible.",
+                              )}
+                        </p>
+                      </div>
+                    </aside>
+                  ) : null}
                   <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
                     <textarea
                       value={body}
-                      onChange={(event) => setBody(event.target.value)}
+                      onChange={(event) => {
+                        setBody(event.target.value);
+                        setConfirmedRiskBody(null);
+                      }}
                       maxLength={2000}
                       rows={2}
                       placeholder={text("اكتب رسالة...", "Write a message...")}
@@ -594,7 +649,11 @@ function ChatsPage() {
                       className="rawaj-message-composer__send"
                     >
                       <Send className="h-4 w-4" />
-                      {sending ? text("جاري الإرسال", "Sending") : text("إرسال", "Send")}
+                      {sending
+                        ? text("جاري الإرسال", "Sending")
+                        : messageSafety.requiresConfirmation && confirmedRiskBody === body.trim()
+                          ? text("تأكيد وإرسال", "Confirm and send")
+                          : text("إرسال", "Send")}
                     </button>
                   </div>
                   {notice && (
