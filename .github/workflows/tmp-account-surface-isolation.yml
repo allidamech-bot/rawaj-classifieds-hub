@@ -89,13 +89,14 @@ jobs:
           git commit -m "fix: isolate account surface actions"
           git push origin HEAD:audit/account-surface-stale-data-isolation
 
-      - name: Persist diagnostic log
+      - name: Persist diagnostic text
         if: steps.apply.outputs.status != '0'
         run: |
           cat tmp-account-surface-isolation.log
+          cp tmp-account-surface-isolation.log tmp-account-surface-isolation-diagnostic.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tmp-account-surface-isolation.log
+          git add tmp-account-surface-isolation-diagnostic.txt
           git commit -m "diagnostic: capture account isolation patch failure"
           git push origin HEAD:audit/account-surface-stale-data-isolation
 
