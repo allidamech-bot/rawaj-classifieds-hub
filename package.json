@@ -56,7 +56,7 @@
     "locations:syria:validate": "node scripts/prepare-syria-ocha-geojson-locations-v2.mjs --dry-run && npm run locations:syria:type-coverage && node scripts/apply-syria-location-bundle.mjs",
     "locations:syria:apply": "npm run locations:syria:type-coverage && node scripts/apply-syria-location-bundle.mjs --apply",
     "test:public-data-security": "node --test scripts/public-data-security.test.mjs",
-    "test:phases-41-50": "node --test scripts/phases-41-50-release-readiness.test.mjs",
+    "test:phases-41-50": "node --test scripts/phases-41-50-release-readiness.test.mjs scripts/ad-placement-rpc-version-ambiguity.test.mjs",
     "test:phases-51-53": "node --test scripts/phases-51-53-release-gates.test.mjs",
     "test:phases-54-56": "node --test scripts/phases-54-56-performance-observability.test.mjs",
     "test:phases-57-69": "node --test scripts/phases-57-69-release-readiness.test.mjs",
