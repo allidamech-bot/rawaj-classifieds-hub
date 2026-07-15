@@ -144,15 +144,21 @@ jobs:
           npm run build
           (cd android && bash ./gradlew :app:assembleDebug --no-daemon)
 
-      - name: Remove one-shot integration files
-        run: |
-          rm .github/workflows/persist-saved-search-push-once.yml
-          rm scripts/apply-saved-search-push-integration.py
-
-      - name: Commit and push validated package
+      - name: Commit and push validated product files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
+          git add \
+            .github/workflows/quality-gate.yml \
+            android \
+            capacitor.config.ts \
+            docs/production-schema/migration-ledger.json \
+            package.json \
+            package-lock.json \
+            scripts/saved-search-push-v1.test.mjs \
+            scripts/saved-search-background-alerts.test.mjs \
+            src \
+            supabase/migrations/202607150002_saved_search_alerts_push_v1.sql \
+            supabase/functions/send-push-notifications/index.ts
           git commit -m "feat: complete saved-search alerts and native push delivery"
           git push origin HEAD:feature/saved-search-alerts-push-v1
