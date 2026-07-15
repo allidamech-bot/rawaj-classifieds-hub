@@ -146,7 +146,7 @@ test("owner store requests reject stale account and route responses", () => {
   assert.match(ownerRoute, /const sellerRequestIdRef = useRef\(0\)/);
   assert.match(ownerRoute, /requestId !== listingsRequestIdRef\.current/);
   assert.match(ownerRoute, /requestId !== sellerRequestIdRef\.current/);
-  assert.match(ownerRoute, /currentProfileId !== auth\.profile\?\.id/);
+  assert.match(ownerRoute, /currentProfileId !== profileIdRef\.current/);
   assert.match(
     ownerRoute,
     /return \(\) => \{[\s\S]*listingsRequestIdRef\.current \+= 1;[\s\S]*sellerRequestIdRef\.current \+= 1;/,
