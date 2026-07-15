@@ -75,6 +75,19 @@ test("notification preferences reject stale loads and writes", () => {
   assert.match(preferencesPanel, /currentProfileId !== profileIdRef\.current/);
 });
 
+test("preference snapshots reset immediately when the account changes", () => {
+  assert.match(preferencesPanel, /const loadedProfileIdRef = useRef<string \| null>\(null\)/);
+  assert.match(preferencesPanel, /loadedProfileIdRef\.current = null/);
+  assert.match(preferencesPanel, /if \(loadedProfileIdRef\.current !== profileId\)/);
+  assert.match(preferencesPanel, /loadedProfileIdRef\.current = profileId/);
+  const transitionStart = preferencesPanel.indexOf("if (loadedProfileIdRef.current !== profileId)");
+  const requestStart = preferencesPanel.indexOf("const requestId = ++requestIdRef.current", transitionStart);
+  const resetIndex = preferencesPanel.indexOf("setPreferences(null)", transitionStart);
+  assert.ok(transitionStart >= 0);
+  assert.ok(resetIndex > transitionStart);
+  assert.ok(requestStart > resetIndex);
+});
+
 test("preference and push finalizers affect only the initiating account", () => {
   assert.match(
     preferencesPanel,
