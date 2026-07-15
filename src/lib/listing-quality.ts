@@ -79,6 +79,24 @@ export function calculateListingQuality(input: ListingQualityInput): ListingQual
   };
 }
 
+export function listingQualityCheckLabel(
+  key: ListingQualityCheckKey,
+  text: (ar: string, en: string) => string,
+) {
+  const labels: Record<ListingQualityCheckKey, [string, string]> = {
+    category: ["القسم الدقيق محدد", "Precise category selected"],
+    title: ["عنوان واضح من 12 حرفاً", "Clear title of at least 12 characters"],
+    description: ["وصف مفيد من 60 حرفاً", "Useful description of at least 60 characters"],
+    primary_photo: ["صورة رئيسية مضافة", "Primary photo added"],
+    photo_depth: ["ثلاث صور أو أكثر", "Three or more photos"],
+    price: ["السعر أو نوعه مكتمل", "Price or price type completed"],
+    location: ["الموقع مكتمل", "Location completed"],
+    category_details: ["مواصفات القسم الأساسية", "Essential category details"],
+  };
+  const [ar, en] = labels[key];
+  return text(ar, en);
+}
+
 function qualityCheck(key: ListingQualityCheckKey, done: boolean): ListingQualityCheck {
   return { key, done, weight: QUALITY_WEIGHTS[key] };
 }
