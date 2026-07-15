@@ -4,4 +4,7 @@
     <string name="title_activity_main">رواج</string>
     <string name="package_name">com.rawaj.marketplace</string>
     <string name="custom_url_scheme">com.rawaj.marketplace</string>
+    <string name="default_notification_channel_id">rawaj_activity</string>
+    <string name="push_channel_name">تنبيهات رواج</string>
+    <string name="push_channel_description">الرسائل ونتائج البحث وتحديثات الحساب</string>
 </resources>
