@@ -195,6 +195,9 @@ jobs:
       - name: Route CSS isolation contract
         run: node --test scripts/route-css-isolation.test.mjs
 
+      - name: Deferred root services contract
+        run: node --test scripts/deferred-root-services.test.mjs
+
       - name: Listing Detail V2 contract
         run: node --test scripts/listing-detail-v2.test.mjs
 

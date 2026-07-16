@@ -9,19 +9,15 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { Analytics } from "@vercel/analytics/react";
-import { useEffect, type ReactNode } from "react";
+import { Suspense, lazy, useEffect, type ReactNode } from "react";
 
 import { FeedbackState } from "@/components/feedback/FeedbackState";
 import { AppShell } from "@/components/shell/AppShell";
 import { Button } from "@/components/ui/button";
 import {
-  ListingComparisonDock,
   ListingComparisonProvider,
+  useListingComparison,
 } from "@/features/comparison/listing-comparison";
-import { ExistingConversationBanner } from "@/features/listing-detail/ExistingConversationBanner";
-import { ViewedBeforeBanner } from "@/features/listing-detail/ViewedBeforeBanner";
-import { DraftRecoveryBanner } from "@/features/listing-studio/DraftRecoveryBanner";
-import { SavedSearchAlertBackgroundScanner } from "@/features/saved-searches/SavedSearchAlertBackgroundScanner";
 import { AuthProvider } from "@/lib/auth";
 import { rawajBuildInfo } from "@/lib/build-info";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
@@ -29,6 +25,7 @@ import { resolveRouteStyleScope, routeStyleHrefs } from "@/lib/route-styles";
 import { buildSiteStructuredData, createSeo, jsonLdScript } from "@/lib/seo";
 import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
 import { UnreadActivityProvider } from "@/lib/unread-activity";
+import { useAuth } from "@/lib/use-auth";
 import adaptiveListingCardsCss from "../adaptive-listing-cards.css?url";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import trustSupportHubV2Css from "../trust-support-hub-v2.css?url";
@@ -58,6 +55,28 @@ import visualFoundationCss from "../visual-foundation.css?url";
 const ROOT_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
 const ROOT_DESCRIPTION =
   "سوق إعلانات مبوبة في سوريا لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة آمنة ومنظمة.";
+
+const LazyDraftRecoveryBanner = lazy(() =>
+  import("@/features/listing-studio/DraftRecoveryBanner").then((module) => ({
+    default: module.DraftRecoveryBanner,
+  })),
+);
+const LazyViewedBeforeBanner = lazy(() =>
+  import("@/features/listing-detail/ViewedBeforeBanner").then((module) => ({
+    default: module.ViewedBeforeBanner,
+  })),
+);
+const LazyExistingConversationBanner = lazy(() =>
+  import("@/features/listing-detail/ExistingConversationBanner").then((module) => ({
+    default: module.ExistingConversationBanner,
+  })),
+);
+const LazySavedSearchAlertBackgroundScanner = lazy(() =>
+  import("@/features/saved-searches/SavedSearchAlertBackgroundScanner").then((module) => ({
+    default: module.SavedSearchAlertBackgroundScanner,
+  })),
+);
+const LazyListingComparisonDock = lazy(() => import("@/features/comparison/ListingComparisonDock"));
 
 function NotFoundComponent() {
   const { text } = useUiPreferences();
@@ -238,6 +257,48 @@ function HtmlAttributes() {
   return null;
 }
 
+function DeferredAccountBackgroundServices() {
+  const auth = useAuth();
+  const profileId = auth.profile?.id ?? null;
+
+  if (auth.status !== "signedIn" || !profileId) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <LazySavedSearchAlertBackgroundScanner key={profileId} />
+    </Suspense>
+  );
+}
+
+function DeferredRouteAnnouncements({
+  showDraftRecovery,
+  listingDetailId,
+}: {
+  showDraftRecovery: boolean;
+  listingDetailId: string | null;
+}) {
+  if (!showDraftRecovery && !listingDetailId) return null;
+
+  return (
+    <Suspense fallback={null}>
+      {showDraftRecovery ? <LazyDraftRecoveryBanner /> : null}
+      {listingDetailId ? <LazyViewedBeforeBanner listingId={listingDetailId} /> : null}
+      {listingDetailId ? <LazyExistingConversationBanner listingId={listingDetailId} /> : null}
+    </Suspense>
+  );
+}
+
+function ListingComparisonDockBoundary() {
+  const { entries } = useListingComparison();
+  if (entries.length === 0) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <LazyListingComparisonDock />
+    </Suspense>
+  );
+}
+
 function personalSpaceRouteClass(pathname: string) {
   if (pathname === "/favorites") return "rawaj-route-favorites";
   if (pathname === "/saved-searches") return "rawaj-route-saved-searches";
@@ -265,24 +326,21 @@ function RootComponent() {
         <AuthProvider>
           <UnreadActivityProvider>
             <ListingComparisonProvider>
-              <SavedSearchAlertBackgroundScanner />
+              <DeferredAccountBackgroundServices />
               <HtmlAttributes />
               <AppShell
                 pathname={pathname}
                 routeClassName={routeScopeClass}
                 announcements={
-                  <>
-                    {showDraftRecovery ? <DraftRecoveryBanner /> : null}
-                    {listingDetailId ? <ViewedBeforeBanner listingId={listingDetailId} /> : null}
-                    {listingDetailId ? (
-                      <ExistingConversationBanner listingId={listingDetailId} />
-                    ) : null}
-                  </>
+                  <DeferredRouteAnnouncements
+                    showDraftRecovery={showDraftRecovery}
+                    listingDetailId={listingDetailId}
+                  />
                 }
               >
                 <Outlet />
               </AppShell>
-              <ListingComparisonDock />
+              <ListingComparisonDockBoundary />
             </ListingComparisonProvider>
           </UnreadActivityProvider>
         </AuthProvider>
