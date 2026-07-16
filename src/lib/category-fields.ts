@@ -1,7 +1,73 @@
-import type { ClassifiedCategory, ClassifiedListing } from "@/lib/classifieds-types";
+import type { ClassifiedCategory, ClassifiedListing, TaxonomyNode } from "@/lib/classifieds-types";
 
 export type CategoryFieldKind =
   "real_estate" | "vehicles" | "jobs" | "services" | "electronics" | "general";
+
+const taxonomySchemaKindAliases: Record<string, CategoryFieldKind> = {
+  real_estate: "real_estate",
+  realestate: "real_estate",
+  property: "real_estate",
+  properties: "real_estate",
+  vehicles: "vehicles",
+  vehicle: "vehicles",
+  automotive: "vehicles",
+  car: "vehicles",
+  cars: "vehicles",
+  jobs: "jobs",
+  job: "jobs",
+  employment: "jobs",
+  services: "services",
+  service: "services",
+  electronics: "electronics",
+  electronic: "electronics",
+  phones: "electronics",
+  mobiles: "electronics",
+  general: "general",
+};
+
+function normalizeTaxonomySchemaKey(value?: string | null) {
+  return (value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function explicitCategoryFieldKind(value?: string | null) {
+  const normalized = normalizeTaxonomySchemaKey(value);
+  return (
+    taxonomySchemaKindAliases[normalized] ??
+    taxonomySchemaKindAliases[normalized.replaceAll("_", "")]
+  );
+}
+
+export function resolveCategoryFieldKind(
+  taxonomyNode?: Pick<
+    TaxonomyNode,
+    "filterSchemaKey" | "classificationKey" | "legacyCategoryId"
+  > | null,
+  category?: Pick<ClassifiedCategory, "id" | "slug" | "nameAr" | "placeholder"> | null,
+  listing?: Pick<ClassifiedListing, "categoryId" | "categoryNameAr" | "categoryPlaceholder"> | null,
+): CategoryFieldKind {
+  const schemaKind = explicitCategoryFieldKind(taxonomyNode?.filterSchemaKey);
+  if (schemaKind) return schemaKind;
+
+  const classificationKind = explicitCategoryFieldKind(taxonomyNode?.classificationKey);
+  if (classificationKind) return classificationKind;
+
+  const legacyCategoryKind = explicitCategoryFieldKind(taxonomyNode?.legacyCategoryId);
+  if (legacyCategoryKind) return legacyCategoryKind;
+
+  return detectCategoryFieldKind(category, listing);
+}
+
+export function categoryUsesGlobalCondition(kind: CategoryFieldKind) {
+  return kind === "vehicles" || kind === "electronics" || kind === "general";
+}
+
+export function categoryRequiresPreciseLocation(kind: CategoryFieldKind) {
+  return kind !== "jobs" && kind !== "services";
+}
 
 export interface CategorySpecificDetails {
   property_type?: string;

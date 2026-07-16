@@ -17,11 +17,16 @@ import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocatio
 import { ListingTaxonomySelector } from "@/features/listing-studio/ListingTaxonomySelector";
 import {
   carMakeOptions,
-  detectCategoryFieldKind,
+  categoryDetailDisplayRows,
+  categoryRequiresPreciseLocation,
+  categoryUsesGlobalCondition,
   mergeCategoryDetails,
+  resolveCategoryFieldKind,
+  sanitizeCategoryDetails,
   type CategoryFieldKind,
   type CategorySpecificDetails,
 } from "@/lib/category-fields";
+import type { LocationNodeType } from "@/lib/api/location-taxonomy";
 import {
   checkListingContentSafety,
   isSafePhoneValue,
@@ -78,7 +83,12 @@ interface StaleUploadCleanupRecord {
   failure: string | null;
 }
 import { categoryName, governorateName } from "@/lib/i18n";
-import { resolveTaxonomyListingSearch } from "@/lib/taxonomy";
+import {
+  buildTaxonomyIndex,
+  getTaxonomyPath,
+  resolveTaxonomyListingSearch,
+  taxonomyPathLabel,
+} from "@/lib/taxonomy";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 import type { PriceType } from "@/types";
@@ -126,6 +136,7 @@ function AddListingPage() {
   const [governorateId, setGovernorateId] = useState("");
   const [district, setDistrict] = useState("");
   const [locationNodeId, setLocationNodeId] = useState("");
+  const [locationNodeType, setLocationNodeType] = useState<LocationNodeType | "">("");
   const [locationLabel, setLocationLabel] = useState("");
   const [description, setDescription] = useState("");
   const [condition, setCondition] = useState<ListingCondition>("not_applicable");
@@ -142,6 +153,7 @@ function AddListingPage() {
   const imageUploadInFlightRef = useRef<Map<string, ImageUploadInFlight>>(new Map());
   const staleUploadCleanupRef = useRef<Map<string, StaleUploadCleanupRecord>>(new Map());
   const draftListingRef = useRef<ClassifiedListing | null>(null);
+  const taxonomyNodeIdRef = useRef("");
   const autosaveTimerRef = useRef<number | null>(null);
   const autosaveRequestIdRef = useRef(0);
   const autosaveQueueRef = useRef<Promise<void>>(Promise.resolve());
@@ -150,11 +162,30 @@ function AddListingPage() {
 
   const category = categories.find((item) => item.id === categoryId);
   const selectedTaxonomyNode = taxonomyNodes.find((item) => item.id === taxonomyNodeId);
-  const categoryFieldKind = detectCategoryFieldKind(category);
+  const categoryFieldKind = resolveCategoryFieldKind(selectedTaxonomyNode, category);
+  const showGlobalCondition = categoryUsesGlobalCondition(categoryFieldKind);
+  const requiresPreciseLocation = categoryRequiresPreciseLocation(categoryFieldKind);
+  const taxonomySelectionReady =
+    taxonomyNodes.length > 0 ? Boolean(selectedTaxonomyNode?.isLeaf) : Boolean(categoryId);
+  const preciseLocationSelected =
+    Boolean(district) ||
+    (Boolean(locationNodeId) &&
+      locationNodeType !== "" &&
+      locationNodeType !== "country" &&
+      locationNodeType !== "governorate");
+  const selectedTaxonomyPath = useMemo(
+    () => getTaxonomyPath(buildTaxonomyIndex(taxonomyNodes), selectedTaxonomyNode),
+    [selectedTaxonomyNode, taxonomyNodes],
+  );
+  const reviewCategoryRows = categoryDetailDisplayRows(
+    categoryFieldKind,
+    sanitizeCategoryDetails(categoryFieldKind, categoryDetails),
+    text,
+  ).slice(0, 6);
   const governorate = governorates.find((item) => item.id === governorateId);
   const normalizedPrice = normalizeNumericInput(price);
   const canContinue = true;
-  const canSubmit = step === 2;
+  const canSubmit = step === 3;
   const quality = useMemo(
     () =>
       calculateListingQuality({
@@ -164,7 +195,9 @@ function AddListingPage() {
         description,
         imageCount: selectedImages.filter((entry) => entry.state !== "failed").length,
         priceReady: priceType !== "fixed" || Number(normalizedPrice) > 0,
-        locationReady: Boolean(locationNodeId) || Boolean(governorateId && district),
+        locationReady:
+          (Boolean(locationNodeId) || Boolean(governorateId)) &&
+          (!requiresPreciseLocation || preciseLocationSelected),
         categoryFieldKind,
         categoryDetails,
         condition,
@@ -178,6 +211,8 @@ function AddListingPage() {
       district,
       governorateId,
       locationNodeId,
+      preciseLocationSelected,
+      requiresPreciseLocation,
       normalizedPrice,
       priceType,
       selectedImages,
@@ -191,6 +226,7 @@ function AddListingPage() {
     text("ماذا تبيع؟", "What are you selling?"),
     text("الصور والتفاصيل", "Photos and details"),
     text("السعر والموقع والتواصل", "Price, location, contact"),
+    text("مراجعة وإرسال", "Review and submit"),
   ];
   const selectedImagePreviews = useMemo(
     () =>
@@ -218,6 +254,16 @@ function AddListingPage() {
   useEffect(() => {
     draftListingRef.current = draftListing;
   }, [draftListing]);
+
+  useEffect(() => {
+    taxonomyNodeIdRef.current = taxonomyNodeId;
+  }, [taxonomyNodeId]);
+
+  useEffect(() => {
+    if (!showGlobalCondition && condition !== "not_applicable") {
+      setCondition("not_applicable");
+    }
+  }, [condition, showGlobalCondition]);
 
   useEffect(
     () => () => {
@@ -567,13 +613,16 @@ function AddListingPage() {
     const errors = buildStepErrors({
       step: currentStep,
       categoryId,
+      taxonomyNodeId,
+      taxonomyNodesLength: taxonomyNodes.length,
+      selectedTaxonomyNodeIsLeaf: selectedTaxonomyNode?.isLeaf ?? false,
       title,
       description,
       price: normalizedPrice,
       priceType,
       governorateId,
       locationNodeId,
-      district: locationNodeId ? `@${locationNodeId}` : district,
+      preciseLocationSelected,
       categoryFieldKind,
       categoryDetails,
       contact,
@@ -595,7 +644,8 @@ function AddListingPage() {
   }
 
   function goNext() {
-    if (!validateCurrentStep(step)) return;
+    const nextStep = Math.min(steps.length - 1, step + 1);
+    if (!validateCurrentStep(nextStep === 3 ? 3 : step)) return;
     setStepErrors([]);
     setFieldErrors({});
     setStep((value) => {
@@ -603,6 +653,65 @@ function AddListingPage() {
       setFurthestStep((current) => Math.max(current, next));
       return next;
     });
+  }
+
+  function handleTaxonomySelection(node: TaxonomyNode, path: TaxonomyNode[]) {
+    const search = resolveTaxonomyListingSearch(node, path);
+    const nextCategoryId = search.category ?? "";
+    const nextCategory = categories.find((item) => item.id === nextCategoryId);
+    const nextKind = resolveCategoryFieldKind(node, nextCategory);
+    const nextCondition = categoryUsesGlobalCondition(nextKind) ? condition : "not_applicable";
+
+    autosaveRequestIdRef.current += 1;
+    taxonomyNodeIdRef.current = node.id;
+    setTaxonomyNodeId(node.id);
+    setCategoryId(nextCategoryId);
+    setSubcategoryId(search.taxonomyLegacySubcategoryId ?? "");
+    if (nextCondition !== condition) setCondition(nextCondition);
+    if (nextKind !== categoryFieldKind) {
+      setCategoryDetails((current) =>
+        syncCategoryDetailsCondition(
+          nextKind,
+          sanitizeCategoryDetails(nextKind, current) as CategorySpecificDetails,
+          nextCondition,
+        ),
+      );
+    }
+  }
+
+  function handleLegacyCategorySelection(nextCategory: ClassifiedCategory) {
+    const nextKind = resolveCategoryFieldKind(null, nextCategory);
+    const nextCondition = categoryUsesGlobalCondition(nextKind) ? condition : "not_applicable";
+
+    autosaveRequestIdRef.current += 1;
+    taxonomyNodeIdRef.current = "";
+    setCategoryId(nextCategory.id);
+    setSubcategoryId("");
+    setTaxonomyNodeId("");
+    if (nextCondition !== condition) setCondition(nextCondition);
+    if (nextKind !== categoryFieldKind) {
+      setCategoryDetails((current) =>
+        syncCategoryDetailsCondition(
+          nextKind,
+          sanitizeCategoryDetails(nextKind, current) as CategorySpecificDetails,
+          nextCondition,
+        ),
+      );
+    }
+  }
+
+  function handleGlobalConditionChange(nextCondition: ListingCondition) {
+    setCondition(nextCondition);
+    setCategoryDetails((current) =>
+      syncCategoryDetailsCondition(categoryFieldKind, current, nextCondition),
+    );
+  }
+
+  function handleCategoryDetailsChange(nextDetails: CategorySpecificDetails) {
+    setCategoryDetails(nextDetails);
+    if (categoryFieldKind === "vehicles" || categoryFieldKind === "electronics") {
+      setCondition(categoryDetailsGlobalCondition(categoryFieldKind, nextDetails));
+    }
   }
 
   function buildCurrentListingPayload(details: Record<string, unknown>) {
@@ -677,6 +786,7 @@ function AddListingPage() {
     const hasMinimumDraftData =
       auth.status === "signedIn" &&
       Boolean(profileId) &&
+      taxonomySelectionReady &&
       autosavePayload.categoryId.trim().length > 0 &&
       (autosavePayload.governorateId.trim().length > 0 || locationNodeId.trim().length > 0) &&
       autosavePayload.title.length >= 4;
@@ -722,7 +832,7 @@ function AddListingPage() {
           : await createOwnerDraftListing(profileId, autosavePayload);
 
         if (result.ok) {
-          if (taxonomyNodeId) {
+          if (taxonomyNodeId && taxonomyNodeIdRef.current === taxonomyNodeId) {
             const taxonomyResult = await assignOwnerListingTaxonomy(
               profileId,
               result.data.id,
@@ -766,7 +876,14 @@ function AddListingPage() {
         autosaveTimerRef.current = null;
       }
     };
-  }, [auth.status, auth.profile?.id, autosavePayload, locationNodeId]);
+  }, [
+    auth.status,
+    auth.profile?.id,
+    autosavePayload,
+    locationNodeId,
+    taxonomyNodeId,
+    taxonomySelectionReady,
+  ]);
 
   const loadSetup = useCallback(async () => {
     const requestId = ++setupRequestIdRef.current;
@@ -801,11 +918,12 @@ function AddListingPage() {
 
   async function submitListing() {
     if (submittingRef.current) return;
-    if (!validateCurrentStep(2)) {
+    if (step !== 3 || !validateCurrentStep(3)) {
       submittingRef.current = false;
       setSubmitting(false);
       return;
     }
+    const canonicalTaxonomyNodeId = taxonomyNodeIdRef.current;
     autosaveRequestIdRef.current += 1;
     if (autosaveTimerRef.current !== null) {
       window.clearTimeout(autosaveTimerRef.current);
@@ -853,7 +971,7 @@ function AddListingPage() {
 
       const details = mergeCategoryDetails(
         {
-          ...(taxonomyNodeId ? { _taxonomy_node_id: taxonomyNodeId } : {}),
+          ...(canonicalTaxonomyNodeId ? { _taxonomy_node_id: canonicalTaxonomyNodeId } : {}),
           ...(contact.phone ? { phone: normalizedPhone } : {}),
           ...(contact.whatsapp ? { whatsapp: normalizedWhatsapp } : {}),
           ...(contentCheck.flags.length > 0 ? { content_flags: contentCheck.flags } : {}),
@@ -874,11 +992,11 @@ function AddListingPage() {
       }
       const listingDraft = result.data;
 
-      if (taxonomyNodeId) {
+      if (canonicalTaxonomyNodeId) {
         const taxonomyResult = await assignOwnerListingTaxonomy(
           auth.profile?.id ?? null,
           listingDraft.id,
-          taxonomyNodeId,
+          canonicalTaxonomyNodeId,
         );
         if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
           setSubmitMessage(taxonomyResult.error.message);
@@ -1117,12 +1235,12 @@ function AddListingPage() {
             "Turn what you have into a clear, ready-to-sell listing",
           )}
           description={text(
-            "أضف المعلومات على ثلاث خطوات قصيرة. نحفظ المسودة تلقائياً ونريك شكل الإعلان أثناء العمل.",
-            "Add the essentials in three short steps. We save the draft automatically and preview the listing as you work.",
+            "أضف المعلومات على أربع خطوات واضحة. نحفظ المسودة تلقائياً ونريك شكل الإعلان أثناء العمل.",
+            "Add the essentials in four clear steps. We save the draft automatically and preview the listing as you work.",
           )}
           status={
             <>
-              <span>{text("3 خطوات فقط", "Only 3 steps")}</span>
+              <span>{text("4 خطوات واضحة", "4 clear steps")}</span>
               <span>{text("حفظ تلقائي للمسودة", "Automatic draft saving")}</span>
             </>
           }
@@ -1142,11 +1260,17 @@ function AddListingPage() {
                 ? text("القسم والعنوان", "Category and title")
                 : index === 1
                   ? text("الصور والوصف", "Photos and description")
-                  : text("السعر والتواصل", "Price and contact"),
+                  : index === 2
+                    ? text("السعر والتواصل", "Price and contact")
+                    : text("تحقق نهائي", "Final verification"),
           }))}
           current={step}
           maxReachable={furthestStep}
           onStepChange={(nextStep) => {
+            if (nextStep > step) {
+              const validationStep = nextStep === step + 1 && nextStep < 3 ? step : 3;
+              if (!validateCurrentStep(validationStep)) return;
+            }
             setStep(nextStep);
             setStepErrors([]);
             setFieldErrors({});
@@ -1224,17 +1348,7 @@ function AddListingPage() {
                         selectedNodeId={taxonomyNodeId}
                         language={language}
                         text={text}
-                        onSelect={(node, path) => {
-                          setTaxonomyNodeId(node.id);
-                          if (!node.isLeaf) {
-                            setCategoryId("");
-                            setSubcategoryId("");
-                            return;
-                          }
-                          const search = resolveTaxonomyListingSearch(node, path);
-                          setCategoryId(search.category ?? "");
-                          setSubcategoryId(search.taxonomyLegacySubcategoryId ?? "");
-                        }}
+                        onSelect={handleTaxonomySelection}
                       />
                     ) : (
                       <div className="rawaj-studio-category-grid">
@@ -1242,11 +1356,7 @@ function AddListingPage() {
                           <button
                             key={item.id}
                             type="button"
-                            onClick={() => {
-                              setCategoryId(item.id);
-                              setSubcategoryId("");
-                              setTaxonomyNodeId("");
-                            }}
+                            onClick={() => handleLegacyCategorySelection(item)}
                             data-selected={categoryId === item.id}
                             className={`relative min-h-14 rounded-[1rem] border p-3 text-start text-sm font-semibold transition active:scale-[0.985] ${categoryId === item.id ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(16,43,70,0.13)]" : "border-border/75 bg-card/80 text-foreground hover:border-gold/40 hover:bg-card"}`}
                           >
@@ -1407,23 +1517,29 @@ function AddListingPage() {
                         data-first-invalid={Boolean(fieldErrors.description)}
                       />
                     </Field>
-                    <Field label={text("الحالة", "Condition")}>
-                      <select
-                        value={condition}
-                        onChange={(event) => setCondition(event.target.value as ListingCondition)}
-                        className="input"
-                      >
-                        <option value="not_applicable">{text("غير محدد", "Not specified")}</option>
-                        <option value="new">{text("جديد", "New")}</option>
-                        <option value="like_new">{text("شبه جديد", "Like new")}</option>
-                        <option value="used">{text("مستعمل", "Used")}</option>
-                        <option value="for_parts">{text("للقطع", "For parts")}</option>
-                      </select>
-                    </Field>
+                    {showGlobalCondition && (
+                      <Field label={text("الحالة", "Condition")}>
+                        <select
+                          value={condition}
+                          onChange={(event) =>
+                            handleGlobalConditionChange(event.target.value as ListingCondition)
+                          }
+                          className="input"
+                        >
+                          <option value="not_applicable">
+                            {text("غير محدد", "Not specified")}
+                          </option>
+                          <option value="new">{text("جديد", "New")}</option>
+                          <option value="like_new">{text("شبه جديد", "Like new")}</option>
+                          <option value="used">{text("مستعمل", "Used")}</option>
+                          <option value="for_parts">{text("للقطع", "For parts")}</option>
+                        </select>
+                      </Field>
+                    )}
                     <CategorySpecificFields
                       kind={categoryFieldKind}
                       values={categoryDetails}
-                      onChange={setCategoryDetails}
+                      onChange={handleCategoryDetailsChange}
                       text={text}
                       errors={fieldErrors}
                     />
@@ -1463,8 +1579,10 @@ function AddListingPage() {
                       error={fieldErrors.governorateId ?? fieldErrors.district}
                     >
                       <CanonicalLocationSelector
+                        value={locationNodeId}
                         onChange={(id, node) => {
                           setLocationNodeId(id ?? "");
+                          setLocationNodeType(node?.nodeType ?? "");
                           setLocationLabel(
                             node
                               ? language === "en"
@@ -1558,42 +1676,75 @@ function AddListingPage() {
                       </Field>
                     )}
                   </Card>
-
-                  <Card title={text("مراجعة سريعة", "Quick review")}>
-                    <div className="space-y-2 text-sm">
-                      <ReviewRow
-                        label={text("القسم", "Category")}
-                        value={
-                          category ? categoryName(category.id, category.nameAr, language) : "-"
-                        }
-                      />
-                      <ReviewRow label={text("العنوان", "Title")} value={title || "-"} />
-                      <ReviewRow
-                        label={text("الموقع", "Location")}
-                        value={
-                          locationLabel ||
-                          district ||
-                          (governorate
-                            ? governorateName(governorate.id, governorate.nameAr, language)
-                            : "-")
-                        }
-                      />
-                      <ReviewRow
-                        label={text("الصور", "Photos")}
-                        value={text(
-                          String(selectedImages.length) + " صورة مختارة",
-                          String(selectedImages.length) + " selected photos",
-                        )}
-                      />
-                    </div>
-                    <ListingStudioMessage tone="success">
-                      {text(
-                        "سيُرسل الإعلان للمراجعة، ويظهر للعامة بعد الموافقة.",
-                        "The listing will be sent for review and become public after approval.",
-                      )}
-                    </ListingStudioMessage>
-                  </Card>
                 </>
+              )}
+
+              {step === 3 && (
+                <Card
+                  title={text("راجع الإعلان قبل الإرسال", "Review before submitting")}
+                  description={text(
+                    "تحقق من التصنيف والتفاصيل والسعر والموقع وطرق التواصل قبل إرسال الإعلان للمراجعة.",
+                    "Check the category, details, price, location, and contact methods before sending the listing for review.",
+                  )}
+                >
+                  <div className="space-y-2 text-sm">
+                    <ReviewRow
+                      label={text("مسار التصنيف", "Category path")}
+                      value={
+                        selectedTaxonomyPath.length > 0
+                          ? taxonomyPathLabel(selectedTaxonomyPath, language)
+                          : category
+                            ? categoryName(category.id, category.nameAr, language)
+                            : "-"
+                      }
+                    />
+                    <ReviewRow label={text("العنوان", "Title")} value={title || "-"} />
+                    <ReviewRow
+                      label={text("السعر", "Price")}
+                      value={priceReviewLabel(price, priceType, text)}
+                    />
+                    <ReviewRow
+                      label={text("نوع السعر", "Price type")}
+                      value={priceTypeReviewLabel(priceType, text)}
+                    />
+                    <ReviewRow
+                      label={text("الموقع", "Location")}
+                      value={
+                        locationLabel ||
+                        district ||
+                        (governorate
+                          ? governorateName(governorate.id, governorate.nameAr, language)
+                          : "-")
+                      }
+                    />
+                    <ReviewRow
+                      label={text("الصور", "Photos")}
+                      value={text(
+                        `${selectedImages.length} صورة مختارة`,
+                        `${selectedImages.length} selected photos`,
+                      )}
+                    />
+                    {showGlobalCondition && (
+                      <ReviewRow
+                        label={text("حالة المنتج", "Item condition")}
+                        value={listingConditionReviewLabel(condition, text)}
+                      />
+                    )}
+                    {reviewCategoryRows.map(([label, value]) => (
+                      <ReviewRow key={`${label}-${value}`} label={label} value={value} />
+                    ))}
+                    <ReviewRow
+                      label={text("طرق التواصل", "Contact methods")}
+                      value={contactMethodsReviewLabel(contact, text)}
+                    />
+                  </div>
+                  <ListingStudioMessage tone="success">
+                    {text(
+                      "سيُرسل الإعلان للمراجعة، ويظهر للعامة بعد الموافقة.",
+                      "The listing will be sent for review and become public after approval.",
+                    )}
+                  </ListingStudioMessage>
+                </Card>
               )}
 
               <div className="rawaj-studio-action-bar">
@@ -1632,11 +1783,14 @@ function AddListingPage() {
                     <div className="mt-3 flex flex-wrap justify-center gap-2">
                       <button
                         onClick={() =>
-                          void navigate({ to: "/listings/$id", params: { id: createdListingId } })
+                          void navigate({
+                            to: "/profile/listings/$id",
+                            params: { id: createdListingId },
+                          })
                         }
                         className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
                       >
-                        {text("عرض الإعلان", "View listing")}
+                        {text("إدارة الإعلان", "Manage listing")}
                       </button>
                       <Link
                         to="/profile"
@@ -1778,16 +1932,99 @@ function validatePhone(value: string) {
   );
 }
 
+function priceTypeReviewLabel(priceType: PriceType, text: (ar: string, en: string) => string) {
+  const labels: Record<PriceType, string> = {
+    fixed: text("ثابت", "Fixed"),
+    negotiable: text("قابل للتفاوض", "Negotiable"),
+    contact: text("عند التواصل", "On contact"),
+    free: text("مجاني", "Free"),
+    exchange: text("للمبادلة", "Exchange"),
+  };
+  return labels[priceType];
+}
+
+function priceReviewLabel(
+  price: string,
+  priceType: PriceType,
+  text: (ar: string, en: string) => string,
+) {
+  if (priceType === "free") return text("مجاني", "Free");
+  if (priceType === "contact") return text("يُحدد عند التواصل", "Set on contact");
+  if (priceType === "exchange") return text("للمبادلة", "Exchange");
+  return price ? `${price} SYP` : "-";
+}
+
+function listingConditionReviewLabel(
+  condition: ListingCondition,
+  text: (ar: string, en: string) => string,
+) {
+  const labels: Record<ListingCondition, string> = {
+    not_applicable: text("غير محدد", "Not specified"),
+    new: text("جديد", "New"),
+    like_new: text("شبه جديد", "Like new"),
+    used: text("مستعمل", "Used"),
+    for_parts: text("للقطع", "For parts"),
+  };
+  return labels[condition];
+}
+
+function contactMethodsReviewLabel(
+  contact: { phone: boolean; whatsapp: boolean },
+  text: (ar: string, en: string) => string,
+) {
+  const methods = [text("رسائل رواج", "RAWAJ messages")];
+  if (contact.phone) methods.push(text("اتصال هاتفي", "Phone call"));
+  if (contact.whatsapp) methods.push(text("واتساب", "WhatsApp"));
+  return methods.join("، ");
+}
+
+function categoryDetailConditionValue(condition: ListingCondition) {
+  const values: Record<ListingCondition, string | undefined> = {
+    not_applicable: undefined,
+    new: "new",
+    like_new: "excellent",
+    used: "used",
+    for_parts: "needs_work",
+  };
+  return values[condition];
+}
+
+function syncCategoryDetailsCondition(
+  kind: CategoryFieldKind,
+  details: CategorySpecificDetails,
+  condition: ListingCondition,
+) {
+  const detailCondition = categoryDetailConditionValue(condition);
+  if (kind === "vehicles") return { ...details, vehicle_condition: detailCondition };
+  if (kind === "electronics") return { ...details, condition: detailCondition };
+  return details;
+}
+
+function categoryDetailsGlobalCondition(
+  kind: "vehicles" | "electronics",
+  details: CategorySpecificDetails,
+): ListingCondition {
+  const detailCondition = kind === "vehicles" ? details.vehicle_condition : details.condition;
+  if (detailCondition === "new") return "new";
+  if (detailCondition === "excellent") return "like_new";
+  if (detailCondition === "used" || detailCondition === "good") return "used";
+  if (detailCondition === "needs_work") return "for_parts";
+  return "not_applicable";
+}
+
 function buildStepErrors({
   step,
   categoryId,
+  taxonomyNodeId,
+  taxonomyNodesLength,
+  selectedTaxonomyNodeIsLeaf,
   title,
   description,
   price,
   priceType,
   governorateId,
   locationNodeId,
-  district,
+  preciseLocationSelected,
   categoryFieldKind,
   categoryDetails,
   contact,
@@ -1796,13 +2033,16 @@ function buildStepErrors({
 }: {
   step: number;
   categoryId: string;
+  taxonomyNodeId: string;
+  taxonomyNodesLength: number;
+  selectedTaxonomyNodeIsLeaf: boolean;
   title: string;
   description: string;
   price: string;
   priceType: PriceType;
   governorateId: string;
   locationNodeId: string;
-  district: string;
+  preciseLocationSelected: boolean;
   categoryFieldKind: CategoryFieldKind;
   categoryDetails: CategorySpecificDetails;
   contact: { phone: boolean; whatsapp: boolean };
@@ -1816,12 +2056,21 @@ function buildStepErrors({
     summary.push(message);
   };
 
-  const validateIdentity = step === 0 || step === 2;
-  const validateDetails = step === 1 || step === 2;
-  const validateFinal = step === 2;
+  const validateIdentity = step === 0 || step === 3;
+  const validateDetails = step === 1 || step === 3;
+  const validateFinal = step === 2 || step === 3;
 
   if (validateIdentity) {
-    if (!categoryId) add("categoryId", "اختر القسم.");
+    if (taxonomyNodesLength > 0) {
+      if (!taxonomyNodeId) {
+        add("taxonomyNodeId", "اختر التصنيف النهائي للإعلان.");
+      } else if (!selectedTaxonomyNodeIsLeaf) {
+        add("taxonomyNodeId", "يجب اختيار تصنيف نهائي قبل المتابعة.");
+      }
+      if (!categoryId) add("categoryId", "تعذر ربط التصنيف بالقسم الأساسي.");
+    } else if (!categoryId) {
+      add("categoryId", "اختر القسم.");
+    }
     if (title.trim().length < 10) add("title", "العنوان يجب أن يكون 10 أحرف على الأقل.");
   }
 
@@ -1867,7 +2116,9 @@ function buildStepErrors({
 
   if (validateFinal) {
     if (!governorateId && !locationNodeId) add("governorateId", "اختر المحافظة.");
-    if (!district) add("district", "اختر المنطقة.");
+    if (categoryRequiresPreciseLocation(categoryFieldKind) && !preciseLocationSelected) {
+      add("district", "اختر منطقة أو موقعاً أكثر دقة لهذا النوع من الإعلانات.");
+    }
     if ((priceType === "fixed" || priceType === "negotiable") && !price) {
       add("price", "السعر يجب أن يكون رقمًا صحيحًا.");
     }
