@@ -7,6 +7,7 @@ const paths = {
   edgeFunction: "supabase/functions/send-push-notifications/index.ts",
   nativePush: "src/lib/native-push.ts",
   pushApi: "src/lib/api/push-notifications.ts",
+  auth: "src/lib/auth.tsx",
   scanner: "src/features/saved-searches/SavedSearchAlertBackgroundScanner.tsx",
   preferences: "src/features/notifications/NotificationPreferencesPanel.tsx",
   targetResolution: "src/lib/api/notification-target-resolution.ts",
@@ -74,11 +75,12 @@ test("push tokens and delivery queue remain private and service-role controlled"
   );
 });
 
-test("native registration is explicit, permission-aware, and removed before logout", async () => {
-  const [nativePush, pushApi, preferences, scanner, moreRoute, packageText, capacitorConfig] =
+test("native registration is explicit, permission-aware, and detached by every logout path", async () => {
+  const [nativePush, pushApi, auth, preferences, scanner, moreRoute, packageText, capacitorConfig] =
     await Promise.all([
       read(paths.nativePush),
       read(paths.pushApi),
+      read(paths.auth),
       read(paths.preferences),
       read(paths.scanner),
       read(paths.moreRoute),
@@ -102,6 +104,13 @@ test("native registration is explicit, permission-aware, and removed before logo
   assert.match(scanner, /<PushNotificationBridge \/>/);
   assert.match(moreRoute, /disableNativePush/);
   assert.match(moreRoute, /await disableNativePush/);
+
+  assert.match(auth, /import \{ disableNativePush \} from "\.\/native-push"/);
+  assert.match(auth, /await disableNativePush\(signedInUserId, false\)/);
+  const detachIndex = auth.indexOf("await disableNativePush(signedInUserId, false)");
+  const signOutIndex = auth.indexOf("await client.auth.signOut()");
+  assert.ok(detachIndex >= 0, "AuthProvider must detach the current native push device");
+  assert.ok(signOutIndex > detachIndex, "Push detachment must happen before Supabase sign out");
 
   const packageJson = JSON.parse(packageText);
   assert.match(packageJson.dependencies["@capacitor/push-notifications"], /^\^?8\./);
