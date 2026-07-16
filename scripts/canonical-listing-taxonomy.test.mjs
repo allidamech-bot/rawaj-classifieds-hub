@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [migration, api, editRoute, qualityGate, migrationStatus] = await Promise.all([
+const [migration, api, editRoute, workflow, migrationStatus] = await Promise.all([
   readFile(
     new URL(
       "../supabase/migrations/202607130001_canonical_listing_taxonomy_assignments.sql",
@@ -12,7 +12,10 @@ const [migration, api, editRoute, qualityGate, migrationStatus] = await Promise.
   ),
   readFile(new URL("../src/lib/api/listing-taxonomy.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/profile/listings.$id.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  readFile(
+    new URL("../.github/workflows/canonical-listing-taxonomy.yml", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../docs/database-migration-status.md", import.meta.url), "utf8"),
 ]);
 
@@ -55,9 +58,11 @@ test("owner edit flow dual-reads and dual-writes canonical taxonomy", () => {
   assert.match(editRoute, /taxonomyAssignmentResult\.data\?\.taxonomyNodeId \?\? fallbackTaxonomyNodeId/);
 });
 
-test("quality gate and migration ledger permanently record Phase 4 truth", () => {
-  assert.match(qualityGate, /Canonical listing taxonomy contract/);
-  assert.match(qualityGate, /node --test scripts\/canonical-listing-taxonomy\.test\.mjs/);
+test("permanent workflow and migration ledger record Phase 4 truth", () => {
+  assert.match(workflow, /Canonical Listing Taxonomy Contract/);
+  assert.match(workflow, /node --test scripts\/canonical-listing-taxonomy\.test\.mjs/);
+  assert.match(workflow, /contents: read/);
+  assert.doesNotMatch(workflow, /contents: write/);
   assert.match(migrationStatus, /202607130001_canonical_listing_taxonomy_assignments\.sql/);
   assert.match(migrationStatus, /live-unverified/);
 });
