@@ -57,9 +57,11 @@ test("seller review actions and forms reject replacement accounts", () => {
   assert.match(reviewCard, /responseScopesRef = useRef<Set<string>>/);
   assert.match(reviewCard, /reportScopesRef = useRef<Set<string>>/);
   assert.match(reviewCard, /currentProfileId !== profileIdRef\.current/);
-  assert.match(sellerRoute, /reviewSubmitProfilesRef = useRef<Set<string>>/);
-  assert.match(sellerRoute, /reviewerUserId: currentProfileId/);
+  assert.match(sellerRoute, /reviewSubmitScopesRef = useRef<Set<string>>/);
+  assert.match(sellerRoute, /const scopeKey = \[currentProfileId, currentSellerId\]\.join\(":"\)/);
+  assert.doesNotMatch(sellerRoute, /reviewerUserId:/);
   assert.match(sellerRoute, /currentProfileId !== profileIdRef\.current/);
+  assert.match(sellerRoute, /currentSellerId !== sellerIdRef\.current/);
 });
 
 test("profile mutations and refreshes remain bound to one account", () => {

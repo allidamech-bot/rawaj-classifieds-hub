@@ -34,7 +34,7 @@ interface StorefrontIdentityHeroProps {
   joinedAt?: string | null;
   ratingAverage?: number | null;
   ratingCount?: number;
-  approvedCount: number;
+  approvedCount: number | null;
   pendingCount?: number;
   needsEditCount?: number;
   closedCount?: number;
@@ -70,18 +70,23 @@ export function StorefrontIdentityHero({
     ? new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
         month: "short",
         year: "numeric",
+        timeZone: "UTC",
       }).format(new Date(joinedAt))
     : null;
   const metrics: StorefrontMetric[] =
     mode === "owner"
       ? [
-          { label: text("نشط", "Live"), value: approvedCount, tone: "live" },
+          { label: text("نشط", "Live"), value: approvedCount ?? 0, tone: "live" },
           { label: text("قيد المراجعة", "In review"), value: pendingCount, tone: "pending" },
           { label: text("تحتاج تدخلاً", "Needs action"), value: needsEditCount, tone: "action" },
           { label: text("مغلقة", "Closed"), value: closedCount, tone: "closed" },
         ]
       : [
-          { label: text("إعلان معتمد", "Approved listings"), value: approvedCount, icon: Store },
+          {
+            label: text("إعلان معتمد", "Approved listings"),
+            value: approvedCount ?? "—",
+            icon: Store,
+          },
           {
             label:
               ratingCount > 0
@@ -103,6 +108,11 @@ export function StorefrontIdentityHero({
           <img
             src={coverUrl ?? undefined}
             alt=""
+            width={1440}
+            height={480}
+            sizes="100vw"
+            loading="eager"
+            fetchPriority="high"
             decoding="async"
             onError={() => setFailedCoverUrl(coverUrl ?? null)}
           />
@@ -132,6 +142,10 @@ export function StorefrontIdentityHero({
               <img
                 src={avatarUrl ?? undefined}
                 alt={displayName}
+                width={160}
+                height={160}
+                sizes="(max-width: 640px) 88px, 112px"
+                loading="eager"
                 decoding="async"
                 onError={() => setFailedAvatarUrl(avatarUrl ?? null)}
               />
@@ -170,6 +184,15 @@ export function StorefrontIdentityHero({
                   "This page shows public information and approved listings only.",
                 ))}
         </p>
+
+        {mode === "public" && verified ? (
+          <p className="text-xs leading-5 text-primary-foreground/75">
+            {text(
+              "تعني الشارة أن بيانات الملف خضعت لمراجعة المنصة، ولا تمثل ضمانًا للمنتج أو الدفع أو التسليم أو إتمام الصفقة.",
+              "The badge means profile information was reviewed by the platform; it does not guarantee a product, payment, delivery, or transaction.",
+            )}
+          </p>
+        ) : null}
 
         <div className="rawaj-storefront-identity__metrics">
           {metrics.map((metric) => {

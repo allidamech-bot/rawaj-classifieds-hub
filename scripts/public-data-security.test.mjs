@@ -87,8 +87,9 @@ test("all public listing reads use explicit allowlists", () => {
 });
 
 test("public seller page uses listing and review allowlists", () => {
-  assert.match(seller, /\.select\(publicListingSelect\)/);
-  assert.match(seller, /\.select\(publicSellerReviewSelect\)/);
+  assert.match(seller, /\.select\(publicListingSelect, \{ count: "exact" \}\)/);
+  assert.match(seller, /\.select\(publicSellerReviewSelect, \{ count: "exact" \}\)/);
+  assert.match(seller, /sanitizePublicListing\(mapListing/);
   assert.doesNotMatch(seller, /\.select\("\*"\)/);
 });
 

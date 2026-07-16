@@ -7,7 +7,7 @@ import {
   setSellerReviewResponse,
   type SellerReviewReportReason,
 } from "@/lib/classifieds-api";
-import type { SellerReview } from "@/lib/classifieds-types";
+import type { PublicSellerReview } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -28,7 +28,7 @@ export function SellerReviewCard({
   review,
   canManageResponse,
 }: {
-  review: SellerReview;
+  review: PublicSellerReview;
   canManageResponse: boolean;
 }) {
   const auth = useAuth();
@@ -64,10 +64,7 @@ export function SellerReviewCard({
     setReported(false);
   }, [profileId, review]);
 
-  const canReport =
-    auth.status === "signedIn" &&
-    Boolean(auth.profile?.id) &&
-    auth.profile?.id !== review.reviewerUserId;
+  const canReport = auth.status === "signedIn" && Boolean(auth.profile?.id);
 
   async function persistResponse(responseText: string) {
     const currentProfileId = profileId;
@@ -173,7 +170,9 @@ export function SellerReviewCard({
         <p className="mt-2 whitespace-pre-line text-xs leading-6">{review.comment}</p>
       ) : null}
       <p className="mt-1 text-[10px] text-muted-foreground">
-        {new Date(review.createdAt).toLocaleDateString(language === "ar" ? "ar-SY" : "en-US")}
+        {new Date(review.createdAt).toLocaleDateString(language === "ar" ? "ar-SY" : "en-US", {
+          timeZone: "UTC",
+        })}
       </p>
 
       {savedResponse ? (

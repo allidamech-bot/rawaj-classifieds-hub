@@ -10,4 +10,4 @@ export const publicListingSelect =
 export const publicListingWithImagesSelect = `${publicListingSelect},listing_images!inner(id)`;
 
 export const publicSellerReviewSelect =
-  "id,seller_user_id,reviewer_user_id,related_listing_id,rating,comment,traits,status,seller_response,seller_response_updated_at,created_at,updated_at";
+  "id,rating,comment,traits,seller_response,seller_response_updated_at,created_at";

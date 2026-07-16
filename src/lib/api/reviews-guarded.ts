@@ -34,7 +34,6 @@ function runOnce<T>(key: string, requests: Map<string, Promise<T>>, operation: (
 
 export function createSellerReview(payload: Parameters<typeof baseCreateSellerReview>[0]) {
   const key = JSON.stringify([
-    payload.reviewerUserId ?? "anonymous",
     payload.sellerUserId.trim(),
     payload.relatedListingId?.trim() ?? "",
     payload.rating,
