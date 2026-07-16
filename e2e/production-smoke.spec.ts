@@ -43,7 +43,9 @@ async function readStaticSitemap(request: APIRequestContext) {
   if (index.includes("<urlset")) return index;
 
   expect(index).toMatch(/<sitemapindex/);
-  const staticShardMatch = index.match(/<loc>([^<]*sitemap\.xml\?section=static(?:&amp;|&)page=1)<\/loc>/);
+  const staticShardMatch = index.match(
+    /<loc>([^<]*sitemap\.xml\?section=static(?:&amp;|&)page=1)<\/loc>/,
+  );
   expect(staticShardMatch, "Sitemap index does not expose the static discovery shard").toBeTruthy();
   const shardUrl = staticShardMatch![1].replaceAll("&amp;", "&");
   return expectTextEndpoint(request, new URL(shardUrl).pathname + new URL(shardUrl).search, /xml/i);
