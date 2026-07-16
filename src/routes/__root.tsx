@@ -76,9 +76,7 @@ const LazySavedSearchAlertBackgroundScanner = lazy(() =>
     default: module.SavedSearchAlertBackgroundScanner,
   })),
 );
-const LazyListingComparisonDock = lazy(
-  () => import("@/features/comparison/ListingComparisonDock"),
-);
+const LazyListingComparisonDock = lazy(() => import("@/features/comparison/ListingComparisonDock"));
 
 function NotFoundComponent() {
   const { text } = useUiPreferences();

@@ -11,10 +11,7 @@ const [root, scanner, comparisonCore, comparisonDock, qualityGate] = await Promi
     ),
     "utf8",
   ),
-  readFile(
-    new URL("../src/features/comparison/listing-comparison.tsx", import.meta.url),
-    "utf8",
-  ),
+  readFile(new URL("../src/features/comparison/listing-comparison.tsx", import.meta.url), "utf8"),
   readFile(
     new URL("../src/features/comparison/ListingComparisonDock.tsx", import.meta.url),
     "utf8",
@@ -54,10 +51,7 @@ test("account background services stay outside the signed-out public bundle", ()
     /import \{ SavedSearchAlertBackgroundScanner \} from "@\/features\/saved-searches\/SavedSearchAlertBackgroundScanner"/,
   );
   assert.match(root, /LazySavedSearchAlertBackgroundScanner = lazy/);
-  assert.match(
-    root,
-    /import\("@\/features\/saved-searches\/SavedSearchAlertBackgroundScanner"\)/,
-  );
+  assert.match(root, /import\("@\/features\/saved-searches\/SavedSearchAlertBackgroundScanner"\)/);
   assert.match(root, /function DeferredAccountBackgroundServices/);
   assert.match(root, /auth\.status !== "signedIn" \|\| !profileId/);
   assert.match(root, /<LazySavedSearchAlertBackgroundScanner key=\{profileId\} \/>/);
