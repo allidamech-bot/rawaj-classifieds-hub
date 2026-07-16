@@ -173,7 +173,7 @@ function safeErrorSummary(error: unknown) {
 function redactSensitiveText(value: string) {
   return value
     .replace(/eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}/g, "[redacted-jwt]")
-    .replace(/(?:token|apikey|api_key|authorization)=?\s*[^\s&]+/gi, "$1=[redacted]");
+    .replace(/(token|apikey|api_key|authorization)=?\s*[^\s&]+/gi, "$1=[redacted]");
 }
 
 export default {
