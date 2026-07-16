@@ -1,12 +1,9 @@
 name: Phase 3 Route CSS Isolation Patch
 
 on:
-  push:
+  pull_request:
     branches:
-      - agent/phase-3-route-css-isolation
-    paths:
-      - scripts/apply-phase3-route-css-isolation.py
-      - .github/workflows/phase3-route-css-isolation.yml
+      - main
 
 permissions:
   contents: write
