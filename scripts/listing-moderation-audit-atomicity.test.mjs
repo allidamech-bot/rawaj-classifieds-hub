@@ -17,16 +17,25 @@ const auditInsertIndex = migration.indexOf("perform public.rawaj_insert_audit_lo
 const notificationIndex = migration.indexOf("perform public.rawaj_create_notification");
 const exceptionBlockIndex = migration.indexOf("\n  exception\n");
 
-test("listing review decision keeps moderation history and audit atomic with the state transition", () => {
-  assert.match(migration, /create or replace function public\.rawaj_review_listing_decision/);
-  assert.ok(moderationInsertIndex > -1, "moderation action insert must exist");
-  assert.ok(auditInsertIndex > moderationInsertIndex, "audit write must follow moderation history");
-  assert.ok(notificationIndex > auditInsertIndex, "notification must run only after required audit writes");
-  assert.ok(
-    exceptionBlockIndex > auditInsertIndex,
-    "required moderation and audit writes must not be protected by exception swallowing",
-  );
-});
+test(
+  "listing review decision keeps moderation history and audit atomic with the state transition",
+  () => {
+    assert.match(migration, /create or replace function public\.rawaj_review_listing_decision/);
+    assert.ok(moderationInsertIndex > -1, "moderation action insert must exist");
+    assert.ok(
+      auditInsertIndex > moderationInsertIndex,
+      "audit write must follow moderation history",
+    );
+    assert.ok(
+      notificationIndex > auditInsertIndex,
+      "notification must run only after required audit writes",
+    );
+    assert.ok(
+      exceptionBlockIndex > auditInsertIndex,
+      "required moderation and audit writes must not be protected by exception swallowing",
+    );
+  },
+);
 
 test("only owner notification delivery remains best effort", () => {
   const exceptionMatches = migration.match(/exception\s+when others then\s+null;/g) ?? [];
