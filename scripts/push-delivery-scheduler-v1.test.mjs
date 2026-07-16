@@ -2,22 +2,33 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [workflow, worker, migration, packageJson, contractWorkflow] = await Promise.all([
-  readFile(new URL("../.github/workflows/push-delivery-scheduler.yml", import.meta.url), "utf8"),
-  readFile(
-    new URL("../supabase/functions/send-push-notifications/index.ts", import.meta.url),
-    "utf8",
-  ),
-  readFile(
-    new URL("../supabase/migrations/202607150002_saved_search_alerts_push_v1.sql", import.meta.url),
-    "utf8",
-  ),
-  readFile(new URL("../package.json", import.meta.url), "utf8"),
-  readFile(
-    new URL("../.github/workflows/push-delivery-scheduler-contract.yml", import.meta.url),
-    "utf8",
-  ),
-]);
+const [workflow, worker, migration, lifecycleMigration, packageJson, contractWorkflow] =
+  await Promise.all([
+    readFile(new URL("../.github/workflows/push-delivery-scheduler.yml", import.meta.url), "utf8"),
+    readFile(
+      new URL("../supabase/functions/send-push-notifications/index.ts", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL(
+        "../supabase/migrations/202607150002_saved_search_alerts_push_v1.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+    readFile(
+      new URL(
+        "../supabase/migrations/202607160004_harden_push_delivery_device_lifecycle.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+    readFile(new URL("../package.json", import.meta.url), "utf8"),
+    readFile(
+      new URL("../.github/workflows/push-delivery-scheduler-contract.yml", import.meta.url),
+      "utf8",
+    ),
+  ]);
 
 test("push delivery worker is scheduled and can be run manually", () => {
   assert.match(workflow, /schedule:/);
@@ -81,6 +92,17 @@ test("the protected worker flushes due saved searches before claiming push deliv
   assert.match(worker, /timingSafeEqual/);
 });
 
+test("disabled and permanently invalid devices cannot strand retryable queue rows", () => {
+  assert.match(lifecycleMigration, /update public\.notification_push_deliveries delivery/i);
+  assert.match(lifecycleMigration, /and not device\.active/i);
+  assert.match(lifecycleMigration, /delivery\.status in \('pending', 'retry', 'processing'\)/i);
+  assert.match(lifecycleMigration, /last_error = 'push_device_disabled'/i);
+  assert.match(lifecycleMigration, /last_error = 'push_channel_disabled'/i);
+  assert.match(lifecycleMigration, /when coalesce\(p_disable_device, false\) then 'failed'/i);
+  assert.match(lifecycleMigration, /last_error = 'push_device_invalidated'/i);
+  assert.match(lifecycleMigration, /id <> p_delivery_id/i);
+});
+
 test("database worker RPCs remain restricted to the service role", () => {
   const flushStart = migration.indexOf(
     "create or replace function public.rawaj_flush_due_saved_search_alerts_v2",
@@ -92,6 +114,20 @@ test("database worker RPCs remain restricted to the service role", () => {
   assert.ok(claimStart > flushStart);
   assert.match(migration.slice(flushStart, claimStart), /auth\.role\(\).*service_role/s);
   assert.match(migration.slice(claimStart), /auth\.role\(\).*service_role/s);
+
+  const markStart = lifecycleMigration.indexOf(
+    "create or replace function public.rawaj_mark_push_delivery_v1",
+  );
+  assert.ok(markStart >= 0);
+  assert.match(lifecycleMigration.slice(markStart), /auth\.role\(\).*service_role/s);
+  assert.match(
+    lifecycleMigration,
+    /grant execute on function public\.rawaj_mark_push_delivery_v1\(uuid, boolean, text, boolean\) to service_role/i,
+  );
+  assert.doesNotMatch(
+    lifecycleMigration,
+    /grant execute on function public\.rawaj_mark_push_delivery_v1[\s\S]*to authenticated/i,
+  );
 });
 
 test("push scheduler contract remains part of local and pull-request validation", () => {
