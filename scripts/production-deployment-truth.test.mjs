@@ -98,15 +98,26 @@ test("local browser smoke retains legal and controlled not-found coverage", () =
   assert.match(browserSpec, /requestfailed/);
 });
 
-test("Production proof distinguishes historical evidence from the current repository delta", () => {
+test("Production proof distinguishes historical evidence from every current release delta", () => {
   assert.match(productionSchemaProof, /Historical Production extraction retained/);
-  assert.match(productionSchemaProof, /202607160002_require_listing_moderation_audit\.sql/);
-  assert.match(productionSchemaProof, /202607160003_enable_chat_realtime\.sql/);
+  for (const migration of [
+    "202607160002_require_listing_moderation_audit.sql",
+    "202607160003_enable_chat_realtime.sql",
+    "202607160004_harden_push_delivery_device_lifecycle.sql",
+    "202607160005_preserve_multi_device_push_preference.sql",
+  ]) {
+    assert.ok(
+      productionSchemaProof.includes(migration),
+      `Missing Production release-delta evidence for ${migration}`,
+    );
+  }
   assert.match(productionSchemaProof, /Unknown until applied and verified/);
   assert.match(
     productionSchemaProof,
     /Realtime conclusion from the historical document is superseded/,
   );
+  assert.match(productionSchemaProof, /Push delivery queue lifecycle correction requires/);
+  assert.match(productionSchemaProof, /Multi-device Push preference correction requires/);
   assert.doesNotMatch(
     productionSchemaProof,
     /no current repository evidence that RAWAJ depends on database-change Realtime subscriptions/i,
@@ -114,7 +125,7 @@ test("Production proof distinguishes historical evidence from the current reposi
   assert.doesNotMatch(productionSchemaProof, /No repository evidence requires Realtime/i);
 });
 
-test("Phase 0 Production proof bundle is read-only and verifies both release blockers", () => {
+test("Production proof bundle is read-only and covers review, Realtime, and Push corrections", () => {
   assert.match(phaseZeroProofSql, /BEGIN TRANSACTION READ ONLY/);
   assert.match(phaseZeroProofSql, /ROLLBACK;/);
   assert.doesNotMatch(
@@ -129,13 +140,28 @@ test("Phase 0 Production proof bundle is read-only and verifies both release blo
   assert.match(phaseZeroProofSql, /conversation_messages/);
   assert.match(phaseZeroProofSql, /relrowsecurity/);
   assert.match(phaseZeroProofSql, /has_table_privilege/);
+  assert.match(phaseZeroProofSql, /rawaj_disable_push_device_v1/);
+  assert.match(phaseZeroProofSql, /rawaj_mark_push_delivery_v1/);
+  assert.match(phaseZeroProofSql, /rawaj_upsert_push_device_v1/);
+  assert.match(phaseZeroProofSql, /has_function_privilege/);
+  assert.match(phaseZeroProofSql, /inactive_device_nonterminal_deliveries/);
+  assert.match(phaseZeroProofSql, /active_granted_devices/);
 });
 
 test("Production checklist requires application and behavioral evidence", () => {
-  assert.match(productionChecklist, /202607160002_require_listing_moderation_audit\.sql/);
-  assert.match(productionChecklist, /202607160003_enable_chat_realtime\.sql/);
+  for (const migration of [
+    "202607160002_require_listing_moderation_audit.sql",
+    "202607160003_enable_chat_realtime.sql",
+    "202607160004_harden_push_delivery_device_lifecycle.sql",
+    "202607160005_preserve_multi_device_push_preference.sql",
+  ]) {
+    assert.ok(productionChecklist.includes(migration), `Missing checklist entry for ${migration}`);
+  }
   assert.match(productionChecklist, /participant A sends a message to participant B/);
   assert.match(productionChecklist, /non-participant C receives no conversation event/);
+  assert.match(productionChecklist, /device A and device B are registered/);
+  assert.match(productionChecklist, /seller-review notification opens the intended seller storefront/);
+  assert.match(productionChecklist, /inactive devices have zero/);
   assert.match(productionChecklist, /full Production catalog extraction refreshed/);
   assert.match(
     productionChecklist,
