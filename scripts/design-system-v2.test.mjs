@@ -2,39 +2,20 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [css, root, routeStyles, button, input, card, badge, header, bottomDock] =
-  await Promise.all([
-    readFile(new URL("../src/design-system-v2.css", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/components/ui/button.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/components/ui/input.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../src/components/ui/card.tsx", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/components/ui/badge.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/components/shell/BottomDock.tsx", import.meta.url),
-      "utf8",
-    ),
-  ]);
+const [css, root, routeStyles, button, input, card, badge, header, bottomDock] = await Promise.all([
+  readFile(new URL("../src/design-system-v2.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/ui/button.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/ui/input.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/ui/card.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/ui/badge.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/shell/BottomDock.tsx", import.meta.url), "utf8"),
+]);
 
 test("design system V2 is loaded after legacy page styles", () => {
-  assert.match(
-    root,
-    /import designSystemV2Css from "\.\.\/design-system-v2\.css\?url";/,
-  );
+  assert.match(root, /import designSystemV2Css from "\.\.\/design-system-v2\.css\?url";/);
   assert.match(
     routeStyles,
     /import personalSpacePolishCss from "\.\.\/personal-space-polish\.css\?url";/,
