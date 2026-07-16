@@ -7,10 +7,7 @@ const [root, route, detailPageData, media, viewer, seller, dock, safety, similar
     readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
     readFile(
-      new URL(
-        "../src/features/listing-detail/public-listing-detail-page-data.ts",
-        import.meta.url,
-      ),
+      new URL("../src/features/listing-detail/public-listing-detail-page-data.ts", import.meta.url),
       "utf8",
     ),
     readFile(
