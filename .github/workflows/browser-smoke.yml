@@ -27,9 +27,55 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  format-phase3:
+    if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format and commit Phase 3 files
+        run: |
+          npx prettier --write \
+            scripts/home-ssr-contract.test.mjs \
+            src/features/categories/public-categories-page-data.ts \
+            src/features/listings/public-listings-page-data.ts \
+            src/features/listings/use-listings-references.ts \
+            src/features/listings/use-listings-results.ts \
+            src/routes/categories.tsx \
+            src/routes/listings.tsx
+          if git diff --quiet; then
+            echo "Phase 3 files are already formatted."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            scripts/home-ssr-contract.test.mjs \
+            src/features/categories/public-categories-page-data.ts \
+            src/features/listings/public-listings-page-data.ts \
+            src/features/listings/use-listings-references.ts \
+            src/features/listings/use-listings-results.ts \
+            src/routes/categories.tsx \
+            src/routes/listings.tsx
+          git commit -m "Format Phase 3 public SSR changes"
+          git push origin HEAD:${{ github.head_ref }}
+
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 20
