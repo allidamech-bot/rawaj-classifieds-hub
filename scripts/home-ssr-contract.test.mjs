@@ -15,7 +15,10 @@ const [home, categories, categoryData, listings, listingData, listingReferences,
       new URL("../src/features/listings/public-listings-page-data.ts", import.meta.url),
       "utf8",
     ),
-    readFile(new URL("../src/features/listings/use-listings-references.ts", import.meta.url), "utf8"),
+    readFile(
+      new URL("../src/features/listings/use-listings-references.ts", import.meta.url),
+      "utf8",
+    ),
     readFile(new URL("../src/features/listings/use-listings-results.ts", import.meta.url), "utf8"),
   ]);
 
@@ -54,7 +57,10 @@ test("listing results SSR is filter-aware and uses public APIs only", () => {
   assert.match(listingData, /buildListingFilters\(\{/);
   assert.match(listingData, /fetchPublicListings\(filters, null, 30\)/);
   assert.match(listingData, /searchPublicSellers\(search\.q\?\.trim\(\) \?\? ""\)/);
-  assert.match(listingData, /\.id === categorySearchValue \|\| category\.slug === categorySearchValue/);
+  assert.match(
+    listingData,
+    /\.id === categorySearchValue \|\| category\.slug === categorySearchValue/,
+  );
   assert.match(listingData, /\.id === search\.gov \|\| governorate\.slug === search\.gov/);
   assert.doesNotMatch(listingData, /service_role|SUPABASE_SERVICE_ROLE|auth\.admin/);
 });

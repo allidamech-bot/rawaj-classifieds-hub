@@ -72,9 +72,7 @@ function CategoriesPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const { language, text } = useUiPreferences();
-  const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>(
-    initialData.taxonomyNodes,
-  );
+  const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>(initialData.taxonomyNodes);
   const [taxonomyAvailable, setTaxonomyAvailable] = useState(initialData.taxonomyAvailable);
   const [categories, setCategories] = useState<ClassifiedCategory[]>(initialData.categories);
   const [subcategories, setSubcategories] = useState<ClassifiedSubcategory[]>(

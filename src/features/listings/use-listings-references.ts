@@ -26,7 +26,9 @@ export interface ListingsReferences {
 
 export function useListingsReferences(search: ListingsSearch): ListingsReferences {
   const { references } = listingsRouteApi.useLoaderData();
-  const [govId, setGovId] = useState(() => resolveGovernorateId(references.governorates, search.gov));
+  const [govId, setGovId] = useState(() =>
+    resolveGovernorateId(references.governorates, search.gov),
+  );
 
   useEffect(() => {
     setGovId(resolveGovernorateId(references.governorates, search.gov));

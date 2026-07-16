@@ -57,9 +57,7 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
   const [sellerSearchError, setSellerSearchError] = useState<ClassifiedsError | null>(
     initialResults.sellerSearchError,
   );
-  const [nextCursor, setNextCursor] = useState<ListingCursor | null>(
-    initialResults.nextCursor,
-  );
+  const [nextCursor, setNextCursor] = useState<ListingCursor | null>(initialResults.nextCursor);
   const [loading, setLoading] = useState(false);
   const filterVersionRef = useRef(0);
   const lastCompletedFilterKeyRef = useRef<string | null>(initialResults.filterKey);
