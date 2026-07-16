@@ -240,9 +240,7 @@ async function ensureNativePushListeners(userId: string): Promise<void> {
         emitUnreadActivityChanged();
         if (typeof window === "undefined") return;
         const data = event.notification.data;
-        window.location.assign(
-          resolveNotificationTargetPath(data?.target_type, data?.target_id),
-        );
+        window.location.assign(resolveNotificationTargetPath(data?.target_type, data?.target_id));
       },
     );
 
