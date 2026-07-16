@@ -48,7 +48,6 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
     listingDetail: /^\/listings\/[^/]+$/.test(normalizedPathname),
     offers: normalizedPathname === "/offers",
     storefront:
-      /^\/seller\/[^/]+$/.test(normalizedPathname) ||
-      normalizedPathname === "/profile/listings",
+      /^\/seller\/[^/]+$/.test(normalizedPathname) || normalizedPathname === "/profile/listings",
   };
 }
