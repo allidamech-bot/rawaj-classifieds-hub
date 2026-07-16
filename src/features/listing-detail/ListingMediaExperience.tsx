@@ -66,8 +66,12 @@ export function ListingMediaExperience({
               <img
                 src={selectedUrl}
                 alt={selectedImage?.altAr ?? title}
+                loading="eager"
                 decoding="async"
                 fetchPriority="high"
+                width={1280}
+                height={960}
+                sizes="(max-width: 1023px) 100vw, 760px"
                 onLoad={() => setLoadedUrl(selectedUrl)}
                 onError={() => markImageFailed(selectedUrl)}
                 className="rawaj-detail-media__image"
@@ -169,6 +173,9 @@ export function ListingMediaExperience({
                       alt=""
                       loading="lazy"
                       decoding="async"
+                      width={160}
+                      height={120}
+                      sizes="80px"
                       onError={() => markImageFailed(imageUrl)}
                     />
                   )}

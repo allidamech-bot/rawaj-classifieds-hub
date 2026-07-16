@@ -3,6 +3,7 @@ import { Clock, MapPin, ShieldAlert } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { ListingContactDock } from "@/features/listing-detail/ListingContactDock";
+import { loadPublicListingDetailPageData } from "@/features/listing-detail/public-listing-detail-page-data";
 import { ListingMediaExperience } from "@/features/listing-detail/ListingMediaExperience";
 import { ListingSafetyAndAlert } from "@/features/listing-detail/ListingSafetyAndAlert";
 import { ListingSellerProfileCard } from "@/features/listing-detail/ListingSellerProfileCard";
@@ -14,10 +15,6 @@ import {
   createSavedSearch,
   favoriteListing,
   fetchFavoriteStatus,
-  fetchListingDetail,
-  fetchListingImages,
-  fetchPublicListings,
-  fetchPublicSellerProfile,
   startListingConversation,
   unfavoriteListing,
 } from "@/lib/classifieds-api";
@@ -38,124 +35,67 @@ import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/listings/$id")({
   loader: async ({ params }) => {
-    const listing = await fetchListingDetail(params.id);
-    if (!listing.ok) throw notFound();
-    return listing.data;
+    const pageData = await loadPublicListingDetailPageData(params.id);
+    if (!pageData) throw notFound();
+    return pageData;
   },
   notFoundComponent: UnavailableListingRecovery,
-  head: ({ loaderData }) =>
-    createSeo({
-      title: loaderData ? `${loaderData.title} | RAWAJ / رواج` : "إعلان غير متاح | RAWAJ / رواج",
-      description: loaderData
-        ? plainText(loaderData.description || "تفاصيل إعلان معتمد على رواج.", 160)
+  head: ({ loaderData }) => {
+    const listing = loaderData?.listing;
+    return createSeo({
+      title: listing ? `${listing.title} | RAWAJ / رواج` : "إعلان غير متاح | RAWAJ / رواج",
+      description: listing
+        ? plainText(listing.description || "تفاصيل إعلان معتمد على رواج.", 160)
         : "هذا الإعلان غير متاح للعرض العام على رواج.",
-      path: loaderData ? `/listings/${loaderData.id}` : "/listings",
+      path: listing ? `/listings/${listing.id}` : "/listings",
       type: "article",
-      image: loaderData?.primaryImageUrl ?? null,
-      noindex: !loaderData,
-    }),
+      image: loaderData?.images[0]?.publicUrl ?? listing?.primaryImageUrl ?? null,
+      noindex: !listing,
+    });
+  },
   component: ListingDetailsPage,
 });
 
 function ListingDetailsPage() {
   const { id } = Route.useParams();
-  const initialListing = Route.useLoaderData();
+  const initialData = Route.useLoaderData();
+  const initialListing = initialData.listing;
   const navigate = useNavigate();
   const auth = useAuth();
   const { language, text } = useUiPreferences();
   const [listing, setListing] = useState<ClassifiedListing | null>(initialListing);
-  const [images, setImages] = useState<ListingImage[]>([]);
-  const [seller, setSeller] = useState<PublicSellerProfile | null>(null);
-  const [similarListings, setSimilarListings] = useState<ClassifiedListing[]>([]);
-  const [loading, setLoading] = useState(!initialListing);
-  const [sellerLoading, setSellerLoading] = useState(true);
-  const [similarLoading, setSimilarLoading] = useState(true);
+  const [images, setImages] = useState<ListingImage[]>(initialData.images);
+  const [seller, setSeller] = useState<PublicSellerProfile | null>(initialData.seller);
+  const [similarListings, setSimilarListings] = useState<ClassifiedListing[]>(
+    initialData.similarListings,
+  );
+  const [loading, setLoading] = useState(false);
+  const [sellerLoading, setSellerLoading] = useState(false);
+  const [similarLoading, setSimilarLoading] = useState(false);
   const [error, setError] = useState<ClassifiedsError | null>(null);
-  const [imageError, setImageError] = useState<ClassifiedsError | null>(null);
+  const [imageError, setImageError] = useState<ClassifiedsError | null>(initialData.imageError);
   const [fav, setFav] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [alertBusy, setAlertBusy] = useState(false);
   const [alertCreated, setAlertCreated] = useState(false);
   const favoriteInFlightRef = useRef(false);
   const favoriteRequestIdRef = useRef(0);
-  const imageRequestIdRef = useRef(0);
   const reportInFlightRef = useRef(false);
   const messageInFlightRef = useRef(false);
   const alertInFlightRef = useRef(false);
 
   useEffect(() => {
-    setListing(initialListing);
+    setListing(initialData.listing);
+    setImages(initialData.images);
+    setSeller(initialData.seller);
+    setSimilarListings(initialData.similarListings);
+    setImageError(initialData.imageError);
     setLoading(false);
+    setSellerLoading(false);
+    setSimilarLoading(false);
     setError(null);
     setAlertCreated(false);
-  }, [initialListing, id]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const requestId = ++imageRequestIdRef.current;
-    setImages([]);
-    setImageError(null);
-
-    async function loadImages() {
-      const result = await fetchListingImages(id);
-      if (cancelled || requestId !== imageRequestIdRef.current) return;
-      if (result.ok) setImages(result.data);
-      else setImageError(result.error);
-    }
-
-    void loadImages();
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
-
-  useEffect(() => {
-    let cancelled = false;
-    setSellerLoading(true);
-    setSeller(null);
-
-    async function loadSeller() {
-      const result = await fetchPublicSellerProfile(initialListing.ownerId);
-      if (cancelled) return;
-      if (result.ok) setSeller(result.data);
-      setSellerLoading(false);
-    }
-
-    void loadSeller();
-    return () => {
-      cancelled = true;
-    };
-  }, [initialListing.ownerId]);
-
-  useEffect(() => {
-    let cancelled = false;
-    setSimilarLoading(true);
-    setSimilarListings([]);
-
-    async function loadSimilarListings() {
-      const result = await fetchPublicListings(
-        {
-          categoryId: initialListing.categoryId,
-          governorateId: initialListing.governorateId,
-          sort: "latest",
-        },
-        null,
-        12,
-      );
-      if (cancelled) return;
-      if (result.ok) {
-        setSimilarListings(
-          result.data.items.filter((item) => item.id !== initialListing.id).slice(0, 8),
-        );
-      }
-      setSimilarLoading(false);
-    }
-
-    void loadSimilarListings();
-    return () => {
-      cancelled = true;
-    };
-  }, [initialListing.categoryId, initialListing.governorateId, initialListing.id]);
+  }, [initialData, id]);
 
   useEffect(() => {
     let cancelled = false;

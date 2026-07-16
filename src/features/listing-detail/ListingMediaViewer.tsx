@@ -116,7 +116,11 @@ export default function ListingMediaViewer({
                 src={currentUrl}
                 alt={currentImage?.altAr ?? title}
                 style={{ transform: `scale(${zoom})` }}
+                loading="eager"
                 decoding="async"
+                width={1600}
+                height={1200}
+                sizes="100vw"
                 draggable={false}
                 onError={() => onImageError(currentUrl)}
               />
@@ -161,6 +165,9 @@ export default function ListingMediaViewer({
                           alt=""
                           loading="lazy"
                           decoding="async"
+                          width={160}
+                          height={120}
+                          sizes="80px"
                           onError={() => onImageError(imageUrl)}
                         />
                       )}
