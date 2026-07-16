@@ -124,7 +124,8 @@ test("native registration is explicit, permission-aware, logout-safe, offline-sa
   assert.ok(detachIndex >= 0, "AuthProvider must detach the current native push device");
   assert.ok(signOutIndex > detachIndex, "Push detachment must happen before Supabase sign out");
 
-  assert.match(nativePush, /disablePushDevice\(userId, deviceKey, false\)/);
+  assert.match(nativePush, /await disableNativePush\(userId, false\)/);
+  assert.doesNotMatch(nativePush, /disablePushDevice\(userId, deviceKey, false\)/);
   assert.doesNotMatch(nativePush, /disablePushDevice\(userId, deviceKey, true\)/);
   assert.match(nativePush, /const localCleanup = unregisterNativePushLocally\(\)/);
   const localCleanupIndex = nativePush.indexOf(
