@@ -5,6 +5,7 @@ import ts from "typescript";
 
 const [
   root,
+  routeStyles,
   home,
   hero,
   worlds,
@@ -17,6 +18,7 @@ const [
   visualPolishCss,
 ] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/index.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/home/DiscoveryHero.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/home/CategoryWorlds.tsx", import.meta.url), "utf8"),
@@ -43,9 +45,9 @@ const { selectDiverseListings } = await import(
 );
 
 test("home discovery V3 styles load after marketplace V2", () => {
-  assert.match(root, /import homeDiscoveryV3Css from "\.\.\/home-discovery-v3\.css\?url";/);
-  const marketplaceIndex = root.indexOf("href: homeMarketplaceV2Css");
-  const discoveryIndex = root.indexOf("href: homeDiscoveryV3Css");
+  assert.match(routeStyles, /import homeDiscoveryV3Css from "\.\.\/home-discovery-v3\.css\?url";/);
+  const marketplaceIndex = root.indexOf("routeStyleHrefs.homeMarketplaceV2");
+  const discoveryIndex = root.indexOf("routeStyleHrefs.homeDiscoveryV3");
   assert.notEqual(marketplaceIndex, -1);
   assert.notEqual(discoveryIndex, -1);
   assert.ok(discoveryIndex > marketplaceIndex);
