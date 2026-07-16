@@ -1,0 +1,43 @@
+name: Phase 3 Listing Detail V3 Diagnostics
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Capture Listing Detail V3 diagnostics
+        shell: bash
+        run: |
+          set +e
+          node --test scripts/listing-detail-v3.test.mjs > phase3-listing-v3.log 2>&1
+          status=$?
+          echo "TEST_EXIT_CODE=$status" >> phase3-listing-v3.log
+          exit 0
+
+      - name: Upload diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase3-listing-v3-${{ github.sha }}
+          path: phase3-listing-v3.log
+          if-no-files-found: error
+          retention-days: 1
