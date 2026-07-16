@@ -23,7 +23,10 @@ const [
   readFile(new URL("../.github/workflows/production-smoke.yml", import.meta.url), "utf8"),
   readFile(new URL("../e2e/production-smoke.spec.ts", import.meta.url), "utf8"),
   readFile(new URL("../e2e/marketplace-smoke.spec.ts", import.meta.url), "utf8"),
-  readFile(new URL("../docs/production-schema/production-schema-proof.md", import.meta.url), "utf8"),
+  readFile(
+    new URL("../docs/production-schema/production-schema-proof.md", import.meta.url),
+    "utf8",
+  ),
   readFile(
     new URL("../docs/final-audit/production-verification-checklist.md", import.meta.url),
     "utf8",
@@ -100,7 +103,10 @@ test("Production proof distinguishes historical evidence from the current reposi
   assert.match(productionSchemaProof, /202607160002_require_listing_moderation_audit\.sql/);
   assert.match(productionSchemaProof, /202607160003_enable_chat_realtime\.sql/);
   assert.match(productionSchemaProof, /Unknown until applied and verified/);
-  assert.match(productionSchemaProof, /Realtime conclusion from the historical document is superseded/);
+  assert.match(
+    productionSchemaProof,
+    /Realtime conclusion from the historical document is superseded/,
+  );
   assert.doesNotMatch(
     productionSchemaProof,
     /no current repository evidence that RAWAJ depends on database-change Realtime subscriptions/i,
@@ -131,5 +137,8 @@ test("Production checklist requires application and behavioral evidence", () => 
   assert.match(productionChecklist, /participant A sends a message to participant B/);
   assert.match(productionChecklist, /non-participant C receives no conversation event/);
   assert.match(productionChecklist, /full Production catalog extraction refreshed/);
-  assert.match(productionChecklist, /Repository presence, a merged PR, and a passing build do not prove/);
+  assert.match(
+    productionChecklist,
+    /Repository presence, a merged PR, and a passing build do not prove/,
+  );
 });
