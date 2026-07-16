@@ -13,7 +13,9 @@ function safeFilename(value: string) {
 function isHydrationWarning(args: unknown[]) {
   const message = args
     .slice(0, 2)
-    .map((value) => (typeof value === "string" ? value : value instanceof Error ? value.message : ""))
+    .map((value) =>
+      typeof value === "string" ? value : value instanceof Error ? value.message : "",
+    )
     .join(" ")
     .toLowerCase();
 
