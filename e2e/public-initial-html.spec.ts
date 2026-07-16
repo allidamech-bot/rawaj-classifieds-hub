@@ -1,9 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-async function readInitialHtml(request: Parameters<typeof test>[0] extends never ? never : never) {
-  return request;
-}
-
 test.describe("public initial HTML", () => {
   test("categories renders useful discovery content before hydration", async ({ request }) => {
     const response = await request.get("/categories", {
