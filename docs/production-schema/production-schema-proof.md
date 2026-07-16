@@ -1,23 +1,28 @@
 # RAWAJ Production Schema Proof
 
-Status: **Production catalog extraction received; repository reconciliation in progress**
+Status: **Historical Production extraction retained; current release delta awaiting controlled Production verification**
 
-Baseline repository commit: `427dd3924f073aa370fcb58751548de65f284430`
+Historical extraction repository baseline: `427dd3924f073aa370fcb58751548de65f284430`
 
-Evidence classification: **S — Supabase Production verified** for PostgreSQL catalog objects listed below. Migration application history and Dashboard-only Auth settings remain unverified.
+Repository reviewed through: `9a9f8a6beba5cb7ba5e7c9252487ab0b3dcb357f`
+
+Last document reconciliation: **2026-07-16**
+
+Evidence classification: **S — Supabase Production verified** applies only to the PostgreSQL catalog snapshot captured on 2026-07-11. It does not prove that migrations merged afterward are applied. Application migration history and Dashboard-only Auth settings remain unverified.
 
 ## Extraction record
 
 - Supabase project: RAWAJ Production
 - Extraction date: 2026-07-11
 - Evidence source: read-only SQL catalog extraction exported from Supabase SQL Editor
-- Extractor scope: PostgreSQL catalogs, information schema, storage buckets, RLS policies, extensions, and realtime publication membership
-- Scheduled jobs query executed: not applicable (`pg_cron` is not installed)
+- Extractor scope: PostgreSQL catalogs, information schema, storage buckets, RLS policies, extensions, and Realtime publication membership
+- Scheduled jobs query executed: not applicable (`pg_cron` was not installed in the captured snapshot)
 - Auth configuration evidence source: pending Supabase Dashboard verification
+- Current proof bundle: `supabase/verification/20260716_phase_0_production_proof.sql`
 
-## Evidence sections received
+## Evidence sections received from the 2026-07-11 snapshot
 
-- [ ] Application migration history — no `supabase_migrations.schema_migrations` relation exists
+- [ ] Application migration history — no `supabase_migrations.schema_migrations` relation existed
 - [x] Relations and RLS state
 - [x] Columns
 - [x] Constraints
@@ -35,7 +40,7 @@ Evidence classification: **S — Supabase Production verified** for PostgreSQL c
 - [x] Scheduled jobs applicability
 - [ ] Auth settings from Supabase Dashboard
 
-## Production catalog summary
+## Historical Production catalog summary — 2026-07-11
 
 - Public tables: **38**
 - Public tables with RLS enabled: **38 / 38**
@@ -54,7 +59,9 @@ Evidence classification: **S — Supabase Production verified** for PostgreSQL c
 - SECURITY DEFINER routines without explicit `search_path`: **0**
 - Tables in `supabase_realtime` publication: **0**
 
-## Confirmed Production storage buckets
+These numbers are retained as historical evidence and must not be presented as the current Production state after 2026-07-11.
+
+## Confirmed Production storage buckets in the historical snapshot
 
 | Bucket | Public | Limit | Allowed MIME types |
 |---|---:|---:|---|
@@ -62,79 +69,116 @@ Evidence classification: **S — Supabase Production verified** for PostgreSQL c
 | `profile-media` | yes | 3 MiB | JPEG, PNG, WebP |
 | `verification-documents` | no | 10 MiB | JPEG, PNG, WebP, PDF |
 
+## Release delta after the historical extraction
+
+| Migration | Repository state | Intended correction | Production state |
+|---|---|---|---|
+| `202607160002_require_listing_moderation_audit.sql` | Merged through PR #392 | Make listing status transition, moderation history, and audit log atomic; keep owner notification best-effort | **Unknown until applied and verified** |
+| `202607160003_enable_chat_realtime.sql` | Merged through PR #394 | Add `conversations` and `conversation_messages` to `supabase_realtime`, grant authenticated SELECT through RLS, and revoke anonymous SELECT | **Unknown until applied and verified** |
+
+No document update may change either Production state to verified merely because the migration exists in GitHub.
+
 ## Reconciliation findings
 
 ### 1. Two unvalidated ad-placement URL constraints are intentional
 
-Production contains two `NOT VALID` constraints on `public.ad_placements`:
+The 2026-07-11 snapshot contained two `NOT VALID` constraints on `public.ad_placements`:
 
 - `ad_placements_destination_url_https_check`
 - `ad_placements_image_url_https_check`
 
-Repository migration `202607090005_harden_ad_placement_urls.sql` intentionally creates both constraints as `NOT VALID`. The migration comment states that they protect new and updated rows while deliberately avoiding a scan or rewrite of historical Production rows.
+Repository migration `202607090005_harden_ad_placement_urls.sql` intentionally creates both constraints as `NOT VALID`. They protect new and updated rows while avoiding an unapproved scan or rewrite of historical Production rows.
 
-Classification: **verified repository intent; no defect; no reconciliation migration required**.
+Classification: **verified repository intent; no defect identified in the historical snapshot**.
 
 Authorized action: none. Do not run `VALIDATE CONSTRAINT` unless a separate data-quality review proves all historical rows compliant and explicitly approves validation.
 
-### 2. Realtime publication is empty and no repository subscription dependency was found
+### 2. Realtime conclusion from the historical document is superseded
 
-The `supabase_realtime` publication currently has no member tables. Repository search found no `postgres_changes` subscription and no `.channel(` usage in application code.
+The 2026-07-11 snapshot proved that `supabase_realtime` had zero member tables. At that time, the repository review recorded no subscription dependency.
 
-Classification: **no current repository evidence that RAWAJ depends on database-change Realtime subscriptions**.
+That conclusion is no longer valid for the current repository. `src/features/communication/useLiveChatWorkspace.ts` now subscribes to `postgres_changes` for:
 
-Authorized action: none. Do not add tables to `supabase_realtime` merely because the publication is empty.
+- `public.conversation_messages`
+- `public.conversations`
+
+Migration `202607160003_enable_chat_realtime.sql` is therefore a justified, narrow reconciliation migration. Its presence in the repository does not prove Production application.
+
+Required evidence after application:
+
+1. Both tables appear in `pg_publication_tables` for `supabase_realtime`.
+2. RLS remains enabled on both tables.
+3. Participant-only SELECT policies remain present.
+4. `authenticated` has SELECT and `anon` does not.
+5. A two-account participant test receives message changes promptly.
+6. A non-participant account receives no conversation or message events.
 
 ### 3. Public profile-media bucket is intentional
 
-Production exposes `profile-media` publicly with a 3 MiB limit and JPEG/PNG/WebP allowlist. Repository migration `202607010003_account_settings_seller_reviews_contract.sql` explicitly creates or updates this bucket with `public = true` and adds a public SELECT policy. Upload, update, and delete policies remain restricted to authenticated users operating within their own UUID-prefixed `avatar` or `cover` path.
+The historical snapshot exposed `profile-media` publicly with a 3 MiB limit and JPEG/PNG/WebP allowlist. Repository migration `202607010003_account_settings_seller_reviews_contract.sql` explicitly creates or updates this bucket with `public = true` and adds a public SELECT policy. Upload, update, and delete policies remain restricted to authenticated users operating within their own UUID-prefixed `avatar` or `cover` path.
 
-Classification: **verified repository intent; no storage visibility defect identified**.
-
-Authorized action: none. Public read is required for seller avatars and cover media; private document storage remains isolated in `verification-documents`.
+Classification: **verified repository intent; no storage visibility defect identified in the historical snapshot**.
 
 ### 4. Application migration history remains unavailable
 
-The database contains internal migration tables for Supabase Auth, Realtime, and Storage only. No application-level `supabase_migrations.schema_migrations` relation exists, so repository migrations cannot be marked applied solely from Production catalog evidence.
+The historical database extraction contained internal migration tables for Supabase Auth, Realtime, and Storage only. No application-level `supabase_migrations.schema_migrations` relation existed, so repository migrations cannot be marked applied solely from object presence or GitHub history.
 
-Classification: **migration ledger application order remains unresolved; object-level evidence is authoritative for current state**.
+Classification: **migration application order remains unresolved; object-level evidence is authoritative for the state captured at a specific timestamp**.
 
-## Positive controls confirmed
+### 5. Listing moderation audit correction requires Production proof
 
-- Every public table has RLS enabled.
-- Every public table has a primary key.
-- No SECURITY DEFINER routine is missing an explicit `search_path` configuration.
-- Storage bucket privacy and MIME/size limits are explicit.
-- `pg_cron` is not installed, so there are no extension-backed scheduled jobs to reconcile.
-- The only non-validated constraints match intentional repository design.
-- No repository evidence requires Realtime publication membership.
-- Public profile media exposure matches repository design and write access remains owner-scoped.
+The current repository requires a listing review decision to commit its listing state, moderation action, and audit log atomically. The 2026-07-11 extraction predates this correction.
 
-## Object-level comparison
+Required evidence after application:
 
-| Object class | Production truth | Current classification | Next action |
+1. The expected RPC signature exists.
+2. `pg_get_functiondef` contains the mandatory moderation-action insert.
+3. `pg_get_functiondef` contains the mandatory audit-log call.
+4. The only best-effort `when others then null` block wraps owner notification delivery.
+5. An approve/reject acceptance test produces both authoritative records.
+
+## Positive controls retained from the historical snapshot
+
+- Every captured public table had RLS enabled.
+- Every captured public table had a primary key.
+- No captured SECURITY DEFINER routine lacked an explicit `search_path` configuration.
+- Storage bucket privacy and MIME/size limits were explicit.
+- `pg_cron` was not installed in the captured snapshot.
+- The non-validated ad-placement constraints matched intentional repository design.
+- Public profile media exposure matched repository design and write access remained owner-scoped.
+
+These controls require a new extraction before they can be claimed for the current release commit.
+
+## Object-level comparison status
+
+| Object class | Historical Production truth | Current classification | Next action |
 |---|---|---|---|
-| Tables/columns | 38 public tables extracted | Verified Production evidence | Continue exact definition comparison where a concrete repository mismatch is found |
-| Constraints | 229 total; 2 intentionally not validated | Aligned with repository intent | No corrective SQL |
-| Indexes | 128 extracted | Verified Production evidence | Continue exact definition comparison where a concrete mismatch is found |
-| Triggers | 51 extracted | Verified Production evidence | Continue exact definition comparison with owning functions |
-| Functions/RPCs | 133 extracted | Security baseline passes | Compare signatures, definitions, grants, and application callers |
-| Grants | 1165 table and 533 routine grants | Verified Production evidence | Compare only access paths used by anon/authenticated clients |
-| RLS policies | 96 public and 16 storage policies | Baseline safety passes | Compare policy definitions to API assumptions |
-| Storage | 3 buckets extracted | Aligned with repository intent | No corrective SQL |
-| Types/enums | 8 public enums extracted | Verified Production evidence | Compare labels and usage to repository migrations |
-| Realtime | Publication has 0 tables; no subscriptions found | No defect identified | No action |
-| Scheduled jobs | `pg_cron` not installed | Not applicable | No action |
-| Extensions | 5 installed | Verified Production evidence | Compare with repository prerequisites |
-| Migration history | Application history unavailable | Unresolved | Infer object state only; do not replay or rename migrations |
+| Tables/columns | 38 public tables extracted | Historical evidence only | Refresh extraction on the release commit |
+| Constraints | 229 total; 2 intentionally not validated | Historical evidence aligned with intent | Recheck after release migrations |
+| Indexes | 128 extracted | Historical evidence only | Refresh extraction |
+| Triggers | 51 extracted | Historical evidence only | Compare definitions with owning functions |
+| Functions/RPCs | 133 extracted | Historical baseline predates moderation-audit correction | Apply and verify exact signature and definition |
+| Grants | 1165 table and 533 routine grants | Historical baseline | Verify chat-table authenticated/anon privileges |
+| RLS policies | 96 public and 16 storage policies | Historical baseline | Verify participant-only chat policies and full role matrix |
+| Storage | 3 buckets extracted | Historical evidence aligned with intent | Recheck limits and policies |
+| Types/enums | 8 public enums extracted | Historical evidence only | Refresh extraction |
+| Realtime | Publication had 0 tables | **Known mismatch with current client dependency** | Apply migration and verify two table memberships plus RLS behavior |
+| Scheduled jobs | `pg_cron` was not installed | Historical evidence | Recheck scheduler architecture separately |
+| Extensions | 5 installed | Historical evidence | Refresh extraction |
+| Migration history | Application history unavailable | Unresolved | Preserve explicit unknown state; do not replay blindly |
 | Auth settings | Not in PostgreSQL extraction | Pending | Verify through Supabase Dashboard |
 
-## Reconciliation decision
+## Controlled verification procedure
 
-No historical migration will be replayed or renamed from this evidence. No corrective SQL is currently justified for the two `NOT VALID` constraints, the empty Realtime publication, or the public profile-media bucket.
-
-The remaining reconciliation work is limited to deterministic comparison of Production RPC signatures/grants, RLS policy definitions, and repository callers. Any future corrective SQL must be narrow, forward-only, idempotent where practical, and separately reviewed before Production execution.
+1. Pin the exact `main` release commit.
+2. Review and apply only the approved forward migrations in order.
+3. Run `supabase/verification/20260716_phase_0_production_proof.sql` read-only.
+4. Export all result sets with timestamp, actor, project, and commit.
+5. Execute the moderator approve/reject acceptance test.
+6. Execute participant A/B and non-participant C Realtime tests.
+7. Refresh the full Production catalog extraction.
+8. Update the migration ledger and this document only from captured evidence.
 
 ## Production safety statement
 
-The extraction was read-only. This document does not authorize replaying historical migrations, renaming applied migrations, validating constraints, changing Realtime publication membership, modifying grants or RLS policies, altering storage visibility, or changing Production data.
+The 2026-07-11 extraction and the Phase 0 proof bundle are read-only. This document does not itself authorize replaying historical migrations, renaming migrations, validating historical constraints, changing Auth settings, or modifying Production data. The two forward migrations listed above were separately reviewed and merged, but their Production state remains **unknown** until controlled application and post-application evidence are captured.
