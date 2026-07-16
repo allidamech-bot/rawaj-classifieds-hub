@@ -25,6 +25,7 @@ import { SavedSearchAlertBackgroundScanner } from "@/features/saved-searches/Sav
 import { AuthProvider } from "@/lib/auth";
 import { rawajBuildInfo } from "@/lib/build-info";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
+import { resolveRouteStyleScope, routeStyleHrefs } from "@/lib/route-styles";
 import { buildSiteStructuredData, createSeo, jsonLdScript } from "@/lib/seo";
 import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
 import { UnreadActivityProvider } from "@/lib/unread-activity";
@@ -38,29 +39,17 @@ import comparisonFoundationCss from "../comparison-foundation.css?url";
 import designSystemV2Css from "../design-system-v2.css?url";
 import desktopExperienceV1Css from "../desktop-experience-v1.css?url";
 import designFoundationCss from "../design-foundation.css?url";
-import homeDiscoveryV3Css from "../home-discovery-v3.css?url";
-import homeMarketplaceV2Css from "../home-marketplace-v2.css?url";
-import homeSignatureCss from "../home-signature.css?url";
 import launchReadinessVisualPolishCss from "../launch-readiness-visual-polish.css?url";
-import listingDetailFoundationCss from "../listing-detail-foundation.css?url";
-import listingDetailV2Css from "../listing-detail-v2.css?url";
-import listingDetailV3Css from "../listing-detail-v3.css?url";
 import listingStudioSignatureCss from "../listing-studio-signature.css?url";
 import listingStudioV2Css from "../listing-studio-v2.css?url";
 import listingStudioV3Css from "../listing-studio-v3.css?url";
-import listingsResultsCss from "../listings-results.css?url";
 import marketplaceDiscoveryCss from "../marketplace-discovery.css?url";
 import marketplaceSystemCss from "../marketplace-system.css?url";
 import messagingSignatureCss from "../messaging-signature.css?url";
 import myStoreBrandPolishCss from "../my-store-brand-polish.css?url";
 import myStoreHeaderRefinementCss from "../my-store-header-refinement.css?url";
 import myStoreRedesignCss from "../my-store-redesign.css?url";
-import offersSignatureCss from "../offers-signature.css?url";
 import personalSpacePolishCss from "../personal-space-polish.css?url";
-import searchFiltersV1Css from "../search-filters-v1.css?url";
-import searchFiltersV2Css from "../search-filters-v2.css?url";
-import sellerStorefrontFoundationCss from "../seller-storefront-foundation.css?url";
-import sellerStorefrontV2Css from "../seller-storefront-v2.css?url";
 import signatureCss from "../signature.css?url";
 import spatialAppShellCss from "../spatial-app-shell.css?url";
 import appCss from "../styles.css?url";
@@ -126,8 +115,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => {
+  head: ({ matches }) => {
     const seo = createSeo({ title: ROOT_TITLE, description: ROOT_DESCRIPTION });
+    const activeMatch = matches[matches.length - 1];
+    const routeStyleScope = resolveRouteStyleScope(activeMatch?.pathname ?? "/");
     return {
       meta: [
         { charSet: "utf-8" },
@@ -143,18 +134,30 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: appCss },
         { rel: "stylesheet", href: visualFoundationCss },
         { rel: "stylesheet", href: signatureCss },
-        { rel: "stylesheet", href: homeSignatureCss },
+        ...(routeStyleScope.home
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.homeSignature }]
+          : []),
         { rel: "stylesheet", href: marketplaceDiscoveryCss },
-        { rel: "stylesheet", href: listingsResultsCss },
-        { rel: "stylesheet", href: listingDetailFoundationCss },
+        ...(routeStyleScope.listingResults
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingsResults }]
+          : []),
+        ...(routeStyleScope.listingDetail
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingDetailFoundation }]
+          : []),
         { rel: "stylesheet", href: authAccountFoundationCss },
         { rel: "stylesheet", href: authAccountV2Css },
         { rel: "stylesheet", href: activityMoreFoundationCss },
         { rel: "stylesheet", href: trustSupportHubV2Css },
-        { rel: "stylesheet", href: sellerStorefrontFoundationCss },
-        { rel: "stylesheet", href: sellerStorefrontV2Css },
+        ...(routeStyleScope.storefront
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.sellerStorefrontFoundation }]
+          : []),
+        ...(routeStyleScope.storefront
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.sellerStorefrontV2 }]
+          : []),
         { rel: "stylesheet", href: myStoreRedesignCss },
-        { rel: "stylesheet", href: offersSignatureCss },
+        ...(routeStyleScope.offers
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.offersSignature }]
+          : []),
         { rel: "stylesheet", href: listingStudioSignatureCss },
         { rel: "stylesheet", href: listingStudioV2Css },
         { rel: "stylesheet", href: listingStudioV3Css },
@@ -167,13 +170,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: personalSpacePolishCss },
         { rel: "stylesheet", href: designSystemV2Css },
         { rel: "stylesheet", href: spatialAppShellCss },
-        { rel: "stylesheet", href: homeMarketplaceV2Css },
-        { rel: "stylesheet", href: homeDiscoveryV3Css },
+        ...(routeStyleScope.home
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.homeMarketplaceV2 }]
+          : []),
+        ...(routeStyleScope.home
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.homeDiscoveryV3 }]
+          : []),
         { rel: "stylesheet", href: adaptiveListingCardsCss },
-        { rel: "stylesheet", href: searchFiltersV1Css },
-        { rel: "stylesheet", href: searchFiltersV2Css },
-        { rel: "stylesheet", href: listingDetailV2Css },
-        { rel: "stylesheet", href: listingDetailV3Css },
+        ...(routeStyleScope.listingResults
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.searchFiltersV1 }]
+          : []),
+        ...(routeStyleScope.listingResults
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.searchFiltersV2 }]
+          : []),
+        ...(routeStyleScope.listingDetail
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingDetailV2 }]
+          : []),
+        ...(routeStyleScope.listingDetail
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingDetailV3 }]
+          : []),
         { rel: "stylesheet", href: desktopExperienceV1Css },
         { rel: "stylesheet", href: launchReadinessVisualPolishCss },
         { rel: "stylesheet", href: designFoundationCss },
