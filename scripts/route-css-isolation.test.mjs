@@ -25,7 +25,10 @@ const scopedStyles = [
 
 test("twelve page-specific styles are no longer imported directly by the root route", () => {
   for (const stylesheet of scopedStyles) {
-    assert.doesNotMatch(root, new RegExp(`from "\\.\\./${stylesheet.replaceAll(".", "\\.")}\\?url"`));
+    assert.doesNotMatch(
+      root,
+      new RegExp(`from "\\.\\./${stylesheet.replaceAll(".", "\\.")}\\?url"`),
+    );
     assert.match(routeStyles, new RegExp(`${stylesheet.replaceAll(".", "\\.")}\\?url`));
   }
 });
