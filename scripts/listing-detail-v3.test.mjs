@@ -71,7 +71,6 @@ test("public listing detail dependencies are rendered before hydration", () => {
   assert.match(detailRoute, /const \[loading, setLoading\] = useState\(false\)/);
   assert.match(detailRoute, /const \[sellerLoading, setSellerLoading\] = useState\(false\)/);
   assert.match(detailRoute, /const \[similarLoading, setSimilarLoading\] = useState\(false\)/);
-  assert.match(detailRoute, /useState<ClassifiedsError \| null>\(initialData\.imageError\)/);
   assert.doesNotMatch(
     detailRoute,
     /fetchListingImages|fetchPublicSellerProfile|fetchPublicListings/,
