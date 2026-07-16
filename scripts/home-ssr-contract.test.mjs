@@ -10,7 +10,7 @@ const [home, categories, categoryData, listings, listingData, listingReferences,
       new URL("../src/features/categories/public-categories-page-data.ts", import.meta.url),
       "utf8",
     ),
-    readFile(new URL("../src/routes/listings.index.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/listings.tsx", import.meta.url), "utf8"),
     readFile(
       new URL("../src/features/listings/public-listings-page-data.ts", import.meta.url),
       "utf8",
@@ -39,7 +39,7 @@ test("category discovery data is present in the initial HTML contract", () => {
   assert.match(categories, /const initialData = Route\.useLoaderData\(\)/);
   assert.match(categories, /useState<TaxonomyNode\[]>\(\s*initialData\.taxonomyNodes/);
   assert.match(categories, /useState<ClassifiedCategory\[]>\(initialData\.categories\)/);
-  assert.match(categories, /useState\(false\)/);
+  assert.match(categories, /const \[loading, setLoading\] = useState\(false\)/);
   assert.match(categoryData, /Promise\.all\(\[/);
   assert.match(categoryData, /fetchPublicTaxonomyNodes\(\)/);
   assert.match(categoryData, /fetchPublicCategories\(\)/);
@@ -48,7 +48,9 @@ test("category discovery data is present in the initial HTML contract", () => {
 
 test("listing results SSR is filter-aware and uses public APIs only", () => {
   assert.match(listings, /loaderDeps: \(\{ search \}\) => search/);
-  assert.match(listings, /loader: \(\{ deps \}\) => loadPublicListingsPageData\(deps\)/);
+  assert.match(listings, /loader: \(\{ deps, location \}\) =>/);
+  assert.match(listings, /loadPublicListingsPageData\(deps\)/);
+  assert.match(listings, /location\.pathname === "\/listings"/);
   assert.match(listingData, /buildListingFilters\(\{/);
   assert.match(listingData, /fetchPublicListings\(filters, null, 30\)/);
   assert.match(listingData, /searchPublicSellers\(search\.q\?\.trim\(\) \?\? ""\)/);
@@ -58,9 +60,10 @@ test("listing results SSR is filter-aware and uses public APIs only", () => {
 });
 
 test("listing hooks hydrate from SSR data instead of an empty loading shell", () => {
-  assert.match(listingReferences, /getRouteApi\("\/listings\/"\)/);
-  assert.match(listingReferences, /initialReferences\.categories/);
-  assert.match(listingReferences, /useState\(false\)/);
+  assert.match(listingReferences, /getRouteApi\("\/listings"\)/);
+  assert.match(listingReferences, /references\.categories/);
+  assert.match(listingReferences, /loading: false/);
+  assert.match(listingResults, /getRouteApi\("\/listings"\)/);
   assert.match(listingResults, /initialResults\.items/);
   assert.match(listingResults, /initialResults\.filterKey/);
   assert.match(listingResults, /lastCompletedFilterKeyRef/);
