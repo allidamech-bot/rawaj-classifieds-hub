@@ -1,0 +1,44 @@
+name: Phase 3 Performance Diagnostics
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Production build
+        run: npm run build
+
+      - name: Generate performance report
+        shell: bash
+        run: |
+          set +e
+          npm run performance:budget
+          exit 0
+
+      - name: Upload performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase3-performance-${{ github.sha }}
+          path: performance-budget-report.json
+          if-no-files-found: error
+          retention-days: 1
