@@ -12,20 +12,14 @@ const [migration, api, editRoute, workflow, migrationStatus] = await Promise.all
   ),
   readFile(new URL("../src/lib/api/listing-taxonomy.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/profile/listings.$id.tsx", import.meta.url), "utf8"),
-  readFile(
-    new URL("../.github/workflows/canonical-listing-taxonomy.yml", import.meta.url),
-    "utf8",
-  ),
+  readFile(new URL("../.github/workflows/canonical-listing-taxonomy.yml", import.meta.url), "utf8"),
   readFile(new URL("../docs/database-migration-status.md", import.meta.url), "utf8"),
 ]);
 
 test("canonical taxonomy relation preserves legacy listing compatibility", () => {
   assert.match(migration, /create table if not exists public\.listing_taxonomy_assignments/);
   assert.match(migration, /listing_id uuid primary key references public\.listings\(id\)/);
-  assert.match(
-    migration,
-    /taxonomy_node_id text not null references public\.taxonomy_nodes\(id\)/,
-  );
+  assert.match(migration, /taxonomy_node_id text not null references public\.taxonomy_nodes\(id\)/);
   assert.match(migration, /assignment_source in \('legacy_derived', 'explicit'\)/);
   assert.match(migration, /rawaj_resolve_legacy_taxonomy_node/);
   assert.match(migration, /after insert or update of category_id, subcategory_id/);
@@ -72,9 +66,6 @@ test("permanent workflow and migration ledger record Phase 4 truth", () => {
   assert.match(workflow, /node --test scripts\/canonical-listing-taxonomy\.test\.mjs/);
   assert.match(workflow, /contents: read/);
   assert.doesNotMatch(workflow, /contents: write/);
-  assert.match(
-    migrationStatus,
-    /202607130001_canonical_listing_taxonomy_assignments\.sql/,
-  );
+  assert.match(migrationStatus, /202607130001_canonical_listing_taxonomy_assignments\.sql/);
   assert.match(migrationStatus, /live-unverified/);
 });
