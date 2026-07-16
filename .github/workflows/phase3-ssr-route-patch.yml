@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/phase-3-public-ssr-html
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
