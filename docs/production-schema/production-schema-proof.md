@@ -4,7 +4,7 @@ Status: **Historical Production extraction retained; current release delta await
 
 Historical extraction repository baseline: `427dd3924f073aa370fcb58751548de65f284430`
 
-Repository reviewed through: `9a9f8a6beba5cb7ba5e7c9252487ab0b3dcb357f`
+Repository reviewed through: `fbd50d38ab971ce2308e0660b15f3568f7c80781`
 
 Last document reconciliation: **2026-07-16**
 
@@ -75,8 +75,10 @@ These numbers are retained as historical evidence and must not be presented as t
 |---|---|---|---|
 | `202607160002_require_listing_moderation_audit.sql` | Merged through PR #392 | Make listing status transition, moderation history, and audit log atomic; keep owner notification best-effort | **Unknown until applied and verified** |
 | `202607160003_enable_chat_realtime.sql` | Merged through PR #394 | Add `conversations` and `conversation_messages` to `supabase_realtime`, grant authenticated SELECT through RLS, and revoke anonymous SELECT | **Unknown until applied and verified** |
+| `202607160004_harden_push_delivery_device_lifecycle.sql` | Merged through PR #398 | Close non-terminal queue rows for disabled or permanently invalid devices and fail permanent token errors immediately | **Unknown until applied and verified** |
+| `202607160005_preserve_multi_device_push_preference.sql` | Merged through PR #399 | Prevent one denied or unregistered device from disabling the account-wide Push preference used by other devices | **Unknown until applied and verified** |
 
-No document update may change either Production state to verified merely because the migration exists in GitHub.
+No document update may change any listed Production state to verified merely because the migration exists in GitHub.
 
 ## Reconciliation findings
 
@@ -137,6 +139,32 @@ Required evidence after application:
 4. The only best-effort `when others then null` block wraps owner notification delivery.
 5. An approve/reject acceptance test produces both authoritative records.
 
+### 6. Push delivery queue lifecycle correction requires Production proof
+
+Migration `202607160004_harden_push_delivery_device_lifecycle.sql` changes the terminal-state behavior of queued Push deliveries. A disabled device or permanently invalid FCM token must not leave `pending`, `retry`, or stale `processing` rows that can never be delivered.
+
+Required evidence after application:
+
+1. `rawaj_disable_push_device_v1(text,boolean)` retains its application-facing signature.
+2. `rawaj_mark_push_delivery_v1(uuid,boolean,text,boolean)` remains executable only by `service_role`.
+3. Disabling one device closes its non-terminal queue rows.
+4. Disabling the account Push channel closes all non-terminal rows for that recipient.
+5. A permanent FCM token error fails the current delivery immediately and closes sibling rows for the device.
+6. The count of non-terminal deliveries linked to inactive devices is zero after reconciliation.
+
+### 7. Multi-device Push preference correction requires Production proof
+
+Migration `202607160005_preserve_multi_device_push_preference.sql` separates device permission state from the account-wide Push preference. A denied or prompt state on one phone must not disable notifications on another registered phone.
+
+Required evidence after application:
+
+1. `rawaj_upsert_push_device_v1(text,text,text,text,text,text)` retains its application-facing signature.
+2. A granted device registration can enable the account Push channel.
+3. A denied or prompt device registration cannot overwrite the account preference to false.
+4. Disabling device A leaves registered device B active and eligible while the account channel remains enabled.
+5. Logging out from device A detaches only A.
+6. A two-device Android acceptance test confirms delivery continues to B.
+
 ## Positive controls retained from the historical snapshot
 
 - Every captured public table had RLS enabled.
@@ -157,13 +185,14 @@ These controls require a new extraction before they can be claimed for the curre
 | Constraints | 229 total; 2 intentionally not validated | Historical evidence aligned with intent | Recheck after release migrations |
 | Indexes | 128 extracted | Historical evidence only | Refresh extraction |
 | Triggers | 51 extracted | Historical evidence only | Compare definitions with owning functions |
-| Functions/RPCs | 133 extracted | Historical baseline predates moderation-audit correction | Apply and verify exact signature and definition |
-| Grants | 1165 table and 533 routine grants | Historical baseline | Verify chat-table authenticated/anon privileges |
+| Functions/RPCs | 133 extracted | Historical baseline predates moderation, Realtime and Push corrections | Apply and verify exact signatures and definitions |
+| Grants | 1165 table and 533 routine grants | Historical baseline | Verify chat privileges and Push RPC role separation |
 | RLS policies | 96 public and 16 storage policies | Historical baseline | Verify participant-only chat policies and full role matrix |
 | Storage | 3 buckets extracted | Historical evidence aligned with intent | Recheck limits and policies |
 | Types/enums | 8 public enums extracted | Historical evidence only | Refresh extraction |
 | Realtime | Publication had 0 tables | **Known mismatch with current client dependency** | Apply migration and verify two table memberships plus RLS behavior |
-| Scheduled jobs | `pg_cron` was not installed | Historical evidence | Recheck scheduler architecture separately |
+| Push delivery queue | Not covered by the historical release delta | **Current lifecycle behavior unverified** | Apply 004/005, inspect definitions/grants, and run device tests |
+| Scheduled jobs | `pg_cron` was not installed | Historical evidence; external GitHub scheduler exists in repository | Verify deployed worker and scheduler configuration separately |
 | Extensions | 5 installed | Historical evidence | Refresh extraction |
 | Migration history | Application history unavailable | Unresolved | Preserve explicit unknown state; do not replay blindly |
 | Auth settings | Not in PostgreSQL extraction | Pending | Verify through Supabase Dashboard |
@@ -176,9 +205,7 @@ These controls require a new extraction before they can be claimed for the curre
 4. Export all result sets with timestamp, actor, project, and commit.
 5. Execute the moderator approve/reject acceptance test.
 6. Execute participant A/B and non-participant C Realtime tests.
-7. Refresh the full Production catalog extraction.
-8. Update the migration ledger and this document only from captured evidence.
-
-## Production safety statement
-
-The 2026-07-11 extraction and the Phase 0 proof bundle are read-only. This document does not itself authorize replaying historical migrations, renaming migrations, validating historical constraints, changing Auth settings, or modifying Production data. The two forward migrations listed above were separately reviewed and merged, but their Production state remains **unknown** until controlled application and post-application evidence are captured.
+7. Execute disabled-device, invalid-token, and two-device Push acceptance tests.
+8. Verify the deployed Push worker and external scheduler configuration without exposing secrets.
+9. Refresh the full Production catalog extraction.
+10. Update the migration ledger and this document only from captured evidence.
