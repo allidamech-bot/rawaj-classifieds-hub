@@ -27,42 +27,9 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  patch-phase3-detail:
-    if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout PR branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Patch and format listing detail SSR
-        run: |
-          python scripts/phase3_patch_listing_detail.py
-          npx prettier --write "src/routes/listings.\$id.tsx" src/features/listing-detail/public-listing-detail-page-data.ts src/features/listing-detail/ListingMediaExperience.tsx src/features/listing-detail/ListingMediaViewer.tsx
-          if git diff --quiet; then
-            echo "Listing detail SSR patch already applied."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "src/routes/listings.\$id.tsx" src/features/listing-detail/public-listing-detail-page-data.ts src/features/listing-detail/ListingMediaExperience.tsx src/features/listing-detail/ListingMediaViewer.tsx
-          git commit -m "Render listing detail dependencies in initial HTML"
-          git push origin HEAD:${{ github.head_ref }}
-
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 20
