@@ -10,7 +10,10 @@ const [workflow, worker, migration, lifecycleMigration, packageJson, contractWor
       "utf8",
     ),
     readFile(
-      new URL("../supabase/migrations/202607150002_saved_search_alerts_push_v1.sql", import.meta.url),
+      new URL(
+        "../supabase/migrations/202607150002_saved_search_alerts_push_v1.sql",
+        import.meta.url,
+      ),
       "utf8",
     ),
     readFile(
