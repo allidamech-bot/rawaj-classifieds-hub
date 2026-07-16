@@ -1,6 +1,7 @@
 import type { PluginListenerHandle } from "@capacitor/core";
 import { disablePushDevice, registerPushDevice } from "@/lib/api/push-notifications";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
+import { resolveNotificationTargetPath } from "@/lib/notification-target-path";
 import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
 
 const PUSH_DEVICE_KEY_STORAGE = "rawaj:native-push-device-key:v1";
@@ -238,7 +239,10 @@ async function ensureNativePushListeners(userId: string): Promise<void> {
       (event) => {
         emitUnreadActivityChanged();
         if (typeof window === "undefined") return;
-        window.location.assign(resolvePushTarget(event.notification.data));
+        const data = event.notification.data;
+        window.location.assign(
+          resolveNotificationTargetPath(data?.target_type, data?.target_id),
+        );
       },
     );
 
@@ -256,16 +260,4 @@ async function clearNativePushListeners(): Promise<void> {
   activeListenerHandles = [];
   activeListenerUserId = null;
   await Promise.all(handles.map((handle) => handle.remove().catch(() => undefined)));
-}
-
-function resolvePushTarget(data: Record<string, unknown> | undefined): string {
-  const targetType = typeof data?.target_type === "string" ? data.target_type : "";
-  const targetId = typeof data?.target_id === "string" ? data.target_id : "";
-
-  if (targetType === "listing" && targetId) return `/listings/${encodeURIComponent(targetId)}`;
-  if (targetType === "saved_search") return "/saved-searches";
-  if ((targetType === "conversation" || targetType === "chat") && targetId) {
-    return `/chats?conversation=${encodeURIComponent(targetId)}`;
-  }
-  return "/notifications";
 }
