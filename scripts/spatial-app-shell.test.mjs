@@ -20,7 +20,7 @@ test("root renders every route through the Spatial App Shell", () => {
 
   const designSystemIndex = root.indexOf("href: designSystemV2Css");
   const spatialShellIndex = root.indexOf("href: spatialAppShellCss");
-  const homeMarketplaceIndex = root.indexOf("href: homeMarketplaceV2Css");
+  const homeMarketplaceIndex = root.indexOf("routeStyleHrefs.homeMarketplaceV2");
 
   assert.ok(designSystemIndex >= 0);
   assert.ok(spatialShellIndex > designSystemIndex);
