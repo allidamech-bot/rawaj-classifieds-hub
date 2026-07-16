@@ -160,7 +160,10 @@ test("Production checklist requires application and behavioral evidence", () => 
   assert.match(productionChecklist, /participant A sends a message to participant B/);
   assert.match(productionChecklist, /non-participant C receives no conversation event/);
   assert.match(productionChecklist, /device A and device B are registered/);
-  assert.match(productionChecklist, /seller-review notification opens the intended seller storefront/);
+  assert.match(
+    productionChecklist,
+    /seller-review notification opens the intended seller storefront/,
+  );
   assert.match(productionChecklist, /inactive devices have zero/);
   assert.match(productionChecklist, /full Production catalog extraction refreshed/);
   assert.match(
