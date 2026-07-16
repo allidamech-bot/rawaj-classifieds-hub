@@ -1,0 +1,253 @@
+name: Phase 5 Apply
+
+on:
+  push:
+    branches:
+      - agent/phase-5-add-listing-taxonomy-architecture
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/phase-5-add-listing-taxonomy-architecture
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Apply Phase 5
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          category = Path('src/lib/category-fields.ts')
+          text = category.read_text()
+          text = text.replace(
+              'import type { ClassifiedCategory, ClassifiedListing } from "@/lib/classifieds-types";',
+              'import type { ClassifiedCategory, ClassifiedListing, TaxonomyNode } from "@/lib/classifieds-types";',
+          )
+          marker = 'export interface CategorySpecificDetails {'
+          helper = '''const taxonomySchemaKindAliases: Record<string, CategoryFieldKind> = {
+            realestate: "real_estate",
+            real_estate: "real_estate",
+            property: "real_estate",
+            properties: "real_estate",
+            vehicle: "vehicles",
+            vehicles: "vehicles",
+            automotive: "vehicles",
+            car: "vehicles",
+            cars: "vehicles",
+            job: "jobs",
+            jobs: "jobs",
+            employment: "jobs",
+            service: "services",
+            services: "services",
+            electronics: "electronics",
+            electronic: "electronics",
+            phones: "electronics",
+            mobiles: "electronics",
+            general: "general",
+          };
+
+          function normalizeSchemaKey(value?: string | null) {
+            return (value ?? "").trim().toLowerCase().replace(/[^a-z0-9_]+/g, "_");
+          }
+
+          export function resolveCategoryFieldKind(
+            taxonomyNode?: Pick<TaxonomyNode, "filterSchemaKey" | "classificationKey" | "legacyCategoryId"> | null,
+            category?: Pick<ClassifiedCategory, "id" | "slug" | "nameAr" | "placeholder"> | null,
+            listing?: Pick<ClassifiedListing, "categoryId" | "categoryNameAr" | "categoryPlaceholder"> | null,
+          ): CategoryFieldKind {
+            for (const candidate of [
+              taxonomyNode?.filterSchemaKey,
+              taxonomyNode?.classificationKey,
+              taxonomyNode?.legacyCategoryId,
+            ]) {
+              const normalized = normalizeSchemaKey(candidate);
+              const compact = normalized.replaceAll("_", "");
+              if (taxonomySchemaKindAliases[normalized]) return taxonomySchemaKindAliases[normalized];
+              if (taxonomySchemaKindAliases[compact]) return taxonomySchemaKindAliases[compact];
+            }
+            return detectCategoryFieldKind(category, listing);
+          }
+
+          export function categoryUsesGlobalCondition(kind: CategoryFieldKind) {
+            return kind === "vehicles" || kind === "electronics" || kind === "general";
+          }
+
+          export function categoryRequiresPreciseLocation(kind: CategoryFieldKind) {
+            return kind !== "jobs" && kind !== "services";
+          }
+
+          '''
+          if 'export function resolveCategoryFieldKind(' not in text:
+              text = text.replace(marker, helper + marker)
+          category.write_text(text)
+
+          route = Path('src/routes/add-listing.tsx')
+          text = route.read_text()
+          text = text.replace('  detectCategoryFieldKind,\n', '')
+          text = text.replace(
+              '  mergeCategoryDetails,\n',
+              '  categoryRequiresPreciseLocation,\n  categoryUsesGlobalCondition,\n  mergeCategoryDetails,\n  resolveCategoryFieldKind,\n',
+          )
+          text = text.replace(
+              '  const categoryFieldKind = detectCategoryFieldKind(category);',
+              '  const categoryFieldKind = resolveCategoryFieldKind(selectedTaxonomyNode, category);\n  const showGlobalCondition = categoryUsesGlobalCondition(categoryFieldKind);',
+          )
+          text = text.replace('  const canSubmit = step === 2;', '  const canSubmit = step === 3;')
+          text = text.replace(
+              '    text("السعر والموقع والتواصل", "Price, location, contact"),\n  ];',
+              '    text("السعر والموقع والتواصل", "Price, location, contact"),\n    text("مراجعة وإرسال", "Review and submit"),\n  ];',
+          )
+          text = text.replace('if (!validateCurrentStep(2)) {', 'if (!validateCurrentStep(3)) {')
+          text = text.replace(
+              '"أضف المعلومات على ثلاث خطوات قصيرة. نحفظ المسودة تلقائياً ونريك شكل الإعلان أثناء العمل.",\n            "Add the essentials in three short steps. We save the draft automatically and preview the listing as you work.",',
+              '"أضف المعلومات على أربع خطوات واضحة. نحفظ المسودة تلقائياً ونريك شكل الإعلان أثناء العمل.",\n            "Add the essentials in four clear steps. We save the draft automatically and preview the listing as you work.",',
+          )
+          text = text.replace('<span>{text("3 خطوات فقط", "Only 3 steps")}</span>', '<span>{text("4 خطوات واضحة", "4 clear steps")}</span>')
+          old_desc = '''              index === 0
+                ? text("القسم والعنوان", "Category and title")
+                : index === 1
+                  ? text("الصور والوصف", "Photos and description")
+                  : text("السعر والتواصل", "Price and contact"),'''
+          new_desc = '''              index === 0
+                ? text("القسم والعنوان", "Category and title")
+                : index === 1
+                  ? text("الصور والوصف", "Photos and description")
+                  : index === 2
+                    ? text("السعر والتواصل", "Price and contact")
+                    : text("تحقق نهائي", "Final verification"),'''
+          text = text.replace(old_desc, new_desc)
+
+          condition_block = re.compile(r'''\s*<Field label=\{text\("الحالة", "Condition"\)\}>.*?</Field>''', re.S)
+          match = condition_block.search(text)
+          if match and '{showGlobalCondition && (' not in match.group(0):
+              block = match.group(0).strip()
+              text = text[:match.start()] + '\n                    {showGlobalCondition && (\n                      ' + block.replace('\n', '\n                      ') + '\n                    )}' + text[match.end():]
+
+          review = re.compile(r'''\n\s*<Card title=\{text\("مراجعة سريعة", "Quick review"\)\}>.*?\n\s*</Card>''', re.S)
+          match = review.search(text)
+          if not match:
+              raise SystemExit('review card not found')
+          review_block = match.group(0)
+          text = text[:match.start()] + text[match.end():]
+          step3 = '''
+              {step === 3 && (
+                <>
+                  <Card
+                    title={text("راجع الإعلان قبل الإرسال", "Review before submitting")}
+                    description={text(
+                      "تحقق من التصنيف والحقول والسعر والموقع قبل إرسال النسخة للمراجعة.",
+                      "Verify the category, fields, price, and location before sending the listing for review.",
+                    )}
+                  >
+                    <ListingStudioMessage tone="success">
+                      {text(
+                        "لن يصبح الإعلان عامًا قبل موافقة فريق المراجعة.",
+                        "The listing will not become public before moderation approval.",
+                      )}
+                    </ListingStudioMessage>
+                  </Card>''' + review_block + '''
+                </>
+              )}
+
+'''
+          action_marker = '              <div className="rawaj-studio-action-bar">'
+          text = text.replace(action_marker, step3 + action_marker)
+          text = text.replace(
+              'void navigate({ to: "/listings/$id", params: { id: createdListingId } })',
+              'void navigate({ to: "/profile/listings/$id", params: { id: createdListingId } })',
+          )
+          text = text.replace('{text("عرض الإعلان", "View listing")}', '{text("إدارة الإعلان", "Manage listing")}')
+          text = text.replace('  const validateIdentity = step === 0 || step === 2;', '  const validateIdentity = step === 0 || step === 3;')
+          text = text.replace('  const validateDetails = step === 1 || step === 2;', '  const validateDetails = step === 1 || step === 3;')
+          text = text.replace('  const validateFinal = step === 2;', '  const validateFinal = step === 2 || step === 3;')
+          text = text.replace(
+              '    if (!district) add("district", "اختر المنطقة.");',
+              '    if (categoryRequiresPreciseLocation(categoryFieldKind) && !district) {\n      add("district", "اختر المنطقة لهذا النوع من الإعلانات.");\n    }',
+          )
+          route.write_text(text)
+
+          contract = Path('scripts/add-listing-taxonomy-architecture.test.mjs')
+          contract.write_text('''import assert from "node:assert/strict";
+          import { readFile } from "node:fs/promises";
+          import test from "node:test";
+
+          const [route, fields, workflow] = await Promise.all([
+            readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
+            readFile(new URL("../src/lib/category-fields.ts", import.meta.url), "utf8"),
+            readFile(new URL("../.github/workflows/add-listing-taxonomy-architecture.yml", import.meta.url), "utf8"),
+          ]);
+
+          test("taxonomy schema assignment takes precedence over substring heuristics", () => {
+            assert.match(fields, /export function resolveCategoryFieldKind/);
+            assert.match(fields, /taxonomyNode\?\.filterSchemaKey/);
+            assert.match(fields, /return detectCategoryFieldKind\(category, listing\)/);
+            assert.match(route, /resolveCategoryFieldKind\(selectedTaxonomyNode, category\)/);
+          });
+
+          test("add listing uses a dedicated review step and owner-safe success destination", () => {
+            assert.match(route, /text\("مراجعة وإرسال", "Review and submit"\)/);
+            assert.match(route, /const canSubmit = step === 3/);
+            assert.match(route, /validateCurrentStep\(3\)/);
+            assert.match(route, /step === 3/);
+            assert.match(route, /to: "\/profile\/listings\/\$id"/);
+            assert.doesNotMatch(route, /to: "\/listings\/\$id", params: \{ id: createdListingId \}/);
+          });
+
+          test("condition and precise-location requirements are category-aware", () => {
+            assert.match(fields, /categoryUsesGlobalCondition/);
+            assert.match(fields, /categoryRequiresPreciseLocation/);
+            assert.match(route, /showGlobalCondition &&/);
+            assert.match(route, /categoryRequiresPreciseLocation\(categoryFieldKind\)/);
+          });
+
+          test("permanent workflow is read-only", () => {
+            assert.match(workflow, /Add Listing Taxonomy Architecture Contract/);
+            assert.match(workflow, /contents: read/);
+            assert.doesNotMatch(workflow, /contents: write/);
+          });
+          ''')
+
+          workflow = Path('.github/workflows/add-listing-taxonomy-architecture.yml')
+          workflow.write_text('''name: Add Listing Taxonomy Architecture Contract
+
+          on:
+            pull_request:
+              branches:
+                - main
+            push:
+              branches:
+                - main
+
+          permissions:
+            contents: read
+
+          jobs:
+            validate:
+              runs-on: ubuntu-latest
+              timeout-minutes: 5
+              steps:
+                - uses: actions/checkout@v4
+                - run: node --test scripts/add-listing-taxonomy-architecture.test.mjs
+          ''')
+          PY
+          npx prettier --write src/lib/category-fields.ts src/routes/add-listing.tsx scripts/add-listing-taxonomy-architecture.test.mjs .github/workflows/add-listing-taxonomy-architecture.yml
+          npx eslint --quiet src/lib/category-fields.ts src/routes/add-listing.tsx scripts/add-listing-taxonomy-architecture.test.mjs
+          node --test scripts/add-listing-taxonomy-architecture.test.mjs
+          npm run typecheck -- --pretty false
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/lib/category-fields.ts src/routes/add-listing.tsx scripts/add-listing-taxonomy-architecture.test.mjs .github/workflows/add-listing-taxonomy-architecture.yml
+          git commit -m "feat: align add listing with canonical taxonomy"
+          git push
