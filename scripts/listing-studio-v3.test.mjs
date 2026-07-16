@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, shared, createRoute, manageRoute, storage, writes, lifecycle, css, gate] =
+const [root, routeStyles, shared, createRoute, manageRoute, storage, writes, lifecycle, css, gate] =
   await Promise.all([
     readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/features/listing-studio/listing-studio.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/routes/profile/listings.$id.tsx", import.meta.url), "utf8"),
@@ -16,8 +17,11 @@ const [root, shared, createRoute, manageRoute, storage, writes, lifecycle, css, 
   ]);
 
 test("V3 stylesheet loads after V2", () => {
-  assert.match(root, /listingStudioV3Css/);
-  assert.ok(root.indexOf("href: listingStudioV3Css") > root.indexOf("href: listingStudioV2Css"));
+  assert.match(routeStyles, /listingStudioV3Css/);
+  assert.ok(
+    root.indexOf("routeStyleHrefs.listingStudioV3") >
+      root.indexOf("routeStyleHrefs.listingStudioV2"),
+  );
 });
 
 test("shared studio supports guided navigation, trust and readiness", () => {
