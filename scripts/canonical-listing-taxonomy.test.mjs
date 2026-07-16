@@ -22,7 +22,10 @@ const [migration, api, editRoute, workflow, migrationStatus] = await Promise.all
 test("canonical taxonomy relation preserves legacy listing compatibility", () => {
   assert.match(migration, /create table if not exists public\.listing_taxonomy_assignments/);
   assert.match(migration, /listing_id uuid primary key references public\.listings\(id\)/);
-  assert.match(migration, /taxonomy_node_id text not null references public\.taxonomy_nodes\(id\)/);
+  assert.match(
+    migration,
+    /taxonomy_node_id text not null references public\.taxonomy_nodes\(id\)/,
+  );
   assert.match(migration, /assignment_source in \('legacy_derived', 'explicit'\)/);
   assert.match(migration, /rawaj_resolve_legacy_taxonomy_node/);
   assert.match(migration, /after insert or update of category_id, subcategory_id/);
@@ -41,7 +44,10 @@ test("explicit taxonomy writes are owner-only, editable-only and leaf-only", () 
 });
 
 test("taxonomy assignments expose only public, owner or admin-safe reads", () => {
-  assert.match(migration, /alter table public\.listing_taxonomy_assignments enable row level security/);
+  assert.match(
+    migration,
+    /alter table public\.listing_taxonomy_assignments enable row level security/,
+  );
   assert.match(migration, /listing\.status = 'approved'/);
   assert.match(migration, /listing\.archived_at is null/);
   assert.match(migration, /listing\.expires_at is null or listing\.expires_at > now\(\)/);
@@ -55,7 +61,10 @@ test("owner edit flow dual-reads and dual-writes canonical taxonomy", () => {
   assert.match(editRoute, /fetchOwnerListingTaxonomyAssignment/);
   assert.match(editRoute, /assignOwnerListingTaxonomy/);
   assert.match(editRoute, /_taxonomy_node_id/);
-  assert.match(editRoute, /taxonomyAssignmentResult\.data\?\.taxonomyNodeId \?\? fallbackTaxonomyNodeId/);
+  assert.match(
+    editRoute,
+    /taxonomyAssignmentResult\.data\?\.taxonomyNodeId \?\? fallbackTaxonomyNodeId/,
+  );
 });
 
 test("permanent workflow and migration ledger record Phase 4 truth", () => {
@@ -63,6 +72,9 @@ test("permanent workflow and migration ledger record Phase 4 truth", () => {
   assert.match(workflow, /node --test scripts\/canonical-listing-taxonomy\.test\.mjs/);
   assert.match(workflow, /contents: read/);
   assert.doesNotMatch(workflow, /contents: write/);
-  assert.match(migrationStatus, /202607130001_canonical_listing_taxonomy_assignments\.sql/);
+  assert.match(
+    migrationStatus,
+    /202607130001_canonical_listing_taxonomy_assignments\.sql/,
+  );
   assert.match(migrationStatus, /live-unverified/);
 });
