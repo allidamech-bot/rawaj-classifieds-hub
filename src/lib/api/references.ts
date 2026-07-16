@@ -220,7 +220,9 @@ export async function fetchPublicTaxonomyNodes(): Promise<ClassifiedsResult<Taxo
   if (!clientResult.ok) return clientResult;
   const { data, error } = await clientResult.data
     .from("taxonomy_nodes")
-    .select("*")
+    .select(
+      "id,parent_id,slug,name_ar,name_en,description_ar,description_en,icon_key,sort_order,depth,is_active,is_leaf,filter_schema_key,classification_key,classification_value,legacy_category_id,legacy_subcategory_id",
+    )
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
     .order("name_ar", { ascending: true });

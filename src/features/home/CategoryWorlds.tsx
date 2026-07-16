@@ -17,7 +17,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { SectionHeader } from "@/components/shell/spatial-primitives";
-import type { ClassifiedCategory } from "@/lib/classifieds-types";
+import type { HomeCategoryWorld } from "@/features/home/home-category-discovery";
 import { categoryName } from "@/lib/i18n";
 
 const categoryIcons: Record<string, LucideIcon> = {
@@ -39,14 +39,13 @@ const categoryIcons: Record<string, LucideIcon> = {
 const worldTones = ["orange", "sage", "gold", "plum", "indigo", "warm"] as const;
 
 interface CategoryWorldsProps {
-  categories: ClassifiedCategory[];
+  worlds: HomeCategoryWorld[];
   language: "ar" | "en";
   text: (ar: string, en: string) => string;
 }
 
-export function CategoryWorlds({ categories, language, text }: CategoryWorldsProps) {
-  const visibleCategories = categories.slice(0, 6);
-  if (visibleCategories.length === 0) return null;
+export function CategoryWorlds({ worlds, language, text }: CategoryWorldsProps) {
+  if (worlds.length === 0) return null;
 
   return (
     <section className="rawaj-category-worlds" aria-labelledby="rawaj-category-worlds-title">
@@ -66,33 +65,73 @@ export function CategoryWorlds({ categories, language, text }: CategoryWorldsPro
       />
 
       <div className="rawaj-category-worlds__grid">
-        {visibleCategories.map((category, index) => {
-          const Icon = categoryIcons[category.placeholder] ?? Grid3X3;
-          return (
-            <Link
-              key={category.id}
-              to="/category/$slug"
-              params={{ slug: category.slug }}
-              className="rawaj-category-world"
-              data-size={index < 2 ? "large" : "compact"}
-              data-tone={worldTones[index % worldTones.length]}
-            >
+        {worlds.map((world, index) => {
+          const Icon = categoryIcons[world.iconKey ?? ""] ?? Grid3X3;
+          const content = (
+            <>
               <span className="rawaj-category-world__orb" aria-hidden="true" />
               <span className="rawaj-category-world__icon">
                 <Icon strokeWidth={1.7} />
               </span>
               <span className="rawaj-category-world__copy">
-                <strong>{categoryName(category.id, category.nameAr, language)}</strong>
-                <small>{category.hintAr ?? text("استكشف الإعلانات", "Explore listings")}</small>
+                <strong>{worldName(world, language)}</strong>
+                <small>
+                  {(language === "en" ? world.descriptionEn : world.descriptionAr) ??
+                    text("استكشف الإعلانات", "Explore listings")}
+                </small>
               </span>
               <ChevronRight
                 className="rawaj-category-world__arrow rtl:rotate-180"
                 strokeWidth={1.8}
               />
+            </>
+          );
+
+          const sharedProps = {
+            className: "rawaj-category-world",
+            "data-size": index < 2 ? ("large" as const) : ("compact" as const),
+            "data-tone": worldTones[index % worldTones.length],
+          };
+
+          if (world.target.kind === "legacy") {
+            return (
+              <Link
+                key={world.id}
+                to="/category/$slug"
+                params={{ slug: world.target.slug }}
+                {...sharedProps}
+              >
+                {content}
+              </Link>
+            );
+          }
+          if (world.target.kind === "directory") {
+            return (
+              <Link
+                key={world.id}
+                to="/categories"
+                search={{ node: world.target.node }}
+                {...sharedProps}
+              >
+                {content}
+              </Link>
+            );
+          }
+          return (
+            <Link key={world.id} to="/listings" search={world.target.search} {...sharedProps}>
+              {content}
             </Link>
           );
         })}
       </div>
     </section>
   );
+}
+
+function worldName(world: HomeCategoryWorld, language: "ar" | "en") {
+  if (language === "ar") return world.nameAr;
+  if (world.nameEn) return world.nameEn;
+  return world.legacyCategoryId
+    ? categoryName(world.legacyCategoryId, world.nameAr, language)
+    : world.nameAr;
 }

@@ -35,11 +35,12 @@ export async function loadPublicCategoriesPageData(): Promise<PublicCategoriesPa
       ? taxonomyResult.error
       : null;
 
+  const taxonomyAvailable = taxonomyResult.ok;
   return {
     taxonomyNodes: taxonomyResult.ok ? taxonomyResult.data : [],
-    taxonomyAvailable: taxonomyResult.ok,
+    taxonomyAvailable,
     categories: categoriesResult.ok ? categoriesResult.data : [],
     subcategories: subcategoriesResult.ok ? subcategoriesResult.data : [],
-    error: categoryError ?? taxonomyError,
+    error: taxonomyError ?? (taxonomyAvailable ? null : categoryError),
   };
 }
