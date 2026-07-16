@@ -39,7 +39,10 @@ test.describe("public initial HTML", () => {
 
     const listingsHtml = await listingsResponse.text();
     const listingPath = listingsHtml.match(/href="(\/listings\/[^"?#]+)"/)?.[1];
-    expect(listingPath, "No public listing URL was present in initial listing results HTML").toBeTruthy();
+    expect(
+      listingPath,
+      "No public listing URL was present in initial listing results HTML",
+    ).toBeTruthy();
 
     const detailResponse = await request.get(listingPath!, {
       headers: { accept: "text/html" },
