@@ -219,6 +219,9 @@ jobs:
       - name: Listing Studio V3 contract
         run: node --test scripts/listing-studio-v3.test.mjs
 
+      - name: Add Listing Taxonomy Architecture contract
+        run: node --test scripts/add-listing-taxonomy-architecture.test.mjs
+
       - name: Seller Storefront V2 contract
         run: node --test scripts/seller-storefront-v2.test.mjs
 
