@@ -2,6 +2,7 @@ import { fetchListingDetail } from "@/lib/api/listings";
 import { fetchMyConversations } from "@/lib/api/messaging";
 import { fetchPublicSellerProfile } from "@/lib/api/seller";
 import type { ClassifiedsResult, NotificationItem } from "@/lib/classifieds-types";
+import { parseNotificationTargetReference } from "@/lib/notification-target-path";
 
 export type ResolvedNotificationTarget =
   | { kind: "listing"; listingId: string }
@@ -15,43 +16,46 @@ export async function resolveNotificationTarget(
   userId: string | null,
   notification: NotificationItem,
 ): Promise<ClassifiedsResult<ResolvedNotificationTarget | null>> {
-  const targetType = notification.targetType?.trim().toLowerCase() ?? "";
-  const targetId = notification.targetId?.trim() ?? "";
-  if (!targetType || !targetId) return { ok: true, data: null };
+  const reference = parseNotificationTargetReference(
+    notification.targetType,
+    notification.targetId,
+  );
+  if (!reference) return { ok: true, data: null };
 
-  if (targetType === "listing") {
-    const result = await fetchListingDetail(targetId);
-    if (result.ok) return { ok: true, data: { kind: "listing", listingId: targetId } };
+  if (reference.kind === "listing") {
+    const result = await fetchListingDetail(reference.id);
+    if (result.ok) {
+      return { ok: true, data: { kind: "listing", listingId: reference.id } };
+    }
     if (result.error.code === "not_found") {
       return { ok: true, data: { kind: "browse_listings" } };
     }
     return result;
   }
 
-  if (targetType === "conversation") {
+  if (reference.kind === "conversation") {
     const result = await fetchMyConversations(userId);
     if (!result.ok) return result;
-    const exists = result.data.some((conversation) => conversation.id === targetId);
+    const exists = result.data.some((conversation) => conversation.id === reference.id);
     return {
       ok: true,
       data: exists
-        ? { kind: "conversation", conversationId: targetId }
-        : { kind: "conversation_missing", conversationId: targetId },
+        ? { kind: "conversation", conversationId: reference.id }
+        : { kind: "conversation_missing", conversationId: reference.id },
     };
   }
 
-  if (targetType === "seller") {
-    const result = await fetchPublicSellerProfile(targetId);
-    if (result.ok) return { ok: true, data: { kind: "seller", sellerId: targetId } };
+  if (reference.kind === "seller") {
+    const result = await fetchPublicSellerProfile(reference.id);
+    if (result.ok) return { ok: true, data: { kind: "seller", sellerId: reference.id } };
     if (result.error.code === "not_found") {
       return { ok: true, data: { kind: "browse_listings" } };
     }
     return result;
   }
 
-  if (targetType === "saved_search") {
-    return { ok: true, data: { kind: "saved_search", savedSearchId: targetId } };
-  }
-
-  return { ok: true, data: null };
+  return {
+    ok: true,
+    data: { kind: "saved_search", savedSearchId: reference.id },
+  };
 }
