@@ -128,20 +128,14 @@ test("native registration is explicit, permission-aware, logout-safe, and multi-
   assert.doesNotMatch(nativePush, /disablePushDevice\(userId, deviceKey, true\)/);
   assert.match(preferences, /if \(pushStatus\.registered\)/);
   assert.match(preferences, /disableNativePush\(currentProfileId, false\)/);
-  assert.doesNotMatch(
-    preferences,
-    /currentPreferences\.pushEnabled \|\| pushStatus\.registered/,
-  );
+  assert.doesNotMatch(preferences, /currentPreferences\.pushEnabled \|\| pushStatus\.registered/);
   assert.match(
     preferences,
     /const accountPushEnabled = currentPreferences\.pushEnabled \|\| enabled/,
   );
   assert.match(multiDeviceMigration, /if v_permission = 'granted' then/i);
   assert.match(multiDeviceMigration, /values \(v_user_id, true\)/i);
-  assert.doesNotMatch(
-    multiDeviceMigration,
-    /values \(v_user_id, v_permission = 'granted'\)/i,
-  );
+  assert.doesNotMatch(multiDeviceMigration, /values \(v_user_id, v_permission = 'granted'\)/i);
 
   const packageJson = JSON.parse(packageText);
   assert.match(packageJson.dependencies["@capacitor/push-notifications"], /^\^?8\./);
