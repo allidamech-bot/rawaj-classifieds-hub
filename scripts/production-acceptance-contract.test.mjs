@@ -2,24 +2,15 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [
-  workflow,
-  spec,
-  stagingWorkflow,
-  stagingSpec,
-  packageSource,
-  qualityGate,
-] = await Promise.all([
-  readFile(new URL("../.github/workflows/production-acceptance.yml", import.meta.url), "utf8"),
-  readFile(new URL("../e2e/production-acceptance.spec.ts", import.meta.url), "utf8"),
-  readFile(
-    new URL("../.github/workflows/staging-write-acceptance.yml", import.meta.url),
-    "utf8",
-  ),
-  readFile(new URL("../e2e/staging-write-acceptance.spec.ts", import.meta.url), "utf8"),
-  readFile(new URL("../package.json", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
-]);
+const [workflow, spec, stagingWorkflow, stagingSpec, packageSource, qualityGate] =
+  await Promise.all([
+    readFile(new URL("../.github/workflows/production-acceptance.yml", import.meta.url), "utf8"),
+    readFile(new URL("../e2e/production-acceptance.spec.ts", import.meta.url), "utf8"),
+    readFile(new URL("../.github/workflows/staging-write-acceptance.yml", import.meta.url), "utf8"),
+    readFile(new URL("../e2e/staging-write-acceptance.spec.ts", import.meta.url), "utf8"),
+    readFile(new URL("../package.json", import.meta.url), "utf8"),
+    readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  ]);
 
 test("production acceptance is manual-only and uses dedicated secrets", () => {
   assert.match(workflow, /on:\s*\n\s*workflow_dispatch:/);
@@ -81,7 +72,10 @@ test("destructive acceptance is isolated to a manual staging-only workflow", () 
   assert.match(stagingWorkflow, /secrets\.RAWAJ_STAGING_PROJECT_REF/);
   assert.match(stagingWorkflow, /secrets\.RAWAJ_STAGING_SERVICE_ROLE_KEY/);
   assert.match(stagingWorkflow, /Validate staging-only environment/);
-  assert.match(stagingWorkflow, /expected_host="https:\/\/\$\{RAWAJ_STAGING_PROJECT_REF\}\.supabase\.co"/);
+  assert.match(
+    stagingWorkflow,
+    /expected_host="https:\/\/\$\{RAWAJ_STAGING_PROJECT_REF\}\.supabase\.co"/,
+  );
   assert.match(stagingWorkflow, /staging-write-acceptance\.spec\.ts/);
   assert.match(stagingWorkflow, /--project=mobile-chromium --workers=1/);
   assert.doesNotMatch(stagingWorkflow, /E2E_BASE_URL:\s*https:\/\/rawa-j\.com/);

@@ -192,9 +192,9 @@ test.describe.serial("RAWAJ staging write acceptance", () => {
       .click();
 
     await page.getByRole("button", { name: /إرسال للمراجعة|Submit for review/ }).click();
-    await expect(
-      page.getByText(/تم إرسال الإعلان للمراجعة|Listing sent for review/),
-    ).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText(/تم إرسال الإعلان للمراجعة|Listing sent for review/)).toBeVisible({
+      timeout: 60_000,
+    });
 
     const listing = await waitForListingStatus(originalTitle, "pending_review");
     listingId = listing.id;
@@ -301,32 +301,28 @@ test.describe.serial("RAWAJ staging write acceptance", () => {
 
     let nonParticipantEventCount = 0;
     const participantEvent = deferred<Record<string, unknown>>();
-    const participantChannel = userA.client
-      .channel(`acceptance-participant-${runId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "conversation_messages",
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        (payload) => participantEvent.resolve(payload.new as Record<string, unknown>),
-      );
-    const nonParticipantChannel = userC.client
-      .channel(`acceptance-non-participant-${runId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "conversation_messages",
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        () => {
-          nonParticipantEventCount += 1;
-        },
-      );
+    const participantChannel = userA.client.channel(`acceptance-participant-${runId}`).on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "conversation_messages",
+        filter: `conversation_id=eq.${conversationId}`,
+      },
+      (payload) => participantEvent.resolve(payload.new as Record<string, unknown>),
+    );
+    const nonParticipantChannel = userC.client.channel(`acceptance-non-participant-${runId}`).on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "conversation_messages",
+        filter: `conversation_id=eq.${conversationId}`,
+      },
+      () => {
+        nonParticipantEventCount += 1;
+      },
+    );
 
     try {
       await Promise.all([
@@ -341,7 +337,11 @@ test.describe.serial("RAWAJ staging write acceptance", () => {
       });
       expect(send.error).toBeNull();
 
-      const liveRow = await withTimeout(participantEvent.promise, 8_000, "participant Realtime event");
+      const liveRow = await withTimeout(
+        participantEvent.promise,
+        8_000,
+        "participant Realtime event",
+      );
       expect(liveRow.body).toBe(chatMessage);
       await delay(1_500);
       expect(nonParticipantEventCount).toBe(0);
@@ -513,9 +513,7 @@ async function resolveListingFixture() {
   const taxonomy = (taxonomyResult.data ?? []) as TaxonomyRow[];
   const locations = (locationResult.data ?? []) as LocationRow[];
   const generalCategoryIds = new Set(
-    categories
-      .filter((category) => !isSpecialCategory(category))
-      .map((category) => category.id),
+    categories.filter((category) => !isSpecialCategory(category)).map((category) => category.id),
   );
   const leaf = taxonomy.find(
     (node) =>
@@ -601,7 +599,11 @@ async function requireListing(): Promise<ListingRow> {
   return data as ListingRow;
 }
 
-async function reviewListing(listing: ListingRow, decision: "approved" | "rejected", reason: string) {
+async function reviewListing(
+  listing: ListingRow,
+  decision: "approved" | "rejected",
+  reason: string,
+) {
   const result = await moderator.client.rpc("rawaj_review_listing_decision", {
     p_listing_id: listing.id,
     p_decision: decision,
@@ -676,7 +678,10 @@ async function cleanupAcceptanceRecords() {
   if (!serviceClient) return;
 
   if (conversationId) {
-    await serviceClient.from("conversation_messages").delete().eq("conversation_id", conversationId);
+    await serviceClient
+      .from("conversation_messages")
+      .delete()
+      .eq("conversation_id", conversationId);
     await serviceClient.from("conversations").delete().eq("id", conversationId);
   }
 
