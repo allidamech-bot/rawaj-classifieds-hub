@@ -2,18 +2,31 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import "./listing-moderation-audit-atomicity.test.mjs";
-
-const [seo, publicFields, listings, locationAware, canonicalAware, priceDrops, seller] =
-  await Promise.all([
-    readFile(new URL("../src/lib/seo.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/api/public-fields.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/api/listings.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/api/location-aware-listings.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/api/location-aware-listings-v2.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/api/price-drops.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/api/seller.ts", import.meta.url), "utf8"),
-  ]);
+const [
+  seo,
+  publicFields,
+  listings,
+  locationAware,
+  canonicalAware,
+  priceDrops,
+  seller,
+  moderationAudit,
+] = await Promise.all([
+  readFile(new URL("../src/lib/seo.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/public-fields.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/listings.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/location-aware-listings.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/location-aware-listings-v2.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/price-drops.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/seller.ts", import.meta.url), "utf8"),
+  readFile(
+    new URL(
+      "../supabase/migrations/202607160002_require_listing_moderation_audit.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+]);
 
 function functionSource(source, start, end) {
   const startIndex = source.indexOf(start);
@@ -77,4 +90,27 @@ test("public seller page uses listing and review allowlists", () => {
   assert.match(seller, /\.select\(publicListingSelect\)/);
   assert.match(seller, /\.select\(publicSellerReviewSelect\)/);
   assert.doesNotMatch(seller, /\.select\("\*"\)/);
+});
+
+test("listing review decisions require moderation history and audit records", () => {
+  const moderationInsertIndex = moderationAudit.indexOf(
+    "insert into public.listing_moderation_actions",
+  );
+  const auditInsertIndex = moderationAudit.indexOf("perform public.rawaj_insert_audit_log");
+  const notificationIndex = moderationAudit.indexOf("perform public.rawaj_create_notification");
+  const exceptionBlockIndex = moderationAudit.indexOf("\n  exception\n");
+
+  assert.ok(moderationInsertIndex > -1);
+  assert.ok(auditInsertIndex > moderationInsertIndex);
+  assert.ok(notificationIndex > auditInsertIndex);
+  assert.ok(exceptionBlockIndex > auditInsertIndex);
+});
+
+test("only owner notification delivery remains best effort", () => {
+  const exceptionMatches = moderationAudit.match(/exception\s+when others then\s+null;/g) ?? [];
+
+  assert.equal(exceptionMatches.length, 1);
+  assert.match(moderationAudit, /Best-effort only: notification delivery/);
+  assert.match(moderationAudit, /raise exception 'stale_review'/);
+  assert.match(moderationAudit, /rawaj_current_user_can_review_listings\(\)/);
 });
