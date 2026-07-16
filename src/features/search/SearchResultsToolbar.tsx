@@ -17,6 +17,7 @@ const RECENT_SEARCHES_KEY = "rawaj_recent_listing_searches_v1";
 const MAX_RECENT_SEARCHES = 5;
 
 const emptySavedSearchParams = {
+  taxonomy: "",
   q: "",
   category: "",
   subcategory: "",
@@ -24,6 +25,8 @@ const emptySavedSearchParams = {
   district: "",
   price_min: "",
   price_max: "",
+  price_type: "",
+  condition: "",
   car_make: "",
   car_model: "",
   fuel: "",
@@ -36,7 +39,7 @@ const emptySavedSearchParams = {
   detail_condition: "",
   employment_type: "",
   salary_type: "",
-  sort: "latest" as const,
+  sort: "latest" as ListingsSort,
 };
 
 interface SearchResultsToolbarProps {
@@ -53,6 +56,7 @@ interface SearchResultsToolbarProps {
   onViewChange: (view: ListingsView) => void;
   onOpenFilters: () => void;
   text: (ar: string, en: string) => string;
+  savedSearch?: typeof emptySavedSearchParams;
 }
 
 function readRecentSearches() {
@@ -83,6 +87,7 @@ export function SearchResultsToolbar({
   onViewChange,
   onOpenFilters,
   text,
+  savedSearch = emptySavedSearchParams,
 }: SearchResultsToolbarProps) {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -250,11 +255,7 @@ export function SearchResultsToolbar({
           </button>
         </div>
 
-        <Link
-          to="/saved-searches"
-          search={emptySavedSearchParams}
-          className="rawaj-search-toolbar__saved"
-        >
+        <Link to="/saved-searches" search={savedSearch} className="rawaj-search-toolbar__saved">
           <Bookmark aria-hidden="true" />
           <span>{text("عمليات البحث", "Saved searches")}</span>
         </Link>

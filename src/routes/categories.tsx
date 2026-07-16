@@ -38,7 +38,6 @@ import {
   findTaxonomyNode,
   flattenTaxonomy,
   getTaxonomyChildren,
-  getTaxonomyLevelScope,
   getTaxonomyPath,
   getTaxonomyRootNodes,
   resolveTaxonomyListingSearch,
@@ -281,18 +280,11 @@ function TaxonomyDirectory({
 }) {
   const term = query.trim();
   const currentPath = getTaxonomyPath(index, currentNode);
-  const levelScope =
-    currentNode && currentPath.length > 0
-      ? getTaxonomyLevelScope(index, currentNode, currentPath)
-      : null;
   const currentListingSearch =
     currentNode && currentPath.length > 0
       ? resolveTaxonomyListingSearch(currentNode, currentPath)
       : null;
-  const canOpenCurrentLevel =
-    currentListingSearch !== null &&
-    levelScope?.length === 1 &&
-    levelScopeMatchesSearch(levelScope[0], currentListingSearch);
+  const canOpenCurrentLevel = currentListingSearch !== null;
   const visibleNodes = currentNode
     ? getTaxonomyChildren(index, currentNode.id)
     : getTaxonomyRootNodes(index);
@@ -379,23 +371,6 @@ function TaxonomyDirectory({
 
 function DirectoryGrid({ children }: { children: React.ReactNode }) {
   return <section className="rawaj-category-directory-grid mt-5">{children}</section>;
-}
-
-function levelScopeMatchesSearch(
-  scope: {
-    categoryId: string;
-    subcategoryId?: string;
-    propertyPurpose?: string;
-    propertyType?: string;
-  },
-  search: ReturnType<typeof resolveTaxonomyListingSearch>,
-) {
-  return (
-    scope.categoryId === search.category &&
-    scope.subcategoryId === search.taxonomyLegacySubcategoryId &&
-    scope.propertyPurpose === search.property_purpose &&
-    scope.propertyType === search.property_type
-  );
 }
 
 function TaxonomyRow({

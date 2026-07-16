@@ -22,6 +22,7 @@ import {
   buildTaxonomyIndex,
   findTaxonomyNode,
   getTaxonomyPath,
+  resolveTaxonomyFilterScope,
   resolveTaxonomyListingSearch,
 } from "@/lib/taxonomy";
 
@@ -87,6 +88,9 @@ export async function loadPublicListingsPageData(
   const taxonomyListingSearch = selectedTaxonomyNode
     ? resolveTaxonomyListingSearch(selectedTaxonomyNode, selectedTaxonomyPath)
     : undefined;
+  const taxonomyFilterScope = selectedTaxonomyNode
+    ? resolveTaxonomyFilterScope(taxonomyIndex, selectedTaxonomyNode)
+    : undefined;
   const categorySearchValue = taxonomyListingSearch?.category ?? search.category;
   const selectedCategory = categorySearchValue
     ? references.categories.find(
@@ -109,11 +113,8 @@ export async function loadPublicListingsPageData(
   const taxonomyOwnsPropertyType = Boolean(taxonomyListingSearch?.property_type);
   const parsedPriceMin = search.price_min;
   const parsedPriceMax = search.price_max;
-  const hasInvalidTaxonomy = Boolean(
-    references.taxonomyAvailable && search.taxonomy && !selectedTaxonomyNode,
-  );
   const hasInvalidCategory = Boolean(
-    (search.category || search.taxonomy) && !selectedCategory && references.categories.length > 0,
+    search.category && !selectedCategory && references.categories.length > 0,
   );
   const hasInvalidSubcategory = Boolean(
     search.subcategory && !selectedSubcategory && references.subcategories.length > 0,
@@ -124,7 +125,7 @@ export async function loadPublicListingsPageData(
     parsedPriceMin > parsedPriceMax,
   );
 
-  if (hasInvalidTaxonomy || hasInvalidCategory || hasInvalidSubcategory || hasPriceContradiction) {
+  if (hasInvalidCategory || hasInvalidSubcategory || hasPriceContradiction) {
     return {
       references,
       results: emptyResults(null),
@@ -132,6 +133,7 @@ export async function loadPublicListingsPageData(
   }
 
   const filters = buildListingFilters({
+    taxonomyFilterScope,
     selectedCategoryId: selectedCategory?.id,
     effectiveSubcategoryId,
     taxonomyListingSearch,
@@ -143,6 +145,8 @@ export async function loadPublicListingsPageData(
     districtAr: search.district ?? "",
     parsedPriceMin,
     parsedPriceMax,
+    priceType: search.price_type,
+    globalCondition: search.condition,
     carMake: search.car_make ?? "",
     carModel: search.car_model ?? "",
     fuelType: search.fuel ?? "",
@@ -196,8 +200,7 @@ function firstReferenceError(
   if (!categoriesResult.ok) return categoriesResult.error;
   if (!subcategoriesResult.ok) return subcategoriesResult.error;
   if (!governoratesResult.ok) return governoratesResult.error;
-  if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
-    return taxonomyResult.error;
-  }
+  // Taxonomy is an optional read model here. Any read failure keeps legacy
+  // category/subcategory search available without mutating listing data.
   return null;
 }

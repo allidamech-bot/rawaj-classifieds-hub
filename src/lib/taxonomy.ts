@@ -46,6 +46,47 @@ export function getTaxonomyChildren(index: TaxonomyIndex, nodeId: string) {
   return index.childrenByParent.get(nodeId) ?? [];
 }
 
+export function getTaxonomyLeafDescendants(index: TaxonomyIndex, node: TaxonomyNode) {
+  const result: TaxonomyNode[] = [];
+  const pending = [node];
+  const visited = new Set<string>();
+
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (!current || visited.has(current.id)) continue;
+    visited.add(current.id);
+    const children = getTaxonomyChildren(index, current.id);
+    if (current.isLeaf || children.length === 0) result.push(current);
+    else pending.push(...children);
+  }
+
+  return result.sort(compareTaxonomyNodes);
+}
+
+export function resolveTaxonomyFilterScope(index: TaxonomyIndex, node: TaxonomyNode) {
+  const leaves = getTaxonomyLeafDescendants(index, node);
+  const scopes = leaves
+    .map((leaf) => {
+      const path = getTaxonomyPath(index, leaf);
+      if (path.length === 0) return null;
+      const search = resolveTaxonomyListingSearch(leaf, path);
+      if (!search.category) return null;
+      return {
+        categoryId: search.category,
+        subcategoryId: search.taxonomyLegacySubcategoryId,
+        propertyPurpose: search.property_purpose,
+        propertyType: search.property_type,
+      };
+    })
+    .filter((scope): scope is NonNullable<typeof scope> => scope != null);
+  const uniqueScopes = [...new Map(scopes.map((scope) => [JSON.stringify(scope), scope])).values()];
+
+  return {
+    taxonomyNodeIds: leaves.map((leaf) => leaf.id),
+    legacyScopes: uniqueScopes,
+  };
+}
+
 export function findTaxonomyNode(index: TaxonomyIndex, value?: string | null) {
   if (!value) return undefined;
   return index.byId.get(value) ?? index.bySlug.get(value);

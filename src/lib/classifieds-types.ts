@@ -542,6 +542,14 @@ export interface UpdateListingPayload {
 }
 
 export interface ListingFilters {
+  taxonomyNodeId?: string;
+  taxonomyNodeIds?: string[];
+  taxonomyLegacyScopes?: Array<{
+    categoryId: string;
+    subcategoryId?: string;
+    propertyPurpose?: string;
+    propertyType?: string;
+  }>;
   categoryId?: string;
   subcategoryId?: string;
   governorateId?: string;
@@ -563,6 +571,8 @@ export interface ListingFilters {
   rentalDuration?: string;
   electronicsBrand?: string;
   detailCondition?: string;
+  condition?: string;
+  priceType?: PriceType;
   employmentType?: string;
   salaryType?: string;
   withPhotos?: boolean;
