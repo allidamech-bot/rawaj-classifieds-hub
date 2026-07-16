@@ -231,6 +231,9 @@ jobs:
       - name: Search Results Taxonomy Integrity contract
         run: node --test scripts/search-results-taxonomy-integrity.test.mjs
 
+      - name: Home and Category Discovery Integrity contract
+        run: npm run test:home-category-discovery
+
       - name: Seller Storefront V2 contract
         run: node --test scripts/seller-storefront-v2.test.mjs
 

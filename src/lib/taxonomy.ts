@@ -16,6 +16,10 @@ export interface TaxonomyListingSearch {
   property_type?: string;
 }
 
+export type TaxonomyDiscoveryTarget =
+  | { kind: "directory"; node: string }
+  | { kind: "listings"; search: ReturnType<typeof taxonomyListingUrlSearch> };
+
 const rootParentKey = "__root__";
 
 export function buildTaxonomyIndex(nodes: TaxonomyNode[]): TaxonomyIndex {
@@ -122,19 +126,30 @@ export function taxonomyPathLabel(path: TaxonomyNode[], language: Language) {
 }
 
 export function taxonomyMatchesSearch(node: TaxonomyNode, term: string, path: TaxonomyNode[]) {
-  const normalizedTerm = term.trim().toLowerCase();
+  const normalizedTerm = normalizeTaxonomySearchText(term);
   if (!normalizedTerm) return true;
-  return [
-    node.slug,
-    node.nameAr,
-    node.nameEn ?? "",
-    node.descriptionAr ?? "",
-    node.descriptionEn ?? "",
-    ...path.flatMap((item) => [item.nameAr, item.nameEn ?? "", item.slug]),
-  ]
-    .join(" ")
+  return normalizeTaxonomySearchText(
+    [
+      node.slug,
+      node.nameAr,
+      node.nameEn ?? "",
+      node.descriptionAr ?? "",
+      node.descriptionEn ?? "",
+      ...path.flatMap((item) => [item.nameAr, item.nameEn ?? "", item.slug]),
+    ].join(" "),
+  ).includes(normalizedTerm);
+}
+
+export function normalizeTaxonomySearchText(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
     .toLowerCase()
-    .includes(normalizedTerm);
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function resolveTaxonomyListingSearch(
@@ -158,6 +173,33 @@ export function taxonomyListingUrlSearch(search: TaxonomyListingSearch) {
   return urlSearch;
 }
 
+export function resolveTaxonomyDiscoveryTarget(
+  index: TaxonomyIndex,
+  node: TaxonomyNode,
+): TaxonomyDiscoveryTarget | null {
+  const path = getTaxonomyPath(index, node);
+  if (path.length === 0) return null;
+  if (getTaxonomyChildren(index, node.id).length > 0) {
+    return { kind: "directory", node: node.id };
+  }
+  return {
+    kind: "listings",
+    search: taxonomyListingUrlSearch(resolveTaxonomyListingSearch(node, path)),
+  };
+}
+
+export function findLegacyCategoryTaxonomyNode(index: TaxonomyIndex, legacyCategoryId: string) {
+  const candidates = flattenTaxonomy(index)
+    .map(({ node }) => node)
+    .filter((node) => node.legacyCategoryId === legacyCategoryId)
+    .sort((a, b) => a.depth - b.depth || compareTaxonomyNodes(a, b));
+  if (candidates.length === 0) return undefined;
+
+  const shallowestDepth = candidates[0].depth;
+  const shallowest = candidates.filter((node) => node.depth === shallowestDepth);
+  return shallowest.length === 1 ? shallowest[0] : undefined;
+}
+
 export function flattenTaxonomy(index: TaxonomyIndex) {
   const result: Array<{ node: TaxonomyNode; path: TaxonomyNode[] }> = [];
   const walk = (nodes: TaxonomyNode[], parentPath: TaxonomyNode[]) => {
@@ -169,6 +211,16 @@ export function flattenTaxonomy(index: TaxonomyIndex) {
   };
   walk(getTaxonomyRootNodes(index), []);
   return result;
+}
+
+export function searchTaxonomyNodes(index: TaxonomyIndex, term: string, withinNode?: TaxonomyNode) {
+  const normalizedTerm = normalizeTaxonomySearchText(term);
+  if (!normalizedTerm) return [];
+  return flattenTaxonomy(index).filter(
+    ({ node, path }) =>
+      (!withinNode || path.some((ancestor) => ancestor.id === withinNode.id)) &&
+      taxonomyMatchesSearch(node, normalizedTerm, path),
+  );
 }
 
 export function getTaxonomyLevelScope(

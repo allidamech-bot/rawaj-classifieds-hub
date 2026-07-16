@@ -2,31 +2,40 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [home, categories, categoryData, listings, listingData, listingReferences, listingResults] =
-  await Promise.all([
-    readFile(new URL("../src/routes/index.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/categories.tsx", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/features/categories/public-categories-page-data.ts", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../src/routes/listings.tsx", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/features/listings/public-listings-page-data.ts", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/features/listings/use-listings-references.ts", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../src/features/listings/use-listings-results.ts", import.meta.url), "utf8"),
-  ]);
+const [
+  home,
+  homeData,
+  categories,
+  categoryData,
+  listings,
+  listingData,
+  listingReferences,
+  listingResults,
+] = await Promise.all([
+  readFile(new URL("../src/routes/index.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/home/public-home-page-data.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/categories.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/categories/public-categories-page-data.ts", import.meta.url),
+    "utf8",
+  ),
+  readFile(new URL("../src/routes/listings.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/listings/public-listings-page-data.ts", import.meta.url),
+    "utf8",
+  ),
+  readFile(new URL("../src/features/listings/use-listings-references.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/listings/use-listings-results.ts", import.meta.url), "utf8"),
+]);
 
 test("home marketplace data is loaded before render", () => {
-  assert.match(home, /createFileRoute\("\/"\)\(\{[\s\S]*loader: async/);
+  assert.match(home, /createFileRoute\("\/"\)\(\{[\s\S]*loader: loadPublicHomePageData/);
   assert.match(home, /Route\.useLoaderData\(\)/);
-  assert.match(home, /fetchPublicListings\(\{\}, null, 18\)/);
-  assert.match(home, /fetchPublicCategories\(\)/);
+  assert.match(homeData, /fetchPublicListings\(\{\}, null, 18\)/);
+  assert.match(homeData, /fetchPublicTaxonomyNodes\(\)/);
+  assert.match(homeData, /fetchPublicCategories\(\)/);
+  assert.match(homeData, /buildCanonicalHomeCategoryWorlds/);
+  assert.match(homeData, /taxonomyResult\.error\.code === "schema_missing"/);
   assert.doesNotMatch(home, /useEffect\(\(\) => \{[\s\S]*fetchPublicListings/);
 });
 

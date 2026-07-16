@@ -36,22 +36,25 @@ import { createSeo } from "@/lib/seo";
 import {
   buildTaxonomyIndex,
   findTaxonomyNode,
-  flattenTaxonomy,
   getTaxonomyChildren,
   getTaxonomyPath,
   getTaxonomyRootNodes,
   resolveTaxonomyListingSearch,
+  searchTaxonomyNodes,
   taxonomyListingUrlSearch,
-  taxonomyMatchesSearch,
   taxonomyNodeDescription,
   taxonomyNodeName,
   taxonomyPathLabel,
 } from "@/lib/taxonomy";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
+const cleanDirectorySearchValue = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() ? value.trim() : undefined),
+  z.string().max(160).optional(),
+);
 const categoriesSearchSchema = z.object({
-  node: z.string().optional(),
-  q: z.string().optional(),
+  node: cleanDirectorySearchValue,
+  q: cleanDirectorySearchValue,
 });
 
 export const Route = createFileRoute("/categories")({
@@ -101,14 +104,8 @@ function CategoriesPage() {
       ]);
       if (cancelled) return;
 
-      if (!categoriesResult.ok) {
-        setFetchError(categoriesResult.error);
-      } else if (!subcategoriesResult.ok) {
-        setFetchError(subcategoriesResult.error);
-      } else {
-        setCategories(categoriesResult.data);
-        setSubcategories(subcategoriesResult.data);
-      }
+      if (categoriesResult.ok) setCategories(categoriesResult.data);
+      if (subcategoriesResult.ok) setSubcategories(subcategoriesResult.data);
 
       if (taxonomyResult.ok) {
         setTaxonomyNodes(taxonomyResult.data);
@@ -116,6 +113,8 @@ function CategoriesPage() {
       } else if (taxonomyResult.error.code === "schema_missing") {
         setTaxonomyNodes([]);
         setTaxonomyAvailable(false);
+        if (!categoriesResult.ok) setFetchError(categoriesResult.error);
+        else if (!subcategoriesResult.ok) setFetchError(subcategoriesResult.error);
       } else {
         setFetchError(taxonomyResult.error);
       }
@@ -288,9 +287,7 @@ function TaxonomyDirectory({
   const visibleNodes = currentNode
     ? getTaxonomyChildren(index, currentNode.id)
     : getTaxonomyRootNodes(index);
-  const searchMatches = term
-    ? flattenTaxonomy(index).filter(({ node, path }) => taxonomyMatchesSearch(node, term, path))
-    : [];
+  const searchMatches = term ? searchTaxonomyNodes(index, term, currentNode) : [];
 
   if (term) {
     return searchMatches.length === 0 ? (

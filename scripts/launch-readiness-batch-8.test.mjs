@@ -30,7 +30,10 @@ const [
 test("category landing pages resolve active categories and expose canonical SEO", () => {
   assert.match(categoryRoute, /createFileRoute\("\/category\/\$slug"\)/);
   assert.match(categoryRoute, /fetchPublicCategories/);
-  assert.match(categoryRoute, /fetchPublicListings\(\{ categoryId: category\.id \}/);
+  assert.match(categoryRoute, /fetchPublicTaxonomyNodes/);
+  assert.match(categoryRoute, /findLegacyCategoryTaxonomyNode/);
+  assert.match(categoryRoute, /fetchPublicListings\(listingFilters, null, 12\)/);
+  assert.match(categoryRoute, /: \{ categoryId: category\.id \}/);
   assert.match(categoryRoute, /path: loaderData \? `\/category\/\$\{loaderData\.category\.slug\}`/);
   assert.match(categoryRoute, /noindex: !loaderData/);
 });
@@ -93,7 +96,7 @@ test("landing pages provide useful marketplace content rather than redirect-only
   assert.match(landingPage, /<RealListingCard/);
   assert.match(landingPage, /to="\/listings"/);
   assert.match(categoryWorlds, /to="\/category\/\$slug"/);
-  assert.match(categoryWorlds, /params=\{\{ slug: category\.slug \}\}/);
+  assert.match(categoryWorlds, /params=\{\{ slug: world\.target\.slug \}\}/);
 });
 
 test("sitemap discovers every active category and governorate landing page", () => {

@@ -16,6 +16,7 @@ const [
   css,
   selectionSource,
   visualPolishCss,
+  homeLoader,
 ] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
@@ -32,6 +33,7 @@ const [
   readFile(new URL("../src/home-discovery-v3.css", import.meta.url), "utf8"),
   readFile(new URL("../src/features/home/home-listing-selection.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/launch-readiness-visual-polish.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/home/public-home-page-data.ts", import.meta.url), "utf8"),
 ]);
 
 const transpiledSelection = ts.transpileModule(selectionSource, {
@@ -67,25 +69,27 @@ test("launch visual polish loads last so populated-card safeguards win", () => {
 
 test("home composes the new discovery flow from real loader data", () => {
   assert.match(home, /<DiscoveryHero/);
-  assert.match(home, /<CategoryWorlds categories=\{categories\}/);
+  assert.match(home, /<CategoryWorlds worlds=\{categoryWorlds\}/);
   assert.match(home, /<FeaturedListingShowcase listings=\{featuredListings\}/);
   assert.match(home, /<LatestDiscovery listings=\{latestListings\}/);
   assert.match(home, /<HomeTrustStrip/);
-  assert.match(home, /fetchPublicCategories\(\)/);
-  assert.match(home, /fetchPublicListings\(\{\}, null, 18\)/);
+  assert.match(home, /loader: loadPublicHomePageData/);
+  assert.match(homeLoader, /fetchPublicTaxonomyNodes\(\)/);
+  assert.match(homeLoader, /fetchPublicCategories\(\)/);
+  assert.match(homeLoader, /fetchPublicListings\(\{\}, null, 18\)/);
   assert.doesNotMatch(home, /mockListings|fakeListings|sampleListings/i);
 });
 
 test("home discovery exposes partial read failures and retries the route loader", () => {
-  assert.match(home, /categoryLoadFailed: !categoriesResult\.ok/);
-  assert.match(home, /listingLoadFailed: !listingsResult\.ok/);
+  assert.match(homeLoader, /categoryLoadFailed:/);
+  assert.match(homeLoader, /listingLoadFailed: !listingsResult\.ok/);
   assert.match(home, /categoryLoadFailed \? \(/);
   assert.match(home, /listingLoadFailed \? \(/);
   assert.match(home, /تعذر تحميل أقسام السوق/);
   assert.match(home, /تعذر تحميل إعلانات السوق/);
   assert.match(home, /router\.invalidate\(\)/);
   assert.match(home, /إعادة المحاولة/);
-  assert.doesNotMatch(home, /<CategoryWorlds categories=\{\[\]\}/);
+  assert.doesNotMatch(home, /<CategoryWorlds worlds=\{\[\]\}/);
 });
 
 test("search overlay preserves listings search and filter behavior", () => {
@@ -95,11 +99,12 @@ test("search overlay preserves listings search and filter behavior", () => {
   assert.match(hero, /search=\{\{ q: shortcut\.query \}\}/);
 });
 
-test("category worlds use live categories, SEO landing routes, and asymmetric sizing", () => {
-  assert.match(worlds, /categories\.slice\(0, 6\)/);
+test("category worlds use canonical targets, legacy fallback, and asymmetric sizing", () => {
+  assert.match(worlds, /world\.target\.kind === "directory"/);
+  assert.match(worlds, /to="\/listings"/);
   assert.match(worlds, /to="\/category\/\$slug"/);
-  assert.match(worlds, /params=\{\{ slug: category\.slug \}\}/);
-  assert.match(worlds, /data-size=\{index < 2 \? "large" : "compact"\}/);
+  assert.match(worlds, /params=\{\{ slug: world\.target\.slug \}\}/);
+  assert.match(worlds, /"data-size": index < 2 \? \("large" as const\) : \("compact" as const\)/);
   assert.match(css, /\.rawaj-category-world\[data-size="large"\]/);
   assert.match(css, /grid-column: span 2/);
 });

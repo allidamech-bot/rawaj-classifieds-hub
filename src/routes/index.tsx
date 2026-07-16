@@ -9,7 +9,7 @@ import { FeaturedListingShowcase } from "@/features/home/FeaturedListingShowcase
 import { HomeTrustStrip } from "@/features/home/HomeTrustStrip";
 import { LatestDiscovery } from "@/features/home/LatestDiscovery";
 import { selectDiverseListings } from "@/features/home/home-listing-selection";
-import { fetchPublicCategories, fetchPublicListings } from "@/lib/classifieds-api";
+import { loadPublicHomePageData } from "@/features/home/public-home-page-data";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
@@ -18,19 +18,7 @@ const HOME_DESCRIPTION =
   "سوق إعلانات مبوبة في سوريا لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة منظمة وواضحة.";
 
 export const Route = createFileRoute("/")({
-  loader: async () => {
-    const [listingsResult, categoriesResult] = await Promise.all([
-      fetchPublicListings({}, null, 18),
-      fetchPublicCategories(),
-    ]);
-
-    return {
-      listings: listingsResult.ok ? listingsResult.data.items : [],
-      categories: categoriesResult.ok ? categoriesResult.data : [],
-      listingLoadFailed: !listingsResult.ok,
-      categoryLoadFailed: !categoriesResult.ok,
-    };
-  },
+  loader: loadPublicHomePageData,
   head: () => createSeo({ title: HOME_TITLE, description: HOME_DESCRIPTION, path: "/" }),
   component: HomePage,
 });
@@ -39,7 +27,7 @@ function HomePage() {
   const navigate = useNavigate();
   const router = useRouter();
   const { language, text } = useUiPreferences();
-  const { listings, categories, listingLoadFailed, categoryLoadFailed } = Route.useLoaderData();
+  const { listings, categoryWorlds, listingLoadFailed, categoryLoadFailed } = Route.useLoaderData();
   const [searchValue, setSearchValue] = useState("");
 
   const featuredListings = selectDiverseListings(
@@ -88,7 +76,7 @@ function HomePage() {
                 action={retryAction}
               />
             ) : (
-              <CategoryWorlds categories={categories} language={language} text={text} />
+              <CategoryWorlds worlds={categoryWorlds} language={language} text={text} />
             )}
 
             {listingLoadFailed ? (
