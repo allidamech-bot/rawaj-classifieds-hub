@@ -6,7 +6,7 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   patch:
@@ -61,14 +61,30 @@ jobs:
           node --test scripts/seller-storefront-v2.test.mjs
           npm run typecheck -- --pretty false
 
-      - name: Remove temporary patch script
-        run: rm scripts/apply-phase3-route-css-isolation.py
-
-      - name: Commit isolated route styles
+      - name: Stage validated files
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "perf: load page styles only on matching routes"
-          git pull --rebase origin agent/phase-3-route-css-isolation
-          git push origin HEAD:agent/phase-3-route-css-isolation
+          mkdir -p phase3-route-css-output/src/routes
+          mkdir -p phase3-route-css-output/src/lib
+          mkdir -p phase3-route-css-output/scripts
+          mkdir -p phase3-route-css-output/e2e
+          mkdir -p phase3-route-css-output/.github/workflows
+          cp src/routes/__root.tsx phase3-route-css-output/src/routes/__root.tsx
+          cp src/lib/route-styles.ts phase3-route-css-output/src/lib/route-styles.ts
+          cp scripts/route-css-isolation.test.mjs phase3-route-css-output/scripts/route-css-isolation.test.mjs
+          cp scripts/home-discovery-v3.test.mjs phase3-route-css-output/scripts/home-discovery-v3.test.mjs
+          cp scripts/adaptive-listing-cards.test.mjs phase3-route-css-output/scripts/adaptive-listing-cards.test.mjs
+          cp scripts/search-filters-v1.test.mjs phase3-route-css-output/scripts/search-filters-v1.test.mjs
+          cp scripts/search-filters-v2.test.mjs phase3-route-css-output/scripts/search-filters-v2.test.mjs
+          cp scripts/listing-detail-v2.test.mjs phase3-route-css-output/scripts/listing-detail-v2.test.mjs
+          cp scripts/listing-detail-v3.test.mjs phase3-route-css-output/scripts/listing-detail-v3.test.mjs
+          cp scripts/seller-storefront-v2.test.mjs phase3-route-css-output/scripts/seller-storefront-v2.test.mjs
+          cp e2e/public-initial-html.spec.ts phase3-route-css-output/e2e/public-initial-html.spec.ts
+          cp .github/workflows/quality-gate.yml phase3-route-css-output/.github/workflows/quality-gate.yml
+
+      - name: Upload validated route CSS output
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase3-route-css-output-${{ github.sha }}
+          path: phase3-route-css-output
+          retention-days: 1
+          if-no-files-found: error
