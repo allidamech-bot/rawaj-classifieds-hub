@@ -10,6 +10,11 @@ type SitemapEntry = {
   priority?: number;
 };
 
+type SitemapIndexEntry = {
+  loc: string;
+  lastmod?: string;
+};
+
 type PublicListingSitemapRow = {
   id: string;
   owner_id: string;
@@ -20,6 +25,10 @@ type PublicSlugRow = {
   slug: string;
 };
 
+const SITEMAP_PAGE_SIZE = 1_000;
+const SITEMAP_SECTION_STATIC = "static";
+const SITEMAP_SECTION_MARKETPLACE = "marketplace";
+
 const staticEntries: SitemapEntry[] = [
   { loc: absoluteUrl("/"), changefreq: "daily", priority: 1 },
   { loc: absoluteUrl("/listings"), changefreq: "hourly", priority: 0.9 },
@@ -27,6 +36,7 @@ const staticEntries: SitemapEntry[] = [
   { loc: absoluteUrl("/offers"), changefreq: "daily", priority: 0.8 },
   { loc: absoluteUrl("/safety"), changefreq: "monthly", priority: 0.5 },
   { loc: absoluteUrl("/prohibited"), changefreq: "monthly", priority: 0.4 },
+  { loc: absoluteUrl("/support"), changefreq: "monthly", priority: 0.4 },
   { loc: absoluteUrl("/privacy"), changefreq: "yearly", priority: 0.3 },
   { loc: absoluteUrl("/terms"), changefreq: "yearly", priority: 0.3 },
 ];
@@ -34,20 +44,58 @@ const staticEntries: SitemapEntry[] = [
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
-      GET: async () => {
-        const [marketplaceEntries, referenceEntries] = await Promise.all([
-          readDynamicMarketplaceEntries(),
-          readPublicReferenceEntries(),
-        ]);
-        const xml = buildSitemapXml([...staticEntries, ...referenceEntries, ...marketplaceEntries]);
+      GET: async ({ request }: { request: Request }) => {
+        try {
+          const requestUrl = new URL(request.url);
+          const section = requestUrl.searchParams.get("section");
+          const page = parsePage(requestUrl.searchParams.get("page"));
 
-        return new Response(xml, {
-          headers: {
-            "Content-Type": "application/xml; charset=utf-8",
-            "Cache-Control": "public, max-age=900, s-maxage=3600, stale-while-revalidate=86400",
-            "X-Content-Type-Options": "nosniff",
-          },
-        });
+          if (section === SITEMAP_SECTION_STATIC) {
+            if (page !== 1) return sitemapNotFound();
+            const entries = [...staticEntries, ...(await readPublicReferenceEntries())];
+            return xmlResponse(buildSitemapXml(entries));
+          }
+
+          if (section === SITEMAP_SECTION_MARKETPLACE) {
+            const entries = await readMarketplacePage(page);
+            if (entries.length === 0 && page > 1) return sitemapNotFound();
+            return xmlResponse(buildSitemapXml(entries));
+          }
+
+          if (section) return sitemapNotFound();
+
+          const listingCount = await readPublicListingCount();
+          const marketplacePageCount = Math.ceil(listingCount / SITEMAP_PAGE_SIZE);
+          const today = new Date().toISOString().slice(0, 10);
+          const indexEntries: SitemapIndexEntry[] = [
+            {
+              loc: sitemapShardUrl(SITEMAP_SECTION_STATIC, 1),
+              lastmod: today,
+            },
+            ...Array.from({ length: marketplacePageCount }, (_, index) => ({
+              loc: sitemapShardUrl(SITEMAP_SECTION_MARKETPLACE, index + 1),
+              lastmod: today,
+            })),
+          ];
+
+          return xmlResponse(buildSitemapIndexXml(indexEntries));
+        } catch (error) {
+          console.error(
+            JSON.stringify({
+              event: "public_sitemap_render_failed",
+              message: error instanceof Error ? error.message : String(error),
+            }),
+          );
+          return new Response("Sitemap temporarily unavailable", {
+            status: 503,
+            headers: {
+              "Content-Type": "text/plain; charset=utf-8",
+              "Cache-Control": "no-store",
+              "Retry-After": "300",
+              "X-Content-Type-Options": "nosniff",
+            },
+          });
+        }
       },
     },
   },
@@ -55,60 +103,71 @@ export const Route = createFileRoute("/sitemap.xml")({
 
 async function readPublicReferenceEntries(): Promise<SitemapEntry[]> {
   const clientResult = getClient();
-  if (!clientResult.ok) return [];
+  if (!clientResult.ok) throw new Error(clientResult.error.message);
 
   const [categoriesResult, governoratesResult] = await Promise.all([
     clientResult.data.from("categories").select("slug").eq("is_active", true).order("sort_order"),
-    clientResult.data.from("governorates").select("slug").eq("is_active", true).order("sort_order"),
+    clientResult.data
+      .from("governorates")
+      .select("slug")
+      .eq("is_active", true)
+      .order("sort_order"),
   ]);
 
-  const categoryEntries: SitemapEntry[] = categoriesResult.error
-    ? []
-    : ((categoriesResult.data ?? []) as PublicSlugRow[])
-        .filter((row) => row.slug)
-        .map((row) => ({
-          loc: absoluteUrl(`/category/${encodeURIComponent(row.slug)}`),
-          changefreq: "daily",
-          priority: 0.8,
-        }));
+  if (categoriesResult.error) throw categoriesResult.error;
+  if (governoratesResult.error) throw governoratesResult.error;
 
-  const governorateEntries: SitemapEntry[] = governoratesResult.error
-    ? []
-    : ((governoratesResult.data ?? []) as PublicSlugRow[])
-        .filter((row) => row.slug)
-        .map((row) => ({
-          loc: absoluteUrl(`/syria/${encodeURIComponent(row.slug)}`),
-          changefreq: "daily",
-          priority: 0.8,
-        }));
+  const categoryEntries: SitemapEntry[] = ((categoriesResult.data ?? []) as PublicSlugRow[])
+    .filter((row) => row.slug)
+    .map((row) => ({
+      loc: absoluteUrl(`/category/${encodeURIComponent(row.slug)}`),
+      changefreq: "daily",
+      priority: 0.8,
+    }));
+
+  const governorateEntries: SitemapEntry[] = ((governoratesResult.data ?? []) as PublicSlugRow[])
+    .filter((row) => row.slug)
+    .map((row) => ({
+      loc: absoluteUrl(`/syria/${encodeURIComponent(row.slug)}`),
+      changefreq: "daily",
+      priority: 0.8,
+    }));
 
   return [...categoryEntries, ...governorateEntries];
 }
 
-async function readDynamicMarketplaceEntries(): Promise<SitemapEntry[]> {
+async function readPublicListingCount(): Promise<number> {
   const clientResult = getClient();
-  if (!clientResult.ok) return [];
+  if (!clientResult.ok) throw new Error(clientResult.error.message);
 
-  const rows: PublicListingSitemapRow[] = [];
-  const pageSize = 1000;
-  const maxRows = 10_000;
+  const { count, error } = await clientResult.data
+    .from("listings")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "approved")
+    .is("archived_at", null)
+    .or(publicListingExpiryFilter());
 
-  for (let offset = 0; offset < maxRows; offset += pageSize) {
-    const { data, error } = await clientResult.data
-      .from("listings")
-      .select("id,owner_id,updated_at")
-      .eq("status", "approved")
-      .is("archived_at", null)
-      .or(publicListingExpiryFilter())
-      .order("updated_at", { ascending: false })
-      .range(offset, offset + pageSize - 1);
+  if (error) throw error;
+  if (typeof count !== "number") throw new Error("Public listing count was not returned.");
+  return count;
+}
 
-    if (error) return [];
+async function readMarketplacePage(page: number): Promise<SitemapEntry[]> {
+  const clientResult = getClient();
+  if (!clientResult.ok) throw new Error(clientResult.error.message);
 
-    const page = (data ?? []) as PublicListingSitemapRow[];
-    rows.push(...page);
-    if (page.length < pageSize) break;
-  }
+  const offset = (page - 1) * SITEMAP_PAGE_SIZE;
+  const { data, error } = await clientResult.data
+    .from("listings")
+    .select("id,owner_id,updated_at")
+    .eq("status", "approved")
+    .is("archived_at", null)
+    .or(publicListingExpiryFilter())
+    .order("id", { ascending: true })
+    .range(offset, offset + SITEMAP_PAGE_SIZE - 1);
+
+  if (error) throw error;
+  const rows = (data ?? []) as PublicListingSitemapRow[];
 
   const listingEntries: SitemapEntry[] = rows.map((row) => ({
     loc: absoluteUrl(`/listings/${encodeURIComponent(row.id)}`),
@@ -131,6 +190,53 @@ async function readDynamicMarketplaceEntries(): Promise<SitemapEntry[]> {
   }));
 
   return [...listingEntries, ...sellerEntries];
+}
+
+function sitemapShardUrl(section: string, page: number): string {
+  return absoluteUrl(`/sitemap.xml?section=${encodeURIComponent(section)}&page=${page}`);
+}
+
+function parsePage(value: string | null): number {
+  if (!value) return 1;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function xmlResponse(xml: string): Response {
+  return new Response(xml, {
+    headers: {
+      "Content-Type": "application/xml; charset=utf-8",
+      "Cache-Control": "public, max-age=900, s-maxage=3600, stale-while-revalidate=86400",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
+}
+
+function sitemapNotFound(): Response {
+  return new Response(buildSitemapXml([]), {
+    status: 404,
+    headers: {
+      "Content-Type": "application/xml; charset=utf-8",
+      "Cache-Control": "public, max-age=300, s-maxage=300",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
+}
+
+function buildSitemapIndexXml(entries: SitemapIndexEntry[]): string {
+  const sitemaps = entries
+    .map((entry) => {
+      const fields = [
+        `<loc>${escapeXml(entry.loc)}</loc>`,
+        entry.lastmod ? `<lastmod>${escapeXml(entry.lastmod)}</lastmod>` : "",
+      ]
+        .filter(Boolean)
+        .join("");
+      return `<sitemap>${fields}</sitemap>`;
+    })
+    .join("");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${sitemaps}</sitemapindex>`;
 }
 
 function buildSitemapXml(entries: SitemapEntry[]): string {
