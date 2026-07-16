@@ -11,6 +11,7 @@ import {
 } from "./auth-types";
 import { AuthContext, type AuthContextValue } from "./auth-context";
 import type { AuthStatus } from "./auth-status";
+import { disableNativePush } from "./native-push";
 import { sanitizeAuthReturnTo } from "./auth-return";
 import { getSupabaseAuthUnavailableReason, isSupabaseConfigured, supabase } from "./supabase";
 
@@ -276,6 +277,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!client) {
         return { error: unavailableReason };
+      }
+
+      const signedInUserId = sessionUserIdRef.current ?? session?.user.id ?? profile?.id ?? null;
+      if (signedInUserId) {
+        await disableNativePush(signedInUserId, false).catch(() => undefined);
       }
 
       const { error } = await client.auth.signOut();
