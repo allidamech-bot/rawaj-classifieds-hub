@@ -2,28 +2,38 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, route, categories, schema, filters, api, toolbar, quickFilters, sheet, empty, css] =
-  await Promise.all([
-    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/listings.index.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/categories.tsx", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/features/listings/listings-search-schema.ts", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../src/features/listings/listings-filters.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/api/listings.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/search/SearchResultsToolbar.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/search/QuickFilterRail.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/search/FilterBottomSheet.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/search/SearchEmptyState.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/search-filters-v1.css", import.meta.url), "utf8"),
-  ]);
+const [
+  root,
+  routeStyles,
+  route,
+  categories,
+  schema,
+  filters,
+  api,
+  toolbar,
+  quickFilters,
+  sheet,
+  empty,
+  css,
+] = await Promise.all([
+  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/listings.index.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/categories.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/listings/listings-search-schema.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/listings/listings-filters.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/listings.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/search/SearchResultsToolbar.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/search/QuickFilterRail.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/search/FilterBottomSheet.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/search/SearchEmptyState.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/search-filters-v1.css", import.meta.url), "utf8"),
+]);
 
 test("search and filter styles load after adaptive listing cards", () => {
-  assert.match(root, /import searchFiltersV1Css from "\.\.\/search-filters-v1\.css\?url";/);
+  assert.match(routeStyles, /import searchFiltersV1Css from "\.\.\/search-filters-v1\.css\?url";/);
   const cardsIndex = root.indexOf("href: adaptiveListingCardsCss");
-  const searchIndex = root.indexOf("href: searchFiltersV1Css");
+  const searchIndex = root.indexOf("routeStyleHrefs.searchFiltersV1");
   assert.notEqual(cardsIndex, -1);
   assert.notEqual(searchIndex, -1);
   assert.ok(searchIndex > cardsIndex);
@@ -32,10 +42,7 @@ test("search and filter styles load after adaptive listing cards", () => {
 test("listing URL schema supports presentation mode and real image filtering", () => {
   assert.match(schema, /listingsViewValues = \["grid", "list"\]/);
   assert.match(schema, /view: z\.enum\(listingsViewValues\)\.optional\(\)/);
-  assert.match(
-    schema,
-    /with_photos: z\.preprocess\(parseBooleanParam, z\.boolean\(\)\.optional\(\)\)/,
-  );
+  assert.match(schema, /with_photos: z\.preprocess\(parseBooleanParam, z\.boolean\(\)\.optional\(\)\)/);
   assert.match(filters, /with_photos: withPhotos \|\| undefined/);
   assert.match(filters, /view: view === "grid" \? undefined : view/);
 });
