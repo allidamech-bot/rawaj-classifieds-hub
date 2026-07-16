@@ -86,5 +86,6 @@ jobs:
         with:
           name: phase3-route-css-output-${{ github.sha }}
           path: phase3-route-css-output
+          include-hidden-files: true
           retention-days: 1
           if-no-files-found: error
