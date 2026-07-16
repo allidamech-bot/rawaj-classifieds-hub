@@ -1,3 +1,4 @@
+import { getRouteApi } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { fetchPublicListings, searchPublicSellers } from "@/lib/classifieds-api";
 import type {
@@ -8,6 +9,8 @@ import type {
 } from "@/lib/classifieds-types";
 import { useFilterDraftSessionActive } from "@/features/search/filter-draft-session";
 import { buildListingFilters, type ListingFilterInputs } from "./listings-filters";
+
+const listingsRouteApi = getRouteApi("/listings");
 
 export interface ListingsResultsInputs extends ListingFilterInputs {
   referencesLoaded: boolean;
@@ -33,6 +36,8 @@ export interface ListingsResults {
 }
 
 export function useListingsResults(inputs: ListingsResultsInputs): ListingsResults {
+  const loaderData = listingsRouteApi.useLoaderData();
+  const initialResults = loaderData.results;
   const {
     referencesLoaded,
     taxonomyAvailable,
@@ -44,15 +49,30 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
     ...filterInputs
   } = inputs;
 
-  const [items, setItems] = useState<ClassifiedListing[]>([]);
-  const [sellerResults, setSellerResults] = useState<PublicSellerSearchResult[]>([]);
-  const [error, setError] = useState<ClassifiedsError | null>(null);
-  const [sellerSearchError, setSellerSearchError] = useState<ClassifiedsError | null>(null);
-  const [nextCursor, setNextCursor] = useState<ListingCursor | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<ClassifiedListing[]>(initialResults.items);
+  const [sellerResults, setSellerResults] = useState<PublicSellerSearchResult[]>(
+    initialResults.sellerResults,
+  );
+  const [error, setError] = useState<ClassifiedsError | null>(initialResults.error);
+  const [sellerSearchError, setSellerSearchError] = useState<ClassifiedsError | null>(
+    initialResults.sellerSearchError,
+  );
+  const [nextCursor, setNextCursor] = useState<ListingCursor | null>(initialResults.nextCursor);
+  const [loading, setLoading] = useState(false);
   const filterVersionRef = useRef(0);
-  const lastCompletedFilterKeyRef = useRef<string | null>(null);
+  const lastCompletedFilterKeyRef = useRef<string | null>(initialResults.filterKey);
   const filterDraftActive = useFilterDraftSessionActive();
+
+  useEffect(() => {
+    filterVersionRef.current += 1;
+    lastCompletedFilterKeyRef.current = initialResults.filterKey;
+    setItems(initialResults.items);
+    setSellerResults(initialResults.sellerResults);
+    setError(initialResults.error);
+    setSellerSearchError(initialResults.sellerSearchError);
+    setNextCursor(initialResults.nextCursor);
+    setLoading(false);
+  }, [initialResults]);
 
   useEffect(() => {
     if (filterDraftActive) return;

@@ -19,6 +19,7 @@ import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
+import { loadPublicCategoriesPageData } from "@/features/categories/public-categories-page-data";
 import {
   fetchPublicCategories,
   fetchPublicSubcategories,
@@ -56,6 +57,7 @@ const categoriesSearchSchema = z.object({
 
 export const Route = createFileRoute("/categories")({
   validateSearch: categoriesSearchSchema,
+  loader: loadPublicCategoriesPageData,
   head: () =>
     createSeo({
       title: "الأقسام | RAWAJ / رواج",
@@ -66,16 +68,19 @@ export const Route = createFileRoute("/categories")({
 });
 
 function CategoriesPage() {
+  const initialData = Route.useLoaderData();
   const search = Route.useSearch();
   const navigate = useNavigate();
   const { language, text } = useUiPreferences();
-  const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>([]);
-  const [taxonomyAvailable, setTaxonomyAvailable] = useState(false);
-  const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
-  const [subcategories, setSubcategories] = useState<ClassifiedSubcategory[]>([]);
+  const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>(initialData.taxonomyNodes);
+  const [taxonomyAvailable, setTaxonomyAvailable] = useState(initialData.taxonomyAvailable);
+  const [categories, setCategories] = useState<ClassifiedCategory[]>(initialData.categories);
+  const [subcategories, setSubcategories] = useState<ClassifiedSubcategory[]>(
+    initialData.subcategories,
+  );
   const [query, setQuery] = useState(search.q ?? "");
-  const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<ClassifiedsError | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<ClassifiedsError | null>(initialData.error);
   const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
@@ -83,6 +88,7 @@ function CategoriesPage() {
   }, [search.q]);
 
   useEffect(() => {
+    if (loadAttempt === 0) return;
     let cancelled = false;
 
     async function load() {
