@@ -6,17 +6,24 @@ const KIB = 1024;
 const MIB = 1024 * KIB;
 const REPORT_PATH = resolve("performance-budget-report.json");
 
+// Calibrated from the 2026-07-16 production build baseline:
+// 155 JS chunks, 556.3 KiB largest JS, 1660.9 KiB total JS,
+// 37 CSS assets, 124.7 KiB largest CSS, and 433.3 KiB total CSS.
+// The limits preserve a practical 8–20% regression margin while still failing
+// the previous multi-megabyte catch-all thresholds.
 const budgets = {
   minimumJavaScriptChunks: 8,
-  maximumJavaScriptChunks: 240,
-  maximumSingleJavaScriptBytes: 900 * KIB,
-  maximumTotalJavaScriptBytes: 4.5 * MIB,
-  maximumCssAssets: 48,
-  maximumSingleCssBytes: 450 * KIB,
-  maximumTotalCssBytes: 1.25 * MIB,
+  maximumJavaScriptChunks: 180,
+  maximumSingleJavaScriptBytes: 640 * KIB,
+  maximumTotalJavaScriptBytes: 1_900 * KIB,
+  maximumCssAssets: 40,
+  maximumSingleCssBytes: 150 * KIB,
+  maximumTotalCssBytes: 500 * KIB,
   maximumSingleFontBytes: 320 * KIB,
   maximumTotalFontBytes: 1.25 * MIB,
-  maximumSingleImageBytes: 1.5 * MIB,
+  maximumImageAssets: 8,
+  maximumSingleImageBytes: 400 * KIB,
+  maximumTotalImageBytes: 1.25 * MIB,
 };
 
 const candidateRoots = [".output/public", "dist/client", "dist", "build/client"];
@@ -87,6 +94,7 @@ const report = {
     largestFontBytes: largest(fonts),
     totalFontBytes: total(fonts),
     largestImageBytes: largest(images),
+    totalImageBytes: total(images),
   },
   formatted: {
     largestJavaScript: formatKib(largest(javascript)),
@@ -96,6 +104,7 @@ const report = {
     largestFont: formatKib(largest(fonts)),
     totalFonts: formatKib(total(fonts)),
     largestImage: formatKib(largest(images)),
+    totalImages: formatKib(total(images)),
   },
   largestAssets: {
     javascript: summarizeLargest(javascript),
@@ -149,8 +158,16 @@ assert.ok(
   `Total fonts ${formatKib(total(fonts))} exceeds ${formatKib(budgets.maximumTotalFontBytes)}.`,
 );
 assert.ok(
+  images.length <= budgets.maximumImageAssets,
+  `Image asset count ${images.length} exceeds ${budgets.maximumImageAssets}.`,
+);
+assert.ok(
   largest(images) <= budgets.maximumSingleImageBytes,
   `Largest image asset ${formatKib(largest(images))} exceeds ${formatKib(budgets.maximumSingleImageBytes)}.`,
+);
+assert.ok(
+  total(images) <= budgets.maximumTotalImageBytes,
+  `Total images ${formatKib(total(images))} exceeds ${formatKib(budgets.maximumTotalImageBytes)}.`,
 );
 
 console.log(JSON.stringify(report, null, 2));
