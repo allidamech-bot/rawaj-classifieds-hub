@@ -213,20 +213,36 @@ JOIN public.push_devices device
 WHERE NOT device.active
   AND delivery.status IN ('pending', 'retry', 'processing');
 
--- 11. Capture account/device state for behavioral reconciliation without changing it.
+-- 11. Capture aggregate account/device state without exporting user identifiers.
+WITH per_account AS (
+  SELECT
+    device.user_id,
+    count(*) FILTER (
+      WHERE device.active AND device.permission_status = 'granted'
+    ) AS active_granted_devices,
+    count(*) FILTER (
+      WHERE device.active AND device.permission_status <> 'granted'
+    ) AS active_non_granted_devices,
+    coalesce(preference.push_enabled, false) AS account_push_enabled
+  FROM public.push_devices device
+  LEFT JOIN public.notification_preferences preference
+    ON preference.user_id = device.user_id
+  GROUP BY device.user_id, preference.push_enabled
+)
 SELECT
-  device.user_id,
+  count(*) AS accounts_with_push_devices,
   count(*) FILTER (
-    WHERE device.active AND device.permission_status = 'granted'
-  ) AS active_granted_devices,
+    WHERE active_granted_devices > 0
+  ) AS accounts_with_active_granted_devices,
   count(*) FILTER (
-    WHERE device.active AND device.permission_status <> 'granted'
-  ) AS active_non_granted_devices,
-  coalesce(preference.push_enabled, false) AS account_push_enabled
-FROM public.push_devices device
-LEFT JOIN public.notification_preferences preference
-  ON preference.user_id = device.user_id
-GROUP BY device.user_id, preference.push_enabled
-ORDER BY device.user_id;
+    WHERE active_non_granted_devices > 0
+  ) AS accounts_with_active_non_granted_devices,
+  count(*) FILTER (
+    WHERE account_push_enabled AND active_granted_devices = 0
+  ) AS push_enabled_accounts_without_active_granted_devices,
+  count(*) FILTER (
+    WHERE NOT account_push_enabled AND active_granted_devices > 0
+  ) AS active_granted_devices_while_account_push_disabled
+FROM per_account;
 
 ROLLBACK;
