@@ -2,13 +2,17 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [hookSource, routeSource, packageSource] = await Promise.all([
+const [hookSource, routeSource, packageSource, realtimeMigration] = await Promise.all([
   readFile(
     new URL("../src/features/communication/useLiveChatWorkspace.ts", import.meta.url),
     "utf8",
   ),
   readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
+  readFile(
+    new URL("../supabase/migrations/202607160003_enable_chat_realtime.sql", import.meta.url),
+    "utf8",
+  ),
 ]);
 
 test("the visible chat subscribes to message and conversation changes", () => {
@@ -71,6 +75,23 @@ test("mobile chat list view cannot load or mark a selected conversation read", (
   assert.ok(
     routeSource.indexOf("!isConversationPanelVisible") <
       routeSource.indexOf("void loadMessages(selectedConversation.id)"),
+  );
+});
+
+test("the Realtime publication includes both participant-scoped chat tables", () => {
+  assert.match(realtimeMigration, /pg_catalog\.pg_publication/);
+  assert.match(realtimeMigration, /pubname = 'supabase_realtime'/);
+  assert.match(realtimeMigration, /ARRAY\['conversations', 'conversation_messages'\]/);
+  assert.match(realtimeMigration, /ALTER PUBLICATION supabase_realtime ADD TABLE public\.%I/);
+  assert.match(realtimeMigration, /GRANT SELECT ON TABLE public\.conversations TO authenticated/);
+  assert.match(
+    realtimeMigration,
+    /GRANT SELECT ON TABLE public\.conversation_messages TO authenticated/,
+  );
+  assert.match(realtimeMigration, /REVOKE SELECT ON TABLE public\.conversations FROM anon/);
+  assert.match(
+    realtimeMigration,
+    /REVOKE SELECT ON TABLE public\.conversation_messages FROM anon/,
   );
 });
 
