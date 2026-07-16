@@ -10,7 +10,11 @@ import { SearchResultsToolbar } from "@/features/search/SearchResultsToolbar";
 import { ListingCardSkeleton } from "@/features/listings/cards";
 import { RealListingCard } from "@/features/listings/RealListingCard";
 import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
-import { detectCategoryFieldKind, type CategoryFieldKind } from "@/lib/category-fields";
+import {
+  categoryUsesGlobalCondition,
+  resolveCategoryFieldKind,
+  type CategoryFieldKind,
+} from "@/lib/category-fields";
 import { categoryName, governorateName } from "@/lib/i18n";
 import { fetchLocationPath, type CanonicalLocationNode } from "@/lib/api/location-taxonomy";
 import { createSeo } from "@/lib/seo";
@@ -18,6 +22,7 @@ import {
   buildTaxonomyIndex,
   findTaxonomyNode,
   getTaxonomyPath,
+  resolveTaxonomyFilterScope,
   resolveTaxonomyListingSearch,
   taxonomyNodeName,
   taxonomyPathLabel,
@@ -67,6 +72,12 @@ function ListingsPage() {
   const [districtAr, setDistrictAr] = useState(search.district ?? "");
   const [locationLabel, setLocationLabel] = useState("");
   const [priceMin, setPriceMin] = useState(search.price_min?.toString() ?? "");
+  const [priceType, setPriceType] = useState<"" | "fixed" | "negotiable" | "contact" | "free">(
+    search.price_type ?? "",
+  );
+  const [globalCondition, setGlobalCondition] = useState<
+    "" | "new" | "used" | "refurbished" | "not_applicable"
+  >(search.condition ?? "");
   const [draftCategoryId, setDraftCategoryId] = useState<string | undefined>(undefined);
   const [priceMax, setPriceMax] = useState(search.price_max?.toString() ?? "");
   const [carMake, setCarMake] = useState(search.car_make ?? "");
@@ -107,6 +118,13 @@ function ListingsPage() {
   const taxonomyListingSearch = selectedTaxonomyNode
     ? resolveTaxonomyListingSearch(selectedTaxonomyNode, selectedTaxonomyPath)
     : undefined;
+  const taxonomyFilterScope = useMemo(
+    () =>
+      selectedTaxonomyNode
+        ? resolveTaxonomyFilterScope(taxonomyIndex, selectedTaxonomyNode)
+        : undefined,
+    [selectedTaxonomyNode, taxonomyIndex],
+  );
   const taxonomyOwnsPropertyPurpose = Boolean(taxonomyListingSearch?.property_purpose);
   const taxonomyOwnsPropertyType = Boolean(taxonomyListingSearch?.property_type);
   const categorySearchValue = taxonomyListingSearch?.category ?? search.category;
@@ -138,13 +156,11 @@ function ListingsPage() {
   const selectedSubcategory = subcategories.find(
     (subcategory) => subcategory.id === effectiveSubcategoryId,
   );
-  const hasInvalidCategory =
-    (Boolean(search.category) || Boolean(search.taxonomy)) &&
-    !selectedCategory &&
-    categories.length > 0;
+  const hasInvalidCategory = Boolean(search.category) && !selectedCategory && categories.length > 0;
   const hasInvalidSubcategory =
     Boolean(search.subcategory) && !selectedSubcategory && subcategories.length > 0;
-  const categoryFieldKind = detectCategoryFieldKind(selectedCategory);
+  const categoryFieldKind = resolveCategoryFieldKind(selectedTaxonomyNode, selectedCategory);
+  const usesGlobalCondition = categoryUsesGlobalCondition(categoryFieldKind);
   const availableSubcategories = useMemo(
     () =>
       selectedCategory
@@ -168,6 +184,8 @@ function ListingsPage() {
     q.trim() ||
     priceMin.trim() ||
     priceMax.trim() ||
+    priceType ||
+    (usesGlobalCondition && globalCondition) ||
     carMake ||
     carModel ||
     fuelType ||
@@ -190,6 +208,8 @@ function ListingsPage() {
     setDistrictAr(search.district ?? "");
     setPriceMin(search.price_min?.toString() ?? "");
     setPriceMax(search.price_max?.toString() ?? "");
+    setPriceType(search.price_type ?? "");
+    setGlobalCondition(search.condition ?? "");
     setCarMake(search.car_make ?? "");
     setCarModel(search.car_model ?? "");
     setFuelType(search.fuel ?? "");
@@ -215,6 +235,8 @@ function ListingsPage() {
     search.fuel,
     search.price_max,
     search.price_min,
+    search.price_type,
+    search.condition,
     search.property_purpose,
     search.property_type,
     search.q,
@@ -296,8 +318,6 @@ function ListingsPage() {
 
   useEffect(() => {
     if (!referencesLoaded || filtersOpen) return;
-    if (taxonomyAvailable && search.taxonomy && !selectedTaxonomyNode) return;
-
     void navigate({
       to: "/listings",
       search: buildListingsSyncSearch({
@@ -315,6 +335,8 @@ function ListingsPage() {
         districtAr,
         parsedPriceMin,
         parsedPriceMax,
+        priceType: priceType || undefined,
+        globalCondition: usesGlobalCondition ? globalCondition : undefined,
         carMake,
         carModel,
         fuelType,
@@ -351,6 +373,9 @@ function ListingsPage() {
     districtAr,
     parsedPriceMin,
     parsedPriceMax,
+    priceType,
+    globalCondition,
+    usesGlobalCondition,
     carMake,
     carModel,
     fuelType,
@@ -372,6 +397,7 @@ function ListingsPage() {
   ]);
 
   const results = useListingsResults({
+    taxonomyFilterScope,
     selectedCategoryId: selectedCategory?.id,
     effectiveSubcategoryId,
     taxonomyListingSearch,
@@ -383,6 +409,8 @@ function ListingsPage() {
     districtAr,
     parsedPriceMin,
     parsedPriceMax,
+    priceType: priceType || undefined,
+    globalCondition: usesGlobalCondition ? globalCondition : undefined,
     carMake,
     carModel,
     fuelType,
@@ -517,6 +545,14 @@ function ListingsPage() {
     priceMax.trim()
       ? { key: "priceMax", label: `${text("إلى", "To")} ${priceMax}`, clear: () => setPriceMax("") }
       : null,
+    priceType ? { key: "priceType", label: priceType, clear: () => setPriceType("") } : null,
+    usesGlobalCondition && globalCondition
+      ? {
+          key: "globalCondition",
+          label: globalCondition,
+          clear: () => setGlobalCondition(""),
+        }
+      : null,
     withPhotos
       ? {
           key: "withPhotos",
@@ -600,9 +636,13 @@ function ListingsPage() {
         : [],
     [draftSelectedCategory, subcategories],
   );
-  const draftCategoryFieldKind = detectCategoryFieldKind(draftSelectedCategory);
+  const draftCategoryFieldKind = resolveCategoryFieldKind(
+    search.taxonomy && draftCategoryId === undefined ? selectedTaxonomyNode : undefined,
+    draftSelectedCategory,
+  );
 
   const pagination = useListingsPagination({
+    taxonomyFilterScope,
     selectedCategoryId: selectedCategory?.id,
     effectiveSubcategoryId,
     taxonomyListingSearch,
@@ -614,6 +654,8 @@ function ListingsPage() {
     districtAr,
     parsedPriceMin,
     parsedPriceMax,
+    priceType: priceType || undefined,
+    globalCondition: usesGlobalCondition ? globalCondition : undefined,
     carMake,
     carModel,
     fuelType,
@@ -679,6 +721,7 @@ function ListingsPage() {
         setEmploymentType("");
         setSalaryType("");
       }
+      if (!categoryUsesGlobalCondition(curr)) setGlobalCondition("");
       prevDraftFieldKindRef.current = curr;
     }
   }, [draftCategoryFieldKind]);
@@ -698,6 +741,8 @@ function ListingsPage() {
     setDistrictAr(search.district ?? "");
     setPriceMin(search.price_min?.toString() ?? "");
     setPriceMax(search.price_max?.toString() ?? "");
+    setPriceType(search.price_type ?? "");
+    setGlobalCondition(search.condition ?? "");
     setCarMake(search.car_make ?? "");
     setCarModel(search.car_model ?? "");
     setFuelType(search.fuel ?? "");
@@ -724,6 +769,8 @@ function ListingsPage() {
     setDistrictAr("");
     setPriceMin("");
     setPriceMax("");
+    setPriceType("");
+    setGlobalCondition("");
     setCarMake("");
     setCarModel("");
     setFuelType("");
@@ -771,6 +818,10 @@ function ListingsPage() {
         districtAr,
         parsedPriceMin,
         parsedPriceMax,
+        priceType: priceType || undefined,
+        globalCondition: categoryUsesGlobalCondition(draftCategoryFieldKind)
+          ? globalCondition
+          : undefined,
         carMake,
         carModel,
         fuelType,
@@ -815,6 +866,31 @@ function ListingsPage() {
           onViewChange={setView}
           onOpenFilters={() => setFiltersOpen(true)}
           text={text}
+          savedSearch={{
+            taxonomy: selectedTaxonomyNode?.id ?? "",
+            q: debouncedQ,
+            category: selectedCategory?.id ?? "",
+            subcategory: subcategoryId,
+            gov: govId,
+            district: districtAr,
+            price_min: priceMin,
+            price_max: priceMax,
+            price_type: priceType,
+            condition: usesGlobalCondition ? globalCondition : "",
+            car_make: carMake,
+            car_model: carModel,
+            fuel: fuelType,
+            transmission,
+            property_purpose: effectivePropertyPurpose ?? "",
+            property_type: effectivePropertyType ?? "",
+            rooms,
+            rental_duration: rentalDuration,
+            electronics_brand: electronicsBrand,
+            detail_condition: detailCondition,
+            employment_type: employmentType,
+            salary_type: salaryType,
+            sort,
+          }}
         />
 
         <QuickFilterRail
@@ -989,6 +1065,43 @@ function ListingsPage() {
                     />
                   </label>
                 </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1 block text-[11px] font-bold text-muted-foreground">
+                      {text("نوع السعر", "Price type")}
+                    </span>
+                    <select
+                      value={priceType}
+                      onChange={(event) => setPriceType(event.target.value as typeof priceType)}
+                      className="input text-xs"
+                    >
+                      <option value="">{text("الكل", "All")}</option>
+                      <option value="fixed">{text("سعر ثابت", "Fixed")}</option>
+                      <option value="negotiable">{text("قابل للتفاوض", "Negotiable")}</option>
+                      <option value="contact">{text("تواصل للسعر", "Contact")}</option>
+                      <option value="free">{text("مجاني", "Free")}</option>
+                    </select>
+                  </label>
+                  {usesGlobalCondition ? (
+                    <label className="block">
+                      <span className="mb-1 block text-[11px] font-bold text-muted-foreground">
+                        {text("الحالة", "Condition")}
+                      </span>
+                      <select
+                        value={globalCondition}
+                        onChange={(event) =>
+                          setGlobalCondition(event.target.value as typeof globalCondition)
+                        }
+                        className="input text-xs"
+                      >
+                        <option value="">{text("الكل", "All")}</option>
+                        <option value="new">{text("جديد", "New")}</option>
+                        <option value="used">{text("مستعمل", "Used")}</option>
+                        <option value="refurbished">{text("مجدّد", "Refurbished")}</option>
+                      </select>
+                    </label>
+                  ) : null}
+                </div>
                 <CategorySpecificFilterFields
                   kind={categoryFieldKind}
                   text={text}
@@ -1158,6 +1271,43 @@ function ListingsPage() {
                 />
               </label>
             </div>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <label>
+                <span className="mb-1 block text-xs font-bold text-muted-foreground">
+                  {text("نوع السعر", "Price type")}
+                </span>
+                <select
+                  value={priceType}
+                  onChange={(event) => setPriceType(event.target.value as typeof priceType)}
+                  className="input text-xs"
+                >
+                  <option value="">{text("الكل", "All")}</option>
+                  <option value="fixed">{text("سعر ثابت", "Fixed")}</option>
+                  <option value="negotiable">{text("قابل للتفاوض", "Negotiable")}</option>
+                  <option value="contact">{text("تواصل للسعر", "Contact")}</option>
+                  <option value="free">{text("مجاني", "Free")}</option>
+                </select>
+              </label>
+              {categoryUsesGlobalCondition(draftCategoryFieldKind) ? (
+                <label>
+                  <span className="mb-1 block text-xs font-bold text-muted-foreground">
+                    {text("الحالة", "Condition")}
+                  </span>
+                  <select
+                    value={globalCondition}
+                    onChange={(event) =>
+                      setGlobalCondition(event.target.value as typeof globalCondition)
+                    }
+                    className="input text-xs"
+                  >
+                    <option value="">{text("الكل", "All")}</option>
+                    <option value="new">{text("جديد", "New")}</option>
+                    <option value="used">{text("مستعمل", "Used")}</option>
+                    <option value="refurbished">{text("مجدّد", "Refurbished")}</option>
+                  </select>
+                </label>
+              ) : null}
+            </div>
           </section>
 
           {draftCategoryFieldKind !== "general" ? (
@@ -1251,7 +1401,10 @@ function ListingsPage() {
             </div>
             {sellerSearchError ? (
               <p className="rounded-xl bg-muted-surface p-3 text-xs text-muted-foreground">
-                {sellerSearchError.message}
+                {text(
+                  "تعذر تحميل نتائج البائعين الآن.",
+                  "Seller results could not be loaded right now.",
+                )}
               </p>
             ) : (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -1325,14 +1478,10 @@ function ListingsPage() {
         ) : error ? (
           <StateCard
             title={text("تعذر تحميل الإعلانات", "Could not load listings")}
-            body={
-              error.code === "schema_missing" || error.code === "supabase_unconfigured"
-                ? text(
-                    "تعذر تحميل البيانات الآن. يمكنك تحديث الصفحة أو المحاولة مرة أخرى.",
-                    "Could not load data right now. Refresh the page or try again.",
-                  )
-                : error.message
-            }
+            body={text(
+              "تعذر تحميل البيانات الآن. يمكنك تحديث الصفحة أو المحاولة مرة أخرى.",
+              "Could not load data right now. Refresh the page or try again.",
+            )}
             actionLabel={text("العودة للرئيسية", "Back to home")}
             actionTo="/"
           />

@@ -77,7 +77,6 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
   useEffect(() => {
     if (filterDraftActive) return;
     if (!referencesLoaded) return;
-    if (taxonomyAvailable && searchTaxonomy && !selectedTaxonomyNode) return;
     if (hasInvalidCategory) return;
     if (hasInvalidSubcategory) return;
     if (hasPriceContradiction) return;
@@ -140,11 +139,14 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
     hasInvalidSubcategory,
     hasPriceContradiction,
     filterInputs.selectedCategoryId,
+    filterInputs.taxonomyFilterScope,
     filterInputs.effectiveSubcategoryId,
     filterInputs.govId,
     filterInputs.districtAr,
     filterInputs.parsedPriceMin,
     filterInputs.parsedPriceMax,
+    filterInputs.priceType,
+    filterInputs.globalCondition,
     filterInputs.carMake,
     filterInputs.carModel,
     filterInputs.fuelType,

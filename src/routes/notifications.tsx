@@ -355,6 +355,7 @@ function NotificationsPage() {
         void navigate({
           to: "/saved-searches",
           search: {
+            taxonomy: "",
             q: "",
             category: "",
             subcategory: "",
@@ -362,6 +363,8 @@ function NotificationsPage() {
             district: "",
             price_min: "",
             price_max: "",
+            price_type: "",
+            condition: "",
             car_make: "",
             car_model: "",
             fuel: "",

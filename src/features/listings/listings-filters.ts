@@ -2,6 +2,15 @@ import type { ListingsSearch, ListingsSort, ListingsView } from "./listings-sear
 import type { CategoryFieldKind } from "@/lib/category-fields";
 
 export interface ListingFilterInputs {
+  taxonomyFilterScope?: {
+    taxonomyNodeIds: string[];
+    legacyScopes: Array<{
+      categoryId: string;
+      subcategoryId?: string;
+      propertyPurpose?: string;
+      propertyType?: string;
+    }>;
+  };
   selectedCategoryId?: string;
   effectiveSubcategoryId: string;
   taxonomyListingSearch?: {
@@ -17,6 +26,8 @@ export interface ListingFilterInputs {
   districtAr: string;
   parsedPriceMin?: number;
   parsedPriceMax?: number;
+  priceType?: "fixed" | "negotiable" | "contact" | "free";
+  globalCondition?: string;
   carMake: string;
   carModel: string;
   fuelType: string;
@@ -41,6 +52,8 @@ export interface ListingsUrlSearch {
   location?: string;
   price_min?: number;
   price_max?: number;
+  price_type?: "fixed" | "negotiable" | "contact" | "free";
+  condition?: string;
   car_make?: string;
   car_model?: string;
   fuel?: string;
@@ -62,6 +75,7 @@ export interface ListingsUrlSearch {
 export function buildListingFilters(inputs: ListingFilterInputs) {
   const {
     selectedCategoryId,
+    taxonomyFilterScope,
     effectiveSubcategoryId,
     taxonomyListingSearch,
     taxonomyOwnsPropertyPurpose,
@@ -72,6 +86,8 @@ export function buildListingFilters(inputs: ListingFilterInputs) {
     districtAr,
     parsedPriceMin,
     parsedPriceMax,
+    priceType,
+    globalCondition,
     carMake,
     carModel,
     fuelType,
@@ -86,9 +102,9 @@ export function buildListingFilters(inputs: ListingFilterInputs) {
     debouncedQ,
     sort,
   } = inputs;
-  const hasCanonicalLocation = districtAr.startsWith("@");
-
   return {
+    taxonomyNodeIds: taxonomyFilterScope?.taxonomyNodeIds,
+    taxonomyLegacyScopes: taxonomyFilterScope?.legacyScopes,
     categoryId: selectedCategoryId,
     subcategoryId: effectiveSubcategoryId || undefined,
     taxonomyLegacySubcategoryId: taxonomyListingSearch?.taxonomyLegacySubcategoryId,
@@ -98,10 +114,12 @@ export function buildListingFilters(inputs: ListingFilterInputs) {
     taxonomyPropertyType: taxonomyOwnsPropertyType
       ? taxonomyListingSearch?.property_type
       : undefined,
-    governorateId: hasCanonicalLocation ? undefined : govId || undefined,
+    governorateId: districtAr.startsWith("@") ? undefined : govId || undefined,
     districtAr: districtAr || undefined,
     priceMin: Number.isFinite(parsedPriceMin) ? parsedPriceMin : undefined,
     priceMax: Number.isFinite(parsedPriceMax) ? parsedPriceMax : undefined,
+    priceType,
+    condition: globalCondition || undefined,
     carMake: carMake || undefined,
     carModel: carModel || undefined,
     fuelType: fuelType || undefined,
@@ -139,6 +157,8 @@ export interface ListingsSyncSearchInputs {
   districtAr: string;
   parsedPriceMin?: number;
   parsedPriceMax?: number;
+  priceType?: "fixed" | "negotiable" | "contact" | "free";
+  globalCondition?: string;
   carMake: string;
   carModel: string;
   fuelType: string;
@@ -171,6 +191,8 @@ export function buildListingsSyncSearch(inputs: ListingsSyncSearchInputs): Listi
     districtAr,
     parsedPriceMin,
     parsedPriceMax,
+    priceType,
+    globalCondition,
     carMake,
     carModel,
     fuelType,
@@ -201,6 +223,8 @@ export function buildListingsSyncSearch(inputs: ListingsSyncSearchInputs): Listi
     district: canonicalLocation ? undefined : districtAr || undefined,
     price_min: parsedPriceMin,
     price_max: parsedPriceMax,
+    price_type: priceType,
+    condition: globalCondition || undefined,
     car_make: carMake || undefined,
     car_model: carModel || undefined,
     fuel: fuelType || undefined,
@@ -294,6 +318,8 @@ export interface ListingsMobileApplyInputs {
   districtAr: string;
   parsedPriceMin?: number;
   parsedPriceMax?: number;
+  priceType?: "fixed" | "negotiable" | "contact" | "free";
+  globalCondition?: string;
   carMake: string;
   carModel: string;
   fuelType: string;
@@ -324,6 +350,8 @@ export function buildListingsMobileApplySearch(
     districtAr,
     parsedPriceMin,
     parsedPriceMax,
+    priceType,
+    globalCondition,
     carMake,
     carModel,
     fuelType,
@@ -356,6 +384,8 @@ export function buildListingsMobileApplySearch(
     district: canonicalLocation ? undefined : districtAr || undefined,
     price_min: parsedPriceMin,
     price_max: parsedPriceMax,
+    price_type: priceType,
+    condition: globalCondition || undefined,
     car_make: hasConcreteCategory && fieldKind === "vehicles" ? carMake || undefined : undefined,
     car_model: hasConcreteCategory && fieldKind === "vehicles" ? carModel || undefined : undefined,
     fuel: hasConcreteCategory && fieldKind === "vehicles" ? fuelType || undefined : undefined,

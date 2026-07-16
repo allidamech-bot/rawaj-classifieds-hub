@@ -7,6 +7,7 @@ import {
   updateSavedSearchAlertFrequency as baseUpdateSavedSearchAlertFrequency,
 } from "@/lib/api/saved-searches";
 import { runDeduplicatedRequest } from "@/lib/api/request-dedup";
+import { normalizeSavedSearchFilters } from "@/lib/saved-search-normalization";
 
 const pendingSavedSearchCreates = new Map<string, ReturnType<typeof baseCreateSavedSearch>>();
 const pendingSavedSearchFrequencyUpdates = new Map<
@@ -22,7 +23,7 @@ export function createSavedSearch(
   const key = JSON.stringify([
     userId ?? "anonymous",
     payload.nameAr.trim(),
-    payload.filters,
+    normalizeSavedSearchFilters(payload.filters),
     payload.alertFrequency ?? "weekly",
   ]);
   return runDeduplicatedRequest(key, pendingSavedSearchCreates, () =>

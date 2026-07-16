@@ -9,6 +9,7 @@ import type {
   ListingCursor,
   ListingImage,
   ListingImageUploadPayload,
+  ListingFilters,
   PaginatedListingsResponse,
 } from "@/lib/classifieds-types";
 import type { PlaceholderType, PriceType } from "@/types";
@@ -34,16 +35,23 @@ import {
   fetchPublicGovernorates,
   mapCategory,
   mapGovernorate,
+  mapTaxonomyNode,
   readReferences,
 } from "@/lib/api/references";
 
 import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
+import { resolveCanonicalLocationIds } from "@/lib/api/canonical-location-filter";
 import { isListingPastExpiry, publicListingExpiryFilter } from "@/lib/api/listing-expiry";
 import { publicListingDetailAliases, publicListingSelect } from "@/lib/api/public-fields";
 import { selectPrimaryListingImages } from "@/lib/api/primary-listing-images";
 import { buildListingImagePath, listingImagesBucket, validateImageFile } from "@/lib/api/storage";
 import { prepareListingImageForUpload } from "@/lib/listing-image-processing";
 import { sanitizePublicListing } from "@/lib/public-listing-presentation";
+import {
+  normalizeArabicSearchTerm,
+  supportsNormalizedListingSearch,
+} from "@/lib/search-normalization";
+import { buildTaxonomyIndex, findTaxonomyNode, resolveTaxonomyFilterScope } from "@/lib/taxonomy";
 
 const signedImageUrlExpiresInSeconds = 900;
 
@@ -184,7 +192,7 @@ export function mapImage(row: Record<string, unknown>): ListingImage {
 }
 
 export async function fetchPublicListings(
-  filters: { categoryId?: string; sort?: string } & Record<string, unknown> = {},
+  filters: ListingFilters = {},
   cursor: ListingCursor | null = null,
   pageSize = 30,
 ): Promise<ClassifiedsResult<PaginatedListingsResponse<ClassifiedListing>>> {
@@ -193,6 +201,14 @@ export async function fetchPublicListings(
 
   const references = await readReferences(clientResult.data);
   if (!references.ok) return { ok: false, error: references.error };
+
+  filters = await hydrateSavedTaxonomyFilter(clientResult.data, filters);
+
+  const canonicalListingIds = await resolveCanonicalTaxonomyListingIds(
+    clientResult.data,
+    filters.taxonomyNodeIds,
+  );
+  if (!canonicalListingIds.ok) return canonicalListingIds;
 
   const listingSelect = filters.withPhotos
     ? `${publicListingSelect},listing_images!inner(id)`
@@ -205,7 +221,55 @@ export async function fetchPublicListings(
     .is("archived_at", null)
     .or(publicListingExpiryFilter());
 
-  if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
+  const taxonomyExpression = buildTaxonomyFilterExpression(
+    canonicalListingIds.data,
+    filters.taxonomyLegacyScopes,
+  );
+  if (taxonomyExpression) {
+    query = query.or(taxonomyExpression);
+  } else {
+    if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
+    if (filters.subcategoryId) query = query.eq("subcategory_id", filters.subcategoryId);
+  }
+
+  if (filters.districtAr?.startsWith("@")) {
+    const locationIds = await resolveCanonicalLocationIds(
+      clientResult.data,
+      filters.districtAr.slice(1),
+    );
+    if (locationIds.ok) {
+      const escapedIds = locationIds.data.map(escapePostgrestFilterValue).join(",");
+      query = filters.governorateId
+        ? query.or(
+            `location_node_id.in.(${escapedIds}),and(location_node_id.is.null,governorate_id.eq.${escapePostgrestFilterValue(filters.governorateId)})`,
+          )
+        : query.in("location_node_id", locationIds.data);
+    } else if (filters.governorateId) {
+      query = query.eq("governorate_id", filters.governorateId);
+    }
+  } else if (filters.districtAr) {
+    if (filters.governorateId) query = query.eq("governorate_id", filters.governorateId);
+    query = query.eq("district_ar", filters.districtAr);
+  } else if (filters.governorateId) {
+    query = query.eq("governorate_id", filters.governorateId);
+  }
+  if (filters.priceMin !== undefined) query = query.gte("price", filters.priceMin);
+  if (filters.priceMax !== undefined) query = query.lte("price", filters.priceMax);
+  if (filters.priceType) query = query.eq("price_type", filters.priceType);
+  if (filters.condition) query = query.eq("listing_condition", filters.condition);
+
+  query = applyCategoryFilters(query, filters);
+
+  const cleanQuery = filters.query?.trim();
+  if (cleanQuery) {
+    const normalized = normalizeArabicSearchTerm(cleanQuery).slice(0, 120);
+    if (normalized && (await supportsNormalizedListingSearch(clientResult.data))) {
+      query = query.ilike("search_text_normalized", `%${escapePostgrestSearchTerm(normalized)}%`);
+    } else {
+      const term = escapePostgrestSearchTerm(cleanQuery.slice(0, 120));
+      query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
+    }
+  }
 
   const sort = filters.sort ?? "latest";
   if (sort === "cheapest") {
@@ -300,6 +364,113 @@ export async function fetchPublicListings(
       pageSize: safePageSize,
     },
   };
+}
+
+async function hydrateSavedTaxonomyFilter(client: SupabaseClient, filters: ListingFilters) {
+  if (!filters.taxonomyNodeId || filters.taxonomyNodeIds?.length) return filters;
+  const { data, error } = await client
+    .from("taxonomy_nodes")
+    .select(
+      "id,parent_id,slug,name_ar,name_en,description_ar,description_en,icon_key,sort_order,depth,is_active,is_leaf,filter_schema_key,classification_key,classification_value,legacy_category_id,legacy_subcategory_id",
+    )
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+  if (error) return filters;
+
+  const index = buildTaxonomyIndex(
+    ((data ?? []) as Record<string, unknown>[]).map(mapTaxonomyNode),
+  );
+  const node = findTaxonomyNode(index, filters.taxonomyNodeId);
+  if (!node) return filters;
+  const scope = resolveTaxonomyFilterScope(index, node);
+  return {
+    ...filters,
+    taxonomyNodeIds: scope.taxonomyNodeIds,
+    taxonomyLegacyScopes: scope.legacyScopes,
+  };
+}
+
+async function resolveCanonicalTaxonomyListingIds(
+  client: SupabaseClient,
+  taxonomyNodeIds?: string[],
+): Promise<ClassifiedsResult<string[] | null>> {
+  const ids = [...new Set((taxonomyNodeIds ?? []).filter(Boolean))];
+  if (ids.length === 0) return { ok: true, data: null };
+
+  const { data, error } = await client
+    .from("listing_taxonomy_assignments")
+    .select("listing_id")
+    .in("taxonomy_node_id", ids);
+  if (error) {
+    const mapped = mapError(error);
+    return mapped.code === "schema_missing"
+      ? { ok: true, data: null }
+      : { ok: false, error: mapped };
+  }
+  return {
+    ok: true,
+    data: [
+      ...new Set(
+        ((data ?? []) as Record<string, unknown>[])
+          .map((row) => rowString(row, "listing_id"))
+          .filter(Boolean),
+      ),
+    ],
+  };
+}
+
+function buildTaxonomyFilterExpression(
+  listingIds: string[] | null,
+  scopes?: ListingFilters["taxonomyLegacyScopes"],
+) {
+  if (listingIds === null && !scopes?.length) return null;
+  const clauses: string[] = [];
+  if (listingIds?.length) {
+    clauses.push(`id.in.(${listingIds.map(escapePostgrestFilterValue).join(",")})`);
+  }
+  for (const scope of scopes ?? []) {
+    const parts = [`category_id.eq.${escapePostgrestFilterValue(scope.categoryId)}`];
+    if (scope.subcategoryId) {
+      parts.push(`subcategory_id.eq.${escapePostgrestFilterValue(scope.subcategoryId)}`);
+    }
+    if (scope.propertyPurpose) {
+      parts.push(
+        `details->>listing_purpose.eq.${escapePostgrestFilterValue(scope.propertyPurpose)}`,
+      );
+    }
+    if (scope.propertyType) {
+      parts.push(`details->>property_type.eq.${escapePostgrestFilterValue(scope.propertyType)}`);
+    }
+    clauses.push(parts.length === 1 ? parts[0] : `and(${parts.join(",")})`);
+  }
+  return clauses.length > 0 ? clauses.join(",") : "id.is.null";
+}
+
+function applyCategoryFilters<
+  T extends { eq: (...args: never[]) => T; ilike: (...args: never[]) => T },
+>(source: T, filters: ListingFilters) {
+  let query = source;
+  const exactFilters: Array<[string, string | number | undefined]> = [
+    ["details->>car_make", filters.carMake],
+    ["details->>fuel_type", filters.fuelType],
+    ["details->>transmission", filters.transmission],
+    ["details->>listing_purpose", filters.taxonomyPropertyPurpose ?? filters.propertyPurpose],
+    ["details->>property_type", filters.taxonomyPropertyType ?? filters.propertyType],
+    ["details->>rental_duration", filters.rentalDuration],
+    ["details->rooms", filters.rooms],
+    ["details->>condition", filters.detailCondition],
+    ["details->>employment_type", filters.employmentType],
+    ["details->>salary_type", filters.salaryType],
+  ];
+  for (const [column, value] of exactFilters) {
+    if (value !== undefined && value !== "") query = query.eq(column as never, value as never);
+  }
+  if (filters.carModel)
+    query = query.ilike("details->>car_model" as never, filters.carModel as never);
+  if (filters.electronicsBrand) {
+    query = query.ilike("details->>electronics_brand" as never, filters.electronicsBrand as never);
+  }
+  return query;
 }
 
 export async function fetchListingDetail(

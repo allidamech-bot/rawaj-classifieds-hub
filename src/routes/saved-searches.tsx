@@ -21,13 +21,22 @@ import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/saved-searches")({
   validateSearch: (search: Record<string, unknown>) => ({
+    taxonomy: typeof search.taxonomy === "string" ? search.taxonomy : "",
     q: typeof search.q === "string" ? search.q : "",
     category: typeof search.category === "string" ? search.category : "",
     subcategory: typeof search.subcategory === "string" ? search.subcategory : "",
     gov: typeof search.gov === "string" ? search.gov : "",
     district: typeof search.district === "string" ? search.district : "",
-    price_min: typeof search.price_min === "string" ? search.price_min : "",
-    price_max: typeof search.price_max === "string" ? search.price_max : "",
+    price_min:
+      typeof search.price_min === "string" || typeof search.price_min === "number"
+        ? String(search.price_min)
+        : "",
+    price_max:
+      typeof search.price_max === "string" || typeof search.price_max === "number"
+        ? String(search.price_max)
+        : "",
+    price_type: typeof search.price_type === "string" ? search.price_type : "",
+    condition: typeof search.condition === "string" ? search.condition : "",
     car_make: typeof search.car_make === "string" ? search.car_make : "",
     car_model: typeof search.car_model === "string" ? search.car_model : "",
     fuel: typeof search.fuel === "string" ? search.fuel : "",
@@ -184,6 +193,7 @@ function SavedSearchesPage() {
 
   function buildListingFilters(): ListingFilters {
     const filters: ListingFilters = {};
+    if (search.taxonomy) filters.taxonomyNodeId = search.taxonomy;
 
     const keywordValue = keyword.trim();
     if (keywordValue) {
@@ -205,6 +215,15 @@ function SavedSearchesPage() {
       const parsed = Number(search.price_max);
       if (!Number.isNaN(parsed)) filters.priceMax = parsed;
     }
+    if (
+      search.price_type === "fixed" ||
+      search.price_type === "negotiable" ||
+      search.price_type === "contact" ||
+      search.price_type === "free"
+    ) {
+      filters.priceType = search.price_type;
+    }
+    if (search.condition) filters.condition = search.condition;
 
     if (search.car_make) filters.carMake = search.car_make;
     if (search.car_model) filters.carModel = search.car_model;
@@ -247,7 +266,10 @@ function SavedSearchesPage() {
       if (currentProfileId !== profileIdRef.current) return;
 
       if (result.ok) {
-        setItems((current) => [result.data, ...current]);
+        setItems((current) => [
+          result.data,
+          ...current.filter((item) => item.id !== result.data.id),
+        ]);
         setHasLoaded(true);
         setMessage(text("تم حفظ البحث في حسابك.", "Search saved to your account."));
       } else {
@@ -603,15 +625,20 @@ function SearchRow({
 }
 
 function toListingSearch(filters: Record<string, unknown>) {
+  const district = stringFilter(filters.districtAr) || stringFilter(filters.district);
   return {
+    taxonomy: stringFilter(filters.taxonomyNodeId) || stringFilter(filters.taxonomy) || undefined,
     q: stringFilter(filters.query) || stringFilter(filters.q) || undefined,
     category: stringFilter(filters.categoryId) || stringFilter(filters.category) || undefined,
     subcategory:
       stringFilter(filters.subcategoryId) || stringFilter(filters.subcategory) || undefined,
     gov: stringFilter(filters.governorateId) || stringFilter(filters.gov) || undefined,
-    district: stringFilter(filters.districtAr) || stringFilter(filters.district) || undefined,
+    location: district?.startsWith("@") ? district.slice(1) : undefined,
+    district: district?.startsWith("@") ? undefined : district,
     price_min: numberFilter(filters.priceMin) ?? numberFilter(filters.price_min),
     price_max: numberFilter(filters.priceMax) ?? numberFilter(filters.price_max),
+    price_type: priceTypeFilter(filters.priceType) ?? priceTypeFilter(filters.price_type),
+    condition: stringFilter(filters.condition),
     car_make: stringFilter(filters.carMake) || stringFilter(filters.car_make) || undefined,
     car_model: stringFilter(filters.carModel) || stringFilter(filters.car_model) || undefined,
     fuel: stringFilter(filters.fuelType) || stringFilter(filters.fuel) || undefined,
@@ -651,6 +678,12 @@ function numberFilter(value: unknown): number | undefined {
 
 function sortFilter(value: unknown): "latest" | "cheapest" | "expensive" | "featured" | undefined {
   return value === "latest" || value === "cheapest" || value === "expensive" || value === "featured"
+    ? value
+    : undefined;
+}
+
+function priceTypeFilter(value: unknown): "fixed" | "negotiable" | "contact" | "free" | undefined {
+  return value === "fixed" || value === "negotiable" || value === "contact" || value === "free"
     ? value
     : undefined;
 }

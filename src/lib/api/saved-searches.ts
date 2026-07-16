@@ -6,6 +6,7 @@ import type {
   SavedSearch,
   SavedSearchAlertFrequency,
 } from "@/lib/classifieds-types";
+import { normalizeSavedSearchFilters } from "@/lib/saved-search-normalization";
 
 function mapSavedSearch(row: Record<string, unknown>): SavedSearch {
   const frequency = rowString(row, "alert_frequency", "weekly");
@@ -69,13 +70,26 @@ export async function createSavedSearch(
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
+  const filters = normalizeSavedSearchFilters(payload.filters);
+
+  const duplicate = await clientResult.data
+    .from("saved_searches")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("filters", filters)
+    .limit(1)
+    .maybeSingle();
+  if (duplicate.error) return { ok: false, error: mapError(duplicate.error) };
+  if (duplicate.data) {
+    return { ok: true, data: mapSavedSearch(duplicate.data as Record<string, unknown>) };
+  }
 
   const { data, error } = await clientResult.data
     .from("saved_searches")
     .insert({
       user_id: userId,
       name_ar: nameAr,
-      filters: payload.filters,
+      filters,
       alert_frequency: payload.alertFrequency ?? "weekly",
     })
     .select("*")

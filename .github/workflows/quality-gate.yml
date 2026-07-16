@@ -228,6 +228,9 @@ jobs:
       - name: Public Listing Detail Integrity contract
         run: node --test scripts/public-listing-detail-integrity.test.mjs
 
+      - name: Search Results Taxonomy Integrity contract
+        run: node --test scripts/search-results-taxonomy-integrity.test.mjs
+
       - name: Seller Storefront V2 contract
         run: node --test scripts/seller-storefront-v2.test.mjs
 
