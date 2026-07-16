@@ -10,7 +10,7 @@ import type {
 import { useFilterDraftSessionActive } from "@/features/search/filter-draft-session";
 import { buildListingFilters, type ListingFilterInputs } from "./listings-filters";
 
-const listingsRouteApi = getRouteApi("/listings/");
+const listingsRouteApi = getRouteApi("/listings");
 
 export interface ListingsResultsInputs extends ListingFilterInputs {
   referencesLoaded: boolean;
