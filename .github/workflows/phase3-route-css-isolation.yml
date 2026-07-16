@@ -1,0 +1,78 @@
+name: Phase 3 Route CSS Isolation Patch
+
+on:
+  push:
+    branches:
+      - agent/phase-3-route-css-isolation
+    paths:
+      - scripts/apply-phase3-route-css-isolation.py
+      - .github/workflows/phase3-route-css-isolation.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/phase-3-route-css-isolation
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply route CSS isolation
+        run: python3 scripts/apply-phase3-route-css-isolation.py
+
+      - name: Format changed files
+        run: |
+          npx prettier --write \
+            src/routes/__root.tsx \
+            src/lib/route-styles.ts \
+            scripts/route-css-isolation.test.mjs \
+            scripts/home-discovery-v3.test.mjs \
+            scripts/adaptive-listing-cards.test.mjs \
+            scripts/search-filters-v1.test.mjs \
+            scripts/search-filters-v2.test.mjs \
+            scripts/listing-detail-v2.test.mjs \
+            scripts/listing-detail-v3.test.mjs \
+            scripts/seller-storefront-v2.test.mjs \
+            e2e/public-initial-html.spec.ts \
+            .github/workflows/quality-gate.yml
+
+      - name: Validate focused contracts
+        run: |
+          node --test scripts/route-css-isolation.test.mjs
+          node --test scripts/home-discovery-v3.test.mjs
+          node --test scripts/adaptive-listing-cards.test.mjs
+          node --test scripts/search-filters-v1.test.mjs
+          node --test scripts/search-filters-v2.test.mjs
+          node --test scripts/listing-detail-v2.test.mjs
+          node --test scripts/listing-detail-v3.test.mjs
+          node --test scripts/seller-storefront-v2.test.mjs
+          npm run typecheck -- --pretty false
+
+      - name: Remove temporary patch automation
+        run: |
+          rm scripts/apply-phase3-route-css-isolation.py
+          rm .github/workflows/phase3-route-css-isolation.yml
+
+      - name: Commit isolated route styles
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "perf: load page styles only on matching routes"
+          git push origin HEAD:agent/phase-3-route-css-isolation
