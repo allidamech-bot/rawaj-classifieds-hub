@@ -39,10 +39,11 @@ import {
 
 import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
 import { isListingPastExpiry, publicListingExpiryFilter } from "@/lib/api/listing-expiry";
-import { publicListingSelect } from "@/lib/api/public-fields";
+import { publicListingDetailAliases, publicListingSelect } from "@/lib/api/public-fields";
 import { selectPrimaryListingImages } from "@/lib/api/primary-listing-images";
 import { buildListingImagePath, listingImagesBucket, validateImageFile } from "@/lib/api/storage";
 import { prepareListingImageForUpload } from "@/lib/listing-image-processing";
+import { sanitizePublicListing } from "@/lib/public-listing-presentation";
 
 const signedImageUrlExpiresInSeconds = 900;
 
@@ -82,7 +83,7 @@ export function mapListing(
     districtAr: rowNullableString(row, "district_ar"),
     contactName: rowNullableString(row, "contact_name"),
     contactOptions: rowRecord(row, "contact_options") as Record<string, boolean>,
-    details: rowRecord(row, "details"),
+    details: mapListingDetails(row),
     isFeatured: rowBoolean(row, "is_featured"),
     featuredUntil: rowNullableString(row, "featured_until"),
     reviewedBy: rowNullableString(row, "reviewed_by"),
@@ -98,6 +99,73 @@ export function mapListing(
     createdAt: rowString(row, "created_at"),
     updatedAt: rowString(row, "updated_at"),
   };
+}
+
+function mapListingDetails(row: Record<string, unknown>) {
+  const fullDetails = rowRecord(row, "details");
+  if (Object.keys(fullDetails).length > 0) return fullDetails;
+
+  const details: Record<string, unknown> = {};
+  for (const [key, alias] of Object.entries(publicListingDetailAliases)) {
+    const value = row[alias];
+    if (value !== undefined && value !== null) details[key] = value;
+  }
+  const taxonomyNodeId = row.detail_taxonomy_node_id;
+  if (typeof taxonomyNodeId === "string" && taxonomyNodeId.trim()) {
+    details._taxonomy_node_id = taxonomyNodeId.trim();
+  }
+  return details;
+}
+
+async function readEnabledPublicContactDetails(
+  client: SupabaseClient,
+  listingId: string,
+  contactOptions: Record<string, boolean>,
+) {
+  const selectors = ["id"];
+  if (contactOptions.phone === true) {
+    selectors.push(
+      "public_phone:details->>phone",
+      "public_mobile:details->>mobile",
+      "public_contact_phone:details->>contact_phone",
+    );
+  }
+  if (contactOptions.whatsapp === true) {
+    selectors.push(
+      "public_whatsapp:details->>whatsapp",
+      "public_whatsapp_camel:details->>whatsApp",
+      "public_contact_whatsapp:details->>contact_whatsapp",
+    );
+  }
+  if (selectors.length === 1) return {};
+
+  const { data, error } = await client
+    .from("listings")
+    .select(selectors.join(","))
+    .eq("id", listingId)
+    .eq("status", "approved")
+    .is("archived_at", null)
+    .or(publicListingExpiryFilter())
+    .maybeSingle();
+  if (error || !data) return {};
+
+  const row = data as unknown as Record<string, unknown>;
+  const details: Record<string, unknown> = {};
+  if (contactOptions.phone === true) {
+    const phone = [row.public_phone, row.public_mobile, row.public_contact_phone].find(
+      (value) => typeof value === "string" && value.trim(),
+    );
+    if (typeof phone === "string") details.phone = phone.trim();
+  }
+  if (contactOptions.whatsapp === true) {
+    const whatsapp = [
+      row.public_whatsapp,
+      row.public_whatsapp_camel,
+      row.public_contact_whatsapp,
+    ].find((value) => typeof value === "string" && value.trim());
+    if (typeof whatsapp === "string") details.whatsapp = whatsapp.trim();
+  }
+  return details;
 }
 
 export function mapImage(row: Record<string, unknown>): ListingImage {
@@ -195,7 +263,7 @@ export async function fetchPublicListings(
   if (error) return { ok: false, error: mapError(error) };
 
   const listings = ((data ?? []) as unknown as Record<string, unknown>[]).map((row) =>
-    mapListing(row, references.categories, references.governorates),
+    sanitizePublicListing(mapListing(row, references.categories, references.governorates)),
   );
 
   const nextCursor: ListingCursor | null =
@@ -268,11 +336,20 @@ export async function fetchListingDetail(
     };
   }
 
-  const listing = mapListing(
+  const mappedListing = mapListing(
     data as Record<string, unknown>,
     references.categories,
     references.governorates,
   );
+  const contactDetails = await readEnabledPublicContactDetails(
+    clientResult.data,
+    listingId,
+    mappedListing.contactOptions,
+  );
+  const listing = sanitizePublicListing({
+    ...mappedListing,
+    details: { ...mappedListing.details, ...contactDetails },
+  });
   const [hydratedListing] = await hydrateListingsWithPrimaryImages(clientResult.data, [listing]);
   return { ok: true, data: hydratedListing ?? listing };
 }

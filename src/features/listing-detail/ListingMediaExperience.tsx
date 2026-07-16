@@ -12,6 +12,7 @@ interface ListingMediaExperienceProps {
   title: string;
   placeholder: PlaceholderType;
   favorite: boolean;
+  showFavorite?: boolean;
   imageError?: string | null;
   onBack: () => void;
   onShare: () => void;
@@ -24,6 +25,7 @@ export function ListingMediaExperience({
   title,
   placeholder,
   favorite,
+  showFavorite = true,
   imageError,
   onBack,
   onShare,
@@ -97,18 +99,20 @@ export function ListingMediaExperience({
               >
                 <Share2 aria-hidden="true" />
               </button>
-              <button
-                type="button"
-                onClick={onToggleFavorite}
-                aria-pressed={favorite}
-                aria-label={
-                  favorite
-                    ? text("إزالة من المفضلة", "Remove from favorites")
-                    : text("حفظ في المفضلة", "Save to favorites")
-                }
-              >
-                <Heart className={favorite ? "fill-current" : undefined} aria-hidden="true" />
-              </button>
+              {showFavorite ? (
+                <button
+                  type="button"
+                  onClick={onToggleFavorite}
+                  aria-pressed={favorite}
+                  aria-label={
+                    favorite
+                      ? text("إزالة من المفضلة", "Remove from favorites")
+                      : text("حفظ في المفضلة", "Save to favorites")
+                  }
+                >
+                  <Heart className={favorite ? "fill-current" : undefined} aria-hidden="true" />
+                </button>
+              ) : null}
             </div>
           </div>
 

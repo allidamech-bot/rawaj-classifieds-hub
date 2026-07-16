@@ -9,7 +9,7 @@ import { ListingSafetyAndAlert } from "@/features/listing-detail/ListingSafetyAn
 import { ListingSellerProfileCard } from "@/features/listing-detail/ListingSellerProfileCard";
 import { SimilarListingsRail } from "@/features/listing-detail/SimilarListingsRail";
 import { UnavailableListingRecovery } from "@/features/listing-detail/UnavailableListingRecovery";
-import { categoryDetailDisplayRows, detectCategoryFieldKind } from "@/lib/category-fields";
+import { resolveCategoryFieldKind } from "@/lib/category-fields";
 import {
   createListingReport,
   createSavedSearch,
@@ -20,16 +20,23 @@ import {
 } from "@/lib/classifieds-api";
 import type {
   ClassifiedListing,
-  ClassifiedsError,
   ListingImage,
   PublicSellerProfile,
+  TaxonomyNode,
 } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized } from "@/lib/i18n";
-import { listingLocationDisplay } from "@/lib/listing-location-display";
 import { buildListingStructuredData } from "@/lib/listing-structured-data";
-import { buildBreadcrumbStructuredData, createSeo, jsonLdScript, plainText } from "@/lib/seo";
+import { buildBreadcrumbStructuredData, createSeo, jsonLdScript } from "@/lib/seo";
 import { phoneHref, whatsappHref } from "@/lib/contact-phone";
-import { listingStatusLabel } from "@/lib/status-labels";
+import {
+  buildPublicListingDetailRows,
+  isPublicListingVisible,
+  normalizePublicListingImages,
+  publicListingShareUrl,
+  publicSeoDescription,
+  resolvePublicLocationLabel,
+} from "@/lib/public-listing-presentation";
+import { taxonomyNodeName, taxonomyPathLabel } from "@/lib/taxonomy";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -43,9 +50,9 @@ export const Route = createFileRoute("/listings/$id")({
   head: ({ loaderData }) => {
     const listing = loaderData?.listing;
     return createSeo({
-      title: listing ? `${listing.title} | RAWAJ / رواج` : "إعلان غير متاح | RAWAJ / رواج",
+      title: listing ? `${listing.title} | رواج` : "إعلان غير متاح | رواج",
       description: listing
-        ? plainText(listing.description || "تفاصيل إعلان معتمد على رواج.", 160)
+        ? publicSeoDescription(listing.description || "تفاصيل إعلان معتمد على رواج.")
         : "هذا الإعلان غير متاح للعرض العام على رواج.",
       path: listing ? `/listings/${listing.id}` : "/listings",
       type: "article",
@@ -72,8 +79,8 @@ function ListingDetailsPage() {
   const [loading, setLoading] = useState(false);
   const [sellerLoading, setSellerLoading] = useState(false);
   const [similarLoading, setSimilarLoading] = useState(false);
-  const [error, setError] = useState<ClassifiedsError | null>(null);
-  const [imageError, setImageError] = useState<ClassifiedsError | null>(initialData.imageError);
+  const [error, setError] = useState(false);
+  const [imagesUnavailable, setImagesUnavailable] = useState(initialData.imagesUnavailable);
   const [fav, setFav] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [alertBusy, setAlertBusy] = useState(false);
@@ -89,11 +96,11 @@ function ListingDetailsPage() {
     setImages(initialData.images);
     setSeller(initialData.seller);
     setSimilarListings(initialData.similarListings);
-    setImageError(initialData.imageError);
+    setImagesUnavailable(initialData.imagesUnavailable);
     setLoading(false);
     setSellerLoading(false);
     setSimilarLoading(false);
-    setError(null);
+    setError(false);
     setAlertCreated(false);
   }, [initialData, id]);
 
@@ -101,7 +108,7 @@ function ListingDetailsPage() {
     let cancelled = false;
     const requestId = ++favoriteRequestIdRef.current;
     const profileId = auth.profile?.id ?? null;
-    if (auth.status !== "signedIn" || !profileId) {
+    if (auth.status !== "signedIn" || !profileId || listing?.ownerId === profileId) {
       setFav(false);
       return () => {
         cancelled = true;
@@ -113,7 +120,7 @@ function ListingDetailsPage() {
       if (!cancelled && requestId === favoriteRequestIdRef.current && result.ok) {
         setFav(result.data);
       } else if (!cancelled && requestId === favoriteRequestIdRef.current && !result.ok) {
-        setActionMessage(result.error.message);
+        setActionMessage(text("تعذر تحميل حالة المفضلة.", "Could not load favorite status."));
       }
     }
 
@@ -121,22 +128,27 @@ function ListingDetailsPage() {
     return () => {
       cancelled = true;
     };
-  }, [auth.status, auth.profile?.id, id]);
+  }, [auth.status, auth.profile?.id, id, listing?.ownerId]);
 
   async function toggleFavorite() {
     setActionMessage(null);
     if (auth.status !== "signedIn") {
-      setActionMessage(
-        text("يجب تسجيل الدخول لحفظ الإعلان في المفضلة.", "Log in to save this listing."),
-      );
+      void navigate({ to: "/login", search: { returnTo: `/listings/${id}` } });
+      return;
+    }
+    if (!listing || !isPublicListingVisible(listing)) return;
+    if (listing.ownerId === auth.profile?.id) {
+      setActionMessage(text("هذا إعلانك.", "This is your listing."));
       return;
     }
     if (favoriteInFlightRef.current) return;
 
     const profileId = auth.profile?.id ?? null;
+    const previousFavoriteState = fav;
     const desiredFavoriteState = !fav;
     const requestId = ++favoriteRequestIdRef.current;
     favoriteInFlightRef.current = true;
+    setFav(desiredFavoriteState);
 
     try {
       const result = desiredFavoriteState
@@ -144,16 +156,25 @@ function ListingDetailsPage() {
         : await unfavoriteListing(profileId, id);
       if (requestId !== favoriteRequestIdRef.current) return;
       if (!result.ok) {
-        setActionMessage(result.error.message);
+        setFav(previousFavoriteState);
+        setActionMessage(
+          text("تعذر تحديث المفضلة. حاول مرة أخرى.", "Could not update favorites. Try again."),
+        );
         return;
       }
 
-      setFav(desiredFavoriteState);
       setActionMessage(
         desiredFavoriteState
           ? text("تم حفظ الإعلان في المفضلة.", "Saved to favorites.")
           : text("تمت إزالة الإعلان من المفضلة.", "Removed from favorites."),
       );
+    } catch {
+      if (requestId === favoriteRequestIdRef.current) {
+        setFav(previousFavoriteState);
+        setActionMessage(
+          text("تعذر تحديث المفضلة. حاول مرة أخرى.", "Could not update favorites. Try again."),
+        );
+      }
     } finally {
       favoriteInFlightRef.current = false;
     }
@@ -162,7 +183,7 @@ function ListingDetailsPage() {
   async function reportListing() {
     setActionMessage(null);
     if (auth.status !== "signedIn") {
-      setActionMessage(text("يجب تسجيل الدخول لإرسال بلاغ.", "Log in to report a listing."));
+      void navigate({ to: "/login", search: { returnTo: `/listings/${id}` } });
       return;
     }
     if (reportInFlightRef.current) return;
@@ -177,7 +198,7 @@ function ListingDetailsPage() {
       setActionMessage(
         result.ok
           ? text("تم إرسال البلاغ للمراجعة.", "Report sent for review.")
-          : result.error.message,
+          : text("تعذر إرسال البلاغ الآن.", "Could not send the report now."),
       );
     } finally {
       reportInFlightRef.current = false;
@@ -187,7 +208,7 @@ function ListingDetailsPage() {
   async function messageSeller() {
     setActionMessage(null);
     if (auth.status !== "signedIn") {
-      setActionMessage(text("يجب تسجيل الدخول لبدء محادثة.", "Log in to start a conversation."));
+      void navigate({ to: "/login", search: { returnTo: `/listings/${id}` } });
       return;
     }
     if (messageInFlightRef.current) return;
@@ -208,7 +229,7 @@ function ListingDetailsPage() {
     try {
       const result = await startListingConversation(auth.profile?.id ?? null, listing.id);
       if (!result.ok) {
-        setActionMessage(result.error.message);
+        setActionMessage(text("تعذر بدء المحادثة الآن.", "Could not start the conversation now."));
         return;
       }
       void navigate({ to: "/chats", search: { conversation: result.data } });
@@ -220,14 +241,14 @@ function ListingDetailsPage() {
   async function shareListing() {
     if (!listing) return;
     setActionMessage(null);
-    const url = window.location.href;
+    const url = publicListingShareUrl(window.location.origin, listing.id);
 
     try {
       if (navigator.share) {
         await navigator.share({ title: listing.title, text: listing.title, url });
         return;
       }
-      await navigator.clipboard.writeText(url);
+      await copyPublicListingUrl(url);
       setActionMessage(text("تم نسخ رابط الإعلان.", "Listing link copied."));
     } catch {
       setActionMessage(text("تعذر مشاركة الإعلان الآن.", "Could not share the listing now."));
@@ -237,7 +258,7 @@ function ListingDetailsPage() {
   async function createPriceAlert() {
     setActionMessage(null);
     if (auth.status !== "signedIn") {
-      setActionMessage(text("سجّل الدخول لتفعيل تنبيه السعر.", "Log in to enable a price alert."));
+      void navigate({ to: "/login", search: { returnTo: `/listings/${id}` } });
       return;
     }
     if (
@@ -271,7 +292,9 @@ function ListingDetailsPage() {
     alertInFlightRef.current = false;
 
     if (!result.ok) {
-      setActionMessage(result.error.message);
+      setActionMessage(
+        text("تعذر إنشاء تنبيه السعر الآن.", "Could not create the price alert now."),
+      );
       return;
     }
 
@@ -306,20 +329,17 @@ function ListingDetailsPage() {
     );
   }
 
-  if (error || !listing) {
+  if (error || !listing || !isPublicListingVisible(listing)) {
     return (
       <>
         <PageHeader title={text("تفاصيل الإعلان", "Listing details")} />
         <main className="container-wide mobile-page-bottom pt-10">
           <StateCard
             title={text("لا يمكن عرض هذا الإعلان", "Listing cannot be shown")}
-            body={
-              error?.message ??
-              text(
-                "قد يكون الإعلان خارج العرض العام أو لم تتم الموافقة عليه.",
-                "The listing may be outside public display or not approved.",
-              )
-            }
+            body={text(
+              "قد يكون الإعلان خارج العرض العام أو لم تتم الموافقة عليه.",
+              "The listing may be outside public display or not approved.",
+            )}
             actionLabel={text("تصفح الإعلانات", "Browse listings")}
             actionTo="/listings"
           />
@@ -328,51 +348,45 @@ function ListingDetailsPage() {
     );
   }
 
-  const categoryFieldKind = detectCategoryFieldKind(null, listing);
-  const categoryRows = categoryDetailDisplayRows(categoryFieldKind, listing.details, text);
-  const locationLabel = listingLocationDisplay(listing, language);
-  const phone = detailString(listing, ["phone", "mobile", "contact_phone", "رقم الهاتف", "الهاتف"]);
-  const whatsapp = detailString(listing, [
-    "whatsapp",
-    "whatsApp",
-    "contact_whatsapp",
-    "واتساب",
-    "رقم واتساب",
-  ]);
+  const selectedTaxonomyNode = initialData.taxonomyNode?.isLeaf ? initialData.taxonomyNode : null;
+  const categoryFieldKind = resolveCategoryFieldKind(
+    selectedTaxonomyNode,
+    initialData.category ?? undefined,
+    listing,
+  );
+  const categoryRows = buildPublicListingDetailRows(categoryFieldKind, listing, text);
+  const locationLabel = resolvePublicLocationLabel({
+    canonicalPath: initialData.locationPath,
+    listing,
+    language,
+  });
+  const phone = detailString(listing, ["phone"]);
+  const whatsapp = detailString(listing, ["whatsapp"]);
   const callHref = listing.contactOptions.phone ? phoneHref(phone) : null;
   const whatsappUrl = listing.contactOptions.whatsapp ? whatsappHref(whatsapp) : null;
   const canCall = Boolean(callHref);
   const canWhatsapp = Boolean(whatsappUrl);
   const sellerName = listing.contactName?.trim() || text("معلن على رواج", "RAWAJ advertiser");
   const isOwner = auth.profile?.id === listing.ownerId;
-  const mediaImages =
-    images.length > 0
-      ? images
-      : listing.primaryImageUrl
-        ? [
-            {
-              id: `primary-${listing.id}`,
-              listingId: listing.id,
-              storagePath: null,
-              publicUrl: listing.primaryImageUrl,
-              altAr: listing.title,
-              sortOrder: 0,
-              createdAt: listing.createdAt,
-            } satisfies ListingImage,
-          ]
-        : [];
+  const mediaImages = normalizePublicListingImages(images, listing);
   const listingCategory = categoryName(
     listing.categoryId,
     listing.categoryNameAr ?? undefined,
     language,
   );
+  const taxonomyLabel = taxonomyPathLabel(initialData.taxonomyPath, language);
+  const breadcrumbItems = buildListingBreadcrumbItems({
+    taxonomyPath: initialData.taxonomyPath,
+    listingCategory,
+    categoryId: listing.categoryId,
+    subcategoryId: listing.subcategoryId,
+    legacySubcategory: initialData.legacySubcategory,
+    language,
+  });
   const listingBreadcrumbs = buildBreadcrumbStructuredData([
     { name: "RAWAJ / رواج", path: "/" },
     { name: text("الإعلانات", "Listings"), path: "/listings" },
-    {
-      name: listing.categoryNameAr ?? listingCategory,
-      path: `/listings?category=${encodeURIComponent(listing.categoryId)}`,
-    },
+    ...breadcrumbItems.map((item) => ({ name: item.label, path: item.path })),
     { name: listing.title, path: `/listings/${listing.id}` },
   ]);
 
@@ -384,7 +398,12 @@ function ListingDetailsPage() {
           title={listing.title}
           placeholder={listing.categoryPlaceholder ?? "misc"}
           favorite={fav}
-          imageError={imageError?.message}
+          showFavorite={!isOwner}
+          imageError={
+            imagesUnavailable
+              ? text("تعذر تحميل بعض الصور.", "Some listing images could not be loaded.")
+              : null
+          }
           onBack={goBack}
           onShare={() => void shareListing()}
           onToggleFavorite={() => void toggleFavorite()}
@@ -410,14 +429,15 @@ function ListingDetailsPage() {
           <div className="rawaj-detail-v2__layout">
             <article className="rawaj-detail-v2__content">
               <section className="rawaj-detail-summary">
+                <ListingTaxonomyBreadcrumb
+                  items={breadcrumbItems}
+                  pathLabel={taxonomyLabel}
+                  text={text}
+                />
                 <div className="rawaj-detail-summary__badges">
                   {listing.isFeatured ? <Badge>{text("مميز", "Featured")}</Badge> : null}
-                  <span>{listingCategory}</span>
-                  <span>
-                    {listing.status === "approved"
-                      ? text("متاح", "Available")
-                      : listingStatusLabel(listing.status, language, true)}
-                  </span>
+                  <span>{breadcrumbItems.at(-1)?.label ?? listingCategory}</span>
+                  <span>{text("متاح", "Available")}</span>
                 </div>
                 <h1>{listing.title}</h1>
                 <div className="rawaj-detail-summary__meta">
@@ -461,7 +481,7 @@ function ListingDetailsPage() {
                     "Details provided by the advertiser",
                   )}
                 />
-                <p className="rawaj-detail-description">
+                <p className="rawaj-detail-description break-words">
                   {listing.description?.trim() ||
                     text(
                       "لم يضف البائع وصفا مفصلا.",
@@ -507,6 +527,7 @@ function ListingDetailsPage() {
                 seller={seller}
                 loading={sellerLoading}
                 fallbackName={sellerName}
+                canMessage={!isOwner}
                 onMessage={messageSeller}
                 language={language}
                 text={text}
@@ -535,7 +556,14 @@ function ListingDetailsPage() {
           />
         </div>
 
-        <script {...jsonLdScript(buildListingStructuredData(listing))} />
+        <script
+          {...jsonLdScript(
+            buildListingStructuredData(
+              { ...listing, districtAr: locationLabel },
+              categoryFieldKind,
+            ),
+          )}
+        />
         <script {...jsonLdScript(listingBreadcrumbs)} />
       </main>
 
@@ -569,9 +597,93 @@ function PriceDisplay({
       <strong>
         {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
       </strong>
-      <small>{priceTypeLabel(listing.priceType, language)}</small>
     </div>
   );
+}
+
+interface ListingBreadcrumbItem {
+  key: string;
+  label: string;
+  path: string;
+}
+
+function ListingTaxonomyBreadcrumb({
+  items,
+  pathLabel,
+  text,
+}: {
+  items: ListingBreadcrumbItem[];
+  pathLabel: string;
+  text: (ar: string, en: string) => string;
+}) {
+  if (items.length === 0) return null;
+  return (
+    <nav
+      aria-label={text("مسار التصنيف", "Category path")}
+      title={pathLabel || undefined}
+      className="mb-3 flex max-w-full flex-wrap items-center gap-1 overflow-hidden text-[11px] text-muted-foreground"
+    >
+      {items.map((item, index) => (
+        <span key={item.key} className="inline-flex min-w-0 items-center gap-1">
+          {index > 0 ? <span aria-hidden="true">/</span> : null}
+          <a href={item.path} className="max-w-[11rem] truncate hover:text-primary">
+            {item.label}
+          </a>
+        </span>
+      ))}
+    </nav>
+  );
+}
+
+function buildListingBreadcrumbItems({
+  taxonomyPath,
+  listingCategory,
+  categoryId,
+  subcategoryId,
+  legacySubcategory,
+  language,
+}: {
+  taxonomyPath: TaxonomyNode[];
+  listingCategory: string;
+  categoryId: string;
+  subcategoryId: string | null;
+  legacySubcategory: { nameAr: string; nameEn: string | null } | null;
+  language: Language;
+}): ListingBreadcrumbItem[] {
+  const canonicalItems = taxonomyPath.map((node) => ({
+    key: node.id,
+    label: taxonomyNodeName(node, language),
+    path: `/listings?taxonomy=${encodeURIComponent(node.id)}`,
+  }));
+  const source =
+    canonicalItems.length > 0
+      ? canonicalItems
+      : [
+          {
+            key: `category-${categoryId}`,
+            label: listingCategory,
+            path: `/listings?category=${encodeURIComponent(categoryId)}`,
+          },
+          ...(subcategoryId && legacySubcategory
+            ? [
+                {
+                  key: `subcategory-${subcategoryId}`,
+                  label:
+                    language === "en"
+                      ? legacySubcategory.nameEn || legacySubcategory.nameAr
+                      : legacySubcategory.nameAr,
+                  path: `/listings?category=${encodeURIComponent(categoryId)}&subcategory=${encodeURIComponent(subcategoryId)}`,
+                },
+              ]
+            : []),
+        ];
+  const labels = new Set<string>();
+  return source.filter((item) => {
+    const label = item.label.trim();
+    if (!label || labels.has(label)) return false;
+    labels.add(label);
+    return true;
+  });
 }
 
 function SectionHeading({ title, subtitle }: { title: string; subtitle: string }) {
@@ -621,26 +733,26 @@ function detailString(listing: ClassifiedListing, keys: string[]) {
   return "";
 }
 
+async function copyPublicListingUrl(url: string) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(url);
+    return;
+  }
+  const input = document.createElement("textarea");
+  input.value = url;
+  input.readOnly = true;
+  input.style.position = "fixed";
+  input.style.opacity = "0";
+  document.body.appendChild(input);
+  input.select();
+  const copied = document.execCommand("copy");
+  input.remove();
+  if (!copied) throw new Error("clipboard_unavailable");
+}
+
 function formatDate(value: string, language: Language) {
   if (!value) return language === "ar" ? "تاريخ غير محدد" : "Date unavailable";
   return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
     dateStyle: "medium",
   }).format(new Date(value));
-}
-
-function priceTypeLabel(type: string, language: Language) {
-  switch (type) {
-    case "fixed":
-      return language === "ar" ? "ثابت" : "Fixed";
-    case "negotiable":
-      return language === "ar" ? "قابل للتفاوض" : "Negotiable";
-    case "contact":
-      return language === "ar" ? "عند التواصل" : "On contact";
-    case "free":
-      return language === "ar" ? "مجاني" : "Free";
-    case "exchange":
-      return language === "ar" ? "للمبادلة" : "Exchange";
-    default:
-      return type;
-  }
 }

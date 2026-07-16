@@ -18,6 +18,7 @@ interface ListingSellerProfileCardProps {
   seller: PublicSellerProfile | null;
   loading: boolean;
   fallbackName: string;
+  canMessage: boolean;
   onMessage: () => void;
   language: Language;
   text: (ar: string, en: string) => string;
@@ -28,6 +29,7 @@ export function ListingSellerProfileCard({
   seller,
   loading,
   fallbackName,
+  canMessage,
   onMessage,
   language,
   text,
@@ -108,11 +110,13 @@ export function ListingSellerProfileCard({
           {text("زيارة متجر البائع", "Visit seller store")}
           <ChevronLeft className="rtl:rotate-180" aria-hidden="true" />
         </Link>
-        <SellerFollowButton sellerId={listing.ownerId} />
-        <button type="button" onClick={onMessage}>
-          <MessageCircle aria-hidden="true" />
-          {text("مراسلة", "Message")}
-        </button>
+        {canMessage ? <SellerFollowButton sellerId={listing.ownerId} /> : null}
+        {canMessage ? (
+          <button type="button" onClick={onMessage}>
+            <MessageCircle aria-hidden="true" />
+            {text("مراسلة", "Message")}
+          </button>
+        ) : null}
       </div>
     </section>
   );

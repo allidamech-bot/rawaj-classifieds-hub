@@ -1,4 +1,5 @@
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
+import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
 import { getClient, mapError } from "@/lib/api/shared";
 
 export interface ListingTaxonomyAssignment {
@@ -15,6 +16,48 @@ function mapAssignment(row: Record<string, unknown>): ListingTaxonomyAssignment 
     assignmentSource: row.assignment_source === "explicit" ? "explicit" : "legacy_derived",
     updatedAt: String(row.updated_at ?? ""),
   };
+}
+
+export async function fetchPublicListingTaxonomyAssignment(
+  listingId: string,
+): Promise<ClassifiedsResult<ListingTaxonomyAssignment | null>> {
+  const normalizedListingId = listingId.trim();
+  if (!normalizedListingId) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const publicListingResult = await clientResult.data
+    .from("listings")
+    .select("id")
+    .eq("id", normalizedListingId)
+    .eq("status", "approved")
+    .is("archived_at", null)
+    .or(publicListingExpiryFilter())
+    .maybeSingle();
+  if (publicListingResult.error) {
+    return {
+      ok: false,
+      error: mapError(publicListingResult.error, "public_listing_taxonomy_read"),
+    };
+  }
+  if (!publicListingResult.data) {
+    return { ok: false, error: { code: "not_found", message: "هذا الإعلان غير متاح." } };
+  }
+
+  const { data, error } = await clientResult.data
+    .from("listing_taxonomy_assignments")
+    .select("listing_id, taxonomy_node_id, assignment_source, updated_at")
+    .eq("listing_id", normalizedListingId)
+    .limit(1)
+    .maybeSingle();
+  if (error) return { ok: false, error: mapError(error, "public_listing_taxonomy_read") };
+  return { ok: true, data: data ? mapAssignment(data as Record<string, unknown>) : null };
 }
 
 export async function fetchOwnerListingTaxonomyAssignment(

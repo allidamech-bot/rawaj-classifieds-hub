@@ -8,9 +8,13 @@ import {
   isUnavailableListingDetailError,
 } from "../src/lib/api/listing-detail-load-guard.ts";
 
-const [barrelSource, routeSource, rootSource, packageSource] = await Promise.all([
+const [barrelSource, routeSource, pageDataSource, rootSource, packageSource] = await Promise.all([
   readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/listing-detail/public-listing-detail-page-data.ts", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
@@ -56,7 +60,8 @@ test("not-found results still reach the existing unavailable-listing recovery co
   };
 
   assert.equal(guardPublicListingDetailResult(result), result);
-  assert.match(routeSource, /if \(!listing\.ok\) throw notFound\(\)/);
+  assert.match(pageDataSource, /if \(!listingResult\.ok\) return null/);
+  assert.match(routeSource, /if \(!pageData\) throw notFound\(\)/);
   assert.match(routeSource, /notFoundComponent: UnavailableListingRecovery/);
 });
 
@@ -65,8 +70,8 @@ test("the public classifieds barrel overrides the raw detail read with the guard
     barrelSource,
     /export \{ fetchListingDetailGuarded as fetchListingDetail \} from "@\/lib\/api\/listing-detail-read-guarded"/,
   );
-  assert.match(routeSource, /fetchListingDetail,/);
-  assert.match(routeSource, /await fetchListingDetail\(params\.id\)/);
+  assert.match(pageDataSource, /fetchListingDetail,/);
+  assert.match(pageDataSource, /await fetchListingDetail\(listingId\)/);
 });
 
 test("retryable loader failures inherit the root invalidate-and-reset recovery action", () => {
