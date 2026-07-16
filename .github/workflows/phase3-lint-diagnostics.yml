@@ -1,0 +1,48 @@
+name: Phase 3 Listing Detail Lint Diagnostics
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Capture lint diagnostics
+        shell: bash
+        run: |
+          set +e
+          npx eslint --quiet \
+            scripts/listing-detail-v3.test.mjs \
+            src/features/listing-detail/ListingMediaExperience.tsx \
+            src/features/listing-detail/ListingMediaViewer.tsx \
+            src/features/listing-detail/public-listing-detail-page-data.ts \
+            'src/routes/listings.$id.tsx' > phase3-lint.log 2>&1
+          status=$?
+          echo "ESLINT_EXIT_CODE=$status" >> phase3-lint.log
+          exit 0
+
+      - name: Upload lint diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase3-listing-detail-lint-${{ github.sha }}
+          path: phase3-lint.log
+          if-no-files-found: error
+          retention-days: 1
