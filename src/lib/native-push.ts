@@ -84,7 +84,7 @@ export async function enableNativePush(
 
     const deviceKey = getOrCreatePushDeviceKey();
     if (permission.receive !== "granted") {
-      if (deviceKey) await disablePushDevice(userId, deviceKey, false);
+      if (deviceKey) await disableNativePush(userId, false);
       return {
         ok: true,
         data: {
@@ -140,17 +140,25 @@ export async function disableNativePush(
   disableChannel = true,
 ): Promise<ClassifiedsResult<boolean>> {
   const deviceKey = getOrCreatePushDeviceKey();
-  const result = await disablePushDevice(userId, deviceKey, disableChannel);
-  if (result.ok) {
-    try {
-      const { PushNotifications } = await import("@capacitor/push-notifications");
-      await PushNotifications.unregister();
-    } catch {
-      // Database unlink remains authoritative when the native plugin is unavailable.
-    }
-    await clearNativePushListeners();
+  const localCleanup = unregisterNativePushLocally();
+
+  try {
+    const result = await disablePushDevice(userId, deviceKey, disableChannel);
+    const locallyUnregistered = await localCleanup;
+    if (result.ok || locallyUnregistered) return { ok: true, data: true };
+    return result;
+  } catch (error) {
+    const locallyUnregistered = await localCleanup;
+    if (locallyUnregistered) return { ok: true, data: true };
+    return {
+      ok: false,
+      error: {
+        code: "unknown",
+        message: "تعذر فصل هذا الجهاز عن الإشعارات الفورية.",
+        details: error instanceof Error ? error.message : String(error),
+      },
+    };
   }
-  return result;
 }
 
 export async function initializeNativePush(
@@ -251,6 +259,19 @@ async function ensureNativePushListeners(userId: string): Promise<void> {
   });
 
   return listenerSetup;
+}
+
+async function unregisterNativePushLocally(): Promise<boolean> {
+  let unregistered = false;
+  try {
+    const { PushNotifications } = await import("@capacitor/push-notifications");
+    await PushNotifications.unregister();
+    unregistered = true;
+  } catch {
+    // The authenticated RPC remains authoritative outside the native runtime.
+  }
+  await clearNativePushListeners();
+  return unregistered;
 }
 
 async function clearNativePushListeners(): Promise<void> {

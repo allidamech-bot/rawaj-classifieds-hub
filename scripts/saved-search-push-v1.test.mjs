@@ -78,7 +78,7 @@ test("push tokens and delivery queue remain private and service-role controlled"
   );
 });
 
-test("native registration is explicit, permission-aware, logout-safe, and multi-device scoped", async () => {
+test("native registration is explicit, permission-aware, logout-safe, offline-safe, and multi-device scoped", async () => {
   const [
     nativePush,
     pushApi,
@@ -115,8 +115,7 @@ test("native registration is explicit, permission-aware, logout-safe, and multi-
   assert.match(preferences, /enableNativePush/);
   assert.match(preferences, /disableNativePush/);
   assert.match(scanner, /<PushNotificationBridge \/>/);
-  assert.match(moreRoute, /disableNativePush/);
-  assert.match(moreRoute, /await disableNativePush/);
+  assert.doesNotMatch(moreRoute, /disableNativePush/);
 
   assert.match(auth, /import \{ disableNativePush \} from "\.\/native-push"/);
   assert.match(auth, /await disableNativePush\(signedInUserId, false\)/);
@@ -125,8 +124,26 @@ test("native registration is explicit, permission-aware, logout-safe, and multi-
   assert.ok(detachIndex >= 0, "AuthProvider must detach the current native push device");
   assert.ok(signOutIndex > detachIndex, "Push detachment must happen before Supabase sign out");
 
-  assert.match(nativePush, /disablePushDevice\(userId, deviceKey, false\)/);
+  assert.match(nativePush, /await disableNativePush\(userId, false\)/);
+  assert.doesNotMatch(nativePush, /disablePushDevice\(userId, deviceKey, false\)/);
   assert.doesNotMatch(nativePush, /disablePushDevice\(userId, deviceKey, true\)/);
+  assert.match(nativePush, /const localCleanup = unregisterNativePushLocally\(\)/);
+  const localCleanupIndex = nativePush.indexOf(
+    "const localCleanup = unregisterNativePushLocally()",
+  );
+  const remoteDetachIndex = nativePush.indexOf(
+    "await disablePushDevice(userId, deviceKey, disableChannel)",
+  );
+  assert.ok(localCleanupIndex >= 0, "Native token cleanup must start for every disable attempt");
+  assert.ok(
+    remoteDetachIndex > localCleanupIndex,
+    "Local native cleanup must start before waiting for the server detach",
+  );
+  assert.match(nativePush, /async function unregisterNativePushLocally\(\): Promise<boolean>/);
+  assert.match(nativePush, /if \(result\.ok \|\| locallyUnregistered\)/);
+  assert.match(nativePush, /await clearNativePushListeners\(\)/);
+  assert.doesNotMatch(nativePush, /if \(result\.ok\) \{[\s\S]*PushNotifications\.unregister\(\)/);
+
   assert.match(preferences, /if \(pushStatus\.registered\)/);
   assert.match(preferences, /disableNativePush\(currentProfileId, false\)/);
   assert.doesNotMatch(preferences, /currentPreferences\.pushEnabled \|\| pushStatus\.registered/);
