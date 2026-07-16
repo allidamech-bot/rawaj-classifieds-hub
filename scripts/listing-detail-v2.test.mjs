@@ -2,10 +2,17 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, route, media, viewer, seller, dock, safety, similar, css, navigation] =
+const [root, route, detailPageData, media, viewer, seller, dock, safety, similar, css, navigation] =
   await Promise.all([
     readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
+    readFile(
+      new URL(
+        "../src/features/listing-detail/public-listing-detail-page-data.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
     readFile(
       new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
       "utf8",
@@ -69,7 +76,8 @@ test("media experience supports swipe, thumbnails, keyboard navigation, zoom, an
 });
 
 test("seller profile uses real public profile data and resilient identity media", () => {
-  assert.match(route, /fetchPublicSellerProfile\(initialListing\.ownerId\)/);
+  assert.match(detailPageData, /fetchPublicSellerProfile\(listing\.ownerId\)/);
+  assert.match(route, /useState<PublicSellerProfile \| null>\(initialData\.seller\)/);
   assert.match(route, /<ListingSellerProfileCard/);
   assert.match(seller, /seller\?\.verified/);
   assert.match(seller, /seller\?\.ratingSummary\.average/);
@@ -106,8 +114,9 @@ test("price alert is implemented through the existing saved-search contract", ()
 });
 
 test("similar listings use public listing filters and adaptive cards", () => {
-  assert.match(route, /fetchPublicListings\([\s\S]*categoryId: initialListing\.categoryId/);
-  assert.match(route, /filter\(\(item\) => item\.id !== initialListing\.id\)/);
+  assert.match(detailPageData, /fetchPublicListings\([\s\S]*categoryId: listing\.categoryId/);
+  assert.match(detailPageData, /filter\(\(item\) => item\.id !== listing\.id\)/);
+  assert.match(route, /initialData\.similarListings/);
   assert.match(similar, /RealListingCard/);
   assert.match(similar, /ListingCardSkeleton/);
   assert.match(similar, /search=\{\{ category: categoryId \}\}/);
