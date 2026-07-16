@@ -89,10 +89,7 @@ test("the Realtime publication includes both participant-scoped chat tables", ()
     /GRANT SELECT ON TABLE public\.conversation_messages TO authenticated/,
   );
   assert.match(realtimeMigration, /REVOKE SELECT ON TABLE public\.conversations FROM anon/);
-  assert.match(
-    realtimeMigration,
-    /REVOKE SELECT ON TABLE public\.conversation_messages FROM anon/,
-  );
+  assert.match(realtimeMigration, /REVOKE SELECT ON TABLE public\.conversation_messages FROM anon/);
 });
 
 test("the live chat contract is permanently included in the chat Quality Gate", () => {
