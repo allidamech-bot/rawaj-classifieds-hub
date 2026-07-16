@@ -20,10 +20,14 @@ test("saved-search alerts flush automatically for signed-in users", () => {
   assert.match(scannerSource, /scanDueSavedSearchAlerts\(userId\)/);
   assert.match(scannerSource, /SavedSearchAlertBackgroundScanner/);
   assert.match(scannerSource, /<PushNotificationBridge \/>/);
-  assert.match(rootSource, /<SavedSearchAlertBackgroundScanner \/>/);
+  assert.match(rootSource, /LazySavedSearchAlertBackgroundScanner = lazy/);
+  assert.match(rootSource, /function DeferredAccountBackgroundServices/);
+  assert.match(rootSource, /auth\.status !== "signedIn" \|\| !profileId/);
+  assert.match(rootSource, /<LazySavedSearchAlertBackgroundScanner key=\{profileId\} \/>/);
+  assert.match(rootSource, /<DeferredAccountBackgroundServices \/>/);
   assert.ok(
     rootSource.indexOf("<UnreadActivityProvider>") <
-      rootSource.indexOf("<SavedSearchAlertBackgroundScanner />"),
+      rootSource.indexOf("<DeferredAccountBackgroundServices />"),
   );
 });
 
