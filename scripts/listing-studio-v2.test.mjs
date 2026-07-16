@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, shared, createRoute, manageRoute, css, qualityGate] = await Promise.all([
+const [root, routeStyles, shared, createRoute, manageRoute, css, qualityGate] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/features/listing-studio/listing-studio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/profile/listings.$id.tsx", import.meta.url), "utf8"),
@@ -12,9 +13,9 @@ const [root, shared, createRoute, manageRoute, css, qualityGate] = await Promise
 ]);
 
 test("Listing Studio V2 stylesheet is loaded after the legacy studio layer", () => {
-  assert.match(root, /import listingStudioV2Css from "\.\.\/listing-studio-v2\.css\?url"/);
-  const legacy = root.indexOf("href: listingStudioSignatureCss");
-  const v2 = root.indexOf("href: listingStudioV2Css");
+  assert.match(routeStyles, /import listingStudioV2Css from "\.\.\/listing-studio-v2\.css\?url"/);
+  const legacy = root.indexOf("routeStyleHrefs.listingStudioSignature");
+  const v2 = root.indexOf("routeStyleHrefs.listingStudioV2");
   assert.notEqual(legacy, -1);
   assert.notEqual(v2, -1);
   assert.ok(v2 > legacy);

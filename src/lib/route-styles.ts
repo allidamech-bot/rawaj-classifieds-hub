@@ -1,15 +1,26 @@
+import activityMoreFoundationCss from "../activity-more-foundation.css?url";
+import communicationCenterV2Css from "../communication-center-v2.css?url";
 import homeDiscoveryV3Css from "../home-discovery-v3.css?url";
 import homeMarketplaceV2Css from "../home-marketplace-v2.css?url";
 import homeSignatureCss from "../home-signature.css?url";
 import listingDetailFoundationCss from "../listing-detail-foundation.css?url";
 import listingDetailV2Css from "../listing-detail-v2.css?url";
 import listingDetailV3Css from "../listing-detail-v3.css?url";
+import listingStudioSignatureCss from "../listing-studio-signature.css?url";
+import listingStudioV2Css from "../listing-studio-v2.css?url";
+import listingStudioV3Css from "../listing-studio-v3.css?url";
 import listingsResultsCss from "../listings-results.css?url";
+import messagingSignatureCss from "../messaging-signature.css?url";
+import myStoreBrandPolishCss from "../my-store-brand-polish.css?url";
+import myStoreHeaderRefinementCss from "../my-store-header-refinement.css?url";
+import myStoreRedesignCss from "../my-store-redesign.css?url";
 import offersSignatureCss from "../offers-signature.css?url";
+import personalSpacePolishCss from "../personal-space-polish.css?url";
 import searchFiltersV1Css from "../search-filters-v1.css?url";
 import searchFiltersV2Css from "../search-filters-v2.css?url";
 import sellerStorefrontFoundationCss from "../seller-storefront-foundation.css?url";
 import sellerStorefrontV2Css from "../seller-storefront-v2.css?url";
+import trustSupportHubV2Css from "../trust-support-hub-v2.css?url";
 
 export const routeStyleHrefs = {
   homeSignature: homeSignatureCss,
@@ -24,6 +35,17 @@ export const routeStyleHrefs = {
   offersSignature: offersSignatureCss,
   sellerStorefrontFoundation: sellerStorefrontFoundationCss,
   sellerStorefrontV2: sellerStorefrontV2Css,
+  listingStudioSignature: listingStudioSignatureCss,
+  listingStudioV2: listingStudioV2Css,
+  listingStudioV3: listingStudioV3Css,
+  messagingSignature: messagingSignatureCss,
+  communicationCenterV2: communicationCenterV2Css,
+  activityMoreFoundation: activityMoreFoundationCss,
+  personalSpacePolish: personalSpacePolishCss,
+  myStoreRedesign: myStoreRedesignCss,
+  myStoreHeaderRefinement: myStoreHeaderRefinementCss,
+  myStoreBrandPolish: myStoreBrandPolishCss,
+  trustSupportHubV2: trustSupportHubV2Css,
 } as const;
 
 export interface RouteStyleScope {
@@ -32,6 +54,12 @@ export interface RouteStyleScope {
   listingDetail: boolean;
   offers: boolean;
   storefront: boolean;
+  listingStudio: boolean;
+  messaging: boolean;
+  communication: boolean;
+  personalSpace: boolean;
+  ownerStore: boolean;
+  trustSupport: boolean;
 }
 
 function normalizePathname(pathname: string) {
@@ -49,5 +77,21 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
     offers: normalizedPathname === "/offers",
     storefront:
       /^\/seller\/[^/]+$/.test(normalizedPathname) || normalizedPathname === "/profile/listings",
+    listingStudio:
+      normalizedPathname === "/add-listing" ||
+      /^\/profile\/listings\/[^/]+$/.test(normalizedPathname),
+    messaging: normalizedPathname === "/chats",
+    communication: ["/chats", "/notifications", "/activity"].includes(normalizedPathname),
+    personalSpace: [
+      "/favorites",
+      "/saved-searches",
+      "/activity",
+      "/chats",
+      "/notifications",
+      "/more",
+      "/profile",
+    ].includes(normalizedPathname),
+    ownerStore: normalizedPathname === "/profile/listings",
+    trustSupport: ["/support", "/safety", "/terms", "/privacy"].includes(normalizedPathname),
   };
 }

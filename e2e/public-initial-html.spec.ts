@@ -90,4 +90,27 @@ test.describe("public initial HTML", () => {
     expect(offerStyles.some((href) => href.includes("home-discovery-v3"))).toBeFalsy();
     expect(offerStyles.some((href) => href.includes("seller-storefront-v2"))).toBeFalsy();
   });
+
+  test("secondary public routes include their own CSS without unrelated page layers", async ({
+    request,
+  }) => {
+    const supportResponse = await request.get("/support", { headers: { accept: "text/html" } });
+    const supportStyles = stylesheetHrefs(await supportResponse.text());
+    expect(supportStyles.some((href) => href.includes("trust-support-hub-v2"))).toBeTruthy();
+    expect(supportStyles.some((href) => href.includes("listing-studio-v3"))).toBeFalsy();
+    expect(supportStyles.some((href) => href.includes("communication-center-v2"))).toBeFalsy();
+
+    const chatsResponse = await request.get("/chats", { headers: { accept: "text/html" } });
+    const chatStyles = stylesheetHrefs(await chatsResponse.text());
+    expect(chatStyles.some((href) => href.includes("messaging-signature"))).toBeTruthy();
+    expect(chatStyles.some((href) => href.includes("communication-center-v2"))).toBeTruthy();
+    expect(chatStyles.some((href) => href.includes("personal-space-polish"))).toBeTruthy();
+    expect(chatStyles.some((href) => href.includes("listing-studio-v3"))).toBeFalsy();
+
+    const studioResponse = await request.get("/add-listing", { headers: { accept: "text/html" } });
+    const studioStyles = stylesheetHrefs(await studioResponse.text());
+    expect(studioStyles.some((href) => href.includes("listing-studio-v2"))).toBeTruthy();
+    expect(studioStyles.some((href) => href.includes("listing-studio-v3"))).toBeTruthy();
+    expect(studioStyles.some((href) => href.includes("messaging-signature"))).toBeFalsy();
+  });
 });

@@ -2,31 +2,41 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, shared, notificationCard, chats, notifications, activity, css, qualityGate] =
-  await Promise.all([
-    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/features/notifications/NotificationTimelineCard.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/notifications.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/activity.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
-    readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
-  ]);
+const [
+  root,
+  routeStyles,
+  shared,
+  notificationCard,
+  chats,
+  notifications,
+  activity,
+  css,
+  qualityGate,
+] = await Promise.all([
+  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/notifications/NotificationTimelineCard.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/notifications.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/activity.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
+  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+]);
 
 test("communication center stylesheet loads after messaging and activity foundations", () => {
   assert.match(
-    root,
+    routeStyles,
     /import communicationCenterV2Css from "\.\.\/communication-center-v2\.css\?url"/,
   );
-  const messaging = root.indexOf("href: messagingSignatureCss");
-  const communication = root.indexOf("href: communicationCenterV2Css");
+  const messaging = root.indexOf("routeStyleHrefs.messagingSignature");
+  const communication = root.indexOf("routeStyleHrefs.communicationCenterV2");
   assert.notEqual(messaging, -1);
   assert.notEqual(communication, -1);
   assert.ok(communication > messaging);

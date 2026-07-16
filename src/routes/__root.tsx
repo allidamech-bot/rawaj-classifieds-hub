@@ -27,26 +27,15 @@ import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
 import { UnreadActivityProvider } from "@/lib/unread-activity";
 import { useAuth } from "@/lib/use-auth";
 import adaptiveListingCardsCss from "../adaptive-listing-cards.css?url";
-import activityMoreFoundationCss from "../activity-more-foundation.css?url";
-import trustSupportHubV2Css from "../trust-support-hub-v2.css?url";
 import authAccountFoundationCss from "../auth-account-foundation.css?url";
 import authAccountV2Css from "../auth-account-v2.css?url";
-import communicationCenterV2Css from "../communication-center-v2.css?url";
 import comparisonFoundationCss from "../comparison-foundation.css?url";
 import designSystemV2Css from "../design-system-v2.css?url";
 import desktopExperienceV1Css from "../desktop-experience-v1.css?url";
 import designFoundationCss from "../design-foundation.css?url";
 import launchReadinessVisualPolishCss from "../launch-readiness-visual-polish.css?url";
-import listingStudioSignatureCss from "../listing-studio-signature.css?url";
-import listingStudioV2Css from "../listing-studio-v2.css?url";
-import listingStudioV3Css from "../listing-studio-v3.css?url";
 import marketplaceDiscoveryCss from "../marketplace-discovery.css?url";
 import marketplaceSystemCss from "../marketplace-system.css?url";
-import messagingSignatureCss from "../messaging-signature.css?url";
-import myStoreBrandPolishCss from "../my-store-brand-polish.css?url";
-import myStoreHeaderRefinementCss from "../my-store-header-refinement.css?url";
-import myStoreRedesignCss from "../my-store-redesign.css?url";
-import personalSpacePolishCss from "../personal-space-polish.css?url";
 import signatureCss from "../signature.css?url";
 import spatialAppShellCss from "../spatial-app-shell.css?url";
 import appCss from "../styles.css?url";
@@ -165,28 +154,50 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           : []),
         { rel: "stylesheet", href: authAccountFoundationCss },
         { rel: "stylesheet", href: authAccountV2Css },
-        { rel: "stylesheet", href: activityMoreFoundationCss },
-        { rel: "stylesheet", href: trustSupportHubV2Css },
+        ...(routeStyleScope.personalSpace
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.activityMoreFoundation }]
+          : []),
+        ...(routeStyleScope.trustSupport
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.trustSupportHubV2 }]
+          : []),
         ...(routeStyleScope.storefront
           ? [{ rel: "stylesheet", href: routeStyleHrefs.sellerStorefrontFoundation }]
           : []),
         ...(routeStyleScope.storefront
           ? [{ rel: "stylesheet", href: routeStyleHrefs.sellerStorefrontV2 }]
           : []),
-        { rel: "stylesheet", href: myStoreRedesignCss },
+        ...(routeStyleScope.ownerStore
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.myStoreRedesign }]
+          : []),
         ...(routeStyleScope.offers
           ? [{ rel: "stylesheet", href: routeStyleHrefs.offersSignature }]
           : []),
-        { rel: "stylesheet", href: listingStudioSignatureCss },
-        { rel: "stylesheet", href: listingStudioV2Css },
-        { rel: "stylesheet", href: listingStudioV3Css },
-        { rel: "stylesheet", href: messagingSignatureCss },
-        { rel: "stylesheet", href: communicationCenterV2Css },
+        ...(routeStyleScope.listingStudio
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioSignature }]
+          : []),
+        ...(routeStyleScope.listingStudio
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioV2 }]
+          : []),
+        ...(routeStyleScope.listingStudio
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioV3 }]
+          : []),
+        ...(routeStyleScope.messaging
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.messagingSignature }]
+          : []),
+        ...(routeStyleScope.communication
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.communicationCenterV2 }]
+          : []),
         { rel: "stylesheet", href: comparisonFoundationCss },
         { rel: "stylesheet", href: marketplaceSystemCss },
-        { rel: "stylesheet", href: myStoreHeaderRefinementCss },
-        { rel: "stylesheet", href: myStoreBrandPolishCss },
-        { rel: "stylesheet", href: personalSpacePolishCss },
+        ...(routeStyleScope.ownerStore
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.myStoreHeaderRefinement }]
+          : []),
+        ...(routeStyleScope.ownerStore
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.myStoreBrandPolish }]
+          : []),
+        ...(routeStyleScope.personalSpace
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.personalSpacePolish }]
+          : []),
         { rel: "stylesheet", href: designSystemV2Css },
         { rel: "stylesheet", href: spatialAppShellCss },
         ...(routeStyleScope.home

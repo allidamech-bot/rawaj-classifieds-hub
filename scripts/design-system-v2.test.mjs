@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [css, root, button, input, card, badge, header, bottomDock] = await Promise.all([
+const [css, root, routeStyles, button, input, card, badge, header, bottomDock] = await Promise.all([
   readFile(new URL("../src/design-system-v2.css", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/components/ui/button.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/ui/input.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/ui/card.tsx", import.meta.url), "utf8"),
@@ -15,7 +16,11 @@ const [css, root, button, input, card, badge, header, bottomDock] = await Promis
 
 test("design system V2 is loaded after legacy page styles", () => {
   assert.match(root, /import designSystemV2Css from "\.\.\/design-system-v2\.css\?url";/);
-  const legacyIndex = root.indexOf("href: personalSpacePolishCss");
+  assert.match(
+    routeStyles,
+    /import personalSpacePolishCss from "\.\.\/personal-space-polish\.css\?url";/,
+  );
+  const legacyIndex = root.indexOf("routeStyleHrefs.personalSpacePolish");
   const designSystemIndex = root.indexOf("href: designSystemV2Css");
   assert.notEqual(legacyIndex, -1);
   assert.notEqual(designSystemIndex, -1);
