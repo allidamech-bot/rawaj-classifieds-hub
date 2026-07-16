@@ -216,15 +216,18 @@ export function NotificationPreferencesPanel() {
     setError("");
     setPushMessage("");
     try {
-      if (currentPreferences.pushEnabled || pushStatus.registered) {
-        const result = await disableNativePush(currentProfileId);
+      if (pushStatus.registered) {
+        const result = await disableNativePush(currentProfileId, false);
         if (currentProfileId !== profileIdRef.current) return;
         if (!result.ok) {
           setError(result.error.message);
           return;
         }
-        setPreferences({ ...currentPreferences, pushEnabled: false });
-        setPushStatus({ ...EMPTY_PUSH_STATUS, platform: currentCapability.platform });
+        setPushStatus({
+          ...EMPTY_PUSH_STATUS,
+          pushEnabled: currentPreferences.pushEnabled,
+          platform: currentCapability.platform,
+        });
         setPushMessage(
           text(
             "تم إيقاف الإشعارات الفورية على هذا الجهاز.",
@@ -242,9 +245,10 @@ export function NotificationPreferencesPanel() {
       }
 
       const enabled = result.data.permissionStatus === "granted" && result.data.registered;
-      setPreferences({ ...currentPreferences, pushEnabled: enabled });
+      const accountPushEnabled = currentPreferences.pushEnabled || enabled;
+      setPreferences({ ...currentPreferences, pushEnabled: accountPushEnabled });
       setPushStatus({
-        pushEnabled: enabled,
+        pushEnabled: accountPushEnabled,
         registered: result.data.registered,
         permissionStatus: result.data.permissionStatus,
         platform: currentCapability.platform,
