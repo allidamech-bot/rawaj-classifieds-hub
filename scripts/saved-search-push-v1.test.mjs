@@ -12,6 +12,7 @@ const paths = {
   auth: "src/lib/auth.tsx",
   scanner: "src/features/saved-searches/SavedSearchAlertBackgroundScanner.tsx",
   preferences: "src/features/notifications/NotificationPreferencesPanel.tsx",
+  targetPath: "src/lib/notification-target-path.ts",
   targetResolution: "src/lib/api/notification-target-resolution.ts",
   notificationsRoute: "src/routes/notifications.tsx",
   moreRoute: "src/routes/more.tsx",
@@ -168,19 +169,37 @@ test("push delivery uses authenticated FCM HTTP v1 and avoids leaking message bo
   );
 });
 
-test("saved-search notifications navigate consistently in app and from native actions", async () => {
-  const [targetResolution, notificationsRoute, nativePush, savedSearchRoute] = await Promise.all([
-    read(paths.targetResolution),
-    read(paths.notificationsRoute),
-    read(paths.nativePush),
-    read(paths.savedSearchRoute),
-  ]);
+test("native and in-app notifications share canonical target normalization and paths", async () => {
+  const [targetPath, targetResolution, notificationsRoute, nativePush, savedSearchRoute] =
+    await Promise.all([
+      read(paths.targetPath),
+      read(paths.targetResolution),
+      read(paths.notificationsRoute),
+      read(paths.nativePush),
+      read(paths.savedSearchRoute),
+    ]);
 
-  assert.match(targetResolution, /kind: "saved_search"/);
-  assert.match(targetResolution, /targetType === "saved_search"/);
+  assert.match(targetPath, /type === "conversation" \|\| type === "chat"/);
+  assert.match(targetPath, /kind: "seller"/);
+  assert.match(targetPath, /return `\/seller\/\$\{encodedId\}`/);
+  assert.match(targetPath, /return `\/listings\/\$\{encodedId\}`/);
+  assert.match(targetPath, /return `\/chats\?conversation=\$\{encodedId\}`/);
+  assert.match(targetPath, /return "\/saved-searches"/);
+  assert.match(targetPath, /fallback = "\/notifications"/);
+
+  assert.match(targetResolution, /parseNotificationTargetReference/);
+  assert.doesNotMatch(targetResolution, /targetType === "conversation"/);
+  assert.match(notificationsRoute, /target\.kind === "listing"/);
+  assert.match(notificationsRoute, /target\.kind === "conversation"/);
+  assert.match(notificationsRoute, /target\.kind === "seller"/);
   assert.match(notificationsRoute, /target\.kind === "saved_search"/);
-  assert.match(notificationsRoute, /target === "saved_search"/);
-  assert.match(nativePush, /targetType === "saved_search"/);
+
+  assert.match(nativePush, /import \{ resolveNotificationTargetPath \}/);
+  assert.match(
+    nativePush,
+    /resolveNotificationTargetPath\(data\?\.target_type, data\?\.target_id\)/,
+  );
+  assert.doesNotMatch(nativePush, /function resolvePushTarget/);
   assert.match(savedSearchRoute, /الخادم|server/i);
   assert.doesNotMatch(savedSearchRoute, /bounded checks while you use the app/i);
 });
