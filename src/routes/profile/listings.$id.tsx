@@ -14,12 +14,16 @@ import {
 import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
 import { ListingTaxonomySelector } from "@/features/listing-studio/ListingTaxonomySelector";
 import {
-  detectCategoryFieldKind,
+  categoryRequiresPreciseLocation,
+  categoryUsesGlobalCondition,
   mergeCategoryDetails,
   readCategoryDetails,
+  resolveCategoryFieldKind,
+  sanitizeCategoryDetails,
   type CategoryFieldKind,
   type CategorySpecificDetails,
 } from "@/lib/category-fields";
+import { fetchLocationPath, type LocationNodeType } from "@/lib/api/location-taxonomy";
 import {
   checkListingContentSafety,
   isSafePhoneValue,
@@ -52,6 +56,7 @@ import type {
   ListingCondition,
   ListingImage,
   TaxonomyNode,
+  UpdateListingPayload,
 } from "@/lib/classifieds-types";
 import { categoryName, governorateName } from "@/lib/i18n";
 import { fetchListingLocationNodeId } from "@/lib/api/listing-location-read";
@@ -69,6 +74,30 @@ interface EditUploadImageEntry {
   state: EditImageUploadState;
   error?: string;
   url: string;
+}
+
+interface EditListingFormValues {
+  categoryId: string;
+  subcategoryId: string | null;
+  taxonomyNodeId: string;
+  governorateId: string;
+  title: string;
+  description: string;
+  price: number | null;
+  priceType: PriceType;
+  condition: ListingCondition;
+  districtAr: string | null;
+  locationNodeId: string;
+  contactName: string;
+  contactOptions: Record<"phone" | "whatsapp", boolean>;
+  phone: string;
+  whatsapp: string;
+  categoryKind: CategoryFieldKind;
+  categoryDetails: CategorySpecificDetails;
+}
+
+interface EditListingSnapshot extends EditListingFormValues {
+  details: Record<string, unknown>;
 }
 
 const MAX_IMAGES = 6;
@@ -96,6 +125,9 @@ function ManageListingPage() {
   const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
   const [subcategories, setSubcategories] = useState<ClassifiedSubcategory[]>([]);
   const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>([]);
+  const [taxonomyCompatibilityMessage, setTaxonomyCompatibilityMessage] = useState<string | null>(
+    null,
+  );
   const [saving, setSaving] = useState(false);
   const [savingError, setSavingError] = useState<string | null>(null);
   const [savingSuccess, setSavingSuccess] = useState<string | null>(null);
@@ -116,15 +148,21 @@ function ManageListingPage() {
   const resubmitInFlightRef = useRef(false);
   const deleteInFlightRef = useRef(false);
   const uploadAllInFlightRef = useRef(false);
+  const initialSnapshotRef = useRef<EditListingSnapshot | null>(null);
+  const taxonomyNodeIdRef = useRef("");
+  const taxonomyAssignmentBaseRef = useRef("");
+  const taxonomyAssignmentRequiredRef = useRef(false);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [subcategoryId, setSubcategoryId] = useState<string | null>(null);
   const [taxonomyNodeId, setTaxonomyNodeId] = useState("");
+  const [taxonomyNavigationNodeId, setTaxonomyNavigationNodeId] = useState("");
   const [governorateId, setGovernorateId] = useState("");
   const [district, setDistrict] = useState("");
   const [locationNodeId, setLocationNodeId] = useState("");
+  const [locationNodeType, setLocationNodeType] = useState<LocationNodeType | "">("");
   const [price, setPrice] = useState("");
   const [priceType, setPriceType] = useState<PriceType>("fixed");
   const [condition, setCondition] = useState<ListingCondition>("not_applicable");
@@ -136,7 +174,15 @@ function ManageListingPage() {
 
   const category = categories.find((item) => item.id === categoryId);
   const selectedTaxonomyNode = taxonomyNodes.find((item) => item.id === taxonomyNodeId);
-  const categoryFieldKind = detectCategoryFieldKind(category, listing);
+  const categoryFieldKind = resolveCategoryFieldKind(selectedTaxonomyNode, category, listing);
+  const showGlobalCondition = categoryUsesGlobalCondition(categoryFieldKind);
+  const requiresPreciseLocation = categoryRequiresPreciseLocation(categoryFieldKind);
+  const preciseLocationSelected =
+    (Boolean(district) && !district.startsWith("@")) ||
+    (Boolean(locationNodeId) &&
+      locationNodeType !== "" &&
+      locationNodeType !== "country" &&
+      locationNodeType !== "governorate");
   const governorate = governorates.find((item) => item.id === governorateId);
   const currentSubcategories = useMemo(
     () => subcategories.filter((item) => item.categoryId === categoryId),
@@ -157,7 +203,9 @@ function ManageListingPage() {
         imageCount:
           images.length + selectedImages.filter((entry) => entry.state !== "failed").length,
         priceReady: priceType !== "fixed" || Number(price) > 0,
-        locationReady: Boolean(locationNodeId) || Boolean(governorateId && district),
+        locationReady:
+          (Boolean(locationNodeId) || Boolean(governorateId)) &&
+          (!requiresPreciseLocation || preciseLocationSelected),
         categoryFieldKind,
         categoryDetails,
         condition,
@@ -172,6 +220,8 @@ function ManageListingPage() {
       governorateId,
       images.length,
       locationNodeId,
+      preciseLocationSelected,
+      requiresPreciseLocation,
       price,
       priceType,
       selectedImages,
@@ -204,62 +254,129 @@ function ManageListingPage() {
     );
 
     if (requestId !== setupRequestIdRef.current) return;
-    setLoading(false);
     if (!refsResult[0].ok) {
+      setLoading(false);
       setSetupError(refsResult[0].error);
       return;
     }
     if (!refsResult[1].ok) {
+      setLoading(false);
       setSetupError(refsResult[1].error);
       return;
     }
     if (!refsResult[2].ok) {
+      setLoading(false);
       setSetupError(refsResult[2].error);
       return;
     }
     if (!listingResult.ok) {
+      setLoading(false);
       setSetupError(listingResult.error);
       return;
     }
 
-    setListing(listingResult.data);
-    setCategories(refsResult[0].data);
+    const loadedListing = listingResult.data;
+    const loadedCategories = refsResult[0].data;
+    const loadedTaxonomyNodes = refsResult[3].ok ? refsResult[3].data : [];
+    const legacyTaxonomyNodeId = readDetailString(loadedListing.details, "_taxonomy_node_id");
+    const fallbackTaxonomyNodeId = legacyTaxonomyNodeId;
+    const canonicalOrFallbackTaxonomyNodeId = taxonomyAssignmentResult.ok
+      ? (taxonomyAssignmentResult.data?.taxonomyNodeId ?? fallbackTaxonomyNodeId)
+      : fallbackTaxonomyNodeId;
+    const canonicalTaxonomyNodeId = taxonomyAssignmentResult.ok
+      ? (taxonomyAssignmentResult.data?.taxonomyNodeId ?? "")
+      : "";
+    const hydratedTaxonomyNodeId = refsResult[3].ok
+      ? resolveHydratedTaxonomyNodeId({
+          taxonomyNodes: loadedTaxonomyNodes,
+          canonicalTaxonomyNodeId,
+          legacyTaxonomyNodeId,
+          categoryId: loadedListing.categoryId,
+          subcategoryId: loadedListing.subcategoryId,
+        })
+      : canonicalOrFallbackTaxonomyNodeId;
+    const loadedLocationNodeId = locationResult.ok ? (locationResult.data ?? "") : "";
+    let loadedLocationNodeType: LocationNodeType | "" = "";
+    if (loadedLocationNodeId) {
+      const pathResult = await fetchLocationPath(loadedLocationNodeId);
+      if (requestId !== setupRequestIdRef.current) return;
+      if (pathResult.ok) {
+        loadedLocationNodeType = pathResult.data.at(-1)?.nodeType ?? "";
+      }
+    }
+    const loadedContact =
+      Object.keys(loadedListing.contactOptions || {}).length > 0
+        ? {
+            phone: Boolean(loadedListing.contactOptions.phone),
+            whatsapp: Boolean(loadedListing.contactOptions.whatsapp),
+          }
+        : { phone: true, whatsapp: false };
+    const loadedCategoryDetails = readCategoryDetails(loadedListing.details);
+    const loadedCategory = loadedCategories.find((item) => item.id === loadedListing.categoryId);
+    const loadedTaxonomyNode = loadedTaxonomyNodes.find(
+      (item) => item.id === hydratedTaxonomyNodeId,
+    );
+    const loadedKind = resolveCategoryFieldKind(loadedTaxonomyNode, loadedCategory, loadedListing);
+    const loadedValues: EditListingFormValues = {
+      categoryId: loadedListing.categoryId,
+      subcategoryId: loadedListing.subcategoryId,
+      taxonomyNodeId: hydratedTaxonomyNodeId,
+      governorateId: loadedListing.governorateId,
+      title: loadedListing.title,
+      description: loadedListing.description,
+      price: loadedListing.price,
+      priceType: loadedListing.priceType,
+      condition: loadedListing.condition,
+      districtAr: loadedLocationNodeId ? `@${loadedLocationNodeId}` : loadedListing.districtAr,
+      locationNodeId: loadedLocationNodeId,
+      contactName: loadedListing.contactName ?? "",
+      contactOptions: loadedContact,
+      phone: normalizeContactValue(readDetailString(loadedListing.details, "phone")),
+      whatsapp: normalizeContactValue(readDetailString(loadedListing.details, "whatsapp")),
+      categoryKind: loadedKind,
+      categoryDetails: loadedCategoryDetails,
+    };
+
+    setListing(loadedListing);
+    setCategories(loadedCategories);
     setGovernorates(refsResult[1].data);
     setSubcategories(refsResult[2].data);
-    setTaxonomyNodes(refsResult[3].ok ? refsResult[3].data : []);
-
-    const fallbackTaxonomyNodeId = readDetailString(
-      listingResult.data.details,
-      "_taxonomy_node_id",
+    setTaxonomyNodes(loadedTaxonomyNodes);
+    setTaxonomyCompatibilityMessage(
+      refsResult[3].ok
+        ? null
+        : text(
+            "تعذر تحميل التصنيف؛ تم الحفاظ على بيانات الإعلان القديمة.",
+            "Taxonomy could not be loaded; the listing's existing data was preserved.",
+          ),
     );
-    setTaxonomyNodeId(
-      taxonomyAssignmentResult.ok
-        ? (taxonomyAssignmentResult.data?.taxonomyNodeId ?? fallbackTaxonomyNodeId)
-        : fallbackTaxonomyNodeId,
-    );
-    setTitle(listingResult.data.title);
-    setDescription(listingResult.data.description);
-    setCategoryId(listingResult.data.categoryId);
-    setSubcategoryId(listingResult.data.subcategoryId);
-    setGovernorateId(listingResult.data.governorateId);
-    setDistrict(listingResult.data.districtAr ?? "");
-    setLocationNodeId(locationResult.ok ? (locationResult.data ?? "") : "");
-    setPrice(listingResult.data.price?.toString() ?? "");
-    setPriceType(listingResult.data.priceType);
-    setCondition(listingResult.data.condition);
-    setContactName(listingResult.data.contactName ?? "");
-    setPhone(readDetailString(listingResult.data.details, "phone"));
-    setWhatsapp(readDetailString(listingResult.data.details, "whatsapp"));
-    setCategoryDetails(readCategoryDetails(listingResult.data.details));
-    setContact(
-      Object.keys(listingResult.data.contactOptions || {}).length > 0
-        ? {
-            phone: Boolean(listingResult.data.contactOptions.phone),
-            whatsapp: Boolean(listingResult.data.contactOptions.whatsapp),
-          }
-        : { phone: true, whatsapp: false },
-    );
-  }, [auth.profile?.id, auth.status, id]);
+    setTaxonomyNodeId(hydratedTaxonomyNodeId);
+    setTaxonomyNavigationNodeId(hydratedTaxonomyNodeId);
+    taxonomyNodeIdRef.current = hydratedTaxonomyNodeId;
+    taxonomyAssignmentBaseRef.current = canonicalTaxonomyNodeId || legacyTaxonomyNodeId;
+    taxonomyAssignmentRequiredRef.current = false;
+    setTitle(loadedValues.title);
+    setDescription(loadedValues.description);
+    setCategoryId(loadedValues.categoryId);
+    setSubcategoryId(loadedValues.subcategoryId);
+    setGovernorateId(loadedValues.governorateId);
+    setDistrict(loadedListing.districtAr ?? "");
+    setLocationNodeId(loadedValues.locationNodeId);
+    setLocationNodeType(loadedLocationNodeType);
+    setPrice(loadedValues.price?.toString() ?? "");
+    setPriceType(loadedValues.priceType);
+    setCondition(loadedValues.condition);
+    setContactName(loadedValues.contactName);
+    setPhone(loadedValues.phone);
+    setWhatsapp(loadedValues.whatsapp);
+    setCategoryDetails(loadedValues.categoryDetails);
+    setContact(loadedValues.contactOptions);
+    initialSnapshotRef.current = {
+      ...loadedValues,
+      details: { ...loadedListing.details },
+    };
+    setLoading(false);
+  }, [auth.profile?.id, auth.status, id, text]);
 
   useEffect(() => {
     setupRequestIdRef.current += 1;
@@ -302,78 +419,168 @@ function ManageListingPage() {
     setImages(result.data);
   }, [auth.profile?.id, id]);
 
+  function captureCurrentFormValues(): EditListingFormValues {
+    return {
+      categoryId,
+      subcategoryId,
+      taxonomyNodeId: taxonomyNodeIdRef.current,
+      governorateId,
+      title: title.trim(),
+      description: description.trim(),
+      price: price.trim() === "" ? null : Number(price),
+      priceType,
+      condition,
+      districtAr: locationNodeId ? `@${locationNodeId}` : district.trim() || null,
+      locationNodeId,
+      contactName: contactName.trim(),
+      contactOptions: { ...contact },
+      phone: normalizeContactValue(phone),
+      whatsapp: normalizeContactValue(whatsapp),
+      categoryKind: categoryFieldKind,
+      categoryDetails: { ...categoryDetails },
+    };
+  }
+
+  function handleTaxonomySelection(node: TaxonomyNode, path: TaxonomyNode[]) {
+    setTaxonomyNavigationNodeId(node.id);
+    if (!isEditable || !node.isLeaf) return;
+
+    const previousKind = categoryFieldKind;
+    const search = resolveTaxonomyListingSearch(node, path);
+    const nextCategoryId = search.category ?? categoryId;
+    const nextCategory = categories.find((item) => item.id === nextCategoryId);
+    const nextKind = resolveCategoryFieldKind(node, nextCategory, listing);
+
+    taxonomyNodeIdRef.current = node.id;
+    taxonomyAssignmentRequiredRef.current = node.id !== taxonomyAssignmentBaseRef.current;
+    setTaxonomyNodeId(node.id);
+    setCategoryId(nextCategoryId);
+    setSubcategoryId(search.taxonomyLegacySubcategoryId ?? null);
+    if (previousKind !== nextKind) {
+      setCategoryDetails((current) => sanitizeCategoryDetails(nextKind, current));
+    }
+    if (!categoryUsesGlobalCondition(nextKind)) setCondition("not_applicable");
+  }
+
+  function handleLegacyCategorySelection(nextCategoryId: string) {
+    const previousKind = categoryFieldKind;
+    const nextCategory = categories.find((item) => item.id === nextCategoryId);
+    const nextKind = resolveCategoryFieldKind(undefined, nextCategory, listing);
+    setCategoryId(nextCategoryId);
+    setSubcategoryId(null);
+    if (previousKind !== nextKind) {
+      setCategoryDetails((current) => sanitizeCategoryDetails(nextKind, current));
+    }
+    if (!categoryUsesGlobalCondition(nextKind)) setCondition("not_applicable");
+  }
+
+  async function persistCapturedChanges(
+    captured: EditListingFormValues,
+    contentFlags: string[],
+  ): Promise<
+    | { ok: true; listing: ClassifiedListing; changed: boolean }
+    | { ok: false; message: string; taxonomyFailure?: boolean }
+  > {
+    const initialSnapshot = initialSnapshotRef.current;
+    if (!initialSnapshot || !listing) {
+      return { ok: false, message: text("تعذر حفظ التعديلات.", "Could not save changes.") };
+    }
+
+    const capturedTaxonomyNodeId = captured.taxonomyNodeId;
+    const taxonomyChanged =
+      taxonomyAssignmentRequiredRef.current &&
+      Boolean(capturedTaxonomyNodeId) &&
+      capturedTaxonomyNodeId === taxonomyNodeIdRef.current;
+    const patch = buildChangedListingPatch(initialSnapshot, captured, contentFlags);
+    const hasChangedFields = Object.keys(patch).length > 0;
+    let savedListing = listing;
+
+    if (hasChangedFields) {
+      const updateResult = await updateOwnerListing(auth.profile?.id ?? null, listing.id, patch);
+      if (!updateResult.ok) return { ok: false, message: updateResult.error.message };
+      savedListing = updateResult.data;
+      setListing(savedListing);
+      initialSnapshotRef.current = {
+        ...captured,
+        details: { ...savedListing.details },
+      };
+    }
+
+    if (taxonomyChanged) {
+      const taxonomyResult = await assignOwnerListingTaxonomy(
+        auth.profile?.id ?? null,
+        savedListing.id,
+        capturedTaxonomyNodeId,
+      );
+      if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
+        return { ok: false, message: taxonomyResult.error.message, taxonomyFailure: true };
+      }
+      taxonomyAssignmentBaseRef.current = capturedTaxonomyNodeId;
+      taxonomyAssignmentRequiredRef.current = taxonomyNodeIdRef.current !== capturedTaxonomyNodeId;
+    }
+
+    return { ok: true, listing: savedListing, changed: hasChangedFields || taxonomyChanged };
+  }
+
   const handleSave = useCallback(async () => {
     if (!listing || !isEditable || saveInFlightRef.current) return;
     saveInFlightRef.current = true;
     setSaving(true);
     setSavingError(null);
     setSavingSuccess(null);
-
-    const validation = validateContactAndContent({
-      title,
-      description,
-      contactName,
-      contact,
-      phone,
-      whatsapp,
-      categoryKind: categoryFieldKind,
-      categoryDetails,
-      existingDetails: listing.details,
-      text,
-    });
-    if (!validation.ok) {
-      setSaving(false);
-      setSavingError(validation.message);
-      return;
-    }
-
-    const details = { ...validation.details };
-    if (taxonomyNodeId) details._taxonomy_node_id = taxonomyNodeId;
-    else delete details._taxonomy_node_id;
-
-    const result = await updateOwnerListing(auth.profile?.id ?? null, listing.id, {
-      categoryId: categoryId || undefined,
-      subcategoryId: subcategoryId ?? null,
-      governorateId: governorateId || undefined,
-      title: title.trim() || undefined,
-      description: description.trim() || undefined,
-      price: price ? Number(price) : null,
-      priceType,
-      condition,
-      districtAr: locationNodeId ? `@${locationNodeId}` : district || undefined,
-      contactName: contactName.trim() || undefined,
-      contactOptions: contact,
-      details,
-    });
-
-    if (result.ok && taxonomyNodeId) {
-      const taxonomyResult = await assignOwnerListingTaxonomy(
-        auth.profile?.id ?? null,
-        result.data.id,
-        taxonomyNodeId,
-      );
-      if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
-        setSaving(false);
-        setListing(result.data);
-        setSavingError(taxonomyResult.error.message);
+    try {
+      const captured = captureCurrentFormValues();
+      const validation = validateEditListing({
+        values: captured,
+        taxonomyNodes,
+        existingDetails: initialSnapshotRef.current?.details ?? listing.details,
+        requireComplete: false,
+        requiresPreciseLocation,
+        preciseLocationSelected,
+        text,
+      });
+      if (!validation.ok) {
+        setSavingError(validation.message);
         return;
       }
-    }
 
-    setSaving(false);
-    if (result.ok) {
-      setListing(result.data);
-      setSavingSuccess(text("تم حفظ التعديلات.", "Changes saved."));
-    } else {
-      setSavingError(result.error.message);
+      const result = await persistCapturedChanges(captured, validation.contentFlags);
+      if (!result.ok) {
+        setSavingError(
+          result.taxonomyFailure
+            ? text(
+                "تم حفظ التعديلات، لكن تعذر تحديث التصنيف.",
+                "Changes were saved, but taxonomy could not be updated.",
+              )
+            : result.message,
+        );
+        return;
+      }
+      if (!result.changed) {
+        setSavingSuccess(text("لا توجد تغييرات للحفظ.", "No changes to save."));
+        return;
+      }
+      setSavingSuccess(
+        listing.status === "draft"
+          ? text(
+              "تم حفظ التعديلات. الإعلان ما زال مسودة.",
+              "Changes saved. The listing is still a draft.",
+            )
+          : text("تم حفظ التعديلات.", "Changes saved."),
+      );
+    } finally {
+      setSaving(false);
+      saveInFlightRef.current = false;
     }
   }, [
     listing,
     isEditable,
-    auth.profile?.id,
+    taxonomyNodes,
+    requiresPreciseLocation,
+    preciseLocationSelected,
+    text,
     categoryId,
     subcategoryId,
-    taxonomyNodeId,
     governorateId,
     title,
     description,
@@ -388,7 +595,6 @@ function ManageListingPage() {
     whatsapp,
     categoryFieldKind,
     categoryDetails,
-    text,
   ]);
 
   const handleResubmit = useCallback(async () => {
@@ -397,81 +603,60 @@ function ManageListingPage() {
     setResubmitting(true);
     setSavingError(null);
     setSavingSuccess(null);
-
-    const validation = validateContactAndContent({
-      title,
-      description,
-      contactName,
-      contact,
-      phone,
-      whatsapp,
-      categoryKind: categoryFieldKind,
-      categoryDetails,
-      existingDetails: listing.details,
-      text,
-    });
-    if (!validation.ok) {
-      setResubmitting(false);
-      setSavingError(validation.message);
-      return;
-    }
-
-    const details = { ...validation.details };
-    if (taxonomyNodeId) details._taxonomy_node_id = taxonomyNodeId;
-    else delete details._taxonomy_node_id;
-
-    const saveResult = await updateOwnerListing(auth.profile?.id ?? null, listing.id, {
-      categoryId: categoryId || undefined,
-      subcategoryId: subcategoryId ?? null,
-      governorateId: governorateId || undefined,
-      title: title.trim() || undefined,
-      description: description.trim() || undefined,
-      price: price ? Number(price) : null,
-      priceType,
-      condition,
-      districtAr: locationNodeId ? `@${locationNodeId}` : district || undefined,
-      contactName: contactName.trim() || undefined,
-      contactOptions: contact,
-      details,
-    });
-
-    if (!saveResult.ok) {
-      setResubmitting(false);
-      setSavingError(saveResult.error.message);
-      return;
-    }
-
-    if (taxonomyNodeId) {
-      const taxonomyResult = await assignOwnerListingTaxonomy(
-        auth.profile?.id ?? null,
-        saveResult.data.id,
-        taxonomyNodeId,
-      );
-      if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
-        setResubmitting(false);
-        setListing(saveResult.data);
-        setSavingError(taxonomyResult.error.message);
+    try {
+      const captured = captureCurrentFormValues();
+      const validation = validateEditListing({
+        values: captured,
+        taxonomyNodes,
+        existingDetails: initialSnapshotRef.current?.details ?? listing.details,
+        requireComplete: true,
+        requiresPreciseLocation,
+        preciseLocationSelected,
+        text,
+      });
+      if (!validation.ok) {
+        setSavingError(validation.message);
         return;
       }
-    }
 
-    const result = await submitOwnerListingForReview(auth.profile?.id ?? null, saveResult.data.id);
+      const saveResult = await persistCapturedChanges(captured, validation.contentFlags);
+      if (!saveResult.ok) {
+        setSavingError(
+          saveResult.taxonomyFailure
+            ? text(
+                "تم حفظ التعديلات، لكن تعذر تحديث التصنيف.",
+                "Changes were saved, but taxonomy could not be updated.",
+              )
+            : saveResult.message,
+        );
+        return;
+      }
 
-    setResubmitting(false);
-    if (result.ok) {
-      setListing(result.data);
+      const submitResult = await submitOwnerListingForReview(
+        auth.profile?.id ?? null,
+        saveResult.listing.id,
+      );
+      if (!submitResult.ok) {
+        setListing(saveResult.listing);
+        setSavingError(submitResult.error.message);
+        return;
+      }
+      setListing(submitResult.data);
       setSavingSuccess(text("تم إعادة إرسال الإعلان للمراجعة.", "Listing resubmitted for review."));
-    } else {
-      setListing(saveResult.data);
-      setSavingError(result.error.message);
+    } finally {
+      setResubmitting(false);
+      resubmitInFlightRef.current = false;
     }
   }, [
     listing,
     isResubmittable,
     auth.profile?.id,
+    taxonomyNodes,
+    requiresPreciseLocation,
+    preciseLocationSelected,
+    text,
     categoryId,
     subcategoryId,
-    taxonomyNodeId,
     governorateId,
     title,
     description,
@@ -486,7 +671,6 @@ function ManageListingPage() {
     whatsapp,
     categoryFieldKind,
     categoryDetails,
-    text,
   ]);
 
   const handleDelete = useCallback(async () => {
@@ -809,6 +993,13 @@ function ManageListingPage() {
             <ListingStudioMessage tone="danger">{savingError}</ListingStudioMessage>
           </div>
         )}
+        {taxonomyCompatibilityMessage && (
+          <div className="mb-4">
+            <ListingStudioMessage tone="warning">
+              {taxonomyCompatibilityMessage}
+            </ListingStudioMessage>
+          </div>
+        )}
         {imagesError && (
           <div className="mb-4">
             <ListingStudioMessage tone="danger">
@@ -832,20 +1023,22 @@ function ManageListingPage() {
                     disabled={!isEditable}
                   />
                 </Field>
-                <Field label={text("الحالة", "Condition")}>
-                  <select
-                    value={condition}
-                    onChange={(e) => setCondition(e.target.value as ListingCondition)}
-                    className="input"
-                    disabled={!isEditable}
-                  >
-                    <option value="not_applicable">{text("غير محدد", "Not specified")}</option>
-                    <option value="new">{text("جديد", "New")}</option>
-                    <option value="like_new">{text("شبه جديد", "Like new")}</option>
-                    <option value="used">{text("مستعمل", "Used")}</option>
-                    <option value="for_parts">{text("للقطع", "For parts")}</option>
-                  </select>
-                </Field>
+                {showGlobalCondition && (
+                  <Field label={text("الحالة", "Condition")}>
+                    <select
+                      value={condition}
+                      onChange={(e) => setCondition(e.target.value as ListingCondition)}
+                      className="input"
+                      disabled={!isEditable}
+                    >
+                      <option value="not_applicable">{text("غير محدد", "Not specified")}</option>
+                      <option value="new">{text("جديد", "New")}</option>
+                      <option value="like_new">{text("شبه جديد", "Like new")}</option>
+                      <option value="used">{text("مستعمل", "Used")}</option>
+                      <option value="for_parts">{text("للقطع", "For parts")}</option>
+                    </select>
+                  </Field>
+                )}
               </div>
               <Field label={text("الوصف", "Description")} className="mt-3">
                 <textarea
@@ -895,23 +1088,10 @@ function ManageListingPage() {
                 <div className={!isEditable ? "pointer-events-none opacity-70" : ""}>
                   <ListingTaxonomySelector
                     nodes={taxonomyNodes}
-                    selectedNodeId={taxonomyNodeId}
+                    selectedNodeId={taxonomyNavigationNodeId}
                     language={language}
                     text={text}
-                    onSelect={(node, path) => {
-                      if (!isEditable) return;
-                      setTaxonomyNodeId(node.id);
-                      if (!node.isLeaf) {
-                        setCategoryId("");
-                        setSubcategoryId(null);
-                        setCategoryDetails({});
-                        return;
-                      }
-                      const search = resolveTaxonomyListingSearch(node, path);
-                      setCategoryId(search.category ?? "");
-                      setSubcategoryId(search.taxonomyLegacySubcategoryId ?? null);
-                      setCategoryDetails({});
-                    }}
+                    onSelect={handleTaxonomySelection}
                   />
                 </div>
               ) : (
@@ -919,12 +1099,7 @@ function ManageListingPage() {
                   <Field label={text("القسم", "Category")}>
                     <select
                       value={categoryId}
-                      onChange={(e) => {
-                        setCategoryId(e.target.value);
-                        setSubcategoryId(null);
-                        setTaxonomyNodeId("");
-                        setCategoryDetails({});
-                      }}
+                      onChange={(e) => handleLegacyCategorySelection(e.target.value)}
                       className="input"
                       disabled={!isEditable}
                     >
@@ -939,10 +1114,7 @@ function ManageListingPage() {
                   <Field label={text("القسم الفرعي", "Subcategory")}>
                     <select
                       value={subcategoryId ?? ""}
-                      onChange={(e) => {
-                        setSubcategoryId(e.target.value || null);
-                        setTaxonomyNodeId("");
-                      }}
+                      onChange={(e) => setSubcategoryId(e.target.value || null)}
                       className="input"
                       disabled={!isEditable || !categoryId}
                     >
@@ -963,6 +1135,7 @@ function ManageListingPage() {
                     disabled={!isEditable}
                     onChange={(id, node) => {
                       setLocationNodeId(id ?? "");
+                      setLocationNodeType(node?.nodeType ?? "");
                       if (node?.legacyGovernorateId) {
                         setGovernorateId(node.legacyGovernorateId);
                       }
@@ -1677,56 +1850,212 @@ function readDetailString(details: Record<string, unknown>, key: string) {
   return typeof value === "string" ? value : "";
 }
 
-function validateContactAndContent({
-  title,
-  description,
-  contactName,
-  contact,
-  phone,
-  whatsapp,
-  categoryKind,
-  categoryDetails,
+function resolveHydratedTaxonomyNodeId({
+  taxonomyNodes,
+  canonicalTaxonomyNodeId,
+  legacyTaxonomyNodeId,
+  categoryId,
+  subcategoryId,
+}: {
+  taxonomyNodes: TaxonomyNode[];
+  canonicalTaxonomyNodeId: string;
+  legacyTaxonomyNodeId: string;
+  categoryId: string;
+  subcategoryId: string | null;
+}) {
+  const byId = new Map(taxonomyNodes.map((node) => [node.id, node]));
+  for (const candidate of [canonicalTaxonomyNodeId, legacyTaxonomyNodeId]) {
+    if (candidate && byId.get(candidate)?.isLeaf) return candidate;
+  }
+
+  const compatibleLeaves = taxonomyNodes.filter(
+    (node) =>
+      node.isLeaf &&
+      node.legacyCategoryId === categoryId &&
+      (!subcategoryId || node.legacySubcategoryId === subcategoryId),
+  );
+  if (subcategoryId) return compatibleLeaves[0]?.id ?? "";
+  return compatibleLeaves.length === 1 ? compatibleLeaves[0].id : "";
+}
+
+function sameValue(left: unknown, right: unknown) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function buildChangedListingPatch(
+  initial: EditListingSnapshot,
+  current: EditListingFormValues,
+  contentFlags: string[],
+): UpdateListingPayload {
+  const patch: UpdateListingPayload = {};
+  const taxonomyChanged =
+    Boolean(current.taxonomyNodeId) && current.taxonomyNodeId !== initial.taxonomyNodeId;
+  const categoryChanged = current.categoryId !== initial.categoryId;
+
+  if (categoryChanged) patch.categoryId = current.categoryId;
+  if ((categoryChanged || taxonomyChanged) && current.subcategoryId !== initial.subcategoryId) {
+    patch.subcategoryId = current.subcategoryId;
+  }
+  if (current.governorateId !== initial.governorateId) {
+    patch.governorateId = current.governorateId;
+  }
+  if (current.title !== initial.title) patch.title = current.title;
+  if (current.description !== initial.description) patch.description = current.description;
+  if (current.price !== initial.price) patch.price = current.price;
+  if (current.priceType !== initial.priceType) patch.priceType = current.priceType;
+  if (current.condition !== initial.condition) patch.condition = current.condition;
+  if (current.districtAr !== initial.districtAr) patch.districtAr = current.districtAr;
+  if (current.contactName !== initial.contactName) {
+    patch.contactName = current.contactName || null;
+  }
+  if (!sameValue(current.contactOptions, initial.contactOptions)) {
+    patch.contactOptions = current.contactOptions;
+  }
+
+  const contactDetailsChanged =
+    current.phone !== initial.phone ||
+    current.whatsapp !== initial.whatsapp ||
+    !sameValue(current.contactOptions, initial.contactOptions);
+  const categoryDetailsChanged =
+    current.categoryKind !== initial.categoryKind ||
+    !sameValue(current.categoryDetails, initial.categoryDetails);
+  const previousFlags = Array.isArray(initial.details.content_flags)
+    ? initial.details.content_flags
+    : [];
+  const contentFlagsChanged = !sameValue(previousFlags, contentFlags);
+
+  if (contactDetailsChanged || categoryDetailsChanged || taxonomyChanged || contentFlagsChanged) {
+    let details = { ...initial.details };
+    if (contactDetailsChanged) {
+      delete details.phone;
+      delete details.whatsapp;
+      if (current.contactOptions.phone && current.phone) details.phone = current.phone;
+      if (current.contactOptions.whatsapp && current.whatsapp) details.whatsapp = current.whatsapp;
+    }
+    if (categoryDetailsChanged) {
+      details = mergeCategoryDetails(details, current.categoryKind, current.categoryDetails);
+    }
+    if (taxonomyChanged) details._taxonomy_node_id = current.taxonomyNodeId;
+    if (contentFlagsChanged) {
+      delete details.content_flags;
+      if (contentFlags.length > 0) details.content_flags = contentFlags;
+    }
+    patch.details = details;
+  }
+
+  return patch;
+}
+
+function validateEditListing({
+  values,
+  taxonomyNodes,
   existingDetails,
+  requireComplete,
+  requiresPreciseLocation,
+  preciseLocationSelected,
   text,
 }: {
-  title: string;
-  description: string;
-  contactName: string;
-  contact: Record<"phone" | "whatsapp", boolean>;
-  phone: string;
-  whatsapp: string;
-  categoryKind: CategoryFieldKind;
-  categoryDetails: CategorySpecificDetails;
+  values: EditListingFormValues;
+  taxonomyNodes: TaxonomyNode[];
   existingDetails: Record<string, unknown>;
+  requireComplete: boolean;
+  requiresPreciseLocation: boolean;
+  preciseLocationSelected: boolean;
   text: (ar: string, en: string) => string;
-}): { ok: true; details: Record<string, unknown> } | { ok: false; message: string } {
-  const normalizedPhone = normalizeContactValue(phone);
-  const normalizedWhatsapp = normalizeContactValue(whatsapp);
+}): { ok: true; contentFlags: string[] } | { ok: false; message: string } {
+  const selectedTaxonomyNode = taxonomyNodes.find((node) => node.id === values.taxonomyNodeId);
 
-  if (contact.phone && !isSafePhoneValue(normalizedPhone)) {
+  if (taxonomyNodes.length > 0 && !selectedTaxonomyNode?.isLeaf) {
+    return {
+      ok: false,
+      message: text("اختر تصنيفًا نهائيًا.", "Choose a final category."),
+    };
+  }
+  if (taxonomyNodes.length === 0 && !values.categoryId) {
+    return { ok: false, message: text("اختر القسم.", "Choose a category.") };
+  }
+  if (values.title.length < (requireComplete ? 10 : 4)) {
+    return {
+      ok: false,
+      message: text("راجع عنوان الإعلان قبل الحفظ.", "Review the listing title before saving."),
+    };
+  }
+  if (!values.governorateId && !values.locationNodeId) {
+    return { ok: false, message: text("اختر المحافظة.", "Choose a governorate.") };
+  }
+  if (values.price !== null && (!Number.isFinite(values.price) || values.price < 0)) {
+    return { ok: false, message: text("أدخل سعرًا صحيحًا.", "Enter a valid price.") };
+  }
+  if (values.contactOptions.phone && !isSafePhoneValue(values.phone)) {
     return {
       ok: false,
       message: text(
-        "أدخل رقم هاتف صالحا قبل حفظ الإعلان.",
+        "أدخل رقم هاتف صالحًا قبل حفظ الإعلان.",
         "Enter a valid phone number before saving.",
       ),
     };
   }
-
-  if (contact.whatsapp && !isSafePhoneValue(normalizedWhatsapp)) {
+  if (values.contactOptions.whatsapp && !isSafePhoneValue(values.whatsapp)) {
     return {
       ok: false,
       message: text(
-        "أدخل رقم واتساب صالحا قبل حفظ الإعلان.",
+        "أدخل رقم واتساب صالحًا قبل حفظ الإعلان.",
         "Enter a valid WhatsApp number before saving.",
       ),
     };
   }
 
+  if (requireComplete && values.description.length < 30) {
+    return {
+      ok: false,
+      message: text(
+        "الوصف يجب أن يكون 30 حرفًا على الأقل.",
+        "Description must be at least 30 characters.",
+      ),
+    };
+  }
+  if (
+    requireComplete &&
+    (values.priceType === "fixed" || values.priceType === "negotiable") &&
+    (values.price === null || values.price <= 0)
+  ) {
+    return {
+      ok: false,
+      message: text("أدخل سعرًا صحيحًا.", "Enter a valid price."),
+    };
+  }
+  if (requireComplete && requiresPreciseLocation && !preciseLocationSelected) {
+    return {
+      ok: false,
+      message: text("اختر موقعًا أكثر دقة.", "Choose a more precise location."),
+    };
+  }
+  if (requireComplete) {
+    const details = values.categoryDetails;
+    const missingCategoryDetails =
+      (values.categoryKind === "vehicles" &&
+        ((!details.car_make && !details.make) ||
+          (!details.car_model && !details.model) ||
+          !details.year ||
+          details.mileage_km === undefined)) ||
+      (values.categoryKind === "real_estate" &&
+        (!details.property_type || !details.listing_purpose || !details.area_sqm)) ||
+      (values.categoryKind === "jobs" && (!details.job_type || !details.employment_type)) ||
+      (values.categoryKind === "services" && !details.service_type) ||
+      (values.categoryKind === "electronics" &&
+        (!details.electronics_brand || !details.electronics_model));
+    if (missingCategoryDetails) {
+      return {
+        ok: false,
+        message: text("أكمل الحقول المطلوبة للقسم.", "Complete the required category fields."),
+      };
+    }
+  }
+
   const contentCheck = checkListingContentSafety([
-    title,
-    description,
-    contactName,
+    values.title,
+    values.description,
+    values.contactName,
     existingDetails,
   ]);
   if (contentCheck.blocked) {
@@ -1738,14 +2067,5 @@ function validateContactAndContent({
     };
   }
 
-  const details = { ...existingDetails };
-  delete details.phone;
-  delete details.whatsapp;
-  delete details.content_flags;
-
-  if (contact.phone) details.phone = normalizedPhone;
-  if (contact.whatsapp) details.whatsapp = normalizedWhatsapp;
-  if (contentCheck.flags.length > 0) details.content_flags = contentCheck.flags;
-
-  return { ok: true, details: mergeCategoryDetails(details, categoryKind, categoryDetails) };
+  return { ok: true, contentFlags: contentCheck.flags };
 }
