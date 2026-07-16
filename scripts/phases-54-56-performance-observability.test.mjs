@@ -49,5 +49,8 @@ test("SSR observability records build identity, duration and pathname only", () 
   assert.match(server, /ssr_request_failed/);
   assert.match(server, /pathname: url\.pathname/);
   assert.match(server, /\[redacted-jwt\]/);
-  assert.doesNotMatch(server, /searchParams|request\.headers|get\("authorization"\)|request\.text\(/);
+  assert.doesNotMatch(
+    server,
+    /searchParams|request\.headers|get\("authorization"\)|request\.text\(/,
+  );
 });
