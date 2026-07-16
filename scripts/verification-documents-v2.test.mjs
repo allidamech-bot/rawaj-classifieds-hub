@@ -82,19 +82,28 @@ test("verification history failures recover without becoming an empty history", 
   assert.doesNotMatch(userRoute, /window\.location\.reload\(\)/);
 });
 
-test("verification history ignores stale responses and invalidates pending work", () => {
+test("verification history ignores stale account and route responses", () => {
   assert.match(userRoute, /const requestsRequestIdRef = useRef\(0\)/);
   assert.match(userRoute, /const submissionRequestIdRef = useRef\(0\)/);
-  assert.match(userRoute, /if \(requestId !== requestsRequestIdRef\.current\) return;/);
+  assert.match(userRoute, /loadedProfileIdRef = useRef<string \| null>/);
+  assert.match(userRoute, /profileIdRef = useRef<string \| null>/);
+  assert.match(userRoute, /requestId !== requestsRequestIdRef\.current/);
+  assert.match(userRoute, /currentProfileId !== profileIdRef\.current/);
   assert.match(
     userRoute,
     /return \(\) => \{[\s\S]*requestsRequestIdRef\.current \+= 1;[\s\S]*submissionRequestIdRef\.current \+= 1;/,
   );
 });
 
-test("verification submission waits for authoritative history and blocks repeat clicks", () => {
-  assert.match(userRoute, /const submitInFlightRef = useRef\(false\)/);
-  assert.match(userRoute, /if \(submitInFlightRef\.current\) return;/);
+test("verification submission waits for history and uses an account-scoped lock", () => {
+  assert.match(userRoute, /submitScopesRef = useRef<Set<string>>/);
+  assert.match(userRoute, /submitScopesRef\.current\.has\(currentProfileId\)/);
+  assert.match(userRoute, /submitScopesRef\.current\.delete\(currentProfileId\)/);
+  assert.match(userRoute, /const payload = \{/);
+  assert.match(userRoute, /userId: currentProfileId/);
+  assert.match(userRoute, /currentProfileId !== profileIdRef\.current/);
+  assert.match(userRoute, /key=\{profileId\}/);
+  assert.doesNotMatch(userRoute, /submitInFlightRef/);
   assert.match(userRoute, /if \(!hasLoadedRequests \|\| requestsLoading\)/);
   assert.match(userRoute, /!hasLoadedRequests \|\|/);
   assert.match(userRoute, /hasPendingRequest \|\|/);
