@@ -46,6 +46,25 @@ No item is considered verified until evidence is captured from Supabase, Vercel,
 - [ ] `authenticated` has SELECT through RLS
 - [ ] `anon` has no SELECT on either chat table
 
+## Phase 2 Push lifecycle migrations
+
+- [ ] `202607160004_harden_push_delivery_device_lifecycle.sql` reviewed against the release commit
+- [ ] `202607160004_harden_push_delivery_device_lifecycle.sql` applied in the controlled environment
+- [ ] `rawaj_disable_push_device_v1(text,boolean)` signature verified
+- [ ] `rawaj_mark_push_delivery_v1(uuid,boolean,text,boolean)` signature verified
+- [ ] authenticated may disable its device and anon may not
+- [ ] only `service_role` may mark delivery outcomes
+- [ ] disabling a device closes all of its non-terminal deliveries
+- [ ] disabling the account Push channel closes all recipient non-terminal deliveries
+- [ ] permanent FCM token failure marks the current delivery failed immediately
+- [ ] permanent FCM token failure closes sibling deliveries for the invalid device
+- [ ] inactive devices have zero `pending`, `retry`, or `processing` deliveries
+- [ ] `202607160005_preserve_multi_device_push_preference.sql` reviewed against the release commit
+- [ ] `202607160005_preserve_multi_device_push_preference.sql` applied in the controlled environment
+- [ ] `rawaj_upsert_push_device_v1(text,text,text,text,text,text)` signature verified
+- [ ] granted device registration enables the account Push channel
+- [ ] denied or prompt device registration does not disable the account Push channel
+
 ## Realtime behavioral proof
 
 - [ ] participant A sends a message to participant B
@@ -56,6 +75,20 @@ No item is considered verified until evidence is captured from Supabase, Vercel,
 - [ ] non-participant C receives no message event
 - [ ] logout removes or invalidates the prior account channel
 - [ ] account switching does not retain the prior account workspace
+
+## Android Push behavioral proof
+
+- [ ] device A and device B are registered to the same test account
+- [ ] disabling Push on device A detaches only device A
+- [ ] device B continues receiving eligible notifications
+- [ ] denying permission on device A does not disable the account preference used by device B
+- [ ] logout on device A detaches A before the Supabase session is invalidated
+- [ ] invalid FCM token is disabled and its queue rows become terminal
+- [ ] listing notification opens the intended listing
+- [ ] conversation notification opens the intended conversation
+- [ ] seller-review notification opens the intended seller storefront
+- [ ] saved-search notification opens saved searches
+- [ ] unknown or malformed target falls back to the notifications center
 
 ## Reconciliation proof
 
