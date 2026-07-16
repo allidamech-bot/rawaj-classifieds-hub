@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
+import "./listing-moderation-audit-atomicity.test.mjs";
+
 const [seo, publicFields, listings, locationAware, canonicalAware, priceDrops, seller] =
   await Promise.all([
     readFile(new URL("../src/lib/seo.ts", import.meta.url), "utf8"),
@@ -23,11 +25,11 @@ function functionSource(source, start, end) {
 
 test("JSON-LD serialization neutralizes script-breaking characters", () => {
   assert.match(seo, /export function serializeJsonLd/);
-  assert.ok(seo.includes('.replace(/</g, "\\\\u003c")'));
-  assert.ok(seo.includes('.replace(/>/g, "\\\\u003e")'));
-  assert.ok(seo.includes('.replace(/&/g, "\\\\u0026")'));
-  assert.ok(seo.includes('.replace(/\\u2028/g, "\\\\u2028")'));
-  assert.ok(seo.includes('.replace(/\\u2029/g, "\\\\u2029")'));
+  assert.ok(seo.includes('.replace(/</g, "\\u003c")'));
+  assert.ok(seo.includes('.replace(/>/g, "\\u003e")'));
+  assert.ok(seo.includes('.replace(/&/g, "\\u0026")'));
+  assert.ok(seo.includes('.replace(/\u2028/g, "\\u2028")'));
+  assert.ok(seo.includes('.replace(/\u2029/g, "\\u2029")'));
   assert.match(seo, /__html: serializeJsonLd\(data\)/);
   assert.doesNotMatch(seo, /__html: JSON\.stringify\(data\)/);
 });
