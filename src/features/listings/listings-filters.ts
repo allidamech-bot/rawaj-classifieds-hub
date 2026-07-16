@@ -218,7 +218,7 @@ export function buildListingsSyncSearch(inputs: ListingsSyncSearchInputs): Listi
       !taxonomyListingSearch?.taxonomyLegacySubcategoryId && !subcategoryId
         ? undefined
         : subcategoryId || undefined,
-    gov: govId || undefined,
+    gov: canonicalLocation ? undefined : govId || undefined,
     location: canonicalLocation,
     district: canonicalLocation ? undefined : districtAr || undefined,
     price_min: parsedPriceMin,
@@ -266,7 +266,7 @@ export function buildListingsCategoryNavigationSearch(
 
   return {
     category: categoryId,
-    gov: govId || undefined,
+    gov: canonicalLocation ? undefined : govId || undefined,
     location: canonicalLocation,
     district: canonicalLocation ? undefined : districtAr || undefined,
     q: query.trim() || undefined,
@@ -379,7 +379,7 @@ export function buildListingsMobileApplySearch(
     taxonomy: preserveTaxonomy ? searchTaxonomy : undefined,
     category: preserveTaxonomy ? undefined : draftCategoryId || undefined,
     subcategory: preserveTaxonomy || explicitAllCategories ? undefined : subcategoryId || undefined,
-    gov: govId || undefined,
+    gov: canonicalLocation ? undefined : govId || undefined,
     location: canonicalLocation,
     district: canonicalLocation ? undefined : districtAr || undefined,
     price_min: parsedPriceMin,
