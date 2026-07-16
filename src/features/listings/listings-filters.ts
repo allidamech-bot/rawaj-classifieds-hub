@@ -114,7 +114,7 @@ export function buildListingFilters(inputs: ListingFilterInputs) {
     taxonomyPropertyType: taxonomyOwnsPropertyType
       ? taxonomyListingSearch?.property_type
       : undefined,
-    governorateId: govId || undefined,
+    governorateId: districtAr.startsWith("@") ? undefined : govId || undefined,
     districtAr: districtAr || undefined,
     priceMin: Number.isFinite(parsedPriceMin) ? parsedPriceMin : undefined,
     priceMax: Number.isFinite(parsedPriceMax) ? parsedPriceMax : undefined,
