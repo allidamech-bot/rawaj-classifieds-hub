@@ -39,10 +39,7 @@ test("marketplace layers load after Design System V2", () => {
     routeStyles,
     /import homeMarketplaceV2Css from "\.\.\/home-marketplace-v2\.css\?url";/,
   );
-  assert.match(
-    routeStyles,
-    /import homeDiscoveryV3Css from "\.\.\/home-discovery-v3\.css\?url";/,
-  );
+  assert.match(routeStyles, /import homeDiscoveryV3Css from "\.\.\/home-discovery-v3\.css\?url";/);
   assert.match(
     root,
     /import adaptiveListingCardsCss from "\.\.\/adaptive-listing-cards\.css\?url";/,
