@@ -62,7 +62,7 @@ test("home discovery uses a dominant search, asymmetric worlds, and editorial fe
   assert.match(home, /<CategoryWorlds/);
   assert.match(home, /<FeaturedListingShowcase/);
   assert.match(hero, /rawaj-search-overlay/);
-  assert.match(worlds, /data-size=\{index < 2 \? "large" : "compact"\}/);
+  assert.match(worlds, /"data-size": index < 2 \? \("large" as const\) : \("compact" as const\)/);
   assert.match(showcase, /<FeaturedShowcaseCard listing=\{primary\}/);
   assert.doesNotMatch(showcase, /RealListingCard/);
   assert.doesNotMatch([home, hero, worlds, showcase].join("\n"), /trending/i);
