@@ -2,25 +2,40 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [rootRoute, detailRoute, mediaExperience, mediaViewer, mediaState, v2Css, v3Css] =
-  await Promise.all([
-    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
-      "utf8",
+const [
+  rootRoute,
+  detailRoute,
+  detailPageData,
+  mediaExperience,
+  mediaViewer,
+  mediaState,
+  v2Css,
+  v3Css,
+] = await Promise.all([
+  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL(
+      "../src/features/listing-detail/public-listing-detail-page-data.ts",
+      import.meta.url,
     ),
-    readFile(
-      new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/features/listing-detail/useListingMediaState.ts", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8"),
-    readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8"),
-  ]);
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/useListingMediaState.ts", import.meta.url),
+    "utf8",
+  ),
+  readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8"),
+]);
 
 const layeredCss = `${v2Css}\n${v3Css}`;
 
@@ -49,6 +64,33 @@ test("Listing Detail V3 preserves the complete listing experience", () => {
   assert.match(detailRoute, /rawaj-detail-location/);
 });
 
+test("public listing detail dependencies are rendered before hydration", () => {
+  assert.match(detailRoute, /loader: async \(\{ params \}\) =>/);
+  assert.match(detailRoute, /loadPublicListingDetailPageData\(params\.id\)/);
+  assert.match(detailRoute, /const initialData = Route\.useLoaderData\(\)/);
+  assert.match(detailRoute, /useState<ListingImage\[]>\(initialData\.images\)/);
+  assert.match(detailRoute, /useState<PublicSellerProfile \| null>\(initialData\.seller\)/);
+  assert.match(detailRoute, /initialData\.similarListings/);
+  assert.match(detailRoute, /const \[loading, setLoading\] = useState\(false\)/);
+  assert.match(detailRoute, /const \[sellerLoading, setSellerLoading\] = useState\(false\)/);
+  assert.match(detailRoute, /const \[similarLoading, setSimilarLoading\] = useState\(false\)/);
+  assert.doesNotMatch(
+    detailRoute,
+    /fetchListingImages|fetchPublicSellerProfile|fetchPublicListings/,
+  );
+});
+
+test("listing detail SSR uses anonymous public APIs and excludes the current related item", () => {
+  assert.match(detailPageData, /fetchListingDetail\(listingId\)/);
+  assert.match(detailPageData, /Promise\.all\(\[/);
+  assert.match(detailPageData, /fetchListingImages\(listing\.id\)/);
+  assert.match(detailPageData, /fetchPublicSellerProfile\(listing\.ownerId\)/);
+  assert.match(detailPageData, /fetchPublicListings\(/);
+  assert.match(detailPageData, /item\.id !== listing\.id/);
+  assert.match(detailPageData, /\.slice\(0, 8\)/);
+  assert.doesNotMatch(detailPageData, /service_role|SUPABASE_SERVICE_ROLE|auth\.admin/);
+});
+
 test("media experience keeps swipe, fullscreen, keyboard, zoom, and accessible controls", () => {
   assert.match(mediaExperience, /useListingMediaState\(images\)/);
   assert.match(mediaExperience, /onTouchStart=\{handleTouchStart\}/);
@@ -62,6 +104,20 @@ test("media experience keeps swipe, fullscreen, keyboard, zoom, and accessible c
   assert.match(mediaExperience, /aria-pressed=\{favorite\}/);
   assert.match(mediaViewer, /DialogPrimitive\.Title/);
   assert.match(mediaViewer, /DialogPrimitive\.Description/);
+});
+
+test("listing media reserves layout space and prioritizes the LCP image", () => {
+  assert.match(mediaExperience, /loading="eager"/);
+  assert.match(mediaExperience, /fetchPriority="high"/);
+  assert.match(mediaExperience, /width=\{1280\}/);
+  assert.match(mediaExperience, /height=\{960\}/);
+  assert.match(mediaExperience, /sizes="\(max-width: 1023px\) 100vw, 760px"/);
+  assert.match(mediaExperience, /width=\{160\}/);
+  assert.match(mediaExperience, /height=\{120\}/);
+  assert.match(mediaExperience, /sizes="80px"/);
+  assert.match(mediaViewer, /width=\{1600\}/);
+  assert.match(mediaViewer, /height=\{1200\}/);
+  assert.match(mediaViewer, /sizes="100vw"/);
 });
 
 test("listing detail media replaces broken signed URLs with category artwork", () => {
