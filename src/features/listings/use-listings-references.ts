@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { getRouteApi } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import {
   fetchPublicCategories,
   fetchPublicGovernorates,
@@ -14,6 +15,8 @@ import type {
 } from "@/lib/classifieds-types";
 import type { ListingsSearch } from "./listings-search-schema";
 
+const listingsRouteApi = getRouteApi("/listings/");
+
 export interface ListingsReferences {
   categories: ClassifiedCategory[];
   subcategories: ClassifiedSubcategory[];
@@ -28,17 +31,42 @@ export interface ListingsReferences {
 }
 
 export function useListingsReferences(search: ListingsSearch): ListingsReferences {
-  const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
-  const [subcategories, setSubcategories] = useState<ClassifiedSubcategory[]>([]);
-  const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>([]);
-  const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>([]);
-  const [taxonomyAvailable, setTaxonomyAvailable] = useState(false);
-  const [referencesLoaded, setReferencesLoaded] = useState(false);
+  const loaderData = listingsRouteApi.useLoaderData();
+  const initialReferences = loaderData.references;
+  const [categories, setCategories] = useState<ClassifiedCategory[]>(initialReferences.categories);
+  const [subcategories, setSubcategories] = useState<ClassifiedSubcategory[]>(
+    initialReferences.subcategories,
+  );
+  const [governorates, setGovernorates] = useState<ClassifiedGovernorate[]>(
+    initialReferences.governorates,
+  );
+  const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>(
+    initialReferences.taxonomyNodes,
+  );
+  const [taxonomyAvailable, setTaxonomyAvailable] = useState(initialReferences.taxonomyAvailable);
+  const [referencesLoaded, setReferencesLoaded] = useState(!initialReferences.error);
   const [govId, setGovId] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<ClassifiedsError | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<ClassifiedsError | null>(initialReferences.error);
+  const skipInitialClientLoadRef = useRef(true);
 
   useEffect(() => {
+    setCategories(initialReferences.categories);
+    setSubcategories(initialReferences.subcategories);
+    setGovernorates(initialReferences.governorates);
+    setTaxonomyNodes(initialReferences.taxonomyNodes);
+    setTaxonomyAvailable(initialReferences.taxonomyAvailable);
+    setReferencesLoaded(!initialReferences.error);
+    setError(initialReferences.error);
+    setLoading(false);
+  }, [initialReferences]);
+
+  useEffect(() => {
+    if (skipInitialClientLoadRef.current) {
+      skipInitialClientLoadRef.current = false;
+      return;
+    }
+
     let cancelled = false;
 
     async function loadReferences() {
