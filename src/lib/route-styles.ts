@@ -1,361 +1,97 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  HeadContent,
-  Link,
-  Outlet,
-  Scripts,
-  createRootRouteWithContext,
-  useRouter,
-  useRouterState,
-} from "@tanstack/react-router";
-import { Analytics } from "@vercel/analytics/react";
-import { Suspense, lazy, useEffect, type ReactNode } from "react";
+import activityMoreFoundationCss from "../activity-more-foundation.css?url";
+import communicationCenterV2Css from "../communication-center-v2.css?url";
+import homeDiscoveryV3Css from "../home-discovery-v3.css?url";
+import homeMarketplaceV2Css from "../home-marketplace-v2.css?url";
+import homeSignatureCss from "../home-signature.css?url";
+import listingDetailFoundationCss from "../listing-detail-foundation.css?url";
+import listingDetailV2Css from "../listing-detail-v2.css?url";
+import listingDetailV3Css from "../listing-detail-v3.css?url";
+import listingStudioSignatureCss from "../listing-studio-signature.css?url";
+import listingStudioV2Css from "../listing-studio-v2.css?url";
+import listingStudioV3Css from "../listing-studio-v3.css?url";
+import listingsResultsCss from "../listings-results.css?url";
+import messagingSignatureCss from "../messaging-signature.css?url";
+import myStoreBrandPolishCss from "../my-store-brand-polish.css?url";
+import myStoreHeaderRefinementCss from "../my-store-header-refinement.css?url";
+import myStoreRedesignCss from "../my-store-redesign.css?url";
+import offersSignatureCss from "../offers-signature.css?url";
+import personalSpacePolishCss from "../personal-space-polish.css?url";
+import searchFiltersV1Css from "../search-filters-v1.css?url";
+import searchFiltersV2Css from "../search-filters-v2.css?url";
+import sellerStorefrontFoundationCss from "../seller-storefront-foundation.css?url";
+import sellerStorefrontV2Css from "../seller-storefront-v2.css?url";
+import trustSupportHubV2Css from "../trust-support-hub-v2.css?url";
 
-import { FeedbackState } from "@/components/feedback/FeedbackState";
-import { AppShell } from "@/components/shell/AppShell";
-import { Button } from "@/components/ui/button";
-import {
-  ListingComparisonProvider,
-  useListingComparison,
-} from "@/features/comparison/listing-comparison";
-import { AuthProvider } from "@/lib/auth";
-import { rawajBuildInfo } from "@/lib/build-info";
-import { reportLovableError } from "@/lib/lovable-error-reporting";
-import { resolveRouteStyleScope, routeStyleHrefs } from "@/lib/route-styles";
-import { buildSiteStructuredData, createSeo, jsonLdScript } from "@/lib/seo";
-import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
-import { UnreadActivityProvider } from "@/lib/unread-activity";
-import { useAuth } from "@/lib/use-auth";
-import adaptiveListingCardsCss from "../adaptive-listing-cards.css?url";
-import authAccountFoundationCss from "../auth-account-foundation.css?url";
-import authAccountV2Css from "../auth-account-v2.css?url";
-import comparisonFoundationCss from "../comparison-foundation.css?url";
-import designSystemV2Css from "../design-system-v2.css?url";
-import desktopExperienceV1Css from "../desktop-experience-v1.css?url";
-import designFoundationCss from "../design-foundation.css?url";
-import launchReadinessVisualPolishCss from "../launch-readiness-visual-polish.css?url";
-import marketplaceDiscoveryCss from "../marketplace-discovery.css?url";
-import marketplaceSystemCss from "../marketplace-system.css?url";
-import signatureCss from "../signature.css?url";
-import spatialAppShellCss from "../spatial-app-shell.css?url";
-import appCss from "../styles.css?url";
-import visualFoundationCss from "../visual-foundation.css?url";
+export const routeStyleHrefs = {
+  homeSignature: homeSignatureCss,
+  homeMarketplaceV2: homeMarketplaceV2Css,
+  homeDiscoveryV3: homeDiscoveryV3Css,
+  listingsResults: listingsResultsCss,
+  searchFiltersV1: searchFiltersV1Css,
+  searchFiltersV2: searchFiltersV2Css,
+  listingDetailFoundation: listingDetailFoundationCss,
+  listingDetailV2: listingDetailV2Css,
+  listingDetailV3: listingDetailV3Css,
+  offersSignature: offersSignatureCss,
+  sellerStorefrontFoundation: sellerStorefrontFoundationCss,
+  sellerStorefrontV2: sellerStorefrontV2Css,
+  listingStudioSignature: listingStudioSignatureCss,
+  listingStudioV2: listingStudioV2Css,
+  listingStudioV3: listingStudioV3Css,
+  messagingSignature: messagingSignatureCss,
+  communicationCenterV2: communicationCenterV2Css,
+  activityMoreFoundation: activityMoreFoundationCss,
+  personalSpacePolish: personalSpacePolishCss,
+  myStoreRedesign: myStoreRedesignCss,
+  myStoreHeaderRefinement: myStoreHeaderRefinementCss,
+  myStoreBrandPolish: myStoreBrandPolishCss,
+  trustSupportHubV2: trustSupportHubV2Css,
+} as const;
 
-const ROOT_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
-const ROOT_DESCRIPTION =
-  "سوق إعلانات مبوبة في سوريا لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة آمنة ومنظمة.";
-
-const LazyDraftRecoveryBanner = lazy(() =>
-  import("@/features/listing-studio/DraftRecoveryBanner").then((module) => ({
-    default: module.DraftRecoveryBanner,
-  })),
-);
-const LazyViewedBeforeBanner = lazy(() =>
-  import("@/features/listing-detail/ViewedBeforeBanner").then((module) => ({
-    default: module.ViewedBeforeBanner,
-  })),
-);
-const LazyExistingConversationBanner = lazy(() =>
-  import("@/features/listing-detail/ExistingConversationBanner").then((module) => ({
-    default: module.ExistingConversationBanner,
-  })),
-);
-const LazySavedSearchAlertBackgroundScanner = lazy(() =>
-  import("@/features/saved-searches/SavedSearchAlertBackgroundScanner").then((module) => ({
-    default: module.SavedSearchAlertBackgroundScanner,
-  })),
-);
-const LazyListingComparisonDock = lazy(() => import("@/features/comparison/ListingComparisonDock"));
-
-function NotFoundComponent() {
-  const { text } = useUiPreferences();
-
-  return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
-      <FeedbackState
-        code="404"
-        title={text("الصفحة غير موجودة", "Page not found")}
-        description={text(
-          "الصفحة التي تبحث عنها غير متاحة أو تم نقلها.",
-          "The page you are looking for is unavailable or has moved.",
-        )}
-        action={
-          <Button asChild>
-            <Link to="/">{text("العودة للرئيسية", "Back to home")}</Link>
-          </Button>
-        }
-      />
-    </div>
-  );
+export interface RouteStyleScope {
+  home: boolean;
+  listingResults: boolean;
+  listingDetail: boolean;
+  offers: boolean;
+  storefront: boolean;
+  listingStudio: boolean;
+  messaging: boolean;
+  communication: boolean;
+  personalSpace: boolean;
+  ownerStore: boolean;
+  trustSupport: boolean;
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
-  const router = useRouter();
-  const { text } = useUiPreferences();
-
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
-
-  return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
-      <FeedbackState
-        tone="error"
-        title={text("حدث خطأ غير متوقع", "Something went wrong")}
-        description={text(
-          "تعذر إكمال الطلب الآن. حاول مرة أخرى.",
-          "The request could not be completed. Try again.",
-        )}
-        action={
-          <Button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-          >
-            {text("إعادة المحاولة", "Try again")}
-          </Button>
-        }
-      />
-    </div>
-  );
+function normalizePathname(pathname: string) {
+  if (!pathname || pathname === "/") return "/";
+  return pathname.replace(/\/+$/, "");
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: ({ matches }) => {
-    const seo = createSeo({ title: ROOT_TITLE, description: ROOT_DESCRIPTION });
-    const activeMatch = matches[matches.length - 1];
-    const routeStyleScope = resolveRouteStyleScope(activeMatch?.pathname ?? "/");
-    return {
-      meta: [
-        { charSet: "utf-8" },
-        { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-        { name: "theme-color", content: "#123f38" },
-        { name: "author", content: "RAWAJ" },
-        { name: "rawaj-build-commit", content: rawajBuildInfo.commitSha },
-        { name: "rawaj-build-environment", content: rawajBuildInfo.environment },
-        ...seo.meta,
-      ],
-      links: [
-        ...seo.links,
-        { rel: "stylesheet", href: appCss },
-        { rel: "stylesheet", href: visualFoundationCss },
-        { rel: "stylesheet", href: signatureCss },
-        ...(routeStyleScope.home
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.homeSignature }]
-          : []),
-        { rel: "stylesheet", href: marketplaceDiscoveryCss },
-        ...(routeStyleScope.listingResults
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingsResults }]
-          : []),
-        ...(routeStyleScope.listingDetail
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingDetailFoundation }]
-          : []),
-        { rel: "stylesheet", href: authAccountFoundationCss },
-        { rel: "stylesheet", href: authAccountV2Css },
-        ...(routeStyleScope.personalSpace
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.activityMoreFoundation }]
-          : []),
-        ...(routeStyleScope.trustSupport
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.trustSupportHubV2 }]
-          : []),
-        ...(routeStyleScope.storefront
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.sellerStorefrontFoundation }]
-          : []),
-        ...(routeStyleScope.storefront
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.sellerStorefrontV2 }]
-          : []),
-        ...(routeStyleScope.ownerStore
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.myStoreRedesign }]
-          : []),
-        ...(routeStyleScope.offers
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.offersSignature }]
-          : []),
-        ...(routeStyleScope.listingStudio
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioSignature }]
-          : []),
-        ...(routeStyleScope.listingStudio
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioV2 }]
-          : []),
-        ...(routeStyleScope.listingStudio
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioV3 }]
-          : []),
-        ...(routeStyleScope.messaging
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.messagingSignature }]
-          : []),
-        ...(routeStyleScope.communication
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.communicationCenterV2 }]
-          : []),
-        { rel: "stylesheet", href: comparisonFoundationCss },
-        { rel: "stylesheet", href: marketplaceSystemCss },
-        ...(routeStyleScope.ownerStore
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.myStoreHeaderRefinement }]
-          : []),
-        ...(routeStyleScope.ownerStore
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.myStoreBrandPolish }]
-          : []),
-        ...(routeStyleScope.personalSpace
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.personalSpacePolish }]
-          : []),
-        { rel: "stylesheet", href: designSystemV2Css },
-        { rel: "stylesheet", href: spatialAppShellCss },
-        ...(routeStyleScope.home
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.homeMarketplaceV2 }]
-          : []),
-        ...(routeStyleScope.home
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.homeDiscoveryV3 }]
-          : []),
-        { rel: "stylesheet", href: adaptiveListingCardsCss },
-        ...(routeStyleScope.listingResults
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.searchFiltersV1 }]
-          : []),
-        ...(routeStyleScope.listingResults
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.searchFiltersV2 }]
-          : []),
-        ...(routeStyleScope.listingDetail
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingDetailV2 }]
-          : []),
-        ...(routeStyleScope.listingDetail
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingDetailV3 }]
-          : []),
-        { rel: "stylesheet", href: desktopExperienceV1Css },
-        { rel: "stylesheet", href: launchReadinessVisualPolishCss },
-        { rel: "stylesheet", href: designFoundationCss },
-        { rel: "icon", href: "/favicon.ico" },
-        { rel: "manifest", href: "/manifest.webmanifest" },
-        { rel: "apple-touch-icon", href: "/brand/rawaj-mark-transparent-192.png" },
-        { rel: "preconnect", href: "https://fonts.googleapis.com" },
-        { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-        {
-          rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap",
-        },
-      ],
-    };
-  },
-  shellComponent: RootShell,
-  component: RootComponent,
-  notFoundComponent: NotFoundComponent,
-  errorComponent: ErrorComponent,
-});
+export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
+  const normalizedPathname = normalizePathname(pathname);
 
-function RootShell({ children }: { children: ReactNode }) {
-  return (
-    <html lang="ar" dir="rtl">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <script {...jsonLdScript(buildSiteStructuredData())} />
-        <Analytics />
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
-function HtmlAttributes() {
-  const { language } = useUiPreferences();
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.lang = language === "en" ? "en" : "ar";
-    root.dir = language === "en" ? "ltr" : "rtl";
-  }, [language]);
-
-  return null;
-}
-
-function DeferredAccountBackgroundServices() {
-  const auth = useAuth();
-  const profileId = auth.profile?.id ?? null;
-
-  if (auth.status !== "signedIn" || !profileId) return null;
-
-  return (
-    <Suspense fallback={null}>
-      <LazySavedSearchAlertBackgroundScanner key={profileId} />
-    </Suspense>
-  );
-}
-
-function DeferredRouteAnnouncements({
-  showDraftRecovery,
-  listingDetailId,
-}: {
-  showDraftRecovery: boolean;
-  listingDetailId: string | null;
-}) {
-  if (!showDraftRecovery && !listingDetailId) return null;
-
-  return (
-    <Suspense fallback={null}>
-      {showDraftRecovery ? <LazyDraftRecoveryBanner /> : null}
-      {listingDetailId ? <LazyViewedBeforeBanner listingId={listingDetailId} /> : null}
-      {listingDetailId ? <LazyExistingConversationBanner listingId={listingDetailId} /> : null}
-    </Suspense>
-  );
-}
-
-function ListingComparisonDockBoundary() {
-  const { entries } = useListingComparison();
-  if (entries.length === 0) return null;
-
-  return (
-    <Suspense fallback={null}>
-      <LazyListingComparisonDock />
-    </Suspense>
-  );
-}
-
-function personalSpaceRouteClass(pathname: string) {
-  if (pathname === "/favorites") return "rawaj-route-favorites";
-  if (pathname === "/saved-searches") return "rawaj-route-saved-searches";
-  if (pathname === "/activity") return "rawaj-route-activity";
-  if (pathname === "/chats") return "rawaj-route-chats";
-  if (pathname === "/notifications") return "rawaj-route-notifications";
-  if (pathname === "/more") return "rawaj-route-more";
-  if (pathname === "/profile" || pathname === "/profile/") return "rawaj-route-profile";
-  return "";
-}
-
-function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const showDraftRecovery = pathname === "/add-listing";
-  const routeScopeClass = personalSpaceRouteClass(pathname);
-  const listingDetailMatch = pathname.match(/^\/listings\/([^/]+)$/);
-  const listingDetailId = listingDetailMatch?.[1]
-    ? decodeURIComponent(listingDetailMatch[1])
-    : null;
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <UiPreferencesProvider>
-        <AuthProvider>
-          <UnreadActivityProvider>
-            <ListingComparisonProvider>
-              <DeferredAccountBackgroundServices />
-              <HtmlAttributes />
-              <AppShell
-                pathname={pathname}
-                routeClassName={routeScopeClass}
-                announcements={
-                  <DeferredRouteAnnouncements
-                    showDraftRecovery={showDraftRecovery}
-                    listingDetailId={listingDetailId}
-                  />
-                }
-              >
-                <Outlet />
-              </AppShell>
-              <ListingComparisonDockBoundary />
-            </ListingComparisonProvider>
-          </UnreadActivityProvider>
-        </AuthProvider>
-      </UiPreferencesProvider>
-    </QueryClientProvider>
-  );
+  return {
+    home: normalizedPathname === "/",
+    listingResults: normalizedPathname === "/listings",
+    listingDetail: /^\/listings\/[^/]+$/.test(normalizedPathname),
+    offers: normalizedPathname === "/offers",
+    storefront:
+      /^\/seller\/[^/]+$/.test(normalizedPathname) || normalizedPathname === "/profile/listings",
+    listingStudio:
+      normalizedPathname === "/add-listing" ||
+      /^\/profile\/listings\/[^/]+$/.test(normalizedPathname),
+    messaging: normalizedPathname === "/chats",
+    communication: ["/chats", "/notifications", "/activity"].includes(normalizedPathname),
+    personalSpace: [
+      "/favorites",
+      "/saved-searches",
+      "/activity",
+      "/chats",
+      "/notifications",
+      "/more",
+      "/profile",
+    ].includes(normalizedPathname),
+    ownerStore: normalizedPathname === "/profile/listings",
+    trustSupport: ["/support", "/safety", "/terms", "/privacy"].includes(normalizedPathname),
+  };
 }

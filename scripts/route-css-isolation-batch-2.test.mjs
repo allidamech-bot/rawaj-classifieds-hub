@@ -1,268 +1,98 @@
-name: Quality Gate
-
-on:
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
-
-concurrency:
-  group: quality-gate-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
-
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-          show-progress: false
-
-      - name: Canonical migration ledger and collision check
-        run: node scripts/check-migration-ledger.mjs
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint changed source files
-        shell: bash
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: |
-          base="$BASE_SHA"
-          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
-            base="$(git rev-parse HEAD^)"
-          fi
-
-          if ! git cat-file -e "$base^{commit}" 2>/dev/null; then
-            git fetch --no-tags --depth=1 origin "$base"
-          fi
-
-          mapfile -t files < <(
-            git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- \
-              '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
-          )
-
-          if [ "${#files[@]}" -eq 0 ]; then
-            echo "No changed JS/TS source files to lint."
-            exit 0
-          fi
-
-          printf 'Linting %s\n' "${files[@]}"
-          npx eslint --quiet "${files[@]}"
-
-      - name: Header Navigation contract
-        run: npm run test:header-navigation
-
-      - name: Bottom Dock Navigation contract
-        run: npm run test:bottom-dock-navigation
-
-      - name: Syria location classification contract
-        run: npm run test:location-classification
-
-      - name: Syria location discovery and presentation contract
-        run: npm run test:location-presentation
-
-      - name: Listings mobile category switch contract
-        run: npm run test:listings-filters
-
-      - name: Seller review eligibility contract
-        run: npm run test:review-eligibility
-
-      - name: Seller review response contract
-        run: npm run test:review-response
-
-      - name: Seller review report contract
-        run: npm run test:review-report
-
-      - name: Seller review traits contract
-        run: npm run test:review-traits
-
-      - name: Listing price drop contract
-        run: npm run test:price-drop
-
-      - name: Listing reservation contract
-        run: npm run test:reservation
-
-      - name: Chat workspace contract
-        run: npm run test:chat-workspace
-
-      - name: Listing studio image parity contract
-        run: npm run test:listing-studio-images
-
-      - name: Listing image content reliability contract
-        run: npm run test:listing-image-content-reliability
-
-      - name: Listing draft creation integrity contract
-        run: npm run test:listing-draft-create-guard
-
-      - name: Account activity center contract
-        run: npm run test:activity-center
-
-      - name: SEO discovery contract
-        run: npm run test:seo-discovery
-
-      - name: Semantic SEO contract
-        run: npm run test:semantic-seo
-
-      - name: Verification documents V2 contract
-        run: npm run test:verification-documents
-
-      - name: Production deployment truth contract
-        run: npm run test:deployment-truth
-
-      - name: Production acceptance safety contract
-        run: npm run test:production-acceptance-contract
-
-      - name: Public data security contract
-        run: npm run test:public-data-security
-
-      - name: Performance and observability release contract
-        run: npm run test:phases-54-56
-
-      - name: Phases 57-69 release readiness contract
-        run: npm run test:phases-57-69
-
-      - name: Bilingual copy quality
-        run: npm run copy:quality
-
-      - name: Admin security regression contract
-        run: node scripts/admin-security-regression.mjs
-
-      - name: Home SSR contract
-        run: npm run test:home-ssr
-
-      - name: Offers SSR contract
-        run: node --test scripts/offers-ssr.test.mjs
-
-      - name: Dynamic sitemap contract
-        run: node --test scripts/dynamic-sitemap.test.mjs
-
-      - name: Contact phone normalization contract
-        run: node --test scripts/contact-phone.test.mjs
-
-      - name: Authentication recovery contract
-        run: node --test scripts/auth-recovery.test.mjs
-
-      - name: Hydration and ad media contract
-        run: node --test scripts/home-hydration-ad-media.test.mjs
-
-      - name: Public ad placement rendering contract
-        run: node --test scripts/public-ad-placement-rendering.test.mjs
-
-      - name: Vercel Analytics integration contract
-        run: node --test scripts/vercel-analytics.test.mjs
-
-      - name: Promotion status notification contract
-        run: node --test scripts/promotion-status-notifications.test.mjs
-
-      - name: Design system V2 contract
-        run: node --test scripts/design-system-v2.test.mjs
-
-      - name: Marketplace core V2 contract
-        run: node --test scripts/marketplace-core-v2.test.mjs
-
-      - name: Home Discovery V3 contract
-        run: node --test scripts/home-discovery-v3.test.mjs
-
-      - name: Adaptive Listing Cards contract
-        run: node --test scripts/adaptive-listing-cards.test.mjs
-
-      - name: Listing Comparison V1 contract
-        run: npm run test:listing-comparison
-
-      - name: Search and Filters V1 contract
-        run: node --test scripts/search-filters-v1.test.mjs
-
-      - name: Search and Filters V2 contract
-        run: node --test scripts/search-filters-v2.test.mjs
-
-      - name: Route CSS isolation contract
-        run: node --test scripts/route-css-isolation.test.mjs
-
-      - name: Deferred root services contract
-        run: node --test scripts/deferred-root-services.test.mjs
-
-      - name: Route CSS isolation batch 2 contract
-        run: node --test scripts/route-css-isolation-batch-2.test.mjs
-
-      - name: Listing Detail V2 contract
-        run: node --test scripts/listing-detail-v2.test.mjs
-
-      - name: Listing Detail V3 contract
-        run: node --test scripts/listing-detail-v3.test.mjs
-
-      - name: Retention and Discovery V1 contract
-        run: npm run test:retention-discovery
-
-      - name: Saved Search Alerts and Push V1 contract
-        run: npm run test:saved-search-push
-
-      - name: Listing Studio V2 contract
-        run: node --test scripts/listing-studio-v2.test.mjs
-
-      - name: Listing Studio V3 contract
-        run: node --test scripts/listing-studio-v3.test.mjs
-
-      - name: Seller Storefront V2 contract
-        run: node --test scripts/seller-storefront-v2.test.mjs
-
-      - name: Auth and Account V2 contract
-        run: node --test scripts/auth-account-v2.test.mjs
-
-      - name: Communication Center V2 contract
-        run: node --test scripts/communication-center-v2.test.mjs
-
-      - name: Launch readiness Batch 2 contract
-        run: npm run test:launch-readiness-batch-2
-
-      - name: Launch readiness Batch 4 contract
-        run: npm run test:launch-readiness-batch-4
-
-      - name: Launch readiness Batch 5 contract
-        run: npm run test:launch-readiness-batch-5
-
-      - name: Launch readiness Batch 6 contract
-        run: npm run test:launch-readiness-batch-6
-
-      - name: Launch readiness Batch 7 contract
-        run: node --test scripts/launch-readiness-batch-7.test.mjs
-
-      - name: Launch readiness Batch 8 contract
-        run: npm run test:launch-readiness-batch-8
-
-      - name: Final user journeys contract
-        run: npm run test:final-user-journeys
-
-      - name: Desktop Experience V1 contract
-        run: node --test scripts/desktop-experience-v1.test.mjs
-
-      - name: Spatial App Shell contract
-        run: node --test scripts/spatial-app-shell.test.mjs
-
-      - name: Typecheck
-        run: npm run typecheck -- --pretty false
-
-      - name: Listing system regression contract
-        run: npm run test:listing-system
-
-      - name: Production build
-        run: npm run build
-
-      - name: Performance budget
-        run: npm run performance:budget
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
+
+const [root, routeStyles, qualityGate] = await Promise.all([
+  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
+  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+]);
+
+const scopedStyles = [
+  "listing-studio-signature.css",
+  "listing-studio-v2.css",
+  "listing-studio-v3.css",
+  "messaging-signature.css",
+  "communication-center-v2.css",
+  "activity-more-foundation.css",
+  "personal-space-polish.css",
+  "my-store-redesign.css",
+  "my-store-header-refinement.css",
+  "my-store-brand-polish.css",
+  "trust-support-hub-v2.css",
+];
+
+test("eleven secondary page styles leave direct root imports", () => {
+  for (const stylesheet of scopedStyles) {
+    assert.doesNotMatch(
+      root,
+      new RegExp(`from "\\.\\./${stylesheet.replaceAll(".", "\\.")}\\?url"`),
+    );
+    assert.match(routeStyles, new RegExp(`${stylesheet.replaceAll(".", "\\.")}\\?url`));
+  }
+});
+
+test("secondary route groups are explicit and exclude unrelated surfaces", () => {
+  assert.match(routeStyles, /normalizedPathname === "\/add-listing"/);
+  assert.match(routeStyles, /\^\\\/profile\\\/listings\\\/\[\^\/\]\+\$/);
+  assert.match(routeStyles, /messaging: normalizedPathname === "\/chats"/);
+  assert.match(routeStyles, /communication: \["\/chats", "\/notifications", "\/activity"\]/);
+  assert.match(routeStyles, /ownerStore: normalizedPathname === "\/profile\/listings"/);
+  assert.match(routeStyles, /trustSupport: \["\/support", "\/safety", "\/terms", "\/privacy"\]/);
+  assert.doesNotMatch(routeStyles, /ownerStore:.*profile\/listings\//);
+});
+
+test("root conditionally emits all secondary route style groups", () => {
+  for (const href of [
+    "listingStudioSignature",
+    "listingStudioV2",
+    "listingStudioV3",
+    "messagingSignature",
+    "communicationCenterV2",
+    "activityMoreFoundation",
+    "personalSpacePolish",
+    "myStoreRedesign",
+    "myStoreHeaderRefinement",
+    "myStoreBrandPolish",
+    "trustSupportHubV2",
+  ]) {
+    assert.match(root, new RegExp(`routeStyleHrefs\\.${href}`));
+  }
+
+  assert.match(root, /routeStyleScope\.listingStudio/);
+  assert.match(root, /routeStyleScope\.messaging/);
+  assert.match(root, /routeStyleScope\.communication/);
+  assert.match(root, /routeStyleScope\.personalSpace/);
+  assert.match(root, /routeStyleScope\.ownerStore/);
+  assert.match(root, /routeStyleScope\.trustSupport/);
+});
+
+test("secondary style cascade remains stable inside each route group", () => {
+  assert.ok(
+    root.indexOf("routeStyleHrefs.listingStudioV2") >
+      root.indexOf("routeStyleHrefs.listingStudioSignature"),
+  );
+  assert.ok(
+    root.indexOf("routeStyleHrefs.listingStudioV3") >
+      root.indexOf("routeStyleHrefs.listingStudioV2"),
+  );
+  assert.ok(
+    root.indexOf("routeStyleHrefs.communicationCenterV2") >
+      root.indexOf("routeStyleHrefs.messagingSignature"),
+  );
+  assert.ok(
+    root.indexOf("routeStyleHrefs.myStoreHeaderRefinement") >
+      root.indexOf("routeStyleHrefs.myStoreRedesign"),
+  );
+  assert.ok(
+    root.indexOf("routeStyleHrefs.myStoreBrandPolish") >
+      root.indexOf("routeStyleHrefs.myStoreHeaderRefinement"),
+  );
+});
+
+test("quality gate permanently enforces route CSS batch 2 read-only", () => {
+  assert.match(qualityGate, /Route CSS isolation batch 2 contract/);
+  assert.match(qualityGate, /node --test scripts\/route-css-isolation-batch-2\.test\.mjs/);
+  assert.match(qualityGate, /contents: read/);
+  assert.doesNotMatch(qualityGate, /contents: write/);
+});
