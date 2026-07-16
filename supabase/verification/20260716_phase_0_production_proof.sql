@@ -41,10 +41,15 @@ SELECT
   ) > position(
     'perform public.rawaj_insert_audit_log' IN lower(definition)
   ) AS notification_follows_required_audit,
+  position(
+    'when others then' IN lower(definition)
+  ) > position(
+    'perform public.rawaj_insert_audit_log' IN lower(definition)
+  ) AS best_effort_block_follows_required_audit,
   (
     length(lower(definition))
-    - length(replace(lower(definition), 'exception', ''))
-  ) / length('exception') = 1 AS exactly_one_best_effort_exception_block
+    - length(replace(lower(definition), 'when others then', ''))
+  ) / length('when others then') = 1 AS exactly_one_best_effort_exception_block
 FROM target;
 
 -- 4. Both chat tables are members of supabase_realtime.
