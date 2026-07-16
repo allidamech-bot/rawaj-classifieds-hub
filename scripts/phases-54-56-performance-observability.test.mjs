@@ -17,7 +17,9 @@ test("phase 54 enforces production JavaScript, stylesheet, font and image budget
   assert.match(budget, /maximumSingleJavaScriptBytes/);
   assert.match(budget, /maximumTotalCssBytes/);
   assert.match(budget, /maximumSingleFontBytes/);
+  assert.match(budget, /maximumImageAssets/);
   assert.match(budget, /maximumSingleImageBytes/);
+  assert.match(budget, /maximumTotalImageBytes/);
   assert.match(budget, /performance-budget-report\.json/);
   assert.match(budget, /RAWAJ_PERFORMANCE_REPORT=/);
   assert.match(qualityGate, /Production build[\s\S]*Performance budget/);
@@ -28,6 +30,7 @@ test("phase 55 keeps performance budgets executable after the production build",
   assert.match(budget, /No client build output found/);
   assert.match(budget, /largestAssets/);
   assert.match(budget, /summarizeLargest/);
+  assert.match(budget, /2026-07-16 production build baseline/);
 });
 
 test("phase 56 captures global client and hydration failures without raw page content", () => {
