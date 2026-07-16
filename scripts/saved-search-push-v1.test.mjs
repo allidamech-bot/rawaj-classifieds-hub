@@ -115,8 +115,7 @@ test("native registration is explicit, permission-aware, logout-safe, offline-sa
   assert.match(preferences, /enableNativePush/);
   assert.match(preferences, /disableNativePush/);
   assert.match(scanner, /<PushNotificationBridge \/>/);
-  assert.match(moreRoute, /disableNativePush/);
-  assert.match(moreRoute, /await disableNativePush/);
+  assert.doesNotMatch(moreRoute, /disableNativePush/);
 
   assert.match(auth, /import \{ disableNativePush \} from "\.\/native-push"/);
   assert.match(auth, /await disableNativePush\(signedInUserId, false\)/);
@@ -128,7 +127,9 @@ test("native registration is explicit, permission-aware, logout-safe, offline-sa
   assert.match(nativePush, /disablePushDevice\(userId, deviceKey, false\)/);
   assert.doesNotMatch(nativePush, /disablePushDevice\(userId, deviceKey, true\)/);
   assert.match(nativePush, /const localCleanup = unregisterNativePushLocally\(\)/);
-  const localCleanupIndex = nativePush.indexOf("const localCleanup = unregisterNativePushLocally()");
+  const localCleanupIndex = nativePush.indexOf(
+    "const localCleanup = unregisterNativePushLocally()",
+  );
   const remoteDetachIndex = nativePush.indexOf(
     "await disablePushDevice(userId, deviceKey, disableChannel)",
   );
