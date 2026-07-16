@@ -225,6 +225,9 @@ jobs:
       - name: Edit Listing Preservation contract
         run: node --test scripts/edit-listing-preservation.test.mjs
 
+      - name: Public Listing Detail Integrity contract
+        run: node --test scripts/public-listing-detail-integrity.test.mjs
+
       - name: Seller Storefront V2 contract
         run: node --test scripts/seller-storefront-v2.test.mjs
 

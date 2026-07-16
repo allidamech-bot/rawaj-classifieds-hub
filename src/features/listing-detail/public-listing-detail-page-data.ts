@@ -1,22 +1,39 @@
 import {
   fetchListingDetail,
   fetchListingImages,
+  fetchPublicCategories,
+  fetchPublicListingTaxonomyAssignment,
   fetchPublicListings,
   fetchPublicSellerProfile,
+  fetchPublicSubcategories,
+  fetchPublicTaxonomyNodes,
 } from "@/lib/classifieds-api";
 import type {
+  ClassifiedCategory,
   ClassifiedListing,
-  ClassifiedsError,
   ListingImage,
   PublicSellerProfile,
+  TaxonomyNode,
 } from "@/lib/classifieds-types";
+import type { CanonicalLocationNode } from "@/lib/api/location-taxonomy";
+import { fetchPublicListingLocationPath } from "@/lib/api/listing-location-read";
+import { resolveListingTaxonomyContext } from "@/lib/listing-taxonomy-context";
+import {
+  isPublicListingVisible,
+  normalizePublicListingImages,
+} from "@/lib/public-listing-presentation";
 
 export interface PublicListingDetailPageData {
   listing: ClassifiedListing;
   images: ListingImage[];
   seller: PublicSellerProfile | null;
   similarListings: ClassifiedListing[];
-  imageError: ClassifiedsError | null;
+  category: ClassifiedCategory | null;
+  taxonomyNode: TaxonomyNode | null;
+  taxonomyPath: TaxonomyNode[];
+  legacySubcategory: { nameAr: string; nameEn: string | null } | null;
+  locationPath: CanonicalLocationNode[];
+  imagesUnavailable: boolean;
 }
 
 export async function loadPublicListingDetailPageData(
@@ -26,7 +43,18 @@ export async function loadPublicListingDetailPageData(
   if (!listingResult.ok) return null;
 
   const listing = listingResult.data;
-  const [imagesResult, sellerResult, similarResult] = await Promise.all([
+  if (!isPublicListingVisible(listing)) return null;
+
+  const [
+    imagesResult,
+    sellerResult,
+    similarResult,
+    categoriesResult,
+    subcategoriesResult,
+    taxonomyNodesResult,
+    taxonomyAssignmentResult,
+    locationPathResult,
+  ] = await Promise.all([
     fetchListingImages(listing.id),
     fetchPublicSellerProfile(listing.ownerId),
     fetchPublicListings(
@@ -38,15 +66,46 @@ export async function loadPublicListingDetailPageData(
       null,
       12,
     ),
+    fetchPublicCategories(),
+    fetchPublicSubcategories(),
+    fetchPublicTaxonomyNodes(),
+    fetchPublicListingTaxonomyAssignment(listing.id),
+    fetchPublicListingLocationPath(listing.id),
   ]);
+  const taxonomyContext = resolveListingTaxonomyContext({
+    taxonomyNodes: taxonomyNodesResult.ok ? taxonomyNodesResult.data : [],
+    canonicalTaxonomyNodeId: taxonomyAssignmentResult.ok
+      ? taxonomyAssignmentResult.data?.taxonomyNodeId
+      : null,
+    detailsTaxonomyNodeId:
+      typeof listing.details._taxonomy_node_id === "string"
+        ? listing.details._taxonomy_node_id
+        : null,
+    categoryId: listing.categoryId,
+    subcategoryId: listing.subcategoryId,
+  });
 
   return {
     listing,
-    images: imagesResult.ok ? imagesResult.data : [],
+    images: normalizePublicListingImages(imagesResult.ok ? imagesResult.data : [], listing),
     seller: sellerResult.ok ? sellerResult.data : null,
     similarListings: similarResult.ok
       ? similarResult.data.items.filter((item) => item.id !== listing.id).slice(0, 8)
       : [],
-    imageError: imagesResult.ok ? null : imagesResult.error,
+    category: categoriesResult.ok
+      ? (categoriesResult.data.find((item) => item.id === listing.categoryId) ?? null)
+      : null,
+    taxonomyNode: taxonomyContext.selectedNode,
+    taxonomyPath: taxonomyContext.path,
+    legacySubcategory: subcategoriesResult.ok
+      ? (() => {
+          const subcategory = subcategoriesResult.data.find(
+            (item) => item.id === listing.subcategoryId,
+          );
+          return subcategory ? { nameAr: subcategory.nameAr, nameEn: subcategory.nameEn } : null;
+        })()
+      : null,
+    locationPath: locationPathResult.ok ? locationPathResult.data : [],
+    imagesUnavailable: !imagesResult.ok,
   };
 }

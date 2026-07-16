@@ -8,6 +8,6 @@ export function listingLocationDisplay(listing: ClassifiedListing, language: "ar
     language,
   );
   const district = listing.districtAr?.trim();
-  if (!district) return governorate;
+  if (!district || district.startsWith("@")) return governorate;
   return [governorate, district].join(" / ");
 }

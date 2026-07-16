@@ -36,7 +36,7 @@ test("breadcrumb helper preserves route order and absolute item URLs", () => {
 test("listing detail emits breadcrumb structured data with real route targets", () => {
   assert.match(listingRoute, /buildBreadcrumbStructuredData/);
   assert.match(listingRoute, /path: "\/listings"/);
-  assert.match(listingRoute, /\?category=\$\{encodeURIComponent\(listing\.categoryId\)\}/);
+  assert.match(listingRoute, /\?category=\$\{encodeURIComponent\(categoryId\)\}/);
   assert.match(listingRoute, /path: `\/listings\/\$\{listing\.id\}`/);
 });
 
@@ -46,7 +46,8 @@ test("listing structured data uses honest category-specific schema types", () =>
   assert.match(listingStructuredData, /return "JobPosting"/);
   assert.match(listingStructuredData, /return "Service"/);
   assert.match(listingStructuredData, /return "Product"/);
-  assert.match(listingRoute, /buildListingStructuredData\(listing\)/);
+  assert.match(listingRoute, /buildListingStructuredData\([\s\S]*categoryFieldKind/);
+  assert.match(listingStructuredData, /publicSeoDescription\(listing\.description, 300\)/);
 });
 
 test("listing offer availability reflects reservation state", () => {

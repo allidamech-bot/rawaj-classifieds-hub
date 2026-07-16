@@ -1,14 +1,18 @@
-import { detectCategoryFieldKind } from "@/lib/category-fields";
+import { detectCategoryFieldKind, type CategoryFieldKind } from "@/lib/category-fields";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
-import { absoluteUrl, plainText } from "@/lib/seo";
+import { publicSeoDescription } from "@/lib/public-listing-presentation";
+import { absoluteUrl } from "@/lib/seo";
 
-export function buildListingStructuredData(listing: ClassifiedListing): Record<string, unknown> {
-  const kind = detectCategoryFieldKind(null, listing);
+export function buildListingStructuredData(
+  listing: ClassifiedListing,
+  explicitKind?: CategoryFieldKind,
+): Record<string, unknown> {
+  const kind = explicitKind ?? detectCategoryFieldKind(null, listing);
   const data: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": schemaTypeForKind(kind),
     name: listing.title,
-    description: plainText(listing.description, 300),
+    description: publicSeoDescription(listing.description, 300),
     url: absoluteUrl(`/listings/${listing.id}`),
     category: listing.categoryNameAr,
     areaServed: listing.governorateNameAr,
@@ -88,7 +92,7 @@ export function buildListingStructuredData(listing: ClassifiedListing): Record<s
   return data;
 }
 
-function schemaTypeForKind(kind: ReturnType<typeof detectCategoryFieldKind>) {
+function schemaTypeForKind(kind: CategoryFieldKind) {
   switch (kind) {
     case "real_estate":
       return "RealEstateListing";
