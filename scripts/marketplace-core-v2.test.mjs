@@ -4,6 +4,7 @@ import test from "node:test";
 
 const [
   root,
+  routeStyles,
   home,
   hero,
   worlds,
@@ -15,6 +16,7 @@ const [
   adaptiveCss,
 ] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/index.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/home/DiscoveryHero.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/home/CategoryWorlds.tsx", import.meta.url), "utf8"),
@@ -33,15 +35,18 @@ const [
 ]);
 
 test("marketplace layers load after Design System V2", () => {
-  assert.match(root, /import homeMarketplaceV2Css from "\.\.\/home-marketplace-v2\.css\?url";/);
-  assert.match(root, /import homeDiscoveryV3Css from "\.\.\/home-discovery-v3\.css\?url";/);
+  assert.match(
+    routeStyles,
+    /import homeMarketplaceV2Css from "\.\.\/home-marketplace-v2\.css\?url";/,
+  );
+  assert.match(routeStyles, /import homeDiscoveryV3Css from "\.\.\/home-discovery-v3\.css\?url";/);
   assert.match(
     root,
     /import adaptiveListingCardsCss from "\.\.\/adaptive-listing-cards\.css\?url";/,
   );
   const foundationIndex = root.indexOf("href: designSystemV2Css");
-  const marketplaceIndex = root.indexOf("href: homeMarketplaceV2Css");
-  const discoveryIndex = root.indexOf("href: homeDiscoveryV3Css");
+  const marketplaceIndex = root.indexOf("routeStyleHrefs.homeMarketplaceV2");
+  const discoveryIndex = root.indexOf("routeStyleHrefs.homeDiscoveryV3");
   const adaptiveIndex = root.indexOf("href: adaptiveListingCardsCss");
   assert.notEqual(foundationIndex, -1);
   assert.notEqual(marketplaceIndex, -1);

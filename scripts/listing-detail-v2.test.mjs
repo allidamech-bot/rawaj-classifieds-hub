@@ -2,46 +2,59 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, route, detailPageData, media, viewer, seller, dock, safety, similar, css, navigation] =
-  await Promise.all([
-    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/features/listing-detail/public-listing-detail-page-data.ts", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/features/listing-detail/ListingSellerProfileCard.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/features/listing-detail/ListingContactDock.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/features/listing-detail/ListingSafetyAndAlert.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/features/listing-detail/SimilarListingsRail.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/primary-navigation.ts", import.meta.url), "utf8"),
-  ]);
+const [
+  root,
+  routeStyles,
+  route,
+  detailPageData,
+  media,
+  viewer,
+  seller,
+  dock,
+  safety,
+  similar,
+  css,
+  navigation,
+] = await Promise.all([
+  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/listing-detail/public-listing-detail-page-data.ts", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingSellerProfileCard.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingContactDock.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingSafetyAndAlert.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/SimilarListingsRail.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/primary-navigation.ts", import.meta.url), "utf8"),
+]);
 
 test("listing detail V2 styles load after marketplace presentation styles", () => {
-  assert.match(root, /import listingDetailV2Css from "\.\.\/listing-detail-v2\.css\?url";/);
-  const searchIndex = root.indexOf("href: searchFiltersV1Css");
-  const detailIndex = root.indexOf("href: listingDetailV2Css");
+  assert.match(routeStyles, /import listingDetailV2Css from "\.\.\/listing-detail-v2\.css\?url";/);
+  const searchIndex = root.indexOf("routeStyleHrefs.searchFiltersV1");
+  const detailIndex = root.indexOf("routeStyleHrefs.listingDetailV2");
   assert.ok(searchIndex >= 0);
   assert.ok(detailIndex > searchIndex);
 });

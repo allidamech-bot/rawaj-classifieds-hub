@@ -2,17 +2,18 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, toolbar, css, gate] = await Promise.all([
+const [root, routeStyles, toolbar, css, gate] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/features/search/SearchResultsToolbar.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/search-filters-v2.css", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
 ]);
 
 test("Search and Filters V2 loads after V1 and before desktop overrides", () => {
-  assert.match(root, /searchFiltersV2Css/);
-  const v1 = root.indexOf("href: searchFiltersV1Css");
-  const v2 = root.indexOf("href: searchFiltersV2Css");
+  assert.match(routeStyles, /searchFiltersV2Css/);
+  const v1 = root.indexOf("routeStyleHrefs.searchFiltersV1");
+  const v2 = root.indexOf("routeStyleHrefs.searchFiltersV2");
   const desktop = root.indexOf("href: desktopExperienceV1Css");
   assert.ok(v2 > v1);
   assert.ok(desktop > v2);

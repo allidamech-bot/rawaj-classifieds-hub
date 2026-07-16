@@ -64,7 +64,7 @@ test("adaptive card styles load after home discovery layers", () => {
     root,
     /import adaptiveListingCardsCss from "\.\.\/adaptive-listing-cards\.css\?url";/,
   );
-  const homeIndex = root.indexOf("href: homeDiscoveryV3Css");
+  const homeIndex = root.indexOf("routeStyleHrefs.homeDiscoveryV3");
   const adaptiveIndex = root.indexOf("href: adaptiveListingCardsCss");
   assert.notEqual(homeIndex, -1);
   assert.notEqual(adaptiveIndex, -1);

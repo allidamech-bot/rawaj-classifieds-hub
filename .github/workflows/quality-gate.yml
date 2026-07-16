@@ -192,6 +192,9 @@ jobs:
       - name: Search and Filters V2 contract
         run: node --test scripts/search-filters-v2.test.mjs
 
+      - name: Route CSS isolation contract
+        run: node --test scripts/route-css-isolation.test.mjs
+
       - name: Listing Detail V2 contract
         run: node --test scripts/listing-detail-v2.test.mjs
 

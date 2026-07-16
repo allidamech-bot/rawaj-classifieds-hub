@@ -4,6 +4,7 @@ import test from "node:test";
 
 const [
   rootRoute,
+  routeStyles,
   detailRoute,
   detailPageData,
   mediaExperience,
@@ -13,6 +14,7 @@ const [
   v3Css,
 ] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
   readFile(
     new URL("../src/features/listing-detail/public-listing-detail-page-data.ts", import.meta.url),
@@ -37,9 +39,10 @@ const [
 const layeredCss = `${v2Css}\n${v3Css}`;
 
 test("Listing Detail V3 stylesheet is loaded after V2", () => {
-  assert.match(rootRoute, /listingDetailV3Css from "\.\.\/listing-detail-v3\.css\?url"/);
+  assert.match(routeStyles, /listingDetailV3Css from "\.\.\/listing-detail-v3\.css\?url"/);
   assert.ok(
-    rootRoute.indexOf("href: listingDetailV3Css") > rootRoute.indexOf("href: listingDetailV2Css"),
+    rootRoute.indexOf("routeStyleHrefs.listingDetailV3") >
+      rootRoute.indexOf("routeStyleHrefs.listingDetailV2"),
     "V3 must load after V2 so it remains an additive override layer",
   );
 });
