@@ -22,15 +22,24 @@ const [
     "utf8",
   ),
   readFile(
-    new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
+    new URL(
+      "../src/features/listing-detail/ListingMediaExperience.tsx",
+      import.meta.url,
+    ),
     "utf8",
   ),
   readFile(
-    new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url),
+    new URL(
+      "../src/features/listing-detail/ListingMediaViewer.tsx",
+      import.meta.url,
+    ),
     "utf8",
   ),
   readFile(
-    new URL("../src/features/listing-detail/useListingMediaState.ts", import.meta.url),
+    new URL(
+      "../src/features/listing-detail/useListingMediaState.ts",
+      import.meta.url,
+    ),
     "utf8",
   ),
   readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8"),
@@ -40,9 +49,13 @@ const [
 const layeredCss = `${v2Css}\n${v3Css}`;
 
 test("Listing Detail V3 stylesheet is loaded after V2", () => {
-  assert.match(rootRoute, /listingDetailV3Css from "\.\.\/listing-detail-v3\.css\?url"/);
+  assert.match(
+    rootRoute,
+    /listingDetailV3Css from "\.\.\/listing-detail-v3\.css\?url"/,
+  );
   assert.ok(
-    rootRoute.indexOf("href: listingDetailV3Css") > rootRoute.indexOf("href: listingDetailV2Css"),
+    rootRoute.indexOf("href: listingDetailV3Css") >
+      rootRoute.indexOf("href: listingDetailV2Css"),
     "V3 must load after V2 so it remains an additive override layer",
   );
 });
@@ -69,11 +82,23 @@ test("public listing detail dependencies are rendered before hydration", () => {
   assert.match(detailRoute, /loadPublicListingDetailPageData\(params\.id\)/);
   assert.match(detailRoute, /const initialData = Route\.useLoaderData\(\)/);
   assert.match(detailRoute, /useState<ListingImage\[]>\(initialData\.images\)/);
-  assert.match(detailRoute, /useState<PublicSellerProfile \| null>\(initialData\.seller\)/);
+  assert.match(
+    detailRoute,
+    /useState<PublicSellerProfile \| null>\(initialData\.seller\)/,
+  );
   assert.match(detailRoute, /initialData\.similarListings/);
-  assert.match(detailRoute, /const \[loading, setLoading\] = useState\(false\)/);
-  assert.match(detailRoute, /const \[sellerLoading, setSellerLoading\] = useState\(false\)/);
-  assert.match(detailRoute, /const \[similarLoading, setSimilarLoading\] = useState\(false\)/);
+  assert.match(
+    detailRoute,
+    /const \[loading, setLoading\] = useState\(false\)/,
+  );
+  assert.match(
+    detailRoute,
+    /const \[sellerLoading, setSellerLoading\] = useState\(false\)/,
+  );
+  assert.match(
+    detailRoute,
+    /const \[similarLoading, setSimilarLoading\] = useState\(false\)/,
+  );
   assert.doesNotMatch(
     detailRoute,
     /fetchListingImages|fetchPublicSellerProfile|fetchPublicListings/,
@@ -88,7 +113,10 @@ test("listing detail SSR uses anonymous public APIs and excludes the current rel
   assert.match(detailPageData, /fetchPublicListings\(/);
   assert.match(detailPageData, /item\.id !== listing\.id/);
   assert.match(detailPageData, /\.slice\(0, 8\)/);
-  assert.doesNotMatch(detailPageData, /service_role|SUPABASE_SERVICE_ROLE|auth\.admin/);
+  assert.doesNotMatch(
+    detailPageData,
+    /service_role|SUPABASE_SERVICE_ROLE|auth\.admin/,
+  );
 });
 
 test("media experience keeps swipe, fullscreen, keyboard, zoom, and accessible controls", () => {
@@ -125,15 +153,27 @@ test("listing detail media replaces broken signed URLs with category artwork", (
   assert.match(mediaState, /const markImageFailed = useCallback/);
   assert.match(mediaState, /next\.add\(url\)/);
   assert.match(mediaExperience, /failedUrls\.has\(selectedUrl\)/);
-  assert.match(mediaExperience, /onError=\{\(\) => markImageFailed\(selectedUrl\)\}/);
-  assert.match(mediaExperience, /<PlaceholderArt type=\{placeholder\} aspect="wide" \/>/);
+  assert.match(
+    mediaExperience,
+    /onError=\{\(\) => markImageFailed\(selectedUrl\)\}/,
+  );
+  assert.match(
+    mediaExperience,
+    /<PlaceholderArt type=\{placeholder\} aspect="wide" \/>/,
+  );
   assert.match(mediaViewer, /failedUrls\.has\(currentUrl\)/);
   assert.match(mediaViewer, /onError=\{\(\) => onImageError\(currentUrl\)\}/);
-  assert.match(mediaViewer, /<PlaceholderArt type=\{placeholder\} aspect="standard" \/>/);
+  assert.match(
+    mediaViewer,
+    /<PlaceholderArt type=\{placeholder\} aspect="standard" \/>/,
+  );
 });
 
 test("full media viewer is excluded from the initial listing-detail bundle", () => {
-  assert.match(mediaExperience, /lazy\(\(\) => import\("\.\/ListingMediaViewer"\)\)/);
+  assert.match(
+    mediaExperience,
+    /lazy\(\(\) => import\("\.\/ListingMediaViewer"\)\)/,
+  );
   assert.match(mediaExperience, /viewerOpen \? \(/);
   assert.match(mediaExperience, /<Suspense fallback=\{null\}>/);
   assert.doesNotMatch(mediaExperience, /@radix-ui\/react-dialog/);
@@ -160,10 +200,19 @@ test("layered V2 and V3 CSS retains mobile-first, bidirectional, safe-area, and 
     "inset-inline-end",
     ":focus-visible",
   ]) {
-    assert.ok(layeredCss.includes(token), `Missing layered detail contract token: ${token}`);
+    assert.ok(
+      layeredCss.includes(token),
+      `Missing layered detail contract token: ${token}`,
+    );
   }
 
   assert.doesNotMatch(v3Css, /@import\s+url/i);
-  assert.match(v3Css, /\.rawaj-detail-v2__sidebar\s*\{[^}]*position:\s*sticky/s);
-  assert.doesNotMatch(v3Css, /\.rawaj-detail-v2__sidebar\s*\{[^}]*position:\s*fixed/s);
+  assert.match(
+    v3Css,
+    /\.rawaj-detail-v2__sidebar\s*\{[^}]*position:\s*sticky/s,
+  );
+  assert.doesNotMatch(
+    v3Css,
+    /\.rawaj-detail-v2__sidebar\s*\{[^}]*position:\s*fixed/s,
+  );
 });
