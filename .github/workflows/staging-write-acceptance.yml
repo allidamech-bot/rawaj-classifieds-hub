@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: Git ref to test against the dedicated RAWAJ staging database
+        description: Main-branch commit to test against the dedicated RAWAJ staging database
         required: true
         default: main
         type: string
@@ -20,9 +20,11 @@ jobs:
   write-journeys:
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    environment: rawaj-staging
     env:
       RAWAJ_STAGING_WRITE_ACCEPTANCE: "1"
       RAWAJ_STAGING_PROJECT_REF: ${{ secrets.RAWAJ_STAGING_PROJECT_REF }}
+      RAWAJ_PRODUCTION_PROJECT_REF: ${{ secrets.RAWAJ_PRODUCTION_PROJECT_REF }}
       VITE_SUPABASE_URL: ${{ secrets.RAWAJ_STAGING_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.RAWAJ_STAGING_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.RAWAJ_STAGING_SERVICE_ROLE_KEY }}
@@ -36,17 +38,36 @@ jobs:
       RAWAJ_STAGING_MODERATOR_PASSWORD: ${{ secrets.RAWAJ_STAGING_MODERATOR_PASSWORD }}
 
     steps:
-      - name: Checkout requested ref
+      - name: Checkout trusted main history
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref }}
-          fetch-depth: 1
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate requested release commit
+        shell: bash
+        env:
+          REQUESTED_REF: ${{ inputs.ref }}
+        run: |
+          git fetch --no-tags origin main
+          target_sha="$(git rev-parse --verify "${REQUESTED_REF}^{commit}")"
+
+          if ! git merge-base --is-ancestor "$target_sha" origin/main; then
+            echo "Requested ref must resolve to a commit already contained in main." >&2
+            exit 1
+          fi
+
+          echo "RAWAJ_ACCEPTANCE_TARGET_SHA=$target_sha" >> "$GITHUB_ENV"
+
+      - name: Checkout validated release commit
+        run: git checkout --detach "$RAWAJ_ACCEPTANCE_TARGET_SHA"
 
       - name: Validate staging-only environment
         shell: bash
         run: |
           required=(
             RAWAJ_STAGING_PROJECT_REF
+            RAWAJ_PRODUCTION_PROJECT_REF
             VITE_SUPABASE_URL
             VITE_SUPABASE_ANON_KEY
             SUPABASE_SERVICE_ROLE_KEY
@@ -67,8 +88,8 @@ jobs:
             fi
           done
 
-          if [ "$RAWAJ_STAGING_PROJECT_REF" = "qezrzwoiyhbjrrxnrqra" ]; then
-            echo "The configured project ref matches a known non-RAWAJ project and is not accepted." >&2
+          if [ "$RAWAJ_STAGING_PROJECT_REF" = "$RAWAJ_PRODUCTION_PROJECT_REF" ]; then
+            echo "The staging project ref must not match RAWAJ Production." >&2
             exit 1
           fi
 
