@@ -1,9 +1,9 @@
 name: Phase 5 Apply
 
 on:
-  push:
+  pull_request:
     branches:
-      - agent/phase-5-add-listing-taxonomy-architecture
+      - main
 
 permissions:
   contents: write
@@ -246,8 +246,9 @@ jobs:
           npx eslint --quiet src/lib/category-fields.ts src/routes/add-listing.tsx scripts/add-listing-taxonomy-architecture.test.mjs
           node --test scripts/add-listing-taxonomy-architecture.test.mjs
           npm run typecheck -- --pretty false
+          rm .github/workflows/phase5-apply.yml
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add src/lib/category-fields.ts src/routes/add-listing.tsx scripts/add-listing-taxonomy-architecture.test.mjs .github/workflows/add-listing-taxonomy-architecture.yml
+          git add -A
           git commit -m "feat: align add listing with canonical taxonomy"
           git push
