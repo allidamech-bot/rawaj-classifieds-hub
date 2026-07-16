@@ -4,6 +4,8 @@ import test from "node:test";
 
 const paths = {
   migration: "supabase/migrations/202607150002_saved_search_alerts_push_v1.sql",
+  multiDeviceMigration:
+    "supabase/migrations/202607160005_preserve_multi_device_push_preference.sql",
   edgeFunction: "supabase/functions/send-push-notifications/index.ts",
   nativePush: "src/lib/native-push.ts",
   pushApi: "src/lib/api/push-notifications.ts",
@@ -75,18 +77,28 @@ test("push tokens and delivery queue remain private and service-role controlled"
   );
 });
 
-test("native registration is explicit, permission-aware, and detached by every logout path", async () => {
-  const [nativePush, pushApi, auth, preferences, scanner, moreRoute, packageText, capacitorConfig] =
-    await Promise.all([
-      read(paths.nativePush),
-      read(paths.pushApi),
-      read(paths.auth),
-      read(paths.preferences),
-      read(paths.scanner),
-      read(paths.moreRoute),
-      read(paths.packageJson),
-      read(paths.capacitorConfig),
-    ]);
+test("native registration is explicit, permission-aware, logout-safe, and multi-device scoped", async () => {
+  const [
+    nativePush,
+    pushApi,
+    auth,
+    preferences,
+    scanner,
+    moreRoute,
+    multiDeviceMigration,
+    packageText,
+    capacitorConfig,
+  ] = await Promise.all([
+    read(paths.nativePush),
+    read(paths.pushApi),
+    read(paths.auth),
+    read(paths.preferences),
+    read(paths.scanner),
+    read(paths.moreRoute),
+    read(paths.multiDeviceMigration),
+    read(paths.packageJson),
+    read(paths.capacitorConfig),
+  ]);
 
   assert.match(nativePush, /import\("@capacitor\/push-notifications"\)/);
   assert.match(nativePush, /checkPermissions\(\)/);
@@ -111,6 +123,19 @@ test("native registration is explicit, permission-aware, and detached by every l
   const signOutIndex = auth.indexOf("await client.auth.signOut()");
   assert.ok(detachIndex >= 0, "AuthProvider must detach the current native push device");
   assert.ok(signOutIndex > detachIndex, "Push detachment must happen before Supabase sign out");
+
+  assert.match(nativePush, /disablePushDevice\(userId, deviceKey, false\)/);
+  assert.doesNotMatch(nativePush, /disablePushDevice\(userId, deviceKey, true\)/);
+  assert.match(preferences, /if \(pushStatus\.registered\)/);
+  assert.match(preferences, /disableNativePush\(currentProfileId, false\)/);
+  assert.doesNotMatch(preferences, /currentPreferences\.pushEnabled \|\| pushStatus\.registered/);
+  assert.match(
+    preferences,
+    /const accountPushEnabled = currentPreferences\.pushEnabled \|\| enabled/,
+  );
+  assert.match(multiDeviceMigration, /if v_permission = 'granted' then/i);
+  assert.match(multiDeviceMigration, /values \(v_user_id, true\)/i);
+  assert.doesNotMatch(multiDeviceMigration, /values \(v_user_id, v_permission = 'granted'\)/i);
 
   const packageJson = JSON.parse(packageText);
   assert.match(packageJson.dependencies["@capacitor/push-notifications"], /^\^?8\./);
