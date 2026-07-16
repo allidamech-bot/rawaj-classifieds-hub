@@ -222,6 +222,9 @@ jobs:
       - name: Add Listing Taxonomy Architecture contract
         run: node --test scripts/add-listing-taxonomy-architecture.test.mjs
 
+      - name: Edit Listing Preservation contract
+        run: node --test scripts/edit-listing-preservation.test.mjs
+
       - name: Seller Storefront V2 contract
         run: node --test scripts/seller-storefront-v2.test.mjs
 
