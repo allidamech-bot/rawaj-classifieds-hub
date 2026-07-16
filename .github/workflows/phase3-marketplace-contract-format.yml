@@ -1,0 +1,43 @@
+name: Phase 3 Marketplace Contract Format
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/phase-3-route-css-isolation
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format and validate contract
+        run: |
+          npx prettier --write scripts/marketplace-core-v2.test.mjs
+          npx eslint --quiet scripts/marketplace-core-v2.test.mjs
+          node --test scripts/marketplace-core-v2.test.mjs
+
+      - name: Upload formatted contract
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase3-marketplace-contract-${{ github.sha }}
+          path: scripts/marketplace-core-v2.test.mjs
+          retention-days: 1
+          if-no-files-found: error
