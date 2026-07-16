@@ -73,8 +73,9 @@ export function installClientErrorMonitoring() {
         pathname: window.location.pathname,
       },
       {
-        mechanism: "console_error_classification",
+        mechanism: "manual",
         handled: true,
+        severity: "warning",
       },
     );
   };
