@@ -60,7 +60,7 @@ export function installClientErrorMonitoring() {
     );
   };
 
-  console.error = (...args: unknown[]) => {
+  const monitoredConsoleError = (...args: unknown[]) => {
     originalConsoleError(...args);
     if (hydrationWarningReported || !isHydrationWarning(args)) return;
     hydrationWarningReported = true;
@@ -77,13 +77,13 @@ export function installClientErrorMonitoring() {
     );
   };
 
+  console.error = monitoredConsoleError;
   window.addEventListener("error", handleError);
   window.addEventListener("unhandledrejection", handleUnhandledRejection);
 
   return () => {
     window.removeEventListener("error", handleError);
     window.removeEventListener("unhandledrejection", handleUnhandledRejection);
-    if (console.error === originalConsoleError) return;
-    console.error = originalConsoleError;
+    if (console.error === monitoredConsoleError) console.error = originalConsoleError;
   };
 }
