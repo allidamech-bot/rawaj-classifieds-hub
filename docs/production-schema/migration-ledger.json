@@ -151,7 +151,8 @@
       "202607100007_repair_seller_review_response_update_path.sql",
       "202607160001_fix_ad_placement_version_ambiguity.sql",
       "202607160002_require_listing_moderation_audit.sql",
-      "202607160003_enable_chat_realtime.sql"
+      "202607160003_enable_chat_realtime.sql",
+      "202607160004_harden_push_delivery_device_lifecycle.sql"
     ],
     "manual": ["202607090004_reconcile_manual_production_hotfixes.sql"]
   }
