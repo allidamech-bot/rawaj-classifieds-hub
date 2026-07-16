@@ -38,6 +38,17 @@ async function expectTextEndpoint(request: APIRequestContext, path: string, cont
   return body;
 }
 
+async function readStaticSitemap(request: APIRequestContext) {
+  const index = await expectTextEndpoint(request, "/sitemap.xml", /(?:xml|text\/plain)/i);
+  if (index.includes("<urlset")) return index;
+
+  expect(index).toMatch(/<sitemapindex/);
+  const staticShardMatch = index.match(/<loc>([^<]*sitemap\.xml\?section=static(?:&amp;|&)page=1)<\/loc>/);
+  expect(staticShardMatch, "Sitemap index does not expose the static discovery shard").toBeTruthy();
+  const shardUrl = staticShardMatch![1].replaceAll("&amp;", "&");
+  return expectTextEndpoint(request, new URL(shardUrl).pathname + new URL(shardUrl).search, /xml/i);
+}
+
 test.describe("RAWAJ production launch health", () => {
   test.skip(productionOnly, "Production smoke runs only with PRODUCTION_SMOKE=1");
 
@@ -73,9 +84,7 @@ test.describe("RAWAJ production launch health", () => {
     expect(categoryHref, "No active category landing URL was rendered").toBeTruthy();
     await expectHealthyDocument(page, categoryHref!);
 
-    const sitemapResponse = await page.request.get("/sitemap.xml");
-    expect(sitemapResponse.status()).toBeLessThan(400);
-    const sitemap = await sitemapResponse.text();
+    const sitemap = await readStaticSitemap(page.request);
     const governorateMatch = sitemap.match(/https:\/\/rawa-j\.com\/syria\/[^<]+/);
     expect(governorateMatch, "No governorate landing URL exists in sitemap.xml").toBeTruthy();
     await expectHealthyDocument(page, new URL(governorateMatch![0]).pathname);
@@ -85,7 +94,7 @@ test.describe("RAWAJ production launch health", () => {
     const robots = await expectTextEndpoint(request, "/robots.txt", /text\/plain/i);
     expect(robots).toMatch(/sitemap:\s*https:\/\/rawa-j\.com\/sitemap\.xml/i);
 
-    const sitemap = await expectTextEndpoint(request, "/sitemap.xml", /(?:xml|text\/plain)/i);
+    const sitemap = await readStaticSitemap(request);
     expect(sitemap).toMatch(/<urlset/);
     expect(sitemap).toMatch(/\/category\//);
     expect(sitemap).toMatch(/\/syria\//);
