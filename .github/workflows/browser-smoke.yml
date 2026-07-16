@@ -50,150 +50,16 @@ jobs:
         run: npm ci
 
       - name: Patch and format listing detail SSR
-        shell: bash
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          path = Path("src/routes/listings.$id.tsx")
-          text = path.read_text(encoding="utf-8")
-
-          text = text.replace(
-              'import { ListingContactDock } from "@/features/listing-detail/ListingContactDock";\n',
-              'import { ListingContactDock } from "@/features/listing-detail/ListingContactDock";\nimport { loadPublicListingDetailPageData } from "@/features/listing-detail/public-listing-detail-page-data";\n',
-              1,
-          )
-          for line in [
-              '  fetchListingImages,\n',
-              '  fetchPublicListings,\n',
-              '  fetchPublicSellerProfile,\n',
-          ]:
-              text = text.replace(line, "", 1)
-
-          old_route = '''export const Route = createFileRoute("/listings/$id")({
-  loader: async ({ params }) => {
-    const listing = await fetchListingDetail(params.id);
-    if (!listing.ok) throw notFound();
-    return listing.data;
-  },
-  notFoundComponent: UnavailableListingRecovery,
-  head: ({ loaderData }) =>
-    createSeo({
-      title: loaderData ? `${loaderData.title} | RAWAJ / رواج` : "إعلان غير متاح | RAWAJ / رواج",
-      description: loaderData
-        ? plainText(loaderData.description || "تفاصيل إعلان معتمد على رواج.", 160)
-        : "هذا الإعلان غير متاح للعرض العام على رواج.",
-      path: loaderData ? `/listings/${loaderData.id}` : "/listings",
-      type: "article",
-      image: loaderData?.primaryImageUrl ?? null,
-      noindex: !loaderData,
-    }),
-  component: ListingDetailsPage,
-});
-'''
-          new_route = '''export const Route = createFileRoute("/listings/$id")({
-  loader: async ({ params }) => {
-    const pageData = await loadPublicListingDetailPageData(params.id);
-    if (!pageData) throw notFound();
-    return pageData;
-  },
-  notFoundComponent: UnavailableListingRecovery,
-  head: ({ loaderData }) => {
-    const listing = loaderData?.listing;
-    return createSeo({
-      title: listing ? `${listing.title} | RAWAJ / رواج` : "إعلان غير متاح | RAWAJ / رواج",
-      description: listing
-        ? plainText(listing.description || "تفاصيل إعلان معتمد على رواج.", 160)
-        : "هذا الإعلان غير متاح للعرض العام على رواج.",
-      path: listing ? `/listings/${listing.id}` : "/listings",
-      type: "article",
-      image: loaderData?.images[0]?.publicUrl ?? listing?.primaryImageUrl ?? null,
-      noindex: !listing,
-    });
-  },
-  component: ListingDetailsPage,
-});
-'''
-          if old_route not in text:
-              raise SystemExit("Listing detail route block not found")
-          text = text.replace(old_route, new_route, 1)
-
-          old_state = '''  const initialListing = Route.useLoaderData();
-  const navigate = useNavigate();
-  const auth = useAuth();
-  const { language, text } = useUiPreferences();
-  const [listing, setListing] = useState<ClassifiedListing | null>(initialListing);
-  const [images, setImages] = useState<ListingImage[]>([]);
-  const [seller, setSeller] = useState<PublicSellerProfile | null>(null);
-  const [similarListings, setSimilarListings] = useState<ClassifiedListing[]>([]);
-  const [loading, setLoading] = useState(!initialListing);
-  const [sellerLoading, setSellerLoading] = useState(true);
-  const [similarLoading, setSimilarLoading] = useState(true);
-  const [error, setError] = useState<ClassifiedsError | null>(null);
-  const [imageError, setImageError] = useState<ClassifiedsError | null>(null);
-'''
-          new_state = '''  const initialData = Route.useLoaderData();
-  const initialListing = initialData.listing;
-  const navigate = useNavigate();
-  const auth = useAuth();
-  const { language, text } = useUiPreferences();
-  const [listing, setListing] = useState<ClassifiedListing | null>(initialListing);
-  const [images, setImages] = useState<ListingImage[]>(initialData.images);
-  const [seller, setSeller] = useState<PublicSellerProfile | null>(initialData.seller);
-  const [similarListings, setSimilarListings] = useState<ClassifiedListing[]>(
-    initialData.similarListings,
-  );
-  const [loading, setLoading] = useState(false);
-  const [sellerLoading, setSellerLoading] = useState(false);
-  const [similarLoading, setSimilarLoading] = useState(false);
-  const [error, setError] = useState<ClassifiedsError | null>(null);
-  const [imageError, setImageError] = useState<ClassifiedsError | null>(initialData.imageError);
-'''
-          if old_state not in text:
-              raise SystemExit("Listing detail state block not found")
-          text = text.replace(old_state, new_state, 1)
-          text = text.replace('  const imageRequestIdRef = useRef(0);\n', "", 1)
-
-          start = text.index('  useEffect(() => {\n    setListing(initialListing);')
-          marker = '  useEffect(() => {\n    let cancelled = false;\n    const requestId = ++favoriteRequestIdRef.current;'
-          end = text.index(marker, start)
-          replacement = '''  useEffect(() => {
-    setListing(initialData.listing);
-    setImages(initialData.images);
-    setSeller(initialData.seller);
-    setSimilarListings(initialData.similarListings);
-    setImageError(initialData.imageError);
-    setLoading(false);
-    setSellerLoading(false);
-    setSimilarLoading(false);
-    setError(null);
-    setAlertCreated(false);
-  }, [initialData, id]);
-
-'''
-          text = text[:start] + replacement + text[end:]
-          path.write_text(text, encoding="utf-8")
-          PY
-
-          npx prettier --write \
-            src/routes/listings.'$id'.tsx \
-            src/features/listing-detail/public-listing-detail-page-data.ts \
-            src/features/listing-detail/ListingMediaExperience.tsx \
-            src/features/listing-detail/ListingMediaViewer.tsx
-
+          python scripts/phase3_patch_listing_detail.py
+          npx prettier --write "src/routes/listings.\$id.tsx" src/features/listing-detail/public-listing-detail-page-data.ts src/features/listing-detail/ListingMediaExperience.tsx src/features/listing-detail/ListingMediaViewer.tsx
           if git diff --quiet; then
             echo "Listing detail SSR patch already applied."
             exit 0
           fi
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            src/routes/listings.'$id'.tsx \
-            src/features/listing-detail/public-listing-detail-page-data.ts \
-            src/features/listing-detail/ListingMediaExperience.tsx \
-            src/features/listing-detail/ListingMediaViewer.tsx
+          git add "src/routes/listings.\$id.tsx" src/features/listing-detail/public-listing-detail-page-data.ts src/features/listing-detail/ListingMediaExperience.tsx src/features/listing-detail/ListingMediaViewer.tsx
           git commit -m "Render listing detail dependencies in initial HTML"
           git push origin HEAD:${{ github.head_ref }}
 
