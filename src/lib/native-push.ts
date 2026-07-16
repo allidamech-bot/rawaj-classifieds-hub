@@ -84,7 +84,7 @@ export async function enableNativePush(
 
     const deviceKey = getOrCreatePushDeviceKey();
     if (permission.receive !== "granted") {
-      if (deviceKey) await disablePushDevice(userId, deviceKey, false);
+      if (deviceKey) await disableNativePush(userId, false);
       return {
         ok: true,
         data: {
