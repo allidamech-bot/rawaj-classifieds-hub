@@ -1,0 +1,77 @@
+name: Phase 3 Deferred Services Format
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/phase-3-defer-global-services
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format changed files
+        run: |
+          npx prettier --write \
+            src/routes/__root.tsx \
+            src/features/comparison/listing-comparison.tsx \
+            src/features/comparison/ListingComparisonDock.tsx \
+            scripts/deferred-root-services.test.mjs \
+            scripts/listing-comparison-v1.test.mjs \
+            scripts/saved-search-background-alerts.test.mjs \
+            .github/workflows/quality-gate.yml
+
+      - name: Validate focused scope
+        run: |
+          npx eslint --quiet \
+            src/routes/__root.tsx \
+            src/features/comparison/listing-comparison.tsx \
+            src/features/comparison/ListingComparisonDock.tsx \
+            scripts/deferred-root-services.test.mjs \
+            scripts/listing-comparison-v1.test.mjs \
+            scripts/saved-search-background-alerts.test.mjs
+          node --test scripts/deferred-root-services.test.mjs
+          npm run test:listing-comparison
+          node --test scripts/saved-search-background-alerts.test.mjs
+          npm run typecheck -- --pretty false
+
+      - name: Stage formatted output
+        run: |
+          mkdir -p phase3-deferred-output/src/routes
+          mkdir -p phase3-deferred-output/src/features/comparison
+          mkdir -p phase3-deferred-output/scripts
+          mkdir -p phase3-deferred-output/.github/workflows
+          cp src/routes/__root.tsx phase3-deferred-output/src/routes/__root.tsx
+          cp src/features/comparison/listing-comparison.tsx phase3-deferred-output/src/features/comparison/listing-comparison.tsx
+          cp src/features/comparison/ListingComparisonDock.tsx phase3-deferred-output/src/features/comparison/ListingComparisonDock.tsx
+          cp scripts/deferred-root-services.test.mjs phase3-deferred-output/scripts/deferred-root-services.test.mjs
+          cp scripts/listing-comparison-v1.test.mjs phase3-deferred-output/scripts/listing-comparison-v1.test.mjs
+          cp scripts/saved-search-background-alerts.test.mjs phase3-deferred-output/scripts/saved-search-background-alerts.test.mjs
+          cp .github/workflows/quality-gate.yml phase3-deferred-output/.github/workflows/quality-gate.yml
+
+      - name: Upload formatted output
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase3-deferred-output-${{ github.sha }}
+          path: phase3-deferred-output
+          include-hidden-files: true
+          retention-days: 1
+          if-no-files-found: error
