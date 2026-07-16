@@ -8,27 +8,32 @@ import {
   isUnavailableSellerProfileError,
 } from "../src/lib/api/seller-profile-load-guard.ts";
 
-const [root, shared, publicRoute, ownerRoute, css, qualityGate, barrel] = await Promise.all([
-  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-  readFile(
-    new URL("../src/features/storefront/StorefrontIdentityHero.tsx", import.meta.url),
-    "utf8",
-  ),
-  readFile(new URL("../src/routes/seller.$id.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/profile/listings.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/seller-storefront-v2.css", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
-]);
+const [root, routeStyles, shared, publicRoute, ownerRoute, css, qualityGate, barrel] =
+  await Promise.all([
+    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
+    readFile(
+      new URL("../src/features/storefront/StorefrontIdentityHero.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../src/routes/seller.$id.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/profile/listings.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/seller-storefront-v2.css", import.meta.url), "utf8"),
+    readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
+  ]);
 
 const sellerLoadError = {
   message: "Temporary seller profile read failure",
 };
 
 test("seller storefront V2 stylesheet loads after existing storefront layers", () => {
-  assert.match(root, /import sellerStorefrontV2Css from "\.\.\/seller-storefront-v2\.css\?url"/);
-  const foundation = root.indexOf("href: sellerStorefrontFoundationCss");
-  const v2 = root.indexOf("href: sellerStorefrontV2Css");
+  assert.match(
+    routeStyles,
+    /import sellerStorefrontV2Css from "\.\.\/seller-storefront-v2\.css\?url"/,
+  );
+  const foundation = root.indexOf("routeStyleHrefs.sellerStorefrontFoundation");
+  const v2 = root.indexOf("routeStyleHrefs.sellerStorefrontV2");
   assert.notEqual(foundation, -1);
   assert.notEqual(v2, -1);
   assert.ok(v2 > foundation);
