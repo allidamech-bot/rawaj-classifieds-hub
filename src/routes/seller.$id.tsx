@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { MessageSquare, ShieldAlert, Star } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
@@ -55,6 +55,8 @@ export const Route = createFileRoute("/seller/$id")({
 function SellerPage() {
   const { text, language } = useUiPreferences();
   const seller = Route.useLoaderData();
+  const router = useRouter();
+  const retrySections = () => void router.invalidate();
 
   return (
     <div className="rawaj-storefront-v2 min-h-dvh" dir={language === "ar" ? "rtl" : "ltr"}>
@@ -72,8 +74,8 @@ function SellerPage() {
             location={seller.locationAr}
             verified={seller.verified}
             joinedAt={seller.joinedAt}
-            ratingAverage={seller.ratingSummary.average}
-            ratingCount={seller.ratingSummary.count}
+            ratingAverage={seller.ratingSummary?.average}
+            ratingCount={seller.ratingSummary?.count}
             approvedCount={seller.approvedListingCount}
           />
 
@@ -86,10 +88,37 @@ function SellerPage() {
                   "إعلانات عامة معتمدة ومتاح تصفحها مباشرة.",
                   "Approved public listings available to browse now.",
                 )}
-                count={seller.listings.length}
+                count={seller.approvedListingCount ?? undefined}
               />
 
-              {seller.listings.length === 0 ? (
+              {seller.inventoryStatus === "ready" &&
+              seller.approvedListingCount != null &&
+              seller.approvedListingCount > seller.listings.length ? (
+                <p className="mb-3 text-xs text-muted-foreground">
+                  {text(
+                    `نعرض أحدث ${seller.listings.length} من ${seller.approvedListingCount} إعلانًا عامًا معتمدًا.`,
+                    `Showing the newest ${seller.listings.length} of ${seller.approvedListingCount} approved public listings.`,
+                  )}
+                </p>
+              ) : null}
+
+              {seller.inventoryStatus !== "ready" ? (
+                <StorefrontNotice
+                  title={text(
+                    "تعذر تحميل الإعلانات مؤقتًا",
+                    "Listings are temporarily unavailable",
+                  )}
+                  description={text(
+                    "تم الحفاظ على هوية البائع العامة. حاول تحميل الإعلانات مرة أخرى.",
+                    "The public seller identity remains available. Try loading the listings again.",
+                  )}
+                  action={
+                    <button type="button" onClick={retrySections} className="underline">
+                      {text("إعادة المحاولة", "Try again")}
+                    </button>
+                  }
+                />
+              ) : seller.listings.length === 0 ? (
                 <StorefrontNotice
                   tone="empty"
                   title={text("لا توجد إعلانات عامة الآن", "No public listings right now")}
@@ -108,7 +137,7 @@ function SellerPage() {
             </div>
 
             <div className="rawaj-storefront-v2__aside">
-              <ReviewsPanel seller={seller} />
+              <ReviewsPanel seller={seller} retrySections={retrySections} />
               <SafetyPanel />
             </div>
           </section>
@@ -124,7 +153,7 @@ function sellerSeoDescription(seller: PublicSellerProfile) {
   const parts = [
     plainText(seller.bio, 100),
     seller.locationAr ? `الموقع: ${seller.locationAr}` : null,
-    `${seller.approvedListingCount} إعلان معتمد`,
+    seller.approvedListingCount != null ? `${seller.approvedListingCount} إعلان عام معتمد` : null,
     seller.verified ? "بائع موثق بعد مراجعة الإدارة" : null,
   ].filter(Boolean);
 
@@ -132,28 +161,45 @@ function sellerSeoDescription(seller: PublicSellerProfile) {
 }
 
 function buildSellerStructuredData(seller: PublicSellerProfile) {
-  const data: Record<string, unknown> = {
-    "@context": "https://schema.org",
-    "@type": seller.businessName ? "Organization" : "Person",
-    name: seller.businessName || seller.displayName,
-    url: absoluteUrl(`/seller/${seller.id}`),
+  const person: Record<string, unknown> = {
+    "@type": "Person",
+    name: plainText(seller.businessName || seller.displayName, 120),
     description: sellerSeoDescription(seller),
-    areaServed: seller.locationAr ?? "سوريا",
   };
-
+  if (seller.locationAr) person.homeLocation = plainText(seller.locationAr, 120);
   if (seller.avatarUrl || seller.coverUrl) {
-    data.image = absoluteUrl(seller.avatarUrl ?? seller.coverUrl ?? "");
+    person.image = absoluteUrl(seller.avatarUrl ?? seller.coverUrl ?? "");
   }
-
-  return data;
+  if (seller.ratingSummary?.count) {
+    person.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: seller.ratingSummary.average,
+      ratingCount: seller.ratingSummary.count,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+  return {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    url: absoluteUrl(`/seller/${seller.id}`),
+    mainEntity: person,
+  };
 }
 
 type ReviewEligibilityUiState =
   "idle" | "loading" | "eligible" | "existing_review" | "no_qualifying_interaction" | "error";
 
-function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
+function ReviewsPanel({
+  seller,
+  retrySections,
+}: {
+  seller: PublicSellerProfile;
+  retrySections: () => void;
+}) {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
+  const ratingSummary = seller.ratingSummary;
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [selectedTraits, setSelectedTraits] = useState<(typeof SELLER_REVIEW_TRAITS)[number][]>([]);
@@ -163,8 +209,10 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   const eligibilityRequestIdRef = useRef(0);
   const profileId = auth.profile?.id ?? null;
   const profileIdRef = useRef<string | null>(profileId);
-  const reviewSubmitProfilesRef = useRef<Set<string>>(new Set());
+  const sellerIdRef = useRef(seller.id);
+  const reviewSubmitScopesRef = useRef<Set<string>>(new Set());
   profileIdRef.current = profileId;
+  sellerIdRef.current = seller.id;
   const isOwnProfile = auth.status === "signedIn" && profileId === seller.id;
   const shouldCheckEligibility = auth.status === "signedIn" && Boolean(profileId) && !isOwnProfile;
 
@@ -189,7 +237,11 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
     setEligibilityState("loading");
     setNotice("");
     const result = await fetchSellerReviewEligibility(seller.id);
-    if (requestId !== eligibilityRequestIdRef.current || currentProfileId !== profileIdRef.current)
+    if (
+      requestId !== eligibilityRequestIdRef.current ||
+      currentProfileId !== profileIdRef.current ||
+      seller.id !== sellerIdRef.current
+    )
       return;
     if (!result.ok) {
       setEligibilityState("error");
@@ -220,24 +272,26 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
   async function submitReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const currentProfileId = profileId;
+    const currentSellerId = seller.id;
     if (eligibilityState !== "eligible" || !currentProfileId) return;
-    if (reviewSubmitProfilesRef.current.has(currentProfileId)) return;
+    const scopeKey = [currentProfileId, currentSellerId].join(":");
+    if (reviewSubmitScopesRef.current.has(scopeKey)) return;
 
     const currentRating = rating;
     const currentComment = comment;
     const currentTraits = selectedTraits;
-    reviewSubmitProfilesRef.current.add(currentProfileId);
+    reviewSubmitScopesRef.current.add(scopeKey);
     setNotice("");
     setSaving(true);
     try {
       const result = await createSellerReview({
-        sellerUserId: seller.id,
-        reviewerUserId: currentProfileId,
+        sellerUserId: currentSellerId,
         rating: currentRating,
         comment: currentComment,
         traits: currentTraits,
       });
-      if (currentProfileId !== profileIdRef.current) return;
+      if (currentProfileId !== profileIdRef.current || currentSellerId !== sellerIdRef.current)
+        return;
       if (result.ok) {
         setComment("");
         setRating(5);
@@ -258,8 +312,9 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
         }
       }
     } finally {
-      reviewSubmitProfilesRef.current.delete(currentProfileId);
-      if (currentProfileId === profileIdRef.current) setSaving(false);
+      reviewSubmitScopesRef.current.delete(scopeKey);
+      if (currentProfileId === profileIdRef.current && currentSellerId === sellerIdRef.current)
+        setSaving(false);
     }
   }
 
@@ -274,27 +329,32 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
               {text("التقييمات المعتمدة", "Approved reviews")}
             </h3>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              {seller.ratingSummary.count > 0
+              {seller.reviewsStatus !== "ready"
                 ? text(
-                    `${seller.ratingSummary.average} من 5 بناء على ${seller.ratingSummary.count} تقييم معتمد`,
-                    `${seller.ratingSummary.average} of 5 from ${seller.ratingSummary.count} approved reviews`,
+                    "تعذر تحميل ملخص التقييمات مؤقتًا.",
+                    "The approved review summary is temporarily unavailable.",
                   )
-                : text("لا توجد تقييمات معتمدة بعد.", "No approved reviews yet.")}
+                : ratingSummary && ratingSummary.count > 0
+                  ? text(
+                      `${ratingSummary.average} من 5 بناء على ${ratingSummary.count} تقييم معتمد`,
+                      `${ratingSummary.average} of 5 from ${ratingSummary.count} approved reviews`,
+                    )
+                  : text("لا توجد تقييمات معتمدة بعد.", "No approved reviews yet.")}
             </p>
           </div>
-          {seller.ratingSummary.count > 0 ? (
+          {ratingSummary && ratingSummary.count > 0 ? (
             <span className="rounded-full bg-primary px-3 py-2 text-sm font-extrabold text-primary-foreground">
-              {seller.ratingSummary.average} ★
+              {ratingSummary.average} ★
             </span>
           ) : null}
         </div>
 
-        {seller.ratingSummary.count > 0 ? (
+        {ratingSummary && ratingSummary.count > 0 ? (
           <div className="mt-4 grid grid-cols-5 gap-1.5 text-center text-[10px] text-muted-foreground">
             {[5, 4, 3, 2, 1].map((star) => (
               <div key={star} className="rounded-[0.8rem] bg-white/70 p-2 hairline">
                 <div className="font-bold text-foreground">
-                  {seller.ratingSummary.distribution[star as 1 | 2 | 3 | 4 | 5]}
+                  {ratingSummary.distribution[star as 1 | 2 | 3 | 4 | 5]}
                 </div>
                 <div>{star} ★</div>
               </div>
@@ -302,15 +362,33 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
           </div>
         ) : null}
 
-        {seller.reviews.length > 0 ? (
+        {seller.reviewsStatus !== "ready" ? (
+          <div className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs leading-6 hairline">
+            <p className="font-bold text-primary">
+              {text("التقييمات غير متاحة مؤقتًا", "Reviews are temporarily unavailable")}
+            </p>
+            <button type="button" onClick={retrySections} className="mt-2 underline">
+              {text("إعادة المحاولة", "Try again")}
+            </button>
+          </div>
+        ) : seller.reviews.length > 0 ? (
           <div className="mt-4 space-y-2">
-            {seller.reviews.slice(0, 3).map((review) => (
+            {seller.reviews.map((review) => (
               <SellerReviewCard
                 key={`${profileId ?? "signed-out"}:${review.id}`}
                 review={review}
                 canManageResponse={isOwnProfile}
               />
             ))}
+            {seller.approvedReviewCount != null &&
+            seller.approvedReviewCount > seller.reviews.length ? (
+              <p className="text-[11px] text-muted-foreground">
+                {text(
+                  `نعرض أحدث ${seller.reviews.length} من ${seller.approvedReviewCount} تقييمًا معتمدًا.`,
+                  `Showing the newest ${seller.reviews.length} of ${seller.approvedReviewCount} approved reviews.`,
+                )}
+              </p>
+            ) : null}
           </div>
         ) : null}
 
@@ -327,6 +405,7 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
             </p>
             <Link
               to="/login"
+              search={{ returnTo: `/seller/${seller.id}` }}
               className="mt-3 inline-flex min-h-11 items-center rounded-lg bg-primary px-3 py-2 font-bold text-primary-foreground"
             >
               {text("تسجيل الدخول", "Log in")}
@@ -337,7 +416,11 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
             {text("لا يمكنك تقييم حسابك.", "You cannot review your own account.")}
           </p>
         ) : eligibilityState === "loading" || eligibilityState === "idle" ? (
-          <p className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs font-semibold text-muted-foreground hairline">
+          <p
+            role="status"
+            aria-live="polite"
+            className="mt-4 rounded-[1rem] bg-white/72 p-3 text-xs font-semibold text-muted-foreground hairline"
+          >
             {text("جارٍ التحقق من أهلية التقييم…", "Checking review eligibility…")}
           </p>
         ) : eligibilityState === "existing_review" ? (
@@ -387,6 +470,8 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
                 <button
                   key={value}
                   type="button"
+                  aria-label={text(`تقييم ${value} من 5`, `Rate ${value} out of 5`)}
+                  aria-pressed={rating === value}
                   onClick={() => setRating(value)}
                   className={`min-h-11 rounded-lg px-3 py-2 text-xs font-bold hairline ${
                     rating >= value ? "bg-gold text-gold-foreground" : "bg-white/72"
@@ -428,18 +513,21 @@ function ReviewsPanel({ seller }: { seller: PublicSellerProfile }) {
                 })}
               </div>
             </div>
-            <textarea
-              value={comment}
-              onChange={(event) => setComment(event.target.value)}
-              maxLength={1200}
-              rows={3}
-              disabled={saving}
-              placeholder={text(
-                "تعليق كتابي اختياري — 10 أحرف على الأقل عند الكتابة",
-                "Optional written comment — at least 10 characters when provided",
-              )}
-              className="w-full rounded-xl bg-white/76 px-3 py-2 text-sm outline-none hairline disabled:opacity-60"
-            />
+            <label className="block">
+              <span className="sr-only">{text("تعليق التقييم", "Review comment")}</span>
+              <textarea
+                value={comment}
+                onChange={(event) => setComment(event.target.value)}
+                maxLength={1200}
+                rows={3}
+                disabled={saving}
+                placeholder={text(
+                  "تعليق كتابي اختياري — 10 أحرف على الأقل عند الكتابة",
+                  "Optional written comment — at least 10 characters when provided",
+                )}
+                className="w-full rounded-xl bg-white/76 px-3 py-2 text-sm outline-none hairline disabled:opacity-60"
+              />
+            </label>
             <button
               type="submit"
               disabled={saving}

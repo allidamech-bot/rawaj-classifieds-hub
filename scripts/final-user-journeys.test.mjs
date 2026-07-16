@@ -44,9 +44,11 @@ test("public listing actions cannot be duplicated", () => {
 test("seller review eligibility is retryable and review writes are account-scoped", () => {
   assert.match(seller, /const loadEligibility = useCallback/);
   assert.match(seller, /const eligibilityRequestIdRef = useRef\(0\)/);
-  assert.match(seller, /const reviewSubmitProfilesRef = useRef<Set<string>>\(new Set\(\)\)/);
-  assert.match(seller, /reviewSubmitProfilesRef\.current\.has\(currentProfileId\)/);
-  assert.match(seller, /reviewSubmitProfilesRef\.current\.delete\(currentProfileId\)/);
+  assert.match(seller, /const reviewSubmitScopesRef = useRef<Set<string>>\(new Set\(\)\)/);
+  assert.match(seller, /reviewSubmitScopesRef\.current\.has\(scopeKey\)/);
+  assert.match(seller, /reviewSubmitScopesRef\.current\.delete\(scopeKey\)/);
+  assert.match(seller, /currentSellerId !== sellerIdRef\.current/);
+  assert.doesNotMatch(seller, /reviewerUserId:/);
   assert.match(seller, /onClick=\{\(\) => void loadEligibility\(\)\}/);
 });
 

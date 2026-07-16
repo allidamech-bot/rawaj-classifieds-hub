@@ -2,6 +2,7 @@ import type {
   ClassifiedsResult,
   CreateSellerReviewPayload,
   ModerateSellerReviewPayload,
+  PublicSellerReview,
   SellerReview,
   SellerReviewStatus,
   SellerReviewTrait,
@@ -105,31 +106,20 @@ export async function fetchSellerReviewEligibility(
 export async function createSellerReview(
   payload: CreateSellerReviewPayload,
 ): Promise<ClassifiedsResult<SellerReview>> {
-  if (!payload.reviewerUserId) {
-    return {
-      ok: false,
-      error: {
-        code: "auth_required",
-        message: "يجب تسجيل الدخول لإرسال تقييم.",
-      },
-    };
-  }
-
   const sellerUserId = payload.sellerUserId.trim();
-  const reviewerUserId = payload.reviewerUserId.trim();
-  const comment = payload.comment?.trim() ?? "";
-  const requestedTraitCount = payload.traits?.length ?? 0;
-  const traits = Array.from(new Set(payload.traits ?? []));
-
-  if (!sellerUserId || sellerUserId === reviewerUserId) {
+  if (!sellerUserId) {
     return {
       ok: false,
       error: {
         code: "validation_error",
-        message: "لا يمكن للمستخدم تقييم نفسه.",
+        message: "تعذر تحديد البائع.",
       },
     };
   }
+
+  const comment = payload.comment?.trim() ?? "";
+  const requestedTraitCount = payload.traits?.length ?? 0;
+  const traits = Array.from(new Set(payload.traits ?? []));
 
   if (!Number.isInteger(payload.rating) || payload.rating < 1 || payload.rating > 5) {
     return {
@@ -175,6 +165,15 @@ export async function createSellerReview(
 
   if (error) {
     const message = error.message ?? "";
+    if (message.includes("seller_review_invalid_seller")) {
+      return {
+        ok: false,
+        error: {
+          code: "validation_error",
+          message: "لا يمكنك تقييم حسابك أو بائع غير صالح.",
+        },
+      };
+    }
     if (message.includes("seller_review_not_eligible")) {
       return {
         ok: false,
@@ -288,7 +287,9 @@ export async function setSellerReviewResponse(
   return { ok: true, data: mapReview(raw as Record<string, unknown>) };
 }
 
-export function readSellerReviewResponse(review: SellerReview): SellerReviewResponseFields {
+export function readSellerReviewResponse(
+  review: SellerReview | PublicSellerReview,
+): SellerReviewResponseFields {
   const extended = review as SellerReviewWithResponse;
   return {
     sellerResponse: extended.sellerResponse ?? null,

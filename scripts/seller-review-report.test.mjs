@@ -70,9 +70,10 @@ test("review reports expose only own-user and moderator select policies", () => 
   assert.match(migration, /public\.current_user_can_moderate\(\)/);
 });
 
-test("review cards expose governed reporting without allowing self-report UI", () => {
+test("public review cards expose governed reporting without public reviewer identity", () => {
   assert.match(card, /createSellerReviewReport\(review\.id, reportReason, reportDetails\)/);
-  assert.match(card, /auth\.profile\?\.id !== review\.reviewerUserId/);
+  assert.match(card, /const canReport = auth\.status === "signedIn"/);
+  assert.doesNotMatch(card, /review\.reviewerUserId/);
   assert.match(card, /reportReasons/);
   assert.match(card, /maxLength=\{1000\}/);
   assert.match(card, /Report submitted for review without automatically hiding the review/);

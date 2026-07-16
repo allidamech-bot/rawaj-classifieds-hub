@@ -237,6 +237,9 @@ jobs:
       - name: Seller Storefront V2 contract
         run: node --test scripts/seller-storefront-v2.test.mjs
 
+      - name: Seller Storefront Trust Integrity contract
+        run: npm run test:seller-storefront-trust
+
       - name: Auth and Account V2 contract
         run: node --test scripts/auth-account-v2.test.mjs
 

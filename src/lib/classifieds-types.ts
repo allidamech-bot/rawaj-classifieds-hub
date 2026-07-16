@@ -181,8 +181,6 @@ export interface CreateSavedSearchPayload {
 
 export interface PublicSellerProfile {
   id: string;
-  firstName: string | null;
-  lastName: string | null;
   displayName: string;
   verified: boolean;
   joinedAt: string | null;
@@ -191,10 +189,27 @@ export interface PublicSellerProfile {
   businessName: string | null;
   avatarUrl: string | null;
   coverUrl: string | null;
-  approvedListingCount: number;
-  ratingSummary: SellerRatingSummary;
-  reviews: SellerReview[];
+  approvedListingCount: number | null;
+  inventoryStatus: PublicSellerSectionStatus;
+  listingDisplayLimit: number;
+  ratingSummary: SellerRatingSummary | null;
+  reviews: PublicSellerReview[];
+  reviewsStatus: PublicSellerSectionStatus;
+  approvedReviewCount: number | null;
+  reviewDisplayLimit: number;
   listings: ClassifiedListing[];
+}
+
+export type PublicSellerSectionStatus = "ready" | "unavailable" | "unsupported";
+
+export interface PublicSellerReview {
+  id: string;
+  rating: number;
+  comment: string | null;
+  traits: SellerReviewTrait[];
+  sellerResponse: string | null;
+  sellerResponseUpdatedAt: string | null;
+  createdAt: string;
 }
 
 export interface UpdateProfileBasicsPayload {
@@ -253,7 +268,6 @@ export interface SellerRatingSummary {
 
 export interface CreateSellerReviewPayload {
   sellerUserId: string;
-  reviewerUserId: string | null;
   relatedListingId?: string | null;
   rating: number;
   comment?: string | null;
