@@ -159,7 +159,7 @@ function Logo() {
     <span className="rawaj-brand-lockup flex items-center gap-2 sm:gap-2.5">
       <span className="rawaj-brand-mark grid h-9 w-9 shrink-0 place-items-center sm:h-10 sm:w-10">
         <img
-          src="/brand/rawaj-mark-transparent-header.png"
+          src="/brand/rawaj-mark-transparent-192.png"
           alt=""
           decoding="async"
           width={32}
