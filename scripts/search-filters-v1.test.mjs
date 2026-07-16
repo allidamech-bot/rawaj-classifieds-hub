@@ -42,7 +42,10 @@ test("search and filter styles load after adaptive listing cards", () => {
 test("listing URL schema supports presentation mode and real image filtering", () => {
   assert.match(schema, /listingsViewValues = \["grid", "list"\]/);
   assert.match(schema, /view: z\.enum\(listingsViewValues\)\.optional\(\)/);
-  assert.match(schema, /with_photos: z\.preprocess\(parseBooleanParam, z\.boolean\(\)\.optional\(\)\)/);
+  assert.match(
+    schema,
+    /with_photos: z\.preprocess\(parseBooleanParam, z\.boolean\(\)\.optional\(\)\)/,
+  );
   assert.match(filters, /with_photos: withPhotos \|\| undefined/);
   assert.match(filters, /view: view === "grid" \? undefined : view/);
 });

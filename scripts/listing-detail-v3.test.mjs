@@ -16,10 +16,22 @@ const [
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listing-detail/public-listing-detail-page-data.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listing-detail/useListingMediaState.ts", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/listing-detail/public-listing-detail-page-data.ts", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/useListingMediaState.ts", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8"),
   readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8"),
 ]);
@@ -62,7 +74,10 @@ test("public listing detail dependencies are rendered before hydration", () => {
   assert.match(detailRoute, /const \[loading, setLoading\] = useState\(false\)/);
   assert.match(detailRoute, /const \[sellerLoading, setSellerLoading\] = useState\(false\)/);
   assert.match(detailRoute, /const \[similarLoading, setSimilarLoading\] = useState\(false\)/);
-  assert.doesNotMatch(detailRoute, /fetchListingImages|fetchPublicSellerProfile|fetchPublicListings/);
+  assert.doesNotMatch(
+    detailRoute,
+    /fetchListingImages|fetchPublicSellerProfile|fetchPublicListings/,
+  );
 });
 
 test("listing detail SSR uses anonymous public APIs and excludes the current related item", () => {

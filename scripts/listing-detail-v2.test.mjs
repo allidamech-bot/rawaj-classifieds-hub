@@ -19,13 +19,34 @@ const [
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listing-detail/public-listing-detail-page-data.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listing-detail/ListingSellerProfileCard.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listing-detail/ListingContactDock.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listing-detail/ListingSafetyAndAlert.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listing-detail/SimilarListingsRail.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/listing-detail/public-listing-detail-page-data.ts", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingMediaViewer.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingSellerProfileCard.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingContactDock.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/ListingSafetyAndAlert.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/listing-detail/SimilarListingsRail.tsx", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/primary-navigation.ts", import.meta.url), "utf8"),
 ]);
