@@ -11,6 +11,9 @@ const [
   productionWorkflow,
   productionSpec,
   browserSpec,
+  productionSchemaProof,
+  productionChecklist,
+  phaseZeroProofSql,
 ] = await Promise.all([
   readFile(new URL("../vite.config.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/build-info.ts", import.meta.url), "utf8"),
@@ -20,6 +23,15 @@ const [
   readFile(new URL("../.github/workflows/production-smoke.yml", import.meta.url), "utf8"),
   readFile(new URL("../e2e/production-smoke.spec.ts", import.meta.url), "utf8"),
   readFile(new URL("../e2e/marketplace-smoke.spec.ts", import.meta.url), "utf8"),
+  readFile(new URL("../docs/production-schema/production-schema-proof.md", import.meta.url), "utf8"),
+  readFile(
+    new URL("../docs/final-audit/production-verification-checklist.md", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../supabase/verification/20260716_phase_0_production_proof.sql", import.meta.url),
+    "utf8",
+  ),
 ]);
 
 test("build metadata is embedded from Vercel or CI truth", () => {
@@ -81,4 +93,43 @@ test("local browser smoke retains legal and controlled not-found coverage", () =
   }
   assert.match(browserSpec, /unknown routes render a controlled not-found surface/);
   assert.match(browserSpec, /requestfailed/);
+});
+
+test("Production proof distinguishes historical evidence from the current repository delta", () => {
+  assert.match(productionSchemaProof, /Historical Production extraction retained/);
+  assert.match(productionSchemaProof, /202607160002_require_listing_moderation_audit\.sql/);
+  assert.match(productionSchemaProof, /202607160003_enable_chat_realtime\.sql/);
+  assert.match(productionSchemaProof, /Unknown until applied and verified/);
+  assert.match(productionSchemaProof, /Realtime conclusion from the historical document is superseded/);
+  assert.doesNotMatch(
+    productionSchemaProof,
+    /no current repository evidence that RAWAJ depends on database-change Realtime subscriptions/i,
+  );
+  assert.doesNotMatch(productionSchemaProof, /No repository evidence requires Realtime/i);
+});
+
+test("Phase 0 Production proof bundle is read-only and verifies both release blockers", () => {
+  assert.match(phaseZeroProofSql, /BEGIN TRANSACTION READ ONLY/);
+  assert.match(phaseZeroProofSql, /ROLLBACK;/);
+  assert.doesNotMatch(
+    phaseZeroProofSql,
+    /^\s*(?:insert|update|delete|alter|create|drop|grant|revoke|truncate)\b/im,
+  );
+  assert.match(phaseZeroProofSql, /rawaj_review_listing_decision/);
+  assert.match(phaseZeroProofSql, /listing_moderation_actions/);
+  assert.match(phaseZeroProofSql, /rawaj_insert_audit_log/);
+  assert.match(phaseZeroProofSql, /pg_publication_tables/);
+  assert.match(phaseZeroProofSql, /conversations/);
+  assert.match(phaseZeroProofSql, /conversation_messages/);
+  assert.match(phaseZeroProofSql, /relrowsecurity/);
+  assert.match(phaseZeroProofSql, /has_table_privilege/);
+});
+
+test("Production checklist requires application and behavioral evidence", () => {
+  assert.match(productionChecklist, /202607160002_require_listing_moderation_audit\.sql/);
+  assert.match(productionChecklist, /202607160003_enable_chat_realtime\.sql/);
+  assert.match(productionChecklist, /participant A sends a message to participant B/);
+  assert.match(productionChecklist, /non-participant C receives no conversation event/);
+  assert.match(productionChecklist, /full Production catalog extraction refreshed/);
+  assert.match(productionChecklist, /Repository presence, a merged PR, and a passing build do not prove/);
 });
