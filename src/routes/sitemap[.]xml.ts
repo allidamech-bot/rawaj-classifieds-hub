@@ -107,11 +107,7 @@ async function readPublicReferenceEntries(): Promise<SitemapEntry[]> {
 
   const [categoriesResult, governoratesResult] = await Promise.all([
     clientResult.data.from("categories").select("slug").eq("is_active", true).order("sort_order"),
-    clientResult.data
-      .from("governorates")
-      .select("slug")
-      .eq("is_active", true)
-      .order("sort_order"),
+    clientResult.data.from("governorates").select("slug").eq("is_active", true).order("sort_order"),
   ]);
 
   if (categoriesResult.error) throw categoriesResult.error;
