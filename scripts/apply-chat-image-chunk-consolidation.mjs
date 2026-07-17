@@ -73,7 +73,7 @@ export async function uploadChatImage(payload: {
   }
 
   const extension = extensionForChatImageMime(payload.file.type);
-  const path = \\`\${conversationId}/\${userId}/\${requestId}.\${extension}\\`;
+  const path = [conversationId, userId, requestId].join("/") + "." + extension;
   const { error } = await clientResult.data.storage
     .from("conversation-images")
     .upload(path, payload.file, {
@@ -121,11 +121,6 @@ await replaceIn(
   "src/lib/api/messaging-guarded.ts",
   `  adminModerateMessageReport,\n  blockConversationParticipant,`,
   `  adminModerateMessageReport,\n  blockConversationParticipant,\n  createChatImageSignedUrl,`,
-);
-await replaceIn(
-  "src/lib/api/messaging-guarded.ts",
-  `  createMessageReport,\n  fetchConversationMessages,`,
-  `  createMessageReport,\n  fetchConversationMessages,`,
 );
 await replaceIn(
   "src/lib/api/messaging-guarded.ts",
