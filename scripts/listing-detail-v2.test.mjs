@@ -90,7 +90,7 @@ test("seller profile uses real public profile data and resilient identity media"
   assert.match(route, /useState<PublicSellerProfile \| null>\(initialData\.seller\)/);
   assert.match(route, /<ListingSellerProfileCard/);
   assert.match(seller, /seller\?\.verified/);
-  assert.match(seller, /seller\?\.ratingSummary\.average/);
+  assert.match(seller, /seller\?\.ratingSummary\?\.average/);
   assert.match(seller, /seller\.approvedListingCount/);
   assert.match(seller, /seller\?\.joinedAt/);
   assert.match(seller, /AvatarImage/);
