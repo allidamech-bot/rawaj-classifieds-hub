@@ -123,6 +123,9 @@ jobs:
       - name: Support, Reports & Moderation Integrity contract
         run: npm run test:support-reports-moderation
 
+      - name: Favorites, Saved Searches & Retention Integrity contract
+        run: npm run test:favorites-saved-searches-retention
+
       - name: SEO discovery contract
         run: npm run test:seo-discovery
 

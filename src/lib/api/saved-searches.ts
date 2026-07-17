@@ -38,9 +38,13 @@ export async function fetchSavedSearches(
 
   const { data, error } = await clientResult.data
     .from("saved_searches")
-    .select("*")
+    .select(
+      "id, user_id, name_ar, filters, alert_frequency, last_alert_checked_at, created_at, updated_at",
+    )
     .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(100);
 
   if (error) return { ok: false, error: mapError(error) };
   return {
@@ -72,30 +76,20 @@ export async function createSavedSearch(
   if (!clientResult.ok) return clientResult;
   const filters = normalizeSavedSearchFilters(payload.filters);
 
-  const duplicate = await clientResult.data
-    .from("saved_searches")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("filters", filters)
-    .limit(1)
-    .maybeSingle();
-  if (duplicate.error) return { ok: false, error: mapError(duplicate.error) };
-  if (duplicate.data) {
-    return { ok: true, data: mapSavedSearch(duplicate.data as Record<string, unknown>) };
+  const { data, error } = await clientResult.data.rpc("rawaj_create_my_saved_search_v2", {
+    p_name_ar: nameAr,
+    p_filters: filters,
+    p_alert_frequency: payload.alertFrequency ?? "weekly",
+  });
+
+  if (error) return { ok: false, error: mapError(error, "create_saved_search") };
+  if (!data || typeof data !== "object") {
+    return {
+      ok: false,
+      error: { code: "not_found", message: "تعذر إنشاء البحث المحفوظ." },
+    };
   }
 
-  const { data, error } = await clientResult.data
-    .from("saved_searches")
-    .insert({
-      user_id: userId,
-      name_ar: nameAr,
-      filters,
-      alert_frequency: payload.alertFrequency ?? "weekly",
-    })
-    .select("*")
-    .single();
-
-  if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: mapSavedSearch(data as Record<string, unknown>) };
 }
 
@@ -122,21 +116,19 @@ export async function updateSavedSearchAlertFrequency(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data
-    .from("saved_searches")
-    .update({ alert_frequency: frequency })
-    .eq("id", cleanId)
-    .eq("user_id", userId)
-    .select("*")
-    .maybeSingle();
+  const { data, error } = await clientResult.data.rpc("rawaj_update_my_saved_search_frequency_v2", {
+    p_saved_search_id: cleanId,
+    p_alert_frequency: frequency,
+  });
 
-  if (error) return { ok: false, error: mapError(error) };
-  if (!data) {
+  if (error) return { ok: false, error: mapError(error, "update_saved_search") };
+  if (!data || typeof data !== "object") {
     return {
       ok: false,
       error: { code: "not_found", message: "لم يعد البحث المحفوظ متاحاً." },
     };
   }
+
   return { ok: true, data: mapSavedSearch(data as Record<string, unknown>) };
 }
 
@@ -151,7 +143,8 @@ export async function deleteSavedSearch(
     };
   }
 
-  if (!savedSearchId) {
+  const cleanId = savedSearchId.trim();
+  if (!cleanId) {
     return {
       ok: false,
       error: { code: "validation_error", message: "تعذر تحديد البحث المحفوظ." },
@@ -161,21 +154,18 @@ export async function deleteSavedSearch(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data
-    .from("saved_searches")
-    .delete()
-    .eq("id", savedSearchId)
-    .eq("user_id", userId)
-    .select("id")
-    .maybeSingle();
+  const { data, error } = await clientResult.data.rpc("rawaj_delete_my_saved_search_v2", {
+    p_saved_search_id: cleanId,
+  });
 
-  if (error) return { ok: false, error: mapError(error) };
-  if (!data) {
+  if (error) return { ok: false, error: mapError(error, "delete_saved_search") };
+  if (data !== true) {
     return {
       ok: false,
       error: { code: "not_found", message: "لم يعد البحث المحفوظ متاحاً." },
     };
   }
+
   return { ok: true, data: null };
 }
 
