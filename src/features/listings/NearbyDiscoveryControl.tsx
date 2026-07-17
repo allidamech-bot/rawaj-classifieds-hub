@@ -1,4 +1,4 @@
-import { LocateFixed, LoaderCircle, X } from "lucide-react";
+import { LocateFixed, LoaderCircle, RefreshCw, X } from "lucide-react";
 import type { NearbyRadiusKm } from "@/lib/nearby-location";
 import type { NearbyDiscoveryError } from "./use-nearby-discovery";
 
@@ -6,21 +6,25 @@ const RADII: NearbyRadiusKm[] = [5, 10, 25, 50, 100];
 
 export function NearbyDiscoveryControl({
   active,
+  enabled,
   loading,
   error,
   radiusKm,
   resultCount,
   onActivate,
+  onRefresh,
   onRadiusChange,
   onClear,
   text,
 }: {
   active: boolean;
+  enabled: boolean;
   loading: boolean;
   error: NearbyDiscoveryError;
   radiusKm: NearbyRadiusKm;
   resultCount: number;
   onActivate: () => void;
+  onRefresh: () => void;
   onRadiusChange: (radius: NearbyRadiusKm) => void;
   onClear: () => void;
   text: (ar: string, en: string) => string;
@@ -60,49 +64,72 @@ export function NearbyDiscoveryControl({
           </span>
           <div className="min-w-0">
             <h2 className="text-sm font-extrabold">
-              {text("إعلانات قريبة منك", "Listings near you")}
+              {text("الإعلانات الأقرب إليك", "Listings closest to you")}
             </h2>
             <p className="text-[11px] text-muted-foreground">
               {active
                 ? text(
-                    `${resultCount} إعلان ضمن ${radiusKm} كم تقريبًا`,
-                    `${resultCount} listings within about ${radiusKm} km`,
+                    `${resultCount} إعلان مرتبة حسب القرب ضمن ${radiusKm} كم تقريبًا`,
+                    `${resultCount} listings sorted by distance within about ${radiusKm} km`,
                   )
-                : text(
-                    "الموقع يُستخدم مؤقتًا ولا يتم حفظ إحداثياتك.",
-                    "Your location is used temporarily and is not saved.",
-                  )}
+                : enabled
+                  ? text(
+                      "الميزة مفعلة. نحتاج موقعًا حديثًا لتحديث الترتيب.",
+                      "Nearby mode is enabled. Refresh your location to update sorting.",
+                    )
+                  : text(
+                      "نحفظ تفضيل التفعيل ونطاق البحث فقط، ولا نحفظ إحداثياتك.",
+                      "Only your preference and radius are saved; your coordinates are not stored.",
+                    )}
             </p>
           </div>
         </div>
 
-        {active ? (
-          <button
-            type="button"
-            onClick={onClear}
-            className="inline-flex min-h-10 items-center gap-1 rounded-xl px-3 text-xs font-bold text-muted-foreground hover:bg-muted-surface"
-          >
-            <X className="h-4 w-4" />
-            {text("إلغاء القريب", "Clear nearby")}
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={onActivate}
-            disabled={loading}
-            className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-primary px-4 text-xs font-extrabold text-primary-foreground disabled:opacity-60"
-          >
-            {loading ? (
-              <LoaderCircle className="h-4 w-4 animate-spin" />
-            ) : (
-              <LocateFixed className="h-4 w-4" />
-            )}
-            {loading ? text("جارٍ تحديد موقعك", "Locating you") : text("قريب مني", "Near me")}
-          </button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {active || enabled ? (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={loading}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-primary/10 px-3 text-xs font-bold text-primary disabled:opacity-60"
+            >
+              {loading ? (
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {text("تحديث الموقع", "Refresh location")}
+            </button>
+          ) : null}
+
+          {active || enabled ? (
+            <button
+              type="button"
+              onClick={onClear}
+              className="inline-flex min-h-10 items-center gap-1 rounded-xl px-3 text-xs font-bold text-muted-foreground hover:bg-muted-surface"
+            >
+              <X className="h-4 w-4" />
+              {text("تعطيل القريب", "Disable nearby")}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onActivate}
+              disabled={loading}
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-primary px-4 text-xs font-extrabold text-primary-foreground disabled:opacity-60"
+            >
+              {loading ? (
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+              ) : (
+                <LocateFixed className="h-4 w-4" />
+              )}
+              {loading ? text("جارٍ تحديد موقعك", "Locating you") : text("تفعيل الأقرب", "Enable nearby")}
+            </button>
+          )}
+        </div>
       </div>
 
-      {active ? (
+      {active || enabled ? (
         <div
           className="mt-3 flex gap-2 overflow-x-auto pb-1"
           aria-label={text("نصف قطر البحث", "Search radius")}
