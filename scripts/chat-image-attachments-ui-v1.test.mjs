@@ -20,6 +20,10 @@ test("messages use v3 and short-lived signed attachment URLs", () => {
   assert.match(messaging, /rawaj_send_conversation_message_v3/);
   assert.match(messaging, /attachment_path/);
   assert.match(messaging, /createChatImageSignedUrl/);
+  assert.match(
+    messaging,
+    /message\.attachmentUrl = await createChatImageSignedUrl\(message\.attachmentPath\)/,
+  );
   assert.match(types, /attachmentUrl: string \| null/);
   assert.match(route, /message\.attachmentUrl/);
 });
