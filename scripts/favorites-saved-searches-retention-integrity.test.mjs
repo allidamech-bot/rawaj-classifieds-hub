@@ -14,9 +14,7 @@ const notificationTarget = read("src/lib/api/notification-target-resolution.ts")
 const migration = read(
   "supabase/migrations/202607170004_favorites_saved_searches_retention_integrity.sql",
 );
-const workflow = read(
-  ".github/workflows/favorites-saved-searches-retention-integrity.yml",
-);
+const workflow = read(".github/workflows/favorites-saved-searches-retention-integrity.yml");
 const qualityGate = read(".github/workflows/quality-gate.yml");
 const packageJson = JSON.parse(read("package.json"));
 const ledger = read("docs/production-schema/migration-ledger.json");
@@ -55,10 +53,7 @@ test("retention reads are bounded and deterministically ordered", () => {
 test("unavailable favorites and notification deep links cannot expose private listings", () => {
   assert.match(favoritesApi, /availability: listing \? "available" : "unavailable"/);
   assert.match(notificationTarget, /saved_search|listing/);
-  assert.doesNotMatch(
-    `${favoritesRoute}\n${savedSearchesRoute}`,
-    /dangerouslySetInnerHTML/,
-  );
+  assert.doesNotMatch(`${favoritesRoute}\n${savedSearchesRoute}`, /dangerouslySetInnerHTML/);
 });
 
 test("Phase 15 database changes are indexed, least-privilege, and repository-only", () => {
@@ -70,10 +65,7 @@ test("Phase 15 database changes are indexed, least-privilege, and repository-onl
   assert.match(migration, /saved_searches_user_created_id_idx/);
   assert.match(migration, /saved_search_alert_matches_search_created_idx/);
   assert.match(migration, /Do not apply automatically/);
-  assert.match(
-    ledger,
-    /202607170004_favorites_saved_searches_retention_integrity\.sql/,
-  );
+  assert.match(ledger, /202607170004_favorites_saved_searches_retention_integrity\.sql/);
 });
 
 test("permanent workflow is read-only and Quality Gate runs Phase 15", () => {
