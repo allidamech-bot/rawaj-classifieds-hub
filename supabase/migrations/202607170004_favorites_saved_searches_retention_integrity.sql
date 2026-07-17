@@ -208,6 +208,11 @@ grant execute on function public.rawaj_create_my_saved_search_v2(text, jsonb, te
 grant execute on function public.rawaj_update_my_saved_search_frequency_v2(uuid, text) to authenticated;
 grant execute on function public.rawaj_delete_my_saved_search_v2(uuid) to authenticated;
 
+-- Some production environments predate the canonical favorites timestamp column.
+-- Repair it idempotently before creating the retention index and before the app reads it.
+alter table public.favorites
+  add column if not exists created_at timestamptz not null default now();
+
 create index if not exists favorites_user_created_id_idx
   on public.favorites (user_id, created_at desc, listing_id);
 
