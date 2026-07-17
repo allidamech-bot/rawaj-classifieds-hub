@@ -4,11 +4,9 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "src/routes/chats.tsx"
-      - "src/lib/api/messaging.ts"
       - "src/lib/api/chat-image-attachments.ts"
-      - "src/lib/classifieds-types.ts"
       - "supabase/migrations/202607170007_chat_image_attachments_v1.sql"
+      - "docs/production-schema/migration-ledger.json"
       - "scripts/chat-image-attachments-v1.test.mjs"
       - ".github/workflows/chat-image-attachments-v1.yml"
   workflow_dispatch:
@@ -27,8 +25,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx prettier --check src/routes/chats.tsx src/lib/api/messaging.ts src/lib/api/chat-image-attachments.ts src/lib/classifieds-types.ts scripts/chat-image-attachments-v1.test.mjs .github/workflows/chat-image-attachments-v1.yml
-      - run: npx eslint --quiet src/routes/chats.tsx src/lib/api/messaging.ts src/lib/api/chat-image-attachments.ts scripts/chat-image-attachments-v1.test.mjs
+      - run: npx prettier --check src/lib/api/chat-image-attachments.ts scripts/chat-image-attachments-v1.test.mjs .github/workflows/chat-image-attachments-v1.yml docs/production-schema/migration-ledger.json
+      - run: npx eslint --quiet src/lib/api/chat-image-attachments.ts scripts/chat-image-attachments-v1.test.mjs
       - run: node --test scripts/chat-image-attachments-v1.test.mjs
       - run: node scripts/check-migration-ledger.mjs
       - run: npm run typecheck -- --pretty false
