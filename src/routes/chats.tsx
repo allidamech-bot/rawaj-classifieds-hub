@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Ban, Flag, MessageCircle, Send, TriangleAlert } from "lucide-react";
+import { Ban, Flag, ImagePlus, MessageCircle, Send, TriangleAlert, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
@@ -17,7 +17,10 @@ import {
   fetchConversationMessages,
   fetchMyConversations,
   markConversationRead,
+  removeChatImage,
   sendConversationMessage,
+  uploadChatImage,
+  validateChatImage,
 } from "@/lib/classifieds-api";
 import {
   completeMessageSendRequest,
@@ -71,6 +74,11 @@ function ChatsPage() {
   const [conversationError, setConversationError] = useState<ClassifiedsError | null>(null);
   const [messageError, setMessageError] = useState<ClassifiedsError | null>(null);
   const [composerDrafts, setComposerDrafts] = useState<Record<string, string>>({});
+  const [selectedImage, setSelectedImage] = useState<{
+    scopeKey: string;
+    file: File;
+    previewUrl: string;
+  } | null>(null);
   const [conversationQuery, setConversationQuery] = useState("");
   const [sendingScopes, setSendingScopes] = useState<Set<string>>(() => new Set());
   const [notice, setNotice] = useState("");
@@ -91,6 +99,7 @@ function ChatsPage() {
   const sendInFlightScopesRef = useRef<Set<string>>(new Set());
   const reportInFlightRef = useRef<Set<string>>(new Set());
   const blockInFlightRef = useRef<Set<string>>(new Set());
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
   const liveProfileId = auth.profile?.id ?? null;
   const accountStateMatches = profileIdRef.current === liveProfileId;
   const accountConversations = accountStateMatches ? conversations : EMPTY_CONVERSATIONS;
@@ -111,6 +120,8 @@ function ChatsPage() {
       : null;
   const body = composerScopeKey ? (composerDrafts[composerScopeKey] ?? "") : "";
   const sending = composerScopeKey ? sendingScopes.has(composerScopeKey) : false;
+  const currentImage =
+    composerScopeKey && selectedImage?.scopeKey === composerScopeKey ? selectedImage : null;
   const messageSafety = useMemo(() => analyzeMessageSafety(body), [body]);
   const visibleMessages = useMemo(
     () =>
@@ -149,6 +160,10 @@ function ChatsPage() {
     accountGenerationRef.current += 1;
 
     setComposerDrafts({});
+    setSelectedImage((current) => {
+      if (current) URL.revokeObjectURL(current.previewUrl);
+      return null;
+    });
     setConversationQuery("");
     setSendingScopes(new Set());
     setConfirmedRisk(null);
@@ -179,6 +194,10 @@ function ChatsPage() {
     setNotice("");
     setMessageError(null);
     setReportingMessageId(null);
+    setSelectedImage((current) => {
+      if (current) URL.revokeObjectURL(current.previewUrl);
+      return null;
+    });
   }, [selectedConversation?.id]);
 
   useEffect(() => {
@@ -316,6 +335,28 @@ function ChatsPage() {
     setConfirmedRisk(null);
   }
 
+  function clearSelectedImage() {
+    setSelectedImage((current) => {
+      if (current) URL.revokeObjectURL(current.previewUrl);
+      return null;
+    });
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  }
+
+  function handleImageSelection(file: File | null) {
+    if (!composerScopeKey || !file) return;
+    const validation = validateChatImage(file);
+    if (!validation.ok) {
+      setMessageError(validation.error);
+      return;
+    }
+    setMessageError(null);
+    setSelectedImage((current) => {
+      if (current) URL.revokeObjectURL(current.previewUrl);
+      return { scopeKey: composerScopeKey, file, previewUrl: URL.createObjectURL(file) };
+    });
+  }
+
   async function handleSend(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const profileId = auth.profile?.id ?? null;
@@ -340,7 +381,8 @@ function ChatsPage() {
       return;
     }
     const cleanBody = body.trim();
-    if (!cleanBody) return;
+    const image = currentImage;
+    if (!cleanBody && !image) return;
     const safety = analyzeMessageSafety(cleanBody);
     if (
       safety.requiresConfirmation &&
@@ -355,28 +397,43 @@ function ChatsPage() {
       );
       return;
     }
-    const requestId = readOrCreateMessageSendRequestId(profileId, conversationId, cleanBody);
+    const requestSignature = image
+      ? `${cleanBody}\n[image:${image.file.name}:${image.file.size}:${image.file.lastModified}]`
+      : cleanBody;
+    const requestId = readOrCreateMessageSendRequestId(profileId, conversationId, requestSignature);
     sendInFlightScopesRef.current.add(scopeKey);
     setSendingScopes((current) => new Set(current).add(scopeKey));
     setNotice("");
     setMessageError(null);
+    let uploadedPath: string | null = null;
     try {
+      const uploadResult = image
+        ? await uploadChatImage({ conversationId, requestId, file: image.file })
+        : null;
+      if (uploadResult && !uploadResult.ok) {
+        if (accountGenerationRef.current === accountGeneration) setMessageError(uploadResult.error);
+        return;
+      }
+      uploadedPath = uploadResult?.data.path ?? null;
       const result = await sendConversationMessage({
         conversationId,
         body: cleanBody,
         requestId,
+        attachment: uploadResult?.data ?? null,
       });
       const stillCurrent =
         accountGenerationRef.current === accountGeneration &&
         profileIdRef.current === profileId &&
         selectedConversationIdRef.current === conversationId;
       if (!result.ok) {
+        if (uploadedPath) await removeChatImage(uploadedPath);
         if (stillCurrent) setMessageError(result.error);
         return;
       }
       completeMessageSendRequest(profileId, conversationId, requestId);
       if (stillCurrent) {
         clearComposerDraftIfUnchanged(scopeKey, cleanBody);
+        clearSelectedImage();
         setConfirmedRisk((current) => (current?.scopeKey === scopeKey ? null : current));
         setMessages((current) => mergeConversationMessages(current, [result.data], conversationId));
         setNotice(text("تم إرسال الرسالة.", "Message sent."));
@@ -692,7 +749,25 @@ function ChatsPage() {
                       const mine = message.isMine;
                       return (
                         <article key={message.id} className="rawaj-message-bubble" data-mine={mine}>
-                          <p className="whitespace-pre-line break-words">{message.body}</p>
+                          {message.attachmentUrl && (
+                            <a
+                              href={message.attachmentUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mb-2 block overflow-hidden rounded-xl bg-black/5"
+                            >
+                              <img
+                                src={message.attachmentUrl}
+                                alt={text("صورة مرفقة بالمحادثة", "Chat attachment")}
+                                loading="lazy"
+                                decoding="async"
+                                className="max-h-80 w-full object-contain"
+                              />
+                            </a>
+                          )}
+                          {message.body && (
+                            <p className="whitespace-pre-line break-words">{message.body}</p>
+                          )}
                           <p className="rawaj-message-bubble__time">
                             {formatDateTime(message.createdAt, language)}
                           </p>
@@ -781,7 +856,46 @@ function ChatsPage() {
                       </div>
                     </aside>
                   ) : null}
-                  <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                  {currentImage && (
+                    <div className="mb-2 flex items-center gap-3 rounded-xl bg-muted-surface p-2 hairline">
+                      <img
+                        src={currentImage.previewUrl}
+                        alt={text("معاينة الصورة", "Image preview")}
+                        className="h-16 w-16 rounded-lg object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-bold">{currentImage.file.name}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {(currentImage.file.size / 1024 / 1024).toFixed(1)} MB
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={clearSelectedImage}
+                        className="grid h-9 w-9 place-items-center rounded-full bg-destructive/10 text-destructive"
+                        aria-label={text("إزالة الصورة", "Remove image")}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                  <div className="grid gap-2 sm:grid-cols-[auto_1fr_auto]">
+                    <input
+                      ref={imageInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="sr-only"
+                      onChange={(event) => handleImageSelection(event.target.files?.[0] ?? null)}
+                    />
+                    <button
+                      type="button"
+                      disabled={sending || selectedConversation.status !== "active"}
+                      onClick={() => imageInputRef.current?.click()}
+                      className="grid min-h-12 place-items-center rounded-xl bg-muted-surface px-4 text-primary hairline"
+                      aria-label={text("إرفاق صورة", "Attach image")}
+                    >
+                      <ImagePlus className="h-5 w-5" />
+                    </button>
                     <textarea
                       value={body}
                       onChange={(event) => {
@@ -796,7 +910,7 @@ function ChatsPage() {
                       type="submit"
                       disabled={
                         sending ||
-                        body.trim().length === 0 ||
+                        (body.trim().length === 0 && !currentImage) ||
                         selectedConversation.status !== "active"
                       }
                       className="rawaj-message-composer__send"
