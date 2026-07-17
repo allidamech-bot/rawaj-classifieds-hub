@@ -192,7 +192,13 @@ async function performConversationMessageSend(
 
   if (!response.error) {
     const row = ((response.data ?? []) as Record<string, unknown>[])[0];
-    if (row) return { ok: true, data: mapMessage(row, actorUserId) };
+    if (row) {
+      const message = mapMessage(row, actorUserId);
+      if (message.attachmentPath) {
+        message.attachmentUrl = await createChatImageSignedUrl(message.attachmentPath);
+      }
+      return { ok: true, data: message };
+    }
     return {
       ok: false,
       error: {
