@@ -7,7 +7,6 @@ on:
       - "src/routes/chats.tsx"
       - "src/lib/api/messaging.ts"
       - "src/lib/api/messaging-guarded.ts"
-      - "src/lib/api/chat-image-attachments.ts"
       - "src/lib/classifieds-types.ts"
       - "scripts/chat-image-attachments-ui-v1.test.mjs"
       - "scripts/chat-workspace.test.mjs"
@@ -43,6 +42,6 @@ jobs:
       - name: Composer scope isolation contract
         run: node --test scripts/chat-composer-scope-isolation.test.mjs
       - name: Lint chat sources
-        run: npx eslint --quiet src/routes/chats.tsx src/lib/api/messaging.ts src/lib/api/messaging-guarded.ts src/lib/api/chat-image-attachments.ts src/lib/classifieds-types.ts
+        run: npx eslint --quiet src/routes/chats.tsx src/lib/api/messaging.ts src/lib/api/messaging-guarded.ts src/lib/classifieds-types.ts
       - name: Typecheck
         run: npm run typecheck -- --pretty false
