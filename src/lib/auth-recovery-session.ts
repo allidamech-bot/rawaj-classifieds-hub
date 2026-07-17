@@ -19,7 +19,8 @@ export function hasActivePasswordRecoverySession(now = Date.now()): boolean {
   if (!value) return false;
 
   const issuedAt = Number(value);
-  const active = Number.isFinite(issuedAt) && issuedAt <= now && now - issuedAt <= RECOVERY_SESSION_TTL_MS;
+  const active =
+    Number.isFinite(issuedAt) && issuedAt <= now && now - issuedAt <= RECOVERY_SESSION_TTL_MS;
   if (!active) clearPasswordRecoverySession();
   return active;
 }

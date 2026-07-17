@@ -67,8 +67,6 @@ test("password recovery listener is always released on unmount", () => {
 test("admin child workspaces enforce permission before rendering the outlet", () => {
   assert.match(admin, /const requestedTab = tabs\.find/);
   assert.match(admin, /requestedTab && !auth\.hasPermission\(requestedTab\.permission\)/);
-  assert.ok(
-    admin.indexOf("requestedTab && !auth.hasPermission") < admin.indexOf("<Outlet />"),
-  );
+  assert.ok(admin.indexOf("requestedTab && !auth.hasPermission") < admin.indexOf("<Outlet />"));
   assert.match(admin, /to: "\/admin\/audit"[\s\S]*permission: "canViewAuditLogs"/);
 });

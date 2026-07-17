@@ -101,10 +101,7 @@ const tabs: Array<{
   },
 ];
 
-function tabMatchesPath(
-  tab: (typeof tabs)[number],
-  pathname: string,
-): boolean {
+function tabMatchesPath(tab: (typeof tabs)[number], pathname: string): boolean {
   return tab.exact ? pathname === tab.to || pathname === "/admin/" : pathname.startsWith(tab.to);
 }
 
