@@ -136,17 +136,19 @@ jobs:
           JOB_STATUS: ${{ job.status }}
         shell: bash
         run: |
-          short_sha="${EXPECTED_COMMIT_SHA:0:12}"
-          title="RAWAJ RC ${short_sha} — ${JOB_STATUS}"
+          title="RAWAJ Release Candidate Status"
           {
-            echo "## RAWAJ Release Candidate evidence"
+            echo "## Latest RAWAJ Release Candidate evidence"
             echo
             echo "- Commit: ${EXPECTED_COMMIT_SHA}"
             echo "- Result: **${JOB_STATUS}**"
+            echo "- Updated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
             echo "- Workflow run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo "- Web, browser, Android, and manifest artifacts are attached to the workflow run when the result is successful."
             echo "- Authenticated Production Acceptance: ${{ github.event_name == 'workflow_dispatch' && inputs.run_production_acceptance && 'executed' || 'external run still required' }}"
             echo "- Physical Android device, release signing, Play Console, real App Links certificate fingerprint, and Supabase dashboard evidence remain external gates."
+            echo
+            echo "This issue is intentionally reused for every candidate. Historical evidence remains in GitHub Actions runs and artifacts."
             if [ -f rc-quality-gate.log ]; then
               echo
               echo "### Quality-gate diagnostic tail"
@@ -154,4 +156,19 @@ jobs:
               tail -n 80 rc-quality-gate.log | sed 's/^/    /'
             fi
           } > rc-evidence.md
-          gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file rc-evidence.md
+
+          issue_number="$(
+            gh issue list \
+              --repo "$GITHUB_REPOSITORY" \
+              --state open \
+              --search '"RAWAJ Release Candidate Status" in:title' \
+              --json number,title \
+              --jq '.[] | select(.title == "RAWAJ Release Candidate Status") | .number' \
+              | head -n 1
+          )"
+
+          if [ -n "$issue_number" ]; then
+            gh issue edit "$issue_number" --repo "$GITHUB_REPOSITORY" --title "$title" --body-file rc-evidence.md
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file rc-evidence.md
+          fi
