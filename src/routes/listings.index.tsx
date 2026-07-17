@@ -9,6 +9,8 @@ import { SearchEmptyState } from "@/features/search/SearchEmptyState";
 import { SearchResultsToolbar } from "@/features/search/SearchResultsToolbar";
 import { ListingCardSkeleton } from "@/features/listings/cards";
 import { RealListingCard } from "@/features/listings/RealListingCard";
+import { NearbyDiscoveryControl } from "@/features/listings/NearbyDiscoveryControl";
+import { useNearbyDiscovery } from "@/features/listings/use-nearby-discovery";
 import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
 import {
   categoryUsesGlobalCondition,
@@ -445,8 +447,37 @@ function ListingsPage() {
     setError,
   } = results;
 
-  const error = referencesError ?? resultsError;
-  const loading = referencesLoading || (!referencesError && resultsLoading);
+  const nearbyFilters = useMemo(
+    () => ({
+      categoryId: selectedCategory?.id,
+      subcategoryId: effectiveSubcategoryId || undefined,
+      governorateId: govId || undefined,
+      priceMin: parsedPriceMin,
+      priceMax: parsedPriceMax,
+      priceType: priceType || undefined,
+      condition: usesGlobalCondition ? globalCondition || undefined : undefined,
+    }),
+    [
+      effectiveSubcategoryId,
+      globalCondition,
+      govId,
+      parsedPriceMax,
+      parsedPriceMin,
+      priceType,
+      selectedCategory?.id,
+      usesGlobalCondition,
+    ],
+  );
+  const nearby = useNearbyDiscovery(nearbyFilters);
+  const visibleItems = nearby.active ? nearby.items.map((entry) => entry.listing) : items;
+  const nearbyDistanceById = useMemo(
+    () => new Map(nearby.items.map((entry) => [entry.listing.id, entry.distanceKm])),
+    [nearby.items],
+  );
+
+  const error =
+    nearby.error === "request_failed" ? resultsError : (referencesError ?? resultsError);
+  const loading = nearby.loading || referencesLoading || (!referencesError && resultsLoading);
 
   const taxonomyTitle = selectedTaxonomyNode
     ? taxonomyNodeName(selectedTaxonomyNode, language)
@@ -857,7 +888,7 @@ function ListingsPage() {
           }
           query={q}
           onQueryChange={setQ}
-          resultCount={items.length}
+          resultCount={visibleItems.length}
           loading={loading}
           activeFilterCount={activeFilterCount}
           sort={sort}
@@ -891,6 +922,18 @@ function ListingsPage() {
             salary_type: salaryType,
             sort,
           }}
+        />
+
+        <NearbyDiscoveryControl
+          active={nearby.active}
+          loading={nearby.loading}
+          error={nearby.error}
+          radiusKm={nearby.radiusKm}
+          resultCount={nearby.items.length}
+          onActivate={() => void nearby.activate()}
+          onRadiusChange={nearby.setRadiusKm}
+          onClear={nearby.clear}
+          text={text}
         />
 
         <QuickFilterRail
@@ -1358,8 +1401,8 @@ function ListingsPage() {
             {loading
               ? text("جاري تحميل الإعلانات...", "Loading listings...")
               : text(
-                  `${items.length} نتيجة محملة حاليًا`,
-                  `${items.length} currently loaded results`,
+                  `${visibleItems.length} نتيجة محملة حاليًا`,
+                  `${visibleItems.length} currently loaded results`,
                 )}
           </span>
           {hasActiveFilters && (
@@ -1485,7 +1528,7 @@ function ListingsPage() {
             actionLabel={text("العودة للرئيسية", "Back to home")}
             actionTo="/"
           />
-        ) : items.length === 0 ? (
+        ) : visibleItems.length === 0 ? (
           <SearchEmptyState
             hasActiveFilters={hasActiveFilters}
             onReset={resetFilters}
@@ -1494,11 +1537,24 @@ function ListingsPage() {
         ) : (
           <>
             <div className="rawaj-results-grid listing-card-grid mt-3" data-view={view}>
-              {items.map((listing) => (
-                <RealListingCard key={listing.id} listing={listing} />
-              ))}
+              {visibleItems.map((listing) => {
+                const distanceKm = nearbyDistanceById.get(listing.id);
+                return (
+                  <RealListingCard
+                    key={listing.id}
+                    listing={listing}
+                    action={
+                      distanceKm !== undefined ? (
+                        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-extrabold text-primary">
+                          {distanceKm} {text("كم تقريبًا", "km away")}
+                        </span>
+                      ) : undefined
+                    }
+                  />
+                );
+              })}
             </div>
-            {nextCursor && (
+            {!nearby.active && nextCursor && (
               <div ref={loadMoreSentinelRef} className="mt-4 flex justify-center">
                 <button
                   type="button"

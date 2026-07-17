@@ -20,7 +20,12 @@ export function useNearbyDiscovery(filters: ListingFilters) {
       const requestId = ++requestRef.current;
       setLoading(true);
       setError(null);
-      const result = await fetchNearbyPublicListings({ point, radiusKm: radius, limit: 60, filters });
+      const result = await fetchNearbyPublicListings({
+        point,
+        radiusKm: radius,
+        limit: 60,
+        filters,
+      });
       if (requestRef.current !== requestId) return;
       if (!result.ok) {
         setError("request_failed");
