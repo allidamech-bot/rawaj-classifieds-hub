@@ -32,7 +32,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onNewIntent(Intent intent) {
+    public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
         routeIncomingIntent(intent);
@@ -90,10 +90,10 @@ public class MainActivity extends BridgeActivity {
         final String path = incoming.getPath();
         final StringBuilder combined = new StringBuilder();
 
-        if (host != null && !host.isBlank()) {
+        if (host != null && !host.isEmpty()) {
             combined.append('/').append(host);
         }
-        if (path != null && !path.isBlank()) {
+        if (path != null && !path.isEmpty()) {
             if (combined.length() == 0 && !path.startsWith("/")) {
                 combined.append('/');
             }
