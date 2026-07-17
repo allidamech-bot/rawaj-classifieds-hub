@@ -15,12 +15,18 @@ export function useNearbyDiscovery(filters: ListingFilters) {
   const pointRef = useRef<NearbyPoint | null>(null);
   const requestRef = useRef(0);
   const restoredRef = useRef(false);
+  const enabledRef = useRef(false);
   const [active, setActive] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [radiusKm, setRadiusKmState] = useState<NearbyRadiusKm>(25);
   const [items, setItems] = useState<NearbyListingResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<NearbyDiscoveryError>(null);
+
+  const updateEnabled = useCallback((next: boolean) => {
+    enabledRef.current = next;
+    setEnabled(next);
+  }, []);
 
   const load = useCallback(
     async (point: NearbyPoint, radius: NearbyRadiusKm) => {
@@ -47,7 +53,8 @@ export function useNearbyDiscovery(filters: ListingFilters) {
   );
 
   const locateAndLoad = useCallback(
-    async (persistEnabled: boolean) => {
+    async (persistEnabled: boolean, radiusOverride?: NearbyRadiusKm) => {
+      const effectiveRadius = radiusOverride ?? radiusKm;
       const requestId = ++requestRef.current;
       setLoading(true);
       setError(null);
@@ -58,19 +65,19 @@ export function useNearbyDiscovery(filters: ListingFilters) {
         setLoading(false);
         setActive(false);
         if (position.status === "permission_denied") {
-          setEnabled(false);
+          updateEnabled(false);
           clearNearbyDiscoveryPreference();
         }
         return;
       }
       pointRef.current = position.point;
-      setEnabled(true);
+      updateEnabled(true);
       if (persistEnabled) {
-        writeNearbyDiscoveryPreference({ enabled: true, radiusKm });
+        writeNearbyDiscoveryPreference({ enabled: true, radiusKm: effectiveRadius });
       }
-      await load(position.point, radiusKm);
+      await load(position.point, effectiveRadius);
     },
-    [load, radiusKm],
+    [load, radiusKm, updateEnabled],
   );
 
   const activate = useCallback(() => locateAndLoad(true), [locateAndLoad]);
@@ -78,31 +85,30 @@ export function useNearbyDiscovery(filters: ListingFilters) {
 
   const setRadiusKm = useCallback((radius: NearbyRadiusKm) => {
     setRadiusKmState(radius);
-    setEnabled((current) => {
-      if (current) writeNearbyDiscoveryPreference({ enabled: true, radiusKm: radius });
-      return current;
-    });
+    if (enabledRef.current) {
+      writeNearbyDiscoveryPreference({ enabled: true, radiusKm: radius });
+    }
   }, []);
 
   const clear = useCallback(() => {
     requestRef.current += 1;
     pointRef.current = null;
     setActive(false);
-    setEnabled(false);
+    updateEnabled(false);
     setItems([]);
     setLoading(false);
     setError(null);
     clearNearbyDiscoveryPreference();
-  }, []);
+  }, [updateEnabled]);
 
   useEffect(() => {
     if (restoredRef.current) return;
     restoredRef.current = true;
     const preference = readNearbyDiscoveryPreference();
     setRadiusKmState(preference.radiusKm);
-    setEnabled(preference.enabled);
-    if (preference.enabled) void locateAndLoad(false);
-  }, [locateAndLoad]);
+    updateEnabled(preference.enabled);
+    if (preference.enabled) void locateAndLoad(false, preference.radiusKm);
+  }, [locateAndLoad, updateEnabled]);
 
   useEffect(() => {
     const point = pointRef.current;
