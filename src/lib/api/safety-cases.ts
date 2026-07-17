@@ -49,10 +49,7 @@ function staleReadResult<T>(operation: string): ClassifiedsResult<T> {
   return { ok: false, error: { code: "unknown", message: "", operation } };
 }
 
-function operationInProgressResult<T>(
-  message: string,
-  operation: string,
-): ClassifiedsResult<T> {
+function operationInProgressResult<T>(message: string, operation: string): ClassifiedsResult<T> {
   return { ok: false, error: { code: "unknown", message, operation } };
 }
 
