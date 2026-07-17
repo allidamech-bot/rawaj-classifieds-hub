@@ -9,5 +9,5 @@ const end = start < 0 ? -1 : source.indexOf(endMarker, start);
 if (start < 0 || end < 0) throw new Error("Location template segment was not found");
 const replacement =
   'setCurrentComposerBody(text("موقعي الحالي: https://www.google.com/maps?q=" + latitude + "," + longitude, "My current location: https://www.google.com/maps?q=" + latitude + "," + longitude))';
-const next = source.slice(0, start) + replacement + source.slice(end);
+const next = source.slice(0, start) + replacement + source.slice(end + 2);
 await writeFile(path, next);
