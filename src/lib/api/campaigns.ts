@@ -50,17 +50,17 @@ let creativeReadGeneration = 0;
 const campaignMutationInFlight = new Set<string>();
 const creativeMutationInFlight = new Set<string>();
 
-function staleReadResult<T>(): ClassifiedsResult<T> {
+function staleReadResult<T>(operation: string): ClassifiedsResult<T> {
   return {
     ok: false,
-    error: { code: "stale_request", message: "" },
+    error: { code: "unknown", message: "", operation },
   };
 }
 
-function operationInProgressResult<T>(message: string): ClassifiedsResult<T> {
+function operationInProgressResult<T>(message: string, operation: string): ClassifiedsResult<T> {
   return {
     ok: false,
-    error: { code: "operation_in_progress", message },
+    error: { code: "unknown", message, operation },
   };
 }
 
@@ -78,7 +78,9 @@ export async function ownerFetchCampaigns(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   const { data, error } = await clientResult.data.rpc("rawaj_owner_list_campaigns");
-  if (requestGeneration !== campaignReadGeneration) return staleReadResult();
+  if (requestGeneration !== campaignReadGeneration) {
+    return staleReadResult("admin_campaign_list_stale_read");
+  }
   if (error) return { ok: false, error: mapError(error) };
   return {
     ok: true,
@@ -103,7 +105,9 @@ export async function ownerFetchCampaignCreatives(
   const { data, error } = await clientResult.data.rpc("rawaj_owner_list_campaign_creatives", {
     p_campaign_id: campaignId,
   });
-  if (requestGeneration !== creativeReadGeneration) return staleReadResult();
+  if (requestGeneration !== creativeReadGeneration) {
+    return staleReadResult("admin_campaign_creatives_stale_read");
+  }
   if (error) return { ok: false, error: mapError(error) };
   return {
     ok: true,
@@ -141,7 +145,10 @@ export async function ownerSaveCampaign(
 
   const operationKey = `campaign:${payload.id || "new"}`;
   if (campaignMutationInFlight.has(operationKey)) {
-    return operationInProgressResult("حفظ الحملة قيد التنفيذ بالفعل.");
+    return operationInProgressResult(
+      "حفظ الحملة قيد التنفيذ بالفعل.",
+      "admin_campaign_save_in_progress",
+    );
   }
   campaignMutationInFlight.add(operationKey);
 
@@ -194,7 +201,10 @@ export async function ownerSetCampaignStatus(
 
   const operationKey = `campaign:${payload.id}`;
   if (campaignMutationInFlight.has(operationKey)) {
-    return operationInProgressResult("هناك عملية أخرى قيد التنفيذ على هذه الحملة.");
+    return operationInProgressResult(
+      "هناك عملية أخرى قيد التنفيذ على هذه الحملة.",
+      "admin_campaign_status_in_progress",
+    );
   }
   campaignMutationInFlight.add(operationKey);
 
@@ -262,7 +272,10 @@ export async function ownerSaveCampaignCreative(
 
   const operationKey = `creative:${payload.id || `${payload.campaignId}:new`}`;
   if (creativeMutationInFlight.has(operationKey)) {
-    return operationInProgressResult("حفظ التصميم الإعلاني قيد التنفيذ بالفعل.");
+    return operationInProgressResult(
+      "حفظ التصميم الإعلاني قيد التنفيذ بالفعل.",
+      "admin_campaign_creative_save_in_progress",
+    );
   }
   creativeMutationInFlight.add(operationKey);
 
