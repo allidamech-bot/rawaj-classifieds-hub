@@ -37,7 +37,7 @@ test("browser upload validation is explicit and never exposes public URLs", () =
   assert.match(api, /image\/webp/);
   assert.match(api, /createSignedUrl\(path, 15 \* 60\)/);
   assert.doesNotMatch(api, /getPublicUrl|publicUrl/);
-  assert.match(api, /conversationId\/\$\{userId\}\/\$\{requestId\}/);
+  assert.match(api, /\$\{conversationId\}\/\$\{userId\}\/\$\{requestId\}/);
   assert.match(api, /remove\(\[path\]\)/);
 });
 
