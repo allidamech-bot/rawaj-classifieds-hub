@@ -155,6 +155,3 @@ await replaceIn(
 );
 
 await unlink("src/lib/api/chat-image-attachments.ts");
-await unlink(".github/workflows/chat-image-performance-diagnostic.yml");
-await unlink("scripts/apply-chat-image-chunk-consolidation.mjs");
-await unlink(".github/workflows/apply-chat-image-chunk-consolidation.yml");
