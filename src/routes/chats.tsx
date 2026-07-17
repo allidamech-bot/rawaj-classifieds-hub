@@ -3,6 +3,7 @@ import { Ban, Flag, ImagePlus, MessageCircle, Send, TriangleAlert, X } from "luc
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
+import { ChatAttachmentImage } from "@/features/communication/ChatAttachmentImage";
 import {
   CommunicationCenterHero,
   CommunicationSafetyNote,
@@ -749,21 +750,17 @@ function ChatsPage() {
                       const mine = message.isMine;
                       return (
                         <article key={message.id} className="rawaj-message-bubble" data-mine={mine}>
-                          {message.attachmentUrl && (
-                            <a
-                              href={message.attachmentUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="mb-2 block overflow-hidden rounded-xl bg-black/5"
-                            >
-                              <img
-                                src={message.attachmentUrl}
-                                alt={text("صورة مرفقة بالمحادثة", "Chat attachment")}
-                                loading="lazy"
-                                decoding="async"
-                                className="max-h-80 w-full object-contain"
-                              />
-                            </a>
+                          {message.attachmentPath && (
+                            <ChatAttachmentImage
+                              attachmentPath={message.attachmentPath}
+                              initialUrl={message.attachmentUrl}
+                              alt={text("صورة مرفقة بالمحادثة", "Chat attachment")}
+                              retryLabel={text("إعادة تحميل الصورة", "Reload image")}
+                              unavailableLabel={text(
+                                "تعذر تحميل الصورة الخاصة. حاول مجددًا.",
+                                "The private image could not be loaded. Try again.",
+                              )}
+                            />
                           )}
                           {message.body && (
                             <p className="whitespace-pre-line break-words">{message.body}</p>
