@@ -47,4 +47,10 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
+  {
+    files: ["scripts/**/*.test.mjs"],
+    rules: {
+      "prettier/prettier": "off",
+    },
+  },
 );
