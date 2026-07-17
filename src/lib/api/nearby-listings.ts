@@ -102,7 +102,7 @@ export async function fetchNearbyPublicListings(
   if (error) return { ok: false, error: mapError(error) };
 
   const mapped = ((data ?? []) as Record<string, unknown>[]).map((row) =>
-    mapListing(row, references.data.categories, references.data.governorates),
+    mapListing(row, references.categories, references.governorates),
   );
   const hydrated = await hydrateListingsWithPrimaryImages(client, mapped);
   const listingById = new Map(hydrated.map((listing) => [listing.id, listing]));
