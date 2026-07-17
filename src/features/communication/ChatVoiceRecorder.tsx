@@ -72,7 +72,9 @@ export function ChatVoiceRecorder({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mimeType = preferredMimeType();
-      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
       streamRef.current = stream;
       recorderRef.current = recorder;
       chunksRef.current = [];
@@ -81,7 +83,10 @@ export function ChatVoiceRecorder({
         if (event.data.size > 0) chunksRef.current.push(event.data);
       };
       recorder.onstop = () => {
-        const durationMs = Math.min(MAX_DURATION_MS, Math.max(1_000, Date.now() - startedAtRef.current));
+        const durationMs = Math.min(
+          MAX_DURATION_MS,
+          Math.max(1_000, Date.now() - startedAtRef.current),
+        );
         const type = recorder.mimeType || mimeType || "audio/webm";
         const blob = new Blob(chunksRef.current, { type });
         if (blob.size > 0) {
@@ -121,10 +126,20 @@ export function ChatVoiceRecorder({
     return (
       <div className="flex items-center gap-2">
         <span className="min-w-12 text-center text-xs font-bold tabular-nums">{seconds}s</span>
-        <button type="button" onClick={stop} className="grid min-h-12 place-items-center rounded-xl bg-destructive px-4 text-white" aria-label={labels.stop}>
+        <button
+          type="button"
+          onClick={stop}
+          className="grid min-h-12 place-items-center rounded-xl bg-destructive px-4 text-white"
+          aria-label={labels.stop}
+        >
           <Square className="h-5 w-5" />
         </button>
-        <button type="button" onClick={cancel} className="grid min-h-12 place-items-center rounded-xl bg-muted-surface px-4 text-destructive hairline" aria-label={labels.cancel}>
+        <button
+          type="button"
+          onClick={cancel}
+          className="grid min-h-12 place-items-center rounded-xl bg-muted-surface px-4 text-destructive hairline"
+          aria-label={labels.cancel}
+        >
           <Trash2 className="h-5 w-5" />
         </button>
       </div>
@@ -132,7 +147,13 @@ export function ChatVoiceRecorder({
   }
 
   return (
-    <button type="button" disabled={disabled} onClick={() => void start()} className="grid min-h-12 place-items-center rounded-xl bg-muted-surface px-4 text-primary hairline" aria-label={labels.start}>
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => void start()}
+      className="grid min-h-12 place-items-center rounded-xl bg-muted-surface px-4 text-primary hairline"
+      aria-label={labels.start}
+    >
       <Mic className="h-5 w-5" />
     </button>
   );

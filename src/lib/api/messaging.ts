@@ -35,11 +35,29 @@ const pendingMessageSends = new Map<string, Promise<ClassifiedsResult<Conversati
 
 export const CHAT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const CHAT_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const CHAT_AUDIO_MAX_BYTES = 10 * 1024 * 1024;
+export const CHAT_AUDIO_MAX_DURATION_MS = 120_000;
+export const CHAT_AUDIO_MIME_TYPES = [
+  "audio/webm",
+  "audio/mp4",
+  "audio/mpeg",
+  "audio/ogg",
+] as const;
 
 export interface UploadedChatImage {
   path: string;
   mimeType: (typeof CHAT_IMAGE_MIME_TYPES)[number];
   sizeBytes: number;
+  kind: "image";
+  durationMs: null;
+}
+
+export interface UploadedChatAudio {
+  path: string;
+  mimeType: (typeof CHAT_AUDIO_MIME_TYPES)[number];
+  sizeBytes: number;
+  kind: "audio";
+  durationMs: number;
 }
 
 export function validateChatImage(file: File): ClassifiedsResult<null> {
@@ -103,6 +121,8 @@ export async function uploadChatImage(payload: {
       path,
       mimeType: payload.file.type as UploadedChatImage["mimeType"],
       sizeBytes: payload.file.size,
+      kind: "image",
+      durationMs: null,
     },
   };
 }
@@ -128,6 +148,94 @@ function extensionForChatImageMime(mimeType: string) {
   if (mimeType === "image/png") return "png";
   if (mimeType === "image/webp") return "webp";
   return "jpg";
+}
+
+export function validateChatAudio(file: File, durationMs: number): ClassifiedsResult<null> {
+  const mimeType = file.type.split(";")[0];
+  if (!CHAT_AUDIO_MIME_TYPES.includes(mimeType as UploadedChatAudio["mimeType"]))
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "صيغة التسجيل الصوتي غير مدعومة." },
+    };
+  if (file.size < 1 || file.size > CHAT_AUDIO_MAX_BYTES)
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "يجب ألا يتجاوز التسجيل 10 ميغابايت." },
+    };
+  if (durationMs < 1_000 || durationMs > CHAT_AUDIO_MAX_DURATION_MS)
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: "يجب أن يكون التسجيل بين ثانية واحدة و120 ثانية.",
+      },
+    };
+  return { ok: true, data: null };
+}
+
+export async function uploadChatAudio(payload: {
+  conversationId: string;
+  requestId: string;
+  file: File;
+  durationMs: number;
+}): Promise<ClassifiedsResult<UploadedChatAudio>> {
+  const conversationId = normalizeChatResourceId(payload.conversationId);
+  const requestId = normalizeChatResourceId(payload.requestId);
+  const mimeType = payload.file.type.split(";")[0];
+  const validation = validateChatAudio(payload.file, payload.durationMs);
+  if (!conversationId || !requestId || !validation.ok)
+    return validation.ok
+      ? { ok: false, error: { code: "validation_error", message: "تعذر تحديد التسجيل الصوتي." } }
+      : validation;
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+  const userResult = await clientResult.data.auth.getUser();
+  const userId = userResult.data.user?.id;
+  if (userResult.error || !userId)
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال تسجيل صوتي." },
+    };
+  const extension =
+    mimeType === "audio/mp4"
+      ? "m4a"
+      : mimeType === "audio/mpeg"
+        ? "mp3"
+        : mimeType === "audio/ogg"
+          ? "ogg"
+          : "webm";
+  const path = [conversationId, userId, requestId].join("/") + "." + extension;
+  const { error } = await clientResult.data.storage
+    .from("conversation-audio")
+    .upload(path, payload.file, { upsert: false, contentType: mimeType, cacheControl: "3600" });
+  if (error) return { ok: false, error: mapError(error, "chat_audio_upload") };
+  return {
+    ok: true,
+    data: {
+      path,
+      mimeType: mimeType as UploadedChatAudio["mimeType"],
+      sizeBytes: payload.file.size,
+      kind: "audio",
+      durationMs: payload.durationMs,
+    },
+  };
+}
+
+export async function removeChatAudio(path: string): Promise<void> {
+  if (!path) return;
+  const clientResult = getClient();
+  if (!clientResult.ok) return;
+  await clientResult.data.storage.from("conversation-audio").remove([path]);
+}
+
+export async function createChatAudioSignedUrl(path: string): Promise<string | null> {
+  if (!path) return null;
+  const clientResult = getClient();
+  if (!clientResult.ok) return null;
+  const { data, error } = await clientResult.data.storage
+    .from("conversation-audio")
+    .createSignedUrl(path, 15 * 60);
+  return error ? null : data.signedUrl;
 }
 
 export async function startListingConversation(
@@ -185,7 +293,7 @@ export async function fetchConversationMessages(
   const { data, error } = await clientResult.data
     .from("conversation_messages")
     .select(
-      "id,conversation_id,sender_user_id,body,attachment_path,attachment_mime_type,attachment_size_bytes,created_at,edited_at,deleted_at",
+      "id,conversation_id,sender_user_id,body,attachment_path,attachment_mime_type,attachment_size_bytes,attachment_kind,attachment_duration_ms,created_at,edited_at,deleted_at",
     )
     .eq("conversation_id", cleanConversationId)
     .is("deleted_at", null)
@@ -201,7 +309,10 @@ export async function fetchConversationMessages(
       if (!message.attachmentPath) return message;
       return {
         ...message,
-        attachmentUrl: await createChatImageSignedUrl(message.attachmentPath),
+        attachmentUrl:
+          message.attachmentKind === "audio"
+            ? await createChatAudioSignedUrl(message.attachmentPath)
+            : await createChatImageSignedUrl(message.attachmentPath),
       };
     }),
   );
@@ -218,7 +329,13 @@ export async function sendConversationMessage(payload: {
   conversationId: string;
   body: string;
   requestId: string;
-  attachment?: { path: string; mimeType: string; sizeBytes: number } | null;
+  attachment?: {
+    path: string;
+    mimeType: string;
+    sizeBytes: number;
+    kind: "image" | "audio";
+    durationMs: number | null;
+  } | null;
 }): Promise<ClassifiedsResult<ConversationMessage>> {
   const cleanConversationId = normalizeChatResourceId(payload.conversationId);
   const cleanBody = payload.body.trim();
@@ -275,23 +392,44 @@ async function performConversationMessageSend(
   conversationId: string,
   cleanBody: string,
   clientRequestId: string,
-  attachment: { path: string; mimeType: string; sizeBytes: number } | null,
+  attachment: {
+    path: string;
+    mimeType: string;
+    sizeBytes: number;
+    kind: "image" | "audio";
+    durationMs: number | null;
+  } | null,
 ): Promise<ClassifiedsResult<ConversationMessage>> {
-  const response = await client.rpc("rawaj_send_conversation_message_v3", {
+  let response = await client.rpc("rawaj_send_conversation_message_v4", {
     p_conversation_id: conversationId,
     p_client_request_id: clientRequestId,
     p_body: cleanBody,
     p_attachment_path: attachment?.path ?? null,
     p_attachment_mime_type: attachment?.mimeType ?? null,
     p_attachment_size_bytes: attachment?.sizeBytes ?? null,
+    p_attachment_kind: attachment?.kind ?? null,
+    p_attachment_duration_ms: attachment?.durationMs ?? null,
   });
+  if (response.error && isMissingMessageSendV4(response.error) && attachment?.kind !== "audio") {
+    response = await client.rpc("rawaj_send_conversation_message_v3", {
+      p_conversation_id: conversationId,
+      p_client_request_id: clientRequestId,
+      p_body: cleanBody,
+      p_attachment_path: attachment?.path ?? null,
+      p_attachment_mime_type: attachment?.mimeType ?? null,
+      p_attachment_size_bytes: attachment?.sizeBytes ?? null,
+    });
+  }
 
   if (!response.error) {
     const row = ((response.data ?? []) as Record<string, unknown>[])[0];
     if (row) {
       const message = mapMessage(row, actorUserId);
       if (message.attachmentPath) {
-        message.attachmentUrl = await createChatImageSignedUrl(message.attachmentPath);
+        message.attachmentUrl =
+          message.attachmentKind === "audio"
+            ? await createChatAudioSignedUrl(message.attachmentPath)
+            : await createChatImageSignedUrl(message.attachmentPath);
       }
       return { ok: true, data: message };
     }
@@ -327,6 +465,19 @@ async function performConversationMessageSend(
       operation: "conversation_message_send",
     },
   };
+}
+
+function isMissingMessageSendV4(error: {
+  code?: string;
+  message?: string;
+  details?: string;
+}): boolean {
+  const value = `${error.message ?? ""} ${error.details ?? ""}`;
+  return (
+    error.code === "PGRST202" ||
+    error.code === "42883" ||
+    value.includes("rawaj_send_conversation_message_v4")
+  );
 }
 
 function isMissingMessageSendV3(error: {
@@ -521,6 +672,18 @@ function mapMessage(row: Record<string, unknown>, actorUserId: string): Conversa
       rowNullableString(row, "attachment_path") === null
         ? null
         : rowNumber(row, "attachment_size_bytes"),
+    attachmentKind: (() => {
+      const value = rowNullableString(row, "attachment_kind");
+      return value === "audio" || value === "image"
+        ? value
+        : rowNullableString(row, "attachment_path")
+          ? "image"
+          : null;
+    })(),
+    attachmentDurationMs:
+      rowNullableString(row, "attachment_kind") === "audio"
+        ? rowNumber(row, "attachment_duration_ms")
+        : null,
     attachmentUrl: null,
     createdAt: rowString(row, "created_at"),
     editedAt: rowNullableString(row, "edited_at"),

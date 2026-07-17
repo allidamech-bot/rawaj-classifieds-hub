@@ -62,7 +62,12 @@ export function ChatVoiceAttachment({
           <Volume2 className="h-4 w-4" aria-hidden="true" />
           <span>{unavailableLabel}</span>
         </div>
-        <button type="button" onClick={() => void refresh()} disabled={loading} className="mt-2 inline-flex min-h-9 items-center gap-2 rounded-lg bg-muted-surface px-3 text-xs font-bold text-primary hairline">
+        <button
+          type="button"
+          onClick={() => void refresh()}
+          disabled={loading}
+          className="mt-2 inline-flex min-h-9 items-center gap-2 rounded-lg bg-muted-surface px-3 text-xs font-bold text-primary hairline"
+        >
           <RefreshCw className={loading ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
           {retryLabel}
         </button>
@@ -72,8 +77,16 @@ export function ChatVoiceAttachment({
 
   return (
     <div className="mb-2 rounded-xl bg-black/5 p-2">
-      <audio controls preload="metadata" src={url} onError={() => void handleError()} className="w-full" />
-      {durationMs ? <p className="mt-1 text-[10px] text-muted-foreground">{Math.ceil(durationMs / 1000)}s</p> : null}
+      <audio
+        controls
+        preload="metadata"
+        src={url}
+        onError={() => void handleError()}
+        className="w-full"
+      />
+      {durationMs ? (
+        <p className="mt-1 text-[10px] text-muted-foreground">{Math.ceil(durationMs / 1000)}s</p>
+      ) : null}
     </div>
   );
 }

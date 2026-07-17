@@ -307,6 +307,8 @@ export interface ConversationMessage {
   attachmentPath: string | null;
   attachmentMimeType: string | null;
   attachmentSizeBytes: number | null;
+  attachmentKind: "image" | "audio" | null;
+  attachmentDurationMs: number | null;
   attachmentUrl: string | null;
   createdAt: string;
   editedAt: string | null;
