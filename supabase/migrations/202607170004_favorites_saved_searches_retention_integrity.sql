@@ -93,7 +93,7 @@ declare
   v_actor uuid := auth.uid();
   v_name text := left(trim(coalesce(p_name_ar, '')), 120);
   v_filters jsonb := coalesce(p_filters, '{}'::jsonb);
-  v_frequency text := lower(trim(coalesce(p_alert_frequency, 'weekly')));
+  v_frequency text := lower(trim(coalesce(p_alert_frequency, 'weekly'));
   v_existing public.saved_searches;
   v_created public.saved_searches;
 begin
@@ -220,4 +220,4 @@ create index if not exists saved_searches_user_created_id_idx
   on public.saved_searches (user_id, created_at desc, id);
 
 create index if not exists saved_search_alert_matches_search_created_idx
-  on public.saved_search_alert_matches (saved_search_id, created_at desc, listing_id);
+  on public.saved_search_alert_matches (saved_search_id, matched_at desc, listing_id);
