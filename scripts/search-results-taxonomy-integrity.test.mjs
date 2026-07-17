@@ -144,8 +144,9 @@ test("saved searches normalize, deduplicate, reopen, and retain alerts", () => {
   assert.match(savedNormalization, /normalizeSavedSearchFilters/);
   assert.match(savedNormalization, /\.sort\(\(\[left\], \[right\]\)/);
   assert.match(savedSearchGuard, /normalizeSavedSearchFilters\(payload\.filters\)/);
-  assert.match(savedSearches, /\.eq\("filters", filters\)/);
-  assert.match(savedSearches, /alert_frequency: payload\.alertFrequency/);
+  assert.match(savedSearches, /rawaj_create_my_saved_search_v2/);
+  assert.match(savedSearches, /p_filters: filters/);
+  assert.match(savedSearches, /p_alert_frequency: payload\.alertFrequency/);
   assert.match(savedSearches, /rawaj_record_saved_search_alert_match/);
   assert.match(publicRead, /hydrateSavedTaxonomyFilter/);
 });
