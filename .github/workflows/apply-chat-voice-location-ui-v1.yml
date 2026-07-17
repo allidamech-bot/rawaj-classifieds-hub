@@ -1,0 +1,34 @@
+name: Apply Chat Voice Location UI V1
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/chat-voice-location-ui-v1
+    paths:
+      - "scripts/apply-chat-voice-location-ui-v1.mjs"
+      - ".github/workflows/apply-chat-voice-location-ui-v1.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/chat-voice-location-ui-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/apply-chat-voice-location-ui-v1.mjs
+      - run: npx prettier --write src/lib/classifieds-types.ts src/lib/api/messaging.ts src/routes/chats.tsx src/features/communication/ChatVoiceRecorder.tsx src/features/communication/ChatVoiceAttachment.tsx
+      - run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/lib/classifieds-types.ts src/lib/api/messaging.ts src/routes/chats.tsx src/features/communication/ChatVoiceRecorder.tsx src/features/communication/ChatVoiceAttachment.tsx
+          git commit -m "feat: add chat voice and location sharing UI"
+          git push origin HEAD:feature/chat-voice-location-ui-v1
