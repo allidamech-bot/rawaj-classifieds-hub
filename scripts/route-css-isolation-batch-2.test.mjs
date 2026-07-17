@@ -38,8 +38,19 @@ test("secondary route groups are explicit and exclude unrelated surfaces", () =>
   assert.match(routeStyles, /messaging: normalizedPathname === "\/chats"/);
   assert.match(routeStyles, /communication: \["\/chats", "\/notifications", "\/activity"\]/);
   assert.match(routeStyles, /ownerStore: normalizedPathname === "\/profile\/listings"/);
-  assert.match(routeStyles, /trustSupport: \["\/support", "\/safety", "\/terms", "\/privacy"\]/);
+  assert.match(
+    routeStyles,
+    /trustSupport: \["\/more", "\/support", "\/safety", "\/terms", "\/privacy"\]/,
+  );
   assert.doesNotMatch(routeStyles, /ownerStore:.*profile\/listings\//);
+});
+
+test("more route loads both personal-space and trust-support style layers", () => {
+  assert.match(routeStyles, /personalSpace:[\s\S]*"\/more"/);
+  assert.match(
+    routeStyles,
+    /trustSupport: \["\/more", "\/support", "\/safety", "\/terms", "\/privacy"\]/,
+  );
 });
 
 test("root conditionally emits all secondary route style groups", () => {

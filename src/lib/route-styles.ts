@@ -92,6 +92,8 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
       "/profile",
     ].includes(normalizedPathname),
     ownerStore: normalizedPathname === "/profile/listings",
-    trustSupport: ["/support", "/safety", "/terms", "/privacy"].includes(normalizedPathname),
+    trustSupport: ["/more", "/support", "/safety", "/terms", "/privacy"].includes(
+      normalizedPathname,
+    ),
   };
 }
