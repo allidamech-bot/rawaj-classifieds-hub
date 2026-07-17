@@ -176,7 +176,10 @@ test("results use matching skeletons before adaptive real cards", () => {
   assert.match(listingsRoute, /<ListingCardSkeleton/);
   assert.match(listingsRoute, /categoryFieldKind === "vehicles"/);
   assert.match(listingsRoute, /categoryFieldKind === "real_estate"/);
-  assert.match(listingsRoute, /<RealListingCard key=\{listing\.id\} listing=\{listing\}/);
+  assert.match(
+    listingsRoute,
+    /<RealListingCard[\s\S]{0,180}key=\{listing\.id\}[\s\S]{0,180}listing=\{listing\}/,
+  );
   assert.match(skeleton, /data-card-variant=\{compact \? "compact" : variant\}/);
   assert.match(css, /rawaj-card-skeleton-shimmer/);
 });

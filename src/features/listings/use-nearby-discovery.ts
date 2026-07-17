@@ -55,8 +55,6 @@ export function useNearbyDiscovery(filters: ListingFilters) {
   const setRadiusKm = useCallback(
     (radius: NearbyRadiusKm) => {
       setRadiusKmState(radius);
-      const point = pointRef.current;
-      if (active && point) void load(point, radius);
     },
     [active, load],
   );
