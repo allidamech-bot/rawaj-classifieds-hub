@@ -13,6 +13,7 @@ const [
   helperSource,
   startSql,
   sendSql,
+  attachmentSql,
   reportSql,
   blockSql,
   realtimeSql,
@@ -27,6 +28,7 @@ const [
   read("src/lib/chat-integrity.ts"),
   read("supabase/migrations/202607100003_align_conversation_start_visibility.sql"),
   read("supabase/migrations/202607140003_idempotent_message_send.sql"),
+  read("supabase/migrations/202607170007_chat_image_attachments_v1.sql"),
   read("supabase/migrations/202607080008_message_report_idempotency.sql"),
   read("supabase/migrations/202607080007_conversation_block_idempotency.sql"),
   read("supabase/migrations/202607160003_enable_chat_realtime.sql"),
@@ -57,7 +59,7 @@ test("public communication APIs are actor-free and authenticate server-side", ()
   assert.match(api, /createMessageReport\([\s\S]{0,100}ClassifiedsResult<null>/);
   assert.match(api, /client\.auth\.getUser\(\)/);
   assert.match(types, /interface ConversationMessage \{[\s\S]*isMine: boolean/);
-  assert.doesNotMatch(types, /interface ConversationMessage \{[\s\S]{0,160}senderUserId/);
+  assert.doesNotMatch(types, /interface ConversationMessage \{[\s\S]{0,220}senderUserId/);
 });
 
 test("conversation creation and reads remain participant-only and canonical", () => {
@@ -72,26 +74,27 @@ test("conversation creation and reads remain participant-only and canonical", ()
   assert.match(api, /\.limit\(CHAT_HISTORY_PAGE_SIZE\)/);
   assert.match(
     api,
-    /select\("id,conversation_id,sender_user_id,body,created_at,edited_at,deleted_at"\)/,
+    /id,conversation_id,sender_user_id,body,attachment_path,attachment_mime_type,attachment_size_bytes,created_at,edited_at,deleted_at/,
   );
   assert.doesNotMatch(api, /from\("conversation_messages"\)[\s\S]{0,100}\.select\("\*"\)/);
 });
 
 test("message sending is validated, server-idempotent and conversation scoped", () => {
-  assert.match(api, /cleanBody\.length < 1/);
+  assert.match(api, /cleanBody\.length < 1 && !attachment/);
   assert.match(api, /cleanBody\.length > CHAT_MESSAGE_MAX_LENGTH/);
   assert.match(
     api,
     /JSON\.stringify\(\[actorResult\.data, cleanConversationId, cleanRequestId\]\)/,
   );
-  assert.match(api, /rawaj_send_conversation_message_v2/);
+  assert.match(api, /rawaj_send_conversation_message_v3/);
   assert.doesNotMatch(api, /\.from\("conversation_messages"\)[\s\S]{0,160}\.insert/);
   assert.match(sendSql, /auth\.uid\(\)/);
   assert.match(sendSql, /client_request_id/);
-  assert.match(sendSql, /message_request_payload_mismatch/);
-  assert.match(sendSql, /unique_violation/);
-  assert.match(sendSql, /sender_user_id = v_actor/);
-  assert.match(route, /<p className="whitespace-pre-line break-words">\{message\.body\}<\/p>/);
+  assert.match(attachmentSql, /message_request_payload_mismatch/);
+  assert.match(attachmentSql, /unique_violation/);
+  assert.match(attachmentSql, /sender_user_id = v_actor/);
+  assert.match(route, /message\.attachmentUrl/);
+  assert.match(route, /message\.body &&/);
   assert.doesNotMatch(route, /dangerouslySetInnerHTML/);
 });
 
@@ -101,6 +104,10 @@ test("pure merge helpers reject cross-conversation rows and order stable ties", 
     conversationId,
     isMine: false,
     body: id,
+    attachmentPath: null,
+    attachmentMimeType: null,
+    attachmentSizeBytes: null,
+    attachmentUrl: null,
     createdAt,
     editedAt: null,
     deletedAt: null,
@@ -121,7 +128,7 @@ test("pure merge helpers reject cross-conversation rows and order stable ties", 
   assert.equal(helper.CHAT_HISTORY_PAGE_SIZE, 200);
 });
 
-test("URL, stale request, draft, and account replacement scopes are isolated", () => {
+test("URL, stale request, draft, attachment, and account replacement scopes are isolated", () => {
   assert.match(route, /normalizeChatResourceId/);
   assert.match(route, /accountStateMatches = profileIdRef\.current === liveProfileId/);
   assert.match(route, /resolveConversationTarget\(accountConversations, search\.conversation\)/);
@@ -133,6 +140,8 @@ test("URL, stale request, draft, and account replacement scopes are isolated", (
   assert.match(route, /sendInFlightScopesRef\.current\.clear\(\)/);
   assert.match(route, /reportInFlightRef\.current\.clear\(\)/);
   assert.match(route, /blockInFlightRef\.current\.clear\(\)/);
+  assert.match(route, /setSelectedImage/);
+  assert.match(route, /URL\.revokeObjectURL/);
   assert.match(route, /setConversations\(\[\]\)/);
   assert.match(route, /setMessages\(\[\]\)/);
   assert.match(route, /search: \{\}, replace: true/);

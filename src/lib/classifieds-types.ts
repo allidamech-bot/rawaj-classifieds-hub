@@ -304,6 +304,10 @@ export interface ConversationMessage {
   conversationId: string;
   isMine: boolean;
   body: string;
+  attachmentPath: string | null;
+  attachmentMimeType: string | null;
+  attachmentSizeBytes: number | null;
+  attachmentUrl: string | null;
   createdAt: string;
   editedAt: string | null;
   deletedAt: string | null;

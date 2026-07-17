@@ -33,6 +33,103 @@ import {
 
 const pendingMessageSends = new Map<string, Promise<ClassifiedsResult<ConversationMessage>>>();
 
+export const CHAT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+export const CHAT_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+
+export interface UploadedChatImage {
+  path: string;
+  mimeType: (typeof CHAT_IMAGE_MIME_TYPES)[number];
+  sizeBytes: number;
+}
+
+export function validateChatImage(file: File): ClassifiedsResult<null> {
+  if (!CHAT_IMAGE_MIME_TYPES.includes(file.type as UploadedChatImage["mimeType"])) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "اختر صورة JPG أو PNG أو WebP." },
+    };
+  }
+  if (file.size < 1 || file.size > CHAT_IMAGE_MAX_BYTES) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "يجب ألا يتجاوز حجم الصورة 5 ميغابايت." },
+    };
+  }
+  return { ok: true, data: null };
+}
+
+export async function uploadChatImage(payload: {
+  conversationId: string;
+  requestId: string;
+  file: File;
+}): Promise<ClassifiedsResult<UploadedChatImage>> {
+  const conversationId = normalizeChatResourceId(payload.conversationId);
+  const requestId = normalizeChatResourceId(payload.requestId);
+  const validation = validateChatImage(payload.file);
+  if (!conversationId || !requestId || !validation.ok) {
+    return validation.ok
+      ? {
+          ok: false,
+          error: { code: "validation_error", message: "تعذر تحديد مرفق المحادثة." },
+        }
+      : validation;
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+  const userResult = await clientResult.data.auth.getUser();
+  const userId = userResult.data.user?.id;
+  if (userResult.error || !userId) {
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال صورة." },
+    };
+  }
+
+  const extension = extensionForChatImageMime(payload.file.type);
+  const path = [conversationId, userId, requestId].join("/") + "." + extension;
+  const { error } = await clientResult.data.storage
+    .from("conversation-images")
+    .upload(path, payload.file, {
+      upsert: false,
+      contentType: payload.file.type,
+      cacheControl: "3600",
+    });
+  if (error) return { ok: false, error: mapError(error, "chat_image_upload") };
+
+  return {
+    ok: true,
+    data: {
+      path,
+      mimeType: payload.file.type as UploadedChatImage["mimeType"],
+      sizeBytes: payload.file.size,
+    },
+  };
+}
+
+export async function removeChatImage(path: string): Promise<void> {
+  if (!path) return;
+  const clientResult = getClient();
+  if (!clientResult.ok) return;
+  await clientResult.data.storage.from("conversation-images").remove([path]);
+}
+
+export async function createChatImageSignedUrl(path: string): Promise<string | null> {
+  if (!path) return null;
+  const clientResult = getClient();
+  if (!clientResult.ok) return null;
+  const { data, error } = await clientResult.data.storage
+    .from("conversation-images")
+    .createSignedUrl(path, 15 * 60);
+  return error ? null : data.signedUrl;
+}
+
+function extensionForChatImageMime(mimeType: string) {
+  if (mimeType === "image/png") return "png";
+  if (mimeType === "image/webp") return "webp";
+  return "jpg";
+}
+
 export async function startListingConversation(
   listingId: string,
 ): Promise<ClassifiedsResult<string>> {
@@ -87,7 +184,9 @@ export async function fetchConversationMessages(
 
   const { data, error } = await clientResult.data
     .from("conversation_messages")
-    .select("id,conversation_id,sender_user_id,body,created_at,edited_at,deleted_at")
+    .select(
+      "id,conversation_id,sender_user_id,body,attachment_path,attachment_mime_type,attachment_size_bytes,created_at,edited_at,deleted_at",
+    )
     .eq("conversation_id", cleanConversationId)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
@@ -96,12 +195,19 @@ export async function fetchConversationMessages(
 
   if (error) return { ok: false, error: mapError(error) };
   const rows = (data ?? []) as Record<string, unknown>[];
+  const mapped = await Promise.all(
+    rows.map(async (row) => {
+      const message = mapMessage(row, actorResult.data);
+      if (!message.attachmentPath) return message;
+      return {
+        ...message,
+        attachmentUrl: await createChatImageSignedUrl(message.attachmentPath),
+      };
+    }),
+  );
   return {
     ok: true,
-    data: sortAndDedupeMessages(
-      rows.map((row) => mapMessage(row, actorResult.data)),
-      cleanConversationId,
-    ),
+    data: sortAndDedupeMessages(mapped, cleanConversationId),
   };
 }
 
@@ -112,11 +218,17 @@ export async function sendConversationMessage(payload: {
   conversationId: string;
   body: string;
   requestId: string;
+  attachment?: { path: string; mimeType: string; sizeBytes: number } | null;
 }): Promise<ClassifiedsResult<ConversationMessage>> {
   const cleanConversationId = normalizeChatResourceId(payload.conversationId);
   const cleanBody = payload.body.trim();
   const cleanRequestId = payload.requestId.trim();
-  if (!cleanConversationId || cleanBody.length < 1 || cleanBody.length > CHAT_MESSAGE_MAX_LENGTH) {
+  const attachment = payload.attachment ?? null;
+  if (
+    !cleanConversationId ||
+    (cleanBody.length < 1 && !attachment) ||
+    cleanBody.length > CHAT_MESSAGE_MAX_LENGTH
+  ) {
     return {
       ok: false,
       error: { code: "validation_error", message: "اكتب رسالة بين 1 و2000 حرف." },
@@ -144,6 +256,7 @@ export async function sendConversationMessage(payload: {
     cleanConversationId,
     cleanBody,
     cleanRequestId,
+    attachment,
   );
   pendingMessageSends.set(sendKey, sendPromise);
 
@@ -162,16 +275,26 @@ async function performConversationMessageSend(
   conversationId: string,
   cleanBody: string,
   clientRequestId: string,
+  attachment: { path: string; mimeType: string; sizeBytes: number } | null,
 ): Promise<ClassifiedsResult<ConversationMessage>> {
-  const response = await client.rpc("rawaj_send_conversation_message_v2", {
+  const response = await client.rpc("rawaj_send_conversation_message_v3", {
     p_conversation_id: conversationId,
     p_client_request_id: clientRequestId,
     p_body: cleanBody,
+    p_attachment_path: attachment?.path ?? null,
+    p_attachment_mime_type: attachment?.mimeType ?? null,
+    p_attachment_size_bytes: attachment?.sizeBytes ?? null,
   });
 
   if (!response.error) {
     const row = ((response.data ?? []) as Record<string, unknown>[])[0];
-    if (row) return { ok: true, data: mapMessage(row, actorUserId) };
+    if (row) {
+      const message = mapMessage(row, actorUserId);
+      if (message.attachmentPath) {
+        message.attachmentUrl = await createChatImageSignedUrl(message.attachmentPath);
+      }
+      return { ok: true, data: message };
+    }
     return {
       ok: false,
       error: {
@@ -182,7 +305,7 @@ async function performConversationMessageSend(
     };
   }
 
-  if (!isMissingMessageSendV2(response.error)) {
+  if (!isMissingMessageSendV3(response.error)) {
     if (isMessageRequestPayloadMismatch(response.error)) {
       return {
         ok: false,
@@ -206,7 +329,7 @@ async function performConversationMessageSend(
   };
 }
 
-function isMissingMessageSendV2(error: {
+function isMissingMessageSendV3(error: {
   code?: string;
   message?: string;
   details?: string;
@@ -216,8 +339,8 @@ function isMissingMessageSendV2(error: {
   return (
     error.code === "PGRST202" ||
     error.code === "42883" ||
-    message.includes("rawaj_send_conversation_message_v2") ||
-    details.includes("rawaj_send_conversation_message_v2")
+    message.includes("rawaj_send_conversation_message_v3") ||
+    details.includes("rawaj_send_conversation_message_v3")
   );
 }
 
@@ -392,6 +515,13 @@ function mapMessage(row: Record<string, unknown>, actorUserId: string): Conversa
     conversationId: rowString(row, "conversation_id"),
     isMine: rowString(row, "sender_user_id") === actorUserId,
     body: rowString(row, "body"),
+    attachmentPath: rowNullableString(row, "attachment_path"),
+    attachmentMimeType: rowNullableString(row, "attachment_mime_type"),
+    attachmentSizeBytes:
+      rowNullableString(row, "attachment_path") === null
+        ? null
+        : rowNumber(row, "attachment_size_bytes"),
+    attachmentUrl: null,
     createdAt: rowString(row, "created_at"),
     editedAt: rowNullableString(row, "edited_at"),
     deletedAt: rowNullableString(row, "deleted_at"),
