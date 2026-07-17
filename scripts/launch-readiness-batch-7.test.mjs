@@ -65,11 +65,11 @@ test("Android identity remains aligned with the Play package", () => {
   assert.match(buildGradle, /applicationId "com\.rawaj\.marketplace"/);
 });
 
-test("Android release is prepared for Play version 1.0.3", () => {
-  assert.match(buildGradle, /versionCode 4/);
-  assert.match(buildGradle, /versionName "1\.0\.3"/);
-  assert.doesNotMatch(buildGradle, /versionCode 3/);
-  assert.doesNotMatch(buildGradle, /versionName "1\.0\.2"/);
+test("Android release is prepared for Play version 1.0.4", () => {
+  assert.match(buildGradle, /versionCode 5/);
+  assert.match(buildGradle, /versionName "1\.0\.4"/);
+  assert.doesNotMatch(buildGradle, /versionCode 4/);
+  assert.doesNotMatch(buildGradle, /versionName "1\.0\.3"/);
 });
 
 test("RAWAJ owns the native icon and system splash", async () => {
