@@ -192,3 +192,5 @@ await patch(".github/workflows/quality-gate.yml", (source) => {
   if (!source.includes(marker)) throw new Error("Missing messaging quality gate marker");
   return source.replace(marker, `${marker}\n      - name: Chat Image Attachments V1 contract\n        run: node --test scripts/chat-image-attachments-v1.test.mjs\n`);
 });
+
+// Triggered intentionally through the one-shot workflow on this feature branch.
