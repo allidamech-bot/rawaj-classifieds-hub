@@ -16,6 +16,8 @@ const [helper, geolocation, api, migration, ledger] = await Promise.all([
   readFile(new URL("../docs/production-schema/migration-ledger.json", import.meta.url), "utf8"),
 ]);
 
+const returnSignature = migration.match(/returns table \(([\s\S]*?)\)\s*language sql/)?.[1] ?? "";
+
 test("nearby coordinates are rounded and radius is allowlisted", () => {
   assert.match(helper, /NEARBY_RADIUS_OPTIONS_KM = \[5, 10, 25, 50, 100\]/);
   assert.match(helper, /COORDINATE_PRECISION = 2/);
@@ -35,9 +37,10 @@ test("database computes distance without exposing coordinates", () => {
   assert.match(migration, /rawaj_public_nearby_listing_matches/);
   assert.match(migration, /round\(user_latitude::numeric, 2\)/);
   assert.match(migration, /6371\.0088 \* 2 \* asin/);
-  assert.match(migration, /returns table \(\s*listing_id uuid,\s*distance_km double precision/);
-  assert.doesNotMatch(migration, /returns table[\s\S]*latitude/);
-  assert.doesNotMatch(migration, /returns table[\s\S]*longitude/);
+  assert.match(returnSignature, /listing_id uuid/);
+  assert.match(returnSignature, /distance_km double precision/);
+  assert.doesNotMatch(returnSignature, /latitude/);
+  assert.doesNotMatch(returnSignature, /longitude/);
 });
 
 test("nearby hydration reauthorizes public listing visibility", () => {
