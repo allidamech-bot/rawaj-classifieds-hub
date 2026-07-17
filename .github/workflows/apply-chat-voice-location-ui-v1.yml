@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "scripts/apply-chat-voice-location-ui-v1.mjs"
+      - "scripts/fix-chat-voice-location-applicator.mjs"
       - "src/features/communication/ChatVoiceRecorder.tsx"
       - "src/features/communication/ChatVoiceAttachment.tsx"
       - ".github/workflows/apply-chat-voice-location-ui-v1.yml"
@@ -25,6 +26,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Repair applicator source
+        run: node scripts/fix-chat-voice-location-applicator.mjs
       - name: Apply patch
         id: apply
         continue-on-error: true
