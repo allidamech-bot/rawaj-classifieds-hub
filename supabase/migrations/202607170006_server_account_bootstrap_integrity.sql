@@ -40,7 +40,7 @@ begin
   )
   on conflict (id) do update
   set
-    email = excluded.email,
+    email = coalesce(excluded.email, public.profiles.email),
     display_name = coalesce(public.profiles.display_name, excluded.display_name),
     updated_at = now();
 
