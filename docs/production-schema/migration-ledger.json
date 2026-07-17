@@ -160,7 +160,8 @@
       "202607170004_favorites_saved_searches_retention_integrity.sql",
       "202607170005_nearby_location_radius_integrity.sql",
       "202607170006_server_account_bootstrap_integrity.sql",
-      "202607170007_chat_image_attachments_v1.sql"
+      "202607170007_chat_image_attachments_v1.sql",
+      "202607170008_chat_voice_messages_v1.sql"
     ],
     "manual": ["202607090004_reconcile_manual_production_hotfixes.sql"]
   }
