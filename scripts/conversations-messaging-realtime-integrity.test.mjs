@@ -162,7 +162,8 @@ test("read, block, and report operations are server-authoritative", () => {
   assert.match(blockSql, /auth\.uid\(\)/);
   assert.match(blockSql, /blocker_user_id/);
   assert.match(blockSql, /blocked_user_id/);
-  assert.match(api, /rowString\(conversation, "other_user_id"\)/);
+  assert.match(api, /rpc\("rawaj_block_conversation_participant"/);
+  assert.doesNotMatch(api, /payload\.blockedUserId/);
 });
 
 test("DTO and workflow boundaries exclude private data and writes", () => {

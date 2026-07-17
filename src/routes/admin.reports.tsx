@@ -16,6 +16,9 @@ function ReportsPage() {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
   const canManageReports = auth.hasPermission("canManageReports");
+  const accountId = auth.profile?.id ?? null;
+  const accountIdRef = useRef(accountId);
+  accountIdRef.current = accountId;
   const [reports, setReports] = useState<ListingReport[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -31,8 +34,9 @@ function ReportsPage() {
     const requestId = ++requestIdRef.current;
     setLoading(true);
     setLoadError(null);
-    const result = await adminFetchReports(canManageReports);
-    if (requestId !== requestIdRef.current) return;
+    const requestAccountId = accountId;
+    const result = await adminFetchReports();
+    if (requestId !== requestIdRef.current || requestAccountId !== accountIdRef.current) return;
     if (result.ok) {
       setReports(result.data);
       setNotes((current) => ({
@@ -46,7 +50,7 @@ function ReportsPage() {
       setLoadError(result.error);
     }
     setLoading(false);
-  }, [canManageReports]);
+  }, [accountId, canManageReports]);
 
   useEffect(() => {
     requestIdRef.current += 1;
@@ -70,12 +74,12 @@ function ReportsPage() {
       requestIdRef.current += 1;
       actionInFlightRef.current.clear();
     };
-  }, [canManageReports, loadReports]);
+  }, [accountId, canManageReports, loadReports]);
 
   async function moderate(report: ListingReport, status: ListingReportStatus) {
     if (actionInFlightRef.current.has(report.id)) return;
     setActionMessage("");
-    if (!auth.profile?.id) {
+    if (!accountId) {
       setActionMessage(
         text("تعذر تحديد حساب المراجع الحالي.", "Could not identify the current reviewer account."),
       );
@@ -85,15 +89,14 @@ function ReportsPage() {
     actionInFlightRef.current.add(report.id);
     setBusyIds((current) => new Set(current).add(report.id));
     try {
-      const result = await adminModerateReport(canManageReports, {
+      const requestAccountId = accountId;
+      const result = await adminModerateReport({
         reportId: report.id,
         status,
-        assignedTo: auth.profile.id,
         adminNote: notes[report.id] ?? null,
-        resolvedAt:
-          status === "resolved" || status === "rejected" ? new Date().toISOString() : null,
         expectedUpdatedAt: report.updatedAt,
       });
+      if (requestAccountId !== accountIdRef.current) return;
       if (!result.ok) {
         setActionMessage(result.error.message);
         return;
@@ -193,8 +196,11 @@ function ReportsPage() {
                   {text("رقم البلاغ:", "Report ID:")} {report.id}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {text("الإعلان:", "Listing:")} {report.listingId} ·{" "}
-                  {text("المبلّغ:", "Reporter:")} {report.reporterId}
+                  {text("الإعلان:", "Listing:")}{" "}
+                  {report.listingTitleSnapshot ??
+                    report.listingId ??
+                    text("غير متاح", "Unavailable")}{" "}
+                  · {text("المبلّغ:", "Reporter:")} {report.reporterId}
                 </p>
                 <p className="mt-2 text-xs leading-6">{report.reason}</p>
                 <textarea

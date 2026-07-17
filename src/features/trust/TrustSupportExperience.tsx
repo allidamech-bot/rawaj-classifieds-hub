@@ -215,7 +215,7 @@ export function SupportRequestTimeline({
               <b>{supportStatusLabel(request.status, language)}</b>
             </header>
             <p>{request.message}</p>
-            {request.adminNote ? <blockquote>{request.adminNote}</blockquote> : null}
+            {request.publicResponse ? <blockquote>{request.publicResponse}</blockquote> : null}
           </div>
         </article>
       ))}

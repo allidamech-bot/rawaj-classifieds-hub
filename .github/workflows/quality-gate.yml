@@ -120,6 +120,9 @@ jobs:
       - name: Account, Profile & Verification Integrity contract
         run: npm run test:account-profile-verification
 
+      - name: Support, Reports & Moderation Integrity contract
+        run: npm run test:support-reports-moderation
+
       - name: SEO discovery contract
         run: npm run test:seo-discovery
 

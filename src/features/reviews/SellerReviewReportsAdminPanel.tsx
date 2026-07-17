@@ -1,5 +1,5 @@
 import { Flag } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   adminFetchSellerReviewReports,
   adminModerateSellerReviewReport,
@@ -9,11 +9,17 @@ import {
 } from "@/lib/classifieds-api";
 import type { ClassifiedsError } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
+import { useAuth } from "@/lib/use-auth";
 
 const statusOptions: SellerReviewReportStatus[] = ["new", "under_review", "resolved", "rejected"];
 
 export function SellerReviewReportsAdminPanel({ canManageReports }: { canManageReports: boolean }) {
+  const auth = useAuth();
   const { language, text } = useUiPreferences();
+  const accountId = auth.profile?.id ?? null;
+  const accountIdRef = useRef(accountId);
+  const requestIdRef = useRef(0);
+  accountIdRef.current = accountId;
   const [reports, setReports] = useState<SellerReviewReport[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [statuses, setStatuses] = useState<Record<string, SellerReviewReportStatus>>({});
@@ -31,7 +37,10 @@ export function SellerReviewReportsAdminPanel({ canManageReports }: { canManageR
 
     setLoading(true);
     setError(null);
-    const result = await adminFetchSellerReviewReports(canManageReports);
+    const requestId = ++requestIdRef.current;
+    const requestAccountId = accountId;
+    const result = await adminFetchSellerReviewReports();
+    if (requestId !== requestIdRef.current || requestAccountId !== accountIdRef.current) return;
     if (result.ok) {
       setReports(result.data);
       setNotes(
@@ -46,19 +55,31 @@ export function SellerReviewReportsAdminPanel({ canManageReports }: { canManageR
   }
 
   useEffect(() => {
+    requestIdRef.current += 1;
+    setReports([]);
+    setNotes({});
+    setStatuses({});
+    setError(null);
+    setMessage("");
+    setSavingId(null);
     void loadReports();
-  }, [canManageReports]);
+    return () => {
+      requestIdRef.current += 1;
+    };
+  }, [accountId, canManageReports]);
 
   async function moderate(report: SellerReviewReport) {
     const status = statuses[report.id] ?? report.status;
+    const requestAccountId = accountId;
     setMessage("");
     setSavingId(report.id);
-    const result = await adminModerateSellerReviewReport(canManageReports, {
+    const result = await adminModerateSellerReviewReport({
       reportId: report.id,
       status,
       adminNote: notes[report.id] ?? null,
       expectedUpdatedAt: report.updatedAt,
     });
+    if (requestAccountId !== accountIdRef.current) return;
     setSavingId(null);
 
     if (!result.ok) {
@@ -130,7 +151,9 @@ export function SellerReviewReportsAdminPanel({ canManageReports }: { canManageR
                   <dt className="inline font-bold text-foreground">
                     {text("التقييم:", "Review:")}
                   </dt>{" "}
-                  <dd className="inline break-all">{report.reviewId}</dd>
+                  <dd className="inline break-all">
+                    {report.reviewId ?? text("مرجع محفوظ", "Preserved reference")}
+                  </dd>
                 </div>
                 <div>
                   <dt className="inline font-bold text-foreground">

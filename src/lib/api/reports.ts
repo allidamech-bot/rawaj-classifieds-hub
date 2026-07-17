@@ -1,12 +1,21 @@
-import type { ClassifiedsResult, ListingReport, ListingReportType } from "@/lib/classifieds-types";
+import type {
+  ClassifiedListing,
+  ClassifiedsResult,
+  ListingReport,
+  ListingReportType,
+} from "@/lib/classifieds-types";
+import {
+  accountSessionStillMatches,
+  resolveAuthenticatedAccountId,
+} from "@/lib/api/account-identity";
+import { mapModerationError } from "@/lib/api/moderation-errors";
 import { getClient, mapError, rowNullableString, rowRecord, rowString } from "@/lib/api/shared";
+import { isListingReportType, normalizeModerationText } from "@/lib/moderation-contract";
 
 interface ModerateReportPayload {
   reportId: string;
   status: ListingReport["status"];
-  assignedTo?: string | null;
   adminNote?: string | null;
-  resolvedAt?: string | null;
 }
 
 export function fromDbReportStatus(status: string): ListingReport["status"] {
@@ -25,75 +34,48 @@ export function toDbReportStatus(status: ListingReport["status"]): string {
 }
 
 export async function createListingReport(
-  userId: string | null,
   listingId: string,
   reportType: ListingReportType,
   reason: string,
-): Promise<ClassifiedsResult<ListingReport>> {
-  if (!userId) {
+): Promise<ClassifiedsResult<null>> {
+  const cleanListingId = listingId.trim();
+  const reportReason = normalizeModerationText(reason, 500);
+  if (
+    !cleanListingId ||
+    !isListingReportType(reportType) ||
+    reportReason.length < 4 ||
+    (reportType === "other" && reportReason.length < 10)
+  ) {
     return {
       ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال بلاغ." },
+      error: { code: "validation_error", message: "اختر سببًا صالحًا وأضف وصفًا واضحًا للبلاغ." },
     };
   }
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
-
-  const reportReason = reason.trim();
-  if (!listingId.trim() || reportReason.length < 4) {
+  const client = clientResult.data;
+  const actor = await resolveAuthenticatedAccountId(client, "listing_report_auth");
+  if (!actor.ok) return actor;
+  const { error } = await client.rpc("rawaj_create_listing_report_v2", {
+    p_listing_id: cleanListingId,
+    p_report_type: reportType,
+    p_reason: reportReason,
+  });
+  if (error) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "أدخل سبب البلاغ وحدد الإعلان." },
+      error: mapModerationError(error, "listing_report_create", "تعذر إرسال البلاغ الآن."),
     };
   }
-
-  const { data: listing, error: listingError } = await clientResult.data
-    .from("listings")
-    .select("id")
-    .eq("id", listingId)
-    .eq("status", "approved")
-    .maybeSingle();
-
-  if (listingError) return { ok: false, error: mapError(listingError) };
-  if (!listing) {
-    return {
-      ok: false,
-      error: { code: "not_found", message: "لا يمكن إرسال بلاغ على إعلان غير متاح." },
-    };
-  }
-
-  const { data: existingReport, error: existingReportError } = await clientResult.data
-    .from("listing_reports")
-    .select("*")
-    .eq("listing_id", listingId)
-    .eq("reporter_id", userId)
-    .in("status", ["new", "under_review", "in_review"])
-    .maybeSingle();
-
-  if (existingReportError) return { ok: false, error: mapError(existingReportError) };
-  if (existingReport)
-    return { ok: true, data: mapReport(existingReport as Record<string, unknown>) };
-
-  const { data, error } = await clientResult.data
-    .from("listing_reports")
-    .insert({
-      listing_id: listingId,
-      reporter_id: userId,
-      report_type: reportType,
-      reason: reportReason,
-      status: "new",
-    })
-    .select("*")
-    .single();
-
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: mapReport(data as Record<string, unknown>) };
+  const current = await accountSessionStillMatches(client, actor.data, "listing_report_stale");
+  if (!current.ok) return current;
+  return { ok: true, data: null };
 }
 
 export async function adminFetchPendingListings(
   canUseAdminAccess: boolean,
-): Promise<ClassifiedsResult<import("@/lib/classifieds-types").ClassifiedListing[]>> {
+): Promise<ClassifiedsResult<ClassifiedListing[]>> {
   if (!canUseAdminAccess) {
     return {
       ok: false,
@@ -103,13 +85,11 @@ export async function adminFetchPendingListings(
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
-
   const { readReferences } = await import("@/lib/api/references");
   const references = await readReferences(clientResult.data);
   if (!references.ok) return { ok: false, error: references.error };
 
   let { data, error } = await clientResult.data.rpc("rawaj_review_queue_pending");
-
   if (error && mapError(error).code === "schema_missing") {
     const fallback = await clientResult.data
       .from("listings")
@@ -119,7 +99,6 @@ export async function adminFetchPendingListings(
     data = fallback.data;
     error = fallback.error;
   }
-
   if (error) return { ok: false, error: mapError(error, "admin_review_queue") };
   return {
     ok: true,
@@ -129,76 +108,44 @@ export async function adminFetchPendingListings(
   };
 }
 
-export async function adminFetchReports(
-  canUseAdminAccess: boolean,
-): Promise<ClassifiedsResult<ListingReport[]>> {
-  if (!canUseAdminAccess) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "إدارة البلاغات متاحة لحساب إداري مخول فقط." },
-    };
-  }
-
+export async function adminFetchReports(): Promise<ClassifiedsResult<ListingReport[]>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data
-    .from("listing_reports")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) return { ok: false, error: mapError(error) };
+  const { data, error } = await clientResult.data.rpc("rawaj_fetch_listing_reports_for_admin", {
+    p_limit: 200,
+  });
+  if (error) {
+    return {
+      ok: false,
+      error: mapModerationError(error, "listing_report_admin_queue", "تعذر تحميل البلاغات."),
+    };
+  }
   return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapReport) };
 }
 
 export async function adminModerateReport(
-  canUseAdminAccess: boolean,
   payload: ModerateReportPayload & { expectedUpdatedAt: string },
 ): Promise<ClassifiedsResult<null>> {
-  if (!canUseAdminAccess) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "إدارة البلاغات متاحة لحساب إداري مخول فقط." },
-    };
-  }
-
   if (!payload.reportId.trim() || !payload.expectedUpdatedAt) {
     return {
       ok: false,
       error: { code: "validation_error", message: "تعذر تحديد البلاغ أو نسخته الحالية." },
     };
   }
-
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
-
-  const dbStatus = toDbReportStatus(payload.status);
-  const { error } = await clientResult.data.rpc("rawaj_admin_moderate_listing_report", {
-    p_report_id: payload.reportId,
-    p_status: dbStatus,
-    p_assigned_to: payload.assignedTo ?? null,
-    p_admin_note: payload.adminNote ?? null,
-    p_resolved_at:
-      payload.resolvedAt ??
-      (payload.status === "resolved" || payload.status === "rejected"
-        ? new Date().toISOString()
-        : null),
+  const { error } = await clientResult.data.rpc("rawaj_admin_moderate_listing_report_v2", {
+    p_report_id: payload.reportId.trim(),
+    p_status: toDbReportStatus(payload.status),
+    p_admin_note: normalizeModerationText(payload.adminNote ?? "", 1000) || null,
     p_expected_updated_at: payload.expectedUpdatedAt,
   });
-
   if (error) {
-    if (error.message?.includes("stale_listing_report")) {
-      return {
-        ok: false,
-        error: {
-          code: "stale_review",
-          message: "تغيّر البلاغ منذ تحميله. أعد تحميل القائمة قبل اتخاذ قرار جديد.",
-        },
-      };
-    }
-    return { ok: false, error: mapError(error) };
+    return {
+      ok: false,
+      error: mapModerationError(error, "listing_report_moderate", "تعذر تحديث البلاغ."),
+    };
   }
-
   return { ok: true, data: null };
 }
 
@@ -206,12 +153,11 @@ function mapListing(
   row: Record<string, unknown>,
   categories: import("@/lib/classifieds-types").ClassifiedCategory[] = [],
   governorates: import("@/lib/classifieds-types").ClassifiedGovernorate[] = [],
-): import("@/lib/classifieds-types").ClassifiedListing {
+): ClassifiedListing {
   const categoryId = rowString(row, "category_id");
   const governorateId = rowString(row, "governorate_id");
   const category = categories.find((item) => item.id === categoryId);
   const governorate = governorates.find((item) => item.id === governorateId);
-
   return {
     id: rowString(row, "id"),
     ownerId: rowString(row, "owner_id"),
@@ -255,7 +201,8 @@ function mapListing(
 function mapReport(row: Record<string, unknown>): ListingReport {
   return {
     id: rowString(row, "id"),
-    listingId: rowString(row, "listing_id"),
+    listingId: rowNullableString(row, "listing_id"),
+    listingTitleSnapshot: rowNullableString(row, "listing_title_snapshot"),
     reporterId: rowString(row, "reporter_id"),
     reportType: rowString(row, "report_type", "other") as ListingReportType,
     reason: rowString(row, "reason"),

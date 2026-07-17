@@ -79,7 +79,7 @@ test("deep links re-fetch the notification and reauthorize every supported targe
   assert.match(resolver, /fetchListingDetail/);
   assert.match(resolver, /fetchMyConversations/);
   assert.match(resolver, /currentAccountOwns\("listings"/);
-  assert.match(resolver, /currentAccountOwns\("support_requests"/);
+  assert.match(resolver, /fetchMySupportRequest\(reference\.id\)/);
   assert.match(resolver, /return \{ ok: true, data: null \}/);
   assert.match(paths, /normalizeNotificationId\(targetId\)/);
   assert.match(nativePush, /notificationOpenPath\(data\?\.notification_id\)/);

@@ -57,7 +57,7 @@ test("support keeps stored request submission and history with shared timeline",
   assert.match(support, /<TrustHubHero/);
   assert.match(support, /displayName=\{auth\.profile\?\.displayName \?\? undefined\}/);
   assert.match(support, /<SupportRequestTimeline/);
-  assert.match(support, /createSupportRequest/);
+  assert.match(support, /createMySupportRequest/);
   assert.match(support, /fetchMySupportRequests/);
   assert.match(support, /relatedListingId/);
   assert.match(support, /supportStatusLabel|SupportRequestTimeline/);
