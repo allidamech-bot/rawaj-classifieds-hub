@@ -8,6 +8,7 @@ import {
   ListChecks,
   Lock,
   ScrollText,
+  ShieldAlert,
   Siren,
   MessageSquareWarning,
   PanelsTopLeft,
@@ -60,6 +61,12 @@ const tabs: Array<{
     to: "/admin/message-reports",
     labelAr: "بلاغات الرسائل",
     icon: MessageSquareWarning,
+    permission: "canManageReports",
+  },
+  {
+    to: "/admin/safety",
+    labelAr: "مركز السلامة",
+    icon: ShieldAlert,
     permission: "canManageReports",
   },
   {

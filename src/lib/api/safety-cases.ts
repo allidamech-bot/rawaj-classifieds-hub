@@ -41,6 +41,18 @@ export interface SafetyStaffSummary {
   roles: string[];
 }
 
+let safetyCaseReadGeneration = 0;
+let safetyStaffReadGeneration = 0;
+const safetyCaseMutationInFlight = new Set<string>();
+
+function staleReadResult<T>(operation: string): ClassifiedsResult<T> {
+  return { ok: false, error: { code: "unknown", message: "", operation } };
+}
+
+function operationInProgressResult<T>(message: string, operation: string): ClassifiedsResult<T> {
+  return { ok: false, error: { code: "unknown", message, operation } };
+}
+
 export async function safetyFetchCases(
   canManageReports: boolean,
   status: SafetyCaseStatus | "all" = "all",
@@ -52,6 +64,7 @@ export async function safetyFetchCases(
     };
   }
 
+  const requestGeneration = ++safetyCaseReadGeneration;
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
@@ -59,6 +72,9 @@ export async function safetyFetchCases(
     p_status: status === "all" ? null : status,
     p_limit: 200,
   });
+  if (requestGeneration !== safetyCaseReadGeneration) {
+    return staleReadResult("admin_safety_cases_stale_read");
+  }
   if (error) return { ok: false, error: mapError(error) };
 
   return {
@@ -77,10 +93,14 @@ export async function safetyFetchStaff(
     };
   }
 
+  const requestGeneration = ++safetyStaffReadGeneration;
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
   const { data, error } = await clientResult.data.rpc("rawaj_safety_list_staff");
+  if (requestGeneration !== safetyStaffReadGeneration) {
+    return staleReadResult("admin_safety_staff_stale_read");
+  }
   if (error) return { ok: false, error: mapError(error) };
 
   return {
@@ -123,32 +143,48 @@ export async function safetySaveCase(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data.rpc("rawaj_safety_upsert_case", {
-    p_id: payload.id || null,
-    p_source_type: payload.sourceType,
-    p_source_id: payload.sourceId?.trim() || null,
-    p_subject_user_id: payload.subjectUserId?.trim() || null,
-    p_title: title,
-    p_summary: payload.summary.trim(),
-    p_severity: payload.severity,
-    p_assigned_to: payload.assignedTo || null,
-    p_expected_version: payload.id ? (payload.expectedVersion ?? null) : null,
-  });
-
-  if (error) {
-    if (error.message?.includes("stale_safety_case")) {
-      return {
-        ok: false,
-        error: { code: "unknown", message: "تغيّرت القضية منذ تحميلها. أعد التحميل قبل الحفظ." },
-      };
-    }
-    return { ok: false, error: mapError(error) };
+  const operationKey = `safety-case:${payload.id || "new"}`;
+  if (safetyCaseMutationInFlight.has(operationKey)) {
+    return operationInProgressResult(
+      "حفظ القضية قيد التنفيذ بالفعل.",
+      "admin_safety_case_save_in_progress",
+    );
   }
+  safetyCaseMutationInFlight.add(operationKey);
 
-  return mapMutation(data);
+  try {
+    const clientResult = getClient();
+    if (!clientResult.ok) return clientResult;
+
+    const { data, error } = await clientResult.data.rpc("rawaj_safety_upsert_case", {
+      p_id: payload.id || null,
+      p_source_type: payload.sourceType,
+      p_source_id: payload.sourceId?.trim() || null,
+      p_subject_user_id: payload.subjectUserId?.trim() || null,
+      p_title: title,
+      p_summary: payload.summary.trim(),
+      p_severity: payload.severity,
+      p_assigned_to: payload.assignedTo || null,
+      p_expected_version: payload.id ? (payload.expectedVersion ?? null) : null,
+    });
+
+    if (error) {
+      if (error.message?.includes("stale_safety_case")) {
+        return {
+          ok: false,
+          error: {
+            code: "unknown",
+            message: "تغيّرت القضية منذ تحميلها. أعد التحميل قبل الحفظ.",
+          },
+        };
+      }
+      return { ok: false, error: mapError(error) };
+    }
+
+    return mapMutation(data);
+  } finally {
+    safetyCaseMutationInFlight.delete(operationKey);
+  }
 }
 
 export async function safetySetCaseStatus(
@@ -182,30 +218,43 @@ export async function safetySetCaseStatus(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data.rpc("rawaj_safety_set_case_status", {
-    p_id: payload.id,
-    p_status: payload.status,
-    p_expected_version: payload.expectedVersion,
-    p_reason: reason,
-    p_resolution_note: payload.resolutionNote?.trim() || null,
-  });
-  if (error) {
-    if (error.message?.includes("stale_safety_case")) {
-      return {
-        ok: false,
-        error: {
-          code: "unknown",
-          message: "تغيّرت القضية منذ تحميلها. أعد التحميل قبل تغيير الحالة.",
-        },
-      };
-    }
-    return { ok: false, error: mapError(error) };
+  const operationKey = `safety-case:${payload.id}`;
+  if (safetyCaseMutationInFlight.has(operationKey)) {
+    return operationInProgressResult(
+      "هناك عملية أخرى قيد التنفيذ على هذه القضية.",
+      "admin_safety_case_status_in_progress",
+    );
   }
+  safetyCaseMutationInFlight.add(operationKey);
 
-  return mapMutation(data);
+  try {
+    const clientResult = getClient();
+    if (!clientResult.ok) return clientResult;
+
+    const { data, error } = await clientResult.data.rpc("rawaj_safety_set_case_status", {
+      p_id: payload.id,
+      p_status: payload.status,
+      p_expected_version: payload.expectedVersion,
+      p_reason: reason,
+      p_resolution_note: payload.resolutionNote?.trim() || null,
+    });
+    if (error) {
+      if (error.message?.includes("stale_safety_case")) {
+        return {
+          ok: false,
+          error: {
+            code: "unknown",
+            message: "تغيّرت القضية منذ تحميلها. أعد التحميل قبل تغيير الحالة.",
+          },
+        };
+      }
+      return { ok: false, error: mapError(error) };
+    }
+
+    return mapMutation(data);
+  } finally {
+    safetyCaseMutationInFlight.delete(operationKey);
+  }
 }
 
 export async function safetyEscalateCase(
@@ -227,25 +276,41 @@ export async function safetyEscalateCase(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data.rpc("rawaj_safety_escalate_case", {
-    p_id: payload.id,
-    p_expected_version: payload.expectedVersion,
-    p_reason: reason,
-  });
-  if (error) {
-    if (error.message?.includes("stale_safety_case")) {
-      return {
-        ok: false,
-        error: { code: "unknown", message: "تغيّرت القضية منذ تحميلها. أعد التحميل قبل التصعيد." },
-      };
-    }
-    return { ok: false, error: mapError(error) };
+  const operationKey = `safety-case:${payload.id}`;
+  if (safetyCaseMutationInFlight.has(operationKey)) {
+    return operationInProgressResult(
+      "هناك عملية أخرى قيد التنفيذ على هذه القضية.",
+      "admin_safety_case_escalation_in_progress",
+    );
   }
+  safetyCaseMutationInFlight.add(operationKey);
 
-  return mapMutation(data);
+  try {
+    const clientResult = getClient();
+    if (!clientResult.ok) return clientResult;
+
+    const { data, error } = await clientResult.data.rpc("rawaj_safety_escalate_case", {
+      p_id: payload.id,
+      p_expected_version: payload.expectedVersion,
+      p_reason: reason,
+    });
+    if (error) {
+      if (error.message?.includes("stale_safety_case")) {
+        return {
+          ok: false,
+          error: {
+            code: "unknown",
+            message: "تغيّرت القضية منذ تحميلها. أعد التحميل قبل التصعيد.",
+          },
+        };
+      }
+      return { ok: false, error: mapError(error) };
+    }
+
+    return mapMutation(data);
+  } finally {
+    safetyCaseMutationInFlight.delete(operationKey);
+  }
 }
 
 function mapSafetyCase(row: Record<string, unknown>): SafetyCaseSummary {
