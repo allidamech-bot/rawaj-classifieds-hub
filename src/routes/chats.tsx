@@ -179,6 +179,10 @@ function ChatsPage() {
       if (current) URL.revokeObjectURL(current.previewUrl);
       return null;
     });
+    setSelectedVoice((current) => {
+      if (current) URL.revokeObjectURL(current.previewUrl);
+      return null;
+    });
     setConversationQuery("");
     setSendingScopes(new Set());
     setConfirmedRisk(null);
@@ -210,6 +214,10 @@ function ChatsPage() {
     setMessageError(null);
     setReportingMessageId(null);
     setSelectedImage((current) => {
+      if (current) URL.revokeObjectURL(current.previewUrl);
+      return null;
+    });
+    setSelectedVoice((current) => {
       if (current) URL.revokeObjectURL(current.previewUrl);
       return null;
     });
@@ -421,6 +429,7 @@ function ChatsPage() {
       setMessageError(validation.error);
       return;
     }
+    clearSelectedVoice();
     setMessageError(null);
     setSelectedImage((current) => {
       if (current) URL.revokeObjectURL(current.previewUrl);
