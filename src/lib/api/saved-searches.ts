@@ -15,9 +15,12 @@ function mapSavedSearch(row: Record<string, unknown>): SavedSearch {
     userId: rowString(row, "user_id"),
     nameAr: rowString(row, "name_ar"),
     filters: rowRecord(row, "filters"),
-    alertFrequency: frequency === "daily" || frequency === "off" ? frequency : "weekly",
+    alertFrequency:
+      frequency === "daily" || frequency === "off" ? frequency : "weekly",
     lastAlertCheckedAt:
-      typeof row.last_alert_checked_at === "string" ? row.last_alert_checked_at : null,
+      typeof row.last_alert_checked_at === "string"
+        ? row.last_alert_checked_at
+        : null,
     createdAt: rowString(row, "created_at"),
     updatedAt: rowString(row, "updated_at"),
   };
@@ -29,7 +32,10 @@ export async function fetchSavedSearches(
   if (!userId) {
     return {
       ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض عمليات البحث المحفوظة." },
+      error: {
+        code: "auth_required",
+        message: "يجب تسجيل الدخول لعرض عمليات البحث المحفوظة.",
+      },
     };
   }
 
@@ -68,7 +74,10 @@ export async function createSavedSearch(
   if (!nameAr) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "أدخل اسماً واضحاً للبحث المحفوظ." },
+      error: {
+        code: "validation_error",
+        message: "أدخل اسماً واضحاً للبحث المحفوظ.",
+      },
     };
   }
 
@@ -76,13 +85,17 @@ export async function createSavedSearch(
   if (!clientResult.ok) return clientResult;
   const filters = normalizeSavedSearchFilters(payload.filters);
 
-  const { data, error } = await clientResult.data.rpc("rawaj_create_my_saved_search_v2", {
-    p_name_ar: nameAr,
-    p_filters: filters,
-    p_alert_frequency: payload.alertFrequency ?? "weekly",
-  });
+  const { data, error } = await clientResult.data.rpc(
+    "rawaj_create_my_saved_search_v2",
+    {
+      p_name_ar: nameAr,
+      p_filters: filters,
+      p_alert_frequency: payload.alertFrequency ?? "weekly",
+    },
+  );
 
-  if (error) return { ok: false, error: mapError(error, "create_saved_search") };
+  if (error)
+    return { ok: false, error: mapError(error, "create_saved_search") };
   if (!data || typeof data !== "object") {
     return {
       ok: false,
@@ -101,7 +114,10 @@ export async function updateSavedSearchAlertFrequency(
   if (!userId) {
     return {
       ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث تنبيه البحث." },
+      error: {
+        code: "auth_required",
+        message: "يجب تسجيل الدخول لتحديث تنبيه البحث.",
+      },
     };
   }
 
@@ -124,7 +140,8 @@ export async function updateSavedSearchAlertFrequency(
     },
   );
 
-  if (error) return { ok: false, error: mapError(error, "update_saved_search") };
+  if (error)
+    return { ok: false, error: mapError(error, "update_saved_search") };
   if (!data || typeof data !== "object") {
     return {
       ok: false,
@@ -142,7 +159,10 @@ export async function deleteSavedSearch(
   if (!userId) {
     return {
       ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لحذف البحث المحفوظ." },
+      error: {
+        code: "auth_required",
+        message: "يجب تسجيل الدخول لحذف البحث المحفوظ.",
+      },
     };
   }
 
@@ -157,11 +177,15 @@ export async function deleteSavedSearch(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data.rpc("rawaj_delete_my_saved_search_v2", {
-    p_saved_search_id: cleanId,
-  });
+  const { data, error } = await clientResult.data.rpc(
+    "rawaj_delete_my_saved_search_v2",
+    {
+      p_saved_search_id: cleanId,
+    },
+  );
 
-  if (error) return { ok: false, error: mapError(error, "delete_saved_search") };
+  if (error)
+    return { ok: false, error: mapError(error, "delete_saved_search") };
   if (data !== true) {
     return {
       ok: false,
@@ -177,10 +201,13 @@ export async function recordSavedSearchAlertMatch(
   savedSearchId: string,
   listingId: string,
 ): Promise<ClassifiedsResult<boolean>> {
-  const { data, error } = await client.rpc("rawaj_record_saved_search_alert_match", {
-    p_saved_search_id: savedSearchId,
-    p_listing_id: listingId,
-  });
+  const { data, error } = await client.rpc(
+    "rawaj_record_saved_search_alert_match",
+    {
+      p_saved_search_id: savedSearchId,
+      p_listing_id: listingId,
+    },
+  );
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: data === true };
 }
@@ -190,10 +217,13 @@ export async function touchSavedSearchAlertChecked(
   savedSearchId: string,
   checkedAt: string,
 ): Promise<ClassifiedsResult<boolean>> {
-  const { data, error } = await client.rpc("rawaj_touch_saved_search_alert_checked", {
-    p_saved_search_id: savedSearchId,
-    p_checked_at: checkedAt,
-  });
+  const { data, error } = await client.rpc(
+    "rawaj_touch_saved_search_alert_checked",
+    {
+      p_saved_search_id: savedSearchId,
+      p_checked_at: checkedAt,
+    },
+  );
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: data === true };
 }
