@@ -152,7 +152,10 @@ test("saved searches normalize, deduplicate, reopen, and retain alerts", () => {
 });
 
 test("public cards receive explicit aliases without contact or full details", () => {
-  assert.match(route, /<RealListingCard key=\{listing\.id\} listing=\{listing\}/);
+  assert.match(
+    route,
+    /<RealListingCard[\s\S]{0,180}key=\{listing\.id\}[\s\S]{0,180}listing=\{listing\}/,
+  );
   assert.match(publicFields, /categoryDetailKeys\.map/);
   assert.match(publicFields, /detail_taxonomy_node_id/);
   assert.doesNotMatch(publicFields, /details->>phone|details->>whatsapp/);
