@@ -1,4 +1,3 @@
-/* eslint-disable */
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import { normalizeChatResourceId } from "@/lib/chat-integrity";
 import { getClient, mapError } from "@/lib/api/shared";
