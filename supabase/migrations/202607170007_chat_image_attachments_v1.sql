@@ -13,6 +13,9 @@ alter table public.conversation_messages
   drop constraint if exists conversation_messages_body_length;
 
 alter table public.conversation_messages
+  drop constraint if exists conversation_messages_content_required;
+
+alter table public.conversation_messages
   add constraint conversation_messages_content_required
   check (
     (char_length(btrim(body)) between 1 and 2000)
@@ -23,20 +26,24 @@ alter table public.conversation_messages
   drop constraint if exists conversation_messages_attachment_mime_allowed;
 
 alter table public.conversation_messages
-  add constraint conversation_messages_attachment_mime_allowed
-  check (
-    attachment_path is null
-    or attachment_mime_type in ('image/jpeg', 'image/png', 'image/webp')
-  );
-
-alter table public.conversation_messages
   drop constraint if exists conversation_messages_attachment_size_allowed;
 
 alter table public.conversation_messages
-  add constraint conversation_messages_attachment_size_allowed
+  drop constraint if exists conversation_messages_attachment_metadata_complete;
+
+alter table public.conversation_messages
+  add constraint conversation_messages_attachment_metadata_complete
   check (
-    attachment_path is null
-    or attachment_size_bytes between 1 and 5242880
+    (
+      attachment_path is null
+      and attachment_mime_type is null
+      and attachment_size_bytes is null
+    )
+    or (
+      attachment_path is not null
+      and attachment_mime_type in ('image/jpeg', 'image/png', 'image/webp')
+      and attachment_size_bytes between 1 and 5242880
+    )
   );
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -131,28 +138,49 @@ begin
   if v_actor is null then
     raise exception 'Authentication is required to send messages.';
   end if;
+
   if p_conversation_id is null or p_client_request_id is null then
     raise exception 'Conversation and message request id are required.';
   end if;
+
   if char_length(v_body) > 2000 then
     raise exception 'Message body must contain at most 2000 characters.';
   end if;
+
   if v_path is null and char_length(v_body) < 1 then
     raise exception 'A message body or image attachment is required.';
   end if;
-  if v_path is not null then
+
+  if v_path is null then
+    if v_mime is not null or p_attachment_size_bytes is not null then
+      raise exception 'Chat attachment metadata is incomplete.';
+    end if;
+  else
     if v_mime not in ('image/jpeg', 'image/png', 'image/webp') then
       raise exception 'Unsupported chat attachment type.';
     end if;
+
     if p_attachment_size_bytes is null or p_attachment_size_bytes not between 1 and 5242880 then
       raise exception 'Chat attachment size is invalid.';
     end if;
+
     if v_path !~ ('^' || p_conversation_id::text || '/' || v_actor::text || '/' || p_client_request_id::text || '\.(jpg|jpeg|png|webp)$') then
       raise exception 'Chat attachment path is invalid.';
     end if;
+
+    if not exists (
+      select 1
+      from storage.objects o
+      where o.bucket_id = 'conversation-images'
+        and o.name = v_path
+        and lower(coalesce(o.metadata ->> 'mimetype', '')) = v_mime
+    ) then
+      raise exception 'Chat attachment upload could not be verified.';
+    end if;
   end if;
 
-  select m.* into v_message
+  select m.*
+    into v_message
   from public.conversation_messages m
   where m.sender_user_id = v_actor
     and m.client_request_id = p_client_request_id
@@ -167,28 +195,52 @@ begin
     then
       raise exception 'message_request_payload_mismatch';
     end if;
+
     return next v_message;
     return;
   end if;
 
-  insert into public.conversation_messages (
-    conversation_id,
-    sender_user_id,
-    body,
-    client_request_id,
-    attachment_path,
-    attachment_mime_type,
-    attachment_size_bytes
-  ) values (
-    p_conversation_id,
-    v_actor,
-    v_body,
-    p_client_request_id,
-    v_path,
-    v_mime,
-    p_attachment_size_bytes
-  )
-  returning * into v_message;
+  begin
+    insert into public.conversation_messages (
+      conversation_id,
+      sender_user_id,
+      body,
+      client_request_id,
+      attachment_path,
+      attachment_mime_type,
+      attachment_size_bytes
+    ) values (
+      p_conversation_id,
+      v_actor,
+      v_body,
+      p_client_request_id,
+      v_path,
+      v_mime,
+      p_attachment_size_bytes
+    )
+    returning * into v_message;
+  exception
+    when unique_violation then
+      select m.*
+        into v_message
+      from public.conversation_messages m
+      where m.sender_user_id = v_actor
+        and m.client_request_id = p_client_request_id
+      for update;
+
+      if not found then
+        raise;
+      end if;
+
+      if v_message.conversation_id is distinct from p_conversation_id
+        or v_message.body is distinct from v_body
+        or v_message.attachment_path is distinct from v_path
+        or v_message.attachment_mime_type is distinct from v_mime
+        or v_message.attachment_size_bytes is distinct from p_attachment_size_bytes
+      then
+        raise exception 'message_request_payload_mismatch';
+      end if;
+  end;
 
   return next v_message;
 end;
