@@ -54,8 +54,12 @@ export function isMessageReportReason(
 }
 
 export function normalizeModerationText(value: string, maximumLength: number): string {
-  return value
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "")
+  return Array.from(value)
+    .filter((character) => {
+      const codePoint = character.codePointAt(0) ?? 0;
+      return codePoint > 31 && codePoint !== 127;
+    })
+    .join("")
     .trim()
     .slice(0, maximumLength);
 }
