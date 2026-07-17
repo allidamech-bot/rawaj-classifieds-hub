@@ -282,18 +282,14 @@ export interface ModerateSellerReviewPayload {
 }
 
 export interface ConversationParticipantSummary {
-  userId: string;
   displayName: string;
   avatarUrl: string | null;
-  governorate: string | null;
 }
 
 export interface Conversation {
   id: string;
   listingId: string | null;
   listingTitle: string;
-  buyerUserId: string;
-  sellerUserId: string;
   status: ConversationStatus;
   otherParticipant: ConversationParticipantSummary;
   lastMessageAt: string | null;
@@ -306,7 +302,7 @@ export interface Conversation {
 export interface ConversationMessage {
   id: string;
   conversationId: string;
-  senderUserId: string;
+  isMine: boolean;
   body: string;
   createdAt: string;
   editedAt: string | null;
@@ -352,8 +348,6 @@ export interface MessageReport {
 
 export interface CreateMessageReportPayload {
   messageId: string;
-  conversationId: string;
-  reporterUserId: string | null;
   reason: string;
   details?: string | null;
 }
@@ -366,8 +360,6 @@ export interface ModerateMessageReportPayload {
 
 export interface BlockConversationPayload {
   conversationId: string;
-  blockerUserId: string | null;
-  blockedUserId: string;
   reason?: string | null;
 }
 

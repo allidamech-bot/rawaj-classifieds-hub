@@ -194,8 +194,8 @@ function MyListingsPage() {
     auth.profile?.displayName ||
     auth.profile?.email ||
     text("متجري", "My store");
-  const ratingCount = sellerProfile?.ratingSummary.count ?? 0;
-  const ratingAverage = sellerProfile?.ratingSummary.average ?? null;
+  const ratingCount = sellerProfile?.ratingSummary?.count ?? 0;
+  const ratingAverage = sellerProfile?.ratingSummary?.average ?? null;
 
   return (
     <>

@@ -76,7 +76,7 @@ function ActivityCenterPage() {
     const requestId = ++conversationRequestIdRef.current;
     setConversationsLoading(true);
     setConversationError(null);
-    const result = await fetchMyConversations(currentProfileId);
+    const result = await fetchMyConversations();
     if (requestId !== conversationRequestIdRef.current || currentProfileId !== profileIdRef.current)
       return;
 

@@ -19,7 +19,7 @@ export function ExistingConversationBanner({ listingId }: { listingId: string })
     }
 
     let cancelled = false;
-    void fetchListingConversationContext(profileId, listingId).then((result) => {
+    void fetchListingConversationContext(listingId).then((result) => {
       if (cancelled) return;
       setConversation(result.ok ? result.data : null);
     });

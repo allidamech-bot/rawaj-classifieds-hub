@@ -60,10 +60,8 @@ export function useLiveChatWorkspace({
 
     const request = (async () => {
       const [conversationsResult, messagesResult] = await Promise.all([
-        fetchMyConversations(profileId),
-        conversationId
-          ? fetchConversationMessages(profileId, conversationId)
-          : Promise.resolve(null),
+        fetchMyConversations(),
+        conversationId ? fetchConversationMessages(conversationId) : Promise.resolve(null),
       ]);
 
       if (activeScopeRef.current !== scopeKey) return;
@@ -83,7 +81,7 @@ export function useLiveChatWorkspace({
       setMessages(messagesResult.data);
       if (!refreshedConversation || refreshedConversation.unreadCount <= 0) return;
 
-      const readResult = await markConversationRead(profileId, conversationId);
+      const readResult = await markConversationRead(conversationId);
       if (!readResult.ok || activeScopeRef.current !== scopeKey) return;
 
       setConversations((current) =>
@@ -120,6 +118,7 @@ export function useLiveChatWorkspace({
     if (!signedIn || !profileId || typeof window === "undefined") return;
 
     const clientResult = getClient();
+    const scopeKey = buildScopeKey(profileId, selectedConversationId);
     let realtimeTimer: ReturnType<typeof setTimeout> | null = null;
 
     const refreshWhenAvailable = () => {
@@ -127,7 +126,21 @@ export function useLiveChatWorkspace({
       void refreshWorkspace();
     };
 
-    const scheduleRealtimeRefresh = () => {
+    const scheduleRealtimeRefresh = (payload?: { new?: unknown; old?: unknown }) => {
+      if (activeScopeRef.current !== scopeKey) return;
+      const row =
+        payload?.new && typeof payload.new === "object"
+          ? (payload.new as Record<string, unknown>)
+          : payload?.old && typeof payload.old === "object"
+            ? (payload.old as Record<string, unknown>)
+            : null;
+      if (
+        row &&
+        selectedConversationId &&
+        typeof row.conversation_id === "string" &&
+        row.conversation_id !== selectedConversationId
+      )
+        return;
       if (document.visibilityState === "hidden" || navigator.onLine === false) return;
       if (realtimeTimer !== null) clearTimeout(realtimeTimer);
       realtimeTimer = setTimeout(refreshWhenAvailable, LIVE_CHAT_EVENT_DEBOUNCE_MS);

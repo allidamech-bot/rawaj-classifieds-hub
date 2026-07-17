@@ -24,13 +24,22 @@ import {
   readOrCreateMessageSendRequestId,
 } from "@/lib/api/message-send-request";
 import type { ClassifiedsError, Conversation, ConversationMessage } from "@/lib/classifieds-types";
+import {
+  mergeConversationMessages,
+  normalizeChatResourceId,
+  sortAndDedupeMessages,
+} from "@/lib/chat-integrity";
 import { resolveConversationTarget } from "@/lib/journey-target-resolution";
 import { analyzeMessageSafety } from "@/lib/message-safety";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 const chatsSearchSchema = z.object({
-  conversation: z.string().optional(),
+  conversation: z.preprocess(
+    (value) =>
+      typeof value === "string" ? (normalizeChatResourceId(value) ?? undefined) : undefined,
+    z.string().optional(),
+  ),
 });
 
 const quickReplies = [
@@ -39,6 +48,8 @@ const quickReplies = [
   { ar: "هل يمكن المعاينة قبل الشراء؟", en: "Can I inspect it before buying?" },
   { ar: "متى يناسبك التواصل؟", en: "When is a good time to talk?" },
 ] as const;
+const EMPTY_CONVERSATIONS: Conversation[] = [];
+const EMPTY_MESSAGES: ConversationMessage[] = [];
 
 export const Route = createFileRoute("/chats")({
   validateSearch: chatsSearchSchema,
@@ -75,14 +86,19 @@ function ChatsPage() {
   const conversationsRequestIdRef = useRef(0);
   const selectedConversationIdRef = useRef<string | null>(null);
   const profileIdRef = useRef<string | null>(auth.profile?.id ?? null);
+  const accountGenerationRef = useRef(0);
   const autoOpenedConversationRef = useRef<string | null>(null);
   const sendInFlightScopesRef = useRef<Set<string>>(new Set());
   const reportInFlightRef = useRef<Set<string>>(new Set());
-  const blockInFlightRef = useRef(false);
+  const blockInFlightRef = useRef<Set<string>>(new Set());
+  const liveProfileId = auth.profile?.id ?? null;
+  const accountStateMatches = profileIdRef.current === liveProfileId;
+  const accountConversations = accountStateMatches ? conversations : EMPTY_CONVERSATIONS;
+  const accountMessages = accountStateMatches ? messages : EMPTY_MESSAGES;
 
   const targetResolution = useMemo(
-    () => resolveConversationTarget(conversations, search.conversation),
-    [conversations, search.conversation],
+    () => resolveConversationTarget(accountConversations, search.conversation),
+    [accountConversations, search.conversation],
   );
   const selectedConversation =
     targetResolution.kind === "selected" || targetResolution.kind === "default"
@@ -96,17 +112,22 @@ function ChatsPage() {
   const body = composerScopeKey ? (composerDrafts[composerScopeKey] ?? "") : "";
   const sending = composerScopeKey ? sendingScopes.has(composerScopeKey) : false;
   const messageSafety = useMemo(() => analyzeMessageSafety(body), [body]);
+  const visibleMessages = useMemo(
+    () =>
+      selectedConversation ? sortAndDedupeMessages(accountMessages, selectedConversation.id) : [],
+    [accountMessages, selectedConversation],
+  );
   const filteredConversations = useMemo(() => {
     const query = conversationQuery.trim().toLocaleLowerCase(language === "ar" ? "ar" : "en");
-    if (!query) return conversations;
-    return conversations.filter((conversation) =>
+    if (!query) return accountConversations;
+    return accountConversations.filter((conversation) =>
       [
         conversation.otherParticipant.displayName,
         conversation.listingTitle,
         conversation.lastMessagePreview ?? "",
       ].some((value) => value.toLocaleLowerCase(language === "ar" ? "ar" : "en").includes(query)),
     );
-  }, [conversationQuery, conversations, language]);
+  }, [accountConversations, conversationQuery, language]);
 
   const isConversationPanelVisible = isDesktop || viewingConversationOnMobile;
   const liveConversationId =
@@ -125,25 +146,29 @@ function ChatsPage() {
     const previousProfileId = profileIdRef.current;
     profileIdRef.current = nextProfileId;
     if (previousProfileId === nextProfileId) return;
+    accountGenerationRef.current += 1;
 
     setComposerDrafts({});
+    setConversationQuery("");
+    setSendingScopes(new Set());
     setConfirmedRisk(null);
+    setReportingMessageId(null);
     setBlockReason("");
     setNotice("");
-
-    if (previousProfileId !== null) {
-      conversationsRequestIdRef.current += 1;
-      messagesRequestIdRef.current += 1;
-      setConversations([]);
-      setMessages([]);
-      setConversationError(null);
-      setMessageError(null);
-      setLoadingConversations(false);
-      setLoadingMessages(false);
-      setViewingConversationOnMobile(false);
-      if (search.conversation) {
-        void navigate({ to: "/chats", search: {}, replace: true });
-      }
+    sendInFlightScopesRef.current.clear();
+    reportInFlightRef.current.clear();
+    blockInFlightRef.current.clear();
+    conversationsRequestIdRef.current += 1;
+    messagesRequestIdRef.current += 1;
+    setConversations([]);
+    setMessages([]);
+    setConversationError(null);
+    setMessageError(null);
+    setLoadingConversations(false);
+    setLoadingMessages(false);
+    setViewingConversationOnMobile(false);
+    if (search.conversation) {
+      void navigate({ to: "/chats", search: {}, replace: true });
     }
   }, [auth.profile?.id, navigate, search.conversation]);
 
@@ -175,14 +200,16 @@ function ChatsPage() {
   }, [search.conversation]);
 
   useEffect(() => {
-    if (!isDesktop && search.conversation && conversations.length > 0) {
-      const exists = conversations.some((conversation) => conversation.id === search.conversation);
+    if (!isDesktop && search.conversation && accountConversations.length > 0) {
+      const exists = accountConversations.some(
+        (conversation) => conversation.id === search.conversation,
+      );
       if (exists && autoOpenedConversationRef.current !== search.conversation) {
         autoOpenedConversationRef.current = search.conversation;
         setViewingConversationOnMobile(true);
       }
     }
-  }, [isDesktop, search.conversation, conversations]);
+  }, [accountConversations, isDesktop, search.conversation]);
 
   async function loadConversations() {
     const profileId = auth.profile?.id ?? null;
@@ -190,7 +217,7 @@ function ChatsPage() {
     const requestId = ++conversationsRequestIdRef.current;
     setLoadingConversations(true);
     setConversationError(null);
-    const result = await fetchMyConversations(profileId);
+    const result = await fetchMyConversations();
     if (requestId !== conversationsRequestIdRef.current || profileId !== profileIdRef.current)
       return;
     if (result.ok) {
@@ -214,7 +241,7 @@ function ChatsPage() {
     const requestId = ++messagesRequestIdRef.current;
     setLoadingMessages(true);
     setMessageError(null);
-    const result = await fetchConversationMessages(profileId, conversationId);
+    const result = await fetchConversationMessages(conversationId);
     if (
       requestId !== messagesRequestIdRef.current ||
       profileId !== profileIdRef.current ||
@@ -222,8 +249,8 @@ function ChatsPage() {
     )
       return;
     if (result.ok) {
-      setMessages(result.data);
-      const markResult = await markConversationRead(profileId, conversationId);
+      setMessages(sortAndDedupeMessages(result.data, conversationId));
+      const markResult = await markConversationRead(conversationId);
       if (
         requestId !== messagesRequestIdRef.current ||
         profileId !== profileIdRef.current ||
@@ -294,6 +321,7 @@ function ChatsPage() {
     const profileId = auth.profile?.id ?? null;
     const conversationId = selectedConversation?.id ?? null;
     const scopeKey = composerScopeKey;
+    const accountGeneration = accountGenerationRef.current;
     if (
       !profileId ||
       !selectedConversation ||
@@ -333,51 +361,56 @@ function ChatsPage() {
     setNotice("");
     setMessageError(null);
     try {
-      const result = await sendConversationMessage(profileId, conversationId, cleanBody, requestId);
+      const result = await sendConversationMessage({
+        conversationId,
+        body: cleanBody,
+        requestId,
+      });
       const stillCurrent =
-        profileIdRef.current === profileId && selectedConversationIdRef.current === conversationId;
+        accountGenerationRef.current === accountGeneration &&
+        profileIdRef.current === profileId &&
+        selectedConversationIdRef.current === conversationId;
       if (!result.ok) {
         if (stillCurrent) setMessageError(result.error);
         return;
       }
       completeMessageSendRequest(profileId, conversationId, requestId);
-      clearComposerDraftIfUnchanged(scopeKey, cleanBody);
-      setConfirmedRisk((current) => (current?.scopeKey === scopeKey ? null : current));
       if (stillCurrent) {
-        setMessages((current) =>
-          current.some((message) => message.id === result.data.id)
-            ? current
-            : [...current, result.data],
-        );
+        clearComposerDraftIfUnchanged(scopeKey, cleanBody);
+        setConfirmedRisk((current) => (current?.scopeKey === scopeKey ? null : current));
+        setMessages((current) => mergeConversationMessages(current, [result.data], conversationId));
         setNotice(text("تم إرسال الرسالة.", "Message sent."));
       }
       if (profileIdRef.current === profileId) await loadConversations();
     } finally {
-      sendInFlightScopesRef.current.delete(scopeKey);
-      setSendingScopes((current) => {
-        const next = new Set(current);
-        next.delete(scopeKey);
-        return next;
-      });
+      if (accountGenerationRef.current === accountGeneration) {
+        sendInFlightScopesRef.current.delete(scopeKey);
+        setSendingScopes((current) => {
+          const next = new Set(current);
+          next.delete(scopeKey);
+          return next;
+        });
+      }
     }
   }
 
   async function handleReport(message: ConversationMessage) {
     const profileId = auth.profile?.id ?? null;
     const conversationId = selectedConversation?.id ?? null;
-    if (!profileId || !conversationId || reportInFlightRef.current.has(message.id)) return;
-    reportInFlightRef.current.add(message.id);
+    const accountGeneration = accountGenerationRef.current;
+    const reportScope = [profileId, conversationId, message.id].join(":");
+    if (!profileId || !conversationId || reportInFlightRef.current.has(reportScope)) return;
+    reportInFlightRef.current.add(reportScope);
     setReportingMessageId(message.id);
     setNotice("");
     try {
       const result = await createMessageReport({
         messageId: message.id,
-        conversationId,
-        reporterUserId: profileId,
         reason: "abusive_or_suspicious",
       });
       if (
         profileIdRef.current !== profileId ||
+        accountGenerationRef.current !== accountGeneration ||
         selectedConversationIdRef.current !== conversationId
       )
         return;
@@ -387,32 +420,40 @@ function ChatsPage() {
           : result.error.message,
       );
     } finally {
-      reportInFlightRef.current.delete(message.id);
-      setReportingMessageId((current) => (current === message.id ? null : current));
+      if (accountGenerationRef.current === accountGeneration) {
+        reportInFlightRef.current.delete(reportScope);
+        if (
+          profileIdRef.current === profileId &&
+          selectedConversationIdRef.current === conversationId
+        ) {
+          setReportingMessageId((current) => (current === message.id ? null : current));
+        }
+      }
     }
   }
 
   async function handleBlock() {
     const profileId = auth.profile?.id ?? null;
     const conversationId = selectedConversation?.id ?? null;
-    const blockedUserId = selectedConversation?.otherParticipant.userId ?? null;
+    const accountGeneration = accountGenerationRef.current;
     const reason = blockReason || null;
-    if (!profileId || !conversationId || !blockedUserId || blockInFlightRef.current) return;
+    const blockScope = [profileId, conversationId].join(":");
+    if (!profileId || !conversationId || blockInFlightRef.current.has(blockScope)) return;
     if (
       !confirm(text("حظر هذا المستخدم في هذه المحادثة؟", "Block this user in this conversation?"))
     )
       return;
-    blockInFlightRef.current = true;
+    blockInFlightRef.current.add(blockScope);
     setNotice("");
     try {
       const result = await blockConversationParticipant({
         conversationId,
-        blockerUserId: profileId,
-        blockedUserId,
         reason,
       });
       const stillCurrent =
-        profileIdRef.current === profileId && selectedConversationIdRef.current === conversationId;
+        accountGenerationRef.current === accountGeneration &&
+        profileIdRef.current === profileId &&
+        selectedConversationIdRef.current === conversationId;
       if (stillCurrent) {
         setNotice(
           result.ok
@@ -425,12 +466,14 @@ function ChatsPage() {
       }
       if (result.ok && profileIdRef.current === profileId) await loadConversations();
     } finally {
-      blockInFlightRef.current = false;
+      if (accountGenerationRef.current === accountGeneration) {
+        blockInFlightRef.current.delete(blockScope);
+      }
     }
   }
 
   function openFirstAvailableConversation() {
-    const firstConversation = conversations[0];
+    const firstConversation = accountConversations[0];
     if (firstConversation) {
       if (!isDesktop) setViewingConversationOnMobile(true);
       void navigate({
@@ -460,11 +503,11 @@ function ChatsPage() {
       <main className="rawaj-communication-v2 rawaj-communication-v2--messages container-wide mobile-page-bottom space-y-4 pt-4">
         <CommunicationCenterHero
           mode="messages"
-          unreadMessages={conversations.reduce(
+          unreadMessages={accountConversations.reduce(
             (total, conversation) => total + conversation.unreadCount,
             0,
           )}
-          conversationCount={conversations.length}
+          conversationCount={accountConversations.length}
         />
         <CommunicationSafetyNote />
 
@@ -487,11 +530,11 @@ function ChatsPage() {
               placeholder={text("ابحث باسم أو إعلان أو رسالة", "Search conversations")}
               label={text("بحث في المحادثات", "Search conversations")}
             />
-            {loadingConversations ? (
+            {!accountStateMatches || loadingConversations ? (
               <PanelText>{text("جاري تحميل المحادثات.", "Loading conversations.")}</PanelText>
             ) : conversationError ? (
-              <PanelText>{conversationError.message}</PanelText>
-            ) : conversations.length === 0 ? (
+              <PanelText role="alert">{conversationError.message}</PanelText>
+            ) : accountConversations.length === 0 ? (
               <PanelText>
                 {text(
                   "لا توجد محادثات بعد. افتح إعلانا معتمدا وابدأ محادثة من صفحة الإعلان.",
@@ -545,7 +588,7 @@ function ChatsPage() {
                     )}
                   </p>
                   <div className="mt-5 flex flex-wrap justify-center gap-2">
-                    {conversations.length > 0 && (
+                    {accountConversations.length > 0 && (
                       <button
                         type="button"
                         onClick={openFirstAvailableConversation}
@@ -636,8 +679,8 @@ function ChatsPage() {
                   {loadingMessages ? (
                     <PanelText>{text("جاري تحميل الرسائل.", "Loading messages.")}</PanelText>
                   ) : messageError ? (
-                    <PanelText>{messageError.message}</PanelText>
-                  ) : messages.length === 0 ? (
+                    <PanelText role="alert">{messageError.message}</PanelText>
+                  ) : visibleMessages.length === 0 ? (
                     <PanelText>
                       {text(
                         "لا توجد رسائل بعد. اكتب أول رسالة حقيقية لهذه المحادثة.",
@@ -645,8 +688,8 @@ function ChatsPage() {
                       )}
                     </PanelText>
                   ) : (
-                    messages.map((message) => {
-                      const mine = message.senderUserId === auth.profile?.id;
+                    visibleMessages.map((message) => {
+                      const mine = message.isMine;
                       return (
                         <article key={message.id} className="rawaj-message-bubble" data-mine={mine}>
                           <p className="whitespace-pre-line break-words">{message.body}</p>
@@ -799,9 +842,18 @@ function Avatar({ name, url }: { name: string; url: string | null }) {
   );
 }
 
-function PanelText({ children }: { children: React.ReactNode }) {
+function PanelText({
+  children,
+  role = "status",
+}: {
+  children: React.ReactNode;
+  role?: "status" | "alert";
+}) {
   return (
-    <p className="rounded-xl bg-muted-surface p-3 text-xs leading-6 text-muted-foreground">
+    <p
+      role={role}
+      className="rounded-xl bg-muted-surface p-3 text-xs leading-6 text-muted-foreground"
+    >
       {children}
     </p>
   );
@@ -812,5 +864,6 @@ function formatDateTime(value: string, language: "ar" | "en") {
   return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
     dateStyle: "short",
     timeStyle: "short",
+    timeZone: "UTC",
   }).format(new Date(value));
 }

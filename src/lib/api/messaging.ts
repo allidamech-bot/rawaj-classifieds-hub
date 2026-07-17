@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   ClassifiedsResult,
+  BlockConversationPayload,
   Conversation,
   ConversationMessage,
   ConversationStatus,
@@ -8,6 +9,13 @@ import type {
   MessageReport,
   MessageReportStatus,
 } from "@/lib/classifieds-types";
+import {
+  CHAT_HISTORY_PAGE_SIZE,
+  CHAT_MESSAGE_MAX_LENGTH,
+  normalizeChatResourceId,
+  sortAndDedupeConversations,
+  sortAndDedupeMessages,
+} from "@/lib/chat-integrity";
 import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
 import {
   getClient,
@@ -23,17 +31,10 @@ import {
 const pendingMessageSends = new Map<string, Promise<ClassifiedsResult<ConversationMessage>>>();
 
 export async function startListingConversation(
-  userId: string | null,
   listingId: string,
 ): Promise<ClassifiedsResult<string>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لبدء محادثة." },
-    };
-  }
-
-  if (!listingId.trim()) {
+  const cleanListingId = normalizeChatResourceId(listingId);
+  if (!cleanListingId) {
     return {
       ok: false,
       error: { code: "validation_error", message: "تعذر تحديد الإعلان لبدء المحادثة." },
@@ -44,43 +45,32 @@ export async function startListingConversation(
   if (!clientResult.ok) return clientResult;
 
   const { data, error } = await clientResult.data.rpc("rawaj_start_listing_conversation", {
-    p_listing_id: listingId,
+    p_listing_id: cleanListingId,
   });
 
   if (error) return { ok: false, error: mapError(error) };
   return { ok: true, data: typeof data === "string" ? data : String(data) };
 }
 
-export async function fetchMyConversations(
-  userId: string | null,
-): Promise<ClassifiedsResult<Conversation[]>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض المحادثات." },
-    };
-  }
-
+export async function fetchMyConversations(): Promise<ClassifiedsResult<Conversation[]>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
   const { data, error } = await clientResult.data.rpc("rawaj_fetch_my_conversations");
   if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapConversation) };
+  return {
+    ok: true,
+    data: sortAndDedupeConversations(
+      ((data ?? []) as Record<string, unknown>[]).map(mapConversation),
+    ),
+  };
 }
 
 export async function fetchConversationMessages(
-  userId: string | null,
   conversationId: string,
 ): Promise<ClassifiedsResult<ConversationMessage[]>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض الرسائل." },
-    };
-  }
-
-  if (!conversationId.trim()) {
+  const cleanConversationId = normalizeChatResourceId(conversationId);
+  if (!cleanConversationId) {
     return {
       ok: false,
       error: { code: "validation_error", message: "تعذر تحديد المحادثة." },
@@ -89,40 +79,41 @@ export async function fetchConversationMessages(
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
+  const actorResult = await getAuthenticatedUserId(clientResult.data);
+  if (!actorResult.ok) return actorResult;
 
   const { data, error } = await clientResult.data
     .from("conversation_messages")
-    .select("*")
-    .eq("conversation_id", conversationId)
+    .select("id,conversation_id,sender_user_id,body,created_at,edited_at,deleted_at")
+    .eq("conversation_id", cleanConversationId)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
-    .limit(200);
+    .order("id", { ascending: false })
+    .limit(CHAT_HISTORY_PAGE_SIZE);
 
   if (error) return { ok: false, error: mapError(error) };
-  const rows = ((data ?? []) as Record<string, unknown>[]).reverse();
-  return { ok: true, data: rows.map(mapMessage) };
+  const rows = (data ?? []) as Record<string, unknown>[];
+  return {
+    ok: true,
+    data: sortAndDedupeMessages(
+      rows.map((row) => mapMessage(row, actorResult.data)),
+      cleanConversationId,
+    ),
+  };
 }
 
 const MESSAGE_REQUEST_UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export async function sendConversationMessage(
-  userId: string | null,
-  conversationId: string,
-  body: string,
-  clientRequestId: string,
-): Promise<ClassifiedsResult<ConversationMessage>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال رسالة." },
-    };
-  }
-
-  const cleanConversationId = conversationId.trim();
-  const cleanBody = body.trim();
-  const cleanRequestId = clientRequestId.trim();
-  if (!cleanConversationId || cleanBody.length < 1 || cleanBody.length > 2000) {
+export async function sendConversationMessage(payload: {
+  conversationId: string;
+  body: string;
+  requestId: string;
+}): Promise<ClassifiedsResult<ConversationMessage>> {
+  const cleanConversationId = normalizeChatResourceId(payload.conversationId);
+  const cleanBody = payload.body.trim();
+  const cleanRequestId = payload.requestId.trim();
+  if (!cleanConversationId || cleanBody.length < 1 || cleanBody.length > CHAT_MESSAGE_MAX_LENGTH) {
     return {
       ok: false,
       error: { code: "validation_error", message: "اكتب رسالة بين 1 و2000 حرف." },
@@ -135,12 +126,18 @@ export async function sendConversationMessage(
     };
   }
 
-  const sendKey = JSON.stringify([userId, cleanRequestId]);
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+  const actorResult = await getAuthenticatedUserId(clientResult.data);
+  if (!actorResult.ok) return actorResult;
+
+  const sendKey = JSON.stringify([actorResult.data, cleanConversationId, cleanRequestId]);
   const existingSend = pendingMessageSends.get(sendKey);
   if (existingSend) return existingSend;
 
   const sendPromise = performConversationMessageSend(
-    userId,
+    clientResult.data,
+    actorResult.data,
     cleanConversationId,
     cleanBody,
     cleanRequestId,
@@ -157,15 +154,13 @@ export async function sendConversationMessage(
 }
 
 async function performConversationMessageSend(
-  userId: string,
+  client: SupabaseClient,
+  actorUserId: string,
   conversationId: string,
   cleanBody: string,
   clientRequestId: string,
 ): Promise<ClassifiedsResult<ConversationMessage>> {
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const response = await clientResult.data.rpc("rawaj_send_conversation_message_v2", {
+  const response = await client.rpc("rawaj_send_conversation_message_v2", {
     p_conversation_id: conversationId,
     p_client_request_id: clientRequestId,
     p_body: cleanBody,
@@ -173,7 +168,7 @@ async function performConversationMessageSend(
 
   if (!response.error) {
     const row = ((response.data ?? []) as Record<string, unknown>[])[0];
-    if (row) return { ok: true, data: mapMessage(row) };
+    if (row) return { ok: true, data: mapMessage(row, actorUserId) };
     return {
       ok: false,
       error: {
@@ -198,27 +193,14 @@ async function performConversationMessageSend(
     return { ok: false, error: mapError(response.error, "conversation_message_send") };
   }
 
-  return performLegacyConversationMessageSend(clientResult.data, userId, conversationId, cleanBody);
-}
-
-async function performLegacyConversationMessageSend(
-  client: SupabaseClient,
-  userId: string,
-  conversationId: string,
-  cleanBody: string,
-): Promise<ClassifiedsResult<ConversationMessage>> {
-  const { data, error } = await client
-    .from("conversation_messages")
-    .insert({
-      conversation_id: conversationId,
-      sender_user_id: userId,
-      body: cleanBody,
-    })
-    .select("*")
-    .single();
-
-  if (error) return { ok: false, error: mapError(error, "conversation_message_send") };
-  return { ok: true, data: mapMessage(data as Record<string, unknown>) };
+  return {
+    ok: false,
+    error: {
+      code: "setup_required",
+      message: "إرسال الرسائل الآمن غير متاح حالياً. حاول لاحقاً.",
+      operation: "conversation_message_send",
+    },
+  };
 }
 
 function isMissingMessageSendV2(error: {
@@ -242,18 +224,22 @@ function isMessageRequestPayloadMismatch(error: { message?: string; details?: st
   );
 }
 
-export async function markConversationRead(
-  userId: string | null,
-  conversationId: string,
-): Promise<ClassifiedsResult<null>> {
-  if (!userId) {
+async function getAuthenticatedUserId(client: SupabaseClient): Promise<ClassifiedsResult<string>> {
+  const { data, error } = await client.auth.getUser();
+  if (error || !data.user?.id) {
     return {
       ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث المحادثة." },
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لإكمال هذا الإجراء." },
     };
   }
+  return { ok: true, data: data.user.id };
+}
 
-  if (!conversationId.trim()) {
+export async function markConversationRead(
+  conversationId: string,
+): Promise<ClassifiedsResult<null>> {
+  const cleanConversationId = normalizeChatResourceId(conversationId);
+  if (!cleanConversationId) {
     return {
       ok: false,
       error: { code: "validation_error", message: "تعذر تحديد المحادثة." },
@@ -264,7 +250,7 @@ export async function markConversationRead(
   if (!clientResult.ok) return clientResult;
 
   const { error } = await clientResult.data.rpc("rawaj_mark_conversation_read", {
-    p_conversation_id: conversationId,
+    p_conversation_id: cleanConversationId,
   });
 
   if (error) return { ok: false, error: mapError(error) };
@@ -274,17 +260,11 @@ export async function markConversationRead(
 
 export async function createMessageReport(
   payload: CreateMessageReportPayload,
-): Promise<ClassifiedsResult<MessageReport>> {
-  if (!payload.reporterUserId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول للإبلاغ عن رسالة." },
-    };
-  }
-
+): Promise<ClassifiedsResult<null>> {
   const reason = payload.reason.trim();
   const details = payload.details?.trim() || null;
-  if (!payload.messageId.trim() || !payload.conversationId.trim() || reason.length < 3) {
+  const messageId = normalizeChatResourceId(payload.messageId);
+  if (!messageId || reason.length < 3) {
     return {
       ok: false,
       error: { code: "validation_error", message: "اختر سبباً واضحاً للبلاغ." },
@@ -293,16 +273,33 @@ export async function createMessageReport(
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
+  const actorResult = await getAuthenticatedUserId(clientResult.data);
+  if (!actorResult.ok) return actorResult;
+
+  const messageResult = await clientResult.data
+    .from("conversation_messages")
+    .select("id,conversation_id")
+    .eq("id", messageId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (messageResult.error) return { ok: false, error: mapError(messageResult.error) };
+  const conversationId = rowString(
+    (messageResult.data ?? {}) as Record<string, unknown>,
+    "conversation_id",
+  );
+  if (!conversationId) {
+    return { ok: false, error: { code: "not_found", message: "تعذر العثور على الرسالة." } };
+  }
 
   const rpcResult = await clientResult.data.rpc("rawaj_create_message_report", {
-    p_message_id: payload.messageId,
-    p_conversation_id: payload.conversationId,
+    p_message_id: messageId,
+    p_conversation_id: conversationId,
     p_reason: reason,
     p_details: details,
   });
 
   if (!rpcResult.error) {
-    return { ok: true, data: mapMessageReport(rpcResult.data as Record<string, unknown>) };
+    return { ok: true, data: null };
   }
 
   if (isMissingMessageReportRpc(rpcResult.error)) {
@@ -319,24 +316,11 @@ export async function createMessageReport(
   return { ok: false, error: mapError(rpcResult.error) };
 }
 
-export async function blockConversationParticipant(payload: {
-  blockerUserId: string | null;
-  conversationId: string;
-  blockedUserId: string;
-  reason?: string | null;
-}): Promise<ClassifiedsResult<null>> {
-  if (!payload.blockerUserId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لحظر مستخدم." },
-    };
-  }
-
-  if (
-    !payload.conversationId.trim() ||
-    !payload.blockedUserId.trim() ||
-    payload.blockedUserId === payload.blockerUserId
-  ) {
+export async function blockConversationParticipant(
+  payload: BlockConversationPayload,
+): Promise<ClassifiedsResult<null>> {
+  const conversationId = normalizeChatResourceId(payload.conversationId);
+  if (!conversationId) {
     return {
       ok: false,
       error: { code: "validation_error", message: "تعذر تحديد المستخدم المطلوب حظره." },
@@ -345,11 +329,23 @@ export async function blockConversationParticipant(payload: {
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
+  const actorResult = await getAuthenticatedUserId(clientResult.data);
+  if (!actorResult.ok) return actorResult;
+
+  const conversationResult = await clientResult.data.rpc("rawaj_fetch_my_conversations");
+  if (conversationResult.error) return { ok: false, error: mapError(conversationResult.error) };
+  const conversation = ((conversationResult.data ?? []) as Record<string, unknown>[]).find(
+    (row) => rowString(row, "id") === conversationId,
+  );
+  const blockedUserId = conversation ? rowString(conversation, "other_user_id") : "";
+  if (!blockedUserId || blockedUserId === actorResult.data) {
+    return { ok: false, error: { code: "not_found", message: "تعذر العثور على المحادثة." } };
+  }
 
   const { error } = await clientResult.data.from("user_blocks").insert({
-    conversation_id: payload.conversationId,
-    blocker_user_id: payload.blockerUserId,
-    blocked_user_id: payload.blockedUserId,
+    conversation_id: conversationId,
+    blocker_user_id: actorResult.data,
+    blocked_user_id: blockedUserId,
     reason: payload.reason?.trim() || null,
   });
 
@@ -362,14 +358,10 @@ function mapConversation(row: Record<string, unknown>): Conversation {
     id: rowString(row, "id"),
     listingId: rowNullableString(row, "listing_id"),
     listingTitle: rowString(row, "listing_title", "إعلان على رواجا"),
-    buyerUserId: rowString(row, "buyer_user_id"),
-    sellerUserId: rowString(row, "seller_user_id"),
     status: rowString(row, "status", "active") as ConversationStatus,
     otherParticipant: {
-      userId: rowString(row, "other_user_id"),
       displayName: rowString(row, "other_display_name", "مستخدم رواجا"),
       avatarUrl: rowNullableString(row, "other_avatar_url"),
-      governorate: rowNullableString(row, "other_governorate"),
     },
     lastMessageAt: rowNullableString(row, "last_message_at"),
     lastMessagePreview: rowNullableString(row, "last_message_preview"),
@@ -379,11 +371,11 @@ function mapConversation(row: Record<string, unknown>): Conversation {
   };
 }
 
-function mapMessage(row: Record<string, unknown>): ConversationMessage {
+function mapMessage(row: Record<string, unknown>, actorUserId: string): ConversationMessage {
   return {
     id: rowString(row, "id"),
     conversationId: rowString(row, "conversation_id"),
-    senderUserId: rowString(row, "sender_user_id"),
+    isMine: rowString(row, "sender_user_id") === actorUserId,
     body: rowString(row, "body"),
     createdAt: rowString(row, "created_at"),
     editedAt: rowNullableString(row, "edited_at"),

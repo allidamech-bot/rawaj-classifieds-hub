@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   ClassifiedsResult,
+  ClassifiedListing,
   PublicSellerProfile,
   PublicSellerSearchResult,
   PublicSellerSectionStatus,
@@ -130,7 +131,14 @@ export async function fetchPublicSellerProfile(
   };
 }
 
-async function readPublicSellerInventory(client: SupabaseClient, sellerId: string) {
+async function readPublicSellerInventory(
+  client: SupabaseClient,
+  sellerId: string,
+): Promise<{
+  status: PublicSellerSectionStatus;
+  totalCount: number | null;
+  listings: ClassifiedListing[];
+}> {
   const references = await readReferences(client);
   if (!references.ok) {
     return {

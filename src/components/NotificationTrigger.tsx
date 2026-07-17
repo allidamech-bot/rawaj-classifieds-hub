@@ -106,7 +106,7 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
     if (openingTargetId || !profileId) return;
     setOpeningTargetId(notification.id);
     setError("");
-    const result = await resolveNotificationTarget(profileId, notification);
+    const result = await resolveNotificationTarget(notification);
     setOpeningTargetId(null);
 
     if (!result.ok) {
