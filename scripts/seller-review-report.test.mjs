@@ -83,7 +83,11 @@ test("admin review reports stay behind report permission and use stale-safe mode
   assert.match(adminRoute, /auth\.hasPermission\("canManageReports"\)/);
   assert.match(adminRoute, /SellerReviewReportsAdminPanel canManageReports=\{canManageReports\}/);
   assert.match(adminPanel, /if \(!canManageReports\) return null;/);
-  assert.match(adminPanel, /adminFetchSellerReviewReports\(canManageReports\)/);
-  assert.match(adminPanel, /adminModerateSellerReviewReport\(canManageReports/);
+  assert.match(adminPanel, /adminFetchSellerReviewReports\(\)/);
+  assert.match(adminPanel, /adminModerateSellerReviewReport\(\{/);
+  assert.doesNotMatch(
+    adminPanel,
+    /admin(?:Fetch|Moderate)SellerReviewReport[s]?\(canManageReports/,
+  );
   assert.match(adminPanel, /expectedUpdatedAt: report\.updatedAt/);
 });

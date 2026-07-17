@@ -1,18 +1,24 @@
 import {
   createAccountDeletionRequest as baseCreateAccountDeletionRequest,
-  createSupportRequest as baseCreateSupportRequest,
+  createMySupportRequest as baseCreateMySupportRequest,
+  fetchMySupportRequest,
   fetchMySupportRequests,
 } from "@/lib/api/support";
+import { resolveAuthenticatedAccountId } from "@/lib/api/account-identity";
 import { runDeduplicatedRequest } from "@/lib/api/request-dedup";
+import { getClient } from "@/lib/api/shared";
 
-const pendingSupportRequests = new Map<string, ReturnType<typeof baseCreateSupportRequest>>();
+const pendingSupportRequests = new Map<string, ReturnType<typeof baseCreateMySupportRequest>>();
 
-export function createSupportRequest(
-  userId: Parameters<typeof baseCreateSupportRequest>[0],
-  payload: Parameters<typeof baseCreateSupportRequest>[1],
+export async function createMySupportRequest(
+  payload: Parameters<typeof baseCreateMySupportRequest>[0],
 ) {
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+  const actor = await resolveAuthenticatedAccountId(clientResult.data, "support_dedup_auth");
+  if (!actor.ok) return actor;
   const key = JSON.stringify([
-    userId ?? "anonymous",
+    actor.data,
     payload.type,
     payload.subject.trim(),
     payload.message.trim(),
@@ -20,12 +26,14 @@ export function createSupportRequest(
     payload.relatedReportId?.trim() ?? "",
   ]);
   return runDeduplicatedRequest(key, pendingSupportRequests, () =>
-    baseCreateSupportRequest(userId, payload),
+    baseCreateMySupportRequest(payload),
   );
 }
+
+export const createSupportRequest = createMySupportRequest;
 
 export function createAccountDeletionRequest() {
   return baseCreateAccountDeletionRequest();
 }
 
-export { fetchMySupportRequests };
+export { fetchMySupportRequest, fetchMySupportRequests };

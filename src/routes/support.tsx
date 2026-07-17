@@ -7,7 +7,7 @@ import {
   TrustHubHero,
   TrustSectionHeader,
 } from "@/features/trust/TrustSupportExperience";
-import { createSupportRequest, fetchMySupportRequests } from "@/lib/classifieds-api";
+import { createMySupportRequest, fetchMySupportRequests } from "@/lib/classifieds-api";
 import type { ClassifiedsError, SupportRequest, SupportRequestType } from "@/lib/classifieds-types";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -99,7 +99,7 @@ function SupportPage() {
     setRequestsLoading(true);
     setRequestsError(null);
 
-    const result = await fetchMySupportRequests(currentProfileId);
+    const result = await fetchMySupportRequests();
     if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current)
       return;
 
@@ -166,7 +166,7 @@ function SupportPage() {
     setSubmitting(true);
 
     try {
-      const result = await createSupportRequest(currentProfileId, payload);
+      const result = await createMySupportRequest(payload);
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setNotice(result.error.message);

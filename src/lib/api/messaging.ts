@@ -17,6 +17,9 @@ import {
   sortAndDedupeMessages,
 } from "@/lib/chat-integrity";
 import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
+import { accountSessionStillMatches } from "@/lib/api/account-identity";
+import { mapModerationError } from "@/lib/api/moderation-errors";
+import { isMessageReportReason, normalizeModerationText } from "@/lib/moderation-contract";
 import {
   getClient,
   isMissingMessageReportRpc,
@@ -261,10 +264,10 @@ export async function markConversationRead(
 export async function createMessageReport(
   payload: CreateMessageReportPayload,
 ): Promise<ClassifiedsResult<null>> {
-  const reason = payload.reason.trim();
-  const details = payload.details?.trim() || null;
+  const reason = normalizeModerationText(payload.reason, 80);
+  const details = normalizeModerationText(payload.details ?? "", 1000) || null;
   const messageId = normalizeChatResourceId(payload.messageId);
-  if (!messageId || reason.length < 3) {
+  if (!messageId || !isMessageReportReason(reason) || (reason === "other" && !details)) {
     return {
       ok: false,
       error: { code: "validation_error", message: "اختر سبباً واضحاً للبلاغ." },
@@ -299,6 +302,12 @@ export async function createMessageReport(
   });
 
   if (!rpcResult.error) {
+    const current = await accountSessionStillMatches(
+      clientResult.data,
+      actorResult.data,
+      "message_report_stale",
+    );
+    if (!current.ok) return current;
     return { ok: true, data: null };
   }
 
@@ -313,7 +322,14 @@ export async function createMessageReport(
     };
   }
 
-  return { ok: false, error: mapError(rpcResult.error) };
+  return {
+    ok: false,
+    error: mapModerationError(
+      rpcResult.error,
+      "message_report_create",
+      "تعذر إرسال بلاغ الرسالة الآن.",
+    ),
+  };
 }
 
 export async function blockConversationParticipant(
@@ -332,24 +348,23 @@ export async function blockConversationParticipant(
   const actorResult = await getAuthenticatedUserId(clientResult.data);
   if (!actorResult.ok) return actorResult;
 
-  const conversationResult = await clientResult.data.rpc("rawaj_fetch_my_conversations");
-  if (conversationResult.error) return { ok: false, error: mapError(conversationResult.error) };
-  const conversation = ((conversationResult.data ?? []) as Record<string, unknown>[]).find(
-    (row) => rowString(row, "id") === conversationId,
-  );
-  const blockedUserId = conversation ? rowString(conversation, "other_user_id") : "";
-  if (!blockedUserId || blockedUserId === actorResult.data) {
-    return { ok: false, error: { code: "not_found", message: "تعذر العثور على المحادثة." } };
-  }
-
-  const { error } = await clientResult.data.from("user_blocks").insert({
-    conversation_id: conversationId,
-    blocker_user_id: actorResult.data,
-    blocked_user_id: blockedUserId,
-    reason: payload.reason?.trim() || null,
+  const { error } = await clientResult.data.rpc("rawaj_block_conversation_participant", {
+    p_conversation_id: conversationId,
+    p_reason: normalizeModerationText(payload.reason ?? "", 300) || null,
   });
 
-  if (error) return { ok: false, error: mapError(error) };
+  if (error) {
+    return {
+      ok: false,
+      error: mapModerationError(error, "conversation_block", "تعذر حظر المستخدم الآن."),
+    };
+  }
+  const current = await accountSessionStillMatches(
+    clientResult.data,
+    actorResult.data,
+    "conversation_block_stale",
+  );
+  if (!current.ok) return current;
   return { ok: true, data: null };
 }
 
@@ -397,8 +412,8 @@ export function toDbMessageReportStatus(status: MessageReport["status"]): string
 function mapMessageReport(row: Record<string, unknown>): MessageReport {
   return {
     id: rowString(row, "id"),
-    messageId: rowString(row, "message_id"),
-    conversationId: rowString(row, "conversation_id"),
+    messageId: rowNullableString(row, "message_id"),
+    conversationId: rowNullableString(row, "conversation_id"),
     reporterUserId: rowString(row, "reporter_user_id"),
     reportedUserId: rowString(row, "reported_user_id"),
     reason: rowString(row, "reason"),
@@ -417,46 +432,26 @@ function mapMessageReport(row: Record<string, unknown>): MessageReport {
   };
 }
 
-export async function adminFetchMessageReports(
-  canUseAdminAccess: boolean,
-): Promise<ClassifiedsResult<MessageReport[]>> {
-  if (!canUseAdminAccess) {
-    return {
-      ok: false,
-      error: {
-        code: "permission_denied",
-        message: "مراجعة بلاغات الرسائل متاحة لحساب إداري مخول فقط.",
-      },
-    };
-  }
-
+export async function adminFetchMessageReports(): Promise<ClassifiedsResult<MessageReport[]>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
   const { data, error } = await clientResult.data.rpc("rawaj_fetch_message_reports_for_admin");
-  if (error) return { ok: false, error: mapError(error) };
+  if (error) {
+    return {
+      ok: false,
+      error: mapModerationError(error, "message_report_admin_queue", "تعذر تحميل بلاغات الرسائل."),
+    };
+  }
   return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapMessageReport) };
 }
 
-export async function adminModerateMessageReport(
-  canUseAdminAccess: boolean,
-  payload: {
-    reportId: string;
-    status: MessageReportStatus;
-    adminNote?: string | null;
-    expectedUpdatedAt: string;
-  },
-): Promise<ClassifiedsResult<null>> {
-  if (!canUseAdminAccess) {
-    return {
-      ok: false,
-      error: {
-        code: "permission_denied",
-        message: "مراجعة بلاغات الرسائل متاحة لحساب إداري مخول فقط.",
-      },
-    };
-  }
-
+export async function adminModerateMessageReport(payload: {
+  reportId: string;
+  status: MessageReportStatus;
+  adminNote?: string | null;
+  expectedUpdatedAt: string;
+}): Promise<ClassifiedsResult<null>> {
   if (!payload.reportId.trim() || !payload.expectedUpdatedAt) {
     return {
       ok: false,
@@ -470,21 +465,15 @@ export async function adminModerateMessageReport(
   const { error } = await clientResult.data.rpc("rawaj_admin_moderate_message_report", {
     p_report_id: payload.reportId,
     p_status: toDbMessageReportStatus(payload.status),
-    p_admin_note: payload.adminNote?.trim() || null,
+    p_admin_note: normalizeModerationText(payload.adminNote ?? "", 1000) || null,
     p_expected_updated_at: payload.expectedUpdatedAt,
   });
 
   if (error) {
-    if (error.message?.includes("stale_message_report")) {
-      return {
-        ok: false,
-        error: {
-          code: "stale_review",
-          message: "تغيّر بلاغ الرسالة منذ تحميله. أعد تحميل القائمة قبل اتخاذ قرار جديد.",
-        },
-      };
-    }
-    return { ok: false, error: mapError(error) };
+    return {
+      ok: false,
+      error: mapModerationError(error, "message_report_moderate", "تعذر تحديث بلاغ الرسالة."),
+    };
   }
 
   return { ok: true, data: null };

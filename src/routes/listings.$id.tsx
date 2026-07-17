@@ -194,14 +194,21 @@ function ListingDetailsPage() {
       return;
     }
     if (reportInFlightRef.current) return;
+    const startProfileId = auth.profile?.id ?? null;
+    const startProfileGeneration = profileGenerationRef.current;
+    if (!startProfileId) return;
     reportInFlightRef.current = true;
     try {
       const result = await createListingReport(
-        auth.profile?.id ?? null,
         id,
         "suspicious_listing",
         "بلاغ سريع من صفحة الإعلان.",
       );
+      if (
+        profileIdRef.current !== startProfileId ||
+        profileGenerationRef.current !== startProfileGeneration
+      )
+        return;
       setActionMessage(
         result.ok
           ? text("تم إرسال البلاغ للمراجعة.", "Report sent for review.")

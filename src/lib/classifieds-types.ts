@@ -11,6 +11,7 @@ export type ClassifiedsErrorCode =
   | "stale_account"
   | "stale_review"
   | "status_mismatch"
+  | "rate_limited"
   | "validation_error"
   | "foreign_key_conflict"
   | "unknown";
@@ -326,8 +327,8 @@ export type MessageReportStatus = "new" | "under_review" | "resolved" | "rejecte
 
 export interface MessageReport {
   id: string;
-  messageId: string;
-  conversationId: string;
+  messageId: string | null;
+  conversationId: string | null;
   reporterUserId: string;
   reportedUserId: string;
   reason: string;
@@ -454,7 +455,8 @@ export interface ModerateListingPromotionRequestPayload {
 
 export interface ListingReport {
   id: string;
-  listingId: string;
+  listingId: string | null;
+  listingTitleSnapshot: string | null;
   reporterId: string;
   reportType: ListingReportType;
   reason: string;
@@ -483,9 +485,7 @@ export interface SupportRequest {
   message: string;
   relatedListingId: string | null;
   relatedReportId: string | null;
-  adminNote: string | null;
-  reviewedBy: string | null;
-  reviewedAt: string | null;
+  publicResponse: string | null;
   createdAt: string;
   updatedAt: string;
 }

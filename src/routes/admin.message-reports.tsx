@@ -15,6 +15,9 @@ function AdminMessageReportsPage() {
   const auth = useAuth();
   const { text } = useUiPreferences();
   const canManageReports = auth.hasPermission("canManageReports");
+  const accountId = auth.profile?.id ?? null;
+  const accountIdRef = useRef(accountId);
+  accountIdRef.current = accountId;
   const [reports, setReports] = useState<MessageReport[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -30,8 +33,9 @@ function AdminMessageReportsPage() {
     const requestId = ++requestIdRef.current;
     setLoading(true);
     setLoadError(null);
-    const result = await adminFetchMessageReports(canManageReports);
-    if (requestId !== requestIdRef.current) return;
+    const requestAccountId = accountId;
+    const result = await adminFetchMessageReports();
+    if (requestId !== requestIdRef.current || requestAccountId !== accountIdRef.current) return;
     if (result.ok) {
       setReports(result.data);
       setNotes((current) => ({
@@ -45,7 +49,7 @@ function AdminMessageReportsPage() {
       setLoadError(result.error);
     }
     setLoading(false);
-  }, [canManageReports]);
+  }, [accountId, canManageReports]);
 
   useEffect(() => {
     requestIdRef.current += 1;
@@ -69,7 +73,7 @@ function AdminMessageReportsPage() {
       requestIdRef.current += 1;
       actionInFlightRef.current.clear();
     };
-  }, [canManageReports, loadReports]);
+  }, [accountId, canManageReports, loadReports]);
 
   async function moderate(report: MessageReport, status: MessageReportStatus) {
     if (actionInFlightRef.current.has(report.id)) return;
@@ -77,12 +81,14 @@ function AdminMessageReportsPage() {
     actionInFlightRef.current.add(report.id);
     setBusyIds((current) => new Set(current).add(report.id));
     try {
-      const result = await adminModerateMessageReport(canManageReports, {
+      const requestAccountId = accountId;
+      const result = await adminModerateMessageReport({
         reportId: report.id,
         status,
         adminNote: notes[report.id] ?? null,
         expectedUpdatedAt: report.updatedAt,
       });
+      if (requestAccountId !== accountIdRef.current) return;
       if (!result.ok) {
         setNotice(result.error.message);
         return;

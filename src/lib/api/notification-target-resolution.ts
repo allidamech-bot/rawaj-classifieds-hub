@@ -2,6 +2,7 @@ import { fetchMyNotificationById } from "@/lib/api/notifications";
 import { fetchListingDetail } from "@/lib/api/listings";
 import { fetchMyConversations } from "@/lib/api/messaging";
 import { fetchPublicSellerProfile } from "@/lib/api/seller";
+import { fetchMySupportRequest } from "@/lib/api/support";
 import { getAuthenticatedUserId, getClient, mapError } from "@/lib/api/shared";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import { parseNotificationTargetReference } from "@/lib/notification-target-path";
@@ -76,7 +77,7 @@ export async function resolveNotificationTarget(
   }
 
   if (reference.kind === "support") {
-    const owned = await currentAccountOwns("support_requests", reference.id);
+    const owned = await fetchMySupportRequest(reference.id);
     if (!owned.ok) return owned;
     return { ok: true, data: owned.data ? { kind: "support" } : null };
   }
@@ -98,7 +99,7 @@ async function resolveOwnedListing(
 }
 
 async function currentAccountOwns(
-  table: "listings" | "saved_searches" | "support_requests",
+  table: "listings" | "saved_searches",
   resourceId: string,
   ownerColumn = "user_id",
 ): Promise<ClassifiedsResult<boolean>> {

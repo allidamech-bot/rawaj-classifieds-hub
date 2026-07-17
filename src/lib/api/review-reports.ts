@@ -1,5 +1,7 @@
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import { getClient, mapError, rowNullableString, rowString } from "@/lib/api/shared";
+import { mapModerationError } from "@/lib/api/moderation-errors";
+import { normalizeModerationText } from "@/lib/moderation-contract";
 
 export type SellerReviewReportReason =
   "abuse" | "spam" | "misleading" | "personal_data" | "prohibited_content" | "other";
@@ -8,7 +10,7 @@ export type SellerReviewReportStatus = "new" | "under_review" | "resolved" | "re
 
 export interface SellerReviewReport {
   id: string;
-  reviewId: string;
+  reviewId: string | null;
   reporterUserId: string;
   reportedReviewerUserId: string;
   reason: SellerReviewReportReason;
@@ -25,7 +27,7 @@ export async function createSellerReviewReport(
   details?: string | null,
 ): Promise<ClassifiedsResult<SellerReviewReport>> {
   const cleanReviewId = reviewId.trim();
-  const cleanDetails = details?.trim() || null;
+  const cleanDetails = normalizeModerationText(details ?? "", 1000) || null;
 
   if (!cleanReviewId) {
     return {
@@ -101,48 +103,39 @@ export async function createSellerReviewReport(
   return { ok: true, data: mapSellerReviewReport(raw as Record<string, unknown>) };
 }
 
-export async function adminFetchSellerReviewReports(
-  canUseAdminAccess: boolean,
-): Promise<ClassifiedsResult<SellerReviewReport[]>> {
-  if (!canUseAdminAccess) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "إدارة بلاغات التقييمات تتطلب صلاحية إدارية." },
-    };
-  }
-
+export async function adminFetchSellerReviewReports(): Promise<
+  ClassifiedsResult<SellerReviewReport[]>
+> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data
-    .from("seller_review_reports")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(200);
+  const { data, error } = await clientResult.data.rpc(
+    "rawaj_fetch_seller_review_reports_for_admin",
+    { p_limit: 200 },
+  );
 
-  if (error) return { ok: false, error: mapError(error) };
+  if (error) {
+    return {
+      ok: false,
+      error: mapModerationError(
+        error,
+        "seller_review_report_admin_queue",
+        "تعذر تحميل بلاغات التقييمات.",
+      ),
+    };
+  }
   return {
     ok: true,
     data: ((data ?? []) as Record<string, unknown>[]).map(mapSellerReviewReport),
   };
 }
 
-export async function adminModerateSellerReviewReport(
-  canUseAdminAccess: boolean,
-  payload: {
-    reportId: string;
-    status: SellerReviewReportStatus;
-    adminNote?: string | null;
-    expectedUpdatedAt: string;
-  },
-): Promise<ClassifiedsResult<null>> {
-  if (!canUseAdminAccess) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "إدارة بلاغات التقييمات تتطلب صلاحية إدارية." },
-    };
-  }
-
+export async function adminModerateSellerReviewReport(payload: {
+  reportId: string;
+  status: SellerReviewReportStatus;
+  adminNote?: string | null;
+  expectedUpdatedAt: string;
+}): Promise<ClassifiedsResult<null>> {
   if (!payload.reportId.trim() || !payload.expectedUpdatedAt) {
     return {
       ok: false,
@@ -156,21 +149,15 @@ export async function adminModerateSellerReviewReport(
   const { error } = await clientResult.data.rpc("rawaj_admin_moderate_seller_review_report", {
     p_report_id: payload.reportId.trim(),
     p_status: payload.status,
-    p_admin_note: payload.adminNote?.trim() || null,
+    p_admin_note: normalizeModerationText(payload.adminNote ?? "", 1000) || null,
     p_expected_updated_at: payload.expectedUpdatedAt,
   });
 
   if (error) {
-    if (error.message?.includes("stale_seller_review_report")) {
-      return {
-        ok: false,
-        error: {
-          code: "stale_review",
-          message: "تغيّر البلاغ منذ تحميله. أعد تحميل القائمة قبل اتخاذ قرار جديد.",
-        },
-      };
-    }
-    return { ok: false, error: mapError(error) };
+    return {
+      ok: false,
+      error: mapModerationError(error, "seller_review_report_moderate", "تعذر تحديث بلاغ التقييم."),
+    };
   }
 
   return { ok: true, data: null };
@@ -179,7 +166,7 @@ export async function adminModerateSellerReviewReport(
 function mapSellerReviewReport(row: Record<string, unknown>): SellerReviewReport {
   return {
     id: rowString(row, "id"),
-    reviewId: rowString(row, "review_id"),
+    reviewId: rowNullableString(row, "review_id"),
     reporterUserId: rowString(row, "reporter_user_id"),
     reportedReviewerUserId: rowString(row, "reported_reviewer_user_id"),
     reason: rowString(row, "reason", "other") as SellerReviewReportReason,

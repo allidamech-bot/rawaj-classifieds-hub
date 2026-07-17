@@ -6,40 +6,39 @@ import {
   fromDbReportStatus,
   toDbReportStatus,
 } from "@/lib/api/reports";
+import { resolveAuthenticatedAccountId } from "@/lib/api/account-identity";
 import { runDeduplicatedRequest } from "@/lib/api/request-dedup";
+import { getClient } from "@/lib/api/shared";
 
 const pendingListingReports = new Map<string, ReturnType<typeof baseCreateListingReport>>();
 const pendingReportModeration = new Map<string, ReturnType<typeof baseAdminModerateReport>>();
 
-export function createListingReport(
-  userId: Parameters<typeof baseCreateListingReport>[0],
+export async function createListingReport(
   listingId: string,
-  reportType: Parameters<typeof baseCreateListingReport>[2],
+  reportType: Parameters<typeof baseCreateListingReport>[1],
   reason: string,
 ) {
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+  const actor = await resolveAuthenticatedAccountId(clientResult.data, "listing_report_dedup_auth");
+  if (!actor.ok) return actor;
   const cleanListingId = listingId.trim();
   const cleanReason = reason.trim();
-  const key = JSON.stringify([userId ?? "anonymous", cleanListingId, reportType, cleanReason]);
+  const key = JSON.stringify([actor.data, cleanListingId, reportType, cleanReason]);
   return runDeduplicatedRequest(key, pendingListingReports, () =>
-    baseCreateListingReport(userId, cleanListingId, reportType, cleanReason),
+    baseCreateListingReport(cleanListingId, reportType, cleanReason),
   );
 }
 
-export function adminModerateReport(
-  canUseAdminAccess: boolean,
-  payload: Parameters<typeof baseAdminModerateReport>[1],
-) {
+export function adminModerateReport(payload: Parameters<typeof baseAdminModerateReport>[0]) {
   const key = JSON.stringify([
-    canUseAdminAccess,
     payload.reportId.trim(),
     payload.status,
-    payload.assignedTo ?? "",
     payload.adminNote?.trim() ?? "",
-    payload.resolvedAt ?? "",
     payload.expectedUpdatedAt,
   ]);
   return runDeduplicatedRequest(key, pendingReportModeration, () =>
-    baseAdminModerateReport(canUseAdminAccess, payload),
+    baseAdminModerateReport(payload),
   );
 }
 
