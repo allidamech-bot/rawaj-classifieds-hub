@@ -1,4 +1,10 @@
-import { expect, test, type Browser, type Page, type TestInfo } from "@playwright/test";
+import {
+  expect,
+  test,
+  type Browser,
+  type Page,
+  type TestInfo,
+} from "@playwright/test";
 
 const viewportMatrix = [
   { name: "mobile-320x568", width: 320, height: 568 },
@@ -74,7 +80,9 @@ function monitorRuntime(page: Page) {
   page.on("console", (message) => {
     if (message.type() === "error") {
       const text = message.text();
-      if (!expectedFailureFragments.some((fragment) => text.includes(fragment))) {
+      if (
+        !expectedFailureFragments.some((fragment) => text.includes(fragment))
+      ) {
         consoleErrors.push(text);
       }
     }
@@ -82,7 +90,9 @@ function monitorRuntime(page: Page) {
   page.on("requestfailed", (request) => {
     const failure = request.failure()?.errorText ?? "unknown failure";
     const evidence = `${request.method()} ${request.url()}: ${failure}`;
-    if (!expectedFailureFragments.some((fragment) => evidence.includes(fragment))) {
+    if (
+      !expectedFailureFragments.some((fragment) => evidence.includes(fragment))
+    ) {
       failedRequests.push(evidence);
     }
   });
@@ -99,7 +109,10 @@ async function assertRouteHealth(
   const runtime = monitorRuntime(page);
   const response = await page.goto(route, { waitUntil: "domcontentloaded" });
 
-  expect(response?.status() ?? 200, `${route} returned a server failure`).toBeLessThan(500);
+  expect(
+    response?.status() ?? 200,
+    `${route} returned a server failure`,
+  ).toBeLessThan(500);
   await expect(page.locator("body")).toBeVisible();
   await expect(page.locator("main")).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", /^ar(?:-|$)/);
@@ -128,10 +141,16 @@ async function assertRouteHealth(
 
   expect(runtime.pageErrors, `${route} emitted page errors`).toEqual([]);
   expect(runtime.consoleErrors, `${route} emitted console errors`).toEqual([]);
-  expect(runtime.failedRequests, `${route} emitted failed requests`).toEqual([]);
+  expect(runtime.failedRequests, `${route} emitted failed requests`).toEqual(
+    [],
+  );
 }
 
-async function auditViewport(browser: Browser, testInfo: TestInfo, viewport: (typeof viewportMatrix)[number]) {
+async function auditViewport(
+  browser: Browser,
+  testInfo: TestInfo,
+  viewport: (typeof viewportMatrix)[number],
+) {
   const context = await browser.newContext({
     viewport: { width: viewport.width, height: viewport.height },
     locale: "ar-SY",
@@ -156,7 +175,9 @@ async function auditViewport(browser: Browser, testInfo: TestInfo, viewport: (ty
 
 test.describe.configure({ mode: "serial" });
 
-test("required viewport matrix remains RTL, renderable, and overflow-safe", async ({ browser }, testInfo) => {
+test("required viewport matrix remains RTL, renderable, and overflow-safe", async ({
+  browser,
+}, testInfo) => {
   for (const viewport of viewportMatrix) {
     await test.step(viewport.name, async () => {
       await auditViewport(browser, testInfo, viewport);
@@ -164,7 +185,9 @@ test("required viewport matrix remains RTL, renderable, and overflow-safe", asyn
   }
 });
 
-test("all static and protected release routes survive direct load, reload, back, and forward", async ({ browser }, testInfo) => {
+test("all static and protected release routes survive direct load, reload, back, and forward", async ({
+  browser,
+}, testInfo) => {
   for (const viewport of [
     { name: "mobile-360x800", width: 360, height: 800 },
     { name: "desktop-1440x900", width: 1440, height: 900 },
@@ -181,7 +204,9 @@ test("all static and protected release routes survive direct load, reload, back,
           page,
           route,
           testInfo,
-          evidenceRoutes.has(route) ? `${viewport.name}-${routeSlug(route)}` : undefined,
+          evidenceRoutes.has(route)
+            ? `${viewport.name}-${routeSlug(route)}`
+            : undefined,
         );
         await page.reload({ waitUntil: "domcontentloaded" });
         await expect(page.locator("main")).toBeVisible();
@@ -202,9 +227,16 @@ test("all static and protected release routes survive direct load, reload, back,
   }
 });
 
-test("login validation blocks malformed credentials without losing the form", async ({ page }, testInfo) => {
+test("login validation blocks malformed credentials without losing the form", async ({
+  page,
+}, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await assertRouteHealth(page, "/login?returnTo=/favorites", testInfo, "login-validation-mobile");
+  await assertRouteHealth(
+    page,
+    "/login?returnTo=/favorites",
+    testInfo,
+    "login-validation-mobile",
+  );
 
   const email = page.locator('input[type="email"]');
   const password = page.locator('input[type="password"]');
@@ -215,7 +247,9 @@ test("login validation blocks malformed credentials without losing the form", as
   await password.fill("123");
   await page.locator('form button[type="submit"]').click();
 
-  const emailInvalid = await email.evaluate((element) => !(element as HTMLInputElement).validity.valid);
+  const emailInvalid = await email.evaluate(
+    (element) => !(element as HTMLInputElement).validity.valid,
+  );
   const validationMessageVisible = await page
     .locator('[role="alert"], [aria-live="polite"], [aria-live="assertive"]')
     .filter({ hasText: /البريد|كلمة المرور|صحيح|مطلوب/i })
@@ -233,7 +267,9 @@ test("login validation blocks malformed credentials without losing the form", as
   });
 });
 
-test("keyboard navigation exposes a visible focus target and dialogs remain escapable", async ({ page }) => {
+test("keyboard navigation exposes a visible focus target and dialogs remain escapable", async ({
+  page,
+}) => {
   await assertRouteHealth(page, "/");
   await page.keyboard.press("Tab");
 
@@ -250,7 +286,10 @@ test("keyboard navigation exposes a visible focus target and dialogs remain esca
   expect(focus.tag).not.toBe("BODY");
   expect(focus.visible).toBeTruthy();
 
-  const dialogTrigger = page.locator('button[aria-haspopup="dialog"]').filter({ visible: true }).first();
+  const dialogTrigger = page
+    .locator('button[aria-haspopup="dialog"]')
+    .filter({ visible: true })
+    .first();
   if (await dialogTrigger.count()) {
     await dialogTrigger.click();
     const dialog = page.locator('[role="dialog"]').first();
@@ -261,7 +300,9 @@ test("keyboard navigation exposes a visible focus target and dialogs remain esca
   }
 });
 
-test("public discovery opens a real listing and seller storefront when data is available", async ({ browser }, testInfo) => {
+test("public discovery opens a real listing and seller storefront when data is available", async ({
+  browser,
+}, testInfo) => {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
     locale: "ar-SY",
@@ -269,12 +310,20 @@ test("public discovery opens a real listing and seller storefront when data is a
   const page = await context.newPage();
 
   try {
-    await assertRouteHealth(page, "/listings", testInfo, "listings-discovery-mobile");
+    await assertRouteHealth(
+      page,
+      "/listings",
+      testInfo,
+      "listings-discovery-mobile",
+    );
     const listingLinks = page.locator('a[href^="/listings/"]');
     await page.waitForTimeout(1_500);
 
     if ((await listingLinks.count()) === 0) {
-      test.skip(true, "No public listing data is available in this environment.");
+      test.skip(
+        true,
+        "No public listing data is available in this environment.",
+      );
     }
 
     const firstListingHref = await listingLinks.first().getAttribute("href");
@@ -305,7 +354,9 @@ test("public discovery opens a real listing and seller storefront when data is a
     await page.goto(firstListingHref!, { waitUntil: "domcontentloaded" });
     const messageAction = page
       .getByRole("button", { name: /مراسلة|تواصل عبر رواج|ابدأ محادثة/i })
-      .or(page.getByRole("link", { name: /مراسلة|تواصل عبر رواج|ابدأ محادثة/i }))
+      .or(
+        page.getByRole("link", { name: /مراسلة|تواصل عبر رواج|ابدأ محادثة/i }),
+      )
       .first();
 
     if (await messageAction.isVisible().catch(() => false)) {
@@ -315,7 +366,10 @@ test("public discovery opens a real listing and seller storefront when data is a
       expect(
         contactOutcome.startsWith("/login") ||
           contactOutcome.startsWith("/chats") ||
-          (await page.locator('[role="dialog"]').isVisible().catch(() => false)),
+          (await page
+            .locator('[role="dialog"]')
+            .isVisible()
+            .catch(() => false)),
       ).toBeTruthy();
     }
   } finally {
