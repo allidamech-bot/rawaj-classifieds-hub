@@ -41,6 +41,8 @@ function VerificationPage() {
   const submissionRequestIdRef = useRef(0);
   const submitInFlightRef = useRef(false);
   const profileId = auth.profile?.id ?? null;
+  const profileIdRef = useRef<string | null>(profileId);
+  profileIdRef.current = profileId;
   const hasPendingRequest = requests.some(
     (request) => request.status === "pending_review" || String(request.status) === "pending",
   );
@@ -53,8 +55,10 @@ function VerificationPage() {
     const requestId = ++requestsRequestIdRef.current;
     setRequestsLoading(true);
     setRequestsError(null);
-    const result = await fetchMyVerificationRequests(profileId);
-    if (requestId !== requestsRequestIdRef.current) return;
+    const currentProfileId = profileId;
+    const result = await fetchMyVerificationRequests();
+    if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+      return;
 
     if (result.ok) {
       setRequests(result.data);
@@ -77,6 +81,11 @@ function VerificationPage() {
       setRequestsError(null);
       setNotice("");
       setNoticeKind("");
+      setRequestType("personal");
+      setLegalName("");
+      setBusinessName("");
+      setDocumentType("");
+      setDocumentFile(null);
       return;
     }
 
@@ -90,6 +99,11 @@ function VerificationPage() {
     setRequestsError(null);
     setNotice("");
     setNoticeKind("");
+    setRequestType("personal");
+    setLegalName("");
+    setBusinessName("");
+    setDocumentType("");
+    setDocumentFile(null);
     void loadRequests();
 
     return () => {
@@ -152,18 +166,22 @@ function VerificationPage() {
     }
 
     const submissionRequestId = ++submissionRequestIdRef.current;
+    const submissionProfileId = profileId;
     submitInFlightRef.current = true;
     setSaving(true);
     try {
       const result = await createSellerVerificationRequest({
-        userId: profileId,
         requestType,
         legalName,
         businessName: requestType === "business" ? businessName : null,
         documentType,
         documentFile,
       });
-      if (submissionRequestId !== submissionRequestIdRef.current) return;
+      if (
+        submissionRequestId !== submissionRequestIdRef.current ||
+        submissionProfileId !== profileIdRef.current
+      )
+        return;
 
       if (result.ok) {
         setRequests((current) => [
@@ -188,7 +206,11 @@ function VerificationPage() {
         setNoticeKind("error");
       }
     } catch {
-      if (submissionRequestId !== submissionRequestIdRef.current) return;
+      if (
+        submissionRequestId !== submissionRequestIdRef.current ||
+        submissionProfileId !== profileIdRef.current
+      )
+        return;
       setNotice(
         text(
           "تعذر إرسال طلب التوثيق بسبب خطأ غير متوقع. أعد المحاولة.",
@@ -197,7 +219,10 @@ function VerificationPage() {
       );
       setNoticeKind("error");
     } finally {
-      if (submissionRequestId === submissionRequestIdRef.current) {
+      if (
+        submissionRequestId === submissionRequestIdRef.current &&
+        submissionProfileId === profileIdRef.current
+      ) {
         submitInFlightRef.current = false;
         setSaving(false);
       }
@@ -455,21 +480,6 @@ function VerificationPage() {
                         <p className="mt-1 text-muted-foreground">
                           {verificationDocumentTypeLabel(request.documentType, text)}
                         </p>
-                      ) : null}
-                      {request.documentPath ? (
-                        <p className="mt-1 text-[10px] font-bold text-emerald-trust">
-                          {text("وثيقة خاصة مرفقة", "Private evidence attached")}
-                        </p>
-                      ) : (
-                        <p className="mt-1 text-[10px] text-muted-foreground">
-                          {text(
-                            "طلب قديم بلا وثيقة مرفقة",
-                            "Legacy request without attached evidence",
-                          )}
-                        </p>
-                      )}
-                      {request.adminNote ? (
-                        <p className="mt-1 text-muted-foreground">{request.adminNote}</p>
                       ) : null}
                     </article>
                   ))}

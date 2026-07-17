@@ -227,7 +227,7 @@ test("public seller SQL and client reads use anonymous-safe allowlists only", ()
   assert.match(publicSellerSql, /l\.status = 'approved'/);
   assert.match(publicSellerSql, /l\.archived_at is null/);
   assert.match(publicSellerSql, /l\.expires_at is null or l\.expires_at > now\(\)/);
-  assert.match(sellerApi, /const publicSellerProfileSelect/);
+  assert.match(sellerApi, /import \{ publicSellerProfileSelect \} from "@\/lib\/profile-dto"/);
   assert.doesNotMatch(sellerApi, /service.role|serviceRole|adminFetch|fetchOwner/i);
   assert.doesNotMatch(route, /auth\.profile.*loader|loader.*auth\.profile/);
 });

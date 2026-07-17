@@ -6,10 +6,6 @@ import {
 import { runDeduplicatedRequest } from "@/lib/api/request-dedup";
 
 const pendingSupportRequests = new Map<string, ReturnType<typeof baseCreateSupportRequest>>();
-const pendingAccountDeletionRequests = new Map<
-  string,
-  ReturnType<typeof baseCreateAccountDeletionRequest>
->();
 
 export function createSupportRequest(
   userId: Parameters<typeof baseCreateSupportRequest>[0],
@@ -28,12 +24,8 @@ export function createSupportRequest(
   );
 }
 
-export function createAccountDeletionRequest(
-  userId: Parameters<typeof baseCreateAccountDeletionRequest>[0],
-) {
-  return runDeduplicatedRequest(userId ?? "anonymous", pendingAccountDeletionRequests, () =>
-    baseCreateAccountDeletionRequest(userId),
-  );
+export function createAccountDeletionRequest() {
+  return baseCreateAccountDeletionRequest();
 }
 
 export { fetchMySupportRequests };

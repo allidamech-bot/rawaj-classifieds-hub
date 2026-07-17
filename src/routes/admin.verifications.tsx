@@ -6,7 +6,7 @@ import {
   adminFetchVerificationRequests,
   adminModerateVerificationRequest,
 } from "@/lib/classifieds-api";
-import type { ClassifiedsError, SellerVerificationRequest } from "@/lib/classifieds-types";
+import type { AdminSellerVerificationRequest, ClassifiedsError } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -18,8 +18,11 @@ export const Route = createFileRoute("/admin/verifications")({
 function AdminVerificationsPage() {
   const auth = useAuth();
   const { text } = useUiPreferences();
+  const accountId = auth.profile?.id ?? null;
+  const accountIdRef = useRef<string | null>(accountId);
+  accountIdRef.current = accountId;
   const canManageVerifications = auth.hasPermission("canManageVerifications");
-  const [requests, setRequests] = useState<SellerVerificationRequest[]>([]);
+  const [requests, setRequests] = useState<AdminSellerVerificationRequest[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [documentUrls, setDocumentUrls] = useState<Record<string, string>>({});
   const [documentErrors, setDocumentErrors] = useState<Record<string, string>>({});
@@ -34,11 +37,12 @@ function AdminVerificationsPage() {
   const actionInFlightRef = useRef<Set<string>>(new Set());
 
   const load = useCallback(async () => {
+    const loadingAccountId = accountId;
     const requestId = ++loadRequestIdRef.current;
     setLoading(true);
     setLoadError(null);
     const result = await adminFetchVerificationRequests(canManageVerifications);
-    if (requestId !== loadRequestIdRef.current) return;
+    if (requestId !== loadRequestIdRef.current || loadingAccountId !== accountIdRef.current) return;
     setLoading(false);
     if (!result.ok) {
       setLoadError(result.error);
@@ -52,7 +56,7 @@ function AdminVerificationsPage() {
       ),
     }));
     setHasLoaded(true);
-  }, [canManageVerifications]);
+  }, [accountId, canManageVerifications]);
 
   useEffect(() => {
     loadRequestIdRef.current += 1;
@@ -69,7 +73,7 @@ function AdminVerificationsPage() {
     };
   }, [load]);
 
-  async function loadSecureDocument(request: SellerVerificationRequest) {
+  async function loadSecureDocument(request: AdminSellerVerificationRequest) {
     if (!request.documentPath || documentInFlightRef.current.has(request.id)) return;
     documentInFlightRef.current.add(request.id);
     setActionMessage("");
@@ -78,7 +82,7 @@ function AdminVerificationsPage() {
     try {
       const result = await adminCreateVerificationDocumentSignedUrl(
         canManageVerifications,
-        request.documentPath,
+        request.id,
       );
 
       if (!result.ok) {
@@ -102,7 +106,10 @@ function AdminVerificationsPage() {
     }
   }
 
-  async function moderate(request: SellerVerificationRequest, status: "approved" | "rejected") {
+  async function moderate(
+    request: AdminSellerVerificationRequest,
+    status: "approved" | "rejected",
+  ) {
     if (actionInFlightRef.current.has(request.id)) return;
     actionInFlightRef.current.add(request.id);
     setWorkingRequestId(request.id);
@@ -316,7 +323,7 @@ function Panel({
 }
 
 function verificationStatusLabel(
-  status: SellerVerificationRequest["status"],
+  status: AdminSellerVerificationRequest["status"],
   text: (ar: string, en: string) => string,
 ) {
   if (status === "approved") return text("موثق", "Verified");
@@ -325,7 +332,7 @@ function verificationStatusLabel(
 }
 
 function verificationTypeLabel(
-  type: SellerVerificationRequest["requestType"],
+  type: AdminSellerVerificationRequest["requestType"],
   text: (ar: string, en: string) => string,
 ) {
   return type === "business" ? text("منشأة", "Business") : text("فرد", "Individual");

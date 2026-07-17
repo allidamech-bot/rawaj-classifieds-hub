@@ -4,7 +4,7 @@ export type AccountStatus = "active" | "frozen" | "disabled" | "pending_review";
 
 export type VerificationStatus = "unverified" | "pending" | "verified" | "rejected";
 
-export interface UserProfile {
+export interface PrivateAccountProfile {
   id: string;
   email: string | null;
   firstName: string | null;
@@ -28,6 +28,8 @@ export interface UserProfile {
   createdAt: string | null;
   updatedAt: string | null;
 }
+
+export type UserProfile = PrivateAccountProfile;
 
 export interface RolePermissions {
   canViewAdminDashboard: boolean;

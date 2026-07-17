@@ -117,6 +117,9 @@ jobs:
       - name: Notifications, Activity & Push Integrity contract
         run: npm run test:notifications-activity-push
 
+      - name: Account, Profile & Verification Integrity contract
+        run: npm run test:account-profile-verification
+
       - name: SEO discovery contract
         run: npm run test:seo-discovery
 

@@ -6,6 +6,7 @@ const [
   authContext,
   authProvider,
   accountSecurity,
+  accountIdentity,
   support,
   profile,
   quickLinks,
@@ -19,6 +20,7 @@ const [
   readFile(new URL("../src/lib/auth-context.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/auth.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/account-security.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/account-identity.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/support.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/profile.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/account/AccountExperience.tsx", import.meta.url), "utf8"),
@@ -42,8 +44,10 @@ test("profile mutations refresh the shared authenticated profile", () => {
 
 test("password change verifies ownership and uses Supabase Auth", () => {
   assert.ok(barrel.includes('export * from "@/lib/api/account-security";'));
-  assert.ok(accountSecurity.includes("client.auth.getUser()"));
-  assert.ok(accountSecurity.includes("userResult.user?.id !== userId"));
+  assert.ok(accountSecurity.includes("resolveAuthenticatedAccountId(client"));
+  assert.ok(accountSecurity.includes("accountSessionStillMatches("));
+  assert.ok(accountIdentity.includes("client.auth.getUser()"));
+  assert.ok(!accountSecurity.includes("userId: string"));
   assert.ok(accountSecurity.includes("client.auth.updateUser({ password: newPassword })"));
   assert.ok(profile.includes("handleChangePassword"));
   assert.ok(profile.includes('autoComplete="new-password"'));

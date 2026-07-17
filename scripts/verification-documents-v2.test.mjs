@@ -85,7 +85,8 @@ test("verification history failures recover without becoming an empty history", 
 test("verification history ignores stale responses and invalidates pending work", () => {
   assert.match(userRoute, /const requestsRequestIdRef = useRef\(0\)/);
   assert.match(userRoute, /const submissionRequestIdRef = useRef\(0\)/);
-  assert.match(userRoute, /if \(requestId !== requestsRequestIdRef\.current\) return;/);
+  assert.match(userRoute, /requestId !== requestsRequestIdRef\.current/);
+  assert.match(userRoute, /currentProfileId !== profileIdRef\.current/);
   assert.match(
     userRoute,
     /return \(\) => \{[\s\S]*requestsRequestIdRef\.current \+= 1;[\s\S]*submissionRequestIdRef\.current \+= 1;/,
@@ -111,8 +112,10 @@ test("successful verification submission survives a failed history refresh", () 
 test("admin document access is permission gated and signed", () => {
   assert.match(api, /adminCreateVerificationDocumentSignedUrl/);
   assert.match(api, /if \(!canManageVerifications\)/);
-  assert.match(api, /const verificationDocumentSignedUrlSeconds = 300/);
-  assert.match(api, /createSignedUrl\(normalizedPath, verificationDocumentSignedUrlSeconds\)/);
+  assert.match(api, /const verificationDocumentSignedUrlSeconds = 120/);
+  assert.match(api, /\.select\("id,document_path"\)/);
+  assert.match(api, /\.eq\("id", requestId\)/);
+  assert.match(api, /createSignedUrl\(documentPath, verificationDocumentSignedUrlSeconds\)/);
   assert.match(adminRoute, /adminCreateVerificationDocumentSignedUrl\(\s*canManageVerifications/);
   assert.match(adminRoute, /target="_blank"/);
   assert.doesNotMatch(adminRoute, /href=\{request\.documentPath\}/);

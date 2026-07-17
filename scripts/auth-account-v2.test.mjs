@@ -81,28 +81,32 @@ test("profile overview requests reject stale account and route responses", () =>
 });
 
 test("profile media replacement validates files and never deletes the old image before linking the new one", () => {
-  assert.match(profileApi, /allowedImageTypes = \["image\/jpeg", "image\/png", "image\/webp"\]/);
-  assert.match(profileApi, /maxProfileImageSizeBytes = 3 \* 1024 \* 1024/);
+  assert.match(profileApi, /validateProfileImageFile\(file\)/);
+  assert.match(profileApi, /buildProfileMediaPath\(actor\.data, kind, file\.name\)/);
   assert.match(profileApi, /upsert: false/);
   const uploadIndex = profileApi.indexOf(".upload(storagePath, file");
-  const profileUpdateIndex = profileApi.indexOf(".update(updatePayload)");
-  const oldMediaCleanupIndex = profileApi.indexOf(".remove([oldPath])");
+  const profileUpdateIndex = profileApi.indexOf("setMyProfileMediaReference(", uploadIndex);
+  const oldMediaCleanupIndex = profileApi.indexOf(
+    ".remove([currentPath.data])",
+    profileUpdateIndex,
+  );
   assert.ok(uploadIndex >= 0);
   assert.ok(profileUpdateIndex > uploadIndex);
   assert.ok(oldMediaCleanupIndex > profileUpdateIndex);
-  assert.match(profileApi, /Failed to clean up unlinked profile media upload/);
-  assert.match(profileApi, /oldPath\.startsWith\(`\$\{userId\}\/\$\{kind\}\/`\)/);
+  assert.match(profileApi, /cleanupUnlinkedProfileMedia/);
+  assert.match(profileApi, /isOwnedProfileMediaPath\(currentPath\.data, actor\.data, kind\)/);
+  assert.match(profileApi, /accountSessionStillMatches/);
 });
 
 test("profile media removal clears the database reference before best-effort storage cleanup", () => {
-  const removalFunctionIndex = profileApi.indexOf("export async function removeProfileMedia");
+  const removalFunctionIndex = profileApi.indexOf("export async function removeMyProfileMedia");
   const removalSection = profileApi.slice(removalFunctionIndex);
-  const profileUpdateIndex = removalSection.indexOf(".update(updatePayload)");
-  const storageCleanupIndex = removalSection.indexOf(".remove([path])");
+  const profileUpdateIndex = removalSection.indexOf('rpc("rawaj_clear_my_profile_media"');
+  const storageCleanupIndex = removalSection.indexOf(".remove([currentPath.data])");
   assert.ok(profileUpdateIndex >= 0);
   assert.ok(storageCleanupIndex > profileUpdateIndex);
-  assert.match(removalSection, /path\.startsWith\(`\$\{userId\}\/\$\{kind\}\/`\)/);
-  assert.match(removalSection, /Failed to clean up profile media after profile reference removal/);
+  assert.match(removalSection, /isOwnedProfileMediaPath\(currentPath\.data, actor\.data, kind\)/);
+  assert.doesNotMatch(removalSection, /userId|oldPath/);
 });
 
 test("account identity media falls back and accepts refreshed URLs", () => {

@@ -8,6 +8,7 @@ export type ClassifiedsErrorCode =
   | "auth_required"
   | "permission_denied"
   | "not_found"
+  | "stale_account"
   | "stale_review"
   | "status_mismatch"
   | "validation_error"
@@ -228,10 +229,8 @@ export interface UpdateProfileBasicsPayload {
 export type ProfileMediaKind = "avatar" | "cover";
 
 export interface ProfileMediaUploadPayload {
-  userId: string | null;
   kind: ProfileMediaKind;
   file: File;
-  oldPath?: string | null;
 }
 
 export type SellerReviewStatus = "pending_review" | "approved" | "rejected";
@@ -375,22 +374,24 @@ export type VerificationDocumentType =
 
 export interface SellerVerificationRequest {
   id: string;
-  userId: string;
   status: VerificationRequestStatus;
   requestType: VerificationRequestType;
   legalName: string;
   businessName: string | null;
   documentType: string | null;
-  documentPath: string | null;
-  adminNote: string | null;
-  reviewedBy: string | null;
   reviewedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
+export interface AdminSellerVerificationRequest extends SellerVerificationRequest {
+  userId: string;
+  documentPath: string | null;
+  adminNote: string | null;
+  reviewedBy: string | null;
+}
+
 export interface CreateSellerVerificationRequestPayload {
-  userId: string | null;
   requestType: VerificationRequestType;
   legalName: string;
   businessName?: string | null;
