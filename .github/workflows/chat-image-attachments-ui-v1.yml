@@ -10,6 +10,9 @@ on:
       - "src/lib/api/chat-image-attachments.ts"
       - "src/lib/classifieds-types.ts"
       - "scripts/chat-image-attachments-ui-v1.test.mjs"
+      - "scripts/chat-workspace.test.mjs"
+      - "scripts/message-send-idempotency.test.mjs"
+      - "scripts/conversations-messaging-realtime-integrity.test.mjs"
       - ".github/workflows/chat-image-attachments-ui-v1.yml"
   workflow_dispatch:
 
@@ -28,5 +31,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node --test scripts/chat-image-attachments-ui-v1.test.mjs
+      - run: npm run test:chat-workspace
       - run: npx eslint --quiet src/routes/chats.tsx src/lib/api/messaging.ts src/lib/api/messaging-guarded.ts src/lib/api/chat-image-attachments.ts src/lib/classifieds-types.ts
       - run: npm run typecheck -- --pretty false
