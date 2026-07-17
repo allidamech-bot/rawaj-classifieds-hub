@@ -21,10 +21,25 @@ jobs:
           fetch-depth: 1
           show-progress: false
           token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/setup-node@v4
+      - name: Apply patch
+        id: patch
+        shell: bash
+        run: |
+          set +e
+          node scripts/apply-chat-image-ui-v1.mjs > patch.log 2>&1
+          status=$?
+          echo "$status" > patch.status
+          exit 0
+      - uses: actions/upload-artifact@v4
         with:
-          node-version: 22
-      - run: node scripts/apply-chat-image-ui-v1.mjs
+          name: chat-image-ui-patch-log
+          path: |
+            patch.log
+            patch.status
+      - name: Verify patch
+        run: |
+          cat patch.log
+          test "$(cat patch.status)" = "0"
       - run: npx prettier --write src/lib/classifieds-types.ts src/lib/api/messaging.ts src/lib/api/messaging-guarded.ts src/routes/chats.tsx scripts/conversations-messaging-realtime-integrity.test.mjs scripts/chat-image-attachments-ui-v1.test.mjs
       - run: |
           git config user.name "github-actions[bot]"
