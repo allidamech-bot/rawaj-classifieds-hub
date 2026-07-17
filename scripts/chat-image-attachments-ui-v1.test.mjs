@@ -16,14 +16,16 @@ test("chat composer supports a validated private image", () => {
   assert.match(route, /currentImage/);
 });
 
-test("messages use v3 and short-lived signed attachment URLs", () => {
+test("images use v4 with v3 fallback and short-lived signed attachment URLs", () => {
+  assert.match(messaging, /rawaj_send_conversation_message_v4/);
   assert.match(messaging, /rawaj_send_conversation_message_v3/);
   assert.match(messaging, /attachment_path/);
   assert.match(messaging, /createChatImageSignedUrl/);
   assert.match(
     messaging,
-    /message\.attachmentUrl = await createChatImageSignedUrl\(message\.attachmentPath\)/,
+    /message\.attachmentKind === "audio"[\s\S]{0,160}createChatImageSignedUrl\(message\.attachmentPath\)/,
   );
   assert.match(types, /attachmentUrl: string \| null/);
+  assert.match(types, /attachmentKind: "image" \| "audio" \| null/);
   assert.match(route, /message\.attachmentUrl/);
 });
