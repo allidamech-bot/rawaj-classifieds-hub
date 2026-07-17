@@ -25,7 +25,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node scripts/apply-chat-voice-location-ui-v1.mjs
+      - name: Apply patch
+        id: apply
+        continue-on-error: true
+        run: node scripts/apply-chat-voice-location-ui-v1.mjs > applicator.log 2>&1
+      - name: Upload applicator diagnostics
+        if: steps.apply.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-voice-location-applicator-log
+          path: applicator.log
+      - name: Stop on applicator failure
+        if: steps.apply.outcome == 'failure'
+        run: cat applicator.log && exit 1
       - run: npx prettier --write src/lib/classifieds-types.ts src/lib/api/messaging.ts src/routes/chats.tsx src/features/communication/ChatVoiceRecorder.tsx src/features/communication/ChatVoiceAttachment.tsx
       - run: |
           git config user.name github-actions[bot]
