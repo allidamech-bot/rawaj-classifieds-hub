@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   ListChecks,
   Lock,
+  ScrollText,
   Siren,
   MessageSquareWarning,
   PanelsTopLeft,
@@ -87,12 +88,25 @@ const tabs: Array<{
     permission: "canManageAdCampaigns",
   },
   {
+    to: "/admin/audit",
+    labelAr: "سجل التدقيق",
+    icon: ScrollText,
+    permission: "canViewAuditLogs",
+  },
+  {
     to: "/admin/owner-controls",
     labelAr: "تحكم المالك",
     icon: Siren,
     permission: "canManageSystemSettings",
   },
 ];
+
+function tabMatchesPath(
+  tab: (typeof tabs)[number],
+  pathname: string,
+): boolean {
+  return tab.exact ? pathname === tab.to || pathname === "/admin/" : pathname.startsWith(tab.to);
+}
 
 function AdminLayout() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -149,10 +163,22 @@ function AdminLayout() {
     );
   }
 
+  const requestedTab = tabs.find((tab) => tabMatchesPath(tab, pathname));
+  if (requestedTab && !auth.hasPermission(requestedTab.permission)) {
+    return (
+      <AdminShellState
+        title={text("لا تملك صلاحية هذه الوحدة", "You do not have access to this workspace")}
+        message={text(
+          "تم منع فتح الوحدة مباشرة لأن دور الحساب لا يتضمن الصلاحية المطلوبة لها.",
+          "Direct access was blocked because this account role does not include the required permission.",
+        )}
+        actionTo="/"
+      />
+    );
+  }
+
   const visibleTabs = tabs.filter((tab) => auth.hasPermission(tab.permission));
-  const activeTab = visibleTabs.find((tab) =>
-    tab.exact ? pathname === tab.to || pathname === "/admin/" : pathname.startsWith(tab.to),
-  );
+  const activeTab = visibleTabs.find((tab) => tabMatchesPath(tab, pathname));
 
   return (
     <>
@@ -186,9 +212,7 @@ function AdminLayout() {
             className="flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {visibleTabs.map((tab) => {
-              const active = tab.exact
-                ? pathname === tab.to || pathname === "/admin/"
-                : pathname.startsWith(tab.to);
+              const active = tabMatchesPath(tab, pathname);
               return (
                 <Link
                   key={tab.to}
