@@ -6,25 +6,25 @@ const RADII: NearbyRadiusKm[] = [5, 10, 25, 50, 100];
 
 export function NearbyDiscoveryControl({
   active,
-  enabled,
+  enabled = active,
   loading,
   error,
   radiusKm,
   resultCount,
   onActivate,
-  onRefresh,
+  onRefresh = onActivate,
   onRadiusChange,
   onClear,
   text,
 }: {
   active: boolean;
-  enabled: boolean;
+  enabled?: boolean;
   loading: boolean;
   error: NearbyDiscoveryError;
   radiusKm: NearbyRadiusKm;
   resultCount: number;
   onActivate: () => void;
-  onRefresh: () => void;
+  onRefresh?: () => void;
   onRadiusChange: (radius: NearbyRadiusKm) => void;
   onClear: () => void;
   text: (ar: string, en: string) => string;
