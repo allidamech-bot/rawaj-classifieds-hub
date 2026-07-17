@@ -1,9 +1,9 @@
 name: Apply Chat Image UI V1
 
 on:
-  push:
+  pull_request:
     branches:
-      - feature/chat-image-attachments-ui-v1
+      - main
     paths:
       - scripts/apply-chat-image-ui-v1.mjs
       - .github/workflows/apply-chat-image-ui-v1.yml
