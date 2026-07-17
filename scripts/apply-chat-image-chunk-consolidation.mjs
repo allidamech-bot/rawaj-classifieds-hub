@@ -143,15 +143,4 @@ await replaceIn(
   `  markConversationRead,\n  removeChatImage,\n  sendConversationMessage,\n  uploadChatImage,\n  validateChatImage,`,
 );
 
-await replaceIn(
-  ".github/workflows/chat-image-attachments-ui-v1.yml",
-  `      - "src/lib/api/chat-image-attachments.ts"\n`,
-  "",
-);
-await replaceIn(
-  ".github/workflows/chat-image-attachments-ui-v1.yml",
-  `src/lib/api/messaging-guarded.ts src/lib/api/chat-image-attachments.ts src/lib/classifieds-types.ts`,
-  `src/lib/api/messaging-guarded.ts src/lib/classifieds-types.ts`,
-);
-
 await unlink("src/lib/api/chat-image-attachments.ts");
