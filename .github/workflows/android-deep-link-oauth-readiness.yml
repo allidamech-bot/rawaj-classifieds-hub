@@ -45,3 +45,11 @@ jobs:
             exit "$status"
           fi
           tail -n 80 gradle-build.log
+      - name: Upload Android build failure log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-gradle-failure-log
+          path: android/gradle-build.log
+          if-no-files-found: error
+          retention-days: 3
