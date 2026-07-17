@@ -3,7 +3,11 @@ import { normalizeChatResourceId } from "@/lib/chat-integrity";
 import { getClient, mapError } from "@/lib/api/shared";
 
 export const CHAT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
-export const CHAT_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const CHAT_IMAGE_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
 
 export interface UploadedChatImage {
   path: string;
@@ -12,16 +16,24 @@ export interface UploadedChatImage {
 }
 
 export function validateChatImage(file: File): ClassifiedsResult<null> {
-  if (!CHAT_IMAGE_MIME_TYPES.includes(file.type as UploadedChatImage["mimeType"])) {
+  if (
+    !CHAT_IMAGE_MIME_TYPES.includes(file.type as UploadedChatImage["mimeType"])
+  ) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "اختر صورة JPG أو PNG أو WebP." },
+      error: {
+        code: "validation_error",
+        message: "اختر صورة JPG أو PNG أو WebP.",
+      },
     };
   }
   if (file.size < 1 || file.size > CHAT_IMAGE_MAX_BYTES) {
     return {
       ok: false,
-      error: { code: "validation_error", message: "يجب ألا يتجاوز حجم الصورة 5 ميغابايت." },
+      error: {
+        code: "validation_error",
+        message: "يجب ألا يتجاوز حجم الصورة 5 ميغابايت.",
+      },
     };
   }
   return { ok: true, data: null };
@@ -39,7 +51,10 @@ export async function uploadChatImage(payload: {
     return validation.ok
       ? {
           ok: false,
-          error: { code: "validation_error", message: "تعذر تحديد مرفق المحادثة." },
+          error: {
+            code: "validation_error",
+            message: "تعذر تحديد مرفق المحادثة.",
+          },
         }
       : validation;
   }
@@ -51,7 +66,10 @@ export async function uploadChatImage(payload: {
   if (userResult.error || !userId) {
     return {
       ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال صورة." },
+      error: {
+        code: "auth_required",
+        message: "يجب تسجيل الدخول لإرسال صورة.",
+      },
     };
   }
 
@@ -83,7 +101,9 @@ export async function removeChatImage(path: string): Promise<void> {
   await clientResult.data.storage.from("conversation-images").remove([path]);
 }
 
-export async function createChatImageSignedUrl(path: string): Promise<string | null> {
+export async function createChatImageSignedUrl(
+  path: string,
+): Promise<string | null> {
   if (!path) return null;
   const clientResult = getClient();
   if (!clientResult.ok) return null;
