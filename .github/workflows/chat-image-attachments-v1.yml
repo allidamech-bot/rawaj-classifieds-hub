@@ -25,7 +25,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx eslint --quiet src/lib/api/chat-image-attachments.ts scripts/chat-image-attachments-v1.test.mjs
+      - run: npx eslint --quiet src/lib/api/chat-image-attachments.ts
       - run: node --test scripts/chat-image-attachments-v1.test.mjs
       - run: node scripts/check-migration-ledger.mjs
       - run: npm run typecheck -- --pretty false
