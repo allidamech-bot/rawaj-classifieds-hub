@@ -1,8 +1,7 @@
-import { getClient, mapError, rowBoolean, rowString } from "@/lib/api/shared";
+import { getAuthenticatedUserId, getClient, mapError, rowBoolean } from "@/lib/api/shared";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 
 export interface NotificationPreferences {
-  userId: string;
   pushEnabled: boolean;
   messagesEnabled: boolean;
   priceChangesEnabled: boolean;
@@ -15,10 +14,10 @@ export interface NotificationPreferences {
 
 export type NotificationPreferenceKey = Exclude<
   keyof NotificationPreferences,
-  "userId" | "pushEnabled" | "updatedAt"
+  "pushEnabled" | "updatedAt"
 >;
 
-const DEFAULT_NOTIFICATION_PREFERENCES: Omit<NotificationPreferences, "userId"> = {
+const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   pushEnabled: false,
   messagesEnabled: true,
   priceChangesEnabled: true,
@@ -38,74 +37,53 @@ const COLUMN_BY_KEY: Record<NotificationPreferenceKey, string> = {
   promotionsEnabled: "promotions_enabled",
 };
 
-export async function fetchNotificationPreferences(
-  userId: string | null,
-): Promise<ClassifiedsResult<NotificationPreferences>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض تفضيلات الإشعارات." },
-    };
-  }
+const PREFERENCE_SELECT =
+  "push_enabled,messages_enabled,price_changes_enabled,saved_search_matches_enabled,listing_status_enabled,reviews_enabled,promotions_enabled,updated_at";
 
+export async function fetchNotificationPreferences(): Promise<
+  ClassifiedsResult<NotificationPreferences>
+> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
+  const actorResult = await getAuthenticatedUserId(clientResult.data);
+  if (!actorResult.ok) return actorResult;
 
   const { data, error } = await clientResult.data
     .from("notification_preferences")
-    .select("*")
-    .eq("user_id", userId)
+    .select(PREFERENCE_SELECT)
+    .eq("user_id", actorResult.data)
     .maybeSingle();
-
   if (error) return { ok: false, error: mapError(error) };
-  if (!data) {
-    return {
-      ok: true,
-      data: { userId, ...DEFAULT_NOTIFICATION_PREFERENCES },
-    };
-  }
-
-  const row = data as Record<string, unknown>;
-  return {
-    ok: true,
-    data: {
-      userId: rowString(row, "user_id", userId),
-      pushEnabled: rowBoolean(row, "push_enabled", false),
-      messagesEnabled: rowBoolean(row, "messages_enabled", true),
-      priceChangesEnabled: rowBoolean(row, "price_changes_enabled", true),
-      savedSearchMatchesEnabled: rowBoolean(row, "saved_search_matches_enabled", true),
-      listingStatusEnabled: rowBoolean(row, "listing_status_enabled", true),
-      reviewsEnabled: rowBoolean(row, "reviews_enabled", true),
-      promotionsEnabled: rowBoolean(row, "promotions_enabled", true),
-      updatedAt: typeof row.updated_at === "string" ? row.updated_at : null,
-    },
-  };
+  if (!data) return { ok: true, data: DEFAULT_NOTIFICATION_PREFERENCES };
+  return { ok: true, data: mapPreferences(data as Record<string, unknown>) };
 }
 
 export async function updateNotificationPreference(
-  userId: string | null,
   key: NotificationPreferenceKey,
   enabled: boolean,
 ): Promise<ClassifiedsResult<NotificationPreferences>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديث تفضيلات الإشعارات." },
-    };
-  }
-
   const column = COLUMN_BY_KEY[key];
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
+  const actorResult = await getAuthenticatedUserId(clientResult.data);
+  if (!actorResult.ok) return actorResult;
 
-  const { error } = await clientResult.data.from("notification_preferences").upsert(
-    {
-      user_id: userId,
-      [column]: enabled,
-    },
-    { onConflict: "user_id" },
-  );
-
+  const { error } = await clientResult.data
+    .from("notification_preferences")
+    .upsert({ user_id: actorResult.data, [column]: enabled }, { onConflict: "user_id" });
   if (error) return { ok: false, error: mapError(error) };
-  return fetchNotificationPreferences(userId);
+  return fetchNotificationPreferences();
+}
+
+function mapPreferences(row: Record<string, unknown>): NotificationPreferences {
+  return {
+    pushEnabled: rowBoolean(row, "push_enabled", false),
+    messagesEnabled: rowBoolean(row, "messages_enabled", true),
+    priceChangesEnabled: rowBoolean(row, "price_changes_enabled", true),
+    savedSearchMatchesEnabled: rowBoolean(row, "saved_search_matches_enabled", true),
+    listingStatusEnabled: rowBoolean(row, "listing_status_enabled", true),
+    reviewsEnabled: rowBoolean(row, "reviews_enabled", true),
+    promotionsEnabled: rowBoolean(row, "promotions_enabled", true),
+    updatedAt: typeof row.updated_at === "string" ? row.updated_at : null,
+  };
 }

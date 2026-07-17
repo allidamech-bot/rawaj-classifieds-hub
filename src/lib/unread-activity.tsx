@@ -52,6 +52,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [counts, setCounts] = useState<UnreadActivityCounts>(EMPTY_COUNTS);
   const [loading, setLoading] = useState(false);
+  const [countsProfileId, setCountsProfileId] = useState<string | null>(null);
   const profileId = auth.profile?.id ?? null;
   const activeProfileRef = useRef<string | null>(null);
   const refreshInFlightRef = useRef<InFlightUnreadRefresh | null>(null);
@@ -63,6 +64,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     if (auth.status !== "signedIn" || !profileId) {
       setCounts(EMPTY_COUNTS);
+      setCountsProfileId(null);
       setLoading(false);
       return;
     }
@@ -79,7 +81,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
       try {
         const [conversationsResult, notificationsResult] = await Promise.all([
           fetchMyConversations(),
-          fetchUnreadNotificationsCount(profileId),
+          fetchUnreadNotificationsCount(),
         ]);
 
         if (activeProfileRef.current !== profileId) return;
@@ -97,6 +99,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
           notifications,
           total: messages + notifications,
         });
+        setCountsProfileId(profileId);
       } finally {
         if (activeProfileRef.current === profileId) setLoading(false);
       }
@@ -175,7 +178,14 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
     };
   }, [auth.status, profileId, refresh]);
 
-  const value = useMemo(() => ({ counts, loading, refresh }), [counts, loading, refresh]);
+  const visibleCounts =
+    auth.status === "signedIn" && profileId && countsProfileId === profileId
+      ? counts
+      : EMPTY_COUNTS;
+  const value = useMemo(
+    () => ({ counts: visibleCounts, loading, refresh }),
+    [loading, refresh, visibleCounts],
+  );
   return <UnreadActivityContext.Provider value={value}>{children}</UnreadActivityContext.Provider>;
 }
 

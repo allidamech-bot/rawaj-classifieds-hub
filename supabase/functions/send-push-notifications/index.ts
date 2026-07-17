@@ -6,11 +6,6 @@ interface PushDelivery {
   notification_type: string;
   device_id: string;
   device_token: string;
-  title_ar: string;
-  body_ar: string;
-  target_type: string | null;
-  target_id: string | null;
-  metadata: Record<string, unknown> | null;
   attempt_count: number;
 }
 
@@ -74,14 +69,14 @@ Deno.serve(async (request) => {
       const markResult = await client.rpc("rawaj_mark_push_delivery_v1", {
         p_delivery_id: delivery.delivery_id,
         p_success: outcome.ok,
-        p_error: outcome.error,
+        p_error: sanitizeProviderError(outcome.error),
         p_disable_device: outcome.disableDevice,
       });
 
       if (markResult.error) {
         console.error("Could not mark push delivery", {
           deliveryId: delivery.delivery_id,
-          error: markResult.error.message,
+          errorCode: markResult.error.code ?? "push_mark_failed",
         });
         continue;
       }
@@ -100,11 +95,13 @@ Deno.serve(async (request) => {
       disabledDevices,
     });
   } catch (error) {
-    console.error("Push delivery worker failed", error);
+    console.error("Push delivery worker failed", {
+      errorType: error instanceof Error ? error.name : "unknown",
+    });
     return jsonResponse(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Unknown push delivery worker error",
+        error: "Push delivery worker failed",
       },
       500,
     );
@@ -197,14 +194,12 @@ async function sendFcmMessage(
           message: {
             token: delivery.device_token,
             notification: {
-              title: delivery.title_ar,
+              title: safePushTitle(),
               body: safePushBody(delivery),
             },
             data: {
               notification_id: delivery.notification_id,
-              target_type: delivery.target_type ?? "notifications",
-              target_id: delivery.target_id ?? "",
-              metadata: JSON.stringify(delivery.metadata ?? {}),
+              notification_type: delivery.notification_type,
             },
             android: {
               priority: "high",
@@ -226,16 +221,20 @@ async function sendFcmMessage(
     const disableDevice = isPermanentTokenError(response.status, errorText);
     return {
       ok: false,
-      error: `FCM ${response.status}: ${errorText.slice(0, 800)}`,
+      error: sanitizeProviderError(`FCM ${response.status}: ${errorText}`),
       disableDevice,
     };
   } catch (error) {
     return {
       ok: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: sanitizeProviderError(error instanceof Error ? error.message : String(error)),
       disableDevice: false,
     };
   }
+}
+
+function safePushTitle(): string {
+  return "رواج";
 }
 
 function safePushBody(delivery: PushDelivery): string {
@@ -265,6 +264,15 @@ function isPermanentTokenError(status: number, body: string): boolean {
     normalized.includes("SENDER_ID_MISMATCH") ||
     (status === 404 && normalized.includes("NOT_FOUND"))
   );
+}
+
+function sanitizeProviderError(value: unknown): string {
+  const normalized = String(value ?? "Push provider error")
+    .replace(/Bearer\s+[A-Za-z0-9._~-]+/gi, "Bearer [redacted]")
+    .replace(/[A-Za-z0-9_-]{80,}/g, "[redacted]")
+    .replace(/[\r\n\t]+/g, " ")
+    .trim();
+  return (normalized || "Push provider error").slice(0, 500);
 }
 
 function pemToArrayBuffer(pem: string): ArrayBuffer {

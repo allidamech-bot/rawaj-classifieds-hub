@@ -9,6 +9,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import {
   CommunicationCenterHero,
@@ -19,17 +20,30 @@ import { NotificationPreferencesPanel } from "@/features/notifications/Notificat
 import { NotificationTimelineCard } from "@/features/notifications/NotificationTimelineCard";
 import {
   fetchMyNotificationsPage,
+  fetchMyNotificationById,
   fetchUnreadNotificationsCount,
   markAllNotificationsRead,
   markNotificationRead,
   resolveNotificationTarget,
 } from "@/lib/classifieds-api";
 import type { ClassifiedsError, NotificationItem } from "@/lib/classifieds-types";
+import type { NotificationCursor } from "@/lib/classifieds-types";
+import { getClient } from "@/lib/api/shared";
+import {
+  mergeNotifications,
+  normalizeNotificationId,
+  notificationIsWithinReadCutoff,
+} from "@/lib/notification-integrity";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 import { useAuth } from "@/lib/use-auth";
 
+const notificationsSearchSchema = z.object({
+  open: z.string().optional(),
+});
+
 export const Route = createFileRoute("/notifications")({
+  validateSearch: notificationsSearchSchema,
   head: () => ({
     meta: [{ title: "التنبيهات | رواج" }, { name: "robots", content: "noindex, nofollow" }],
   }),
@@ -57,6 +71,7 @@ const followUpLinks = [
 
 function NotificationsPage() {
   const auth = useAuth();
+  const search = Route.useSearch();
   const navigate = useNavigate();
   const { language, text } = useUiPreferences();
   const { counts, refresh: refreshUnreadActivity } = useUnreadActivityCounts();
@@ -65,6 +80,7 @@ function NotificationsPage() {
   const [hasLoaded, setHasLoaded] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<NotificationCursor | null>(null);
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [unreadCountExact, setUnreadCountExact] = useState(true);
   const [loadError, setLoadError] = useState<ClassifiedsError | null>(null);
@@ -84,6 +100,11 @@ function NotificationsPage() {
   const markingReadScopesRef = useRef<Set<string>>(new Set());
   const openingTargetScopesRef = useRef<Set<string>>(new Set());
   const markingAllProfilesRef = useRef<Set<string>>(new Set());
+  const handledPushOpenScopesRef = useRef<Set<string>>(new Set());
+  const realtimeGenerationRef = useRef(0);
+  const openNotificationTargetRef = useRef<(notification: NotificationItem) => Promise<void>>(
+    async () => undefined,
+  );
   profileIdRef.current = profileId;
 
   const applyKnownReadState = useCallback((items: NotificationItem[]) => {
@@ -91,7 +112,9 @@ function NotificationsPage() {
     const readIds = readNotificationIdsRef.current;
     return items.map((item) => {
       if (item.readAt) return item;
-      if (markAllReadAt) return { ...item, readAt: markAllReadAt };
+      if (markAllReadAt && notificationIsWithinReadCutoff(item, markAllReadAt)) {
+        return { ...item, readAt: markAllReadAt };
+      }
       if (readIds.has(item.id)) return { ...item, readAt: new Date().toISOString() };
       return item;
     });
@@ -110,8 +133,8 @@ function NotificationsPage() {
     setActionMessage(null);
 
     const [pageResult, unreadResult] = await Promise.all([
-      fetchMyNotificationsPage(currentProfileId, 0, NOTIFICATIONS_PAGE_SIZE),
-      fetchUnreadNotificationsCount(currentProfileId),
+      fetchMyNotificationsPage({ limit: NOTIFICATIONS_PAGE_SIZE }),
+      fetchUnreadNotificationsCount(),
     ]);
 
     if (
@@ -132,6 +155,7 @@ function NotificationsPage() {
     setNotifications(nextItems);
     setHasLoaded(true);
     setHasMore(pageResult.data.hasMore);
+    setNextCursor(pageResult.data.nextCursor);
     setUnreadCountExact(unreadResult.ok);
     setUnreadTotal(
       unreadResult.ok
@@ -166,6 +190,7 @@ function NotificationsPage() {
       setHasLoaded(false);
       setLoadingMore(false);
       setHasMore(false);
+      setNextCursor(null);
       setUnreadTotal(0);
       setUnreadCountExact(true);
       setLoadError(null);
@@ -189,6 +214,7 @@ function NotificationsPage() {
       setHasLoaded(false);
       setLoadingMore(false);
       setHasMore(false);
+      setNextCursor(null);
       setUnreadTotal(0);
       setUnreadCountExact(true);
       setLoadError(null);
@@ -207,22 +233,127 @@ function NotificationsPage() {
     };
   }, [auth.status, loadNotifications, profileId]);
 
+  useEffect(() => {
+    if (auth.status !== "signedIn" || !profileId || typeof window === "undefined") return;
+    const clientResult = getClient();
+    if (!clientResult.ok) return;
+
+    const currentProfileId = profileId;
+    const generation = ++realtimeGenerationRef.current;
+    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+    const refreshUnread = () => {
+      if (refreshTimer !== null) clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(async () => {
+        const result = await fetchUnreadNotificationsCount();
+        if (
+          generation !== realtimeGenerationRef.current ||
+          currentProfileId !== profileIdRef.current
+        )
+          return;
+        if (result.ok) {
+          setUnreadTotal(result.data);
+          setUnreadCountExact(true);
+        }
+        void refreshUnreadActivity();
+      }, 150);
+    };
+    const channel = clientResult.data
+      .channel(`rawaj-notifications:${currentProfileId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${currentProfileId}`,
+        },
+        async (payload) => {
+          const record = payload.eventType === "DELETE" ? payload.old : payload.new;
+          const notificationId = normalizeNotificationId(record?.id);
+          if (!notificationId) return;
+          if (payload.eventType === "DELETE") {
+            setNotifications((current) => current.filter((item) => item.id !== notificationId));
+            refreshUnread();
+            return;
+          }
+          const result = await fetchMyNotificationById(notificationId);
+          if (
+            generation !== realtimeGenerationRef.current ||
+            currentProfileId !== profileIdRef.current ||
+            !result.ok ||
+            !result.data
+          )
+            return;
+          const notification = result.data;
+          setNotifications((current) =>
+            applyKnownReadState(mergeNotifications(current, [notification])),
+          );
+          refreshUnread();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      realtimeGenerationRef.current += 1;
+      if (refreshTimer !== null) clearTimeout(refreshTimer);
+      void clientResult.data.removeChannel(channel);
+    };
+  }, [applyKnownReadState, auth.status, profileId, refreshUnreadActivity]);
+
+  useEffect(() => {
+    if (auth.status !== "signedIn" || !profileId || !search.open) return;
+    const notificationId = normalizeNotificationId(search.open);
+    if (!notificationId) {
+      void navigate({ to: "/notifications", search: {}, replace: true });
+      return;
+    }
+    const scope = notificationActionScope(profileId, notificationId);
+    if (handledPushOpenScopesRef.current.has(scope)) return;
+    handledPushOpenScopesRef.current.add(scope);
+    const currentProfileId = profileId;
+    void (async () => {
+      const result = await fetchMyNotificationById(notificationId);
+      if (currentProfileId !== profileIdRef.current) return;
+      void navigate({ to: "/notifications", search: {}, replace: true });
+      if (!result.ok || !result.data) {
+        setActionMessage(
+          text(
+            "تعذر فتح هذا التنبيه أو لم يعد متاحًا لهذا الحساب.",
+            "This notification is unavailable for the current account.",
+          ),
+        );
+        return;
+      }
+      setNotifications((current) =>
+        applyKnownReadState(mergeNotifications(current, [result.data as NotificationItem])),
+      );
+      await openNotificationTargetRef.current(result.data as NotificationItem);
+    })();
+  }, [applyKnownReadState, auth.status, navigate, profileId, search.open, text]);
+
   async function loadMoreNotifications() {
-    if (!profileId || loading || loadingMore || loadMoreInFlightRef.current || !hasMore) return;
+    if (
+      !profileId ||
+      loading ||
+      loadingMore ||
+      loadMoreInFlightRef.current ||
+      !hasMore ||
+      !nextCursor
+    )
+      return;
     const currentProfileId = profileId;
     const parentRequestId = notificationsRequestIdRef.current;
     const paginationRequestId = ++paginationRequestIdRef.current;
-    const offset = notifications.length;
+    const cursorSnapshot = nextCursor;
     loadMoreInFlightRef.current = true;
     setLoadingMore(true);
     setPaginationError(null);
 
     try {
-      const result = await fetchMyNotificationsPage(
-        currentProfileId,
-        offset,
-        NOTIFICATIONS_PAGE_SIZE,
-      );
+      const result = await fetchMyNotificationsPage({
+        cursor: cursorSnapshot,
+        limit: NOTIFICATIONS_PAGE_SIZE,
+      });
       if (
         parentRequestId !== notificationsRequestIdRef.current ||
         paginationRequestId !== paginationRequestIdRef.current ||
@@ -234,11 +365,9 @@ function NotificationsPage() {
         return;
       }
       const nextItems = applyKnownReadState(result.data.items);
-      setNotifications((current) => {
-        const knownIds = new Set(current.map((item) => item.id));
-        return [...current, ...nextItems.filter((item) => !knownIds.has(item.id))];
-      });
+      setNotifications((current) => mergeNotifications(current, nextItems));
       setHasMore(result.data.hasMore);
+      setNextCursor(result.data.nextCursor);
     } finally {
       if (paginationRequestId === paginationRequestIdRef.current) {
         loadMoreInFlightRef.current = false;
@@ -258,7 +387,7 @@ function NotificationsPage() {
     setMarkingReadIds((current) => new Set(current).add(notificationId));
     setActionMessage(null);
     try {
-      const result = await markNotificationRead(currentProfileId, notificationId);
+      const result = await markNotificationRead(notificationId);
       if (currentProfileId !== profileIdRef.current) return false;
       if (!result.ok) {
         setActionMessage(result.error.message);
@@ -292,17 +421,27 @@ function NotificationsPage() {
     setMarkingAll(true);
     setActionMessage(null);
     try {
-      const result = await markAllNotificationsRead(currentProfileId);
+      const result = await markAllNotificationsRead();
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setActionMessage(result.error.message);
         return;
       }
-      const readAt = new Date().toISOString();
+      const readAt = result.data.cutoff;
       markAllReadAtRef.current = readAt;
-      notifications.forEach((item) => readNotificationIdsRef.current.add(item.id));
-      setNotifications((current) => current.map((item) => ({ ...item, readAt })));
-      setUnreadTotal(0);
+      notifications
+        .filter((item) => notificationIsWithinReadCutoff(item, readAt))
+        .forEach((item) => readNotificationIdsRef.current.add(item.id));
+      setNotifications((current) =>
+        current.map((item) =>
+          notificationIsWithinReadCutoff(item, readAt) ? { ...item, readAt } : item,
+        ),
+      );
+      setUnreadTotal(
+        notifications.filter(
+          (item) => !item.readAt && !notificationIsWithinReadCutoff(item, readAt),
+        ).length,
+      );
       setUnreadCountExact(true);
       void refreshUnreadActivity();
     } finally {
@@ -321,7 +460,7 @@ function NotificationsPage() {
     setOpeningTargetIds((current) => new Set(current).add(notification.id));
     setActionMessage(null);
     try {
-      const result = await resolveNotificationTarget(notification);
+      const result = await resolveNotificationTarget(notification.id);
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setActionMessage(result.error.message);
@@ -347,7 +486,9 @@ function NotificationsPage() {
       }
       if (target.kind === "listing") {
         void navigate({ to: "/listings/$id", params: { id: target.listingId } });
-      } else if (target.kind === "conversation" || target.kind === "conversation_missing") {
+      } else if (target.kind === "owner_listing") {
+        void navigate({ to: "/profile/listings/$id", params: { id: target.listingId } });
+      } else if (target.kind === "conversation") {
         void navigate({ to: "/chats", search: { conversation: target.conversationId } });
       } else if (target.kind === "seller") {
         void navigate({ to: "/seller/$id", params: { id: target.sellerId } });
@@ -382,6 +523,12 @@ function NotificationsPage() {
         });
       } else if (target.kind === "browse_listings") {
         void navigate({ to: "/listings" });
+      } else if (target.kind === "support") {
+        void navigate({ to: "/support" });
+      } else if (target.kind === "verification") {
+        void navigate({ to: "/verification" });
+      } else if (target.kind === "promotion") {
+        void navigate({ to: "/promotion" });
       }
     } finally {
       openingTargetScopesRef.current.delete(scopeKey);
@@ -394,6 +541,8 @@ function NotificationsPage() {
       }
     }
   }
+
+  openNotificationTargetRef.current = openNotificationTarget;
 
   const hasUnreadEvidence =
     unreadTotal > 0 || notifications.some((item) => !item.readAt) || hasMore;
@@ -554,32 +703,14 @@ function NotificationsPage() {
 }
 
 function isNavigableNotification(notification: NotificationItem) {
-  const target = notification.targetType?.toLowerCase();
-  return Boolean(
-    notification.targetId &&
-    (target === "listing" ||
-      target === "conversation" ||
-      target === "seller" ||
-      target === "saved_search"),
-  );
+  return Boolean(notification.targetId && notification.targetType);
 }
 
 function localizedNotification(notification: NotificationItem, language: "ar" | "en") {
   if (language === "ar") return { title: notification.titleAr, body: notification.bodyAr };
-  const title =
-    metadataString(notification.metadata, "title_en") ||
-    metadataString(notification.metadata, "titleEn") ||
-    notification.titleAr;
-  const body =
-    metadataString(notification.metadata, "body_en") ||
-    metadataString(notification.metadata, "bodyEn") ||
-    notification.bodyAr;
+  const title = notification.titleEn || notification.titleAr;
+  const body = notification.bodyEn || notification.bodyAr;
   return { title, body };
-}
-
-function metadataString(metadata: Record<string, unknown>, key: string) {
-  const value = metadata[key];
-  return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
 function Panel({

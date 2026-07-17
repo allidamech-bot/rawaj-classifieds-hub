@@ -118,21 +118,20 @@ test("native registration is explicit, permission-aware, logout-safe, offline-sa
   assert.doesNotMatch(moreRoute, /disableNativePush/);
 
   assert.match(auth, /import \{ disableNativePush \} from "\.\/native-push"/);
-  assert.match(auth, /await disableNativePush\(signedInUserId, false\)/);
-  const detachIndex = auth.indexOf("await disableNativePush(signedInUserId, false)");
+  assert.match(auth, /await disableNativePush\(false\)/);
+  const detachIndex = auth.indexOf("await disableNativePush(false)");
   const signOutIndex = auth.indexOf("await client.auth.signOut()");
   assert.ok(detachIndex >= 0, "AuthProvider must detach the current native push device");
   assert.ok(signOutIndex > detachIndex, "Push detachment must happen before Supabase sign out");
 
-  assert.match(nativePush, /await disableNativePush\(userId, false\)/);
-  assert.doesNotMatch(nativePush, /disablePushDevice\(userId, deviceKey, false\)/);
-  assert.doesNotMatch(nativePush, /disablePushDevice\(userId, deviceKey, true\)/);
+  assert.match(nativePush, /await disableNativePush\(false\)/);
+  assert.doesNotMatch(nativePush, /disablePushDevice\(userId,/);
   assert.match(nativePush, /const localCleanup = unregisterNativePushLocally\(\)/);
   const localCleanupIndex = nativePush.indexOf(
     "const localCleanup = unregisterNativePushLocally()",
   );
   const remoteDetachIndex = nativePush.indexOf(
-    "await disablePushDevice(userId, deviceKey, disableChannel)",
+    "await disablePushDevice(deviceKey, disableChannel)",
   );
   assert.ok(localCleanupIndex >= 0, "Native token cleanup must start for every disable attempt");
   assert.ok(
@@ -145,7 +144,7 @@ test("native registration is explicit, permission-aware, logout-safe, offline-sa
   assert.doesNotMatch(nativePush, /if \(result\.ok\) \{[\s\S]*PushNotifications\.unregister\(\)/);
 
   assert.match(preferences, /if \(pushStatus\.registered\)/);
-  assert.match(preferences, /disableNativePush\(currentProfileId, false\)/);
+  assert.match(preferences, /disableNativePush\(false\)/);
   assert.doesNotMatch(preferences, /currentPreferences\.pushEnabled \|\| pushStatus\.registered/);
   assert.match(
     preferences,
@@ -196,7 +195,7 @@ test("native and in-app notifications share canonical target normalization and p
       read(paths.savedSearchRoute),
     ]);
 
-  assert.match(targetPath, /type === "conversation" \|\| type === "chat"/);
+  assert.match(targetPath, /normalizeNotificationTargetType/);
   assert.match(targetPath, /kind: "seller"/);
   assert.match(targetPath, /return `\/seller\/\$\{encodedId\}`/);
   assert.match(targetPath, /return `\/listings\/\$\{encodedId\}`/);
@@ -211,11 +210,9 @@ test("native and in-app notifications share canonical target normalization and p
   assert.match(notificationsRoute, /target\.kind === "seller"/);
   assert.match(notificationsRoute, /target\.kind === "saved_search"/);
 
-  assert.match(nativePush, /import \{ resolveNotificationTargetPath \}/);
-  assert.match(
-    nativePush,
-    /resolveNotificationTargetPath\(data\?\.target_type, data\?\.target_id\)/,
-  );
+  assert.match(nativePush, /import \{ notificationOpenPath \}/);
+  assert.match(nativePush, /notificationOpenPath\(data\?\.notification_id\)/);
+  assert.doesNotMatch(nativePush, /data\?\.target_type|data\?\.target_id/);
   assert.doesNotMatch(nativePush, /function resolvePushTarget/);
   assert.match(savedSearchRoute, /الخادم|server/i);
   assert.doesNotMatch(savedSearchRoute, /bounded checks while you use the app/i);

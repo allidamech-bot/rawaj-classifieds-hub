@@ -3,51 +3,63 @@ import { Bell, CheckCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchMyNotifications,
-  fetchUnreadNotificationsCount,
   markAllNotificationsRead,
   markNotificationRead,
   resolveNotificationTarget,
   scanOwnerListingExpiryReminders,
 } from "@/lib/classifieds-api";
 import type { NotificationItem } from "@/lib/classifieds-types";
+import { notificationIsWithinReadCutoff } from "@/lib/notification-integrity";
 import { useUiPreferences } from "@/lib/ui-preferences";
+import { useUnreadActivityCounts } from "@/lib/unread-activity";
 import { useAuth } from "@/lib/use-auth";
 
 export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark" }) {
   const auth = useAuth();
   const navigate = useNavigate();
   const { language, text } = useUiPreferences();
+  const { counts, refresh: refreshUnreadActivity } = useUnreadActivityCounts();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [openingTargetId, setOpeningTargetId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const profileId = auth.profile?.id ?? null;
+  const profileIdRef = useRef<string | null>(profileId);
+  const requestIdRef = useRef(0);
+  const markingReadRef = useRef<Set<string>>(new Set());
+  const markingAllRef = useRef(false);
+  profileIdRef.current = profileId;
+  const unreadCount = counts.notifications;
 
   const refreshNotifications = useCallback(
     async (loadList: boolean) => {
       if (!profileId) return;
+      const currentProfileId = profileId;
+      const requestId = ++requestIdRef.current;
       setError("");
-      const countResult = await fetchUnreadNotificationsCount(profileId);
-      if (countResult.ok) setUnreadCount(countResult.data);
-      else setError(countResult.error.message);
-
-      if (!loadList) return;
+      await refreshUnreadActivity();
+      if (
+        !loadList ||
+        requestId !== requestIdRef.current ||
+        currentProfileId !== profileIdRef.current
+      )
+        return;
       setLoading(true);
-      const listResult = await fetchMyNotifications(profileId);
+      const listResult = await fetchMyNotifications({ limit: 20 });
+      if (requestId !== requestIdRef.current || currentProfileId !== profileIdRef.current) return;
       setLoading(false);
       if (listResult.ok) setNotifications(listResult.data);
       else setError(listResult.error.message);
     },
-    [profileId],
+    [profileId, refreshUnreadActivity],
   );
 
   useEffect(() => {
     if (!profileId) {
+      requestIdRef.current += 1;
       setNotifications([]);
-      setUnreadCount(0);
       setError("");
       setOpeningTargetId(null);
       return;
@@ -89,7 +101,12 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
   }
 
   async function markOne(notificationId: string) {
-    const result = await markNotificationRead(profileId, notificationId);
+    const currentProfileId = profileId;
+    if (!currentProfileId || markingReadRef.current.has(notificationId)) return;
+    markingReadRef.current.add(notificationId);
+    const result = await markNotificationRead(notificationId);
+    markingReadRef.current.delete(notificationId);
+    if (currentProfileId !== profileIdRef.current) return;
     if (!result.ok) {
       setError(result.error.message);
       return;
@@ -99,14 +116,16 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
         item.id === notificationId ? { ...item, readAt: new Date().toISOString() } : item,
       ),
     );
-    setUnreadCount((current) => Math.max(0, current - 1));
+    void refreshUnreadActivity();
   }
 
   async function openNotificationTarget(notification: NotificationItem) {
     if (openingTargetId || !profileId) return;
     setOpeningTargetId(notification.id);
     setError("");
-    const result = await resolveNotificationTarget(notification);
+    const currentProfileId = profileId;
+    const result = await resolveNotificationTarget(notification.id);
+    if (currentProfileId !== profileIdRef.current) return;
     setOpeningTargetId(null);
 
     if (!result.ok) {
@@ -124,31 +143,85 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
       void navigate({ to: "/listings/$id", params: { id: target.listingId } });
     } else if (target.kind === "conversation") {
       void navigate({ to: "/chats", search: { conversation: target.conversationId } });
-    } else if (target.kind === "conversation_missing") {
-      void navigate({ to: "/chats", search: { conversation: target.conversationId } });
+    } else if (target.kind === "owner_listing") {
+      void navigate({ to: "/profile/listings/$id", params: { id: target.listingId } });
     } else if (target.kind === "seller") {
       void navigate({ to: "/seller/$id", params: { id: target.sellerId } });
     } else if (target.kind === "browse_listings") {
       void navigate({ to: "/listings" });
+    } else if (target.kind === "saved_search") {
+      void navigate({
+        to: "/saved-searches",
+        search: {
+          taxonomy: "",
+          q: "",
+          category: "",
+          subcategory: "",
+          gov: "",
+          district: "",
+          price_min: "",
+          price_max: "",
+          price_type: "",
+          condition: "",
+          car_make: "",
+          car_model: "",
+          fuel: "",
+          transmission: "",
+          property_purpose: "",
+          property_type: "",
+          rooms: "",
+          rental_duration: "",
+          electronics_brand: "",
+          detail_condition: "",
+          employment_type: "",
+          salary_type: "",
+          sort: "latest",
+        },
+      });
+    } else if (target.kind === "support") {
+      void navigate({ to: "/support" });
+    } else if (target.kind === "verification") {
+      void navigate({ to: "/verification" });
+    } else if (target.kind === "promotion") {
+      void navigate({ to: "/promotion" });
     }
   }
 
   function canOpenNotificationTarget(notification: NotificationItem) {
     const target = notification.targetType?.toLowerCase();
     return Boolean(
-      notification.targetId && ["listing", "conversation", "seller"].includes(target ?? ""),
+      notification.targetId &&
+      [
+        "listing",
+        "owner_listing",
+        "conversation",
+        "seller",
+        "saved_search",
+        "support",
+        "verification",
+        "promotion",
+      ].includes(target ?? ""),
     );
   }
 
   async function markAll() {
-    const result = await markAllNotificationsRead(profileId);
+    const currentProfileId = profileId;
+    if (!currentProfileId || markingAllRef.current) return;
+    markingAllRef.current = true;
+    const result = await markAllNotificationsRead();
+    markingAllRef.current = false;
+    if (currentProfileId !== profileIdRef.current) return;
     if (!result.ok) {
       setError(result.error.message);
       return;
     }
-    const readAt = new Date().toISOString();
-    setNotifications((current) => current.map((item) => ({ ...item, readAt })));
-    setUnreadCount(0);
+    const readAt = result.data.cutoff;
+    setNotifications((current) =>
+      current.map((item) =>
+        notificationIsWithinReadCutoff(item, readAt) ? { ...item, readAt } : item,
+      ),
+    );
+    void refreshUnreadActivity();
   }
 
   function openNotificationCenter() {
@@ -175,7 +248,7 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -end-1 min-w-4 rounded-full bg-destructive px-1 text-[10px] font-bold leading-4 text-destructive-foreground">
-            {unreadCount > 9 ? "9+" : unreadCount}
+            {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </button>
@@ -228,10 +301,18 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-xs font-bold">{notification.titleAr}</h3>
-                        {notification.bodyAr && (
+                        <h3 className="text-xs font-bold">
+                          {language === "en"
+                            ? notification.titleEn || notification.titleAr
+                            : notification.titleAr}
+                        </h3>
+                        {(language === "en"
+                          ? notification.bodyEn || notification.bodyAr
+                          : notification.bodyAr) && (
                           <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-                            {notification.bodyAr}
+                            {language === "en"
+                              ? notification.bodyEn || notification.bodyAr
+                              : notification.bodyAr}
                           </p>
                         )}
                       </div>

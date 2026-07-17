@@ -182,7 +182,8 @@ test("DTO and workflow boundaries exclude private data and writes", () => {
   assert.match(qualityGate, /Conversations, Messaging & Realtime Integrity contract/);
   assert.match(qualityGate, /npm run test:conversations-messaging-realtime/);
   const packageJson = JSON.parse(packageSource);
-  assert.equal(packageJson.scripts.precheck, "npm run test:conversations-messaging-realtime");
+  assert.match(packageJson.scripts.precheck, /^npm run test:conversations-messaging-realtime/);
+  assert.match(packageJson.scripts.precheck, /npm run test:notifications-activity-push/);
   assert.ok(packageJson.scripts["test:conversations-messaging-realtime"]);
   assert.doesNotMatch(
     [api, route, liveHook].join("\n"),

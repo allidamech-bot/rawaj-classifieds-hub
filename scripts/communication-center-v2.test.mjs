@@ -146,9 +146,9 @@ test("notifications preserve pagination read and target recovery", () => {
     assert.match(notifications, contract);
 });
 
-test("notifications localize from metadata with safe Arabic fallback", () => {
-  assert.match(notifications, /metadataString\(notification\.metadata, "title_en"\)/);
-  assert.match(notifications, /metadataString\(notification\.metadata, "body_en"\)/);
+test("notifications localize from explicit safe DTO fields with Arabic fallback", () => {
+  assert.match(notifications, /notification\.titleEn/);
+  assert.match(notifications, /notification\.bodyEn/);
   assert.match(notifications, /\|\|\s+notification\.titleAr/);
   assert.match(notifications, /\|\|\s+notification\.bodyAr/);
 });
