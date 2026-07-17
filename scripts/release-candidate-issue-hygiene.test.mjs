@@ -10,7 +10,7 @@ const workflow = await readFile(
 test("release candidate evidence reuses one canonical issue", () => {
   assert.match(workflow, /title="RAWAJ Release Candidate Status"/);
   assert.match(workflow, /gh issue list/);
-  assert.match(workflow, /select\(\.title == \\"RAWAJ Release Candidate Status\\"\)/);
+  assert.match(workflow, /select\(\.title == "RAWAJ Release Candidate Status"\)/);
   assert.match(workflow, /gh issue edit/);
   assert.match(workflow, /if \[ -n "\$issue_number" \]/);
 });
