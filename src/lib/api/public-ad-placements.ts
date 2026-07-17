@@ -18,6 +18,13 @@ const activePlacementCache = new Map<
   { expiresAt: number; result: ClassifiedsResult<PublicAdPlacement[]> }
 >();
 const activePlacementRequests = new Map<string, Promise<ClassifiedsResult<PublicAdPlacement[]>>>();
+let activePlacementCacheGeneration = 0;
+
+export function invalidateActiveAdPlacementCache(): void {
+  activePlacementCacheGeneration += 1;
+  activePlacementCache.clear();
+  activePlacementRequests.clear();
+}
 
 export async function fetchActiveAdPlacements(
   placementPage: AdPlacementPage,
@@ -30,9 +37,10 @@ export async function fetchActiveAdPlacements(
   const pending = activePlacementRequests.get(cacheKey);
   if (pending) return pending;
 
+  const requestGeneration = activePlacementCacheGeneration;
   const request = loadActiveAdPlacements(placementPage, device).then((result) => {
     activePlacementRequests.delete(cacheKey);
-    if (result.ok) {
+    if (result.ok && requestGeneration === activePlacementCacheGeneration) {
       activePlacementCache.set(cacheKey, {
         expiresAt: Date.now() + ACTIVE_PLACEMENT_CACHE_TTL_MS,
         result,
