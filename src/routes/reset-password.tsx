@@ -3,6 +3,11 @@ import { Eye, EyeOff, KeyRound, LogIn, User } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { authErrorMessage } from "@/lib/auth-errors";
+import {
+  clearPasswordRecoverySession,
+  hasActivePasswordRecoverySession,
+  markPasswordRecoverySession,
+} from "@/lib/auth-recovery-session";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
 import { supabase } from "@/lib/supabase";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -50,7 +55,7 @@ function ResetPasswordPage() {
       }
 
       const markReady = () => {
-        if (cancelled) return;
+        if (cancelled || !hasActivePasswordRecoverySession()) return;
         clearTimeout(expiryTimer);
         setReady(true);
         setChecking(false);
@@ -58,7 +63,8 @@ function ResetPasswordPage() {
 
       const { data: listener } = client.auth.onAuthStateChange((event, session) => {
         if (!session) return;
-        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+        if (event === "PASSWORD_RECOVERY") {
+          markPasswordRecoverySession();
           markReady();
         }
       });
@@ -66,7 +72,7 @@ function ResetPasswordPage() {
 
       const { data, error: sessionError } = await client.auth.getSession();
       if (cancelled) return;
-      if (!sessionError && data.session) {
+      if (!sessionError && data.session && hasActivePasswordRecoverySession()) {
         markReady();
         return;
       }
@@ -75,7 +81,7 @@ function ResetPasswordPage() {
         if (cancelled) return;
         const { data: lateSession, error: lateError } = await client.auth.getSession();
         if (cancelled) return;
-        setReady(Boolean(!lateError && lateSession.session));
+        setReady(Boolean(!lateError && lateSession.session && hasActivePasswordRecoverySession()));
         setChecking(false);
       }, 15000);
     }
@@ -92,6 +98,17 @@ function ResetPasswordPage() {
     event.preventDefault();
     setMessage("");
     setError("");
+
+    if (!hasActivePasswordRecoverySession()) {
+      setReady(false);
+      setError(
+        text(
+          "انتهت جلسة الاستعادة. اطلب رابطًا جديدًا قبل تغيير كلمة المرور.",
+          "The recovery session expired. Request a new link before changing your password.",
+        ),
+      );
+      return;
+    }
 
     if (password.length < 6) {
       setError(
@@ -128,6 +145,7 @@ function ResetPasswordPage() {
       return;
     }
 
+    clearPasswordRecoverySession();
     setPassword("");
     setConfirmPassword("");
     setMessage(
