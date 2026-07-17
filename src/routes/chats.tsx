@@ -1,9 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Ban, Flag, ImagePlus, MessageCircle, Send, TriangleAlert, X } from "lucide-react";
+import { Ban, Flag, ImagePlus, MapPin, MessageCircle, Send, TriangleAlert, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { ChatAttachmentImage } from "@/features/communication/ChatAttachmentImage";
+import { ChatVoiceAttachment } from "@/features/communication/ChatVoiceAttachment";
+import {
+  ChatVoiceRecorder,
+  type RecordedVoiceClip,
+} from "@/features/communication/ChatVoiceRecorder";
 import {
   CommunicationCenterHero,
   CommunicationSafetyNote,
@@ -18,9 +23,12 @@ import {
   fetchConversationMessages,
   fetchMyConversations,
   markConversationRead,
+  removeChatAudio,
   removeChatImage,
   sendConversationMessage,
+  uploadChatAudio,
   uploadChatImage,
+  validateChatAudio,
   validateChatImage,
 } from "@/lib/classifieds-api";
 import {
@@ -80,6 +88,10 @@ function ChatsPage() {
     file: File;
     previewUrl: string;
   } | null>(null);
+  const [selectedVoice, setSelectedVoice] = useState<
+    (RecordedVoiceClip & { scopeKey: string }) | null
+  >(null);
+  const [locating, setLocating] = useState(false);
   const [conversationQuery, setConversationQuery] = useState("");
   const [sendingScopes, setSendingScopes] = useState<Set<string>>(() => new Set());
   const [notice, setNotice] = useState("");
@@ -123,6 +135,8 @@ function ChatsPage() {
   const sending = composerScopeKey ? sendingScopes.has(composerScopeKey) : false;
   const currentImage =
     composerScopeKey && selectedImage?.scopeKey === composerScopeKey ? selectedImage : null;
+  const currentVoice =
+    composerScopeKey && selectedVoice?.scopeKey === composerScopeKey ? selectedVoice : null;
   const messageSafety = useMemo(() => analyzeMessageSafety(body), [body]);
   const visibleMessages = useMemo(
     () =>
@@ -165,6 +179,10 @@ function ChatsPage() {
       if (current) URL.revokeObjectURL(current.previewUrl);
       return null;
     });
+    setSelectedVoice((current) => {
+      if (current) URL.revokeObjectURL(current.previewUrl);
+      return null;
+    });
     setConversationQuery("");
     setSendingScopes(new Set());
     setConfirmedRisk(null);
@@ -196,6 +214,10 @@ function ChatsPage() {
     setMessageError(null);
     setReportingMessageId(null);
     setSelectedImage((current) => {
+      if (current) URL.revokeObjectURL(current.previewUrl);
+      return null;
+    });
+    setSelectedVoice((current) => {
       if (current) URL.revokeObjectURL(current.previewUrl);
       return null;
     });
@@ -344,6 +366,62 @@ function ChatsPage() {
     if (imageInputRef.current) imageInputRef.current.value = "";
   }
 
+  function clearSelectedVoice() {
+    setSelectedVoice((current) => {
+      if (current) URL.revokeObjectURL(current.previewUrl);
+      return null;
+    });
+  }
+
+  function handleVoiceRecorded(clip: RecordedVoiceClip) {
+    if (!composerScopeKey) return;
+    const validation = validateChatAudio(clip.file, clip.durationMs);
+    if (!validation.ok) {
+      URL.revokeObjectURL(clip.previewUrl);
+      setMessageError(validation.error);
+      return;
+    }
+    clearSelectedImage();
+    setMessageError(null);
+    setSelectedVoice((current) => {
+      if (current) URL.revokeObjectURL(current.previewUrl);
+      return { ...clip, scopeKey: composerScopeKey };
+    });
+  }
+
+  function shareCurrentLocation() {
+    if (!composerScopeKey || locating || !navigator.geolocation) {
+      setNotice(
+        text("تعذر الوصول إلى الموقع على هذا الجهاز.", "Location is unavailable on this device."),
+      );
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const latitude = coords.latitude.toFixed(5);
+        const longitude = coords.longitude.toFixed(5);
+        setCurrentComposerBody(
+          text(
+            "موقعي الحالي: https://www.google.com/maps?q=" + latitude + "," + longitude,
+            "My current location: https://www.google.com/maps?q=" + latitude + "," + longitude,
+          ),
+        );
+        setLocating(false);
+      },
+      () => {
+        setNotice(
+          text(
+            "لم نتمكن من تحديد موقعك. تحقق من الإذن ثم حاول مجددًا.",
+            "We could not access your location. Check permission and try again.",
+          ),
+        );
+        setLocating(false);
+      },
+      { enableHighAccuracy: false, timeout: 12_000, maximumAge: 60_000 },
+    );
+  }
+
   function handleImageSelection(file: File | null) {
     if (!composerScopeKey || !file) return;
     const validation = validateChatImage(file);
@@ -351,6 +429,7 @@ function ChatsPage() {
       setMessageError(validation.error);
       return;
     }
+    clearSelectedVoice();
     setMessageError(null);
     setSelectedImage((current) => {
       if (current) URL.revokeObjectURL(current.previewUrl);
@@ -383,7 +462,8 @@ function ChatsPage() {
     }
     const cleanBody = body.trim();
     const image = currentImage;
-    if (!cleanBody && !image) return;
+    const voice = currentVoice;
+    if (!cleanBody && !image && !voice) return;
     const safety = analyzeMessageSafety(cleanBody);
     if (
       safety.requiresConfirmation &&
@@ -400,7 +480,9 @@ function ChatsPage() {
     }
     const requestSignature = image
       ? `${cleanBody}\n[image:${image.file.name}:${image.file.size}:${image.file.lastModified}]`
-      : cleanBody;
+      : voice
+        ? `${cleanBody}\n[audio:${voice.file.name}:${voice.file.size}:${voice.durationMs}]`
+        : cleanBody;
     const requestId = readOrCreateMessageSendRequestId(profileId, conversationId, requestSignature);
     sendInFlightScopesRef.current.add(scopeKey);
     setSendingScopes((current) => new Set(current).add(scopeKey));
@@ -410,7 +492,14 @@ function ChatsPage() {
     try {
       const uploadResult = image
         ? await uploadChatImage({ conversationId, requestId, file: image.file })
-        : null;
+        : voice
+          ? await uploadChatAudio({
+              conversationId,
+              requestId,
+              file: voice.file,
+              durationMs: voice.durationMs,
+            })
+          : null;
       if (uploadResult && !uploadResult.ok) {
         if (accountGenerationRef.current === accountGeneration) setMessageError(uploadResult.error);
         return;
@@ -427,7 +516,10 @@ function ChatsPage() {
         profileIdRef.current === profileId &&
         selectedConversationIdRef.current === conversationId;
       if (!result.ok) {
-        if (uploadedPath) await removeChatImage(uploadedPath);
+        if (uploadedPath) {
+          if (voice) await removeChatAudio(uploadedPath);
+          else await removeChatImage(uploadedPath);
+        }
         if (stillCurrent) setMessageError(result.error);
         return;
       }
@@ -435,6 +527,7 @@ function ChatsPage() {
       if (stillCurrent) {
         clearComposerDraftIfUnchanged(scopeKey, cleanBody);
         clearSelectedImage();
+        clearSelectedVoice();
         setConfirmedRisk((current) => (current?.scopeKey === scopeKey ? null : current));
         setMessages((current) => mergeConversationMessages(current, [result.data], conversationId));
         setNotice(text("تم إرسال الرسالة.", "Message sent."));
@@ -750,7 +843,18 @@ function ChatsPage() {
                       const mine = message.isMine;
                       return (
                         <article key={message.id} className="rawaj-message-bubble" data-mine={mine}>
-                          {message.attachmentPath && (
+                          {message.attachmentPath && message.attachmentKind === "audio" ? (
+                            <ChatVoiceAttachment
+                              attachmentPath={message.attachmentPath}
+                              initialUrl={message.attachmentUrl}
+                              durationMs={message.attachmentDurationMs}
+                              retryLabel={text("إعادة تحميل التسجيل", "Reload voice message")}
+                              unavailableLabel={text(
+                                "تعذر تحميل التسجيل الصوتي الخاص.",
+                                "The private voice message could not be loaded.",
+                              )}
+                            />
+                          ) : message.attachmentPath ? (
                             <ChatAttachmentImage
                               attachmentPath={message.attachmentPath}
                               initialUrl={message.attachmentUrl}
@@ -761,7 +865,7 @@ function ChatsPage() {
                                 "The private image could not be loaded. Try again.",
                               )}
                             />
-                          )}
+                          ) : null}
                           {message.body && (
                             <p className="whitespace-pre-line break-words">{message.body}</p>
                           )}
@@ -876,7 +980,20 @@ function ChatsPage() {
                       </button>
                     </div>
                   )}
-                  <div className="grid gap-2 sm:grid-cols-[auto_1fr_auto]">
+                  {currentVoice && (
+                    <div className="mb-2 flex items-center gap-3 rounded-xl bg-muted-surface p-2 hairline">
+                      <audio controls src={currentVoice.previewUrl} className="min-w-0 flex-1" />
+                      <button
+                        type="button"
+                        onClick={clearSelectedVoice}
+                        className="grid h-9 w-9 place-items-center rounded-full bg-destructive/10 text-destructive"
+                        aria-label={text("إزالة التسجيل", "Remove voice message")}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                  <div className="grid gap-2 sm:grid-cols-[auto_auto_auto_1fr_auto]">
                     <input
                       ref={imageInputRef}
                       type="file"
@@ -893,6 +1010,35 @@ function ChatsPage() {
                     >
                       <ImagePlus className="h-5 w-5" />
                     </button>
+                    <ChatVoiceRecorder
+                      disabled={
+                        sending || selectedConversation.status !== "active" || Boolean(currentImage)
+                      }
+                      onRecorded={handleVoiceRecorded}
+                      onError={(message) => setNotice(message)}
+                      labels={{
+                        start: text("تسجيل رسالة صوتية", "Record voice message"),
+                        stop: text("إيقاف التسجيل", "Stop recording"),
+                        cancel: text("إلغاء التسجيل", "Cancel recording"),
+                        permission: text(
+                          "تعذر استخدام الميكروفون. تحقق من الإذن.",
+                          "Microphone access failed. Check permission.",
+                        ),
+                        unsupported: text(
+                          "التسجيل الصوتي غير مدعوم على هذا الجهاز.",
+                          "Voice recording is unsupported on this device.",
+                        ),
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={sending || locating || selectedConversation.status !== "active"}
+                      onClick={shareCurrentLocation}
+                      className="grid min-h-12 place-items-center rounded-xl bg-muted-surface px-4 text-primary hairline"
+                      aria-label={text("مشاركة الموقع", "Share location")}
+                    >
+                      <MapPin className="h-5 w-5" />
+                    </button>
                     <textarea
                       value={body}
                       onChange={(event) => {
@@ -907,7 +1053,7 @@ function ChatsPage() {
                       type="submit"
                       disabled={
                         sending ||
-                        (body.trim().length === 0 && !currentImage) ||
+                        (body.trim().length === 0 && !currentImage && !currentVoice) ||
                         selectedConversation.status !== "active"
                       }
                       className="rawaj-message-composer__send"

@@ -74,7 +74,7 @@ test("conversation creation and reads remain participant-only and canonical", ()
   assert.match(api, /\.limit\(CHAT_HISTORY_PAGE_SIZE\)/);
   assert.match(
     api,
-    /id,conversation_id,sender_user_id,body,attachment_path,attachment_mime_type,attachment_size_bytes,created_at,edited_at,deleted_at/,
+    /id,conversation_id,sender_user_id,body,attachment_path,attachment_mime_type,attachment_size_bytes,attachment_kind,attachment_duration_ms,created_at,edited_at,deleted_at/,
   );
   assert.doesNotMatch(api, /from\("conversation_messages"\)[\s\S]{0,100}\.select\("\*"\)/);
 });
@@ -86,7 +86,9 @@ test("message sending is validated, server-idempotent and conversation scoped", 
     api,
     /JSON\.stringify\(\[actorResult\.data, cleanConversationId, cleanRequestId\]\)/,
   );
+  assert.match(api, /rawaj_send_conversation_message_v4/);
   assert.match(api, /rawaj_send_conversation_message_v3/);
+  assert.match(api, /isMissingMessageSendV4/);
   assert.doesNotMatch(api, /\.from\("conversation_messages"\)[\s\S]{0,160}\.insert/);
   assert.match(sendSql, /auth\.uid\(\)/);
   assert.match(sendSql, /client_request_id/);
@@ -107,6 +109,8 @@ test("pure merge helpers reject cross-conversation rows and order stable ties", 
     attachmentPath: null,
     attachmentMimeType: null,
     attachmentSizeBytes: null,
+    attachmentKind: null,
+    attachmentDurationMs: null,
     attachmentUrl: null,
     createdAt,
     editedAt: null,
@@ -141,6 +145,7 @@ test("URL, stale request, draft, attachment, and account replacement scopes are 
   assert.match(route, /reportInFlightRef\.current\.clear\(\)/);
   assert.match(route, /blockInFlightRef\.current\.clear\(\)/);
   assert.match(route, /setSelectedImage/);
+  assert.match(route, /setSelectedVoice/);
   assert.match(route, /URL\.revokeObjectURL/);
   assert.match(route, /setConversations\(\[\]\)/);
   assert.match(route, /setMessages\(\[\]\)/);
@@ -195,8 +200,9 @@ test("DTO and workflow boundaries exclude private data and writes", () => {
   assert.match(packageJson.scripts.precheck, /^npm run test:conversations-messaging-realtime/);
   assert.match(packageJson.scripts.precheck, /npm run test:notifications-activity-push/);
   assert.ok(packageJson.scripts["test:conversations-messaging-realtime"]);
+  assert.match(route, /navigator\.geolocation\.getCurrentPosition/);
   assert.doesNotMatch(
     [api, route, liveHook].join("\n"),
-    /service_role|navigator\.geolocation|radius/i,
+    /service_role|watchPosition|localStorage[^\n]*(latitude|longitude)|sessionStorage[^\n]*(latitude|longitude)/i,
   );
 });
