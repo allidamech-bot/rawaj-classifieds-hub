@@ -4,10 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "scripts/apply-chat-voice-location-ui-v1.mjs"
-      - "scripts/fix-chat-voice-location-applicator.mjs"
-      - "src/features/communication/ChatVoiceRecorder.tsx"
-      - "src/features/communication/ChatVoiceAttachment.tsx"
+      - "scripts/apply-chat-voice-state-safety.mjs"
       - ".github/workflows/apply-chat-voice-location-ui-v1.yml"
   workflow_dispatch:
 
@@ -26,37 +23,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Repair applicator source
-        run: node scripts/fix-chat-voice-location-applicator.mjs
-      - name: Apply patch
-        id: apply
-        continue-on-error: true
-        run: node scripts/apply-chat-voice-location-ui-v1.mjs > applicator.log 2>&1
-      - name: Upload applicator diagnostics
-        if: steps.apply.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: chat-voice-location-applicator-log
-          path: applicator.log
-      - name: Stop on applicator failure
-        if: steps.apply.outcome == 'failure'
-        run: cat applicator.log && exit 1
-      - name: Format generated sources
-        id: format
-        continue-on-error: true
-        run: npx prettier --write src/lib/classifieds-types.ts src/lib/api/messaging.ts src/routes/chats.tsx src/features/communication/ChatVoiceRecorder.tsx src/features/communication/ChatVoiceAttachment.tsx > prettier.log 2>&1
-      - name: Upload formatting diagnostics
-        if: steps.format.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: chat-voice-location-prettier-log
-          path: prettier.log
-      - name: Stop on formatting failure
-        if: steps.format.outcome == 'failure'
-        run: cat prettier.log && exit 1
+      - run: node scripts/apply-chat-voice-state-safety.mjs
+      - run: npx prettier --write src/routes/chats.tsx
       - run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add src/lib/classifieds-types.ts src/lib/api/messaging.ts src/routes/chats.tsx src/features/communication/ChatVoiceRecorder.tsx src/features/communication/ChatVoiceAttachment.tsx
-          git commit -m "feat: add chat voice and location sharing UI"
+          git add src/routes/chats.tsx
+          git commit -m "fix: isolate chat voice attachment state"
           git push origin HEAD:${{ github.head_ref }}
