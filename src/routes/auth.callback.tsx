@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { authErrorMessage } from "@/lib/auth-errors";
+import { markPasswordRecoverySession } from "@/lib/auth-recovery-session";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
 import { supabase } from "@/lib/supabase";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -52,17 +53,19 @@ function AuthCallbackPage() {
 
       const searchParams = new URLSearchParams(window.location.search);
       const code = searchParams.get("code");
+      const recoveryCodeRequested = Boolean(code && callbackContext.isRecovery);
       let observedRecoveryEvent = false;
       let completed = false;
 
-      const finish = (recovery: boolean) => {
+      const finish = (recoveryAuthorized: boolean) => {
         if (cancelled || completed) return;
         completed = true;
         clearTimeout(expiryTimer);
+        if (recoveryAuthorized) markPasswordRecoverySession();
         setStatus("success");
         completionTimer = setTimeout(() => {
           if (cancelled) return;
-          if (recovery || callbackContext.isRecovery) {
+          if (recoveryAuthorized) {
             const destination = `/reset-password?returnTo=${encodeURIComponent(callbackContext.returnTo)}`;
             window.location.assign(destination);
             return;
@@ -75,7 +78,7 @@ function AuthCallbackPage() {
         if (cancelled || !session) return;
         if (event === "PASSWORD_RECOVERY") observedRecoveryEvent = true;
         if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-          finish(observedRecoveryEvent || event === "PASSWORD_RECOVERY");
+          finish(observedRecoveryEvent || (event === "SIGNED_IN" && recoveryCodeRequested));
         }
       });
       unsubscribeAuth = () => listener.subscription.unsubscribe();
@@ -89,7 +92,7 @@ function AuthCallbackPage() {
         const { data, error } = await client.auth.getSession();
         if (error) throw error;
         if (data.session) {
-          finish(observedRecoveryEvent || callbackContext.isRecovery);
+          finish(observedRecoveryEvent || recoveryCodeRequested);
           return;
         }
 
@@ -98,7 +101,7 @@ function AuthCallbackPage() {
           const { data: lateSession, error: lateError } = await client.auth.getSession();
           if (cancelled || completed) return;
           if (!lateError && lateSession.session) {
-            finish(observedRecoveryEvent || callbackContext.isRecovery);
+            finish(observedRecoveryEvent || recoveryCodeRequested);
             return;
           }
           listener.subscription.unsubscribe();
