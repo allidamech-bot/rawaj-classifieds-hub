@@ -49,7 +49,10 @@ function staleReadResult<T>(operation: string): ClassifiedsResult<T> {
   return { ok: false, error: { code: "unknown", message: "", operation } };
 }
 
-function operationInProgressResult<T>(message: string, operation: string): ClassifiedsResult<T> {
+function operationInProgressResult<T>(
+  message: string,
+  operation: string,
+): ClassifiedsResult<T> {
   return { ok: false, error: { code: "unknown", message, operation } };
 }
 
@@ -58,7 +61,10 @@ export async function safetyFetchCases(
   status: SafetyCaseStatus | "all" = "all",
 ): Promise<ClassifiedsResult<SafetyCaseSummary[]>> {
   if (!canManageReports) {
-    return { ok: false, error: { code: "permission_denied", message: "ليست لديك صلاحية لإدارة قضايا السلامة." } };
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "ليست لديك صلاحية لإدارة قضايا السلامة." },
+    };
   }
 
   const requestGeneration = ++safetyCaseReadGeneration;
@@ -74,14 +80,20 @@ export async function safetyFetchCases(
   }
   if (error) return { ok: false, error: mapError(error) };
 
-  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapSafetyCase) };
+  return {
+    ok: true,
+    data: ((data ?? []) as Record<string, unknown>[]).map(mapSafetyCase),
+  };
 }
 
 export async function safetyFetchStaff(
   canManageReports: boolean,
 ): Promise<ClassifiedsResult<SafetyStaffSummary[]>> {
   if (!canManageReports) {
-    return { ok: false, error: { code: "permission_denied", message: "ليست لديك صلاحية لعرض طاقم السلامة." } };
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "ليست لديك صلاحية لعرض طاقم السلامة." },
+    };
   }
 
   const requestGeneration = ++safetyStaffReadGeneration;
@@ -120,17 +132,26 @@ export async function safetySaveCase(
   },
 ): Promise<ClassifiedsResult<{ id: string; version: number; updatedAt: string }>> {
   if (!canManageReports) {
-    return { ok: false, error: { code: "permission_denied", message: "ليست لديك صلاحية لإدارة قضايا السلامة." } };
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "ليست لديك صلاحية لإدارة قضايا السلامة." },
+    };
   }
 
   const title = payload.title.trim();
   if (title.length < 3) {
-    return { ok: false, error: { code: "validation_error", message: "أدخل عنواناً واضحاً للقضية." } };
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "أدخل عنواناً واضحاً للقضية." },
+    };
   }
 
   const operationKey = `safety-case:${payload.id || "new"}`;
   if (safetyCaseMutationInFlight.has(operationKey)) {
-    return operationInProgressResult("حفظ القضية قيد التنفيذ بالفعل.", "admin_safety_case_save_in_progress");
+    return operationInProgressResult(
+      "حفظ القضية قيد التنفيذ بالفعل.",
+      "admin_safety_case_save_in_progress",
+    );
   }
   safetyCaseMutationInFlight.add(operationKey);
 
@@ -152,7 +173,13 @@ export async function safetySaveCase(
 
     if (error) {
       if (error.message?.includes("stale_safety_case")) {
-        return { ok: false, error: { code: "unknown", message: "تغيّرت القضية منذ تحميلها. أعد التحميل قبل الحفظ." } };
+        return {
+          ok: false,
+          error: {
+            code: "unknown",
+            message: "تغيّرت القضية منذ تحميلها. أعد التحميل قبل الحفظ.",
+          },
+        };
       }
       return { ok: false, error: mapError(error) };
     }
@@ -174,20 +201,32 @@ export async function safetySetCaseStatus(
   },
 ): Promise<ClassifiedsResult<{ id: string; version: number; updatedAt: string }>> {
   if (!canManageReports) {
-    return { ok: false, error: { code: "permission_denied", message: "ليست لديك صلاحية لإدارة قضايا السلامة." } };
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "ليست لديك صلاحية لإدارة قضايا السلامة." },
+    };
   }
 
   const reason = payload.reason.trim();
   if (reason.length < 3) {
-    return { ok: false, error: { code: "validation_error", message: "أدخل سبباً واضحاً لتغيير الحالة." } };
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "أدخل سبباً واضحاً لتغيير الحالة." },
+    };
   }
   if (payload.status === "closed" && (payload.resolutionNote?.trim().length ?? 0) < 3) {
-    return { ok: false, error: { code: "validation_error", message: "أدخل ملاحظة إغلاق واضحة قبل إغلاق القضية." } };
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "أدخل ملاحظة إغلاق واضحة قبل إغلاق القضية." },
+    };
   }
 
   const operationKey = `safety-case:${payload.id}`;
   if (safetyCaseMutationInFlight.has(operationKey)) {
-    return operationInProgressResult("هناك عملية أخرى قيد التنفيذ على هذه القضية.", "admin_safety_case_status_in_progress");
+    return operationInProgressResult(
+      "هناك عملية أخرى قيد التنفيذ على هذه القضية.",
+      "admin_safety_case_status_in_progress",
+    );
   }
   safetyCaseMutationInFlight.add(operationKey);
 
@@ -204,7 +243,13 @@ export async function safetySetCaseStatus(
     });
     if (error) {
       if (error.message?.includes("stale_safety_case")) {
-        return { ok: false, error: { code: "unknown", message: "تغيّرت القضية منذ تحميلها. أعد التحميل قبل تغيير الحالة." } };
+        return {
+          ok: false,
+          error: {
+            code: "unknown",
+            message: "تغيّرت القضية منذ تحميلها. أعد التحميل قبل تغيير الحالة.",
+          },
+        };
       }
       return { ok: false, error: mapError(error) };
     }
@@ -220,17 +265,26 @@ export async function safetyEscalateCase(
   payload: { id: string; expectedVersion: number; reason: string },
 ): Promise<ClassifiedsResult<{ id: string; version: number; updatedAt: string }>> {
   if (!canManageReports) {
-    return { ok: false, error: { code: "permission_denied", message: "ليست لديك صلاحية لتصعيد القضية." } };
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "ليست لديك صلاحية لتصعيد القضية." },
+    };
   }
 
   const reason = payload.reason.trim();
   if (reason.length < 3) {
-    return { ok: false, error: { code: "validation_error", message: "أدخل سبباً واضحاً للتصعيد." } };
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "أدخل سبباً واضحاً للتصعيد." },
+    };
   }
 
   const operationKey = `safety-case:${payload.id}`;
   if (safetyCaseMutationInFlight.has(operationKey)) {
-    return operationInProgressResult("هناك عملية أخرى قيد التنفيذ على هذه القضية.", "admin_safety_case_escalation_in_progress");
+    return operationInProgressResult(
+      "هناك عملية أخرى قيد التنفيذ على هذه القضية.",
+      "admin_safety_case_escalation_in_progress",
+    );
   }
   safetyCaseMutationInFlight.add(operationKey);
 
@@ -245,7 +299,13 @@ export async function safetyEscalateCase(
     });
     if (error) {
       if (error.message?.includes("stale_safety_case")) {
-        return { ok: false, error: { code: "unknown", message: "تغيّرت القضية منذ تحميلها. أعد التحميل قبل التصعيد." } };
+        return {
+          ok: false,
+          error: {
+            code: "unknown",
+            message: "تغيّرت القضية منذ تحميلها. أعد التحميل قبل التصعيد.",
+          },
+        };
       }
       return { ok: false, error: mapError(error) };
     }
@@ -284,7 +344,10 @@ function mapMutation(
 ): ClassifiedsResult<{ id: string; version: number; updatedAt: string }> {
   const row = ((data ?? []) as Record<string, unknown>[])[0];
   if (!row) {
-    return { ok: false, error: { code: "unknown", message: "تم تنفيذ العملية دون نتيجة قابلة للتحقق." } };
+    return {
+      ok: false,
+      error: { code: "unknown", message: "تم تنفيذ العملية دون نتيجة قابلة للتحقق." },
+    };
   }
   return {
     ok: true,
