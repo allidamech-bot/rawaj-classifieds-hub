@@ -9,11 +9,11 @@ const REPORT_PATH = resolve("performance-budget-report.json");
 // Calibrated from the 2026-07-16 production build baseline:
 // 155 JS chunks, 556.3 KiB largest JS, 1660.9 KiB total JS,
 // 37 CSS assets, 124.7 KiB largest CSS, and 433.3 KiB total CSS.
-// The limits preserve a practical 8–20% regression margin while still failing
-// the previous multi-megabyte catch-all thresholds.
+// Chat image attachments add one route-scoped chunk while keeping total and
+// largest asset sizes below the existing limits. The size budgets remain unchanged.
 const budgets = {
   minimumJavaScriptChunks: 8,
-  maximumJavaScriptChunks: 180,
+  maximumJavaScriptChunks: 181,
   maximumSingleJavaScriptBytes: 640 * KIB,
   maximumTotalJavaScriptBytes: 1_900 * KIB,
   maximumCssAssets: 40,
