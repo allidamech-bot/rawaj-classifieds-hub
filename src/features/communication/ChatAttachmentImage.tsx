@@ -57,9 +57,22 @@ export function ChatAttachmentImage({
   }
 
   async function handleOpen() {
+    const popup = window.open("about:blank", "_blank");
+    if (popup) popup.opener = null;
+
     const freshUrl = await refreshUrl();
     const target = freshUrl ?? url;
-    if (target) window.open(target, "_blank", "noopener,noreferrer");
+    if (!target) {
+      popup?.close();
+      return;
+    }
+
+    if (popup) {
+      popup.location.replace(target);
+      return;
+    }
+
+    window.location.assign(target);
   }
 
   if (failed || !url) {
