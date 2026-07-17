@@ -246,6 +246,9 @@ jobs:
       - name: Communication Center V2 contract
         run: node --test scripts/communication-center-v2.test.mjs
 
+      - name: Conversations, Messaging & Realtime Integrity contract
+        run: npm run test:conversations-messaging-realtime
+
       - name: Launch readiness Batch 2 contract
         run: npm run test:launch-readiness-batch-2
 

@@ -2,7 +2,6 @@ import { fetchMyConversations } from "@/lib/api/messaging";
 import type { ClassifiedsResult, Conversation } from "@/lib/classifieds-types";
 
 export async function fetchListingConversationContext(
-  userId: string | null,
   listingId: string,
 ): Promise<ClassifiedsResult<Conversation | null>> {
   const cleanListingId = listingId.trim();
@@ -16,7 +15,7 @@ export async function fetchListingConversationContext(
     };
   }
 
-  const result = await fetchMyConversations(userId);
+  const result = await fetchMyConversations();
   if (!result.ok) return result;
 
   return {

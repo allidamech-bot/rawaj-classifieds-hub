@@ -321,7 +321,7 @@ function NotificationsPage() {
     setOpeningTargetIds((current) => new Set(current).add(notification.id));
     setActionMessage(null);
     try {
-      const result = await resolveNotificationTarget(currentProfileId, notification);
+      const result = await resolveNotificationTarget(notification);
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setActionMessage(result.error.message);

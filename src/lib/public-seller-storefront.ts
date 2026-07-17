@@ -73,7 +73,13 @@ export function buildPublicSellerRatingSummary(reviews: PublicSellerReview[]): S
 }
 
 export function cleanPublicSellerText(value: string | null | undefined, maxLength: number) {
-  const clean = (value ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim();
+  const clean = [...(value ?? "")]
+    .filter((character) => {
+      const code = character.charCodeAt(0);
+      return code === 9 || code === 10 || code === 13 || (code >= 32 && code !== 127);
+    })
+    .join("")
+    .trim();
   if (!clean) return null;
   return clean.length <= maxLength ? clean : clean.slice(0, maxLength).trim();
 }

@@ -4,7 +4,7 @@ import test from "node:test";
 
 const [
   messagingSource,
-  messagingGuardedSource,
+  chatIntegritySource,
   requestSource,
   routeSource,
   migrationSource,
@@ -12,7 +12,7 @@ const [
   packageSource,
 ] = await Promise.all([
   readFile(new URL("../src/lib/api/messaging.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/api/messaging-guarded.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/chat-integrity.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/message-send-request.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
   readFile(
@@ -39,14 +39,18 @@ test("the database makes one client message request idempotent", () => {
   assert.match(migrationSource, /notify pgrst, 'reload schema'/);
 });
 
-test("the client sends through the idempotent RPC with a legacy compatibility fallback", () => {
-  assert.match(messagingSource, /clientRequestId: string/);
+test("the client sends only through the server-idempotent RPC", () => {
+  assert.match(messagingSource, /requestId: string/);
   assert.match(messagingSource, /MESSAGE_REQUEST_UUID_PATTERN/);
   assert.match(messagingSource, /rawaj_send_conversation_message_v2/);
   assert.match(messagingSource, /p_client_request_id: clientRequestId/);
   assert.match(messagingSource, /isMissingMessageSendV2/);
-  assert.match(messagingSource, /performLegacyConversationMessageSend/);
-  assert.match(messagingSource, /JSON\.stringify\(\[userId, cleanRequestId\]\)/);
+  assert.match(messagingSource, /code: "setup_required"/);
+  assert.doesNotMatch(messagingSource, /\.from\("conversation_messages"\)[\s\S]{0,160}\.insert/);
+  assert.match(
+    messagingSource,
+    /JSON\.stringify\(\[actorResult\.data, cleanConversationId, cleanRequestId\]\)/,
+  );
 });
 
 test("a failed or ambiguous browser attempt reuses its request UUID after reload", () => {
@@ -58,23 +62,20 @@ test("a failed or ambiguous browser attempt reuses its request UUID after reload
   assert.match(requestSource, /completeMessageSendRequest/);
 });
 
-test("successful sends clear retry state before route scope can become stale", () => {
-  assert.match(messagingGuardedSource, /sendConversationMessage as baseSendConversationMessage/);
-  assert.match(
-    messagingGuardedSource,
-    /const result = await baseSendConversationMessage\(\.\.\.args\)/,
-  );
-  assert.match(messagingGuardedSource, /if \(result\.ok && userId\)/);
-  assert.match(
-    messagingGuardedSource,
-    /completeMessageSendRequest\(userId, conversationId, requestId\)/,
-  );
+test("canonical messages merge by id with deterministic ordering", () => {
+  assert.match(chatIntegritySource, /function mergeConversationMessages/);
+  assert.match(chatIntegritySource, /new Map<string, ConversationMessage>/);
+  assert.match(chatIntegritySource, /left\.createdAt\.localeCompare\(right\.createdAt\)/);
+  assert.match(chatIntegritySource, /left\.id\.localeCompare\(right\.id\)/);
 });
 
 test("the chat route reuses one attempt and deduplicates rendered rows", () => {
   assert.match(routeSource, /readOrCreateMessageSendRequestId/);
-  assert.match(routeSource, /sendConversationMessage\([\s\S]*cleanBody,[\s\S]*requestId/);
-  assert.match(routeSource, /current\.some\(\(message\) => message\.id === result\.data\.id\)/);
+  assert.match(routeSource, /sendConversationMessage\(\{[\s\S]*body: cleanBody,[\s\S]*requestId/);
+  assert.match(
+    routeSource,
+    /mergeConversationMessages\(current, \[result\.data\], conversationId\)/,
+  );
 });
 
 test("the migration and contract are permanently registered", () => {

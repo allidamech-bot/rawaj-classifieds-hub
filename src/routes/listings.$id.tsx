@@ -88,7 +88,14 @@ function ListingDetailsPage() {
   const favoriteInFlightRef = useRef(false);
   const favoriteRequestIdRef = useRef(0);
   const reportInFlightRef = useRef(false);
-  const messageInFlightRef = useRef(false);
+  const messageInFlightRef = useRef<string | null>(null);
+  const profileIdRef = useRef<string | null>(auth.profile?.id ?? null);
+  const profileGenerationRef = useRef(0);
+  const liveProfileId = auth.profile?.id ?? null;
+  if (profileIdRef.current !== liveProfileId) {
+    profileIdRef.current = liveProfileId;
+    profileGenerationRef.current += 1;
+  }
   const alertInFlightRef = useRef(false);
 
   useEffect(() => {
@@ -211,7 +218,9 @@ function ListingDetailsPage() {
       void navigate({ to: "/login", search: { returnTo: `/listings/${id}` } });
       return;
     }
-    if (messageInFlightRef.current) return;
+    const startProfileId = auth.profile?.id ?? null;
+    const startProfileGeneration = profileGenerationRef.current;
+    if (!startProfileId || messageInFlightRef.current === startProfileId) return;
     if (listing?.ownerId === auth.profile?.id) {
       setActionMessage(text("لا يمكنك بدء محادثة مع نفسك.", "You cannot message yourself."));
       return;
@@ -225,16 +234,25 @@ function ListingDetailsPage() {
       );
       return;
     }
-    messageInFlightRef.current = true;
+    messageInFlightRef.current = startProfileId;
     try {
-      const result = await startListingConversation(auth.profile?.id ?? null, listing.id);
+      const result = await startListingConversation(listing.id);
+      if (
+        profileIdRef.current !== startProfileId ||
+        profileGenerationRef.current !== startProfileGeneration
+      )
+        return;
       if (!result.ok) {
         setActionMessage(text("تعذر بدء المحادثة الآن.", "Could not start the conversation now."));
         return;
       }
       void navigate({ to: "/chats", search: { conversation: result.data } });
     } finally {
-      messageInFlightRef.current = false;
+      if (
+        profileGenerationRef.current === startProfileGeneration &&
+        messageInFlightRef.current === startProfileId
+      )
+        messageInFlightRef.current = null;
     }
   }
 

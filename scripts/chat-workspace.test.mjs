@@ -10,7 +10,7 @@ const [chatRoute, communicationComponents, communicationCss, guardedMessaging, a
       "utf8",
     ),
     readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/api/messaging-guarded.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/api/messaging.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
   ]);
 
@@ -53,14 +53,15 @@ test("existing message safety controls remain present", () => {
   assert.match(chatRoute, /selectedConversation\.status !== "active"/);
 });
 
-test("conversation starts, reports and blocks deduplicate identical concurrent writes", () => {
+test("conversation starts, reports and blocks use server-authoritative identity", () => {
+  const participantApi = guardedMessaging.slice(
+    0,
+    guardedMessaging.indexOf("export function fromDbMessageReportStatus"),
+  );
   assert.match(api, /messaging-guarded/);
-  assert.match(guardedMessaging, /pendingConversationStarts/);
-  assert.match(guardedMessaging, /pendingMessageReports/);
-  assert.match(guardedMessaging, /pendingParticipantBlocks/);
-  assert.match(guardedMessaging, /function runOnce/);
-  assert.match(guardedMessaging, /if \(pending\) return pending/);
-  assert.match(guardedMessaging, /baseStartListingConversation/);
-  assert.match(guardedMessaging, /baseCreateMessageReport/);
-  assert.match(guardedMessaging, /baseBlockConversationParticipant/);
+  assert.match(guardedMessaging, /rawaj_start_listing_conversation/);
+  assert.match(guardedMessaging, /rawaj_create_message_report/);
+  assert.match(guardedMessaging, /client\.auth\.getUser\(\)/);
+  assert.match(guardedMessaging, /rawaj_fetch_my_conversations/);
+  assert.doesNotMatch(participantApi, /reporterUserId|blockerUserId|payload\.blockedUserId/);
 });

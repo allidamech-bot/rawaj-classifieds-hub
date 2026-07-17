@@ -13,7 +13,6 @@ export type ResolvedNotificationTarget =
   | { kind: "browse_listings" };
 
 export async function resolveNotificationTarget(
-  userId: string | null,
   notification: NotificationItem,
 ): Promise<ClassifiedsResult<ResolvedNotificationTarget | null>> {
   const reference = parseNotificationTargetReference(
@@ -34,7 +33,7 @@ export async function resolveNotificationTarget(
   }
 
   if (reference.kind === "conversation") {
-    const result = await fetchMyConversations(userId);
+    const result = await fetchMyConversations();
     if (!result.ok) return result;
     const exists = result.data.some((conversation) => conversation.id === reference.id);
     return {

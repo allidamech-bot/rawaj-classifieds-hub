@@ -50,7 +50,7 @@ test("notification action results and finalizers cannot mutate a replacement acc
 });
 
 test("notification targets are rechecked before messages or navigation", () => {
-  const resolveIndex = notificationsRoute.indexOf("resolveNotificationTarget(currentProfileId");
+  const resolveIndex = notificationsRoute.indexOf("resolveNotificationTarget(notification");
   const guardIndex = notificationsRoute.indexOf(
     "if (currentProfileId !== profileIdRef.current) return;",
     resolveIndex,

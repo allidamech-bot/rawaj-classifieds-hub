@@ -36,8 +36,8 @@ export function ListingSellerProfileCard({
 }: ListingSellerProfileCardProps) {
   const displayName = seller?.businessName?.trim() || seller?.displayName?.trim() || fallbackName;
   const joinedLabel = seller?.joinedAt ? formatJoinedDate(seller.joinedAt, language) : null;
-  const rating = seller?.ratingSummary.average;
-  const ratingCount = seller?.ratingSummary.count ?? 0;
+  const rating = seller?.ratingSummary?.average;
+  const ratingCount = seller?.ratingSummary?.count ?? 0;
 
   return (
     <section
