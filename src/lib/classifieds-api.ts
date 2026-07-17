@@ -1,3 +1,6 @@
+import { ownerSaveAdPlacement as ownerSaveAdPlacementBase } from "@/lib/api/ad-placements";
+import { invalidateActiveAdPlacementCache } from "@/lib/api/public-ad-placements";
+
 export * from "@/lib/api/shared";
 export * from "@/lib/api/references";
 export * from "@/lib/api/locations";
@@ -49,3 +52,11 @@ export * from "@/lib/api/safety-case-details";
 export * from "@/lib/api/owner-system-controls";
 export * from "@/lib/api/profile";
 export * from "@/lib/api/account-security";
+
+export async function ownerSaveAdPlacement(
+  ...args: Parameters<typeof ownerSaveAdPlacementBase>
+): ReturnType<typeof ownerSaveAdPlacementBase> {
+  const result = await ownerSaveAdPlacementBase(...args);
+  if (result.ok) invalidateActiveAdPlacementCache();
+  return result;
+}
