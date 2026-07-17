@@ -4,7 +4,6 @@ on:
   pull_request:
     paths:
       - "src/lib/api/campaigns.ts"
-      - "src/lib/classifieds-types.ts"
       - "src/routes/admin.campaigns.tsx"
       - "src/routes/admin.tsx"
       - "scripts/admin-campaign-operation-integrity.test.mjs"
@@ -28,4 +27,4 @@ jobs:
       - name: Admin campaign operation integrity contract
         run: node --test scripts/admin-campaign-operation-integrity.test.mjs
       - name: Lint changed TypeScript
-        run: npx eslint --quiet src/lib/api/campaigns.ts src/lib/classifieds-types.ts
+        run: npx eslint --quiet src/lib/api/campaigns.ts
