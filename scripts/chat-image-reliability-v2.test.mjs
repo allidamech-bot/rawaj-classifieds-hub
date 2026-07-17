@@ -21,7 +21,9 @@ test("attachment viewer refreshes expired signed URLs and exposes retry state", 
   assert.match(viewer, /createChatImageSignedUrl\(attachmentPath\)/);
   assert.match(viewer, /handleImageError/);
   assert.match(viewer, /refreshAttemptRef\.current >= 1/);
-  assert.match(viewer, /window\.open\(target, "_blank", "noopener,noreferrer"\)/);
+  assert.match(viewer, /window\.open\("about:blank", "_blank"\)/);
+  assert.match(viewer, /popup\.opener = null/);
+  assert.match(viewer, /popup\.location\.replace\(target\)/);
   assert.match(viewer, /unavailableLabel/);
   assert.match(viewer, /retryLabel/);
 });
