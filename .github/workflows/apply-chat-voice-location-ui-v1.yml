@@ -41,7 +41,19 @@ jobs:
       - name: Stop on applicator failure
         if: steps.apply.outcome == 'failure'
         run: cat applicator.log && exit 1
-      - run: npx prettier --write src/lib/classifieds-types.ts src/lib/api/messaging.ts src/routes/chats.tsx src/features/communication/ChatVoiceRecorder.tsx src/features/communication/ChatVoiceAttachment.tsx
+      - name: Format generated sources
+        id: format
+        continue-on-error: true
+        run: npx prettier --write src/lib/classifieds-types.ts src/lib/api/messaging.ts src/routes/chats.tsx src/features/communication/ChatVoiceRecorder.tsx src/features/communication/ChatVoiceAttachment.tsx > prettier.log 2>&1
+      - name: Upload formatting diagnostics
+        if: steps.format.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-voice-location-prettier-log
+          path: prettier.log
+      - name: Stop on formatting failure
+        if: steps.format.outcome == 'failure'
+        run: cat prettier.log && exit 1
       - run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
