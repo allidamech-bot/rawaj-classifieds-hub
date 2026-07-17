@@ -57,11 +57,13 @@ export async function uploadChatImage(payload: {
 
   const extension = extensionForMime(payload.file.type);
   const path = `${conversationId}/${userId}/${requestId}.${extension}`;
-  const { error } = await clientResult.data.storage.from("conversation-images").upload(path, payload.file, {
-    upsert: false,
-    contentType: payload.file.type,
-    cacheControl: "3600",
-  });
+  const { error } = await clientResult.data.storage
+    .from("conversation-images")
+    .upload(path, payload.file, {
+      upsert: false,
+      contentType: payload.file.type,
+      cacheControl: "3600",
+    });
   if (error) return { ok: false, error: mapError(error, "chat_image_upload") };
 
   return {
