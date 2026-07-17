@@ -8,6 +8,7 @@ const [
   requestSource,
   routeSource,
   migrationSource,
+  attachmentMigrationSource,
   ledgerSource,
   packageSource,
 ] = await Promise.all([
@@ -17,6 +18,10 @@ const [
   readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
   readFile(
     new URL("../supabase/migrations/202607140003_idempotent_message_send.sql", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../supabase/migrations/202607170007_chat_image_attachments_v1.sql", import.meta.url),
     "utf8",
   ),
   readFile(new URL("../docs/production-schema/migration-ledger.json", import.meta.url), "utf8"),
@@ -30,21 +35,22 @@ test("the database makes one client message request idempotent", () => {
     /on public\.conversation_messages \(sender_user_id, client_request_id\)/,
   );
   assert.match(migrationSource, /rawaj_send_conversation_message_v2/);
-  assert.match(migrationSource, /message_request_payload_mismatch/);
-  assert.match(migrationSource, /when unique_violation/);
+  assert.match(attachmentMigrationSource, /rawaj_send_conversation_message_v3/);
+  assert.match(attachmentMigrationSource, /message_request_payload_mismatch/);
+  assert.match(attachmentMigrationSource, /when unique_violation/);
   assert.match(
-    migrationSource,
-    /grant execute on function public\.rawaj_send_conversation_message_v2\(uuid, uuid, text\) to authenticated/,
+    attachmentMigrationSource,
+    /grant execute on function public\.rawaj_send_conversation_message_v3\(uuid, uuid, text, text, text, integer\) to authenticated/,
   );
-  assert.match(migrationSource, /notify pgrst, 'reload schema'/);
+  assert.match(attachmentMigrationSource, /notify pgrst, 'reload schema'/);
 });
 
-test("the client sends only through the server-idempotent RPC", () => {
+test("the client sends only through the server-idempotent attachment-aware RPC", () => {
   assert.match(messagingSource, /requestId: string/);
   assert.match(messagingSource, /MESSAGE_REQUEST_UUID_PATTERN/);
-  assert.match(messagingSource, /rawaj_send_conversation_message_v2/);
+  assert.match(messagingSource, /rawaj_send_conversation_message_v3/);
   assert.match(messagingSource, /p_client_request_id: clientRequestId/);
-  assert.match(messagingSource, /isMissingMessageSendV2/);
+  assert.match(messagingSource, /isMissingMessageSendV3/);
   assert.match(messagingSource, /code: "setup_required"/);
   assert.doesNotMatch(messagingSource, /\.from\("conversation_messages"\)[\s\S]{0,160}\.insert/);
   assert.match(
@@ -72,15 +78,17 @@ test("canonical messages merge by id with deterministic ordering", () => {
 test("the chat route reuses one attempt and deduplicates rendered rows", () => {
   assert.match(routeSource, /readOrCreateMessageSendRequestId/);
   assert.match(routeSource, /sendConversationMessage\(\{[\s\S]*body: cleanBody,[\s\S]*requestId/);
+  assert.match(routeSource, /requestSignature/);
   assert.match(
     routeSource,
     /mergeConversationMessages\(current, \[result\.data\], conversationId\)/,
   );
 });
 
-test("the migration and contract are permanently registered", () => {
+test("the migrations and contract are permanently registered", () => {
   const ledger = JSON.parse(ledgerSource);
   assert.ok(ledger.classifications.canonical.includes("202607140003_idempotent_message_send.sql"));
+  assert.ok(ledger.classifications.canonical.includes("202607170007_chat_image_attachments_v1.sql"));
   const packageJson = JSON.parse(packageSource);
   assert.match(packageJson.scripts["test:chat-workspace"], /message-send-idempotency\.test\.mjs/);
 });
