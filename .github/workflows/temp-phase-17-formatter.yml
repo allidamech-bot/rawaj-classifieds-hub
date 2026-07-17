@@ -1,0 +1,46 @@
+name: Temporary Phase 17 Formatter
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-phase-17-formatter.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format Phase 17 files
+        run: >-
+          npx prettier --write
+          src/lib/nearby-location.ts
+          src/lib/nearby-geolocation.ts
+          src/lib/api/nearby-listings.ts
+          scripts/nearby-location-radius-integrity.test.mjs
+          .github/workflows/nearby-location-radius-integrity.yml
+          docs/production-schema/migration-ledger.json
+
+      - name: Commit formatting
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/lib/nearby-location.ts src/lib/nearby-geolocation.ts src/lib/api/nearby-listings.ts scripts/nearby-location-radius-integrity.test.mjs .github/workflows/nearby-location-radius-integrity.yml docs/production-schema/migration-ledger.json
+          git diff --cached --quiet || git commit -m "style: format phase 17 files"
+          git push origin HEAD:${{ github.head_ref }}
