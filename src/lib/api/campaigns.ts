@@ -45,6 +45,25 @@ export interface CampaignCreativeSummary {
   ctr: number;
 }
 
+let campaignReadGeneration = 0;
+let creativeReadGeneration = 0;
+const campaignMutationInFlight = new Set<string>();
+const creativeMutationInFlight = new Set<string>();
+
+function staleReadResult<T>(): ClassifiedsResult<T> {
+  return {
+    ok: false,
+    error: { code: "stale_request", message: "" },
+  };
+}
+
+function operationInProgressResult<T>(message: string): ClassifiedsResult<T> {
+  return {
+    ok: false,
+    error: { code: "operation_in_progress", message },
+  };
+}
+
 export async function ownerFetchCampaigns(
   canManageCampaigns: boolean,
 ): Promise<ClassifiedsResult<CampaignSummary[]>> {
@@ -55,9 +74,11 @@ export async function ownerFetchCampaigns(
     };
   }
 
+  const requestGeneration = ++campaignReadGeneration;
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   const { data, error } = await clientResult.data.rpc("rawaj_owner_list_campaigns");
+  if (requestGeneration !== campaignReadGeneration) return staleReadResult();
   if (error) return { ok: false, error: mapError(error) };
   return {
     ok: true,
@@ -76,11 +97,13 @@ export async function ownerFetchCampaignCreatives(
     };
   }
 
+  const requestGeneration = ++creativeReadGeneration;
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   const { data, error } = await clientResult.data.rpc("rawaj_owner_list_campaign_creatives", {
     p_campaign_id: campaignId,
   });
+  if (requestGeneration !== creativeReadGeneration) return staleReadResult();
   if (error) return { ok: false, error: mapError(error) };
   return {
     ok: true,
@@ -116,29 +139,39 @@ export async function ownerSaveCampaign(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const { data, error } = await clientResult.data.rpc("rawaj_owner_upsert_campaign", {
-    p_id: payload.id || null,
-    p_name: name,
-    p_status: payload.status,
-    p_starts_at: payload.startsAt || null,
-    p_ends_at: payload.endsAt || null,
-    p_target_pages: payload.targetPages,
-    p_target_category_ids: payload.targetCategoryIds.map((value) => value.trim()).filter(Boolean),
-    p_expected_version: payload.id ? (payload.expectedVersion ?? null) : null,
-  });
-
-  if (error) {
-    if (error.message?.includes("stale_campaign")) {
-      return {
-        ok: false,
-        error: { code: "unknown", message: "تغيّرت الحملة منذ تحميلها. أعد التحميل قبل الحفظ." },
-      };
-    }
-    return { ok: false, error: mapError(error) };
+  const operationKey = `campaign:${payload.id || "new"}`;
+  if (campaignMutationInFlight.has(operationKey)) {
+    return operationInProgressResult("حفظ الحملة قيد التنفيذ بالفعل.");
   }
-  return mapMutationResult(data);
+  campaignMutationInFlight.add(operationKey);
+
+  try {
+    const clientResult = getClient();
+    if (!clientResult.ok) return clientResult;
+    const { data, error } = await clientResult.data.rpc("rawaj_owner_upsert_campaign", {
+      p_id: payload.id || null,
+      p_name: name,
+      p_status: payload.status,
+      p_starts_at: payload.startsAt || null,
+      p_ends_at: payload.endsAt || null,
+      p_target_pages: payload.targetPages,
+      p_target_category_ids: payload.targetCategoryIds.map((value) => value.trim()).filter(Boolean),
+      p_expected_version: payload.id ? (payload.expectedVersion ?? null) : null,
+    });
+
+    if (error) {
+      if (error.message?.includes("stale_campaign")) {
+        return {
+          ok: false,
+          error: { code: "unknown", message: "تغيّرت الحملة منذ تحميلها. أعد التحميل قبل الحفظ." },
+        };
+      }
+      return { ok: false, error: mapError(error) };
+    }
+    return mapMutationResult(data);
+  } finally {
+    campaignMutationInFlight.delete(operationKey);
+  }
 }
 
 export async function ownerSetCampaignStatus(
@@ -159,27 +192,37 @@ export async function ownerSetCampaignStatus(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const { data, error } = await clientResult.data.rpc("rawaj_owner_set_campaign_status", {
-    p_id: payload.id,
-    p_status: payload.status,
-    p_expected_version: payload.expectedVersion,
-    p_reason: reason,
-  });
-  if (error) {
-    if (error.message?.includes("stale_campaign")) {
-      return {
-        ok: false,
-        error: {
-          code: "unknown",
-          message: "تغيّرت الحملة منذ تحميلها. أعد التحميل قبل تغيير الحالة.",
-        },
-      };
-    }
-    return { ok: false, error: mapError(error) };
+  const operationKey = `campaign:${payload.id}`;
+  if (campaignMutationInFlight.has(operationKey)) {
+    return operationInProgressResult("هناك عملية أخرى قيد التنفيذ على هذه الحملة.");
   }
-  return mapMutationResult(data);
+  campaignMutationInFlight.add(operationKey);
+
+  try {
+    const clientResult = getClient();
+    if (!clientResult.ok) return clientResult;
+    const { data, error } = await clientResult.data.rpc("rawaj_owner_set_campaign_status", {
+      p_id: payload.id,
+      p_status: payload.status,
+      p_expected_version: payload.expectedVersion,
+      p_reason: reason,
+    });
+    if (error) {
+      if (error.message?.includes("stale_campaign")) {
+        return {
+          ok: false,
+          error: {
+            code: "unknown",
+            message: "تغيّرت الحملة منذ تحميلها. أعد التحميل قبل تغيير الحالة.",
+          },
+        };
+      }
+      return { ok: false, error: mapError(error) };
+    }
+    return mapMutationResult(data);
+  } finally {
+    campaignMutationInFlight.delete(operationKey);
+  }
 }
 
 export async function ownerSaveCampaignCreative(
@@ -217,28 +260,38 @@ export async function ownerSaveCampaignCreative(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const { data, error } = await clientResult.data.rpc("rawaj_owner_upsert_campaign_creative", {
-    p_id: payload.id || null,
-    p_campaign_id: payload.campaignId,
-    p_name: payload.name.trim(),
-    p_image_url: payload.imageUrl.trim(),
-    p_destination_url: payload.destinationUrl.trim(),
-    p_weight: payload.weight,
-    p_is_active: payload.isActive,
-    p_expected_version: payload.id ? (payload.expectedVersion ?? null) : null,
-  });
-  if (error) {
-    if (error.message?.includes("stale_campaign_creative")) {
-      return {
-        ok: false,
-        error: { code: "unknown", message: "تغيّر التصميم منذ تحميله. أعد التحميل قبل الحفظ." },
-      };
-    }
-    return { ok: false, error: mapError(error) };
+  const operationKey = `creative:${payload.id || `${payload.campaignId}:new`}`;
+  if (creativeMutationInFlight.has(operationKey)) {
+    return operationInProgressResult("حفظ التصميم الإعلاني قيد التنفيذ بالفعل.");
   }
-  return mapMutationResult(data);
+  creativeMutationInFlight.add(operationKey);
+
+  try {
+    const clientResult = getClient();
+    if (!clientResult.ok) return clientResult;
+    const { data, error } = await clientResult.data.rpc("rawaj_owner_upsert_campaign_creative", {
+      p_id: payload.id || null,
+      p_campaign_id: payload.campaignId,
+      p_name: payload.name.trim(),
+      p_image_url: payload.imageUrl.trim(),
+      p_destination_url: payload.destinationUrl.trim(),
+      p_weight: payload.weight,
+      p_is_active: payload.isActive,
+      p_expected_version: payload.id ? (payload.expectedVersion ?? null) : null,
+    });
+    if (error) {
+      if (error.message?.includes("stale_campaign_creative")) {
+        return {
+          ok: false,
+          error: { code: "unknown", message: "تغيّر التصميم منذ تحميله. أعد التحميل قبل الحفظ." },
+        };
+      }
+      return { ok: false, error: mapError(error) };
+    }
+    return mapMutationResult(data);
+  } finally {
+    creativeMutationInFlight.delete(operationKey);
+  }
 }
 
 function mapMutationResult(
