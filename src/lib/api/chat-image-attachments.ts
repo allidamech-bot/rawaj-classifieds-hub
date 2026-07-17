@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import { normalizeChatResourceId } from "@/lib/chat-integrity";
 import { getClient, mapError } from "@/lib/api/shared";
@@ -37,7 +38,10 @@ export async function uploadChatImage(payload: {
   const validation = validateChatImage(payload.file);
   if (!conversationId || !requestId || !validation.ok) {
     return validation.ok
-      ? { ok: false, error: { code: "validation_error", message: "تعذر تحديد مرفق المحادثة." } }
+      ? {
+          ok: false,
+          error: { code: "validation_error", message: "تعذر تحديد مرفق المحادثة." },
+        }
       : validation;
   }
 
@@ -46,14 +50,19 @@ export async function uploadChatImage(payload: {
   const userResult = await clientResult.data.auth.getUser();
   const userId = userResult.data.user?.id;
   if (userResult.error || !userId) {
-    return { ok: false, error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال صورة." } };
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال صورة." },
+    };
   }
 
   const extension = extensionForMime(payload.file.type);
   const path = `${conversationId}/${userId}/${requestId}.${extension}`;
-  const { error } = await clientResult.data.storage
-    .from("conversation-images")
-    .upload(path, payload.file, { upsert: false, contentType: payload.file.type, cacheControl: "3600" });
+  const { error } = await clientResult.data.storage.from("conversation-images").upload(path, payload.file, {
+    upsert: false,
+    contentType: payload.file.type,
+    cacheControl: "3600",
+  });
   if (error) return { ok: false, error: mapError(error, "chat_image_upload") };
 
   return {
