@@ -1,0 +1,110 @@
+name: Pre-release Customer Acceptance
+
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: pre-release-acceptance-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  local-main-browser-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      VITE_SITE_URL: http://127.0.0.1:4173
+
+    steps:
+      - name: Checkout audited branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          show-progress: false
+
+      - name: Verify baseline ancestry
+        shell: bash
+        run: |
+          git merge-base --is-ancestor 4444114fc0429175fff7cdbd9af0006c6ce7a143 HEAD
+          git status --short
+          git rev-parse HEAD
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck -- --pretty false
+
+      - name: Production build
+        run: npm run build
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run local-main customer acceptance audit
+        run: npx playwright test e2e/pre-release-customer-acceptance.spec.ts --project=desktop-chromium --workers=1
+
+      - name: Upload local acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-main-pre-release-acceptance
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: warn
+          retention-days: 30
+
+  live-public-browser-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      E2E_BASE_URL: https://rawa-j.com
+
+    steps:
+      - name: Checkout audited branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          show-progress: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run non-destructive live public acceptance audit
+        run: npx playwright test e2e/pre-release-customer-acceptance.spec.ts --project=desktop-chromium --workers=1
+
+      - name: Run cross-browser public release smoke
+        run: npm run test:release:browsers
+
+      - name: Upload live acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-public-pre-release-acceptance
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: warn
+          retention-days: 30
