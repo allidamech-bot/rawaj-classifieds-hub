@@ -1,8 +1,4 @@
-import type {
-  ClassifiedListing,
-  ClassifiedsResult,
-  ListingFilters,
-} from "@/lib/classifieds-types";
+import type { ClassifiedListing, ClassifiedsResult, ListingFilters } from "@/lib/classifieds-types";
 import { getClient, mapError, rowNumber, rowString } from "@/lib/api/shared";
 import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
 import { publicListingSelect } from "@/lib/api/public-fields";

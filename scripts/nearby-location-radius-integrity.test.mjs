@@ -7,7 +7,10 @@ const [helper, geolocation, api, migration, ledger] = await Promise.all([
   readFile(new URL("../src/lib/nearby-geolocation.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/nearby-listings.ts", import.meta.url), "utf8"),
   readFile(
-    new URL("../supabase/migrations/202607170005_nearby_location_radius_integrity.sql", import.meta.url),
+    new URL(
+      "../supabase/migrations/202607170005_nearby_location_radius_integrity.sql",
+      import.meta.url,
+    ),
     "utf8",
   ),
   readFile(new URL("../docs/production-schema/migration-ledger.json", import.meta.url), "utf8"),

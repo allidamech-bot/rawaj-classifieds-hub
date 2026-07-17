@@ -1,11 +1,7 @@
 import { roundNearbyPoint, type NearbyPoint } from "@/lib/nearby-location";
 
 export type NearbyGeolocationStatus =
-  | "ready"
-  | "unsupported"
-  | "permission_denied"
-  | "unavailable"
-  | "timeout";
+  "ready" | "unsupported" | "permission_denied" | "unavailable" | "timeout";
 
 export type NearbyGeolocationResult =
   | { ok: true; point: NearbyPoint }
