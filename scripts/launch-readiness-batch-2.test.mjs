@@ -8,6 +8,7 @@ const [
   accountSecurity,
   accountIdentity,
   support,
+  accountMigration,
   profile,
   quickLinks,
   ownerListings,
@@ -22,6 +23,13 @@ const [
   readFile(new URL("../src/lib/api/account-security.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/account-identity.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/support.ts", import.meta.url), "utf8"),
+  readFile(
+    new URL(
+      "../supabase/migrations/202607170002_account_profile_verification_integrity.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
   readFile(new URL("../src/routes/profile.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/account/AccountExperience.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/profile/listings.tsx", import.meta.url), "utf8"),
@@ -53,10 +61,14 @@ test("password change verifies ownership and uses Supabase Auth", () => {
   assert.ok(profile.includes('autoComplete="new-password"'));
 });
 
-test("account deletion creates a deduplicated trackable support request", () => {
+test("account deletion creates a server-authoritative deduplicated support request", () => {
   assert.ok(support.includes("createAccountDeletionRequest"));
-  assert.ok(support.includes('.eq("subject", ACCOUNT_DELETION_SUBJECT)'));
-  assert.ok(support.includes('.in("status", ["new", "under_review"])'));
+  assert.ok(support.includes('rpc("rawaj_request_my_account_deletion")'));
+  assert.ok(support.includes("resolveAuthenticatedAccountId("));
+  assert.ok(support.includes("accountSessionStillMatches("));
+  assert.ok(accountMigration.includes("idx_support_account_deletion_open_unique"));
+  assert.ok(accountMigration.includes("pg_advisory_xact_lock"));
+  assert.ok(accountMigration.includes("rawaj_request_my_account_deletion"));
   assert.ok(profile.includes("handleAccountDeletionRequest"));
   assert.ok(profile.includes("تأكيد طلب الحذف"));
   assert.ok(!profile.includes("Request account review"));
