@@ -8,10 +8,6 @@ const campaignRoute = await readFile(
   "utf8",
 );
 const adminShell = await readFile(new URL("../src/routes/admin.tsx", import.meta.url), "utf8");
-const errorTypes = await readFile(
-  new URL("../src/lib/classifieds-types.ts", import.meta.url),
-  "utf8",
-);
 
 test("campaign workspace remains permission-scoped in the shell and route", () => {
   assert.match(adminShell, /permission: "canManageAdCampaigns"/);
@@ -25,6 +21,8 @@ test("only the newest campaign and creative reads may update the workspace", () 
   assert.match(campaignApi, /const requestGeneration = \+\+creativeReadGeneration/);
   assert.match(campaignApi, /requestGeneration !== campaignReadGeneration/);
   assert.match(campaignApi, /requestGeneration !== creativeReadGeneration/);
+  assert.match(campaignApi, /admin_campaign_list_stale_read/);
+  assert.match(campaignApi, /admin_campaign_creatives_stale_read/);
 });
 
 test("campaign and creative writes use resource-scoped in-flight locks", () => {
@@ -34,11 +32,14 @@ test("campaign and creative writes use resource-scoped in-flight locks", () => {
   assert.match(campaignApi, /creativeMutationInFlight\.has\(operationKey\)/);
   assert.match(campaignApi, /campaignMutationInFlight\.delete\(operationKey\)/);
   assert.match(campaignApi, /creativeMutationInFlight\.delete\(operationKey\)/);
+  assert.match(campaignApi, /admin_campaign_save_in_progress/);
+  assert.match(campaignApi, /admin_campaign_status_in_progress/);
+  assert.match(campaignApi, /admin_campaign_creative_save_in_progress/);
 });
 
-test("stale and duplicate operations have explicit non-database error codes", () => {
-  assert.match(errorTypes, /\| "stale_request"/);
-  assert.match(errorTypes, /\| "operation_in_progress"/);
-  assert.match(campaignApi, /code: "stale_request"/);
-  assert.match(campaignApi, /code: "operation_in_progress"/);
+test("duplicate operation failures stay inside the established error contract", () => {
+  assert.match(campaignApi, /function staleReadResult<T>/);
+  assert.match(campaignApi, /function operationInProgressResult<T>/);
+  assert.match(campaignApi, /code: "unknown", message: "", operation/);
+  assert.match(campaignApi, /code: "unknown", message, operation/);
 });
