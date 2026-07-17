@@ -15,6 +15,12 @@ test("nearby discovery is explicitly activated and remains ephemeral", () => {
   assert.doesNotMatch(hook, /localStorage|sessionStorage|URLSearchParams/);
 });
 
+test("cancelled permission requests cannot reactivate nearby mode", () => {
+  assert.match(hook, /const requestId = \+\+requestRef\.current;[\s\S]*requestNearbyPosition\(\)/);
+  assert.match(hook, /if \(requestRef\.current !== requestId\) return;/);
+  assert.match(hook, /requestRef\.current \+= 1;/);
+});
+
 test("nearby mode supports the approved radius choices and manual fallback", () => {
   assert.match(control, /\[5, 10, 25, 50, 100\]/);
   assert.match(control, /permission_denied/);
