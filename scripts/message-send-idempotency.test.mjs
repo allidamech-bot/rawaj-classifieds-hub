@@ -64,10 +64,12 @@ test("canonical messages still merge once with deterministic ordering", () => {
   assert.match(routeSource, /mergeConversationMessages\(current, \[result\.data\], conversationId\)/);
 });
 
-test("both migrations and the permanent chat contract remain registered", () => {
+test("base idempotency and forward-only attachment migrations remain registered", () => {
   const ledger = JSON.parse(ledgerSource);
   assert.ok(ledger.classifications.canonical.includes("202607140003_idempotent_message_send.sql"));
-  assert.ok(ledger.classifications.canonical.includes("202607170007_chat_image_attachments_v1.sql"));
+  assert.ok(
+    ledger.classifications.reconciliation.includes("202607170007_chat_image_attachments_v1.sql"),
+  );
   const packageJson = JSON.parse(packageSource);
   assert.match(packageJson.scripts["test:chat-workspace"], /message-send-idempotency\.test\.mjs/);
 });
