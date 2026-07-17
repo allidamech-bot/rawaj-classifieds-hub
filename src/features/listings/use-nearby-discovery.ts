@@ -40,9 +40,11 @@ export function useNearbyDiscovery(filters: ListingFilters) {
   );
 
   const activate = useCallback(async () => {
+    const requestId = ++requestRef.current;
     setLoading(true);
     setError(null);
     const position = await requestNearbyPosition();
+    if (requestRef.current !== requestId) return;
     if (!position.ok) {
       setError(position.status);
       setLoading(false);
@@ -52,12 +54,9 @@ export function useNearbyDiscovery(filters: ListingFilters) {
     await load(position.point, radiusKm);
   }, [load, radiusKm]);
 
-  const setRadiusKm = useCallback(
-    (radius: NearbyRadiusKm) => {
-      setRadiusKmState(radius);
-    },
-    [active, load],
-  );
+  const setRadiusKm = useCallback((radius: NearbyRadiusKm) => {
+    setRadiusKmState(radius);
+  }, []);
 
   const clear = useCallback(() => {
     requestRef.current += 1;
@@ -71,7 +70,7 @@ export function useNearbyDiscovery(filters: ListingFilters) {
   useEffect(() => {
     const point = pointRef.current;
     if (active && point) void load(point, radiusKm);
-  }, [active, filters, load, radiusKm]);
+  }, [active, load, radiusKm]);
 
   return { active, radiusKm, items, loading, error, activate, setRadiusKm, clear };
 }
