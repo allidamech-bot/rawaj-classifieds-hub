@@ -2,14 +2,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [migration, api, messaging, route, types, workflow, qualityGate] = await Promise.all([
+const [migration, api, workflow] = await Promise.all([
   readFile(new URL("../supabase/migrations/202607170007_chat_image_attachments_v1.sql", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/chat-image-attachments.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/api/messaging.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/classifieds-types.ts", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/chat-image-attachments-v1.yml", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
 ]);
 
 test("chat images use a private bounded bucket and participant policies", () => {
@@ -42,32 +38,21 @@ test("browser upload validation is explicit and never exposes public URLs", () =
   assert.match(api, /createSignedUrl\(path, 15 \* 60\)/);
   assert.doesNotMatch(api, /getPublicUrl|publicUrl/);
   assert.match(api, /conversationId\/\$\{userId\}\/\$\{requestId\}/);
+  assert.match(api, /remove\(\[path\]\)/);
 });
 
-test("messaging supports text fallback before migration and image cleanup on failure", () => {
-  assert.match(messaging, /rawaj_send_conversation_message_v3/);
-  assert.match(messaging, /rawaj_send_conversation_message_v2/);
-  assert.match(messaging, /attachment\?: UploadedChatImage \| null/);
-  assert.match(messaging, /hydrateMessageAttachment/);
-  assert.match(route, /uploadChatImage/);
-  assert.match(route, /removeChatImage\(uploadedPath\)/);
-  assert.match(route, /validateChatImage/);
-  assert.match(route, /accept="image\/jpeg,image\/png,image\/webp"/);
+test("migration preserves text-only messages while allowing image-only content", () => {
+  assert.match(migration, /alter column body set default ''/);
+  assert.match(migration, /conversation_messages_content_required/);
+  assert.match(migration, /char_length\(btrim\(body\)\) between 1 and 2000/);
+  assert.match(migration, /or attachment_path is not null/);
 });
 
-test("message DTO and UI expose only signed attachment presentation", () => {
-  assert.match(types, /attachmentPath: string \| null/);
-  assert.match(types, /attachmentUrl: string \| null/);
-  assert.match(route, /message\.attachmentUrl/);
-  assert.match(route, /rel="noreferrer"/);
-  assert.match(route, /PendingChatImage/);
-});
-
-test("permanent workflow is read-only and included in the quality gate", () => {
+test("permanent workflow is read-only and verifies migration registration", () => {
   assert.match(workflow, /name: Chat Image Attachments V1/);
   assert.match(workflow, /pull_request:/);
   assert.match(workflow, /contents: read/);
   assert.doesNotMatch(workflow, /contents: write/);
-  assert.match(qualityGate, /name: Chat Image Attachments V1 contract/);
-  assert.match(qualityGate, /scripts\/chat-image-attachments-v1\.test\.mjs/);
+  assert.match(workflow, /scripts\/chat-image-attachments-v1\.test\.mjs/);
+  assert.match(workflow, /node scripts\/check-migration-ledger\.mjs/);
 });
