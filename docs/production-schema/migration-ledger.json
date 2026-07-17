@@ -156,7 +156,8 @@
       "202607160005_preserve_multi_device_push_preference.sql",
       "202607170001_notifications_activity_push_integrity.sql",
       "202607170002_account_profile_verification_integrity.sql",
-      "202607170003_support_reports_moderation_integrity.sql"
+      "202607170003_support_reports_moderation_integrity.sql",
+      "202607170004_favorites_saved_searches_retention_integrity.sql"
     ],
     "manual": ["202607090004_reconcile_manual_production_hotfixes.sql"]
   }
