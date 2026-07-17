@@ -32,4 +32,15 @@ jobs:
       - name: Lint changed sources
         run: npx eslint src/routes/chats.tsx src/lib/api/messaging.ts src/lib/classifieds-types.ts src/features/communication/ChatVoiceRecorder.tsx src/features/communication/ChatVoiceAttachment.tsx
       - name: Typecheck
-        run: npm run typecheck
+        id: typecheck
+        continue-on-error: true
+        run: npm run typecheck > typecheck.log 2>&1
+      - name: Upload typecheck diagnostics
+        if: steps.typecheck.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-voice-location-typecheck-log
+          path: typecheck.log
+      - name: Stop on typecheck failure
+        if: steps.typecheck.outcome == 'failure'
+        run: cat typecheck.log && exit 1
