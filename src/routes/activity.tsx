@@ -10,6 +10,7 @@ import {
 } from "@/features/communication/CommunicationExperience";
 import { fetchMyConversations, fetchMyNotificationsPage } from "@/lib/classifieds-api";
 import type { ClassifiedsError, Conversation, NotificationItem } from "@/lib/classifieds-types";
+import { mergeNotifications } from "@/lib/notification-integrity";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -42,6 +43,7 @@ function ActivityCenterPage() {
   const [hasLoadedConversations, setHasLoadedConversations] = useState(false);
   const [notificationError, setNotificationError] = useState<ClassifiedsError | null>(null);
   const [conversationError, setConversationError] = useState<ClassifiedsError | null>(null);
+  const [loadedProfileId, setLoadedProfileId] = useState<string | null>(null);
   const notificationRequestIdRef = useRef(0);
   const conversationRequestIdRef = useRef(0);
   const profileId = auth.profile?.id ?? null;
@@ -56,12 +58,13 @@ function ActivityCenterPage() {
     const requestId = ++notificationRequestIdRef.current;
     setNotificationsLoading(true);
     setNotificationError(null);
-    const result = await fetchMyNotificationsPage(currentProfileId, 0, 8);
+    const result = await fetchMyNotificationsPage({ limit: 8 });
     if (requestId !== notificationRequestIdRef.current || currentProfileId !== profileIdRef.current)
       return;
 
     if (result.ok) {
-      setNotifications(result.data.items);
+      setNotifications((current) => mergeNotifications(current, result.data.items));
+      setLoadedProfileId(currentProfileId);
       setHasLoadedNotifications(true);
     } else {
       setNotificationError(result.error);
@@ -101,6 +104,7 @@ function ActivityCenterPage() {
       setHasLoadedConversations(false);
       setNotificationError(null);
       setConversationError(null);
+      setLoadedProfileId(null);
       return;
     }
 
@@ -114,6 +118,7 @@ function ActivityCenterPage() {
     setHasLoadedConversations(false);
     setNotificationError(null);
     setConversationError(null);
+    setLoadedProfileId(null);
     void Promise.all([loadNotifications(), loadConversations()]);
 
     return () => {
@@ -197,15 +202,17 @@ function ActivityCenterPage() {
                     disabled={notificationsLoading}
                   />
                 ) : null}
-                {notifications.length === 0 ? (
+                {loadedProfileId !== profileId || notifications.length === 0 ? (
                   <ActivityState>
                     {text("لا توجد إشعارات محفوظة حاليًا.", "No saved notifications right now.")}
                   </ActivityState>
                 ) : (
                   <div className="rawaj-activity-feed">
                     {notifications.map((notification) => (
-                      <article
+                      <Link
                         key={notification.id}
+                        to="/notifications"
+                        search={{ open: notification.id }}
                         className="rawaj-notification-timeline"
                         data-read={Boolean(notification.readAt)}
                       >
@@ -215,10 +222,20 @@ function ActivityCenterPage() {
                             aria-hidden="true"
                           />
                           <div className="min-w-0 flex-1">
-                            <h2 className="text-sm font-bold">{notification.titleAr}</h2>
-                            {notification.bodyAr ? (
+                            <h2 className="text-sm font-bold">
+                              {language === "en"
+                                ? notification.titleEn || notification.titleAr
+                                : notification.titleAr}
+                            </h2>
+                            {(
+                              language === "en"
+                                ? notification.bodyEn || notification.bodyAr
+                                : notification.bodyAr
+                            ) ? (
                               <p className="mt-1 line-clamp-2 text-xs leading-6 text-muted-foreground">
-                                {notification.bodyAr}
+                                {language === "en"
+                                  ? notification.bodyEn || notification.bodyAr
+                                  : notification.bodyAr}
                               </p>
                             ) : null}
                             <p className="mt-1 text-[10px] text-muted-foreground">
@@ -226,7 +243,7 @@ function ActivityCenterPage() {
                             </p>
                           </div>
                         </div>
-                      </article>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -284,7 +301,9 @@ function ActivityCenterPage() {
                             {conversation.lastMessagePreview || conversation.listingTitle}
                           </span>
                         </span>
-                        {conversation.unreadCount > 0 ? <b>{conversation.unreadCount}</b> : null}
+                        {conversation.unreadCount > 0 ? (
+                          <b>{formatUnreadBadge(conversation.unreadCount)}</b>
+                        ) : null}
                       </Link>
                     ))}
                   </div>
@@ -315,7 +334,7 @@ function ActivityTabButton({
     <button type="button" role="tab" aria-selected={active} onClick={onClick}>
       <Icon className="h-4 w-4" />
       {label}
-      {count > 0 ? <b>{count}</b> : null}
+      {count > 0 ? <b>{formatUnreadBadge(count)}</b> : null}
     </button>
   );
 }
@@ -377,4 +396,8 @@ function formatDateTime(value: string, language: "ar" | "en") {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+function formatUnreadBadge(count: number) {
+  return count > 99 ? "99+" : String(count);
 }

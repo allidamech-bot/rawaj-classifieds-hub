@@ -151,7 +151,7 @@ export function NotificationPreferencesPanel() {
       if (requestId !== requestIdRef.current || profileId !== profileIdRef.current) return;
       setPushCapability(capability);
 
-      const preferencesResult = await fetchNotificationPreferences(profileId);
+      const preferencesResult = await fetchNotificationPreferences();
       if (requestId !== requestIdRef.current || profileId !== profileIdRef.current) return;
       if (!preferencesResult.ok) {
         setLoading(false);
@@ -162,7 +162,7 @@ export function NotificationPreferencesPanel() {
 
       if (capability.available) {
         const deviceKey = getOrCreatePushDeviceKey();
-        const statusResult = await fetchPushChannelStatus(profileId, deviceKey);
+        const statusResult = await fetchPushChannelStatus(deviceKey);
         if (requestId !== requestIdRef.current || profileId !== profileIdRef.current) return;
         if (statusResult.ok) setPushStatus(statusResult.data);
       }
@@ -190,7 +190,7 @@ export function NotificationPreferencesPanel() {
     setSavingKey(key);
     setError("");
     try {
-      const result = await updateNotificationPreference(currentProfileId, key, nextEnabled);
+      const result = await updateNotificationPreference(key, nextEnabled);
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setPreferences(previous);
@@ -217,7 +217,7 @@ export function NotificationPreferencesPanel() {
     setPushMessage("");
     try {
       if (pushStatus.registered) {
-        const result = await disableNativePush(currentProfileId, false);
+        const result = await disableNativePush(false);
         if (currentProfileId !== profileIdRef.current) return;
         if (!result.ok) {
           setError(result.error.message);
@@ -237,7 +237,7 @@ export function NotificationPreferencesPanel() {
         return;
       }
 
-      const result = await enableNativePush(currentProfileId, language, true);
+      const result = await enableNativePush(language, true);
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setError(result.error.message);

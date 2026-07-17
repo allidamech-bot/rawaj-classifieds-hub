@@ -281,7 +281,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const signedInUserId = sessionUserIdRef.current ?? session?.user.id ?? profile?.id ?? null;
       if (signedInUserId) {
-        await disableNativePush(signedInUserId, false).catch(() => undefined);
+        await disableNativePush(false).catch(() => undefined);
       }
 
       const { error } = await client.auth.signOut();

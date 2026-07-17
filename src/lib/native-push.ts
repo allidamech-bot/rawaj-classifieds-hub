@@ -1,7 +1,8 @@
 import type { PluginListenerHandle } from "@capacitor/core";
 import { disablePushDevice, registerPushDevice } from "@/lib/api/push-notifications";
+import { getAuthenticatedUserId, getClient } from "@/lib/api/shared";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
-import { resolveNotificationTargetPath } from "@/lib/notification-target-path";
+import { notificationOpenPath } from "@/lib/notification-target-path";
 import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
 
 const PUSH_DEVICE_KEY_STORAGE = "rawaj:native-push-device-key:v1";
@@ -53,16 +54,17 @@ export async function getNativePushCapability(): Promise<NativePushCapability> {
 }
 
 export async function enableNativePush(
-  userId: string | null,
   locale: string,
   requestPermission = true,
 ): Promise<ClassifiedsResult<NativePushRegistration>> {
-  if (!userId) {
+  const actorResult = await currentPushAccount();
+  if (!actorResult.ok) {
     return {
       ok: false,
       error: { code: "auth_required", message: "يجب تسجيل الدخول لتفعيل الإشعارات الفورية." },
     };
   }
+  const accountSnapshot = actorResult.data;
 
   const capability = await getNativePushCapability();
   if (!capability.available) {
@@ -84,7 +86,7 @@ export async function enableNativePush(
 
     const deviceKey = getOrCreatePushDeviceKey();
     if (permission.receive !== "granted") {
-      if (deviceKey) await disableNativePush(userId, false);
+      if (deviceKey) await disableNativePush(false);
       return {
         ok: true,
         data: {
@@ -105,11 +107,15 @@ export async function enableNativePush(
       });
     }
 
-    await ensureNativePushListeners(userId);
+    await ensureNativePushListeners(accountSnapshot);
     const tokenResult = await waitForRegistrationToken(PushNotifications);
     if (!tokenResult.ok) return tokenResult;
 
-    const registration = await registerPushDevice(userId, {
+    const currentActor = await currentPushAccount();
+    if (!currentActor.ok) return currentActor;
+    if (currentActor.data !== accountSnapshot) return stalePushAccountError();
+
+    const registration = await registerPushDevice({
       deviceKey,
       deviceToken: tokenResult.data,
       platform: capability.platform,
@@ -136,14 +142,13 @@ export async function enableNativePush(
 }
 
 export async function disableNativePush(
-  userId: string | null,
   disableChannel = true,
 ): Promise<ClassifiedsResult<boolean>> {
   const deviceKey = getOrCreatePushDeviceKey();
   const localCleanup = unregisterNativePushLocally();
 
   try {
-    const result = await disablePushDevice(userId, deviceKey, disableChannel);
+    const result = await disablePushDevice(deviceKey, disableChannel);
     const locallyUnregistered = await localCleanup;
     if (result.ok || locallyUnregistered) return { ok: true, data: true };
     return result;
@@ -162,10 +167,13 @@ export async function disableNativePush(
 }
 
 export async function initializeNativePush(
-  userId: string | null,
   locale: string,
 ): Promise<ClassifiedsResult<NativePushRegistration>> {
-  return enableNativePush(userId, locale, false);
+  return enableNativePush(locale, false);
+}
+
+export async function resetNativePushSession(): Promise<void> {
+  await clearNativePushListeners();
 }
 
 async function waitForRegistrationToken(
@@ -248,7 +256,7 @@ async function ensureNativePushListeners(userId: string): Promise<void> {
         emitUnreadActivityChanged();
         if (typeof window === "undefined") return;
         const data = event.notification.data;
-        window.location.assign(resolveNotificationTargetPath(data?.target_type, data?.target_id));
+        window.location.assign(notificationOpenPath(data?.notification_id));
       },
     );
 
@@ -279,4 +287,20 @@ async function clearNativePushListeners(): Promise<void> {
   activeListenerHandles = [];
   activeListenerUserId = null;
   await Promise.all(handles.map((handle) => handle.remove().catch(() => undefined)));
+}
+
+async function currentPushAccount(): Promise<ClassifiedsResult<string>> {
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+  return getAuthenticatedUserId(clientResult.data);
+}
+
+function stalePushAccountError<T>(): ClassifiedsResult<T> {
+  return {
+    ok: false,
+    error: {
+      code: "permission_denied",
+      message: "تغيّر الحساب أثناء إعداد الإشعارات. أعد المحاولة من الحساب الحالي.",
+    },
+  };
 }

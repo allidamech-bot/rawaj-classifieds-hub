@@ -505,16 +505,30 @@ export interface ModerateSupportRequestPayload {
 
 export interface NotificationItem {
   id: string;
-  recipientId: string;
-  actorId: string | null;
   type: string;
   titleAr: string;
+  titleEn: string | null;
   bodyAr: string | null;
-  targetType: string | null;
+  bodyEn: string | null;
+  targetType: NotificationTargetType | null;
   targetId: string | null;
-  metadata: Record<string, unknown>;
   readAt: string | null;
   createdAt: string;
+}
+
+export type NotificationTargetType =
+  | "listing"
+  | "conversation"
+  | "seller"
+  | "saved_search"
+  | "owner_listing"
+  | "support"
+  | "verification"
+  | "promotion";
+
+export interface NotificationCursor {
+  createdAt: string;
+  id: string;
 }
 
 export interface CreateListingPayload {

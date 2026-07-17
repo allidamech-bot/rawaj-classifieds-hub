@@ -68,7 +68,7 @@ async function scanDueSavedSearchAlertsLegacy(
   const client = clientResult.data;
   const checkedAt = new Date().toISOString();
 
-  const preferencesResult = await fetchNotificationPreferences(userId);
+  const preferencesResult = await fetchNotificationPreferences();
   if (!preferencesResult.ok) return preferencesResult;
   if (!preferencesResult.data.savedSearchMatchesEnabled) {
     return {

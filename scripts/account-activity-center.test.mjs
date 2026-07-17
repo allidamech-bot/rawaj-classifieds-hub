@@ -52,7 +52,7 @@ test("activity feeds recover independently without erasing successful snapshots"
   assert.match(activityRoute, /onRetry=\{\(\) => void loadConversations\(\)\}/);
   assert.match(
     activityRoute,
-    /if \(result\.ok\) \{[\s\S]*setNotifications\(result\.data\.items\)[\s\S]*\} else \{[\s\S]*setNotificationError\(result\.error\)/,
+    /if \(result\.ok\) \{[\s\S]*mergeNotifications\(current, result\.data\.items\)[\s\S]*\} else \{[\s\S]*setNotificationError\(result\.error\)/,
   );
   assert.match(
     activityRoute,

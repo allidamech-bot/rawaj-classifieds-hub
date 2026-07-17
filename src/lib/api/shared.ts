@@ -17,6 +17,22 @@ export function getClient(): ClassifiedsResult<SupabaseClient> {
   return { ok: true, data: supabase };
 }
 
+export async function getAuthenticatedUserId(
+  client: SupabaseClient,
+): Promise<ClassifiedsResult<string>> {
+  const { data, error } = await client.auth.getUser();
+  if (error || !data.user?.id) {
+    return {
+      ok: false,
+      error: {
+        code: "auth_required",
+        message: "يجب تسجيل الدخول لإكمال هذا الإجراء.",
+      },
+    };
+  }
+  return { ok: true, data: data.user.id };
+}
+
 export function mapError(
   error: { code?: string; message?: string; details?: string },
   operation?: string,
