@@ -50,6 +50,17 @@ test("retention reads are bounded and deterministically ordered", () => {
   assert.match(favoritesApi, /publicListingExpiryFilter/);
 });
 
+test("legacy favorites schemas are repaired before retention indexing", () => {
+  assert.match(
+    migration,
+    /alter table public\.favorites[\s\S]*add column if not exists created_at timestamptz not null default now\(\)/,
+  );
+  assert.ok(
+    migration.indexOf("add column if not exists created_at") <
+      migration.indexOf("favorites_user_created_id_idx"),
+  );
+});
+
 test("unavailable favorites and notification deep links cannot expose private listings", () => {
   assert.match(favoritesApi, /availability: listing \? "available" : "unavailable"/);
   assert.match(notificationTarget, /saved_search|listing/);
