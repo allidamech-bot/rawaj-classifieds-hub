@@ -116,6 +116,7 @@ function LoginPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting) return;
     setMessage("");
     setError("");
 
@@ -172,6 +173,9 @@ function LoginPage() {
       return;
     }
 
+    const signupCallbackUrl = new URL("/auth/callback", window.location.origin);
+    signupCallbackUrl.searchParams.set("returnTo", returnTo);
+
     setSubmitting(true);
     const result =
       mode === "login"
@@ -179,7 +183,10 @@ function LoginPage() {
         : await client.auth.signUp({
             email: cleanEmail,
             password,
-            options: { data: { display_name: cleanName } },
+            options: {
+              emailRedirectTo: signupCallbackUrl.toString(),
+              data: { display_name: cleanName },
+            },
           });
 
     if (result.error) {
