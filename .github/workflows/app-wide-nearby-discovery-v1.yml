@@ -30,17 +30,6 @@ jobs:
       - name: App-wide nearby discovery contract
         run: node --test scripts/app-wide-nearby-discovery-v1.test.mjs
       - name: Lint nearby sources
-        id: lint
-        continue-on-error: true
-        run: npx eslint src/lib/nearby-preferences.ts src/features/listings/use-nearby-discovery.ts src/features/listings/NearbyDiscoveryControl.tsx scripts/app-wide-nearby-discovery-v1.test.mjs > nearby-lint.log 2>&1
-      - name: Upload lint diagnostics
-        if: steps.lint.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: nearby-lint-log
-          path: nearby-lint.log
-      - name: Stop on lint failure
-        if: steps.lint.outcome == 'failure'
-        run: cat nearby-lint.log && exit 1
+        run: npx eslint src/lib/nearby-preferences.ts src/features/listings/use-nearby-discovery.ts src/features/listings/NearbyDiscoveryControl.tsx scripts/app-wide-nearby-discovery-v1.test.mjs
       - name: Typecheck
         run: npm run typecheck -- --pretty false
