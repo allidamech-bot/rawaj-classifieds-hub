@@ -123,7 +123,9 @@ export function NearbyDiscoveryControl({
               ) : (
                 <LocateFixed className="h-4 w-4" />
               )}
-              {loading ? text("جارٍ تحديد موقعك", "Locating you") : text("تفعيل الأقرب", "Enable nearby")}
+              {loading
+                ? text("جارٍ تحديد موقعك", "Locating you")
+                : text("تفعيل الأقرب", "Enable nearby")}
             </button>
           )}
         </div>
