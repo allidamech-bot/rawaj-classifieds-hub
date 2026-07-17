@@ -61,6 +61,17 @@ test("legacy favorites schemas are repaired before retention indexing", () => {
   );
 });
 
+test("saved-search alert retention index uses the canonical matched timestamp", () => {
+  assert.match(
+    migration,
+    /saved_search_alert_matches_search_created_idx[\s\S]*saved_search_id, matched_at desc, listing_id/,
+  );
+  assert.doesNotMatch(
+    migration,
+    /saved_search_alert_matches_search_created_idx[\s\S]*saved_search_id, created_at desc, listing_id/,
+  );
+});
+
 test("unavailable favorites and notification deep links cannot expose private listings", () => {
   assert.match(favoritesApi, /availability: listing \? "available" : "unavailable"/);
   assert.match(notificationTarget, /saved_search|listing/);
