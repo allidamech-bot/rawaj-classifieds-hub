@@ -15,6 +15,20 @@ function containsControlCharacter(value: string): boolean {
   });
 }
 
+function containsEncodedRedirectBypass(value: string): boolean {
+  let pathname = value.split(/[?#]/, 1)[0] ?? "";
+  for (let pass = 0; pass < 3; pass += 1) {
+    try {
+      const decoded = decodeURIComponent(pathname);
+      if (decoded === pathname) break;
+      pathname = decoded;
+    } catch {
+      return true;
+    }
+  }
+  return pathname.startsWith("//") || pathname.startsWith("/\\") || pathname.includes("\\");
+}
+
 function safeFallback(value: unknown): string {
   if (value === DEFAULT_AUTH_RETURN_TO) return DEFAULT_AUTH_RETURN_TO;
   return sanitizeAuthReturnTo(value, DEFAULT_AUTH_RETURN_TO);
@@ -28,6 +42,7 @@ export function sanitizeAuthReturnTo(value: unknown, fallback = DEFAULT_AUTH_RET
     !trimmed ||
     trimmed.length > MAX_AUTH_RETURN_LENGTH ||
     containsControlCharacter(trimmed) ||
+    containsEncodedRedirectBypass(trimmed) ||
     !trimmed.startsWith("/") ||
     trimmed.startsWith("//")
   )

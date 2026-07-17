@@ -19,6 +19,7 @@ import {
   rowString,
 } from "@/lib/api/shared";
 import { sanitizePublicListing } from "@/lib/public-listing-presentation";
+import { publicSellerProfileSelect } from "@/lib/profile-dto";
 import {
   buildPublicSellerRatingSummary,
   cleanPublicSellerText,
@@ -28,15 +29,6 @@ import {
   PUBLIC_SELLER_REVIEW_SUMMARY_LIMIT,
   safePublicSellerMediaUrl,
 } from "@/lib/public-seller-storefront";
-
-const publicSellerProfileSelect =
-  "id,display_name,governorate,bio,business_name,avatar_path,avatar_url,cover_path,cover_url,verified,created_at";
-
-function publicProfileMediaUrl(client: SupabaseClient, path: string | null): string | null {
-  if (!path) return null;
-  const { data } = client.storage.from("profile-media").getPublicUrl(path);
-  return data.publicUrl ?? null;
-}
 
 export async function fetchPublicSellerProfile(
   sellerId: string,
@@ -116,8 +108,8 @@ export async function fetchPublicSellerProfile(
         null,
       bio: cleanPublicSellerText(rowNullableString(profile, "bio"), 1000),
       businessName: cleanPublicSellerText(rowNullableString(profile, "business_name"), 120),
-      avatarUrl: resolvePublicProfileMediaUrl(clientResult.data, profile, "avatar"),
-      coverUrl: resolvePublicProfileMediaUrl(clientResult.data, profile, "cover"),
+      avatarUrl: resolvePublicProfileMediaUrl(profile, "avatar"),
+      coverUrl: resolvePublicProfileMediaUrl(profile, "cover"),
       approvedListingCount: inventory.totalCount,
       inventoryStatus: inventory.status,
       listingDisplayLimit: PUBLIC_SELLER_LISTING_LIMIT,
@@ -201,17 +193,8 @@ function sectionStatus(errorCode: string): Exclude<PublicSellerSectionStatus, "r
   return errorCode === "schema_missing" ? "unsupported" : "unavailable";
 }
 
-function resolvePublicProfileMediaUrl(
-  client: SupabaseClient,
-  profile: Record<string, unknown>,
-  kind: "avatar" | "cover",
-) {
-  return (
-    safePublicSellerMediaUrl(rowNullableString(profile, `${kind}_url`)) ??
-    safePublicSellerMediaUrl(
-      publicProfileMediaUrl(client, rowNullableString(profile, `${kind}_path`)),
-    )
-  );
+function resolvePublicProfileMediaUrl(profile: Record<string, unknown>, kind: "avatar" | "cover") {
+  return safePublicSellerMediaUrl(rowNullableString(profile, `${kind}_url`));
 }
 
 export async function searchPublicSellers(
@@ -237,19 +220,16 @@ export async function searchPublicSellers(
 }
 
 function mapPublicSellerSearchResult(row: Record<string, unknown>): PublicSellerSearchResult {
-  const firstName = rowNullableString(row, "first_name");
-  const lastName = rowNullableString(row, "last_name");
   const displayName =
     rowNullableString(row, "display_name") ||
-    [firstName, lastName].filter(Boolean).join(" ").trim() ||
     rowNullableString(row, "business_name") ||
     "معلن على رواج";
 
   return {
     id: rowString(row, "id"),
     displayName,
-    firstName,
-    lastName,
+    firstName: null,
+    lastName: null,
     businessName: rowNullableString(row, "business_name"),
     governorate: rowNullableString(row, "governorate"),
     bio: rowNullableString(row, "bio"),

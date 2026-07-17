@@ -5,6 +5,7 @@ import type {
   SupportRequestStatus,
   SupportRequestType,
 } from "@/lib/classifieds-types";
+import { resolveAuthenticatedAccountId } from "@/lib/api/account-identity";
 import { getClient, mapError, rowNullableString, rowString } from "@/lib/api/shared";
 
 export async function createSupportRequest(
@@ -58,22 +59,34 @@ export async function createSupportRequest(
 
 const ACCOUNT_DELETION_SUBJECT = "طلب حذف حساب رواج";
 
-export async function createAccountDeletionRequest(
-  userId: string | null,
-): Promise<ClassifiedsResult<SupportRequest>> {
-  if (!userId) {
+export async function createAccountDeletionRequest(): Promise<ClassifiedsResult<SupportRequest>> {
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+  const actor = await resolveAuthenticatedAccountId(
+    clientResult.data,
+    "account_deletion_request_auth",
+  );
+  if (!actor.ok) return actor;
+
+  const rpcResult = await clientResult.data.rpc("rawaj_request_my_account_deletion");
+  if (!rpcResult.error) {
+    const row = Array.isArray(rpcResult.data) ? rpcResult.data[0] : rpcResult.data;
+    if (row && typeof row === "object") {
+      return { ok: true, data: mapSupportRequest(row as Record<string, unknown>) };
+    }
+  } else if (!isMissingAccountDeletionRpc(rpcResult.error)) {
     return {
       ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لطلب حذف الحساب." },
+      error: mapError(rpcResult.error, "account_deletion_request"),
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
   const { data: existing, error: existingError } = await clientResult.data
     .from("support_requests")
-    .select("*")
-    .eq("user_id", userId)
+    .select(
+      "id,user_id,type,status,subject,message,related_listing_id,related_report_id,admin_note,reviewed_by,reviewed_at,created_at,updated_at",
+    )
+    .eq("user_id", actor.data)
     .eq("subject", ACCOUNT_DELETION_SUBJECT)
     .in("status", ["new", "under_review"])
     .order("created_at", { ascending: false })
@@ -87,12 +100,20 @@ export async function createAccountDeletionRequest(
     return { ok: true, data: mapSupportRequest(existing as Record<string, unknown>) };
   }
 
-  return createSupportRequest(userId, {
+  return createSupportRequest(actor.data, {
     type: "other",
     subject: ACCOUNT_DELETION_SUBJECT,
     message:
       "أطلب حذف حسابي وبياناته الشخصية من منصة رواج. أفهم أن الإدارة ستراجع الطلب وتتحقق من الالتزامات والعمليات المفتوحة قبل تنفيذ الحذف الآمن.",
   });
+}
+
+function isMissingAccountDeletionRpc(error: { code?: string; message?: string }) {
+  return (
+    error.code === "PGRST202" ||
+    error.code === "42883" ||
+    (error.message ?? "").includes("rawaj_request_my_account_deletion")
+  );
 }
 
 export async function fetchMySupportRequests(

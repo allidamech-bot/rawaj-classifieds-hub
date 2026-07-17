@@ -137,7 +137,7 @@ function ProfilePage() {
     const requestId = ++verificationRequestIdRef.current;
     setVerificationLoading(true);
     setVerificationError(null);
-    const result = await fetchMyVerificationRequests(currentProfileId);
+    const result = await fetchMyVerificationRequests();
     if (requestId !== verificationRequestIdRef.current || currentProfileId !== profileIdRef.current)
       return;
 
@@ -171,7 +171,7 @@ function ProfilePage() {
     passwordSavingProfilesRef.current.add(currentProfileId);
     setPasswordSaving(true);
     try {
-      const result = await changeOwnPassword(currentProfileId, currentPassword);
+      const result = await changeOwnPassword(currentPassword);
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setPasswordNotice(result.error.message);
@@ -194,7 +194,7 @@ function ProfilePage() {
     setDeletionSaving(true);
     setDeletionNotice("");
     try {
-      const result = await createAccountDeletionRequest(currentProfileId);
+      const result = await createAccountDeletionRequest();
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setDeletionNotice(result.error.message);
@@ -234,7 +234,7 @@ function ProfilePage() {
     setSettingsNotice("");
     setSettingsSaving(true);
     try {
-      const result = await updateOwnProfileBasics(currentProfileId, payload);
+      const result = await updateOwnProfileBasics(payload);
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setSettingsNotice(result.error.message);
@@ -260,16 +260,13 @@ function ProfilePage() {
     const currentProfileId = profileId;
     if (!file || !currentProfileId || mediaSavingProfilesRef.current.has(currentProfileId)) return;
 
-    const oldPath = kind === "avatar" ? auth.profile?.avatarPath : auth.profile?.coverPath;
     mediaSavingProfilesRef.current.add(currentProfileId);
     setSettingsNotice("");
     setMediaSaving(kind);
     try {
       const result = await uploadProfileMedia({
-        userId: currentProfileId,
         kind,
         file,
-        oldPath,
       });
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
@@ -296,12 +293,11 @@ function ProfilePage() {
     const currentProfileId = profileId;
     if (!currentProfileId || mediaSavingProfilesRef.current.has(currentProfileId)) return;
 
-    const oldPath = kind === "avatar" ? auth.profile?.avatarPath : auth.profile?.coverPath;
     mediaSavingProfilesRef.current.add(currentProfileId);
     setSettingsNotice("");
     setMediaSaving(kind);
     try {
-      const result = await removeProfileMedia(currentProfileId, kind, oldPath);
+      const result = await removeProfileMedia(kind);
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setSettingsNotice(result.error.message);

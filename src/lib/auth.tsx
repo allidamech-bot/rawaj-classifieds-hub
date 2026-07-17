@@ -12,6 +12,7 @@ import {
 import { AuthContext, type AuthContextValue } from "./auth-context";
 import type { AuthStatus } from "./auth-status";
 import { disableNativePush } from "./native-push";
+import { privateAccountProfileSelect } from "./profile-dto";
 import { sanitizeAuthReturnTo } from "./auth-return";
 import { getSupabaseAuthUnavailableReason, isSupabaseConfigured, supabase } from "./supabase";
 
@@ -56,9 +57,7 @@ function isRejectedRefreshTokenError(error: { message?: string; status?: number 
 async function fetchProfile(client: SupabaseClient, user: User): Promise<UserProfile> {
   const { data: profileData, error: profileError } = await client
     .from("profiles")
-    .select(
-      "id,email,first_name,last_name,display_name,account_status,verification_status,governorate,city_area,bio,business_name,phone,whatsapp,preferred_contact_method,avatar_path,avatar_url,cover_path,cover_url,created_at,updated_at",
-    )
+    .select(privateAccountProfileSelect)
     .eq("id", user.id)
     .maybeSingle();
 
@@ -91,9 +90,7 @@ async function fetchProfile(client: SupabaseClient, user: User): Promise<UserPro
 
     const { data: bootstrappedProfile, error: bootstrapReadError } = await client
       .from("profiles")
-      .select(
-        "id,email,first_name,last_name,display_name,account_status,verification_status,governorate,city_area,bio,business_name,phone,whatsapp,preferred_contact_method,avatar_path,avatar_url,cover_path,cover_url,created_at,updated_at",
-      )
+      .select(privateAccountProfileSelect)
       .eq("id", user.id)
       .maybeSingle();
 
