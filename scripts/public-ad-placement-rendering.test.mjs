@@ -22,11 +22,12 @@ test("public ad slot loads device-targeted active placements and renders one ban
   assert.match(slot, /rel="noopener noreferrer sponsored"/);
 });
 
-test("broken public ad media is removed while preserving stable banner dimensions", () => {
+test("broken public ad media is removed while preserving stable, LCP-ready banner dimensions", () => {
   assert.match(slot, /useState<string \| null>\(null\)/);
   assert.match(slot, /failedImageUrl === placement\.imageUrl/);
   assert.match(slot, /onError=\{\(\) => setFailedImageUrl\(placement\.imageUrl\)\}/);
-  assert.match(slot, /loading="lazy"/);
+  assert.match(slot, /loading="eager"/);
+  assert.match(slot, /fetchPriority="high"/);
   assert.match(slot, /decoding="async"/);
   assert.match(slot, /width=\{1600\}/);
   assert.match(slot, /height=\{500\}/);
