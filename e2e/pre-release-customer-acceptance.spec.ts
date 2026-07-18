@@ -73,7 +73,6 @@ const ignoredRuntimeFragments = [
   "va.vercel-scripts.com",
   "vercel-insights.com",
 ];
-const isLiveBaseline = process.env.E2E_BASE_URL === "https://rawa-j.com";
 
 function routeSlug(route: string) {
   return route === "/" ? "home" : route.replace(/^\//, "").replaceAll("/", "-");
@@ -208,7 +207,7 @@ test("browser back and forward preserve public navigation", async ({ page }) => 
 
 test("320px hero and primary dock action remain readable", async ({ page }, testInfo) => {
   test.skip(
-    isLiveBaseline,
+    testInfo.project.use.baseURL === "https://rawa-j.com",
     "The live target intentionally remains the unfixed baseline for comparison.",
   );
   await page.setViewportSize({ width: 320, height: 568 });
