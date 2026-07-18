@@ -80,7 +80,7 @@ test("home shell renders one header and one responsive dock", async ({ page }, t
   }
 });
 
-test("home search trims Arabic and English queries and handles an empty submit", async ({ page }) => {
+test("home search submits trimmed queries", async ({ page }) => {
   await openHealthyPage(page, "/");
 
   const search = page.locator("#rawaj-home-search");
@@ -144,9 +144,9 @@ test("active public ad uses the unified ratio and follows the resolved route", a
   await expect(link).toHaveAttribute("rel", /sponsored/);
 
   const image = homeSlot.locator("img");
-  await expect
-    .poll(() => image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0))
-    .toBe(true);
+  const imageLoaded = () =>
+    image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0);
+  await expect.poll(imageLoaded).toBe(true);
   const ratio = await image.evaluate((element) => {
     const bounds = element.getBoundingClientRect();
     return bounds.width / bounds.height;
