@@ -70,7 +70,7 @@ export function createSeo(options: SeoOptions = {}) {
       { name: "twitter:image:alt", content: `${title} — ${siteName}` },
       ...(options.noindex ? [{ name: "robots", content: "noindex, nofollow" }] : []),
     ],
-    links: [{ rel: "canonical", href: url }],
+    links: options.path ? [{ rel: "canonical", href: url }] : [],
   };
 }
 
