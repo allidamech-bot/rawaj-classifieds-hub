@@ -1,21 +1,13 @@
-import type { Currency } from "@/types";
-
 // Consistent Arabic price formatting (Arabic-Indic digits + ٬ thousands separator).
-const nf = new Intl.NumberFormat("ar-SY", { maximumFractionDigits: 2 });
+const nf = new Intl.NumberFormat("ar-SY", { maximumFractionDigits: 0 });
 
-const currencyLabels: Record<Currency, string> = {
-  SYP: "ل.س جديدة",
-  USD: "$",
-  EUR: "€",
-  SAR: "ر.س",
-};
-
-export function formatPrice(price: number, currency: Currency = "SYP") {
+export function formatPrice(price: number, currency: "SYP" | "USD" = "SYP") {
   if (!price && price !== 0) return "";
-  return `${nf.format(price)} ${currencyLabels[currency]}`;
+  const formatted = nf.format(price);
+  return `${formatted} ${currency === "SYP" ? "ل.س" : "$"}`;
 }
 
-export function priceLabel(price: number, type: string, currency: Currency = "SYP") {
+export function priceLabel(price: number, type: string, currency: "SYP" | "USD" = "SYP") {
   switch (type) {
     case "free":
       return "مجاناً";
