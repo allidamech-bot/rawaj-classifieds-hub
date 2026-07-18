@@ -69,6 +69,84 @@ test("home discovery can navigate to the public listings workspace", async ({ pa
   await expect(page.locator("main")).toBeVisible();
 });
 
+test("pending navigation never exposes the previous home page inside the next route shell", async ({
+  page,
+}) => {
+  await openHealthyPage(page, "/");
+
+  const shell = page.locator(".rawaj-app-shell");
+  await expect(shell).toHaveAttribute("data-route-state", "idle");
+  await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
+  await expect(page.locator("main.rawaj-home-v3-main")).toBeVisible();
+
+  let releaseRequests!: () => void;
+  const requestGate = new Promise<void>((resolve) => {
+    releaseRequests = resolve;
+  });
+  let delayedRequestCount = 0;
+
+  await page.route("**/rest/v1/**", async (route) => {
+    delayedRequestCount += 1;
+    await requestGate;
+    await route.continue();
+  });
+
+  const listingsLink = page.locator('a[href="/listings"]').first();
+  const clickPromise = listingsLink.click({ noWaitAfter: true });
+
+  await expect(shell).toHaveAttribute("data-route-state", "pending");
+  await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
+  await expect(shell).toHaveAttribute("data-pending-pathname", "/listings");
+  await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
+  await expect(page.locator('[data-shell-region="page-content"]')).toBeHidden();
+  await expect(page.locator("main.rawaj-search-results-v1")).toHaveCount(0);
+  expect(delayedRequestCount).toBeGreaterThan(0);
+
+  releaseRequests();
+  await clickPromise;
+  await expect(page).toHaveURL(/\/listings(?:\?|$)/);
+  await expect(shell).toHaveAttribute("data-route-state", "idle");
+  await expect(shell).toHaveAttribute("data-resolved-pathname", "/listings");
+  await expect(page.locator('[data-shell-region="route-pending-mask"]')).toHaveCount(0);
+  await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(0);
+  await expect(page.locator("main.rawaj-search-results-v1")).toBeVisible();
+});
+
+test("rapid bottom navigation resolves to one page without stacked route content", async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile bottom-dock contract");
+  await openHealthyPage(page, "/");
+
+  let releaseRequests!: () => void;
+  const requestGate = new Promise<void>((resolve) => {
+    releaseRequests = resolve;
+  });
+
+  await page.route("**/rest/v1/**", async (route) => {
+    await requestGate;
+    await route.continue();
+  });
+
+  const shell = page.locator(".rawaj-app-shell");
+  await page.locator('.rawaj-mobile-dock a[href="/categories"]').click({ noWaitAfter: true });
+  await expect(shell).toHaveAttribute("data-route-state", "pending");
+  await page.locator('.rawaj-mobile-dock a[href="/"]').click({ noWaitAfter: true });
+  await page.locator('.rawaj-mobile-dock a[href="/categories"]').click({ noWaitAfter: true });
+
+  await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
+  await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
+  await expect(page.locator('[data-shell-region="page-content"]')).toBeHidden();
+  await expect(page.locator("main:visible")).toHaveCount(0);
+
+  releaseRequests();
+  await expect(page).toHaveURL(/\/categories(?:\?|$)/);
+  await expect(shell).toHaveAttribute("data-route-state", "idle");
+  await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
+  await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(0);
+  await expect(page.locator("main.rawaj-categories-page")).toHaveCount(1);
+});
+
 test("category directory exposes an indexable category landing route when data exists", async ({
   page,
 }) => {
