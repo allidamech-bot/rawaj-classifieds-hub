@@ -162,6 +162,14 @@
   color: #c1d0c7;
 }
 
+.rawaj-search-results-v1 > .mt-4 {
+  color: #4c625a;
+}
+
+.dark .rawaj-search-results-v1 > .mt-4 {
+  color: #c1d0c7;
+}
+
 .rawaj-adaptive-card__title {
   display: -webkit-box;
   min-height: 2.55rem;
