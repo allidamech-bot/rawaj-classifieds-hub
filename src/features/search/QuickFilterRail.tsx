@@ -54,7 +54,8 @@ export function QuickFilterRail({
         document.querySelectorAll<HTMLElement>(".rawaj-filter-sheet__section"),
       );
       const target = sections.find(
-        (item) => item.querySelector("h3")?.textContent?.trim() === targetHeading,
+        (item) =>
+          item.querySelector("h3")?.textContent?.trim() === targetHeading,
       );
 
       if (!target) return;
@@ -88,9 +89,17 @@ export function QuickFilterRail({
         <MapPin aria-hidden="true" />
         <span>{locationLabel}</span>
       </button>
-      <button type="button" onClick={() => openSection("price")} data-active={priceActive}>
+      <button
+        type="button"
+        onClick={() => openSection("price")}
+        data-active={priceActive}
+      >
         <Tag aria-hidden="true" />
-        <span>{priceActive ? text("السعر محدد", "Price set") : text("السعر", "Price")}</span>
+        <span>
+          {priceActive
+            ? text("السعر محدد", "Price set")
+            : text("السعر", "Price")}
+        </span>
       </button>
       <button
         type="button"
