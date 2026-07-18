@@ -12,6 +12,7 @@ concurrency:
 
 permissions:
   contents: read
+  statuses: write
 
 jobs:
   quality:
@@ -33,6 +34,22 @@ jobs:
 
       - name: Run full repository check
         run: npm run check
+
+      - name: Publish quality result
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const passed = '${{ job.status }}' === 'success'
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: passed ? 'success' : 'failure',
+              context: 'Home Page Audit / Quality',
+              description: passed ? 'npm run check passed' : 'npm run check failed',
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            })
 
   browser:
     name: Browser Smoke
@@ -67,3 +84,19 @@ jobs:
             test-results
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Publish browser result
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const passed = '${{ job.status }}' === 'success'
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: passed ? 'success' : 'failure',
+              context: 'Home Page Audit / Browser',
+              description: passed ? 'Playwright smoke passed' : 'Playwright smoke failed',
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            })
