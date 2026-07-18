@@ -6,7 +6,7 @@ on:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   apply:
@@ -29,13 +29,24 @@ jobs:
       - run: npx eslint --quiet src/features/communication/ChatVoiceAttachment.tsx src/lib/api/messaging.ts src/lib/api/messaging-guarded.ts src/lib/classifieds-types.ts src/routes/chats.tsx
       - run: node scripts/check-migration-ledger.mjs
       - run: npm run typecheck -- --pretty false
-      - name: Remove temporary patch machinery
-        run: rm scripts/apply-chat-release-blockers.mjs .github/workflows/apply-chat-release-blockers.yml
-      - name: Commit the verified patch
+      - name: Stage verified files
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet && exit 0
-          git commit -m "fix: repair chat audio receipts and mobile layout"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          mkdir -p verified-patch
+          cp --parents \
+            src/features/communication/ChatVoiceAttachment.tsx \
+            src/lib/api/messaging.ts \
+            src/lib/api/messaging-guarded.ts \
+            src/lib/classifieds-types.ts \
+            src/routes/chats.tsx \
+            src/communication-center-v2.css \
+            supabase/migrations/202607180001_chat_delivery_read_receipts.sql \
+            docs/production-schema/migration-ledger.json \
+            scripts/chat-release-blockers.test.mjs \
+            .github/workflows/chat-release-blockers.yml \
+            verified-patch/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chat-release-blockers-verified-patch
+          path: verified-patch
+          if-no-files-found: error
+          retention-days: 2
