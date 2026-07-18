@@ -1,0 +1,256 @@
+name: Pre-release Customer Acceptance
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: pre-release-acceptance-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  adaptive-card-diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout PR merge ref
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          show-progress: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Capture adaptive card contract output
+        shell: bash
+        run: |
+          set +e
+          node --test scripts/adaptive-listing-cards.test.mjs > adaptive-card-diagnostic.txt 2>&1
+          status=$?
+          set -e
+          printf '%s\n' "$status" > adaptive-card-exit-code.txt
+          cat adaptive-card-diagnostic.txt
+
+      - name: Upload adaptive card diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: adaptive-card-contract-diagnostic
+          path: |
+            adaptive-card-diagnostic.txt
+            adaptive-card-exit-code.txt
+          if-no-files-found: error
+          retention-days: 7
+
+  local-main-browser-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      VITE_SITE_URL: http://127.0.0.1:4173
+      E2E_BASE_URL: http://127.0.0.1:4173
+
+    steps:
+      - name: Checkout audited branch head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          show-progress: false
+
+      - name: Verify baseline ancestry
+        shell: bash
+        run: |
+          git merge-base --is-ancestor 4444114fc0429175fff7cdbd9af0006c6ce7a143 HEAD
+          git status --short
+          git rev-parse HEAD
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck -- --pretty false
+
+      - name: Production build for local Node acceptance
+        run: NITRO_PRESET=node-server npm run build
+
+      - name: Start production server
+        shell: bash
+        run: |
+          mkdir -p .output/public/_vercel/insights
+          printf 'window.va=window.va||function(){};\n' > .output/public/_vercel/insights/script.js
+          HOST=127.0.0.1 PORT=4173 node .output/server/index.mjs >/tmp/rawaj-production.log 2>&1 &
+          for attempt in {1..40}; do
+            if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/rawaj-production.log
+          exit 1
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run local production customer acceptance audit
+        run: npx playwright test e2e/pre-release-customer-acceptance.spec.ts --project=desktop-chromium --workers=1
+
+      - name: Print production log on failure
+        if: failure()
+        run: cat /tmp/rawaj-production.log || true
+
+      - name: Upload local acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-main-pre-release-acceptance
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: warn
+          retention-days: 30
+
+  live-public-browser-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      E2E_BASE_URL: https://rawa-j.com
+
+    steps:
+      - name: Checkout audited branch head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          show-progress: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium, Firefox, and WebKit
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Run non-destructive live public acceptance audit
+        run: npx playwright test e2e/pre-release-customer-acceptance.spec.ts --project=desktop-chromium --workers=1
+
+      - name: Run cross-browser public release smoke
+        if: always()
+        run: npm run test:release:browsers
+
+      - name: Upload live acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-public-pre-release-acceptance
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: warn
+          retention-days: 30
+
+  lighthouse-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      E2E_BASE_URL: https://rawa-j.com
+
+    steps:
+      - name: Checkout audited branch head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          show-progress: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Resolve one live listing detail URL
+        id: listing
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE' >/tmp/rawaj-listing-url
+          import { chromium } from "playwright";
+
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({ locale: "ar-SY" });
+          await page.goto("https://rawa-j.com/listings", { waitUntil: "domcontentloaded" });
+          await page.waitForTimeout(2_000);
+          const href = await page.locator('a[href^="/listings/"]').first().getAttribute("href");
+          await browser.close();
+          if (!href) process.exit(2);
+          console.log(new URL(href, "https://rawa-j.com").href);
+          NODE
+          echo "url=$(cat /tmp/rawaj-listing-url)" >> "$GITHUB_OUTPUT"
+
+      - name: Run required mobile and desktop Lighthouse profiles
+        shell: bash
+        run: |
+          mkdir -p lighthouse-results
+          declare -A routes=(
+            [home]="https://rawa-j.com/"
+            [listings]="https://rawa-j.com/listings"
+            [listing-detail]="${{ steps.listing.outputs.url }}"
+            [login]="https://rawa-j.com/login"
+          )
+
+          for profile in mobile desktop; do
+            preset=()
+            if [[ "$profile" == "desktop" ]]; then
+              preset=(--preset=desktop)
+            fi
+
+            for name in home listings listing-detail login; do
+              npx --yes lighthouse "${routes[$name]}" \
+                --quiet \
+                --only-categories=performance,accessibility,best-practices,seo \
+                --output=json \
+                --output-path="lighthouse-results/${name}-${profile}.json" \
+                --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+                "${preset[@]}"
+            done
+          done
+
+      - name: Upload Lighthouse evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-lighthouse-pre-release-acceptance
+          path: lighthouse-results
+          if-no-files-found: warn
+          retention-days: 30
