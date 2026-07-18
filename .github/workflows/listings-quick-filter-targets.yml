@@ -1,0 +1,30 @@
+name: Listings Quick Filter Targets
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/features/search/QuickFilterRail.tsx"
+      - "scripts/listings-quick-filter-targets.test.mjs"
+      - ".github/workflows/listings-quick-filter-targets.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --test scripts/listings-quick-filter-targets.test.mjs
+      - run: npm run test:listings-filters
+      - run: npx eslint --quiet src/features/search/QuickFilterRail.tsx
+      - run: npm run typecheck -- --pretty false
+      - run: npm run build
