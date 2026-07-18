@@ -59,13 +59,19 @@ export function DiscoveryHero({
         </div>
 
         <div className="rawaj-search-overlay">
-          <form onSubmit={onSubmit} className="rawaj-search-overlay__form">
-            <label className="rawaj-search-overlay__field">
+          <form onSubmit={onSubmit} className="rawaj-search-overlay__form" role="search">
+            <label className="rawaj-search-overlay__field" htmlFor="rawaj-home-search">
               <Search className="h-5 w-5 shrink-0" strokeWidth={1.9} />
               <input
+                id="rawaj-home-search"
+                name="q"
                 value={searchValue}
                 onChange={(event) => onSearchValueChange(event.target.value)}
                 type="search"
+                inputMode="search"
+                enterKeyHint="search"
+                autoComplete="off"
+                dir="auto"
                 aria-label={text("ابحث في رواج", "Search RAWAJ")}
                 placeholder={text(
                   "ابحث عن سيارة، منزل، هاتف أو خدمة...",
