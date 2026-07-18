@@ -18,6 +18,7 @@ The release remains **NO-GO** for customer publication because:
 2. Existing production media includes materially oversized images. One listing-card source image was approximately 3.5 MB while rendered at a small card size. Production media transformation or replacement is outside this audit's non-destructive boundary.
 3. GitHub Actions does not expose dedicated Supabase test credentials, so real authenticated buyer, seller, favorite, saved-search, chat, notification, profile-edit, listing-create/edit, and admin journeys were not completed.
 4. Physical Android acceptance for OAuth/deep links, push navigation, safe areas, keyboard overlap, back behavior, TalkBack, and installation of the signed RC remains external.
+5. During the audit, `main` advanced to `22c6d0d5c3771136ba5cfbe64b028a76115ced79`; the audit branch must be updated and all gates rerun before merge consideration.
 
 No P0 defect was found. No Production promotion, live data mutation, Google Play upload, or PR merge was performed.
 
@@ -28,7 +29,9 @@ No P0 defect was found. No Production promotion, live data mutation, Google Play
 | Expected `main` commit | `4444114fc0429175fff7cdbd9af0006c6ce7a143` |
 | Actual verified `main` commit at audit start | Exact match |
 | Baseline commit message | `Build Android 1.0.4 release candidate (#457)` |
-| Feature branch ancestry | Baseline is an ancestor; branch is not behind `main` |
+| Feature branch ancestry at audit start | Baseline is an ancestor; branch was not behind `main` |
+| Current `main` after audit began | `22c6d0d5c3771136ba5cfbe64b028a76115ced79` |
+| Current integration status | Audit branch is behind the newer `main`; update and full rerun required before merge |
 | GitHub checkout cleanliness | Clean checkout verified by the acceptance workflow |
 | User Windows working tree | Not inspectable from the available environment |
 | `npm ci` | Executed in GitHub Actions |
@@ -60,7 +63,7 @@ The local workflow stubs only the unavailable Vercel Analytics script endpoint. 
 
 | Area | Audited branch/local production | Live website baseline |
 | --- | --- | --- |
-| Source revision | PR branch based on exact baseline | Deployment revision was not assumed to equal the branch |
+| Source revision | PR branch based on exact requested baseline; now behind newer `main` | Deployment revision was not assumed to equal the branch |
 | Supabase Actions secrets | Not configured | Public production reads available |
 | Public listing/seller data | Data-dependent tests can skip locally | Real public data inspected non-destructively |
 | 320 px hero/title | Fluid typography fix present | Overlap/crowding captured in live evidence |
@@ -342,6 +345,7 @@ The live Lighthouse baseline artifact from run `29622887163` expires on 2026-08-
 10. Local Vercel Analytics test-host shim.
 11. Correct installation of all cross-browser smoke engines.
 12. Separation of live baseline checks from branch-only fixed-state assertions.
+13. Removal of duplicate acceptance workflows and stale skeleton contract expectations.
 
 ## 19. Automated regression tests added or extended
 
@@ -369,20 +373,23 @@ The branch is subject to the repository Quality Gate, browser acceptance workflo
 
 The final diff must contain only the audit report, evidence workflow, tests and objective fixes. No dependency package, production data, Google Play configuration, unrelated feature or broad redesign is permitted.
 
+The current `main` advanced to `22c6d0d5c3771136ba5cfbe64b028a76115ced79` after the audit branch was created. The branch must be updated from this newer `main` and the complete gate set rerun before merge consideration. See `docs/qa/android-1.0.4-pre-release-main-advance-addendum.md`.
+
 ## 21. Remaining external acceptance gates
 
-1. Clear the Vercel build-rate limit and obtain a reviewable Preview.
-2. Re-run mobile/desktop Lighthouse on the deployed fixed branch with production-like data.
-3. Remediate or transform oversized Production media without destructive data loss.
-4. Configure isolated buyer, seller and admin E2E accounts/backend.
-5. Complete authenticated journeys B and C and all blocked mutations.
-6. Perform a physical Android RC pass for OAuth/deep links, push, safe areas, keyboard, back behavior and TalkBack.
-7. Review every final PR check and the final diff.
-8. Keep the PR draft and unmerged while any P0 or unresolved P1 remains.
-9. Do not upload or promote Android 1.0.4 until the recommendation changes.
+1. Update the branch from current `main` and rerun all integration gates.
+2. Clear the Vercel build-rate limit and obtain a reviewable Preview.
+3. Re-run mobile/desktop Lighthouse on the deployed fixed branch with production-like data.
+4. Remediate or transform oversized Production media without destructive data loss.
+5. Configure isolated buyer, seller and admin E2E accounts/backend.
+6. Complete authenticated journeys B and C and all blocked mutations.
+7. Perform a physical Android RC pass for OAuth/deep links, push, safe areas, keyboard, back behavior and TalkBack.
+8. Review every final PR check and the final diff.
+9. Keep the PR draft and unmerged while any P0 or unresolved P1 remains.
+10. Do not upload or promote Android 1.0.4 until the recommendation changes.
 
 ## 22. Final recommendation
 
 **NO-GO**
 
-The branch contains objective fixes and substantially stronger acceptance coverage, but release acceptance is incomplete. The live mobile discovery performance remains an unresolved P1 until oversized media is addressed and the fixed build is remeasured. Real authenticated journeys and physical Android acceptance also remain blocked. PR #458 must remain draft and unmerged.
+The branch contains objective fixes and substantially stronger acceptance coverage, but release acceptance is incomplete. The live mobile discovery performance remains an unresolved P1 until oversized media is addressed and the fixed build is remeasured. Real authenticated journeys and physical Android acceptance also remain blocked. PR #458 must remain draft and unmerged, and the branch must be updated from the newer `main` before any merge decision.
