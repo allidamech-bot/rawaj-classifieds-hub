@@ -652,15 +652,19 @@ function ChatsPage() {
     <>
       <PageHeader title={text("المحادثات", "Messages")} />
       <main className="rawaj-communication-v2 rawaj-communication-v2--messages container-wide mobile-page-bottom space-y-4 pt-4">
-        <CommunicationCenterHero
-          mode="messages"
-          unreadMessages={accountConversations.reduce(
-            (total, conversation) => total + conversation.unreadCount,
-            0,
-          )}
-          conversationCount={accountConversations.length}
-        />
-        <CommunicationSafetyNote />
+        <div className="hidden lg:block">
+          <CommunicationCenterHero
+            mode="messages"
+            unreadMessages={accountConversations.reduce(
+              (total, conversation) => total + conversation.unreadCount,
+              0,
+            )}
+            conversationCount={accountConversations.length}
+          />
+        </div>
+        <div className="hidden lg:block">
+          <CommunicationSafetyNote />
+        </div>
 
         <div className="rawaj-message-workspace">
           <aside
@@ -871,6 +875,25 @@ function ChatsPage() {
                           )}
                           <p className="rawaj-message-bubble__time">
                             {formatDateTime(message.createdAt, language)}
+                            {mine ? (
+                              <span
+                                className="ms-1 font-bold"
+                                data-message-state={
+                                  selectedConversation.otherLastReadAt &&
+                                  Date.parse(selectedConversation.otherLastReadAt) >=
+                                    Date.parse(message.createdAt)
+                                    ? "read"
+                                    : "delivered"
+                                }
+                              >
+                                {" · "}
+                                {selectedConversation.otherLastReadAt &&
+                                Date.parse(selectedConversation.otherLastReadAt) >=
+                                  Date.parse(message.createdAt)
+                                  ? text("مقروءة", "Read")
+                                  : text("تم التسليم", "Delivered")}
+                              </span>
+                            ) : null}
                           </p>
                           {!mine && (
                             <button

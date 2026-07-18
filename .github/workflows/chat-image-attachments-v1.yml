@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "src/lib/api/chat-image-attachments.ts"
+      - "src/lib/api/messaging.ts"
       - "supabase/migrations/202607170007_chat_image_attachments_v1.sql"
       - "docs/production-schema/migration-ledger.json"
       - "scripts/chat-image-attachments-v1.test.mjs"
@@ -25,7 +25,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx eslint --quiet src/lib/api/chat-image-attachments.ts
+      - run: npx eslint --quiet src/lib/api/messaging.ts
       - run: node --test scripts/chat-image-attachments-v1.test.mjs
       - run: node scripts/check-migration-ledger.mjs
       - run: npm run typecheck -- --pretty false

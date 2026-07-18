@@ -1,6 +1,6 @@
 import { RefreshCw, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createChatAudioSignedUrl } from "@/lib/classifieds-api";
+import { createChatAudioSignedUrl, downloadChatAudioObjectUrl } from "@/lib/classifieds-api";
 
 interface ChatVoiceAttachmentProps {
   attachmentPath: string;
@@ -18,53 +18,80 @@ export function ChatVoiceAttachment({
   unavailableLabel,
 }: ChatVoiceAttachmentProps) {
   const [url, setUrl] = useState(initialUrl);
-  const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState(!initialUrl);
-  const refreshedRef = useRef(false);
+  const [loading, setLoading] = useState(!initialUrl);
+  const [failed, setFailed] = useState(false);
   const mountedRef = useRef(true);
+  const loadingRef = useRef(false);
+  const ownedObjectUrlRef = useRef<string | null>(null);
+
+  const releaseOwnedUrl = useCallback(() => {
+    if (ownedObjectUrlRef.current) URL.revokeObjectURL(ownedObjectUrlRef.current);
+    ownedObjectUrlRef.current = null;
+  }, []);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      releaseOwnedUrl();
     };
-  }, []);
+  }, [releaseOwnedUrl]);
+
+  const resolveUrl = useCallback(
+    async (preferDownload = false) => {
+      if (!attachmentPath || loadingRef.current) return;
+      loadingRef.current = true;
+      if (mountedRef.current) {
+        setLoading(true);
+        setFailed(false);
+      }
+
+      let next = preferDownload ? null : await createChatAudioSignedUrl(attachmentPath);
+      let ownsNext = false;
+      if (!next) {
+        next = await downloadChatAudioObjectUrl(attachmentPath);
+        ownsNext = Boolean(next);
+      }
+
+      if (!mountedRef.current) {
+        if (ownsNext && next) URL.revokeObjectURL(next);
+        loadingRef.current = false;
+        return;
+      }
+
+      releaseOwnedUrl();
+      if (ownsNext && next) ownedObjectUrlRef.current = next;
+      setUrl(next);
+      setFailed(!next);
+      setLoading(false);
+      loadingRef.current = false;
+    },
+    [attachmentPath, releaseOwnedUrl],
+  );
 
   useEffect(() => {
+    releaseOwnedUrl();
     setUrl(initialUrl);
-    setFailed(!initialUrl);
-    refreshedRef.current = false;
-  }, [attachmentPath, initialUrl]);
-
-  const refresh = useCallback(async () => {
-    if (!attachmentPath || loading) return;
-    setLoading(true);
-    const next = await createChatAudioSignedUrl(attachmentPath);
-    if (!mountedRef.current) return;
-    setUrl(next);
-    setFailed(!next);
-    setLoading(false);
-  }, [attachmentPath, loading]);
+    setFailed(false);
+    setLoading(!initialUrl);
+    loadingRef.current = false;
+    if (!initialUrl) void resolveUrl();
+  }, [attachmentPath, initialUrl, releaseOwnedUrl, resolveUrl]);
 
   async function handleError() {
-    if (refreshedRef.current) {
-      setFailed(true);
-      return;
-    }
-    refreshedRef.current = true;
-    await refresh();
+    await resolveUrl(true);
   }
 
-  if (failed || !url) {
+  if (!url) {
     return (
       <div className="mb-2 rounded-xl bg-black/5 p-3">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Volume2 className="h-4 w-4" aria-hidden="true" />
-          <span>{unavailableLabel}</span>
+          <span>{loading ? retryLabel : unavailableLabel}</span>
         </div>
         <button
           type="button"
-          onClick={() => void refresh()}
+          onClick={() => void resolveUrl()}
           disabled={loading}
           className="mt-2 inline-flex min-h-9 items-center gap-2 rounded-lg bg-muted-surface px-3 text-xs font-bold text-primary hairline"
         >
@@ -76,7 +103,10 @@ export function ChatVoiceAttachment({
   }
 
   return (
-    <div className="mb-2 rounded-xl bg-black/5 p-2">
+    <div
+      className="mb-2 rounded-xl bg-black/5 p-2"
+      data-audio-source={ownedObjectUrlRef.current ? "private-download" : "signed-url"}
+    >
       <audio
         controls
         preload="metadata"
@@ -87,6 +117,7 @@ export function ChatVoiceAttachment({
       {durationMs ? (
         <p className="mt-1 text-[10px] text-muted-foreground">{Math.ceil(durationMs / 1000)}s</p>
       ) : null}
+      {failed ? <span className="sr-only">{unavailableLabel}</span> : null}
     </div>
   );
 }

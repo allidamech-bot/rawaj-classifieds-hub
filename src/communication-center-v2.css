@@ -1062,3 +1062,14 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* RAWAJ chat release blocker: keep the mobile conversation workspace above the fold. */
+@media (max-width: 1023px) {
+  .rawaj-communication-v2--messages {
+    padding-top: 0.35rem;
+  }
+
+  .rawaj-communication-v2--messages .rawaj-message-workspace {
+    min-height: calc(100dvh - 9.5rem);
+  }
+}

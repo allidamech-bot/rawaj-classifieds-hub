@@ -295,6 +295,7 @@ export interface Conversation {
   lastMessageAt: string | null;
   lastMessagePreview: string | null;
   unreadCount: number;
+  otherLastReadAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -238,6 +238,15 @@ export async function createChatAudioSignedUrl(path: string): Promise<string | n
   return error ? null : data.signedUrl;
 }
 
+export async function downloadChatAudioObjectUrl(path: string): Promise<string | null> {
+  if (!path || typeof URL === "undefined") return null;
+  const clientResult = getClient();
+  if (!clientResult.ok) return null;
+  const { data, error } = await clientResult.data.storage.from("conversation-audio").download(path);
+  if (error || !data) return null;
+  return URL.createObjectURL(data);
+}
+
 export async function startListingConversation(
   listingId: string,
 ): Promise<ClassifiedsResult<string>> {
@@ -655,6 +664,7 @@ function mapConversation(row: Record<string, unknown>): Conversation {
     lastMessageAt: rowNullableString(row, "last_message_at"),
     lastMessagePreview: rowNullableString(row, "last_message_preview"),
     unreadCount: rowNumber(row, "unread_count"),
+    otherLastReadAt: rowNullableString(row, "other_last_read_at"),
     createdAt: rowString(row, "created_at"),
     updatedAt: rowString(row, "updated_at"),
   };
