@@ -1,6 +1,8 @@
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
-import { Link, useNavigate } from "@tanstack/react-router";
 import { NotificationTrigger } from "@/components/NotificationTrigger";
+import { PublicAdPlacementSlot } from "@/components/PublicAdPlacementSlot";
+import { resolveAdPlacementPage } from "@/lib/ad-placement-route";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface Props {
@@ -13,6 +15,9 @@ interface Props {
 export function PageHeader({ title, to = "/", back = true, backMode = "link" }: Props) {
   const { text } = useUiPreferences();
   const navigate = useNavigate();
+  const pathname = useRouterState({
+    select: (state) => state.resolvedLocation?.pathname ?? state.location.pathname,
+  });
 
   function handleBack() {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -26,43 +31,50 @@ export function PageHeader({ title, to = "/", back = true, backMode = "link" }: 
     "rawaj-icon-button rawaj-touch-target grid shrink-0 place-items-center shadow-none";
 
   return (
-    <div className="rawaj-page-header sticky top-0 z-20">
-      <div className="container-wide flex min-h-14 items-center gap-2.5 py-1.5 sm:min-h-16 sm:gap-3">
-        {back && backMode === "history" ? (
-          <button
-            type="button"
-            onClick={handleBack}
-            aria-label={text("رجوع", "Back")}
-            title={text("رجوع", "Back")}
-            className={backClassName}
-          >
-            <ChevronRight className="h-4.5 w-4.5 rtl:rotate-180" strokeWidth={1.9} />
-          </button>
-        ) : back ? (
-          <Link
-            to={to}
-            aria-label={text("رجوع", "Back")}
-            title={text("رجوع", "Back")}
-            className={backClassName}
-          >
-            <ChevronRight className="h-4.5 w-4.5 rtl:rotate-180" strokeWidth={1.9} />
-          </Link>
-        ) : null}
+    <>
+      <div
+        className="rawaj-page-header sticky top-0 z-20"
+        data-shell-region="header-region"
+        data-resolved-pathname={pathname}
+      >
+        <div className="container-wide flex min-h-14 items-center gap-2.5 py-1.5 sm:min-h-16 sm:gap-3">
+          {back && backMode === "history" ? (
+            <button
+              type="button"
+              onClick={handleBack}
+              aria-label={text("رجوع", "Back")}
+              title={text("رجوع", "Back")}
+              className={backClassName}
+            >
+              <ChevronRight className="h-4.5 w-4.5 rtl:rotate-180" strokeWidth={1.9} />
+            </button>
+          ) : back ? (
+            <Link
+              to={to}
+              aria-label={text("رجوع", "Back")}
+              title={text("رجوع", "Back")}
+              className={backClassName}
+            >
+              <ChevronRight className="h-4.5 w-4.5 rtl:rotate-180" strokeWidth={1.9} />
+            </Link>
+          ) : null}
 
-        {title ? (
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-[15px] font-bold leading-tight text-primary sm:text-base">
-              {title}
-            </h1>
+          {title ? (
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-[15px] font-bold leading-tight text-primary sm:text-base">
+                {title}
+              </h1>
+            </div>
+          ) : (
+            <div className="flex-1" />
+          )}
+
+          <div className="ms-auto shrink-0">
+            <NotificationTrigger />
           </div>
-        ) : (
-          <div className="flex-1" />
-        )}
-
-        <div className="ms-auto shrink-0">
-          <NotificationTrigger />
         </div>
       </div>
-    </div>
+      <PublicAdPlacementSlot placementPage={resolveAdPlacementPage(pathname)} />
+    </>
   );
 }
