@@ -21,19 +21,45 @@ interface ChatVoiceRecorderProps {
 }
 
 const MAX_DURATION_MS = 120_000;
+const RECORDER_MIME_TYPES = [
+  "audio/webm;codecs=opus",
+  "audio/mp4;codecs=mp4a.40.2",
+  "audio/mp4",
+  "audio/webm",
+  "audio/ogg;codecs=opus",
+  "audio/ogg",
+] as const;
 
 function preferredMimeType() {
   if (typeof MediaRecorder === "undefined") return "";
-  for (const type of ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"]) {
-    if (MediaRecorder.isTypeSupported(type)) return type;
+  return RECORDER_MIME_TYPES.find((type) => MediaRecorder.isTypeSupported(type)) ?? "";
+}
+
+function canonicalMimeType(value: string) {
+  const baseType = value.trim().toLowerCase().split(";", 1)[0] ?? "";
+  if (baseType === "video/webm") return "audio/webm";
+  if (baseType === "audio/x-m4a" || baseType === "audio/m4a") return "audio/mp4";
+  if (["audio/webm", "audio/mp4", "audio/mpeg", "audio/ogg"].includes(baseType)) {
+    return baseType;
   }
   return "";
 }
 
 function extensionForMime(mime: string) {
-  if (mime.includes("mp4")) return "m4a";
-  if (mime.includes("ogg")) return "ogg";
+  if (mime === "audio/mp4") return "m4a";
+  if (mime === "audio/mpeg") return "mp3";
+  if (mime === "audio/ogg") return "ogg";
   return "webm";
+}
+
+function createRecorder(stream: MediaStream, mimeType: string) {
+  try {
+    return new MediaRecorder(stream, { mimeType });
+  } catch {
+    const baseType = canonicalMimeType(mimeType);
+    if (!baseType || baseType === mimeType) throw new Error("unsupported_audio_recorder");
+    return new MediaRecorder(stream, { mimeType: baseType });
+  }
 }
 
 export function ChatVoiceRecorder({
@@ -69,12 +95,17 @@ export function ChatVoiceRecorder({
       onError(labels.unsupported);
       return;
     }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mimeType = preferredMimeType();
-      const recorder = mimeType
-        ? new MediaRecorder(stream, { mimeType })
-        : new MediaRecorder(stream);
+      if (!mimeType) {
+        stream.getTracks().forEach((track) => track.stop());
+        onError(labels.unsupported);
+        return;
+      }
+
+      const recorder = createRecorder(stream, mimeType);
       streamRef.current = stream;
       recorderRef.current = recorder;
       chunksRef.current = [];
@@ -82,16 +113,26 @@ export function ChatVoiceRecorder({
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunksRef.current.push(event.data);
       };
+      recorder.onerror = () => {
+        cleanup();
+        onError(labels.unsupported);
+      };
       recorder.onstop = () => {
         const durationMs = Math.min(
           MAX_DURATION_MS,
           Math.max(1_000, Date.now() - startedAtRef.current),
         );
-        const type = recorder.mimeType || mimeType || "audio/webm";
-        const blob = new Blob(chunksRef.current, { type });
-        if (blob.size > 0) {
-          const file = new File([blob], `voice-${Date.now()}.${extensionForMime(type)}`, { type });
+        const type = canonicalMimeType(recorder.mimeType || mimeType);
+        const blob = type ? new Blob(chunksRef.current, { type }) : null;
+        if (blob && blob.size > 0) {
+          const file = new File(
+            [blob],
+            `voice-${Date.now()}.${extensionForMime(type)}`,
+            { type },
+          );
           onRecorded({ file, previewUrl: URL.createObjectURL(blob), durationMs });
+        } else {
+          onError(labels.unsupported);
         }
         cleanup();
       };
@@ -100,7 +141,7 @@ export function ChatVoiceRecorder({
       timerRef.current = window.setInterval(() => {
         const next = Date.now() - startedAtRef.current;
         setElapsedMs(next);
-        if (next >= MAX_DURATION_MS) recorder.stop();
+        if (next >= MAX_DURATION_MS && recorder.state === "recording") recorder.stop();
       }, 250);
     } catch {
       cleanup();
