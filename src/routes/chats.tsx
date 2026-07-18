@@ -850,8 +850,8 @@ function ChatsPage() {
                               durationMs={message.attachmentDurationMs}
                               retryLabel={text("إعادة تحميل التسجيل", "Reload voice message")}
                               unavailableLabel={text(
-                                "تعذر تحميل التسجيل الصوتي الخاص.",
-                                "The private voice message could not be loaded.",
+                                "تعذر تشغيل التسجيل الصوتي. أعد تحميله أو حاول مرة أخرى.",
+                                "Could not play the voice message. Reload it or try again.",
                               )}
                             />
                           ) : message.attachmentPath ? (

@@ -264,7 +264,6 @@ export async function uploadChatAudio(payload: {
       },
     };
   const extension = extensionForChatAudioMime(mimeType);
-  const normalizedName = normalizeChatAudioFileName(payload.file.name, mimeType);
   const path = [conversationId, userId, requestId].join("/") + "." + extension;
   let audioBytes: ArrayBuffer;
   try {
@@ -289,10 +288,9 @@ export async function uploadChatAudio(payload: {
       },
     };
   }
-  const fileToUpload = new File([audioBytes], normalizedName, { type: mimeType });
   const { error } = await clientResult.data.storage
     .from("conversation-audio")
-    .upload(path, fileToUpload, { upsert: false, contentType: mimeType, cacheControl: "3600" });
+    .upload(path, audioBytes, { upsert: false, contentType: mimeType, cacheControl: "3600" });
   if (error) {
     const mapped = mapError(error, "chat_audio_upload");
     return {
@@ -312,7 +310,7 @@ export async function uploadChatAudio(payload: {
     data: {
       path,
       mimeType: mimeType as UploadedChatAudio["mimeType"],
-      sizeBytes: fileToUpload.size,
+      sizeBytes: payload.file.size,
       kind: "audio",
       durationMs,
     },

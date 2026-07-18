@@ -26,11 +26,11 @@ test("chat audio validation keeps the canonical list and adds an operation code"
   }
 });
 
-test("chat audio upload normalizes the file name, extension, and MIME and keeps ArrayBuffer", () => {
+test("chat audio upload canonicalizes MIME/extension and keeps the ArrayBuffer transport", () => {
   assert.match(messaging, /normalizeChatAudioFileName/);
   assert.match(messaging, /extensionForChatAudioMime/);
   assert.match(messaging, /payload\.file\.arrayBuffer\(\)/);
-  assert.match(messaging, /new File\(\[audioBytes\], normalizedName/);
+  assert.match(messaging, /\.upload\(path, audioBytes, \{ upsert: false, contentType: mimeType/);
   assert.match(messaging, /operation: "chat_audio_recorder"/);
   assert.match(messaging, /operation: "chat_audio_prepare"/);
   assert.match(messaging, /operation: "chat_audio_upload"/);
