@@ -39,7 +39,10 @@ export function DiscoveryHero({
             <Sparkles className="h-4 w-4" strokeWidth={1.9} />
             {text("اكتشف رواج", "Discover RAWAJ")}
           </p>
-          <h1 id="rawaj-home-title">
+          <h1
+            id="rawaj-home-title"
+            style={{ fontSize: "clamp(2rem, 10vw, 4.75rem)", lineHeight: 1.06 }}
+          >
             {text("كل السوق السوري، في مكان واحد.", "Syria’s marketplace, all in one place.")}
           </h1>
           <p>

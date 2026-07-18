@@ -15,11 +15,12 @@ permissions:
 jobs:
   local-main-browser-audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     env:
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       VITE_SITE_URL: http://127.0.0.1:4173
+      E2E_BASE_URL: http://127.0.0.1:4173
 
     steps:
       - name: Checkout audited branch
@@ -50,11 +51,28 @@ jobs:
       - name: Production build
         run: npm run build
 
+      - name: Start production preview
+        shell: bash
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 >/tmp/rawaj-preview.log 2>&1 &
+          for attempt in {1..40}; do
+            if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/rawaj-preview.log
+          exit 1
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Run local-main customer acceptance audit
+      - name: Run local production customer acceptance audit
         run: npx playwright test e2e/pre-release-customer-acceptance.spec.ts --project=desktop-chromium --workers=1
+
+      - name: Print preview log on failure
+        if: failure()
+        run: cat /tmp/rawaj-preview.log || true
 
       - name: Upload local acceptance evidence
         if: always()
@@ -69,7 +87,7 @@ jobs:
 
   live-public-browser-audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
       E2E_BASE_URL: https://rawa-j.com
 
@@ -96,6 +114,7 @@ jobs:
         run: npx playwright test e2e/pre-release-customer-acceptance.spec.ts --project=desktop-chromium --workers=1
 
       - name: Run cross-browser public release smoke
+        if: always()
         run: npm run test:release:browsers
 
       - name: Upload live acceptance evidence

@@ -126,7 +126,16 @@ export function BottomDock({ pathname }: BottomDockProps) {
                   active || item.primary ? "font-bold" : "font-medium"
                 }`}
               >
-                {label}
+                {item.primary ? (
+                  <>
+                    <span className="max-[340px]:hidden">{label}</span>
+                    <span className="rawaj-bottom-dock__compact-label hidden max-[340px]:inline">
+                      {text("أضف", "Post")}
+                    </span>
+                  </>
+                ) : (
+                  label
+                )}
               </span>
               {active && !item.primary ? (
                 <span
