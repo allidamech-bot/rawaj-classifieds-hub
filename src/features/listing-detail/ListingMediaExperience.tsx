@@ -1,6 +1,7 @@
 import { ArrowLeft, ChevronLeft, ChevronRight, Heart, Maximize2, Share2 } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
+import { PublicAdPlacementSlot } from "@/components/PublicAdPlacementSlot";
 import type { ListingImage } from "@/lib/classifieds-types";
 import type { PlaceholderType } from "@/types";
 import { useListingMediaState } from "./useListingMediaState";
@@ -191,6 +192,8 @@ export function ListingMediaExperience({
 
         {imageError ? <p className="rawaj-detail-media__error">{imageError}</p> : null}
       </section>
+
+      <PublicAdPlacementSlot placementPage="listing_detail" />
 
       {viewerOpen ? (
         <Suspense fallback={null}>
