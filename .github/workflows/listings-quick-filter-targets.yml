@@ -25,6 +25,23 @@ jobs:
       - run: npm ci
       - run: node --test scripts/listings-quick-filter-targets.test.mjs
       - run: npm run test:listings-filters
-      - run: npx eslint --quiet src/features/search/QuickFilterRail.tsx
+      - name: Lint quick-filter source
+        id: lint
+        continue-on-error: true
+        run: >-
+          npx eslint --quiet --format json
+          --output-file eslint-quick-filter.json
+          src/features/search/QuickFilterRail.tsx
+      - name: Upload lint diagnostics
+        if: steps.lint.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: listings-quick-filter-lint
+          path: eslint-quick-filter.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Enforce lint result
+        if: steps.lint.outcome == 'failure'
+        run: exit 1
       - run: npm run typecheck -- --pretty false
       - run: npm run build
