@@ -37,13 +37,13 @@ test("chat audio upload canonicalizes MIME/extension and keeps the ArrayBuffer t
 });
 
 test("recorder supports candidate MIME list with safe fallback and error handling", () => {
-  assert.match(recorder, /RECORDER_MIME_CANDIDATES/);
-  assert.match(recorder, /audio\/webm;codecs=opus/);
-  assert.match(recorder, /audio\/mp4;codecs=mp4a\.40\.2/);
-  assert.match(recorder, /audio\/mp4/);
-  assert.match(recorder, /audio\/webm/);
-  assert.match(recorder, /audio\/ogg;codecs=opus/);
-  assert.match(recorder, /audio\/ogg/);
+  assert.match(recorder, /function recorderMimeCandidates\(\): string\[\]/);
+  assert.match(recorder, /"audio\/webm;codecs=opus"/);
+  assert.match(recorder, /"audio\/mp4;codecs=mp4a\.40\.2"/);
+  assert.match(recorder, /"audio\/mp4"/);
+  assert.match(recorder, /"audio\/webm"/);
+  assert.match(recorder, /"audio\/ogg;codecs=opus"/);
+  assert.match(recorder, /"audio\/ogg"/);
 });
 
 test("recorder normalizes Android aliases, guards stop, and exposes onerror", () => {

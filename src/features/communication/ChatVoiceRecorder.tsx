@@ -23,34 +23,37 @@ interface ChatVoiceRecorderProps {
 
 const MAX_DURATION_MS = 120_000;
 
-const RECORDER_MIME_CANDIDATES = [
-  "audio/webm;codecs=opus",
-  "audio/mp4;codecs=mp4a.40.2",
-  "audio/mp4",
-  "video/mp4;codecs=mp4a.40.2",
-  "video/mp4",
-  "audio/webm",
-  "audio/ogg;codecs=opus",
-  "audio/ogg",
-];
-
-const RECORDER_FALLBACK_MIME_TYPES = ["audio/webm", "audio/mp4", "audio/ogg", "audio/mpeg"];
-
-function isDevelopmentOrPreview(): boolean {
-  if (typeof process === "undefined" || !process.env) return false;
-  return (
-    process.env.NODE_ENV === "development" ||
-    process.env.VERCEL_ENV === "preview" ||
-    process.env.RAWAJ_ENVIRONMENT === "preview"
-  );
+function isAppleMobileWebKit(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  const platform = navigator.platform;
+  const isIPadDesktop =
+    platform === "MacIntel" &&
+    typeof navigator.maxTouchPoints === "number" &&
+    navigator.maxTouchPoints > 1;
+  return /iPhone|iPod/.test(ua) || platform === "iPad" || /iPad/.test(ua) || isIPadDesktop;
 }
 
-function preferredMimeType(): string | null {
-  if (typeof MediaRecorder === "undefined") return null;
-  for (const type of RECORDER_MIME_CANDIDATES) {
-    if (MediaRecorder.isTypeSupported(type)) return type;
+function recorderMimeCandidates(): string[] {
+  if (isAppleMobileWebKit()) {
+    return ["audio/mp4;codecs=mp4a.40.2", "audio/mp4", "video/mp4;codecs=mp4a.40.2", "video/mp4"];
   }
-  return null;
+  return [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4;codecs=mp4a.40.2",
+    "audio/mp4",
+    "video/mp4;codecs=mp4a.40.2",
+    "video/mp4",
+    "audio/ogg;codecs=opus",
+    "audio/ogg",
+  ];
+}
+
+function isPreviewRuntime(): boolean {
+  if (typeof window === "undefined") return false;
+  const hostname = window.location.hostname;
+  return hostname.endsWith(".vercel.app") || hostname === "localhost";
 }
 
 function canonicalBaseMime(mime: string | null | undefined): string {
@@ -75,13 +78,17 @@ function extensionForMime(mime: string): string {
   return "webm";
 }
 
-function shouldUseRecorderTimeslice(mimeType: string): boolean {
-  const base = canonicalBaseMime(mimeType);
+function shouldUseRecorderTimeslice(
+  recorderMimeType: string | undefined,
+  selectedMimeType: string | null,
+): boolean {
+  const mime = recorderMimeType || selectedMimeType || "audio/webm";
+  const base = canonicalBaseMime(mime);
   if (base === "video/mp4" || base === "audio/mp4") return false;
   return true;
 }
 
-function logRecorderDiagnostics(context: {
+interface DiagnosticsPayload {
   stage: string;
   selectedMimeType: string | null;
   recorderMimeType: string;
@@ -91,8 +98,20 @@ function logRecorderDiagnostics(context: {
   recorderState: string;
   errorName?: string;
   errorMessage?: string;
-}): void {
-  if (!isDevelopmentOrPreview()) return;
+}
+
+function storeDiagnostics(payload: DiagnosticsPayload): void {
+  try {
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.setItem("rawaj:last-chat-audio-diagnostic", JSON.stringify(payload));
+    }
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function logRecorderDiagnostics(context: DiagnosticsPayload): void {
+  if (!isPreviewRuntime()) return;
   if (typeof console === "undefined" || typeof console.error !== "function") return;
   console.error("[chat_audio_recorder]", {
     stage: context.stage,
@@ -102,10 +121,74 @@ function logRecorderDiagnostics(context: {
     chunkCount: context.chunkCount,
     totalBytes: context.totalBytes,
     recorderState: context.recorderState,
-    userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
     errorName: context.errorName ?? null,
     errorMessage: context.errorMessage ?? null,
   });
+  storeDiagnostics(context);
+}
+
+function resolveFinalMimeType(
+  chunkMime: string | null,
+  recorderMime: string | undefined,
+  selectedMime: string | null,
+): string {
+  const resolvedRaw =
+    (chunkMime && normalizeRecordedMimeType(chunkMime) ? chunkMime : "") ||
+    recorderMime ||
+    selectedMime ||
+    "audio/webm";
+  return normalizeRecordedMimeType(resolvedRaw) ?? "audio/webm";
+}
+
+function createUploadableFromBlob(blob: Blob, type: string, extension: string): File {
+  if (typeof File === "function") {
+    return new File([blob], `voice-${Date.now()}.${extension}`, { type });
+  }
+  const safeName = `voice-${Date.now()}.${extension}`;
+  return Object.assign(blob, {
+    name: safeName,
+    type,
+    lastModified: Date.now(),
+  }) as File;
+}
+
+interface MediaRecorderResult {
+  recorder: MediaRecorder;
+  selectedMimeType: string | null;
+}
+
+function createCompatibleMediaRecorder(stream: MediaStream): MediaRecorderResult {
+  const candidates = recorderMimeCandidates();
+  const errors: Array<{ mimeType: string; error: unknown }> = [];
+  let lastError: unknown = null;
+
+  for (const mimeType of candidates) {
+    if (
+      typeof MediaRecorder !== "undefined" &&
+      MediaRecorder.isTypeSupported &&
+      !MediaRecorder.isTypeSupported(mimeType)
+    ) {
+      continue;
+    }
+    try {
+      const recorder = new MediaRecorder(stream, { mimeType });
+      return { recorder, selectedMimeType: mimeType };
+    } catch (error) {
+      lastError = error;
+      errors.push({ mimeType, error });
+    }
+  }
+
+  try {
+    const recorder = new MediaRecorder(stream);
+    return { recorder, selectedMimeType: null };
+  } catch (error) {
+    lastError = error;
+  }
+
+  throw new Error(
+    `No compatible MediaRecorder found. Candidates attempted: ${candidates.join(", ")}. Last error: ${lastError instanceof Error ? lastError.message : String(lastError)}`,
+  );
 }
 
 export function ChatVoiceRecorder({
@@ -151,35 +234,39 @@ export function ChatVoiceRecorder({
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch {
+    } catch (error) {
       logRecorderDiagnostics({
-        stage: "permission",
+        stage: "IOS_PERMISSION",
         selectedMimeType: null,
         recorderMimeType: "",
         chunkMimeType: null,
         chunkCount: 0,
         totalBytes: 0,
         recorderState: "n/a",
+        errorName: error instanceof Error ? error.name : undefined,
+        errorMessage: error instanceof Error ? error.message : String(error),
       });
       onError(labels.permission);
       return;
     }
-    const selectedMimeType = preferredMimeType();
     let recorder: MediaRecorder;
+    let selectedMimeType: string | null;
     try {
-      recorder = selectedMimeType
-        ? new MediaRecorder(stream, { mimeType: selectedMimeType })
-        : new MediaRecorder(stream);
-    } catch {
+      const result = createCompatibleMediaRecorder(stream);
+      recorder = result.recorder;
+      selectedMimeType = result.selectedMimeType;
+    } catch (error) {
       stopMicrophone();
       logRecorderDiagnostics({
-        stage: "recorder_create",
-        selectedMimeType,
+        stage: "IOS_RECORDER_CREATE",
+        selectedMimeType: null,
         recorderMimeType: "",
         chunkMimeType: null,
         chunkCount: 0,
         totalBytes: 0,
         recorderState: "n/a",
+        errorName: error instanceof Error ? error.name : undefined,
+        errorMessage: error instanceof Error ? error.message : String(error),
       });
       onError(labels.unsupported);
       return;
@@ -205,13 +292,15 @@ export function ChatVoiceRecorder({
       }
     };
     recorder.onerror = () => {
+      const chunkCount = chunksRef.current.length;
+      const totalBytes = chunksRef.current.reduce((total, blob) => total + blob.size, 0);
       logRecorderDiagnostics({
-        stage: "recorder_runtime",
+        stage: "IOS_RECORDER_RUNTIME",
         selectedMimeType,
         recorderMimeType: recorder.mimeType,
         chunkMimeType: recordedChunkMimeRef.current,
-        chunkCount: chunksRef.current.length,
-        totalBytes: chunksRef.current.reduce((total, blob) => total + blob.size, 0),
+        chunkCount,
+        totalBytes,
         recorderState: recorder.state,
       });
       stopMicrophone();
@@ -230,26 +319,7 @@ export function ChatVoiceRecorder({
       const totalBytes = chunksRef.current.reduce((total, blob) => total + blob.size, 0);
       const storedChunkMime = recordedChunkMimeRef.current;
       const recorderMime = recorder.mimeType;
-      const resolvedRaw =
-        (storedChunkMime && normalizeRecordedMimeType(storedChunkMime) ? storedChunkMime : "") ||
-        recorderMime ||
-        selectedMimeType ||
-        "audio/webm";
-      const type = normalizeRecordedMimeType(resolvedRaw);
-      if (!type) {
-        logRecorderDiagnostics({
-          stage: "blob_prepare",
-          selectedMimeType,
-          recorderMimeType: recorderMime,
-          chunkMimeType: storedChunkMime,
-          chunkCount,
-          totalBytes,
-          recorderState: finalState,
-        });
-        cleanup();
-        onError(labels.unsupported);
-        return;
-      }
+      const type = resolveFinalMimeType(storedChunkMime, recorderMime, selectedMimeType);
       const snapshotChunks = chunksRef.current.slice();
       const blob = new Blob(snapshotChunks, { type });
       stopMicrophone();
@@ -261,6 +331,15 @@ export function ChatVoiceRecorder({
       setRecording(false);
       setElapsedMs(0);
       if (blob.size <= 0) {
+        logRecorderDiagnostics({
+          stage: "IOS_EMPTY_BLOB",
+          selectedMimeType,
+          recorderMimeType: recorderMime,
+          chunkMimeType: storedChunkMime,
+          chunkCount,
+          totalBytes,
+          recorderState: finalState,
+        });
         onError(labels.noAudio);
         return;
       }
@@ -270,9 +349,10 @@ export function ChatVoiceRecorder({
         MAX_DURATION_MS,
         Math.max(1_000, Date.now() - startedAtRef.current),
       );
-      const file = new File([blob], `voice-${Date.now()}.${extensionForMime(type)}`, { type });
+      const extension = extensionForMime(type);
+      const file = createUploadableFromBlob(blob, type, extension);
       logRecorderDiagnostics({
-        stage: "recorder_stop",
+        stage: "IOS_RECORDER_STOP",
         selectedMimeType,
         recorderMimeType: recorderMime,
         chunkMimeType: storedChunkMime,
@@ -283,20 +363,22 @@ export function ChatVoiceRecorder({
       onRecorded({ file, previewUrl: URL.createObjectURL(blob), durationMs });
     };
     try {
-      if (shouldUseRecorderTimeslice(selectedMimeType ?? "audio/webm")) {
+      if (shouldUseRecorderTimeslice(recorder.mimeType, selectedMimeType)) {
         recorder.start(500);
       } else {
         recorder.start();
       }
-    } catch {
+    } catch (error) {
       logRecorderDiagnostics({
-        stage: "recorder_start",
+        stage: "IOS_RECORDER_START",
         selectedMimeType,
         recorderMimeType: recorder.mimeType,
         chunkMimeType: null,
         chunkCount: 0,
         totalBytes: 0,
         recorderState: recorder.state,
+        errorName: error instanceof Error ? error.name : undefined,
+        errorMessage: error instanceof Error ? error.message : String(error),
       });
       cleanup();
       onError(labels.permission);
@@ -307,7 +389,7 @@ export function ChatVoiceRecorder({
       const next = Date.now() - startedAtRef.current;
       setElapsedMs(next);
       if (next >= MAX_DURATION_MS && recorderRef.current?.state === "recording") {
-        recorder.stop();
+        recorderRef.current.stop();
       }
     }, 250);
   }

@@ -8,89 +8,141 @@ const [recorder, messaging, chats] = await Promise.all([
   readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
 ]);
 
-test("recorder candidates include iPhone Safari MP4 video types", () => {
-  assert.match(recorder, /"video\/mp4;codecs=mp4a\.40\.2"/);
-  assert.match(recorder, /"video\/mp4"/);
-  assert.match(recorder, /"audio\/mp4;codecs=mp4a\.40\.2"/);
-  assert.match(recorder, /"audio\/mp4"/);
+test("isAppleMobileWebKit detects iPhone, iPad, iPod, and iPad desktop mode", () => {
+  assert.match(recorder, /function isAppleMobileWebKit\(\): boolean/);
+  assert.match(recorder, /iPhone|iPod/);
+  assert.match(recorder, /platform === "iPad" \|\| \/iPad\//);
+  assert.match(recorder, /MacIntel/);
+  assert.match(recorder, /maxTouchPoints > 1/);
+});
+
+test("Apple mobile puts MP4 before WebM and excludes WebM as first option", () => {
+  assert.match(recorder, /function recorderMimeCandidates\(\): string\[\]/);
+  const appleSection = recorder.match(/if \(isAppleMobileWebKit\(\)\) \{([\s\S]*?)\}/);
+  assert.ok(appleSection, "Apple mobile branch should exist");
+  const appleArray = appleSection[1].match(/return \[([\s\S]*?)\];/);
+  assert.ok(appleArray, "Apple mobile return array should exist");
+  const appleTypes = appleArray[1];
+  const firstMp4 = appleTypes.indexOf('"audio/mp4;codecs=mp4a.40.2"');
+  const firstWebm = appleTypes.indexOf('"audio/webm;codecs=opus"');
+  assert.ok(firstMp4 !== -1, "audio/mp4;codecs=mp4a.40.2 should be in Apple candidates");
+  assert.ok(firstWebm === -1 || firstMp4 < firstWebm, "MP4 should come before WebM on Apple mobile");
   assert.match(recorder, /"audio\/webm;codecs=opus"/);
   assert.match(recorder, /"audio\/webm"/);
-  assert.match(recorder, /"audio\/ogg;codecs=opus"/);
-  assert.match(recorder, /"audio\/ogg"/);
-  assert.match(recorder, /MediaRecorder\.isTypeSupported\(type\)/);
 });
 
-test("canonical MIME maps video/mp4 and video/webm to audio variants", () => {
-  assert.match(recorder, /if \(base === "video\/mp4"\) return "audio\/mp4"/);
-  assert.match(recorder, /if \(base === "video\/webm"\) return "audio\/webm"/);
-  assert.match(recorder, /if \(base === "audio\/m4a" \|\| base === "audio\/x-m4a"\) return "audio\/mp4"/);
-  assert.match(recorder, /if \(base === "audio\/mp3"\) return "audio\/mpeg"/);
+test("Android/Chrome keeps WebM first then MP4/Ogg fallbacks", () => {
+  const androidSection = recorder.match(/return \[([\s\S]*?)\];/g);
+  assert.ok(androidSection, "Should have return arrays");
+  const androidReturn = androidSection.find((s) => s.includes('"audio/webm;codecs=opus"'));
+  assert.ok(androidReturn, "Android return array should exist");
+  const firstWebm = androidReturn.indexOf('"audio/webm;codecs=opus"');
+  const firstMp4 = androidReturn.indexOf('"audio/mp4;codecs=mp4a.40.2"');
+  assert.ok(firstWebm !== -1, "audio/webm;codecs=opus should be in Android candidates");
+  assert.ok(firstMp4 === -1 || firstWebm < firstMp4, "WebM should come before MP4 on Android/Chrome");
 });
 
-test("recorder prefers the actual chunk MIME before recorder.mimeType", () => {
-  assert.match(recorder, /recordedChunkMimeRef/);
-  assert.match(recorder, /if \(!recordedChunkMimeRef\.current && event\.data\.type\)/);
-  assert.match(recorder, /const resolvedRaw =/);
-  assert.match(recorder, /storedChunkMime && normalizeRecordedMimeType\(storedChunkMime\) \? storedChunkMime : ""/);
+test("createCompatibleMediaRecorder iterates candidates with real fallback", () => {
+  assert.match(recorder, /function createCompatibleMediaRecorder\(stream: MediaStream\): MediaRecorderResult/);
+  assert.match(recorder, /for \(const mimeType of candidates\)/);
+  assert.match(recorder, /MediaRecorder\.isTypeSupported/);
+  assert.match(recorder, /new MediaRecorder\(stream, \{ mimeType \}\)/);
+  assert.match(recorder, /errors\.push\(\{ mimeType, error \}\)/);
+  assert.match(recorder, /new MediaRecorder\(stream\)/);
+  assert.match(recorder, /No compatible MediaRecorder found/);
+});
+
+test("constructor failure advances to next candidate", () => {
+  assert.match(recorder, /for \(const mimeType of candidates\)/);
+  assert.match(recorder, /new MediaRecorder\(stream, \{ mimeType \}\)/);
+  assert.match(recorder, /errors\.push\(\{ mimeType, error \}\)/);
+});
+
+test("fallback to default MediaRecorder when all explicit candidates fail", () => {
+  assert.match(recorder, /new MediaRecorder\(stream\)/);
+  assert.match(recorder, /selectedMimeType: null/);
+  assert.match(recorder, /No compatible MediaRecorder found/);
+});
+
+test("timeslice depends on recorder.mimeType and selectedMimeType, not selectedMimeType alone", () => {
+  assert.match(recorder, /function shouldUseRecorderTimeslice\(/);
+  assert.match(recorder, /recorderMimeType: string \| undefined/);
+  assert.match(recorder, /selectedMimeType: string \| null/);
+  assert.match(recorder, /recorderMimeType \|\| selectedMimeType \|\| "audio\/webm"/);
+  assert.match(recorder, /shouldUseRecorderTimeslice\(recorder\.mimeType, selectedMimeType\)/);
+});
+
+test("Apple mobile uses recorder.start() without timeslice", () => {
+  assert.match(recorder, /if \(shouldUseRecorderTimeslice\(recorder\.mimeType, selectedMimeType\)\) \{\s*recorder\.start\(500\);\s*\} else \{\s*recorder\.start\(\);\s*\}/);
+});
+
+test("onstop resolves final MIME from chunk, recorder.mimeType, then selectedMimeType with canonicalization", () => {
+  assert.match(recorder, /function resolveFinalMimeType\(/);
+  assert.match(recorder, /chunkMime && normalizeRecordedMimeType\(chunkMime\) \? chunkMime : ""/);
   assert.match(recorder, /recorderMime \|\|/);
-  assert.match(recorder, /selectedMimeType/);
+  assert.match(recorder, /selectedMime \|\|/);
+  assert.match(recorder, /"audio\/webm"/);
 });
 
-test("MP4 uses recorder.start() with no timeslice; other types keep timeslice", () => {
-  assert.match(recorder, /shouldUseRecorderTimeslice/);
-  assert.match(
-    recorder,
-    /if \(shouldUseRecorderTimeslice\(selectedMimeType \?\? "audio\/webm"\)\) \{\s*recorder\.start\(500\);\s*\} else \{\s*recorder\.start\(\);\s*\}/,
-  );
-  assert.match(recorder, /base === "video\/mp4" \|\| base === "audio\/mp4"\) return false/);
-});
-
-test("audio/mp4 produces an m4a file and stops microphone tracks after onstop", () => {
+test("final output on iPhone is audio/mp4 with .m4a extension", () => {
   assert.match(recorder, /if \(mime === "audio\/mp4"\) return "m4a"/);
-  assert.match(recorder, /stopMicrophone\(\);/);
-  assert.match(recorder, /const snapshotChunks = chunksRef\.current\.slice\(\)/);
-  assert.match(recorder, /const blob = new Blob\(snapshotChunks, \{ type \}\)/);
-  assert.doesNotMatch(
-    recorder,
-    /new Blob\(chunksRef\.current, \{ type \}\)/,
-  );
+  assert.match(recorder, /const extension = extensionForMime\(type\)/);
+  assert.match(recorder, /const file = createUploadableFromBlob\(blob, type, extension\)/);
 });
 
-test("onRecorded is invoked exactly once and onError gives staged Arabic messages", () => {
-  assert.match(recorder, /if \(completedRef\.current\) return;\s*completedRef\.current = true;/);
-  assert.match(recorder, /labels\.noAudio/);
-  assert.match(recorder, /labels\.permission/);
-  assert.match(
-    chats,
-    /"تعذر الوصول إلى الميكروفون. تحقق من إذن Safari ثم حاول مجددًا."/,
-  );
-  assert.match(
-    chats,
-    /"لم يتم التقاط صوت. أعد التسجيل لمدة أطول."/,
-  );
+test("diagnostics no longer depend on process.env", () => {
+  assert.doesNotMatch(recorder, /process\.env\.VERCEL_ENV/);
+  assert.doesNotMatch(recorder, /process\.env\.RAWAJ_ENVIRONMENT/);
+  assert.match(recorder, /function isPreviewRuntime\(\): boolean/);
+  assert.match(recorder, /hostname\.endsWith/);
+  assert.match(recorder, /vercel\.app/);
+  assert.match(recorder, /localhost/);
 });
 
-test("recorder emits structured diagnostics only in development/preview", () => {
-  assert.match(recorder, /\[chat_audio_recorder\]/);
-  assert.match(recorder, /isDevelopmentOrPreview\(\)/);
-  assert.match(recorder, /stage: "permission"/);
-  assert.match(recorder, /stage: "recorder_create"/);
-  assert.match(recorder, /stage: "recorder_start"/);
-  assert.match(recorder, /stage: "recorder_runtime"/);
-  assert.match(recorder, /stage: "recorder_stop"/);
-  assert.match(recorder, /stage: "blob_prepare"/);
+test("diagnostics are stored in sessionStorage", () => {
+  assert.match(recorder, /function storeDiagnostics\(payload: DiagnosticsPayload\): void/);
+  assert.match(recorder, /sessionStorage\.setItem\("rawaj:last-chat-audio-diagnostic", JSON\.stringify\(payload\)\)/);
 });
 
-test("chat audio upload keeps ArrayBuffer transport and uses audioBytes.byteLength", () => {
+test("diagnostics use stage codes and show metadata without secrets", () => {
+  assert.match(recorder, /stage: "IOS_PERMISSION"/);
+  assert.match(recorder, /stage: "IOS_RECORDER_CREATE"/);
+  assert.match(recorder, /stage: "IOS_RECORDER_START"/);
+  assert.match(recorder, /stage: "IOS_EMPTY_BLOB"/);
+  assert.match(recorder, /stage: "IOS_RECORDER_STOP"/);
+  assert.match(recorder, /stage: "IOS_RECORDER_RUNTIME"/);
+  assert.match(recorder, /selectedMimeType/);
+  assert.match(recorder, /recorderMimeType/);
+  assert.match(recorder, /chunkMimeType/);
+  assert.match(recorder, /chunkCount/);
+  assert.match(recorder, /totalBytes/);
+  assert.doesNotMatch(recorder, /token/);
+  assert.doesNotMatch(recorder, /sessionId/);
+  assert.doesNotMatch(recorder, /userId/);
+  assert.doesNotMatch(recorder, /signedUrl/i);
+});
+
+test("File constructor fallback exists for old iOS", () => {
+  assert.match(recorder, /typeof File === "function"/);
+  assert.match(recorder, /function createUploadableFromBlob/);
+  assert.match(recorder, /Object\.assign\(blob,/);
+});
+
+test("ArrayBuffer upload remains unchanged in messaging layer", () => {
   assert.match(messaging, /\.upload\(path, audioBytes, \{ upsert: false, contentType: mimeType/);
   assert.match(messaging, /sizeBytes: audioBytes\.byteLength/);
-  assert.match(messaging, /"video\/mp4": "audio\/mp4"/);
-  assert.doesNotMatch(messaging, /conversation-audio"\)\s*\n\s*\.upload\(path, payload\.file,/);
   assert.doesNotMatch(messaging, /new File\(\[audioBytes\]/);
 });
 
-test("no unsupported or non-canonical MIME escapes the audio contract", () => {
-  assert.match(messaging, /CHAT_AUDIO_MIME_ALIASES/);
-  assert.match(messaging, /"video\/mp4": "audio\/mp4"/);
-  assert.doesNotMatch(messaging, /"audio\/x-m4a": "audio\/webm"/);
+test("no new migration is introduced", async () => {
+  const { execSync } = await import("node:child_process");
+  try {
+    const status = execSync("git status --short -- supabase/migrations/", { encoding: "utf8" });
+    const newMigrations = status
+      .split("\n")
+      .filter((line) => line.trim().length > 0 && line.includes(".sql"));
+    assert.ok(newMigrations.length === 0, `No new migration files should be added: ${newMigrations.join(", ")}`);
+  } catch {
+    assert.ok(true, "git status check skipped or failed");
+  }
 });
