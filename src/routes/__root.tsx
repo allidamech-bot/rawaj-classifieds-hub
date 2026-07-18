@@ -323,14 +323,20 @@ function personalSpaceRouteClass(pathname: string) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const resolvedPathname = useRouterState({
-    select: (state) => state.resolvedLocation.pathname,
+  const routeNavigation = useRouterState({
+    select: (state) => {
+      const resolvedPathname = state.resolvedLocation?.pathname ?? state.location.pathname;
+      return {
+        resolvedPathname,
+        pendingPathname: state.location.pathname,
+        isRouteNavigating:
+          Boolean(state.resolvedLocation) &&
+          state.isLoading &&
+          state.location.pathname !== resolvedPathname,
+      };
+    },
   });
-  const pendingPathname = useRouterState({ select: (state) => state.location.pathname });
-  const isRouteNavigating = useRouterState({
-    select: (state) =>
-      state.isLoading && state.location.pathname !== state.resolvedLocation.pathname,
-  });
+  const { resolvedPathname, pendingPathname, isRouteNavigating } = routeNavigation;
   const showDraftRecovery = resolvedPathname === "/add-listing";
   const routeScopeClass = personalSpaceRouteClass(resolvedPathname);
   const listingDetailMatch = resolvedPathname.match(/^\/listings\/([^/]+)$/);
