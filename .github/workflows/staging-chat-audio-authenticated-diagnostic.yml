@@ -1,0 +1,39 @@
+name: Staging Chat Audio Authenticated Diagnostic
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/staging-chat-audio-authenticated-diagnostic.mjs"
+      - ".github/workflows/staging-chat-audio-authenticated-diagnostic.yml"
+      - "src/lib/api/messaging.ts"
+      - "src/lib/supabase.ts"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authenticated-audio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: rawaj-staging
+    env:
+      RAWAJ_STAGING_PROJECT_REF: ${{ secrets.RAWAJ_STAGING_PROJECT_REF }}
+      RAWAJ_PRODUCTION_PROJECT_REF: ${{ secrets.RAWAJ_PRODUCTION_PROJECT_REF }}
+      VITE_SUPABASE_URL: ${{ secrets.RAWAJ_STAGING_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.RAWAJ_STAGING_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.RAWAJ_STAGING_SERVICE_ROLE_KEY }}
+      RAWAJ_STAGING_USER_A_EMAIL: ${{ secrets.RAWAJ_STAGING_USER_A_EMAIL }}
+      RAWAJ_STAGING_USER_A_PASSWORD: ${{ secrets.RAWAJ_STAGING_USER_A_PASSWORD }}
+      RAWAJ_STAGING_USER_B_EMAIL: ${{ secrets.RAWAJ_STAGING_USER_B_EMAIL }}
+      RAWAJ_STAGING_USER_B_PASSWORD: ${{ secrets.RAWAJ_STAGING_USER_B_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run exact client upload and send path
+        run: node scripts/staging-chat-audio-authenticated-diagnostic.mjs
