@@ -23,15 +23,10 @@ export function DiscoveryHero({
   text,
 }: DiscoveryHeroProps) {
   const query = searchValue.trim();
-  const filterSearch = query
-    ? { q: query, open_filters: true }
-    : { open_filters: true };
+  const filterSearch = query ? { q: query, open_filters: true } : { open_filters: true };
 
   return (
-    <section
-      className="rawaj-discovery-hero"
-      aria-labelledby="rawaj-home-title"
-    >
+    <section className="rawaj-discovery-hero" aria-labelledby="rawaj-home-title">
       <div className="rawaj-discovery-hero__geometry" aria-hidden="true">
         <span data-shape="one" />
         <span data-shape="two" />
@@ -48,10 +43,7 @@ export function DiscoveryHero({
             id="rawaj-home-title"
             style={{ fontSize: "clamp(2rem, 10vw, 4.75rem)", lineHeight: 1.06 }}
           >
-            {text(
-              "كل السوق السوري، في مكان واحد.",
-              "Syria’s marketplace, all in one place.",
-            )}
+            {text("كل السوق السوري، في مكان واحد.", "Syria’s marketplace, all in one place.")}
           </h1>
           <p>
             {text(
@@ -91,11 +83,7 @@ export function DiscoveryHero({
           </form>
 
           <div className="rawaj-search-overlay__controls">
-            <Link
-              to="/listings"
-              search={filterSearch}
-              className="rawaj-search-location"
-            >
+            <Link to="/listings" search={filterSearch} className="rawaj-search-location">
               <MapPin className="h-4 w-4" strokeWidth={1.9} />
               <span>{text("كل سوريا", "All Syria")}</span>
             </Link>
@@ -112,11 +100,7 @@ export function DiscoveryHero({
 
           <div className="rawaj-search-shortcuts">
             {quickSearches.map((shortcut) => (
-              <Link
-                key={shortcut.query}
-                to="/listings"
-                search={{ q: shortcut.query }}
-              >
+              <Link key={shortcut.query} to="/listings" search={{ q: shortcut.query }}>
                 {text(shortcut.ar, shortcut.en)}
               </Link>
             ))}
