@@ -68,11 +68,7 @@ const evidenceRoutes = new Set([
   "/notifications",
 ]);
 
-const ignoredRuntimeFragments = [
-  "ERR_ABORTED",
-  "va.vercel-scripts.com",
-  "vercel-insights.com",
-];
+const ignoredRuntimeFragments = ["ERR_ABORTED", "va.vercel-scripts.com", "vercel-insights.com"];
 
 function routeSlug(route: string) {
   return route === "/" ? "home" : route.replace(/^\//, "").replaceAll("/", "-");
@@ -94,9 +90,7 @@ function monitorRuntime(page: Page) {
   page.on("requestfailed", (request) => {
     const failure = request.failure()?.errorText ?? "unknown failure";
     const evidence = `${request.method()} ${request.url()}: ${failure}`;
-    if (
-      !ignoredRuntimeFragments.some((fragment) => evidence.includes(fragment))
-    ) {
+    if (!ignoredRuntimeFragments.some((fragment) => evidence.includes(fragment))) {
       failedRequests.push(evidence);
     }
   });
@@ -113,10 +107,7 @@ async function assertRouteHealth(
   const runtime = monitorRuntime(page);
   const response = await page.goto(route, { waitUntil: "domcontentloaded" });
 
-  expect(
-    response?.status() ?? 200,
-    `${route} returned a server failure`,
-  ).toBeLessThan(500);
+  expect(response?.status() ?? 200, `${route} returned a server failure`).toBeLessThan(500);
   await expect(page.locator("body")).toBeVisible();
   await expect(page.locator("main")).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", /^ar(?:-|$)/);
@@ -127,10 +118,9 @@ async function assertRouteHealth(
     viewportWidth: document.documentElement.clientWidth,
     documentWidth: document.documentElement.scrollWidth,
   }));
-  expect(
-    dimensions.documentWidth,
-    `${route} has horizontal overflow`,
-  ).toBeLessThanOrEqual(dimensions.viewportWidth + 2);
+  expect(dimensions.documentWidth, `${route} has horizontal overflow`).toBeLessThanOrEqual(
+    dimensions.viewportWidth + 2,
+  );
 
   if (testInfo && screenshotName) {
     await page.screenshot({
@@ -142,9 +132,7 @@ async function assertRouteHealth(
 
   expect(runtime.pageErrors, `${route} emitted page errors`).toEqual([]);
   expect(runtime.consoleErrors, `${route} emitted console errors`).toEqual([]);
-  expect(runtime.failedRequests, `${route} emitted failed requests`).toEqual(
-    [],
-  );
+  expect(runtime.failedRequests, `${route} emitted failed requests`).toEqual([]);
 }
 
 test.describe.configure({ mode: "serial" });
@@ -162,12 +150,7 @@ for (const viewport of viewportMatrix) {
     try {
       for (const route of ["/", "/listings"] as const) {
         const page = await context.newPage();
-        await assertRouteHealth(
-          page,
-          route,
-          testInfo,
-          `${viewport.name}-${routeSlug(route)}`,
-        );
+        await assertRouteHealth(page, route, testInfo, `${viewport.name}-${routeSlug(route)}`);
         await page.close();
       }
     } finally {
@@ -196,9 +179,7 @@ for (const viewport of [
           page,
           route,
           testInfo,
-          evidenceRoutes.has(route)
-            ? `${viewport.name}-${routeSlug(route)}`
-            : undefined,
+          evidenceRoutes.has(route) ? `${viewport.name}-${routeSlug(route)}` : undefined,
         );
         await page.reload({ waitUntil: "domcontentloaded" });
         await expect(page.locator("main")).toBeVisible();
@@ -210,9 +191,7 @@ for (const viewport of [
   });
 }
 
-test("browser back and forward preserve public navigation", async ({
-  page,
-}) => {
+test("browser back and forward preserve public navigation", async ({ page }) => {
   await assertRouteHealth(page, "/");
   await page.goto("/categories", { waitUntil: "domcontentloaded" });
   await expect(page.locator("main")).toBeVisible();
@@ -222,9 +201,7 @@ test("browser back and forward preserve public navigation", async ({
   await expect(page).toHaveURL(/\/categories\/?$/);
 });
 
-test("320px hero and primary dock action remain readable", async ({
-  page,
-}, testInfo) => {
+test("320px hero and primary dock action remain readable", async ({ page }, testInfo) => {
   test.skip(
     testInfo.project.use.baseURL === "https://rawa-j.com",
     "The live target intentionally remains the unfixed baseline for comparison.",
@@ -238,67 +215,43 @@ test("320px hero and primary dock action remain readable", async ({
   const descriptionBox = await description.boundingBox();
   expect(headingBox).not.toBeNull();
   expect(descriptionBox).not.toBeNull();
-  expect(headingBox!.y + headingBox!.height).toBeLessThanOrEqual(
-    descriptionBox!.y + 1,
-  );
+  expect(headingBox!.y + headingBox!.height).toBeLessThanOrEqual(descriptionBox!.y + 1);
 
-  const primaryDockAction = page.locator(
-    '.rawaj-dock-item[data-primary="true"]',
-  );
+  const primaryDockAction = page.locator('.rawaj-dock-item[data-primary="true"]');
   await expect(primaryDockAction).toBeVisible();
-  await expect(
-    primaryDockAction.locator(".rawaj-bottom-dock__compact-label"),
-  ).toBeVisible();
-  await expect(
-    primaryDockAction.locator(".rawaj-bottom-dock__compact-label"),
-  ).toHaveText("أضف");
+  await expect(primaryDockAction.locator(".rawaj-bottom-dock__compact-label")).toBeVisible();
+  await expect(primaryDockAction.locator(".rawaj-bottom-dock__compact-label")).toHaveText("أضف");
 });
 
 test("login validation blocks malformed credentials without losing the form", async ({
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await assertRouteHealth(
-    page,
-    "/login?returnTo=/favorites",
-    testInfo,
-    "login-validation-mobile",
-  );
+  await assertRouteHealth(page, "/login?returnTo=/favorites", testInfo, "login-validation-mobile");
 
   const email = page.locator('input[type="email"]');
   const password = page.locator('input[type="password"]');
   if ((await email.count()) === 0 || (await password.count()) === 0) {
     await expect(
-      page
-        .getByText(/خدمة الحسابات غير متاحة|Account service is unavailable/i)
-        .first(),
+      page.getByText(/خدمة الحسابات غير متاحة|Account service is unavailable/i).first(),
     ).toBeVisible();
-    test.skip(
-      true,
-      "Authentication environment variables are not configured for this target.",
-    );
+    test.skip(true, "Authentication environment variables are not configured for this target.");
   }
 
   await email.fill("invalid-email");
   await password.fill("123");
   await page.locator('form button[type="submit"]').click();
   expect(
-    await email.evaluate(
-      (element) => !(element as HTMLInputElement).validity.valid,
-    ),
+    await email.evaluate((element) => !(element as HTMLInputElement).validity.valid),
   ).toBeTruthy();
   await expect(page).toHaveURL(/\/login/);
   await expect(email).toHaveValue("invalid-email");
 });
 
-test("keyboard navigation exposes focus and open dialogs close with Escape", async ({
-  page,
-}) => {
+test("keyboard navigation exposes focus and open dialogs close with Escape", async ({ page }) => {
   await assertRouteHealth(page, "/");
   await page.keyboard.press("Tab");
-  const activeTag = await page.evaluate(
-    () => document.activeElement?.tagName ?? "BODY",
-  );
+  const activeTag = await page.evaluate(() => document.activeElement?.tagName ?? "BODY");
   expect(activeTag).not.toBe("BODY");
 
   const dialogTrigger = page.locator('button[aria-haspopup="dialog"]').first();
@@ -316,12 +269,7 @@ test("public discovery opens listing detail and seller storefront when data exis
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await assertRouteHealth(
-    page,
-    "/listings",
-    testInfo,
-    "listings-discovery-mobile",
-  );
+  await assertRouteHealth(page, "/listings", testInfo, "listings-discovery-mobile");
   const listingLinks = page.locator('a[href^="/listings/"]');
   await page.waitForTimeout(1_000);
 
@@ -364,9 +312,7 @@ test("public discovery opens listing detail and seller storefront when data exis
       .isVisible()
       .catch(() => false);
     expect(
-      pathname.startsWith("/login") ||
-        pathname.startsWith("/chats") ||
-        dialogVisible,
+      pathname.startsWith("/login") || pathname.startsWith("/chats") || dialogVisible,
     ).toBeTruthy();
   }
 });
