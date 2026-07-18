@@ -3,13 +3,28 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const [header, slot, api] = await Promise.all([
-  readFile(new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/api/public-ad-placements.ts", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/lib/api/public-ad-placements.ts", import.meta.url),
+    "utf8",
+  ),
 ]);
 
 test("supported marketplace pages resolve to their ad placement inventory", () => {
-  for (const placement of ["home", "search_results", "listing_detail", "categories", "offers"]) {
+  for (const placement of [
+    "home",
+    "search_results",
+    "listing_detail",
+    "categories",
+    "offers",
+  ]) {
     assert.match(header, new RegExp(`return \\"${placement}\\"`));
   }
   assert.match(header, /PublicAdPlacementSlot/);
@@ -25,7 +40,10 @@ test("public ad slot loads device-targeted active placements and renders one ban
 test("broken public ad media is removed while preserving stable, LCP-ready banner dimensions", () => {
   assert.match(slot, /useState<string \| null>\(null\)/);
   assert.match(slot, /failedImageUrl === placement\.imageUrl/);
-  assert.match(slot, /onError=\{\(\) => setFailedImageUrl\(placement\.imageUrl\)\}/);
+  assert.match(
+    slot,
+    /onError=\{\(\) => setFailedImageUrl\(placement\.imageUrl\)\}/,
+  );
   assert.match(slot, /loading="eager"/);
   assert.match(slot, /fetchPriority="high"/);
   assert.match(slot, /decoding="async"/);
