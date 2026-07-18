@@ -3,6 +3,7 @@ import type { AdPlacementPage } from "@/lib/api/ad-placements";
 import {
   fetchActiveAdPlacements,
   onAdPlacementInvalidation,
+  refreshActiveAdPlacements,
   type AdPlacementDevice,
   type PublicAdPlacement,
 } from "@/lib/api/public-ad-placements";
@@ -19,6 +20,7 @@ interface LoadedPlacement {
 }
 
 const MOBILE_PLACEMENT_QUERY = "(max-width: 767px)";
+const AD_PLACEMENT_SCHEDULE_REFRESH_MS = 30_000;
 
 function resolvePlacementDevice(mediaQuery: MediaQueryList): AdPlacementDevice {
   return mediaQuery.matches ? "mobile" : "desktop";
@@ -51,11 +53,14 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
     let cancelled = false;
     let requestSequence = 0;
 
-    function load() {
+    function load(forceRefresh = false) {
       if (cancelled) return;
       const requestId = ++requestSequence;
+      const request = forceRefresh
+        ? refreshActiveAdPlacements(page, activeDevice)
+        : fetchActiveAdPlacements(page, activeDevice);
 
-      void fetchActiveAdPlacements(page, activeDevice).then((result) => {
+      void request.then((result) => {
         if (cancelled || requestId !== requestSequence) return;
         setFailedImageUrl(null);
         setLoaded({
@@ -67,11 +72,16 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
     }
 
     load();
-    const unsubscribe = onAdPlacementInvalidation(load);
+    const unsubscribe = onAdPlacementInvalidation(() => load());
+    const scheduleRefreshTimer = window.setInterval(
+      () => load(true),
+      AD_PLACEMENT_SCHEDULE_REFRESH_MS,
+    );
 
     return () => {
       cancelled = true;
       requestSequence += 1;
+      window.clearInterval(scheduleRefreshTimer);
       unsubscribe();
     };
   }, [device, placementPage]);
