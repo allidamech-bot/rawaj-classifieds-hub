@@ -1,6 +1,8 @@
 import { Camera, MapPin, Shapes, Sparkles, Tag, X } from "lucide-react";
 import type { CategoryFieldKind } from "@/lib/category-fields";
 
+type QuickFilterSection = "location" | "price" | "category" | "condition";
+
 interface QuickFilterRailProps {
   locationLabel: string;
   priceActive: boolean;
@@ -36,6 +38,35 @@ export function QuickFilterRail({
   fieldKind,
   text,
 }: QuickFilterRailProps) {
+  function openSection(section: QuickFilterSection) {
+    onOpenFilters();
+
+    const headingBySection: Record<QuickFilterSection, string> = {
+      location: text("الموقع", "Location"),
+      price: text("السعر", "Price"),
+      category: text("القسم", "Category"),
+      condition: text("خيارات القسم", "Category options"),
+    };
+
+    window.setTimeout(() => {
+      const targetHeading = headingBySection[section];
+      const sections = Array.from(
+        document.querySelectorAll<HTMLElement>(".rawaj-filter-sheet__section"),
+      );
+      const target = sections.find(
+        (item) => item.querySelector("h3")?.textContent?.trim() === targetHeading,
+      );
+
+      if (!target) return;
+      target.scrollIntoView({ block: "start", behavior: "smooth" });
+      window.setTimeout(() => {
+        target
+          .querySelector<HTMLElement>("button:not([disabled]), input:not([disabled]), select:not([disabled])")
+          ?.focus({ preventScroll: true });
+      }, 220);
+    }, 80);
+  }
+
   return (
     <nav
       className="rawaj-quick-filter-rail"
@@ -49,24 +80,24 @@ export function QuickFilterRail({
       </button>
       <button
         type="button"
-        onClick={onOpenFilters}
+        onClick={() => openSection("location")}
         data-active={locationLabel !== text("كل سوريا", "All Syria")}
       >
         <MapPin aria-hidden="true" />
         <span>{locationLabel}</span>
       </button>
-      <button type="button" onClick={onOpenFilters} data-active={priceActive}>
+      <button type="button" onClick={() => openSection("price")} data-active={priceActive}>
         <Tag aria-hidden="true" />
         <span>{priceActive ? text("السعر محدد", "Price set") : text("السعر", "Price")}</span>
       </button>
-      <button type="button" onClick={onOpenFilters} data-active={categoryActive}>
+      <button type="button" onClick={() => openSection("category")} data-active={categoryActive}>
         <Shapes aria-hidden="true" />
         <span>{categoryLabel}</span>
       </button>
       {showCondition ? (
         <button
           type="button"
-          onClick={onOpenFilters}
+          onClick={() => openSection("condition")}
           data-active={conditionActive}
           data-kind={fieldKind}
         >
