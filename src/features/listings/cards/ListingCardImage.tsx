@@ -38,18 +38,14 @@ export function ListingCardImage({
     const promoteIfNearViewport = () => {
       const bounds = image.getBoundingClientRect();
       const margin = window.innerHeight * 0.25;
-      if (
-        bounds.top <= window.innerHeight + margin &&
-        bounds.bottom >= -margin
-      ) {
+      if (bounds.top <= window.innerHeight + margin && bounds.bottom >= -margin) {
         setNearViewport(true);
         return true;
       }
       return false;
     };
 
-    if (promoteIfNearViewport() || typeof IntersectionObserver === "undefined")
-      return;
+    if (promoteIfNearViewport() || typeof IntersectionObserver === "undefined") return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -66,19 +62,11 @@ export function ListingCardImage({
   }, [loading, src]);
 
   if (!src || failedSrc === src) {
-    return (
-      <PlaceholderArt
-        type={placeholder}
-        aspect={placeholderAspect}
-        className={className}
-      />
-    );
+    return <PlaceholderArt type={placeholder} aspect={placeholderAspect} className={className} />;
   }
 
-  const effectiveLoading =
-    loading === "eager" || nearViewport ? "eager" : "lazy";
-  const effectiveFetchPriority =
-    fetchPriority ?? (nearViewport ? "high" : undefined);
+  const effectiveLoading = loading === "eager" || nearViewport ? "eager" : "lazy";
+  const effectiveFetchPriority = fetchPriority ?? (nearViewport ? "high" : undefined);
 
   return (
     <img
