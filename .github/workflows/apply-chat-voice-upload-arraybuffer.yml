@@ -31,7 +31,22 @@ jobs:
           rm -f scripts/chat-voice-upload-arraybuffer.test.mjs
           node --check scripts/apply-chat-voice-upload-arraybuffer.mjs
           node scripts/apply-chat-voice-upload-arraybuffer.mjs
-      - run: npx prettier --write src/features/communication/ChatVoiceRecorder.tsx src/lib/api/messaging.ts scripts/chat-voice-upload-arraybuffer.test.mjs
+      - name: Export generated patch
+        run: |
+          mkdir -p generated-patch
+          cp --parents \
+            src/features/communication/ChatVoiceRecorder.tsx \
+            src/lib/api/messaging.ts \
+            scripts/chat-voice-upload-arraybuffer.test.mjs \
+            generated-patch/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chat-voice-upload-generated-patch
+          path: generated-patch
+          retention-days: 2
+      - run: npx prettier --write src/features/communication/ChatVoiceRecorder.tsx
+      - run: npx prettier --write src/lib/api/messaging.ts
+      - run: npx prettier --write scripts/chat-voice-upload-arraybuffer.test.mjs
       - run: node --test scripts/chat-voice-upload-arraybuffer.test.mjs
       - run: npx eslint --quiet src/features/communication/ChatVoiceRecorder.tsx src/lib/api/messaging.ts
       - run: npm run typecheck -- --pretty false
