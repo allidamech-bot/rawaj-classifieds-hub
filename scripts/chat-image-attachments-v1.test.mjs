@@ -11,7 +11,7 @@ const [migration, api, workflow] = await Promise.all([
     ),
     "utf8",
   ),
-  readFile(new URL("../src/lib/api/chat-image-attachments.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/messaging.ts", import.meta.url), "utf8"),
   readFile(
     new URL("../.github/workflows/chat-image-attachments-v1.yml", import.meta.url),
     "utf8",
@@ -50,7 +50,7 @@ test("browser upload validation is explicit and never exposes public URLs", () =
   assert.match(api, /image\/webp/);
   assert.match(api, /createSignedUrl\(path, 15 \* 60\)/);
   assert.doesNotMatch(api, /getPublicUrl|publicUrl/);
-  assert.match(api, /\$\{conversationId\}\/\$\{userId\}\/\$\{requestId\}/);
+  assert.match(api, /\[conversationId, userId, requestId\]\.join\("\/"\)/);
   assert.match(api, /remove\(\[path\]\)/);
 });
 
