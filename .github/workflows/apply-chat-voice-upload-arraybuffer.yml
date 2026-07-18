@@ -1,0 +1,52 @@
+name: Apply Chat Voice Upload ArrayBuffer
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.head_ref == 'fix/chat-voice-upload-arraybuffer'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Rebuild patch from main
+        run: |
+          git checkout origin/main -- \
+            src/features/communication/ChatVoiceRecorder.tsx \
+            src/lib/api/messaging.ts
+          rm -f scripts/chat-voice-upload-arraybuffer.test.mjs
+          node --check scripts/apply-chat-voice-upload-arraybuffer.mjs
+          node scripts/apply-chat-voice-upload-arraybuffer.mjs
+      - run: npx prettier --write src/features/communication/ChatVoiceRecorder.tsx src/lib/api/messaging.ts scripts/chat-voice-upload-arraybuffer.test.mjs
+      - run: node --test scripts/chat-voice-upload-arraybuffer.test.mjs
+      - run: npx eslint --quiet src/features/communication/ChatVoiceRecorder.tsx src/lib/api/messaging.ts
+      - run: npm run typecheck -- --pretty false
+      - run: npm run build
+      - name: Commit verified product files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            src/features/communication/ChatVoiceRecorder.tsx \
+            src/lib/api/messaging.ts \
+            scripts/chat-voice-upload-arraybuffer.test.mjs
+          if git diff --cached --quiet; then
+            echo "Verified patch already present."
+            exit 0
+          fi
+          git commit -m "fix: normalize and stream chat voice uploads"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
