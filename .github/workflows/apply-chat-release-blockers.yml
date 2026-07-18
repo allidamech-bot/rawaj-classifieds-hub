@@ -6,7 +6,7 @@ on:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   apply:
@@ -23,16 +23,31 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: node scripts/apply-chat-release-blockers.mjs
+      - name: Rebuild the verified patch from main anchors
+        run: |
+          git checkout origin/main -- \
+            src/features/communication/ChatVoiceAttachment.tsx \
+            src/lib/api/messaging.ts \
+            src/lib/api/messaging-guarded.ts \
+            src/lib/classifieds-types.ts \
+            src/routes/chats.tsx \
+            src/communication-center-v2.css \
+            docs/production-schema/migration-ledger.json
+          rm -f \
+            supabase/migrations/202607180001_chat_delivery_read_receipts.sql \
+            scripts/chat-release-blockers.test.mjs \
+            .github/workflows/chat-release-blockers.yml
+          node scripts/apply-chat-release-blockers.mjs
       - run: npx prettier --write src/features/communication/ChatVoiceAttachment.tsx src/lib/api/messaging.ts src/lib/api/messaging-guarded.ts src/lib/classifieds-types.ts src/routes/chats.tsx src/communication-center-v2.css scripts/chat-release-blockers.test.mjs .github/workflows/chat-release-blockers.yml docs/production-schema/migration-ledger.json
       - run: node --test scripts/chat-release-blockers.test.mjs
       - run: npx eslint --quiet src/features/communication/ChatVoiceAttachment.tsx src/lib/api/messaging.ts src/lib/api/messaging-guarded.ts src/lib/classifieds-types.ts src/routes/chats.tsx
       - run: node scripts/check-migration-ledger.mjs
       - run: npm run typecheck -- --pretty false
-      - name: Stage verified files
+      - name: Commit verified application files
         run: |
-          mkdir -p verified-patch
-          cp --parents \
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
             src/features/communication/ChatVoiceAttachment.tsx \
             src/lib/api/messaging.ts \
             src/lib/api/messaging-guarded.ts \
@@ -41,12 +56,10 @@ jobs:
             src/communication-center-v2.css \
             supabase/migrations/202607180001_chat_delivery_read_receipts.sql \
             docs/production-schema/migration-ledger.json \
-            scripts/chat-release-blockers.test.mjs \
-            .github/workflows/chat-release-blockers.yml \
-            verified-patch/
-      - uses: actions/upload-artifact@v4
-        with:
-          name: chat-release-blockers-verified-patch
-          path: verified-patch
-          if-no-files-found: error
-          retention-days: 2
+            scripts/chat-release-blockers.test.mjs
+          if git diff --cached --quiet; then
+            echo "Verified patch is already present."
+            exit 0
+          fi
+          git commit -m "fix: repair chat audio receipts and mobile layout"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
