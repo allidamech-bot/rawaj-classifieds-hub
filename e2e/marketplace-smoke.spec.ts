@@ -18,9 +18,9 @@ const protectedRoutes = ["/add-listing", "/profile", "/favorites", "/admin"] as 
 const delayedReferenceRequest = "**/rest/v1/subcategories**";
 
 function isExpectedLocalRequestFailure(url: string, failure: string) {
-  return (
-    failure.includes("ERR_ABORTED") || (failure === "csp" && url.includes("va.vercel-scripts.com"))
-  );
+  if (failure.includes("ERR_ABORTED")) return true;
+  if (!url.includes("va.vercel-scripts.com")) return false;
+  return failure === "csp" || failure.includes("ERR_BLOCKED_BY_ORB");
 }
 
 async function waitForHydratedRouter(page: Page) {
@@ -136,6 +136,7 @@ test("active public ad uses the unified ratio and follows the resolved route", a
   const homeSlot = page.locator('[data-placement-page="home"]');
   await expect(homeSlot).toBeVisible({ timeout: 15_000 });
   await expect(homeSlot).toHaveAttribute("data-placement-device", expectedDevice);
+  await expect(homeSlot).toHaveAttribute("data-placement-loading", "false");
   await expect(page.locator("[data-placement-page]")).toHaveCount(1);
 
   const link = homeSlot.locator("a");
@@ -160,6 +161,7 @@ test("active public ad uses the unified ratio and follows the resolved route", a
   const listingsSlot = page.locator('[data-placement-page="search_results"]');
   await expect(listingsSlot).toBeVisible({ timeout: 15_000 });
   await expect(listingsSlot).toHaveAttribute("data-placement-device", expectedDevice);
+  await expect(listingsSlot).toHaveAttribute("data-placement-loading", "false");
   await expect(page.locator("[data-placement-page]")).toHaveCount(1);
   await expect(page.locator('[data-placement-page="home"]')).toHaveCount(0);
 });
