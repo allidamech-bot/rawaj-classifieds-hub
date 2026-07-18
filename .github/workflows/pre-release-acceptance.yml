@@ -48,8 +48,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck -- --pretty false
 
-      - name: Production build
-        run: npm run build
+      - name: Production build for local Node acceptance
+        run: NITRO_PRESET=node-server npm run build
 
       - name: Start production server
         shell: bash
