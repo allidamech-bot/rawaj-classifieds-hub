@@ -192,6 +192,8 @@ test("card text uses accessible light and dark contrast colors", () => {
   assert.match(css, /dark \.rawaj-adaptive-card__price[\s\S]*color: #ff9a7d/);
   assert.match(css, /rawaj-adaptive-card__category[\s\S]*color: #4c625a/);
   assert.match(css, /dark \.rawaj-adaptive-card__category[\s\S]*color: #c1d0c7/);
+  assert.match(css, /rawaj-search-results-v1 > \.mt-4[\s\S]*color: #4c625a/);
+  assert.match(css, /dark \.rawaj-search-results-v1 > \.mt-4[\s\S]*color: #c1d0c7/);
 });
 
 test("card interactions avoid layout shift and respect reduced motion", () => {
