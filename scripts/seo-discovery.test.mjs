@@ -12,10 +12,10 @@ const [seo, robots, sitemap] = await Promise.all([
   readFile(sitemapPath, "utf8"),
 ]);
 
-test("canonical fallback is production safe and never defaults to localhost", () => {
+test("canonical URLs are production safe and require an explicit route path", () => {
   assert.match(seo, /const fallbackSiteUrl = "https:\/\/rawa-j\.com"/);
   assert.doesNotMatch(seo, /fallbackSiteUrl = "http:\/\/localhost:3000"/);
-  assert.match(seo, /links: \[\{ rel: "canonical", href: url \}\]/);
+  assert.match(seo, /links: options\.path \? \[\{ rel: "canonical", href: url \}\] : \[\]/);
 });
 
 test("robots advertises the sitemap and keeps private workspaces out of crawl", () => {
