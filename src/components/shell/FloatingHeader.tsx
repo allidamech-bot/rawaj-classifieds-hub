@@ -49,7 +49,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
           <Link
             to="/"
             className="order-1 flex min-w-0 items-center gap-2 sm:gap-3"
-            aria-label={text("العودة إلى الرئيسية", "Back to home")}
+            aria-label={text("رواج RAWAJ، العودة إلى الرئيسية", "RAWAJ, back to home")}
           >
             <Logo />
           </Link>
@@ -172,7 +172,9 @@ function Logo() {
       <span className="flex items-center gap-1.5 leading-none sm:gap-2">
         <span className="font-display text-base font-bold text-primary sm:text-[18px]">رواج</span>
         <span className="rawaj-brand-divider h-4 w-px sm:h-5" aria-hidden="true" />
-        <span className="text-[11px] font-bold tracking-[0.16em] text-brand-orange">RAWAJ</span>
+        <span className="text-[11px] font-bold tracking-[0.16em] text-[#b63f24] dark:text-[#ff9a7d]">
+          RAWAJ
+        </span>
       </span>
     </span>
   );
