@@ -13,13 +13,31 @@ const [
   listingCardImage,
 ] = await Promise.all([
   readFile(new URL("../src/router.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/client-error-monitoring.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/lovable-error-reporting.ts", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/lib/client-error-monitoring.ts", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/lib/lovable-error-reporting.ts", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("./performance-budget.mjs", import.meta.url), "utf8"),
   readFile(new URL("../src/server.ts", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
-  readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/listings/cards/ListingCardImage.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../.github/workflows/quality-gate.yml", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL(
+      "../src/features/listings/cards/ListingCardImage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
 ]);
 
 test("phase 54 enforces production JavaScript, stylesheet, font and image budgets", () => {
