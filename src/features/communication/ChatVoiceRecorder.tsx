@@ -1,5 +1,17 @@
 import { Mic, Square, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import {
+  canonicalBaseMime,
+  createCompatibleMediaRecorder,
+  createUploadableFromBlob,
+  extensionForMime,
+  isAppleMobileWebKit,
+  normalizeRecordedMimeType,
+  recorderMimeCandidates,
+  resolveFinalMimeType,
+  shouldUseRecorderTimeslice,
+} from "@/lib/chat-audio-recorder-strategy";
+import { logRecorderDiagnostics } from "@/lib/chat-audio-diagnostics";
 
 export interface RecordedVoiceClip {
   file: File;
@@ -22,174 +34,6 @@ interface ChatVoiceRecorderProps {
 }
 
 const MAX_DURATION_MS = 120_000;
-
-function isAppleMobileWebKit(): boolean {
-  if (typeof navigator === "undefined") return false;
-  const ua = navigator.userAgent;
-  const platform = navigator.platform;
-  const isIPadDesktop =
-    platform === "MacIntel" &&
-    typeof navigator.maxTouchPoints === "number" &&
-    navigator.maxTouchPoints > 1;
-  return /iPhone|iPod/.test(ua) || platform === "iPad" || /iPad/.test(ua) || isIPadDesktop;
-}
-
-function recorderMimeCandidates(): string[] {
-  if (isAppleMobileWebKit()) {
-    return ["audio/mp4;codecs=mp4a.40.2", "audio/mp4", "video/mp4;codecs=mp4a.40.2", "video/mp4"];
-  }
-  return [
-    "audio/webm;codecs=opus",
-    "audio/webm",
-    "audio/mp4;codecs=mp4a.40.2",
-    "audio/mp4",
-    "video/mp4;codecs=mp4a.40.2",
-    "video/mp4",
-    "audio/ogg;codecs=opus",
-    "audio/ogg",
-  ];
-}
-
-function isPreviewRuntime(): boolean {
-  if (typeof window === "undefined") return false;
-  const hostname = window.location.hostname;
-  return hostname.endsWith(".vercel.app") || hostname === "localhost";
-}
-
-function canonicalBaseMime(mime: string | null | undefined): string {
-  const base = (mime ?? "").split(";")[0]?.trim().toLowerCase() ?? "";
-  return base;
-}
-
-function normalizeRecordedMimeType(mime: string): string | null {
-  const base = canonicalBaseMime(mime);
-  if (base === "video/mp4") return "audio/mp4";
-  if (base === "video/webm") return "audio/webm";
-  if (["audio/webm", "audio/mp4", "audio/mpeg", "audio/ogg"].includes(base)) return base;
-  if (base === "audio/m4a" || base === "audio/x-m4a") return "audio/mp4";
-  if (base === "audio/mp3") return "audio/mpeg";
-  return null;
-}
-
-function extensionForMime(mime: string): string {
-  if (mime === "audio/mp4") return "m4a";
-  if (mime === "audio/mpeg") return "mp3";
-  if (mime === "audio/ogg") return "ogg";
-  return "webm";
-}
-
-function shouldUseRecorderTimeslice(
-  recorderMimeType: string | undefined,
-  selectedMimeType: string | null,
-): boolean {
-  const mime = recorderMimeType || selectedMimeType || "audio/webm";
-  const base = canonicalBaseMime(mime);
-  if (base === "video/mp4" || base === "audio/mp4") return false;
-  return true;
-}
-
-interface DiagnosticsPayload {
-  stage: string;
-  selectedMimeType: string | null;
-  recorderMimeType: string;
-  chunkMimeType: string | null;
-  chunkCount: number;
-  totalBytes: number;
-  recorderState: string;
-  errorName?: string;
-  errorMessage?: string;
-}
-
-function storeDiagnostics(payload: DiagnosticsPayload): void {
-  try {
-    if (typeof sessionStorage !== "undefined") {
-      sessionStorage.setItem("rawaj:last-chat-audio-diagnostic", JSON.stringify(payload));
-    }
-  } catch {
-    // ignore storage errors
-  }
-}
-
-function logRecorderDiagnostics(context: DiagnosticsPayload): void {
-  if (!isPreviewRuntime()) return;
-  if (typeof console === "undefined" || typeof console.error !== "function") return;
-  console.error("[chat_audio_recorder]", {
-    stage: context.stage,
-    selectedMimeType: context.selectedMimeType,
-    recorderMimeType: context.recorderMimeType,
-    chunkMimeType: context.chunkMimeType,
-    chunkCount: context.chunkCount,
-    totalBytes: context.totalBytes,
-    recorderState: context.recorderState,
-    errorName: context.errorName ?? null,
-    errorMessage: context.errorMessage ?? null,
-  });
-  storeDiagnostics(context);
-}
-
-function resolveFinalMimeType(
-  chunkMime: string | null,
-  recorderMime: string | undefined,
-  selectedMime: string | null,
-): string {
-  const resolvedRaw =
-    (chunkMime && normalizeRecordedMimeType(chunkMime) ? chunkMime : "") ||
-    recorderMime ||
-    selectedMime ||
-    "audio/webm";
-  return normalizeRecordedMimeType(resolvedRaw) ?? "audio/webm";
-}
-
-function createUploadableFromBlob(blob: Blob, type: string, extension: string): File {
-  if (typeof File === "function") {
-    return new File([blob], `voice-${Date.now()}.${extension}`, { type });
-  }
-  const safeName = `voice-${Date.now()}.${extension}`;
-  return Object.assign(blob, {
-    name: safeName,
-    type,
-    lastModified: Date.now(),
-  }) as File;
-}
-
-interface MediaRecorderResult {
-  recorder: MediaRecorder;
-  selectedMimeType: string | null;
-}
-
-function createCompatibleMediaRecorder(stream: MediaStream): MediaRecorderResult {
-  const candidates = recorderMimeCandidates();
-  const errors: Array<{ mimeType: string; error: unknown }> = [];
-  let lastError: unknown = null;
-
-  for (const mimeType of candidates) {
-    if (
-      typeof MediaRecorder !== "undefined" &&
-      MediaRecorder.isTypeSupported &&
-      !MediaRecorder.isTypeSupported(mimeType)
-    ) {
-      continue;
-    }
-    try {
-      const recorder = new MediaRecorder(stream, { mimeType });
-      return { recorder, selectedMimeType: mimeType };
-    } catch (error) {
-      lastError = error;
-      errors.push({ mimeType, error });
-    }
-  }
-
-  try {
-    const recorder = new MediaRecorder(stream);
-    return { recorder, selectedMimeType: null };
-  } catch (error) {
-    lastError = error;
-  }
-
-  throw new Error(
-    `No compatible MediaRecorder found. Candidates attempted: ${candidates.join(", ")}. Last error: ${lastError instanceof Error ? lastError.message : String(lastError)}`,
-  );
-}
 
 export function ChatVoiceRecorder({
   disabled,
@@ -231,6 +75,7 @@ export function ChatVoiceRecorder({
       onError(labels.unsupported);
       return;
     }
+    const appleMobile = isAppleMobileWebKit();
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -359,11 +204,14 @@ export function ChatVoiceRecorder({
         chunkCount,
         totalBytes,
         recorderState: finalState,
+        fileMimeType: type,
+        fileSize: blob.size,
+        durationMs,
       });
       onRecorded({ file, previewUrl: URL.createObjectURL(blob), durationMs });
     };
     try {
-      if (shouldUseRecorderTimeslice(recorder.mimeType, selectedMimeType)) {
+      if (shouldUseRecorderTimeslice(appleMobile, recorder.mimeType, selectedMimeType)) {
         recorder.start(500);
       } else {
         recorder.start();

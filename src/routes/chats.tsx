@@ -31,6 +31,7 @@ import {
   validateChatAudio,
   validateChatImage,
 } from "@/lib/classifieds-api";
+import { isPreviewRuntime, loadDiagnostics } from "@/lib/chat-audio-diagnostics";
 import {
   completeMessageSendRequest,
   readOrCreateMessageSendRequestId,
@@ -1094,6 +1095,7 @@ function ChatsPage() {
                   {notice && (
                     <p className="mt-2 text-xs font-semibold text-emerald-trust">{notice}</p>
                   )}
+                  {isPreviewRuntime() && <VoiceDiagnosticsPreview />}
                 </form>
               </>
             )}
@@ -1146,4 +1148,44 @@ function formatDateTime(value: string, language: "ar" | "en") {
     timeStyle: "short",
     timeZone: "UTC",
   }).format(new Date(value));
+}
+
+function VoiceDiagnosticsPreview() {
+  const { text } = useUiPreferences();
+  const [diagnostics, setDiagnostics] = useState<ReturnType<typeof loadDiagnostics>>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDiagnostics(loadDiagnostics());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!diagnostics) return null;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(diagnostics, null, 2));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <div className="mt-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs">
+      <p className="font-semibold text-destructive">
+        {text("رمز تشخيص التسجيل:", "Recording diagnostic code:")} {diagnostics.stage}
+      </p>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="mt-2 rounded-lg bg-muted-surface px-3 py-1 text-xs font-semibold text-primary hairline"
+      >
+        {copied ? text("تم النسخ", "Copied") : text("نسخ تفاصيل العطل", "Copy failure details")}
+      </button>
+    </div>
+  );
 }

@@ -30,6 +30,7 @@ import {
   rowRecord,
   rowString,
 } from "@/lib/api/shared";
+import { logRecorderDiagnostics } from "@/lib/chat-audio-diagnostics";
 
 const pendingMessageSends = new Map<string, Promise<ClassifiedsResult<ConversationMessage>>>();
 
@@ -220,6 +221,19 @@ export async function uploadChatAudio(payload: {
   const durationMs = Number.isFinite(payload.durationMs) ? payload.durationMs : 0;
   const validation = validateChatAudio(payload.file, durationMs);
   if (!mimeType) {
+    logRecorderDiagnostics({
+      stage: "IOS_VALIDATION",
+      selectedMimeType: payload.file.type,
+      recorderMimeType: "",
+      chunkMimeType: null,
+      chunkCount: 0,
+      totalBytes: 0,
+      recorderState: "n/a",
+      fileMimeType: payload.file.type,
+      fileSize: payload.file.size,
+      durationMs,
+      operation: "chat_audio_validation",
+    });
     return {
       ok: false,
       error: {
@@ -230,6 +244,19 @@ export async function uploadChatAudio(payload: {
     };
   }
   if (!conversationId || !requestId || !validation.ok) {
+    logRecorderDiagnostics({
+      stage: "IOS_VALIDATION",
+      selectedMimeType: payload.file.type,
+      recorderMimeType: "",
+      chunkMimeType: null,
+      chunkCount: 0,
+      totalBytes: 0,
+      recorderState: "n/a",
+      fileMimeType: payload.file.type,
+      fileSize: payload.file.size,
+      durationMs,
+      operation: "chat_audio_validation",
+    });
     return validation.ok
       ? {
           ok: false,
@@ -269,7 +296,23 @@ export async function uploadChatAudio(payload: {
   let audioBytes: ArrayBuffer;
   try {
     audioBytes = await payload.file.arrayBuffer();
-  } catch {
+  } catch (error) {
+    logRecorderDiagnostics({
+      stage: "IOS_PREPARE",
+      selectedMimeType: null,
+      recorderMimeType: "",
+      chunkMimeType: null,
+      chunkCount: 0,
+      totalBytes: 0,
+      recorderState: "n/a",
+      fileMimeType: mimeType,
+      fileSize: payload.file.size,
+      arrayBufferSize: 0,
+      durationMs,
+      operation: "chat_audio_prepare",
+      errorName: error instanceof Error ? error.name : undefined,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return {
       ok: false,
       error: {
@@ -280,6 +323,20 @@ export async function uploadChatAudio(payload: {
     };
   }
   if (audioBytes.byteLength < 1) {
+    logRecorderDiagnostics({
+      stage: "IOS_PREPARE",
+      selectedMimeType: null,
+      recorderMimeType: "",
+      chunkMimeType: null,
+      chunkCount: 0,
+      totalBytes: 0,
+      recorderState: "n/a",
+      fileMimeType: mimeType,
+      fileSize: payload.file.size,
+      arrayBufferSize: audioBytes.byteLength,
+      durationMs,
+      operation: "chat_audio_prepare",
+    });
     return {
       ok: false,
       error: {
@@ -294,6 +351,22 @@ export async function uploadChatAudio(payload: {
     .upload(path, audioBytes, { upsert: false, contentType: mimeType, cacheControl: "3600" });
   if (error) {
     const mapped = mapError(error, "chat_audio_upload");
+    logRecorderDiagnostics({
+      stage: "IOS_UPLOAD",
+      selectedMimeType: null,
+      recorderMimeType: "",
+      chunkMimeType: null,
+      chunkCount: 0,
+      totalBytes: 0,
+      recorderState: "n/a",
+      fileMimeType: mimeType,
+      fileSize: payload.file.size,
+      arrayBufferSize: audioBytes.byteLength,
+      durationMs,
+      supabaseErrorCode: mapped.code,
+      httpStatus: typeof error.status === "number" ? error.status : null,
+      operation: "chat_audio_upload",
+    });
     return {
       ok: false,
       error: {
@@ -539,6 +612,19 @@ async function performConversationMessageSend(
       }
       return { ok: true, data: message };
     }
+    logRecorderDiagnostics({
+      stage: "IOS_MESSAGE_SEND",
+      selectedMimeType: null,
+      recorderMimeType: "",
+      chunkMimeType: null,
+      chunkCount: 0,
+      totalBytes: 0,
+      recorderState: "n/a",
+      fileMimeType: attachment?.mimeType ?? null,
+      fileSize: attachment?.sizeBytes ?? null,
+      durationMs: attachment?.durationMs ?? null,
+      operation: "conversation_message_send",
+    });
     return {
       ok: false,
       error: {
@@ -551,6 +637,20 @@ async function performConversationMessageSend(
 
   if (!isMissingMessageSendV3(response.error)) {
     if (isMessageRequestPayloadMismatch(response.error)) {
+      logRecorderDiagnostics({
+        stage: "IOS_MESSAGE_SEND",
+        selectedMimeType: null,
+        recorderMimeType: "",
+        chunkMimeType: null,
+        chunkCount: 0,
+        totalBytes: 0,
+        recorderState: "n/a",
+        fileMimeType: attachment?.mimeType ?? null,
+        fileSize: attachment?.sizeBytes ?? null,
+        durationMs: attachment?.durationMs ?? null,
+        supabaseErrorCode: response.error.code,
+        operation: "conversation_message_send",
+      });
       return {
         ok: false,
         error: {
@@ -560,9 +660,37 @@ async function performConversationMessageSend(
         },
       };
     }
+    logRecorderDiagnostics({
+      stage: "IOS_MESSAGE_SEND",
+      selectedMimeType: null,
+      recorderMimeType: "",
+      chunkMimeType: null,
+      chunkCount: 0,
+      totalBytes: 0,
+      recorderState: "n/a",
+      fileMimeType: attachment?.mimeType ?? null,
+      fileSize: attachment?.sizeBytes ?? null,
+      durationMs: attachment?.durationMs ?? null,
+      supabaseErrorCode: response.error.code,
+      operation: "conversation_message_send",
+    });
     return { ok: false, error: mapError(response.error, "conversation_message_send") };
   }
 
+  logRecorderDiagnostics({
+    stage: "IOS_MESSAGE_SEND",
+    selectedMimeType: null,
+    recorderMimeType: "",
+    chunkMimeType: null,
+    chunkCount: 0,
+    totalBytes: 0,
+    recorderState: "n/a",
+    fileMimeType: attachment?.mimeType ?? null,
+    fileSize: attachment?.sizeBytes ?? null,
+    durationMs: attachment?.durationMs ?? null,
+    supabaseErrorCode: response.error.code,
+    operation: "conversation_message_send",
+  });
   return {
     ok: false,
     error: {
