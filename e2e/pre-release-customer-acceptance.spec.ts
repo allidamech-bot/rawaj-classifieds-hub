@@ -68,10 +68,23 @@ const evidenceRoutes = new Set([
   "/notifications",
 ]);
 
+const localAuditBaseUrl = "http://127.0.0.1:4173";
 const ignoredRuntimeFragments = ["ERR_ABORTED", "va.vercel-scripts.com", "vercel-insights.com"];
 
 function routeSlug(route: string) {
   return route === "/" ? "home" : route.replace(/^\//, "").replaceAll("/", "-");
+}
+
+async function installLocalAnalyticsShim(page: Page, testInfo: TestInfo) {
+  if (testInfo.project.use.baseURL !== localAuditBaseUrl) return;
+
+  await page.route("**/_vercel/insights/script.js", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/javascript; charset=utf-8",
+      body: "window.va=window.va||function(){};\n",
+    });
+  });
 }
 
 function monitorRuntime(page: Page) {
@@ -101,9 +114,10 @@ function monitorRuntime(page: Page) {
 async function assertRouteHealth(
   page: Page,
   route: string,
-  testInfo?: TestInfo,
+  testInfo: TestInfo,
   screenshotName?: string,
 ) {
+  await installLocalAnalyticsShim(page, testInfo);
   const runtime = monitorRuntime(page);
   const response = await page.goto(route, { waitUntil: "domcontentloaded" });
 
@@ -122,7 +136,7 @@ async function assertRouteHealth(
     dimensions.viewportWidth + 2,
   );
 
-  if (testInfo && screenshotName) {
+  if (screenshotName) {
     await page.screenshot({
       path: testInfo.outputPath(`${screenshotName}.png`),
       fullPage: false,
@@ -191,8 +205,8 @@ for (const viewport of [
   });
 }
 
-test("browser back and forward preserve public navigation", async ({ page }) => {
-  await assertRouteHealth(page, "/");
+test("browser back and forward preserve public navigation", async ({ page }, testInfo) => {
+  await assertRouteHealth(page, "/", testInfo);
   await page.goto("/categories", { waitUntil: "domcontentloaded" });
   await expect(page.locator("main")).toBeVisible();
   await page.goBack({ waitUntil: "domcontentloaded" });
@@ -248,22 +262,25 @@ test("login validation blocks malformed credentials without losing the form", as
   await expect(email).toHaveValue("invalid-email");
 });
 
-test("keyboard navigation exposes focus and open dialogs close with Escape", async ({ page }) => {
-  await assertRouteHealth(page, "/");
-  await page.keyboard.press("Tab");
-  const activeTag = await page.evaluate(() => document.activeElement?.tagName ?? "BODY");
-  expect(activeTag).not.toBe("BODY");
+test(
+  "keyboard navigation exposes focus and open dialogs close with Escape",
+  async ({ page }, testInfo) => {
+    await assertRouteHealth(page, "/", testInfo);
+    await page.keyboard.press("Tab");
+    const activeTag = await page.evaluate(() => document.activeElement?.tagName ?? "BODY");
+    expect(activeTag).not.toBe("BODY");
 
-  const dialogTrigger = page.locator('button[aria-haspopup="dialog"]').first();
-  if ((await dialogTrigger.count()) > 0 && (await dialogTrigger.isVisible())) {
-    await dialogTrigger.click();
-    const dialog = page.locator('[role="dialog"]').first();
-    if (await dialog.isVisible().catch(() => false)) {
-      await page.keyboard.press("Escape");
-      await expect(dialog).not.toBeVisible();
+    const dialogTrigger = page.locator('button[aria-haspopup="dialog"]').first();
+    if ((await dialogTrigger.count()) > 0 && (await dialogTrigger.isVisible())) {
+      await dialogTrigger.click();
+      const dialog = page.locator('[role="dialog"]').first();
+      if (await dialog.isVisible().catch(() => false)) {
+        await page.keyboard.press("Escape");
+        await expect(dialog).not.toBeVisible();
+      }
     }
-  }
-});
+  },
+);
 
 test("public discovery opens listing detail and seller storefront when data exists", async ({
   page,
