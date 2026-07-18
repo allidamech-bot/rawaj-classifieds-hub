@@ -2,21 +2,36 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const rootRoute = await readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8");
-const foundation = await readFile(new URL("../src/design-foundation.css", import.meta.url), "utf8");
+const rootRoute = await readFile(
+  new URL("../src/routes/__root.tsx", import.meta.url),
+  "utf8",
+);
+const foundation = await readFile(
+  new URL("../src/design-foundation.css", import.meta.url),
+  "utf8",
+);
 const appShell = await readFile(
   new URL("../src/components/shell/AppShell.tsx", import.meta.url),
   "utf8",
 );
-const footer = await readFile(new URL("../src/components/SiteFooter.tsx", import.meta.url), "utf8");
+const footer = await readFile(
+  new URL("../src/components/SiteFooter.tsx", import.meta.url),
+  "utf8",
+);
 
 test("canonical design foundation is loaded after legacy visual layers", () => {
-  const foundationLink = rootRoute.indexOf('{ rel: "stylesheet", href: designFoundationCss }');
+  const foundationLink = rootRoute.indexOf(
+    '{ rel: "stylesheet", href: designFoundationCss }',
+  );
   const finalLegacyLink = rootRoute.indexOf(
     '{ rel: "stylesheet", href: launchReadinessVisualPolishCss }',
   );
 
-  assert.notEqual(foundationLink, -1, "design foundation stylesheet must be linked");
+  assert.notEqual(
+    foundationLink,
+    -1,
+    "design foundation stylesheet must be linked",
+  );
   assert.ok(
     foundationLink > finalLegacyLink,
     "canonical tokens must load after legacy visual layers during migration",
@@ -48,7 +63,10 @@ test("canonical design foundation exposes required semantic contracts", () => {
   ];
 
   for (const token of requiredTokens) {
-    assert.match(foundation, new RegExp(`${token.replaceAll("-", "\\-")}\\s*:`));
+    assert.match(
+      foundation,
+      new RegExp(`${token.replaceAll("-", "\\-")}\\s*:`),
+    );
   }
 
   assert.match(foundation, /min-height:\s*100dvh/);
@@ -68,7 +86,10 @@ test("app shell owns viewport, keyboard and bottom-reservation behavior", () => 
   assert.match(appShell, /--app-viewport-height/);
   assert.match(appShell, /orientationchange/);
   assert.match(appShell, /data-shell-dock=\{config\.showDock\}/);
-  assert.match(appShell, /data-shell-sticky-action=\{config\.reserveStickyAction\}/);
+  assert.match(
+    appShell,
+    /data-shell-sticky-action=\{config\.reserveStickyAction\}/,
+  );
   assert.match(appShell, /data-keyboard-open=\{keyboardOpen\}/);
   assert.match(appShell, /className="rawaj-app-shell__content"/);
   assert.doesNotMatch(appShell, /<main className="rawaj-app-shell__content"/);
@@ -80,7 +101,10 @@ test("app shell owns viewport, keyboard and bottom-reservation behavior", () => 
 });
 
 test("desktop footer preserves heading order and readable trust text", () => {
-  assert.match(footer, /<h2 className="mb-2 text-xs font-extrabold text-foreground">/);
+  assert.match(
+    footer,
+    /<h2 className="mb-2 text-xs font-extrabold text-foreground">/,
+  );
   assert.doesNotMatch(footer, /<h4/);
   assert.match(
     footer,
