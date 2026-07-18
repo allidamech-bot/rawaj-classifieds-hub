@@ -25,7 +25,8 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
     if (!placementPage) return;
 
     let cancelled = false;
-    const device: AdPlacementDevice = window.matchMedia("(max-width: 767px)").matches
+    const device: AdPlacementDevice = window.matchMedia("(max-width: 767px)")
+      .matches
       ? "mobile"
       : "desktop";
 
@@ -43,10 +44,14 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
   }, [placementPage]);
 
   const placement = loaded?.page === placementPage ? loaded.placement : null;
-  if (!placementPage || !placement || failedImageUrl === placement.imageUrl) return null;
+  if (!placementPage || !placement || failedImageUrl === placement.imageUrl)
+    return null;
 
   return (
-    <aside className="container-wide mt-3" aria-label={text("مساحة إعلانية", "Advertisement")}>
+    <aside
+      className="container-wide mt-3"
+      aria-label={text("مساحة إعلانية", "Advertisement")}
+    >
       <a
         href={placement.destinationUrl}
         target="_blank"
