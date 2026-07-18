@@ -10,19 +10,23 @@ async function openHydrated(page: Page, path: string) {
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
 }
 
+function mockAdPlacementResponse() {
+  return JSON.stringify([
+    {
+      id: "00000000-0000-4000-8000-000000000001",
+      image_url: MOCK_AD_IMAGE,
+      destination_url: "https://example.com/rawaj-ad",
+      priority: 100,
+    },
+  ]);
+}
+
 async function mockPublicAdRpc(page: Page) {
   await page.route("**/rest/v1/rpc/rawaj_fetch_active_ad_placements", async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify([
-        {
-          id: "00000000-0000-4000-8000-000000000001",
-          image_url: MOCK_AD_IMAGE,
-          destination_url: "https://example.com/rawaj-ad",
-          priority: 100,
-        },
-      ]),
+      body: mockAdPlacementResponse(),
     });
   });
 }
@@ -121,8 +125,48 @@ test("all supported routes mount one correctly targeted public ad slot", async (
     const slot = page.locator(`[data-placement-page="${route.placement}"]`);
     await expect(slot).toBeVisible();
     await expect(slot).toHaveAttribute("data-placement-device", expectedDevice);
+    await expect(slot).toHaveAttribute("data-placement-loading", "false");
     await expect(page.locator("[data-placement-page]")).toHaveCount(1);
     await expect(slot.locator("img")).toHaveAttribute("width", "1600");
     await expect(slot.locator("img")).toHaveAttribute("height", "700");
+  }
+});
+
+test("active home ad replaces its SSR placeholder without shifting main content", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "Single deterministic layout check");
+
+  let releaseRequest = () => {};
+  const requestGate = new Promise<void>((resolve) => {
+    releaseRequest = resolve;
+  });
+  await page.route("**/rest/v1/rpc/rawaj_fetch_active_ad_placements", async (route) => {
+    await requestGate;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: mockAdPlacementResponse(),
+    });
+  });
+
+  try {
+    const response = await page.goto("/", { waitUntil: "domcontentloaded" });
+    expect(response?.status() ?? 200).toBeLessThan(500);
+    await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
+
+    const loadingSlot = page.locator('[data-placement-page="home"][data-placement-loading="true"]');
+    await expect(loadingSlot).toBeVisible();
+    const mainTopBefore = (await page.locator("main.rawaj-home-v3-main").boundingBox())?.y;
+    expect(mainTopBefore).toBeDefined();
+
+    releaseRequest();
+    const loadedSlot = page.locator('[data-placement-page="home"][data-placement-loading="false"]');
+    await expect(loadedSlot).toBeVisible();
+    const mainTopAfter = (await page.locator("main.rawaj-home-v3-main").boundingBox())?.y;
+    expect(mainTopAfter).toBeDefined();
+    expect(Math.abs(mainTopAfter! - mainTopBefore!)).toBeLessThanOrEqual(1);
+  } finally {
+    releaseRequest();
   }
 });
