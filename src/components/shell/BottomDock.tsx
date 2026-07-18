@@ -23,7 +23,13 @@ type NavItem = {
 };
 
 const items: NavItem[] = [
-  { to: "/", section: "home", labelAr: "الرئيسية", labelEn: "Home", icon: Home },
+  {
+    to: "/",
+    section: "home",
+    labelAr: "الرئيسية",
+    labelEn: "Home",
+    icon: Home,
+  },
   {
     to: "/categories",
     section: "categories",
@@ -46,7 +52,13 @@ const items: NavItem[] = [
     labelEn: "Chats",
     icon: MessageCircle,
   },
-  { to: "/more", section: "account", labelAr: "حسابي", labelEn: "Account", icon: User },
+  {
+    to: "/more",
+    section: "account",
+    labelAr: "حسابي",
+    labelEn: "Account",
+    icon: User,
+  },
 ];
 
 export function BottomDock({ pathname }: BottomDockProps) {
