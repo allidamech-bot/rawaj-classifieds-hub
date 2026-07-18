@@ -3,12 +3,15 @@ import { useEffect, useState, type ReactNode } from "react";
 import { SiteFooter } from "@/components/SiteFooter";
 import { BottomDock } from "@/components/shell/BottomDock";
 import { resolveAppShellConfig } from "@/lib/primary-navigation";
+import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface AppShellProps {
   pathname: string;
   children: ReactNode;
   announcements?: ReactNode;
   routeClassName?: string;
+  isRouteNavigating?: boolean;
+  pendingPathname?: string;
 }
 
 function isEditableElement(target: Element | null) {
@@ -75,9 +78,12 @@ export function AppShell({
   children,
   announcements,
   routeClassName = "",
+  isRouteNavigating = false,
+  pendingPathname,
 }: AppShellProps) {
   const config = resolveAppShellConfig(pathname);
   const keyboardOpen = useViewportState();
+  const { text } = useUiPreferences();
 
   return (
     <div
@@ -88,6 +94,10 @@ export function AppShell({
       data-shell-header={config.showHeader}
       data-shell-sticky-action={config.reserveStickyAction}
       data-keyboard-open={keyboardOpen}
+      data-route-state={isRouteNavigating ? "pending" : "idle"}
+      data-resolved-pathname={pathname}
+      data-pending-pathname={isRouteNavigating ? pendingPathname : undefined}
+      aria-busy={isRouteNavigating}
     >
       <div className="rawaj-app-shell__page" data-shell-region="page-canvas">
         {announcements ? (
@@ -96,12 +106,31 @@ export function AppShell({
           </div>
         ) : null}
 
-        <div className="rawaj-app-shell__content" data-shell-region="page-content">
+        <div
+          className="rawaj-app-shell__content"
+          data-shell-region="page-content"
+          aria-hidden={isRouteNavigating ? true : undefined}
+        >
           {children}
         </div>
 
         {config.showFooter ? <SiteFooter /> : null}
       </div>
+
+      {isRouteNavigating ? (
+        <div
+          className="rawaj-route-pending-mask"
+          data-shell-region="route-pending-mask"
+          role="status"
+          aria-live="polite"
+          aria-label={text("جاري فتح الصفحة", "Opening page")}
+        >
+          <div className="rawaj-route-pending-mask__content">
+            <span className="rawaj-route-pending-mask__spinner" aria-hidden="true" />
+            <span>{text("جاري فتح الصفحة...", "Opening page...")}</span>
+          </div>
+        </div>
+      ) : null}
 
       <div
         id="rawaj-floating-layer"
