@@ -144,7 +144,7 @@ test("rapid bottom navigation resolves to one page without stacked route content
   await expect(shell).toHaveAttribute("data-route-state", "idle");
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
   await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(0);
-  await expect(page.locator("main.rawaj-categories-page")).toHaveCount(1);
+  await expect(page.locator("main.rawaj-categories-v2")).toHaveCount(1);
 });
 
 test("category directory exposes an indexable category landing route when data exists", async ({
