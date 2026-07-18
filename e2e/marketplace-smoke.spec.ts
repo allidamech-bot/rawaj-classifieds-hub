@@ -15,6 +15,7 @@ const publicRoutes = [
 ] as const;
 
 const protectedRoutes = ["/add-listing", "/profile", "/favorites", "/admin"] as const;
+const delayedReferenceRequest = "**/rest/v1/subcategories**";
 
 function isExpectedLocalRequestFailure(url: string, failure: string) {
   return (
@@ -188,11 +189,7 @@ test("pending navigation never exposes the previous home page inside the next ro
   });
   let delayedRequestCount = 0;
 
-  await page.route("**/listings", async (route) => {
-    if (route.request().isNavigationRequest()) {
-      await route.continue();
-      return;
-    }
+  await page.route(delayedReferenceRequest, async (route) => {
     delayedRequestCount += 1;
     await requestGate;
     await route.continue();
@@ -203,13 +200,13 @@ test("pending navigation never exposes the previous home page inside the next ro
   try {
     await listingsLink.dispatchEvent("click");
 
+    await expect.poll(() => delayedRequestCount).toBeGreaterThan(0);
     await expect(shell).toHaveAttribute("data-route-state", "pending");
     await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
     await expect(shell).toHaveAttribute("data-pending-pathname", "/listings");
     await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
     await expect(page.locator('[data-shell-region="page-content"]')).toBeHidden();
     await expect(page.locator("main.rawaj-search-results-v1")).toHaveCount(0);
-    expect(delayedRequestCount).toBeGreaterThan(0);
   } finally {
     releaseRequest();
   }
@@ -220,7 +217,7 @@ test("pending navigation never exposes the previous home page inside the next ro
   await expect(page.locator('[data-shell-region="route-pending-mask"]')).toHaveCount(0);
   await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(0);
   await expect(page.locator("main.rawaj-search-results-v1")).toBeVisible();
-  await page.unroute("**/listings");
+  await page.unroute(delayedReferenceRequest);
 });
 
 test("rapid bottom navigation resolves to one page without stacked route content", async ({
@@ -235,11 +232,7 @@ test("rapid bottom navigation resolves to one page without stacked route content
   });
   let delayedRequestCount = 0;
 
-  await page.route("**/categories", async (route) => {
-    if (route.request().isNavigationRequest()) {
-      await route.continue();
-      return;
-    }
+  await page.route(delayedReferenceRequest, async (route) => {
     delayedRequestCount += 1;
     await requestGate;
     await route.continue();
@@ -251,6 +244,7 @@ test("rapid bottom navigation resolves to one page without stacked route content
 
   try {
     await categoriesDockLink.dispatchEvent("click");
+    await expect.poll(() => delayedRequestCount).toBeGreaterThan(0);
     await expect(shell).toHaveAttribute("data-route-state", "pending");
     await homeDockLink.dispatchEvent("click");
     await categoriesDockLink.dispatchEvent("click");
@@ -259,7 +253,6 @@ test("rapid bottom navigation resolves to one page without stacked route content
     await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
     await expect(page.locator('[data-shell-region="page-content"]')).toBeHidden();
     await expect(page.locator("main:visible")).toHaveCount(0);
-    expect(delayedRequestCount).toBeGreaterThan(0);
   } finally {
     releaseRequest();
   }
@@ -269,7 +262,7 @@ test("rapid bottom navigation resolves to one page without stacked route content
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
   await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(0);
   await expect(page.locator("main.rawaj-categories-v2")).toHaveCount(1);
-  await page.unroute("**/categories");
+  await page.unroute(delayedReferenceRequest);
 });
 
 test("category directory exposes an indexable category landing route when data exists", async ({
