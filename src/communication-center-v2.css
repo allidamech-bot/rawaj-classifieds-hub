@@ -229,6 +229,30 @@
   gap: 0.75rem;
 }
 
+/* List-first mobile experience: the conversation list should size to its content
+   and never force a full-height blank area beneath it. */
+@media (max-width: 1023px) {
+  .rawaj-message-workspace[data-view="list"] {
+    min-height: auto;
+  }
+
+  .rawaj-message-workspace[data-view="list"] .rawaj-conversation-sidebar {
+    min-height: auto;
+  }
+
+  .rawaj-message-workspace[data-view="list"] .rawaj-message-panel {
+    min-height: auto;
+  }
+}
+
+/* Conversation view still needs a stable, computed height that accounts for the
+   sticky header and the bottom navigation without overflowing off-screen. */
+@media (max-width: 1023px) {
+  .rawaj-message-workspace[data-view="conversation"] {
+    min-height: calc(100dvh - 11rem);
+  }
+}
+
 .rawaj-conversation-sidebar,
 .rawaj-message-panel,
 .rawaj-notification-panel,

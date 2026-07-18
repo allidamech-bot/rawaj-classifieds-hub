@@ -227,6 +227,102 @@ export async function ownerSaveAdPlacement(
   };
 }
 
+export interface DeleteAdPlacementPayload {
+  id: string;
+  expectedVersion: number;
+  reason: string;
+}
+
+export interface DeleteAdPlacementResult {
+  id: string;
+  imageUrl: string;
+  storagePath: string | null;
+}
+
+export async function ownerDeleteAdPlacement(
+  canManageAdPlacements: boolean,
+  payload: DeleteAdPlacementPayload,
+): Promise<ClassifiedsResult<DeleteAdPlacementResult>> {
+  if (!canManageAdPlacements) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "إدارة المساحات الإعلانية متاحة للمالك فقط." },
+    };
+  }
+
+  const reason = payload.reason.trim();
+  if (!payload.id || reason.length < 3) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "أدخل سبباً واضحاً لحذف المساحة." },
+    };
+  }
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data.rpc("rawaj_owner_delete_ad_placement", {
+    p_id: payload.id,
+    p_expected_version: payload.expectedVersion,
+    p_reason: reason,
+  });
+
+  if (error) {
+    if (error.message?.includes("stale_ad_placement")) {
+      return {
+        ok: false,
+        error: {
+          code: "unknown",
+          message: "تغيّرت المساحة الإعلانية منذ تحميلها. أعد التحميل قبل الحذف.",
+        },
+      };
+    }
+    return { ok: false, error: mapError(error) };
+  }
+
+  const row = ((data ?? []) as Record<string, unknown>[])[0];
+  if (!row) {
+    return {
+      ok: false,
+      error: { code: "unknown", message: "تم تنفيذ الحذف دون نتيجة قابلة للتحقق." },
+    };
+  }
+
+  const imageUrl = rowString(row, "image_url");
+  const storagePath = rowNullableString(row, "storage_path");
+  if (imageUrl && storagePath) {
+    await removeOrphanedAdPlacementImage(canManageAdPlacements, imageUrl, storagePath);
+  }
+
+  return {
+    ok: true,
+    data: {
+      id: rowString(row, "id"),
+      imageUrl,
+      storagePath: storagePath ? storagePath : null,
+    },
+  };
+}
+
+export async function removeOrphanedAdPlacementImage(
+  canManageAdPlacements: boolean,
+  imageUrl: string,
+  storagePath: string,
+): Promise<void> {
+  if (!canManageAdPlacements || !imageUrl || !storagePath) return;
+  const clientResult = getClient();
+  if (!clientResult.ok) return;
+
+  const { data } = await clientResult.data
+    .from("ad_placements")
+    .select("id")
+    .eq("image_url", imageUrl)
+    .limit(1);
+  if (Array.isArray(data) && data.length > 0) return;
+
+  await clientResult.data.storage.from(adPlacementMediaBucket).remove([storagePath]);
+}
+
 export async function ownerSetAdPlacementStatus(
   canManageAdPlacements: boolean,
   payload: { id: string; status: AdPlacementStatus; expectedVersion: number; reason: string },

@@ -22,20 +22,35 @@ interface ChatVoiceRecorderProps {
 
 const MAX_DURATION_MS = 120_000;
 
-function preferredMimeType() {
-  if (typeof MediaRecorder === "undefined") return "";
-  for (const type of ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"]) {
+const RECORDER_MIME_CANDIDATES = [
+  "audio/webm;codecs=opus",
+  "audio/mp4;codecs=mp4a.40.2",
+  "audio/mp4",
+  "audio/webm",
+  "audio/ogg;codecs=opus",
+  "audio/ogg",
+];
+
+const RECORDER_FALLBACK_MIME_TYPES = ["audio/webm", "audio/mp4", "audio/ogg", "audio/mpeg"];
+
+function preferredMimeType(): string | null {
+  if (typeof MediaRecorder === "undefined") return null;
+  for (const type of RECORDER_MIME_CANDIDATES) {
     if (MediaRecorder.isTypeSupported(type)) return type;
   }
-  return "";
+  return null;
 }
 
-function normalizeRecordedMimeType(mime: string) {
+function normalizeRecordedMimeType(mime: string): string | null {
   const base = mime.split(";")[0]?.trim().toLowerCase() ?? "";
-  return ["audio/webm", "audio/mp4", "audio/mpeg", "audio/ogg"].includes(base) ? base : "";
+  if (base === "video/webm") return "audio/webm";
+  if (["audio/webm", "audio/mp4", "audio/mpeg", "audio/ogg"].includes(base)) return base;
+  if (base === "audio/m4a" || base === "audio/x-m4a") return "audio/mp4";
+  if (base === "audio/mp3") return "audio/mpeg";
+  return null;
 }
 
-function extensionForMime(mime: string) {
+function extensionForMime(mime: string): string {
   if (mime === "audio/mp4") return "m4a";
   if (mime === "audio/mpeg") return "mp3";
   if (mime === "audio/ogg") return "ogg";
@@ -56,11 +71,15 @@ export function ChatVoiceRecorder({
   const [recording, setRecording] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
 
+  function stopMicrophone() {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+  }
+
   function cleanup() {
     if (timerRef.current !== null) window.clearInterval(timerRef.current);
     timerRef.current = null;
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
+    stopMicrophone();
     recorderRef.current = null;
     chunksRef.current = [];
     setRecording(false);
@@ -75,54 +94,78 @@ export function ChatVoiceRecorder({
       onError(labels.unsupported);
       return;
     }
+    let stream: MediaStream;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = preferredMimeType();
-      const recorder = mimeType
-        ? new MediaRecorder(stream, { mimeType })
-        : new MediaRecorder(stream);
-      streamRef.current = stream;
-      recorderRef.current = recorder;
-      chunksRef.current = [];
-      startedAtRef.current = Date.now();
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) chunksRef.current.push(event.data);
-      };
-      recorder.onstop = () => {
-        const durationMs = Math.min(
-          MAX_DURATION_MS,
-          Math.max(1_000, Date.now() - startedAtRef.current),
-        );
-        const type = normalizeRecordedMimeType(recorder.mimeType || mimeType || "audio/webm");
-        if (!type) {
-          cleanup();
-          onError(labels.unsupported);
-          return;
-        }
-        const blob = new Blob(chunksRef.current, { type });
-        if (blob.size > 0) {
-          const file = new File([blob], `voice-${Date.now()}.${extensionForMime(type)}`, { type });
-          onRecorded({ file, previewUrl: URL.createObjectURL(blob), durationMs });
-        } else {
-          onError(labels.unsupported);
-        }
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      onError(labels.permission);
+      return;
+    }
+    const mimeType = preferredMimeType();
+    let recorder: MediaRecorder;
+    try {
+      recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+    } catch {
+      stopMicrophone();
+      onError(labels.unsupported);
+      return;
+    }
+    if (typeof recorder.start !== "function") {
+      stopMicrophone();
+      onError(labels.unsupported);
+      return;
+    }
+    streamRef.current = stream;
+    recorderRef.current = recorder;
+    chunksRef.current = [];
+    startedAtRef.current = Date.now();
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) chunksRef.current.push(event.data);
+    };
+    recorder.onerror = () => {
+      cleanup();
+      onError(labels.permission);
+    };
+    recorder.onstop = () => {
+      const durationMs = Math.min(
+        MAX_DURATION_MS,
+        Math.max(1_000, Date.now() - startedAtRef.current),
+      );
+      const type = normalizeRecordedMimeType(recorder.mimeType || mimeType || "audio/webm");
+      if (!type) {
         cleanup();
-      };
+        onError(labels.unsupported);
+        return;
+      }
+      const blob = new Blob(chunksRef.current, { type });
+      if (blob.size > 0) {
+        const file = new File([blob], `voice-${Date.now()}.${extensionForMime(type)}`, { type });
+        onRecorded({ file, previewUrl: URL.createObjectURL(blob), durationMs });
+      } else {
+        cleanup();
+        onError(labels.unsupported);
+      }
+    };
+    try {
       recorder.start(500);
-      setRecording(true);
-      timerRef.current = window.setInterval(() => {
-        const next = Date.now() - startedAtRef.current;
-        setElapsedMs(next);
-        if (next >= MAX_DURATION_MS) recorder.stop();
-      }, 250);
     } catch {
       cleanup();
       onError(labels.permission);
+      return;
     }
+    setRecording(true);
+    timerRef.current = window.setInterval(() => {
+      const next = Date.now() - startedAtRef.current;
+      setElapsedMs(next);
+      if (next >= MAX_DURATION_MS && recorderRef.current?.state === "recording") {
+        recorder.stop();
+      }
+    }, 250);
   }
 
   function stop() {
-    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+    const recorder = recorderRef.current;
+    if (recorder && recorder.state === "recording") recorder.stop();
   }
 
   function cancel() {

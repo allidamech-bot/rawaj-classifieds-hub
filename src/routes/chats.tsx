@@ -264,13 +264,6 @@ function ChatsPage() {
       return;
     if (result.ok) {
       setConversations(result.data);
-      if (!search.conversation && result.data[0]) {
-        void navigate({
-          to: "/chats",
-          search: { conversation: result.data[0].id },
-          replace: true,
-        });
-      }
     } else {
       setConversationError(result.error);
     }
@@ -666,7 +659,10 @@ function ChatsPage() {
           <CommunicationSafetyNote />
         </div>
 
-        <div className="rawaj-message-workspace">
+        <div
+          className="rawaj-message-workspace"
+          data-view={selectedConversation ? "conversation" : "list"}
+        >
           <aside
             className={`rawaj-conversation-sidebar ${
               !isDesktop && viewingConversationOnMobile ? "hidden" : ""

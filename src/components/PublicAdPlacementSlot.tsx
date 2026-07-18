@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AdPlacementPage } from "@/lib/api/ad-placements";
 import {
   fetchActiveAdPlacements,
+  onAdPlacementInvalidation,
   type AdPlacementDevice,
   type PublicAdPlacement,
 } from "@/lib/api/public-ad-placements";
@@ -23,22 +24,32 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
 
   useEffect(() => {
     if (!placementPage) return;
+    const activePage: AdPlacementPage = placementPage;
 
     let cancelled = false;
     const device: AdPlacementDevice = window.matchMedia("(max-width: 767px)").matches
       ? "mobile"
       : "desktop";
 
-    void fetchActiveAdPlacements(placementPage, device).then((result) => {
+    const page: AdPlacementPage = activePage;
+    function load() {
       if (cancelled) return;
-      setLoaded({
-        page: placementPage,
-        placement: result.ok ? (result.data[0] ?? null) : null,
+      void fetchActiveAdPlacements(page, device).then((result) => {
+        if (cancelled) return;
+        setLoaded({
+          page,
+          placement: result.ok ? (result.data[0] ?? null) : null,
+        });
       });
-    });
+    }
+
+    load();
+
+    const unsubscribe = onAdPlacementInvalidation(load);
 
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [placementPage]);
 
@@ -64,6 +75,7 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
           width={1600}
           height={500}
           draggable={false}
+          key={placement.imageUrl}
           onError={() => setFailedImageUrl(placement.imageUrl)}
           className="aspect-[3.2/1] w-full object-cover sm:aspect-[5/1]"
         />

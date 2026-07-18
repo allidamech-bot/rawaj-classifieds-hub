@@ -132,3 +132,73 @@ export function buildPromotionReceiptPath(
 export function isPathOwnedByUser(path: string, userId: string, kind: string): boolean {
   return path.startsWith(`${userId}/${kind}/`);
 }
+
+export const AD_PLACEMENT_IMAGE_MIN_WIDTH = 960;
+export const AD_PLACEMENT_IMAGE_MIN_HEIGHT = 420;
+export const AD_PLACEMENT_IMAGE_RATIO = 16 / 7;
+
+export interface AdPlacementImageValidation {
+  ok: boolean;
+  error?: string;
+  width?: number;
+  height?: number;
+}
+
+export function validateAdPlacementImageFile(file: File): { ok: boolean; error?: string } {
+  if (file.size <= 0) return { ok: false, error: "ملف الصورة فارغ أو تالف." };
+  if (!validateImageMimeType(file.type)) {
+    return { ok: false, error: "الصيغ المسموحة للصور: JPG أو PNG أو WebP." };
+  }
+  if (!validateImageExtension(file.name)) {
+    return { ok: false, error: "امتداد الملف غير صالح. استخدم jpg أو png أو webp." };
+  }
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    return { ok: false, error: "حجم صورة المساحة يجب ألا يتجاوز 5MB." };
+  }
+  return { ok: true };
+}
+
+export function validateAdPlacementImageDimensions(
+  width: number,
+  height: number,
+): AdPlacementImageValidation {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return { ok: false, error: "تعذر قراءة أبعاد الصورة.", width, height };
+  }
+  if (width < AD_PLACEMENT_IMAGE_MIN_WIDTH || height < AD_PLACEMENT_IMAGE_MIN_HEIGHT) {
+    return {
+      ok: false,
+      error: "الصورة صغيرة جداً. استخدم مقاساً لا يقل عن 960×420 بكسل.",
+      width,
+      height,
+    };
+  }
+  const ratio = width / height;
+  const tolerance = 0.12;
+  if (Math.abs(ratio - AD_PLACEMENT_IMAGE_RATIO) > tolerance) {
+    return {
+      ok: false,
+      error: "النسبة المطلوبة للصورة هي 16:7 تقريباً. عدّل المقاس أو الاقتصاص.",
+      width,
+      height,
+    };
+  }
+  return { ok: true, width, height };
+}
+
+export function readImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      const dimensions = { width: image.naturalWidth, height: image.naturalHeight };
+      URL.revokeObjectURL(url);
+      resolve(dimensions);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("تعذر قراءة أبعاد الصورة."));
+    };
+    image.src = url;
+  });
+}

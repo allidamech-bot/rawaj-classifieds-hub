@@ -17,7 +17,7 @@ test("supported marketplace pages resolve to their ad placement inventory", () =
 
 test("public ad slot loads device-targeted active placements and renders one banner", () => {
   assert.match(slot, /matchMedia\("\(max-width: 767px\)"\)/);
-  assert.match(slot, /fetchActiveAdPlacements\(placementPage, device\)/);
+  assert.match(slot, /fetchActiveAdPlacements\(page, device\)/);
   assert.match(slot, /result\.data\[0\]/);
   assert.match(slot, /rel="noopener noreferrer sponsored"/);
 });

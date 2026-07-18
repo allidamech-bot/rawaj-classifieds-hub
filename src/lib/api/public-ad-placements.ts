@@ -20,10 +20,79 @@ const activePlacementCache = new Map<
 const activePlacementRequests = new Map<string, Promise<ClassifiedsResult<PublicAdPlacement[]>>>();
 let activePlacementCacheGeneration = 0;
 
+const AD_PLACEMENT_INVALIDATION_EVENT = "rawaj:ad-placement-invalidation";
+
+type AdPlacementInvalidationListener = () => void;
+const adPlacementInvalidationListeners = new Set<AdPlacementInvalidationListener>();
+
+const broadcastChannel: BroadcastChannel | null = (() => {
+  if (typeof BroadcastChannel === "undefined") return null;
+  try {
+    return new BroadcastChannel(AD_PLACEMENT_INVALIDATION_EVENT);
+  } catch {
+    return null;
+  }
+})();
+
+if (broadcastChannel) {
+  broadcastChannel.onmessage = () => {
+    activePlacementCacheGeneration += 1;
+    activePlacementCache.clear();
+    activePlacementRequests.clear();
+    emitAdPlacementInvalidation();
+  };
+}
+
+if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+  window.addEventListener("storage", (event) => {
+    if (
+      event.key === `broadcast:${AD_PLACEMENT_INVALIDATION_EVENT}` ||
+      event.key === AD_PLACEMENT_INVALIDATION_EVENT
+    ) {
+      activePlacementCacheGeneration += 1;
+      activePlacementCache.clear();
+      activePlacementRequests.clear();
+      emitAdPlacementInvalidation();
+    }
+  });
+}
+
+function emitAdPlacementInvalidation(): void {
+  for (const listener of adPlacementInvalidationListeners) {
+    try {
+      listener();
+    } catch {
+      /* listener errors must not break invalidation propagation */
+    }
+  }
+}
+
+export function onAdPlacementInvalidation(listener: AdPlacementInvalidationListener): () => void {
+  adPlacementInvalidationListeners.add(listener);
+  return () => adPlacementInvalidationListeners.delete(listener);
+}
+
 export function invalidateActiveAdPlacementCache(): void {
   activePlacementCacheGeneration += 1;
   activePlacementCache.clear();
   activePlacementRequests.clear();
+  emitAdPlacementInvalidation();
+  if (broadcastChannel) {
+    try {
+      broadcastChannel.postMessage({ type: "invalidate" });
+    } catch {
+      /* cross-tab broadcast is best-effort */
+    }
+  } else if (typeof window !== "undefined" && typeof window.localStorage === "object") {
+    try {
+      window.localStorage.setItem(
+        `broadcast:${AD_PLACEMENT_INVALIDATION_EVENT}`,
+        String(Date.now()),
+      );
+    } catch {
+      /* storage fallback is best-effort */
+    }
+  }
 }
 
 export async function fetchActiveAdPlacements(

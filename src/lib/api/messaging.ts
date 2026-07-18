@@ -150,11 +150,34 @@ function extensionForChatImageMime(mimeType: string) {
   return "jpg";
 }
 
+const CHAT_AUDIO_MIME_ALIASES: Record<string, (typeof CHAT_AUDIO_MIME_TYPES)[number]> = {
+  "audio/webm": "audio/webm",
+  "video/webm": "audio/webm",
+  "audio/mp4": "audio/mp4",
+  "audio/m4a": "audio/mp4",
+  "audio/x-m4a": "audio/mp4",
+  "audio/mpeg": "audio/mpeg",
+  "audio/mp3": "audio/mpeg",
+  "audio/ogg": "audio/ogg",
+};
+
 function normalizeChatAudioMimeType(value: string): UploadedChatAudio["mimeType"] | null {
-  const mimeType = value.split(";")[0]?.trim().toLowerCase() ?? "";
-  return CHAT_AUDIO_MIME_TYPES.includes(mimeType as UploadedChatAudio["mimeType"])
-    ? (mimeType as UploadedChatAudio["mimeType"])
-    : null;
+  const raw = value.split(";")[0]?.trim().toLowerCase() ?? "";
+  const mapped = CHAT_AUDIO_MIME_ALIASES[raw];
+  return mapped ?? null;
+}
+
+function normalizeChatAudioFileName(originalName: string, mimeType: string): string {
+  const extension = extensionForChatAudioMime(mimeType);
+  const base = originalName.replace(/\.[^.]+$/, "").replace(/[^\p{L}\p{N}_-]+/gu, "-") || "voice";
+  return `${base}.${extension}`;
+}
+
+function extensionForChatAudioMime(mimeType: string): string {
+  if (mimeType === "audio/mp4") return "m4a";
+  if (mimeType === "audio/mpeg") return "mp3";
+  if (mimeType === "audio/ogg") return "ogg";
+  return "webm";
 }
 
 export function validateChatAudio(file: File, durationMs: number): ClassifiedsResult<null> {
@@ -162,7 +185,11 @@ export function validateChatAudio(file: File, durationMs: number): ClassifiedsRe
   if (!mimeType)
     return {
       ok: false,
-      error: { code: "validation_error", message: "صيغة التسجيل الصوتي غير مدعومة." },
+      error: {
+        code: "validation_error",
+        message: "صيغة التسجيل الصوتي غير مدعومة.",
+        operation: "chat_audio_validation",
+      },
     };
   if (file.size < 1 || file.size > CHAT_AUDIO_MAX_BYTES)
     return {
@@ -189,11 +216,40 @@ export async function uploadChatAudio(payload: {
   const conversationId = normalizeChatResourceId(payload.conversationId);
   const requestId = normalizeChatResourceId(payload.requestId);
   const mimeType = normalizeChatAudioMimeType(payload.file.type);
-  const validation = validateChatAudio(payload.file, payload.durationMs);
-  if (!conversationId || !requestId || !mimeType || !validation.ok)
+  const durationMs = Number.isFinite(payload.durationMs) ? payload.durationMs : 0;
+  const validation = validateChatAudio(payload.file, durationMs);
+  if (!mimeType) {
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        operation: "chat_audio_validation",
+        message: "صيغة التسجيل الصوتي غير مدعومة على هذا الجهاز. جرب متصفحاً آخر أو أعد التسجيل.",
+      },
+    };
+  }
+  if (!conversationId || !requestId || !validation.ok) {
     return validation.ok
-      ? { ok: false, error: { code: "validation_error", message: "تعذر تحديد التسجيل الصوتي." } }
+      ? {
+          ok: false,
+          error: {
+            code: "validation_error",
+            operation: "chat_audio_validation",
+            message: "تعذر تحديد التسجيل الصوتي.",
+          },
+        }
       : validation;
+  }
+  if (payload.file.size < 1) {
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        operation: "chat_audio_validation",
+        message: "التسجيل الصوتي فارغ. أعد التسجيل ثم حاول مجدداً.",
+      },
+    };
+  }
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   const userResult = await clientResult.data.auth.getUser();
@@ -201,16 +257,14 @@ export async function uploadChatAudio(payload: {
   if (userResult.error || !userId)
     return {
       ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لإرسال تسجيل صوتي." },
+      error: {
+        code: "auth_required",
+        operation: "chat_audio_recorder",
+        message: "يجب تسجيل الدخول لإرسال تسجيل صوتي.",
+      },
     };
-  const extension =
-    mimeType === "audio/mp4"
-      ? "m4a"
-      : mimeType === "audio/mpeg"
-        ? "mp3"
-        : mimeType === "audio/ogg"
-          ? "ogg"
-          : "webm";
+  const extension = extensionForChatAudioMime(mimeType);
+  const normalizedName = normalizeChatAudioFileName(payload.file.name, mimeType);
   const path = [conversationId, userId, requestId].join("/") + "." + extension;
   let audioBytes: ArrayBuffer;
   try {
@@ -220,20 +274,32 @@ export async function uploadChatAudio(payload: {
       ok: false,
       error: {
         code: "validation_error",
-        message: "تعذر تجهيز التسجيل الصوتي للإرسال. أعد تسجيله ثم حاول مجدداً.",
         operation: "chat_audio_prepare",
+        message: "تعذر تجهيز التسجيل الصوتي للإرسال. أعد تسجيله ثم حاول مجدداً.",
       },
     };
   }
+  if (audioBytes.byteLength < 1) {
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        operation: "chat_audio_prepare",
+        message: "التسجيل الصوتي فارغ. أعد التسجيل ثم حاول مجدداً.",
+      },
+    };
+  }
+  const fileToUpload = new File([audioBytes], normalizedName, { type: mimeType });
   const { error } = await clientResult.data.storage
     .from("conversation-audio")
-    .upload(path, audioBytes, { upsert: false, contentType: mimeType, cacheControl: "3600" });
+    .upload(path, fileToUpload, { upsert: false, contentType: mimeType, cacheControl: "3600" });
   if (error) {
     const mapped = mapError(error, "chat_audio_upload");
     return {
       ok: false,
       error: {
         ...mapped,
+        operation: "chat_audio_upload",
         message:
           mapped.code === "permission_denied"
             ? "تعذر رفع التسجيل بسبب صلاحيات التخزين. أعد تسجيل الدخول ثم حاول مجدداً."
@@ -246,9 +312,9 @@ export async function uploadChatAudio(payload: {
     data: {
       path,
       mimeType: mimeType as UploadedChatAudio["mimeType"],
-      sizeBytes: payload.file.size,
+      sizeBytes: fileToUpload.size,
       kind: "audio",
-      durationMs: payload.durationMs,
+      durationMs,
     },
   };
 }
