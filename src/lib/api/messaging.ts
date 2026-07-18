@@ -150,9 +150,16 @@ function extensionForChatImageMime(mimeType: string) {
   return "jpg";
 }
 
+function normalizeChatAudioMimeType(value: string): UploadedChatAudio["mimeType"] | null {
+  const mimeType = value.split(";")[0]?.trim().toLowerCase() ?? "";
+  return CHAT_AUDIO_MIME_TYPES.includes(mimeType as UploadedChatAudio["mimeType"])
+    ? (mimeType as UploadedChatAudio["mimeType"])
+    : null;
+}
+
 export function validateChatAudio(file: File, durationMs: number): ClassifiedsResult<null> {
-  const mimeType = file.type.split(";")[0];
-  if (!CHAT_AUDIO_MIME_TYPES.includes(mimeType as UploadedChatAudio["mimeType"]))
+  const mimeType = normalizeChatAudioMimeType(file.type);
+  if (!mimeType)
     return {
       ok: false,
       error: { code: "validation_error", message: "صيغة التسجيل الصوتي غير مدعومة." },
@@ -181,9 +188,9 @@ export async function uploadChatAudio(payload: {
 }): Promise<ClassifiedsResult<UploadedChatAudio>> {
   const conversationId = normalizeChatResourceId(payload.conversationId);
   const requestId = normalizeChatResourceId(payload.requestId);
-  const mimeType = payload.file.type.split(";")[0];
+  const mimeType = normalizeChatAudioMimeType(payload.file.type);
   const validation = validateChatAudio(payload.file, payload.durationMs);
-  if (!conversationId || !requestId || !validation.ok)
+  if (!conversationId || !requestId || !mimeType || !validation.ok)
     return validation.ok
       ? { ok: false, error: { code: "validation_error", message: "تعذر تحديد التسجيل الصوتي." } }
       : validation;
@@ -205,10 +212,35 @@ export async function uploadChatAudio(payload: {
           ? "ogg"
           : "webm";
   const path = [conversationId, userId, requestId].join("/") + "." + extension;
+  let audioBytes: ArrayBuffer;
+  try {
+    audioBytes = await payload.file.arrayBuffer();
+  } catch {
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: "تعذر تجهيز التسجيل الصوتي للإرسال. أعد تسجيله ثم حاول مجدداً.",
+        operation: "chat_audio_prepare",
+      },
+    };
+  }
   const { error } = await clientResult.data.storage
     .from("conversation-audio")
-    .upload(path, payload.file, { upsert: false, contentType: mimeType, cacheControl: "3600" });
-  if (error) return { ok: false, error: mapError(error, "chat_audio_upload") };
+    .upload(path, audioBytes, { upsert: false, contentType: mimeType, cacheControl: "3600" });
+  if (error) {
+    const mapped = mapError(error, "chat_audio_upload");
+    return {
+      ok: false,
+      error: {
+        ...mapped,
+        message:
+          mapped.code === "permission_denied"
+            ? "تعذر رفع التسجيل بسبب صلاحيات التخزين. أعد تسجيل الدخول ثم حاول مجدداً."
+            : "تعذر رفع التسجيل الصوتي الآن. حاول إعادة التسجيل والإرسال.",
+      },
+    };
+  }
   return {
     ok: true,
     data: {

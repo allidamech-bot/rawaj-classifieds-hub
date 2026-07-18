@@ -30,9 +30,15 @@ function preferredMimeType() {
   return "";
 }
 
+function normalizeRecordedMimeType(mime: string) {
+  const base = mime.split(";")[0]?.trim().toLowerCase() ?? "";
+  return ["audio/webm", "audio/mp4", "audio/mpeg", "audio/ogg"].includes(base) ? base : "";
+}
+
 function extensionForMime(mime: string) {
-  if (mime.includes("mp4")) return "m4a";
-  if (mime.includes("ogg")) return "ogg";
+  if (mime === "audio/mp4") return "m4a";
+  if (mime === "audio/mpeg") return "mp3";
+  if (mime === "audio/ogg") return "ogg";
   return "webm";
 }
 
@@ -87,11 +93,18 @@ export function ChatVoiceRecorder({
           MAX_DURATION_MS,
           Math.max(1_000, Date.now() - startedAtRef.current),
         );
-        const type = recorder.mimeType || mimeType || "audio/webm";
+        const type = normalizeRecordedMimeType(recorder.mimeType || mimeType || "audio/webm");
+        if (!type) {
+          cleanup();
+          onError(labels.unsupported);
+          return;
+        }
         const blob = new Blob(chunksRef.current, { type });
         if (blob.size > 0) {
           const file = new File([blob], `voice-${Date.now()}.${extensionForMime(type)}`, { type });
           onRecorded({ file, previewUrl: URL.createObjectURL(blob), durationMs });
+        } else {
+          onError(labels.unsupported);
         }
         cleanup();
       };
