@@ -23,10 +23,7 @@ function isExpectedLocalRequestFailure(url: string, failure: string) {
 }
 
 async function waitForHydratedRouter(page: Page) {
-  await page.waitForFunction(() => {
-    const runtime = window as typeof window & { $_TSR?: unknown };
-    return Boolean(document.querySelector('script[type="module"][src]')) && runtime.$_TSR === undefined;
-  });
+  await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
 }
 
 async function openHealthyPage(page: Page, path: string) {
@@ -46,7 +43,6 @@ async function openHealthyPage(page: Page, path: string) {
   await expect(page.locator("main")).toBeVisible();
   await expect.poll(() => page.title()).not.toBe("");
   await waitForHydratedRouter(page);
-  await page.waitForTimeout(100);
   expect(pageErrors).toEqual([]);
   expect(failedRequests).toEqual([]);
 }
