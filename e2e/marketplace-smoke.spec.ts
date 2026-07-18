@@ -64,7 +64,7 @@ for (const path of protectedRoutes) {
   });
 }
 
-test("home shell renders one header and the expected dock contract", async ({ page }, testInfo) => {
+test("home shell renders one header and one responsive dock", async ({ page }, testInfo) => {
   await openHealthyPage(page, "/");
 
   await expect(page.locator('[data-shell-region="header-region"]')).toHaveCount(1);
@@ -72,10 +72,11 @@ test("home shell renders one header and the expected dock contract", async ({ pa
   await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(1);
 
   const dock = page.locator(".rawaj-mobile-dock");
+  await expect(dock).toHaveCount(1);
   if (testInfo.project.name.startsWith("mobile")) {
-    await expect(dock).toHaveCount(1);
+    await expect(dock).toBeVisible();
   } else {
-    await expect(dock).toHaveCount(0);
+    await expect(dock).toBeHidden();
   }
 });
 
@@ -95,6 +96,7 @@ test("home search trims Arabic and English queries and handles an empty submit",
 
   await page.goBack();
   await waitForHydratedRouter(page);
+  await expect(search).toBeVisible();
   await search.fill("  iPhone 15  ");
   await page.locator('.rawaj-search-overlay__form button[type="submit"]').click();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
@@ -102,6 +104,7 @@ test("home search trims Arabic and English queries and handles an empty submit",
 
   await page.goBack();
   await waitForHydratedRouter(page);
+  await expect(search).toBeVisible();
   await search.fill("   ");
   await search.press("Enter");
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
@@ -280,6 +283,37 @@ test("category directory exposes an indexable category landing route when data e
   await categoryLink.click();
   await expect(page).toHaveURL(/\/category\/[^/?#]+/);
   await expect(page.locator("h1")).toBeVisible();
+});
+
+test("home stays within the viewport at audited mobile and desktop widths", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "Single Chromium viewport matrix");
+
+  for (const width of [320, 360, 390, 430, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await openHealthyPage(page, "/");
+
+    const dimensions = await page.evaluate(() => ({
+      viewport: document.documentElement.clientWidth,
+      document: document.documentElement.scrollWidth,
+    }));
+    expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport + 2);
+    await expect(page.locator('[data-shell-region="header-region"]')).toHaveCount(1);
+    await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
+    await expect(page.locator(".rawaj-category-world").first()).toBeVisible();
+
+    const searchSubmit = page.locator(".rawaj-search-overlay__submit");
+    const submitBounds = await searchSubmit.boundingBox();
+    expect(submitBounds?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+    const dock = page.locator(".rawaj-mobile-dock");
+    if (width < 1024) {
+      await expect(dock).toBeVisible();
+    } else {
+      await expect(dock).toBeHidden();
+    }
+  }
 });
 
 test("unknown routes render a controlled not-found surface", async ({ page }) => {
