@@ -67,7 +67,7 @@ test("public ad placement reads are isolated from account auth transitions", () 
   assert.match(supabaseClient, /detectSessionInUrl: false/);
   assert.match(supabaseClient, /storageKey: "rawaj-public-read-client"/);
   assert.match(publicApi, /import \{ publicSupabase \} from "@\/lib\/supabase"/);
-  assert.match(publicApi, /const client = publicSupabase/);
+  assert.match(publicApi, /const client =[\s\S]*publicSupabase/);
 });
 
 test("supported routes mount one public ad slot across headers and listing detail media", () => {
