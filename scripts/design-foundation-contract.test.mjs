@@ -8,6 +8,7 @@ const appShell = await readFile(
   new URL("../src/components/shell/AppShell.tsx", import.meta.url),
   "utf8",
 );
+const footer = await readFile(new URL("../src/components/SiteFooter.tsx", import.meta.url), "utf8");
 
 test("canonical design foundation is loaded after legacy visual layers", () => {
   const foundationLink = rootRoute.indexOf('{ rel: "stylesheet", href: designFoundationCss }');
@@ -76,4 +77,13 @@ test("app shell owns viewport, keyboard and bottom-reservation behavior", () => 
   assert.match(foundation, /data-shell-sticky-action="true"/);
   assert.match(foundation, /data-shell-mode="conversation"/);
   assert.match(foundation, /data-keyboard-open="true"/);
+});
+
+test("desktop footer preserves heading order and readable trust text", () => {
+  assert.match(footer, /<h2 className="mb-2 text-xs font-extrabold text-foreground">/);
+  assert.doesNotMatch(footer, /<h4/);
+  assert.match(
+    footer,
+    /bg-muted-surface[\s\S]*text-\[10px\][\s\S]*font-bold[\s\S]*text-foreground/,
+  );
 });
