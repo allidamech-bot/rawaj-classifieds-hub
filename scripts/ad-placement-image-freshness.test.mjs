@@ -2,13 +2,17 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [publicApi, facade, slot, route, storage] = await Promise.all([
-  readFile(new URL("../src/lib/api/public-ad-placements.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/admin.ad-placements.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/api/storage.ts", import.meta.url), "utf8"),
-]);
+const [publicApi, facade, slot, route, storage, floatingHeader, pageHeader, routeResolver] =
+  await Promise.all([
+    readFile(new URL("../src/lib/api/public-ad-placements.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/admin.ad-placements.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/api/storage.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/PageHeader.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/ad-placement-route.ts", import.meta.url), "utf8"),
+  ]);
 
 test("public ad placement cache broadcasts explicit invalidation across tabs", () => {
   assert.match(publicApi, /BroadcastChannel/);
@@ -37,6 +41,16 @@ test("scheduled placement state refreshes locally without broadcasting every pol
   assert.match(slot, /window\.setInterval\(/);
   assert.match(slot, /\(\) => load\(true\)/);
   assert.match(slot, /window\.clearInterval\(scheduleRefreshTimer\)/);
+});
+
+test("supported routes mount the same public ad slot across both header systems", () => {
+  for (const placement of ["home", "search_results", "listing_detail", "categories", "offers"]) {
+    assert.match(routeResolver, new RegExp(`return \\"${placement}\\"`));
+  }
+  assert.match(floatingHeader, /resolveAdPlacementPage\(pathname\)/);
+  assert.match(floatingHeader, /<PublicAdPlacementSlot/);
+  assert.match(pageHeader, /resolveAdPlacementPage\(pathname\)/);
+  assert.match(pageHeader, /<PublicAdPlacementSlot/);
 });
 
 test("PublicAdPlacementSlot follows mobile and desktop viewport changes", () => {
