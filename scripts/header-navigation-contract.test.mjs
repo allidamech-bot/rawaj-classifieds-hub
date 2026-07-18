@@ -15,9 +15,16 @@ test("mobile header keeps secondary controls off small screens", () => {
 test("header typography respects functional minimums", () => {
   assert.doesNotMatch(header, /text-\[8px\]|text-\[9px\]|text-\[10px\]/);
   assert.match(header, /text-\[11px\]/);
+  assert.match(header, /text-\[#b63f24\]/);
+  assert.match(header, /dark:text-\[#ff9a7d\]/);
 });
 
 test("header controls expose mobile touch targets", () => {
   assert.match(header, /min-h-11/);
   assert.match(header, /rawaj-touch-target/);
+});
+
+test("brand home link accessible name contains its visible RAWAJ label", () => {
+  assert.match(header, /رواج RAWAJ، العودة إلى الرئيسية/);
+  assert.match(header, /RAWAJ, back to home/);
 });
