@@ -149,20 +149,20 @@ const [recorder, messaging, migration, packageJson] = await Promise.all([
 ]);
 
 test("recorder strips codec parameters before creating the voice File", () => {
-  assert.match(recorder, /normalizeRecordedMimeType/);
-  assert.match(recorder, /mime\.split\(";"\)/);
-  assert.match(recorder, /new Blob\(chunksRef\.current, \{ type \}\)/);
-  assert.match(recorder, /new File\(\[blob\].*\{ type \}/s);
-  assert.match(recorder, /audio\/webm/);
-  assert.match(recorder, /audio\/mp4/);
+  assert.ok(recorder.includes("normalizeRecordedMimeType"));
+  assert.ok(recorder.includes('mime.split(";")'));
+  assert.ok(recorder.includes("new Blob(chunksRef.current, { type })"));
+  assert.ok(recorder.includes("new File([blob]"));
+  assert.ok(recorder.includes("audio/webm"));
+  assert.ok(recorder.includes("audio/mp4"));
 });
 
 test("voice upload uses ArrayBuffer so Supabase applies the canonical content type", () => {
-  assert.match(messaging, /normalizeChatAudioMimeType/);
-  assert.match(messaging, /await payload\.file\.arrayBuffer\(\)/);
-  assert.match(messaging, /\.upload\(path, audioBytes,/);
-  assert.doesNotMatch(messaging, /conversation-audio"\)\s*\.upload\(path, payload\.file/);
-  assert.match(messaging, /contentType: mimeType/);
+  assert.ok(messaging.includes("normalizeChatAudioMimeType"));
+  assert.ok(messaging.includes("await payload.file.arrayBuffer()"));
+  assert.ok(messaging.includes(".upload(path, audioBytes,"));
+  assert.ok(!messaging.includes(".upload(path, payload.file"));
+  assert.ok(messaging.includes("contentType: mimeType"));
 });
 
 test("client MIME contract remains aligned with the production migration", () => {
@@ -170,14 +170,14 @@ test("client MIME contract remains aligned with the production migration", () =>
     assert.ok(messaging.includes(mime));
     assert.ok(migration.includes(mime));
   }
-  assert.match(migration, /conversation-audio/);
-  assert.match(migration, /rawaj_send_conversation_message_v4/);
+  assert.ok(migration.includes("conversation-audio"));
+  assert.ok(migration.includes("rawaj_send_conversation_message_v4"));
 });
 
 test("the repository uses the Supabase client version whose Blob path is avoided", () => {
-  assert.match(packageJson, /"@supabase\/supabase-js": "\^2\.87\.1"/);
-  assert.match(messaging, /chat_audio_prepare/);
-  assert.match(messaging, /chat_audio_upload/);
+  assert.ok(packageJson.includes('"@supabase/supabase-js": "^2.87.1"'));
+  assert.ok(messaging.includes("chat_audio_prepare"));
+  assert.ok(messaging.includes("chat_audio_upload"));
 });
 `,
 );
