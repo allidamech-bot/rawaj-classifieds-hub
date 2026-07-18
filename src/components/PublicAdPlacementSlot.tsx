@@ -21,6 +21,8 @@ interface LoadedPlacement {
 
 const MOBILE_PLACEMENT_QUERY = "(max-width: 767px)";
 const AD_PLACEMENT_SCHEDULE_REFRESH_MS = 30_000;
+const AD_PLACEMENT_RETRY_BASE_MS = 1_500;
+const AD_PLACEMENT_RETRY_MAX_MS = 30_000;
 const AD_PLACEMENT_FRAME_CLASS =
   "relative block aspect-[16/7] w-full overflow-hidden rounded-[1.25rem] border border-border/70 bg-card shadow-[0_12px_32px_rgba(8,24,42,0.08)]";
 
@@ -54,6 +56,27 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
     const activeDevice: AdPlacementDevice = device;
     let cancelled = false;
     let requestSequence = 0;
+    let retryAttempt = 0;
+    let retryTimer: number | null = null;
+
+    function clearRetryTimer() {
+      if (retryTimer === null) return;
+      window.clearTimeout(retryTimer);
+      retryTimer = null;
+    }
+
+    function scheduleRetry() {
+      if (cancelled || retryTimer !== null) return;
+      const delay = Math.min(
+        AD_PLACEMENT_RETRY_MAX_MS,
+        AD_PLACEMENT_RETRY_BASE_MS * 2 ** retryAttempt,
+      );
+      retryAttempt += 1;
+      retryTimer = window.setTimeout(() => {
+        retryTimer = null;
+        load(true);
+      }, delay);
+    }
 
     function load(forceRefresh = false) {
       if (cancelled) return;
@@ -64,11 +87,18 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
 
       void request.then((result) => {
         if (cancelled || requestId !== requestSequence) return;
+        if (!result.ok) {
+          scheduleRetry();
+          return;
+        }
+
+        clearRetryTimer();
+        retryAttempt = 0;
         setFailedImageUrl(null);
         setLoaded({
           page,
           device: activeDevice,
-          placement: result.ok ? (result.data[0] ?? null) : null,
+          placement: result.data[0] ?? null,
         });
       });
     }
@@ -83,6 +113,7 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
     return () => {
       cancelled = true;
       requestSequence += 1;
+      clearRetryTimer();
       window.clearInterval(scheduleRefreshTimer);
       unsubscribe();
     };
