@@ -100,3 +100,20 @@ test("mobile marketplace routes do not widen the document viewport", async ({ pa
     expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport + 2);
   }
 });
+
+test("CSP header allows Vercel analytics script source", async ({ page }) => {
+  const response = await page.goto("/", { waitUntil: "domcontentloaded" });
+  const csp = response?.headers()["content-security-policy"] ?? "";
+  expect(csp).toContain("va.vercel-scripts.com");
+});
+
+test("auth callback shows error immediately when no code is present", async ({ page }) => {
+  const response = await page.goto("/auth/callback", { waitUntil: "domcontentloaded" });
+  expect(response?.status() ?? 200).toBeLessThan(500);
+  await expect(page.locator("body")).toBeVisible();
+  await expect(
+    page.locator("text=تعذر تسجيل الدخول").or(page.locator("text=Could not sign in")),
+  ).toBeVisible({
+    timeout: 3000,
+  });
+});

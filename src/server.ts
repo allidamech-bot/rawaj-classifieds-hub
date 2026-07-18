@@ -54,7 +54,7 @@ function buildContentSecurityPolicy(isSecureRequest: boolean) {
     "frame-ancestors 'none'",
     "frame-src 'none'",
     "form-action 'self'",
-    "script-src 'self' 'unsafe-inline'",
+    "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https:",
     "media-src 'self' blob: https://*.supabase.co https://*.supabase.com",
