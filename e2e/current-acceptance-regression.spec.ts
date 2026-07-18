@@ -19,9 +19,7 @@ test("categories direct load renders the active production ad placement", async 
   await expect(image).toHaveCount(1);
   await expect
     .poll(() =>
-      image.evaluate(
-        (element: HTMLImageElement) => element.complete && element.naturalWidth > 0,
-      ),
+      image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0),
     )
     .toBe(true);
 });
