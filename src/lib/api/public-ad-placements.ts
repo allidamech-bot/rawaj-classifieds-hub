@@ -2,6 +2,7 @@ import { normalizeAdPlacementMediaUrl } from "@/lib/ad-placement-media-url";
 import { getClient, mapError, rowNumber, rowString } from "@/lib/api/shared";
 import type { AdPlacementPage } from "@/lib/api/ad-placements";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
+import { publicSupabase } from "@/lib/supabase";
 
 export type AdPlacementDevice = "mobile" | "desktop";
 
@@ -144,10 +145,18 @@ async function loadActiveAdPlacements(
   placementPage: AdPlacementPage,
   device: AdPlacementDevice,
 ): Promise<ClassifiedsResult<PublicAdPlacement[]>> {
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
+  const client = publicSupabase ?? (() => {
+    const clientResult = getClient();
+    return clientResult.ok ? clientResult.data : null;
+  })();
+  if (!client) {
+    const clientResult = getClient();
+    return clientResult.ok
+      ? { ok: false, error: { code: "unknown", message: "تعذر تحميل المساحة الإعلانية." } }
+      : clientResult;
+  }
 
-  const { data, error } = await clientResult.data.rpc("rawaj_fetch_active_ad_placements", {
+  const { data, error } = await client.rpc("rawaj_fetch_active_ad_placements", {
     p_placement_page: placementPage,
     p_device: device,
   });
