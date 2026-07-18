@@ -1,8 +1,8 @@
 name: Staging Chat Audio Authenticated Diagnostic
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: [audit/chat-audio-production-pipeline]
     paths:
       - "scripts/staging-chat-audio-authenticated-diagnostic.mjs"
       - ".github/workflows/staging-chat-audio-authenticated-diagnostic.yml"
