@@ -43,6 +43,19 @@ const protectedRoutes = [
   "/activity",
   "/more",
   "/admin",
+  "/admin/verifications",
+  "/admin/users",
+  "/admin/safety",
+  "/admin/reviews",
+  "/admin/reports",
+  "/admin/promotions",
+  "/admin/pending",
+  "/admin/owner-controls",
+  "/admin/message-reports",
+  "/admin/listings",
+  "/admin/campaigns",
+  "/admin/audit",
+  "/admin/ad-placements",
 ] as const;
 
 const evidenceRoutes = new Set([
@@ -54,7 +67,12 @@ const evidenceRoutes = new Set([
   "/chats",
   "/notifications",
 ]);
-const ignoredRuntimeFragments = ["ERR_ABORTED", "va.vercel-scripts.com", "vercel-insights.com"];
+
+const ignoredRuntimeFragments = [
+  "ERR_ABORTED",
+  "va.vercel-scripts.com",
+  "vercel-insights.com",
+];
 
 function routeSlug(route: string) {
   return route === "/" ? "home" : route.replace(/^\//, "").replaceAll("/", "-");
@@ -69,14 +87,16 @@ function monitorRuntime(page: Page) {
   page.on("console", (message) => {
     if (message.type() !== "error") return;
     const text = message.text();
-    if (!ignoredRuntimeFragments.some((fragment) => text.includes(fragment)))
+    if (!ignoredRuntimeFragments.some((fragment) => text.includes(fragment))) {
       consoleErrors.push(text);
+    }
   });
   page.on("requestfailed", (request) => {
     const failure = request.failure()?.errorText ?? "unknown failure";
     const evidence = `${request.method()} ${request.url()}: ${failure}`;
-    if (!ignoredRuntimeFragments.some((fragment) => evidence.includes(fragment)))
+    if (!ignoredRuntimeFragments.some((fragment) => evidence.includes(fragment))) {
       failedRequests.push(evidence);
+    }
   });
 
   return { pageErrors, consoleErrors, failedRequests };
@@ -85,7 +105,7 @@ function monitorRuntime(page: Page) {
 async function assertRouteHealth(
   page: Page,
   route: string,
-  testInfo: TestInfo,
+  testInfo?: TestInfo,
   screenshotName?: string,
 ) {
   const runtime = monitorRuntime(page);
@@ -106,7 +126,7 @@ async function assertRouteHealth(
     dimensions.viewportWidth + 2,
   );
 
-  if (screenshotName) {
+  if (testInfo && screenshotName) {
     await page.screenshot({
       path: testInfo.outputPath(`${screenshotName}.png`),
       fullPage: false,
@@ -150,7 +170,7 @@ for (const viewport of [
   test(`route inventory survives direct load and reload at ${viewport.name}`, async ({
     browser,
   }, testInfo) => {
-    test.setTimeout(180_000);
+    test.setTimeout(240_000);
     const context = await browser.newContext({
       viewport: { width: viewport.width, height: viewport.height },
       locale: "ar-SY",
@@ -176,7 +196,7 @@ for (const viewport of [
 }
 
 test("browser back and forward preserve public navigation", async ({ page }) => {
-  await assertRouteHealth(pae, "/");
+  await assertRouteHealth(page, "/");
   await page.goto("/categories", { waitUntil: "domcontentloaded" });
   await expect(page.locator("main")).toBeVisible();
   await page.goBack({ waitUntil: "domcontentloaded" });
@@ -187,7 +207,7 @@ test("browser back and forward preserve public navigation", async ({ page }) => 
 
 test("320px hero and primary dock action remain readable", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 568 });
-  await assertRouteHealth(pae, "/", testInfo, "home-mobile-320-readability");
+  await assertRouteHealth(page, "/", testInfo, "home-mobile-320-readability");
 
   const heading = page.locator("#rawaj-home-title");
   const description = heading.locator("xpath=following-sibling::p[1]");
@@ -199,14 +219,20 @@ test("320px hero and primary dock action remain readable", async ({ page }, test
 
   const primaryDockAction = page.locator('.rawaj-dock-item[data-primary="true"]');
   await expect(primaryDockAction).toBeVisible();
-  await expect(primaryDockAction.locator(".rawaj-bottom-dock__label")).toHaveText("أضف");
+  await expect(primaryDockAction.locator(".rawaj-bottom-dock__compact-label")).toBeVisible();
+  await expect(primaryDockAction.locator(".rawaj-bottom-dock__compact-label")).toHaveText("أضف");
 });
 
 test("login validation blocks malformed credentials without losing the form", async ({
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await assertRouteHealth(pae, "/login?returnTo=/favorites", testInfo, "login-validation-mobile");
+  await assertRouteHealth(
+    page,
+    "/login?returnTo=/favorites",
+    testInfo,
+    "login-validation-mobile",
+  );
 
   const email = page.locator('input[type="email"]');
   const password = page.locator('input[type="password"]');
@@ -248,12 +274,13 @@ test("public discovery opens listing detail and seller storefront when data exis
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await assertRouteHealth(pae, "/listings", testInfo, "listings-discovery-mobile");
+  await assertRouteHealth(page, "/listings", testInfo, "listings-discovery-mobile");
   const listingLinks = page.locator('a[href^="/listings/"]');
   await page.waitForTimeout(1_000);
 
-  if ((await listingLinks.count()) === 0)
+  if ((await listingLinks.count()) === 0) {
     test.skip(true, "No public listing data is available in this target.");
+  }
 
   const firstListingHref = await listingLinks.first().getAttribute("href");
   expect(firstListingHref).toBeTruthy();
@@ -279,7 +306,7 @@ test("public discovery opens listing detail and seller storefront when data exis
   await page.goto(firstListingHref!, { waitUntil: "domcontentloaded" });
   const messageAction = page
     .getByRole("button", { name: /مراسلة|تواصل عبر رواج|ابدأ محادثة/i })
-    .or(page.getByRole("link", { name: /مراسلة|تواصل عبر ر؈اج|ابدأ محادثة/ }))
+    .or(page.getByRole("link", { name: /مراسلة|تواصل عبر رواج|ابدأ محادثة/i }))
     .first();
   if (await messageAction.isVisible().catch(() => false)) {
     await messageAction.click();
