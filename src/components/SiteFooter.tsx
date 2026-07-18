@@ -45,9 +45,9 @@ export function SiteFooter() {
       <div className="container-wide grid grid-cols-2 gap-6 py-8 sm:grid-cols-3">
         {groups.map((group) => (
           <div key={group.titleAr}>
-            <h4 className="mb-2 text-xs font-extrabold text-foreground">
+            <h2 className="mb-2 text-xs font-extrabold text-foreground">
               {text(group.titleAr, group.titleEn)}
-            </h4>
+            </h2>
             <ul className="space-y-1.5">
               {group.links.map((link) => (
                 <li key={link.to}>
@@ -66,11 +66,11 @@ export function SiteFooter() {
       <div className="border-t border-border">
         <div className="container-wide flex flex-wrap items-center justify-between gap-2 py-4">
           <p className="text-[11px] text-muted-foreground">
-            © {new Date().getFullYear()}{" "}
+            © {new Date().getFullYear()} {" "}
             {text("رَوَاج · سوق سوريا المجاني للإعلانات", "RAWAJ · Syria classifieds marketplace")}
           </p>
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground">
-            <ShieldCheck className="h-3 w-3 text-gold" />{" "}
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted-surface px-2 py-1 text-[10px] font-bold text-foreground">
+            <ShieldCheck className="h-3 w-3 text-gold" /> {" "}
             {text("سوريا فقط · تصفح آمن", "Syria only · Safe browsing")}
           </span>
         </div>
