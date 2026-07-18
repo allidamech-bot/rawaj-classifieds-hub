@@ -11,7 +11,10 @@ const [seoSource, robots, manifest, privacyRoute, termsRoute] = await Promise.al
 ]);
 
 test("public pages always expose complete social-sharing metadata", () => {
-  assert.match(seoSource, /const defaultSocialImage = "\/brand\/rawaj-mark-transparent-512\.png"/);
+  assert.match(
+    seoSource,
+    /const defaultSocialImage = "\/brand\/rawaj-mark-transparent-512\.png"/,
+  );
   assert.match(seoSource, /property: "og:site_name"/);
   assert.match(seoSource, /property: "og:locale", content: "ar_SY"/);
   assert.match(seoSource, /property: "og:locale:alternate", content: "en_US"/);
@@ -23,9 +26,12 @@ test("public pages always expose complete social-sharing metadata", () => {
   assert.doesNotMatch(seoSource, /const twitterCard = image/);
 });
 
-test("canonical production identity remains fixed to RAWAJ", () => {
+test("canonical production identity remains fixed to RAWAJ without root conflicts", () => {
   assert.match(seoSource, /const fallbackSiteUrl = "https:\/\/rawa-j\.com"/);
-  assert.match(seoSource, /links: \[\{ rel: "canonical", href: url \}\]/);
+  assert.match(
+    seoSource,
+    /links: options\.path \? \[\{ rel: "canonical", href: url \}\] : \[\]/,
+  );
   assert.match(seoSource, /name: siteName/);
   assert.match(manifest, /"name": "رواج RAWAJ"/);
   assert.match(manifest, /"lang": "ar"/);
