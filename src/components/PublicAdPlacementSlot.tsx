@@ -59,7 +59,8 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
         <img
           src={placement.imageUrl}
           alt={text("إعلان ترويجي", "Promotional advertisement")}
-          loading="lazy"
+          loading="eager"
+          fetchPriority="high"
           decoding="async"
           width={1600}
           height={500}
