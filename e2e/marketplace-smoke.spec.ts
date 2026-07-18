@@ -175,12 +175,13 @@ test("home discovery can navigate to the public listings workspace", async ({ pa
   await expect(page.locator("main")).toBeVisible();
 });
 
-test("pending navigation never exposes the previous home page inside the next route shell", async ({
+test("pending navigation keeps the resolved page visible without mixing route shells", async ({
   page,
 }) => {
   await openHealthyPage(page, "/");
 
   const shell = page.locator(".rawaj-app-shell");
+  const pageContent = page.locator('[data-shell-region="page-content"]');
   await expect(shell).toHaveAttribute("data-route-state", "idle");
   await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
   await expect(page.locator("main.rawaj-home-v3-main")).toBeVisible();
@@ -207,7 +208,9 @@ test("pending navigation never exposes the previous home page inside the next ro
     await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
     await expect(shell).toHaveAttribute("data-pending-pathname", "/listings");
     await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
-    await expect(page.locator('[data-shell-region="page-content"]')).toBeHidden();
+    await expect(pageContent).toBeVisible();
+    await expect(pageContent).toHaveCSS("pointer-events", "none");
+    await expect(page.locator("main.rawaj-home-v3-main")).toBeVisible();
     await expect(page.locator("main.rawaj-search-results-v1")).toHaveCount(0);
   } finally {
     releaseRequest();
@@ -241,6 +244,7 @@ test("rapid bottom navigation resolves to one page without stacked route content
   });
 
   const shell = page.locator(".rawaj-app-shell");
+  const pageContent = page.locator('[data-shell-region="page-content"]');
   const categoriesDockLink = page.locator('.rawaj-mobile-dock a[href="/categories"]');
   const homeDockLink = page.locator('.rawaj-mobile-dock a[href="/"]');
 
@@ -253,8 +257,10 @@ test("rapid bottom navigation resolves to one page without stacked route content
 
     await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
     await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
-    await expect(page.locator('[data-shell-region="page-content"]')).toBeHidden();
-    await expect(page.locator("main:visible")).toHaveCount(0);
+    await expect(pageContent).toBeVisible();
+    await expect(pageContent).toHaveCSS("pointer-events", "none");
+    await expect(page.locator("main:visible")).toHaveCount(1);
+    await expect(page.locator("main.rawaj-home-v3-main")).toBeVisible();
   } finally {
     releaseRequest();
   }
