@@ -1,0 +1,98 @@
+/* RAWAJ pre-release chat workspace corrections.
+ * Scoped to the messages route so activity and notification layouts remain unchanged.
+ */
+
+.rawaj-communication-v2--messages .rawaj-communication-hero {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.9rem;
+  border-radius: 1.15rem;
+  padding: 0.8rem 1rem;
+}
+
+.rawaj-communication-v2--messages .rawaj-communication-hero__copy > p,
+.rawaj-communication-v2--messages .rawaj-communication-hero__copy > span {
+  display: none;
+}
+
+.rawaj-communication-v2--messages .rawaj-communication-hero__copy h1 {
+  margin-top: 0;
+  font-size: clamp(1rem, 3vw, 1.35rem);
+}
+
+.rawaj-communication-v2--messages .rawaj-communication-hero__metrics {
+  grid-template-columns: repeat(2, minmax(5.5rem, auto));
+  margin-top: 0;
+}
+
+.rawaj-communication-v2--messages .rawaj-communication-hero__metrics > div:nth-child(2) {
+  display: none;
+}
+
+.rawaj-communication-v2--messages .rawaj-communication-hero__actions {
+  grid-column: 1 / -1;
+  margin-top: 0;
+}
+
+.rawaj-communication-v2--messages .rawaj-communication-safety {
+  padding: 0.65rem 0.8rem;
+}
+
+.rawaj-communication-v2--messages .rawaj-message-workspace,
+.rawaj-communication-v2--messages .rawaj-message-panel {
+  min-height: min(72dvh, 48rem);
+}
+
+.rawaj-communication-v2--messages .rawaj-message-stream {
+  min-height: 14rem;
+}
+
+.rawaj-message-bubble__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18rem;
+  margin-inline-start: 0.35rem;
+  font-size: 0.48rem;
+  font-weight: 800;
+  opacity: 0.72;
+}
+
+.rawaj-message-bubble__status[data-read="true"] {
+  color: #b8f3df;
+  opacity: 0.95;
+}
+
+@media (min-width: 1024px) {
+  .rawaj-communication-v2--messages .rawaj-communication-hero {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .rawaj-communication-v2--messages .rawaj-communication-hero__actions {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 1023px) {
+  .rawaj-communication-v2--messages {
+    gap: 0.55rem;
+    padding-top: 0.5rem !important;
+  }
+
+  .rawaj-communication-v2--messages .rawaj-communication-hero,
+  .rawaj-communication-v2--messages .rawaj-communication-safety {
+    display: none;
+  }
+
+  .rawaj-communication-v2--messages .rawaj-message-workspace,
+  .rawaj-communication-v2--messages .rawaj-message-panel {
+    min-height: calc(100dvh - 9.25rem);
+  }
+
+  .rawaj-communication-v2--messages .rawaj-conversation-sidebar {
+    min-height: calc(100dvh - 9.25rem);
+  }
+
+  .rawaj-communication-v2--messages .rawaj-message-stream {
+    min-height: 0;
+  }
+}
