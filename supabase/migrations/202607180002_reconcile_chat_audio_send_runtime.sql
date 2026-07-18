@@ -1,6 +1,6 @@
 -- RAWAJ chat-audio send runtime reconciliation.
 -- Apply manually to Supabase Production after review.
--- This migration is idempotent and repairs partial bucket, policy, helper, RPC, and grant state.
+-- This migration is idempotent and repairs partial table, bucket, policy, helper, RPC, and grant state.
 
 alter table public.conversation_messages
   add column if not exists attachment_path text,
@@ -8,6 +8,66 @@ alter table public.conversation_messages
   add column if not exists attachment_size_bytes integer,
   add column if not exists attachment_kind text,
   add column if not exists attachment_duration_ms integer;
+
+alter table public.conversation_messages
+  alter column body set default '';
+
+update public.conversation_messages
+set attachment_kind = case
+  when lower(coalesce(attachment_mime_type, '')) like 'audio/%' then 'audio'
+  when lower(coalesce(attachment_mime_type, '')) like 'image/%' then 'image'
+  else attachment_kind
+end
+where attachment_path is not null
+  and attachment_kind is null;
+
+alter table public.conversation_messages
+  drop constraint if exists conversation_messages_body_length;
+
+alter table public.conversation_messages
+  drop constraint if exists conversation_messages_content_required;
+
+alter table public.conversation_messages
+  add constraint conversation_messages_content_required
+  check (
+    (char_length(btrim(body)) between 1 and 2000)
+    or attachment_path is not null
+  ) not valid;
+
+alter table public.conversation_messages
+  drop constraint if exists conversation_messages_attachment_mime_allowed;
+
+alter table public.conversation_messages
+  drop constraint if exists conversation_messages_attachment_size_allowed;
+
+alter table public.conversation_messages
+  drop constraint if exists conversation_messages_attachment_metadata_complete;
+
+alter table public.conversation_messages
+  add constraint conversation_messages_attachment_metadata_complete
+  check (
+    (
+      attachment_path is null
+      and attachment_mime_type is null
+      and attachment_size_bytes is null
+      and attachment_kind is null
+      and attachment_duration_ms is null
+    )
+    or (
+      attachment_path is not null
+      and attachment_kind = 'image'
+      and attachment_mime_type in ('image/jpeg', 'image/png', 'image/webp')
+      and attachment_size_bytes between 1 and 5242880
+      and attachment_duration_ms is null
+    )
+    or (
+      attachment_path is not null
+      and attachment_kind = 'audio'
+      and attachment_mime_type in ('audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/ogg')
+      and attachment_size_bytes between 1 and 10485760
+      and attachment_duration_ms between 1000 and 120000
+    )
+  ) not valid;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
@@ -21,6 +81,21 @@ on conflict (id) do update
 set public = false,
     file_size_limit = excluded.file_size_limit,
     allowed_mime_types = excluded.allowed_mime_types;
+
+create or replace function public.rawaj_is_conversation_participant(p_conversation_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.conversations c
+    where c.id = p_conversation_id
+      and auth.uid() in (c.buyer_user_id, c.seller_user_id)
+  );
+$$;
 
 create or replace function public.rawaj_chat_attachment_conversation_id(p_name text)
 returns uuid
@@ -39,12 +114,13 @@ begin
 end;
 $$;
 
+revoke all on function public.rawaj_is_conversation_participant(uuid) from public;
+revoke all on function public.rawaj_is_conversation_participant(uuid) from anon;
+grant execute on function public.rawaj_is_conversation_participant(uuid) to authenticated;
+
 revoke all on function public.rawaj_chat_attachment_conversation_id(text) from public;
 revoke all on function public.rawaj_chat_attachment_conversation_id(text) from anon;
 grant execute on function public.rawaj_chat_attachment_conversation_id(text) to authenticated;
-
-revoke all on function public.rawaj_is_conversation_participant(uuid) from anon;
-grant execute on function public.rawaj_is_conversation_participant(uuid) to authenticated;
 
 drop policy if exists conversation_audio_participant_read on storage.objects;
 create policy conversation_audio_participant_read
