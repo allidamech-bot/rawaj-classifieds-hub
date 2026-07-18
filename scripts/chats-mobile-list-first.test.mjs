@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [chats, css, resolution, bottomDock] = await Promise.all([
+const [chats, baseCss, mobileCss, routeStyles, resolution, bottomDock] = await Promise.all([
   readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/communication-center-v3.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/journey-target-resolution.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/components/shell/BottomDock.tsx", import.meta.url), "utf8"),
 ]);
@@ -35,16 +37,30 @@ test("invalid conversation id is not replaced by the first conversation", () => 
   assert.doesNotMatch(chats, /search\.conversation && result\.data\[0\]/);
 });
 
-test("mobile list view uses data-view isolation without forced full height", () => {
+test("mobile list mode renders the conversation sidebar and removes the blank message panel", () => {
   assert.match(chats, /data-view=\{selectedConversation \? "conversation" : "list"\}/);
-  assert.match(css, /\.rawaj-message-workspace\[data-view="list"\]/);
-  assert.match(css, /\.rawaj-message-workspace\[data-view="list"\] \{\s*min-height: auto;/);
-  assert.match(css, /\.rawaj-message-workspace\[data-view="list"\] \.rawaj-conversation-sidebar/);
+  assert.match(baseCss, /\.rawaj-message-panel \{\s*display: flex;/);
+  assert.match(mobileCss, /@import "\.\/communication-center-v2\.css";/);
+  assert.match(
+    mobileCss,
+    /\.rawaj-message-workspace\[data-view="list"\] \.rawaj-conversation-sidebar \{[\s\S]*display: block !important;/,
+  );
+  assert.match(
+    mobileCss,
+    /\.rawaj-message-workspace\[data-view="list"\] \.rawaj-message-panel\.hidden \{[\s\S]*display: none !important;/,
+  );
+  assert.match(routeStyles, /communicationCenterV2: communicationCenterV3Css/);
 });
 
-test("conversation view uses a computed height for header and bottom navigation", () => {
-  assert.match(css, /\.rawaj-message-workspace\[data-view="conversation"\]/);
-  assert.match(css, /calc\(100dvh - 11rem\)/);
+test("conversation mode hides the sidebar and keeps a computed mobile message height", () => {
+  assert.match(
+    mobileCss,
+    /\.rawaj-message-workspace\[data-view="conversation"\] \.rawaj-conversation-sidebar\.hidden \{[\s\S]*display: none !important;/,
+  );
+  assert.match(
+    mobileCss,
+    /\.rawaj-message-workspace\[data-view="conversation"\] \.rawaj-message-panel \{[\s\S]*display: flex !important;[\s\S]*calc\(100dvh - 11rem\)/,
+  );
 });
 
 test("mobile back button returns to the conversation list", () => {
