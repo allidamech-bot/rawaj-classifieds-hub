@@ -12,6 +12,7 @@ const [
   pageHeader,
   listingMedia,
   routeResolver,
+  supabaseClient,
   httpsMigration,
 ] = await Promise.all([
   readFile(new URL("../src/lib/api/public-ad-placements.ts", import.meta.url), "utf8"),
@@ -23,6 +24,7 @@ const [
   readFile(new URL("../src/components/PageHeader.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/ad-placement-route.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/supabase.ts", import.meta.url), "utf8"),
   readFile(
     new URL("../supabase/migrations/202607190001_enforce_ad_placement_https_urls.sql", import.meta.url),
     "utf8",
@@ -58,6 +60,16 @@ test("scheduled placement state refreshes locally without broadcasting every pol
   assert.match(slot, /window\.clearInterval\(scheduleRefreshTimer\)/);
 });
 
+test("public ad placement reads are isolated from account auth transitions", () => {
+  assert.match(supabaseClient, /export const publicSupabase/);
+  assert.match(supabaseClient, /persistSession: false/);
+  assert.match(supabaseClient, /autoRefreshToken: false/);
+  assert.match(supabaseClient, /detectSessionInUrl: false/);
+  assert.match(supabaseClient, /storageKey: "rawaj-public-read-client"/);
+  assert.match(publicApi, /import \{ publicSupabase \} from "@\/lib\/supabase"/);
+  assert.match(publicApi, /const client = publicSupabase/);
+});
+
 test("supported routes mount one public ad slot across headers and listing detail media", () => {
   for (const placement of ["home", "search_results", "listing_detail", "categories", "offers"]) {
     assert.match(routeResolver, new RegExp(`return \\"${placement}\\"`));
@@ -65,6 +77,7 @@ test("supported routes mount one public ad slot across headers and listing detai
   assert.match(floatingHeader, /resolveAdPlacementPage\(pathname\)/);
   assert.match(floatingHeader, /<PublicAdPlacementSlot/);
   assert.match(pageHeader, /resolveAdPlacementPage\(pathname\)/);
+  assert.match(pageHeader, /resolveTitlePlacement\(title\)/);
   assert.match(pageHeader, /<PublicAdPlacementSlot/);
   assert.match(listingMedia, /<PublicAdPlacementSlot placementPage="listing_detail"/);
 });
