@@ -110,6 +110,10 @@ const publicCategoryCache = new WeakMap<
   SupabaseClient,
   PublicReferenceCacheEntry<ClassifiedCategory[]>
 >();
+const publicSubcategoryCache = new WeakMap<
+  SupabaseClient,
+  PublicReferenceCacheEntry<ClassifiedSubcategory[]>
+>();
 const publicGovernorateCache = new WeakMap<
   SupabaseClient,
   PublicReferenceCacheEntry<ClassifiedGovernorate[]>
@@ -160,6 +164,22 @@ async function readPublicCategories(
   client: SupabaseClient,
 ): Promise<ClassifiedsResult<ClassifiedCategory[]>> {
   return readCachedPublicReference(client, publicCategoryCache, () => loadPublicCategories(client));
+}
+
+async function loadPublicSubcategories(
+  client: SupabaseClient,
+): Promise<ClassifiedsResult<ClassifiedSubcategory[]>> {
+  const { data, error } = await client.from("subcategories").select("*").order("sort_order");
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapSubcategory) };
+}
+
+async function readPublicSubcategories(
+  client: SupabaseClient,
+): Promise<ClassifiedsResult<ClassifiedSubcategory[]>> {
+  return readCachedPublicReference(client, publicSubcategoryCache, () =>
+    loadPublicSubcategories(client),
+  );
 }
 
 async function loadPublicGovernorates(
@@ -234,12 +254,7 @@ export async function fetchPublicSubcategories(): Promise<
 > {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
-  const { data, error } = await clientResult.data
-    .from("subcategories")
-    .select("*")
-    .order("sort_order");
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapSubcategory) };
+  return readPublicSubcategories(clientResult.data);
 }
 
 export async function fetchPublicTaxonomyNodes(): Promise<ClassifiedsResult<TaxonomyNode[]>> {
