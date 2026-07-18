@@ -33,7 +33,7 @@ function activePlacementCacheKey(
 }
 
 const broadcastChannel: BroadcastChannel | null = (() => {
-  if (typeof BroadcastChannel === "undefined") return null;
+  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") return null;
   try {
     return new BroadcastChannel(AD_PLACEMENT_INVALIDATION_EVENT);
   } catch {
