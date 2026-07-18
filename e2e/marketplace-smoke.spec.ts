@@ -79,30 +79,36 @@ test("pending navigation never exposes the previous home page inside the next ro
   await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
   await expect(page.locator("main.rawaj-home-v3-main")).toBeVisible();
 
-  let releaseRequests!: () => void;
+  let releaseRequest = () => {};
   const requestGate = new Promise<void>((resolve) => {
-    releaseRequests = resolve;
+    releaseRequest = resolve;
   });
   let delayedRequestCount = 0;
 
-  await page.route("**/rest/v1/**", async (route) => {
+  await page.route("**/listings", async (route) => {
     delayedRequestCount += 1;
     await requestGate;
     await route.continue();
   });
 
   const listingsLink = page.locator('a[href="/listings"]').first();
-  const clickPromise = listingsLink.click({ noWaitAfter: true });
+  let clickPromise: Promise<void> | null = null;
 
-  await expect(shell).toHaveAttribute("data-route-state", "pending");
-  await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
-  await expect(shell).toHaveAttribute("data-pending-pathname", "/listings");
-  await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
-  await expect(page.locator('[data-shell-region="page-content"]')).toBeHidden();
-  await expect(page.locator("main.rawaj-search-results-v1")).toHaveCount(0);
-  expect(delayedRequestCount).toBeGreaterThan(0);
+  try {
+    clickPromise = listingsLink.click({ noWaitAfter: true });
 
-  releaseRequests();
+    await expect(shell).toHaveAttribute("data-route-state", "pending");
+    await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
+    await expect(shell).toHaveAttribute("data-pending-pathname", "/listings");
+    await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
+    await expect(page.locator('[data-shell-region="page-content"]')).toBeHidden();
+    await expect(page.locator("main.rawaj-search-results-v1")).toHaveCount(0);
+    expect(delayedRequestCount).toBeGreaterThan(0);
+  } finally {
+    releaseRequest();
+    await page.unroute("**/listings");
+  }
+
   await clickPromise;
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   await expect(shell).toHaveAttribute("data-route-state", "idle");
@@ -118,28 +124,36 @@ test("rapid bottom navigation resolves to one page without stacked route content
   test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile bottom-dock contract");
   await openHealthyPage(page, "/");
 
-  let releaseRequests!: () => void;
+  let releaseRequest = () => {};
   const requestGate = new Promise<void>((resolve) => {
-    releaseRequests = resolve;
+    releaseRequest = resolve;
   });
+  let delayedRequestCount = 0;
 
-  await page.route("**/rest/v1/**", async (route) => {
+  await page.route("**/categories", async (route) => {
+    delayedRequestCount += 1;
     await requestGate;
     await route.continue();
   });
 
   const shell = page.locator(".rawaj-app-shell");
-  await page.locator('.rawaj-mobile-dock a[href="/categories"]').click({ noWaitAfter: true });
-  await expect(shell).toHaveAttribute("data-route-state", "pending");
-  await page.locator('.rawaj-mobile-dock a[href="/"]').click({ noWaitAfter: true });
-  await page.locator('.rawaj-mobile-dock a[href="/categories"]').click({ noWaitAfter: true });
 
-  await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
-  await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
-  await expect(page.locator('[data-shell-region="page-content"]')).toBeHidden();
-  await expect(page.locator("main:visible")).toHaveCount(0);
+  try {
+    await page.locator('.rawaj-mobile-dock a[href="/categories"]').click({ noWaitAfter: true });
+    await expect(shell).toHaveAttribute("data-route-state", "pending");
+    await page.locator('.rawaj-mobile-dock a[href="/"]').click({ noWaitAfter: true });
+    await page.locator('.rawaj-mobile-dock a[href="/categories"]').click({ noWaitAfter: true });
 
-  releaseRequests();
+    await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
+    await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
+    await expect(page.locator('[data-shell-region="page-content"]')).toBeHidden();
+    await expect(page.locator("main:visible")).toHaveCount(0);
+    expect(delayedRequestCount).toBeGreaterThan(0);
+  } finally {
+    releaseRequest();
+    await page.unroute("**/categories");
+  }
+
   await expect(page).toHaveURL(/\/categories(?:\?|$)/);
   await expect(shell).toHaveAttribute("data-route-state", "idle");
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
