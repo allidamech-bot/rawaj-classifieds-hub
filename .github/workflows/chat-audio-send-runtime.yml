@@ -1,0 +1,40 @@
+name: Chat Audio Send Runtime
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/features/communication/ChatVoiceRecorder.tsx"
+      - "src/lib/api/chat-audio-send-guarded.ts"
+      - "src/lib/api/messaging-guarded.ts"
+      - "supabase/migrations/202607180002_reconcile_chat_audio_send_runtime.sql"
+      - "docs/production-schema/migration-ledger.json"
+      - "scripts/chat-audio-send-runtime.test.mjs"
+      - ".github/workflows/chat-audio-send-runtime.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --test scripts/chat-audio-send-runtime.test.mjs
+      - run: node --test scripts/chat-release-blockers.test.mjs
+      - run: node --test scripts/chat-voice-location-ui-v1.test.mjs
+      - run: node scripts/check-migration-ledger.mjs
+      - run: >-
+          npx eslint --quiet
+          src/features/communication/ChatVoiceRecorder.tsx
+          src/lib/api/chat-audio-send-guarded.ts
+          src/lib/api/messaging-guarded.ts
+      - run: npm run typecheck -- --pretty false
+      - run: npm run build
