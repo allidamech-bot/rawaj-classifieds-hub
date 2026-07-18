@@ -14,6 +14,63 @@ permissions:
   contents: read
 
 jobs:
+  lint-diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout audited branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          show-progress: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Capture changed-source lint output
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          base="$BASE_SHA"
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="$(git rev-parse HEAD^)"
+          fi
+          if ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            git fetch --no-tags --depth=1 origin "$base"
+          fi
+          mapfile -t files < <(
+            git diff --name-only --diff-filter=ACMR "$base" "$GITHUB_SHA" -- \
+              '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
+          )
+          printf '%s\n' "${files[@]}" > lint-files.txt
+          set +e
+          npx eslint --quiet "${files[@]}" > lint-diagnostic.txt 2>&1
+          status=$?
+          set -e
+          printf '%s\n' "$status" > lint-exit-code.txt
+          cat lint-files.txt
+          cat lint-diagnostic.txt
+
+      - name: Upload lint diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-release-lint-diagnostic
+          path: |
+            lint-files.txt
+            lint-diagnostic.txt
+            lint-exit-code.txt
+          if-no-files-found: error
+          retention-days: 7
+
   local-main-browser-audit:
     runs-on: ubuntu-latest
     timeout-minutes: 40
