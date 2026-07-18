@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [chats, css, resolution] = await Promise.all([
+const [chats, css, resolution, bottomDock] = await Promise.all([
   readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/journey-target-resolution.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/shell/BottomDock.tsx", import.meta.url), "utf8"),
 ]);
 
 test("opening /chats without a conversation query stays list-first (no auto-open)", () => {
@@ -14,6 +15,12 @@ test("opening /chats without a conversation query stays list-first (no auto-open
     /if \(!search\.conversation && result\.data\[0\]\)\s*\{[\s\S]{0,120}navigate\(/,
   );
   assert.doesNotMatch(chats, /search: \{ conversation: result\.data\[0\]\.id \}/);
+  assert.match(resolution, /Generic navigation to \/chats must remain list-first/);
+  assert.doesNotMatch(resolution, /firstConversation/);
+});
+
+test("the bottom dock clears a stale conversation target when Chats is tapped", () => {
+  assert.match(bottomDock, /search=\{item\.to === "\/chats" \? \{\} : undefined\}/);
 });
 
 test("direct links (?conversation=<id>) still select a conversation", () => {
@@ -25,10 +32,7 @@ test("direct links (?conversation=<id>) still select a conversation", () => {
 test("invalid conversation id is not replaced by the first conversation", () => {
   assert.match(chats, /missingConversationTarget/);
   assert.match(resolution, /kind: "missing"/);
-  assert.doesNotMatch(
-    chats,
-    /search\.conversation && result\.data\[0\]/,
-  );
+  assert.doesNotMatch(chats, /search\.conversation && result\.data\[0\]/);
 });
 
 test("mobile list view uses data-view isolation without forced full height", () => {
