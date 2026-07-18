@@ -11,7 +11,6 @@ Release boundary: this batch does not upload Android 1.0.4 to Google Play and do
 - The audio player deduplicates refresh requests and exposes a stable retry state.
 - The messages route removes the oversized hero and safety blocks on mobile and uses the available screen for the conversation list or active chat.
 - The desktop messages hero is compacted without changing Activity or Notifications.
-- Currency presentation recognizes SYP, USD, EUR, and SAR, with SYP explicitly labelled as the new Syrian pound denomination.
 
 ## Not claimed complete by this batch
 
