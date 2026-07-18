@@ -16,19 +16,14 @@ export interface FloatingHeaderProps {
 
 function resolveAdPlacementPage(pathname: string): AdPlacementPage | null {
   if (pathname === "/") return "home";
-  if (pathname === "/listings" || pathname === "/listings/")
-    return "search_results";
+  if (pathname === "/listings" || pathname === "/listings/") return "search_results";
   if (pathname.startsWith("/listings/")) return "listing_detail";
-  if (pathname === "/categories" || pathname === "/categories/")
-    return "categories";
+  if (pathname === "/categories" || pathname === "/categories/") return "categories";
   if (pathname === "/offers" || pathname === "/offers/") return "offers";
   return null;
 }
 
-export function FloatingHeader({
-  compact = false,
-  title,
-}: FloatingHeaderProps) {
+export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) {
   const auth = useAuth();
   const { language, text, toggleLanguage } = useUiPreferences();
   const pathname = useRouterState({
@@ -64,10 +59,7 @@ export function FloatingHeader({
           <Link
             to="/"
             className="order-1 flex min-w-0 items-center gap-2 sm:gap-3"
-            aria-label={text(
-              "رواج RAWAJ، العودة إلى الرئيسية",
-              "RAWAJ, back to home",
-            )}
+            aria-label={text("رواج RAWAJ، العودة إلى الرئيسية", "RAWAJ, back to home")}
           >
             <Logo />
           </Link>
@@ -81,10 +73,7 @@ export function FloatingHeader({
               to="/listings"
               search={{ open_filters: true }}
               className="rawaj-header-location order-2 hidden min-h-11 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold md:inline-flex lg:px-3.5"
-              aria-label={text(
-                "تصفح الإعلانات في كل سوريا",
-                "Browse listings across Syria",
-              )}
+              aria-label={text("تصفح الإعلانات في كل سوريا", "Browse listings across Syria")}
             >
               <MapPin className="h-4 w-4 text-brand-orange" strokeWidth={2.1} />
               <span>{text("كل سوريا", "All Syria")}</span>
@@ -191,13 +180,8 @@ function Logo() {
       </span>
 
       <span className="flex items-center gap-1.5 leading-none sm:gap-2">
-        <span className="font-display text-base font-bold text-primary sm:text-[18px]">
-          رواج
-        </span>
-        <span
-          className="rawaj-brand-divider h-4 w-px sm:h-5"
-          aria-hidden="true"
-        />
+        <span className="font-display text-base font-bold text-primary sm:text-[18px]">رواج</span>
+        <span className="rawaj-brand-divider h-4 w-px sm:h-5" aria-hidden="true" />
         <span className="text-[11px] font-bold tracking-[0.16em] text-[#b63f24] dark:text-[#ff9a7d]">
           RAWAJ
         </span>
