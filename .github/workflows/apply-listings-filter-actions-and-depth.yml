@@ -34,7 +34,28 @@ jobs:
           rm -f scripts/listings-filter-actions-and-depth.test.mjs
           node scripts/repair-listings-patch-script.mjs
           node scripts/apply-listings-filter-actions-and-depth.mjs
-      - run: npx prettier --write src/features/search/QuickFilterRail.tsx src/features/search/FilterBottomSheet.tsx src/features/listings/listings-components.tsx src/lib/category-fields.ts src/routes/listings.index.tsx scripts/listings-filter-actions-and-depth.test.mjs
+      - name: Export generated patch
+        run: |
+          mkdir -p generated-patch
+          cp --parents \
+            src/features/search/QuickFilterRail.tsx \
+            src/features/search/FilterBottomSheet.tsx \
+            src/features/listings/listings-components.tsx \
+            src/lib/category-fields.ts \
+            src/routes/listings.index.tsx \
+            scripts/listings-filter-actions-and-depth.test.mjs \
+            generated-patch/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: listings-filter-generated-patch
+          path: generated-patch
+          retention-days: 2
+      - run: npx prettier --write src/features/search/QuickFilterRail.tsx
+      - run: npx prettier --write src/features/search/FilterBottomSheet.tsx
+      - run: npx prettier --write src/features/listings/listings-components.tsx
+      - run: npx prettier --write src/lib/category-fields.ts
+      - run: npx prettier --write src/routes/listings.index.tsx
+      - run: npx prettier --write scripts/listings-filter-actions-and-depth.test.mjs
       - run: node --test scripts/listings-filter-actions-and-depth.test.mjs
       - run: npx eslint --quiet src/features/search/QuickFilterRail.tsx src/features/search/FilterBottomSheet.tsx src/features/listings/listings-components.tsx src/lib/category-fields.ts src/routes/listings.index.tsx
       - run: npm run typecheck -- --pretty false
