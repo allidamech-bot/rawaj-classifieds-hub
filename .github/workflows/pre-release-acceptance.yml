@@ -127,3 +127,83 @@ jobs:
             test-results
           if-no-files-found: warn
           retention-days: 30
+
+  lighthouse-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      E2E_BASE_URL: https://rawa-j.com
+
+    steps:
+      - name: Checkout audited branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          show-progress: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Resolve one live listing detail URL
+        id: listing
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE' >/tmp/rawaj-listing-url
+          import { chromium } from "playwright";
+
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({ locale: "ar-SY" });
+          await page.goto("https://rawa-j.com/listings", { waitUntil: "domcontentloaded" });
+          await page.waitForTimeout(2_000);
+          const href = await page.locator('a[href^="/listings/"]').first().getAttribute("href");
+          await browser.close();
+          if (!href) process.exit(2);
+          console.log(new URL(href, "https://rawa-j.com").href);
+          NODE
+          echo "url=$(cat /tmp/rawaj-listing-url)" >> "$GITHUB_OUTPUT"
+
+      - name: Run required mobile and desktop Lighthouse profiles
+        shell: bash
+        run: |
+          mkdir -p lighthouse-results
+          declare -A routes=(
+            [home]="https://rawa-j.com/"
+            [listings]="https://rawa-j.com/listings"
+            [listing-detail]="${{ steps.listing.outputs.url }}"
+            [login]="https://rawa-j.com/login"
+          )
+
+          for profile in mobile desktop; do
+            preset=()
+            if [[ "$profile" == "desktop" ]]; then
+              preset=(--preset=desktop)
+            fi
+
+            for name in home listings listing-detail login; do
+              npx --yes lighthouse "${routes[$name]}" \
+                --quiet \
+                --only-categories=performance,accessibility,best-practices,seo \
+                --output=json \
+                --output-path="lighthouse-results/${name}-${profile}.json" \
+                --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+                "${preset[@]}"
+            done
+          done
+
+      - name: Upload Lighthouse evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-lighthouse-pre-release-acceptance
+          path: lighthouse-results
+          if-no-files-found: warn
+          retention-days: 30
