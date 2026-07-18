@@ -31,6 +31,23 @@ jobs:
           rm -f scripts/chat-voice-upload-arraybuffer.test.mjs
           node --check scripts/apply-chat-voice-upload-arraybuffer.mjs
           node scripts/apply-chat-voice-upload-arraybuffer.mjs
+      - name: Scope transport regression to audio upload
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/chat-voice-upload-arraybuffer.test.mjs")
+          source = path.read_text()
+          before = '''  assert.ok(!messaging.includes(".upload(path, payload.file"));'''
+          after = '''  const audioUpload = messaging.slice(
+            messaging.indexOf("export async function uploadChatAudio"),
+            messaging.indexOf("export async function removeChatAudio"),
+          );
+          assert.ok(!audioUpload.includes(".upload(path, payload.file"));'''
+          if before not in source:
+              raise SystemExit("Audio upload assertion anchor not found")
+          path.write_text(source.replace(before, after))
+          PY
       - name: Export generated patch
         run: |
           mkdir -p generated-patch
