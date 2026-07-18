@@ -64,6 +64,102 @@ for (const path of protectedRoutes) {
   });
 }
 
+test("home shell renders one header and the expected dock contract", async ({ page }, testInfo) => {
+  await openHealthyPage(page, "/");
+
+  await expect(page.locator('[data-shell-region="header-region"]')).toHaveCount(1);
+  await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
+  await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(1);
+
+  const dock = page.locator(".rawaj-mobile-dock");
+  if (testInfo.project.name.startsWith("mobile")) {
+    await expect(dock).toHaveCount(1);
+  } else {
+    await expect(dock).toHaveCount(0);
+  }
+});
+
+test("home search trims Arabic and English queries and handles an empty submit", async ({ page }) => {
+  await openHealthyPage(page, "/");
+
+  const search = page.locator("#rawaj-home-search");
+  await expect(search).toBeVisible();
+  await expect(search).toHaveAttribute("name", "q");
+  await expect(search).toHaveAttribute("enterkeyhint", "search");
+  await expect(search).toHaveAttribute("dir", "auto");
+
+  await search.fill("  سيارة  ");
+  await search.press("Enter");
+  await expect(page).toHaveURL(/\/listings(?:\?|$)/);
+  expect(new URL(page.url()).searchParams.get("q")).toBe("سيارة");
+
+  await page.goBack();
+  await waitForHydratedRouter(page);
+  await search.fill("  iPhone 15  ");
+  await page.locator('.rawaj-search-overlay__form button[type="submit"]').click();
+  await expect(page).toHaveURL(/\/listings(?:\?|$)/);
+  expect(new URL(page.url()).searchParams.get("q")).toBe("iPhone 15");
+
+  await page.goBack();
+  await waitForHydratedRouter(page);
+  await search.fill("   ");
+  await search.press("Enter");
+  await expect(page).toHaveURL(/\/listings(?:\?|$)/);
+  expect(new URL(page.url()).searchParams.has("q")).toBe(false);
+});
+
+test("mobile home search hides the bottom dock while the keyboard field is focused", async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile keyboard contract");
+  await openHealthyPage(page, "/");
+
+  const search = page.locator("#rawaj-home-search");
+  await search.focus();
+  await expect(page.locator("html")).toHaveAttribute("data-keyboard-open", "true");
+  await expect(page.locator(".rawaj-mobile-dock")).toHaveCSS("pointer-events", "none");
+
+  await search.blur();
+  await expect(page.locator("html")).toHaveAttribute("data-keyboard-open", "false");
+});
+
+test("active public ad uses the unified ratio and follows the resolved route", async ({
+  page,
+}, testInfo) => {
+  await openHealthyPage(page, "/");
+
+  const expectedDevice = testInfo.project.name.startsWith("mobile") ? "mobile" : "desktop";
+  const homeSlot = page.locator('[data-placement-page="home"]');
+  await expect(homeSlot).toBeVisible({ timeout: 15_000 });
+  await expect(homeSlot).toHaveAttribute("data-placement-device", expectedDevice);
+  await expect(page.locator("[data-placement-page]")).toHaveCount(1);
+
+  const link = homeSlot.locator("a");
+  await expect(link).toHaveAttribute("target", "_blank");
+  await expect(link).toHaveAttribute("rel", /noopener/);
+  await expect(link).toHaveAttribute("rel", /noreferrer/);
+  await expect(link).toHaveAttribute("rel", /sponsored/);
+
+  const image = homeSlot.locator("img");
+  await expect
+    .poll(() => image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0))
+    .toBe(true);
+  const ratio = await image.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return bounds.width / bounds.height;
+  });
+  expect(ratio).toBeGreaterThan(2.2);
+  expect(ratio).toBeLessThan(2.38);
+
+  await page.locator('a[href="/listings"]').first().click();
+  await expect(page).toHaveURL(/\/listings(?:\?|$)/);
+  const listingsSlot = page.locator('[data-placement-page="search_results"]');
+  await expect(listingsSlot).toBeVisible({ timeout: 15_000 });
+  await expect(listingsSlot).toHaveAttribute("data-placement-device", expectedDevice);
+  await expect(page.locator("[data-placement-page]")).toHaveCount(1);
+  await expect(page.locator('[data-placement-page="home"]')).toHaveCount(0);
+});
+
 test("home discovery can navigate to the public listings workspace", async ({ page }) => {
   await openHealthyPage(page, "/");
   const listingsLink = page.locator('a[href="/listings"]').first();
