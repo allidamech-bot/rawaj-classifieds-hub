@@ -23,7 +23,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Rebuild patch from main
+      - name: Reset product files from main
         run: |
           git checkout origin/main -- \
             src/features/search/QuickFilterRail.tsx \
@@ -32,8 +32,14 @@ jobs:
             src/lib/category-fields.ts \
             src/routes/listings.index.tsx
           rm -f scripts/listings-filter-actions-and-depth.test.mjs
-          node scripts/repair-listings-patch-script.mjs
-          node scripts/apply-listings-filter-actions-and-depth.mjs
+      - name: Validate repair script
+        run: node --check scripts/repair-listings-patch-script.mjs
+      - name: Repair patch generator
+        run: node scripts/repair-listings-patch-script.mjs
+      - name: Validate repaired patch generator
+        run: node --check scripts/apply-listings-filter-actions-and-depth.mjs
+      - name: Generate product patch
+        run: node scripts/apply-listings-filter-actions-and-depth.mjs
       - name: Export generated patch
         run: |
           mkdir -p generated-patch
