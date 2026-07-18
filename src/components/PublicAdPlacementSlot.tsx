@@ -24,9 +24,14 @@ function resolvePlacementDevice(mediaQuery: MediaQueryList): AdPlacementDevice {
   return mediaQuery.matches ? "mobile" : "desktop";
 }
 
+function readInitialPlacementDevice(): AdPlacementDevice | null {
+  if (typeof window === "undefined") return null;
+  return resolvePlacementDevice(window.matchMedia(MOBILE_PLACEMENT_QUERY));
+}
+
 export function PublicAdPlacementSlot({ placementPage }: Props) {
   const { text } = useUiPreferences();
-  const [device, setDevice] = useState<AdPlacementDevice | null>(null);
+  const [device, setDevice] = useState<AdPlacementDevice | null>(readInitialPlacementDevice);
   const [loaded, setLoaded] = useState<LoadedPlacement | null>(null);
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
 
@@ -34,16 +39,12 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
     const mediaQuery = window.matchMedia(MOBILE_PLACEMENT_QUERY);
     const syncDevice = () => setDevice(resolvePlacementDevice(mediaQuery));
 
-    syncDevice();
     mediaQuery.addEventListener("change", syncDevice);
     return () => mediaQuery.removeEventListener("change", syncDevice);
   }, []);
 
   useEffect(() => {
-    if (!placementPage || !device) {
-      setLoaded(null);
-      return;
-    }
+    if (!placementPage || !device) return;
 
     const page: AdPlacementPage = placementPage;
     const activeDevice: AdPlacementDevice = device;
@@ -53,10 +54,10 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
     function load() {
       if (cancelled) return;
       const requestId = ++requestSequence;
-      setFailedImageUrl(null);
 
       void fetchActiveAdPlacements(page, activeDevice).then((result) => {
         if (cancelled || requestId !== requestSequence) return;
+        setFailedImageUrl(null);
         setLoaded({
           page,
           device: activeDevice,
