@@ -49,6 +49,7 @@ function useViewportState() {
     };
 
     update();
+    root.dataset.rawajHydrated = "true";
     viewport?.addEventListener("resize", scheduleUpdate);
     viewport?.addEventListener("scroll", scheduleUpdate);
     window.addEventListener("resize", scheduleUpdate);
@@ -67,6 +68,7 @@ function useViewportState() {
       root.style.removeProperty("--keyboard-inset");
       root.style.removeProperty("--app-viewport-height");
       delete root.dataset.keyboardOpen;
+      delete root.dataset.rawajHydrated;
     };
   }, []);
 
