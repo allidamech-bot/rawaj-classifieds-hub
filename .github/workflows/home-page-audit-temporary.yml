@@ -33,13 +33,16 @@ jobs:
         run: npm ci
 
       - name: Run focused ad placement contract
-        run: npm run test:release-blockers-ad-image-freshness
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run test:release-blockers-ad-image-freshness 2>&1 | tee home-page-audit-quality.log
 
       - name: Run full repository check
         shell: bash
         run: |
           set -o pipefail
-          npm run check 2>&1 | tee home-page-audit-quality.log
+          npm run check 2>&1 | tee -a home-page-audit-quality.log
 
       - name: Upload quality diagnostics
         if: failure()
@@ -47,7 +50,7 @@ jobs:
         with:
           name: home-page-audit-quality-${{ github.run_id }}
           path: home-page-audit-quality.log
-          if-no-files-found: ignore
+          if-no-files-found: error
           retention-days: 7
 
       - name: Publish quality result
