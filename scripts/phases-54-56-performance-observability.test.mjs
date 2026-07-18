@@ -2,13 +2,24 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [router, monitoring, reporting, budget, server, qualityGate] = await Promise.all([
+const [
+  router,
+  monitoring,
+  reporting,
+  budget,
+  server,
+  qualityGate,
+  publicAdPlacement,
+  listingCardImage,
+] = await Promise.all([
   readFile(new URL("../src/router.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/client-error-monitoring.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/lovable-error-reporting.ts", import.meta.url), "utf8"),
   readFile(new URL("./performance-budget.mjs", import.meta.url), "utf8"),
   readFile(new URL("../src/server.ts", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/listings/cards/ListingCardImage.tsx", import.meta.url), "utf8"),
 ]);
 
 test("phase 54 enforces production JavaScript, stylesheet, font and image budgets", () => {
@@ -23,6 +34,16 @@ test("phase 54 enforces production JavaScript, stylesheet, font and image budget
   assert.match(budget, /performance-budget-report\.json/);
   assert.match(budget, /RAWAJ_PERFORMANCE_REPORT=/);
   assert.match(qualityGate, /Production build[\s\S]*Performance budget/);
+});
+
+test("phase 54 prioritizes above-the-fold marketplace media without eagerly loading every card", () => {
+  assert.match(publicAdPlacement, /loading="eager"/);
+  assert.match(publicAdPlacement, /fetchPriority="high"/);
+  assert.match(listingCardImage, /loading = "lazy"/);
+  assert.match(listingCardImage, /getBoundingClientRect\(\)/);
+  assert.match(listingCardImage, /rootMargin: "25% 0px"/);
+  assert.match(listingCardImage, /nearViewport \? "high" : undefined/);
+  assert.match(listingCardImage, /nearViewport \? "eager" : "lazy"/);
 });
 
 test("phase 55 keeps performance budgets executable after the production build", () => {
