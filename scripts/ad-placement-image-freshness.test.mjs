@@ -20,7 +20,28 @@ test("public ad placement cache broadcasts invalidation across tabs", () => {
 test("PublicAdPlacementSlot refetches after an explicit invalidation event", () => {
   assert.match(slot, /onAdPlacementInvalidation\(load\)/);
   assert.match(slot, /const unsubscribe = onAdPlacementInvalidation\(load\)/);
-  assert.match(slot, /return \(\) => \{\s*cancelled = true;\s*unsubscribe\(\);\s*\}/);
+  assert.match(slot, /setFailedImageUrl\(null\)/);
+  assert.match(slot, /requestId !== requestSequence/);
+  assert.match(slot, /cancelled = true;/);
+  assert.match(slot, /unsubscribe\(\);/);
+});
+
+test("PublicAdPlacementSlot follows mobile and desktop viewport changes", () => {
+  assert.match(slot, /window\.matchMedia\(MOBILE_PLACEMENT_QUERY\)/);
+  assert.match(slot, /mediaQuery\.addEventListener\("change", syncDevice\)/);
+  assert.match(slot, /mediaQuery\.removeEventListener\("change", syncDevice\)/);
+  assert.match(slot, /loaded\.device === device/);
+  assert.match(slot, /data-placement-device={device}/);
+});
+
+test("public ad rendering uses the same 16:7 image contract as admin validation", () => {
+  assert.match(slot, /width={1600}/);
+  assert.match(slot, /height={700}/);
+  assert.match(slot, /aspect-\[16\/7\]/);
+  assert.doesNotMatch(slot, /aspect-\[3\.2\/1\]/);
+  assert.doesNotMatch(slot, /aspect-\[5\/1\]/);
+  assert.match(route, /~16:7 ratio/);
+  assert.match(storage, /export const AD_PLACEMENT_IMAGE_RATIO = 16 \/ 7/);
 });
 
 test("stale in-flight placement reads cannot repopulate invalidated image data", () => {
