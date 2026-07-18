@@ -145,10 +145,12 @@ async function loadActiveAdPlacements(
   placementPage: AdPlacementPage,
   device: AdPlacementDevice,
 ): Promise<ClassifiedsResult<PublicAdPlacement[]>> {
-  const client = publicSupabase ?? (() => {
-    const clientResult = getClient();
-    return clientResult.ok ? clientResult.data : null;
-  })();
+  const client =
+    publicSupabase ??
+    (() => {
+      const clientResult = getClient();
+      return clientResult.ok ? clientResult.data : null;
+    })();
   if (!client) {
     const clientResult = getClient();
     return clientResult.ok
