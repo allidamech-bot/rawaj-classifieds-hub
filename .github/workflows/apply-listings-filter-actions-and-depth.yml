@@ -6,6 +6,7 @@ on:
     types: [opened, synchronize, reopened]
 
 permissions:
+  actions: read
   contents: write
 
 jobs:
@@ -13,6 +14,8 @@ jobs:
     if: github.head_ref == 'fix/listings-filter-actions-and-depth'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,45 +26,43 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Reset product files from main
+      - name: Download generated product files
         run: |
-          git checkout origin/main -- \
-            src/features/search/QuickFilterRail.tsx \
-            src/features/search/FilterBottomSheet.tsx \
-            src/features/listings/listings-components.tsx \
-            src/lib/category-fields.ts \
-            src/routes/listings.index.tsx
-          rm -f scripts/listings-filter-actions-and-depth.test.mjs
-      - name: Validate repair script
-        run: node --check scripts/repair-listings-patch-script.mjs
-      - name: Repair patch generator
-        run: node scripts/repair-listings-patch-script.mjs
-      - name: Validate repaired patch generator
-        run: node --check scripts/apply-listings-filter-actions-and-depth.mjs
-      - name: Generate product patch
-        run: node scripts/apply-listings-filter-actions-and-depth.mjs
-      - name: Export generated patch
+          rm -rf generated-patch
+          mkdir generated-patch
+          gh run download 29624820445 \
+            --repo "${{ github.repository }}" \
+            --name listings-filter-generated-patch \
+            --dir generated-patch
+          cp -R generated-patch/src/. src/
+          cp -R generated-patch/scripts/. scripts/
+      - name: Repair generated selector and regression assertion
         run: |
-          mkdir -p generated-patch
-          cp --parents \
-            src/features/search/QuickFilterRail.tsx \
-            src/features/search/FilterBottomSheet.tsx \
-            src/features/listings/listings-components.tsx \
-            src/lib/category-fields.ts \
-            src/routes/listings.index.tsx \
-            scripts/listings-filter-actions-and-depth.test.mjs \
-            generated-patch/
-      - uses: actions/upload-artifact@v4
-        with:
-          name: listings-filter-generated-patch
-          path: generated-patch
-          retention-days: 2
-      - run: npx prettier --write src/features/search/QuickFilterRail.tsx
-      - run: npx prettier --write src/features/search/FilterBottomSheet.tsx
-      - run: npx prettier --write src/features/listings/listings-components.tsx
-      - run: npx prettier --write src/lib/category-fields.ts
-      - run: npx prettier --write src/routes/listings.index.tsx
-      - run: npx prettier --write scripts/listings-filter-actions-and-depth.test.mjs
+          python - <<'PY'
+          from pathlib import Path
+
+          sheet = Path("src/features/search/FilterBottomSheet.tsx")
+          source = sheet.read_text()
+          bad = '''        "[data-filter-section="" + focusTarget + ""]",'''
+          good = '''        '[data-filter-section="' + focusTarget + '"]','''
+          if bad not in source:
+              raise SystemExit("Generated filter selector anchor was not found")
+          sheet.write_text(source.replace(bad, good))
+
+          contract = Path("scripts/listings-filter-actions-and-depth.test.mjs")
+          lines = []
+          replacement = '''    assert.ok(rail.includes('onOpenFilter("' + target + '")'));'''
+          replaced = False
+          for line in contract.read_text().splitlines():
+              if "assert.match(rail, new RegExp" in line:
+                  line = replacement
+                  replaced = True
+              lines.append(line)
+          if not replaced:
+              raise SystemExit("Generated quick-filter assertion anchor was not found")
+          contract.write_text("\n".join(lines) + "\n")
+          PY
+      - run: npx prettier --write src/features/search/QuickFilterRail.tsx src/features/search/FilterBottomSheet.tsx src/features/listings/listings-components.tsx src/lib/category-fields.ts src/routes/listings.index.tsx scripts/listings-filter-actions-and-depth.test.mjs
       - run: node --test scripts/listings-filter-actions-and-depth.test.mjs
       - run: npx eslint --quiet src/features/search/QuickFilterRail.tsx src/features/search/FilterBottomSheet.tsx src/features/listings/listings-components.tsx src/lib/category-fields.ts src/routes/listings.index.tsx
       - run: npm run typecheck -- --pretty false
