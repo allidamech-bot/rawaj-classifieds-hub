@@ -156,7 +156,7 @@ async function loadActiveAdPlacements(
 
   return {
     ok: true,
-    data: ((data ?? []) as Record<string, unknown>[]) 
+    data: ((data ?? []) as Record<string, unknown>[])
       .map((row) => ({
         id: rowString(row, "id"),
         imageUrl: normalizeAdPlacementMediaUrl(rowString(row, "image_url")),
