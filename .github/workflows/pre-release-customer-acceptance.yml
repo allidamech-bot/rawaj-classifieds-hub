@@ -56,8 +56,6 @@ jobs:
       - name: Start production server
         shell: bash
         run: |
-          mkdir -p .output/public/_vercel/insights
-          printf 'window.va=window.va||function(){};\n' > .output/public/_vercel/insights/script.js
           HOST=127.0.0.1 PORT=4173 node .output/server/index.mjs >/tmp/rawaj-production.log 2>&1 &
           for attempt in {1..40}; do
             if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then
