@@ -61,7 +61,9 @@ export function QuickFilterRail({
       target.scrollIntoView({ block: "start", behavior: "smooth" });
       window.setTimeout(() => {
         target
-          .querySelector<HTMLElement>("button:not([disabled]), input:not([disabled]), select:not([disabled])")
+          .querySelector<HTMLElement>(
+            "button:not([disabled]), input:not([disabled]), select:not([disabled])",
+          )
           ?.focus({ preventScroll: true });
       }, 220);
     }, 80);
@@ -90,7 +92,11 @@ export function QuickFilterRail({
         <Tag aria-hidden="true" />
         <span>{priceActive ? text("السعر محدد", "Price set") : text("السعر", "Price")}</span>
       </button>
-      <button type="button" onClick={() => openSection("category")} data-active={categoryActive}>
+      <button
+        type="button"
+        onClick={() => openSection("category")}
+        data-active={categoryActive}
+      >
         <Shapes aria-hidden="true" />
         <span>{categoryLabel}</span>
       </button>
@@ -103,7 +109,9 @@ export function QuickFilterRail({
         >
           <span className="rawaj-quick-filter-rail__dot" aria-hidden="true" />
           <span>
-            {conditionActive ? text("الحالة محددة", "Condition set") : text("الحالة", "Condition")}
+            {conditionActive
+              ? text("الحالة محددة", "Condition set")
+              : text("الحالة", "Condition")}
           </span>
         </button>
       ) : null}
