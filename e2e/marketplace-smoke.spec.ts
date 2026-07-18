@@ -22,6 +22,13 @@ function isExpectedLocalRequestFailure(url: string, failure: string) {
   );
 }
 
+async function waitForHydratedRouter(page: Page) {
+  await page.waitForFunction(() => {
+    const runtime = window as typeof window & { $_TSR?: unknown };
+    return Boolean(document.querySelector('script[type="module"][src]')) && runtime.$_TSR === undefined;
+  });
+}
+
 async function openHealthyPage(page: Page, path: string) {
   const pageErrors: string[] = [];
   const failedRequests: string[] = [];
@@ -38,7 +45,8 @@ async function openHealthyPage(page: Page, path: string) {
   await expect(page.locator("body")).toBeVisible();
   await expect(page.locator("main")).toBeVisible();
   await expect.poll(() => page.title()).not.toBe("");
-  await page.waitForTimeout(250);
+  await waitForHydratedRouter(page);
+  await page.waitForTimeout(100);
   expect(pageErrors).toEqual([]);
   expect(failedRequests).toEqual([]);
 }
@@ -86,16 +94,19 @@ test("pending navigation never exposes the previous home page inside the next ro
   let delayedRequestCount = 0;
 
   await page.route("**/listings", async (route) => {
+    if (route.request().isNavigationRequest()) {
+      await route.continue();
+      return;
+    }
     delayedRequestCount += 1;
     await requestGate;
     await route.continue();
   });
 
   const listingsLink = page.locator('a[href="/listings"]').first();
-  let clickPromise: Promise<void> | null = null;
 
   try {
-    clickPromise = listingsLink.click({ noWaitAfter: true });
+    await listingsLink.dispatchEvent("click");
 
     await expect(shell).toHaveAttribute("data-route-state", "pending");
     await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
@@ -106,16 +117,15 @@ test("pending navigation never exposes the previous home page inside the next ro
     expect(delayedRequestCount).toBeGreaterThan(0);
   } finally {
     releaseRequest();
-    await page.unroute("**/listings");
   }
 
-  await clickPromise;
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   await expect(shell).toHaveAttribute("data-route-state", "idle");
   await expect(shell).toHaveAttribute("data-resolved-pathname", "/listings");
   await expect(page.locator('[data-shell-region="route-pending-mask"]')).toHaveCount(0);
   await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(0);
   await expect(page.locator("main.rawaj-search-results-v1")).toBeVisible();
+  await page.unroute("**/listings");
 });
 
 test("rapid bottom navigation resolves to one page without stacked route content", async ({
@@ -131,18 +141,24 @@ test("rapid bottom navigation resolves to one page without stacked route content
   let delayedRequestCount = 0;
 
   await page.route("**/categories", async (route) => {
+    if (route.request().isNavigationRequest()) {
+      await route.continue();
+      return;
+    }
     delayedRequestCount += 1;
     await requestGate;
     await route.continue();
   });
 
   const shell = page.locator(".rawaj-app-shell");
+  const categoriesDockLink = page.locator('.rawaj-mobile-dock a[href="/categories"]');
+  const homeDockLink = page.locator('.rawaj-mobile-dock a[href="/"]');
 
   try {
-    await page.locator('.rawaj-mobile-dock a[href="/categories"]').click({ noWaitAfter: true });
+    await categoriesDockLink.dispatchEvent("click");
     await expect(shell).toHaveAttribute("data-route-state", "pending");
-    await page.locator('.rawaj-mobile-dock a[href="/"]').click({ noWaitAfter: true });
-    await page.locator('.rawaj-mobile-dock a[href="/categories"]').click({ noWaitAfter: true });
+    await homeDockLink.dispatchEvent("click");
+    await categoriesDockLink.dispatchEvent("click");
 
     await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
     await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
@@ -151,7 +167,6 @@ test("rapid bottom navigation resolves to one page without stacked route content
     expect(delayedRequestCount).toBeGreaterThan(0);
   } finally {
     releaseRequest();
-    await page.unroute("**/categories");
   }
 
   await expect(page).toHaveURL(/\/categories(?:\?|$)/);
@@ -159,6 +174,7 @@ test("rapid bottom navigation resolves to one page without stacked route content
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
   await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(0);
   await expect(page.locator("main.rawaj-categories-v2")).toHaveCount(1);
+  await page.unroute("**/categories");
 });
 
 test("category directory exposes an indexable category landing route when data exists", async ({
