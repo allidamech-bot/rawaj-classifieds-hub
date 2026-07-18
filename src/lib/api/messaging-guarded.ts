@@ -1,4 +1,9 @@
 import {
+  sendConversationMessage,
+  uploadChatAudio,
+  validateChatAudio,
+} from "@/lib/api/chat-audio-send-guarded";
+import {
   adminFetchMessageReports,
   adminModerateMessageReport,
   blockConversationParticipant,
@@ -12,12 +17,9 @@ import {
   markConversationRead,
   removeChatAudio,
   removeChatImage,
-  sendConversationMessage,
   startListingConversation,
   toDbMessageReportStatus,
-  uploadChatAudio,
   uploadChatImage,
-  validateChatAudio,
   validateChatImage,
 } from "@/lib/api/messaging";
 
