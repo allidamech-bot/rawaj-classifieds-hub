@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   authenticated-audio:
@@ -28,6 +29,7 @@ jobs:
       RAWAJ_STAGING_USER_A_PASSWORD: ${{ secrets.RAWAJ_STAGING_USER_A_PASSWORD }}
       RAWAJ_STAGING_USER_B_EMAIL: ${{ secrets.RAWAJ_STAGING_USER_B_EMAIL }}
       RAWAJ_STAGING_USER_B_PASSWORD: ${{ secrets.RAWAJ_STAGING_USER_B_PASSWORD }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -36,4 +38,26 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Run exact client upload and send path
-        run: node scripts/staging-chat-audio-authenticated-diagnostic.mjs
+        id: audio
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          node scripts/staging-chat-audio-authenticated-diagnostic.mjs > audio-diagnostic.log 2>&1
+          status=$?
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Publish sanitized result to issue 459
+        shell: bash
+        run: |
+          result="$(tail -n 40 audio-diagnostic.log | sed -E 's#https://[a-z0-9]+\.supabase\.co#https://<staging>.supabase.co#g' | head -c 5000)"
+          if [ "${{ steps.audio.outputs.exit_code }}" = "0" ]; then
+            verdict="PASS"
+          else
+            verdict="FAIL"
+          fi
+          body=$(printf '### Authenticated staging audio diagnostic — %s\n\nCommit: `%s`\n\n```text\n%s\n```' "$verdict" "$GITHUB_SHA" "$result")
+          gh api "repos/$GITHUB_REPOSITORY/issues/459/comments" -f body="$body"
+      - name: Enforce authenticated diagnostic
+        if: steps.audio.outputs.exit_code != '0'
+        run: exit 1
