@@ -66,13 +66,23 @@ test("public classifieds API routes audio operations through the hardened layer"
   );
 });
 
-test("forward migration repairs the complete authenticated audio contract", () => {
+test("forward migration repairs partial table, Storage, and RPC state", () => {
+  assert.match(migration, /drop constraint if exists conversation_messages_body_length/);
+  assert.match(migration, /conversation_messages_content_required/);
+  assert.match(migration, /conversation_messages_attachment_metadata_complete/);
+  assert.match(migration, /attachment_kind = 'image'/);
+  assert.match(migration, /attachment_kind = 'audio'/);
+  assert.match(migration, /attachment_duration_ms between 1000 and 120000/);
+  assert.match(migration, /\) not valid;/);
   assert.match(migration, /conversation-audio/);
   assert.match(migration, /conversation_audio_participant_read/);
   assert.match(migration, /conversation_audio_sender_insert/);
   assert.match(migration, /conversation_audio_sender_delete/);
+  assert.match(
+    migration,
+    /create or replace function public\.rawaj_is_conversation_participant/,
+  );
   assert.match(migration, /rawaj_chat_attachment_conversation_id/);
-  assert.match(migration, /rawaj_is_conversation_participant/);
   assert.match(migration, /create or replace function public\.rawaj_send_conversation_message_v4/);
   assert.match(
     migration,
