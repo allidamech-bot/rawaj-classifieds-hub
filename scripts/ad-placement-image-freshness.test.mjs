@@ -2,20 +2,33 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [publicApi, facade, slot, route, storage, floatingHeader, pageHeader, routeResolver] =
-  await Promise.all([
-    readFile(new URL("../src/lib/api/public-ad-placements.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/admin.ad-placements.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/api/storage.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/components/PageHeader.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/ad-placement-route.ts", import.meta.url), "utf8"),
-  ]);
+const [
+  publicApi,
+  facade,
+  slot,
+  route,
+  storage,
+  floatingHeader,
+  pageHeader,
+  routeResolver,
+  httpsMigration,
+] = await Promise.all([
+  readFile(new URL("../src/lib/api/public-ad-placements.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/admin.ad-placements.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/storage.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/PageHeader.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/ad-placement-route.ts", import.meta.url), "utf8"),
+  readFile(
+    new URL("../supabase/migrations/202607190001_enforce_ad_placement_https_urls.sql", import.meta.url),
+    "utf8",
+  ),
+]);
 
-test("public ad placement cache broadcasts explicit invalidation across tabs", () => {
-  assert.match(publicApi, /BroadcastChannel/);
+test("public ad placement cache broadcasts explicit invalidation only in browsers", () => {
+  assert.match(publicApi, /typeof window === "undefined" \|\| typeof BroadcastChannel === "undefined"/);
   assert.match(publicApi, /broadcastChannel\.postMessage/);
   assert.match(publicApi, /window\.addEventListener\("storage"/);
   assert.match(publicApi, /export function onAdPlacementInvalidation/);
@@ -71,6 +84,13 @@ test("public ad rendering uses the same 16:7 image contract as admin validation"
   assert.match(storage, /export const AD_PLACEMENT_IMAGE_RATIO = 16 \/ 7/);
 });
 
+test("public ad rendering reserves its frame and preserves a broken-image fallback", () => {
+  assert.match(slot, /data-placement-loading="true"/);
+  assert.match(slot, /hasResolvedCurrentPlacement/);
+  assert.match(slot, /imageFailed \?/);
+  assert.match(slot, /Promotional advertisement/);
+});
+
 test("stale in-flight placement reads cannot repopulate invalidated image data", () => {
   assert.match(publicApi, /const requestGeneration = activePlacementCacheGeneration/);
   assert.match(
@@ -83,6 +103,14 @@ test("owner placement saves (image replacement) invalidate the public cache", ()
   assert.match(facade, /ownerSaveAdPlacement as ownerSaveAdPlacementBase/);
   assert.match(facade, /const result = await ownerSaveAdPlacementBase\(\.\.\.args\)/);
   assert.match(facade, /if \(result\.ok\) invalidateActiveAdPlacementCache\(\)/);
+});
+
+test("server-side owner RPC enforces HTTPS image and destination URLs", () => {
+  assert.match(httpsMigration, /v_safe_https_pattern constant text/);
+  assert.match(httpsMigration, /v_image_url !~\* v_safe_https_pattern/);
+  assert.match(httpsMigration, /v_destination_url !~\* v_safe_https_pattern/);
+  assert.match(httpsMigration, /security definer/);
+  assert.match(httpsMigration, /current_user_has_role\('owner'\)/);
 });
 
 test("admin UI validates ad image dimensions/ratio and adds change + remove buttons", () => {
