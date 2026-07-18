@@ -1,0 +1,32 @@
+name: Listings Filter Actions and Depth
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/features/search/QuickFilterRail.tsx"
+      - "src/features/search/FilterBottomSheet.tsx"
+      - "src/features/listings/listings-components.tsx"
+      - "src/lib/category-fields.ts"
+      - "src/routes/listings.index.tsx"
+      - "scripts/listings-filter-actions-and-depth.test.mjs"
+      - ".github/workflows/listings-filter-actions-and-depth.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --test scripts/listings-filter-actions-and-depth.test.mjs
+      - run: npx eslint --quiet src/features/search/QuickFilterRail.tsx src/features/search/FilterBottomSheet.tsx src/features/listings/listings-components.tsx src/lib/category-fields.ts src/routes/listings.index.tsx
+      - run: npm run typecheck -- --pretty false
