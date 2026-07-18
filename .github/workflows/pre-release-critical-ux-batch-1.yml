@@ -1,0 +1,48 @@
+name: Pre-release Critical UX Batch 1
+
+on:
+  pull_request:
+    paths:
+      - "src/features/search/QuickFilterRail.tsx"
+      - "src/features/communication/**"
+      - "src/chat-release-fixes.css"
+      - "src/types/index.ts"
+      - "src/utils/format.ts"
+      - "scripts/pre-release-critical-ux-batch-1.test.mjs"
+      - ".github/workflows/pre-release-critical-ux-batch-1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Pre-release UX regression contract
+        run: node --test scripts/pre-release-critical-ux-batch-1.test.mjs
+
+      - name: Existing chat voice and location contract
+        run: node --test scripts/chat-voice-location-ui-v1.test.mjs
+
+      - name: Existing listings filter contracts
+        run: npm run test:listings-filters
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
