@@ -1,12 +1,13 @@
 name: Pre-release Customer Acceptance
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - main
 
 concurrency:
-  group: pre-release-acceptance-${{ github.event.pull_request.number }}
+  group: pre-release-acceptance-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
