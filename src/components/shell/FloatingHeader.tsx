@@ -26,7 +26,9 @@ function resolveAdPlacementPage(pathname: string): AdPlacementPage | null {
 export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) {
   const auth = useAuth();
   const { language, text, toggleLanguage } = useUiPreferences();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const pathname = useRouterState({
+    select: (state) => state.resolvedLocation?.pathname ?? state.location.pathname,
+  });
   const activeSection = resolvePrimaryNavigationSection(pathname);
 
   const navItems = [
@@ -44,6 +46,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
       <header
         className="rawaj-app-header sticky top-0 z-30 text-foreground"
         data-shell-region="header-region"
+        data-resolved-pathname={pathname}
       >
         <div className="rawaj-floating-header-shell container-wide flex min-h-14 items-center gap-2 py-1.5 sm:min-h-[3.75rem] sm:gap-3 lg:min-h-16 lg:gap-4 lg:py-2">
           <Link
