@@ -1,0 +1,53 @@
+name: Live Chat Audio Deployment Check
+
+on:
+  push:
+    branches: [audit/chat-audio-production-pipeline]
+    paths:
+      - "scripts/live-chat-audio-deployment-check.mjs"
+      - ".github/workflows/live-chat-audio-deployment-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  verify-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      EXPECTED_AUDIO_FIX_COMMIT: 1dff35deabef300c8c8e738a4ef0bd07486c0b97
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check live build commit
+        id: check
+        continue-on-error: true
+        run: node scripts/live-chat-audio-deployment-check.mjs
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-chat-audio-deployment-check
+          path: live-chat-audio-deployment-check.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Publish result to issue 459
+        if: always()
+        shell: bash
+        run: |
+          result="$(cat live-chat-audio-deployment-check.json)"
+          if [ "${{ steps.check.outcome }}" = "success" ]; then
+            verdict="PASS — audio fix is live"
+          else
+            verdict="FAIL — live site is not on the audio-fix commit"
+          fi
+          body=$(printf '### Live chat-audio deployment check — %s\n\n```json\n%s\n```' "$verdict" "$result")
+          gh api "repos/$GITHUB_REPOSITORY/issues/459/comments" -f body="$body"
+      - name: Enforce live deployment truth
+        if: steps.check.outcome == 'failure'
+        run: exit 1
