@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { NotificationTrigger } from "@/components/NotificationTrigger";
 import { PublicAdPlacementSlot } from "@/components/PublicAdPlacementSlot";
 import { resolveAdPlacementPage } from "@/lib/ad-placement-route";
+import type { AdPlacementPage } from "@/lib/api/ad-placements";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface Props {
@@ -10,14 +11,34 @@ interface Props {
   to?: string;
   back?: boolean;
   backMode?: "link" | "history";
+  placementPage?: AdPlacementPage | null;
 }
 
-export function PageHeader({ title, to = "/", back = true, backMode = "link" }: Props) {
+function resolveTitlePlacement(title?: string): AdPlacementPage | null {
+  const normalizedTitle = title?.trim().toLocaleLowerCase();
+  if (!normalizedTitle) return null;
+  if (normalizedTitle === "الأقسام" || normalizedTitle === "categories") return "categories";
+  if (normalizedTitle === "الإعلانات" || normalizedTitle === "listings") return "search_results";
+  if (normalizedTitle === "العروض" || normalizedTitle === "offers") return "offers";
+  return null;
+}
+
+export function PageHeader({
+  title,
+  to = "/",
+  back = true,
+  backMode = "link",
+  placementPage,
+}: Props) {
   const { text } = useUiPreferences();
   const navigate = useNavigate();
   const pathname = useRouterState({
     select: (state) => state.resolvedLocation?.pathname ?? state.location.pathname,
   });
+  const resolvedPlacementPage =
+    placementPage === undefined
+      ? (resolveAdPlacementPage(pathname) ?? resolveTitlePlacement(title))
+      : placementPage;
 
   function handleBack() {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -74,7 +95,7 @@ export function PageHeader({ title, to = "/", back = true, backMode = "link" }: 
           </div>
         </div>
       </div>
-      <PublicAdPlacementSlot placementPage={resolveAdPlacementPage(pathname)} />
+      <PublicAdPlacementSlot placementPage={resolvedPlacementPage} />
     </>
   );
 }
