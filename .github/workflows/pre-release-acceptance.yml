@@ -109,8 +109,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Install Chromium, Firefox, and WebKit
+        run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Run non-destructive live public acceptance audit
         run: npx playwright test e2e/pre-release-customer-acceptance.spec.ts --project=desktop-chromium --workers=1
