@@ -1,0 +1,38 @@
+name: Chat Audio Production Diagnostic
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/chat-audio-production-diagnostic.mjs"
+      - ".github/workflows/chat-audio-production-diagnostic.yml"
+      - ".env.production"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Probe production audio backend
+        id: probe
+        continue-on-error: true
+        run: node scripts/chat-audio-production-diagnostic.mjs
+      - name: Upload diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-audio-production-diagnostic
+          path: chat-audio-production-diagnostic.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Enforce diagnostic result
+        if: steps.probe.outcome == 'failure'
+        run: exit 1
