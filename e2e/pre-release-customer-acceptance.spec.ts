@@ -69,6 +69,7 @@ const evidenceRoutes = new Set([
 ]);
 
 const ignoredRuntimeFragments = ["ERR_ABORTED", "va.vercel-scripts.com", "vercel-insights.com"];
+const isLiveBaseline = process.env.E2E_BASE_URL === "https://rawa-j.com";
 
 function routeSlug(route: string) {
   return route === "/" ? "home" : route.replace(/^\//, "").replaceAll("/", "-");
@@ -202,6 +203,7 @@ test("browser back and forward preserve public navigation", async ({ page }) => 
 });
 
 test("320px hero and primary dock action remain readable", async ({ page }, testInfo) => {
+  test.skip(isLiveBaseline, "The live target intentionally remains the unfixed baseline for comparison.");
   await page.setViewportSize({ width: 320, height: 568 });
   await assertRouteHealth(page, "/", testInfo, "home-mobile-320-readability");
 
