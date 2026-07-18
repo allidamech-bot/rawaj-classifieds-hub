@@ -187,6 +187,13 @@ test("results use matching skeletons before adaptive real cards", () => {
   assert.match(css, /rawaj-card-skeleton-shimmer/);
 });
 
+test("card text uses accessible light and dark contrast colors", () => {
+  assert.match(css, /rawaj-adaptive-card__price[\s\S]*color: #b63f24/);
+  assert.match(css, /dark \.rawaj-adaptive-card__price[\s\S]*color: #ff9a7d/);
+  assert.match(css, /rawaj-adaptive-card__category[\s\S]*color: #4c625a/);
+  assert.match(css, /dark \.rawaj-adaptive-card__category[\s\S]*color: #c1d0c7/);
+});
+
 test("card interactions avoid layout shift and respect reduced motion", () => {
   assert.match(css, /aspect-ratio: 4 \/ 3/);
   assert.match(css, /aspect-ratio: 16 \/ 10/);
