@@ -6,8 +6,6 @@ on:
       - "src/features/search/QuickFilterRail.tsx"
       - "src/features/communication/**"
       - "src/chat-release-fixes.css"
-      - "src/types/index.ts"
-      - "src/utils/format.ts"
       - "scripts/pre-release-critical-ux-batch-1.test.mjs"
       - ".github/workflows/pre-release-critical-ux-batch-1.yml"
   workflow_dispatch:
