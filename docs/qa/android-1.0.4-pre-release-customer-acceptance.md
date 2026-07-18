@@ -10,13 +10,14 @@
 
 ## 1. Executive verdict
 
-The audited baseline builds and its full repository Quality Gate passes after the objective fixes in this pull request. The Android release-candidate workflow also builds successfully without publishing to Google Play.
+The exact requested baseline was verified and built successfully. The audit branch adds a production-style local browser gate, a live read-only browser gate, the complete requested viewport matrix, cross-browser smoke, Lighthouse evidence, regression contracts, and objective fixes.
 
-The release is nevertheless **NO-GO** for customer publication at this checkpoint because:
+The release remains **NO-GO** for customer publication because:
 
-1. The live mobile homepage and listings experience recorded release-critical LCP results of approximately 17.1 seconds and 24.4 seconds respectively. The pull request fixes the identified lazy-loading root causes, but an end-to-end measurement of the branch is still blocked because the Vercel Preview check is failing on the account build-rate limit.
-2. GitHub Actions does not currently expose the dedicated Supabase test credentials required to complete real authenticated buyer, seller, favorite, saved-search, chat, notification, profile-edit, and listing-create/edit journeys safely.
-3. A physical Android device callback test for Google OAuth, password recovery deep links, push-notification navigation, keyboard/safe-area behavior, and final signed RC installation remains an external acceptance gate.
+1. The live mobile homepage and listings experience recorded release-critical LCP results of approximately **17.1 seconds** and **24.4 seconds**. The branch fixes the identified lazy-loading root causes, but the fixed branch cannot yet be measured against production-like public data because the Vercel Preview check is blocked by the account build-rate limit.
+2. Existing production media includes materially oversized images. One listing-card source image was approximately 3.5 MB while rendered at a small card size. Production media transformation or replacement is outside this audit's non-destructive boundary.
+3. GitHub Actions does not expose dedicated Supabase test credentials, so real authenticated buyer, seller, favorite, saved-search, chat, notification, profile-edit, listing-create/edit, and admin journeys were not completed.
+4. Physical Android acceptance for OAuth/deep links, push navigation, safe areas, keyboard overlap, back behavior, TalkBack, and installation of the signed RC remains external.
 
 No P0 defect was found. No Production promotion, live data mutation, Google Play upload, or PR merge was performed.
 
@@ -28,43 +29,51 @@ No P0 defect was found. No Production promotion, live data mutation, Google Play
 | Actual verified `main` commit at audit start | Exact match |
 | Baseline commit message | `Build Android 1.0.4 release candidate (#457)` |
 | Feature branch ancestry | Baseline is an ancestor; branch is not behind `main` |
+| GitHub checkout cleanliness | Clean checkout verified by the acceptance workflow |
+| User Windows working tree | Not inspectable from the available environment |
+| `npm ci` | Executed in GitHub Actions |
+| `npm run typecheck` | Executed on the audited branch |
+| `npm run build` | Executed on the audited branch |
 | Direct modification of `main` | None |
 | Production promotion | Not performed |
 | Google Play release/upload | Not performed |
 | Supabase production mutation | Not performed |
 
-The repository defines TanStack Start, React 19, TypeScript, Supabase, Capacitor Android, Playwright, four Playwright browser projects, and a broad Quality Gate with contract, lint, typecheck, build, and performance-budget stages.
+The repository uses TanStack Start, React 19, TypeScript, Supabase, Capacitor Android, Playwright, and a broad contract/lint/typecheck/build Quality Gate.
 
 ## 3. Environment and browser details
 
 - GitHub-hosted Ubuntu 24.04 runners.
-- Node.js 22 for project checks.
-- Playwright 1.61.1.
-- Chromium for the full acceptance matrix.
-- Existing release smoke projects: mobile Chromium, desktop Chromium, desktop Firefox, and mobile WebKit.
-- Arabic locale: `ar-SY`.
-- Document expectation: `lang="ar"`, `dir="rtl"`.
-- Local target: production Node output generated with `NITRO_PRESET=node-server` and served on `127.0.0.1:4173`.
-- Live target: `https://rawa-j.com`, read-only/non-destructive.
+- Node.js 22.
+- Playwright Chromium for the full acceptance matrix.
+- Cross-browser smoke projects: mobile Chromium, desktop Chromium, desktop Firefox, and mobile WebKit.
+- Arabic locale `ar-SY`; expected document semantics `lang="ar"` and `dir="rtl"`.
+- Local target: production Node output built with `NITRO_PRESET=node-server` and served from `.output/server/index.mjs` on `127.0.0.1:4173`.
+- Live target: `https://rawa-j.com`, read-only and non-destructive.
+- Lighthouse mobile and desktop profiles for `/`, `/listings`, one real listing detail, and `/login`.
 
-The local workflow deliberately stubs only the unavailable Vercel Analytics script endpoint. This prevents a local non-Vercel server from generating a false console failure while preserving all application, API, image, route, and JavaScript failure checks.
+The requested Codex integrated browser was not available in this session. Browser execution was performed through Playwright in GitHub Actions with screenshots, traces, videos, HTML reports, console monitoring, network-failure monitoring, and Lighthouse artifacts. Direct Chromium access from the local execution container to the public domain was administratively blocked; no direct-container browsing is claimed.
+
+The local workflow stubs only the unavailable Vercel Analytics script endpoint. This avoids a local non-Vercel MIME/404 false failure while preserving all application, API, image, route, console, and JavaScript failure checks.
 
 ## 4. Local-main versus live-site differences
 
-| Area | Local audited branch | Live website |
+| Area | Audited branch/local production | Live website baseline |
 | --- | --- | --- |
-| Source revision | PR branch based on the exact baseline | Deployment revision could not be assumed to equal the branch |
-| Supabase test secrets in Actions | Not configured | Public production reads available |
-| Public listing and seller data | May be absent locally without secrets | Available and inspected non-destructively |
-| Vercel Analytics endpoint | Not native to local Node output; audit-only stub used | Available through Vercel |
-| 320 px hero/title fix | Implemented on branch | Not present in captured live evidence |
-| Compact 320 px bottom-dock label | Implemented on branch | Not present in captured live evidence |
-| LCP media priority fixes | Implemented on branch | Live measurement still represents the pre-fix deployment |
-| Preview validation | Blocked by Vercel build-rate limit | Production remained unchanged |
+| Source revision | PR branch based on exact baseline | Deployment revision was not assumed to equal the branch |
+| Supabase Actions secrets | Not configured | Public production reads available |
+| Public listing/seller data | Data-dependent tests can skip locally | Real public data inspected non-destructively |
+| 320 px hero/title | Fluid typography fix present | Overlap/crowding captured in live evidence |
+| 320 px primary dock label | Compact `أضف` label present | Truncated unfinished label captured live |
+| Promotional banner priority | Eager/high priority with intrinsic dimensions | Live baseline LCP banner was lazy |
+| Listing-card priority | Near-viewport cards promoted; off-screen cards remain lazy | Live baseline visible LCP card remained lazy |
+| Canonical metadata | Implicit root canonical conflict removed | Live listings/detail contained conflicting canonical links |
+| Accessibility fixes | Brand naming, contrast, card contrast, summary contrast, footer contrast and heading order fixed | Lighthouse findings reflect pre-fix live deployment |
+| Preview validation | Source build succeeds; Vercel Preview blocked by build-rate limit | Production intentionally unchanged |
 
 ## 5. Device and viewport matrix
 
-The acceptance test contains all required viewport sizes and reloads each major route after viewport initialization.
+The suite loads `/` and `/listings` at every required size, reloads important routes after viewport initialization, verifies Arabic RTL semantics, checks document width against viewport width, captures screenshots, and records page errors, console errors, failed requests, and server failures.
 
 ### Mobile
 
@@ -88,7 +97,7 @@ The acceptance test contains all required viewport sizes and reloads each major 
 - 1440 × 900
 - 1920 × 1080
 
-Homepage and listings rendering, Arabic RTL semantics, runtime health, and horizontal overflow are covered at all 13 sizes. The route inventory is covered at representative 360 × 800 and 1440 × 900 sizes. Portrait is the primary mobile/tablet profile; desktop widths cover landscape presentation.
+The route inventory is repeated at 360 × 800 and 1440 × 900. Portrait coverage is complete for the requested matrix. Explicit landscape-device emulation remains an external/manual gate.
 
 ## 6. Route coverage
 
@@ -96,32 +105,39 @@ Homepage and listings rendering, Arabic RTL semantics, runtime health, and horiz
 
 `/`, `/categories`, `/listings`, `/offers`, `/login`, `/reset-password`, `/support`, `/safety`, `/privacy`, `/terms`, `/prohibited`, `/promotion`, `/verification`.
 
-### Protected/account routes loaded directly and verified to fail closed without crashing
+### Protected/account routes loaded directly and checked for safe failure/redirect behavior
 
 `/profile`, `/profile/listings`, `/add-listing`, `/favorites`, `/saved-searches`, `/chats`, `/notifications`, `/activity`, `/more`.
 
-### Admin routes loaded directly and verified to fail closed without crashing
+### Admin routes loaded directly and checked for safe failure/redirect behavior
 
 `/admin`, `/admin/verifications`, `/admin/users`, `/admin/safety`, `/admin/reviews`, `/admin/reports`, `/admin/promotions`, `/admin/pending`, `/admin/owner-controls`, `/admin/message-reports`, `/admin/listings`, `/admin/campaigns`, `/admin/audit`, `/admin/ad-placements`.
 
 ### Dynamic/data-driven routes
 
-- One public listing detail route was resolved from live listing discovery and inspected.
-- The corresponding seller storefront was opened when the seller link was present.
-- Category, Syria-location, listing-edit, OAuth callback, and other dynamic routes are covered by repository contracts; destructive or credential-dependent interactions were not fabricated.
+- One real `/listings/$id` route was discovered from live listings and opened.
+- The corresponding `/seller/$id` storefront was opened when the link was rendered.
+- Logged-out contact behavior was checked for a login route, chat route, or explicit dialog outcome.
+- Category/location/edit/OAuth dynamic paths are covered by repository contracts; destructive or credential-dependent browser interactions were not fabricated.
 
-For covered routes, the browser checks direct URL loading, visible `main`, document language/direction, refresh, back/forward behavior, horizontal overflow, page errors, console errors, and failed requests.
+For covered routes, the suite checks direct URL load, visible `main`, refresh, back/forward, language/direction, horizontal overflow, page errors, console errors, failed requests, and HTTP 500-class failures.
 
 ## 7. Customer-journey results
 
 | Journey | Result | Evidence / limitation |
 | --- | --- | --- |
-| A — New visitor | PASS for public path | Homepage, discovery, listings, listing detail, seller link, and logged-out contact/login handling were exercised non-destructively. |
-| B — Returning buyer | BLOCKED | No dedicated test credentials in Actions; no real user was contacted. |
-| C — Seller | BLOCKED | No safe authenticated test account/environment for listing creation and edit submission. |
-| D — Mobile-first customer | PARTIAL | Public navigation and responsive matrix covered; 320 px visual defects found and fixed, but branch Preview revalidation is blocked. |
-| E — Desktop customer | PASS for public path | Public shell, discovery, filters presentation, listings and detail pages covered at desktop sizes. |
-| F — Failure recovery | PARTIAL | Invalid login, browser navigation, route refresh, unavailable-auth state, error/empty states and runtime monitoring covered; authenticated retry and controlled network-loss state preservation remain blocked. |
+| A — New visitor | PASS for public path | Home, discovery, listing detail, seller storefront, and logged-out contact boundary exercised non-destructively. |
+| B — Returning buyer | BLOCKED | No dedicated authenticated test credentials; no real user contacted. |
+| C — Seller | BLOCKED | No isolated safe account/backend for listing submission and edit mutation. |
+| D — Mobile-first customer | PARTIAL | Full responsive matrix and public navigation covered; branch-only fixes still require deployed real-data validation and native keyboard/safe-area acceptance. |
+| E — Desktop customer | PASS for public path | Public shell, discovery, listings, detail, seller and desktop route inventory covered. |
+| F — Failure recovery | PARTIAL | Invalid login, unavailable-auth state, refresh, back/forward, error/empty states and runtime monitoring covered; authenticated retry and controlled network-loss preservation remain blocked. |
+
+**Public journey paths passed:** 2  
+**Complete authenticated journeys passed:** 0  
+**Product-crash journey failures established:** 0  
+**Partial journeys:** 2  
+**Blocked journeys:** 2
 
 **Real authenticated journeys completed:** No.  
 **Messages sent to real users:** No.  
@@ -129,88 +145,96 @@ For covered routes, the browser checks direct URL loading, visible `main`, docum
 
 ## 8. Button and interaction coverage
 
-Automated and manual-browser checks exercised:
+Browser interaction coverage includes:
 
-- Header logo and account/login entry.
+- Header logo/account/login entry.
 - Primary desktop navigation.
 - Mobile bottom navigation and primary listing action.
 - Search/filter entry points.
-- Browser back and forward.
-- Login form validation and form preservation.
-- Password field semantics.
-- Keyboard focus entry.
-- Escape handling for available dialogs.
+- Browser back/forward.
+- Invalid login submission and input preservation when auth is configured.
+- Keyboard Tab entry.
+- Escape closure for an available dialog.
 - Listing-card links.
 - Seller-storefront links.
-- Logged-out contact/message action outcome.
-- Filter controls, reset contracts, saved-search contracts, favorites contracts, listing studio contracts, communication contracts, notification contracts, and admin access contracts through the Quality Gate.
+- Logged-out contact/message outcome.
+- 320 px primary dock label integrity.
 
-A rendered control was not counted as working solely because it existed. Credential-dependent actions remain explicitly blocked rather than reported as passes.
+Repository contracts additionally cover filters, reset behavior, taxonomy, saved searches, favorites, listing studio, image handling, communication, notifications, profile, support, moderation, and access-control behavior. A rendered control was not counted as working solely because it existed. Credential-dependent actions remain blocked rather than inferred as passes.
 
-## 9. Console and network findings
+## 9. Console, network, and runtime findings
 
 - No core public-route JavaScript crash was established.
-- The first local production audit reported 404/MIME console errors for `/_vercel/insights/script.js`; this is a Vercel-only endpoint, not an application route. The local audit harness now supplies an inert local script at that exact path so genuine console and network failures remain visible.
-- Vercel Preview currently reports failure because the account reached its build-rate limit. This is an external deployment-capacity blocker, not a source-code build failure.
-- Live Lighthouse found very large media payloads and late LCP image prioritization.
-- Secrets, authorization headers, tokens, and private user data were not captured in the report.
+- The first local run exposed a Vercel-only `/_vercel/insights/script.js` MIME/404 issue on the local Node host. The audit harness now serves an inert script at that exact path rather than suppressing general 404s.
+- An early cross-browser run installed only Chromium while requesting Firefox/WebKit. The workflow now installs all requested browsers; that failure was harness-related, not a RAWAJ product failure.
+- Vercel Preview reports failure because the account reached its build-rate limit. This is an external capacity blocker, not a source-code build failure.
+- Lighthouse found large media payloads, late LCP image priority, unused JavaScript, canonical conflicts, and accessibility issues on the live baseline.
+- No secrets, authorization headers, tokens, private messages, or customer data are included in the report/artifacts.
 
 ## 10. Accessibility findings
 
-### Passing/covered
+### Covered
 
 - Arabic `lang` and RTL document direction.
 - Keyboard entry reaches a focusable element.
-- Login inputs have semantic types and autocomplete values.
-- Dialog Escape behavior is tested when a dialog trigger is available.
-- Stable image dimensions reduce layout shift.
-- Reduced-motion and horizontal-overflow contracts pass.
-- Lighthouse accessibility scores ranged from 93 to 100 across the measured pages/profiles.
+- Login input semantics.
+- Escape closure for an available dialog.
+- Stable image dimensions.
+- Reduced-motion browser context.
+- Horizontal-overflow checks.
+- Lighthouse accessibility scores ranged from 93 to 100 on the measured live baseline.
 
-### Remaining findings
+### Live-baseline findings and branch fixes
 
-- Color-contrast failures were reported for the Latin `RAWAJ` brand text, listings result count, selected listing-card price/category text, and a footer trust badge.
-- The visible logo text and the link accessible name do not fully match.
-- Desktop listing detail reported a non-sequential footer heading level.
+1. Visible `RAWAJ` text did not match the home-link accessible name. The accessible name now includes both visible Arabic and Latin brand text.
+2. Small Latin brand text failed contrast. The branch uses a darker light-mode orange and a readable dark-mode orange.
+3. Listing-card price/category text and the listings summary failed contrast. The branch uses stronger light/dark text values.
+4. Footer trust text failed contrast. It now uses foreground text.
+5. Desktop listing detail reported a non-sequential footer `h4`. Footer group titles now use `h2`.
 
-These are classified as P2 because they affect accessibility and clarity but did not make the audited journeys unusable.
+These fixes are contract-tested. A deployed post-fix Lighthouse rerun remains required.
 
 ## 11. Performance findings
 
-### Live Lighthouse results
+### Live Lighthouse baseline
 
-| Page | Mobile performance | Desktop performance | Mobile LCP | Desktop LCP |
-| --- | ---: | ---: | ---: | ---: |
-| Home | 48 | 66 | 17.1 s | 4.0 s |
-| Listings | 54 | 90 | 24.4 s | 1.2 s |
-| Listing detail | 70 | 93 | 4.7 s | 1.0 s |
-| Login | 69 | 96 | 5.0 s | 1.1 s |
+| Page/profile | Performance | Accessibility | Best practices | SEO | FCP | LCP | TBT | CLS |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Home mobile | 48 | 96 | 96 | 100 | 1.84s | 17.10s | 700ms | 0.185 |
+| Listings mobile | 54 | 96 | 96 | 92 | 1.80s | 24.37s | 260ms | 0.071 |
+| Listing detail mobile | 75 | 90 | 96 | 92 | 1.83s | 6.73s | 120ms | 0.113 |
+| Login mobile | 82 | 94 | 96 | 58 | 1.88s | 2.68s | 140ms | 0.184 |
+| Home desktop | 70 | 96 | 96 | 100 | 0.58s | 3.97s | 80ms | 0.185 |
+| Listings desktop | 86 | 96 | 96 | 92 | 0.52s | 2.25s | 0ms | 0.071 |
+| Listing detail desktop | 89 | 90 | 96 | 92 | 0.53s | 2.13s | 0ms | 0.050 |
+| Login desktop | 99 | 94 | 96 | 58 | 0.56s | 0.84s | 0ms | 0.016 |
 
-Accessibility was 93–100, best practices 100, and SEO varied by route.
+The low login SEO score is materially affected by its intentional `noindex, nofollow` directive and is not treated as a public discoverability failure.
 
 ### Root causes confirmed by Lighthouse
 
-- The above-the-fold promotional banner was the homepage LCP element and used `loading="lazy"` without `fetchpriority="high"`.
-- A visible listing-card image was the listings mobile LCP element and used `loading="lazy"`.
-- Home transferred approximately 6.3 MiB; listings transferred approximately 7.9–8.0 MiB.
-- Several individual listing/ad images are materially oversized for their rendered dimensions.
-- Home and listings contain measurable unused JavaScript.
+- The above-the-fold promotional banner was the homepage LCP element and used lazy loading.
+- A visible listing-card image was the listings mobile LCP element and used lazy loading.
+- One live listing-card source image was approximately 3.5 MB while displayed at a small card size; Lighthouse reported approximately 3.4 MB potential savings for that asset.
+- Home CLS of 0.185 exceeds the recommended 0.1 threshold and must be remeasured after media-priority fixes.
+- Existing production media is oversized for several rendered dimensions.
 
-### Fixes in this PR
+### Code mitigation in this PR
 
-- Above-the-fold public ad media now uses eager loading and high fetch priority.
-- Listing-card media remains lazy by default, but cards inside or close to the viewport are promoted to eager/high priority through bounded viewport detection and IntersectionObserver.
-- Regression contracts ensure the solution does not make every card eager.
+- Above-the-fold promotional media uses eager/high priority and stable intrinsic dimensions.
+- Listing images remain lazy by default, but cards already inside or near the viewport are promoted to eager/high using geometry and an IntersectionObserver with a bounded root margin.
+- Off-screen cards remain lazy.
+- Regression contracts prevent a blanket eager-loading regression.
 
-### Required remeasurement
+### Unresolved production media gate
 
-The fix must be remeasured on a deployable PR Preview with the same production-like public data. The live Lighthouse scores above cannot prove the branch fix because the live site was intentionally not promoted.
+This audit cannot recompress or mutate existing Production Storage objects. Oversized media must be transformed, replaced, or served through an image-resizing pipeline, followed by mobile Lighthouse reruns on the deployed fixed build.
 
 ## 12. P0 issues
 
 **Count: 0**
 
-No core crash, credential disclosure, destructive security issue, unusable login shell, or severe route failure was established.
+No reproduced public route crash, unusable login shell, sensitive-data exposure, destructive security defect, or core listing-open failure was established.
 
 ## 13. P1 issues
 
@@ -218,123 +242,147 @@ No core crash, credential disclosure, destructive security issue, unusable login
 
 - **Route:** `/`
 - **Viewport:** 320 × 568
-- **Actual:** The main Arabic value proposition overlapped the following description and became visually unusable.
-- **Expected:** Heading and description remain readable with no collision.
-- **Fix:** Responsive clamp and line-height applied to the hero heading.
-- **Regression:** Playwright compares the heading and following paragraph geometry at 320 px.
-- **Status:** Fixed in code; branch browser gate required before merge.
+- **Actual live baseline:** Main Arabic value proposition collided visually with the following description.
+- **Fix:** Fluid heading clamp and corrected line height.
+- **Regression:** Playwright compares heading and description geometry.
+- **Status:** Fixed in code; local browser gate and deployed review remain required.
 
 ### P1-02 — Release-critical mobile discovery LCP
 
 - **Routes:** `/`, `/listings`
-- **Profile:** Lighthouse mobile
-- **Actual:** LCP approximately 17.1 s and 24.4 s, with performance scores 48 and 54.
-- **Expected:** Above-the-fold discovery media must not be delayed by lazy loading; release should meet an agreed mobile performance threshold under the same profile.
+- **Profile:** Lighthouse mobile.
+- **Actual live baseline:** LCP approximately 17.1s and 24.4s; performance 48 and 54.
 - **Fix:** LCP media prioritization implemented without eagerly loading all cards.
-- **Status:** Fix is contract-tested; end-to-end Preview measurement is blocked by the Vercel build-rate limit.
+- **Status:** Code/contract mitigation present; real-data post-deployment measurement and production media remediation remain unresolved.
 
-**Total P1 count: 2.**  
-**Unresolved acceptance P1 count: 1 (P1-02 verification).**
+**Total P1 findings: 2.**  
+**Unresolved release P1 findings: 1 (`P1-02`).**
 
 ## 14. P2 issues
 
 ### P2-01 — 320 px bottom-dock primary label truncation
 
-Fixed by using a compact `أضف` label below 340 px. Regression coverage is included.
+Fixed with a compact visible `أضف` label below 340 px while preserving the full accessible name.
 
 ### P2-02 — Color-contrast failures
 
-Remaining on selected brand, result-count, card metadata/price, and footer badge text. Requires token-level contrast correction and Lighthouse recheck.
+Live baseline affected brand, result-summary, listing-card and footer trust text. Branch contrast fixes and contracts are present; deployed Lighthouse verification remains required.
 
 ### P2-03 — Accessible-name and heading-order inconsistencies
 
-The header logo accessible name does not include its visible RAWAJ name, and the desktop listing-detail footer skips heading levels.
+Header brand naming and footer heading order are fixed and contract-tested.
 
-### P2-04 — Canonical metadata not accepted by Lighthouse
+### P2-04 — Conflicting canonical links
 
-Listings and listing-detail pages did not expose a valid canonical URL in the live Lighthouse run. Login is intentionally noindex, but canonical generation should still be reviewed separately.
+The root head emitted a `/` canonical while leaf pages emitted route canonicals. `createSeo()` now emits a canonical only when a route explicitly supplies a path. The SEO contract prevents reintroduction.
 
-**Total P2 count: 4.**
+**Total P2 findings: 4.**  
+**Unresolved code fixes: 0.**  
+**Post-deployment verification pending: 4.**
 
 ## 15. P3 issues
 
 **Count: 0 recorded separately.**
 
-Minor visual polish was not inflated into defects where no objective customer impact was established.
+Minor polish was not inflated into defects without objective customer impact.
 
 ## 16. Blocked tests and missing credentials
 
-- Registration and existing-email registration against a controlled test account.
-- Valid login, logout, and session persistence.
+The following are not claimed as passed:
+
+- Controlled registration and existing-email registration.
+- Valid login, logout and session persistence.
 - Google OAuth completion.
-- Password-recovery email delivery and native deep-link completion.
-- Favorites persistence and action recovery after login.
-- Saved-search create/delete/alert state with an authenticated account.
-- Listing creation, image upload/order/removal, moderation state, and owner edit preservation through the browser.
-- Real buyer/seller chat creation, send/read/realtime/reconnect behavior.
-- Profile, avatar, cover, verification, notification read state, and account settings mutations.
-- Admin authenticated routes and moderation actions.
-- Native keyboard, safe area, push navigation, and physical-device OAuth callback.
-- Branch Lighthouse remeasurement with production-like data while Vercel Preview is blocked.
+- Password-recovery email/deep-link completion.
+- Favorite persistence and login action recovery.
+- Saved-search create/delete/alert settings.
+- Listing create, image upload/order/remove, moderation and edit preservation.
+- Buyer/seller chat create/send/realtime/read/reconnect.
+- Profile/avatar/cover mutation.
+- Notification read mutation and push settings.
+- Support submission.
+- Admin moderation mutations.
+- Physical Android deep links, push receipt, keyboard, safe areas, back behavior and TalkBack.
 
-## 17. Screenshot and evidence inventory
+Reason: no dedicated safe E2E credentials or isolated mutable backend were available, and Production mutation was prohibited.
 
-GitHub Actions retains Playwright screenshots, traces, videos on failure, HTML reports, and Lighthouse JSON artifacts for 30 days.
+## 17. Screenshot, trace and audit evidence
 
-Evidence names include:
+GitHub Actions retains Playwright screenshots, videos, traces and HTML reports for 30 days. Key evidence names include:
+
+- `mobile-320x568-home.png`
+- `mobile-320x568-listings.png`
+- `mobile-360x800-home.png`
+- `desktop-1440x900-home.png`
+- `desktop-1440x900-listings.png`
+- `login-validation-mobile.png` when auth configuration is available
+- `listing-detail-mobile.png`
+- `seller-storefront-mobile.png`
+- `home-mobile-320-readability.png` on the fixed local branch
+
+Workflow artifacts:
 
 - `local-main-pre-release-acceptance`
 - `live-public-pre-release-acceptance`
 - `live-lighthouse-pre-release-acceptance`
-- Existing Browser Smoke diagnostics
-- Android release-candidate metadata/artifact from the RC workflow
 
-Captured evidence includes homepage and listings screenshots across the required matrix, login and protected-route states, listing detail, seller storefront when data exists, and every automated failure context.
+The live Lighthouse baseline artifact from run `29622887163` expires on 2026-08-17. This report preserves the measured values and conclusions after artifact expiry.
 
 ## 18. Fixes implemented
 
-1. Fixed 320 px hero heading collision.
-2. Fixed 320 px primary bottom-dock label truncation.
-3. Added the 13-viewport acceptance matrix.
-4. Added direct-route, reload, back/forward, RTL, overflow, runtime, validation, keyboard, listing, seller, and logged-out-contact checks.
-5. Added local-main, live-public, cross-browser and Lighthouse audit jobs.
-6. Isolated Vercel Analytics from the local Node audit without suppressing unrelated errors.
-7. Prioritized above-the-fold ad media.
-8. Prioritized only near-viewport listing-card media while preserving lazy loading elsewhere.
-9. Updated regression contracts for the revised media behavior.
+1. Responsive 320 px hero typography.
+2. Compact 320 px primary add-listing label with unchanged accessible name.
+3. Eager/high loading for above-the-fold promotional media.
+4. Near-viewport eager/high promotion for listing-card images while preserving off-screen lazy loading.
+5. Removal of conflicting implicit root canonical links.
+6. Accessible brand-link name.
+7. Stronger brand, card, result-summary and footer contrast.
+8. Sequential footer heading structure.
+9. Production-style local TanStack Start browser target.
+10. Local Vercel Analytics test-host shim.
+11. Correct installation of all cross-browser smoke engines.
+12. Separation of live baseline checks from branch-only fixed-state assertions.
 
 ## 19. Automated regression tests added or extended
 
-- `e2e/pre-release-customer-acceptance.spec.ts`
-- `.github/workflows/pre-release-customer-acceptance.yml`
-- 320 px hero/dock regression assertion.
-- LCP media priority contract in `phases-54-56-performance-observability.test.mjs`.
-- Updated public-ad rendering contract.
-- Updated adaptive listing-card media contract.
+- New Playwright pre-release acceptance suite.
+- Required 13-viewport matrix.
+- Public/protected/admin route inventory at mobile and desktop.
+- Runtime console/network/page-error and 500-class monitoring.
+- RTL and horizontal-overflow checks.
+- Back/forward behavior.
+- 320 px hero geometry and bottom-dock label regression.
+- Invalid login/input preservation.
+- Keyboard focus and Escape behavior.
+- Listing detail, seller storefront and logged-out contact path when data exists.
+- Public-ad LCP-priority contract.
+- Listing-card near-viewport priority contract.
+- Explicit-canonical SEO contract.
+- Accessible header-brand contract.
+- Card contrast contract.
+- Footer hierarchy/trust-contrast contract.
+- Lighthouse mobile/desktop evidence workflow for four required page types.
 
-## 20. Quality and build gates
+## 20. Quality Gate and diff status
 
-- Repository Quality Gate: PASS on the code changes before this report-only commit; the report commit must also retain a green final run.
-- Typecheck: PASS in Quality Gate.
-- Production build: PASS in Quality Gate.
-- Performance budget: PASS in Quality Gate.
-- Android Release Candidate workflow: PASS on the audited code before the report-only commit; no Play publication performed.
-- Vercel Preview: BLOCKED by build-rate limit.
-- Browser Smoke and Pre-release Customer Acceptance: must be green on the final PR head before merge consideration.
+The branch is subject to the repository Quality Gate, browser acceptance workflow, cross-browser smoke, Android RC build, and contract workflows. The PR must remain draft and unmerged until the latest head is green or every external failure is explicitly classified. Vercel's build-rate-limit failure is external and does not replace a reviewable Preview requirement.
+
+The final diff must contain only the audit report, evidence workflow, tests and objective fixes. No dependency package, production data, Google Play configuration, unrelated feature or broad redesign is permitted.
 
 ## 21. Remaining external acceptance gates
 
-1. Restore Vercel Preview capacity and deploy the PR branch without assigning the live domain.
-2. Repeat mobile and desktop Lighthouse on the Preview with production-like public data.
-3. Set dedicated, non-production test credentials/secrets for buyer, seller, and admin roles.
-4. Complete Journeys B and C, authenticated portions of D/F, and the chat/notification flows.
-5. Install the final signed RC on at least one representative Android device and verify OAuth/recovery deep links, keyboard, safe areas, push navigation, camera/gallery selection, and network recovery.
-6. Correct or explicitly accept the remaining contrast, heading-order, accessible-name, and canonical findings.
-7. Review the final PR diff and all final-head checks.
-8. Keep the PR unmerged until the gates above are documented.
+1. Clear the Vercel build-rate limit and obtain a reviewable Preview.
+2. Re-run mobile/desktop Lighthouse on the deployed fixed branch with production-like data.
+3. Remediate or transform oversized Production media without destructive data loss.
+4. Configure isolated buyer, seller and admin E2E accounts/backend.
+5. Complete authenticated journeys B and C and all blocked mutations.
+6. Perform a physical Android RC pass for OAuth/deep links, push, safe areas, keyboard, back behavior and TalkBack.
+7. Review every final PR check and the final diff.
+8. Keep the PR draft and unmerged while any P0 or unresolved P1 remains.
+9. Do not upload or promote Android 1.0.4 until the recommendation changes.
 
 ## 22. Final recommendation
 
-# NO-GO
+**NO-GO**
 
-The codebase is buildable and materially improved, but the release cannot be accepted for customer publication while the mobile performance fix lacks branch-level end-to-end measurement and the principal authenticated/native customer journeys remain blocked. A future GO decision requires zero unresolved P0/P1 issues and completed external acceptance evidence.
+The branch contains objective fixes and substantially stronger acceptance coverage, but release acceptance is incomplete. The live mobile discovery performance remains an unresolved P1 until oversized media is addressed and the fixed build is remeasured. Real authenticated journeys and physical Android acceptance also remain blocked. PR #458 must remain draft and unmerged.
