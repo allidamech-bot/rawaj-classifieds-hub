@@ -114,6 +114,10 @@ const publicGovernorateCache = new WeakMap<
   SupabaseClient,
   PublicReferenceCacheEntry<ClassifiedGovernorate[]>
 >();
+const publicTaxonomyCache = new WeakMap<
+  SupabaseClient,
+  PublicReferenceCacheEntry<TaxonomyNode[]>
+>();
 
 async function readCachedPublicReference<T>(
   client: SupabaseClient,
@@ -182,6 +186,29 @@ async function readPublicGovernorates(
   );
 }
 
+async function loadPublicTaxonomyNodes(
+  client: SupabaseClient,
+): Promise<ClassifiedsResult<TaxonomyNode[]>> {
+  const { data, error } = await client
+    .from("taxonomy_nodes")
+    .select(
+      "id,parent_id,slug,name_ar,name_en,description_ar,description_en,icon_key,sort_order,depth,is_active,is_leaf,filter_schema_key,classification_key,classification_value,legacy_category_id,legacy_subcategory_id",
+    )
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("name_ar", { ascending: true });
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapTaxonomyNode) };
+}
+
+async function readPublicTaxonomyNodes(
+  client: SupabaseClient,
+): Promise<ClassifiedsResult<TaxonomyNode[]>> {
+  return readCachedPublicReference(client, publicTaxonomyCache, () =>
+    loadPublicTaxonomyNodes(client),
+  );
+}
+
 export async function readReferences(client: SupabaseClient) {
   const [categoriesResult, governoratesResult] = await Promise.all([
     readPublicCategories(client),
@@ -218,16 +245,7 @@ export async function fetchPublicSubcategories(): Promise<
 export async function fetchPublicTaxonomyNodes(): Promise<ClassifiedsResult<TaxonomyNode[]>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
-  const { data, error } = await clientResult.data
-    .from("taxonomy_nodes")
-    .select(
-      "id,parent_id,slug,name_ar,name_en,description_ar,description_en,icon_key,sort_order,depth,is_active,is_leaf,filter_schema_key,classification_key,classification_value,legacy_category_id,legacy_subcategory_id",
-    )
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true })
-    .order("name_ar", { ascending: true });
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapTaxonomyNode) };
+  return readPublicTaxonomyNodes(clientResult.data);
 }
 
 export async function fetchPublicGovernorates(): Promise<
