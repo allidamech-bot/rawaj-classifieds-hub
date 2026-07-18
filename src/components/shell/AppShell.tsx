@@ -108,11 +108,7 @@ export function AppShell({
           </div>
         ) : null}
 
-        <div
-          className="rawaj-app-shell__content"
-          data-shell-region="page-content"
-          aria-hidden={isRouteNavigating ? true : undefined}
-        >
+        <div className="rawaj-app-shell__content" data-shell-region="page-content">
           {children}
         </div>
 
