@@ -22,6 +22,22 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
     })
   : null;
 
+/**
+ * Public marketplace reads must not inherit or wait on an account session.
+ * This client never persists or refreshes authentication and therefore keeps
+ * public ad placements stable while sign-in state is being established.
+ */
+export const publicSupabase: SupabaseClient | null = isSupabaseConfigured
+  ? createClient(supabaseUrl!, supabaseAnonKey!, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+        storageKey: "rawaj-public-read-client",
+      },
+    })
+  : null;
+
 export function getSupabaseAuthUnavailableReason() {
   if (isSupabaseConfigured) return null;
   if (!hasSupabaseUrl && !hasSupabaseAnonKey) {
