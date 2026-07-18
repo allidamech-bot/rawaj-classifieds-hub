@@ -113,7 +113,7 @@ test("shared cards preserve media, state, links, action slot, location, and time
   assert.match(shared, /formatDate\(listing\.createdAt, language\)/);
 });
 
-test("listing card images fall back cleanly and reserve stable media space", () => {
+test("listing card images fall back cleanly, reserve space, and prioritize only near-viewport media", () => {
   assert.match(cardImage, /onError=\{\(\) => setFailedSrc\(src\)\}/);
   assert.match(cardImage, /failedSrc === src/);
   assert.match(cardImage, /placeholderAspect = "standard"/);
@@ -122,14 +122,17 @@ test("listing card images fall back cleanly and reserve stable media space", () 
     /<PlaceholderArt[\s\S]*type=\{placeholder\}[\s\S]*aspect=\{placeholderAspect\}[\s\S]*className=\{className\}/,
   );
   assert.match(cardImage, /useState<string \| null>\(null\)/);
-  assert.match(cardImage, /loading=\{loading\}/);
-  assert.match(cardImage, /fetchPriority=\{fetchPriority\}/);
+  assert.match(cardImage, /loading = "lazy"/);
+  assert.match(cardImage, /getBoundingClientRect\(\)/);
+  assert.match(cardImage, /rootMargin: "25% 0px"/);
+  assert.match(cardImage, /loading=\{effectiveLoading\}/);
+  assert.match(cardImage, /fetchPriority=\{effectiveFetchPriority\}/);
+  assert.match(cardImage, /nearViewport \? "high" : undefined/);
   assert.match(cardImage, /decoding="async"/);
   assert.match(cardImage, /width=\{width\}/);
   assert.match(cardImage, /height=\{height\}/);
   assert.match(cardImage, /draggable=\{false\}/);
   assert.match(cardImage, /className=\{className\}/);
-  assert.doesNotMatch(cardImage, /useEffect/);
   assert.match(featured, /<ListingCardImage/);
 });
 
