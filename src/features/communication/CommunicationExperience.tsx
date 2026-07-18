@@ -16,6 +16,7 @@ import type { ReactNode } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Conversation, NotificationItem } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
+import "../../chat-release-fixes.css";
 
 export function CommunicationCenterHero({
   mode,
