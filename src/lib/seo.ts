@@ -24,9 +24,7 @@ export type BreadcrumbItem = {
 };
 
 export function getSiteUrl() {
-  const configured = (
-    import.meta.env[SITE_URL_ENV_NAME] as string | undefined
-  )?.trim();
+  const configured = (import.meta.env[SITE_URL_ENV_NAME] as string | undefined)?.trim();
   return (configured || fallbackSiteUrl).replace(/\/+$/, "");
 }
 
@@ -70,9 +68,7 @@ export function createSeo(options: SeoOptions = {}) {
       { name: "twitter:description", content: description },
       { name: "twitter:image", content: image },
       { name: "twitter:image:alt", content: `${title} — ${siteName}` },
-      ...(options.noindex
-        ? [{ name: "robots", content: "noindex, nofollow" }]
-        : []),
+      ...(options.noindex ? [{ name: "robots", content: "noindex, nofollow" }] : []),
     ],
     links: options.path ? [{ rel: "canonical", href: url }] : [],
   };
