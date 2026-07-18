@@ -10,6 +10,7 @@ const [
   storage,
   floatingHeader,
   pageHeader,
+  listingMedia,
   routeResolver,
   httpsMigration,
 ] = await Promise.all([
@@ -20,6 +21,7 @@ const [
   readFile(new URL("../src/lib/api/storage.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/PageHeader.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/listing-detail/ListingMediaExperience.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/ad-placement-route.ts", import.meta.url), "utf8"),
   readFile(
     new URL("../supabase/migrations/202607190001_enforce_ad_placement_https_urls.sql", import.meta.url),
@@ -56,7 +58,7 @@ test("scheduled placement state refreshes locally without broadcasting every pol
   assert.match(slot, /window\.clearInterval\(scheduleRefreshTimer\)/);
 });
 
-test("supported routes mount the same public ad slot across both header systems", () => {
+test("supported routes mount one public ad slot across headers and listing detail media", () => {
   for (const placement of ["home", "search_results", "listing_detail", "categories", "offers"]) {
     assert.match(routeResolver, new RegExp(`return \\"${placement}\\"`));
   }
@@ -64,6 +66,7 @@ test("supported routes mount the same public ad slot across both header systems"
   assert.match(floatingHeader, /<PublicAdPlacementSlot/);
   assert.match(pageHeader, /resolveAdPlacementPage\(pathname\)/);
   assert.match(pageHeader, /<PublicAdPlacementSlot/);
+  assert.match(listingMedia, /<PublicAdPlacementSlot placementPage="listing_detail"/);
 });
 
 test("PublicAdPlacementSlot follows mobile and desktop viewport changes", () => {
