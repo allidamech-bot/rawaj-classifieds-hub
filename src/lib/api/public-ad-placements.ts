@@ -25,6 +25,13 @@ const AD_PLACEMENT_INVALIDATION_EVENT = "rawaj:ad-placement-invalidation";
 type AdPlacementInvalidationListener = () => void;
 const adPlacementInvalidationListeners = new Set<AdPlacementInvalidationListener>();
 
+function activePlacementCacheKey(
+  placementPage: AdPlacementPage,
+  device: AdPlacementDevice,
+): string {
+  return `${placementPage}:${device}`;
+}
+
 const broadcastChannel: BroadcastChannel | null = (() => {
   if (typeof BroadcastChannel === "undefined") return null;
   try {
@@ -95,11 +102,22 @@ export function invalidateActiveAdPlacementCache(): void {
   }
 }
 
+export async function refreshActiveAdPlacements(
+  placementPage: AdPlacementPage,
+  device: AdPlacementDevice,
+): Promise<ClassifiedsResult<PublicAdPlacement[]>> {
+  const cacheKey = activePlacementCacheKey(placementPage, device);
+  activePlacementCacheGeneration += 1;
+  activePlacementCache.delete(cacheKey);
+  activePlacementRequests.delete(cacheKey);
+  return fetchActiveAdPlacements(placementPage, device);
+}
+
 export async function fetchActiveAdPlacements(
   placementPage: AdPlacementPage,
   device: AdPlacementDevice,
 ): Promise<ClassifiedsResult<PublicAdPlacement[]>> {
-  const cacheKey = `${placementPage}:${device}`;
+  const cacheKey = activePlacementCacheKey(placementPage, device);
   const cached = activePlacementCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.result;
 
@@ -138,7 +156,7 @@ async function loadActiveAdPlacements(
 
   return {
     ok: true,
-    data: ((data ?? []) as Record<string, unknown>[])
+    data: ((data ?? []) as Record<string, unknown>[]) 
       .map((row) => ({
         id: rowString(row, "id"),
         imageUrl: normalizeAdPlacementMediaUrl(rowString(row, "image_url")),
