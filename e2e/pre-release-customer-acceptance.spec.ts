@@ -68,11 +68,7 @@ const evidenceRoutes = new Set([
   "/notifications",
 ]);
 
-const ignoredRuntimeFragments = [
-  "ERR_ABORTED",
-  "va.vercel-scripts.com",
-  "vercel-insights.com",
-];
+const ignoredRuntimeFragments = ["ERR_ABORTED", "va.vercel-scripts.com", "vercel-insights.com"];
 
 function routeSlug(route: string) {
   return route === "/" ? "home" : route.replace(/^\//, "").replaceAll("/", "-");
@@ -227,12 +223,7 @@ test("login validation blocks malformed credentials without losing the form", as
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await assertRouteHealth(
-    page,
-    "/login?returnTo=/favorites",
-    testInfo,
-    "login-validation-mobile",
-  );
+  await assertRouteHealth(page, "/login?returnTo=/favorites", testInfo, "login-validation-mobile");
 
   const email = page.locator('input[type="email"]');
   const password = page.locator('input[type="password"]');
