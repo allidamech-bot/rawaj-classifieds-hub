@@ -123,7 +123,9 @@ export function ChatVoiceAttachment({
         className="w-full"
       />
       {durationMs ? (
-        <p className="mt-1 text-[10px] text-muted-foreground">{Math.ceil(durationMs / 1000)}s</p>
+        <p className="mt-1 text-[10px] text-muted-foreground">
+          {Math.ceil(durationMs / 1000)}s
+        </p>
       ) : null}
     </div>
   );
