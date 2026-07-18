@@ -4,7 +4,7 @@ import { Languages, LogIn, MapPin, Plus, User, UserCog } from "lucide-react";
 import { NotificationTrigger } from "@/components/NotificationTrigger";
 import { OfflineNotice } from "@/components/OfflineNotice";
 import { PublicAdPlacementSlot } from "@/components/PublicAdPlacementSlot";
-import type { AdPlacementPage } from "@/lib/api/ad-placements";
+import { resolveAdPlacementPage } from "@/lib/ad-placement-route";
 import { resolvePrimaryNavigationSection } from "@/lib/primary-navigation";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -12,15 +12,6 @@ import { useAuth } from "@/lib/use-auth";
 export interface FloatingHeaderProps {
   compact?: boolean;
   title?: string;
-}
-
-function resolveAdPlacementPage(pathname: string): AdPlacementPage | null {
-  if (pathname === "/") return "home";
-  if (pathname === "/listings" || pathname === "/listings/") return "search_results";
-  if (pathname.startsWith("/listings/")) return "listing_detail";
-  if (pathname === "/categories" || pathname === "/categories/") return "categories";
-  if (pathname === "/offers" || pathname === "/offers/") return "offers";
-  return null;
 }
 
 export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) {
