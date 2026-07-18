@@ -262,25 +262,24 @@ test("login validation blocks malformed credentials without losing the form", as
   await expect(email).toHaveValue("invalid-email");
 });
 
-test(
-  "keyboard navigation exposes focus and open dialogs close with Escape",
-  async ({ page }, testInfo) => {
-    await assertRouteHealth(page, "/", testInfo);
-    await page.keyboard.press("Tab");
-    const activeTag = await page.evaluate(() => document.activeElement?.tagName ?? "BODY");
-    expect(activeTag).not.toBe("BODY");
+test("keyboard navigation exposes focus and open dialogs close with Escape", async ({
+  page,
+}, testInfo) => {
+  await assertRouteHealth(page, "/", testInfo);
+  await page.keyboard.press("Tab");
+  const activeTag = await page.evaluate(() => document.activeElement?.tagName ?? "BODY");
+  expect(activeTag).not.toBe("BODY");
 
-    const dialogTrigger = page.locator('button[aria-haspopup="dialog"]').first();
-    if ((await dialogTrigger.count()) > 0 && (await dialogTrigger.isVisible())) {
-      await dialogTrigger.click();
-      const dialog = page.locator('[role="dialog"]').first();
-      if (await dialog.isVisible().catch(() => false)) {
-        await page.keyboard.press("Escape");
-        await expect(dialog).not.toBeVisible();
-      }
+  const dialogTrigger = page.locator('button[aria-haspopup="dialog"]').first();
+  if ((await dialogTrigger.count()) > 0 && (await dialogTrigger.isVisible())) {
+    await dialogTrigger.click();
+    const dialog = page.locator('[role="dialog"]').first();
+    if (await dialog.isVisible().catch(() => false)) {
+      await page.keyboard.press("Escape");
+      await expect(dialog).not.toBeVisible();
     }
-  },
-);
+  }
+});
 
 test("public discovery opens listing detail and seller storefront when data exists", async ({
   page,
