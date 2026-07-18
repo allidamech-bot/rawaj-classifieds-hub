@@ -1,5 +1,5 @@
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
-import communicationCenterV2Css from "../communication-center-v2.css?url";
+import communicationCenterV3Css from "../communication-center-v3.css?url";
 import homeDiscoveryV3Css from "../home-discovery-v3.css?url";
 import homeMarketplaceV2Css from "../home-marketplace-v2.css?url";
 import homeSignatureCss from "../home-signature.css?url";
@@ -39,7 +39,7 @@ export const routeStyleHrefs = {
   listingStudioV2: listingStudioV2Css,
   listingStudioV3: listingStudioV3Css,
   messagingSignature: messagingSignatureCss,
-  communicationCenterV2: communicationCenterV2Css,
+  communicationCenterV2: communicationCenterV3Css,
   activityMoreFoundation: activityMoreFoundationCss,
   personalSpacePolish: personalSpacePolishCss,
   myStoreRedesign: myStoreRedesignCss,
