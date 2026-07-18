@@ -29,7 +29,10 @@ test("Android recorder produces only canonical supported audio formats", () => {
   assert.match(recorder, /if \(!mimeType\)/);
   assert.match(recorder, /stream\.getTracks\(\)\.forEach\(\(track\) => track\.stop\(\)\)/);
   assert.match(recorder, /canonicalMimeType\(recorder\.mimeType \|\| mimeType\)/);
-  assert.doesNotMatch(recorder, /mimeType \?\s*new MediaRecorder[\s\S]*:\s*new MediaRecorder\(stream\)/);
+  assert.doesNotMatch(
+    recorder,
+    /mimeType \?\s*new MediaRecorder[\s\S]*:\s*new MediaRecorder\(stream\)/,
+  );
 });
 
 test("audio runtime canonicalizes WebView MIME aliases and retries stale uploads", () => {
@@ -51,7 +54,15 @@ test("public classifieds API routes audio operations through the hardened layer"
   assert.match(guarded, /validateChatAudio/);
   assert.doesNotMatch(
     guarded,
-    /sendConversationMessage,[\s\S]*uploadChatAudio,[\s\S]*validateChatAudio,[\s\S]*from "@\/lib\/api\/messaging"/,
+    /import\s*\{[^}]*sendConversationMessage[^}]*\}\s*from "@\/lib\/api\/messaging"/,
+  );
+  assert.doesNotMatch(
+    guarded,
+    /import\s*\{[^}]*uploadChatAudio[^}]*\}\s*from "@\/lib\/api\/messaging"/,
+  );
+  assert.doesNotMatch(
+    guarded,
+    /import\s*\{[^}]*validateChatAudio[^}]*\}\s*from "@\/lib\/api\/messaging"/,
   );
 });
 
