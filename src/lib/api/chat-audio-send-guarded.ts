@@ -28,18 +28,7 @@ export function normalizeChatAudioMimeType(value: string): UploadedChatAudio["mi
 
 export function validateChatAudio(file: File, durationMs: number): ClassifiedsResult<null> {
   const normalized = normalizeChatAudioFile(file);
-  if (!normalized) {
-    return {
-      ok: false,
-      error: {
-        code: "validation_error",
-        message: "صيغة التسجيل الناتجة من هذا الجهاز غير مدعومة. أعد التسجيل أو حدّث التطبيق.",
-        details: file.type || "missing_audio_mime_type",
-        operation: "chat_audio_validation",
-      },
-    };
-  }
-
+  if (!normalized) return unsupportedAudioFormat(file);
   return validateChatAudioBase(normalized, durationMs);
 }
 
@@ -50,7 +39,7 @@ export async function uploadChatAudio(payload: {
   durationMs: number;
 }): Promise<ClassifiedsResult<UploadedChatAudio>> {
   const normalizedFile = normalizeChatAudioFile(payload.file);
-  if (!normalizedFile) return validateChatAudio(payload.file, payload.durationMs);
+  if (!normalizedFile) return unsupportedAudioFormat(payload.file);
 
   const firstAttempt = await uploadChatAudioBase({ ...payload, file: normalizedFile });
   if (firstAttempt.ok) return firstAttempt;
@@ -126,6 +115,18 @@ function normalizeChatAudioFile(file: File): File | null {
     type: mimeType,
     lastModified: file.lastModified || Date.now(),
   });
+}
+
+function unsupportedAudioFormat<T>(file: File): ClassifiedsResult<T> {
+  return {
+    ok: false,
+    error: {
+      code: "validation_error",
+      message: "صيغة التسجيل الناتجة من هذا الجهاز غير مدعومة. أعد التسجيل أو حدّث التطبيق.",
+      details: file.type || "missing_audio_mime_type",
+      operation: "chat_audio_validation",
+    },
+  };
 }
 
 async function resolveAudioStoragePath(payload: {
