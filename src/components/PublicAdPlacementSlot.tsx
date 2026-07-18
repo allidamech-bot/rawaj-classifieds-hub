@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { AdPlacementPage } from "@/lib/api/ad-placements";
 import {
   fetchActiveAdPlacements,
@@ -14,50 +14,78 @@ interface Props {
 
 interface LoadedPlacement {
   page: AdPlacementPage;
+  device: AdPlacementDevice;
   placement: PublicAdPlacement | null;
+}
+
+const MOBILE_PLACEMENT_QUERY = "(max-width: 767px)";
+
+function resolvePlacementDevice(mediaQuery: MediaQueryList): AdPlacementDevice {
+  return mediaQuery.matches ? "mobile" : "desktop";
 }
 
 export function PublicAdPlacementSlot({ placementPage }: Props) {
   const { text } = useUiPreferences();
+  const [device, setDevice] = useState<AdPlacementDevice | null>(null);
   const [loaded, setLoaded] = useState<LoadedPlacement | null>(null);
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!placementPage) return;
-    const activePage: AdPlacementPage = placementPage;
+    const mediaQuery = window.matchMedia(MOBILE_PLACEMENT_QUERY);
+    const syncDevice = () => setDevice(resolvePlacementDevice(mediaQuery));
 
+    syncDevice();
+    mediaQuery.addEventListener("change", syncDevice);
+    return () => mediaQuery.removeEventListener("change", syncDevice);
+  }, []);
+
+  useEffect(() => {
+    if (!placementPage || !device) {
+      setLoaded(null);
+      return;
+    }
+
+    const page: AdPlacementPage = placementPage;
+    const activeDevice: AdPlacementDevice = device;
     let cancelled = false;
-    const device: AdPlacementDevice = window.matchMedia("(max-width: 767px)").matches
-      ? "mobile"
-      : "desktop";
+    let requestSequence = 0;
 
-    const page: AdPlacementPage = activePage;
     function load() {
       if (cancelled) return;
-      void fetchActiveAdPlacements(page, device).then((result) => {
-        if (cancelled) return;
+      const requestId = ++requestSequence;
+      setFailedImageUrl(null);
+
+      void fetchActiveAdPlacements(page, activeDevice).then((result) => {
+        if (cancelled || requestId !== requestSequence) return;
         setLoaded({
           page,
+          device: activeDevice,
           placement: result.ok ? (result.data[0] ?? null) : null,
         });
       });
     }
 
     load();
-
     const unsubscribe = onAdPlacementInvalidation(load);
 
     return () => {
       cancelled = true;
+      requestSequence += 1;
       unsubscribe();
     };
-  }, [placementPage]);
+  }, [device, placementPage]);
 
-  const placement = loaded?.page === placementPage ? loaded.placement : null;
-  if (!placementPage || !placement || failedImageUrl === placement.imageUrl) return null;
+  const placement =
+    loaded?.page === placementPage && loaded.device === device ? loaded.placement : null;
+  if (!placementPage || !device || !placement || failedImageUrl === placement.imageUrl) return null;
 
   return (
-    <aside className="container-wide mt-3" aria-label={text("مساحة إعلانية", "Advertisement")}>
+    <aside
+      className="container-wide mt-3"
+      aria-label={text("مساحة إعلانية", "Advertisement")}
+      data-placement-page={placementPage}
+      data-placement-device={device}
+    >
       <a
         href={placement.destinationUrl}
         target="_blank"
@@ -70,14 +98,14 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
         <img
           src={placement.imageUrl}
           alt={text("إعلان ترويجي", "Promotional advertisement")}
-          loading="lazy"
+          loading="eager"
           decoding="async"
           width={1600}
-          height={500}
+          height={700}
           draggable={false}
-          key={placement.imageUrl}
+          key={`${placement.id}:${placement.imageUrl}:${device}`}
           onError={() => setFailedImageUrl(placement.imageUrl)}
-          className="aspect-[3.2/1] w-full object-cover sm:aspect-[5/1]"
+          className="aspect-[16/7] w-full object-cover"
         />
       </a>
     </aside>
