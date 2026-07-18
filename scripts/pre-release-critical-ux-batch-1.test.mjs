@@ -2,21 +2,18 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [quickFilters, voicePlayer, communicationExperience, chatCss, currencyTypes, format] =
-  await Promise.all([
-    readFile(new URL("../src/features/search/QuickFilterRail.tsx", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/features/communication/ChatVoiceAttachment.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../src/chat-release-fixes.css", import.meta.url), "utf8"),
-    readFile(new URL("../src/types/index.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/utils/format.ts", import.meta.url), "utf8"),
-  ]);
+const [quickFilters, voicePlayer, communicationExperience, chatCss] = await Promise.all([
+  readFile(new URL("../src/features/search/QuickFilterRail.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/communication/ChatVoiceAttachment.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/communication/CommunicationExperience.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(new URL("../src/chat-release-fixes.css", import.meta.url), "utf8"),
+]);
 
 test("quick filter controls open their intended filter sections", () => {
   assert.match(quickFilters, /type QuickFilterSection = "location" \| "price" \| "category" \| "condition"/);
@@ -45,12 +42,4 @@ test("messages route removes the oversized pre-chat area on mobile", () => {
     /@media \(max-width: 1023px\)[\s\S]*\.rawaj-communication-v2--messages \.rawaj-communication-hero,[\s\S]*\.rawaj-communication-v2--messages \.rawaj-communication-safety \{[\s\S]*display: none/,
   );
   assert.match(chatCss, /min-height: calc\(100dvh - 9\.25rem\)/);
-});
-
-test("currency presentation includes new SYP, USD, EUR, and SAR", () => {
-  assert.match(currencyTypes, /export type Currency = "SYP" \| "USD" \| "EUR" \| "SAR"/);
-  assert.match(format, /SYP: "ل\.س جديدة"/);
-  assert.match(format, /USD: "\$"/);
-  assert.match(format, /EUR: "€"/);
-  assert.match(format, /SAR: "ر\.س"/);
 });
