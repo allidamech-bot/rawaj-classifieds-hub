@@ -1040,12 +1040,16 @@ function ChatsPage() {
                         stop: text("إيقاف التسجيل", "Stop recording"),
                         cancel: text("إلغاء التسجيل", "Cancel recording"),
                         permission: text(
-                          "تعذر استخدام الميكروفون. تحقق من الإذن.",
-                          "Microphone access failed. Check permission.",
+                          "تعذر الوصول إلى الميكروفون. تحقق من إذن Safari ثم حاول مجددًا.",
+                          "Microphone access failed. Check Safari permission and try again.",
                         ),
                         unsupported: text(
                           "التسجيل الصوتي غير مدعوم على هذا الجهاز.",
                           "Voice recording is unsupported on this device.",
+                        ),
+                        noAudio: text(
+                          "لم يتم التقاط صوت. أعد التسجيل لمدة أطول.",
+                          "No audio was captured. Record longer.",
                         ),
                       }}
                     />

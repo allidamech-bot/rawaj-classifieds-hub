@@ -154,6 +154,7 @@ const CHAT_AUDIO_MIME_ALIASES: Record<string, (typeof CHAT_AUDIO_MIME_TYPES)[num
   "audio/webm": "audio/webm",
   "video/webm": "audio/webm",
   "audio/mp4": "audio/mp4",
+  "video/mp4": "audio/mp4",
   "audio/m4a": "audio/mp4",
   "audio/x-m4a": "audio/mp4",
   "audio/mpeg": "audio/mpeg",
@@ -310,7 +311,7 @@ export async function uploadChatAudio(payload: {
     data: {
       path,
       mimeType: mimeType as UploadedChatAudio["mimeType"],
-      sizeBytes: payload.file.size,
+      sizeBytes: audioBytes.byteLength,
       kind: "audio",
       durationMs,
     },
