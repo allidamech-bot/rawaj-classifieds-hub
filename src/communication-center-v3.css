@@ -1,0 +1,32 @@
+@import "./communication-center-v2.css";
+
+/* Mobile messaging isolation must not depend on Tailwind's generic `hidden`
+ * utility because the route stylesheet defines display values for the panels.
+ * The workspace state is the source of truth: list mode renders the sidebar,
+ * conversation mode renders the message panel, and a missing deep link may
+ * intentionally show its controlled message panel alongside the list. */
+@media (max-width: 1023px) {
+  .rawaj-message-workspace[data-view="list"] {
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rawaj-message-workspace[data-view="list"] .rawaj-conversation-sidebar {
+    display: block !important;
+    min-height: 0;
+  }
+
+  .rawaj-message-workspace[data-view="list"] .rawaj-message-panel.hidden {
+    display: none !important;
+    min-height: 0;
+  }
+
+  .rawaj-message-workspace[data-view="conversation"] .rawaj-conversation-sidebar.hidden {
+    display: none !important;
+  }
+
+  .rawaj-message-workspace[data-view="conversation"] .rawaj-message-panel {
+    display: flex !important;
+    min-height: calc(100dvh - 11rem);
+  }
+}
