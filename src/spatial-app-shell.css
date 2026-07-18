@@ -69,9 +69,57 @@ body {
   min-width: 0;
 }
 
+.rawaj-app-shell[data-route-state="pending"] .rawaj-app-shell__content,
+.rawaj-app-shell[data-route-state="pending"] .rawaj-app-shell__page > footer {
+  pointer-events: none;
+  visibility: hidden;
+}
+
 .rawaj-app-shell__announcements {
   position: relative;
   z-index: var(--depth-floating);
+}
+
+.rawaj-route-pending-mask {
+  position: fixed;
+  z-index: calc(var(--depth-floating) + 5);
+  inset: 0;
+  display: grid;
+  place-items: center;
+  min-height: var(--app-viewport-height, 100dvh);
+  padding: calc(var(--safe-top) + 1rem) 1rem calc(var(--dock-height) + var(--safe-bottom) + 1rem);
+  background: var(--rawaj-surface-page);
+}
+
+.rawaj-route-pending-mask__content {
+  display: inline-flex;
+  min-height: 3.25rem;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 10%, var(--color-border));
+  border-radius: 1rem;
+  padding: 0.8rem 1rem;
+  background: var(--rawaj-surface-card);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-card);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.rawaj-route-pending-mask__spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
+  border: 2px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-top-color: var(--color-primary);
+  border-radius: 999px;
+  animation: rawaj-route-pending-spin 700ms linear infinite;
+}
+
+@keyframes rawaj-route-pending-spin {
+  to {
+    transform: rotate(1turn);
+  }
 }
 
 .rawaj-app-shell__floating-layer,
@@ -249,24 +297,17 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 }
 
 .rawaj-page-transition {
-  animation: rawaj-page-enter var(--motion-slow) ease both;
-}
-
-@keyframes rawaj-page-enter {
-  from {
-    transform: translateY(0.4rem);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  animation: none;
 }
 
 @media (min-width: 1024px) {
   .rawaj-app-shell__page,
   .rawaj-app-shell[data-shell-dock="true"] .rawaj-app-shell__page,
   .rawaj-app-shell[data-shell-sticky-action="true"] .rawaj-app-shell__page {
+    padding-bottom: 2rem;
+  }
+
+  .rawaj-route-pending-mask {
     padding-bottom: 2rem;
   }
 
@@ -280,7 +321,7 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rawaj-page-transition {
+  .rawaj-route-pending-mask__spinner {
     animation: none;
   }
 
