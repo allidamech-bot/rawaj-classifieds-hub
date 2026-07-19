@@ -31,7 +31,13 @@ jobs:
         run: node --test scripts/auth-stable-public-surfaces.test.mjs
       - name: Route CSS isolation contract
         run: node --test scripts/route-css-isolation.test.mjs
-      - name: ESLint
+      - name: Lint route-style loader
+        run: npx eslint src/lib/route-styles.ts
+      - name: Lint auth-stable contract
+        run: npx eslint scripts/auth-stable-public-surfaces.test.mjs
+      - name: Lint auth-transition browser test
+        run: npx eslint e2e/auth-transition-style-regression.spec.ts
+      - name: Full ESLint
         run: npm run lint
       - name: TypeScript
         run: npm run typecheck
