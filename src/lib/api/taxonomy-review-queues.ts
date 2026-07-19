@@ -2,14 +2,9 @@ import { getClient, mapError } from "@/lib/api/shared";
 import type { ClassifiedsError, ClassifiedsResult } from "@/lib/classifieds-types";
 
 export type TaxonomyMappingQueueStatus =
-  | "pending"
-  | "auto_mapped"
-  | "needs_review"
-  | "confirmed"
-  | "unresolved"
-  | "rejected"
-  | "applied";
-export type VehicleReferenceQueueStatus = "pending" | "matched" | "created" | "rejected" | "applied";
+  "pending" | "auto_mapped" | "needs_review" | "confirmed" | "unresolved" | "rejected" | "applied";
+export type VehicleReferenceQueueStatus =
+  "pending" | "matched" | "created" | "rejected" | "applied";
 export type VehicleReferenceEntityType = "make" | "model" | "generation" | "trim";
 
 export interface ReviewQueuePage<T> {
