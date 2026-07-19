@@ -1,9 +1,9 @@
 name: Integrate Add Listing Dynamic Once
 
 on:
-  push:
+  pull_request:
     branches:
-      - feature/taxonomy-search-foundation-v1
+      - main
     paths:
       - ".github/workflows/integrate-add-listing-dynamic-once.yml"
       - "scripts/integrate-add-listing-dynamic-all-categories-v1.mjs"
@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: integrate-add-listing-dynamic-once
+  group: integrate-add-listing-dynamic-once-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
 jobs:
