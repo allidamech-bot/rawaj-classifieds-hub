@@ -6,6 +6,10 @@ on:
       - "supabase/migrations/20260719002*.sql"
       - "supabase/migrations/20260719003*.sql"
       - "src/lib/api/taxonomy-metadata.ts"
+      - "src/lib/api/listing-attributes.ts"
+      - "src/lib/dynamic-listing-fields.ts"
+      - "src/features/listing-studio/DynamicListingFields.tsx"
+      - "src/lib/classifieds-api.ts"
       - "scripts/taxonomy-data-foundation-v1.test.mjs"
       - "scripts/listing-attribute-write-contract-v1.test.mjs"
       - "scripts/taxonomy-metadata-api-v1.test.mjs"
@@ -13,6 +17,7 @@ on:
       - "scripts/taxonomy-mapping-review-apply-v1.test.mjs"
       - "scripts/vehicle-reference-review-apply-v1.test.mjs"
       - "scripts/dynamic-listing-submit-guard-v1.test.mjs"
+      - "scripts/dynamic-listing-studio-client-v1.test.mjs"
       - "scripts/replay-supabase-local.mjs"
       - "scripts/sql/clean-replay-*.sql"
       - "scripts/sql/*-local-verification.sql"
@@ -53,6 +58,8 @@ jobs:
         run: node --test scripts/vehicle-reference-review-apply-v1.test.mjs
       - name: Dynamic listing submit guard contract
         run: node --test scripts/dynamic-listing-submit-guard-v1.test.mjs
+      - name: Dynamic listing studio client contract
+        run: node --test scripts/dynamic-listing-studio-client-v1.test.mjs
       - name: ESLint
         id: lint
         continue-on-error: true
