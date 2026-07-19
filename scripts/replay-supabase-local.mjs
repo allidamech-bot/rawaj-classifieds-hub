@@ -52,6 +52,11 @@ const compatibilityHooks = [
     anchor: "202607080037_remove_legacy_listing_write_trigger.sql",
     filename: "clean-replay-before-202607080037-legacy-listing-guard.sql",
   },
+  {
+    timing: "before",
+    anchor: "202607080038_listing_submit_edit_rpc_repair.sql",
+    filename: "clean-replay-before-202607080038-submit-rpc.sql",
+  },
 ].map((hook) => ({
   ...hook,
   filePath: path.join(root, "scripts", "sql", hook.filename),
