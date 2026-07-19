@@ -50,15 +50,12 @@ export async function fetchPublicListingFacets(
 
   const priceMin = finiteNonNegative(query.priceMin);
   const priceMax = finiteNonNegative(query.priceMax);
-  if (
-    query.priceMin !== undefined &&
-    priceMin === undefined ||
-    query.priceMax !== undefined &&
-    priceMax === undefined ||
-    priceMin !== undefined &&
-    priceMax !== undefined &&
-    priceMin > priceMax
-  ) {
+  const hasInvalidPriceMin = query.priceMin !== undefined && priceMin === undefined;
+  const hasInvalidPriceMax = query.priceMax !== undefined && priceMax === undefined;
+  const hasPriceContradiction =
+    priceMin !== undefined && priceMax !== undefined && priceMin > priceMax;
+
+  if (hasInvalidPriceMin || hasInvalidPriceMax || hasPriceContradiction) {
     return invalidFacetQuery();
   }
 
