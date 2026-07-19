@@ -2,20 +2,45 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [categoriesData, references, liveChat, chatCss] = await Promise.all([
-  readFile(new URL("../src/features/categories/public-categories-page-data.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/api/references.ts", import.meta.url), "utf8"),
-  readFile(
-    new URL("../src/features/communication/useLiveChatWorkspace.ts", import.meta.url),
-    "utf8",
-  ),
-  readFile(new URL("../src/communication-center-v3.css", import.meta.url), "utf8"),
-]);
+const [categoriesData, references, liveChat, chatCss, routeStyles, stableStyles] =
+  await Promise.all([
+    readFile(
+      new URL("../src/features/categories/public-categories-page-data.ts", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../src/lib/api/references.ts", import.meta.url), "utf8"),
+    readFile(
+      new URL("../src/features/communication/useLiveChatWorkspace.ts", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../src/communication-center-v3.css", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/auth-stable-route-styles.css", import.meta.url), "utf8"),
+  ]);
 
 test("categories own their visual styles instead of relying only on root head state", () => {
   assert.match(categoriesData, /import "\.\.\/\.\.\/listings-results\.css";/);
   assert.match(categoriesData, /import "\.\.\/\.\.\/search-filters-v1\.css";/);
   assert.match(categoriesData, /import "\.\.\/\.\.\/search-filters-v2\.css";/);
+});
+
+test("critical category and chat styles stay loaded while auth routes are active", () => {
+  assert.match(routeStyles, /import "\.\.\/auth-stable-route-styles\.css";/);
+  for (const stylesheet of [
+    "listings-results.css",
+    "search-filters-v1.css",
+    "search-filters-v2.css",
+    "activity-more-foundation.css",
+    "messaging-signature.css",
+    "communication-center-v3.css",
+    "personal-space-polish.css",
+  ]) {
+    assert.match(
+      stableStyles,
+      new RegExp(`@import "\\./${stylesheet.replaceAll(".", "\\.")}";`),
+      `${stylesheet} must remain loaded through sign-in transitions`,
+    );
+  }
 });
 
 test("public category references do not inherit signed-in session transitions", () => {
