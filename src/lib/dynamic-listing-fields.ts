@@ -110,7 +110,9 @@ export function normalizeDynamicAttributesForWrite(
         break;
       case "multi_select": {
         const entries = Array.isArray(rawValue)
-          ? rawValue.filter((item): item is string => typeof item === "string" && item.trim() !== "")
+          ? rawValue.filter(
+              (item): item is string => typeof item === "string" && item.trim() !== "",
+            )
           : [];
         if (entries.length > 0) result[field.key] = [...new Set(entries)];
         break;
@@ -149,10 +151,7 @@ export function validateDynamicListingFields(
     const value = values[field.key];
     const label = fieldLabel(field, language);
     if (state.required && isEmptyDynamicValue(value)) {
-      addError(
-        field.key,
-        language === "ar" ? `حقل «${label}» مطلوب.` : `“${label}” is required.`,
-      );
+      addError(field.key, language === "ar" ? `حقل «${label}» مطلوب.` : `“${label}” is required.`);
       continue;
     }
 
@@ -194,15 +193,22 @@ export function validateDynamicListingFields(
       if (numericValue === null) {
         addError(
           field.key,
-          language === "ar" ? `أدخل رقمًا صالحًا في «${label}».` : `Enter a valid number for “${label}”.`,
+          language === "ar"
+            ? `أدخل رقمًا صالحًا في «${label}».`
+            : `Enter a valid number for “${label}”.`,
         );
         continue;
       }
 
-      if ((field.fieldType === "integer" || field.fieldType === "year") && !Number.isInteger(numericValue)) {
+      if (
+        (field.fieldType === "integer" || field.fieldType === "year") &&
+        !Number.isInteger(numericValue)
+      ) {
         addError(
           field.key,
-          language === "ar" ? `أدخل رقمًا صحيحًا في «${label}».` : `Enter a whole number for “${label}”.`,
+          language === "ar"
+            ? `أدخل رقمًا صحيحًا في «${label}».`
+            : `Enter a whole number for “${label}”.`,
         );
         continue;
       }
@@ -239,7 +245,9 @@ export function validateDynamicListingFields(
       if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
         addError(
           field.key,
-          language === "ar" ? `اختيارات «${label}» غير صالحة.` : `“${label}” selections are invalid.`,
+          language === "ar"
+            ? `اختيارات «${label}» غير صالحة.`
+            : `“${label}” selections are invalid.`,
         );
       }
       continue;
@@ -249,7 +257,9 @@ export function validateDynamicListingFields(
     if (!textValue) {
       addError(
         field.key,
-        language === "ar" ? `اختر قيمة صالحة في «${label}».` : `Choose a valid value for “${label}”.`,
+        language === "ar"
+          ? `اختر قيمة صالحة في «${label}».`
+          : `Choose a valid value for “${label}”.`,
       );
       continue;
     }
@@ -257,7 +267,9 @@ export function validateDynamicListingFields(
     if (field.options.length > 0 && !field.options.some((option) => option.key === textValue)) {
       addError(
         field.key,
-        language === "ar" ? `اختيار «${label}» غير متاح.` : `The selected “${label}” value is unavailable.`,
+        language === "ar"
+          ? `اختيار «${label}» غير متاح.`
+          : `The selected “${label}” value is unavailable.`,
       );
     }
   }
