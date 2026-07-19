@@ -1,0 +1,45 @@
+name: Generate Data Quality Route Once
+
+on:
+  push:
+    branches:
+      - feature/taxonomy-search-foundation-v1
+    paths:
+      - ".github/workflows/generate-data-quality-route-once.yml"
+      - "src/routes/admin.data-quality.tsx"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: generate-data-quality-route-once
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/taxonomy-search-foundation-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Generate TanStack route tree through the production build
+        run: npm run build
+      - name: Commit generated route tree
+        shell: bash
+        run: |
+          if git diff --quiet -- src/routeTree.gen.ts; then
+            echo "Route tree is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routeTree.gen.ts
+          git commit -m "chore: register admin data quality route"
+          git push origin HEAD:feature/taxonomy-search-foundation-v1
