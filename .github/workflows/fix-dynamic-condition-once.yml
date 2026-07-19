@@ -1,0 +1,99 @@
+name: Fix Dynamic Condition Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/fix-dynamic-condition-once.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fix-dynamic-condition-once-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/taxonomy-search-foundation-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Preserve governed listing condition
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("src/routes/add-listing.tsx")
+          source = path.read_text(encoding="utf-8")
+
+          old = '''  const showGlobalCondition =
+            !dynamicSchemaActive && categoryUsesGlobalCondition(categoryFieldKind);
+          const requiresPreciseLocation = categoryRequiresPreciseLocation(categoryFieldKind);
+          '''
+          new = '''  const dynamicSchemaUsesListingCondition = Boolean(
+            dynamicSchemaActive &&
+              dynamicSchema?.fields.some((field) => field.key === "listing_condition"),
+          );
+          const showGlobalCondition =
+            !dynamicSchemaActive && categoryUsesGlobalCondition(categoryFieldKind);
+          const requiresPreciseLocation = categoryRequiresPreciseLocation(categoryFieldKind);
+          '''
+          if old not in source:
+              raise SystemExit("Missing dynamic condition derived-state marker")
+          source = source.replace(old, new, 1)
+
+          old = '''  useEffect(() => {
+            if (!showGlobalCondition && condition !== "not_applicable") {
+              setCondition("not_applicable");
+            }
+          }, [condition, showGlobalCondition]);
+          '''
+          new = '''  useEffect(() => {
+            if (
+              !showGlobalCondition &&
+              !dynamicSchemaUsesListingCondition &&
+              condition !== "not_applicable"
+            ) {
+              setCondition("not_applicable");
+            }
+          }, [condition, dynamicSchemaUsesListingCondition, showGlobalCondition]);
+          '''
+          if old not in source:
+              raise SystemExit("Missing dynamic condition reset marker")
+          source = source.replace(old, new, 1)
+
+          old = '''  function handleDynamicValuesChange(nextValues: DynamicListingValues) {
+            setDynamicValues(nextValues);
+            if (!dynamicSchema?.fields.some((field) => field.key === "listing_condition")) return;
+            const nextCondition = dynamicListingCondition(nextValues.listing_condition);
+          '''
+          new = '''  function handleDynamicValuesChange(nextValues: DynamicListingValues) {
+            setDynamicValues(nextValues);
+            if (!dynamicSchemaUsesListingCondition) return;
+            const nextCondition = dynamicListingCondition(nextValues.listing_condition);
+          '''
+          if old not in source:
+              raise SystemExit("Missing dynamic condition change marker")
+          source = source.replace(old, new, 1)
+
+          path.write_text(source, encoding="utf-8")
+          PY
+          npx prettier --write src/routes/add-listing.tsx
+      - name: Commit condition fix
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/add-listing.tsx
+          git commit -m "fix: preserve governed listing condition"
+          git push origin HEAD:feature/taxonomy-search-foundation-v1
