@@ -53,6 +53,24 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Prepare Prettier reference artifact
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/rawaj-formatted/src/lib/api" "$RUNNER_TEMP/rawaj-formatted/src/routes"
+          cp src/lib/api/listing-data-quality-context.ts "$RUNNER_TEMP/rawaj-formatted/src/lib/api/"
+          cp src/routes/admin.data-quality.tsx "$RUNNER_TEMP/rawaj-formatted/src/routes/"
+          cp src/routes/admin.tsx "$RUNNER_TEMP/rawaj-formatted/src/routes/"
+          npx prettier --write \
+            "$RUNNER_TEMP/rawaj-formatted/src/lib/api/listing-data-quality-context.ts" \
+            "$RUNNER_TEMP/rawaj-formatted/src/routes/admin.data-quality.tsx" \
+            "$RUNNER_TEMP/rawaj-formatted/src/routes/admin.tsx"
+      - name: Upload Prettier reference artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: taxonomy-prettier-${{ github.sha }}
+          path: ${{ runner.temp }}/rawaj-formatted
+          if-no-files-found: error
+          retention-days: 7
       - name: Taxonomy and data foundation contract
         run: node --test scripts/taxonomy-data-foundation-v1.test.mjs
       - name: Listing attribute write contract
