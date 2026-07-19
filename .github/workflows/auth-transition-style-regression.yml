@@ -1,5 +1,6 @@
 name: Auth Transition Style Regression Temporary Gate
 
+# Temporary acceptance gate; remove after the validated Preview is available.
 on:
   push:
     branches:
