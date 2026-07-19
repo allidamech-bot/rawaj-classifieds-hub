@@ -16,6 +16,7 @@ import {
   rowString,
   normalizePlaceholder,
 } from "@/lib/api/shared";
+import { publicSupabase } from "@/lib/supabase";
 
 export function mapCategory(row: Record<string, unknown>): ClassifiedCategory {
   return {
@@ -229,6 +230,11 @@ async function readPublicTaxonomyNodes(
   );
 }
 
+function getPublicReferenceClient(): ClassifiedsResult<SupabaseClient> {
+  if (publicSupabase) return { ok: true, data: publicSupabase };
+  return getClient();
+}
+
 export async function readReferences(client: SupabaseClient) {
   const [categoriesResult, governoratesResult] = await Promise.all([
     readPublicCategories(client),
@@ -244,7 +250,7 @@ export async function readReferences(client: SupabaseClient) {
 }
 
 export async function fetchPublicCategories(): Promise<ClassifiedsResult<ClassifiedCategory[]>> {
-  const clientResult = getClient();
+  const clientResult = getPublicReferenceClient();
   if (!clientResult.ok) return clientResult;
   return readPublicCategories(clientResult.data);
 }
@@ -252,13 +258,13 @@ export async function fetchPublicCategories(): Promise<ClassifiedsResult<Classif
 export async function fetchPublicSubcategories(): Promise<
   ClassifiedsResult<ClassifiedSubcategory[]>
 > {
-  const clientResult = getClient();
+  const clientResult = getPublicReferenceClient();
   if (!clientResult.ok) return clientResult;
   return readPublicSubcategories(clientResult.data);
 }
 
 export async function fetchPublicTaxonomyNodes(): Promise<ClassifiedsResult<TaxonomyNode[]>> {
-  const clientResult = getClient();
+  const clientResult = getPublicReferenceClient();
   if (!clientResult.ok) return clientResult;
   return readPublicTaxonomyNodes(clientResult.data);
 }
@@ -266,7 +272,7 @@ export async function fetchPublicTaxonomyNodes(): Promise<ClassifiedsResult<Taxo
 export async function fetchPublicGovernorates(): Promise<
   ClassifiedsResult<ClassifiedGovernorate[]>
 > {
-  const clientResult = getClient();
+  const clientResult = getPublicReferenceClient();
   if (!clientResult.ok) return clientResult;
   return readPublicGovernorates(clientResult.data);
 }
