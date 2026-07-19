@@ -10,16 +10,22 @@ const client = await readFile(
 test("client uses only governed queue RPCs", () => {
   for (const rpc of [
     "rawaj_admin_fetch_taxonomy_mapping_queue_v1",
-    "rawaj_admin_review_taxonomy_mapping_v1",
-    "rawaj_owner_apply_confirmed_taxonomy_mapping_v1",
     "rawaj_admin_fetch_vehicle_reference_queue_v1",
-    "rawaj_admin_review_vehicle_reference_v1",
-    "rawaj_owner_create_vehicle_reference_from_queue_v1",
-    "rawaj_owner_apply_vehicle_reference_resolution_v1",
   ]) {
     assert.match(client, new RegExp(`\\.rpc\\(\\s*"${rpc}"`));
   }
 
+  for (const rpc of [
+    "rawaj_admin_review_taxonomy_mapping_v1",
+    "rawaj_owner_apply_confirmed_taxonomy_mapping_v1",
+    "rawaj_admin_review_vehicle_reference_v1",
+    "rawaj_owner_create_vehicle_reference_from_queue_v1",
+    "rawaj_owner_apply_vehicle_reference_resolution_v1",
+  ]) {
+    assert.match(client, new RegExp(`callMutation\\(\\s*"${rpc}"`));
+  }
+
+  assert.match(client, /clientResult\.data\.rpc\(functionName, parameters\)/);
   assert.doesNotMatch(client, /\.from\("taxonomy_mapping_queue"/);
   assert.doesNotMatch(client, /\.from\("vehicle_reference_review_queue"/);
 });
