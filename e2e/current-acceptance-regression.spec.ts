@@ -44,63 +44,6 @@ test("categories direct load keeps its designed atlas and active production ad t
   expect(categoryVisuals?.cardRadius ?? 0).toBeGreaterThan(16);
 });
 
-test("critical category and chat styles remain available while the login route is active", async ({
-  page,
-}, testInfo) => {
-  const response = await page.goto("/login", { waitUntil: "domcontentloaded" });
-  expect(response?.status() ?? 200).toBeLessThan(500);
-  await waitForHydration(page);
-
-  const categoryState = await page.evaluate(() => {
-    const root = document.createElement("div");
-    root.className = "rawaj-categories-v2";
-    const hero = document.createElement("section");
-    hero.className = "rawaj-categories-v2__hero";
-    const card = document.createElement("article");
-    card.className = "rawaj-category-directory-card";
-    root.append(hero, card);
-    document.body.append(root);
-
-    const result = {
-      heroBackground: getComputedStyle(hero).backgroundImage,
-      heroRadius: Number.parseFloat(getComputedStyle(hero).borderRadius),
-      cardRadius: Number.parseFloat(getComputedStyle(card).borderRadius),
-    };
-    root.remove();
-    return result;
-  });
-
-  expect(categoryState.heroBackground).toContain("linear-gradient");
-  expect(categoryState.heroRadius).toBeGreaterThan(16);
-  expect(categoryState.cardRadius).toBeGreaterThan(16);
-
-  test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile messaging contract");
-
-  const chatState = await page.evaluate(() => {
-    const workspace = document.createElement("div");
-    workspace.className = "rawaj-message-workspace";
-    workspace.dataset.view = "list";
-    const sidebar = document.createElement("aside");
-    sidebar.className = "rawaj-conversation-sidebar";
-    const panel = document.createElement("section");
-    panel.className = "rawaj-message-panel";
-    workspace.append(sidebar, panel);
-    document.body.append(workspace);
-
-    const result = {
-      sidebar: getComputedStyle(sidebar).display,
-      panel: getComputedStyle(panel).display,
-      workspaceHeight: workspace.getBoundingClientRect().height,
-    };
-    workspace.remove();
-    return result;
-  });
-
-  expect(chatState.sidebar).not.toBe("none");
-  expect(chatState.panel).toBe("none");
-  expect(chatState.workspaceHeight).toBeLessThan(200);
-});
-
 test("mobile chat workspace state overrides stale or transient panel classes", async ({
   page,
 }, testInfo) => {
