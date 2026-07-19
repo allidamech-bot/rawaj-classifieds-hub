@@ -146,7 +146,8 @@
       "202607190028_listing_attribute_values_foundation_v1.sql",
       "202607190029_listing_attribute_dependency_hardening_v1.sql",
       "202607190030_vehicle_reference_seed_and_review_queue_v1.sql",
-      "202607190031_listing_taxonomy_and_vehicle_review_queue_seed_v1.sql"
+      "202607190031_listing_taxonomy_and_vehicle_review_queue_seed_v1.sql",
+      "202607190032_listing_attribute_write_contract_v1.sql"
     ],
     "superseded": ["202606290002_classifieds_foundation.sql"],
     "reconciliation": [
