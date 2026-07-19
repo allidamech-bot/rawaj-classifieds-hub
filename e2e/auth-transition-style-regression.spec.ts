@@ -4,7 +4,9 @@ async function waitForHydration(page: import("@playwright/test").Page) {
   await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
 }
 
-test("category atlas styles are already present while the login route is active", async ({ page }) => {
+test("category atlas styles are already present while the login route is active", async ({
+  page,
+}) => {
   const response = await page.goto("/login", { waitUntil: "domcontentloaded" });
   expect(response?.status() ?? 200).toBeLessThan(500);
   await waitForHydration(page);
