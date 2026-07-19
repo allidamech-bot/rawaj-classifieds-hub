@@ -5,9 +5,11 @@ on:
     paths:
       - "supabase/migrations/20260719002*.sql"
       - "supabase/migrations/20260719003*.sql"
+      - "src/lib/api/taxonomy-metadata.ts"
       - "scripts/taxonomy-data-foundation-v1.test.mjs"
       - "scripts/listing-attribute-write-contract-v1.test.mjs"
       - "scripts/taxonomy-metadata-api-v1.test.mjs"
+      - "scripts/taxonomy-metadata-client-v1.test.mjs"
       - "scripts/replay-supabase-local.mjs"
       - "scripts/sql/clean-replay-*.sql"
       - "scripts/sql/*-local-verification.sql"
@@ -40,6 +42,8 @@ jobs:
         run: node --test scripts/listing-attribute-write-contract-v1.test.mjs
       - name: Taxonomy metadata API contract
         run: node --test scripts/taxonomy-metadata-api-v1.test.mjs
+      - name: Taxonomy metadata client contract
+        run: node --test scripts/taxonomy-metadata-client-v1.test.mjs
       - name: ESLint
         id: lint
         continue-on-error: true
