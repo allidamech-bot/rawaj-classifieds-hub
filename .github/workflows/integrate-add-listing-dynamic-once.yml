@@ -29,6 +29,29 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Repair transformation source quoting
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("scripts/integrate-add-listing-dynamic-all-categories-v1.mjs")
+          source = path.read_text(encoding="utf-8")
+          replacements = {
+              '              `تم حفظ الإعلان كمسودة، لكن تعذر حفظ حقول التصنيف: ${attributeResult.error.message}`,':
+                  '              "تم حفظ الإعلان كمسودة، لكن تعذر حفظ حقول التصنيف: " + attributeResult.error.message,',
+              '              `The listing was saved as a draft, but category fields could not be saved: ${attributeResult.error.message}`,':
+                  '              "The listing was saved as a draft, but category fields could not be saved: " + attributeResult.error.message,',
+              '              `تم حفظ الإعلان كمسودة. أكمل الحقول المطلوبة قبل الإرسال: ${missingLabels}`,':
+                  '              "تم حفظ الإعلان كمسودة. أكمل الحقول المطلوبة قبل الإرسال: " + missingLabels,',
+              '              `The listing was saved as a draft. Complete the required fields before submission: ${missingLabels}`,':
+                  '              "The listing was saved as a draft. Complete the required fields before submission: " + missingLabels,',
+          }
+          for old, new in replacements.items():
+              if old not in source:
+                  raise SystemExit(f"Missing quote repair marker: {old}")
+              source = source.replace(old, new, 1)
+          path.write_text(source, encoding="utf-8")
+          PY
       - name: Integrate governed fields for every category leaf
         id: integrate
         continue-on-error: true
