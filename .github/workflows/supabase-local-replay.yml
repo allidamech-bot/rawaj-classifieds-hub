@@ -8,7 +8,7 @@ on:
       - "docs/production-schema/migration-ledger.json"
       - "scripts/replay-supabase-local.mjs"
       - "scripts/sql/clean-replay-*.sql"
-      - "scripts/sql/taxonomy-foundation-local-verification.sql"
+      - "scripts/sql/*-local-verification.sql"
       - ".github/workflows/supabase-local-replay.yml"
   workflow_dispatch:
 
