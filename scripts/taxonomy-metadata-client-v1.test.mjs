@@ -61,12 +61,12 @@ test("client caches metadata and deduplicates concurrent requests", () => {
 });
 
 test("client parses untrusted JSONB payloads without unchecked field access", () => {
-  assert.match(client, /function asRecord\(value: unknown\)/);
-  assert.match(client, /function asRecordArray\(value: unknown\)/);
-  assert.match(client, /function stringValue\(value: unknown\)/);
-  assert.match(client, /function numberValue\(value: unknown\)/);
-  assert.match(client, /\.map\(parseTaxonomyNode\)\.filter\(isPresent\)/);
-  assert.match(client, /\.map\(parseLeafField\)\.filter\(isPresent\)/);
+  assert.match(client, /function record\(value: unknown\)/);
+  assert.match(client, /function records\(value: unknown\)/);
+  assert.match(client, /function text\(value: unknown\)/);
+  assert.match(client, /function numeric\(value: unknown\)/);
+  assert.match(client, /\.map\(parseTaxonomyNode\)\.filter\(present\)/);
+  assert.match(client, /\.map\(parseLeafField\)\.filter\(present\)/);
 });
 
 test("client supports public SSR reads and configured authenticated fallback", () => {
