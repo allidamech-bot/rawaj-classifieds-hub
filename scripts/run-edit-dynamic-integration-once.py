@@ -33,30 +33,62 @@ if old_helper not in source:
     raise SystemExit("Transformer helper marker missing")
 source = source.replace(old_helper, new_helper, 1)
 
-expected_ui_marker = '''            <CategorySpecificFields
-              kind={categoryFieldKind}
-              values={categoryDetails}
-              disabled={!isEditable}
-              text={text}
-              onChange={(nextDetails) => {
-                setCategoryDetails(nextDetails);
-                if (categoryFieldKind === "vehicles" || categoryFieldKind === "electronics") {
-                  setCondition(categoryDetailsGlobalCondition(categoryFieldKind, nextDetails));
-                }
-              }}
-            />
+ui_start_marker = 'replace_once(\n    "dynamic fields UI",'
+condition_helper_marker = 'replace_once(\n    "dynamic condition helper",'
+ui_start = source.find(ui_start_marker)
+ui_end = source.find(condition_helper_marker, ui_start)
+if ui_start < 0 or ui_end < 0:
+    raise SystemExit("Transformer dynamic UI block markers missing")
+
+ui_transform = '''dynamic_fields_pattern = re.compile(
+    r''' + "'''" + r'''            <CategorySpecificFields\s*\n
+\s+kind=\{categoryFieldKind\}\s*\n
+\s+values=\{categoryDetails\}\s*\n
+\s+disabled=\{!isEditable\}\s*\n
+(?:\s+onChange=\{setCategoryDetails\}\s*\n\s+text=\{text\}|\s+text=\{text\}\s*\n\s+onChange=\{setCategoryDetails\})\s*\n
+\s*/>\s*\n''' + "'''" + r''',
+)
+dynamic_fields_replacement = ''' + "'''" + '''            {dynamicSchemaLoading ? (
+              <div className="mt-4 rounded-[1.15rem] border border-border/60 bg-card-warm/65 p-4 text-xs text-muted-foreground">
+                {text(
+                  "جارٍ تجهيز الحقول الخاصة بالتصنيف...",
+                  "Preparing category-specific fields...",
+                )}
+              </div>
+            ) : dynamicSchemaActive && dynamicSchema ? (
+              <DynamicListingFields
+                schema={dynamicSchema}
+                values={dynamicValues}
+                onChange={handleDynamicValuesChange}
+                language={language}
+                text={text}
+                errors={dynamicFieldErrors}
+                disabled={!isEditable || saving || resubmitting}
+              />
+            ) : (
+              <CategorySpecificFields
+                kind={categoryFieldKind}
+                values={categoryDetails}
+                disabled={!isEditable}
+                onChange={setCategoryDetails}
+                text={text}
+              />
+            )}
+            {dynamicSchemaError ? (
+              <p className="mt-3 rounded-xl border border-warning/20 bg-warning/10 p-3 text-xs leading-5 text-warning-foreground">
+                {text(
+                  "تعذر تحميل بعض الحقول المنظمة، لذلك تم الحفاظ على نموذج التوافق والبيانات القديمة.",
+                  "Some governed fields could not load, so the compatibility form and legacy data were preserved.",
+                )}
+              </p>
+            ) : null}
+''' + "'''" + '''
+source, count = dynamic_fields_pattern.subn(dynamic_fields_replacement, source, count=1)
+if count != 1:
+    raise SystemExit(f"dynamic fields UI replacement count: {count}")
+
 '''
-actual_ui_marker = '''            <CategorySpecificFields
-              kind={categoryFieldKind}
-              values={categoryDetails}
-              disabled={!isEditable}
-              onChange={setCategoryDetails}
-              text={text}
-            />
-'''
-if expected_ui_marker not in source:
-    raise SystemExit("Transformer UI search marker missing")
-source = source.replace(expected_ui_marker, actual_ui_marker, 1)
+source = source[:ui_start] + ui_transform + source[ui_end:]
 
 namespace = {
     "__name__": "__main__",
