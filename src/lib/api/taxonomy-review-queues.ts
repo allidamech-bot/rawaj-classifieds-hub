@@ -2,7 +2,13 @@ import { getClient, mapError } from "@/lib/api/shared";
 import type { ClassifiedsError, ClassifiedsResult } from "@/lib/classifieds-types";
 
 export type TaxonomyMappingQueueStatus =
-  "pending" | "auto_mapped" | "needs_review" | "confirmed" | "unresolved" | "rejected" | "applied";
+  | "pending"
+  | "auto_mapped"
+  | "needs_review"
+  | "confirmed"
+  | "unresolved"
+  | "rejected"
+  | "applied";
 export type VehicleReferenceQueueStatus = "pending" | "matched" | "created" | "rejected" | "applied";
 export type VehicleReferenceEntityType = "make" | "model" | "generation" | "trim";
 
@@ -147,10 +153,14 @@ export async function applyConfirmedTaxonomyMapping(
 ): Promise<ClassifiedsResult<Record<string, unknown>>> {
   if (!userId) return authenticationFailure();
   if (!listingId.trim() || !expectedReviewedAt.trim()) return validationFailure();
-  return callMutation("rawaj_owner_apply_confirmed_taxonomy_mapping_v1", {
-    p_listing_id: listingId.trim(),
-    p_expected_reviewed_at: expectedReviewedAt.trim(),
-  }, "taxonomy_mapping_apply");
+  return callMutation(
+    "rawaj_owner_apply_confirmed_taxonomy_mapping_v1",
+    {
+      p_listing_id: listingId.trim(),
+      p_expected_reviewed_at: expectedReviewedAt.trim(),
+    },
+    "taxonomy_mapping_apply",
+  );
 }
 
 export async function fetchVehicleReferenceQueue(
@@ -192,13 +202,17 @@ export async function reviewVehicleReference(
 ): Promise<ClassifiedsResult<Record<string, unknown>>> {
   if (!userId) return authenticationFailure();
   if (!input.queueId.trim() || !input.expectedQueueUpdatedAt.trim()) return validationFailure();
-  return callMutation("rawaj_admin_review_vehicle_reference_v1", {
-    p_queue_id: input.queueId.trim(),
-    p_decision: input.decision,
-    p_match_id: cleanNullableText(input.matchId),
-    p_note: cleanNullableText(input.note),
-    p_expected_queue_updated_at: input.expectedQueueUpdatedAt.trim(),
-  }, "vehicle_reference_review");
+  return callMutation(
+    "rawaj_admin_review_vehicle_reference_v1",
+    {
+      p_queue_id: input.queueId.trim(),
+      p_decision: input.decision,
+      p_match_id: cleanNullableText(input.matchId),
+      p_note: cleanNullableText(input.note),
+      p_expected_queue_updated_at: input.expectedQueueUpdatedAt.trim(),
+    },
+    "vehicle_reference_review",
+  );
 }
 
 export async function createVehicleReferenceFromQueue(
@@ -214,12 +228,16 @@ export async function createVehicleReferenceFromQueue(
   if (!input.queueId.trim() || !input.reference.id.trim() || !input.expectedQueueUpdatedAt.trim()) {
     return validationFailure();
   }
-  return callMutation("rawaj_owner_create_vehicle_reference_from_queue_v1", {
-    p_queue_id: input.queueId.trim(),
-    p_reference: input.reference,
-    p_note: cleanNullableText(input.note),
-    p_expected_queue_updated_at: input.expectedQueueUpdatedAt.trim(),
-  }, "vehicle_reference_create");
+  return callMutation(
+    "rawaj_owner_create_vehicle_reference_from_queue_v1",
+    {
+      p_queue_id: input.queueId.trim(),
+      p_reference: input.reference,
+      p_note: cleanNullableText(input.note),
+      p_expected_queue_updated_at: input.expectedQueueUpdatedAt.trim(),
+    },
+    "vehicle_reference_create",
+  );
 }
 
 export async function applyVehicleReferenceResolution(
@@ -229,10 +247,14 @@ export async function applyVehicleReferenceResolution(
 ): Promise<ClassifiedsResult<Record<string, unknown>>> {
   if (!userId) return authenticationFailure();
   if (!queueId.trim() || !expectedReviewedAt.trim()) return validationFailure();
-  return callMutation("rawaj_owner_apply_vehicle_reference_resolution_v1", {
-    p_queue_id: queueId.trim(),
-    p_expected_reviewed_at: expectedReviewedAt.trim(),
-  }, "vehicle_reference_apply");
+  return callMutation(
+    "rawaj_owner_apply_vehicle_reference_resolution_v1",
+    {
+      p_queue_id: queueId.trim(),
+      p_expected_reviewed_at: expectedReviewedAt.trim(),
+    },
+    "vehicle_reference_apply",
+  );
 }
 
 async function callMutation(
@@ -408,7 +430,15 @@ function nullableNumber(value: unknown): number | null {
 
 function taxonomyStatus(value: unknown): TaxonomyMappingQueueStatus | null {
   const result = text(value);
-  return ["pending", "auto_mapped", "needs_review", "confirmed", "unresolved", "rejected", "applied"].includes(result)
+  return [
+    "pending",
+    "auto_mapped",
+    "needs_review",
+    "confirmed",
+    "unresolved",
+    "rejected",
+    "applied",
+  ].includes(result)
     ? (result as TaxonomyMappingQueueStatus)
     : null;
 }
