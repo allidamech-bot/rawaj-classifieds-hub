@@ -14,6 +14,7 @@ const verificationPaths = [
   "vehicle-reference-review-apply-local-verification.sql",
   "dynamic-listing-submit-guard-local-verification.sql",
   "listing-data-quality-workspace-local-verification.sql",
+  "listing-data-quality-context-local-verification.sql",
 ].map((filename) => ({
   filename,
   filePath: path.join(root, "scripts", "sql", filename),
