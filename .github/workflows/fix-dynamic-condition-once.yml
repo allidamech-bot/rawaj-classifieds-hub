@@ -33,32 +33,29 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
+
           path = Path("src/routes/add-listing.tsx")
           source = path.read_text(encoding="utf-8")
 
-          old = '''  const showGlobalCondition =
-            !dynamicSchemaActive && categoryUsesGlobalCondition(categoryFieldKind);
-          const requiresPreciseLocation = categoryRequiresPreciseLocation(categoryFieldKind);
-          '''
-          new = '''  const dynamicSchemaUsesListingCondition = Boolean(
+          source, count = re.subn(
+              r'''  const showGlobalCondition =\n\s+!dynamicSchemaActive && categoryUsesGlobalCondition\(categoryFieldKind\);\n  const requiresPreciseLocation = categoryRequiresPreciseLocation\(categoryFieldKind\);''',
+              '''  const dynamicSchemaUsesListingCondition = Boolean(
             dynamicSchemaActive &&
               dynamicSchema?.fields.some((field) => field.key === "listing_condition"),
           );
           const showGlobalCondition =
             !dynamicSchemaActive && categoryUsesGlobalCondition(categoryFieldKind);
-          const requiresPreciseLocation = categoryRequiresPreciseLocation(categoryFieldKind);
-          '''
-          if old not in source:
-              raise SystemExit("Missing dynamic condition derived-state marker")
-          source = source.replace(old, new, 1)
+          const requiresPreciseLocation = categoryRequiresPreciseLocation(categoryFieldKind);''',
+              source,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit(f"Dynamic condition derived-state replacements: {count}")
 
-          old = '''  useEffect(() => {
-            if (!showGlobalCondition && condition !== "not_applicable") {
-              setCondition("not_applicable");
-            }
-          }, [condition, showGlobalCondition]);
-          '''
-          new = '''  useEffect(() => {
+          source, count = re.subn(
+              r'''  useEffect\(\(\) => \{\n\s+if \(!showGlobalCondition && condition !== "not_applicable"\) \{\n\s+setCondition\("not_applicable"\);\n\s+\}\n  \}, \[condition, showGlobalCondition\]\);''',
+              '''  useEffect(() => {
             if (
               !showGlobalCondition &&
               !dynamicSchemaUsesListingCondition &&
@@ -66,25 +63,21 @@ jobs:
             ) {
               setCondition("not_applicable");
             }
-          }, [condition, dynamicSchemaUsesListingCondition, showGlobalCondition]);
-          '''
-          if old not in source:
-              raise SystemExit("Missing dynamic condition reset marker")
-          source = source.replace(old, new, 1)
+          }, [condition, dynamicSchemaUsesListingCondition, showGlobalCondition]);''',
+              source,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit(f"Dynamic condition reset replacements: {count}")
 
-          old = '''  function handleDynamicValuesChange(nextValues: DynamicListingValues) {
-            setDynamicValues(nextValues);
-            if (!dynamicSchema?.fields.some((field) => field.key === "listing_condition")) return;
-            const nextCondition = dynamicListingCondition(nextValues.listing_condition);
-          '''
-          new = '''  function handleDynamicValuesChange(nextValues: DynamicListingValues) {
-            setDynamicValues(nextValues);
-            if (!dynamicSchemaUsesListingCondition) return;
-            const nextCondition = dynamicListingCondition(nextValues.listing_condition);
-          '''
-          if old not in source:
-              raise SystemExit("Missing dynamic condition change marker")
-          source = source.replace(old, new, 1)
+          source, count = re.subn(
+              r'''(  function handleDynamicValuesChange\(nextValues: DynamicListingValues\) \{\n\s+setDynamicValues\(nextValues\);\n)\s+if \(!dynamicSchema\?\.fields\.some\(\(field\) => field\.key === "listing_condition"\)\) return;''',
+              r'''\1    if (!dynamicSchemaUsesListingCondition) return;''',
+              source,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit(f"Dynamic condition handler replacements: {count}")
 
           path.write_text(source, encoding="utf-8")
           PY
