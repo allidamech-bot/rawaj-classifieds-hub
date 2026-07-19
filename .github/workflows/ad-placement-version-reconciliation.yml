@@ -20,6 +20,8 @@ jobs:
       - run: npm ci
       - name: Ad placement RPC reconciliation contract
         run: node --test scripts/ad-placement-rpc-version-ambiguity.test.mjs
+      - name: ESLint
+        run: npm run lint
       - name: TypeScript
         run: npm run typecheck
       - name: Production build
