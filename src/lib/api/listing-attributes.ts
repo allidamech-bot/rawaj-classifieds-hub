@@ -39,10 +39,9 @@ export async function fetchOwnerListingAttributeCompleteness(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data.rpc(
-    "rawaj_listing_attribute_completeness_v1",
-    { p_listing_id: cleanListingId },
-  );
+  const { data, error } = await clientResult.data.rpc("rawaj_listing_attribute_completeness_v1", {
+    p_listing_id: cleanListingId,
+  });
 
   if (error) {
     return {
@@ -69,14 +68,11 @@ export async function replaceOwnerListingAttributes(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data.rpc(
-    "rawaj_owner_replace_listing_attributes_v1",
-    {
-      p_listing_id: cleanListingId,
-      p_expected_updated_at: cleanExpectedUpdatedAt,
-      p_attributes: attributes,
-    },
-  );
+  const { data, error } = await clientResult.data.rpc("rawaj_owner_replace_listing_attributes_v1", {
+    p_listing_id: cleanListingId,
+    p_expected_updated_at: cleanExpectedUpdatedAt,
+    p_attributes: attributes,
+  });
 
   if (error) {
     return {
@@ -151,11 +147,12 @@ function mapListingAttributeError(
     message.includes("listing_attribute_")
   ) {
     return {
+      ok: false,
       code: "validation_error",
       message: "تحتوي تفاصيل الإعلان على قيمة غير صالحة لهذا التصنيف.",
       details: error.details ?? error.message,
       operation,
-    };
+    } as ClassifiedsError;
   }
 
   return mapError(error, operation);
