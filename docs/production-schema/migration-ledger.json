@@ -138,7 +138,9 @@
       "202607190020_taxonomy_governance_foundation_v1.sql",
       "202607190021_taxonomy_field_registry_foundation_v1.sql",
       "202607190022_vehicle_reference_catalog_foundation_v1.sql",
-      "202607190023_taxonomy_data_public_read_contract_v1.sql"
+      "202607190023_taxonomy_data_public_read_contract_v1.sql",
+      "202607190024_taxonomy_legacy_mapping_contract_v1.sql",
+      "202607190025_taxonomy_owner_governance_rpc_v1.sql"
     ],
     "superseded": ["202606290002_classifieds_foundation.sql"],
     "reconciliation": [
