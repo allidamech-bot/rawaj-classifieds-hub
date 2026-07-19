@@ -14,6 +14,7 @@ const migrations = await Promise.all(
     "202607190027_complete_marketplace_taxonomy_draft_v2.sql",
     "202607190028_listing_attribute_values_foundation_v1.sql",
     "202607190029_listing_attribute_dependency_hardening_v1.sql",
+    "202607190030_vehicle_reference_seed_and_review_queue_v1.sql",
   ].map((filename) =>
     readFile(new URL(`../supabase/migrations/${filename}`, import.meta.url), "utf8"),
   ),
@@ -35,6 +36,7 @@ const requiredTables = [
   "vehicle_models",
   "vehicle_generations",
   "vehicle_trims",
+  "vehicle_reference_review_queue",
   "listing_attribute_values",
 ];
 
@@ -104,6 +106,35 @@ test("vehicle models and descendants cannot exist without controlled parents", (
   assert.match(migration, /'vehicle_trims_by_model'/);
 });
 
+test("vehicle catalog seeds common makes and models with aliases", () => {
+  for (const make of ["toyota", "hyundai", "kia", "mercedes-benz", "byd", "saipa", "iran-khodro"]) {
+    assert.match(migration, new RegExp(`\\('${make}', '${make}'`));
+  }
+  for (const model of [
+    "toyota-camry",
+    "hyundai-elantra",
+    "kia-cerato",
+    "byd-song-plus",
+    "saipa-pride",
+    "iran-khodro-samand",
+  ]) {
+    assert.match(migration, new RegExp(`\\('${model}'`));
+  }
+  assert.match(migration, /array\['سيراتو','Cerato','Cirato'\]/);
+  assert.match(migration, /array\['كامري','كامريه','Kamri','Camry'\]/);
+});
+
+test("unknown vehicle references enter a private deduplicated review queue", () => {
+  assert.match(migration, /create table if not exists public\.vehicle_reference_review_queue/);
+  assert.match(migration, /vehicle_reference_review_queue_open_scope_idx/);
+  assert.match(migration, /where status = 'pending'/);
+  assert.match(migration, /revoke all on table public\.vehicle_reference_review_queue from anon, authenticated/);
+  assert.doesNotMatch(
+    migration,
+    /grant (?:select|insert|update|delete|all) on table public\.vehicle_reference_review_queue to anon, authenticated/,
+  );
+});
+
 test("legacy compatibility mappings can consolidate old categories into canonical leaves", () => {
   assert.match(migration, /create table if not exists public\.taxonomy_legacy_mappings/);
   assert.match(migration, /attribute_patch jsonb not null default '\{\}'::jsonb/);
@@ -127,7 +158,7 @@ test("legacy listing migration is explicit, reviewable, and confidence bounded",
   assert.match(migration, /reviewed_by uuid references public\.profiles\(id\)/);
 });
 
-test("public clients receive read-only published metadata and never receive mapping queue access", () => {
+test("public clients receive read-only published metadata and never receive private review queues", () => {
   for (const table of [
     "taxonomy_versions",
     "taxonomy_version_nodes",
@@ -148,14 +179,16 @@ test("public clients receive read-only published metadata and never receive mapp
     );
   }
 
-  assert.match(
-    migration,
-    /revoke all on table public\.taxonomy_mapping_queue from anon, authenticated/,
-  );
-  assert.doesNotMatch(
-    migration,
-    /grant (?:select|insert|update|delete|all) on table public\.taxonomy_mapping_queue to anon, authenticated/,
-  );
+  for (const table of ["taxonomy_mapping_queue", "vehicle_reference_review_queue"]) {
+    assert.match(
+      migration,
+      new RegExp(`revoke all on table public\\.${table} from anon, authenticated`),
+    );
+    assert.doesNotMatch(
+      migration,
+      new RegExp(`grant (?:select|insert|update|delete|all) on table public\\.${table} to anon, authenticated`),
+    );
+  }
   assert.doesNotMatch(migration, /for (?:insert|update|delete)\s*\nto anon, authenticated/);
 });
 
