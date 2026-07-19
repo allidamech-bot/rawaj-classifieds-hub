@@ -1,0 +1,94 @@
+name: Integrate Edit Listing Dynamic Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/integrate-edit-listing-dynamic-once.yml"
+      - "scripts/integrate-edit-listing-dynamic-all-categories-v1.py"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: integrate-edit-listing-dynamic-once-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/taxonomy-search-foundation-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Keep duplicate save/resubmit markers explicit
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("scripts/integrate-edit-listing-dynamic-all-categories-v1.py")
+          source = path.read_text(encoding="utf-8")
+          old = '''def replace_once(label: str, old: str, new: str) -> None:
+              global source
+              count = source.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected exactly one marker, found {count}")
+              source = source.replace(old, new, 1)
+          '''
+          new = '''def replace_once(label: str, old: str, new: str) -> None:
+              global source
+              expected_count = 2 if label in {
+                  "save loading guard",
+                  "save attribute failure message",
+              } else 1
+              count = source.count(old)
+              if count != expected_count:
+                  raise SystemExit(
+                      f"{label}: expected {expected_count} marker(s), found {count}"
+                  )
+              source = source.replace(old, new, 1)
+          '''
+          if old not in source:
+              raise SystemExit("Transformer helper marker missing")
+          path.write_text(source.replace(old, new, 1), encoding="utf-8")
+          PY
+      - name: Integrate governed fields into listing edit
+        id: integrate
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/integrate-edit-listing-dynamic-all-categories-v1.py 2>&1 | tee "$RUNNER_TEMP/rawaj-edit-dynamic-integration.log"
+      - name: Upload integration diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: edit-dynamic-integration-${{ github.sha }}
+          path: ${{ runner.temp }}/rawaj-edit-dynamic-integration.log
+          if-no-files-found: error
+          retention-days: 7
+      - name: Fail when integration failed
+        if: steps.integrate.outcome == 'failure'
+        run: exit 1
+      - name: Format integrated route
+        run: npx prettier --write 'src/routes/profile/listings.$id.tsx'
+      - name: Commit integrated route
+        shell: bash
+        run: |
+          if git diff --quiet -- 'src/routes/profile/listings.$id.tsx'; then
+            echo "No integration changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 'src/routes/profile/listings.$id.tsx'
+          git commit -m "feat: integrate dynamic editing across all categories"
+          git push origin HEAD:feature/taxonomy-search-foundation-v1
