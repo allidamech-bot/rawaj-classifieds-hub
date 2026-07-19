@@ -19,7 +19,7 @@ jobs:
   quality:
     name: Auth Transition Quality
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,9 +28,37 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Focused auth-transition contracts
+        id: focused
+        continue-on-error: true
         run: node --test scripts/auth-stable-public-surfaces.test.mjs
+      - name: Route CSS isolation contract
+        id: route_css
+        continue-on-error: true
+        run: node --test scripts/route-css-isolation.test.mjs
+      - name: ESLint
+        id: lint
+        continue-on-error: true
+        run: npm run lint
+      - name: TypeScript
+        id: typecheck
+        continue-on-error: true
+        run: npm run typecheck
+      - name: Production build
+        id: build
+        continue-on-error: true
+        run: npm run build
       - name: Full repository check
+        id: full_check
+        continue-on-error: true
         run: npm run check
+      - name: Enforce diagnostic results
+        run: |
+          test "${{ steps.focused.outcome }}" = success
+          test "${{ steps.route_css.outcome }}" = success
+          test "${{ steps.lint.outcome }}" = success
+          test "${{ steps.typecheck.outcome }}" = success
+          test "${{ steps.build.outcome }}" = success
+          test "${{ steps.full_check.outcome }}" = success
       - name: Publish quality result
         if: always()
         uses: actions/github-script@v7
