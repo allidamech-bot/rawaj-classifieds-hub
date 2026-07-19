@@ -1,10 +1,11 @@
 @import "./communication-center-v2.css";
 
 /* Mobile messaging isolation is controlled by the workspace view itself.
- * Do not depend on Tailwind's generic `hidden` utility: auth refreshes,
- * invalid/stale deep links, and conversation-loading transitions can change
- * panel classes independently. In list mode the sidebar is the only rendered
- * surface; in conversation mode the message panel is the only rendered one. */
+ * Do not depend only on the workspace route state: auth refreshes,
+ * invalid/stale deep links, and conversation-loading transitions can leave a
+ * selected conversation in memory while the user is visibly back on the list.
+ * The explicit `hidden` state therefore remains authoritative after every
+ * conversation-mode rule. */
 @media (max-width: 1023px) {
   .rawaj-message-workspace[data-view="list"] {
     min-height: 0;
@@ -28,5 +29,11 @@
   .rawaj-message-workspace[data-view="conversation"] .rawaj-message-panel {
     display: flex !important;
     min-height: calc(100dvh - 11rem);
+  }
+
+  .rawaj-message-workspace .rawaj-conversation-sidebar.hidden,
+  .rawaj-message-workspace .rawaj-message-panel.hidden {
+    display: none !important;
+    min-height: 0;
   }
 }
