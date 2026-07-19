@@ -38,8 +38,6 @@ test("mobile chat workspace state overrides stale or transient panel classes", a
     workspace.className = "rawaj-message-workspace";
     workspace.dataset.view = "list";
 
-    // Reproduce the reported regression: neither element has Tailwind's `hidden`
-    // class while auth/search state is changing. Workspace state must still win.
     const sidebar = document.createElement("aside");
     sidebar.className = "rawaj-conversation-sidebar";
     const panel = document.createElement("section");
@@ -60,12 +58,34 @@ test("mobile chat workspace state overrides stale or transient panel classes", a
   expect(listState.panel).toBe("none");
   expect(listState.workspaceHeight).toBeLessThan(200);
 
+  const staleSelectedState = await page.evaluate(() => {
+    const workspace = document.createElement("div");
+    workspace.className = "rawaj-message-workspace";
+    workspace.dataset.view = "conversation";
+
+    const sidebar = document.createElement("aside");
+    sidebar.className = "rawaj-conversation-sidebar";
+    const panel = document.createElement("section");
+    panel.className = "rawaj-message-panel hidden";
+    workspace.append(sidebar, panel);
+    document.body.append(workspace);
+
+    const result = {
+      panel: getComputedStyle(panel).display,
+      panelHeight: panel.getBoundingClientRect().height,
+    };
+    workspace.remove();
+    return result;
+  });
+
+  expect(staleSelectedState.panel).toBe("none");
+  expect(staleSelectedState.panelHeight).toBe(0);
+
   const conversationState = await page.evaluate(() => {
     const workspace = document.createElement("div");
     workspace.className = "rawaj-message-workspace";
     workspace.dataset.view = "conversation";
 
-    // Conversation mode must also be deterministic without relying on `hidden`.
     const sidebar = document.createElement("aside");
     sidebar.className = "rawaj-conversation-sidebar";
     const panel = document.createElement("section");
