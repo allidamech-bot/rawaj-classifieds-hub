@@ -8,12 +8,6 @@ import process from "node:process";
 const root = process.cwd();
 const migrationsDirectory = path.join(root, "supabase", "migrations");
 const ledgerPath = path.join(root, "docs", "production-schema", "migration-ledger.json");
-const compatibilityPreludePath = path.join(
-  root,
-  "scripts",
-  "sql",
-  "clean-replay-compatibility-prelude.sql",
-);
 const verificationPath = path.join(
   root,
   "scripts",
@@ -22,7 +16,6 @@ const verificationPath = path.join(
 );
 const databaseUrl =
   process.env.SUPABASE_DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
-const compatibilityPreludeAfter = "202606290001_auth_roles_foundation.sql";
 const subprocessOptions = {
   cwd: root,
   env: {
@@ -32,6 +25,22 @@ const subprocessOptions = {
   encoding: "utf8",
   maxBuffer: 50 * 1024 * 1024,
 };
+
+const compatibilityHooks = [
+  {
+    timing: "after",
+    anchor: "202606290001_auth_roles_foundation.sql",
+    filename: "clean-replay-compatibility-prelude.sql",
+  },
+  {
+    timing: "before",
+    anchor: "202607070006_location_search_regions.sql",
+    filename: "clean-replay-before-202607070006-location-policies.sql",
+  },
+].map((hook) => ({
+  ...hook,
+  filePath: path.join(root, "scripts", "sql", hook.filename),
+}));
 
 const ledger = JSON.parse(await readFile(ledgerPath, "utf8"));
 const classifications = ledger.classifications ?? {};
@@ -58,8 +67,11 @@ const replayFiles = [...selectedFiles].sort((left, right) => left.localeCompare(
 if (replayFiles.length === 0) {
   throw new Error("No canonical or reconciliation migrations were selected for replay.");
 }
-if (!replayFiles.includes(compatibilityPreludeAfter)) {
-  throw new Error(`Compatibility prelude anchor is not replayed: ${compatibilityPreludeAfter}`);
+
+for (const hook of compatibilityHooks) {
+  if (!replayFiles.includes(hook.anchor)) {
+    throw new Error(`Compatibility hook anchor is not replayed: ${hook.anchor}`);
+  }
 }
 
 console.log(`Replaying ${replayFiles.length} migrations against disposable local Supabase.`);
@@ -68,6 +80,8 @@ console.log(
 );
 
 for (const [index, filename] of replayFiles.entries()) {
+  runCompatibilityHooks("before", filename);
+
   runSqlFile(path.join(migrationsDirectory, filename), {
     label: `Migration ${index + 1}/${replayFiles.length}`,
     filename,
@@ -75,14 +89,7 @@ for (const [index, filename] of replayFiles.entries()) {
   });
   console.log(`PASS ${index + 1}/${replayFiles.length} ${filename}`);
 
-  if (filename === compatibilityPreludeAfter) {
-    runSqlFile(compatibilityPreludePath, {
-      label: "Clean-replay compatibility prelude",
-      filename: path.basename(compatibilityPreludePath),
-      appName: "rawaj_supabase_local_compatibility",
-    });
-    console.log(`PASS compatibility ${path.basename(compatibilityPreludePath)}`);
-  }
+  runCompatibilityHooks("after", filename);
 }
 
 const verification = runSqlFile(verificationPath, {
@@ -94,6 +101,19 @@ const verification = runSqlFile(verificationPath, {
 if (verification.stdout?.trim()) console.log(verification.stdout.trim());
 if (verification.stderr?.trim()) console.log(verification.stderr.trim());
 console.log("Supabase local clean replay and foundation verification passed.");
+
+function runCompatibilityHooks(timing, anchor) {
+  for (const hook of compatibilityHooks) {
+    if (hook.timing !== timing || hook.anchor !== anchor) continue;
+
+    runSqlFile(hook.filePath, {
+      label: `Clean-replay ${timing} hook for ${anchor}`,
+      filename: hook.filename,
+      appName: "rawaj_supabase_local_compatibility",
+    });
+    console.log(`PASS compatibility ${timing} ${anchor} ${hook.filename}`);
+  }
+}
 
 function runSqlFile(filePath, { label, filename, appName }) {
   const result = spawnSync(
