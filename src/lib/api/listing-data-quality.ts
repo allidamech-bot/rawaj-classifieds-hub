@@ -2,11 +2,7 @@ import { getClient, mapError } from "@/lib/api/shared";
 import type { ClassifiedsError, ClassifiedsResult } from "@/lib/classifieds-types";
 
 export type ListingDataQualityStatus =
-  | "open"
-  | "needs_review"
-  | "seller_action"
-  | "dismissed"
-  | "resolved";
+  "open" | "needs_review" | "seller_action" | "dismissed" | "resolved";
 
 export type ListingDataQualityIssueType =
   | "taxonomy"
@@ -19,11 +15,7 @@ export type ListingDataQualityIssueType =
 export type ListingDataQualitySeverity = "info" | "warning" | "error" | "blocking";
 
 export type ListingDataQualityDecision =
-  | "needs_review"
-  | "seller_action"
-  | "dismiss"
-  | "resolve"
-  | "reopen";
+  "needs_review" | "seller_action" | "dismiss" | "resolve" | "reopen";
 
 export interface ListingDataQualityIssue {
   id: string;
@@ -93,17 +85,14 @@ export async function fetchListingDataQualityIssues(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data.rpc(
-    "rawaj_admin_fetch_listing_data_quality_v1",
-    {
-      p_status: options.status ?? null,
-      p_issue_type: options.issueType ?? null,
-      p_category_id: cleanNullableText(options.categoryId),
-      p_severity: options.severity ?? null,
-      p_limit: clampInteger(options.limit, 1, 200, 50),
-      p_offset: clampInteger(options.offset, 0, 1_000_000, 0),
-    },
-  );
+  const { data, error } = await clientResult.data.rpc("rawaj_admin_fetch_listing_data_quality_v1", {
+    p_status: options.status ?? null,
+    p_issue_type: options.issueType ?? null,
+    p_category_id: cleanNullableText(options.categoryId),
+    p_severity: options.severity ?? null,
+    p_limit: clampInteger(options.limit, 1, 200, 50),
+    p_offset: clampInteger(options.offset, 0, 1_000_000, 0),
+  });
 
   if (error) return rpcFailure(error, "listing_data_quality_fetch");
   return { ok: true, data: parsePage(data) };
@@ -295,7 +284,12 @@ function oneOf<T extends string>(value: unknown, allowed: readonly T[]): T | nul
   return typeof value === "string" && allowed.includes(value as T) ? (value as T) : null;
 }
 
-function clampInteger(value: number | undefined, minimum: number, maximum: number, fallback: number) {
+function clampInteger(
+  value: number | undefined,
+  minimum: number,
+  maximum: number,
+  fallback: number,
+) {
   if (!Number.isFinite(value)) return fallback;
   return Math.min(maximum, Math.max(minimum, Math.trunc(value as number)));
 }
