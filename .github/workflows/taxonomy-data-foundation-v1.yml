@@ -101,7 +101,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
       - name: Fail when ESLint failed
-        if: steps.lint.outcome == 'failure'
+        if: steps.lint.conclusion == 'failure'
         run: exit 1
       - name: TypeScript
         id: typecheck
@@ -119,7 +119,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
       - name: Fail when TypeScript failed
-        if: steps.typecheck.outcome == 'failure'
+        if: steps.typecheck.conclusion == 'failure'
         run: exit 1
       - name: Production build
         run: npm run build
