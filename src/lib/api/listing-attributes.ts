@@ -114,7 +114,7 @@ function mapListingAttributeError(
 
   if (message.includes("stale_owner_update")) {
     return {
-      code: "stale_write",
+      code: "status_mismatch",
       message: "تغيّرت المسودة أثناء الحفظ. أعد المحاولة بعد تحديث الصفحة.",
       details: error.details ?? error.message,
       operation,
