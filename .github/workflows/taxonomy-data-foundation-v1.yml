@@ -17,7 +17,6 @@ on:
       - "src/routes/admin.data-quality.tsx"
       - "src/routes/admin.tsx"
       - "src/lib/classifieds-api.ts"
-      - "scripts/run-edit-dynamic-integration-once.py"
       - "scripts/taxonomy-data-foundation-v1.test.mjs"
       - "scripts/listing-attribute-write-contract-v1.test.mjs"
       - "scripts/taxonomy-metadata-api-v1.test.mjs"
@@ -29,6 +28,7 @@ on:
       - "scripts/listing-data-quality-client-v1.test.mjs"
       - "scripts/admin-data-quality-workspace-v1.test.mjs"
       - "scripts/add-listing-dynamic-all-categories-v1.test.mjs"
+      - "scripts/edit-listing-dynamic-all-categories-v1.test.mjs"
       - "scripts/dynamic-listing-submit-guard-v1.test.mjs"
       - "scripts/dynamic-listing-studio-client-v1.test.mjs"
       - "scripts/replay-supabase-local.mjs"
@@ -40,7 +40,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: taxonomy-data-foundation-v1-${{ github.event.pull_request.number || github.ref }}
@@ -49,41 +49,14 @@ concurrency:
 jobs:
   contract:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: feature/taxonomy-search-foundation-v1
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Complete governed edit integration once
-        shell: bash
-        run: |
-          set +e
-          python scripts/run-edit-dynamic-integration-once.py > /tmp/edit-dynamic-integration.log 2>&1
-          status=$?
-          cat /tmp/edit-dynamic-integration.log
-          if [ $status -ne 0 ]; then
-            cp /tmp/edit-dynamic-integration.log scripts/edit-dynamic-integration-diagnostic.txt
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add scripts/edit-dynamic-integration-diagnostic.txt
-            git commit -m "chore: capture dynamic edit integration failure"
-            git push origin HEAD:feature/taxonomy-search-foundation-v1
-            exit $status
-          fi
-          npx prettier --write 'src/routes/profile/listings.$id.tsx'
-          if ! git diff --quiet -- 'src/routes/profile/listings.$id.tsx'; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add 'src/routes/profile/listings.$id.tsx'
-            git commit -m "feat: integrate dynamic editing across all categories"
-            git push origin HEAD:feature/taxonomy-search-foundation-v1
-          fi
       - name: Taxonomy and data foundation contract
         run: node --test scripts/taxonomy-data-foundation-v1.test.mjs
       - name: Listing attribute write contract
@@ -106,6 +79,8 @@ jobs:
         run: node --test scripts/admin-data-quality-workspace-v1.test.mjs
       - name: Add-listing dynamic all-category contract
         run: node --test scripts/add-listing-dynamic-all-categories-v1.test.mjs
+      - name: Edit-listing dynamic all-category contract
+        run: node --test scripts/edit-listing-dynamic-all-categories-v1.test.mjs
       - name: Dynamic listing submit guard contract
         run: node --test scripts/dynamic-listing-submit-guard-v1.test.mjs
       - name: Dynamic listing studio client contract
