@@ -6,13 +6,19 @@ language plpgsql
 set search_path = public, pg_temp
 as $$
 declare
-  v_listing_id uuid := coalesce(new.listing_id, old.listing_id);
+  v_listing_id uuid;
   v_make_id text;
   v_model_id text;
   v_generation_id text;
   v_trim_id text;
   v_expected_parent text;
 begin
+  if tg_op = 'DELETE' then
+    v_listing_id := old.listing_id;
+  else
+    v_listing_id := new.listing_id;
+  end if;
+
   select value_key into v_make_id
   from public.listing_attribute_values
   where listing_id = v_listing_id and field_key = 'vehicle_make';
@@ -59,7 +65,10 @@ begin
     end if;
   end if;
 
-  return coalesce(new, old);
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
 end;
 $$;
 
