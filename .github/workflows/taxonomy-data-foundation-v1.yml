@@ -12,6 +12,7 @@ on:
       - "scripts/taxonomy-metadata-client-v1.test.mjs"
       - "scripts/taxonomy-mapping-review-apply-v1.test.mjs"
       - "scripts/vehicle-reference-review-apply-v1.test.mjs"
+      - "scripts/dynamic-listing-submit-guard-v1.test.mjs"
       - "scripts/replay-supabase-local.mjs"
       - "scripts/sql/clean-replay-*.sql"
       - "scripts/sql/*-local-verification.sql"
@@ -50,6 +51,8 @@ jobs:
         run: node --test scripts/taxonomy-mapping-review-apply-v1.test.mjs
       - name: Vehicle reference review and apply contract
         run: node --test scripts/vehicle-reference-review-apply-v1.test.mjs
+      - name: Dynamic listing submit guard contract
+        run: node --test scripts/dynamic-listing-submit-guard-v1.test.mjs
       - name: ESLint
         id: lint
         continue-on-error: true
