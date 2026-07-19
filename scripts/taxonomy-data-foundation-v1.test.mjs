@@ -10,6 +10,8 @@ const migrations = await Promise.all(
     "202607190023_taxonomy_data_public_read_contract_v1.sql",
     "202607190024_taxonomy_legacy_mapping_contract_v1.sql",
     "202607190025_taxonomy_owner_governance_rpc_v1.sql",
+    "202607190026_marketplace_domain_field_registry_v1.sql",
+    "202607190027_complete_marketplace_taxonomy_draft_v2.sql",
   ].map((filename) =>
     readFile(new URL(`../supabase/migrations/${filename}`, import.meta.url), "utf8"),
   ),
@@ -63,6 +65,24 @@ test("field schemas are stable, reusable, and leaf-scoped", () => {
   assert.match(migration, /primary key \(version_id, taxonomy_node_id, field_key\)/);
   assert.match(migration, /display_surfaces <@ array/);
   assert.match(migration, /effect in \('show', 'hide', 'require', 'optional', 'clear'\)/);
+});
+
+test("domain fields cover product, fashion, food, animal, education, service, and business data", () => {
+  for (const key of [
+    "product_authenticity",
+    "fashion_size",
+    "food_unit",
+    "expiry_date",
+    "animal_breed",
+    "vaccinated",
+    "education_delivery_mode",
+    "service_pricing_unit",
+    "business_item_type",
+    "operating_hours",
+  ]) {
+    assert.match(migration, new RegExp(`\\('${key}'`));
+  }
+  assert.match(migration, /Seller-declared and not authenticated by RAWAJ/);
 });
 
 test("vehicle models and descendants cannot exist without controlled parents", () => {
@@ -171,6 +191,41 @@ test("owner taxonomy governance RPCs are authenticated entry points with databas
     assert.match(migration, new RegExp(`revoke all on function public\\.${signature} from public, anon`));
   }
   assert.match(migration, /not public\.current_user_has_role\('owner'\)/);
+});
+
+test("taxonomy V2 is installed as a draft and never auto-published", () => {
+  assert.match(migration, /values \(\s*2,\s*'draft'/);
+  assert.match(migration, /This migration creates a draft only/);
+  assert.doesNotMatch(
+    migration,
+    /202607190027_complete_marketplace_taxonomy_draft_v2[\s\S]*rawaj_owner_publish_taxonomy_version\(/,
+  );
+});
+
+test("taxonomy V2 covers every active root and maps every legacy subcategory", () => {
+  assert.match(migration, /from public\.categories category_row/);
+  assert.match(migration, /from public\.subcategories subcategory_row/);
+  assert.match(migration, /insert into public\.taxonomy_legacy_mappings/);
+  assert.match(migration, /else subcategory_row\.id/);
+  assert.match(migration, /'mobiles-phones'/);
+  assert.match(migration, /'jobs-opportunities'/);
+  assert.match(migration, /'realestate-commercial-other'/);
+});
+
+test("legacy brand and employment buckets become structured attributes instead of duplicate leaves", () => {
+  assert.match(migration, /when 'mobiles-iphone' then 'mobiles-phones'/);
+  assert.match(migration, /jsonb_build_object\('electronics_brand', 'Apple'\)/);
+  assert.match(migration, /when 'jobs-full-time' then 'jobs-opportunities'/);
+  assert.match(migration, /jsonb_build_object\('employment_type', 'full_time'\)/);
+  assert.match(migration, /when 'jobs-remote' then jsonb_build_object\('remote_mode', 'remote'\)/);
+});
+
+test("every active leaf receives schema-driven studio, detail, and filter rules", () => {
+  assert.match(migration, /with schema_rules as/);
+  assert.match(migration, /join schema_rules schema_rule/);
+  assert.match(migration, /leaf_row\.is_active\s*\n\s*and leaf_row\.is_leaf/);
+  assert.match(migration, /'listing_studio', 'search_filter', 'comparison'/);
+  assert.match(migration, /field_row\.is_active/);
 });
 
 test("foundation trigger helper pins search_path and is not directly executable", () => {
