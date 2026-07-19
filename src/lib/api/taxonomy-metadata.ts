@@ -163,10 +163,7 @@ export interface VehicleModelChildrenMetadata {
 
 const METADATA_CACHE_TTL_MS = 5 * 60_000;
 const REFERENCE_CACHE_TTL_MS = 10 * 60_000;
-const metadataCache = new Map<
-  string,
-  { expiresAt: number; result: ClassifiedsResult<unknown> }
->();
+const metadataCache = new Map<string, { expiresAt: number; result: ClassifiedsResult<unknown> }>();
 const metadataRequests = new Map<string, Promise<ClassifiedsResult<unknown>>>();
 
 export function invalidateTaxonomyMetadataCache(): void {
@@ -175,15 +172,11 @@ export function invalidateTaxonomyMetadataCache(): void {
 }
 
 export function fetchPublishedTaxonomy(): Promise<ClassifiedsResult<PublishedTaxonomy>> {
-  return cachedRequest(
-    "taxonomy:published",
-    METADATA_CACHE_TTL_MS,
-    async () => {
-      const result = await callPublicRpc("rawaj_fetch_published_taxonomy_v1");
-      if (!result.ok) return result;
-      return { ok: true, data: parsePublishedTaxonomy(result.data) };
-    },
-  );
+  return cachedRequest("taxonomy:published", METADATA_CACHE_TTL_MS, async () => {
+    const result = await callPublicRpc("rawaj_fetch_published_taxonomy_v1");
+    if (!result.ok) return result;
+    return { ok: true, data: parsePublishedTaxonomy(result.data) };
+  });
 }
 
 export function fetchPublishedLeafSchema(
@@ -192,17 +185,13 @@ export function fetchPublishedLeafSchema(
   const cleanNodeId = taxonomyNodeId.trim();
   if (!cleanNodeId) return Promise.resolve(validationFailure("تعذر تحديد القسم المطلوب."));
 
-  return cachedRequest(
-    `taxonomy:leaf:${cleanNodeId}`,
-    METADATA_CACHE_TTL_MS,
-    async () => {
-      const result = await callPublicRpc("rawaj_fetch_published_leaf_schema_v1", {
-        p_taxonomy_node_id: cleanNodeId,
-      });
-      if (!result.ok) return result;
-      return { ok: true, data: parsePublishedLeafSchema(result.data) };
-    },
-  );
+  return cachedRequest(`taxonomy:leaf:${cleanNodeId}`, METADATA_CACHE_TTL_MS, async () => {
+    const result = await callPublicRpc("rawaj_fetch_published_leaf_schema_v1", {
+      p_taxonomy_node_id: cleanNodeId,
+    });
+    if (!result.ok) return result;
+    return { ok: true, data: parsePublishedLeafSchema(result.data) };
+  });
 }
 
 export function fetchVehicleMakes(
@@ -211,23 +200,19 @@ export function fetchVehicleMakes(
 ): Promise<ClassifiedsResult<VehicleMakeMetadata[]>> {
   const cleanQuery = query?.trim() ?? "";
   const cleanLimit = clampInteger(limit, 1, 200, 100);
+  const cacheKey = `vehicle:makes:${cleanQuery.toLocaleLowerCase()}:${cleanLimit}`;
 
-  return cachedRequest(
-    `vehicle:makes:${cleanQuery.toLocaleLowerCase()}:${cleanLimit}`,
-    REFERENCE_CACHE_TTL_MS,
-    async () => {
-      const result = await callPublicRpc("rawaj_fetch_vehicle_makes_v1", {
-        p_query: cleanQuery || null,
-        p_limit: cleanLimit,
-      });
-      if (!result.ok) return result;
-      const payload = asRecord(result.data);
-      return {
-        ok: true,
-        data: asRecordArray(payload.items).map(parseVehicleMake).filter(isPresent),
-      };
-    },
-  );
+  return cachedRequest(cacheKey, REFERENCE_CACHE_TTL_MS, async () => {
+    const result = await callPublicRpc("rawaj_fetch_vehicle_makes_v1", {
+      p_query: cleanQuery || null,
+      p_limit: cleanLimit,
+    });
+    if (!result.ok) return result;
+    return {
+      ok: true,
+      data: records(record(result.data).items).map(parseVehicleMake).filter(present),
+    };
+  });
 }
 
 export function fetchVehicleModels(
@@ -240,25 +225,27 @@ export function fetchVehicleModels(
   const cleanQuery = options.query?.trim() ?? "";
   const cleanYear = nullableInteger(options.year);
   const cleanLimit = clampInteger(options.limit, 1, 300, 200);
+  const cacheKey = [
+    "vehicle:models",
+    cleanMakeId,
+    cleanQuery.toLocaleLowerCase(),
+    cleanYear ?? "all",
+    cleanLimit,
+  ].join(":");
 
-  return cachedRequest(
-    `vehicle:models:${cleanMakeId}:${cleanQuery.toLocaleLowerCase()}:${cleanYear ?? "all"}:${cleanLimit}`,
-    REFERENCE_CACHE_TTL_MS,
-    async () => {
-      const result = await callPublicRpc("rawaj_fetch_vehicle_models_v1", {
-        p_make_id: cleanMakeId,
-        p_query: cleanQuery || null,
-        p_year: cleanYear,
-        p_limit: cleanLimit,
-      });
-      if (!result.ok) return result;
-      const payload = asRecord(result.data);
-      return {
-        ok: true,
-        data: asRecordArray(payload.items).map(parseVehicleModel).filter(isPresent),
-      };
-    },
-  );
+  return cachedRequest(cacheKey, REFERENCE_CACHE_TTL_MS, async () => {
+    const result = await callPublicRpc("rawaj_fetch_vehicle_models_v1", {
+      p_make_id: cleanMakeId,
+      p_query: cleanQuery || null,
+      p_year: cleanYear,
+      p_limit: cleanLimit,
+    });
+    if (!result.ok) return result;
+    return {
+      ok: true,
+      data: records(record(result.data).items).map(parseVehicleModel).filter(present),
+    };
+  });
 }
 
 export function fetchVehicleModelChildren(
@@ -269,18 +256,15 @@ export function fetchVehicleModelChildren(
   if (!cleanModelId) return Promise.resolve(validationFailure("اختر موديل السيارة أولًا."));
 
   const cleanYear = nullableInteger(year);
-  return cachedRequest(
-    `vehicle:children:${cleanModelId}:${cleanYear ?? "all"}`,
-    REFERENCE_CACHE_TTL_MS,
-    async () => {
-      const result = await callPublicRpc("rawaj_fetch_vehicle_model_children_v1", {
-        p_model_id: cleanModelId,
-        p_year: cleanYear,
-      });
-      if (!result.ok) return result;
-      return { ok: true, data: parseVehicleModelChildren(result.data) };
-    },
-  );
+  const cacheKey = `vehicle:children:${cleanModelId}:${cleanYear ?? "all"}`;
+  return cachedRequest(cacheKey, REFERENCE_CACHE_TTL_MS, async () => {
+    const result = await callPublicRpc("rawaj_fetch_vehicle_model_children_v1", {
+      p_model_id: cleanModelId,
+      p_year: cleanYear,
+    });
+    if (!result.ok) return result;
+    return { ok: true, data: parseVehicleModelChildren(result.data) };
+  });
 }
 
 async function callPublicRpc(
@@ -330,18 +314,18 @@ function cachedRequest<T>(
 }
 
 function parsePublishedTaxonomy(value: unknown): PublishedTaxonomy {
-  const payload = asRecord(value);
+  const payload = record(value);
   return {
     version: parseVersion(payload.version),
-    nodes: asRecordArray(payload.nodes).map(parseTaxonomyNode).filter(isPresent),
+    nodes: records(payload.nodes).map(parseTaxonomyNode).filter(present),
   };
 }
 
 function parsePublishedLeafSchema(value: unknown): PublishedLeafSchema {
-  const payload = asRecord(value);
+  const payload = record(value);
   const leaf = parseTaxonomyNode(payload.leaf);
   return {
-    found: booleanValue(payload.found),
+    found: bool(payload.found),
     version: parseVersion(payload.version),
     leaf: leaf
       ? {
@@ -359,108 +343,107 @@ function parsePublishedLeafSchema(value: unknown): PublishedLeafSchema {
           classificationValue: leaf.classificationValue,
         }
       : null,
-    fields: asRecordArray(payload.fields).map(parseLeafField).filter(isPresent),
-    conditionalRules: asRecordArray(payload.conditionalRules)
-      .map(parseConditionalRule)
-      .filter(isPresent),
+    fields: records(payload.fields).map(parseLeafField).filter(present),
+    conditionalRules: records(payload.conditionalRules).map(parseConditionalRule).filter(present),
   };
 }
 
 function parseVersion(value: unknown): TaxonomyVersionMetadata | null {
-  const row = asRecord(value);
-  const id = stringValue(row.id);
-  const number = numberValue(row.number);
-  if (!id || number === null) return null;
-  return { id, number, publishedAt: nullableString(row.publishedAt) };
+  const row = record(value);
+  const id = text(row.id);
+  const versionNumber = numeric(row.number);
+  return id && versionNumber !== null
+    ? { id, number: versionNumber, publishedAt: nullableText(row.publishedAt) }
+    : null;
 }
 
 function parseTaxonomyNode(value: unknown): PublishedTaxonomyNode | null {
-  const row = asRecord(value);
-  const id = stringValue(row.id);
-  const slug = stringValue(row.slug);
-  const nameAr = stringValue(row.nameAr);
+  const row = record(value);
+  const id = text(row.id);
+  const slug = text(row.slug);
+  const nameAr = text(row.nameAr);
   if (!id || !slug || !nameAr) return null;
 
   return {
     id,
-    parentId: nullableString(row.parentId),
+    parentId: nullableText(row.parentId),
     slug,
     nameAr,
-    nameEn: nullableString(row.nameEn),
-    descriptionAr: nullableString(row.descriptionAr),
-    descriptionEn: nullableString(row.descriptionEn),
-    iconKey: nullableString(row.iconKey),
-    sortOrder: numberValue(row.sortOrder) ?? 0,
-    depth: numberValue(row.depth) ?? 0,
-    isLeaf: booleanValue(row.isLeaf),
-    filterSchemaKey: nullableString(row.filterSchemaKey),
-    displaySchemaKey: nullableString(row.displaySchemaKey),
-    classificationKey: nullableString(row.classificationKey),
-    classificationValue: nullableString(row.classificationValue),
-    legacyCategoryId: nullableString(row.legacyCategoryId),
-    legacySubcategoryId: nullableString(row.legacySubcategoryId),
-    seoTitleAr: nullableString(row.seoTitleAr),
-    seoTitleEn: nullableString(row.seoTitleEn),
-    seoDescriptionAr: nullableString(row.seoDescriptionAr),
-    seoDescriptionEn: nullableString(row.seoDescriptionEn),
+    nameEn: nullableText(row.nameEn),
+    descriptionAr: nullableText(row.descriptionAr),
+    descriptionEn: nullableText(row.descriptionEn),
+    iconKey: nullableText(row.iconKey),
+    sortOrder: numeric(row.sortOrder) ?? 0,
+    depth: numeric(row.depth) ?? 0,
+    isLeaf: bool(row.isLeaf),
+    filterSchemaKey: nullableText(row.filterSchemaKey),
+    displaySchemaKey: nullableText(row.displaySchemaKey),
+    classificationKey: nullableText(row.classificationKey),
+    classificationValue: nullableText(row.classificationValue),
+    legacyCategoryId: nullableText(row.legacyCategoryId),
+    legacySubcategoryId: nullableText(row.legacySubcategoryId),
+    seoTitleAr: nullableText(row.seoTitleAr),
+    seoTitleEn: nullableText(row.seoTitleEn),
+    seoDescriptionAr: nullableText(row.seoDescriptionAr),
+    seoDescriptionEn: nullableText(row.seoDescriptionEn),
   };
 }
 
 function parseLeafField(value: unknown): PublishedLeafField | null {
-  const row = asRecord(value);
-  const key = stringValue(row.key);
-  const labelAr = stringValue(row.labelAr);
-  const fieldType = stringValue(row.fieldType);
+  const row = record(value);
+  const key = text(row.key);
+  const labelAr = text(row.labelAr);
+  const fieldType = text(row.fieldType);
   if (!key || !labelAr || !fieldType) return null;
 
   return {
     key,
-    groupKey: nullableString(row.groupKey),
-    sortOrder: numberValue(row.sortOrder) ?? 0,
-    required: booleanValue(row.required),
-    searchable: booleanValue(row.searchable),
-    filterable: booleanValue(row.filterable),
-    displayable: booleanValue(row.displayable),
-    displaySurfaces: stringArray(row.displaySurfaces),
+    groupKey: nullableText(row.groupKey),
+    sortOrder: numeric(row.sortOrder) ?? 0,
+    required: bool(row.required),
+    searchable: bool(row.searchable),
+    filterable: bool(row.filterable),
+    displayable: bool(row.displayable),
+    displaySurfaces: textArray(row.displaySurfaces),
     labelAr,
-    labelEn: nullableString(row.labelEn),
-    descriptionAr: nullableString(row.descriptionAr),
-    descriptionEn: nullableString(row.descriptionEn),
-    placeholderAr: nullableString(row.placeholderAr),
-    placeholderEn: nullableString(row.placeholderEn),
+    labelEn: nullableText(row.labelEn),
+    descriptionAr: nullableText(row.descriptionAr),
+    descriptionEn: nullableText(row.descriptionEn),
+    placeholderAr: nullableText(row.placeholderAr),
+    placeholderEn: nullableText(row.placeholderEn),
     fieldType,
-    unitKey: nullableString(row.unitKey),
-    optionSetKey: nullableString(row.optionSetKey),
-    dataProviderKey: nullableString(row.dataProviderKey),
-    validation: asRecord(row.validation),
+    unitKey: nullableText(row.unitKey),
+    optionSetKey: nullableText(row.optionSetKey),
+    dataProviderKey: nullableText(row.dataProviderKey),
+    validation: record(row.validation),
     defaultValue: row.defaultValue,
-    sensitive: booleanValue(row.sensitive),
-    options: asRecordArray(row.options).map(parseFieldOption).filter(isPresent),
+    sensitive: bool(row.sensitive),
+    options: records(row.options).map(parseFieldOption).filter(present),
   };
 }
 
 function parseFieldOption(value: unknown): TaxonomyFieldOption | null {
-  const row = asRecord(value);
-  const key = stringValue(row.key);
-  const labelAr = stringValue(row.labelAr);
+  const row = record(value);
+  const key = text(row.key);
+  const labelAr = text(row.labelAr);
   if (!key || !labelAr) return null;
   return {
     key,
     labelAr,
-    labelEn: nullableString(row.labelEn),
-    aliases: stringArray(row.aliases),
-    sortOrder: numberValue(row.sortOrder) ?? 0,
-    metadata: asRecord(row.metadata),
+    labelEn: nullableText(row.labelEn),
+    aliases: textArray(row.aliases),
+    sortOrder: numeric(row.sortOrder) ?? 0,
+    metadata: record(row.metadata),
   };
 }
 
 function parseConditionalRule(value: unknown): PublishedLeafConditionalRule | null {
-  const row = asRecord(value);
-  const id = stringValue(row.id);
-  const triggerFieldKey = stringValue(row.triggerFieldKey);
-  const operator = stringValue(row.operator);
-  const targetFieldKey = stringValue(row.targetFieldKey);
-  const effect = stringValue(row.effect);
+  const row = record(value);
+  const id = text(row.id);
+  const triggerFieldKey = text(row.triggerFieldKey);
+  const operator = text(row.operator);
+  const targetFieldKey = text(row.targetFieldKey);
+  const effect = text(row.effect);
   if (!id || !triggerFieldKey || !operator || !targetFieldKey || !effect) return null;
   return {
     id,
@@ -469,35 +452,35 @@ function parseConditionalRule(value: unknown): PublishedLeafConditionalRule | nu
     triggerValue: row.triggerValue,
     targetFieldKey,
     effect,
-    priority: numberValue(row.priority) ?? 0,
+    priority: numeric(row.priority) ?? 0,
   };
 }
 
 function parseVehicleMake(value: unknown): VehicleMakeMetadata | null {
-  const row = asRecord(value);
-  const id = stringValue(row.id);
-  const slug = stringValue(row.slug);
-  const nameAr = stringValue(row.nameAr);
-  const nameEn = stringValue(row.nameEn);
+  const row = record(value);
+  const id = text(row.id);
+  const slug = text(row.slug);
+  const nameAr = text(row.nameAr);
+  const nameEn = text(row.nameEn);
   if (!id || !slug || !nameAr || !nameEn) return null;
   return {
     id,
     slug,
     nameAr,
     nameEn,
-    aliases: stringArray(row.aliases),
-    countryCode: nullableString(row.countryCode),
-    sortOrder: numberValue(row.sortOrder) ?? 0,
+    aliases: textArray(row.aliases),
+    countryCode: nullableText(row.countryCode),
+    sortOrder: numeric(row.sortOrder) ?? 0,
   };
 }
 
 function parseVehicleModel(value: unknown): VehicleModelMetadata | null {
-  const row = asRecord(value);
-  const id = stringValue(row.id);
-  const makeId = stringValue(row.makeId);
-  const slug = stringValue(row.slug);
-  const nameAr = stringValue(row.nameAr);
-  const nameEn = stringValue(row.nameEn);
+  const row = record(value);
+  const id = text(row.id);
+  const makeId = text(row.makeId);
+  const slug = text(row.slug);
+  const nameAr = text(row.nameAr);
+  const nameEn = text(row.nameEn);
   if (!id || !makeId || !slug || !nameAr || !nameEn) return null;
   return {
     id,
@@ -505,69 +488,65 @@ function parseVehicleModel(value: unknown): VehicleModelMetadata | null {
     slug,
     nameAr,
     nameEn,
-    aliases: stringArray(row.aliases),
-    vehicleType: nullableString(row.vehicleType),
-    startYear: numberValue(row.startYear),
-    endYear: numberValue(row.endYear),
-    sortOrder: numberValue(row.sortOrder) ?? 0,
+    aliases: textArray(row.aliases),
+    vehicleType: nullableText(row.vehicleType),
+    startYear: numeric(row.startYear),
+    endYear: numeric(row.endYear),
+    sortOrder: numeric(row.sortOrder) ?? 0,
   };
 }
 
 function parseVehicleModelChildren(value: unknown): VehicleModelChildrenMetadata {
-  const payload = asRecord(value);
-  const modelRow = asRecord(payload.model);
-  const modelId = stringValue(modelRow.id);
-  const makeId = stringValue(modelRow.makeId);
-  const nameAr = stringValue(modelRow.nameAr);
-  const nameEn = stringValue(modelRow.nameEn);
+  const payload = record(value);
+  const modelRow = record(payload.model);
+  const id = text(modelRow.id);
+  const makeId = text(modelRow.makeId);
+  const nameAr = text(modelRow.nameAr);
+  const nameEn = text(modelRow.nameEn);
+  const model = id && makeId && nameAr && nameEn ? { id, makeId, nameAr, nameEn } : null;
 
   return {
-    found: booleanValue(payload.found),
-    model:
-      modelId && makeId && nameAr && nameEn
-        ? { id: modelId, makeId, nameAr, nameEn }
-        : null,
-    generations: asRecordArray(payload.generations)
-      .map(parseVehicleGeneration)
-      .filter(isPresent),
-    trims: asRecordArray(payload.trims).map(parseVehicleTrim).filter(isPresent),
+    found: bool(payload.found),
+    model,
+    generations: records(payload.generations).map(parseVehicleGeneration).filter(present),
+    trims: records(payload.trims).map(parseVehicleTrim).filter(present),
   };
 }
 
 function parseVehicleGeneration(value: unknown): VehicleGenerationMetadata | null {
-  const row = asRecord(value);
-  const id = stringValue(row.id);
-  const modelId = stringValue(row.modelId);
-  const nameAr = stringValue(row.nameAr);
-  const nameEn = stringValue(row.nameEn);
+  const row = record(value);
+  const id = text(row.id);
+  const modelId = text(row.modelId);
+  const nameAr = text(row.nameAr);
+  const nameEn = text(row.nameEn);
   if (!id || !modelId || !nameAr || !nameEn) return null;
   return {
     id,
     modelId,
     nameAr,
     nameEn,
-    startYear: numberValue(row.startYear),
-    endYear: numberValue(row.endYear),
-    sortOrder: numberValue(row.sortOrder) ?? 0,
+    startYear: numeric(row.startYear),
+    endYear: numeric(row.endYear),
+    sortOrder: numeric(row.sortOrder) ?? 0,
   };
 }
 
 function parseVehicleTrim(value: unknown): VehicleTrimMetadata | null {
-  const row = asRecord(value);
-  const id = stringValue(row.id);
-  const modelId = stringValue(row.modelId);
-  const nameAr = stringValue(row.nameAr);
-  const nameEn = stringValue(row.nameEn);
+  const row = record(value);
+  const id = text(row.id);
+  const modelId = text(row.modelId);
+  const nameAr = text(row.nameAr);
+  const nameEn = text(row.nameEn);
   if (!id || !modelId || !nameAr || !nameEn) return null;
   return {
     id,
     modelId,
-    generationId: nullableString(row.generationId),
+    generationId: nullableText(row.generationId),
     nameAr,
     nameEn,
-    startYear: numberValue(row.startYear),
-    endYear: numberValue(row.endYear),
-    sortOrder: numberValue(row.sortOrder) ?? 0,
+    startYear: numeric(row.startYear),
+    endYear: numeric(row.endYear),
+    sortOrder: numeric(row.sortOrder) ?? 0,
   };
 }
 
@@ -575,25 +554,25 @@ function validationFailure<T>(message: string): ClassifiedsResult<T> {
   return { ok: false, error: { code: "validation_error", message } };
 }
 
-function asRecord(value: unknown): Record<string, unknown> {
+function record(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
 }
 
-function asRecordArray(value: unknown): Record<string, unknown>[] {
-  return Array.isArray(value) ? value.map(asRecord) : [];
+function records(value: unknown): Record<string, unknown>[] {
+  return Array.isArray(value) ? value.map(record) : [];
 }
 
-function stringValue(value: unknown): string {
+function text(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
-function nullableString(value: unknown): string | null {
+function nullableText(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
-function numberValue(value: unknown): number | null {
+function numeric(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && value.trim()) {
     const parsed = Number(value);
@@ -603,31 +582,26 @@ function numberValue(value: unknown): number | null {
 }
 
 function nullableInteger(value: unknown): number | null {
-  const parsed = numberValue(value);
+  const parsed = numeric(value);
   return parsed === null ? null : Math.trunc(parsed);
 }
 
-function booleanValue(value: unknown): boolean {
+function bool(value: unknown): boolean {
   return value === true;
 }
 
-function stringArray(value: unknown): string[] {
+function textArray(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")
     : [];
 }
 
-function clampInteger(
-  value: unknown,
-  minimum: number,
-  maximum: number,
-  fallback: number,
-): number {
+function clampInteger(value: unknown, minimum: number, maximum: number, fallback: number): number {
   const parsed = nullableInteger(value);
   if (parsed === null) return fallback;
   return Math.min(maximum, Math.max(minimum, parsed));
 }
 
-function isPresent<T>(value: T | null): value is T {
+function present<T>(value: T | null): value is T {
   return value !== null;
 }
