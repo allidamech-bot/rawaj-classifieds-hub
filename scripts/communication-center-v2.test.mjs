@@ -10,7 +10,8 @@ const [
   chats,
   notifications,
   activity,
-  css,
+  cssV2,
+  cssV3,
   qualityGate,
 ] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
@@ -27,14 +28,18 @@ const [
   readFile(new URL("../src/routes/notifications.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/activity.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/communication-center-v3.css", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
 ]);
 
-test("communication center stylesheet loads after messaging and activity foundations", () => {
+test("communication center V3 refinement loads after messaging and retains the V2 base", () => {
   assert.match(
     routeStyles,
-    /import communicationCenterV2Css from "\.\.\/communication-center-v2\.css\?url"/,
+    /import communicationCenterV3Css from "\.\.\/communication-center-v3\.css\?url"/,
   );
+  assert.match(routeStyles, /communicationCenterV2: communicationCenterV3Css/);
+  assert.match(cssV3, /@import "\.\/communication-center-v2\.css"/);
+
   const messaging = root.indexOf("routeStyleHrefs.messagingSignature");
   const communication = root.indexOf("routeStyleHrefs.communicationCenterV2");
   assert.notEqual(messaging, -1);
@@ -163,15 +168,17 @@ test("activity center previews real notifications and conversations", () => {
 });
 
 test("communication center stays responsive and reduced-motion safe", () => {
-  assert.match(css, /\.rawaj-message-workspace/);
-  assert.match(css, /\.rawaj-notification-timeline/);
-  assert.match(css, /inset-inline/);
-  assert.match(css, /@media \(min-width: 1024px\)/);
-  assert.match(css, /@media \(max-width: 389px\)/);
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(cssV2, /\.rawaj-message-workspace/);
+  assert.match(cssV2, /\.rawaj-notification-timeline/);
+  assert.match(cssV2, /inset-inline/);
+  assert.match(cssV2, /@media \(min-width: 1024px\)/);
+  assert.match(cssV2, /@media \(max-width: 389px\)/);
+  assert.match(cssV2, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(cssV3, /@media \(max-width: 1023px\)/);
+  assert.match(cssV3, /data-view="list"/);
 });
 
-test("quality gate permanently runs communication center V2 read-only", () => {
+test("quality gate permanently runs communication center V2 plus V3 refinement read-only", () => {
   assert.match(qualityGate, /contents: read/);
   assert.match(qualityGate, /Communication Center V2 contract/);
   assert.match(qualityGate, /node --test scripts\/communication-center-v2\.test\.mjs/);
