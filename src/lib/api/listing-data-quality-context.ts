@@ -61,9 +61,7 @@ export async function fetchListingDataQualityContext(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data.rpc(
-    "rawaj_admin_fetch_data_quality_context_v1",
-  );
+  const { data, error } = await clientResult.data.rpc("rawaj_admin_fetch_data_quality_context_v1");
   if (error) {
     return {
       ok: false,

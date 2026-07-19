@@ -275,7 +275,10 @@ function AdminDataQualityWorkspace() {
         <MetricCard
           icon={FileWarning}
           label={text("إعلانات متأثرة", "Affected listings")}
-          value={context?.summary.affectedListings ?? new Set(page.items.map((issue) => issue.listingId)).size}
+          value={
+            context?.summary.affectedListings ??
+            new Set(page.items.map((issue) => issue.listingId)).size
+          }
         />
       </section>
 
@@ -293,7 +296,9 @@ function AdminDataQualityWorkspace() {
               >
                 {context?.versions.map((version) => (
                   <option key={version.id} value={version.id}>
-                    {text("النسخة", "Version")} {version.versionNumber} — {versionStatus(version, text)} — {version.activeLeafCount} {text("ورقة", "leaves")}
+                    {text("النسخة", "Version")} {version.versionNumber} —{" "}
+                    {versionStatus(version, text)} — {version.activeLeafCount}{" "}
+                    {text("ورقة", "leaves")}
                   </option>
                 ))}
               </select>
@@ -305,7 +310,9 @@ function AdminDataQualityWorkspace() {
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground disabled:opacity-50"
             >
               <ScanSearch className={`h-4 w-4 ${scanning ? "animate-pulse" : ""}`} />
-              {scanning ? text("جارٍ فحص كل الأقسام...", "Scanning all categories...") : text("فحص كل الأقسام", "Scan all categories")}
+              {scanning
+                ? text("جارٍ فحص كل الأقسام...", "Scanning all categories...")
+                : text("فحص كل الأقسام", "Scan all categories")}
             </button>
           </div>
           {selectedVersion ? (
@@ -341,7 +348,11 @@ function AdminDataQualityWorkspace() {
           })}
         </div>
         <div className="mt-2 grid gap-3 md:grid-cols-3">
-          <select value={categoryId} onChange={(event) => setCategoryId(event.target.value)} className="input">
+          <select
+            value={categoryId}
+            onChange={(event) => setCategoryId(event.target.value)}
+            className="input"
+          >
             <option value="all">{text("كل الأقسام", "All categories")}</option>
             {context?.categories.map((category) => (
               <option key={category.id} value={category.id}>
@@ -350,14 +361,26 @@ function AdminDataQualityWorkspace() {
               </option>
             ))}
           </select>
-          <select value={severity} onChange={(event) => setSeverity(event.target.value as FilterValue<ListingDataQualitySeverity>)} className="input">
+          <select
+            value={severity}
+            onChange={(event) =>
+              setSeverity(event.target.value as FilterValue<ListingDataQualitySeverity>)
+            }
+            className="input"
+          >
             <option value="all">{text("كل درجات الخطورة", "All severities")}</option>
             <option value="blocking">{text("حرج", "Blocking")}</option>
             <option value="error">{text("خطأ", "Error")}</option>
             <option value="warning">{text("تحذير", "Warning")}</option>
             <option value="info">{text("معلومة", "Info")}</option>
           </select>
-          <select value={status} onChange={(event) => setStatus(event.target.value as FilterValue<ListingDataQualityStatus>)} className="input">
+          <select
+            value={status}
+            onChange={(event) =>
+              setStatus(event.target.value as FilterValue<ListingDataQualityStatus>)
+            }
+            className="input"
+          >
             <option value="all">{text("كل حالات المراجعة", "All review states")}</option>
             <option value="open">{text("مفتوحة", "Open")}</option>
             <option value="needs_review">{text("تحتاج مراجعة", "Needs review")}</option>
@@ -372,7 +395,10 @@ function AdminDataQualityWorkspace() {
       {message ? <Notice tone="success">{message}</Notice> : null}
 
       {loading && !hasLoaded ? (
-        <StatePanel icon={RefreshCw} title={text("جارٍ تحميل نتائج الجودة...", "Loading quality results...")} />
+        <StatePanel
+          icon={RefreshCw}
+          title={text("جارٍ تحميل نتائج الجودة...", "Loading quality results...")}
+        />
       ) : error && !hasLoaded ? (
         <StatePanel
           icon={AlertTriangle}
@@ -417,7 +443,8 @@ function AdminDataQualityWorkspace() {
           {text("السابق", "Previous")}
         </button>
         <p className="text-[11px] font-bold text-muted-foreground">
-          {page.total === 0 ? 0 : offset + 1}–{Math.min(offset + PAGE_SIZE, page.total)} / {page.total}
+          {page.total === 0 ? 0 : offset + 1}–{Math.min(offset + PAGE_SIZE, page.total)} /{" "}
+          {page.total}
         </p>
         <button
           type="button"
@@ -449,9 +476,12 @@ function QualityIssueCard({
   onNoteChange: (value: string) => void;
   onDecision: (decision: ListingDataQualityDecision) => void;
 }) {
-  const categoryName = language === "en" ? issue.categoryNameEn || issue.categoryNameAr : issue.categoryNameAr;
-  const taxonomyName = language === "en" ? issue.taxonomyNameEn || issue.taxonomyNameAr : issue.taxonomyNameAr;
-  const fieldLabel = language === "en" ? issue.fieldLabelEn || issue.fieldLabelAr : issue.fieldLabelAr;
+  const categoryName =
+    language === "en" ? issue.categoryNameEn || issue.categoryNameAr : issue.categoryNameAr;
+  const taxonomyName =
+    language === "en" ? issue.taxonomyNameEn || issue.taxonomyNameAr : issue.taxonomyNameAr;
+  const fieldLabel =
+    language === "en" ? issue.fieldLabelEn || issue.fieldLabelAr : issue.fieldLabelAr;
 
   return (
     <article className="rounded-2xl bg-card p-4 hairline">
@@ -484,22 +514,35 @@ function QualityIssueCard({
       </div>
 
       <div className="mt-4 grid gap-2 text-[11px] sm:grid-cols-2 lg:grid-cols-4">
-        <InfoCell label={text("التصنيف النهائي", "Final taxonomy")} value={taxonomyName || issue.taxonomyNodeId || "—"} />
+        <InfoCell
+          label={text("التصنيف النهائي", "Final taxonomy")}
+          value={taxonomyName || issue.taxonomyNodeId || "—"}
+        />
         <InfoCell label={text("الحقل", "Field")} value={fieldLabel || issue.fieldKey || "—"} />
-        <InfoCell label={text("حالة الإعلان", "Listing status")} value={issue.listingStatus || "—"} />
-        <InfoCell label={text("حالة الجودة", "Quality status")} value={statusLabel(issue.status, text)} />
+        <InfoCell
+          label={text("حالة الإعلان", "Listing status")}
+          value={issue.listingStatus || "—"}
+        />
+        <InfoCell
+          label={text("حالة الجودة", "Quality status")}
+          value={statusLabel(issue.status, text)}
+        />
       </div>
 
       {Object.keys(issue.evidence).length > 0 ? (
         <details className="mt-3 rounded-xl bg-muted-surface p-3 text-[11px]">
-          <summary className="cursor-pointer font-bold">{text("دليل الفحص", "Scan evidence")}</summary>
+          <summary className="cursor-pointer font-bold">
+            {text("دليل الفحص", "Scan evidence")}
+          </summary>
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
-            {Object.entries(issue.evidence).slice(0, 12).map(([key, value]) => (
-              <div key={key} className="rounded-lg bg-background/70 p-2">
-                <span className="font-bold text-muted-foreground">{key}</span>
-                <p className="mt-1 break-words">{formatEvidence(value)}</p>
-              </div>
-            ))}
+            {Object.entries(issue.evidence)
+              .slice(0, 12)
+              .map(([key, value]) => (
+                <div key={key} className="rounded-lg bg-background/70 p-2">
+                  <span className="font-bold text-muted-foreground">{key}</span>
+                  <p className="mt-1 break-words">{formatEvidence(value)}</p>
+                </div>
+              ))}
           </div>
         </details>
       ) : null}
@@ -513,19 +556,49 @@ function QualityIssueCard({
             value={note}
             onChange={(event) => onNoteChange(event.target.value)}
             maxLength={2000}
-            placeholder={text("سبب القرار أو المطلوب من البائع", "Decision reason or seller action")}
+            placeholder={text(
+              "سبب القرار أو المطلوب من البائع",
+              "Decision reason or seller action",
+            )}
             className="input"
           />
         </label>
         <div className="flex flex-wrap gap-2">
-          <ActionButton icon={ScanSearch} label={text("مراجعة", "Review")} disabled={working} onClick={() => onDecision("needs_review")} />
-          <ActionButton icon={UserRoundCog} label={text("للبائع", "Seller action")} disabled={working} onClick={() => onDecision("seller_action")} />
+          <ActionButton
+            icon={ScanSearch}
+            label={text("مراجعة", "Review")}
+            disabled={working}
+            onClick={() => onDecision("needs_review")}
+          />
+          <ActionButton
+            icon={UserRoundCog}
+            label={text("للبائع", "Seller action")}
+            disabled={working}
+            onClick={() => onDecision("seller_action")}
+          />
           {issue.status === "resolved" || issue.status === "dismissed" ? (
-            <ActionButton icon={RotateCcw} label={text("إعادة فتح", "Reopen")} disabled={working} onClick={() => onDecision("reopen")} />
+            <ActionButton
+              icon={RotateCcw}
+              label={text("إعادة فتح", "Reopen")}
+              disabled={working}
+              onClick={() => onDecision("reopen")}
+            />
           ) : (
             <>
-              <ActionButton icon={CheckCircle2} label={text("حل", "Resolve")} disabled={working} onClick={() => onDecision("resolve")} positive />
-              <ActionButton icon={XCircle} label={text("تجاهل", "Dismiss")} disabled={working} onClick={() => onDecision("dismiss")} danger />
+              <ActionButton
+                icon={CheckCircle2}
+                label={text("حل", "Resolve")}
+                disabled={working}
+                onClick={() => onDecision("resolve")}
+                positive
+              />
+              <ActionButton
+                icon={XCircle}
+                label={text("تجاهل", "Dismiss")}
+                disabled={working}
+                onClick={() => onDecision("dismiss")}
+                danger
+              />
             </>
           )}
         </div>
@@ -534,11 +607,23 @@ function QualityIssueCard({
   );
 }
 
-function MetricCard({ icon: Icon, label, value, danger = false }: { icon: typeof ScanSearch; label: string; value: number; danger?: boolean }) {
+function MetricCard({
+  icon: Icon,
+  label,
+  value,
+  danger = false,
+}: {
+  icon: typeof ScanSearch;
+  label: string;
+  value: number;
+  danger?: boolean;
+}) {
   return (
     <div className="rounded-2xl bg-card p-4 hairline">
       <div className="flex items-center justify-between gap-3">
-        <span className={`grid h-10 w-10 place-items-center rounded-xl ${danger ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
+        <span
+          className={`grid h-10 w-10 place-items-center rounded-xl ${danger ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}
+        >
           <Icon className="h-4 w-4" />
         </span>
         <strong className="text-2xl font-extrabold">{value}</strong>
@@ -548,10 +633,32 @@ function MetricCard({ icon: Icon, label, value, danger = false }: { icon: typeof
   );
 }
 
-function SeverityBadge({ severity, text }: { severity: ListingDataQualitySeverity; text: (ar: string, en: string) => string }) {
-  const label = severity === "blocking" ? text("حرج", "Blocking") : severity === "error" ? text("خطأ", "Error") : severity === "warning" ? text("تحذير", "Warning") : text("معلومة", "Info");
-  const className = severity === "blocking" || severity === "error" ? "bg-destructive/10 text-destructive" : severity === "warning" ? "bg-warning/15 text-warning-foreground" : "bg-primary/10 text-primary";
-  return <span className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold ${className}`}>{label}</span>;
+function SeverityBadge({
+  severity,
+  text,
+}: {
+  severity: ListingDataQualitySeverity;
+  text: (ar: string, en: string) => string;
+}) {
+  const label =
+    severity === "blocking"
+      ? text("حرج", "Blocking")
+      : severity === "error"
+        ? text("خطأ", "Error")
+        : severity === "warning"
+          ? text("تحذير", "Warning")
+          : text("معلومة", "Info");
+  const className =
+    severity === "blocking" || severity === "error"
+      ? "bg-destructive/10 text-destructive"
+      : severity === "warning"
+        ? "bg-warning/15 text-warning-foreground"
+        : "bg-primary/10 text-primary";
+  return (
+    <span className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold ${className}`}>
+      {label}
+    </span>
+  );
 }
 
 function InfoCell({ label, value }: { label: string; value: string }) {
@@ -563,24 +670,65 @@ function InfoCell({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ActionButton({ icon: Icon, label, disabled, onClick, positive = false, danger = false }: { icon: typeof ScanSearch; label: string; disabled: boolean; onClick: () => void; positive?: boolean; danger?: boolean }) {
-  const tone = positive ? "bg-success/12 text-success" : danger ? "bg-destructive/10 text-destructive" : "bg-muted-surface";
+function ActionButton({
+  icon: Icon,
+  label,
+  disabled,
+  onClick,
+  positive = false,
+  danger = false,
+}: {
+  icon: typeof ScanSearch;
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+  positive?: boolean;
+  danger?: boolean;
+}) {
+  const tone = positive
+    ? "bg-success/12 text-success"
+    : danger
+      ? "bg-destructive/10 text-destructive"
+      : "bg-muted-surface";
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-xs font-bold disabled:opacity-40 ${tone}`}>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-xs font-bold disabled:opacity-40 ${tone}`}
+    >
       <Icon className="h-4 w-4" />
       {label}
     </button>
   );
 }
 
-function StatePanel({ icon: Icon, title, body, actionLabel, onAction }: { icon: typeof ScanSearch; title: string; body?: string; actionLabel?: string; onAction?: () => void }) {
+function StatePanel({
+  icon: Icon,
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  icon: typeof ScanSearch;
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <section className="rounded-2xl bg-card p-6 text-center hairline">
       <Icon className="mx-auto h-7 w-7 text-primary" />
       <h2 className="mt-3 text-base font-extrabold">{title}</h2>
-      {body ? <p className="mx-auto mt-2 max-w-2xl text-xs leading-6 text-muted-foreground">{body}</p> : null}
+      {body ? (
+        <p className="mx-auto mt-2 max-w-2xl text-xs leading-6 text-muted-foreground">{body}</p>
+      ) : null}
       {actionLabel && onAction ? (
-        <button type="button" onClick={onAction} className="mt-4 min-h-10 rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground">
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-4 min-h-10 rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground"
+        >
           {actionLabel}
         </button>
       ) : null}
@@ -590,21 +738,33 @@ function StatePanel({ icon: Icon, title, body, actionLabel, onAction }: { icon: 
 
 function Notice({ tone, children }: { tone: "error" | "success"; children: string }) {
   return (
-    <p className={`rounded-xl p-3 text-xs font-semibold hairline ${tone === "error" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}>
+    <p
+      className={`rounded-xl p-3 text-xs font-semibold hairline ${tone === "error" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}
+    >
       {children}
     </p>
   );
 }
 
 function preferredVersion(versions: DataQualityTaxonomyVersion[]) {
-  return versions.find((version) => version.status === "draft") ?? versions.find((version) => version.status === "published") ?? null;
+  return (
+    versions.find((version) => version.status === "draft") ??
+    versions.find((version) => version.status === "published") ??
+    null
+  );
 }
 
-function versionStatus(version: DataQualityTaxonomyVersion, text: (ar: string, en: string) => string) {
+function versionStatus(
+  version: DataQualityTaxonomyVersion,
+  text: (ar: string, en: string) => string,
+) {
   return version.status === "draft" ? text("مسودة", "Draft") : text("منشورة", "Published");
 }
 
-function issueTypeLabel(issueType: ListingDataQualityIssueType, text: (ar: string, en: string) => string) {
+function issueTypeLabel(
+  issueType: ListingDataQualityIssueType,
+  text: (ar: string, en: string) => string,
+) {
   const labels: Record<ListingDataQualityIssueType, string> = {
     taxonomy: text("التصنيف", "Taxonomy"),
     required_field: text("حقل مطلوب", "Required field"),
@@ -629,25 +789,62 @@ function statusLabel(status: ListingDataQualityStatus, text: (ar: string, en: st
 
 function issueCodeLabel(code: string, text: (ar: string, en: string) => string) {
   const labels: Record<string, string> = {
-    taxonomy_unresolved: text("لم يُحسم التصنيف النهائي للإعلان.", "The final listing taxonomy is unresolved."),
-    taxonomy_target_not_active_leaf: text("التصنيف المقترح ليس ورقة فعالة.", "The suggested taxonomy is not an active leaf."),
-    taxonomy_category_mismatch: text("التصنيف النهائي لا يطابق القسم الأساسي.", "The final taxonomy does not match the root category."),
-    taxonomy_mapping_needs_review: text("اقتراح التصنيف يحتاج مراجعة بشرية.", "The taxonomy suggestion needs human review."),
-    required_field_missing: text("حقل إلزامي مفقود لهذا التصنيف.", "A required field is missing for this taxonomy."),
-    field_not_allowed_for_leaf: text("حقل محفوظ لا ينتمي إلى هذا التصنيف.", "A stored field is not allowed for this taxonomy."),
-    controlled_option_invalid: text("القيمة ليست ضمن الخيارات الرسمية للحقل.", "The value is not in the controlled option set."),
-    numeric_value_out_of_range: text("القيمة الرقمية خارج الحدود المسموحة.", "The numeric value is outside the allowed range."),
-    text_value_too_long: text("القيمة النصية أطول من الحد المسموح.", "The text value exceeds the allowed length."),
-    legacy_details_not_object: text("صيغة البيانات القديمة غير صالحة.", "The legacy details payload has an invalid shape."),
-    legacy_details_require_mapping: text("بيانات قديمة تحتاج تحويلًا إلى الحقول المنظمة.", "Legacy data needs migration into governed fields."),
-    vehicle_reference_resolution_pending: text("مرجع مركبة متخصص ما زال قيد المراجعة.", "A specialized vehicle reference is still under review."),
+    taxonomy_unresolved: text(
+      "لم يُحسم التصنيف النهائي للإعلان.",
+      "The final listing taxonomy is unresolved.",
+    ),
+    taxonomy_target_not_active_leaf: text(
+      "التصنيف المقترح ليس ورقة فعالة.",
+      "The suggested taxonomy is not an active leaf.",
+    ),
+    taxonomy_category_mismatch: text(
+      "التصنيف النهائي لا يطابق القسم الأساسي.",
+      "The final taxonomy does not match the root category.",
+    ),
+    taxonomy_mapping_needs_review: text(
+      "اقتراح التصنيف يحتاج مراجعة بشرية.",
+      "The taxonomy suggestion needs human review.",
+    ),
+    required_field_missing: text(
+      "حقل إلزامي مفقود لهذا التصنيف.",
+      "A required field is missing for this taxonomy.",
+    ),
+    field_not_allowed_for_leaf: text(
+      "حقل محفوظ لا ينتمي إلى هذا التصنيف.",
+      "A stored field is not allowed for this taxonomy.",
+    ),
+    controlled_option_invalid: text(
+      "القيمة ليست ضمن الخيارات الرسمية للحقل.",
+      "The value is not in the controlled option set.",
+    ),
+    numeric_value_out_of_range: text(
+      "القيمة الرقمية خارج الحدود المسموحة.",
+      "The numeric value is outside the allowed range.",
+    ),
+    text_value_too_long: text(
+      "القيمة النصية أطول من الحد المسموح.",
+      "The text value exceeds the allowed length.",
+    ),
+    legacy_details_not_object: text(
+      "صيغة البيانات القديمة غير صالحة.",
+      "The legacy details payload has an invalid shape.",
+    ),
+    legacy_details_require_mapping: text(
+      "بيانات قديمة تحتاج تحويلًا إلى الحقول المنظمة.",
+      "Legacy data needs migration into governed fields.",
+    ),
+    vehicle_reference_resolution_pending: text(
+      "مرجع مركبة متخصص ما زال قيد المراجعة.",
+      "A specialized vehicle reference is still under review.",
+    ),
   };
   return labels[code] ?? code;
 }
 
 function formatEvidence(value: unknown) {
   if (value === null || value === undefined) return "—";
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean")
+    return String(value);
   try {
     return JSON.stringify(value);
   } catch {
