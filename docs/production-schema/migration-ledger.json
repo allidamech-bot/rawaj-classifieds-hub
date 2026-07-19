@@ -148,7 +148,8 @@
       "202607190030_vehicle_reference_seed_and_review_queue_v1.sql",
       "202607190031_listing_taxonomy_and_vehicle_review_queue_seed_v1.sql",
       "202607190032_listing_attribute_write_contract_v1.sql",
-      "202607190033_taxonomy_metadata_api_v1.sql"
+      "202607190033_taxonomy_metadata_api_v1.sql",
+      "202607190034_taxonomy_mapping_review_apply_v1.sql"
     ],
     "superseded": ["202606290002_classifieds_foundation.sql"],
     "reconciliation": [
