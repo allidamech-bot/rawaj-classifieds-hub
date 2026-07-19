@@ -76,13 +76,79 @@ BEGIN
     RAISE EXCEPTION 'vehicle_model_api_missing_camry_alias_match: %', v_payload;
   END IF;
 
-  v_payload := public.rawaj_fetch_vehicle_models_v1('kia', null, 1900, 3000);
-  IF jsonb_array_length(v_payload -> 'items') <> 0 THEN
-    RAISE EXCEPTION 'vehicle_model_api_ignored_year_filter: %', v_payload;
+  -- Real catalog rows may intentionally have unknown year bounds. Add two
+  -- disposable bounded fixtures so the optional year predicate is exercised
+  -- without treating unknown bounds as invalid data.
+  INSERT INTO public.vehicle_makes (
+    id, slug, name_ar, name_en, aliases, country_code, sort_order
+  ) VALUES (
+    'rawaj-verification',
+    'rawaj-verification',
+    'اختبار رواج',
+    'RAWAJ Verification',
+    ARRAY['RAWAJ Verification'],
+    'SY',
+    999990
+  );
+
+  INSERT INTO public.vehicle_models (
+    id, make_id, slug, name_ar, name_en, aliases, vehicle_type,
+    start_year, end_year, sort_order
+  ) VALUES
+    (
+      'rawaj-verification-legacy',
+      'rawaj-verification',
+      'legacy',
+      'قديم',
+      'Legacy',
+      ARRAY['Legacy'],
+      'sedan',
+      1990,
+      1999,
+      10
+    ),
+    (
+      'rawaj-verification-modern',
+      'rawaj-verification',
+      'modern',
+      'حديث',
+      'Modern',
+      ARRAY['Modern'],
+      'sedan',
+      2020,
+      2030,
+      20
+    );
+
+  v_payload := public.rawaj_fetch_vehicle_models_v1(
+    'rawaj-verification',
+    null,
+    1995,
+    300
+  );
+  IF jsonb_array_length(v_payload -> 'items') <> 1
+    OR v_payload #>> '{items,0,id}' <> 'rawaj-verification-legacy' THEN
+    RAISE EXCEPTION 'vehicle_model_api_year_filter_invalid_for_1995: %', v_payload;
   END IF;
 
+  v_payload := public.rawaj_fetch_vehicle_models_v1(
+    'rawaj-verification',
+    null,
+    2025,
+    300
+  );
+  IF jsonb_array_length(v_payload -> 'items') <> 1
+    OR v_payload #>> '{items,0,id}' <> 'rawaj-verification-modern' THEN
+    RAISE EXCEPTION 'vehicle_model_api_year_filter_invalid_for_2025: %', v_payload;
+  END IF;
+
+  DELETE FROM public.vehicle_models
+  WHERE make_id = 'rawaj-verification';
+  DELETE FROM public.vehicle_makes
+  WHERE id = 'rawaj-verification';
+
   v_payload := public.rawaj_fetch_vehicle_model_children_v1('toyota-camry', null);
-  IF NOT COALESCE((v_payload ->> 'found')::boolean, false)
+  IF NOT COalesce((v_payload ->> 'found')::boolean, false)
     OR v_payload #>> '{model,id}' <> 'toyota-camry'
     OR jsonb_typeof(v_payload -> 'generations') <> 'array'
     OR jsonb_typeof(v_payload -> 'trims') <> 'array' THEN
