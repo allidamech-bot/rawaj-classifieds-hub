@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   quality:
-    name: Chat Quality
+    name: Auth-Stable Surfaces Quality
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -26,8 +26,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Focused list-first contract
-        run: npm run test:release-blockers-chats-list-first
+      - name: Focused auth-stable surface contracts
+        run: node --test scripts/auth-stable-public-surfaces.test.mjs scripts/chats-mobile-list-first.test.mjs
       - name: Full repository check
         run: npm run check
       - name: Publish quality result
@@ -41,13 +41,13 @@ jobs:
               repo: context.repo.repo,
               sha: context.sha,
               state: passed ? 'success' : 'failure',
-              context: 'Chat White Panel / Quality',
-              description: passed ? 'Chat quality gate passed' : 'Chat quality gate failed',
+              context: 'Auth-Stable Surfaces / Quality',
+              description: passed ? 'Auth-stable surface quality passed' : 'Auth-stable surface quality failed',
               target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
             })
 
   browser:
-    name: Chat Browser
+    name: Auth-Stable Surfaces Browser
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -58,13 +58,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - name: Run exact white-panel regression
+      - name: Run category ad and exact white-panel regression
         run: npx playwright test e2e/current-acceptance-regression.spec.ts --project=mobile-chromium --project=desktop-chromium
       - name: Upload browser diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: chat-white-panel-${{ github.run_id }}
+          name: auth-stable-surfaces-${{ github.run_id }}
           path: |
             playwright-report
             test-results
@@ -81,7 +81,7 @@ jobs:
               repo: context.repo.repo,
               sha: context.sha,
               state: passed ? 'success' : 'failure',
-              context: 'Chat White Panel / Browser',
-              description: passed ? 'Exact mobile regression passed' : 'Chat browser regression failed',
+              context: 'Auth-Stable Surfaces / Browser',
+              description: passed ? 'Auth-stable browser regression passed' : 'Auth-stable browser regression failed',
               target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
             })
