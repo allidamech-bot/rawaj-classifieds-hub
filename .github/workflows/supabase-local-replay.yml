@@ -44,9 +44,32 @@ jobs:
           sudo apt-get install --yes --no-install-recommends postgresql-client
 
       - name: Start disposable Supabase stack
+        shell: bash
         run: |
+          set -Eeuo pipefail
           supabase stop --no-backup || true
-          supabase start
+
+          migration_backup="$RUNNER_TEMP/rawaj-supabase-migrations"
+          startup_log="$RUNNER_TEMP/rawaj-supabase-start.log"
+          rm -rf "$migration_backup"
+          mv supabase/migrations "$migration_backup"
+          mkdir -p supabase/migrations
+
+          restore_migrations() {
+            rm -rf supabase/migrations
+            mv "$migration_backup" supabase/migrations
+          }
+          trap restore_migrations EXIT
+
+          if ! supabase start >"$startup_log" 2>&1; then
+            echo "Supabase startup failed. Last 200 log lines:"
+            tail -n 200 "$startup_log"
+            exit 1
+          fi
+
+          restore_migrations
+          trap - EXIT
+          tail -n 80 "$startup_log"
           supabase status
 
       - name: Replay canonical database history and verify invariants
