@@ -1,3 +1,6 @@
+import "../../listings-results.css";
+import "../../search-filters-v1.css";
+import "../../search-filters-v2.css";
 import {
   fetchPublicCategories,
   fetchPublicSubcategories,
