@@ -8,6 +8,8 @@ const migrations = await Promise.all(
     "202607190021_taxonomy_field_registry_foundation_v1.sql",
     "202607190022_vehicle_reference_catalog_foundation_v1.sql",
     "202607190023_taxonomy_data_public_read_contract_v1.sql",
+    "202607190024_taxonomy_legacy_mapping_contract_v1.sql",
+    "202607190025_taxonomy_owner_governance_rpc_v1.sql",
   ].map((filename) =>
     readFile(new URL(`../supabase/migrations/${filename}`, import.meta.url), "utf8"),
   ),
@@ -24,6 +26,7 @@ const requiredTables = [
   "taxonomy_field_rules",
   "field_conditional_rules",
   "taxonomy_mapping_queue",
+  "taxonomy_legacy_mappings",
   "vehicle_makes",
   "vehicle_models",
   "vehicle_generations",
@@ -78,6 +81,18 @@ test("vehicle models and descendants cannot exist without controlled parents", (
   assert.match(migration, /'vehicle_trims_by_model'/);
 });
 
+test("legacy compatibility mappings can consolidate old categories into canonical leaves", () => {
+  assert.match(migration, /create table if not exists public\.taxonomy_legacy_mappings/);
+  assert.match(migration, /attribute_patch jsonb not null default '\{\}'::jsonb/);
+  assert.match(
+    migration,
+    /mapping_kind in \('exact', 'category_default', 'brand_attribute', 'compatibility', 'manual_review'\)/,
+  );
+  assert.match(migration, /taxonomy_legacy_mappings_exact_scope_idx/);
+  assert.match(migration, /taxonomy_legacy_mappings_category_default_idx/);
+  assert.match(migration, /node_row\.is_leaf/);
+});
+
 test("legacy listing migration is explicit, reviewable, and confidence bounded", () => {
   assert.match(migration, /create table if not exists public\.taxonomy_mapping_queue/);
   assert.match(migration, /listing_id uuid primary key references public\.listings\(id\)/);
@@ -98,6 +113,7 @@ test("public clients receive read-only published metadata and never receive mapp
     "field_definitions",
     "taxonomy_field_rules",
     "field_conditional_rules",
+    "taxonomy_legacy_mappings",
     "vehicle_makes",
     "vehicle_models",
     "vehicle_generations",
@@ -126,6 +142,35 @@ test("public taxonomy reads expose only the published active version", () => {
   assert.match(migration, /create policy taxonomy_version_nodes_public_read/);
   assert.match(migration, /version_row\.status = 'published'/);
   assert.match(migration, /and node_row\.is_active/);
+});
+
+test("owner governance validates and atomically publishes a complete taxonomy", () => {
+  assert.match(migration, /create or replace function public\.rawaj_owner_validate_taxonomy_version/);
+  assert.match(migration, /active_roots_without_active_leaves/);
+  assert.match(migration, /active_leaves_without_complete_schema/);
+  assert.match(migration, /legacy_subcategories_without_mapping/);
+  assert.match(migration, /taxonomy_cycles/);
+  assert.match(migration, /runtime_slug_reuse_conflicts/);
+  assert.match(migration, /create or replace function public\.rawaj_owner_create_taxonomy_draft/);
+  assert.match(migration, /A taxonomy draft already exists/);
+  assert.match(migration, /create or replace function public\.rawaj_owner_publish_taxonomy_version/);
+  assert.match(migration, /raise exception 'stale_taxonomy_version'/);
+  assert.match(migration, /taxonomy_validation_failed/);
+  assert.match(migration, /lock table public\.taxonomy_versions/);
+  assert.match(migration, /lock table public\.taxonomy_nodes/);
+  assert.match(migration, /'taxonomy\.version_published'/);
+});
+
+test("owner taxonomy governance RPCs are authenticated entry points with database owner checks", () => {
+  for (const signature of [
+    "rawaj_owner_validate_taxonomy_version\\(uuid\\)",
+    "rawaj_owner_create_taxonomy_draft\\(text\\)",
+    "rawaj_owner_publish_taxonomy_version\\(uuid, timestamptz, text\\)",
+  ]) {
+    assert.match(migration, new RegExp(`grant execute on function public\\.${signature} to authenticated`));
+    assert.match(migration, new RegExp(`revoke all on function public\\.${signature} from public, anon`));
+  }
+  assert.match(migration, /not public\.current_user_has_role\('owner'\)/);
 });
 
 test("foundation trigger helper pins search_path and is not directly executable", () => {
