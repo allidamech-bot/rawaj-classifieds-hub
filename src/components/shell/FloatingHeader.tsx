@@ -4,7 +4,7 @@ import { Languages, LogIn, MapPin, Plus, User, UserCog } from "lucide-react";
 import { NotificationTrigger } from "@/components/NotificationTrigger";
 import { OfflineNotice } from "@/components/OfflineNotice";
 import { PublicAdPlacementSlot } from "@/components/PublicAdPlacementSlot";
-import type { AdPlacementPage } from "@/lib/api/ad-placements";
+import { resolveAdPlacementPage } from "@/lib/ad-placement-route";
 import { resolvePrimaryNavigationSection } from "@/lib/primary-navigation";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -14,19 +14,12 @@ export interface FloatingHeaderProps {
   title?: string;
 }
 
-function resolveAdPlacementPage(pathname: string): AdPlacementPage | null {
-  if (pathname === "/") return "home";
-  if (pathname === "/listings" || pathname === "/listings/") return "search_results";
-  if (pathname.startsWith("/listings/")) return "listing_detail";
-  if (pathname === "/categories" || pathname === "/categories/") return "categories";
-  if (pathname === "/offers" || pathname === "/offers/") return "offers";
-  return null;
-}
-
 export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) {
   const auth = useAuth();
   const { language, text, toggleLanguage } = useUiPreferences();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const pathname = useRouterState({
+    select: (state) => state.resolvedLocation?.pathname ?? state.location.pathname,
+  });
   const activeSection = resolvePrimaryNavigationSection(pathname);
 
   const navItems = [
@@ -44,6 +37,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
       <header
         className="rawaj-app-header sticky top-0 z-30 text-foreground"
         data-shell-region="header-region"
+        data-resolved-pathname={pathname}
       >
         <div className="rawaj-floating-header-shell container-wide flex min-h-14 items-center gap-2 py-1.5 sm:min-h-[3.75rem] sm:gap-3 lg:min-h-16 lg:gap-4 lg:py-2">
           <Link

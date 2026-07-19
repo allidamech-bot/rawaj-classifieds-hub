@@ -88,6 +88,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
             <Link
               key={item.to}
               to={item.to}
+              search={item.to === "/chats" ? {} : undefined}
               preload="intent"
               role="listitem"
               data-active={active}

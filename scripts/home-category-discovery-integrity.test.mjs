@@ -180,8 +180,10 @@ test("legacy landing maps only through explicit legacy ids and preserves fallbac
   assert.equal(taxonomy.findLegacyCategoryTaxonomyNode(index, "missing"), undefined);
 });
 
-test("public discovery reads remain privacy-safe and deduplicate dual matches", () => {
+test("public discovery reads remain privacy-safe, cached, and deduplicate dual matches", () => {
   assert.match(references, /from\("taxonomy_nodes"\)[\s\S]*\.select\([\s\S]*legacy_subcategory_id/);
+  assert.match(references, /const publicTaxonomyCache = new WeakMap/);
+  assert.match(references, /readCachedPublicReference\(client, publicTaxonomyCache/);
   assert.doesNotMatch(
     references.match(/fetchPublicTaxonomyNodes[\s\S]*?\n\}/)?.[0] ?? "",
     /select\("\*"\)/,

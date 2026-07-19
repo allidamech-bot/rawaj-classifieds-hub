@@ -69,9 +69,62 @@ body {
   min-width: 0;
 }
 
+.rawaj-app-shell[data-route-state="pending"] .rawaj-app-shell__content,
+.rawaj-app-shell[data-route-state="pending"] .rawaj-app-shell__page > footer {
+  pointer-events: none;
+}
+
 .rawaj-app-shell__announcements {
   position: relative;
   z-index: var(--depth-floating);
+}
+
+.rawaj-route-pending-mask {
+  pointer-events: none;
+  position: fixed;
+  z-index: calc(var(--depth-navigation) + 5);
+  inset-inline: 0;
+  top: var(--safe-top);
+  height: 0.25rem;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.rawaj-route-pending-mask__content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.rawaj-route-pending-mask__content > span:last-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.rawaj-route-pending-mask__spinner {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: min(42vw, 18rem);
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--rawaj-orange), var(--rawaj-gold), var(--color-primary));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--rawaj-orange) 34%, transparent);
+  animation: rawaj-route-pending-slide 900ms ease-in-out infinite;
+}
+
+@keyframes rawaj-route-pending-slide {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(calc(100vw + 110%));
+  }
 }
 
 .rawaj-app-shell__floating-layer,
@@ -249,18 +302,7 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 }
 
 .rawaj-page-transition {
-  animation: rawaj-page-enter var(--motion-slow) ease both;
-}
-
-@keyframes rawaj-page-enter {
-  from {
-    transform: translateY(0.4rem);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  animation: none;
 }
 
 @media (min-width: 1024px) {
@@ -280,8 +322,9 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rawaj-page-transition {
+  .rawaj-route-pending-mask__spinner {
     animation: none;
+    width: 100%;
   }
 
   .rawaj-mobile-dock,

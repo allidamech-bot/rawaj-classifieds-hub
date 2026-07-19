@@ -323,10 +323,23 @@ function personalSpaceRouteClass(pathname: string) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const showDraftRecovery = pathname === "/add-listing";
-  const routeScopeClass = personalSpaceRouteClass(pathname);
-  const listingDetailMatch = pathname.match(/^\/listings\/([^/]+)$/);
+  const routeNavigation = useRouterState({
+    select: (state) => {
+      const resolvedPathname = state.resolvedLocation?.pathname ?? state.location.pathname;
+      return {
+        resolvedPathname,
+        pendingPathname: state.location.pathname,
+        isRouteNavigating:
+          Boolean(state.resolvedLocation) &&
+          state.isLoading &&
+          state.location.pathname !== resolvedPathname,
+      };
+    },
+  });
+  const { resolvedPathname, pendingPathname, isRouteNavigating } = routeNavigation;
+  const showDraftRecovery = resolvedPathname === "/add-listing";
+  const routeScopeClass = personalSpaceRouteClass(resolvedPathname);
+  const listingDetailMatch = resolvedPathname.match(/^\/listings\/([^/]+)$/);
   const listingDetailId = listingDetailMatch?.[1]
     ? decodeURIComponent(listingDetailMatch[1])
     : null;
@@ -340,7 +353,9 @@ function RootComponent() {
               <DeferredAccountBackgroundServices />
               <HtmlAttributes />
               <AppShell
-                pathname={pathname}
+                pathname={resolvedPathname}
+                pendingPathname={pendingPathname}
+                isRouteNavigating={isRouteNavigating}
                 routeClassName={routeScopeClass}
                 announcements={
                   <DeferredRouteAnnouncements

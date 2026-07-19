@@ -1,0 +1,13 @@
+/*
+ * Critical public/account route styles must survive client-side authentication
+ * transitions. These selectors are route-scoped, so keeping the bundles loaded
+ * does not restyle unrelated pages, but it prevents TanStack head-link churn
+ * from dropping the categories atlas or the mobile chat isolation rules.
+ */
+@import "./listings-results.css";
+@import "./search-filters-v1.css";
+@import "./search-filters-v2.css";
+@import "./activity-more-foundation.css";
+@import "./messaging-signature.css";
+@import "./communication-center-v3.css";
+@import "./personal-space-polish.css";

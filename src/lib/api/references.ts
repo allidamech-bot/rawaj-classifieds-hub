@@ -16,6 +16,7 @@ import {
   rowString,
   normalizePlaceholder,
 } from "@/lib/api/shared";
+import { publicSupabase } from "@/lib/supabase";
 
 export function mapCategory(row: Record<string, unknown>): ClassifiedCategory {
   return {
@@ -110,9 +111,17 @@ const publicCategoryCache = new WeakMap<
   SupabaseClient,
   PublicReferenceCacheEntry<ClassifiedCategory[]>
 >();
+const publicSubcategoryCache = new WeakMap<
+  SupabaseClient,
+  PublicReferenceCacheEntry<ClassifiedSubcategory[]>
+>();
 const publicGovernorateCache = new WeakMap<
   SupabaseClient,
   PublicReferenceCacheEntry<ClassifiedGovernorate[]>
+>();
+const publicTaxonomyCache = new WeakMap<
+  SupabaseClient,
+  PublicReferenceCacheEntry<TaxonomyNode[]>
 >();
 
 async function readCachedPublicReference<T>(
@@ -158,6 +167,22 @@ async function readPublicCategories(
   return readCachedPublicReference(client, publicCategoryCache, () => loadPublicCategories(client));
 }
 
+async function loadPublicSubcategories(
+  client: SupabaseClient,
+): Promise<ClassifiedsResult<ClassifiedSubcategory[]>> {
+  const { data, error } = await client.from("subcategories").select("*").order("sort_order");
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapSubcategory) };
+}
+
+async function readPublicSubcategories(
+  client: SupabaseClient,
+): Promise<ClassifiedsResult<ClassifiedSubcategory[]>> {
+  return readCachedPublicReference(client, publicSubcategoryCache, () =>
+    loadPublicSubcategories(client),
+  );
+}
+
 async function loadPublicGovernorates(
   client: SupabaseClient,
 ): Promise<ClassifiedsResult<ClassifiedGovernorate[]>> {
@@ -182,6 +207,34 @@ async function readPublicGovernorates(
   );
 }
 
+async function loadPublicTaxonomyNodes(
+  client: SupabaseClient,
+): Promise<ClassifiedsResult<TaxonomyNode[]>> {
+  const { data, error } = await client
+    .from("taxonomy_nodes")
+    .select(
+      "id,parent_id,slug,name_ar,name_en,description_ar,description_en,icon_key,sort_order,depth,is_active,is_leaf,filter_schema_key,classification_key,classification_value,legacy_category_id,legacy_subcategory_id",
+    )
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("name_ar", { ascending: true });
+  if (error) return { ok: false, error: mapError(error) };
+  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapTaxonomyNode) };
+}
+
+async function readPublicTaxonomyNodes(
+  client: SupabaseClient,
+): Promise<ClassifiedsResult<TaxonomyNode[]>> {
+  return readCachedPublicReference(client, publicTaxonomyCache, () =>
+    loadPublicTaxonomyNodes(client),
+  );
+}
+
+function getPublicReferenceClient(): ClassifiedsResult<SupabaseClient> {
+  if (publicSupabase) return { ok: true, data: publicSupabase };
+  return getClient();
+}
+
 export async function readReferences(client: SupabaseClient) {
   const [categoriesResult, governoratesResult] = await Promise.all([
     readPublicCategories(client),
@@ -197,7 +250,7 @@ export async function readReferences(client: SupabaseClient) {
 }
 
 export async function fetchPublicCategories(): Promise<ClassifiedsResult<ClassifiedCategory[]>> {
-  const clientResult = getClient();
+  const clientResult = getPublicReferenceClient();
   if (!clientResult.ok) return clientResult;
   return readPublicCategories(clientResult.data);
 }
@@ -205,35 +258,21 @@ export async function fetchPublicCategories(): Promise<ClassifiedsResult<Classif
 export async function fetchPublicSubcategories(): Promise<
   ClassifiedsResult<ClassifiedSubcategory[]>
 > {
-  const clientResult = getClient();
+  const clientResult = getPublicReferenceClient();
   if (!clientResult.ok) return clientResult;
-  const { data, error } = await clientResult.data
-    .from("subcategories")
-    .select("*")
-    .order("sort_order");
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapSubcategory) };
+  return readPublicSubcategories(clientResult.data);
 }
 
 export async function fetchPublicTaxonomyNodes(): Promise<ClassifiedsResult<TaxonomyNode[]>> {
-  const clientResult = getClient();
+  const clientResult = getPublicReferenceClient();
   if (!clientResult.ok) return clientResult;
-  const { data, error } = await clientResult.data
-    .from("taxonomy_nodes")
-    .select(
-      "id,parent_id,slug,name_ar,name_en,description_ar,description_en,icon_key,sort_order,depth,is_active,is_leaf,filter_schema_key,classification_key,classification_value,legacy_category_id,legacy_subcategory_id",
-    )
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true })
-    .order("name_ar", { ascending: true });
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapTaxonomyNode) };
+  return readPublicTaxonomyNodes(clientResult.data);
 }
 
 export async function fetchPublicGovernorates(): Promise<
   ClassifiedsResult<ClassifiedGovernorate[]>
 > {
-  const clientResult = getClient();
+  const clientResult = getPublicReferenceClient();
   if (!clientResult.ok) return clientResult;
   return readPublicGovernorates(clientResult.data);
 }

@@ -1,5 +1,6 @@
+import "../auth-stable-route-styles.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
-import communicationCenterV2Css from "../communication-center-v2.css?url";
+import communicationCenterV3Css from "../communication-center-v3.css?url";
 import homeDiscoveryV3Css from "../home-discovery-v3.css?url";
 import homeMarketplaceV2Css from "../home-marketplace-v2.css?url";
 import homeSignatureCss from "../home-signature.css?url";
@@ -39,7 +40,7 @@ export const routeStyleHrefs = {
   listingStudioV2: listingStudioV2Css,
   listingStudioV3: listingStudioV3Css,
   messagingSignature: messagingSignatureCss,
-  communicationCenterV2: communicationCenterV2Css,
+  communicationCenterV2: communicationCenterV3Css,
   activityMoreFoundation: activityMoreFoundationCss,
   personalSpacePolish: personalSpacePolishCss,
   myStoreRedesign: myStoreRedesignCss,
@@ -72,7 +73,10 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
 
   return {
     home: normalizedPathname === "/",
-    listingResults: normalizedPathname === "/listings",
+    // The category atlas styles intentionally live in search-filters-v1.css.
+    // Keep that discovery bundle active on /categories so its hero, search,
+    // and directory cards do not fall back to unstyled utility-only rows.
+    listingResults: ["/listings", "/categories"].includes(normalizedPathname),
     listingDetail: /^\/listings\/[^/]+$/.test(normalizedPathname),
     offers: normalizedPathname === "/offers",
     storefront:

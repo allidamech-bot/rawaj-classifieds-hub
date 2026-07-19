@@ -46,7 +46,8 @@ test("root head resolves stylesheet scope from the active matched pathname", () 
 
 test("route scopes remain explicit and exclude unrelated child pages", () => {
   assert.match(routeStyles, /home: normalizedPathname === "\/"/);
-  assert.match(routeStyles, /listingResults: normalizedPathname === "\/listings"/);
+  assert.match(routeStyles, /listingResults: \["\/listings", "\/categories"\]\.includes/);
+  assert.match(routeStyles, /category atlas styles intentionally live in search-filters-v1\.css/);
   assert.match(routeStyles, /listingDetail: \/\^\\\/listings\\\/\[\^\/\]\+\$\//);
   assert.match(routeStyles, /offers: normalizedPathname === "\/offers"/);
   assert.match(routeStyles, /normalizedPathname === "\/profile\/listings"/);

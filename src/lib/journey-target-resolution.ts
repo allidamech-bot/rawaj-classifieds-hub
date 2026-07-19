@@ -17,8 +17,8 @@ export function resolveConversationTarget(
     return { kind: "missing", requestedConversationId: requestedId };
   }
 
-  const firstConversation = conversations[0];
-  if (firstConversation) return { kind: "default", conversation: firstConversation };
+  // Generic navigation to /chats must remain list-first. A conversation is only
+  // selected when the route contains an explicit, validated conversation id.
   return { kind: "empty" };
 }
 

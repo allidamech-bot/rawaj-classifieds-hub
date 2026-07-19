@@ -2,6 +2,7 @@ import { normalizeAdPlacementMediaUrl } from "@/lib/ad-placement-media-url";
 import { getClient, mapError, rowNumber, rowString } from "@/lib/api/shared";
 import type { AdPlacementPage } from "@/lib/api/ad-placements";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
+import { publicSupabase } from "@/lib/supabase";
 
 export type AdPlacementDevice = "mobile" | "desktop";
 
@@ -25,8 +26,15 @@ const AD_PLACEMENT_INVALIDATION_EVENT = "rawaj:ad-placement-invalidation";
 type AdPlacementInvalidationListener = () => void;
 const adPlacementInvalidationListeners = new Set<AdPlacementInvalidationListener>();
 
+function activePlacementCacheKey(
+  placementPage: AdPlacementPage,
+  device: AdPlacementDevice,
+): string {
+  return `${placementPage}:${device}`;
+}
+
 const broadcastChannel: BroadcastChannel | null = (() => {
-  if (typeof BroadcastChannel === "undefined") return null;
+  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") return null;
   try {
     return new BroadcastChannel(AD_PLACEMENT_INVALIDATION_EVENT);
   } catch {
@@ -95,11 +103,22 @@ export function invalidateActiveAdPlacementCache(): void {
   }
 }
 
+export async function refreshActiveAdPlacements(
+  placementPage: AdPlacementPage,
+  device: AdPlacementDevice,
+): Promise<ClassifiedsResult<PublicAdPlacement[]>> {
+  const cacheKey = activePlacementCacheKey(placementPage, device);
+  activePlacementCacheGeneration += 1;
+  activePlacementCache.delete(cacheKey);
+  activePlacementRequests.delete(cacheKey);
+  return fetchActiveAdPlacements(placementPage, device);
+}
+
 export async function fetchActiveAdPlacements(
   placementPage: AdPlacementPage,
   device: AdPlacementDevice,
 ): Promise<ClassifiedsResult<PublicAdPlacement[]>> {
-  const cacheKey = `${placementPage}:${device}`;
+  const cacheKey = activePlacementCacheKey(placementPage, device);
   const cached = activePlacementCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.result;
 
@@ -126,10 +145,20 @@ async function loadActiveAdPlacements(
   placementPage: AdPlacementPage,
   device: AdPlacementDevice,
 ): Promise<ClassifiedsResult<PublicAdPlacement[]>> {
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
+  const client =
+    publicSupabase ??
+    (() => {
+      const clientResult = getClient();
+      return clientResult.ok ? clientResult.data : null;
+    })();
+  if (!client) {
+    const clientResult = getClient();
+    return clientResult.ok
+      ? { ok: false, error: { code: "unknown", message: "تعذر تحميل المساحة الإعلانية." } }
+      : clientResult;
+  }
 
-  const { data, error } = await clientResult.data.rpc("rawaj_fetch_active_ad_placements", {
+  const { data, error } = await client.rpc("rawaj_fetch_active_ad_placements", {
     p_placement_page: placementPage,
     p_device: device,
   });

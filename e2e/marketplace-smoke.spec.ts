@@ -15,11 +15,16 @@ const publicRoutes = [
 ] as const;
 
 const protectedRoutes = ["/add-listing", "/profile", "/favorites", "/admin"] as const;
+const delayedReferenceRequest = "**/rest/v1/subcategories**";
 
 function isExpectedLocalRequestFailure(url: string, failure: string) {
-  return (
-    failure.includes("ERR_ABORTED") || (failure === "csp" && url.includes("va.vercel-scripts.com"))
-  );
+  if (failure.includes("ERR_ABORTED")) return true;
+  if (!url.includes("va.vercel-scripts.com")) return false;
+  return failure === "csp" || failure.includes("ERR_BLOCKED_BY_ORB");
+}
+
+async function waitForHydratedRouter(page: Page) {
+  await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
 }
 
 async function openHealthyPage(page: Page, path: string) {
@@ -38,7 +43,7 @@ async function openHealthyPage(page: Page, path: string) {
   await expect(page.locator("body")).toBeVisible();
   await expect(page.locator("main")).toBeVisible();
   await expect.poll(() => page.title()).not.toBe("");
-  await page.waitForTimeout(250);
+  await waitForHydratedRouter(page);
   expect(pageErrors).toEqual([]);
   expect(failedRequests).toEqual([]);
 }
@@ -60,13 +65,212 @@ for (const path of protectedRoutes) {
   });
 }
 
+test("home shell renders one header and one responsive dock", async ({ page }, testInfo) => {
+  await openHealthyPage(page, "/");
+
+  await expect(page.locator('[data-shell-region="header-region"]')).toHaveCount(1);
+  await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
+  await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(1);
+
+  const dock = page.locator(".rawaj-mobile-dock");
+  await expect(dock).toHaveCount(1);
+  if (testInfo.project.name.startsWith("mobile")) {
+    await expect(dock).toBeVisible();
+  } else {
+    await expect(dock).toBeHidden();
+  }
+});
+
+test("home search submits trimmed queries", async ({ page }) => {
+  await openHealthyPage(page, "/");
+
+  const search = page.locator("#rawaj-home-search");
+  await expect(search).toBeVisible();
+  await expect(search).toHaveAttribute("name", "q");
+  await expect(search).toHaveAttribute("enterkeyhint", "search");
+  await expect(search).toHaveAttribute("dir", "auto");
+
+  await search.fill("  سيارة  ");
+  await search.press("Enter");
+  await expect(page).toHaveURL(/\/listings(?:\?|$)/);
+  expect(new URL(page.url()).searchParams.get("q")).toBe("سيارة");
+
+  await page.goBack();
+  await waitForHydratedRouter(page);
+  await expect(search).toBeVisible();
+  await search.fill("  iPhone 15  ");
+  await page.locator('.rawaj-search-overlay__form button[type="submit"]').click();
+  await expect(page).toHaveURL(/\/listings(?:\?|$)/);
+  expect(new URL(page.url()).searchParams.get("q")).toBe("iPhone 15");
+
+  await page.goBack();
+  await waitForHydratedRouter(page);
+  await expect(search).toBeVisible();
+  await search.fill("   ");
+  await search.press("Enter");
+  await expect(page).toHaveURL(/\/listings(?:\?|$)/);
+  expect(new URL(page.url()).searchParams.has("q")).toBe(false);
+});
+
+test("mobile home search hides the bottom dock while the keyboard field is focused", async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile keyboard contract");
+  await openHealthyPage(page, "/");
+
+  const search = page.locator("#rawaj-home-search");
+  await search.focus();
+  await expect(page.locator("html")).toHaveAttribute("data-keyboard-open", "true");
+  await expect(page.locator(".rawaj-mobile-dock")).toHaveCSS("pointer-events", "none");
+
+  await search.blur();
+  await expect(page.locator("html")).toHaveAttribute("data-keyboard-open", "false");
+});
+
+test("active public ad uses the unified ratio and follows the resolved route", async ({
+  page,
+}, testInfo) => {
+  await openHealthyPage(page, "/");
+
+  const expectedDevice = testInfo.project.name.startsWith("mobile") ? "mobile" : "desktop";
+  const homeSlot = page.locator('[data-placement-page="home"]');
+  await expect(homeSlot).toBeVisible({ timeout: 15_000 });
+  await expect(homeSlot).toHaveAttribute("data-placement-device", expectedDevice);
+  await expect(homeSlot).toHaveAttribute("data-placement-loading", "false");
+  await expect(page.locator("[data-placement-page]")).toHaveCount(1);
+
+  const link = homeSlot.locator("a");
+  await expect(link).toHaveAttribute("target", "_blank");
+  await expect(link).toHaveAttribute("rel", /noopener/);
+  await expect(link).toHaveAttribute("rel", /noreferrer/);
+  await expect(link).toHaveAttribute("rel", /sponsored/);
+
+  const image = homeSlot.locator("img");
+  const imageLoaded = () =>
+    image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0);
+  await expect.poll(imageLoaded).toBe(true);
+  const ratio = await image.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return bounds.width / bounds.height;
+  });
+  expect(ratio).toBeGreaterThan(2.2);
+  expect(ratio).toBeLessThan(2.38);
+
+  await page.locator(".rawaj-search-location").click();
+  await expect(page).toHaveURL(/\/listings(?:\?|$)/);
+  const listingsSlot = page.locator('[data-placement-page="search_results"]');
+  await expect(listingsSlot).toBeVisible({ timeout: 15_000 });
+  await expect(listingsSlot).toHaveAttribute("data-placement-device", expectedDevice);
+  await expect(listingsSlot).toHaveAttribute("data-placement-loading", "false");
+  await expect(page.locator("[data-placement-page]")).toHaveCount(1);
+  await expect(page.locator('[data-placement-page="home"]')).toHaveCount(0);
+});
+
 test("home discovery can navigate to the public listings workspace", async ({ page }) => {
   await openHealthyPage(page, "/");
-  const listingsLink = page.locator('a[href="/listings"]').first();
+  const listingsLink = page.locator(".rawaj-search-location");
   await expect(listingsLink).toBeVisible();
   await listingsLink.click();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   await expect(page.locator("main")).toBeVisible();
+});
+
+test("pending navigation keeps the resolved page visible without mixing route shells", async ({
+  page,
+}) => {
+  await openHealthyPage(page, "/");
+
+  const shell = page.locator(".rawaj-app-shell");
+  const pageContent = page.locator('[data-shell-region="page-content"]');
+  await expect(shell).toHaveAttribute("data-route-state", "idle");
+  await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
+  await expect(page.locator("main.rawaj-home-v3-main")).toBeVisible();
+
+  let releaseRequest = () => {};
+  const requestGate = new Promise<void>((resolve) => {
+    releaseRequest = resolve;
+  });
+  let delayedRequestCount = 0;
+
+  await page.route(delayedReferenceRequest, async (route) => {
+    delayedRequestCount += 1;
+    await requestGate;
+    await route.continue();
+  });
+
+  const listingsLink = page.locator(".rawaj-search-location");
+
+  try {
+    await listingsLink.dispatchEvent("click");
+
+    await expect.poll(() => delayedRequestCount).toBeGreaterThan(0);
+    await expect(shell).toHaveAttribute("data-route-state", "pending");
+    await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
+    await expect(shell).toHaveAttribute("data-pending-pathname", "/listings");
+    await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
+    await expect(pageContent).toBeVisible();
+    await expect(pageContent).toHaveCSS("pointer-events", "none");
+    await expect(page.locator("main.rawaj-home-v3-main")).toBeVisible();
+    await expect(page.locator("main.rawaj-search-results-v1")).toHaveCount(0);
+  } finally {
+    releaseRequest();
+  }
+
+  await expect(page).toHaveURL(/\/listings(?:\?|$)/);
+  await expect(shell).toHaveAttribute("data-route-state", "idle");
+  await expect(shell).toHaveAttribute("data-resolved-pathname", "/listings");
+  await expect(page.locator('[data-shell-region="route-pending-mask"]')).toHaveCount(0);
+  await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(0);
+  await expect(page.locator("main.rawaj-search-results-v1")).toBeVisible();
+  await page.unroute(delayedReferenceRequest);
+});
+
+test("rapid bottom navigation resolves to one page without stacked route content", async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile bottom-dock contract");
+  await openHealthyPage(page, "/");
+
+  let releaseRequest = () => {};
+  const requestGate = new Promise<void>((resolve) => {
+    releaseRequest = resolve;
+  });
+  let delayedRequestCount = 0;
+
+  await page.route(delayedReferenceRequest, async (route) => {
+    delayedRequestCount += 1;
+    await requestGate;
+    await route.continue();
+  });
+
+  const shell = page.locator(".rawaj-app-shell");
+  const pageContent = page.locator('[data-shell-region="page-content"]');
+  const categoriesDockLink = page.locator('.rawaj-mobile-dock a[href="/categories"]');
+  const homeDockLink = page.locator('.rawaj-mobile-dock a[href="/"]');
+
+  try {
+    await categoriesDockLink.dispatchEvent("click");
+    await expect.poll(() => delayedRequestCount).toBeGreaterThan(0);
+    await expect(shell).toHaveAttribute("data-route-state", "pending");
+    await homeDockLink.dispatchEvent("click");
+    await categoriesDockLink.dispatchEvent("click");
+
+    await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
+    await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
+    await expect(pageContent).toBeVisible();
+    await expect(pageContent).toHaveCSS("pointer-events", "none");
+    await expect(page.locator("main:visible")).toHaveCount(1);
+    await expect(page.locator("main.rawaj-home-v3-main")).toBeVisible();
+  } finally {
+    releaseRequest();
+  }
+
+  await expect(page).toHaveURL(/\/categories(?:\?|$)/);
+  await expect(shell).toHaveAttribute("data-route-state", "idle");
+  await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
+  await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(0);
+  await expect(page.locator("main.rawaj-categories-v2")).toHaveCount(1);
+  await page.unroute(delayedReferenceRequest);
 });
 
 test("category directory exposes an indexable category landing route when data exists", async ({
@@ -80,6 +284,37 @@ test("category directory exposes an indexable category landing route when data e
   await categoryLink.click();
   await expect(page).toHaveURL(/\/category\/[^/?#]+/);
   await expect(page.locator("h1")).toBeVisible();
+});
+
+test("home stays within the viewport at audited mobile and desktop widths", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "Single Chromium viewport matrix");
+
+  for (const width of [320, 360, 390, 430, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await openHealthyPage(page, "/");
+
+    const dimensions = await page.evaluate(() => ({
+      viewport: document.documentElement.clientWidth,
+      document: document.documentElement.scrollWidth,
+    }));
+    expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport + 2);
+    await expect(page.locator('[data-shell-region="header-region"]')).toHaveCount(1);
+    await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
+    await expect(page.locator(".rawaj-category-world").first()).toBeVisible();
+
+    const searchSubmit = page.locator(".rawaj-search-overlay__submit");
+    const submitBounds = await searchSubmit.boundingBox();
+    expect(submitBounds?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+    const dock = page.locator(".rawaj-mobile-dock");
+    if (width < 1024) {
+      await expect(dock).toBeVisible();
+    } else {
+      await expect(dock).toBeHidden();
+    }
+  }
 });
 
 test("unknown routes render a controlled not-found surface", async ({ page }) => {
