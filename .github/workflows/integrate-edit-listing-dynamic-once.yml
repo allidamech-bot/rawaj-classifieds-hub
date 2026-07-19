@@ -29,21 +29,22 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Keep duplicate save/resubmit markers explicit
+      - name: Align strict transformation markers
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
           path = Path("scripts/integrate-edit-listing-dynamic-all-categories-v1.py")
           source = path.read_text(encoding="utf-8")
-          old = '''def replace_once(label: str, old: str, new: str) -> None:
+
+          old_helper = '''def replace_once(label: str, old: str, new: str) -> None:
               global source
               count = source.count(old)
               if count != 1:
                   raise SystemExit(f"{label}: expected exactly one marker, found {count}")
               source = source.replace(old, new, 1)
           '''
-          new = '''def replace_once(label: str, old: str, new: str) -> None:
+          new_helper = '''def replace_once(label: str, old: str, new: str) -> None:
               global source
               expected_count = 2 if label == "save loading guard" else 1
               count = source.count(old)
@@ -53,9 +54,36 @@ jobs:
                   )
               source = source.replace(old, new, 1)
           '''
-          if old not in source:
+          if old_helper not in source:
               raise SystemExit("Transformer helper marker missing")
-          path.write_text(source.replace(old, new, 1), encoding="utf-8")
+          source = source.replace(old_helper, new_helper, 1)
+
+          old_ui_marker = '''            <CategorySpecificFields
+              kind={categoryFieldKind}
+              values={categoryDetails}
+              disabled={!isEditable}
+              text={text}
+              onChange={(nextDetails) => {
+                setCategoryDetails(nextDetails);
+                if (categoryFieldKind === "vehicles" || categoryFieldKind === "electronics") {
+                  setCondition(categoryDetailsGlobalCondition(categoryFieldKind, nextDetails));
+                }
+              }}
+            />
+          '''
+          actual_ui_marker = '''            <CategorySpecificFields
+              kind={categoryFieldKind}
+              values={categoryDetails}
+              disabled={!isEditable}
+              onChange={setCategoryDetails}
+              text={text}
+            />
+          '''
+          if old_ui_marker not in source:
+              raise SystemExit("Transformer UI search marker missing")
+          source = source.replace(old_ui_marker, actual_ui_marker, 1)
+
+          path.write_text(source, encoding="utf-8")
           PY
       - name: Integrate governed fields into listing edit
         id: integrate
