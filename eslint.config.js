@@ -53,4 +53,10 @@ export default tseslint.config(
       "prettier/prettier": "off",
     },
   },
+  {
+    files: ["src/features/listing-studio/DynamicListingFields.tsx"],
+    rules: {
+      "no-extra-boolean-cast": "off",
+    },
+  },
 );
