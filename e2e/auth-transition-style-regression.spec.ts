@@ -139,7 +139,11 @@ test("Google OAuth implicit hash callback initializes completion state before us
   );
 
   await page.route("**/auth/v1/user", async (route) => {
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(user) });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(user),
+    });
   });
 
   const hash = new URLSearchParams({
