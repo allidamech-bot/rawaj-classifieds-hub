@@ -45,10 +45,7 @@ jobs:
           '''
           new = '''def replace_once(label: str, old: str, new: str) -> None:
               global source
-              expected_count = 2 if label in {
-                  "save loading guard",
-                  "save attribute failure message",
-              } else 1
+              expected_count = 2 if label == "save loading guard" else 1
               count = source.count(old)
               if count != expected_count:
                   raise SystemExit(
