@@ -8,6 +8,12 @@ import process from "node:process";
 const root = process.cwd();
 const migrationsDirectory = path.join(root, "supabase", "migrations");
 const ledgerPath = path.join(root, "docs", "production-schema", "migration-ledger.json");
+const compatibilityPreludePath = path.join(
+  root,
+  "scripts",
+  "sql",
+  "clean-replay-compatibility-prelude.sql",
+);
 const verificationPath = path.join(
   root,
   "scripts",
@@ -16,6 +22,7 @@ const verificationPath = path.join(
 );
 const databaseUrl =
   process.env.SUPABASE_DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
+const compatibilityPreludeAfter = "202606290001_auth_roles_foundation.sql";
 const subprocessOptions = {
   cwd: root,
   env: {
@@ -51,6 +58,9 @@ const replayFiles = [...selectedFiles].sort((left, right) => left.localeCompare(
 if (replayFiles.length === 0) {
   throw new Error("No canonical or reconciliation migrations were selected for replay.");
 }
+if (!replayFiles.includes(compatibilityPreludeAfter)) {
+  throw new Error(`Compatibility prelude anchor is not replayed: ${compatibilityPreludeAfter}`);
+}
 
 console.log(`Replaying ${replayFiles.length} migrations against disposable local Supabase.`);
 console.log(
@@ -58,50 +68,53 @@ console.log(
 );
 
 for (const [index, filename] of replayFiles.entries()) {
-  const migrationPath = path.join(migrationsDirectory, filename);
+  runSqlFile(path.join(migrationsDirectory, filename), {
+    label: `Migration ${index + 1}/${replayFiles.length}`,
+    filename,
+    appName: "rawaj_supabase_local_replay",
+  });
+  console.log(`PASS ${index + 1}/${replayFiles.length} ${filename}`);
+
+  if (filename === compatibilityPreludeAfter) {
+    runSqlFile(compatibilityPreludePath, {
+      label: "Clean-replay compatibility prelude",
+      filename: path.basename(compatibilityPreludePath),
+      appName: "rawaj_supabase_local_compatibility",
+    });
+    console.log(`PASS compatibility ${path.basename(compatibilityPreludePath)}`);
+  }
+}
+
+const verification = runSqlFile(verificationPath, {
+  label: "Local Supabase foundation verification",
+  filename: path.basename(verificationPath),
+  appName: "rawaj_supabase_local_verification",
+});
+
+if (verification.stdout?.trim()) console.log(verification.stdout.trim());
+if (verification.stderr?.trim()) console.log(verification.stderr.trim());
+console.log("Supabase local clean replay and foundation verification passed.");
+
+function runSqlFile(filePath, { label, filename, appName }) {
   const result = spawnSync(
     "psql",
-    [databaseUrl, "-X", "--set", "ON_ERROR_STOP=1", "--file", migrationPath],
+    [databaseUrl, "-X", "--set", "ON_ERROR_STOP=1", "--file", filePath],
     {
       ...subprocessOptions,
       env: {
         ...subprocessOptions.env,
-        PGAPPNAME: "rawaj_supabase_local_replay",
+        PGAPPNAME: appName,
       },
     },
   );
 
   if (result.error) throw result.error;
   if (result.status !== 0) {
-    console.error(`\nMigration ${index + 1}/${replayFiles.length} failed: ${filename}`);
+    console.error(`\n${label} failed: ${filename}`);
     if (result.stdout?.trim()) console.error(result.stdout.trim());
     if (result.stderr?.trim()) console.error(result.stderr.trim());
-    throw new Error(`Migration replay failed at ${filename} with exit code ${result.status}.`);
+    throw new Error(`${label} failed at ${filename} with exit code ${result.status}.`);
   }
 
-  console.log(`PASS ${index + 1}/${replayFiles.length} ${filename}`);
+  return result;
 }
-
-const verification = spawnSync(
-  "psql",
-  [databaseUrl, "-X", "--set", "ON_ERROR_STOP=1", "--file", verificationPath],
-  {
-    ...subprocessOptions,
-    env: {
-      ...subprocessOptions.env,
-      PGAPPNAME: "rawaj_supabase_local_verification",
-    },
-  },
-);
-
-if (verification.error) throw verification.error;
-if (verification.status !== 0) {
-  console.error("\nLocal Supabase foundation verification failed.");
-  if (verification.stdout?.trim()) console.error(verification.stdout.trim());
-  if (verification.stderr?.trim()) console.error(verification.stderr.trim());
-  throw new Error(`Local Supabase verification failed with exit code ${verification.status}.`);
-}
-
-if (verification.stdout?.trim()) console.log(verification.stdout.trim());
-if (verification.stderr?.trim()) console.log(verification.stderr.trim());
-console.log("Supabase local clean replay and foundation verification passed.");
