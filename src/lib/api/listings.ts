@@ -39,6 +39,8 @@ import {
   readReferences,
 } from "@/lib/api/references";
 
+import { fetchDynamicFilteredPublicListings } from "@/lib/api/dynamic-filtered-listings";
+import { hasDynamicListingFilters } from "@/lib/api/dynamic-listing-search";
 import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
 import { resolveCanonicalLocationIds } from "@/lib/api/canonical-location-filter";
 import { isListingPastExpiry, publicListingExpiryFilter } from "@/lib/api/listing-expiry";
@@ -203,6 +205,13 @@ export async function fetchPublicListings(
   if (!references.ok) return { ok: false, error: references.error };
 
   filters = await hydrateSavedTaxonomyFilter(clientResult.data, filters);
+
+  if (hasDynamicListingFilters(filters)) {
+    return fetchDynamicFilteredPublicListings(filters, cursor, pageSize, {
+      mapListing,
+      hydrateListingsWithPrimaryImages,
+    });
+  }
 
   const canonicalListingIds = await resolveCanonicalTaxonomyListingIds(
     clientResult.data,
