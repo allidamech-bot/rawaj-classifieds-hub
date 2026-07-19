@@ -61,8 +61,21 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Complete governed edit integration once
+        shell: bash
         run: |
-          python scripts/run-edit-dynamic-integration-once.py
+          set +e
+          python scripts/run-edit-dynamic-integration-once.py > /tmp/edit-dynamic-integration.log 2>&1
+          status=$?
+          cat /tmp/edit-dynamic-integration.log
+          if [ $status -ne 0 ]; then
+            cp /tmp/edit-dynamic-integration.log scripts/edit-dynamic-integration-diagnostic.txt
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add scripts/edit-dynamic-integration-diagnostic.txt
+            git commit -m "chore: capture dynamic edit integration failure"
+            git push origin HEAD:feature/taxonomy-search-foundation-v1
+            exit $status
+          fi
           npx prettier --write 'src/routes/profile/listings.$id.tsx'
           if ! git diff --quiet -- 'src/routes/profile/listings.$id.tsx'; then
             git config user.name "github-actions[bot]"
