@@ -4,9 +4,13 @@ on:
   pull_request:
     paths:
       - "supabase/migrations/20260719002*.sql"
+      - "supabase/migrations/20260719003*.sql"
       - "scripts/taxonomy-data-foundation-v1.test.mjs"
+      - "scripts/replay-supabase-local.mjs"
+      - "scripts/sql/taxonomy-foundation-local-verification.sql"
       - "docs/production-schema/migration-ledger.json"
       - ".github/workflows/taxonomy-data-foundation-v1.yml"
+      - ".github/workflows/supabase-local-replay.yml"
   workflow_dispatch:
 
 permissions:
