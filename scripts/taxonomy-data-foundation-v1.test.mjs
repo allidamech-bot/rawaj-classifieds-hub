@@ -12,6 +12,8 @@ const migrations = await Promise.all(
     "202607190025_taxonomy_owner_governance_rpc_v1.sql",
     "202607190026_marketplace_domain_field_registry_v1.sql",
     "202607190027_complete_marketplace_taxonomy_draft_v2.sql",
+    "202607190028_listing_attribute_values_foundation_v1.sql",
+    "202607190029_listing_attribute_dependency_hardening_v1.sql",
   ].map((filename) =>
     readFile(new URL(`../supabase/migrations/${filename}`, import.meta.url), "utf8"),
   ),
@@ -33,9 +35,10 @@ const requiredTables = [
   "vehicle_models",
   "vehicle_generations",
   "vehicle_trims",
+  "listing_attribute_values",
 ];
 
-test("foundation creates the governed taxonomy, field, mapping, and vehicle tables", () => {
+test("foundation creates the governed taxonomy, field, mapping, vehicle, and attribute tables", () => {
   for (const table of requiredTables) {
     assert.match(migration, new RegExp(`create table if not exists public\\.${table}\\s*\\(`));
     assert.match(migration, new RegExp(`alter table public\\.${table} enable row level security`));
@@ -228,11 +231,49 @@ test("every active leaf receives schema-driven studio, detail, and filter rules"
   assert.match(migration, /field_row\.is_active/);
 });
 
-test("foundation trigger helper pins search_path and is not directly executable", () => {
-  assert.match(
+test("listing attributes are typed, leaf-scoped, and not directly writable by clients", () => {
+  assert.match(migration, /create table if not exists public\.listing_attribute_values/);
+  assert.match(migration, /num_nonnulls\(value_text, value_numeric, value_boolean, value_date, value_key, value_json\) = 1/);
+  assert.match(migration, /listing_attribute_not_allowed_for_taxonomy/);
+  assert.match(migration, /listing_attribute_invalid_option/);
+  assert.match(migration, /revoke all on table public\.listing_attribute_values from anon, authenticated/);
+  assert.match(migration, /grant select on table public\.listing_attribute_values to anon, authenticated/);
+  assert.doesNotMatch(
     migration,
-    /create or replace function public\.rawaj_touch_taxonomy_foundation_updated_at\(\)/,
+    /grant (?:insert|update|delete|all) on table public\.listing_attribute_values to anon, authenticated/,
   );
+});
+
+test("vehicle attribute relationships remain valid after inserts, updates, and deletes", () => {
+  assert.match(migration, /create constraint trigger listing_attribute_values_dependencies/);
+  assert.match(migration, /after insert or update or delete/);
+  assert.match(migration, /deferrable initially deferred/);
+  assert.match(migration, /listing_attribute_vehicle_model_make_mismatch/);
+  assert.match(migration, /listing_attribute_vehicle_generation_model_mismatch/);
+  assert.match(migration, /listing_attribute_vehicle_trim_model_mismatch/);
+  assert.match(migration, /if tg_op = 'DELETE'/);
+});
+
+test("legacy mappings enforce category consistency and active leaf targets", () => {
+  assert.match(migration, /taxonomy_legacy_mapping_category_mismatch/);
+  assert.match(migration, /taxonomy_legacy_mapping_requires_active_leaf/);
+  assert.match(migration, /create trigger taxonomy_legacy_mappings_validate/);
+});
+
+test("sensitive attributes cannot become public through a public listing", () => {
+  assert.match(migration, /not field_row\.is_sensitive/);
+  assert.match(migration, /listing_attribute_values_visible_with_listing/);
+});
+
+test("foundation trigger helpers pin search_path and are not directly executable", () => {
+  for (const signature of [
+    "rawaj_touch_taxonomy_foundation_updated_at",
+    "rawaj_validate_listing_attribute_value",
+    "rawaj_enforce_listing_attribute_dependencies",
+    "rawaj_validate_taxonomy_legacy_mapping",
+  ]) {
+    assert.match(migration, new RegExp(`function public\\.${signature}\\(\\)`));
+  }
   assert.match(migration, /set search_path = public, pg_temp/);
   assert.match(
     migration,
