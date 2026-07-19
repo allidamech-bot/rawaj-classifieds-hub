@@ -72,7 +72,10 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
 
   return {
     home: normalizedPathname === "/",
-    listingResults: normalizedPathname === "/listings",
+    // The category atlas styles intentionally live in search-filters-v1.css.
+    // Keep that discovery bundle active on /categories so its hero, search,
+    // and directory cards do not fall back to unstyled utility-only rows.
+    listingResults: ["/listings", "/categories"].includes(normalizedPathname),
     listingDetail: /^\/listings\/[^/]+$/.test(normalizedPathname),
     offers: normalizedPathname === "/offers",
     storefront:
