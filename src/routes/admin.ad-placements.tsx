@@ -11,10 +11,13 @@ import {
   Save,
   ShieldAlert,
   Smartphone,
+  Trash2,
+  TriangleAlert,
   Upload,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
+  ownerDeleteAdPlacement,
   ownerFetchAdPlacements,
   ownerSaveAdPlacement,
   ownerSetAdPlacementStatus,
@@ -25,6 +28,12 @@ import {
 } from "@/lib/classifieds-api";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
+import {
+  readImageDimensions,
+  validateAdPlacementImageDimensions,
+  validateAdPlacementImageFile,
+  type AdPlacementImageValidation,
+} from "@/lib/api/storage";
 
 export const Route = createFileRoute("/admin/ad-placements")({
   head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
@@ -83,6 +92,9 @@ function AdPlacementsPage() {
   const [actionError, setActionError] = useState("");
   const [notice, setNotice] = useState("");
   const [statusReason, setStatusReason] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<AdPlacementSummary | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteInFlight, setDeleteInFlight] = useState(false);
   const requestIdRef = useRef(0);
   const mutationInFlightRef = useRef(false);
   const uploadInFlightRef = useRef(false);
@@ -148,6 +160,24 @@ function AdPlacementsPage() {
 
   async function handleImageSelection(file: File | undefined) {
     if (!file || uploadInFlightRef.current) return;
+    const fileCheck = validateAdPlacementImageFile(file);
+    if (!fileCheck.ok) {
+      setActionError(fileCheck.error ?? "ملف الصورة غير صالح.");
+      return;
+    }
+    let dimensions: { width: number; height: number };
+    try {
+      dimensions = await readImageDimensions(file);
+    } catch {
+      setActionError(text("تعذر قراءة أبعاد الصورة.", "Could not read image dimensions."));
+      return;
+    }
+    const dimensionCheck = validateAdPlacementImageDimensions(dimensions.width, dimensions.height);
+    if (!dimensionCheck.ok) {
+      setActionError(dimensionCheck.error ?? "مقاس الصورة غير صالح.");
+      return;
+    }
+
     uploadInFlightRef.current = true;
     setUploadingImage(true);
     setActionError("");
@@ -164,6 +194,11 @@ function AdPlacementsPage() {
       uploadInFlightRef.current = false;
       setUploadingImage(false);
     }
+  }
+
+  function clearImage() {
+    setForm((value) => ({ ...value, imageUrl: "" }));
+    setNotice("");
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -243,6 +278,38 @@ function AdPlacementsPage() {
     } finally {
       mutationInFlightRef.current = false;
       setSaving(false);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete || deleteInFlight || mutationInFlightRef.current) return;
+    const reason = deleteReason.trim();
+    if (reason.length < 3) {
+      setActionError(text("اكتب سبباً واضحاً للحذف.", "Enter a clear reason for deletion."));
+      return;
+    }
+    mutationInFlightRef.current = true;
+    setDeleteInFlight(true);
+    setActionError("");
+    setNotice("");
+    try {
+      const result = await ownerDeleteAdPlacement(canManage, {
+        id: pendingDelete.id,
+        expectedVersion: pendingDelete.version,
+        reason,
+      });
+      if (!result.ok) {
+        setActionError(result.error.message);
+        return;
+      }
+      setPlacements((current) => current.filter((item) => item.id !== pendingDelete.id));
+      if (form.id === pendingDelete.id) resetForm();
+      setPendingDelete(null);
+      setDeleteReason("");
+      setNotice(text("تم حذف المساحة الإعلانية وتسجيل العملية.", "Placement deleted and audited."));
+    } finally {
+      mutationInFlightRef.current = false;
+      setDeleteInFlight(false);
     }
   }
 
@@ -375,7 +442,7 @@ function AdPlacementsPage() {
                     />
                     <span className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-primary">
                       <Upload className="h-4 w-4" />
-                      {text("اضغط لتغيير الصورة", "Click to replace image")}
+                      {text("تغيير الصورة", "Change image")}
                     </span>
                   </div>
                 ) : (
@@ -392,6 +459,24 @@ function AdPlacementsPage() {
                   </>
                 )}
               </label>
+              <p className="mt-1.5 flex items-center gap-1.5 text-[11px] leading-5 text-muted-foreground">
+                <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-warning" />
+                {text(
+                  "المقاس المطلوب: 16:7 تقريباً، بحد أدنى 960×420 بكسل.",
+                  "Required: ~16:7 ratio, minimum 960×420 px.",
+                )}
+              </p>
+              {form.imageUrl ? (
+                <button
+                  type="button"
+                  onClick={clearImage}
+                  disabled={uploadingImage}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-destructive/10 px-3 py-2 text-xs font-bold text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {text("إزالة الصورة المحددة", "Remove selected image")}
+                </button>
+              ) : null}
             </div>
 
             <Field label={text("رابط الوجهة", "Destination URL")} wide>
@@ -601,12 +686,99 @@ function AdPlacementsPage() {
                       {text("إيقاف", "Pause")}
                     </button>
                   )}
+                  <button
+                    type="button"
+                    disabled={saving || deleteInFlight}
+                    onClick={() => {
+                      setDeleteReason("");
+                      setActionError("");
+                      setPendingDelete(placement);
+                    }}
+                    className="rawaj-chip gap-1 px-3 py-2 text-xs font-bold bg-destructive/10 text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {text("حذف", "Delete")}
+                  </button>
                 </div>
               </article>
             ))}
           </div>
         )}
       </section>
+
+      {pendingDelete ? (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => {
+            if (!deleteInFlight) setPendingDelete(null);
+          }}
+        >
+          <section
+            className="w-full max-w-md rounded-2xl bg-card p-5 hairline shadow-soft"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center gap-2">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-destructive/10 text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </span>
+              <h3 className="text-sm font-extrabold">
+                {text("حذف المساحة الإعلانية", "Delete ad placement")}
+              </h3>
+            </div>
+            <dl className="mt-4 space-y-2 rounded-xl bg-muted-surface p-3 text-xs hairline">
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground">{text("الاسم", "Name")}</dt>
+                <dd className="truncate font-bold">{pendingDelete.name}</dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground">{text("المكان", "Page")}</dt>
+                <dd className="truncate font-bold">{pendingDelete.placementPage}</dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground">{text("النسخة", "Version")}</dt>
+                <dd className="truncate font-bold">v{pendingDelete.version}</dd>
+              </div>
+            </dl>
+            <label className="mt-4 block">
+              <span className="mb-1.5 block text-[11px] font-bold text-muted-foreground">
+                {text("سبب الحذف (لأغراض التدقيق)", "Deletion reason (for audit)")}
+              </span>
+              <textarea
+                value={deleteReason}
+                onChange={(event) => setDeleteReason(event.target.value)}
+                rows={2}
+                disabled={deleteInFlight}
+                className="w-full rounded-xl bg-muted-surface px-3 py-2 text-xs outline-none hairline"
+              />
+            </label>
+            {actionError && (
+              <p className="mt-2 text-xs font-semibold text-destructive">{actionError}</p>
+            )}
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                disabled={deleteInFlight}
+                onClick={() => setPendingDelete(null)}
+                className="flex-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
+              >
+                {text("إلغاء", "Cancel")}
+              </button>
+              <button
+                type="button"
+                disabled={deleteInFlight || deleteReason.trim().length < 3}
+                onClick={() => void confirmDelete()}
+                className="flex-1 rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground disabled:opacity-60"
+              >
+                {deleteInFlight
+                  ? text("جارٍ الحذف", "Deleting")
+                  : text("حذف نهائي", "Delete permanently")}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }

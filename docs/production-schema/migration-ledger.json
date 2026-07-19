@@ -89,6 +89,7 @@
       "202607080019_listing_moderation_console.sql",
       "202607080020_permission_enforcement_finalization.sql",
       "202607080021_ad_placements_management.sql",
+      "202607180002_owner_delete_ad_placement.sql",
       "202607080022_campaign_manager.sql",
       "202607080023_safety_case_management.sql",
       "202607080024_safety_case_assignment_escalation.sql",

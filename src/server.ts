@@ -54,9 +54,10 @@ function buildContentSecurityPolicy(isSecureRequest: boolean) {
     "frame-ancestors 'none'",
     "frame-src 'none'",
     "form-action 'self'",
-    "script-src 'self' 'unsafe-inline'",
+    "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https:",
+    "media-src 'self' blob: https://*.supabase.co https://*.supabase.com",
     "font-src 'self' data: https://fonts.gstatic.com",
     "connect-src 'self' https://*.supabase.co https://*.supabase.com wss://*.supabase.co wss://*.supabase.com https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com",
     "manifest-src 'self'",
@@ -73,7 +74,7 @@ function applyResponseHeaders(response: Response, request: Request, durationMs: 
 
   headers.set("x-content-type-options", "nosniff");
   headers.set("referrer-policy", "strict-origin-when-cross-origin");
-  headers.set("permissions-policy", "geolocation=(), microphone=(), camera=()");
+  headers.set("permissions-policy", "geolocation=(self), microphone=(self), camera=(self)");
   headers.set("x-frame-options", "DENY");
   headers.set("x-permitted-cross-domain-policies", "none");
   headers.set("cross-origin-opener-policy", "same-origin-allow-popups");

@@ -1,5 +1,17 @@
 import { Mic, Square, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import {
+  canonicalBaseMime,
+  createCompatibleMediaRecorder,
+  createUploadableFromBlob,
+  extensionForMime,
+  isAppleMobileWebKit,
+  normalizeRecordedMimeType,
+  recorderMimeCandidates,
+  resolveFinalMimeType,
+  shouldUseRecorderTimeslice,
+} from "@/lib/chat-audio-recorder-strategy";
+import { logRecorderDiagnostics } from "@/lib/chat-audio-diagnostics";
 
 export interface RecordedVoiceClip {
   file: File;
@@ -17,30 +29,11 @@ interface ChatVoiceRecorderProps {
     cancel: string;
     permission: string;
     unsupported: string;
+    noAudio: string;
   };
 }
 
 const MAX_DURATION_MS = 120_000;
-
-function preferredMimeType() {
-  if (typeof MediaRecorder === "undefined") return "";
-  for (const type of ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"]) {
-    if (MediaRecorder.isTypeSupported(type)) return type;
-  }
-  return "";
-}
-
-function normalizeRecordedMimeType(mime: string) {
-  const base = mime.split(";")[0]?.trim().toLowerCase() ?? "";
-  return ["audio/webm", "audio/mp4", "audio/mpeg", "audio/ogg"].includes(base) ? base : "";
-}
-
-function extensionForMime(mime: string) {
-  if (mime === "audio/mp4") return "m4a";
-  if (mime === "audio/mpeg") return "mp3";
-  if (mime === "audio/ogg") return "ogg";
-  return "webm";
-}
 
 export function ChatVoiceRecorder({
   disabled,
@@ -53,16 +46,23 @@ export function ChatVoiceRecorder({
   const chunksRef = useRef<Blob[]>([]);
   const startedAtRef = useRef(0);
   const timerRef = useRef<number | null>(null);
+  const recordedChunkMimeRef = useRef<string | null>(null);
+  const completedRef = useRef(false);
   const [recording, setRecording] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
+
+  function stopMicrophone() {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+  }
 
   function cleanup() {
     if (timerRef.current !== null) window.clearInterval(timerRef.current);
     timerRef.current = null;
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
+    stopMicrophone();
     recorderRef.current = null;
     chunksRef.current = [];
+    recordedChunkMimeRef.current = null;
     setRecording(false);
     setElapsedMs(0);
   }
@@ -75,54 +75,176 @@ export function ChatVoiceRecorder({
       onError(labels.unsupported);
       return;
     }
+    const appleMobile = isAppleMobileWebKit();
+    let stream: MediaStream;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = preferredMimeType();
-      const recorder = mimeType
-        ? new MediaRecorder(stream, { mimeType })
-        : new MediaRecorder(stream);
-      streamRef.current = stream;
-      recorderRef.current = recorder;
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (error) {
+      logRecorderDiagnostics({
+        stage: "IOS_PERMISSION",
+        selectedMimeType: null,
+        recorderMimeType: "",
+        chunkMimeType: null,
+        chunkCount: 0,
+        totalBytes: 0,
+        recorderState: "n/a",
+        errorName: error instanceof Error ? error.name : undefined,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
+      onError(labels.permission);
+      return;
+    }
+    let recorder: MediaRecorder;
+    let selectedMimeType: string | null;
+    try {
+      const result = createCompatibleMediaRecorder(stream);
+      recorder = result.recorder;
+      selectedMimeType = result.selectedMimeType;
+    } catch (error) {
+      stopMicrophone();
+      logRecorderDiagnostics({
+        stage: "IOS_RECORDER_CREATE",
+        selectedMimeType: null,
+        recorderMimeType: "",
+        chunkMimeType: null,
+        chunkCount: 0,
+        totalBytes: 0,
+        recorderState: "n/a",
+        errorName: error instanceof Error ? error.name : undefined,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
+      onError(labels.unsupported);
+      return;
+    }
+    if (typeof recorder.start !== "function") {
+      stopMicrophone();
+      onError(labels.unsupported);
+      return;
+    }
+    streamRef.current = stream;
+    recorderRef.current = recorder;
+    chunksRef.current = [];
+    recordedChunkMimeRef.current = null;
+    completedRef.current = false;
+    startedAtRef.current = Date.now();
+    recorder.ondataavailable = (event) => {
+      if (event.data && event.data.size > 0) {
+        chunksRef.current.push(event.data);
+        if (!recordedChunkMimeRef.current && event.data.type) {
+          const canonical = normalizeRecordedMimeType(event.data.type);
+          if (canonical) recordedChunkMimeRef.current = event.data.type;
+        }
+      }
+    };
+    recorder.onerror = () => {
+      const chunkCount = chunksRef.current.length;
+      const totalBytes = chunksRef.current.reduce((total, blob) => total + blob.size, 0);
+      logRecorderDiagnostics({
+        stage: "IOS_RECORDER_RUNTIME",
+        selectedMimeType,
+        recorderMimeType: recorder.mimeType,
+        chunkMimeType: recordedChunkMimeRef.current,
+        chunkCount,
+        totalBytes,
+        recorderState: recorder.state,
+      });
+      stopMicrophone();
+      if (timerRef.current !== null) window.clearInterval(timerRef.current);
+      timerRef.current = null;
+      recorderRef.current = null;
       chunksRef.current = [];
-      startedAtRef.current = Date.now();
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) chunksRef.current.push(event.data);
-      };
-      recorder.onstop = () => {
-        const durationMs = Math.min(
-          MAX_DURATION_MS,
-          Math.max(1_000, Date.now() - startedAtRef.current),
-        );
-        const type = normalizeRecordedMimeType(recorder.mimeType || mimeType || "audio/webm");
-        if (!type) {
-          cleanup();
-          onError(labels.unsupported);
-          return;
-        }
-        const blob = new Blob(chunksRef.current, { type });
-        if (blob.size > 0) {
-          const file = new File([blob], `voice-${Date.now()}.${extensionForMime(type)}`, { type });
-          onRecorded({ file, previewUrl: URL.createObjectURL(blob), durationMs });
-        } else {
-          onError(labels.unsupported);
-        }
-        cleanup();
-      };
-      recorder.start(500);
-      setRecording(true);
-      timerRef.current = window.setInterval(() => {
-        const next = Date.now() - startedAtRef.current;
-        setElapsedMs(next);
-        if (next >= MAX_DURATION_MS) recorder.stop();
-      }, 250);
-    } catch {
+      recordedChunkMimeRef.current = null;
+      setRecording(false);
+      setElapsedMs(0);
+      onError(labels.permission);
+    };
+    recorder.onstop = () => {
+      const finalState = recorder.state;
+      const chunkCount = chunksRef.current.length;
+      const totalBytes = chunksRef.current.reduce((total, blob) => total + blob.size, 0);
+      const storedChunkMime = recordedChunkMimeRef.current;
+      const recorderMime = recorder.mimeType;
+      const type = resolveFinalMimeType(storedChunkMime, recorderMime, selectedMimeType);
+      const snapshotChunks = chunksRef.current.slice();
+      const blob = new Blob(snapshotChunks, { type });
+      stopMicrophone();
+      if (timerRef.current !== null) window.clearInterval(timerRef.current);
+      timerRef.current = null;
+      recorderRef.current = null;
+      chunksRef.current = [];
+      recordedChunkMimeRef.current = null;
+      setRecording(false);
+      setElapsedMs(0);
+      if (blob.size <= 0) {
+        logRecorderDiagnostics({
+          stage: "IOS_EMPTY_BLOB",
+          selectedMimeType,
+          recorderMimeType: recorderMime,
+          chunkMimeType: storedChunkMime,
+          chunkCount,
+          totalBytes,
+          recorderState: finalState,
+        });
+        onError(labels.noAudio);
+        return;
+      }
+      if (completedRef.current) return;
+      completedRef.current = true;
+      const durationMs = Math.min(
+        MAX_DURATION_MS,
+        Math.max(1_000, Date.now() - startedAtRef.current),
+      );
+      const extension = extensionForMime(type);
+      const file = createUploadableFromBlob(blob, type, extension);
+      logRecorderDiagnostics({
+        stage: "IOS_RECORDER_STOP",
+        selectedMimeType,
+        recorderMimeType: recorderMime,
+        chunkMimeType: storedChunkMime,
+        chunkCount,
+        totalBytes,
+        recorderState: finalState,
+        fileMimeType: type,
+        fileSize: blob.size,
+        durationMs,
+      });
+      onRecorded({ file, previewUrl: URL.createObjectURL(blob), durationMs });
+    };
+    try {
+      if (shouldUseRecorderTimeslice(appleMobile, recorder.mimeType, selectedMimeType)) {
+        recorder.start(500);
+      } else {
+        recorder.start();
+      }
+    } catch (error) {
+      logRecorderDiagnostics({
+        stage: "IOS_RECORDER_START",
+        selectedMimeType,
+        recorderMimeType: recorder.mimeType,
+        chunkMimeType: null,
+        chunkCount: 0,
+        totalBytes: 0,
+        recorderState: recorder.state,
+        errorName: error instanceof Error ? error.name : undefined,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
       cleanup();
       onError(labels.permission);
+      return;
     }
+    setRecording(true);
+    timerRef.current = window.setInterval(() => {
+      const next = Date.now() - startedAtRef.current;
+      setElapsedMs(next);
+      if (next >= MAX_DURATION_MS && recorderRef.current?.state === "recording") {
+        recorderRef.current.stop();
+      }
+    }, 250);
   }
 
   function stop() {
-    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+    const recorder = recorderRef.current;
+    if (recorder && recorder.state === "recording") recorder.stop();
   }
 
   function cancel() {

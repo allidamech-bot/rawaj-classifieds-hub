@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [recorder, messaging, migration, packageJson] = await Promise.all([
+const [recorder, strategy, messaging, migration, packageJson] = await Promise.all([
   readFile(new URL("../src/features/communication/ChatVoiceRecorder.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/chat-audio-recorder-strategy.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/messaging.ts", import.meta.url), "utf8"),
   readFile(
     new URL("../supabase/migrations/202607170008_chat_voice_messages_v1.sql", import.meta.url),
@@ -12,13 +13,15 @@ const [recorder, messaging, migration, packageJson] = await Promise.all([
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
 
-test("recorder strips codec parameters before creating the voice File", () => {
+test("recorder canonicalizes codec MIME values before creating the uploadable voice file", () => {
   assert.ok(recorder.includes("normalizeRecordedMimeType"));
-  assert.ok(recorder.includes('mime.split(";")'));
-  assert.ok(recorder.includes("new Blob(chunksRef.current, { type })"));
-  assert.ok(recorder.includes("new File([blob]"));
-  assert.ok(recorder.includes("audio/webm"));
-  assert.ok(recorder.includes("audio/mp4"));
+  assert.ok(strategy.includes('split(";")'));
+  assert.ok(recorder.includes("const snapshotChunks = chunksRef.current.slice()"));
+  assert.ok(recorder.includes("new Blob(snapshotChunks, { type })"));
+  assert.ok(recorder.includes("createUploadableFromBlob(blob, type, extension)"));
+  assert.ok(strategy.includes("new File([blob]"));
+  assert.ok(strategy.includes("audio/webm"));
+  assert.ok(strategy.includes("audio/mp4"));
 });
 
 test("voice upload uses ArrayBuffer so Supabase applies the canonical content type", () => {

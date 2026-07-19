@@ -31,6 +31,7 @@ import {
   validateChatAudio,
   validateChatImage,
 } from "@/lib/classifieds-api";
+import { isPreviewRuntime, loadDiagnostics } from "@/lib/chat-audio-diagnostics";
 import {
   completeMessageSendRequest,
   readOrCreateMessageSendRequestId,
@@ -264,13 +265,6 @@ function ChatsPage() {
       return;
     if (result.ok) {
       setConversations(result.data);
-      if (!search.conversation && result.data[0]) {
-        void navigate({
-          to: "/chats",
-          search: { conversation: result.data[0].id },
-          replace: true,
-        });
-      }
     } else {
       setConversationError(result.error);
     }
@@ -666,7 +660,10 @@ function ChatsPage() {
           <CommunicationSafetyNote />
         </div>
 
-        <div className="rawaj-message-workspace">
+        <div
+          className="rawaj-message-workspace"
+          data-view={selectedConversation ? "conversation" : "list"}
+        >
           <aside
             className={`rawaj-conversation-sidebar ${
               !isDesktop && viewingConversationOnMobile ? "hidden" : ""
@@ -854,8 +851,8 @@ function ChatsPage() {
                               durationMs={message.attachmentDurationMs}
                               retryLabel={text("إعادة تحميل التسجيل", "Reload voice message")}
                               unavailableLabel={text(
-                                "تعذر تحميل التسجيل الصوتي الخاص.",
-                                "The private voice message could not be loaded.",
+                                "تعذر تشغيل التسجيل الصوتي. أعد تحميله أو حاول مرة أخرى.",
+                                "Could not play the voice message. Reload it or try again.",
                               )}
                             />
                           ) : message.attachmentPath ? (
@@ -1044,12 +1041,16 @@ function ChatsPage() {
                         stop: text("إيقاف التسجيل", "Stop recording"),
                         cancel: text("إلغاء التسجيل", "Cancel recording"),
                         permission: text(
-                          "تعذر استخدام الميكروفون. تحقق من الإذن.",
-                          "Microphone access failed. Check permission.",
+                          "تعذر الوصول إلى الميكروفون. تحقق من إذن Safari ثم حاول مجددًا.",
+                          "Microphone access failed. Check Safari permission and try again.",
                         ),
                         unsupported: text(
                           "التسجيل الصوتي غير مدعوم على هذا الجهاز.",
                           "Voice recording is unsupported on this device.",
+                        ),
+                        noAudio: text(
+                          "لم يتم التقاط صوت. أعد التسجيل لمدة أطول.",
+                          "No audio was captured. Record longer.",
                         ),
                       }}
                     />
@@ -1094,6 +1095,7 @@ function ChatsPage() {
                   {notice && (
                     <p className="mt-2 text-xs font-semibold text-emerald-trust">{notice}</p>
                   )}
+                  {isPreviewRuntime() && <VoiceDiagnosticsPreview />}
                 </form>
               </>
             )}
@@ -1146,4 +1148,44 @@ function formatDateTime(value: string, language: "ar" | "en") {
     timeStyle: "short",
     timeZone: "UTC",
   }).format(new Date(value));
+}
+
+function VoiceDiagnosticsPreview() {
+  const { text } = useUiPreferences();
+  const [diagnostics, setDiagnostics] = useState<ReturnType<typeof loadDiagnostics>>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDiagnostics(loadDiagnostics());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!diagnostics) return null;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(diagnostics, null, 2));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <div className="mt-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs">
+      <p className="font-semibold text-destructive">
+        {text("رمز تشخيص التسجيل:", "Recording diagnostic code:")} {diagnostics.stage}
+      </p>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="mt-2 rounded-lg bg-muted-surface px-3 py-1 text-xs font-semibold text-primary hairline"
+      >
+        {copied ? text("تم النسخ", "Copied") : text("نسخ تفاصيل العطل", "Copy failure details")}
+      </button>
+    </div>
+  );
 }
