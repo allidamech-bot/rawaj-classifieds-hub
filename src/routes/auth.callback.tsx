@@ -54,26 +54,6 @@ function AuthCallbackPage() {
       const searchParams = new URLSearchParams(window.location.search);
       const code = searchParams.get("code");
       const recoveryCodeRequested = Boolean(code && callbackContext.isRecovery);
-
-      if (!code) {
-        const { data } = await client.auth.getSession();
-        if (cancelled) return;
-        if (data.session) {
-          finish(callbackContext.isRecovery);
-          return;
-        }
-        setStatus("error");
-        setErrorMsg(
-          callbackContext.isRecovery
-            ? text(
-                "تعذر تجهيز جلسة استعادة كلمة المرور. قد يكون الرابط منتهيًا أو استُخدم سابقًا. اطلب رابطًا جديدًا وحاول مرة أخرى.",
-                "Could not prepare the password recovery session. The link may be expired or already used. Request a new link and try again.",
-              )
-            : text("تعذر تسجيل الدخول. حاول مرة أخرى.", "Could not sign in. Please try again."),
-        );
-        return;
-      }
-
       let observedRecoveryEvent = false;
       let completed = false;
 
@@ -92,6 +72,25 @@ function AuthCallbackPage() {
           }
           void navigate({ to: callbackContext.returnTo });
         }, 650);
+      }
+
+      if (!code) {
+        const { data } = await client.auth.getSession();
+        if (cancelled) return;
+        if (data.session) {
+          finish(callbackContext.isRecovery);
+          return;
+        }
+        setStatus("error");
+        setErrorMsg(
+          callbackContext.isRecovery
+            ? text(
+                "تعذر تجهيز جلسة استعادة كلمة المرور. قد يكون الرابط منتهيًا أو استُخدم سابقًا. اطلب رابطًا جديدًا وحاول مرة أخرى.",
+                "Could not prepare the password recovery session. The link may be expired or already used. Request a new link and try again.",
+              )
+            : text("تعذر تسجيل الدخول. حاول مرة أخرى.", "Could not sign in. Please try again."),
+        );
+        return;
       }
 
       const { data: listener } = client.auth.onAuthStateChange((event, session) => {
