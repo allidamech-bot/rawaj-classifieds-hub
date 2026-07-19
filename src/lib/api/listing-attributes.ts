@@ -1,5 +1,5 @@
-import type { ClassifiedsError, ClassifiedsResult } from "@/lib/classifieds-types";
 import { getClient, mapError } from "@/lib/api/shared";
+import type { ClassifiedsError, ClassifiedsResult } from "@/lib/classifieds-types";
 
 export interface MissingListingAttribute {
   fieldKey: string;
@@ -25,6 +25,72 @@ export interface ListingAttributeWriteResult {
   updatedAt: string;
   writtenCount: number;
   completeness: ListingAttributeCompleteness;
+}
+
+export interface OwnerListingAttributeValues {
+  listingId: string;
+  listingUpdatedAt: string;
+  listingStatus: string;
+  taxonomyVersionId: string | null;
+  taxonomyVersionNumber: number | null;
+  taxonomyNodeId: string | null;
+  valueCount: number;
+  values: Record<string, unknown>;
+}
+
+export async function fetchOwnerListingAttributes(
+  userId: string | null,
+  listingId: string,
+): Promise<ClassifiedsResult<OwnerListingAttributeValues>> {
+  if (!userId) return authenticationFailure();
+
+  const cleanListingId = listingId.trim();
+  if (!cleanListingId) return listingValidationFailure();
+
+  const clientResult = getClient();
+  if (!clientResult.ok) return clientResult;
+
+  const { data, error } = await clientResult.data.rpc(
+    "rawaj_owner_fetch_listing_attributes_v1",
+    {
+      p_listing_id: cleanListingId,
+    },
+  );
+
+  if (error) {
+    return {
+      ok: false,
+      error: mapListingAttributeError(error, "listing_attribute_fetch"),
+    };
+  }
+
+  const payload = record(data);
+  const returnedListingId = text(payload.listingId);
+  const listingUpdatedAt = text(payload.listingUpdatedAt);
+  if (!returnedListingId || !listingUpdatedAt) {
+    return {
+      ok: false,
+      error: {
+        code: "unknown",
+        message: "لم يؤكد الخادم تحميل تفاصيل الإعلان المنظمة.",
+        operation: "listing_attribute_fetch",
+      },
+    };
+  }
+
+  return {
+    ok: true,
+    data: {
+      listingId: returnedListingId,
+      listingUpdatedAt,
+      listingStatus: text(payload.listingStatus),
+      taxonomyVersionId: nullableText(payload.taxonomyVersionId),
+      taxonomyVersionNumber: nullableNumber(payload.taxonomyVersionNumber),
+      taxonomyNodeId: nullableText(payload.taxonomyNodeId),
+      valueCount: integer(payload.valueCount),
+      values: record(payload.values),
+    },
+  };
 }
 
 export async function fetchOwnerListingAttributeCompleteness(
@@ -116,6 +182,15 @@ function mapListingAttributeError(
     return {
       code: "status_mismatch",
       message: "تغيّرت المسودة أثناء الحفظ. أعد المحاولة بعد تحديث الصفحة.",
+      details: error.details ?? error.message,
+      operation,
+    };
+  }
+
+  if (message.includes("listing_attribute_read_forbidden")) {
+    return {
+      code: "forbidden",
+      message: "لا تملك صلاحية قراءة تفاصيل هذا الإعلان المنظمة.",
       details: error.details ?? error.message,
       operation,
     };
@@ -230,6 +305,12 @@ function integer(value: unknown): number {
     return Number.isFinite(parsed) ? Math.trunc(parsed) : 0;
   }
   return 0;
+}
+
+function nullableNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function boolean(value: unknown): boolean {
