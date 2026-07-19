@@ -12,6 +12,7 @@ on:
       - "src/lib/api/listing-data-quality-context.ts"
       - "src/lib/dynamic-listing-fields.ts"
       - "src/features/listing-studio/DynamicListingFields.tsx"
+      - "src/routes/add-listing.tsx"
       - "src/routes/admin.data-quality.tsx"
       - "src/routes/admin.tsx"
       - "src/lib/classifieds-api.ts"
@@ -25,6 +26,7 @@ on:
       - "scripts/listing-data-quality-workspace-v1.test.mjs"
       - "scripts/listing-data-quality-client-v1.test.mjs"
       - "scripts/admin-data-quality-workspace-v1.test.mjs"
+      - "scripts/add-listing-dynamic-all-categories-v1.test.mjs"
       - "scripts/dynamic-listing-submit-guard-v1.test.mjs"
       - "scripts/dynamic-listing-studio-client-v1.test.mjs"
       - "scripts/replay-supabase-local.mjs"
@@ -73,6 +75,8 @@ jobs:
         run: node --test scripts/listing-data-quality-client-v1.test.mjs
       - name: Admin data quality workspace contract
         run: node --test scripts/admin-data-quality-workspace-v1.test.mjs
+      - name: Add-listing dynamic all-category contract
+        run: node --test scripts/add-listing-dynamic-all-categories-v1.test.mjs
       - name: Dynamic listing submit guard contract
         run: node --test scripts/dynamic-listing-submit-guard-v1.test.mjs
       - name: Dynamic listing studio client contract
