@@ -1,0 +1,37 @@
+name: Taxonomy Data Foundation V1
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20260719002*.sql"
+      - "scripts/taxonomy-data-foundation-v1.test.mjs"
+      - "docs/production-schema/migration-ledger.json"
+      - ".github/workflows/taxonomy-data-foundation-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: taxonomy-data-foundation-v1-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Taxonomy and data foundation contract
+        run: node --test scripts/taxonomy-data-foundation-v1.test.mjs
+      - name: ESLint
+        run: npm run lint
+      - name: TypeScript
+        run: npm run typecheck
+      - name: Production build
+        run: npm run build
