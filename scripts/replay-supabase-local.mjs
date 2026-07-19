@@ -37,6 +37,11 @@ const compatibilityHooks = [
     anchor: "202607070006_location_search_regions.sql",
     filename: "clean-replay-before-202607070006-location-policies.sql",
   },
+  {
+    timing: "before",
+    anchor: "202607080019_listing_moderation_console.sql",
+    filename: "clean-replay-before-202607080019-listing-status.sql",
+  },
 ].map((hook) => ({
   ...hook,
   filePath: path.join(root, "scripts", "sql", hook.filename),
