@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import { spawnSync } from "node:child_process";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
@@ -78,7 +76,9 @@ const selectedFiles = new Set(
 const repositoryMigrationFiles = new Set(
   (await readdir(migrationsDirectory)).filter((filename) => filename.endsWith(".sql")),
 );
-const missingFiles = [...selectedFiles].filter((filename) => !repositoryMigrationFiles.has(filename));
+const missingFiles = [...selectedFiles].filter(
+  (filename) => !repositoryMigrationFiles.has(filename),
+);
 if (missingFiles.length > 0) {
   throw new Error(`Replay ledger references missing migrations: ${missingFiles.join(", ")}`);
 }
