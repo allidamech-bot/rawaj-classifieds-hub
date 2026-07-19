@@ -1,0 +1,52 @@
+name: Integrate Dynamic Filter Pipeline V1
+
+on:
+  pull_request:
+    paths:
+      - "scripts/integrate-dynamic-filter-pipeline-v1.py"
+      - ".github/workflows/integrate-dynamic-filter-pipeline-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: integrate-dynamic-filter-pipeline-v1
+  cancel-in-progress: true
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/taxonomy-search-foundation-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Integrate dynamic filter pipeline
+        run: |
+          set -euo pipefail
+          python scripts/integrate-dynamic-filter-pipeline-v1.py
+          npx prettier --write \
+            src/features/listings/listings-filters.ts \
+            src/features/listings/use-listings-results.ts \
+            src/features/listings/use-listings-pagination.ts \
+            src/features/listings/public-listings-page-data.ts
+          grep -q 'attributeFilters' src/features/listings/listings-filters.ts
+          grep -q 'parseListingAttributeFilters' src/features/listings/public-listings-page-data.ts
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add \
+              src/features/listings/listings-filters.ts \
+              src/features/listings/use-listings-results.ts \
+              src/features/listings/use-listings-pagination.ts \
+              src/features/listings/public-listings-page-data.ts
+            git commit -m "feat: propagate governed filters through listing queries"
+            git push origin HEAD:feature/taxonomy-search-foundation-v1
+          fi
