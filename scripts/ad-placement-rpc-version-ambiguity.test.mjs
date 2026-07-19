@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [migration, apiSource, ledgerSource, packageSource] = await Promise.all([
+const [reconciliationMigration, apiSource, ledgerSource, packageSource] = await Promise.all([
   readFile(
     new URL(
-      "../supabase/migrations/202607160001_fix_ad_placement_version_ambiguity.sql",
+      "../supabase/migrations/202607190010_reconcile_ad_placement_https_version_update.sql",
       import.meta.url,
     ),
     "utf8",
@@ -18,22 +18,42 @@ const [migration, apiSource, ledgerSource, packageSource] = await Promise.all([
 const ledger = JSON.parse(ledgerSource);
 const packageJson = JSON.parse(packageSource);
 
-test("ad placement owner writes qualify the version column", () => {
-  assert.match(migration, /create or replace function public\.rawaj_owner_upsert_ad_placement/);
-  assert.match(migration, /create or replace function public\.rawaj_owner_set_ad_placement_status/);
-  assert.equal((migration.match(/version = ad_placements\.version \+ 1/g) ?? []).length, 2);
-  assert.doesNotMatch(migration, /version\s*=\s*version\s*\+\s*1/);
-  assert.equal((migration.match(/ad_placements\.version = p_expected_version/g) ?? []).length, 2);
-});
-
-test("ad placement RPC signatures and grants remain stable", () => {
+test("latest ad placement owner writes qualify the version column", () => {
   assert.match(
-    migration,
-    /grant execute on function public\.rawaj_owner_upsert_ad_placement\(uuid, text, text, text, text, timestamptz, timestamptz, text, integer, boolean, boolean, bigint\) to authenticated/,
+    reconciliationMigration,
+    /create or replace function public\.rawaj_owner_upsert_ad_placement/,
   );
   assert.match(
-    migration,
-    /grant execute on function public\.rawaj_owner_set_ad_placement_status\(uuid, text, bigint, text\) to authenticated/,
+    reconciliationMigration,
+    /create or replace function public\.rawaj_owner_set_ad_placement_status/,
+  );
+  assert.equal(
+    (reconciliationMigration.match(/version = a\.version \+ 1/g) ?? []).length,
+    2,
+  );
+  assert.doesNotMatch(reconciliationMigration, /version\s*=\s*version\s*\+\s*1/);
+  assert.equal(
+    (reconciliationMigration.match(/a\.version = p_expected_version/g) ?? []).length,
+    2,
+  );
+});
+
+test("version repair preserves HTTPS validation and stable RPC signatures", () => {
+  assert.match(
+    reconciliationMigration,
+    /v_safe_https_pattern constant text := '\^https:\/\//,
+  );
+  assert.match(
+    reconciliationMigration,
+    /Image and destination URLs must use valid HTTPS URLs\./,
+  );
+  assert.match(
+    reconciliationMigration,
+    /grant execute on function public\.rawaj_owner_upsert_ad_placement\([\s\S]*?\) to authenticated/,
+  );
+  assert.match(
+    reconciliationMigration,
+    /grant execute on function public\.rawaj_owner_set_ad_placement_status\(uuid, text, bigint, text\)[\s\S]*?to authenticated/,
   );
   assert.match(apiSource, /rpc\("rawaj_owner_set_ad_placement_status", \{/);
   for (const argument of ["p_id", "p_status", "p_expected_version", "p_reason"]) {
@@ -41,10 +61,10 @@ test("ad placement RPC signatures and grants remain stable", () => {
   }
 });
 
-test("ad placement RPC repair is registered and permanently gated", () => {
+test("latest ad placement RPC repair is registered and permanently gated", () => {
   assert.ok(
     ledger.classifications.reconciliation.includes(
-      "202607160001_fix_ad_placement_version_ambiguity.sql",
+      "202607190010_reconcile_ad_placement_https_version_update.sql",
     ),
   );
   assert.match(
