@@ -9,6 +9,7 @@ const ledgerPath = path.join(root, "docs", "production-schema", "migration-ledge
 const verificationPaths = [
   "taxonomy-foundation-local-verification.sql",
   "listing-attribute-write-local-verification.sql",
+  "taxonomy-metadata-api-local-verification.sql",
 ].map((filename) => ({
   filename,
   filePath: path.join(root, "scripts", "sql", filename),
