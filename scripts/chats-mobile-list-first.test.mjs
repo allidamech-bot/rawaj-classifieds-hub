@@ -37,7 +37,7 @@ test("invalid conversation id is not replaced by the first conversation", () => 
   assert.doesNotMatch(chats, /search\.conversation && result\.data\[0\]/);
 });
 
-test("mobile list mode renders the conversation sidebar and removes the blank message panel", () => {
+test("mobile list mode renders only the conversation sidebar regardless of transient panel classes", () => {
   assert.match(chats, /data-view=\{selectedConversation \? "conversation" : "list"\}/);
   assert.match(baseCss, /\.rawaj-message-panel \{\s*display: flex;/);
   assert.match(mobileCss, /@import "\.\/communication-center-v2\.css";/);
@@ -47,7 +47,11 @@ test("mobile list mode renders the conversation sidebar and removes the blank me
   );
   assert.match(
     mobileCss,
-    /\.rawaj-message-workspace\[data-view="list"\] \.rawaj-message-panel\.hidden \{[\s\S]*display: none !important;/,
+    /\.rawaj-message-workspace\[data-view="list"\] \.rawaj-message-panel \{[\s\S]*display: none !important;/,
+  );
+  assert.doesNotMatch(
+    mobileCss,
+    /\.rawaj-message-workspace\[data-view="list"\] \.rawaj-message-panel\.hidden/,
   );
   assert.match(routeStyles, /communicationCenterV2: communicationCenterV3Css/);
 });
@@ -55,7 +59,11 @@ test("mobile list mode renders the conversation sidebar and removes the blank me
 test("conversation mode hides the sidebar and keeps a computed mobile message height", () => {
   assert.match(
     mobileCss,
-    /\.rawaj-message-workspace\[data-view="conversation"\] \.rawaj-conversation-sidebar\.hidden \{[\s\S]*display: none !important;/,
+    /\.rawaj-message-workspace\[data-view="conversation"\] \.rawaj-conversation-sidebar \{[\s\S]*display: none !important;/,
+  );
+  assert.doesNotMatch(
+    mobileCss,
+    /\.rawaj-message-workspace\[data-view="conversation"\] \.rawaj-conversation-sidebar\.hidden/,
   );
   assert.match(
     mobileCss,
