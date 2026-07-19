@@ -4,7 +4,9 @@ async function waitForHydration(page: import("@playwright/test").Page) {
   await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
 }
 
-test("categories direct load renders the active production ad placement", async ({ page }) => {
+test("categories direct load keeps its designed atlas and active production ad together", async ({
+  page,
+}) => {
   const response = await page.goto("/categories", { waitUntil: "domcontentloaded" });
   expect(response?.status() ?? 200).toBeLessThan(500);
   await waitForHydration(page);
@@ -22,6 +24,24 @@ test("categories direct load renders the active production ad placement", async 
       image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0),
     )
     .toBe(true);
+
+  const categoryVisuals = await page.evaluate(() => {
+    const hero = document.querySelector<HTMLElement>(".rawaj-categories-v2__hero");
+    const card = document.querySelector<HTMLElement>(".rawaj-category-directory-card");
+    if (!hero || !card) return null;
+    return {
+      heroBackground: getComputedStyle(hero).backgroundImage,
+      heroRadius: Number.parseFloat(getComputedStyle(hero).borderRadius),
+      cardDisplay: getComputedStyle(card).display,
+      cardRadius: Number.parseFloat(getComputedStyle(card).borderRadius),
+    };
+  });
+
+  expect(categoryVisuals).not.toBeNull();
+  expect(categoryVisuals?.heroBackground).toContain("linear-gradient");
+  expect(categoryVisuals?.heroRadius ?? 0).toBeGreaterThan(16);
+  expect(categoryVisuals?.cardDisplay).not.toBe("none");
+  expect(categoryVisuals?.cardRadius ?? 0).toBeGreaterThan(16);
 });
 
 test("mobile chat workspace state overrides stale or transient panel classes", async ({
