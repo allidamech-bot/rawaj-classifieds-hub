@@ -142,7 +142,9 @@
       "202607190024_taxonomy_legacy_mapping_contract_v1.sql",
       "202607190025_taxonomy_owner_governance_rpc_v1.sql",
       "202607190026_marketplace_domain_field_registry_v1.sql",
-      "202607190027_complete_marketplace_taxonomy_draft_v2.sql"
+      "202607190027_complete_marketplace_taxonomy_draft_v2.sql",
+      "202607190028_listing_attribute_values_foundation_v1.sql",
+      "202607190029_listing_attribute_dependency_hardening_v1.sql"
     ],
     "superseded": ["202606290002_classifieds_foundation.sql"],
     "reconciliation": [
