@@ -66,8 +66,9 @@ test("categories atlas stays readable at narrow mobile widths", async ({ page },
       scrollWidth: document.documentElement.scrollWidth,
       cardCount: document.querySelectorAll(".rawaj-category-directory-card").length,
       firstCardHeight:
-        document.querySelector<HTMLElement>(".rawaj-category-directory-card")?.getBoundingClientRect()
-          .height ?? 0,
+        document
+          .querySelector<HTMLElement>(".rawaj-category-directory-card")
+          ?.getBoundingClientRect().height ?? 0,
     }));
 
     expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.viewportWidth + 1);
