@@ -11,6 +11,7 @@ const verificationPaths = [
   "listing-attribute-write-local-verification.sql",
   "taxonomy-metadata-api-local-verification.sql",
   "taxonomy-mapping-review-apply-local-verification.sql",
+  "vehicle-reference-review-apply-local-verification.sql",
 ].map((filename) => ({
   filename,
   filePath: path.join(root, "scripts", "sql", filename),
