@@ -15,6 +15,7 @@ const migrations = await Promise.all(
     "202607190028_listing_attribute_values_foundation_v1.sql",
     "202607190029_listing_attribute_dependency_hardening_v1.sql",
     "202607190030_vehicle_reference_seed_and_review_queue_v1.sql",
+    "202607190031_listing_taxonomy_and_vehicle_review_queue_seed_v1.sql",
   ].map((filename) =>
     readFile(new URL(`../supabase/migrations/${filename}`, import.meta.url), "utf8"),
   ),
@@ -156,6 +157,32 @@ test("legacy listing migration is explicit, reviewable, and confidence bounded",
     /status in \('pending', 'auto_mapped', 'needs_review', 'confirmed', 'unresolved'\)/,
   );
   assert.match(migration, /reviewed_by uuid references public\.profiles\(id\)/);
+});
+
+test("queue seeding is non-destructive and evidence-based", () => {
+  assert.match(migration, /This migration never changes listing taxonomy assignments, subcategories, or details/);
+  assert.match(migration, /insert into public\.taxonomy_mapping_queue/);
+  assert.match(migration, /'detailKeys'/);
+  assert.match(migration, /0\.9900/);
+  assert.match(migration, /0\.8500/);
+  assert.match(migration, /0\.6500/);
+  assert.match(migration, /status in \('pending', 'auto_mapped', 'needs_review', 'unresolved'\)/);
+  assert.doesNotMatch(
+    migration,
+    /update public\.listings\s+set\s+(?:category_id|subcategory_id|details)/i,
+  );
+  assert.doesNotMatch(
+    migration,
+    /(?:insert into|update|delete from) public\.listing_taxonomy_assignments/i,
+  );
+});
+
+test("legacy invalid vehicle pairs are queued under a resolved make instead of silently accepted", () => {
+  assert.match(migration, /coalesce\(listing_row\.details ->> 'car_make', listing_row\.details ->> 'brand'\)/);
+  assert.match(migration, /coalesce\(listing_row\.details ->> 'car_model', listing_row\.details ->> 'model'\)/);
+  assert.match(migration, /entity_type,\s*\n\s*parent_make_id/);
+  assert.match(migration, /resolved\.make_id is not null\s*\n\s*and resolved\.model_id is null/);
+  assert.match(migration, /occurrence_count = public\.vehicle_reference_review_queue\.occurrence_count \+ 1/);
 });
 
 test("public clients receive read-only published metadata and never receive private review queues", () => {
