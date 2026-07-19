@@ -19,12 +19,14 @@ old_helper = '''def replace_once(label: str, old: str, new: str) -> None:
 '''
 new_helper = '''def replace_once(label: str, old: str, new: str) -> None:
     global source
-    expected_count = 2 if label == "save loading guard" else 1
     count = source.count(old)
-    if count != expected_count:
-        raise SystemExit(
-            f"{label}: expected {expected_count} marker(s), found {count}"
-        )
+    if label == "save loading guard":
+        if count not in (1, 2):
+            raise SystemExit(
+                f"{label}: expected one or two markers, found {count}"
+            )
+    elif count != 1:
+        raise SystemExit(f"{label}: expected exactly one marker, found {count}")
     source = source.replace(old, new, 1)
 '''
 if old_helper not in source:
@@ -60,7 +62,11 @@ namespace = {
     "__name__": "__main__",
     "__file__": str(transformer_path),
 }
-exec(compile(source, str(transformer_path), "exec"), namespace)
+try:
+    exec(compile(source, str(transformer_path), "exec"), namespace)
+except BaseException as error:
+    print(f"Governed edit integration failed: {error}")
+    raise
 
 integrated = route_path.read_text(encoding="utf-8")
 required_markers = (
