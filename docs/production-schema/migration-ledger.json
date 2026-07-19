@@ -154,7 +154,9 @@
       "202607190036_dynamic_listing_submit_guard_v1.sql",
       "202607190037_listing_data_quality_workspace_v1.sql",
       "202607190038_listing_data_quality_context_v1.sql",
-      "202607190039_owner_listing_attribute_read_v1.sql"
+      "202607190039_owner_listing_attribute_read_v1.sql",
+      "202607190040_dynamic_listing_facets_v1.sql",
+      "202607190041_dynamic_listing_facets_repair_v1.sql"
     ],
     "superseded": ["202606290002_classifieds_foundation.sql"],
     "reconciliation": [
