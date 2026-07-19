@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } from "react";
+
+import "../../communication-center-v3.css";
 import {
   fetchConversationMessages,
   fetchMyConversations,
