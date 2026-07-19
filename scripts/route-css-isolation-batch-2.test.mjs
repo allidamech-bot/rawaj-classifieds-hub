@@ -13,7 +13,7 @@ const scopedStyles = [
   "listing-studio-v2.css",
   "listing-studio-v3.css",
   "messaging-signature.css",
-  "communication-center-v2.css",
+  "communication-center-v3.css",
   "activity-more-foundation.css",
   "personal-space-polish.css",
   "my-store-redesign.css",
