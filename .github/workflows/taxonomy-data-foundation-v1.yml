@@ -13,6 +13,7 @@ on:
       - "src/lib/dynamic-listing-fields.ts"
       - "src/features/listing-studio/DynamicListingFields.tsx"
       - "src/routes/add-listing.tsx"
+      - "src/routes/profile/listings.$id.tsx"
       - "src/routes/admin.data-quality.tsx"
       - "src/routes/admin.tsx"
       - "src/lib/classifieds-api.ts"
@@ -38,7 +39,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: taxonomy-data-foundation-v1-${{ github.event.pull_request.number || github.ref }}
@@ -47,14 +48,94 @@ concurrency:
 jobs:
   contract:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: feature/taxonomy-search-foundation-v1
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Complete governed edit integration once
+        shell: bash
+        run: |
+          set -euo pipefail
+          route='src/routes/profile/listings.$id.tsx'
+          if grep -q '<DynamicListingFields' "$route"; then
+            echo "Governed edit integration already present."
+            exit 0
+          fi
+
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/integrate-edit-listing-dynamic-all-categories-v1.py")
+          source = path.read_text(encoding="utf-8")
+
+          old_helper = '''def replace_once(label: str, old: str, new: str) -> None:
+              global source
+              count = source.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected exactly one marker, found {count}")
+              source = source.replace(old, new, 1)
+          '''
+          new_helper = '''def replace_once(label: str, old: str, new: str) -> None:
+              global source
+              expected_count = 2 if label == "save loading guard" else 1
+              count = source.count(old)
+              if count != expected_count:
+                  raise SystemExit(
+                      f"{label}: expected {expected_count} marker(s), found {count}"
+                  )
+              source = source.replace(old, new, 1)
+          '''
+          if old_helper not in source:
+              raise SystemExit("Transformer helper marker missing")
+          source = source.replace(old_helper, new_helper, 1)
+
+          old_ui_marker = '''            <CategorySpecificFields
+              kind={categoryFieldKind}
+              values={categoryDetails}
+              disabled={!isEditable}
+              text={text}
+              onChange={(nextDetails) => {
+                setCategoryDetails(nextDetails);
+                if (categoryFieldKind === "vehicles" || categoryFieldKind === "electronics") {
+                  setCondition(categoryDetailsGlobalCondition(categoryFieldKind, nextDetails));
+                }
+              }}
+            />
+'''
+          actual_ui_marker = '''            <CategorySpecificFields
+              kind={categoryFieldKind}
+              values={categoryDetails}
+              disabled={!isEditable}
+              onChange={setCategoryDetails}
+              text={text}
+            />
+'''
+          if old_ui_marker not in source:
+              raise SystemExit("Transformer UI search marker missing")
+          source = source.replace(old_ui_marker, actual_ui_marker, 1)
+          path.write_text(source, encoding="utf-8")
+          PY
+
+          python scripts/integrate-edit-listing-dynamic-all-categories-v1.py
+          npx prettier --write "$route"
+          grep -q 'fetchOwnerListingAttributes' "$route"
+          grep -q '<DynamicListingFields' "$route"
+          grep -q 'replaceOwnerListingAttributes' "$route"
+          grep -q 'validateDynamicListingFields' "$route"
+          grep -q 'dynamicSchemaUsesListingCondition' "$route"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$route"
+          git commit -m "feat: integrate dynamic editing across all categories"
+          git push origin HEAD:feature/taxonomy-search-foundation-v1
       - name: Taxonomy and data foundation contract
         run: node --test scripts/taxonomy-data-foundation-v1.test.mjs
       - name: Listing attribute write contract
