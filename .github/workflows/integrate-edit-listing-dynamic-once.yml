@@ -1,9 +1,9 @@
 name: Integrate Edit Listing Dynamic Once
 
 on:
-  push:
+  pull_request:
     branches:
-      - feature/taxonomy-search-foundation-v1
+      - main
     paths:
       - ".github/workflows/integrate-edit-listing-dynamic-once.yml"
       - "scripts/integrate-edit-listing-dynamic-all-categories-v1.py"
@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: integrate-edit-listing-dynamic-once
+  group: integrate-edit-listing-dynamic-once-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
 jobs:
@@ -84,18 +84,26 @@ jobs:
               raise SystemExit("Transformer UI search marker missing")
           source = source.replace(old_ui_marker, actual_ui_marker, 1)
 
-          old_condition_marker = '''function readDetailString(details: Record<string, unknown>, key: string) {
-'''
-          actual_condition_marker = '''function safeDetailString(details: Record<string, unknown>, key: string) {
-'''
-          if old_condition_marker not in source:
-              raise SystemExit("Transformer condition-helper search marker missing")
-          source = source.replace(old_condition_marker, actual_condition_marker, 1)
-
           path.write_text(source, encoding="utf-8")
           PY
       - name: Integrate governed fields into listing edit
-        run: python scripts/integrate-edit-listing-dynamic-all-categories-v1.py
+        id: integrate
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/integrate-edit-listing-dynamic-all-categories-v1.py 2>&1 | tee "$RUNNER_TEMP/rawaj-edit-dynamic-integration.log"
+      - name: Upload integration diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: edit-dynamic-integration-${{ github.sha }}
+          path: ${{ runner.temp }}/rawaj-edit-dynamic-integration.log
+          if-no-files-found: error
+          retention-days: 7
+      - name: Fail when integration failed
+        if: steps.integrate.outcome == 'failure'
+        run: exit 1
       - name: Format integrated route
         run: npx prettier --write 'src/routes/profile/listings.$id.tsx'
       - name: Verify integrated route markers
@@ -106,15 +114,11 @@ jobs:
           grep -q 'replaceOwnerListingAttributes' 'src/routes/profile/listings.$id.tsx'
           grep -q 'validateDynamicListingFields' 'src/routes/profile/listings.$id.tsx'
           grep -q 'dynamicSchemaUsesListingCondition' 'src/routes/profile/listings.$id.tsx'
-      - name: Remove one-shot integration tooling
-        run: |
-          rm .github/workflows/integrate-edit-listing-dynamic-once.yml
-          rm scripts/integrate-edit-listing-dynamic-all-categories-v1.py
-      - name: Commit integrated route and cleanup
+      - name: Commit integrated route
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
+          git add 'src/routes/profile/listings.$id.tsx'
           git commit -m "feat: integrate dynamic editing across all categories"
           git push origin HEAD:feature/taxonomy-search-foundation-v1
