@@ -147,12 +147,11 @@ function mapListingAttributeError(
     message.includes("listing_attribute_")
   ) {
     return {
-      ok: false,
       code: "validation_error",
       message: "تحتوي تفاصيل الإعلان على قيمة غير صالحة لهذا التصنيف.",
       details: error.details ?? error.message,
       operation,
-    } as ClassifiedsError;
+    };
   }
 
   return mapError(error, operation);
