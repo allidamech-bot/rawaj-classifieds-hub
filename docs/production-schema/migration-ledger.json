@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "baseline": {
     "branch": "main",
-    "commit": "7c451222605c79f4453a5bdede2efc7fb0608301",
-    "lastMergedPullRequest": 303,
-    "capturedAt": "2026-07-13"
+    "commit": "5d0cf27f43372fb8bad6925e49ee49dbffead20c",
+    "lastMergedPullRequest": 468,
+    "capturedAt": "2026-07-19"
   },
   "classificationDefinitions": {
     "canonical": "Part of the intended clean-install schema history.",
@@ -133,7 +133,12 @@
       "202607140002_idempotent_owner_draft_creation.sql",
       "202607140003_idempotent_message_send.sql",
       "202607150001_retention_discovery_v1.sql",
-      "202607150002_saved_search_alerts_push_v1.sql"
+      "202607150002_saved_search_alerts_push_v1.sql",
+      "202607190001_enforce_ad_placement_https_urls.sql",
+      "202607190020_taxonomy_governance_foundation_v1.sql",
+      "202607190021_taxonomy_field_registry_foundation_v1.sql",
+      "202607190022_vehicle_reference_catalog_foundation_v1.sql",
+      "202607190023_taxonomy_data_public_read_contract_v1.sql"
     ],
     "superseded": ["202606290002_classifieds_foundation.sql"],
     "reconciliation": [
