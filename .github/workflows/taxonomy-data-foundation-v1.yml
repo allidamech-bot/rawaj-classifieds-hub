@@ -7,6 +7,7 @@ on:
       - "supabase/migrations/20260719003*.sql"
       - "scripts/taxonomy-data-foundation-v1.test.mjs"
       - "scripts/replay-supabase-local.mjs"
+      - "scripts/sql/clean-replay-*.sql"
       - "scripts/sql/taxonomy-foundation-local-verification.sql"
       - "docs/production-schema/migration-ledger.json"
       - ".github/workflows/taxonomy-data-foundation-v1.yml"
@@ -34,7 +35,23 @@ jobs:
       - name: Taxonomy and data foundation contract
         run: node --test scripts/taxonomy-data-foundation-v1.test.mjs
       - name: ESLint
-        run: npm run lint
+        id: lint
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run lint 2>&1 | tee "$RUNNER_TEMP/rawaj-taxonomy-lint.log"
+      - name: Upload ESLint diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: taxonomy-eslint-${{ github.sha }}
+          path: ${{ runner.temp }}/rawaj-taxonomy-lint.log
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Fail when ESLint failed
+        if: steps.lint.outcome == 'failure'
+        run: exit 1
       - name: TypeScript
         run: npm run typecheck
       - name: Production build
