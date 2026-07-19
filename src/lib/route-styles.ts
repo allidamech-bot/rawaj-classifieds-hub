@@ -1,3 +1,4 @@
+import "../auth-stable-route-styles.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import communicationCenterV3Css from "../communication-center-v3.css?url";
 import homeDiscoveryV3Css from "../home-discovery-v3.css?url";
