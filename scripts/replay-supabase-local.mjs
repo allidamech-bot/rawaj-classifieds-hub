@@ -42,6 +42,11 @@ const compatibilityHooks = [
     anchor: "202607080019_listing_moderation_console.sql",
     filename: "clean-replay-before-202607080019-listing-status.sql",
   },
+  {
+    timing: "before",
+    anchor: "202607080024_safety_case_assignment_escalation.sql",
+    filename: "clean-replay-before-202607080024-safety-list-cases.sql",
+  },
 ].map((hook) => ({
   ...hook,
   filePath: path.join(root, "scripts", "sql", hook.filename),
