@@ -16,6 +16,15 @@ const verificationPath = path.join(
 );
 const databaseUrl =
   process.env.SUPABASE_DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
+const subprocessOptions = {
+  cwd: root,
+  env: {
+    ...process.env,
+    PGOPTIONS: "--client-min-messages=warning",
+  },
+  encoding: "utf8",
+  maxBuffer: 50 * 1024 * 1024,
+};
 
 const ledger = JSON.parse(await readFile(ledgerPath, "utf8"));
 const classifications = ledger.classifications ?? {};
@@ -50,47 +59,49 @@ console.log(
 
 for (const [index, filename] of replayFiles.entries()) {
   const migrationPath = path.join(migrationsDirectory, filename);
-  console.log(`::group::Migration ${index + 1}/${replayFiles.length}: ${filename}`);
   const result = spawnSync(
     "psql",
     [databaseUrl, "-X", "--set", "ON_ERROR_STOP=1", "--file", migrationPath],
     {
-      cwd: root,
+      ...subprocessOptions,
       env: {
-        ...process.env,
+        ...subprocessOptions.env,
         PGAPPNAME: "rawaj_supabase_local_replay",
-        PGOPTIONS: "--client-min-messages=warning",
       },
-      stdio: "inherit",
     },
   );
-  console.log("::endgroup::");
 
   if (result.error) throw result.error;
   if (result.status !== 0) {
+    console.error(`\nMigration ${index + 1}/${replayFiles.length} failed: ${filename}`);
+    if (result.stdout?.trim()) console.error(result.stdout.trim());
+    if (result.stderr?.trim()) console.error(result.stderr.trim());
     throw new Error(`Migration replay failed at ${filename} with exit code ${result.status}.`);
   }
+
+  console.log(`PASS ${index + 1}/${replayFiles.length} ${filename}`);
 }
 
-console.log("::group::Taxonomy, RLS, reference-data, and replay invariants");
 const verification = spawnSync(
   "psql",
   [databaseUrl, "-X", "--set", "ON_ERROR_STOP=1", "--file", verificationPath],
   {
-    cwd: root,
+    ...subprocessOptions,
     env: {
-      ...process.env,
+      ...subprocessOptions.env,
       PGAPPNAME: "rawaj_supabase_local_verification",
-      PGOPTIONS: "--client-min-messages=warning",
     },
-    stdio: "inherit",
   },
 );
-console.log("::endgroup::");
 
 if (verification.error) throw verification.error;
 if (verification.status !== 0) {
+  console.error("\nLocal Supabase foundation verification failed.");
+  if (verification.stdout?.trim()) console.error(verification.stdout.trim());
+  if (verification.stderr?.trim()) console.error(verification.stderr.trim());
   throw new Error(`Local Supabase verification failed with exit code ${verification.status}.`);
 }
 
+if (verification.stdout?.trim()) console.log(verification.stdout.trim());
+if (verification.stderr?.trim()) console.log(verification.stderr.trim());
 console.log("Supabase local clean replay and foundation verification passed.");
