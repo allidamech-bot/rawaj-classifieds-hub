@@ -1,0 +1,62 @@
+name: Supabase Local Replay Gate
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/config.toml"
+      - "docs/production-schema/migration-ledger.json"
+      - "scripts/replay-supabase-local.mjs"
+      - "scripts/sql/taxonomy-foundation-local-verification.sql"
+      - ".github/workflows/supabase-local-replay.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-local-replay-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  clean-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v2
+        with:
+          version: 2.84.2
+          github-token: ${{ github.token }}
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends postgresql-client
+
+      - name: Start disposable Supabase stack
+        run: |
+          supabase stop --no-backup || true
+          supabase start
+          supabase status
+
+      - name: Replay canonical database history and verify invariants
+        env:
+          SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: node scripts/replay-supabase-local.mjs
+
+      - name: Lint replayed database
+        run: supabase db lint --local --level error
+
+      - name: Stop disposable Supabase stack
+        if: always()
+        run: supabase stop --no-backup
