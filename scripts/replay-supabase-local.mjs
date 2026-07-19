@@ -6,12 +6,13 @@ import process from "node:process";
 const root = process.cwd();
 const migrationsDirectory = path.join(root, "supabase", "migrations");
 const ledgerPath = path.join(root, "docs", "production-schema", "migration-ledger.json");
-const verificationPath = path.join(
-  root,
-  "scripts",
-  "sql",
+const verificationPaths = [
   "taxonomy-foundation-local-verification.sql",
-);
+  "listing-attribute-write-local-verification.sql",
+].map((filename) => ({
+  filename,
+  filePath: path.join(root, "scripts", "sql", filename),
+}));
 const databaseUrl =
   process.env.SUPABASE_DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
 const subprocessOptions = {
@@ -112,15 +113,19 @@ for (const [index, filename] of replayFiles.entries()) {
   runCompatibilityHooks("after", filename);
 }
 
-const verification = runSqlFile(verificationPath, {
-  label: "Local Supabase foundation verification",
-  filename: path.basename(verificationPath),
-  appName: "rawaj_supabase_local_verification",
-});
+for (const verification of verificationPaths) {
+  const result = runSqlFile(verification.filePath, {
+    label: `Local Supabase verification ${verification.filename}`,
+    filename: verification.filename,
+    appName: "rawaj_supabase_local_verification",
+  });
 
-if (verification.stdout?.trim()) console.log(verification.stdout.trim());
-if (verification.stderr?.trim()) console.log(verification.stderr.trim());
-console.log("Supabase local clean replay and foundation verification passed.");
+  if (result.stdout?.trim()) console.log(result.stdout.trim());
+  if (result.stderr?.trim()) console.log(result.stderr.trim());
+  console.log(`PASS verification ${verification.filename}`);
+}
+
+console.log("Supabase local clean replay and all foundation verifications passed.");
 
 function runCompatibilityHooks(timing, anchor) {
   for (const hook of compatibilityHooks) {
