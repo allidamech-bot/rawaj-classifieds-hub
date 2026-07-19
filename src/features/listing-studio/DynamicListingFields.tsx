@@ -45,10 +45,7 @@ export function DynamicListingFields({
   const [vehicleMetadataLoading, setVehicleMetadataLoading] = useState(false);
   const [vehicleMetadataError, setVehicleMetadataError] = useState<string | null>(null);
 
-  const states = useMemo(
-    () => resolveDynamicFieldStates(schema, values),
-    [schema, values],
-  );
+  const states = useMemo(() => resolveDynamicFieldStates(schema, values), [schema, values]);
   const visibleStates = useMemo(() => states.filter((state) => state.visible), [states]);
   const needsVehicleMakes = visibleStates.some(
     (state) => state.field.dataProviderKey === "vehicle_makes",
@@ -291,9 +288,14 @@ function DynamicField({
         vehicleModelId,
       })}
 
-      {description ? <span className="mt-1 block text-[10px] text-muted-foreground">{description}</span> : null}
+      {description ? (
+        <span className="mt-1 block text-[10px] text-muted-foreground">{description}</span>
+      ) : null}
       {error ? (
-        <span id={`${fieldId}-error`} className="mt-1 block text-[10px] font-medium text-destructive">
+        <span
+          id={`${fieldId}-error`}
+          className="mt-1 block text-[10px] font-medium text-destructive"
+        >
           {error}
         </span>
       ) : null}
@@ -399,7 +401,7 @@ function renderInput({
 
   if (field.fieldType === "location") {
     return (
-      <div aria-invalid={Boolean(common["aria-invalid"])}>
+      <div aria-invalid={common["aria-invalid"]}>
         <CanonicalLocationSelector
           value={stringValue(value)}
           onChange={(id) => onChange(id ?? "")}
@@ -415,7 +417,10 @@ function renderInput({
         {field.options.map((option) => {
           const checked = selected.has(option.key);
           return (
-            <span key={option.key} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs">
+            <span
+              key={option.key}
+              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs"
+            >
               <input
                 type="checkbox"
                 disabled={common.disabled}
@@ -467,7 +472,8 @@ function renderInput({
       (field.dataProviderKey === "vehicle_models_by_make" && !vehicleMakeId) ||
       (["vehicle_generations_by_model", "vehicle_trims_by_model"].includes(
         field.dataProviderKey ?? "",
-      ) && !vehicleModelId);
+      ) &&
+        !vehicleModelId);
 
     return (
       <select
