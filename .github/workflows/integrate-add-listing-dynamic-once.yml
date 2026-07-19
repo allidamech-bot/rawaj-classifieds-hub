@@ -30,7 +30,23 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Integrate governed fields for every category leaf
-        run: node scripts/integrate-add-listing-dynamic-all-categories-v1.mjs
+        id: integrate
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/integrate-add-listing-dynamic-all-categories-v1.mjs 2>&1 | tee "$RUNNER_TEMP/rawaj-dynamic-integration.log"
+      - name: Upload integration diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dynamic-integration-${{ github.sha }}
+          path: ${{ runner.temp }}/rawaj-dynamic-integration.log
+          if-no-files-found: error
+          retention-days: 7
+      - name: Fail when integration failed
+        if: steps.integrate.outcome == 'failure'
+        run: exit 1
       - name: Format integrated route
         run: npx prettier --write src/routes/add-listing.tsx
       - name: Commit integrated route
