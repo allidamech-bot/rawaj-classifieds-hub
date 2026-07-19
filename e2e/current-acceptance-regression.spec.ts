@@ -24,7 +24,7 @@ test("categories direct load renders the active production ad placement", async 
     .toBe(true);
 });
 
-test("mobile chat CSS renders exactly one panel for list and conversation states", async ({
+test("mobile chat workspace state overrides stale or transient panel classes", async ({
   page,
 }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile messaging contract");
@@ -38,16 +38,19 @@ test("mobile chat CSS renders exactly one panel for list and conversation states
     workspace.className = "rawaj-message-workspace";
     workspace.dataset.view = "list";
 
+    // Reproduce the reported regression: neither element has Tailwind's `hidden`
+    // class while auth/search state is changing. Workspace state must still win.
     const sidebar = document.createElement("aside");
-    sidebar.className = "rawaj-conversation-sidebar hidden";
+    sidebar.className = "rawaj-conversation-sidebar";
     const panel = document.createElement("section");
-    panel.className = "rawaj-message-panel hidden";
+    panel.className = "rawaj-message-panel";
     workspace.append(sidebar, panel);
     document.body.append(workspace);
 
     const result = {
       sidebar: getComputedStyle(sidebar).display,
       panel: getComputedStyle(panel).display,
+      workspaceHeight: workspace.getBoundingClientRect().height,
     };
     workspace.remove();
     return result;
@@ -55,14 +58,16 @@ test("mobile chat CSS renders exactly one panel for list and conversation states
 
   expect(listState.sidebar).not.toBe("none");
   expect(listState.panel).toBe("none");
+  expect(listState.workspaceHeight).toBeLessThan(200);
 
   const conversationState = await page.evaluate(() => {
     const workspace = document.createElement("div");
     workspace.className = "rawaj-message-workspace";
     workspace.dataset.view = "conversation";
 
+    // Conversation mode must also be deterministic without relying on `hidden`.
     const sidebar = document.createElement("aside");
-    sidebar.className = "rawaj-conversation-sidebar hidden";
+    sidebar.className = "rawaj-conversation-sidebar";
     const panel = document.createElement("section");
     panel.className = "rawaj-message-panel";
     workspace.append(sidebar, panel);
