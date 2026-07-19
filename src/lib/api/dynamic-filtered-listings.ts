@@ -1,4 +1,7 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
+  ClassifiedCategory,
+  ClassifiedGovernorate,
   ClassifiedListing,
   ClassifiedsResult,
   ListingCursor,
@@ -8,16 +11,28 @@ import type {
 import { resolveCanonicalLocationIds } from "@/lib/api/canonical-location-filter";
 import { fetchDynamicListingSearchPage } from "@/lib/api/dynamic-listing-search";
 import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
-import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
 import { publicListingSelect } from "@/lib/api/public-fields";
 import { readReferences } from "@/lib/api/references";
 import { getClient, mapError } from "@/lib/api/shared";
 import { sanitizePublicListing } from "@/lib/public-listing-presentation";
 
+export interface DynamicListingHydrationDependencies {
+  mapListing: (
+    row: Record<string, unknown>,
+    categories: ClassifiedCategory[],
+    governorates: ClassifiedGovernorate[],
+  ) => ClassifiedListing;
+  hydrateListingsWithPrimaryImages: (
+    client: SupabaseClient,
+    listings: ClassifiedListing[],
+  ) => Promise<ClassifiedListing[]>;
+}
+
 export async function fetchDynamicFilteredPublicListings(
   filters: ListingFilters,
   cursor: ListingCursor | null,
   pageSize: number,
+  dependencies: DynamicListingHydrationDependencies,
 ): Promise<ClassifiedsResult<PaginatedListingsResponse<ClassifiedListing>>> {
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
@@ -69,9 +84,11 @@ export async function fetchDynamicFilteredPublicListings(
   }
 
   const mapped = ((data ?? []) as Record<string, unknown>[]).map((row) =>
-    sanitizePublicListing(mapListing(row, references.categories, references.governorates)),
+    sanitizePublicListing(
+      dependencies.mapListing(row, references.categories, references.governorates),
+    ),
   );
-  const hydrated = await hydrateListingsWithPrimaryImages(client, mapped);
+  const hydrated = await dependencies.hydrateListingsWithPrimaryImages(client, mapped);
   const listingById = new Map(hydrated.map((listing) => [listing.id, listing]));
 
   return {
