@@ -182,6 +182,9 @@ function AddListingPage() {
     dynamicSchema.leaf?.id === taxonomyNodeId &&
     dynamicSchema.fields.some((field) => field.displaySurfaces.includes("listing_studio")),
   );
+  const dynamicSchemaUsesListingCondition = Boolean(
+    dynamicSchemaActive && dynamicSchema?.fields.some((field) => field.key === "listing_condition"),
+  );
   const showGlobalCondition =
     !dynamicSchemaActive && categoryUsesGlobalCondition(categoryFieldKind);
   const requiresPreciseLocation = categoryRequiresPreciseLocation(categoryFieldKind);
@@ -331,10 +334,14 @@ function AddListingPage() {
   }, [selectedTaxonomyNode?.isLeaf, taxonomyNodeId]);
 
   useEffect(() => {
-    if (!showGlobalCondition && condition !== "not_applicable") {
+    if (
+      !showGlobalCondition &&
+      !dynamicSchemaUsesListingCondition &&
+      condition !== "not_applicable"
+    ) {
       setCondition("not_applicable");
     }
-  }, [condition, showGlobalCondition]);
+  }, [condition, dynamicSchemaUsesListingCondition, showGlobalCondition]);
 
   useEffect(
     () => () => {
@@ -811,7 +818,7 @@ function AddListingPage() {
 
   function handleDynamicValuesChange(nextValues: DynamicListingValues) {
     setDynamicValues(nextValues);
-    if (!dynamicSchema?.fields.some((field) => field.key === "listing_condition")) return;
+    if (!dynamicSchemaUsesListingCondition) return;
     const nextCondition = dynamicListingCondition(nextValues.listing_condition);
     if (nextCondition !== condition) setCondition(nextCondition);
   }
