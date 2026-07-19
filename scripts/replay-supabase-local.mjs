@@ -9,6 +9,7 @@ const ledgerPath = path.join(root, "docs", "production-schema", "migration-ledge
 const verificationPaths = [
   "taxonomy-foundation-local-verification.sql",
   "listing-attribute-write-local-verification.sql",
+  "owner-listing-attribute-read-local-verification.sql",
   "taxonomy-metadata-api-local-verification.sql",
   "taxonomy-mapping-review-apply-local-verification.sql",
   "vehicle-reference-review-apply-local-verification.sql",
