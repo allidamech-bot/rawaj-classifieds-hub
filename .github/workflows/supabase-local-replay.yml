@@ -7,7 +7,7 @@ on:
       - "supabase/config.toml"
       - "docs/production-schema/migration-ledger.json"
       - "scripts/replay-supabase-local.mjs"
-      - "scripts/sql/clean-replay-compatibility-prelude.sql"
+      - "scripts/sql/clean-replay-*.sql"
       - "scripts/sql/taxonomy-foundation-local-verification.sql"
       - ".github/workflows/supabase-local-replay.yml"
   workflow_dispatch:
