@@ -8,6 +8,7 @@ on:
       - "src/lib/api/taxonomy-metadata.ts"
       - "src/lib/api/listing-attributes.ts"
       - "src/lib/api/taxonomy-review-queues.ts"
+      - "src/lib/api/listing-data-quality.ts"
       - "src/lib/dynamic-listing-fields.ts"
       - "src/features/listing-studio/DynamicListingFields.tsx"
       - "src/lib/classifieds-api.ts"
@@ -18,6 +19,8 @@ on:
       - "scripts/taxonomy-mapping-review-apply-v1.test.mjs"
       - "scripts/vehicle-reference-review-apply-v1.test.mjs"
       - "scripts/taxonomy-review-queue-client-v1.test.mjs"
+      - "scripts/listing-data-quality-workspace-v1.test.mjs"
+      - "scripts/listing-data-quality-client-v1.test.mjs"
       - "scripts/dynamic-listing-submit-guard-v1.test.mjs"
       - "scripts/dynamic-listing-studio-client-v1.test.mjs"
       - "scripts/replay-supabase-local.mjs"
@@ -60,6 +63,10 @@ jobs:
         run: node --test scripts/vehicle-reference-review-apply-v1.test.mjs
       - name: Taxonomy review queue client contract
         run: node --test scripts/taxonomy-review-queue-client-v1.test.mjs
+      - name: Cross-category listing data quality contract
+        run: node --test scripts/listing-data-quality-workspace-v1.test.mjs
+      - name: Listing data quality client contract
+        run: node --test scripts/listing-data-quality-client-v1.test.mjs
       - name: Dynamic listing submit guard contract
         run: node --test scripts/dynamic-listing-submit-guard-v1.test.mjs
       - name: Dynamic listing studio client contract
