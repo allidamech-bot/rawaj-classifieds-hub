@@ -16,6 +16,24 @@ permissions:
   statuses: write
 
 jobs:
+  format_probe:
+    name: Auth Transition ESLint Fix Probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx eslint e2e/auth-transition-style-regression.spec.ts --fix
+      - uses: actions/upload-artifact@v4
+        with:
+          name: auth-transition-eslint-fixed-${{ github.run_id }}
+          path: e2e/auth-transition-style-regression.spec.ts
+          retention-days: 2
+
   quality:
     name: Auth Transition Quality
     runs-on: ubuntu-latest
