@@ -17,10 +17,17 @@ BEGIN
     RAISE EXCEPTION 'taxonomy_foundation_required_tables_missing';
   END IF;
 
-  SELECT count(*), min(id)
-    INTO v_count, v_published_version_id
+  SELECT count(*)
+    INTO v_count
   FROM public.taxonomy_versions
   WHERE status = 'published';
+
+  SELECT id
+    INTO v_published_version_id
+  FROM public.taxonomy_versions
+  WHERE status = 'published'
+  ORDER BY version_number DESC
+  LIMIT 1;
 
   IF v_count <> 1 OR v_published_version_id IS NULL THEN
     RAISE EXCEPTION 'taxonomy_foundation_requires_exactly_one_published_version: %', v_count;
