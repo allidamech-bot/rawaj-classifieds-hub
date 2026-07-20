@@ -1,0 +1,37 @@
+name: Apply Public Auth Integrity
+
+on:
+  push:
+    branches:
+      - agent/full-site-actions-integrity-audit
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-public-auth-integrity
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/full-site-actions-integrity-audit
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply guarded auth repair
+        run: node scripts/apply-public-auth-integrity.mjs
+      - name: Commit repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/login.tsx src/routes/reset-password.tsx scripts/apply-public-auth-integrity.mjs
+          git commit -m "fix: harden public auth action lifecycle"
+          git push origin HEAD:agent/full-site-actions-integrity-audit
