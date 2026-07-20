@@ -123,8 +123,8 @@ export async function loadPublicListingsPageData(
   );
   const hasPriceContradiction = Boolean(
     typeof parsedPriceMin === "number" &&
-      typeof parsedPriceMax === "number" &&
-      parsedPriceMin > parsedPriceMax,
+    typeof parsedPriceMax === "number" &&
+    parsedPriceMin > parsedPriceMax,
   );
 
   if (hasInvalidCategory || hasInvalidSubcategory || hasPriceContradiction) {
