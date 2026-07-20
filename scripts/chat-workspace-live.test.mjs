@@ -27,18 +27,17 @@ test("the visible chat subscribes to message and conversation changes", () => {
   assert.match(hookSource, /removeChannel\(channel\)/);
 });
 
-test("live chat refreshes are debounced, bounded, and visibility aware", () => {
+test("live chat refreshes are debounced, event-driven, and visibility aware", () => {
   assert.match(hookSource, /LIVE_CHAT_EVENT_DEBOUNCE_MS = 150/);
-  assert.match(hookSource, /LIVE_CHAT_FALLBACK_POLL_MS = 60 \* 1000/);
+  assert.doesNotMatch(hookSource, /LIVE_CHAT_FALLBACK_POLL_MS/);
+  assert.doesNotMatch(hookSource, /window\.setInterval\(/);
   assert.match(hookSource, /setTimeout\([\s\S]*LIVE_CHAT_EVENT_DEBOUNCE_MS/);
-  assert.match(
-    hookSource,
-    /window\.setInterval\(refreshWhenAvailable, LIVE_CHAT_FALLBACK_POLL_MS\)/,
-  );
   assert.match(hookSource, /document\.visibilityState === "hidden"/);
   assert.match(hookSource, /navigator\.onLine === false/);
   assert.match(hookSource, /addEventListener\("online", refreshWhenAvailable\)/);
+  assert.match(hookSource, /addEventListener\("focus", refreshWhenAvailable\)/);
   assert.match(hookSource, /addEventListener\("visibilitychange", refreshWhenAvailable\)/);
+  assert.match(hookSource, /invalidateConversationMessagesCache\(selectedConversationId\)/);
 });
 
 test("live chat deduplicates reads and ignores stale account or conversation results", () => {
