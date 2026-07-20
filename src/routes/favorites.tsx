@@ -29,6 +29,7 @@ function FavoritesPage() {
   const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<ClassifiedsError | null>(null);
   const [actionMessage, setActionMessage] = useState("");
+  const [removingIds, setRemovingIds] = useState<Set<string>>(() => new Set());
   const removeInFlightRef = useRef<Set<string>>(new Set());
   const loadRequestIdRef = useRef(0);
   const profileId = auth.profile?.id ?? null;
@@ -42,17 +43,31 @@ function FavoritesPage() {
     const requestId = ++loadRequestIdRef.current;
     setLoading(true);
     setError(null);
-    const result = await fetchFavoriteJourneyItems(currentProfileId);
-    if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
-
-    if (result.ok) {
-      setItems(result.data);
-      setHasLoaded(true);
-    } else {
-      setError(result.error);
+    try {
+      const result = await fetchFavoriteJourneyItems(currentProfileId);
+      if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (result.ok) {
+        setItems(result.data);
+        setHasLoaded(true);
+      } else {
+        setError(result.error);
+      }
+    } catch (caught) {
+      if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      setError({
+        code: "unknown",
+        message:
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحميل المفضلة. حاول مرة أخرى.", "Could not load favorites. Try again."),
+        operation: "favorite_journey_load",
+      });
+    } finally {
+      if (requestId === loadRequestIdRef.current && currentProfileId === profileIdRef.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
-  }, [auth.profile?.id, profileId]);
+  }, [profileId, text]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
@@ -62,6 +77,7 @@ function FavoritesPage() {
       setHasLoaded(false);
       setError(null);
       setActionMessage("");
+      setRemovingIds(new Set());
       return;
     }
 
@@ -85,6 +101,7 @@ function FavoritesPage() {
     if (removeInFlightRef.current.has(scopeKey)) return;
 
     removeInFlightRef.current.add(scopeKey);
+    setRemovingIds((current) => new Set(current).add(listingId));
     setActionMessage("");
     try {
       const result = await unfavoriteListing(currentProfileId, listingId);
@@ -94,8 +111,22 @@ function FavoritesPage() {
         return;
       }
       setItems((current) => current.filter((item) => item.listingId !== listingId));
+    } catch (caught) {
+      if (currentProfileId !== profileIdRef.current) return;
+      setActionMessage(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر إزالة الإعلان من المفضلة.", "Could not remove the listing from favorites."),
+      );
     } finally {
       removeInFlightRef.current.delete(scopeKey);
+      if (currentProfileId === profileIdRef.current) {
+        setRemovingIds((current) => {
+          const next = new Set(current);
+          next.delete(listingId);
+          return next;
+        });
+      }
     }
   }
 
@@ -200,6 +231,7 @@ function FavoritesPage() {
                       <FavoriteListingCard
                         key={item.listingId}
                         listing={listing}
+                        removing={removingIds.has(item.listingId)}
                         onRemove={() => void remove(item.listingId)}
                       />
                     );
@@ -248,7 +280,9 @@ function FavoritesPage() {
                         <button
                           type="button"
                           onClick={() => void remove(item.listingId)}
-                          className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive"
+                          disabled={removingIds.has(item.listingId)}
+                          aria-busy={removingIds.has(item.listingId)}
+                          className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive disabled:cursor-wait disabled:opacity-50"
                           aria-label={text("إزالة من المفضلة", "Remove from favorites")}
                         >
                           <Trash2 className="h-4 w-4" />
