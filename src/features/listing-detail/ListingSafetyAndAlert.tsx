@@ -3,6 +3,7 @@ import { BellRing, Flag, ShieldCheck } from "lucide-react";
 interface ListingSafetyAndAlertProps {
   showVisitorActions: boolean;
   alertBusy: boolean;
+  reportBusy: boolean;
   alertCreated: boolean;
   onCreateAlert: () => void;
   onReport: () => void;
@@ -12,6 +13,7 @@ interface ListingSafetyAndAlertProps {
 export function ListingSafetyAndAlert({
   showVisitorActions,
   alertBusy,
+  reportBusy,
   alertCreated,
   onCreateAlert,
   onReport,
@@ -65,9 +67,17 @@ export function ListingSafetyAndAlert({
                 ? text("جارٍ التفعيل", "Enabling")
                 : text("نبّهني لنتائج السعر", "Alert me to price results")}
           </button>
-          <button type="button" onClick={onReport} data-tone="report">
+          <button
+            type="button"
+            onClick={onReport}
+            disabled={reportBusy}
+            aria-busy={reportBusy}
+            data-tone="report"
+          >
             <Flag aria-hidden="true" />
-            {text("إبلاغ عن الإعلان", "Report listing")}
+            {reportBusy
+              ? text("جارٍ إرسال البلاغ", "Sending report")
+              : text("إبلاغ عن الإعلان", "Report listing")}
           </button>
         </div>
       ) : null}

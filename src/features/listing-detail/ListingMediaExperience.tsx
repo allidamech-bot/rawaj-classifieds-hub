@@ -13,6 +13,7 @@ interface ListingMediaExperienceProps {
   title: string;
   placeholder: PlaceholderType;
   favorite: boolean;
+  favoriteBusy?: boolean;
   showFavorite?: boolean;
   imageError?: string | null;
   onBack: () => void;
@@ -26,6 +27,7 @@ export function ListingMediaExperience({
   title,
   placeholder,
   favorite,
+  favoriteBusy = false,
   showFavorite = true,
   imageError,
   onBack,
@@ -104,6 +106,8 @@ export function ListingMediaExperience({
                 <button
                   type="button"
                   onClick={onToggleFavorite}
+                  disabled={favoriteBusy}
+                  aria-busy={favoriteBusy}
                   aria-pressed={favorite}
                   aria-label={
                     favorite
