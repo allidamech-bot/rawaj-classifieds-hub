@@ -1,0 +1,54 @@
+name: Apply Listing Actions Integrity
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/apply-listing-actions-integrity.mjs"
+      - ".github/workflows/apply-listing-actions-integrity.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-listing-actions-integrity
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/full-site-actions-integrity-audit
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply guarded listing repair
+        id: repair
+        continue-on-error: true
+        shell: bash
+        run: node scripts/apply-listing-actions-integrity.mjs > listing-actions-repair.log 2>&1
+      - name: Upload repair diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: listing-actions-repair-${{ github.sha }}
+          path: listing-actions-repair.log
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Fail when repair failed
+        if: steps.repair.outcome == 'failure'
+        run: exit 1
+      - name: Commit repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/add-listing.tsx src/routes/profile/listings.\$id.tsx scripts/apply-listing-actions-integrity.mjs
+          git commit -m "fix: harden listing action lifecycle"
+          git push origin HEAD:agent/full-site-actions-integrity-audit
