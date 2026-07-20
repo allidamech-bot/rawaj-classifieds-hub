@@ -52,6 +52,7 @@ jobs:
             git push origin HEAD:agent/admin-actions-integrity-audit
             exit "$status"
           fi
+          git checkout HEAD -- .github/workflows/apply-admin-actions-integrity-repair.yml
           rm -f repair-diagnostic.txt scripts/fix-admin-repair-script.mjs
       - name: Commit repair
         run: |
