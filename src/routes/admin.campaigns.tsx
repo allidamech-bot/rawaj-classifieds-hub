@@ -189,12 +189,14 @@ function CampaignManagerPage() {
       startsAt: fromLocalDateTimeInput(campaignForm.startsAt),
       endsAt: fromLocalDateTimeInput(campaignForm.endsAt),
       targetPages: campaignForm.targetPages,
-      targetCategoryIds: [...new Set(
-        campaignForm.categoryIdsText
-          .split(",")
-          .map((value) => value.trim())
-          .filter(Boolean),
-      )],
+      targetCategoryIds: [
+        ...new Set(
+          campaignForm.categoryIdsText
+            .split(",")
+            .map((value) => value.trim())
+            .filter(Boolean),
+        ),
+      ],
     });
 
     setSaving(false);
