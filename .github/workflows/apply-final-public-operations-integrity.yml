@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "scripts/apply-final-public-operations-integrity.mjs"
+      - "scripts/fix-final-public-operations-generator.mjs"
       - ".github/workflows/apply-final-public-operations-integrity.yml"
   workflow_dispatch:
 
@@ -28,7 +29,10 @@ jobs:
       - name: Apply guarded final operations repair
         id: repair
         continue-on-error: true
-        run: node scripts/apply-final-public-operations-integrity.mjs > final-public-operations.log 2>&1
+        shell: bash
+        run: |
+          node scripts/fix-final-public-operations-generator.mjs > final-public-operations.log 2>&1
+          node scripts/apply-final-public-operations-integrity.mjs >> final-public-operations.log 2>&1
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -41,6 +45,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/routes/activity.tsx src/routes/offers.tsx src/routes/profile/listings.tsx scripts/apply-final-public-operations-integrity.mjs
+          git add src/routes/activity.tsx src/routes/offers.tsx src/routes/profile/listings.tsx scripts/apply-final-public-operations-integrity.mjs scripts/fix-final-public-operations-generator.mjs
           git commit -m "fix: harden remaining public operation lifecycles"
           git push origin HEAD:agent/full-site-actions-integrity-audit
