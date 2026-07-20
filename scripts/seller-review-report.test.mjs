@@ -71,12 +71,19 @@ test("review reports expose only own-user and moderator select policies", () => 
 });
 
 test("public review cards expose governed reporting without public reviewer identity", () => {
-  assert.match(card, /createSellerReviewReport\(review\.id, reportReason, reportDetails\)/);
+  assert.match(card, /const normalizedDetails = reportDetails\.trim\(\)/);
+  assert.match(
+    card,
+    /createSellerReviewReport\(review\.id, reportReason, normalizedDetails\)/,
+  );
   assert.match(card, /const canReport = auth\.status === "signedIn"/);
   assert.doesNotMatch(card, /review\.reviewerUserId/);
   assert.match(card, /reportReasons/);
   assert.match(card, /maxLength=\{1000\}/);
   assert.match(card, /Report submitted for review without automatically hiding the review/);
+  assert.match(card, /reportScopesRef\.current\.has\(scopeKey\)/);
+  assert.match(card, /async function submitReport[\s\S]*?catch \(caught\)[\s\S]*?finally/);
+  assert.match(card, /aria-busy=\{reportSaving\}/);
 });
 
 test("admin review reports stay behind report permission and use stale-safe moderation API", () => {
