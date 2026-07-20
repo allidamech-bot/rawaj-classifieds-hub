@@ -7,9 +7,7 @@ const pendingListingImageReads = new Map<string, Promise<ClassifiedsResult<Listi
  * Deduplicate only concurrent reads. No completed result is cached so image
  * replacement, deletion, and ordering changes remain visible immediately.
  */
-export function fetchListingImages(
-  listingId: string,
-): Promise<ClassifiedsResult<ListingImage[]>> {
+export function fetchListingImages(listingId: string): Promise<ClassifiedsResult<ListingImage[]>> {
   const cleanListingId = listingId.trim();
   const pending = pendingListingImageReads.get(cleanListingId);
   if (pending) return pending;
