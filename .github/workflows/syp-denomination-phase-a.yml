@@ -1,0 +1,40 @@
+name: SYP Denomination Phase A
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "scripts/syp-denomination-phase-a.test.mjs"
+      - "scripts/sql/syp-denomination-phase-a-rollback.sql"
+      - "supabase/migrations/202607210001_syp_denomination_phase_a.sql"
+      - ".github/workflows/syp-denomination-phase-a.yml"
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run SYP Phase A contracts
+        run: node --test scripts/syp-denomination-phase-a.test.mjs
+
+      - name: Run TypeScript
+        run: npm run typecheck
