@@ -38,3 +38,6 @@ jobs:
 
       - name: Run TypeScript
         run: npm run typecheck
+
+      - name: Build production bundle
+        run: npm run build
