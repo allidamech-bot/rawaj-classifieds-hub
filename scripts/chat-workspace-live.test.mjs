@@ -40,7 +40,7 @@ test("live chat refreshes are debounced, event-driven, and visibility aware", ()
   assert.match(hookSource, /invalidateConversationMessagesCache\(selectedConversationId\)/);
 });
 
-test("live chat deduplicates reads and ignores stale account or conversation results", () => {
+test("live chat deduplicates reads, isolates accounts, and ignores stale results", () => {
   assert.match(hookSource, /interface InFlightChatRefresh/);
   assert.match(hookSource, /activeRefresh\?\.scopeKey === scopeKey/);
   assert.match(hookSource, /return activeRefresh\.promise/);
@@ -49,6 +49,11 @@ test("live chat deduplicates reads and ignores stale account or conversation res
   assert.match(hookSource, /refreshedConversation\.unreadCount <= 0/);
   assert.match(hookSource, /markConversationRead\(conversationId\)/);
   assert.match(hookSource, /conversation\.unreadCount !== 0/);
+  assert.match(hookSource, /cacheProfileIdRef/);
+  assert.match(hookSource, /const nextProfileId = signedIn \? profileId : null/);
+  assert.match(hookSource, /invalidateConversationMessagesCache\(\);/);
+  assert.match(hookSource, /inFlightRefreshRef\.current = null/);
+  assert.match(hookSource, /previousUnreadMessagesRef\.current = null/);
 });
 
 test("the chat route activates live sync only while the conversation panel is visible", () => {
