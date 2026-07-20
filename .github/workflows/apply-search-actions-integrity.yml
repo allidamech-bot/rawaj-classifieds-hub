@@ -1,0 +1,46 @@
+name: Apply Search Actions Integrity
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/apply-search-actions-integrity.mjs"
+      - ".github/workflows/apply-search-actions-integrity.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/full-site-actions-integrity-audit
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply guarded search repair
+        id: repair
+        continue-on-error: true
+        run: node scripts/apply-search-actions-integrity.mjs > search-repair.log 2>&1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: search-repair-${{ github.sha }}
+          path: search-repair.log
+          retention-days: 7
+      - if: steps.repair.outcome == 'failure'
+        run: exit 1
+      - name: Commit repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/listings/use-listings-results.ts src/features/listings/use-listings-pagination.ts scripts/apply-search-actions-integrity.mjs
+          git commit -m "fix: harden search result lifecycle"
+          git push origin HEAD:agent/full-site-actions-integrity-audit
