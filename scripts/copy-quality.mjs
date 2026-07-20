@@ -17,7 +17,9 @@ async function collectSourceFiles(directory) {
   for (const entry of entries) {
     const path = resolve(directory, entry.name);
     if (entry.isDirectory()) files.push(...(await collectSourceFiles(path)));
-    else if (supportedExtensions.test(entry.name) && !ignoredFiles.has(entry.name)) files.push(path);
+    else if (supportedExtensions.test(entry.name) && !ignoredFiles.has(entry.name)) {
+      files.push(path);
+    }
   }
 
   return files;
