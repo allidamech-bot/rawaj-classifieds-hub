@@ -1,0 +1,70 @@
+name: Fix Dynamic Search Column
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/fix-dynamic-search-column.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
+          fetch-depth: 0
+      - name: Align dynamic search with canonical normalized column
+        shell: python
+        run: |
+          from pathlib import Path
+
+          facets_path = Path("supabase/migrations/202607190041_dynamic_listing_facets_repair_v1.sql")
+          facets = facets_path.read_text(encoding="utf-8")
+          old_facets = """listing_row.search_document @@ websearch_to_tsquery(
+                    'simple',
+                    public.rawaj_normalize_arabic_search(v_query)
+                  )"""
+          new_facets = """listing_row.search_text_normalized ilike
+                    '%' || public.rawaj_normalize_arabic_search(v_query) || '%'"""
+          if facets.count(old_facets) != 1:
+              raise SystemExit(f"Expected one repaired facets search expression, found {facets.count(old_facets)}")
+          facets_path.write_text(facets.replace(old_facets, new_facets), encoding="utf-8")
+
+          search_path = Path("supabase/migrations/202607190042_dynamic_listing_search_page_v1.sql")
+          search = search_path.read_text(encoding="utf-8")
+          old_search = """coalesce(
+                    listing_row.search_document @@ websearch_to_tsquery(
+                      'simple',
+                      public.rawaj_normalize_arabic_search(v_query)
+                    ),
+                    false
+                  )"""
+          new_search = """listing_row.search_text_normalized ilike
+                  '%' || public.rawaj_normalize_arabic_search(v_query) || '%'"""
+          if search.count(old_search) != 1:
+              raise SystemExit(f"Expected one dynamic search expression, found {search.count(old_search)}")
+          search_path.write_text(search.replace(old_search, new_search), encoding="utf-8")
+      - name: Verify focused SQL contracts
+        run: |
+          npm ci
+          node --test scripts/dynamic-listing-facets-v1.test.mjs
+          node --test scripts/dynamic-listing-search-v1.test.mjs
+      - name: Commit repair
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          branch='${{ github.event.pull_request.head.ref || github.ref_name }}'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add supabase/migrations/202607190041_dynamic_listing_facets_repair_v1.sql supabase/migrations/202607190042_dynamic_listing_search_page_v1.sql
+          git commit -m "fix: use canonical normalized listing search column"
+          git pull --rebase origin "$branch"
+          git push origin HEAD:"$branch"
