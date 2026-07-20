@@ -29,9 +29,22 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Integrate dynamic facets UI
+        shell: bash
         run: |
+          set +e
+          python scripts/integrate-dynamic-facets-ui-v1.py > /tmp/dynamic-facets-ui.log 2>&1
+          status=$?
+          cat /tmp/dynamic-facets-ui.log
+          if [ $status -ne 0 ]; then
+            cp /tmp/dynamic-facets-ui.log scripts/dynamic-facets-ui-diagnostic.txt
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add scripts/dynamic-facets-ui-diagnostic.txt
+            git commit -m "chore: capture dynamic facets UI integration failure"
+            git push origin HEAD:feature/taxonomy-search-foundation-v1
+            exit $status
+          fi
           set -euo pipefail
-          python scripts/integrate-dynamic-facets-ui-v1.py
           npx prettier --write src/routes/listings.index.tsx
           grep -q 'DynamicListingFacetFilters' src/routes/listings.index.tsx
           grep -q 'encodedAttributeFilters' src/routes/listings.index.tsx
