@@ -1,6 +1,9 @@
 name: Apply Full Site ESLint Fix
 
 on:
+  push:
+    branches:
+      - agent/full-site-actions-integrity-audit
   pull_request:
     branches:
       - main
