@@ -162,6 +162,7 @@ function AddListingPage() {
   const selectedImagesRef = useRef<UploadImageEntry[]>([]);
   const imageRetryInFlightRef = useRef<Set<string>>(new Set());
   const imageRemovalInFlightRef = useRef<Set<string>>(new Set());
+  const imageReorderInFlightRef = useRef(false);
   const imageUploadOperationRef = useRef<Map<string, number>>(new Map());
   const imageUploadInFlightRef = useRef<Map<string, ImageUploadInFlight>>(new Map());
   const staleUploadCleanupRef = useRef<Map<string, StaleUploadCleanupRecord>>(new Map());
@@ -326,12 +327,23 @@ function AddListingPage() {
       );
       setDynamicSchema(result.data);
       setDynamicValues(defaults);
+    }).catch((error: unknown) => {
+      if (requestId !== dynamicSchemaRequestIdRef.current) return;
+      setDynamicSchemaLoading(false);
+      setDynamicSchemaError(
+        error instanceof Error
+          ? error.message
+          : text(
+              "تعذر تحميل حقول التصنيف. حاول مرة أخرى.",
+              "Could not load category fields. Try again.",
+            ),
+      );
     });
 
     return () => {
       dynamicSchemaRequestIdRef.current += 1;
     };
-  }, [selectedTaxonomyNode?.isLeaf, taxonomyNodeId]);
+  }, [selectedTaxonomyNode?.isLeaf, taxonomyNodeId, text]);
 
   useEffect(() => {
     if (
@@ -557,13 +569,14 @@ function AddListingPage() {
   }
 
   async function moveSelectedImage(id: string, direction: -1 | 1) {
-    if (submittingRef.current || reorderingImages) return;
+    if (submittingRef.current || imageReorderInFlightRef.current) return;
     const current = selectedImagesRef.current;
     if (current.some((entry) => entry.state === "uploading")) return;
     const index = current.findIndex((entry) => entry.id === id);
     const targetIndex = index + direction;
     if (index < 0 || targetIndex < 0 || targetIndex >= current.length) return;
 
+    imageReorderInFlightRef.current = true;
     const previous = [...current];
     const next = [...current];
     [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
@@ -574,29 +587,45 @@ function AddListingPage() {
     const persistedOrder = next.flatMap((entry, sortOrder) =>
       entry.uploadedImage ? [{ id: entry.uploadedImage.id, sortOrder }] : [],
     );
-    if (!draft || persistedOrder.length === 0) return;
-
-    setReorderingImages(true);
-    const result = await reorderListingImages(auth.profile?.id ?? null, draft.id, persistedOrder);
-    setReorderingImages(false);
-    if (!result.ok) {
-      selectedImagesRef.current = previous;
-      setSelectedImages(previous);
-      setSubmitMessage(result.error.message);
+    if (!draft || persistedOrder.length === 0) {
+      imageReorderInFlightRef.current = false;
       return;
     }
 
-    const refreshedById = new Map(result.data.map((image) => [image.id, image] as const));
-    updateSelectedImagesFromRef((entries) =>
-      entries.map((entry) =>
-        entry.uploadedImage
-          ? {
-              ...entry,
-              uploadedImage: refreshedById.get(entry.uploadedImage.id) ?? entry.uploadedImage,
-            }
-          : entry,
-      ),
-    );
+    setReorderingImages(true);
+    setSubmitMessage(null);
+    try {
+      const result = await reorderListingImages(auth.profile?.id ?? null, draft.id, persistedOrder);
+      if (!result.ok) {
+        selectedImagesRef.current = previous;
+        setSelectedImages(previous);
+        setSubmitMessage(result.error.message);
+        return;
+      }
+
+      const refreshedById = new Map(result.data.map((image) => [image.id, image] as const));
+      updateSelectedImagesFromRef((entries) =>
+        entries.map((entry) =>
+          entry.uploadedImage
+            ? {
+                ...entry,
+                uploadedImage: refreshedById.get(entry.uploadedImage.id) ?? entry.uploadedImage,
+              }
+            : entry,
+        ),
+      );
+    } catch (error) {
+      selectedImagesRef.current = previous;
+      setSelectedImages(previous);
+      setSubmitMessage(
+        error instanceof Error
+          ? error.message
+          : text("تعذر ترتيب الصور. حاول مرة أخرى.", "Could not reorder photos. Try again."),
+      );
+    } finally {
+      imageReorderInFlightRef.current = false;
+      setReorderingImages(false);
+    }
   }
 
   async function retrySelectedImage(id: string) {
@@ -1024,25 +1053,38 @@ function AddListingPage() {
     const requestId = ++setupRequestIdRef.current;
     setLoading(true);
     setSetupError(null);
-    const [categoriesResult, governoratesResult, taxonomyResult] = await Promise.all([
-      fetchPublicCategories(),
-      fetchPublicGovernorates(),
-      fetchPublicTaxonomyNodes(),
-    ]);
-    if (requestId !== setupRequestIdRef.current) return;
-    setLoading(false);
-    if (!categoriesResult.ok) {
-      setSetupError(categoriesResult.error);
-      return;
+    try {
+      const [categoriesResult, governoratesResult, taxonomyResult] = await Promise.all([
+        fetchPublicCategories(),
+        fetchPublicGovernorates(),
+        fetchPublicTaxonomyNodes(),
+      ]);
+      if (requestId !== setupRequestIdRef.current) return;
+      if (!categoriesResult.ok) {
+        setSetupError(categoriesResult.error);
+        return;
+      }
+      if (!governoratesResult.ok) {
+        setSetupError(governoratesResult.error);
+        return;
+      }
+      setCategories(categoriesResult.data);
+      setGovernorates(governoratesResult.data);
+      setTaxonomyNodes(taxonomyResult.ok ? taxonomyResult.data : []);
+    } catch (error) {
+      if (requestId !== setupRequestIdRef.current) return;
+      setSetupError({
+        code: "unknown",
+        message:
+          error instanceof Error
+            ? error.message
+            : text("تعذر تجهيز نموذج النشر. حاول مرة أخرى.", "Could not prepare the posting form. Try again."),
+        operation: "add_listing_setup",
+      });
+    } finally {
+      if (requestId === setupRequestIdRef.current) setLoading(false);
     }
-    if (!governoratesResult.ok) {
-      setSetupError(governoratesResult.error);
-      return;
-    }
-    setCategories(categoriesResult.data);
-    setGovernorates(governoratesResult.data);
-    setTaxonomyNodes(taxonomyResult.ok ? taxonomyResult.data : []);
-  }, []);
+  }, [text]);
 
   useEffect(() => {
     void loadSetup();
@@ -1336,6 +1378,15 @@ function AddListingPage() {
           : text(
               "تم إرسال الإعلان للمراجعة. سيظهر للعامة بعد الموافقة.",
               "Listing sent for review. It will be public after approval.",
+            ),
+      );
+    } catch (error) {
+      setSubmitMessage(
+        error instanceof Error
+          ? error.message
+          : text(
+              "تعذر إرسال الإعلان. تم الاحتفاظ بالمسودة لتعيد المحاولة.",
+              "Could not submit the listing. The draft was kept so you can retry.",
             ),
       );
     } finally {

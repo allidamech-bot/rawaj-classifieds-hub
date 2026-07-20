@@ -161,6 +161,8 @@ function ManageListingPage() {
   const resubmitInFlightRef = useRef(false);
   const deleteInFlightRef = useRef(false);
   const uploadAllInFlightRef = useRef(false);
+  const imageReorderInFlightRef = useRef(false);
+  const imageDeleteInFlightRef = useRef<Set<string>>(new Set());
   const initialSnapshotRef = useRef<EditListingSnapshot | null>(null);
   const taxonomyNodeIdRef = useRef("");
   const taxonomyAssignmentBaseRef = useRef("");
@@ -747,6 +749,12 @@ function ManageListingPage() {
             )
           : text("تم حفظ التعديلات.", "Changes saved."),
       );
+    } catch (error) {
+      setSavingError(
+        error instanceof Error
+          ? error.message
+          : text("تعذر حفظ التعديلات. حاول مرة أخرى.", "Could not save changes. Try again."),
+      );
     } finally {
       setSaving(false);
       saveInFlightRef.current = false;
@@ -872,6 +880,15 @@ function ManageListingPage() {
       }
       setListing(submitResult.data);
       setSavingSuccess(text("تم إعادة إرسال الإعلان للمراجعة.", "Listing resubmitted for review."));
+    } catch (error) {
+      setSavingError(
+        error instanceof Error
+          ? error.message
+          : text(
+              "تعذر إعادة إرسال الإعلان للمراجعة. حاول مرة أخرى.",
+              "Could not resubmit the listing for review. Try again.",
+            ),
+      );
     } finally {
       setResubmitting(false);
       resubmitInFlightRef.current = false;
@@ -908,12 +925,23 @@ function ManageListingPage() {
 
     deleteInFlightRef.current = true;
     setDeleting(true);
-    const result = await deleteOwnerListing(auth.profile?.id ?? null, listing.id);
-    setDeleting(false);
-    if (result.ok) {
-      void navigate({ to: "/profile" });
-    } else {
-      setSavingError(result.error.message);
+    setSavingError(null);
+    try {
+      const result = await deleteOwnerListing(auth.profile?.id ?? null, listing.id);
+      if (!result.ok) {
+        setSavingError(result.error.message);
+        return;
+      }
+      await navigate({ to: "/profile" });
+    } catch (error) {
+      setSavingError(
+        error instanceof Error
+          ? error.message
+          : text("تعذر حذف الإعلان. حاول مرة أخرى.", "Could not delete the listing. Try again."),
+      );
+    } finally {
+      deleteInFlightRef.current = false;
+      setDeleting(false);
     }
   }, [listing, isDeletable, auth.profile?.id, navigate, text]);
 
@@ -1045,19 +1073,38 @@ function ManageListingPage() {
     uploadAllInFlightRef.current = true;
     setUploading(true);
     setUploadError(null);
-    for (const entry of [...selectedImagesRef.current]) {
-      await uploadSelectedImage(entry.id);
+    try {
+      for (const entry of [...selectedImagesRef.current]) {
+        await uploadSelectedImage(entry.id);
+      }
+    } catch (error) {
+      setUploadError(
+        error instanceof Error
+          ? error.message
+          : text("تعذر رفع الصور. حاول مرة أخرى.", "Could not upload photos. Try again."),
+      );
+    } finally {
+      uploadAllInFlightRef.current = false;
+      setUploading(false);
     }
-    setUploading(false);
   }
 
   async function moveExistingImage(imageId: string, direction: -1 | 1) {
-    if (!listing || !isEditable || imagesLoading || uploading || reorderingImages) return;
+    if (
+      !listing ||
+      !isEditable ||
+      imagesLoading ||
+      uploading ||
+      imageReorderInFlightRef.current
+    ) {
+      return;
+    }
     const current = imagesRef.current;
     const index = current.findIndex((image) => image.id === imageId);
     const targetIndex = index + direction;
     if (index < 0 || targetIndex < 0 || targetIndex >= current.length) return;
 
+    imageReorderInFlightRef.current = true;
     const previous = [...current];
     const next = [...current];
     [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
@@ -1066,33 +1113,63 @@ function ManageListingPage() {
     setReorderingImages(true);
     setUploadError(null);
 
-    const result = await reorderListingImages(
-      auth.profile?.id ?? null,
-      listing.id,
-      next.map((image, sortOrder) => ({ id: image.id, sortOrder })),
-    );
-    setReorderingImages(false);
-    if (!result.ok) {
+    try {
+      const result = await reorderListingImages(
+        auth.profile?.id ?? null,
+        listing.id,
+        next.map((image, sortOrder) => ({ id: image.id, sortOrder })),
+      );
+      if (!result.ok) {
+        imagesRef.current = previous;
+        setImages(previous);
+        setUploadError(result.error.message);
+        return;
+      }
+      imagesRef.current = result.data;
+      setImages(result.data);
+    } catch (error) {
       imagesRef.current = previous;
       setImages(previous);
-      setUploadError(result.error.message);
-      return;
+      setUploadError(
+        error instanceof Error
+          ? error.message
+          : text("تعذر ترتيب الصور. حاول مرة أخرى.", "Could not reorder photos. Try again."),
+      );
+    } finally {
+      imageReorderInFlightRef.current = false;
+      setReorderingImages(false);
     }
-    imagesRef.current = result.data;
-    setImages(result.data);
   }
 
   function handleDeleteImage(image: ListingImage) {
+    if (!listing || imageDeleteInFlightRef.current.size > 0) return;
+    const currentListing = listing;
+    imageDeleteInFlightRef.current.add(image.id);
+    setImagesLoading(true);
+    setUploadError(null);
     void (async () => {
-      setImagesLoading(true);
-      const result = await deleteListingImage(auth.profile?.id ?? null, listing!.id, image);
-      setImagesLoading(false);
-      if (result.ok) {
+      try {
+        const result = await deleteListingImage(
+          auth.profile?.id ?? null,
+          currentListing.id,
+          image,
+        );
+        if (!result.ok) {
+          setUploadError(result.error.message);
+          return;
+        }
         const nextImages = imagesRef.current.filter((item) => item.id !== image.id);
         imagesRef.current = nextImages;
         setImages(nextImages);
-      } else {
-        setUploadError(result.error.message);
+      } catch (error) {
+        setUploadError(
+          error instanceof Error
+            ? error.message
+            : text("تعذر حذف الصورة. حاول مرة أخرى.", "Could not delete the photo. Try again."),
+        );
+      } finally {
+        imageDeleteInFlightRef.current.delete(image.id);
+        setImagesLoading(false);
       }
     })();
   }
