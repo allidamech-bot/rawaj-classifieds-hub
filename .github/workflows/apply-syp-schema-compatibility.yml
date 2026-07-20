@@ -25,35 +25,7 @@ jobs:
 
       - name: Apply schema compatibility
         working-directory: repo
-        run: |
-          python scripts/.apply-syp-schema-compatibility.py
-          python - <<'PY'
-          from pathlib import Path
-
-          contract_path = Path("scripts/syp-denomination-phase-a.test.mjs")
-          contract = contract_path.read_text()
-          contract_old = r'assert.match(listings, /query\.order\("price", \{ ascending: true/);'
-          contract_new = r'assert.match(listings, /\.order\("price", \{ ascending: true/);'
-          if contract.count(contract_old) != 1:
-              raise SystemExit("legacy price-order contract anchor missing")
-          contract_path.write_text(contract.replace(contract_old, contract_new, 1))
-
-          dynamic_path = Path("src/lib/api/dynamic-filtered-listings.ts")
-          dynamic = dynamic_path.read_text()
-          declaration_old = "  const supportsSypDenomination = await supportsSypDenominationSchema(client);\n"
-          declaration_new = (
-              declaration_old
-              + '  const listingSelect = publicListingSelectForSchema(supportsSypDenomination) as "*";\n'
-          )
-          select_old = ".select(publicListingSelectForSchema(supportsSypDenomination))"
-          if dynamic.count(declaration_old) != 1:
-              raise SystemExit("dynamic schema declaration anchor missing")
-          if dynamic.count(select_old) != 1:
-              raise SystemExit("dynamic select expression anchor missing")
-          dynamic = dynamic.replace(declaration_old, declaration_new, 1)
-          dynamic = dynamic.replace(select_old, ".select(listingSelect)", 1)
-          dynamic_path.write_text(dynamic)
-          PY
+        run: python scripts/.apply-syp-schema-compatibility.py
 
       - name: Install dependencies
         working-directory: repo
@@ -67,6 +39,8 @@ jobs:
             src/lib/api/public-fields.ts \
             src/lib/api/listings.ts \
             src/lib/api/dynamic-filtered-listings.ts \
+            src/lib/api/listing-draft-create-rpc.ts \
+            src/lib/api/listing-write-rpc.ts \
             src/lib/api/syp-denomination.ts \
             scripts/syp-denomination-phase-a.test.mjs >/dev/null
 
@@ -120,5 +94,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "fix: keep public reads safe before SYP Phase A migration"
+          git commit -m "fix: keep SYP Phase A safe before schema rollout"
           git push origin HEAD:agent/syp-denomination-phase-a
