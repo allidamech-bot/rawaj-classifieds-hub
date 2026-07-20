@@ -28,6 +28,17 @@ jobs:
         run: |
           sed -i 's#202607090002_owner_update_rpc_runtime_v2.sql#202607080038_listing_submit_edit_rpc_repair.sql#' scripts/.complete-syp-phase-a.py
           python scripts/.complete-syp-phase-a.py
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("scripts/syp-denomination-phase-a.test.mjs")
+          source = path.read_text()
+          marker = 'test("Phase A edit, detail, queue, and SEO surfaces use explicit denomination"'
+          start = source.index(marker)
+          prefix, completion = source[:start], source[start:]
+          completion = completion.replace('", () => {', '", async () => {')
+          completion = completion.replace(' = read("', ' = await readFile("')
+          path.write_text(prefix + completion)
+          PY
 
       - name: Install dependencies
         working-directory: repo
