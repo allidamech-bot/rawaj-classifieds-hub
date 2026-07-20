@@ -24,21 +24,43 @@ const localCount = source.split(localPattern).length - 1;
 if (localCount !== 1) throw new Error(`Expected one local id match, found ${localCount}`);
 source = source.replace(localPattern, '          id: "local-" + currentProfileId + "-" + Date.now(),');
 
-const indentationReplacements = [
-  ["                           type=\"button\"", "                          type=\"button\""],
-  ["                           onClick={() => void remove(item.listingId)}", "                          onClick={() => void remove(item.listingId)}"],
-  ["                           disabled={removingIds.has(item.listingId)}", "                          disabled={removingIds.has(item.listingId)}"],
-  ["                           aria-busy={removingIds.has(item.listingId)}", "                          aria-busy={removingIds.has(item.listingId)}"],
-  ["                           className=\"grid h-9", "                          className=\"grid h-9"],
-  ["             type=\"button\"", "            type=\"button\""],
-  ["             onClick={onRemove}", "            onClick={onRemove}"],
-  ["             disabled={removeDisabled}", "            disabled={removeDisabled}"],
-  ["             aria-busy={removeDisabled}", "            aria-busy={removeDisabled}"],
-  ["             className=\"grid h-9", "            className=\"grid h-9"],
-];
-for (const [before, after] of indentationReplacements) {
-  source = source.split(before).join(after);
+const unavailableButtonBlock = `  source = replaceOnce(
+    source,
+    \`                           type="button"\\n                           onClick={() => void remove(item.listingId)}\\n                           className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive"\`,
+    \`                           type="button"\\n                           onClick={() => void remove(item.listingId)}\\n                           disabled={removingIds.has(item.listingId)}\\n                           aria-busy={removingIds.has(item.listingId)}\\n                           className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive disabled:cursor-wait disabled:opacity-50"\`,
+    "unavailable favorite remove disabled",
+  );`;
+const unavailableCount = source.split(unavailableButtonBlock).length - 1;
+if (unavailableCount !== 1) {
+  throw new Error(`Expected one unavailable favorite generator block, found ${unavailableCount}`);
 }
+source = source.replace(
+  unavailableButtonBlock,
+  `  source = replaceRegexOnce(
+    source,
+    /type="button"\\s+onClick=\\{\\(\\) => void remove\\(item\\.listingId\\)\\}\\s+className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive"/,
+    \`type="button"\n                          onClick={() => void remove(item.listingId)}\n                          disabled={removingIds.has(item.listingId)}\n                          aria-busy={removingIds.has(item.listingId)}\n                          className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive disabled:cursor-wait disabled:opacity-50"\`,
+    "unavailable favorite remove disabled",
+  );`,
+);
+
+const rowButtonBlock = `  source = replaceOnce(
+    source,
+    \`             type="button"\\n             onClick={onRemove}\\n             className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive"\`,
+    \`             type="button"\\n             onClick={onRemove}\\n             disabled={removeDisabled}\\n             aria-busy={removeDisabled}\\n             className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive disabled:cursor-wait disabled:opacity-50"\`,
+    "search row remove disabled button",
+  );`;
+const rowCount = source.split(rowButtonBlock).length - 1;
+if (rowCount !== 1) throw new Error(`Expected one search row generator block, found ${rowCount}`);
+source = source.replace(
+  rowButtonBlock,
+  `  source = replaceRegexOnce(
+    source,
+    /type="button"\\s+onClick=\\{onRemove\\}\\s+className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive"/,
+    \`type="button"\n            onClick={onRemove}\n            disabled={removeDisabled}\n            aria-busy={removeDisabled}\n            className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive disabled:cursor-wait disabled:opacity-50"\`,
+    "search row remove disabled button",
+  );`,
+);
 
 await writeFile(path, source);
 await rm("scripts/fix-saved-items-generator.mjs", { force: true });
