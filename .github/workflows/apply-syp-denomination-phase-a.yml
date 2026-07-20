@@ -40,6 +40,9 @@ jobs:
           status=$?
           set -e
           cat /tmp/syp-phase-a-apply.log
+          if [ "$status" -ne 0 ]; then
+            cp /tmp/syp-phase-a-apply.log syp-phase-a-apply.log
+          fi
           exit "$status"
 
       - name: Upload apply diagnostics
@@ -47,7 +50,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: syp-phase-a-apply-diagnostics
-          path: /tmp/syp-phase-a-apply.log
+          path: syp-phase-a-apply.log
           if-no-files-found: error
           retention-days: 1
 
@@ -76,6 +79,7 @@ jobs:
 
       - name: Commit generated implementation
         run: |
+          rm -f syp-phase-a-apply.log
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
