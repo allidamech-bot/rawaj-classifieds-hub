@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
+import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { markPasswordRecoverySession } from "@/lib/auth-recovery-session";
@@ -52,16 +53,53 @@ function AuthCallbackPage() {
       }
 
       const searchParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
       const code = searchParams.get("code");
       const recoveryCodeRequested = Boolean(code && callbackContext.isRecovery);
+      const recoveryHashAccessToken =
+        callbackContext.isRecovery && hashParams.get("type") === "recovery"
+          ? hashParams.get("access_token")
+          : null;
       let observedRecoveryEvent = false;
       let completed = false;
 
-      function finish(recoveryAuthorized: boolean) {
+      function hasRecoveryHashProof(session: Session | null): session is Session {
+        return Boolean(
+          session &&
+            recoveryHashAccessToken &&
+            session.access_token === recoveryHashAccessToken,
+        );
+      }
+
+      function recoveryFailureMessage() {
+        return text(
+          "تعذر تجهيز جلسة استعادة كلمة المرور. قد يكون الرابط منتهيًا أو استُخدم سابقًا. اطلب رابطًا جديدًا وحاول مرة أخرى.",
+          "Could not prepare the password recovery session. The link may be expired or already used. Request a new link and try again.",
+        );
+      }
+
+      function failCallback() {
         if (cancelled || completed) return;
         completed = true;
         clearTimeout(expiryTimer);
-        if (recoveryAuthorized) markPasswordRecoverySession();
+        setStatus("error");
+        setErrorMsg(
+          callbackContext.isRecovery
+            ? recoveryFailureMessage()
+            : text("تعذر تسجيل الدخول. حاول مرة أخرى.", "Could not sign in. Please try again."),
+        );
+      }
+
+      function finish(recoveryAuthorized: boolean, session: Session | null) {
+        if (cancelled || completed) return;
+        if (recoveryAuthorized && !session?.user.id) {
+          failCallback();
+          return;
+        }
+
+        completed = true;
+        clearTimeout(expiryTimer);
+        if (recoveryAuthorized && session) markPasswordRecoverySession(session.user.id);
         setStatus("success");
         completionTimer = setTimeout(() => {
           if (cancelled) return;
@@ -74,33 +112,76 @@ function AuthCallbackPage() {
         }, 650);
       }
 
-      if (!code) {
-        const { data } = await client.auth.getSession();
-        if (cancelled) return;
-        if (data.session) {
-          finish(callbackContext.isRecovery);
-          return;
-        }
-        setStatus("error");
-        setErrorMsg(
-          callbackContext.isRecovery
-            ? text(
-                "تعذر تجهيز جلسة استعادة كلمة المرور. قد يكون الرابط منتهيًا أو استُخدم سابقًا. اطلب رابطًا جديدًا وحاول مرة أخرى.",
-                "Could not prepare the password recovery session. The link may be expired or already used. Request a new link and try again.",
-              )
-            : text("تعذر تسجيل الدخول. حاول مرة أخرى.", "Could not sign in. Please try again."),
-        );
-        return;
-      }
-
       const { data: listener } = client.auth.onAuthStateChange((event, session) => {
         if (cancelled || !session) return;
-        if (event === "PASSWORD_RECOVERY") observedRecoveryEvent = true;
-        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-          finish(observedRecoveryEvent || (event === "SIGNED_IN" && recoveryCodeRequested));
+        if (event === "PASSWORD_RECOVERY") {
+          observedRecoveryEvent = true;
+          finish(true, session);
+          return;
+        }
+        if (hasRecoveryHashProof(session)) {
+          finish(true, session);
+          return;
+        }
+        if (
+          !callbackContext.isRecovery &&
+          (event === "SIGNED_IN" || event === "INITIAL_SESSION")
+        ) {
+          finish(false, session);
         }
       });
       unsubscribeAuth = () => listener.subscription.unsubscribe();
+
+      if (!code) {
+        const { data, error } = await client.auth.getSession();
+        if (cancelled) return;
+        if (error) {
+          listener.subscription.unsubscribe();
+          setStatus("error");
+          setErrorMsg(
+            authErrorMessage(
+              error,
+              callbackContext.isRecovery ? "recovery" : "callback",
+              text,
+            ),
+          );
+          return;
+        }
+
+        if (!callbackContext.isRecovery && data.session) {
+          finish(false, data.session);
+          return;
+        }
+        if (
+          callbackContext.isRecovery &&
+          data.session &&
+          (observedRecoveryEvent || hasRecoveryHashProof(data.session))
+        ) {
+          finish(true, data.session);
+          return;
+        }
+        if (!callbackContext.isRecovery) {
+          failCallback();
+          return;
+        }
+
+        expiryTimer = setTimeout(async () => {
+          if (cancelled || completed) return;
+          const { data: lateSession, error: lateError } = await client.auth.getSession();
+          if (cancelled || completed) return;
+          if (
+            !lateError &&
+            lateSession.session &&
+            (observedRecoveryEvent || hasRecoveryHashProof(lateSession.session))
+          ) {
+            finish(true, lateSession.session);
+            return;
+          }
+          listener.subscription.unsubscribe();
+          failCallback();
+        }, 15000);
+        return;
+      }
 
       try {
         const { error: exchangeError } = await client.auth.exchangeCodeForSession(code);
@@ -109,7 +190,7 @@ function AuthCallbackPage() {
         const { data, error } = await client.auth.getSession();
         if (error) throw error;
         if (data.session) {
-          finish(observedRecoveryEvent || recoveryCodeRequested);
+          finish(recoveryCodeRequested, data.session);
           return;
         }
 
@@ -118,19 +199,11 @@ function AuthCallbackPage() {
           const { data: lateSession, error: lateError } = await client.auth.getSession();
           if (cancelled || completed) return;
           if (!lateError && lateSession.session) {
-            finish(observedRecoveryEvent || recoveryCodeRequested);
+            finish(recoveryCodeRequested, lateSession.session);
             return;
           }
           listener.subscription.unsubscribe();
-          setStatus("error");
-          setErrorMsg(
-            callbackContext.isRecovery
-              ? text(
-                  "تعذر تجهيز جلسة استعادة كلمة المرور. قد يكون الرابط منتهيًا أو استُخدم سابقًا. اطلب رابطًا جديدًا وحاول مرة أخرى.",
-                  "Could not prepare the password recovery session. The link may be expired or already used. Request a new link and try again.",
-                )
-              : text("تعذر تسجيل الدخول. حاول مرة أخرى.", "Could not sign in. Please try again."),
-          );
+          failCallback();
         }, 20000);
       } catch (error) {
         if (cancelled) return;
