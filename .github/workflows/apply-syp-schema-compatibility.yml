@@ -40,16 +40,19 @@ jobs:
 
           dynamic_path = Path("src/lib/api/dynamic-filtered-listings.ts")
           dynamic = dynamic_path.read_text()
-          dynamic_old = '''  const supportsSypDenomination = await supportsSypDenominationSchema(client);
-          const { data, error } = await client
-            .from("listings")
-            .select(publicListingSelectForSchema(supportsSypDenomination))'''
-          dynamic_new = '''  const supportsSypDenomination = await supportsSypDenominationSchema(client);
-          const listingSelect = publicListingSelectForSchema(supportsSypDenomination) as "*";
-          const { data, error } = await client.from("listings").select(listingSelect)'''
-          if dynamic.count(dynamic_old) != 1:
-              raise SystemExit("dynamic select type anchor missing")
-          dynamic_path.write_text(dynamic.replace(dynamic_old, dynamic_new, 1))
+          declaration_old = "  const supportsSypDenomination = await supportsSypDenominationSchema(client);\n"
+          declaration_new = (
+              declaration_old
+              + '  const listingSelect = publicListingSelectForSchema(supportsSypDenomination) as "*";\n'
+          )
+          select_old = ".select(publicListingSelectForSchema(supportsSypDenomination))"
+          if dynamic.count(declaration_old) != 1:
+              raise SystemExit("dynamic schema declaration anchor missing")
+          if dynamic.count(select_old) != 1:
+              raise SystemExit("dynamic select expression anchor missing")
+          dynamic = dynamic.replace(declaration_old, declaration_new, 1)
+          dynamic = dynamic.replace(select_old, ".select(listingSelect)", 1)
+          dynamic_path.write_text(dynamic)
           PY
 
       - name: Install dependencies
