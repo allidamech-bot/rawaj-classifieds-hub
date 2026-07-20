@@ -39,7 +39,7 @@ begin
     raise exception 'listing_search_filters_object_required' using errcode = '22023';
   end if;
 
-  if jsonb_object_length(v_filters) > 50 then
+  if (select count(*) from jsonb_object_keys(v_filters)) > 50 then
     raise exception 'listing_search_filter_limit_exceeded' using errcode = '54000';
   end if;
 
