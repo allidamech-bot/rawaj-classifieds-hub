@@ -101,16 +101,8 @@ function ReportsPage() {
         setActionMessage(result.error.message);
         return;
       }
-      const updatedAt = new Date().toISOString();
-      setReports((current) =>
-        current.map((item) =>
-          item.id === report.id
-            ? { ...item, status, adminNote: notes[report.id] ?? null, updatedAt }
-            : item,
-        ),
-      );
       setActionMessage(text("تم تحديث البلاغ.", "Report updated."));
-      void loadReports();
+      await loadReports();
     } finally {
       actionInFlightRef.current.delete(report.id);
       setBusyIds((current) => {

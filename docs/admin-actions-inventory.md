@@ -1,17 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
-
-const path = "scripts/apply-admin-actions-integrity-repair.mjs";
-const source = await readFile(path, "utf8");
-const startMarker = "const inventoryDoc = `";
-const endMarker = "\nawait writeFile(\"docs/admin-actions-inventory.md\", inventoryDoc);";
-const start = source.indexOf(startMarker);
-const end = source.indexOf(endMarker, start);
-
-if (start < 0 || end < 0) {
-  throw new Error("Could not locate the admin inventory documentation block.");
-}
-
-const documentation = `# RAWAJ Admin Actions Inventory
+# RAWAJ Admin Actions Inventory
 
 This inventory covers the complete generated /admin/* route surface at the audited baseline.
 
@@ -45,7 +32,3 @@ This inventory covers the complete generated /admin/* route surface at the audit
 - Production-safe verification uses static contracts and CI; no destructive production mutation is required.
 
 The contract test prints the exact current counts for buttons, links, forms, and filter/field controls on every run.
-`;
-
-const replacement = `const inventoryDoc = ${JSON.stringify(documentation)};`;
-await writeFile(path, source.slice(0, start) + replacement + source.slice(end));

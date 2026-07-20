@@ -189,7 +189,12 @@ function CampaignManagerPage() {
       startsAt: fromLocalDateTimeInput(campaignForm.startsAt),
       endsAt: fromLocalDateTimeInput(campaignForm.endsAt),
       targetPages: campaignForm.targetPages,
-      targetCategoryIds: campaignForm.categoryIdsText.split(","),
+      targetCategoryIds: [...new Set(
+        campaignForm.categoryIdsText
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
+      )],
     });
 
     setSaving(false);
@@ -204,7 +209,6 @@ function CampaignManagerPage() {
         ? text("تم تحديث الحملة وتسجيل العملية.", "Campaign updated and audited.")
         : text("تم إنشاء الحملة وتسجيل العملية.", "Campaign created and audited."),
     );
-    await refreshCampaigns();
     const refreshed = await ownerFetchCampaigns(canManage);
     if (refreshed.ok) {
       setCampaigns(refreshed.data);
@@ -214,6 +218,7 @@ function CampaignManagerPage() {
   }
 
   async function changeStatus(campaign: CampaignSummary, status: CampaignStatus) {
+    if (saving) return;
     const reason = statusReason.trim();
     if (reason.length < 3) {
       setError(

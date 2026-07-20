@@ -177,7 +177,7 @@ function AdminDataQualityWorkspace() {
   }
 
   async function reviewIssue(issue: ListingDataQualityIssue, decision: ListingDataQualityDecision) {
-    const actionKey = `${issue.id}:${decision}`;
+    const actionKey = issue.id;
     if (actionInFlightRef.current.has(actionKey)) return;
     actionInFlightRef.current.add(actionKey);
     setWorkingId(issue.id);

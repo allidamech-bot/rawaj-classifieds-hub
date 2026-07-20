@@ -111,7 +111,7 @@ function AdminListingModerationConsole() {
     listing: AdminModerationListingSummary,
     action: AdminListingModerationAction,
   ) {
-    const actionKey = `${listing.id}:${action}`;
+    const actionKey = listing.id;
     if (actionInFlightRef.current.has(actionKey)) return;
     setActionMessage("");
     const reason = reasons[listing.id]?.trim() ?? "";

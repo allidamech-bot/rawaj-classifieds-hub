@@ -76,7 +76,7 @@ function PromotionsPage() {
   }, [load]);
 
   async function loadReceipt(request: ListingPromotionRequest) {
-    if (!request.proofPath || receiptInFlightRef.current.has(request.id)) return;
+    if (!request.proofPath || receiptInFlightRef.current.size > 0) return;
     receiptInFlightRef.current.add(request.id);
     setReceiptLoadingId(request.id);
     setReceiptErrors((current) => ({ ...current, [request.id]: "" }));
@@ -198,7 +198,7 @@ function PromotionsPage() {
                       ) : (
                         <button
                           type="button"
-                          disabled={receiptLoadingId === request.id}
+                          disabled={receiptLoadingId !== null}
                           onClick={() => void loadReceipt(request)}
                           className="rounded-lg bg-muted-surface px-2 py-1 font-bold text-muted-foreground hairline disabled:opacity-60"
                         >
@@ -222,6 +222,7 @@ function PromotionsPage() {
               </div>
               <textarea
                 value={notes[request.id] ?? ""}
+                disabled={workingRequestId === request.id}
                 onChange={(event) =>
                   setNotes((current) => ({ ...current, [request.id]: event.target.value }))
                 }
@@ -232,16 +233,26 @@ function PromotionsPage() {
               {request.status === "pending_review" && (
                 <div className="mt-3 flex gap-2">
                   <button
+                    type="button"
+                    disabled={workingRequestId === request.id}
+                    aria-busy={workingRequestId === request.id}
                     onClick={() => void moderate(request, "approved")}
-                    className="rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground"
+                    className="rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground disabled:opacity-60"
                   >
-                    {text("موافقة", "Approve")}
+                    {workingRequestId === request.id
+                      ? text("جارٍ التحديث", "Updating")
+                      : text("موافقة", "Approve")}
                   </button>
                   <button
+                    type="button"
+                    disabled={workingRequestId === request.id}
+                    aria-busy={workingRequestId === request.id}
                     onClick={() => void moderate(request, "rejected")}
-                    className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground"
+                    className="rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground disabled:opacity-60"
                   >
-                    {text("رفض", "Reject")}
+                    {workingRequestId === request.id
+                      ? text("جارٍ التحديث", "Updating")
+                      : text("رفض", "Reject")}
                   </button>
                 </div>
               )}
