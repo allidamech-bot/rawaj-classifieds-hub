@@ -8,6 +8,7 @@ interface ListingContactDockProps {
   canWhatsapp: boolean;
   callHref: string | null;
   whatsappUrl: string | null;
+  messageBusy: boolean;
   onMessage: () => void;
   onOffer: () => void;
   text: (ar: string, en: string) => string;
@@ -20,6 +21,7 @@ export function ListingContactDock({
   canWhatsapp,
   callHref,
   whatsappUrl,
+  messageBusy,
   onMessage,
   onOffer,
   text,
@@ -49,13 +51,25 @@ export function ListingContactDock({
           </>
         ) : (
           <>
-            <button type="button" onClick={onMessage} className="rawaj-contact-dock__primary">
+            <button
+              type="button"
+              onClick={onMessage}
+              disabled={messageBusy}
+              aria-busy={messageBusy}
+              className="rawaj-contact-dock__primary"
+            >
               <MessageCircle aria-hidden="true" />
-              {text("مراسلة", "Message")}
+              {messageBusy ? text("جارٍ الفتح", "Opening") : text("مراسلة", "Message")}
             </button>
-            <button type="button" onClick={onOffer} className="rawaj-contact-dock__offer">
+            <button
+              type="button"
+              onClick={onOffer}
+              disabled={messageBusy}
+              aria-busy={messageBusy}
+              className="rawaj-contact-dock__offer"
+            >
               <Tag aria-hidden="true" />
-              {text("قدّم عرضًا", "Make an offer")}
+              {messageBusy ? text("جارٍ الفتح", "Opening") : text("قدّم عرضًا", "Make an offer")}
             </button>
             {canCall && callHref ? (
               <DockLink icon={Phone} href={callHref} label={text("اتصال", "Call")} />

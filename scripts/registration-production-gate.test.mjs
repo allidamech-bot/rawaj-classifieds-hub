@@ -15,8 +15,19 @@ test("registration uses a first-party confirmation callback", () => {
 });
 
 test("registration submit is protected against duplicate execution", () => {
-  assert.match(login, /if \(submitting\) return;/);
+  assert.match(login, /const submitInFlightRef = useRef\(false\)/);
+  assert.match(login, /if \(submitInFlightRef\.current\) return;/);
+  assert.ok((login.match(/submitInFlightRef\.current = true;/g) ?? []).length >= 2);
+  assert.ok((login.match(/submitInFlightRef\.current = false;/g) ?? []).length >= 2);
   assert.match(login, /disabled=\{submitting\}/);
+});
+
+test("registration releases the action lock after thrown failures", () => {
+  assert.match(login, /catch \(error\)[\s\S]*?authErrorMessage/);
+  assert.match(
+    login,
+    /finally \{[\s\S]*?submitInFlightRef\.current = false;[\s\S]*?setSubmitting\(false\);/,
+  );
 });
 
 test("registration never creates a browser-selected profile identity", () => {

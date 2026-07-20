@@ -97,7 +97,10 @@ test("categories retain taxonomy behavior inside a spatial directory", () => {
 
 test("category directory load failures can retry all reference reads in place", () => {
   assert.match(categories, /const \[loadAttempt, setLoadAttempt\] = useState\(0\)/);
-  assert.match(categories, /\}, \[loadAttempt\]\);/);
+  assert.match(categories, /async function load\(\)[\s\S]*?try \{[\s\S]*?catch \(caught\)[\s\S]*?finally/);
+  assert.match(categories, /operation: "categories_retry_load"/);
+  assert.match(categories, /if \(!cancelled\) setLoading\(false\)/);
+  assert.match(categories, /\}, \[loadAttempt, text\]\);/);
   assert.match(categories, /actionLabel=\{text\("إعادة المحاولة", "Try again"\)\}/);
   assert.match(categories, /setLoadAttempt\(\(attempt\) => attempt \+ 1\)/);
   assert.match(categories, /onClick=\{onAction\}/);

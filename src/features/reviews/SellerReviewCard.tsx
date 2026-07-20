@@ -72,11 +72,22 @@ export function SellerReviewCard({
     const scopeKey = [currentProfileId, review.id].join(":");
     if (responseScopesRef.current.has(scopeKey)) return;
 
+    const normalizedResponse = responseText.trim();
+    if (normalizedResponse.length > 0 && normalizedResponse.length < 3) {
+      setNotice(
+        text(
+          "اكتب 3 أحرف على الأقل أو احذف الرد.",
+          "Write at least 3 characters or remove the response.",
+        ),
+      );
+      return;
+    }
+
     responseScopesRef.current.add(scopeKey);
     setNotice("");
     setSaving(true);
     try {
-      const result = await setSellerReviewResponse(review.id, responseText);
+      const result = await setSellerReviewResponse(review.id, normalizedResponse);
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setNotice(result.error.message);
@@ -91,6 +102,14 @@ export function SellerReviewCard({
           ? text("تم حفظ رد البائع.", "Seller response saved.")
           : text("تم حذف رد البائع.", "Seller response removed."),
       );
+    } catch (caught) {
+      if (currentProfileId === profileIdRef.current) {
+        setNotice(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر حفظ رد البائع.", "Could not save the seller response."),
+        );
+      }
     } finally {
       responseScopesRef.current.delete(scopeKey);
       if (currentProfileId === profileIdRef.current) setSaving(false);
@@ -109,11 +128,12 @@ export function SellerReviewCard({
     const scopeKey = [currentProfileId, review.id].join(":");
     if (reportScopesRef.current.has(scopeKey)) return;
 
+    const normalizedDetails = reportDetails.trim();
     reportScopesRef.current.add(scopeKey);
     setReportNotice("");
     setReportSaving(true);
     try {
-      const result = await createSellerReviewReport(review.id, reportReason, reportDetails);
+      const result = await createSellerReviewReport(review.id, reportReason, normalizedDetails);
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setReportNotice(result.error.message);
@@ -129,6 +149,14 @@ export function SellerReviewCard({
           "Report submitted for review without automatically hiding the review.",
         ),
       );
+    } catch (caught) {
+      if (currentProfileId === profileIdRef.current) {
+        setReportNotice(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر إرسال بلاغ التقييم.", "Could not submit the review report."),
+        );
+      }
     } finally {
       reportScopesRef.current.delete(scopeKey);
       if (currentProfileId === profileIdRef.current) setReportSaving(false);
@@ -190,6 +218,7 @@ export function SellerReviewCard({
       {reportOpen && canReport && !reported ? (
         <form
           onSubmit={(event) => void submitReport(event)}
+          aria-busy={reportSaving}
           className="mt-3 space-y-2 border-t border-border/70 pt-3"
         >
           <div>
@@ -248,7 +277,11 @@ export function SellerReviewCard({
       ) : null}
 
       {canManageResponse ? (
-        <form onSubmit={submitResponse} className="mt-3 space-y-2 border-t border-border/70 pt-3">
+        <form
+          onSubmit={submitResponse}
+          aria-busy={saving}
+          className="mt-3 space-y-2 border-t border-border/70 pt-3"
+        >
           <label className="block">
             <span className="text-[10px] font-bold text-muted-foreground">
               {savedResponse

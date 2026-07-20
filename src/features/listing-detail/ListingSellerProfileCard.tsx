@@ -19,6 +19,7 @@ interface ListingSellerProfileCardProps {
   loading: boolean;
   fallbackName: string;
   canMessage: boolean;
+  messageBusy: boolean;
   onMessage: () => void;
   language: Language;
   text: (ar: string, en: string) => string;
@@ -30,6 +31,7 @@ export function ListingSellerProfileCard({
   loading,
   fallbackName,
   canMessage,
+  messageBusy,
   onMessage,
   language,
   text,
@@ -112,9 +114,9 @@ export function ListingSellerProfileCard({
         </Link>
         {canMessage ? <SellerFollowButton sellerId={listing.ownerId} /> : null}
         {canMessage ? (
-          <button type="button" onClick={onMessage}>
+          <button type="button" onClick={onMessage} disabled={messageBusy} aria-busy={messageBusy}>
             <MessageCircle aria-hidden="true" />
-            {text("مراسلة", "Message")}
+            {messageBusy ? text("جارٍ الفتح", "Opening") : text("مراسلة", "Message")}
           </button>
         ) : null}
       </div>

@@ -96,37 +96,48 @@ function CategoriesPage() {
     async function load() {
       setLoading(true);
       setFetchError(null);
+      try {
+        const [taxonomyResult, categoriesResult, subcategoriesResult] = await Promise.all([
+          fetchPublicTaxonomyNodes(),
+          fetchPublicCategories(),
+          fetchPublicSubcategories(),
+        ]);
+        if (cancelled) return;
 
-      const [taxonomyResult, categoriesResult, subcategoriesResult] = await Promise.all([
-        fetchPublicTaxonomyNodes(),
-        fetchPublicCategories(),
-        fetchPublicSubcategories(),
-      ]);
-      if (cancelled) return;
+        if (categoriesResult.ok) setCategories(categoriesResult.data);
+        if (subcategoriesResult.ok) setSubcategories(subcategoriesResult.data);
 
-      if (categoriesResult.ok) setCategories(categoriesResult.data);
-      if (subcategoriesResult.ok) setSubcategories(subcategoriesResult.data);
-
-      if (taxonomyResult.ok) {
-        setTaxonomyNodes(taxonomyResult.data);
-        setTaxonomyAvailable(true);
-      } else if (taxonomyResult.error.code === "schema_missing") {
-        setTaxonomyNodes([]);
-        setTaxonomyAvailable(false);
-        if (!categoriesResult.ok) setFetchError(categoriesResult.error);
-        else if (!subcategoriesResult.ok) setFetchError(subcategoriesResult.error);
-      } else {
-        setFetchError(taxonomyResult.error);
+        if (taxonomyResult.ok) {
+          setTaxonomyNodes(taxonomyResult.data);
+          setTaxonomyAvailable(true);
+        } else if (taxonomyResult.error.code === "schema_missing") {
+          setTaxonomyNodes([]);
+          setTaxonomyAvailable(false);
+          if (!categoriesResult.ok) setFetchError(categoriesResult.error);
+          else if (!subcategoriesResult.ok) setFetchError(subcategoriesResult.error);
+        } else {
+          setFetchError(taxonomyResult.error);
+        }
+      } catch (caught) {
+        if (cancelled) return;
+        setFetchError({
+          code: "unknown",
+          message:
+            caught instanceof Error
+              ? caught.message
+              : text("تعذر تحميل الأقسام.", "Could not load categories."),
+          operation: "categories_retry_load",
+        });
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-
-      setLoading(false);
     }
 
     void load();
     return () => {
       cancelled = true;
     };
-  }, [loadAttempt]);
+  }, [loadAttempt, text]);
 
   const taxonomyIndex = useMemo(() => buildTaxonomyIndex(taxonomyNodes), [taxonomyNodes]);
   const currentNode = findTaxonomyNode(taxonomyIndex, search.node);

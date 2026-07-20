@@ -84,6 +84,8 @@ function SavedSearchesPage() {
   const [keyword, setKeyword] = useState("");
   const [frequency, setFrequency] = useState<LocalSearch["frequency"]>("weekly");
   const [message, setMessage] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(() => new Set());
   const [savingFrequencyId, setSavingFrequencyId] = useState<string | null>(null);
   const [scanMessage, setScanMessage] = useState("");
   const loadRequestIdRef = useRef(0);
@@ -102,53 +104,84 @@ function SavedSearchesPage() {
     const requestId = ++loadRequestIdRef.current;
     setLoading(true);
     setLoadError(null);
-    const result = await fetchSavedSearches(currentProfileId);
-    if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+    setScanMessage("");
+    try {
+      const result = await fetchSavedSearches(currentProfileId);
+      if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
+      if (!result.ok) {
+        setLoadError(result.error);
+        return;
+      }
 
-    if (!result.ok) {
-      setLoadError(result.error);
+      setItems(result.data);
+      setHasLoaded(true);
       setLoading(false);
-      return;
-    }
 
-    setItems(result.data);
-    setHasLoaded(true);
-    setLoading(false);
-
-    const scanResult = await scanDueSavedSearchAlerts(currentProfileId);
-    if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
-    if (!scanResult.ok) {
-      setScanMessage(
-        text(
-          "تم تحميل عمليات البحث، لكن تعذر فحص النتائج الجديدة الآن.",
-          "Saved searches loaded, but new matches could not be scanned right now.",
-        ),
-      );
-      return;
+      try {
+        const scanResult = await scanDueSavedSearchAlerts(currentProfileId);
+        if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current)
+          return;
+        if (!scanResult.ok) {
+          setScanMessage(
+            text(
+              "تم تحميل عمليات البحث، لكن تعذر فحص النتائج الجديدة الآن.",
+              "Saved searches loaded, but new matches could not be scanned right now.",
+            ),
+          );
+          return;
+        }
+        if (scanResult.data.createdNotifications > 0) {
+          setScanMessage(
+            text(
+              "تم العثور على " +
+                scanResult.data.createdNotifications +
+                " نتيجة جديدة وإضافتها إلى إشعاراتك.",
+              scanResult.data.createdNotifications +
+                " new matches were added to your notifications.",
+            ),
+          );
+        }
+        const refreshed = await fetchSavedSearches(currentProfileId);
+        if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current)
+          return;
+        if (refreshed.ok) {
+          setItems(refreshed.data);
+        } else {
+          setScanMessage(
+            text(
+              "تم فحص التنبيهات، لكن تعذر تحديث تفاصيل عمليات البحث فورًا.",
+              "Alerts were scanned, but saved-search details could not refresh immediately.",
+            ),
+          );
+        }
+      } catch {
+        if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current)
+          return;
+        setScanMessage(
+          text(
+            "تم تحميل عمليات البحث، لكن تعذر فحص النتائج الجديدة الآن.",
+            "Saved searches loaded, but new matches could not be scanned right now.",
+          ),
+        );
+      }
+    } catch (caught) {
+      if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
+      setLoadError({
+        code: "unknown",
+        message:
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحميل عمليات البحث المحفوظة.", "Could not load saved searches."),
+        operation: "saved_searches_load",
+      });
+    } finally {
+      if (requestId === loadRequestIdRef.current && currentProfileId === profileIdRef.current) {
+        setLoading(false);
+      }
     }
-
-    if (scanResult.data.createdNotifications > 0) {
-      setScanMessage(
-        text(
-          `تم العثور على ${scanResult.data.createdNotifications} نتيجة جديدة وإضافتها إلى إشعاراتك.`,
-          `${scanResult.data.createdNotifications} new matches were added to your notifications.`,
-        ),
-      );
-    }
-
-    const refreshed = await fetchSavedSearches(currentProfileId);
-    if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
-    if (refreshed.ok) {
-      setItems(refreshed.data);
-    } else {
-      setScanMessage(
-        text(
-          "تم فحص التنبيهات، لكن تعذر تحديث تفاصيل عمليات البحث فورًا.",
-          "Alerts were scanned, but saved-search details could not refresh immediately.",
-        ),
-      );
-    }
-  }, [auth.profile?.id, profileId, text]);
+  }, [profileId, text]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
@@ -163,6 +196,8 @@ function SavedSearchesPage() {
       setKeyword("");
       setFrequency("weekly");
       setSavingFrequencyId(null);
+      setCreating(false);
+      setDeletingIds(new Set());
       setMessage("");
       setScanMessage("");
       return;
@@ -255,7 +290,27 @@ function SavedSearchesPage() {
     const label = name.trim() || text("بحث محفوظ", "Saved search");
     const filters = buildListingFilters();
     const currentFrequency = frequency;
+    const saveLocally = () => {
+      setLocalItems((current) => [
+        {
+          id: "local-" + currentProfileId + "-" + Date.now(),
+          nameAr: label,
+          filters: toLocalFilters(filters),
+          createdAt: new Date().toISOString(),
+          frequency: currentFrequency,
+        },
+        ...current,
+      ]);
+      setMessage(
+        text(
+          "تعذر حفظ البحث في الحساب، فتم حفظه لهذه الجلسة فقط.",
+          "Could not save this search to the account, so it was saved for this session only.",
+        ),
+      );
+    };
+
     creatingSearchProfilesRef.current.add(currentProfileId);
+    setCreating(true);
     setMessage("");
     try {
       const result = await createSavedSearch(currentProfileId, {
@@ -264,7 +319,6 @@ function SavedSearchesPage() {
         alertFrequency: currentFrequency,
       });
       if (currentProfileId !== profileIdRef.current) return;
-
       if (result.ok) {
         setItems((current) => [
           result.data,
@@ -273,27 +327,18 @@ function SavedSearchesPage() {
         setHasLoaded(true);
         setMessage(text("تم حفظ البحث في حسابك.", "Search saved to your account."));
       } else {
-        setLocalItems((current) => [
-          {
-            id: `local-${currentProfileId}-${Date.now()}`,
-            nameAr: label,
-            filters: toLocalFilters(filters),
-            createdAt: new Date().toISOString(),
-            frequency: currentFrequency,
-          },
-          ...current,
-        ]);
-        setMessage(
-          text(
-            "تعذر حفظ البحث في الحساب، فتم حفظه لهذه الجلسة فقط.",
-            "Could not save this search to the account, so it was saved for this session only.",
-          ),
-        );
+        saveLocally();
       }
+      setName("");
+      setKeyword("");
+    } catch {
+      if (currentProfileId !== profileIdRef.current) return;
+      saveLocally();
       setName("");
       setKeyword("");
     } finally {
       creatingSearchProfilesRef.current.delete(currentProfileId);
+      if (currentProfileId === profileIdRef.current) setCreating(false);
     }
   }
 
@@ -345,6 +390,14 @@ function SavedSearchesPage() {
       }
       setItems((current) => current.map((item) => (item.id === id ? result.data : item)));
       setMessage(text("تم تحديث تكرار التنبيه.", "Alert frequency updated."));
+    } catch (caught) {
+      if (currentProfileId !== profileIdRef.current) return;
+      setItems(previous);
+      setMessage(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر تحديث تكرار التنبيه.", "Could not update alert frequency."),
+      );
     } finally {
       frequencyScopesRef.current.delete(scopeKey);
       if (currentProfileId === profileIdRef.current) setSavingFrequencyId(null);
@@ -358,6 +411,7 @@ function SavedSearchesPage() {
     if (deletingSearchScopesRef.current.has(scopeKey)) return;
 
     deletingSearchScopesRef.current.add(scopeKey);
+    setDeletingIds((current) => new Set(current).add(id));
     setMessage("");
     try {
       const result = await deleteSavedSearch(currentProfileId, id);
@@ -366,11 +420,24 @@ function SavedSearchesPage() {
         setMessage(result.error.message);
         return;
       }
-
       setItems((current) => current.filter((item) => item.id !== id));
       setMessage(text("تم حذف البحث المحفوظ.", "Saved search removed."));
+    } catch (caught) {
+      if (currentProfileId !== profileIdRef.current) return;
+      setMessage(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر حذف البحث المحفوظ.", "Could not remove the saved search."),
+      );
     } finally {
       deletingSearchScopesRef.current.delete(scopeKey);
+      if (currentProfileId === profileIdRef.current) {
+        setDeletingIds((current) => {
+          const next = new Set(current);
+          next.delete(id);
+          return next;
+        });
+      }
     }
   }
 
@@ -430,24 +497,28 @@ function SavedSearchesPage() {
 
         <form
           onSubmit={addSavedSearch}
+          aria-busy={creating}
           className="grid grid-cols-1 gap-3 rounded-2xl bg-card p-4 hairline md:grid-cols-[1fr_1fr_180px_auto]"
         >
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder={text("اسم البحث", "Search name")}
-            className="rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+            disabled={creating}
+            className="rounded-xl border border-input bg-card px-3 py-2.5 text-sm disabled:opacity-60"
           />
           <input
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
             placeholder={text("كلمة البحث", "Search keyword")}
-            className="rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+            disabled={creating}
+            className="rounded-xl border border-input bg-card px-3 py-2.5 text-sm disabled:opacity-60"
           />
           <select
             value={frequency}
             onChange={(event) => setFrequency(event.target.value as LocalSearch["frequency"])}
-            className="rounded-xl border border-input bg-card px-3 py-2.5 text-sm"
+            disabled={creating}
+            className="rounded-xl border border-input bg-card px-3 py-2.5 text-sm disabled:opacity-60"
           >
             <option value="daily">{text("تنبيه يومي", "Daily alert")}</option>
             <option value="weekly">{text("تنبيه أسبوعي", "Weekly alert")}</option>
@@ -455,7 +526,8 @@ function SavedSearchesPage() {
           </select>
           <button
             type="submit"
-            className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground"
+            disabled={creating}
+            className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:cursor-wait disabled:opacity-60"
           >
             {text("حفظ البحث", "Save search")}
           </button>
@@ -529,6 +601,7 @@ function SavedSearchesPage() {
                     filters={item.filters as Record<string, unknown>}
                     frequency={item.alertFrequency}
                     frequencyDisabled={savingFrequencyId === item.id}
+                    removeDisabled={deletingIds.has(item.id)}
                     onFrequencyChange={(next) => void changeAlertFrequency(item.id, next)}
                     onRemove={() => void removeSavedSearch(item.id)}
                   />
@@ -550,6 +623,7 @@ function SearchRow({
   frequency,
   local = false,
   frequencyDisabled = false,
+  removeDisabled = false,
   onFrequencyChange,
   onRemove,
 }: {
@@ -560,6 +634,7 @@ function SearchRow({
   frequency: SavedSearchAlertFrequency;
   local?: boolean;
   frequencyDisabled?: boolean;
+  removeDisabled?: boolean;
   onFrequencyChange?: (next: SavedSearchAlertFrequency) => void;
   onRemove?: () => void;
 }) {
@@ -604,7 +679,9 @@ function SearchRow({
           <button
             type="button"
             onClick={onRemove}
-            className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive"
+            disabled={removeDisabled}
+            aria-busy={removeDisabled}
+            className="grid h-9 w-9 place-items-center rounded-full bg-muted-surface text-destructive disabled:cursor-wait disabled:opacity-50"
             aria-label={text("حذف البحث", "Remove search")}
           >
             <Trash2 className="h-4 w-4" />

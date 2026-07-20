@@ -82,6 +82,9 @@ function ListingDetailsPage() {
   const [error, setError] = useState(false);
   const [imagesUnavailable, setImagesUnavailable] = useState(initialData.imagesUnavailable);
   const [fav, setFav] = useState(false);
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
+  const [reportBusy, setReportBusy] = useState(false);
+  const [messageBusy, setMessageBusy] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [alertBusy, setAlertBusy] = useState(false);
   const [alertCreated, setAlertCreated] = useState(false);
@@ -123,11 +126,17 @@ function ListingDetailsPage() {
     }
 
     async function loadFavorite() {
-      const result = await fetchFavoriteStatus(profileId, id);
-      if (!cancelled && requestId === favoriteRequestIdRef.current && result.ok) {
-        setFav(result.data);
-      } else if (!cancelled && requestId === favoriteRequestIdRef.current && !result.ok) {
-        setActionMessage(text("تعذر تحميل حالة المفضلة.", "Could not load favorite status."));
+      try {
+        const result = await fetchFavoriteStatus(profileId, id);
+        if (!cancelled && requestId === favoriteRequestIdRef.current && result.ok) {
+          setFav(result.data);
+        } else if (!cancelled && requestId === favoriteRequestIdRef.current && !result.ok) {
+          setActionMessage(text("تعذر تحميل حالة المفضلة.", "Could not load favorite status."));
+        }
+      } catch {
+        if (!cancelled && requestId === favoriteRequestIdRef.current) {
+          setActionMessage(text("تعذر تحميل حالة المفضلة.", "Could not load favorite status."));
+        }
       }
     }
 
@@ -155,6 +164,7 @@ function ListingDetailsPage() {
     const desiredFavoriteState = !fav;
     const requestId = ++favoriteRequestIdRef.current;
     favoriteInFlightRef.current = true;
+    setFavoriteBusy(true);
     setFav(desiredFavoriteState);
 
     try {
@@ -184,13 +194,14 @@ function ListingDetailsPage() {
       }
     } finally {
       favoriteInFlightRef.current = false;
+      setFavoriteBusy(false);
     }
   }
 
   async function reportListing() {
     setActionMessage(null);
     if (auth.status !== "signedIn") {
-      void navigate({ to: "/login", search: { returnTo: `/listings/${id}` } });
+      void navigate({ to: "/login", search: { returnTo: "/listings/" + id } });
       return;
     }
     if (reportInFlightRef.current) return;
@@ -198,6 +209,7 @@ function ListingDetailsPage() {
     const startProfileGeneration = profileGenerationRef.current;
     if (!startProfileId) return;
     reportInFlightRef.current = true;
+    setReportBusy(true);
     try {
       const result = await createListingReport(
         id,
@@ -207,22 +219,31 @@ function ListingDetailsPage() {
       if (
         profileIdRef.current !== startProfileId ||
         profileGenerationRef.current !== startProfileGeneration
-      )
+      ) {
         return;
+      }
       setActionMessage(
         result.ok
           ? text("تم إرسال البلاغ للمراجعة.", "Report sent for review.")
           : text("تعذر إرسال البلاغ الآن.", "Could not send the report now."),
       );
+    } catch {
+      if (
+        profileIdRef.current === startProfileId &&
+        profileGenerationRef.current === startProfileGeneration
+      ) {
+        setActionMessage(text("تعذر إرسال البلاغ الآن.", "Could not send the report now."));
+      }
     } finally {
       reportInFlightRef.current = false;
+      if (profileGenerationRef.current === startProfileGeneration) setReportBusy(false);
     }
   }
 
   async function messageSeller() {
     setActionMessage(null);
     if (auth.status !== "signedIn") {
-      void navigate({ to: "/login", search: { returnTo: `/listings/${id}` } });
+      void navigate({ to: "/login", search: { returnTo: "/listings/" + id } });
       return;
     }
     const startProfileId = auth.profile?.id ?? null;
@@ -242,24 +263,35 @@ function ListingDetailsPage() {
       return;
     }
     messageInFlightRef.current = startProfileId;
+    setMessageBusy(true);
     try {
       const result = await startListingConversation(listing.id);
       if (
         profileIdRef.current !== startProfileId ||
         profileGenerationRef.current !== startProfileGeneration
-      )
+      ) {
         return;
+      }
       if (!result.ok) {
         setActionMessage(text("تعذر بدء المحادثة الآن.", "Could not start the conversation now."));
         return;
       }
-      void navigate({ to: "/chats", search: { conversation: result.data } });
+      await navigate({ to: "/chats", search: { conversation: result.data } });
+    } catch {
+      if (
+        profileIdRef.current === startProfileId &&
+        profileGenerationRef.current === startProfileGeneration
+      ) {
+        setActionMessage(text("تعذر بدء المحادثة الآن.", "Could not start the conversation now."));
+      }
     } finally {
       if (
         profileGenerationRef.current === startProfileGeneration &&
         messageInFlightRef.current === startProfileId
-      )
+      ) {
         messageInFlightRef.current = null;
+        setMessageBusy(false);
+      }
     }
   }
 
@@ -283,7 +315,7 @@ function ListingDetailsPage() {
   async function createPriceAlert() {
     setActionMessage(null);
     if (auth.status !== "signedIn") {
-      void navigate({ to: "/login", search: { returnTo: `/listings/${id}` } });
+      void navigate({ to: "/login", search: { returnTo: "/listings/" + id } });
       return;
     }
     if (
@@ -303,33 +335,38 @@ function ListingDetailsPage() {
     if (alertInFlightRef.current) return;
     alertInFlightRef.current = true;
     setAlertBusy(true);
-    const result = await createSavedSearch(auth.profile?.id ?? null, {
-      nameAr: `نتائج مشابهة بسعر ${listing.price}`,
-      filters: {
-        categoryId: listing.categoryId,
-        governorateId: listing.governorateId,
-        priceMax: listing.price,
-        sort: "cheapest",
-      },
-      alertFrequency: "daily",
-    });
-    setAlertBusy(false);
-    alertInFlightRef.current = false;
-
-    if (!result.ok) {
+    try {
+      const result = await createSavedSearch(auth.profile?.id ?? null, {
+        nameAr: "نتائج مشابهة بسعر " + listing.price,
+        filters: {
+          categoryId: listing.categoryId,
+          governorateId: listing.governorateId,
+          priceMax: listing.price,
+          sort: "cheapest",
+        },
+        alertFrequency: "daily",
+      });
+      if (!result.ok) {
+        setActionMessage(
+          text("تعذر إنشاء تنبيه السعر الآن.", "Could not create the price alert now."),
+        );
+        return;
+      }
+      setAlertCreated(true);
+      setActionMessage(
+        text(
+          "تم حفظ بحث يومي لإعلانات مشابهة بهذا السعر أو أقل.",
+          "A daily search was saved for similar listings at this price or lower.",
+        ),
+      );
+    } catch {
       setActionMessage(
         text("تعذر إنشاء تنبيه السعر الآن.", "Could not create the price alert now."),
       );
-      return;
+    } finally {
+      alertInFlightRef.current = false;
+      setAlertBusy(false);
     }
-
-    setAlertCreated(true);
-    setActionMessage(
-      text(
-        "تم حفظ بحث يومي لإعلانات مشابهة بهذا السعر أو أقل.",
-        "A daily search was saved for similar listings at this price or lower.",
-      ),
-    );
   }
 
   function goBack() {
@@ -423,6 +460,7 @@ function ListingDetailsPage() {
           title={listing.title}
           placeholder={listing.categoryPlaceholder ?? "misc"}
           favorite={fav}
+          favoriteBusy={favoriteBusy}
           showFavorite={!isOwner}
           imageError={
             imagesUnavailable
@@ -539,6 +577,7 @@ function ListingDetailsPage() {
               <ListingSafetyAndAlert
                 showVisitorActions={!isOwner}
                 alertBusy={alertBusy}
+                reportBusy={reportBusy}
                 alertCreated={alertCreated}
                 onCreateAlert={() => void createPriceAlert()}
                 onReport={() => void reportListing()}
@@ -553,6 +592,7 @@ function ListingDetailsPage() {
                 loading={sellerLoading}
                 fallbackName={sellerName}
                 canMessage={!isOwner}
+                messageBusy={messageBusy}
                 onMessage={messageSeller}
                 language={language}
                 text={text}
@@ -599,6 +639,7 @@ function ListingDetailsPage() {
         canWhatsapp={canWhatsapp}
         callHref={callHref}
         whatsappUrl={whatsappUrl}
+        messageBusy={messageBusy}
         onMessage={() => void messageSeller()}
         onOffer={() => void messageSeller()}
         text={text}

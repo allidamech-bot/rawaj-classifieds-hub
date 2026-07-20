@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useRef, useState } from "react";
 import { ArrowUpLeft, BadgePercent, Clock3, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { ListingCardImage } from "@/features/listings/cards/ListingCardImage";
@@ -26,6 +27,20 @@ function OffersPage() {
   const router = useRouter();
   const { text } = useUiPreferences();
   const { offers, error } = Route.useLoaderData();
+  const [retrying, setRetrying] = useState(false);
+  const retryInFlightRef = useRef(false);
+
+  async function retryOffers() {
+    if (retryInFlightRef.current) return;
+    retryInFlightRef.current = true;
+    setRetrying(true);
+    try {
+      await router.invalidate();
+    } finally {
+      retryInFlightRef.current = false;
+      setRetrying(false);
+    }
+  }
 
   return (
     <>
@@ -108,7 +123,8 @@ function OffersPage() {
                 title={text("تعذر تحميل العروض", "Could not load offers")}
                 body={error.message}
                 actionLabel={text("إعادة المحاولة", "Try again")}
-                onAction={() => void router.invalidate()}
+                onAction={() => void retryOffers()}
+                actionDisabled={retrying}
               />
             ) : offers.length === 0 ? (
               <OffersState
@@ -204,11 +220,13 @@ function OffersState({
   body,
   actionLabel,
   onAction,
+  actionDisabled = false,
 }: {
   title: string;
   body?: string;
   actionLabel?: string;
   onAction?: () => void;
+  actionDisabled?: boolean;
 }) {
   return (
     <section className="rawaj-offers-empty mt-5 overflow-hidden rounded-[1.5rem] p-6 text-center sm:p-8">
@@ -223,6 +241,8 @@ function OffersState({
         <button
           type="button"
           onClick={onAction}
+          disabled={actionDisabled}
+          aria-busy={actionDisabled}
           className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
         >
           {actionLabel}

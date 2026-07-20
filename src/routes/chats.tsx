@@ -102,6 +102,7 @@ function ChatsPage() {
   } | null>(null);
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
   const [blockReason, setBlockReason] = useState("");
+  const [blocking, setBlocking] = useState(false);
   const [viewingConversationOnMobile, setViewingConversationOnMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const messagesRequestIdRef = useRef(0);
@@ -189,6 +190,7 @@ function ChatsPage() {
     setConfirmedRisk(null);
     setReportingMessageId(null);
     setBlockReason("");
+    setBlocking(false);
     setNotice("");
     sendInFlightScopesRef.current.clear();
     reportInFlightRef.current.clear();
@@ -211,6 +213,7 @@ function ChatsPage() {
     selectedConversationIdRef.current = selectedConversation?.id ?? null;
     setConfirmedRisk(null);
     setBlockReason("");
+    setBlocking(false);
     setNotice("");
     setMessageError(null);
     setReportingMessageId(null);
@@ -260,15 +263,33 @@ function ChatsPage() {
     const requestId = ++conversationsRequestIdRef.current;
     setLoadingConversations(true);
     setConversationError(null);
-    const result = await fetchMyConversations();
-    if (requestId !== conversationsRequestIdRef.current || profileId !== profileIdRef.current)
-      return;
-    if (result.ok) {
-      setConversations(result.data);
-    } else {
-      setConversationError(result.error);
+    try {
+      const result = await fetchMyConversations();
+      if (requestId !== conversationsRequestIdRef.current || profileId !== profileIdRef.current) {
+        return;
+      }
+      if (result.ok) {
+        setConversations(result.data);
+      } else {
+        setConversationError(result.error);
+      }
+    } catch (caught) {
+      if (requestId !== conversationsRequestIdRef.current || profileId !== profileIdRef.current) {
+        return;
+      }
+      setConversationError({
+        code: "unknown",
+        message:
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحميل المحادثات.", "Could not load conversations."),
+        operation: "chat_conversations_load",
+      });
+    } finally {
+      if (requestId === conversationsRequestIdRef.current && profileId === profileIdRef.current) {
+        setLoadingConversations(false);
+      }
     }
-    setLoadingConversations(false);
   }
 
   async function loadMessages(conversationId: string) {
@@ -277,27 +298,54 @@ function ChatsPage() {
     const requestId = ++messagesRequestIdRef.current;
     setLoadingMessages(true);
     setMessageError(null);
-    const result = await fetchConversationMessages(conversationId);
-    if (
-      requestId !== messagesRequestIdRef.current ||
-      profileId !== profileIdRef.current ||
-      conversationId !== selectedConversationIdRef.current
-    )
-      return;
-    if (result.ok) {
+    try {
+      const result = await fetchConversationMessages(conversationId);
+      if (
+        requestId !== messagesRequestIdRef.current ||
+        profileId !== profileIdRef.current ||
+        conversationId !== selectedConversationIdRef.current
+      ) {
+        return;
+      }
+      if (!result.ok) {
+        setMessageError(result.error);
+        return;
+      }
       setMessages(sortAndDedupeMessages(result.data, conversationId));
       const markResult = await markConversationRead(conversationId);
       if (
         requestId !== messagesRequestIdRef.current ||
         profileId !== profileIdRef.current ||
         conversationId !== selectedConversationIdRef.current
-      )
+      ) {
         return;
+      }
       if (!markResult.ok) setNotice(markResult.error.message);
-    } else {
-      setMessageError(result.error);
+    } catch (caught) {
+      if (
+        requestId !== messagesRequestIdRef.current ||
+        profileId !== profileIdRef.current ||
+        conversationId !== selectedConversationIdRef.current
+      ) {
+        return;
+      }
+      setMessageError({
+        code: "unknown",
+        message:
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحميل الرسائل.", "Could not load messages."),
+        operation: "chat_messages_load",
+      });
+    } finally {
+      if (
+        requestId === messagesRequestIdRef.current &&
+        profileId === profileIdRef.current &&
+        conversationId === selectedConversationIdRef.current
+      ) {
+        setLoadingMessages(false);
+      }
     }
-    setLoadingMessages(false);
   }
 
   useEffect(() => {
@@ -527,6 +575,29 @@ function ChatsPage() {
         setNotice(text("تم إرسال الرسالة.", "Message sent."));
       }
       if (profileIdRef.current === profileId) await loadConversations();
+    } catch (caught) {
+      if (uploadedPath) {
+        try {
+          if (voice) await removeChatAudio(uploadedPath);
+          else await removeChatImage(uploadedPath);
+        } catch {
+          // Best-effort cleanup; the user-facing send failure remains primary.
+        }
+      }
+      if (
+        accountGenerationRef.current === accountGeneration &&
+        profileIdRef.current === profileId &&
+        selectedConversationIdRef.current === conversationId
+      ) {
+        setMessageError({
+          code: "unknown",
+          message:
+            caught instanceof Error
+              ? caught.message
+              : text("تعذر إرسال الرسالة.", "Could not send the message."),
+          operation: "chat_message_send",
+        });
+      }
     } finally {
       if (accountGenerationRef.current === accountGeneration) {
         sendInFlightScopesRef.current.delete(scopeKey);
@@ -564,6 +635,18 @@ function ChatsPage() {
           ? text("تم إرسال بلاغ الرسالة للمراجعة.", "Message report sent for review.")
           : result.error.message,
       );
+    } catch (caught) {
+      if (
+        profileIdRef.current === profileId &&
+        accountGenerationRef.current === accountGeneration &&
+        selectedConversationIdRef.current === conversationId
+      ) {
+        setNotice(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر إرسال بلاغ الرسالة.", "Could not report the message."),
+        );
+      }
     } finally {
       if (accountGenerationRef.current === accountGeneration) {
         reportInFlightRef.current.delete(reportScope);
@@ -589,6 +672,7 @@ function ChatsPage() {
     )
       return;
     blockInFlightRef.current.add(blockScope);
+    setBlocking(true);
     setNotice("");
     try {
       const result = await blockConversationParticipant({
@@ -610,9 +694,22 @@ function ChatsPage() {
         );
       }
       if (result.ok && profileIdRef.current === profileId) await loadConversations();
+    } catch (caught) {
+      if (
+        accountGenerationRef.current === accountGeneration &&
+        profileIdRef.current === profileId &&
+        selectedConversationIdRef.current === conversationId
+      ) {
+        setNotice(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر حظر المحادثة.", "Could not block the conversation."),
+        );
+      }
     } finally {
       if (accountGenerationRef.current === accountGeneration) {
         blockInFlightRef.current.delete(blockScope);
+        setBlocking(false);
       }
     }
   }
@@ -802,11 +899,13 @@ function ChatsPage() {
                     <button
                       type="button"
                       onClick={() => void handleBlock()}
+                      disabled={blocking}
+                      aria-busy={blocking}
                       aria-label={text("حظر المستخدم", "Block user")}
                       className="inline-flex items-center gap-1 rounded-xl bg-destructive/10 px-3 py-2 text-[11px] font-bold text-destructive"
                     >
                       <Ban className="h-3.5 w-3.5" />
-                      {text("حظر", "Block")}
+                      {blocking ? text("جارٍ الحظر", "Blocking") : text("حظر", "Block")}
                     </button>
                   </div>
                   {selectedConversation.status === "archived" && (
@@ -914,11 +1013,13 @@ function ChatsPage() {
 
                 <form
                   onSubmit={(event) => void handleSend(event)}
+                  aria-busy={sending}
                   className="rawaj-message-composer"
                 >
                   <input
                     value={blockReason}
                     onChange={(event) => setBlockReason(event.target.value)}
+                    disabled={blocking}
                     maxLength={300}
                     placeholder={text("سبب الحظر اختياري", "Optional block reason")}
                     className="rawaj-message-composer__block-reason mb-2"

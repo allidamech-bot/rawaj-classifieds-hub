@@ -52,6 +52,9 @@ function PromotionPage() {
   const [notice, setNotice] = useState("");
   const listingsRequestIdRef = useRef(0);
   const requestsRequestIdRef = useRef(0);
+  const submitInFlightRef = useRef(false);
+  const profileIdRef = useRef<string | null>(profileId);
+  profileIdRef.current = profileId;
 
   const approvedListings = useMemo(
     () => listings.filter((listing) => listing.status === "approved"),
@@ -92,49 +95,84 @@ function PromotionPage() {
     },
   ];
   const durationOptions = [3, 7, 14, 30];
+  const hasPendingForSelectedListing = requests.some(
+    (request) => request.listingId === selectedListingId && request.status === "pending_review",
+  );
 
   const loadListings = useCallback(async () => {
     if (!profileId) return;
-
+    const currentProfileId = profileId;
     const requestId = ++listingsRequestIdRef.current;
     setListingsLoading(true);
     setListingsError(null);
-    const result = await fetchCurrentUserListings(profileId);
-    if (requestId !== listingsRequestIdRef.current) return;
-
-    if (result.ok) {
-      setListings(result.data);
-      setHasLoadedListings(true);
-      setSelectedListingId((current) => {
-        const currentStillEligible = result.data.some(
-          (item) => item.id === current && item.status === "approved",
-        );
-        if (currentStillEligible) return current;
-        return result.data.find((item) => item.status === "approved")?.id ?? "";
+    try {
+      const result = await fetchCurrentUserListings(currentProfileId);
+      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
+      if (result.ok) {
+        setListings(result.data);
+        setHasLoadedListings(true);
+        setSelectedListingId((current) => {
+          const currentStillEligible = result.data.some(
+            (item) => item.id === current && item.status === "approved",
+          );
+          if (currentStillEligible) return current;
+          return result.data.find((item) => item.status === "approved")?.id ?? "";
+        });
+      } else {
+        setListingsError(result.error);
+      }
+    } catch (caught) {
+      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
+      setListingsError({
+        code: "unknown",
+        message:
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحميل إعلاناتك.", "Could not load your listings."),
+        operation: "promotion_listings_load",
       });
-    } else {
-      setListingsError(result.error);
+    } finally {
+      if (requestId === listingsRequestIdRef.current && currentProfileId === profileIdRef.current) {
+        setListingsLoading(false);
+      }
     }
-    setListingsLoading(false);
-  }, [profileId]);
+  }, [profileId, text]);
 
   const loadRequests = useCallback(async () => {
     if (!profileId) return;
-
+    const currentProfileId = profileId;
     const requestId = ++requestsRequestIdRef.current;
     setRequestsLoading(true);
     setRequestsError(null);
-    const result = await fetchMyPromotionRequests(profileId);
-    if (requestId !== requestsRequestIdRef.current) return;
-
-    if (result.ok) {
-      setRequests(result.data);
-      setHasLoadedRequests(true);
-    } else {
-      setRequestsError(result.error);
+    try {
+      const result = await fetchMyPromotionRequests(currentProfileId);
+      if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
+      if (result.ok) {
+        setRequests(result.data);
+        setHasLoadedRequests(true);
+      } else {
+        setRequestsError(result.error);
+      }
+    } catch (caught) {
+      if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
+      setRequestsError({
+        code: "unknown",
+        message:
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحميل طلبات الترويج.", "Could not load promotion requests."),
+        operation: "promotion_requests_load",
+      });
+    } finally {
+      if (requestId === requestsRequestIdRef.current && currentProfileId === profileIdRef.current) {
+        setRequestsLoading(false);
+      }
     }
-    setRequestsLoading(false);
-  }, [profileId]);
+  }, [profileId, text]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
@@ -170,52 +208,90 @@ function PromotionPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (saving) return;
-
+    const currentProfileId = profileId;
+    if (!currentProfileId || submitInFlightRef.current) return;
     setNotice("");
+    if (!hasLoadedListings || !hasLoadedRequests || listingsLoading || requestsLoading) {
+      setNotice(
+        text(
+          "انتظر اكتمال تحميل بياناتك قبل الإرسال.",
+          "Wait until your data finishes loading before submitting.",
+        ),
+      );
+      return;
+    }
+    if (!selectedListingId) {
+      setNotice(text("اختر إعلاناً معتمداً.", "Choose an approved listing."));
+      return;
+    }
+    if (hasPendingForSelectedListing) {
+      setNotice(
+        text(
+          "يوجد طلب ترويج قيد المراجعة لهذا الإعلان.",
+          "A promotion request for this listing is already under review.",
+        ),
+      );
+      return;
+    }
+
+    submitInFlightRef.current = true;
     setSaving(true);
     try {
       const result = await createListingPromotionRequest({
         listingId: selectedListingId,
-        requesterUserId: profileId,
+        requesterUserId: currentProfileId,
         promotionType,
         requestedDays,
-        paymentMethod: paymentMethod || null,
-        paymentReference: paymentReference || null,
+        paymentMethod: paymentMethod.trim() || null,
+        paymentReference: paymentReference.trim() || null,
       });
-      if (result.ok) {
-        if (receiptFile) {
-          const receiptResult = await uploadPromotionReceipt({
-            userId: profileId,
-            requestId: result.data.id,
-            file: receiptFile,
-          });
-          if (!receiptResult.ok) {
-            setNotice(
-              text(
-                `تم إرسال طلب الترويج للمراجعة، لكن تعذر رفع الإيصال: ${receiptResult.error.message}`,
-                `Promotion request was sent for review, but receipt upload failed: ${receiptResult.error.message}`,
-              ),
-            );
-            await loadRequests();
-            return;
-          }
-        }
-        setNotice(
-          text(
-            "تم إرسال طلب الترويج للمراجعة اليدوية.",
-            "Promotion request sent for manual review.",
-          ),
-        );
-        setPaymentMethod("");
-        setPaymentReference("");
-        setReceiptFile(null);
-        await loadRequests();
-      } else {
+      if (currentProfileId !== profileIdRef.current) return;
+      if (!result.ok) {
         setNotice(result.error.message);
+        return;
+      }
+
+      setRequests((current) => [
+        result.data,
+        ...current.filter((item) => item.id !== result.data.id),
+      ]);
+      setHasLoadedRequests(true);
+      if (receiptFile) {
+        const receiptResult = await uploadPromotionReceipt({
+          userId: currentProfileId,
+          requestId: result.data.id,
+          file: receiptFile,
+        });
+        if (currentProfileId !== profileIdRef.current) return;
+        if (!receiptResult.ok) {
+          setNotice(
+            text(
+              "تم إنشاء طلب الترويج، لكن تعذر رفع الإيصال. لا تعِد إرسال الطلب؛ تواصل مع الدعم لإرفاقه.",
+              "The promotion request was created, but the receipt could not upload. Do not resubmit; contact support to attach it.",
+            ),
+          );
+          await loadRequests();
+          return;
+        }
+      }
+      setNotice(
+        text("تم إرسال طلب الترويج للمراجعة اليدوية.", "Promotion request sent for manual review."),
+      );
+      setPaymentMethod("");
+      setPaymentReference("");
+      setReceiptFile(null);
+      await loadRequests();
+    } catch (caught) {
+      if (currentProfileId === profileIdRef.current) {
+        setNotice(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر إرسال طلب الترويج.", "Could not submit the promotion request."),
+        );
       }
     } finally {
-      setSaving(false);
+      submitInFlightRef.current = false;
+      if (currentProfileId === profileIdRef.current) setSaving(false);
     }
   }
 
@@ -308,6 +384,7 @@ function PromotionPage() {
             ) : null}
             <form
               onSubmit={(event) => void submit(event)}
+              aria-busy={saving}
               className="rounded-2xl bg-card p-4 hairline"
             >
               <div className="grid gap-3 sm:grid-cols-2">
@@ -388,7 +465,15 @@ function PromotionPage() {
                 )}
               </div>
               <button
-                disabled={saving || !selectedListingId}
+                type="submit"
+                disabled={
+                  saving ||
+                  !selectedListingId ||
+                  !hasLoadedListings ||
+                  !hasLoadedRequests ||
+                  hasPendingForSelectedListing
+                }
+                aria-busy={saving}
                 className="mt-3 rounded-xl bg-gold px-4 py-2 text-xs font-bold text-gold-foreground disabled:opacity-60"
               >
                 {saving
