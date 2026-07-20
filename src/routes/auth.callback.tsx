@@ -65,9 +65,7 @@ function AuthCallbackPage() {
 
       function hasRecoveryHashProof(session: Session | null): session is Session {
         return Boolean(
-          session &&
-            recoveryHashAccessToken &&
-            session.access_token === recoveryHashAccessToken,
+          session && recoveryHashAccessToken && session.access_token === recoveryHashAccessToken,
         );
       }
 
@@ -123,10 +121,7 @@ function AuthCallbackPage() {
           finish(true, session);
           return;
         }
-        if (
-          !callbackContext.isRecovery &&
-          (event === "SIGNED_IN" || event === "INITIAL_SESSION")
-        ) {
+        if (!callbackContext.isRecovery && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
           finish(false, session);
         }
       });
@@ -139,11 +134,7 @@ function AuthCallbackPage() {
           listener.subscription.unsubscribe();
           setStatus("error");
           setErrorMsg(
-            authErrorMessage(
-              error,
-              callbackContext.isRecovery ? "recovery" : "callback",
-              text,
-            ),
+            authErrorMessage(error, callbackContext.isRecovery ? "recovery" : "callback", text),
           );
           return;
         }
