@@ -77,11 +77,7 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
       if (cancelled || freshnessTimer !== null) return;
       freshnessTimer = window.setTimeout(() => {
         freshnessTimer = null;
-        if (
-          cancelled ||
-          document.visibilityState === "hidden" ||
-          navigator.onLine === false
-        ) {
+        if (cancelled || document.visibilityState === "hidden" || navigator.onLine === false) {
           return;
         }
         retryAttempt = 0;
