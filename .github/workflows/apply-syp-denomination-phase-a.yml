@@ -6,6 +6,7 @@ on:
     branches:
       - main
     paths:
+      - "scripts/.apply-syp-phase-a.prefix.b64"
       - "scripts/.apply-syp-phase-a.mjs.gz.b64"
       - ".github/workflows/apply-syp-denomination-phase-a.yml"
 
@@ -23,5 +24,7 @@ jobs:
           git clone --quiet --depth 1 --branch agent/syp-denomination-phase-a \
             "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" repo
           cd repo
-          base64 -d scripts/.apply-syp-phase-a.mjs.gz.b64 | gunzip > /tmp/apply-syp-phase-a.mjs
+          cat scripts/.apply-syp-phase-a.prefix.b64 scripts/.apply-syp-phase-a.mjs.gz.b64 \
+            | base64 -d \
+            | gunzip > /tmp/apply-syp-phase-a.mjs
           node /tmp/apply-syp-phase-a.mjs
