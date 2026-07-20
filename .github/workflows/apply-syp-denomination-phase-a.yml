@@ -36,8 +36,9 @@ jobs:
       - name: Apply complete Phase A preflight patch
         working-directory: repo
         run: |
-          python scripts/.syp-phase-a-preflight.py
-          python scripts/.syp-phase-a-contract-adjust.py
+          python scripts/.syp-phase-a-preflight.py >/tmp/phase-a-apply.log 2>&1
+          python scripts/.syp-phase-a-contract-adjust.py >>/tmp/phase-a-apply.log 2>&1
+          tail -n 4 /tmp/phase-a-apply.log
 
       - name: Install dependencies
         working-directory: repo
@@ -59,11 +60,21 @@ jobs:
             src/features/listings/cards/ListingCardShared.tsx \
             src/routes/add-listing.tsx \
             scripts/syp-denomination-phase-a.test.mjs \
-            docs/syp-denomination-phase-a.md
+            docs/syp-denomination-phase-a.md >/dev/null
+          echo "Prettier completed."
 
       - name: Run Phase A contract tests
         working-directory: repo
-        run: node --test scripts/syp-denomination-phase-a.test.mjs
+        run: |
+          set +e
+          node --test scripts/syp-denomination-phase-a.test.mjs >/tmp/contracts.log 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            tail -n 120 /tmp/contracts.log
+            exit "$status"
+          fi
+          echo "All Phase A contracts passed."
 
       - name: Run TypeScript
         working-directory: repo
@@ -73,10 +84,10 @@ jobs:
           status=$?
           set -e
           if [ "$status" -ne 0 ]; then
-            tail -n 160 /tmp/typecheck.log
+            cat /tmp/typecheck.log
             exit "$status"
           fi
-          tail -n 20 /tmp/typecheck.log
+          echo "TypeScript passed."
 
       - name: Check generated diff
         working-directory: repo
