@@ -298,4 +298,19 @@ jobs:
         run: npm run build
 
       - name: Performance budget
+        id: performance_budget
+        continue-on-error: true
         run: npm run performance:budget
+
+      - name: Upload performance budget report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-budget-${{ github.sha }}
+          path: performance-budget-report.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Fail when performance budget failed
+        if: steps.performance_budget.outcome == 'failure'
+        run: exit 1

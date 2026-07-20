@@ -25,12 +25,14 @@ test("phase 54 enforces production JavaScript, stylesheet, font and image budget
   assert.match(qualityGate, /Production build[\s\S]*Performance budget/);
 });
 
-test("phase 55 keeps performance budgets executable after the production build", () => {
+test("phase 55 keeps performance budgets executable and evidence-based after the build", () => {
   assert.match(qualityGate, /npm run performance:budget/);
+  assert.match(qualityGate, /Upload performance budget report/);
   assert.match(budget, /No client build output found/);
   assert.match(budget, /largestAssets/);
   assert.match(budget, /summarizeLargest/);
-  assert.match(budget, /2026-07-16 production build baseline/);
+  assert.match(budget, /user-accepted 2026-07-19 production baseline/);
+  assert.match(budget, /maximumTotalCssBytes: 540 \* KIB/);
 });
 
 test("phase 56 captures global client and hydration failures without raw page content", () => {

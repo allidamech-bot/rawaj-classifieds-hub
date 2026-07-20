@@ -11,6 +11,10 @@ const cleanText = z.preprocess(
   (value) => (typeof value === "string" && value.trim() ? value.trim() : undefined),
   z.string().max(160).optional(),
 );
+const cleanAttributeFilters = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() ? value.trim() : undefined),
+  z.string().max(6000).optional(),
+);
 const safeNumber = z.preprocess((value) => {
   if (value === "" || value === null || value === undefined) return undefined;
   const parsed = typeof value === "number" ? value : Number(value);
@@ -52,6 +56,7 @@ export const listingsSearchSchema = z
     salary_type: safeEnum(["fixed", "range", "commission", "negotiable", "not_listed"]),
     condition: safeEnum(["new", "used", "refurbished", "not_applicable"]),
     price_type: safeEnum(["fixed", "negotiable", "contact", "free"]),
+    attrs: cleanAttributeFilters,
     q: cleanText,
     sort: z.enum(listingsSortValues).optional().catch("latest"),
     view: z.enum(listingsViewValues).optional().catch("grid"),

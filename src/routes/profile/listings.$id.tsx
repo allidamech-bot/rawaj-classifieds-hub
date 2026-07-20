@@ -12,6 +12,7 @@ import {
   ListingStudioTrustStrip,
 } from "@/features/listing-studio/listing-studio";
 import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
+import { DynamicListingFields } from "@/features/listing-studio/DynamicListingFields";
 import { ListingTaxonomySelector } from "@/features/listing-studio/ListingTaxonomySelector";
 import {
   categoryRequiresPreciseLocation,
@@ -25,10 +26,22 @@ import {
 } from "@/lib/category-fields";
 import { fetchLocationPath, type LocationNodeType } from "@/lib/api/location-taxonomy";
 import {
+  fetchOwnerListingAttributes,
+  replaceOwnerListingAttributes,
+  type ListingAttributeCompleteness,
+} from "@/lib/api/listing-attributes";
+import { fetchPublishedLeafSchema, type PublishedLeafSchema } from "@/lib/api/taxonomy-metadata";
+import {
   checkListingContentSafety,
   isSafePhoneValue,
   normalizeContactValue,
 } from "@/lib/content-safety";
+import {
+  normalizeDynamicAttributesForWrite,
+  sanitizeDynamicListingValues,
+  validateDynamicListingFields,
+  type DynamicListingValues,
+} from "@/lib/dynamic-listing-fields";
 import { calculateListingQuality, listingQualityCheckLabel } from "@/lib/listing-quality";
 import {
   assignOwnerListingTaxonomy,
@@ -152,6 +165,8 @@ function ManageListingPage() {
   const taxonomyNodeIdRef = useRef("");
   const taxonomyAssignmentBaseRef = useRef("");
   const taxonomyAssignmentRequiredRef = useRef(false);
+  const dynamicSchemaRequestIdRef = useRef(0);
+  const initialDynamicValuesRef = useRef<Record<string, unknown>>({});
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -171,11 +186,32 @@ function ManageListingPage() {
   const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [categoryDetails, setCategoryDetails] = useState<CategorySpecificDetails>({});
+  const [dynamicSchema, setDynamicSchema] = useState<PublishedLeafSchema | null>(null);
+  const [dynamicValues, setDynamicValues] = useState<DynamicListingValues>({});
+  const [dynamicFieldErrors, setDynamicFieldErrors] = useState<Record<string, string>>({});
+  const [dynamicSchemaLoading, setDynamicSchemaLoading] = useState(false);
+  const [dynamicSchemaError, setDynamicSchemaError] = useState<string | null>(null);
 
   const category = categories.find((item) => item.id === categoryId);
   const selectedTaxonomyNode = taxonomyNodes.find((item) => item.id === taxonomyNodeId);
   const categoryFieldKind = resolveCategoryFieldKind(selectedTaxonomyNode, category, listing);
-  const showGlobalCondition = categoryUsesGlobalCondition(categoryFieldKind);
+  const dynamicSchemaActive = Boolean(
+    dynamicSchema?.found &&
+    dynamicSchema.leaf?.id === taxonomyNodeId &&
+    dynamicSchema.fields.some((field) => field.displaySurfaces.includes("listing_studio")),
+  );
+  const dynamicSchemaUsesListingCondition = Boolean(
+    dynamicSchemaActive && dynamicSchema?.fields.some((field) => field.key === "listing_condition"),
+  );
+  const normalizedDynamicAttributes = useMemo(
+    () =>
+      dynamicSchemaActive && dynamicSchema
+        ? normalizeDynamicAttributesForWrite(dynamicSchema, dynamicValues)
+        : {},
+    [dynamicSchema, dynamicSchemaActive, dynamicValues],
+  );
+  const showGlobalCondition =
+    !dynamicSchemaActive && categoryUsesGlobalCondition(categoryFieldKind);
   const requiresPreciseLocation = categoryRequiresPreciseLocation(categoryFieldKind);
   const preciseLocationSelected =
     (Boolean(district) && !district.startsWith("@")) ||
@@ -206,14 +242,15 @@ function ManageListingPage() {
         locationReady:
           (Boolean(locationNodeId) || Boolean(governorateId)) &&
           (!requiresPreciseLocation || preciseLocationSelected),
-        categoryFieldKind,
-        categoryDetails,
+        categoryFieldKind: dynamicSchemaActive ? "general" : categoryFieldKind,
+        categoryDetails: dynamicSchemaActive ? {} : categoryDetails,
         condition,
       }),
     [
       categoryDetails,
       categoryFieldKind,
       categoryId,
+      dynamicSchemaActive,
       condition,
       description,
       district,
@@ -389,6 +426,79 @@ function ManageListingPage() {
   }, [loadSetup]);
 
   useEffect(() => {
+    const requestId = ++dynamicSchemaRequestIdRef.current;
+    setDynamicSchema(null);
+    setDynamicValues({});
+    setDynamicFieldErrors({});
+    setDynamicSchemaError(null);
+    initialDynamicValuesRef.current = {};
+
+    if (!listing?.id || !taxonomyNodeId || !selectedTaxonomyNode?.isLeaf || !auth.profile?.id) {
+      setDynamicSchemaLoading(false);
+      return;
+    }
+
+    setDynamicSchemaLoading(true);
+    void Promise.all([
+      fetchPublishedLeafSchema(taxonomyNodeId),
+      fetchOwnerListingAttributes(auth.profile.id, listing.id),
+    ]).then(([schemaResult, attributeResult]) => {
+      if (requestId !== dynamicSchemaRequestIdRef.current) return;
+      setDynamicSchemaLoading(false);
+
+      if (!schemaResult.ok) {
+        if (schemaResult.error.code !== "schema_missing") {
+          setDynamicSchemaError(schemaResult.error.message);
+        }
+        return;
+      }
+      if (!schemaResult.data.found || schemaResult.data.leaf?.id !== taxonomyNodeId) return;
+
+      const defaults = Object.fromEntries(
+        schemaResult.data.fields
+          .filter((field) => field.defaultValue !== null && field.defaultValue !== undefined)
+          .map((field) => [field.key, field.defaultValue]),
+      );
+      const storedValues =
+        attributeResult.ok && attributeResult.data.taxonomyNodeId === taxonomyNodeId
+          ? attributeResult.data.values
+          : {};
+      if (!attributeResult.ok && attributeResult.error.code !== "schema_missing") {
+        setDynamicSchemaError(attributeResult.error.message);
+      }
+
+      const hydratedValues = sanitizeDynamicListingValues(schemaResult.data, {
+        ...defaults,
+        ...storedValues,
+      });
+      setDynamicSchema(schemaResult.data);
+      setDynamicValues(hydratedValues);
+      initialDynamicValuesRef.current = normalizeDynamicAttributesForWrite(
+        schemaResult.data,
+        hydratedValues,
+      );
+
+      if (schemaResult.data.fields.some((field) => field.key === "listing_condition")) {
+        setCondition(dynamicListingCondition(hydratedValues.listing_condition));
+      }
+    });
+
+    return () => {
+      dynamicSchemaRequestIdRef.current += 1;
+    };
+  }, [auth.profile?.id, listing?.id, selectedTaxonomyNode?.isLeaf, taxonomyNodeId]);
+
+  useEffect(() => {
+    if (
+      !showGlobalCondition &&
+      !dynamicSchemaUsesListingCondition &&
+      condition !== "not_applicable"
+    ) {
+      setCondition("not_applicable");
+    }
+  }, [condition, dynamicSchemaUsesListingCondition, showGlobalCondition]);
+
+  useEffect(() => {
     selectedImagesRef.current = selectedImages;
   }, [selectedImages]);
 
@@ -453,6 +563,10 @@ function ManageListingPage() {
 
     taxonomyNodeIdRef.current = node.id;
     taxonomyAssignmentRequiredRef.current = node.id !== taxonomyAssignmentBaseRef.current;
+    setDynamicSchema(null);
+    setDynamicValues({});
+    setDynamicFieldErrors({});
+    setDynamicSchemaError(null);
     setTaxonomyNodeId(node.id);
     setCategoryId(nextCategoryId);
     setSubcategoryId(search.taxonomyLegacySubcategoryId ?? null);
@@ -466,6 +580,10 @@ function ManageListingPage() {
     const previousKind = categoryFieldKind;
     const nextCategory = categories.find((item) => item.id === nextCategoryId);
     const nextKind = resolveCategoryFieldKind(undefined, nextCategory, listing);
+    setDynamicSchema(null);
+    setDynamicValues({});
+    setDynamicFieldErrors({});
+    setDynamicSchemaError(null);
     setCategoryId(nextCategoryId);
     setSubcategoryId(null);
     if (previousKind !== nextKind) {
@@ -474,12 +592,25 @@ function ManageListingPage() {
     if (!categoryUsesGlobalCondition(nextKind)) setCondition("not_applicable");
   }
 
+  function handleDynamicValuesChange(nextValues: DynamicListingValues) {
+    setDynamicValues(nextValues);
+    setDynamicFieldErrors({});
+    if (!dynamicSchemaUsesListingCondition) return;
+    const nextCondition = dynamicListingCondition(nextValues.listing_condition);
+    if (nextCondition !== condition) setCondition(nextCondition);
+  }
+
   async function persistCapturedChanges(
     captured: EditListingFormValues,
     contentFlags: string[],
   ): Promise<
-    | { ok: true; listing: ClassifiedListing; changed: boolean }
-    | { ok: false; message: string; taxonomyFailure?: boolean }
+    | {
+        ok: true;
+        listing: ClassifiedListing;
+        changed: boolean;
+        completeness?: ListingAttributeCompleteness;
+      }
+    | { ok: false; message: string; taxonomyFailure?: boolean; attributeFailure?: boolean }
   > {
     const initialSnapshot = initialSnapshotRef.current;
     if (!initialSnapshot || !listing) {
@@ -491,19 +622,18 @@ function ManageListingPage() {
       taxonomyAssignmentRequiredRef.current &&
       Boolean(capturedTaxonomyNodeId) &&
       capturedTaxonomyNodeId === taxonomyNodeIdRef.current;
+    const attributesChanged =
+      dynamicSchemaActive &&
+      !sameValue(normalizedDynamicAttributes, initialDynamicValuesRef.current);
     const patch = buildChangedListingPatch(initialSnapshot, captured, contentFlags);
     const hasChangedFields = Object.keys(patch).length > 0;
     let savedListing = listing;
+    let completeness: ListingAttributeCompleteness | undefined;
 
     if (hasChangedFields) {
       const updateResult = await updateOwnerListing(auth.profile?.id ?? null, listing.id, patch);
       if (!updateResult.ok) return { ok: false, message: updateResult.error.message };
       savedListing = updateResult.data;
-      setListing(savedListing);
-      initialSnapshotRef.current = {
-        ...captured,
-        details: { ...savedListing.details },
-      };
     }
 
     if (taxonomyChanged) {
@@ -519,7 +649,38 @@ function ManageListingPage() {
       taxonomyAssignmentRequiredRef.current = taxonomyNodeIdRef.current !== capturedTaxonomyNodeId;
     }
 
-    return { ok: true, listing: savedListing, changed: hasChangedFields || taxonomyChanged };
+    if (dynamicSchemaActive && dynamicSchema && (attributesChanged || taxonomyChanged)) {
+      const attributeResult = await replaceOwnerListingAttributes(
+        auth.profile?.id ?? null,
+        savedListing.id,
+        savedListing.updatedAt,
+        normalizedDynamicAttributes,
+      );
+      if (!attributeResult.ok) {
+        return {
+          ok: false,
+          message: attributeResult.error.message,
+          attributeFailure: true,
+        };
+      }
+      savedListing = {
+        ...savedListing,
+        updatedAt: attributeResult.data.updatedAt,
+      };
+      completeness = attributeResult.data.completeness;
+      initialDynamicValuesRef.current = { ...normalizedDynamicAttributes };
+    }
+
+    const changed = hasChangedFields || taxonomyChanged || attributesChanged;
+    if (changed) {
+      setListing(savedListing);
+      initialSnapshotRef.current = {
+        ...captured,
+        details: { ...savedListing.details },
+      };
+    }
+
+    return { ok: true, listing: savedListing, changed, completeness };
   }
 
   const handleSave = useCallback(async () => {
@@ -529,9 +690,22 @@ function ManageListingPage() {
     setSavingError(null);
     setSavingSuccess(null);
     try {
+      if (dynamicSchemaLoading) {
+        setSavingError(
+          text(
+            "انتظر حتى يكتمل تحميل حقول التصنيف.",
+            "Wait for the category fields to finish loading.",
+          ),
+        );
+        return;
+      }
+
       const captured = captureCurrentFormValues();
+      const validationValues = dynamicSchemaActive
+        ? { ...captured, categoryKind: "general" as const, categoryDetails: {} }
+        : captured;
       const validation = validateEditListing({
-        values: captured,
+        values: validationValues,
         taxonomyNodes,
         existingDetails: initialSnapshotRef.current?.details ?? listing.details,
         requireComplete: false,
@@ -552,7 +726,12 @@ function ManageListingPage() {
                 "تم حفظ التعديلات، لكن تعذر تحديث التصنيف.",
                 "Changes were saved, but taxonomy could not be updated.",
               )
-            : result.message,
+            : result.attributeFailure
+              ? text(
+                  "تم حفظ التعديلات الأساسية، لكن تعذر حفظ حقول التصنيف المنظمة.",
+                  "Base changes were saved, but governed category fields could not be saved.",
+                )
+              : result.message,
         );
         return;
       }
@@ -604,9 +783,22 @@ function ManageListingPage() {
     setSavingError(null);
     setSavingSuccess(null);
     try {
+      if (dynamicSchemaLoading) {
+        setSavingError(
+          text(
+            "انتظر حتى يكتمل تحميل حقول التصنيف.",
+            "Wait for the category fields to finish loading.",
+          ),
+        );
+        return;
+      }
+
       const captured = captureCurrentFormValues();
+      const validationValues = dynamicSchemaActive
+        ? { ...captured, categoryKind: "general" as const, categoryDetails: {} }
+        : captured;
       const validation = validateEditListing({
-        values: captured,
+        values: validationValues,
         taxonomyNodes,
         existingDetails: initialSnapshotRef.current?.details ?? listing.details,
         requireComplete: true,
@@ -619,6 +811,25 @@ function ManageListingPage() {
         return;
       }
 
+      if (dynamicSchemaActive && dynamicSchema) {
+        const dynamicValidation = validateDynamicListingFields(
+          dynamicSchema,
+          dynamicValues,
+          language,
+        );
+        setDynamicFieldErrors(dynamicValidation.fields);
+        if (dynamicValidation.summary.length > 0) {
+          setSavingError(
+            dynamicValidation.summary[0] ??
+              text(
+                "أكمل الحقول المطلوبة الخاصة بالتصنيف.",
+                "Complete the required category fields.",
+              ),
+          );
+          return;
+        }
+      }
+
       const saveResult = await persistCapturedChanges(captured, validation.contentFlags);
       if (!saveResult.ok) {
         setSavingError(
@@ -627,7 +838,25 @@ function ManageListingPage() {
                 "تم حفظ التعديلات، لكن تعذر تحديث التصنيف.",
                 "Changes were saved, but taxonomy could not be updated.",
               )
-            : saveResult.message,
+            : saveResult.attributeFailure
+              ? text(
+                  "تم حفظ التعديلات الأساسية، لكن تعذر حفظ حقول التصنيف المنظمة.",
+                  "Base changes were saved, but governed category fields could not be saved.",
+                )
+              : saveResult.message,
+        );
+        return;
+      }
+
+      if (saveResult.completeness && !saveResult.completeness.complete) {
+        const missingLabels = saveResult.completeness.missingRequiredFields
+          .map((field) => (language === "en" ? field.labelEn || field.labelAr : field.labelAr))
+          .join(language === "ar" ? "، " : ", ");
+        setSavingError(
+          text(
+            "أكمل الحقول المطلوبة قبل إعادة الإرسال: " + missingLabels,
+            "Complete the required fields before resubmission: " + missingLabels,
+          ),
         );
         return;
       }
@@ -1049,13 +1278,45 @@ function ManageListingPage() {
                   disabled={!isEditable}
                 />
               </Field>
-              <CategorySpecificFields
-                kind={categoryFieldKind}
-                values={categoryDetails}
-                disabled={!isEditable}
-                onChange={setCategoryDetails}
-                text={text}
-              />
+              {dynamicSchemaLoading ? (
+                <div className="mt-4 rounded-[1.15rem] border border-border/60 bg-card-warm/65 p-4 text-xs text-muted-foreground">
+                  {text(
+                    "جارٍ تجهيز الحقول الخاصة بالتصنيف...",
+                    "Preparing category-specific fields...",
+                  )}
+                </div>
+              ) : dynamicSchemaActive && dynamicSchema ? (
+                <DynamicListingFields
+                  schema={dynamicSchema}
+                  values={dynamicValues}
+                  onChange={handleDynamicValuesChange}
+                  language={language}
+                  text={text}
+                  errors={dynamicFieldErrors}
+                  disabled={!isEditable || saving || resubmitting}
+                />
+              ) : (
+                <CategorySpecificFields
+                  kind={categoryFieldKind}
+                  values={categoryDetails}
+                  disabled={!isEditable}
+                  text={text}
+                  onChange={(nextDetails) => {
+                    setCategoryDetails(nextDetails);
+                    if (categoryFieldKind === "vehicles" || categoryFieldKind === "electronics") {
+                      setCondition(legacyCategoryCondition(categoryFieldKind, nextDetails));
+                    }
+                  }}
+                />
+              )}
+              {dynamicSchemaError ? (
+                <p className="mt-3 rounded-xl border border-warning/20 bg-warning/10 p-3 text-xs leading-5 text-warning-foreground">
+                  {text(
+                    "تعذر تحميل بعض الحقول المنظمة، لذلك تم الحفاظ على نموذج التوافق والبيانات القديمة.",
+                    "Some governed fields could not load, so the compatibility form and legacy data were preserved.",
+                  )}
+                </p>
+              ) : null}
               <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Field label={text("السعر", "Price")}>
                   <input
@@ -1843,6 +2104,26 @@ function CheckboxField({
       />
     </label>
   );
+}
+
+function dynamicListingCondition(value: unknown): ListingCondition {
+  if (value === "new") return "new";
+  if (value === "like_new") return "like_new";
+  if (value === "good" || value === "fair") return "used";
+  if (value === "for_parts") return "for_parts";
+  return "not_applicable";
+}
+
+function legacyCategoryCondition(
+  kind: CategoryFieldKind,
+  details: CategorySpecificDetails,
+): ListingCondition {
+  const value = kind === "vehicles" ? details.vehicle_condition : details.condition;
+  if (value === "new") return "new";
+  if (value === "excellent" || value === "good") return "like_new";
+  if (value === "needs_work") return "for_parts";
+  if (value === "used") return "used";
+  return "not_applicable";
 }
 
 function readDetailString(details: Record<string, unknown>, key: string) {

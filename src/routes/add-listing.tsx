@@ -14,6 +14,7 @@ import {
   ListingStudioTrustStrip,
 } from "@/features/listing-studio/listing-studio";
 import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
+import { DynamicListingFields } from "@/features/listing-studio/DynamicListingFields";
 import { ListingTaxonomySelector } from "@/features/listing-studio/ListingTaxonomySelector";
 import {
   carMakeOptions,
@@ -27,11 +28,19 @@ import {
   type CategorySpecificDetails,
 } from "@/lib/category-fields";
 import type { LocationNodeType } from "@/lib/api/location-taxonomy";
+import { replaceOwnerListingAttributes } from "@/lib/api/listing-attributes";
+import { fetchPublishedLeafSchema, type PublishedLeafSchema } from "@/lib/api/taxonomy-metadata";
 import {
   checkListingContentSafety,
   isSafePhoneValue,
   normalizeContactValue,
 } from "@/lib/content-safety";
+import {
+  dynamicFieldReviewRows,
+  normalizeDynamicAttributesForWrite,
+  validateDynamicListingFields,
+  type DynamicListingValues,
+} from "@/lib/dynamic-listing-fields";
 import { calculateListingQuality, listingQualityCheckLabel } from "@/lib/listing-quality";
 import { runBoundedTasks } from "@/lib/bounded-task-queue";
 import {
@@ -145,6 +154,10 @@ function AddListingPage() {
   const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [categoryDetails, setCategoryDetails] = useState<CategorySpecificDetails>({});
+  const [dynamicSchema, setDynamicSchema] = useState<PublishedLeafSchema | null>(null);
+  const [dynamicValues, setDynamicValues] = useState<DynamicListingValues>({});
+  const [dynamicSchemaLoading, setDynamicSchemaLoading] = useState(false);
+  const [dynamicSchemaError, setDynamicSchemaError] = useState<string | null>(null);
   const submittingRef = useRef(false);
   const selectedImagesRef = useRef<UploadImageEntry[]>([]);
   const imageRetryInFlightRef = useRef<Set<string>>(new Set());
@@ -159,11 +172,21 @@ function AddListingPage() {
   const autosaveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const lastAutosaveSignatureRef = useRef("");
   const setupRequestIdRef = useRef(0);
+  const dynamicSchemaRequestIdRef = useRef(0);
 
   const category = categories.find((item) => item.id === categoryId);
   const selectedTaxonomyNode = taxonomyNodes.find((item) => item.id === taxonomyNodeId);
   const categoryFieldKind = resolveCategoryFieldKind(selectedTaxonomyNode, category);
-  const showGlobalCondition = categoryUsesGlobalCondition(categoryFieldKind);
+  const dynamicSchemaActive = Boolean(
+    dynamicSchema?.found &&
+    dynamicSchema.leaf?.id === taxonomyNodeId &&
+    dynamicSchema.fields.some((field) => field.displaySurfaces.includes("listing_studio")),
+  );
+  const dynamicSchemaUsesListingCondition = Boolean(
+    dynamicSchemaActive && dynamicSchema?.fields.some((field) => field.key === "listing_condition"),
+  );
+  const showGlobalCondition =
+    !dynamicSchemaActive && categoryUsesGlobalCondition(categoryFieldKind);
   const requiresPreciseLocation = categoryRequiresPreciseLocation(categoryFieldKind);
   const taxonomySelectionReady =
     taxonomyNodes.length > 0 ? Boolean(selectedTaxonomyNode?.isLeaf) : Boolean(categoryId);
@@ -177,11 +200,22 @@ function AddListingPage() {
     () => getTaxonomyPath(buildTaxonomyIndex(taxonomyNodes), selectedTaxonomyNode),
     [selectedTaxonomyNode, taxonomyNodes],
   );
-  const reviewCategoryRows = categoryDetailDisplayRows(
-    categoryFieldKind,
-    sanitizeCategoryDetails(categoryFieldKind, categoryDetails),
-    text,
-  ).slice(0, 6);
+  const normalizedDynamicAttributes = useMemo(
+    () =>
+      dynamicSchemaActive && dynamicSchema
+        ? normalizeDynamicAttributesForWrite(dynamicSchema, dynamicValues)
+        : {},
+    [dynamicSchema, dynamicSchemaActive, dynamicValues],
+  );
+  const reviewCategoryRows = (
+    dynamicSchemaActive && dynamicSchema
+      ? dynamicFieldReviewRows(dynamicSchema, dynamicValues, language)
+      : categoryDetailDisplayRows(
+          categoryFieldKind,
+          sanitizeCategoryDetails(categoryFieldKind, categoryDetails),
+          text,
+        )
+  ).slice(0, 12);
   const governorate = governorates.find((item) => item.id === governorateId);
   const normalizedPrice = normalizeNumericInput(price);
   const canContinue = true;
@@ -198,14 +232,15 @@ function AddListingPage() {
         locationReady:
           (Boolean(locationNodeId) || Boolean(governorateId)) &&
           (!requiresPreciseLocation || preciseLocationSelected),
-        categoryFieldKind,
-        categoryDetails,
+        categoryFieldKind: dynamicSchemaActive ? "general" : categoryFieldKind,
+        categoryDetails: dynamicSchemaActive ? {} : categoryDetails,
         condition,
       }),
     [
       categoryDetails,
       categoryFieldKind,
       categoryId,
+      dynamicSchemaActive,
       condition,
       description,
       district,
@@ -260,10 +295,53 @@ function AddListingPage() {
   }, [taxonomyNodeId]);
 
   useEffect(() => {
-    if (!showGlobalCondition && condition !== "not_applicable") {
+    const requestId = ++dynamicSchemaRequestIdRef.current;
+    setDynamicSchema(null);
+    setDynamicValues({});
+    setDynamicSchemaError(null);
+
+    if (!taxonomyNodeId || !selectedTaxonomyNode?.isLeaf) {
+      setDynamicSchemaLoading(false);
+      return;
+    }
+
+    setDynamicSchemaLoading(true);
+    void fetchPublishedLeafSchema(taxonomyNodeId).then((result) => {
+      if (requestId !== dynamicSchemaRequestIdRef.current) return;
+      setDynamicSchemaLoading(false);
+
+      if (!result.ok) {
+        if (result.error.code !== "schema_missing") {
+          setDynamicSchemaError(result.error.message);
+        }
+        return;
+      }
+
+      if (!result.data.found || result.data.leaf?.id !== taxonomyNodeId) return;
+
+      const defaults = Object.fromEntries(
+        result.data.fields
+          .filter((field) => field.defaultValue !== null && field.defaultValue !== undefined)
+          .map((field) => [field.key, field.defaultValue]),
+      );
+      setDynamicSchema(result.data);
+      setDynamicValues(defaults);
+    });
+
+    return () => {
+      dynamicSchemaRequestIdRef.current += 1;
+    };
+  }, [selectedTaxonomyNode?.isLeaf, taxonomyNodeId]);
+
+  useEffect(() => {
+    if (
+      !showGlobalCondition &&
+      !dynamicSchemaUsesListingCondition &&
+      condition !== "not_applicable"
+    ) {
       setCondition("not_applicable");
     }
-  }, [condition, showGlobalCondition]);
+  }, [condition, dynamicSchemaUsesListingCondition, showGlobalCondition]);
 
   useEffect(
     () => () => {
@@ -623,12 +701,30 @@ function AddListingPage() {
       governorateId,
       locationNodeId,
       preciseLocationSelected,
-      categoryFieldKind,
-      categoryDetails,
+      categoryFieldKind: dynamicSchemaActive ? "general" : categoryFieldKind,
+      categoryDetails: dynamicSchemaActive ? {} : categoryDetails,
       contact,
       phone,
       whatsapp,
     });
+
+    if ((currentStep === 1 || currentStep === 3) && dynamicSchemaLoading) {
+      const loadingMessage = text(
+        "انتظر حتى يكتمل تحميل حقول التصنيف.",
+        "Wait for the category fields to finish loading.",
+      );
+      errors.fields.dynamicSchema = loadingMessage;
+      errors.summary.push(loadingMessage);
+    }
+
+    if ((currentStep === 1 || currentStep === 3) && dynamicSchemaActive && dynamicSchema) {
+      const dynamicErrors = validateDynamicListingFields(dynamicSchema, dynamicValues, language);
+      Object.assign(errors.fields, dynamicErrors.fields);
+      for (const message of dynamicErrors.summary) {
+        if (!errors.summary.includes(message)) errors.summary.push(message);
+      }
+    }
+
     setFieldErrors(errors.fields);
     setStepErrors(errors.summary);
     if (errors.summary.length > 0) {
@@ -664,6 +760,9 @@ function AddListingPage() {
 
     autosaveRequestIdRef.current += 1;
     taxonomyNodeIdRef.current = node.id;
+    setDynamicSchema(null);
+    setDynamicValues({});
+    setDynamicSchemaError(null);
     setTaxonomyNodeId(node.id);
     setCategoryId(nextCategoryId);
     setSubcategoryId(search.taxonomyLegacySubcategoryId ?? "");
@@ -685,6 +784,9 @@ function AddListingPage() {
 
     autosaveRequestIdRef.current += 1;
     taxonomyNodeIdRef.current = "";
+    setDynamicSchema(null);
+    setDynamicValues({});
+    setDynamicSchemaError(null);
     setCategoryId(nextCategory.id);
     setSubcategoryId("");
     setTaxonomyNodeId("");
@@ -714,6 +816,13 @@ function AddListingPage() {
     }
   }
 
+  function handleDynamicValuesChange(nextValues: DynamicListingValues) {
+    setDynamicValues(nextValues);
+    if (!dynamicSchemaUsesListingCondition) return;
+    const nextCondition = dynamicListingCondition(nextValues.listing_condition);
+    if (nextCondition !== condition) setCondition(nextCondition);
+  }
+
   function buildCurrentListingPayload(details: Record<string, unknown>) {
     return {
       categoryId,
@@ -734,17 +843,16 @@ function AddListingPage() {
   const autosavePayload = useMemo(() => {
     const normalizedPhone = normalizeContactValue(phone);
     const normalizedWhatsapp = normalizeContactValue(whatsapp);
-    const details = mergeCategoryDetails(
-      {
-        ...(taxonomyNodeId ? { _taxonomy_node_id: taxonomyNodeId } : {}),
-        ...(contact.phone && isSafePhoneValue(normalizedPhone) ? { phone: normalizedPhone } : {}),
-        ...(contact.whatsapp && isSafePhoneValue(normalizedWhatsapp)
-          ? { whatsapp: normalizedWhatsapp }
-          : {}),
-      },
-      categoryFieldKind,
-      categoryDetails,
-    );
+    const compatibilityDetails = {
+      ...(taxonomyNodeId ? { _taxonomy_node_id: taxonomyNodeId } : {}),
+      ...(contact.phone && isSafePhoneValue(normalizedPhone) ? { phone: normalizedPhone } : {}),
+      ...(contact.whatsapp && isSafePhoneValue(normalizedWhatsapp)
+        ? { whatsapp: normalizedWhatsapp }
+        : {}),
+    };
+    const details = dynamicSchemaActive
+      ? compatibilityDetails
+      : mergeCategoryDetails(compatibilityDetails, categoryFieldKind, categoryDetails);
 
     return {
       categoryId,
@@ -778,6 +886,7 @@ function AddListingPage() {
     whatsapp,
     categoryFieldKind,
     categoryDetails,
+    dynamicSchemaActive,
   ]);
 
   useEffect(() => {
@@ -786,6 +895,7 @@ function AddListingPage() {
     const hasMinimumDraftData =
       auth.status === "signedIn" &&
       Boolean(profileId) &&
+      !dynamicSchemaLoading &&
       taxonomySelectionReady &&
       autosavePayload.categoryId.trim().length > 0 &&
       (autosavePayload.governorateId.trim().length > 0 || locationNodeId.trim().length > 0) &&
@@ -804,7 +914,10 @@ function AddListingPage() {
       return;
     }
 
-    const signature = JSON.stringify(autosavePayload);
+    const signature = JSON.stringify({
+      listing: autosavePayload,
+      attributes: dynamicSchemaActive ? normalizedDynamicAttributes : null,
+    });
     if (signature === lastAutosaveSignatureRef.current) {
       setAutosaveState("saved");
       return;
@@ -831,34 +944,52 @@ function AddListingPage() {
           ? await updateOwnerListing(profileId, draft.id, autosavePayload)
           : await createOwnerDraftListing(profileId, autosavePayload);
 
-        if (result.ok) {
-          if (taxonomyNodeId && taxonomyNodeIdRef.current === taxonomyNodeId) {
-            const taxonomyResult = await assignOwnerListingTaxonomy(
-              profileId,
-              result.data.id,
-              taxonomyNodeId,
-            );
-            if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
-              setAutosaveState("failed");
-              setAutosaveError(taxonomyResult.error.message);
-              return;
-            }
-          }
-          draftListingRef.current = result.data;
-          setDraftListing(result.data);
-          setCreatedListingId(result.data.id);
-        }
-
-        if (requestId !== autosaveRequestIdRef.current || submittingRef.current) return;
-
         if (!result.ok) {
+          if (requestId !== autosaveRequestIdRef.current || submittingRef.current) return;
           setAutosaveState("failed");
           setAutosaveError(result.error.message);
           return;
         }
 
+        let persistedDraft = result.data;
+        if (taxonomyNodeId && taxonomyNodeIdRef.current === taxonomyNodeId) {
+          const taxonomyResult = await assignOwnerListingTaxonomy(
+            profileId,
+            persistedDraft.id,
+            taxonomyNodeId,
+          );
+          if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
+            setAutosaveState("failed");
+            setAutosaveError(taxonomyResult.error.message);
+            return;
+          }
+        }
+
+        if (dynamicSchemaActive && dynamicSchema && taxonomyNodeIdRef.current === taxonomyNodeId) {
+          const attributeResult = await replaceOwnerListingAttributes(
+            profileId,
+            persistedDraft.id,
+            persistedDraft.updatedAt,
+            normalizedDynamicAttributes,
+          );
+          if (!attributeResult.ok) {
+            setAutosaveState("failed");
+            setAutosaveError(attributeResult.error.message);
+            return;
+          }
+          persistedDraft = {
+            ...persistedDraft,
+            updatedAt: attributeResult.data.updatedAt,
+          };
+        }
+
+        if (requestId !== autosaveRequestIdRef.current || submittingRef.current) return;
+
+        draftListingRef.current = persistedDraft;
+        setDraftListing(persistedDraft);
+        setCreatedListingId(persistedDraft.id);
         lastAutosaveSignatureRef.current = signature;
-        setLastAutosavedAt(result.data.updatedAt || new Date().toISOString());
+        setLastAutosavedAt(persistedDraft.updatedAt || new Date().toISOString());
         setAutosaveState("saved");
         setAutosaveError(null);
       });
@@ -880,7 +1011,11 @@ function AddListingPage() {
     auth.status,
     auth.profile?.id,
     autosavePayload,
+    dynamicSchema,
+    dynamicSchemaActive,
+    dynamicSchemaLoading,
     locationNodeId,
+    normalizedDynamicAttributes,
     taxonomyNodeId,
     taxonomySelectionReady,
   ]);
@@ -969,16 +1104,15 @@ function AddListingPage() {
         return;
       }
 
-      const details = mergeCategoryDetails(
-        {
-          ...(canonicalTaxonomyNodeId ? { _taxonomy_node_id: canonicalTaxonomyNodeId } : {}),
-          ...(contact.phone ? { phone: normalizedPhone } : {}),
-          ...(contact.whatsapp ? { whatsapp: normalizedWhatsapp } : {}),
-          ...(contentCheck.flags.length > 0 ? { content_flags: contentCheck.flags } : {}),
-        },
-        categoryFieldKind,
-        categoryDetails,
-      );
+      const compatibilityDetails = {
+        ...(canonicalTaxonomyNodeId ? { _taxonomy_node_id: canonicalTaxonomyNodeId } : {}),
+        ...(contact.phone ? { phone: normalizedPhone } : {}),
+        ...(contact.whatsapp ? { whatsapp: normalizedWhatsapp } : {}),
+        ...(contentCheck.flags.length > 0 ? { content_flags: contentCheck.flags } : {}),
+      };
+      const details = dynamicSchemaActive
+        ? compatibilityDetails
+        : mergeCategoryDetails(compatibilityDetails, categoryFieldKind, categoryDetails);
 
       const payload = buildCurrentListingPayload(details);
       const currentDraft = draftListingRef.current;
@@ -990,7 +1124,7 @@ function AddListingPage() {
         setSubmitMessage(result.error.message);
         return;
       }
-      const listingDraft = result.data;
+      let listingDraft = result.data;
 
       if (canonicalTaxonomyNodeId) {
         const taxonomyResult = await assignOwnerListingTaxonomy(
@@ -1000,6 +1134,47 @@ function AddListingPage() {
         );
         if (!taxonomyResult.ok && taxonomyResult.error.code !== "schema_missing") {
           setSubmitMessage(taxonomyResult.error.message);
+          return;
+        }
+      }
+
+      if (dynamicSchemaActive && dynamicSchema) {
+        const attributeResult = await replaceOwnerListingAttributes(
+          auth.profile?.id ?? null,
+          listingDraft.id,
+          listingDraft.updatedAt,
+          normalizedDynamicAttributes,
+        );
+        if (!attributeResult.ok) {
+          setSubmitMessage(
+            text(
+              "تم حفظ الإعلان كمسودة، لكن تعذر حفظ حقول التصنيف: " + attributeResult.error.message,
+              "The listing was saved as a draft, but category fields could not be saved: " +
+                attributeResult.error.message,
+            ),
+          );
+          return;
+        }
+
+        listingDraft = {
+          ...listingDraft,
+          updatedAt: attributeResult.data.updatedAt,
+        };
+
+        if (!attributeResult.data.completeness.complete) {
+          draftListingRef.current = listingDraft;
+          setDraftListing(listingDraft);
+          setCreatedListingId(listingDraft.id);
+          const missingLabels = attributeResult.data.completeness.missingRequiredFields
+            .map((field) => (language === "en" ? field.labelEn || field.labelAr : field.labelAr))
+            .join(language === "ar" ? "، " : ", ");
+          setSubmitMessage(
+            text(
+              "تم حفظ الإعلان كمسودة. أكمل الحقول المطلوبة قبل الإرسال: " + missingLabels,
+              "The listing was saved as a draft. Complete the required fields before submission: " +
+                missingLabels,
+            ),
+          );
           return;
         }
       }
@@ -1536,13 +1711,40 @@ function AddListingPage() {
                         </select>
                       </Field>
                     )}
-                    <CategorySpecificFields
-                      kind={categoryFieldKind}
-                      values={categoryDetails}
-                      onChange={handleCategoryDetailsChange}
-                      text={text}
-                      errors={fieldErrors}
-                    />
+                    {dynamicSchemaLoading ? (
+                      <div className="mt-4 rounded-[1.15rem] border border-border/60 bg-card-warm/65 p-4 text-xs text-muted-foreground">
+                        {text(
+                          "جارٍ تجهيز الحقول الخاصة بالتصنيف...",
+                          "Preparing category-specific fields...",
+                        )}
+                      </div>
+                    ) : dynamicSchemaActive && dynamicSchema ? (
+                      <DynamicListingFields
+                        schema={dynamicSchema}
+                        values={dynamicValues}
+                        onChange={handleDynamicValuesChange}
+                        language={language}
+                        text={text}
+                        errors={fieldErrors}
+                        disabled={submitting}
+                      />
+                    ) : (
+                      <CategorySpecificFields
+                        kind={categoryFieldKind}
+                        values={categoryDetails}
+                        onChange={handleCategoryDetailsChange}
+                        text={text}
+                        errors={fieldErrors}
+                      />
+                    )}
+                    {dynamicSchemaError ? (
+                      <p className="mt-3 rounded-xl border border-warning/20 bg-warning/10 p-3 text-xs leading-5 text-warning-foreground">
+                        {text(
+                          "تعذر تحميل الحقول المنظمة، لذلك تم تشغيل النموذج المتوافق مؤقتاً. لم يتم فقدان اختيارك.",
+                          "Governed fields could not load, so the compatible fallback form is active. Your category selection was preserved.",
+                        )}
+                      </p>
+                    ) : null}
                   </Card>
                 </>
               )}
@@ -1976,6 +2178,14 @@ function contactMethodsReviewLabel(
   if (contact.phone) methods.push(text("اتصال هاتفي", "Phone call"));
   if (contact.whatsapp) methods.push(text("واتساب", "WhatsApp"));
   return methods.join("، ");
+}
+
+function dynamicListingCondition(value: unknown): ListingCondition {
+  if (value === "new") return "new";
+  if (value === "like_new") return "like_new";
+  if (value === "good" || value === "fair") return "used";
+  if (value === "for_parts") return "for_parts";
+  return "not_applicable";
 }
 
 function categoryDetailConditionValue(condition: ListingCondition) {

@@ -50,6 +50,7 @@ import { Route as AdminPendingRouteImport } from './routes/admin.pending'
 import { Route as AdminOwnerControlsRouteImport } from './routes/admin.owner-controls'
 import { Route as AdminMessageReportsRouteImport } from './routes/admin.message-reports'
 import { Route as AdminListingsRouteImport } from './routes/admin.listings'
+import { Route as AdminDataQualityRouteImport } from './routes/admin.data-quality'
 import { Route as AdminCampaignsRouteImport } from './routes/admin.campaigns'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
@@ -260,6 +261,11 @@ const AdminListingsRoute = AdminListingsRouteImport.update({
   path: '/listings',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDataQualityRoute = AdminDataQualityRouteImport.update({
+  id: '/data-quality',
+  path: '/data-quality',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCampaignsRoute = AdminCampaignsRouteImport.update({
   id: '/campaigns',
   path: '/campaigns',
@@ -308,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/campaigns': typeof AdminCampaignsRoute
+  '/admin/data-quality': typeof AdminDataQualityRoute
   '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/owner-controls': typeof AdminOwnerControlsRoute
@@ -353,6 +360,7 @@ export interface FileRoutesByTo {
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/campaigns': typeof AdminCampaignsRoute
+  '/admin/data-quality': typeof AdminDataQualityRoute
   '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/owner-controls': typeof AdminOwnerControlsRoute
@@ -401,6 +409,7 @@ export interface FileRoutesById {
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/campaigns': typeof AdminCampaignsRoute
+  '/admin/data-quality': typeof AdminDataQualityRoute
   '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
   '/admin/owner-controls': typeof AdminOwnerControlsRoute
@@ -450,6 +459,7 @@ export interface FileRouteTypes {
     | '/admin/ad-placements'
     | '/admin/audit'
     | '/admin/campaigns'
+    | '/admin/data-quality'
     | '/admin/listings'
     | '/admin/message-reports'
     | '/admin/owner-controls'
@@ -495,6 +505,7 @@ export interface FileRouteTypes {
     | '/admin/ad-placements'
     | '/admin/audit'
     | '/admin/campaigns'
+    | '/admin/data-quality'
     | '/admin/listings'
     | '/admin/message-reports'
     | '/admin/owner-controls'
@@ -542,6 +553,7 @@ export interface FileRouteTypes {
     | '/admin/ad-placements'
     | '/admin/audit'
     | '/admin/campaigns'
+    | '/admin/data-quality'
     | '/admin/listings'
     | '/admin/message-reports'
     | '/admin/owner-controls'
@@ -882,6 +894,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminListingsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/data-quality': {
+      id: '/admin/data-quality'
+      path: '/data-quality'
+      fullPath: '/admin/data-quality'
+      preLoaderRoute: typeof AdminDataQualityRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/campaigns': {
       id: '/admin/campaigns'
       path: '/campaigns'
@@ -917,6 +936,7 @@ interface AdminRouteChildren {
   AdminAdPlacementsRoute: typeof AdminAdPlacementsRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminCampaignsRoute: typeof AdminCampaignsRoute
+  AdminDataQualityRoute: typeof AdminDataQualityRoute
   AdminListingsRoute: typeof AdminListingsRoute
   AdminMessageReportsRoute: typeof AdminMessageReportsRoute
   AdminOwnerControlsRoute: typeof AdminOwnerControlsRoute
@@ -934,6 +954,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAdPlacementsRoute: AdminAdPlacementsRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminCampaignsRoute: AdminCampaignsRoute,
+  AdminDataQualityRoute: AdminDataQualityRoute,
   AdminListingsRoute: AdminListingsRoute,
   AdminMessageReportsRoute: AdminMessageReportsRoute,
   AdminOwnerControlsRoute: AdminOwnerControlsRoute,

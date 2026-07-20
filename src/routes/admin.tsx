@@ -1,6 +1,7 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   BadgeCheck,
+  DatabaseZap,
   Megaphone,
   FileCheck,
   Flag,
@@ -53,6 +54,12 @@ const tabs: Array<{
     to: "/admin/listings",
     labelAr: "قرارات الإعلانات",
     icon: ListChecks,
+    permission: "canModerateListings",
+  },
+  {
+    to: "/admin/data-quality",
+    labelAr: "جودة البيانات",
+    icon: DatabaseZap,
     permission: "canModerateListings",
   },
   { to: "/admin/reviews", labelAr: "مراجعة التقييمات", icon: Star, permission: "canManageReviews" },

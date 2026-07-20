@@ -1,5 +1,6 @@
 import type { ListingsSearch, ListingsSort, ListingsView } from "./listings-search-schema";
 import type { CategoryFieldKind } from "@/lib/category-fields";
+import type { ListingAttributeFilters } from "@/features/listings/listing-attribute-filter-state";
 
 export interface ListingFilterInputs {
   taxonomyFilterScope?: {
@@ -41,6 +42,7 @@ export interface ListingFilterInputs {
   withPhotos: boolean;
   debouncedQ: string;
   sort: ListingsSort;
+  attributeFilters?: ListingAttributeFilters;
 }
 
 export interface ListingsUrlSearch {
@@ -101,6 +103,7 @@ export function buildListingFilters(inputs: ListingFilterInputs) {
     withPhotos,
     debouncedQ,
     sort,
+    attributeFilters,
   } = inputs;
   return {
     taxonomyNodeIds: taxonomyFilterScope?.taxonomyNodeIds,
@@ -135,6 +138,8 @@ export function buildListingFilters(inputs: ListingFilterInputs) {
     withPhotos: withPhotos || undefined,
     query: debouncedQ,
     sort,
+    attributeFilters:
+      attributeFilters && Object.keys(attributeFilters).length > 0 ? attributeFilters : undefined,
   };
 }
 

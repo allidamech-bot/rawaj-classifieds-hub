@@ -18,6 +18,7 @@ const emptyPageData: PublicListingsPageData = {
     items: [],
     sellerResults: [],
     nextCursor: null,
+    totalCount: null,
     error: null,
     sellerSearchError: null,
     filterKey: null,

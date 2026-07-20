@@ -28,6 +28,7 @@ export interface ListingsResults {
   error: ClassifiedsError | null;
   sellerSearchError: ClassifiedsError | null;
   nextCursor: ListingCursor | null;
+  totalCount: number | null;
   loading: boolean;
   filterVersionRef: React.MutableRefObject<number>;
   setItems: React.Dispatch<React.SetStateAction<ClassifiedListing[]>>;
@@ -58,6 +59,7 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
     initialResults.sellerSearchError,
   );
   const [nextCursor, setNextCursor] = useState<ListingCursor | null>(initialResults.nextCursor);
+  const [totalCount, setTotalCount] = useState<number | null>(initialResults.totalCount);
   const [loading, setLoading] = useState(false);
   const filterVersionRef = useRef(0);
   const lastCompletedFilterKeyRef = useRef<string | null>(initialResults.filterKey);
@@ -71,6 +73,7 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
     setError(initialResults.error);
     setSellerSearchError(initialResults.sellerSearchError);
     setNextCursor(initialResults.nextCursor);
+    setTotalCount(initialResults.totalCount);
     setLoading(false);
   }, [initialResults]);
 
@@ -88,6 +91,7 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
     filterVersionRef.current += 1;
     const version = filterVersionRef.current;
     setNextCursor(null);
+    setTotalCount(null);
     setLoading(true);
     setError(null);
     setItems([]);
@@ -107,10 +111,12 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
         setError(result.error);
         setItems([]);
         setNextCursor(null);
+        setTotalCount(null);
       } else {
         lastCompletedFilterKeyRef.current = filterKey;
         setItems(result.data.items);
         setNextCursor(result.data.nextCursor);
+        setTotalCount(result.data.totalCount ?? null);
       }
 
       if (sellerResult.ok) {
@@ -167,6 +173,7 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
     filterInputs.withPhotos,
     filterInputs.debouncedQ,
     filterInputs.sort,
+    filterInputs.attributeFilters,
   ]);
 
   return {
@@ -175,6 +182,7 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
     error,
     sellerSearchError,
     nextCursor,
+    totalCount,
     loading,
     filterVersionRef,
     setItems,

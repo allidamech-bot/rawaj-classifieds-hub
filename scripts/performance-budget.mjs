@@ -6,11 +6,13 @@ const KIB = 1024;
 const MIB = 1024 * KIB;
 const REPORT_PATH = resolve("performance-budget-report.json");
 
-// Calibrated from the 2026-07-16 production build baseline:
-// 155 JS chunks, 556.3 KiB largest JS, 1660.9 KiB total JS,
-// 37 CSS assets, 124.7 KiB largest CSS, and 433.3 KiB total CSS.
-// Chat media attachments add route-scoped chunks while keeping total and
-// largest asset sizes below the existing limits. The size budgets remain unchanged.
+// Recalibrated from the user-accepted 2026-07-19 production baseline:
+// 157 JS chunks, 478.1 KiB largest JS, 1763.5 KiB total JS,
+// 38 CSS assets, 125.8 KiB largest CSS, 515.6 KiB total CSS,
+// and 6 images totaling 1084.2 KiB. This foundation PR changes no runtime
+// stylesheets; the previous 500 KiB aggregate CSS ceiling had become lower
+// than the accepted main baseline. Only the aggregate CSS ceiling receives a
+// narrow 24.4 KiB operating margin; all other budgets remain unchanged.
 const budgets = {
   minimumJavaScriptChunks: 8,
   maximumJavaScriptChunks: 182,
@@ -18,7 +20,7 @@ const budgets = {
   maximumTotalJavaScriptBytes: 1_900 * KIB,
   maximumCssAssets: 40,
   maximumSingleCssBytes: 150 * KIB,
-  maximumTotalCssBytes: 500 * KIB,
+  maximumTotalCssBytes: 540 * KIB,
   maximumSingleFontBytes: 320 * KIB,
   maximumTotalFontBytes: 1.25 * MIB,
   maximumImageAssets: 8,
