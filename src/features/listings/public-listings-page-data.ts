@@ -40,6 +40,7 @@ export interface PublicListingsResultsData {
   items: ClassifiedListing[];
   sellerResults: PublicSellerSearchResult[];
   nextCursor: ListingCursor | null;
+  totalCount: number | null;
   error: ClassifiedsError | null;
   sellerSearchError: ClassifiedsError | null;
   filterKey: string | null;
@@ -122,8 +123,8 @@ export async function loadPublicListingsPageData(
   );
   const hasPriceContradiction = Boolean(
     typeof parsedPriceMin === "number" &&
-    typeof parsedPriceMax === "number" &&
-    parsedPriceMin > parsedPriceMax,
+      typeof parsedPriceMax === "number" &&
+      parsedPriceMin > parsedPriceMax,
   );
 
   if (hasInvalidCategory || hasInvalidSubcategory || hasPriceContradiction) {
@@ -175,6 +176,7 @@ export async function loadPublicListingsPageData(
       items: listingsResult.ok ? listingsResult.data.items : [],
       sellerResults: sellerResult.ok ? sellerResult.data : [],
       nextCursor: listingsResult.ok ? listingsResult.data.nextCursor : null,
+      totalCount: listingsResult.ok ? (listingsResult.data.totalCount ?? null) : null,
       error: listingsResult.ok ? null : listingsResult.error,
       sellerSearchError: sellerResult.ok ? null : sellerResult.error,
       filterKey,
@@ -187,6 +189,7 @@ function emptyResults(error: ClassifiedsError | null): PublicListingsResultsData
     items: [],
     sellerResults: [],
     nextCursor: null,
+    totalCount: null,
     error,
     sellerSearchError: null,
     filterKey: null,
