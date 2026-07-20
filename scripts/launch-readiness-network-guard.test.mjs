@@ -8,12 +8,16 @@ const [
   publicAdSlot,
   messagingGuarded,
   communicationStyles,
+  publicListings,
+  publicListingDetail,
 ] = await Promise.all([
   readFile(new URL("../src/lib/unread-activity.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/communication/useLiveChatWorkspace.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/messaging-guarded.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/communication-center-v3.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/location-aware-listings-v2.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/listing-detail-read-guarded.ts", import.meta.url), "utf8"),
 ]);
 
 test("unread activity no longer polls on a permanent interval", () => {
@@ -48,6 +52,20 @@ test("chat message reads cache signed attachment URLs and dedupe concurrent requ
   assert.match(messagingGuarded, /if \(pending\) return pending/);
   assert.match(messagingGuarded, /export function invalidateConversationMessagesCache/);
   assert.match(messagingGuarded, /if \(result\.ok\) invalidateConversationMessagesCache/);
+});
+
+test("public listing reads dedupe concurrent Signed URL work without stale snapshots", () => {
+  assert.match(publicListings, /pendingPublicListingReads = new Map/);
+  assert.match(publicListings, /const pending = pendingPublicListingReads\.get\(key\)/);
+  assert.match(publicListings, /if \(pending\) return pending/);
+  assert.match(publicListings, /pendingPublicListingReads\.delete\(key\)/);
+  assert.doesNotMatch(publicListings, /expiresAt|CACHE_TTL/);
+
+  assert.match(publicListingDetail, /pendingPublicListingDetailReads = new Map/);
+  assert.match(publicListingDetail, /const pending = pendingPublicListingDetailReads\.get\(listingId\)/);
+  assert.match(publicListingDetail, /if \(pending\) return pending/);
+  assert.match(publicListingDetail, /pendingPublicListingDetailReads\.delete\(listingId\)/);
+  assert.doesNotMatch(publicListingDetail, /expiresAt|CACHE_TTL/);
 });
 
 test("public ad placements avoid permanent polling and cap retries", () => {
