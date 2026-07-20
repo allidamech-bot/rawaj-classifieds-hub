@@ -1,0 +1,46 @@
+name: Copy Quality Diagnostic
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "scripts/copy-quality.mjs"
+      - ".github/workflows/copy-quality-diagnostic.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: copy-quality-diagnostic-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run bilingual copy quality
+        id: copy_quality
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run copy:quality 2>&1 | tee "$RUNNER_TEMP/rawaj-copy-quality.log"
+      - name: Upload copy diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: copy-quality-${{ github.sha }}
+          path: ${{ runner.temp }}/rawaj-copy-quality.log
+          if-no-files-found: error
+          retention-days: 2
+      - name: Fail when copy quality failed
+        if: steps.copy_quality.outcome == 'failure'
+        run: exit 1
