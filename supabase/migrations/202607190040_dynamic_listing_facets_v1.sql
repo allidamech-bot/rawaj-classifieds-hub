@@ -98,7 +98,7 @@ begin
         or cardinality(p_taxonomy_node_ids) = 0
         or assignment_row.taxonomy_node_id = any(p_taxonomy_node_ids)
       )
-      and (p_governorate_id is null or listing_row.governorate_id = p_governorate_id)
+      and (p_governorate_id is null or listing_row.governorate_id = p_governorate_id::text)
       and (p_price_min is null or listing_row.price >= p_price_min)
       and (p_price_max is null or listing_row.price <= p_price_max)
       and (
@@ -201,7 +201,7 @@ begin
         or cardinality(p_taxonomy_node_ids) = 0
         or assignment_row.taxonomy_node_id = any(p_taxonomy_node_ids)
       )
-      and (p_governorate_id is null or listing_row.governorate_id = p_governorate_id)
+      and (p_governorate_id is null or listing_row.governorate_id = p_governorate_id::text)
       and (p_price_min is null or listing_row.price >= p_price_min)
       and (p_price_max is null or listing_row.price <= p_price_max)
       and (
