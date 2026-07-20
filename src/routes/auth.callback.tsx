@@ -75,9 +75,9 @@ function AuthCallbackPage() {
       function hasRecoveryProof(session: Session | null): session is Session {
         return Boolean(
           session &&
-            (observedRecoveryEvent ||
-              hasRecoveryHashProof(session) ||
-              hasActivePasswordRecoverySession(session.user.id)),
+          (observedRecoveryEvent ||
+            hasRecoveryHashProof(session) ||
+            hasActivePasswordRecoverySession(session.user.id)),
         );
       }
 
