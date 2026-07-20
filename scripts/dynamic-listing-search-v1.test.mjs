@@ -31,7 +31,6 @@ const paginationHook = await readFile("src/features/listings/use-listings-pagina
 const route = await readFile("src/routes/listings.index.tsx", "utf8");
 const toolbar = await readFile("src/features/search/SearchResultsToolbar.tsx", "utf8");
 
-
 test("dynamic search applies governed fields for every published leaf", () => {
   assert.match(searchMigration, /taxonomy_field_rules/);
   assert.match(searchMigration, /field_row\.is_filterable/);
@@ -83,8 +82,8 @@ test("results and pagination carry the same attribute filter object", () => {
 test("facets render generically on desktop and mobile", () => {
   assert.match(facetsClient, /rawaj_public_listing_facets_v1/);
   assert.match(filterComponent, /data-dynamic-listing-facets="all-categories"/);
-  assert.match(filterComponent, /single_select/);
-  assert.match(filterComponent, /multi_select/);
+  assert.match(filterComponent, /facet\.fieldType === "multi_select"/);
+  assert.match(filterComponent, /onChange\(selected \? undefined : option\.valueKey\)/);
   assert.match(route, /DynamicListingFacetFilters/);
   assert.match(route, /تفاصيل القسم/);
   assert.doesNotMatch(filterComponent, /carMake|vehicleMake|vehicles-only/i);
