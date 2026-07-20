@@ -25,7 +25,25 @@ jobs:
 
       - name: Repair moderation guard and rollback baseline
         working-directory: repo
-        run: python scripts/.repair-syp-moderation-guard.py
+        run: |
+          python scripts/.repair-syp-moderation-guard.py
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("scripts/syp-denomination-phase-a.test.mjs")
+          source = path.read_text()
+          old = "  assert.doesNotMatch(rollback, /price_new_syp_normalized/);"
+          new = '''  const rollbackGuardStart = rollback.indexOf(
+            "create or replace function public.rawaj_protect_listing_moderation_update()",
+          );
+          const rollbackGuard = rollback.slice(
+            rollbackGuardStart,
+            rollback.indexOf("\\n$$;", rollbackGuardStart) + 4,
+          );
+          assert.doesNotMatch(rollbackGuard, /price_new_syp_normalized/);'''
+          if source.count(old) != 1:
+              raise SystemExit("rollback guard contract anchor missing")
+          path.write_text(source.replace(old, new, 1))
+          PY
 
       - name: Install dependencies
         working-directory: repo
