@@ -49,12 +49,37 @@ test("promotion listings and request history recover independently in place", ()
 test("promotion load responses cannot overwrite a newer account or retry", () => {
   assert.match(promotionRoute, /const listingsRequestIdRef = useRef\(0\)/);
   assert.match(promotionRoute, /const requestsRequestIdRef = useRef\(0\)/);
-  assert.match(promotionRoute, /if \(requestId !== listingsRequestIdRef\.current\) return;/);
-  assert.match(promotionRoute, /if \(requestId !== requestsRequestIdRef\.current\) return;/);
+  assert.match(promotionRoute, /const profileIdRef = useRef<string \| null>\(profileId\)/);
+  assert.match(
+    promotionRoute,
+    /requestId !== listingsRequestIdRef\.current \|\| currentProfileId !== profileIdRef\.current/,
+  );
+  assert.match(
+    promotionRoute,
+    /requestId !== requestsRequestIdRef\.current \|\| currentProfileId !== profileIdRef\.current/,
+  );
   assert.match(
     promotionRoute,
     /return \(\) => \{[\s\S]*listingsRequestIdRef\.current \+= 1;[\s\S]*requestsRequestIdRef\.current \+= 1;/,
   );
+});
+
+test("promotion submission is single-flight and blocks duplicate pending requests", () => {
+  assert.match(promotionRoute, /const submitInFlightRef = useRef\(false\)/);
+  assert.match(promotionRoute, /if \(!currentProfileId \|\| submitInFlightRef\.current\) return;/);
+  assert.match(promotionRoute, /const hasPendingForSelectedListing = requests\.some/);
+  assert.match(promotionRoute, /if \(hasPendingForSelectedListing\)/);
+  assert.match(
+    promotionRoute,
+    /finally \{[\s\S]*?submitInFlightRef\.current = false;[\s\S]*?setSaving\(false\);/,
+  );
+});
+
+test("receipt failure preserves the created request and prevents accidental duplication", () => {
+  assert.match(promotionRoute, /setRequests\(\(current\) => \[/);
+  assert.match(promotionRoute, /The promotion request was created, but the receipt could not upload/);
+  assert.match(promotionRoute, /Do not resubmit/);
+  assert.match(promotionRoute, /await loadRequests\(\)/);
 });
 
 test("a failed refresh preserves the last successful promotion snapshot", () => {
