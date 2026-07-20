@@ -1,6 +1,9 @@
 name: Apply Admin Rollback Count Fix
 
 on:
+  push:
+    branches:
+      - agent/admin-actions-rollback-integration
   pull_request:
     branches:
       - main
