@@ -56,6 +56,7 @@ export function useListingsPagination(inputs: ListingsPaginationInputs): Listing
     withPhotos,
     debouncedQ,
     sort,
+    attributeFilters,
   } = inputs;
   const [loadingMore, setLoadingMore] = useState(false);
   const loadingMoreRef = useRef(false);
@@ -99,6 +100,7 @@ export function useListingsPagination(inputs: ListingsPaginationInputs): Listing
         withPhotos,
         debouncedQ,
         sort,
+        attributeFilters,
       }),
       nextCursor,
       30,
@@ -158,6 +160,7 @@ export function useListingsPagination(inputs: ListingsPaginationInputs): Listing
     withPhotos,
     debouncedQ,
     sort,
+    attributeFilters,
   ]);
 
   return { loadingMore, loadMore };

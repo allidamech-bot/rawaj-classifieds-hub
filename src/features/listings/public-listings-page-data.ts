@@ -1,4 +1,5 @@
 import { buildListingFilters } from "@/features/listings/listings-filters";
+import { parseListingAttributeFilters } from "@/features/listings/listing-attribute-filter-state";
 import type { ListingsSearch } from "@/features/listings/listings-search-schema";
 import {
   fetchPublicCategories,
@@ -160,6 +161,7 @@ export async function loadPublicListingsPageData(
     withPhotos: Boolean(search.with_photos),
     debouncedQ: search.q?.trim() ?? "",
     sort: search.sort ?? "latest",
+    attributeFilters: parseListingAttributeFilters(search.attrs),
   });
   const filterKey = JSON.stringify(filters);
   const [listingsResult, sellerResult] = await Promise.all([

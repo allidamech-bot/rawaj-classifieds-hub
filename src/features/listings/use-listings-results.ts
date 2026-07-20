@@ -167,6 +167,7 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
     filterInputs.withPhotos,
     filterInputs.debouncedQ,
     filterInputs.sort,
+    filterInputs.attributeFilters,
   ]);
 
   return {
