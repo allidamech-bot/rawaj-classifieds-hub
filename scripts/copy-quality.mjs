@@ -7,7 +7,7 @@ const supportedExtensions = /\.(?:ts|tsx)$/;
 const ignoredFiles = new Set(["routeTree.gen.ts"]);
 const placeholderCopy = /Lorem ipsum|TODO_COPY|FIXME_COPY|TRANSLATION_MISSING|placeholder copy/i;
 const emptyArabicLabel = /text\(\s*["'`]\s*["'`]\s*,/;
-const emptyEnglishLabel = /text\([\s\S]{0,240}?,\s*["'`]\s*["'`]\s*\)/;
+const emptyEnglishLabel = /text\(\s*(?:"[^"\n]*"|'[^'\n]*'|`[^`\n]*`)\s*,\s*["'`]\s*["'`]\s*\)/;
 
 async function collectSourceFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
