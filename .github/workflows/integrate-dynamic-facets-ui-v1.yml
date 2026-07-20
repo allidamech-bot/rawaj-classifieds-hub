@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "scripts/integrate-dynamic-facets-ui-v1.py"
+      - "scripts/run-dynamic-facets-ui-integration-v1.py"
       - ".github/workflows/integrate-dynamic-facets-ui-v1.yml"
   workflow_dispatch:
 
@@ -32,7 +33,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          python scripts/integrate-dynamic-facets-ui-v1.py > /tmp/dynamic-facets-ui.log 2>&1
+          python scripts/run-dynamic-facets-ui-integration-v1.py > /tmp/dynamic-facets-ui.log 2>&1
           status=$?
           cat /tmp/dynamic-facets-ui.log
           if [ $status -ne 0 ]; then
@@ -45,14 +46,21 @@ jobs:
             exit $status
           fi
           set -euo pipefail
-          npx prettier --write src/routes/listings.index.tsx
+          npx prettier --write \
+            src/routes/listings.index.tsx \
+            src/features/search/SearchResultsToolbar.tsx
           grep -q 'DynamicListingFacetFilters' src/routes/listings.index.tsx
           grep -q 'encodedAttributeFilters' src/routes/listings.index.tsx
           grep -q 'attributeFilters' src/routes/listings.index.tsx
-          if ! git diff --quiet -- src/routes/listings.index.tsx; then
+          grep -q 'attrs: ""' src/features/search/SearchResultsToolbar.tsx
+          if ! git diff --quiet -- \
+            src/routes/listings.index.tsx \
+            src/features/search/SearchResultsToolbar.tsx; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add src/routes/listings.index.tsx
+            git add \
+              src/routes/listings.index.tsx \
+              src/features/search/SearchResultsToolbar.tsx
             git commit -m "feat: add governed facets across listing results"
             git push origin HEAD:feature/taxonomy-search-foundation-v1
           fi
