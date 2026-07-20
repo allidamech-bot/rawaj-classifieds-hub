@@ -42,8 +42,8 @@ jobs:
               )
           profile = profile.replace(old_validation, new_validation)
 
-          old_condition = "condition: categoryDetailsGlobalCondition(categoryDetails),"
-          new_condition = "condition: legacyCategoryCondition(categoryDetails.condition),"
+          old_condition = "setCondition(categoryDetailsGlobalCondition(categoryFieldKind, nextDetails));"
+          new_condition = "setCondition(legacyCategoryCondition(categoryFieldKind, nextDetails));"
           if profile.count(old_condition) != 1:
               raise SystemExit(
                   f"Expected exactly one legacy condition call, found {profile.count(old_condition)}"
@@ -51,7 +51,11 @@ jobs:
           profile = profile.replace(old_condition, new_condition)
 
           insertion_anchor = "function readDetailString("
-          helper = '''function legacyCategoryCondition(value: unknown): ListingCondition {
+          helper = '''function legacyCategoryCondition(
+            kind: CategoryFieldKind,
+            details: CategorySpecificDetails,
+          ): ListingCondition {
+            const value = kind === "vehicles" ? details.vehicle_condition : details.condition;
             if (value === "new") return "new";
             if (value === "excellent" || value === "good") return "like_new";
             if (value === "needs_work") return "for_parts";
