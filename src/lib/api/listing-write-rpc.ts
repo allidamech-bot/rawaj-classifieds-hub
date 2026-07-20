@@ -10,6 +10,7 @@ import {
   buildOwnerUpdateRpcArgsV3,
 } from "@/lib/api/listing-write-contract";
 import { getClient, mapError, rowString } from "@/lib/api/shared";
+import { supportsSypDenominationSchema } from "@/lib/api/syp-denomination-schema";
 
 const ownerUpdateRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();
 const ownerSubmitRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();
@@ -72,6 +73,7 @@ async function runOwnerListingUpdate(
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
+  const supportsSypDenomination = await supportsSypDenominationSchema(clientResult.data);
 
   const { data: existing, error: existingError } = await clientResult.data
     .from("listings")
@@ -107,7 +109,7 @@ async function runOwnerListingUpdate(
     patch.description = payload.description?.trim() ?? null;
   }
   if (payload.price !== undefined) patch.price = payload.price;
-  if (payload.priceDenomination !== undefined) {
+  if (supportsSypDenomination && payload.priceDenomination !== undefined) {
     patch.price_denomination = payload.priceDenomination;
   }
   if (payload.priceType) patch.price_type = payload.priceType;

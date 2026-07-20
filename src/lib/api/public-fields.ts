@@ -13,7 +13,7 @@ export const publicListingLegacySelect = `${publicListingSelectBeforePrice},${pu
 
 export const publicListingSelect = `${publicListingSelectBeforePrice},price_denomination,price_new_syp_normalized,${publicListingSelectAfterPrice}`;
 
-export function publicListingSelectForSchema(supportsSypDenomination: boolean) {
+export function publicListingSelectForSchema(supportsSypDenomination: boolean): string {
   return supportsSypDenomination ? publicListingSelect : publicListingLegacySelect;
 }
 

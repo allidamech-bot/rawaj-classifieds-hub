@@ -126,3 +126,31 @@ test("Phase A rollback restores replaced functions before dropping columns", asy
   assert.doesNotMatch(rollbackGuard, /price_new_syp_normalized/);
   assert.doesNotMatch(rollback, /Required follow-up: redeploy/i);
 });
+
+test("Phase A reads and writes remain compatible before the additive migration", async () => {
+  const schema = await readPhaseAText("src/lib/api/syp-denomination-schema.ts");
+  const fields = await readPhaseAText("src/lib/api/public-fields.ts");
+  const listings = await readPhaseAText("src/lib/api/listings.ts");
+  const dynamic = await readPhaseAText("src/lib/api/dynamic-filtered-listings.ts");
+  const draftCreate = await readPhaseAText("src/lib/api/listing-draft-create-rpc.ts");
+  const listingWrite = await readPhaseAText("src/lib/api/listing-write-rpc.ts");
+  const denominationApi = await readPhaseAText("src/lib/api/syp-denomination.ts");
+
+  assert.match(schema, /select\("price_denomination"\)\.limit\(0\)/);
+  assert.match(fields, /publicListingLegacySelect/);
+  assert.match(fields, /publicListingSelectForSchema\(supportsSypDenomination: boolean\): string/);
+  assert.match(listings, /supportsSypDenominationSchema/);
+  assert.match(listings, /query\.gte\("price", filters\.priceMin\)/);
+  assert.match(listings, /\.order\("price", \{ ascending: true/);
+  assert.match(
+    listings,
+    /supportsSypDenomination[\s\S]*price_denomination: payload\.priceDenomination/,
+  );
+  assert.match(dynamic, /publicListingSelectForSchema\(supportsSypDenomination\)/);
+  assert.match(
+    draftCreate,
+    /supportsSypDenomination[\s\S]*price_denomination: payload\.priceDenomination/,
+  );
+  assert.match(listingWrite, /supportsSypDenomination && payload\.priceDenomination !== undefined/);
+  assert.match(denominationApi, /return \{ ok: true, data: \[\] \}/);
+});

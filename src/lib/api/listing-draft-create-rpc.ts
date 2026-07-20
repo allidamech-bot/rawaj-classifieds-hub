@@ -4,6 +4,7 @@ import {
 } from "@/lib/api/listings";
 import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
 import { getClient, mapError } from "@/lib/api/shared";
+import { supportsSypDenominationSchema } from "@/lib/api/syp-denomination-schema";
 import type {
   ClassifiedListing,
   ClassifiedsResult,
@@ -32,6 +33,7 @@ export async function createOwnerDraftListingIdempotent(
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
+  const supportsSypDenomination = await supportsSypDenominationSchema(clientResult.data);
 
   const title = payload.title.trim();
   const description = payload.description.trim();
@@ -71,7 +73,7 @@ export async function createOwnerDraftListingIdempotent(
     title,
     description,
     price: payload.price,
-    price_denomination: payload.priceDenomination,
+    ...(supportsSypDenomination ? { price_denomination: payload.priceDenomination } : {}),
     price_type: payload.priceType,
     listing_condition: payload.condition,
     district_ar: locationWrite.data.districtAr,

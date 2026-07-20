@@ -11,7 +11,8 @@ import type {
 import { resolveCanonicalLocationIds } from "@/lib/api/canonical-location-filter";
 import { fetchDynamicListingSearchPage } from "@/lib/api/dynamic-listing-search";
 import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
-import { publicListingSelect } from "@/lib/api/public-fields";
+import { publicListingSelectForSchema } from "@/lib/api/public-fields";
+import { supportsSypDenominationSchema } from "@/lib/api/syp-denomination-schema";
 import { readReferences } from "@/lib/api/references";
 import { getClient, mapError } from "@/lib/api/shared";
 import { sanitizePublicListing } from "@/lib/public-listing-presentation";
@@ -69,9 +70,10 @@ export async function fetchDynamicFilteredPublicListings(
     };
   }
 
+  const supportsSypDenomination = await supportsSypDenominationSchema(client);
   const { data, error } = await client
     .from("listings")
-    .select(publicListingSelect)
+    .select(publicListingSelectForSchema(supportsSypDenomination))
     .in("id", page.listingIds)
     .eq("status", "approved")
     .is("archived_at", null)
@@ -83,7 +85,7 @@ export async function fetchDynamicFilteredPublicListings(
     };
   }
 
-  const mapped = ((data ?? []) as Record<string, unknown>[]).map((row) =>
+  const mapped = ((data ?? []) as unknown as Record<string, unknown>[]).map((row) =>
     sanitizePublicListing(
       dependencies.mapListing(row, references.categories, references.governorates),
     ),

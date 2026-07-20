@@ -44,7 +44,8 @@ import { hasDynamicListingFilters } from "@/lib/api/dynamic-listing-search";
 import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
 import { resolveCanonicalLocationIds } from "@/lib/api/canonical-location-filter";
 import { isListingPastExpiry, publicListingExpiryFilter } from "@/lib/api/listing-expiry";
-import { publicListingDetailAliases, publicListingSelect } from "@/lib/api/public-fields";
+import { publicListingDetailAliases, publicListingSelectForSchema } from "@/lib/api/public-fields";
+import { supportsSypDenominationSchema } from "@/lib/api/syp-denomination-schema";
 import { selectPrimaryListingImages } from "@/lib/api/primary-listing-images";
 import { buildListingImagePath, listingImagesBucket, validateImageFile } from "@/lib/api/storage";
 import { prepareListingImageForUpload } from "@/lib/listing-image-processing";
@@ -210,6 +211,8 @@ export async function fetchPublicListings(
   const references = await readReferences(clientResult.data);
   if (!references.ok) return { ok: false, error: references.error };
 
+  const supportsSypDenomination = await supportsSypDenominationSchema(clientResult.data);
+
   filters = await hydrateSavedTaxonomyFilter(clientResult.data, filters);
 
   if (hasDynamicListingFilters(filters)) {
@@ -225,9 +228,10 @@ export async function fetchPublicListings(
   );
   if (!canonicalListingIds.ok) return canonicalListingIds;
 
+  const schemaListingSelect = publicListingSelectForSchema(supportsSypDenomination);
   const listingSelect = filters.withPhotos
-    ? `${publicListingSelect},listing_images!inner(id)`
-    : publicListingSelect;
+    ? `${schemaListingSelect},listing_images!inner(id)`
+    : schemaListingSelect;
 
   let query = clientResult.data
     .from("listings")
@@ -269,10 +273,14 @@ export async function fetchPublicListings(
     query = query.eq("governorate_id", filters.governorateId);
   }
   if (filters.priceMin !== undefined) {
-    query = query.gte("price_new_syp_normalized", filters.priceMin);
+    query = supportsSypDenomination
+      ? query.gte("price_new_syp_normalized", filters.priceMin)
+      : query.gte("price", filters.priceMin);
   }
   if (filters.priceMax !== undefined) {
-    query = query.lte("price_new_syp_normalized", filters.priceMax);
+    query = supportsSypDenomination
+      ? query.lte("price_new_syp_normalized", filters.priceMax)
+      : query.lte("price", filters.priceMax);
   }
   if (filters.priceType) query = query.eq("price_type", filters.priceType);
   if (filters.condition) query = query.eq("listing_condition", filters.condition);
@@ -292,13 +300,21 @@ export async function fetchPublicListings(
 
   const sort = filters.sort ?? "latest";
   if (sort === "cheapest") {
-    query = query
-      .order("price_new_syp_normalized", { ascending: true, nullsFirst: false })
-      .order("id", { ascending: true });
+    query = supportsSypDenomination
+      ? query
+          .order("price_new_syp_normalized", { ascending: true, nullsFirst: false })
+          .order("id", { ascending: true })
+      : query
+          .order("price", { ascending: true, nullsFirst: false })
+          .order("id", { ascending: true });
   } else if (sort === "expensive") {
-    query = query
-      .order("price_new_syp_normalized", { ascending: false, nullsFirst: false })
-      .order("id", { ascending: true });
+    query = supportsSypDenomination
+      ? query
+          .order("price_new_syp_normalized", { ascending: false, nullsFirst: false })
+          .order("id", { ascending: true })
+      : query
+          .order("price", { ascending: false, nullsFirst: false })
+          .order("id", { ascending: true });
   } else if (sort === "featured") {
     query = query
       .order("is_featured", { ascending: false })
@@ -328,12 +344,14 @@ export async function fetchPublicListings(
     } else if (cursor.type === "cheapest" || cursor.type === "expensive") {
       const id = escapePostgrestFilterValue(cursor.id);
       if (cursor.price === null) {
-        query = query.or(`and(price.is.null,id.gt.${id})`);
+        const priceColumn = supportsSypDenomination ? "price_new_syp_normalized" : "price";
+        query = query.or(`and(${priceColumn}.is.null,id.gt.${id})`);
       } else {
         const price = escapePostgrestFilterValue(String(cursor.price));
         const operator = cursor.type === "cheapest" ? "gt" : "lt";
+        const priceColumn = supportsSypDenomination ? "price_new_syp_normalized" : "price";
         query = query.or(
-          `price.${operator}.${price},price.is.null,and(price.eq.${price},id.gt.${id})`,
+          `${priceColumn}.${operator}.${price},${priceColumn}.is.null,and(${priceColumn}.eq.${price},id.gt.${id})`,
         );
       }
     } else {
@@ -362,7 +380,11 @@ export async function fetchPublicListings(
                   : "latest",
           id: listings[safePageSize - 1].id,
           ...(sort === "cheapest" || sort === "expensive"
-            ? { price: listings[safePageSize - 1].priceNewSypNormalized }
+            ? {
+                price: supportsSypDenomination
+                  ? listings[safePageSize - 1].priceNewSypNormalized
+                  : listings[safePageSize - 1].price,
+              }
             : {}),
           ...(sort === "featured"
             ? {
@@ -509,9 +531,11 @@ export async function fetchListingDetail(
   const references = await readReferences(clientResult.data);
   if (!references.ok) return { ok: false, error: references.error };
 
+  const supportsSypDenomination = await supportsSypDenominationSchema(clientResult.data);
+
   const { data, error } = await clientResult.data
     .from("listings")
-    .select(publicListingSelect)
+    .select(publicListingSelectForSchema(supportsSypDenomination))
     .eq("id", listingId)
     .eq("status", "approved")
     .is("archived_at", null)
@@ -527,7 +551,7 @@ export async function fetchListingDetail(
   }
 
   const mappedListing = mapListing(
-    data as Record<string, unknown>,
+    data as unknown as Record<string, unknown>,
     references.categories,
     references.governorates,
   );
@@ -833,6 +857,7 @@ async function createListingWithStatus(
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
+  const supportsSypDenomination = await supportsSypDenominationSchema(clientResult.data);
 
   const title = payload.title.trim();
   const description = payload.description.trim();
@@ -874,7 +899,7 @@ async function createListingWithStatus(
     title,
     description,
     price: payload.price,
-    price_denomination: payload.priceDenomination,
+    ...(supportsSypDenomination ? { price_denomination: payload.priceDenomination } : {}),
     price_type: payload.priceType,
     listing_condition: payload.condition,
     status,
