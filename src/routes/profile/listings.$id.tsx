@@ -818,7 +818,7 @@ function ManageListingPage() {
           language,
         );
         setDynamicFieldErrors(dynamicValidation.fields);
-        if (!dynamicValidation.ok) {
+        if (dynamicValidation.summary.length > 0) {
           setSavingError(
             dynamicValidation.summary[0] ??
               text(
@@ -1304,7 +1304,7 @@ function ManageListingPage() {
                   onChange={(nextDetails) => {
                     setCategoryDetails(nextDetails);
                     if (categoryFieldKind === "vehicles" || categoryFieldKind === "electronics") {
-                      setCondition(categoryDetailsGlobalCondition(categoryFieldKind, nextDetails));
+                      setCondition(legacyCategoryCondition(categoryFieldKind, nextDetails));
                     }
                   }}
                 />
@@ -2111,6 +2111,18 @@ function dynamicListingCondition(value: unknown): ListingCondition {
   if (value === "like_new") return "like_new";
   if (value === "good" || value === "fair") return "used";
   if (value === "for_parts") return "for_parts";
+  return "not_applicable";
+}
+
+function legacyCategoryCondition(
+  kind: CategoryFieldKind,
+  details: CategorySpecificDetails,
+): ListingCondition {
+  const value = kind === "vehicles" ? details.vehicle_condition : details.condition;
+  if (value === "new") return "new";
+  if (value === "excellent" || value === "good") return "like_new";
+  if (value === "needs_work") return "for_parts";
+  if (value === "used") return "used";
   return "not_applicable";
 }
 

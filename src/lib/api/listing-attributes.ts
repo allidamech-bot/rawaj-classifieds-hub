@@ -186,7 +186,7 @@ function mapListingAttributeError(
 
   if (message.includes("listing_attribute_read_forbidden")) {
     return {
-      code: "forbidden",
+      code: "permission_denied",
       message: "لا تملك صلاحية قراءة تفاصيل هذا الإعلان المنظمة.",
       details: error.details ?? error.message,
       operation,
