@@ -8,6 +8,7 @@ on:
     paths:
       - "scripts/.apply-syp-phase-a.prefix.b64"
       - "scripts/.apply-syp-phase-a.mjs.gz.b64"
+      - "scripts/.syp-phase-a-preflight.py"
       - ".github/workflows/apply-syp-denomination-phase-a.yml"
 
 permissions:
@@ -24,153 +25,16 @@ jobs:
           git clone --quiet --depth 1 --branch agent/syp-denomination-phase-a \
             "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" repo
 
-      - name: Reconstruct and apply deterministic patch
+      - name: Reconstruct patch payload
         working-directory: repo
         run: |
           cat scripts/.apply-syp-phase-a.prefix.b64 scripts/.apply-syp-phase-a.mjs.gz.b64 \
             | base64 -d \
             | gunzip > /tmp/apply-syp-phase-a.mjs
-          python - <<'PY'
-          from pathlib import Path
 
-          path = Path('/tmp/apply-syp-phase-a.mjs')
-          source = path.read_text()
-
-          replacements = [
-              (
-                  'replaceExact("src/lib/api/listings.ts", "              ? { price: listings[safePageSize - 1].price }", "              ? { price: listings[safePageSize - 1].priceNewSypNormalized }", 1);',
-                  'replaceExact("src/lib/api/listings.ts", "? { price: listings[safePageSize - 1].price }", "? { price: listings[safePageSize - 1].priceNewSypNormalized }", 1);',
-                  'cursor',
-              ),
-              (
-                  'replaceExact("src/lib/api/listing-write-rpc.ts", "  if (payload.price !== undefined) patch.price = payload.price;\\n  if (payload.priceType !== undefined) patch.price_type = payload.priceType;", "  if (payload.price !== undefined) patch.price = payload.price;\\n  if (payload.priceDenomination !== undefined) {\\n    patch.price_denomination = payload.priceDenomination;\\n  }\\n  if (payload.priceType !== undefined) patch.price_type = payload.priceType;", 1);',
-                  'replaceExact("src/lib/api/listing-write-rpc.ts", "  if (payload.price !== undefined) patch.price = payload.price;\\n  if (payload.priceType) patch.price_type = payload.priceType;", "  if (payload.price !== undefined) patch.price = payload.price;\\n  if (payload.priceDenomination !== undefined) {\\n    patch.price_denomination = payload.priceDenomination;\\n  }\\n  if (payload.priceType) patch.price_type = payload.priceType;", 1);',
-                  'listing-write',
-              ),
-              (
-                  'replaceExact("src/lib/classifieds-api.ts", "export * from \\\"@/lib/api/listing-write-rpc\\\";", "export * from \\\"@/lib/api/listing-write-rpc\\\";\\nexport * from \\\"@/lib/api/syp-denomination\\\";", 1);',
-                  'replaceExact("src/lib/classifieds-api.ts", "export * from \\\"@/lib/api/listings\\\";", "export * from \\\"@/lib/api/listings\\\";\\nexport * from \\\"@/lib/api/syp-denomination\\\";", 1);',
-                  'classifieds export',
-              ),
-          ]
-          for old, new, label in replacements:
-              if old not in source:
-                  raise SystemExit(f'{label} hotfix anchor missing')
-              source = source.replace(old, new, 1)
-
-          assertion_old = '  if (occurrences !== expected) throw new Error(`${path}: expected ${expected} exact matches, found ${occurrences}`);'
-          assertion_new = '''  if (occurrences !== expected) {
-            globalThis.__phaseAMismatches ??= [];
-            globalThis.__phaseAMismatches.push({ path, expected, occurrences, oldText });
-            console.error(`MISMATCH ${path}: expected ${expected} exact matches, found ${occurrences}`);
-            return;
-          }'''
-          if assertion_old not in source:
-              raise SystemExit('assertion collector anchor missing')
-          source = source.replace(assertion_old, assertion_new, 1)
-          source += '''
-          const mismatches = globalThis.__phaseAMismatches ?? [];
-          if (mismatches.length !== 4 || mismatches.some((item) => item.path !== "src/routes/add-listing.tsx")) {
-            console.error("Unexpected Phase A anchor mismatches", mismatches);
-            process.exit(2);
-          }
-          '''
-          path.write_text(source)
-          PY
-          node /tmp/apply-syp-phase-a.mjs
-
-      - name: Apply structural add-listing integrations
+      - name: Apply complete Phase A preflight patch
         working-directory: repo
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path('src/routes/add-listing.tsx')
-          source = path.read_text()
-
-          def replace_once(old: str, new: str, label: str) -> None:
-              global source
-              count = source.count(old)
-              if count != 1:
-                  raise SystemExit(f'{label}: expected one match, found {count}')
-              source = source.replace(old, new, 1)
-
-          replace_once(
-              '      normalizedPrice,\n      priceType,',
-              '      normalizedPrice,\n      priceDenomination,\n      priceType,',
-              'price denomination dependency',
-          )
-
-          marker = '<Field label={text("نوع السعر", "Price type")}>'
-          if source.count(marker) != 1:
-              raise SystemExit(f'price type field: expected one marker, found {source.count(marker)}')
-          start = source.index(marker)
-          line_start = source.rfind('\n', 0, start) + 1
-          indent = source[line_start:start]
-          end = source.index('</Field>', start) + len('</Field>')
-          denomination_field = f'''\n{indent}{{(priceType === "fixed" || priceType === "negotiable") && price ? (
-          {indent}<Field
-          {indent}  label={{text("وحدة الليرة السورية", "Syrian pound denomination")}}
-          {indent}  error={{fieldErrors.priceDenomination}}
-          {indent}>
-          {indent}  <select
-          {indent}    value={{priceDenomination}}
-          {indent}    onChange={{(event) =>
-          {indent}      setPriceDenomination(event.target.value as SypPriceDenomination)
-          {indent}    }}
-          {indent}    className="input"
-          {indent}    data-first-invalid={{Boolean(fieldErrors.priceDenomination)}}
-          {indent}  >
-          {indent}    <option value="unclassified">
-          {indent}      {{text("اختر القديمة أو الجديدة", "Choose old or new")}}
-          {indent}    </option>
-          {indent}    <option value="old">
-          {indent}      {{text("ليرة سورية قديمة", "Old Syrian pounds")}}
-          {indent}    </option>
-          {indent}    <option value="new">
-          {indent}      {{text("ليرة سورية جديدة", "New Syrian pounds")}}
-          {indent}    </option>
-          {indent}  </select>
-          {indent}</Field>
-          {indent}) : null}}'''
-          source = source[:end] + denomination_field + source[end:]
-
-          review_marker = 'value={priceReviewLabel(price, priceType, text)}'
-          if source.count(review_marker) != 1:
-              raise SystemExit(f'price review: expected one marker, found {source.count(review_marker)}')
-          review_start = source.index(review_marker)
-          value_line_start = source.rfind('\n', 0, review_start) + 1
-          value_indent = source[value_line_start:review_start]
-          row_indent = value_indent[:-2]
-          source = source.replace(
-              review_marker,
-              'value={priceReviewLabel(price, priceType, priceDenomination, text)}',
-              1,
-          )
-          review_end = source.index('/>', review_start) + 2
-          denomination_review = f'''\n{row_indent}{{(priceType === "fixed" || priceType === "negotiable") && price ? (
-          {row_indent}  <ReviewRow
-          {row_indent}    label={{text("وحدة السعر", "Price denomination")}}
-          {row_indent}    value={{
-          {row_indent}      priceDenomination === "old"
-          {row_indent}        ? text("ليرة سورية قديمة", "Old Syrian pounds")
-          {row_indent}        : priceDenomination === "new"
-          {row_indent}          ? text("ليرة سورية جديدة", "New Syrian pounds")
-          {row_indent}          : text("غير مصنّفة", "Unclassified")
-          {row_indent}    }}
-          {row_indent}  />
-          {row_indent}) : null}}'''
-          source = source[:review_end] + denomination_review + source[review_end:]
-
-          preview_marker = '? `${price} SYP`'
-          replace_once(
-              preview_marker,
-              '? priceReviewLabel(price, priceType, priceDenomination, text)',
-              'listing preview price',
-          )
-
-          path.write_text(source)
-          PY
+        run: python scripts/.syp-phase-a-preflight.py
 
       - name: Install dependencies
         working-directory: repo
@@ -194,9 +58,23 @@ jobs:
             scripts/syp-denomination-phase-a.test.mjs \
             docs/syp-denomination-phase-a.md
 
-      - name: Verify Phase A contracts
+      - name: Run Phase A contract tests
+        working-directory: repo
+        run: node --test scripts/syp-denomination-phase-a.test.mjs
+
+      - name: Run TypeScript
         working-directory: repo
         run: |
-          node --test scripts/syp-denomination-phase-a.test.mjs
-          npm run typecheck
-          git diff --check
+          set +e
+          npm run typecheck > /tmp/typecheck.log 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            tail -n 160 /tmp/typecheck.log
+            exit "$status"
+          fi
+          tail -n 20 /tmp/typecheck.log
+
+      - name: Check generated diff
+        working-directory: repo
+        run: git diff --check
