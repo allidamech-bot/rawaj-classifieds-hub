@@ -48,7 +48,7 @@ test("PublicAdPlacementSlot refetches after an explicit invalidation event", () 
   assert.ok(slot.includes("unsubscribe();"));
 });
 
-test("scheduled placement refresh is event-driven, cached, and bounded", () => {
+test("scheduled placement refresh is event-driven, cached, low-frequency, and bounded", () => {
   assert.ok(publicApi.includes("const ACTIVE_PLACEMENT_CACHE_TTL_MS = 5 * 60_000;"));
   assert.ok(publicApi.includes("export async function refreshActiveAdPlacements("));
   assert.ok(publicApi.includes("activePlacementCache.delete(cacheKey);"));
@@ -57,6 +57,11 @@ test("scheduled placement refresh is event-driven, cached, and bounded", () => {
   assert.equal(slot.includes("window.setInterval("), false);
   assert.ok(slot.includes("const AD_PLACEMENT_RETRY_LIMIT = 3;"));
   assert.ok(slot.includes("retryAttempt >= AD_PLACEMENT_RETRY_LIMIT"));
+  assert.ok(slot.includes("const AD_PLACEMENT_FRESHNESS_REFRESH_MS = 5 * 60_000;"));
+  assert.ok(slot.includes("refreshActiveAdPlacements(page, activeDevice)"));
+  assert.ok(slot.includes("window.setTimeout(() =>"));
+  assert.ok(slot.includes("}, AD_PLACEMENT_FRESHNESS_REFRESH_MS);"));
+  assert.ok(slot.includes("clearFreshnessTimer();"));
   assert.ok(slot.includes('window.addEventListener("online", refreshWhenAvailable);'));
   assert.ok(slot.includes('window.addEventListener("focus", refreshWhenAvailable);'));
   assert.ok(slot.includes('document.addEventListener("visibilitychange", refreshWhenAvailable);'));
