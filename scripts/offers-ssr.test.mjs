@@ -13,10 +13,15 @@ test("verified price drops are loaded before offers render", () => {
   assert.doesNotMatch(offers, /جاري تحميل التخفيضات الحقيقية/);
 });
 
-test("offers load errors retry the route loader in place", () => {
+test("offers load errors retry the route loader in place with a single-flight guard", () => {
   assert.match(offers, /useRouter\(\)/);
+  assert.match(offers, /const retryInFlightRef = useRef\(false\)/);
+  assert.match(offers, /const \[retrying, setRetrying\] = useState\(false\)/);
+  assert.match(offers, /async function retryOffers[\s\S]*?await router\.invalidate\(\)[\s\S]*?finally/);
   assert.match(offers, /actionLabel=\{text\("إعادة المحاولة", "Try again"\)\}/);
-  assert.match(offers, /onAction=\{\(\) => void router\.invalidate\(\)\}/);
-  assert.match(offers, /onClick=\{onAction\}/);
+  assert.match(offers, /onAction=\{\(\) => void retryOffers\(\)\}/);
+  assert.match(offers, /actionDisabled=\{retrying\}/);
+  assert.match(offers, /disabled=\{actionDisabled\}/);
+  assert.match(offers, /aria-busy=\{actionDisabled\}/);
   assert.doesNotMatch(offers, /window\.location\.reload\(\)/);
 });
