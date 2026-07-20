@@ -10,78 +10,18 @@ on:
       - ".github/workflows/apply-syp-denomination-phase-a.yml"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  apply:
-    if: github.actor != 'github-actions[bot]'
+  apply-diagnostic:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout feature branch
-        uses: actions/checkout@v4
-        with:
-          ref: agent/syp-denomination-phase-a
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Decode and apply deterministic patch
+      - name: Run deterministic patch diagnostics
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          git clone --quiet --depth 1 --branch agent/syp-denomination-phase-a \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" repo
+          cd repo
           base64 -d scripts/.apply-syp-phase-a.mjs.gz.b64 | gunzip > /tmp/apply-syp-phase-a.mjs
-          set +e
-          node /tmp/apply-syp-phase-a.mjs > /tmp/syp-phase-a-apply.log 2>&1
-          status=$?
-          set -e
-          cat /tmp/syp-phase-a-apply.log
-          if [ "$status" -ne 0 ]; then
-            cp /tmp/syp-phase-a-apply.log syp-phase-a-apply.log
-          fi
-          exit "$status"
-
-      - name: Upload apply diagnostics
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: syp-phase-a-apply-diagnostics
-          path: syp-phase-a-apply.log
-          if-no-files-found: error
-          retention-days: 1
-
-      - name: Format generated and modified source files
-        run: |
-          npx prettier --write \
-            src/lib/syp-denomination.ts \
-            src/features/listings/SypPriceDisplay.tsx \
-            src/lib/api/syp-denomination.ts \
-            src/lib/classifieds-types.ts \
-            src/lib/api/public-fields.ts \
-            src/lib/api/listings.ts \
-            src/lib/api/listing-draft-create-rpc.ts \
-            src/lib/api/listing-write-rpc.ts \
-            src/lib/classifieds-api.ts \
-            src/features/listings/cards/ListingCardShared.tsx \
-            src/routes/add-listing.tsx \
-            scripts/syp-denomination-phase-a.test.mjs \
-            docs/syp-denomination-phase-a.md
-
-      - name: Run Phase A contracts
-        run: node --test scripts/syp-denomination-phase-a.test.mjs
-
-      - name: Run TypeScript
-        run: npm run typecheck
-
-      - name: Commit generated implementation
-        run: |
-          rm -f syp-phase-a-apply.log
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "feat: add SYP denomination Phase A foundation"
-          git push origin HEAD:agent/syp-denomination-phase-a
+          node /tmp/apply-syp-phase-a.mjs
