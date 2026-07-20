@@ -1,4 +1,3 @@
-import { useRouterState } from "@tanstack/react-router";
 import {
   createContext,
   useCallback,
@@ -38,7 +37,6 @@ const EMPTY_COUNTS: UnreadActivityCounts = {
   total: 0,
 };
 
-const UNREAD_ACTIVITY_POLL_MS = 60 * 1000;
 const UNREAD_ACTIVITY_EVENT_DEBOUNCE_MS = 250;
 
 const UnreadActivityContext = createContext<UnreadActivityContextValue>({
@@ -49,7 +47,6 @@ const UnreadActivityContext = createContext<UnreadActivityContextValue>({
 
 export function UnreadActivityProvider({ children }: { children: ReactNode }) {
   const auth = useAuth();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [counts, setCounts] = useState<UnreadActivityCounts>(EMPTY_COUNTS);
   const [loading, setLoading] = useState(false);
   const [countsProfileId, setCountsProfileId] = useState<string | null>(null);
@@ -114,16 +111,18 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void refresh();
-  }, [pathname, refresh]);
+  }, [refresh]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const handleRefresh = () => void refresh();
     window.addEventListener(UNREAD_ACTIVITY_CHANGED_EVENT, handleRefresh);
     window.addEventListener("focus", handleRefresh);
+    window.addEventListener("online", handleRefresh);
     return () => {
       window.removeEventListener(UNREAD_ACTIVITY_CHANGED_EVENT, handleRefresh);
       window.removeEventListener("focus", handleRefresh);
+      window.removeEventListener("online", handleRefresh);
     };
   }, [refresh]);
 
@@ -135,7 +134,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
 
     let refreshTimer: ReturnType<typeof setTimeout> | null = null;
     const scheduleRefresh = () => {
-      if (document.visibilityState === "hidden") return;
+      if (document.visibilityState === "hidden" || navigator.onLine === false) return;
       if (refreshTimer !== null) clearTimeout(refreshTimer);
       refreshTimer = setTimeout(() => void refresh(), UNREAD_ACTIVITY_EVENT_DEBOUNCE_MS);
     };
@@ -152,29 +151,29 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
         },
         scheduleRefresh,
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "conversation_messages",
+        },
+        scheduleRefresh,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "conversations",
+        },
+        scheduleRefresh,
+      )
       .subscribe();
 
     return () => {
       if (refreshTimer !== null) clearTimeout(refreshTimer);
       void clientResult.data.removeChannel(channel);
-    };
-  }, [auth.status, profileId, refresh]);
-
-  useEffect(() => {
-    if (auth.status !== "signedIn" || !profileId || typeof window === "undefined") return;
-
-    const refreshWhenAvailable = () => {
-      if (document.visibilityState === "hidden" || navigator.onLine === false) return;
-      void refresh();
-    };
-    const interval = window.setInterval(refreshWhenAvailable, UNREAD_ACTIVITY_POLL_MS);
-
-    window.addEventListener("online", refreshWhenAvailable);
-    document.addEventListener("visibilitychange", refreshWhenAvailable);
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener("online", refreshWhenAvailable);
-      document.removeEventListener("visibilitychange", refreshWhenAvailable);
     };
   }, [auth.status, profileId, refresh]);
 
