@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
+import { SypClassificationQueue } from "@/features/listings/SypClassificationQueue";
 import {
   StorefrontIdentityHero,
   StorefrontNotice,
@@ -243,6 +244,8 @@ function MyListingsPage() {
           needsEditCount={grouped.needs_edit.length}
           closedCount={grouped.closed.length}
         />
+
+        <SypClassificationQueue />
 
         {latestDraft ? (
           <StorefrontNotice

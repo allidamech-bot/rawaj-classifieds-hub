@@ -34,7 +34,10 @@ export function SypClassificationQueue() {
       setError(
         caught instanceof Error
           ? caught.message
-          : text("تعذر تحميل قائمة تصنيف الأسعار.", "Could not load the price classification queue."),
+          : text(
+              "تعذر تحميل قائمة تصنيف الأسعار.",
+              "Could not load the price classification queue.",
+            ),
       );
     } finally {
       if (requestId === requestIdRef.current) setLoading(false);
@@ -136,7 +139,10 @@ export function SypClassificationQueue() {
                       )}
                     </p>
                     <p className="mt-1 text-[10px] text-muted-foreground">
-                      {text("القيمة المخزنة ستبقى كما هي", "The stored value will remain unchanged")}
+                      {text(
+                        "القيمة المخزنة ستبقى كما هي",
+                        "The stored value will remain unchanged",
+                      )}
                     </p>
                   </div>
                   {busy ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : null}

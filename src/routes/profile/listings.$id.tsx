@@ -71,7 +71,12 @@ import type {
   TaxonomyNode,
   UpdateListingPayload,
 } from "@/lib/classifieds-types";
-import { categoryName, governorateName } from "@/lib/i18n";
+import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import {
+  createClassifiedSypPrice,
+  requiresSypDenomination,
+  type SypPriceDenomination,
+} from "@/lib/syp-denomination";
 import { fetchListingLocationNodeId } from "@/lib/api/listing-location-read";
 import { listingStatusLabel } from "@/lib/status-labels";
 import { resolveTaxonomyListingSearch } from "@/lib/taxonomy";
@@ -97,6 +102,7 @@ interface EditListingFormValues {
   title: string;
   description: string;
   price: number | null;
+  priceDenomination: SypPriceDenomination;
   priceType: PriceType;
   condition: ListingCondition;
   districtAr: string | null;
@@ -181,6 +187,7 @@ function ManageListingPage() {
   const [locationNodeId, setLocationNodeId] = useState("");
   const [locationNodeType, setLocationNodeType] = useState<LocationNodeType | "">("");
   const [price, setPrice] = useState("");
+  const [priceDenomination, setPriceDenomination] = useState<SypPriceDenomination>("unclassified");
   const [priceType, setPriceType] = useState<PriceType>("fixed");
   const [condition, setCondition] = useState<ListingCondition>("not_applicable");
   const [contactName, setContactName] = useState("");
@@ -240,7 +247,11 @@ function ManageListingPage() {
         description,
         imageCount:
           images.length + selectedImages.filter((entry) => entry.state !== "failed").length,
-        priceReady: priceType !== "fixed" || Number(price) > 0,
+        priceReady:
+          priceType !== "fixed" ||
+          (Number(price) > 0 &&
+            (!requiresSypDenomination(Number(price), priceType) ||
+              priceDenomination !== "unclassified")),
         locationReady:
           (Boolean(locationNodeId) || Boolean(governorateId)) &&
           (!requiresPreciseLocation || preciseLocationSelected),
@@ -262,6 +273,7 @@ function ManageListingPage() {
       preciseLocationSelected,
       requiresPreciseLocation,
       price,
+      priceDenomination,
       priceType,
       selectedImages,
       selectedTaxonomyNode?.isLeaf,
@@ -364,6 +376,7 @@ function ManageListingPage() {
       title: loadedListing.title,
       description: loadedListing.description,
       price: loadedListing.price,
+      priceDenomination: loadedListing.priceDenomination,
       priceType: loadedListing.priceType,
       condition: loadedListing.condition,
       districtAr: loadedLocationNodeId ? `@${loadedLocationNodeId}` : loadedListing.districtAr,
@@ -403,6 +416,7 @@ function ManageListingPage() {
     setLocationNodeId(loadedValues.locationNodeId);
     setLocationNodeType(loadedLocationNodeType);
     setPrice(loadedValues.price?.toString() ?? "");
+    setPriceDenomination(loadedValues.priceDenomination);
     setPriceType(loadedValues.priceType);
     setCondition(loadedValues.condition);
     setContactName(loadedValues.contactName);
@@ -540,6 +554,7 @@ function ManageListingPage() {
       title: title.trim(),
       description: description.trim(),
       price: price.trim() === "" ? null : Number(price),
+      priceDenomination,
       priceType,
       condition,
       districtAr: locationNodeId ? `@${locationNodeId}` : district.trim() || null,
@@ -772,6 +787,7 @@ function ManageListingPage() {
     title,
     description,
     price,
+    priceDenomination,
     priceType,
     condition,
     district,
@@ -907,6 +923,7 @@ function ManageListingPage() {
     title,
     description,
     price,
+    priceDenomination,
     priceType,
     condition,
     district,
@@ -1408,6 +1425,24 @@ function ManageListingPage() {
                     <option value="exchange">{text("للمبادلة", "Exchange")}</option>
                   </select>
                 </Field>
+                {(priceType === "fixed" || priceType === "negotiable") && price ? (
+                  <Field label={text("وحدة الليرة السورية", "Syrian pound denomination")}>
+                    <select
+                      value={priceDenomination}
+                      onChange={(event) =>
+                        setPriceDenomination(event.target.value as SypPriceDenomination)
+                      }
+                      className="input"
+                      disabled={!isEditable}
+                    >
+                      <option value="unclassified">
+                        {text("اختر القديمة أو الجديدة", "Choose old or new")}
+                      </option>
+                      <option value="old">{text("ليرة سورية قديمة", "Old Syrian pounds")}</option>
+                      <option value="new">{text("ليرة سورية جديدة", "New Syrian pounds")}</option>
+                    </select>
+                  </Field>
+                ) : null}
               </div>
             </ListingStudioSection>
 
@@ -1783,7 +1818,7 @@ function ManageListingPage() {
                   : priceType === "contact"
                     ? text("عند التواصل", "On contact")
                     : price
-                      ? `${price} SYP`
+                      ? formatManagedSypPrice(price, priceType, priceDenomination, language)
                       : ""
               }
               location={
@@ -1901,6 +1936,27 @@ function ManageListingPage() {
       <style>{`.input{width:100%;min-height:2.75rem;border-radius:1rem;background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid var(--border);padding:.68rem .8rem;font-size:.875rem;color:var(--foreground);outline:none;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}.input:focus{border-color:var(--brand-orange);background:var(--card);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand-orange) 12%,transparent)}.input:disabled{opacity:.62;cursor:not-allowed}`}</style>
     </>
   );
+}
+
+function formatManagedSypPrice(
+  value: string,
+  priceType: PriceType,
+  denomination: SypPriceDenomination,
+  language: Language,
+) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return "";
+  const dual = createClassifiedSypPrice(amount, denomination);
+  if (!dual) {
+    return `${formatPriceLocalized(amount, priceType, language, "SYP")} · ${
+      language === "ar" ? "الوحدة غير مصنفة" : "Unclassified denomination"
+    }`;
+  }
+  const newLabel = formatPriceLocalized(dual.newSyp, priceType, language, "SYP");
+  const oldLabel = formatPriceLocalized(dual.oldSyp, "fixed", language, "SYP");
+  return language === "ar"
+    ? `${newLabel} · يعادل ${oldLabel} قديمة`
+    : `${newLabel} · ${oldLabel} old`;
 }
 
 function Field({
@@ -2250,6 +2306,9 @@ function buildChangedListingPatch(
   if (current.title !== initial.title) patch.title = current.title;
   if (current.description !== initial.description) patch.description = current.description;
   if (current.price !== initial.price) patch.price = current.price;
+  if (current.priceDenomination !== initial.priceDenomination) {
+    patch.priceDenomination = current.priceDenomination;
+  }
   if (current.priceType !== initial.priceType) patch.priceType = current.priceType;
   if (current.condition !== initial.condition) patch.condition = current.condition;
   if (current.districtAr !== initial.districtAr) patch.districtAr = current.districtAr;
@@ -2333,6 +2392,18 @@ function validateEditListing({
   }
   if (values.price !== null && (!Number.isFinite(values.price) || values.price < 0)) {
     return { ok: false, message: text("أدخل سعرًا صحيحًا.", "Enter a valid price.") };
+  }
+  if (
+    requiresSypDenomination(values.price, values.priceType) &&
+    values.priceDenomination === "unclassified"
+  ) {
+    return {
+      ok: false,
+      message: text(
+        "حدد ما إذا كان السعر بالليرة القديمة أو الجديدة.",
+        "Choose whether the price is in old or new Syrian pounds.",
+      ),
+    };
   }
   if (values.contactOptions.phone && !isSafePhoneValue(values.phone)) {
     return {

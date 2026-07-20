@@ -9,6 +9,7 @@ import { ListingSafetyAndAlert } from "@/features/listing-detail/ListingSafetyAn
 import { ListingSellerProfileCard } from "@/features/listing-detail/ListingSellerProfileCard";
 import { SimilarListingsRail } from "@/features/listing-detail/SimilarListingsRail";
 import { UnavailableListingRecovery } from "@/features/listing-detail/UnavailableListingRecovery";
+import { SypPriceDisplay } from "@/features/listings/SypPriceDisplay";
 import { resolveCategoryFieldKind } from "@/lib/category-fields";
 import {
   createListingReport,
@@ -24,7 +25,7 @@ import type {
   PublicSellerProfile,
   TaxonomyNode,
 } from "@/lib/classifieds-types";
-import { categoryName, formatPriceLocalized } from "@/lib/i18n";
+import { categoryName } from "@/lib/i18n";
 import { buildListingStructuredData } from "@/lib/listing-structured-data";
 import { buildBreadcrumbStructuredData, createSeo, jsonLdScript } from "@/lib/seo";
 import { phoneHref, whatsappHref } from "@/lib/contact-phone";
@@ -321,6 +322,7 @@ function ListingDetailsPage() {
     if (
       !listing ||
       listing.price === null ||
+      listing.priceNewSypNormalized === null ||
       !["fixed", "negotiable"].includes(listing.priceType)
     ) {
       setActionMessage(
@@ -337,11 +339,11 @@ function ListingDetailsPage() {
     setAlertBusy(true);
     try {
       const result = await createSavedSearch(auth.profile?.id ?? null, {
-        nameAr: "نتائج مشابهة بسعر " + listing.price,
+        nameAr: "نتائج مشابهة بسعر " + listing.priceNewSypNormalized,
         filters: {
           categoryId: listing.categoryId,
           governorateId: listing.governorateId,
-          priceMax: listing.price,
+          priceMax: listing.priceNewSypNormalized,
           sort: "cheapest",
         },
         alertFrequency: "daily",
@@ -650,7 +652,6 @@ function ListingDetailsPage() {
 
 function PriceDisplay({
   listing,
-  language,
   text,
 }: {
   listing: ClassifiedListing;
@@ -660,9 +661,7 @@ function PriceDisplay({
   return (
     <div className="rawaj-detail-price">
       <span>{text("السعر", "Price")}</span>
-      <strong>
-        {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
-      </strong>
+      <SypPriceDisplay listing={listing} />
     </div>
   );
 }
