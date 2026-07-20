@@ -53,21 +53,39 @@ jobs:
             src/lib/api/syp-denomination.ts \
             scripts/syp-denomination-phase-a.test.mjs >/dev/null
 
-      - name: Verify Phase A contracts
-        working-directory: repo
-        run: node --test scripts/syp-denomination-phase-a.test.mjs
-
-      - name: Verify search and public detail contracts
+      - name: Verify contracts quietly
         working-directory: repo
         run: |
-          node --test scripts/search-results-taxonomy-integrity.test.mjs
-          node --test scripts/public-listing-detail-integrity.test.mjs
+          node --test scripts/syp-denomination-phase-a.test.mjs >/tmp/phase-a.log 2>&1
+          node --test scripts/search-results-taxonomy-integrity.test.mjs >/tmp/search.log 2>&1
+          node --test scripts/public-listing-detail-integrity.test.mjs >/tmp/detail.log 2>&1
+          echo "Compatibility contracts passed."
 
-      - name: Verify TypeScript and production build
+      - name: Verify TypeScript
         working-directory: repo
         run: |
-          npm run typecheck
-          npm run build
+          set +e
+          npm run typecheck >/tmp/typecheck.log 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            cat /tmp/typecheck.log
+            exit "$status"
+          fi
+          echo "TypeScript passed."
+
+      - name: Verify production build
+        working-directory: repo
+        run: |
+          set +e
+          npm run build >/tmp/build.log 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            tail -n 200 /tmp/build.log
+            exit "$status"
+          fi
+          echo "Production build passed."
 
       - name: Verify generated diff
         working-directory: repo
