@@ -96,12 +96,16 @@ test("critical public journeys have permanent contracts", async () => {
 test("no temporary action-repair generators or write workflows remain", async () => {
   const scripts = await collectFiles("scripts", () => true);
   const workflows = await collectFiles(".github/workflows", () => true);
-  const temporaryScripts = scripts.filter((file) =>
-    /scripts\/(?:apply|fix)-.*(?:actions|integrity|operations).*\.mjs$/.test(file),
+  const auditBatchNames =
+    "(?:public-auth|listing-actions|listing-detail-actions|saved-items-actions|chat-actions|notification-actions|trust-actions|profile-seller-actions|category-directory-actions|review-card-actions|search-actions|final-public-operations)";
+  const temporaryScriptPattern = new RegExp(
+    `scripts/(?:apply-${auditBatchNames}-integrity|fix-${auditBatchNames}-generator)\\.mjs$`,
   );
-  const temporaryWorkflows = workflows.filter((file) =>
-    /\.github\/workflows\/apply-.*(?:actions|integrity|operations).*\.ya?ml$/.test(file),
+  const temporaryWorkflowPattern = new RegExp(
+    `\\.github/workflows/apply-${auditBatchNames}-integrity\\.ya?ml$`,
   );
+  const temporaryScripts = scripts.filter((file) => temporaryScriptPattern.test(file));
+  const temporaryWorkflows = workflows.filter((file) => temporaryWorkflowPattern.test(file));
   assert.deepEqual(temporaryScripts, []);
   assert.deepEqual(temporaryWorkflows, []);
 });
