@@ -40,6 +40,17 @@ export function useLiveChatWorkspace({
   const activeScopeRef = useRef<string | null>(null);
   const inFlightRefreshRef = useRef<InFlightChatRefresh | null>(null);
   const previousUnreadMessagesRef = useRef<number | null>(null);
+  const cacheProfileIdRef = useRef<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    const nextProfileId = signedIn ? profileId : null;
+    if (cacheProfileIdRef.current === nextProfileId) return;
+
+    cacheProfileIdRef.current = nextProfileId;
+    invalidateConversationMessagesCache();
+    inFlightRefreshRef.current = null;
+    previousUnreadMessagesRef.current = null;
+  }, [profileId, signedIn]);
 
   useEffect(() => {
     const scopeKey =
