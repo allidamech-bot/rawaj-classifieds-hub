@@ -106,12 +106,28 @@ test("promotion and verification decisions expose loading and prevent duplicate 
   );
 });
 
-test("campaign payload and status controls reject malformed or repeated actions", () => {
+test("campaign mutations remain locked through authoritative refetch", () => {
   const value = source("src/routes/admin.campaigns.tsx");
-  assert.match(value, /async function changeStatus[\s\S]*?if \(saving\) return;/);
-  assert.match(value, /targetCategoryIds: \[\.\.\.new Set\(/);
+  assert.match(value, /const mutationInFlightRef = useRef\(false\);/);
+  assert.match(
+    value,
+    /async function saveCampaign[\s\S]*?if \(mutationInFlightRef\.current\) return;[\s\S]*?mutationInFlightRef\.current = true;[\s\S]*?finally \{[\s\S]*?mutationInFlightRef\.current = false;[\s\S]*?setSaving\(false\);/,
+  );
+  assert.match(
+    value,
+    /async function changeStatus[\s\S]*?if \(mutationInFlightRef\.current\) return;[\s\S]*?await refreshCampaigns\(\);[\s\S]*?finally \{[\s\S]*?mutationInFlightRef\.current = false;/,
+  );
+  assert.match(
+    value,
+    /async function saveCreative[\s\S]*?mutationInFlightRef\.current\) return;[\s\S]*?await refreshCreatives[\s\S]*?await refreshCampaigns\(\);[\s\S]*?finally \{[\s\S]*?mutationInFlightRef\.current = false;/,
+  );
+  assert.match(value, /function editCampaign\(campaign: CampaignSummary, preserveFeedback = false\)/);
+  assert.match(value, /if \(!preserveFeedback\) setNotice\(""\);/);
+  assert.match(value, /editCampaign\(campaign, true\);/);
+  assert.match(value, /targetCategoryIds: \[[\s\S]*?\.\.\.new Set\(/);
   assert.match(value, /\.map\(\(value\) => value\.trim\(\)\)/);
   assert.match(value, /\.filter\(Boolean\)/);
+  assert.match(value, /disabled=\{loading \|\| saving\}/);
   assert.doesNotMatch(
     value,
     /targetCategoryIds: campaignForm\.categoryIdsText\.split\(","\)/,
