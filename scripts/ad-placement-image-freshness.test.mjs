@@ -91,8 +91,8 @@ test("PublicAdPlacementSlot follows mobile and desktop viewport changes", () => 
 });
 
 test("public ad rendering uses the same 16:7 image contract as admin validation", () => {
-  assert.match(slot, /width={1600}/);
-  assert.match(slot, /height={700}/);
+  assert.match(slot, /width=\{1600\}/);
+  assert.match(slot, /height=\{700\}/);
   assert.match(slot, /aspect-\[16\/7\]/);
   assert.doesNotMatch(slot, /aspect-\[3\.2\/1\]/);
   assert.doesNotMatch(slot, /aspect-\[5\/1\]/);
