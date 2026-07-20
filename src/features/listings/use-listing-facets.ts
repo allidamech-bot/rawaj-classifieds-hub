@@ -13,11 +13,44 @@ interface UseListingFacetsInputs {
   query?: string;
 }
 
+interface FacetCacheEntry {
+  data: ListingFacetsResult;
+  expiresAt: number;
+}
+
+const FACET_CACHE_TTL_MS = 30_000;
+const FACET_CACHE_MAX_ENTRIES = 50;
+const facetCache = new Map<string, FacetCacheEntry>();
+
 const emptyFacets: ListingFacetsResult = {
   taxonomyVersionId: null,
   totalCount: 0,
   facets: [],
 };
+
+function readCachedFacets(requestKey: string): ListingFacetsResult | null {
+  const cached = facetCache.get(requestKey);
+  if (!cached) return null;
+  if (cached.expiresAt <= Date.now()) {
+    facetCache.delete(requestKey);
+    return null;
+  }
+  facetCache.delete(requestKey);
+  facetCache.set(requestKey, cached);
+  return cached.data;
+}
+
+function cacheFacets(requestKey: string, data: ListingFacetsResult) {
+  facetCache.set(requestKey, {
+    data,
+    expiresAt: Date.now() + FACET_CACHE_TTL_MS,
+  });
+  while (facetCache.size > FACET_CACHE_MAX_ENTRIES) {
+    const oldestKey = facetCache.keys().next().value;
+    if (typeof oldestKey !== "string") break;
+    facetCache.delete(oldestKey);
+  }
+}
 
 export function useListingFacets(inputs: UseListingFacetsInputs) {
   const [data, setData] = useState<ListingFacetsResult>(emptyFacets);
@@ -58,6 +91,14 @@ export function useListingFacets(inputs: UseListingFacetsInputs) {
       return;
     }
 
+    const cached = readCachedFacets(requestKey);
+    if (cached) {
+      setData(cached);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     void fetchPublicListingFacets({
@@ -74,6 +115,7 @@ export function useListingFacets(inputs: UseListingFacetsInputs) {
         setError(result.error);
         return;
       }
+      cacheFacets(requestKey, result.data);
       setData(result.data);
     });
   }, [requestKey]);
