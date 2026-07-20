@@ -46,21 +46,47 @@ function isPublicDocumentPath(pathname: string) {
   );
 }
 
-function buildContentSecurityPolicy(isSecureRequest: boolean) {
+function isVercelPreviewBuild() {
+  return rawajBuildInfo.provider === "vercel" && rawajBuildInfo.environment === "preview";
+}
+
+function buildContentSecurityPolicy(isSecureRequest: boolean, allowVercelPreviewTools: boolean) {
+  const scriptSources = ["'self'", "'unsafe-inline'", "https://va.vercel-scripts.com"];
+  const frameSources = ["'none'"];
+  const connectSources = [
+    "'self'",
+    "https://*.supabase.co",
+    "https://*.supabase.com",
+    "wss://*.supabase.co",
+    "wss://*.supabase.com",
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com",
+    "https://vitals.vercel-insights.com",
+    "https://*.vercel-insights.com",
+  ];
+  const manifestSources = ["'self'"];
+
+  if (allowVercelPreviewTools) {
+    scriptSources.push("https://vercel.live");
+    frameSources.splice(0, frameSources.length, "'self'", "https://vercel.live");
+    connectSources.push("https://vercel.live", "wss://vercel.live");
+    manifestSources.push("https://vercel.com");
+  }
+
   const directives = [
     "default-src 'self'",
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'none'",
-    "frame-src 'none'",
+    `frame-src ${frameSources.join(" ")}`,
     "form-action 'self'",
-    "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com",
+    `script-src ${scriptSources.join(" ")}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https:",
     "media-src 'self' blob: https://*.supabase.co https://*.supabase.com",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' https://*.supabase.co https://*.supabase.com wss://*.supabase.co wss://*.supabase.com https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com",
-    "manifest-src 'self'",
+    `connect-src ${connectSources.join(" ")}`,
+    `manifest-src ${manifestSources.join(" ")}`,
     "worker-src 'self' blob:",
   ];
   if (isSecureRequest) directives.push("upgrade-insecure-requests");
@@ -79,7 +105,10 @@ function applyResponseHeaders(response: Response, request: Request, durationMs: 
   headers.set("x-permitted-cross-domain-policies", "none");
   headers.set("cross-origin-opener-policy", "same-origin-allow-popups");
   headers.set("cross-origin-resource-policy", "same-site");
-  headers.set("content-security-policy", buildContentSecurityPolicy(isSecureRequest));
+  headers.set(
+    "content-security-policy",
+    buildContentSecurityPolicy(isSecureRequest, isVercelPreviewBuild()),
+  );
   headers.set("server-timing", `rawaj;dur=${durationMs}`);
   headers.set("x-rawaj-build-commit", rawajBuildInfo.commitSha);
   headers.set("x-rawaj-build-environment", rawajBuildInfo.environment);
