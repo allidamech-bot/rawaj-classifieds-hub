@@ -2,11 +2,18 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [unreadActivity, liveChatWorkspace, publicAdSlot, messagingGuarded] = await Promise.all([
+const [
+  unreadActivity,
+  liveChatWorkspace,
+  publicAdSlot,
+  messagingGuarded,
+  communicationStyles,
+] = await Promise.all([
   readFile(new URL("../src/lib/unread-activity.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/communication/useLiveChatWorkspace.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/messaging-guarded.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/communication-center-v3.css", import.meta.url), "utf8"),
 ]);
 
 test("unread activity no longer polls on a permanent interval", () => {
@@ -48,4 +55,11 @@ test("public ad placements avoid permanent polling and cap retries", () => {
   assert.match(publicAdSlot, /AD_PLACEMENT_RETRY_LIMIT = 3/);
   assert.match(publicAdSlot, /retryAttempt >= AD_PLACEMENT_RETRY_LIMIT/);
   assert.match(publicAdSlot, /navigator\.onLine === false/);
+});
+
+test("messages route uses a compact workspace header", () => {
+  assert.match(communicationStyles, /\.rawaj-communication-hero\[data-mode="messages"\]/);
+  assert.match(communicationStyles, /padding: 0\.8rem 1rem/);
+  assert.match(communicationStyles, /\.rawaj-communication-hero__metrics \{\s*display: none;/);
+  assert.match(communicationStyles, /min-height: calc\(100dvh - 8\.5rem\)/);
 });
