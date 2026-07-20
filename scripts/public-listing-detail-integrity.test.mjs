@@ -111,7 +111,8 @@ test("canonical location paths and legacy fallbacks never show raw node ids", ()
 });
 
 test("price, gallery, seller, and contact presentation remain public-safe", () => {
-  assert.match(route, /formatPriceLocalized\(listing\.price \?\? 0/);
+  assert.match(route, /<SypPriceDisplay listing=\{listing\} \/>/);
+  assert.match(structuredData, /listing\.priceNewSypNormalized/);
   assert.match(pageData, /normalizePublicListingImages\(/);
   assert.match(presentation, /\.sort\(\(left, right\) => left\.sortOrder - right\.sortOrder\)/);
   assert.match(presentation, /seen\.has\(url\)/);
