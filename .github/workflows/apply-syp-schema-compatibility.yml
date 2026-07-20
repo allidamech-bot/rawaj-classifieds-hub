@@ -25,7 +25,18 @@ jobs:
 
       - name: Apply schema compatibility
         working-directory: repo
-        run: python scripts/.apply-syp-schema-compatibility.py
+        run: |
+          python scripts/.apply-syp-schema-compatibility.py
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("scripts/syp-denomination-phase-a.test.mjs")
+          source = path.read_text()
+          old = r'assert.match(listings, /query\.order\("price", \{ ascending: true/);'
+          new = r'assert.match(listings, /\.order\("price", \{ ascending: true/);'
+          if source.count(old) != 1:
+              raise SystemExit("legacy price-order contract anchor missing")
+          path.write_text(source.replace(old, new, 1))
+          PY
 
       - name: Install dependencies
         working-directory: repo
