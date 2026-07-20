@@ -1,0 +1,34 @@
+name: Apply Admin Campaign Integrity
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/apply-admin-campaign-integrity.mjs"
+      - ".github/workflows/apply-admin-campaign-integrity.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/admin-actions-integrity-audit
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/apply-admin-campaign-integrity.mjs
+      - name: Commit campaign integrity repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/admin.campaigns.tsx scripts/apply-admin-campaign-integrity.mjs
+          git commit -m "fix: keep campaign mutations locked through refetch"
+          git push origin HEAD:agent/admin-actions-integrity-audit
