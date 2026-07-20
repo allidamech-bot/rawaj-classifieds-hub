@@ -132,49 +132,72 @@ function NotificationsPage() {
     setPaginationError(null);
     setActionMessage(null);
 
-    const [pageResult, unreadResult] = await Promise.all([
-      fetchMyNotificationsPage({ limit: NOTIFICATIONS_PAGE_SIZE }),
-      fetchUnreadNotificationsCount(),
-    ]);
+    try {
+      const [pageResult, unreadResult] = await Promise.all([
+        fetchMyNotificationsPage({ limit: NOTIFICATIONS_PAGE_SIZE }),
+        fetchUnreadNotificationsCount(),
+      ]);
 
-    if (
-      requestId !== notificationsRequestIdRef.current ||
-      currentProfileId !== profileIdRef.current
-    )
-      return;
+      if (
+        requestId !== notificationsRequestIdRef.current ||
+        currentProfileId !== profileIdRef.current
+      ) {
+        return;
+      }
+      if (!pageResult.ok) {
+        setLoadError(pageResult.error);
+        setUnreadCountExact(false);
+        return;
+      }
 
-    if (!pageResult.ok) {
-      setLoadError(pageResult.error);
-      setUnreadCountExact(false);
-      setLoading(false);
-      return;
-    }
-
-    const nextItems = applyKnownReadState(pageResult.data.items);
-    const loadedUnread = nextItems.filter((item) => !item.readAt).length;
-    setNotifications(nextItems);
-    setHasLoaded(true);
-    setHasMore(pageResult.data.hasMore);
-    setNextCursor(pageResult.data.nextCursor);
-    setUnreadCountExact(unreadResult.ok);
-    setUnreadTotal(
-      unreadResult.ok
-        ? unreadResult.data
-        : Math.max(
-            loadedUnread,
-            counts.notifications,
-            pageResult.data.hasMore && loadedUnread === 0 ? 1 : 0,
-          ),
-    );
-    if (!unreadResult.ok) {
-      setActionMessage(
-        text(
-          "تعذر تحديث العدد الدقيق للتنبيهات، لكن يمكنك متابعة العناصر وقراءتها بشكل طبيعي.",
-          "The exact unread count could not be refreshed, but notifications remain usable.",
-        ),
+      const nextItems = applyKnownReadState(pageResult.data.items);
+      const loadedUnread = nextItems.filter((item) => !item.readAt).length;
+      setNotifications(nextItems);
+      setHasLoaded(true);
+      setHasMore(pageResult.data.hasMore);
+      setNextCursor(pageResult.data.nextCursor);
+      setUnreadCountExact(unreadResult.ok);
+      setUnreadTotal(
+        unreadResult.ok
+          ? unreadResult.data
+          : Math.max(
+              loadedUnread,
+              counts.notifications,
+              pageResult.data.hasMore && loadedUnread === 0 ? 1 : 0,
+            ),
       );
+      if (!unreadResult.ok) {
+        setActionMessage(
+          text(
+            "تعذر تحديث العدد الدقيق للتنبيهات، لكن يمكنك متابعة العناصر وقراءتها بشكل طبيعي.",
+            "The exact unread count could not be refreshed, but notifications remain usable.",
+          ),
+        );
+      }
+    } catch (caught) {
+      if (
+        requestId !== notificationsRequestIdRef.current ||
+        currentProfileId !== profileIdRef.current
+      ) {
+        return;
+      }
+      setUnreadCountExact(false);
+      setLoadError({
+        code: "unknown",
+        message:
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحميل التنبيهات.", "Could not load notifications."),
+        operation: "notifications_load",
+      });
+    } finally {
+      if (
+        requestId === notificationsRequestIdRef.current &&
+        currentProfileId === profileIdRef.current
+      ) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, [applyKnownReadState, counts.notifications, profileId, text]);
 
   useEffect(() => {
@@ -312,22 +335,32 @@ function NotificationsPage() {
     handledPushOpenScopesRef.current.add(scope);
     const currentProfileId = profileId;
     void (async () => {
-      const result = await fetchMyNotificationById(notificationId);
-      if (currentProfileId !== profileIdRef.current) return;
-      void navigate({ to: "/notifications", search: {}, replace: true });
-      if (!result.ok || !result.data) {
-        setActionMessage(
-          text(
-            "تعذر فتح هذا التنبيه أو لم يعد متاحًا لهذا الحساب.",
-            "This notification is unavailable for the current account.",
-          ),
+      try {
+        const result = await fetchMyNotificationById(notificationId);
+        if (currentProfileId !== profileIdRef.current) return;
+        void navigate({ to: "/notifications", search: {}, replace: true });
+        if (!result.ok || !result.data) {
+          setActionMessage(
+            text(
+              "تعذر فتح هذا التنبيه أو لم يعد متاحًا لهذا الحساب.",
+              "This notification is unavailable for the current account.",
+            ),
+          );
+          return;
+        }
+        setNotifications((current) =>
+          applyKnownReadState(mergeNotifications(current, [result.data as NotificationItem])),
         );
-        return;
+        await openNotificationTargetRef.current(result.data as NotificationItem);
+      } catch (caught) {
+        if (currentProfileId !== profileIdRef.current) return;
+        void navigate({ to: "/notifications", search: {}, replace: true });
+        setActionMessage(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر فتح التنبيه.", "Could not open the notification."),
+        );
       }
-      setNotifications((current) =>
-        applyKnownReadState(mergeNotifications(current, [result.data as NotificationItem])),
-      );
-      await openNotificationTargetRef.current(result.data as NotificationItem);
     })();
   }, [applyKnownReadState, auth.status, navigate, profileId, search.open, text]);
 
@@ -339,8 +372,9 @@ function NotificationsPage() {
       loadMoreInFlightRef.current ||
       !hasMore ||
       !nextCursor
-    )
+    ) {
       return;
+    }
     const currentProfileId = profileId;
     const parentRequestId = notificationsRequestIdRef.current;
     const paginationRequestId = ++paginationRequestIdRef.current;
@@ -358,8 +392,9 @@ function NotificationsPage() {
         parentRequestId !== notificationsRequestIdRef.current ||
         paginationRequestId !== paginationRequestIdRef.current ||
         currentProfileId !== profileIdRef.current
-      )
+      ) {
         return;
+      }
       if (!result.ok) {
         setPaginationError(result.error);
         return;
@@ -368,6 +403,21 @@ function NotificationsPage() {
       setNotifications((current) => mergeNotifications(current, nextItems));
       setHasMore(result.data.hasMore);
       setNextCursor(result.data.nextCursor);
+    } catch (caught) {
+      if (
+        parentRequestId === notificationsRequestIdRef.current &&
+        paginationRequestId === paginationRequestIdRef.current &&
+        currentProfileId === profileIdRef.current
+      ) {
+        setPaginationError({
+          code: "unknown",
+          message:
+            caught instanceof Error
+              ? caught.message
+              : text("تعذر تحميل المزيد من التنبيهات.", "Could not load more notifications."),
+          operation: "notifications_load_more",
+        });
+      }
     } finally {
       if (paginationRequestId === paginationRequestIdRef.current) {
         loadMoreInFlightRef.current = false;
@@ -401,6 +451,15 @@ function NotificationsPage() {
       if (wasUnread) setUnreadTotal((current) => Math.max(0, current - 1));
       void refreshUnreadActivity();
       return true;
+    } catch (caught) {
+      if (currentProfileId === profileIdRef.current) {
+        setActionMessage(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تعليم التنبيه كمقروء.", "Could not mark the notification as read."),
+        );
+      }
+      return false;
     } finally {
       markingReadScopesRef.current.delete(scopeKey);
       if (currentProfileId === profileIdRef.current) {
@@ -444,6 +503,14 @@ function NotificationsPage() {
       );
       setUnreadCountExact(true);
       void refreshUnreadActivity();
+    } catch (caught) {
+      if (currentProfileId === profileIdRef.current) {
+        setActionMessage(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تعليم جميع التنبيهات كمقروءة.", "Could not mark all notifications as read."),
+        );
+      }
     } finally {
       markingAllProfilesRef.current.delete(currentProfileId);
       if (currentProfileId === profileIdRef.current) setMarkingAll(false);
@@ -485,15 +552,15 @@ function NotificationsPage() {
         if (currentProfileId !== profileIdRef.current) return;
       }
       if (target.kind === "listing") {
-        void navigate({ to: "/listings/$id", params: { id: target.listingId } });
+        await navigate({ to: "/listings/$id", params: { id: target.listingId } });
       } else if (target.kind === "owner_listing") {
-        void navigate({ to: "/profile/listings/$id", params: { id: target.listingId } });
+        await navigate({ to: "/profile/listings/$id", params: { id: target.listingId } });
       } else if (target.kind === "conversation") {
-        void navigate({ to: "/chats", search: { conversation: target.conversationId } });
+        await navigate({ to: "/chats", search: { conversation: target.conversationId } });
       } else if (target.kind === "seller") {
-        void navigate({ to: "/seller/$id", params: { id: target.sellerId } });
+        await navigate({ to: "/seller/$id", params: { id: target.sellerId } });
       } else if (target.kind === "saved_search") {
-        void navigate({
+        await navigate({
           to: "/saved-searches",
           search: {
             taxonomy: "",
@@ -522,13 +589,21 @@ function NotificationsPage() {
           },
         });
       } else if (target.kind === "browse_listings") {
-        void navigate({ to: "/listings" });
+        await navigate({ to: "/listings" });
       } else if (target.kind === "support") {
-        void navigate({ to: "/support" });
+        await navigate({ to: "/support" });
       } else if (target.kind === "verification") {
-        void navigate({ to: "/verification" });
+        await navigate({ to: "/verification" });
       } else if (target.kind === "promotion") {
-        void navigate({ to: "/promotion" });
+        await navigate({ to: "/promotion" });
+      }
+    } catch (caught) {
+      if (currentProfileId === profileIdRef.current) {
+        setActionMessage(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر فتح هدف التنبيه.", "Could not open the notification target."),
+        );
       }
     } finally {
       openingTargetScopesRef.current.delete(scopeKey);
