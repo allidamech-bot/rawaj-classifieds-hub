@@ -1,0 +1,56 @@
+name: Apply Full Site ESLint Fix
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/routes/**"
+      - "src/features/**"
+      - "src/components/**"
+      - "scripts/*actions*integrity.test.mjs"
+      - "scripts/full-site-actions-integrity.test.mjs"
+      - ".github/workflows/apply-full-site-eslint-fix.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-full-site-eslint-fix
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/full-site-actions-integrity-audit
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Fix changed TypeScript and contract files
+        shell: bash
+        run: |
+          mapfile -t files < <(git diff --name-only origin/main...HEAD -- '*.ts' '*.tsx' '*.mjs')
+          if [ "${#files[@]}" -eq 0 ]; then
+            exit 0
+          fi
+          npx eslint --fix "${files[@]}"
+      - name: Commit scoped formatting fixes
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "style: format full-site action integrity changes"
+          git push origin HEAD:agent/full-site-actions-integrity-audit
