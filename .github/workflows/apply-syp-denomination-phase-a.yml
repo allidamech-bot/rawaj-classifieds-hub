@@ -27,4 +27,14 @@ jobs:
           cat scripts/.apply-syp-phase-a.prefix.b64 scripts/.apply-syp-phase-a.mjs.gz.b64 \
             | base64 -d \
             | gunzip > /tmp/apply-syp-phase-a.mjs
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('/tmp/apply-syp-phase-a.mjs')
+          source = path.read_text()
+          old = 'replaceExact("src/lib/api/listings.ts", "              ? { price: listings[safePageSize - 1].price }", "              ? { price: listings[safePageSize - 1].priceNewSypNormalized }", 1);'
+          new = 'replaceExact("src/lib/api/listings.ts", "? { price: listings[safePageSize - 1].price }", "? { price: listings[safePageSize - 1].priceNewSypNormalized }", 1);'
+          if old not in source:
+              raise SystemExit('cursor hotfix anchor missing')
+          path.write_text(source.replace(old, new, 1))
+          PY
           node /tmp/apply-syp-phase-a.mjs
