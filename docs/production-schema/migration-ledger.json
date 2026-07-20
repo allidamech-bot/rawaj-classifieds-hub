@@ -14,11 +14,7 @@
     "manual": "Repository record explicitly references manual Production hotfix reconciliation.",
     "unknown": "Repository intent is not yet sufficiently established."
   },
-  "productionStateDefinitions": [
-    "verified-applied",
-    "verified-not-applied",
-    "unknown"
-  ],
+  "productionStateDefinitions": ["verified-applied", "verified-not-applied", "unknown"],
   "replaySafetyDefinitions": [
     "clean-replay-required",
     "forward-only-do-not-replay",
@@ -164,9 +160,7 @@
       "202607190042_dynamic_listing_search_page_v1.sql",
       "202607190043_dynamic_listing_public_rpc_input_hardening_v1.sql"
     ],
-    "superseded": [
-      "202606290002_classifieds_foundation.sql"
-    ],
+    "superseded": ["202606290002_classifieds_foundation.sql"],
     "reconciliation": [
       "202607020004_fix_verification_status_enum_cast.sql",
       "202607050001_reconcile_listing_image_storage_visibility.sql",
@@ -201,8 +195,6 @@
       "202607200003_fix_admin_campaign_safety_version_ambiguity.sql",
       "202607200004_fix_listing_generated_column_moderation_guard.sql"
     ],
-    "manual": [
-      "202607090004_reconcile_manual_production_hotfixes.sql"
-    ]
+    "manual": ["202607090004_reconcile_manual_production_hotfixes.sql"]
   }
 }
