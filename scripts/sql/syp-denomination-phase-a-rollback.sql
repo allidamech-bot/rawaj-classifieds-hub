@@ -401,7 +401,7 @@ create or replace function public.rawaj_protect_listing_moderation_update()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 begin
   if current_setting('rawaj.owner_price_drop_write', true) = 'on' then
@@ -413,9 +413,9 @@ begin
       raise exception 'listing_price_drop_requires_approved_listing';
     end if;
 
-    if (to_jsonb(new) - array['price', 'updated_at'])
+    if (to_jsonb(new) - array['price', 'updated_at', 'search_text_normalized'])
        is distinct from
-       (to_jsonb(old) - array['price', 'updated_at'])
+       (to_jsonb(old) - array['price', 'updated_at', 'search_text_normalized'])
     then
       raise exception 'listing_price_drop_unsafe_update';
     end if;
@@ -432,17 +432,59 @@ begin
     return new;
   end if;
 
+  if current_setting('rawaj.owner_reservation_write', true) = 'on' then
+    if auth.uid() is null or old.owner_id <> auth.uid() then
+      raise exception 'listing_reservation_permission_denied';
+    end if;
+
+    if old.status <> 'approved' or new.status is distinct from old.status then
+      raise exception 'listing_reservation_requires_approved_listing';
+    end if;
+
+    if (to_jsonb(new) - array['reserved_at', 'updated_at', 'search_text_normalized'])
+       is distinct from
+       (to_jsonb(old) - array['reserved_at', 'updated_at', 'search_text_normalized'])
+    then
+      raise exception 'listing_reservation_unsafe_update';
+    end if;
+
+    return new;
+  end if;
+
+  if current_setting('rawaj.promotion_moderation_write', true) = 'on' then
+    if auth.uid() is null or not public.current_user_can_moderate() then
+      raise exception 'listing_promotion_moderation_permission_denied';
+    end if;
+
+    if old.status <> 'approved' or new.status is distinct from old.status then
+      raise exception 'listing_promotion_moderation_requires_approved_listing';
+    end if;
+
+    if (to_jsonb(new) - array[
+          'is_featured', 'featured_until', 'updated_at', 'search_text_normalized'
+        ])
+       is distinct from
+       (to_jsonb(old) - array[
+          'is_featured', 'featured_until', 'updated_at', 'search_text_normalized'
+        ])
+    then
+      raise exception 'listing_promotion_moderation_unsafe_update';
+    end if;
+
+    return new;
+  end if;
+
   if public.rawaj_current_user_can_review_listings()
      and (to_jsonb(new) - array[
-           'status','reviewed_by','reviewed_at','rejection_reason',
-           'published_at','archived_at','updated_at','status_changed_at',
-           'expires_at'
+           'status', 'reviewed_by', 'reviewed_at', 'rejection_reason',
+           'published_at', 'archived_at', 'updated_at', 'status_changed_at',
+           'expires_at', 'search_text_normalized'
          ])
          is not distinct from
          (to_jsonb(old) - array[
-           'status','reviewed_by','reviewed_at','rejection_reason',
-           'published_at','archived_at','updated_at','status_changed_at',
-           'expires_at'
+           'status', 'reviewed_by', 'reviewed_at', 'rejection_reason',
+           'published_at', 'archived_at', 'updated_at', 'status_changed_at',
+           'expires_at', 'search_text_normalized'
          ])
   then
     return new;

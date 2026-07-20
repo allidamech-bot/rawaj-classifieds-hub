@@ -94,6 +94,9 @@ test("Phase A normalized search and price history never compare mixed raw SYP", 
   assert.match(sql, /new_price_denomination/i);
   assert.match(sql, /l\.price_new_syp_normalized = d\.new_price_new_syp_normalized/i);
   assert.match(sql, /rawaj_sync_favorite_snapshot_syp_denomination/i);
+  assert.match(sql, /rawaj\.owner_reservation_write/i);
+  assert.match(sql, /rawaj\.promotion_moderation_write/i);
+  assert.match(sql, /expires_at', 'search_text_normalized', 'price_new_syp_normalized'/i);
   assert.match(
     sql,
     /if found then[\s\S]*else[\s\S]*price_denomination_snapshot := 'unclassified'/i,
@@ -110,5 +113,16 @@ test("Phase A rollback restores replaced functions before dropping columns", asy
     rollback,
     /create or replace function public\.rawaj_public_listing_search_page_v1_impl\(/i,
   );
+  assert.match(rollback, /rawaj\.owner_reservation_write/i);
+  assert.match(rollback, /rawaj\.promotion_moderation_write/i);
+  assert.match(rollback, /expires_at', 'search_text_normalized'/i);
+  const rollbackGuardStart = rollback.indexOf(
+    "create or replace function public.rawaj_protect_listing_moderation_update()",
+  );
+  const rollbackGuard = rollback.slice(
+    rollbackGuardStart,
+    rollback.indexOf("\n$$;", rollbackGuardStart) + 4,
+  );
+  assert.doesNotMatch(rollbackGuard, /price_new_syp_normalized/);
   assert.doesNotMatch(rollback, /Required follow-up: redeploy/i);
 });
