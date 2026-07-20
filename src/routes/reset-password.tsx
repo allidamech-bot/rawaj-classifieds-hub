@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import type { Session } from "@supabase/supabase-js";
 import { Eye, EyeOff, KeyRound, LogIn, User } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
@@ -34,6 +35,7 @@ function ResetPasswordPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [ready, setReady] = useState(false);
+  const [recoveryUserId, setRecoveryUserId] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -52,13 +54,15 @@ function ResetPasswordPage() {
         if (!cancelled) {
           setChecking(false);
           setReady(false);
+          setRecoveryUserId(null);
         }
         return;
       }
 
-      const markReady = () => {
-        if (cancelled || !hasActivePasswordRecoverySession()) return;
+      const markReady = (session: Session) => {
+        if (cancelled || !hasActivePasswordRecoverySession(session.user.id)) return;
         clearTimeout(expiryTimer);
+        setRecoveryUserId(session.user.id);
         setReady(true);
         setChecking(false);
       };
@@ -66,16 +70,20 @@ function ResetPasswordPage() {
       const { data: listener } = client.auth.onAuthStateChange((event, session) => {
         if (!session) return;
         if (event === "PASSWORD_RECOVERY") {
-          markPasswordRecoverySession();
-          markReady();
+          markPasswordRecoverySession(session.user.id);
+          markReady(session);
         }
       });
       unsubscribeAuth = () => listener.subscription.unsubscribe();
 
       const { data, error: sessionError } = await client.auth.getSession();
       if (cancelled) return;
-      if (!sessionError && data.session && hasActivePasswordRecoverySession()) {
-        markReady();
+      if (
+        !sessionError &&
+        data.session &&
+        hasActivePasswordRecoverySession(data.session.user.id)
+      ) {
+        markReady(data.session);
         return;
       }
 
@@ -83,7 +91,16 @@ function ResetPasswordPage() {
         if (cancelled) return;
         const { data: lateSession, error: lateError } = await client.auth.getSession();
         if (cancelled) return;
-        setReady(Boolean(!lateError && lateSession.session && hasActivePasswordRecoverySession()));
+        if (
+          !lateError &&
+          lateSession.session &&
+          hasActivePasswordRecoverySession(lateSession.session.user.id)
+        ) {
+          markReady(lateSession.session);
+          return;
+        }
+        setRecoveryUserId(null);
+        setReady(false);
         setChecking(false);
       }, 15000);
     }
@@ -109,16 +126,6 @@ function ResetPasswordPage() {
     setMessage("");
     setError("");
 
-    if (!hasActivePasswordRecoverySession()) {
-      setReady(false);
-      setError(
-        text(
-          "انتهت جلسة الاستعادة. اطلب رابطًا جديدًا قبل تغيير كلمة المرور.",
-          "The recovery session expired. Request a new link before changing your password.",
-        ),
-      );
-      return;
-    }
     if (password.length < 6) {
       setError(
         text(
@@ -147,12 +154,34 @@ function ResetPasswordPage() {
     saveInFlightRef.current = true;
     setSaving(true);
     try {
+      const { data: sessionData, error: sessionError } = await client.auth.getSession();
+      const currentUserId = sessionData.session?.user.id ?? null;
+      if (
+        sessionError ||
+        !currentUserId ||
+        !recoveryUserId ||
+        currentUserId !== recoveryUserId ||
+        !hasActivePasswordRecoverySession(currentUserId)
+      ) {
+        clearPasswordRecoverySession();
+        setRecoveryUserId(null);
+        setReady(false);
+        setError(
+          text(
+            "انتهت جلسة الاستعادة أو تغيّر الحساب. اطلب رابطًا جديدًا قبل تغيير كلمة المرور.",
+            "The recovery session expired or the account changed. Request a new link before changing your password.",
+          ),
+        );
+        return;
+      }
+
       const { error: updateError } = await client.auth.updateUser({ password });
       if (updateError) {
         setError(authErrorMessage(updateError, "update-password", text));
         return;
       }
       clearPasswordRecoverySession();
+      setRecoveryUserId(null);
       setPassword("");
       setConfirmPassword("");
       setMessage(
