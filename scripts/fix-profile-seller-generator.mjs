@@ -40,5 +40,15 @@ replaceGeneratorBlock(
   );`,
 );
 
+replaceGeneratorBlock(
+  "seller rating disabled state",
+  `source = replaceRegexOnce(
+    source,
+    /aria-pressed=\\{rating === value\\}\\s+onClick=/,
+    \`aria-pressed={rating === value}\n                  disabled={saving}\n                  onClick=\`,
+    "seller rating disabled state",
+  );`,
+);
+
 await writeFile(path, source);
 await rm("scripts/fix-profile-seller-generator.mjs", { force: true });
