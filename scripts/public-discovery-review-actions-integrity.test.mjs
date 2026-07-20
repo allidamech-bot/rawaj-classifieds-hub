@@ -33,7 +33,7 @@ test("seller review response and report actions are normalized and failure-safe"
   assert.match(reviewCard, /setSellerReviewResponse\(review\.id, normalizedResponse\)/);
   assert.match(reviewCard, /const normalizedDetails = reportDetails\.trim\(\)/);
   assert.match(reviewCard, /createSellerReviewReport\(review\.id, reportReason, normalizedDetails\)/);
-  assert.match(reviewCard, /async function submitResponse[\s\S]*?catch \(caught\)[\s\S]*?finally/);
+  assert.match(reviewCard, /async function persistResponse[\s\S]*?catch \(caught\)[\s\S]*?finally/);
   assert.match(reviewCard, /async function submitReport[\s\S]*?catch \(caught\)[\s\S]*?finally/);
   assert.match(reviewCard, /aria-busy=\{saving\}/);
   assert.match(reviewCard, /aria-busy=\{reportSaving\}/);
