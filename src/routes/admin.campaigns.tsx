@@ -256,9 +256,7 @@ function CampaignManagerPage() {
         return;
       }
       setStatusReason("");
-      setNotice(
-        text("تم تغيير حالة الحملة وتسجيل السبب.", "Campaign status changed and audited."),
-      );
+      setNotice(text("تم تغيير حالة الحملة وتسجيل السبب.", "Campaign status changed and audited."));
       await refreshCampaigns();
     } finally {
       mutationInFlightRef.current = false;
