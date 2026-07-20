@@ -53,6 +53,7 @@ jobs:
             exit "$status"
           fi
           git checkout HEAD -- .github/workflows/apply-admin-actions-integrity-repair.yml
+          rm -f .github/workflows/admin-actions-integrity.yml
           rm -f repair-diagnostic.txt scripts/fix-admin-repair-script.mjs
       - name: Commit repair
         run: |
