@@ -78,11 +78,7 @@ function ResetPasswordPage() {
 
       const { data, error: sessionError } = await client.auth.getSession();
       if (cancelled) return;
-      if (
-        !sessionError &&
-        data.session &&
-        hasActivePasswordRecoverySession(data.session.user.id)
-      ) {
+      if (!sessionError && data.session && hasActivePasswordRecoverySession(data.session.user.id)) {
         markReady(data.session);
         return;
       }
