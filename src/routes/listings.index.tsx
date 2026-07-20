@@ -9,6 +9,7 @@ import { SearchEmptyState } from "@/features/search/SearchEmptyState";
 import { SearchResultsToolbar } from "@/features/search/SearchResultsToolbar";
 import { ListingCardSkeleton } from "@/features/listings/cards";
 import { RealListingCard } from "@/features/listings/RealListingCard";
+import { DynamicListingFacetFilters } from "@/features/listings/DynamicListingFacetFilters";
 import { NearbyDiscoveryControl } from "@/features/listings/NearbyDiscoveryControl";
 import { useNearbyDiscovery } from "@/features/listings/use-nearby-discovery";
 import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
@@ -44,6 +45,12 @@ import {
 import { useListingsReferences } from "@/features/listings/use-listings-references";
 import { useListingsResults } from "@/features/listings/use-listings-results";
 import { useListingsPagination } from "@/features/listings/use-listings-pagination";
+import { useListingFacets } from "@/features/listings/use-listing-facets";
+import {
+  countListingAttributeFilters,
+  encodeListingAttributeFilters,
+  parseListingAttributeFilters,
+} from "@/features/listings/listing-attribute-filter-state";
 import {
   CategorySpecificFilterFields,
   SellerSearchCard,
@@ -94,6 +101,9 @@ function ListingsPage() {
   const [detailCondition, setDetailCondition] = useState(search.detail_condition ?? "");
   const [employmentType, setEmploymentType] = useState(search.employment_type ?? "");
   const [salaryType, setSalaryType] = useState(search.salary_type ?? "");
+  const [attributeFilters, setAttributeFilters] = useState(() =>
+    parseListingAttributeFilters(search.attrs),
+  );
   const [q, setQ] = useState(search.q ?? "");
   const [debouncedQ, setDebouncedQ] = useState(search.q ?? "");
   const [filtersOpen, setFiltersOpen] = useState(Boolean(search.open_filters));
@@ -180,6 +190,20 @@ function ListingsPage() {
     typeof parsedPriceMin === "number" &&
     typeof parsedPriceMax === "number" &&
     parsedPriceMin > parsedPriceMax;
+  const encodedAttributeFilters = useMemo(
+    () => encodeListingAttributeFilters(attributeFilters),
+    [attributeFilters],
+  );
+  const dynamicFacetCount = countListingAttributeFilters(attributeFilters);
+  const listingFacets = useListingFacets({
+    enabled: Boolean(taxonomyFilterScope?.taxonomyNodeIds.length),
+    taxonomyNodeIds: taxonomyFilterScope?.taxonomyNodeIds,
+    attributeFilters,
+    governorateId: govId || undefined,
+    priceMin: parsedPriceMin,
+    priceMax: parsedPriceMax,
+    query: debouncedQ,
+  });
   const hasActiveFilters = Boolean(
     selectedGovernorate ||
     districtAr ||
@@ -200,7 +224,8 @@ function ListingsPage() {
     detailCondition ||
     employmentType ||
     salaryType ||
-    withPhotos,
+    withPhotos ||
+    dynamicFacetCount > 0,
   );
 
   useEffect(() => {
@@ -224,10 +249,12 @@ function ListingsPage() {
     setDetailCondition(search.detail_condition ?? "");
     setEmploymentType(search.employment_type ?? "");
     setSalaryType(search.salary_type ?? "");
+    setAttributeFilters(parseListingAttributeFilters(search.attrs));
     setSort(search.sort ?? "latest");
     setView(search.view ?? "grid");
     setWithPhotos(Boolean(search.with_photos));
   }, [
+    search.attrs,
     search.car_make,
     search.car_model,
     search.district,
@@ -322,38 +349,41 @@ function ListingsPage() {
     if (!referencesLoaded || filtersOpen) return;
     void navigate({
       to: "/listings",
-      search: buildListingsSyncSearch({
-        selectedTaxonomyNodeId: selectedTaxonomyNode?.id,
-        selectedCategoryId: selectedCategory?.id,
-        subcategoryId,
-        taxonomyListingSearch,
-        taxonomyOwnsPropertyPurpose,
-        taxonomyOwnsPropertyPurposeValue: taxonomyListingSearch?.property_purpose,
-        propertyPurpose,
-        taxonomyOwnsPropertyType,
-        taxonomyOwnsPropertyTypeValue: taxonomyListingSearch?.property_type,
-        propertyType,
-        govId,
-        districtAr,
-        parsedPriceMin,
-        parsedPriceMax,
-        priceType: priceType || undefined,
-        globalCondition: usesGlobalCondition ? globalCondition : undefined,
-        carMake,
-        carModel,
-        fuelType,
-        transmission,
-        rooms,
-        rentalDuration,
-        electronicsBrand,
-        detailCondition,
-        employmentType,
-        salaryType,
-        withPhotos,
-        debouncedQ,
-        sort,
-        view,
-      }),
+      search: {
+        ...buildListingsSyncSearch({
+          selectedTaxonomyNodeId: selectedTaxonomyNode?.id,
+          selectedCategoryId: selectedCategory?.id,
+          subcategoryId,
+          taxonomyListingSearch,
+          taxonomyOwnsPropertyPurpose,
+          taxonomyOwnsPropertyPurposeValue: taxonomyListingSearch?.property_purpose,
+          propertyPurpose,
+          taxonomyOwnsPropertyType,
+          taxonomyOwnsPropertyTypeValue: taxonomyListingSearch?.property_type,
+          propertyType,
+          govId,
+          districtAr,
+          parsedPriceMin,
+          parsedPriceMax,
+          priceType: priceType || undefined,
+          globalCondition: usesGlobalCondition ? globalCondition : undefined,
+          carMake,
+          carModel,
+          fuelType,
+          transmission,
+          rooms,
+          rentalDuration,
+          electronicsBrand,
+          detailCondition,
+          employmentType,
+          salaryType,
+          withPhotos,
+          debouncedQ,
+          sort,
+          view,
+        }),
+        attrs: encodedAttributeFilters,
+      },
       replace: true,
     });
   }, [
@@ -394,6 +424,7 @@ function ListingsPage() {
     debouncedQ,
     sort,
     view,
+    encodedAttributeFilters,
     filtersOpen,
     navigate,
   ]);
@@ -426,6 +457,7 @@ function ListingsPage() {
     withPhotos,
     debouncedQ,
     sort,
+    attributeFilters,
     referencesLoaded,
     taxonomyAvailable,
     selectedTaxonomyNode,
@@ -441,6 +473,7 @@ function ListingsPage() {
     sellerSearchError,
     loading: resultsLoading,
     nextCursor,
+    totalCount,
     filterVersionRef,
     setItems,
     setNextCursor,
@@ -653,7 +686,26 @@ function ListingsPage() {
         }
       : null,
   ].filter(Boolean) as Array<{ key: string; label: string; clear: () => void }>;
-  const activeFilterCount = activeFilters.length;
+  const dynamicActiveFilters = Object.entries(attributeFilters).map(([fieldKey, value]) => {
+    const facet = listingFacets.data.facets.find((item) => item.fieldKey === fieldKey);
+    const fieldLabel = facet
+      ? language === "en"
+        ? facet.labelEn || facet.labelAr
+        : facet.labelAr
+      : fieldKey;
+    return {
+      key: `attribute:${fieldKey}`,
+      label: `${fieldLabel}: ${formatDynamicFilterValue(value, facet, language, text)}`,
+      clear: () =>
+        setAttributeFilters((current) => {
+          const next = { ...current };
+          delete next[fieldKey];
+          return next;
+        }),
+    };
+  });
+  const allActiveFilters = [...activeFilters, ...dynamicActiveFilters];
+  const activeFilterCount = allActiveFilters.length;
 
   const draftSelectedCategory = draftCategoryId
     ? categories.find(
@@ -700,6 +752,7 @@ function ListingsPage() {
     withPhotos,
     debouncedQ,
     sort,
+    attributeFilters,
     nextCursor,
     hasPriceContradiction,
     filterVersionRef,
@@ -786,6 +839,7 @@ function ListingsPage() {
     setDetailCondition(search.detail_condition ?? "");
     setEmploymentType(search.employment_type ?? "");
     setSalaryType(search.salary_type ?? "");
+    setAttributeFilters(parseListingAttributeFilters(search.attrs));
     setSubcategoryId(search.subcategory ?? "");
     setDraftCategoryId(search.taxonomy ? undefined : (search.category ?? undefined));
   }
@@ -812,6 +866,7 @@ function ListingsPage() {
     setDetailCondition("");
     setEmploymentType("");
     setSalaryType("");
+    setAttributeFilters({});
     setQ("");
     setWithPhotos(false);
     setFiltersOpen(false);
@@ -841,36 +896,39 @@ function ListingsPage() {
     setFiltersOpen(false);
     void navigate({
       to: "/listings",
-      search: buildListingsMobileApplySearch({
-        searchTaxonomy: search.taxonomy,
-        draftCategoryId,
-        subcategoryId,
-        govId,
-        districtAr,
-        parsedPriceMin,
-        parsedPriceMax,
-        priceType: priceType || undefined,
-        globalCondition: categoryUsesGlobalCondition(draftCategoryFieldKind)
-          ? globalCondition
-          : undefined,
-        carMake,
-        carModel,
-        fuelType,
-        transmission,
-        fieldKind: draftCategoryFieldKind,
-        propertyPurpose,
-        propertyType,
-        rooms,
-        rentalDuration,
-        electronicsBrand,
-        detailCondition,
-        employmentType,
-        salaryType,
-        withPhotos,
-        debouncedQ,
-        sort,
-        view,
-      }),
+      search: {
+        ...buildListingsMobileApplySearch({
+          searchTaxonomy: search.taxonomy,
+          draftCategoryId,
+          subcategoryId,
+          govId,
+          districtAr,
+          parsedPriceMin,
+          parsedPriceMax,
+          priceType: priceType || undefined,
+          globalCondition: categoryUsesGlobalCondition(draftCategoryFieldKind)
+            ? globalCondition
+            : undefined,
+          carMake,
+          carModel,
+          fuelType,
+          transmission,
+          fieldKind: draftCategoryFieldKind,
+          propertyPurpose,
+          propertyType,
+          rooms,
+          rentalDuration,
+          electronicsBrand,
+          detailCondition,
+          employmentType,
+          salaryType,
+          withPhotos,
+          debouncedQ,
+          sort,
+          view,
+        }),
+        attrs: encodedAttributeFilters,
+      },
       replace: true,
     });
   };
@@ -888,7 +946,7 @@ function ListingsPage() {
           }
           query={q}
           onQueryChange={setQ}
-          resultCount={visibleItems.length}
+          resultCount={nearby.active ? nearby.items.length : (totalCount ?? visibleItems.length)}
           loading={loading}
           activeFilterCount={activeFilterCount}
           sort={sort}
@@ -920,6 +978,7 @@ function ListingsPage() {
             detail_condition: detailCondition,
             employment_type: employmentType,
             salary_type: salaryType,
+            attrs: encodedAttributeFilters ?? "",
             sort,
           }}
         />
@@ -1179,6 +1238,17 @@ function ListingsPage() {
                   taxonomyOwnsPurpose={taxonomyOwnsPropertyPurpose}
                   taxonomyOwnsType={taxonomyOwnsPropertyType}
                 />
+                <div className="mt-4">
+                  <DynamicListingFacetFilters
+                    facets={listingFacets.data.facets}
+                    values={attributeFilters}
+                    loading={listingFacets.loading}
+                    errorMessage={listingFacets.error?.message}
+                    language={language}
+                    onChange={setAttributeFilters}
+                    text={text}
+                  />
+                </div>
                 <div className="mt-3 flex justify-end">
                   <button
                     type="button"
@@ -1394,6 +1464,23 @@ function ListingsPage() {
               />
             </section>
           ) : null}
+
+          {listingFacets.data.facets.length > 0 ? (
+            <section className="rawaj-filter-sheet__section">
+              <div className="rawaj-filter-sheet__section-heading">
+                <h3>{text("تفاصيل القسم", "Category details")}</h3>
+              </div>
+              <DynamicListingFacetFilters
+                facets={listingFacets.data.facets}
+                values={attributeFilters}
+                loading={listingFacets.loading}
+                errorMessage={listingFacets.error?.message}
+                language={language}
+                onChange={setAttributeFilters}
+                text={text}
+              />
+            </section>
+          ) : null}
         </FilterBottomSheet>
 
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
@@ -1401,8 +1488,12 @@ function ListingsPage() {
             {loading
               ? text("جاري تحميل الإعلانات...", "Loading listings...")
               : text(
-                  `${visibleItems.length} نتيجة محملة حاليًا`,
-                  `${visibleItems.length} currently loaded results`,
+                  totalCount === null
+                    ? `${visibleItems.length} نتيجة محملة حاليًا`
+                    : `${totalCount} نتيجة، تم تحميل ${visibleItems.length}`,
+                  totalCount === null
+                    ? `${visibleItems.length} currently loaded results`
+                    : `${totalCount} results, ${visibleItems.length} loaded`,
                 )}
           </span>
           {hasActiveFilters && (
@@ -1419,7 +1510,7 @@ function ListingsPage() {
           >
             {text("تصفح الأقسام", "Browse categories")}
           </Link>
-          {activeFilters.map((filter) => (
+          {allActiveFilters.map((filter) => (
             <button
               key={filter.key}
               type="button"
@@ -1573,4 +1664,36 @@ function ListingsPage() {
       </main>
     </>
   );
+}
+
+function formatDynamicFilterValue(
+  value: string | boolean | string[] | { min?: number; max?: number },
+  facet:
+    { options: Array<{ valueKey: string; labelAr: string; labelEn: string | null }> } | undefined,
+  language: "ar" | "en",
+  text: (ar: string, en: string) => string,
+) {
+  if (typeof value === "boolean") return value ? text("نعم", "Yes") : text("لا", "No");
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => dynamicOptionLabel(item, facet, language))
+      .join(language === "ar" ? "، " : ", ");
+  }
+  if (value && typeof value === "object") {
+    const minimum = value.min === undefined ? "…" : String(value.min);
+    const maximum = value.max === undefined ? "…" : String(value.max);
+    return `${minimum} – ${maximum}`;
+  }
+  return dynamicOptionLabel(value, facet, language);
+}
+
+function dynamicOptionLabel(
+  value: string,
+  facet:
+    { options: Array<{ valueKey: string; labelAr: string; labelEn: string | null }> } | undefined,
+  language: "ar" | "en",
+) {
+  const option = facet?.options.find((item) => item.valueKey === value);
+  if (!option) return value;
+  return language === "en" ? option.labelEn || option.labelAr : option.labelAr;
 }

@@ -39,6 +39,7 @@ const emptySavedSearchParams = {
   detail_condition: "",
   employment_type: "",
   salary_type: "",
+  attrs: "",
   sort: "latest" as ListingsSort,
 };
 
