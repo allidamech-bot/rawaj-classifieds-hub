@@ -3,15 +3,13 @@ import { readFile, rm, writeFile } from "node:fs/promises";
 const path = "scripts/apply-chat-actions-integrity.mjs";
 let source = await readFile(path, "utf8");
 
-const resetBlock = `replaceOnce(
-  '    setBlockReason("");\n    setNotice("");',
-  '    setBlockReason("");\n    setBlocking(false);\n    setNotice("");',
-  "chat account reset blocking",
-);`;
-const resetCount = source.split(resetBlock).length - 1;
-if (resetCount !== 1) throw new Error(`Expected one reset generator block, found ${resetCount}`);
+const resetBlockPattern = /replaceOnce\(\s*'    setBlockReason\(""\);\\n    setNotice\(""\);',\s*'    setBlockReason\(""\);\\n    setBlocking\(false\);\\n    setNotice\(""\);',\s*"chat account reset blocking",\s*\);/;
+const resetMatches = [...source.matchAll(new RegExp(resetBlockPattern.source, "g"))];
+if (resetMatches.length !== 1) {
+  throw new Error(`Expected one reset generator block, found ${resetMatches.length}`);
+}
 source = source.replace(
-  resetBlock,
+  resetBlockPattern,
   `{
   const before = '    setBlockReason("");\\n    setNotice("");';
   const after = '    setBlockReason("");\\n    setBlocking(false);\\n    setNotice("");';
