@@ -9,6 +9,7 @@ on:
       - "scripts/.apply-syp-phase-a.prefix.b64"
       - "scripts/.apply-syp-phase-a.mjs.gz.b64"
       - "scripts/.syp-phase-a-preflight.py"
+      - "scripts/.syp-phase-a-contract-adjust.py"
       - ".github/workflows/apply-syp-denomination-phase-a.yml"
 
 permissions:
@@ -34,7 +35,9 @@ jobs:
 
       - name: Apply complete Phase A preflight patch
         working-directory: repo
-        run: python scripts/.syp-phase-a-preflight.py
+        run: |
+          python scripts/.syp-phase-a-preflight.py
+          python scripts/.syp-phase-a-contract-adjust.py
 
       - name: Install dependencies
         working-directory: repo
