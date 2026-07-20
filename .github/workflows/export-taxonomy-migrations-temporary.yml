@@ -1,0 +1,31 @@
+name: Export Taxonomy Migrations Temporary
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/export-taxonomy-migrations-temporary.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect migrations
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$RUNNER_TEMP/rawaj-taxonomy-migrations"
+          cp supabase/migrations/20260719002*.sql "$RUNNER_TEMP/rawaj-taxonomy-migrations/"
+          cp supabase/migrations/20260719003*.sql "$RUNNER_TEMP/rawaj-taxonomy-migrations/"
+          cp supabase/migrations/20260719004*.sql "$RUNNER_TEMP/rawaj-taxonomy-migrations/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rawaj-taxonomy-migrations-${{ github.sha }}
+          path: ${{ runner.temp }}/rawaj-taxonomy-migrations
+          if-no-files-found: error
+          retention-days: 1
