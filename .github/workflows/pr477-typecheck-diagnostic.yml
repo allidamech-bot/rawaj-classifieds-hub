@@ -1,9 +1,9 @@
 name: PR477 Typecheck Diagnostic
 
 on:
-  push:
+  pull_request:
     branches:
-      - agent/recovery-event-bootstrap
+      - main
 
 permissions:
   contents: read
