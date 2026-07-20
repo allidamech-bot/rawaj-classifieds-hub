@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - agent/admin-actions-rollback-integration
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/apply-admin-auth-fixtures.yml"
 
 permissions:
   contents: write
