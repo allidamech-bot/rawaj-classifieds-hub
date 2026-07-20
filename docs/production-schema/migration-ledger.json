@@ -191,7 +191,9 @@
       "202607180001_chat_delivery_read_receipts.sql",
       "202607190010_reconcile_ad_placement_https_version_update.sql",
       "202607200001_fix_owner_system_control_version_ambiguity.sql",
-      "202607200002_admin_runtime_capability_gate_v1.sql"
+      "202607200002_admin_runtime_capability_gate_v1.sql",
+      "202607200003_fix_admin_campaign_safety_version_ambiguity.sql",
+      "202607200004_fix_listing_generated_column_moderation_guard.sql"
     ],
     "manual": ["202607090004_reconcile_manual_production_hotfixes.sql"]
   }

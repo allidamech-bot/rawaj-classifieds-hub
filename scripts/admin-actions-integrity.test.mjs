@@ -35,6 +35,13 @@ const migrationFiles = (await readdir(migrationsDir)).filter((file) => file.ends
 const migrationSql = (
   await Promise.all(migrationFiles.map((file) => readFile(new URL(file, migrationsDir), "utf8")))
 ).join("\n");
+const campaignSafetyRepair = await readFile(
+  new URL(
+    "../supabase/migrations/202607200003_fix_admin_campaign_safety_version_ambiguity.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 function source(path) {
   const value = routeSources.get(path);
@@ -132,6 +139,25 @@ test("campaign mutations remain locked through authoritative refetch", () => {
     value,
     /targetCategoryIds: campaignForm\.categoryIdsText\.split\(","\)/,
   );
+});
+
+test("campaign and safety version increments are table-qualified", () => {
+  const functionNames = [
+    "rawaj_owner_upsert_campaign",
+    "rawaj_owner_set_campaign_status",
+    "rawaj_owner_upsert_campaign_creative",
+    "rawaj_safety_upsert_case",
+    "rawaj_safety_set_case_status",
+    "rawaj_safety_escalate_case",
+  ];
+  for (const functionName of functionNames) {
+    assert.ok(campaignSafetyRepair.includes(functionName), `Repair missing function: ${functionName}`);
+  }
+  assert.match(campaignSafetyRepair, /version = campaign_row\.version \+ 1/g);
+  assert.match(campaignSafetyRepair, /version = creative_row\.version \+ 1/g);
+  assert.match(campaignSafetyRepair, /version = safety_row\.version \+ 1/g);
+  assert.doesNotMatch(campaignSafetyRepair, /version\s*=\s*version\s*\+\s*1/i);
+  assert.match(campaignSafetyRepair, /set search_path = public, pg_temp/gi);
 });
 
 test("critical admin RPC contracts exist in frontend and migration ledger", async () => {

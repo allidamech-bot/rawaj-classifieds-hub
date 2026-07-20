@@ -17,6 +17,9 @@ const verificationPaths = [
   "listing-data-quality-workspace-local-verification.sql",
   "listing-data-quality-context-local-verification.sql",
   "dynamic-listing-search-local-verification.sql",
+  "admin-actions-auth-fixtures-local-setup.sql",
+  "admin-actions-rollback-local-verification.sql",
+  "admin-actions-auth-fixtures-local-cleanup.sql",
 ].map((filename) => ({
   filename,
   filePath: path.join(root, "scripts", "sql", filename),
