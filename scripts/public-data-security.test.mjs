@@ -38,11 +38,11 @@ function functionSource(source, start, end) {
 
 test("JSON-LD serialization neutralizes script-breaking characters", () => {
   assert.match(seo, /export function serializeJsonLd/);
-  assert.ok(seo.includes('.replace(/</g, "\\\\u003c")'));
-  assert.ok(seo.includes('.replace(/>/g, "\\\\u003e")'));
-  assert.ok(seo.includes('.replace(/&/g, "\\\\u0026")'));
-  assert.ok(seo.includes('.replace(/\\u2028/g, "\\\\u2028")'));
-  assert.ok(seo.includes('.replace(/\\u2029/g, "\\\\u2029")'));
+  assert.ok(seo.includes('.replace(/</g, "\\u003c")'));
+  assert.ok(seo.includes('.replace(/>/g, "\\u003e")'));
+  assert.ok(seo.includes('.replace(/&/g, "\\u0026")'));
+  assert.ok(seo.includes('.replace(/\u2028/g, "\\u2028")'));
+  assert.ok(seo.includes('.replace(/\u2029/g, "\\u2029")'));
   assert.match(seo, /__html: serializeJsonLd\(data\)/);
   assert.doesNotMatch(seo, /__html: JSON\.stringify\(data\)/);
 });
@@ -56,9 +56,12 @@ test("public listing allowlist excludes moderation-only fields", () => {
   ]) {
     assert.doesNotMatch(publicFields, new RegExp(`"${internalField}"`));
   }
+  assert.match(publicFields, /publicListingLegacySelect/);
   assert.match(publicFields, /publicListingSelect/);
+  assert.match(publicFields, /publicListingSelectForSchema/);
   assert.match(publicFields, /publicSellerReviewSelect/);
   assert.doesNotMatch(publicFields, /"admin_note"/);
+  assert.doesNotMatch(publicFields, /select\("\*"\)/);
 });
 
 test("all public listing reads use explicit allowlists", () => {
@@ -73,11 +76,19 @@ test("all public listing reads use explicit allowlists", () => {
     "export async function fetchOwnerListingDetail(",
   );
 
-  assert.ok(publicList.includes("const listingSelect = filters.withPhotos"));
-  assert.ok(publicList.includes("`${publicListingSelect},listing_images!inner(id)`"));
+  assert.ok(
+    publicList.includes(
+      "const schemaListingSelect = publicListingSelectForSchema(supportsSypDenomination)",
+    ),
+  );
+  assert.ok(publicList.includes("`${schemaListingSelect},listing_images!inner(id)`"));
   assert.ok(publicList.includes(".select(listingSelect)"));
+  assert.match(
+    publicDetail,
+    /\.select\(publicListingSelectForSchema\(supportsSypDenomination\)\)/,
+  );
 
-  for (const source of [publicDetail, locationAware, canonicalAware, priceDrops]) {
+  for (const source of [locationAware, canonicalAware, priceDrops]) {
     assert.match(source, /\.select\(publicListingSelect\)/);
   }
 
