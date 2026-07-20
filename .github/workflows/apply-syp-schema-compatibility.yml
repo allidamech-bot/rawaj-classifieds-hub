@@ -29,13 +29,27 @@ jobs:
           python scripts/.apply-syp-schema-compatibility.py
           python - <<'PY'
           from pathlib import Path
-          path = Path("scripts/syp-denomination-phase-a.test.mjs")
-          source = path.read_text()
-          old = r'assert.match(listings, /query\.order\("price", \{ ascending: true/);'
-          new = r'assert.match(listings, /\.order\("price", \{ ascending: true/);'
-          if source.count(old) != 1:
+
+          contract_path = Path("scripts/syp-denomination-phase-a.test.mjs")
+          contract = contract_path.read_text()
+          contract_old = r'assert.match(listings, /query\.order\("price", \{ ascending: true/);'
+          contract_new = r'assert.match(listings, /\.order\("price", \{ ascending: true/);'
+          if contract.count(contract_old) != 1:
               raise SystemExit("legacy price-order contract anchor missing")
-          path.write_text(source.replace(old, new, 1))
+          contract_path.write_text(contract.replace(contract_old, contract_new, 1))
+
+          dynamic_path = Path("src/lib/api/dynamic-filtered-listings.ts")
+          dynamic = dynamic_path.read_text()
+          dynamic_old = '''  const supportsSypDenomination = await supportsSypDenominationSchema(client);
+          const { data, error } = await client
+            .from("listings")
+            .select(publicListingSelectForSchema(supportsSypDenomination))'''
+          dynamic_new = '''  const supportsSypDenomination = await supportsSypDenominationSchema(client);
+          const listingSelect = publicListingSelectForSchema(supportsSypDenomination) as "*";
+          const { data, error } = await client.from("listings").select(listingSelect)'''
+          if dynamic.count(dynamic_old) != 1:
+              raise SystemExit("dynamic select type anchor missing")
+          dynamic_path.write_text(dynamic.replace(dynamic_old, dynamic_new, 1))
           PY
 
       - name: Install dependencies
