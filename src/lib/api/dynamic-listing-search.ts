@@ -1,8 +1,4 @@
-import type {
-  ClassifiedsResult,
-  ListingCursor,
-  ListingFilters,
-} from "@/lib/classifieds-types";
+import type { ClassifiedsResult, ListingCursor, ListingFilters } from "@/lib/classifieds-types";
 import { getClient, mapError } from "@/lib/api/shared";
 
 export interface DynamicListingSearchPage {

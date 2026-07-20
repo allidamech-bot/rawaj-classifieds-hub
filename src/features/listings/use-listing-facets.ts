@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ClassifiedsError } from "@/lib/classifieds-types";
-import {
-  fetchPublicListingFacets,
-  type ListingFacetsResult,
-} from "@/lib/api/listing-facets";
+import { fetchPublicListingFacets, type ListingFacetsResult } from "@/lib/api/listing-facets";
 import type { ListingAttributeFilters } from "@/features/listings/listing-attribute-filter-state";
 
 interface UseListingFacetsInputs {

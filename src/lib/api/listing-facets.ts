@@ -1,11 +1,7 @@
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import { getClient, mapError } from "@/lib/api/shared";
 
-export type ListingFacetFilterValue =
-  | string
-  | boolean
-  | string[]
-  | { min?: number; max?: number };
+export type ListingFacetFilterValue = string | boolean | string[] | { min?: number; max?: number };
 
 export interface ListingFacetOption {
   valueKey: string;

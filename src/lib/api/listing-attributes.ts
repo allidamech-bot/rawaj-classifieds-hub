@@ -50,12 +50,9 @@ export async function fetchOwnerListingAttributes(
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
-  const { data, error } = await clientResult.data.rpc(
-    "rawaj_owner_fetch_listing_attributes_v1",
-    {
-      p_listing_id: cleanListingId,
-    },
-  );
+  const { data, error } = await clientResult.data.rpc("rawaj_owner_fetch_listing_attributes_v1", {
+    p_listing_id: cleanListingId,
+  });
 
   if (error) {
     return {

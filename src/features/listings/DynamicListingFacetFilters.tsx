@@ -23,7 +23,10 @@ export function DynamicListingFacetFilters({
 }: DynamicListingFacetFiltersProps) {
   if (loading && facets.length === 0) {
     return (
-      <div className="grid gap-3" aria-label={text("جارٍ تحميل فلاتر القسم", "Loading category filters")}>
+      <div
+        className="grid gap-3"
+        aria-label={text("جارٍ تحميل فلاتر القسم", "Loading category filters")}
+      >
         {Array.from({ length: 3 }, (_, index) => (
           <div key={index} className="h-20 animate-pulse rounded-xl bg-muted-surface" />
         ))}
@@ -195,7 +198,9 @@ function updateFacetValue(
   onChange(next);
 }
 
-function isRange(value: ListingFacetFilterValue | undefined): value is { min?: number; max?: number } {
+function isRange(
+  value: ListingFacetFilterValue | undefined,
+): value is { min?: number; max?: number } {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 

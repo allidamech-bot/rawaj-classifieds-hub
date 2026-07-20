@@ -23,9 +23,7 @@ export function parseListingAttributeFilters(value: unknown): ListingAttributeFi
   return normalizeListingAttributeFilters(value);
 }
 
-export function encodeListingAttributeFilters(
-  value: ListingAttributeFilters,
-): string | undefined {
+export function encodeListingAttributeFilters(value: ListingAttributeFilters): string | undefined {
   const normalized = normalizeListingAttributeFilters(value);
   if (Object.keys(normalized).length === 0) return undefined;
   const encoded = JSON.stringify(normalized);
@@ -40,9 +38,7 @@ export function normalizeListingAttributeFilters(value: unknown): ListingAttribu
     .map(([key, filterValue]) => [key.trim(), filterValue] as const)
     .filter(
       ([key]) =>
-        key.length > 0 &&
-        key.length <= MAX_FIELD_KEY_LENGTH &&
-        FIELD_KEY_PATTERN.test(key),
+        key.length > 0 && key.length <= MAX_FIELD_KEY_LENGTH && FIELD_KEY_PATTERN.test(key),
     )
     .sort(([left], [right]) => left.localeCompare(right))
     .slice(0, MAX_FILTER_FIELDS);
