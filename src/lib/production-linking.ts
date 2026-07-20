@@ -3,8 +3,7 @@ export const RAWAJ_PRODUCTION_HOST = "rawa-j.com";
 export const RAWAJ_AUTH_CALLBACK_PATH = "/auth/callback";
 export const RAWAJ_ANDROID_PACKAGE_NAME = "com.rawaj.marketplace";
 export const RAWAJ_ANDROID_APP_LINK_RELATION = "delegate_permission/common.handle_all_urls";
-export const RAWAJ_ANDROID_FINGERPRINT_ENV_NAME =
-  "RAWAJ_ANDROID_SHA256_CERT_FINGERPRINTS";
+export const RAWAJ_ANDROID_FINGERPRINT_ENV_NAME = "RAWAJ_ANDROID_SHA256_CERT_FINGERPRINTS";
 
 const COLONIZED_SHA256_PATTERN = /^(?:[0-9A-F]{2}:){31}[0-9A-F]{2}$/;
 const COMPACT_SHA256_PATTERN = /^[0-9A-F]{64}$/;
