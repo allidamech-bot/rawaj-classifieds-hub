@@ -73,11 +73,19 @@ test("record mutations serialize conflicting decisions per record", () => {
 });
 
 test("report moderation stays busy until authoritative refetch", () => {
-  for (const file of ["src/routes/admin.reports.tsx", "src/routes/admin.message-reports.tsx"]) {
-    const value = source(file);
-    assert.match(value, /await loadReports\(\);/);
+  const listingReports = source("src/routes/admin.reports.tsx");
+  const messageReports = source("src/routes/admin.message-reports.tsx");
+
+  assert.match(
+    listingReports,
+    /setActionMessage\(text\("تم تحديث البلاغ\.",[\s\S]*?await loadReports\(\);/,
+  );
+  assert.match(
+    messageReports,
+    /setNotice\(text\("تم تحديث بلاغ الرسالة\.",[\s\S]*?await loadReports\(\);/,
+  );
+  for (const value of [listingReports, messageReports]) {
     assert.doesNotMatch(value, /const updatedAt = new Date\(\)\.toISOString\(\)/);
-    assert.doesNotMatch(value, /void loadReports\(\);/);
   }
 });
 
