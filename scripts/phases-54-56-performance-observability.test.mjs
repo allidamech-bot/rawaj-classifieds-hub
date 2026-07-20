@@ -15,6 +15,8 @@ const [
   messagingGuarded,
   publicListings,
   publicListingDetail,
+  listingImages,
+  classifiedsApi,
 ] = await Promise.all([
   readFile(new URL("../src/router.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/client-error-monitoring.ts", import.meta.url), "utf8"),
@@ -28,6 +30,8 @@ const [
   readFile(new URL("../src/lib/api/messaging-guarded.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/location-aware-listings-v2.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/listing-detail-read-guarded.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/listing-images-read-guarded.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
 ]);
 
 test("phase 54 enforces production JavaScript, stylesheet, font and image budgets", () => {
@@ -104,4 +108,13 @@ test("launch traffic safeguards dedupe Signed URL reads without stale public lis
   assert.match(publicListingDetail, /pendingPublicListingDetailReads = new Map/);
   assert.match(publicListingDetail, /if \(pending\) return pending/);
   assert.doesNotMatch(publicListingDetail, /expiresAt|CACHE_TTL/);
+
+  assert.match(listingImages, /pendingListingImageReads = new Map/);
+  assert.match(listingImages, /if \(pending\) return pending/);
+  assert.match(listingImages, /pendingListingImageReads\.delete\(cleanListingId\)/);
+  assert.doesNotMatch(listingImages, /expiresAt|CACHE_TTL/);
+  assert.match(
+    classifiedsApi,
+    /export \{ fetchListingImages \} from "@\/lib\/api\/listing-images-read-guarded"/,
+  );
 });
