@@ -51,42 +51,33 @@ function isVercelPreviewBuild() {
 }
 
 function buildContentSecurityPolicy(isSecureRequest: boolean, allowVercelPreviewTools: boolean) {
-  const scriptSources = ["'self'", "'unsafe-inline'", "https://va.vercel-scripts.com"];
-  const frameSources = ["'none'"];
-  const connectSources = [
-    "'self'",
-    "https://*.supabase.co",
-    "https://*.supabase.com",
-    "wss://*.supabase.co",
-    "wss://*.supabase.com",
-    "https://fonts.googleapis.com",
-    "https://fonts.gstatic.com",
-    "https://vitals.vercel-insights.com",
-    "https://*.vercel-insights.com",
-  ];
-  const manifestSources = ["'self'"];
-
-  if (allowVercelPreviewTools) {
-    scriptSources.push("https://vercel.live");
-    frameSources.splice(0, frameSources.length, "'self'", "https://vercel.live");
-    connectSources.push("https://vercel.live", "wss://vercel.live");
-    manifestSources.push("https://vercel.com");
-  }
+  const scriptSourceDirective = allowVercelPreviewTools
+    ? "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://vercel.live"
+    : "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com";
+  const frameSourceDirective = allowVercelPreviewTools
+    ? "frame-src 'self' https://vercel.live"
+    : "frame-src 'none'";
+  const manifestSourceDirective = allowVercelPreviewTools
+    ? "manifest-src 'self' https://vercel.com"
+    : "manifest-src 'self'";
+  const connectSourceDirective = allowVercelPreviewTools
+    ? "connect-src 'self' https://*.supabase.co https://*.supabase.com wss://*.supabase.co wss://*.supabase.com https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com https://vercel.live wss://vercel.live"
+    : "connect-src 'self' https://*.supabase.co https://*.supabase.com wss://*.supabase.co wss://*.supabase.com https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com";
 
   const directives = [
     "default-src 'self'",
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'none'",
-    `frame-src ${frameSources.join(" ")}`,
+    frameSourceDirective,
     "form-action 'self'",
-    `script-src ${scriptSources.join(" ")}`,
+    scriptSourceDirective,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https:",
     "media-src 'self' blob: https://*.supabase.co https://*.supabase.com",
     "font-src 'self' data: https://fonts.gstatic.com",
-    `connect-src ${connectSources.join(" ")}`,
-    `manifest-src ${manifestSources.join(" ")}`,
+    connectSourceDirective,
+    manifestSourceDirective,
     "worker-src 'self' blob:",
   ];
   if (isSecureRequest) directives.push("upgrade-insecure-requests");
