@@ -24,20 +24,49 @@ on conflict (id) do update set
   email = excluded.email,
   updated_at = now();
 
+insert into public.taxonomy_versions (
+  id,
+  version_number,
+  status,
+  based_on_version_id,
+  change_summary,
+  created_at,
+  updated_at
+)
+select
+  'a1100000-0000-4000-8000-000000000099',
+  coalesce(max(version_number), 0) + 1000,
+  'draft',
+  (select id from public.taxonomy_versions where status = 'published' order by version_number desc limit 1),
+  'Disposable admin Data Quality rollback fixture',
+  now(),
+  now()
+from public.taxonomy_versions
+on conflict (id) do nothing;
+
 commit;
 
 DO $verification$
 DECLARE
-  v_count bigint;
+  v_user_count bigint;
+  v_taxonomy_count bigint;
 BEGIN
-  SELECT count(*) INTO v_count
+  SELECT count(*) INTO v_user_count
   FROM auth.users
   WHERE id::text LIKE 'a1100000-0000-4000-8000-%';
 
-  IF v_count <> 4 THEN
-    RAISE EXCEPTION 'admin_auth_fixture_setup_count_invalid_%', v_count;
+  SELECT count(*) INTO v_taxonomy_count
+  FROM public.taxonomy_versions
+  WHERE id = 'a1100000-0000-4000-8000-000000000099';
+
+  IF v_user_count <> 4 THEN
+    RAISE EXCEPTION 'admin_auth_fixture_setup_count_invalid_%', v_user_count;
   END IF;
 
-  RAISE NOTICE 'RAWAJ disposable admin auth fixtures created: 4 users.';
+  IF v_taxonomy_count <> 1 THEN
+    RAISE EXCEPTION 'admin_taxonomy_fixture_setup_count_invalid_%', v_taxonomy_count;
+  END IF;
+
+  RAISE NOTICE 'RAWAJ disposable admin fixtures created: 4 auth users and 1 taxonomy version.';
 END;
 $verification$;
