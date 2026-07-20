@@ -98,19 +98,35 @@ function SupportPage() {
     const requestId = ++requestsRequestIdRef.current;
     setRequestsLoading(true);
     setRequestsError(null);
-
-    const result = await fetchMySupportRequests();
-    if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current)
-      return;
-
-    if (result.ok) {
-      setRequests(result.data);
-      setRequestsHasLoaded(true);
-    } else {
-      setRequestsError(result.error);
+    try {
+      const result = await fetchMySupportRequests();
+      if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current) {
+        return;
+      }
+      if (result.ok) {
+        setRequests(result.data);
+        setRequestsHasLoaded(true);
+      } else {
+        setRequestsError(result.error);
+      }
+    } catch (caught) {
+      if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current) {
+        return;
+      }
+      setRequestsError({
+        code: "unknown",
+        message:
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحميل طلبات الدعم.", "Could not load support requests."),
+        operation: "support_requests_load",
+      });
+    } finally {
+      if (requestId === requestsRequestIdRef.current && currentProfileId === profileIdRef.current) {
+        setRequestsLoading(false);
+      }
     }
-    setRequestsLoading(false);
-  }, [profileId]);
+  }, [profileId, text]);
 
   useEffect(() => {
     requestsRequestIdRef.current += 1;
@@ -155,11 +171,23 @@ function SupportPage() {
     const currentProfileId = profileId;
     if (!currentProfileId || submitScopesRef.current.has(currentProfileId)) return;
 
+    const cleanSubject = subject.trim();
+    const cleanMessage = message.trim();
+    const cleanRelatedListingId = relatedListingId.trim();
+    if (cleanSubject.length < 4) {
+      setNotice(text("اكتب عنواناً واضحاً من 4 أحرف على الأقل.", "Enter a clear subject of at least 4 characters."));
+      return;
+    }
+    if (cleanMessage.length < 10) {
+      setNotice(text("اكتب تفاصيل كافية من 10 أحرف على الأقل.", "Enter at least 10 characters of detail."));
+      return;
+    }
+
     const payload = {
       type: requestType,
-      subject,
-      message,
-      relatedListingId: relatedListingId || null,
+      subject: cleanSubject,
+      message: cleanMessage,
+      relatedListingId: cleanRelatedListingId || null,
     };
     submitScopesRef.current.add(currentProfileId);
     setNotice("");
@@ -183,6 +211,14 @@ function SupportPage() {
       setRelatedListingId("");
       setRequestType("technical_issue");
       setNotice(text("تم إرسال طلب الدعم للمراجعة.", "Support request submitted for review."));
+    } catch (caught) {
+      if (currentProfileId === profileIdRef.current) {
+        setNotice(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر إرسال طلب الدعم.", "Could not submit the support request."),
+        );
+      }
     } finally {
       submitScopesRef.current.delete(currentProfileId);
       if (currentProfileId === profileIdRef.current) setSubmitting(false);
@@ -213,13 +249,14 @@ function SupportPage() {
                 )}
               />
               {auth.status === "signedIn" ? (
-                <form onSubmit={(event) => void submitRequest(event)}>
+                <form onSubmit={(event) => void submitRequest(event)} aria-busy={submitting}>
                   <label className="block">
                     <span className="text-xs font-bold text-muted-foreground">
                       {text("نوع الطلب", "Request type")}
                     </span>
                     <select
                       value={requestType}
+                      disabled={submitting}
                       onChange={(event) => setRequestType(event.target.value as SupportRequestType)}
                     >
                       <option value="complaint">{text("شكوى", "Complaint")}</option>
@@ -239,7 +276,10 @@ function SupportPage() {
                     </span>
                     <input
                       value={subject}
+                      disabled={submitting}
                       onChange={(event) => setSubject(event.target.value)}
+                      required
+                      minLength={4}
                       maxLength={160}
                     />
                   </label>
@@ -249,6 +289,7 @@ function SupportPage() {
                     </span>
                     <input
                       value={relatedListingId}
+                      disabled={submitting}
                       onChange={(event) => setRelatedListingId(event.target.value)}
                     />
                   </label>
@@ -258,7 +299,10 @@ function SupportPage() {
                     </span>
                     <textarea
                       value={message}
+                      disabled={submitting}
                       onChange={(event) => setMessage(event.target.value)}
+                      required
+                      minLength={10}
                       maxLength={3000}
                       rows={5}
                     />

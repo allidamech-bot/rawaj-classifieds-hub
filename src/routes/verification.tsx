@@ -51,23 +51,39 @@ function VerificationPage() {
 
   const loadRequests = useCallback(async () => {
     if (!profileId) return;
-
     const requestId = ++requestsRequestIdRef.current;
     setRequestsLoading(true);
     setRequestsError(null);
     const currentProfileId = profileId;
-    const result = await fetchMyVerificationRequests();
-    if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current)
-      return;
-
-    if (result.ok) {
-      setRequests(result.data);
-      setHasLoadedRequests(true);
-    } else {
-      setRequestsError(result.error);
+    try {
+      const result = await fetchMyVerificationRequests();
+      if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current) {
+        return;
+      }
+      if (result.ok) {
+        setRequests(result.data);
+        setHasLoadedRequests(true);
+      } else {
+        setRequestsError(result.error);
+      }
+    } catch (caught) {
+      if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current) {
+        return;
+      }
+      setRequestsError({
+        code: "unknown",
+        message:
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحميل طلبات التوثيق.", "Could not load verification requests."),
+        operation: "verification_requests_load",
+      });
+    } finally {
+      if (requestId === requestsRequestIdRef.current && currentProfileId === profileIdRef.current) {
+        setRequestsLoading(false);
+      }
     }
-    setRequestsLoading(false);
-  }, [profileId]);
+  }, [profileId, text]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
@@ -151,6 +167,12 @@ function VerificationPage() {
       return;
     }
 
+    if (legalName.trim().length < 3) {
+      setNotice(text("اكتب الاسم القانوني بوضوح.", "Enter the legal name clearly."));
+      setNoticeKind("error");
+      return;
+    }
+
     if (!documentType || !documentFile) {
       setNotice(
         text("اختر نوع المستند وأرفق الوثيقة.", "Choose a document type and attach the file."),
@@ -172,8 +194,8 @@ function VerificationPage() {
     try {
       const result = await createSellerVerificationRequest({
         requestType,
-        legalName,
-        businessName: requestType === "business" ? businessName : null,
+        legalName: legalName.trim(),
+        businessName: requestType === "business" ? businessName.trim() : null,
         documentType,
         documentFile,
       });
@@ -278,7 +300,7 @@ function VerificationPage() {
           </p>
         </section>
 
-        <form onSubmit={(event) => void submit(event)} className="rounded-2xl bg-card p-4 hairline">
+        <form onSubmit={(event) => void submit(event)} aria-busy={saving} className="rounded-2xl bg-card p-4 hairline">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label={text("نوع الطلب", "Request type")}>
               <select
@@ -286,6 +308,7 @@ function VerificationPage() {
                 onChange={(event) =>
                   changeRequestType(event.target.value as VerificationRequestType)
                 }
+                disabled={saving}
                 className="input"
               >
                 <option value="personal">{text("فرد", "Individual")}</option>
@@ -299,6 +322,7 @@ function VerificationPage() {
                 onChange={(event) => setLegalName(event.target.value)}
                 maxLength={120}
                 required
+                disabled={saving}
                 className="input"
               />
             </Field>
@@ -310,7 +334,8 @@ function VerificationPage() {
                   onChange={(event) => setBusinessName(event.target.value)}
                   maxLength={120}
                   required
-                  className="input"
+                  disabled={saving}
+                className="input"
                 />
               </Field>
             ) : null}
@@ -322,6 +347,7 @@ function VerificationPage() {
                   setDocumentType(event.target.value as VerificationDocumentType)
                 }
                 required
+                disabled={saving}
                 className="input"
               >
                 <option value="">{text("اختر نوع المستند", "Choose document type")}</option>
@@ -344,7 +370,8 @@ function VerificationPage() {
               accept="image/jpeg,image/png,image/webp,application/pdf"
               required
               onChange={(event) => setDocumentFile(event.target.files?.[0] ?? null)}
-              className="mt-3 block w-full text-xs file:me-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-card file:px-3 file:py-2 file:font-bold file:text-foreground"
+              disabled={saving}
+               className="mt-3 block w-full text-xs file:me-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-card file:px-3 file:py-2 file:font-bold file:text-foreground"
             />
             {documentFile ? (
               <span className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
