@@ -77,10 +77,14 @@ export function buildListingStructuredData(
     });
   }
 
-  if (kind !== "jobs" && listing.price !== null) {
+  // SYP structured data is emitted only after explicit old/new classification. Search
+  // engines otherwise cannot distinguish the two denominations that share the same ISO code.
+  const structuredPrice =
+    listing.currency === "SYP" ? listing.priceNewSypNormalized : listing.price;
+  if (kind !== "jobs" && structuredPrice !== null) {
     data.offers = {
       "@type": "Offer",
-      price: listing.price,
+      price: structuredPrice,
       priceCurrency: listing.currency,
       availability: listing.reservedAt
         ? "https://schema.org/LimitedAvailability"
