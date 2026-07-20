@@ -11,7 +11,6 @@ import type { Conversation, ConversationMessage } from "@/lib/classifieds-types"
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 
 const LIVE_CHAT_EVENT_DEBOUNCE_MS = 150;
-const LIVE_CHAT_FALLBACK_POLL_MS = 60 * 1000;
 
 interface LiveChatWorkspaceOptions {
   signedIn: boolean;
@@ -148,8 +147,8 @@ export function useLiveChatWorkspace({
       realtimeTimer = setTimeout(refreshWhenAvailable, LIVE_CHAT_EVENT_DEBOUNCE_MS);
     };
 
-    const interval = window.setInterval(refreshWhenAvailable, LIVE_CHAT_FALLBACK_POLL_MS);
     window.addEventListener("online", refreshWhenAvailable);
+    window.addEventListener("focus", refreshWhenAvailable);
     document.addEventListener("visibilitychange", refreshWhenAvailable);
 
     const channel =
@@ -181,8 +180,8 @@ export function useLiveChatWorkspace({
 
     return () => {
       if (realtimeTimer !== null) clearTimeout(realtimeTimer);
-      window.clearInterval(interval);
       window.removeEventListener("online", refreshWhenAvailable);
+      window.removeEventListener("focus", refreshWhenAvailable);
       document.removeEventListener("visibilitychange", refreshWhenAvailable);
       if (channel && clientResult.ok) void clientResult.data.removeChannel(channel);
     };
