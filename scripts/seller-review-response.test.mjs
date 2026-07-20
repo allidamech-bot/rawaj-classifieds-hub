@@ -92,9 +92,18 @@ test("seller storefront displays responses publicly and gates response managemen
   assert.match(sellerRoute, /import \{ SellerReviewCard \}/);
   assert.match(sellerRoute, /canManageResponse=\{isOwnProfile\}/);
   assert.match(card, /readSellerReviewResponse\(review\)/);
-  assert.match(card, /setSellerReviewResponse\(review\.id, responseText\)/);
+  assert.match(card, /const normalizedResponse = responseText\.trim\(\)/);
+  assert.match(card, /setSellerReviewResponse\(review\.id, normalizedResponse\)/);
+  assert.match(card, /normalizedResponse\.length > 0 && normalizedResponse\.length < 3/);
   assert.match(card, /Seller response/);
   assert.match(card, /canManageResponse \?/);
+});
+
+test("seller response action is single-flight and releases state after failures", () => {
+  assert.match(card, /responseScopesRef\.current\.has\(scopeKey\)/);
+  assert.match(card, /async function persistResponse[\s\S]*?catch \(caught\)[\s\S]*?finally/);
+  assert.match(card, /responseScopesRef\.current\.delete\(scopeKey\)/);
+  assert.match(card, /setSaving\(false\)/);
 });
 
 test("seller review creation and responses deduplicate identical concurrent writes", () => {
