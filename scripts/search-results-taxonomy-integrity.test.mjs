@@ -79,8 +79,8 @@ test("public results apply all filters at the data source", () => {
     /publicListingExpiryFilter\(\)/,
     /\.eq\("subcategory_id"/,
     /\.eq\("governorate_id"/,
-    /\.gte\("price"/,
-    /\.lte\("price"/,
+    /\.gte\("price_new_syp_normalized"/,
+    /\.lte\("price_new_syp_normalized"/,
     /\.eq\("price_type"/,
     /\.eq\("listing_condition"/,
     /applyCategoryFilters\(query, filters\)/,
@@ -120,7 +120,7 @@ test("results use explicit schema and clear incompatible category filters only",
 
 test("sorting, pagination, and stale responses preserve result integrity", () => {
   assert.match(publicRead, /order\("created_at"/);
-  assert.match(publicRead, /order\("price"/);
+  assert.match(publicRead, /order\("price_new_syp_normalized"/);
   assert.match(publicRead, /order\("is_featured"/);
   assert.match(publicRead, /order\("id"/);
   assert.match(publicRead, /encodeListingCursor|nextCursor/);
