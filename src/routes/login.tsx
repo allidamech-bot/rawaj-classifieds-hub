@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Eye, EyeOff, Lock, LogIn, ShieldCheck, UserPlus } from "lucide-react";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { PageHeader } from "@/components/PageHeader";
 import { AuthExperienceAside, AuthExperienceHeader } from "@/features/account/AccountExperience";
@@ -24,14 +24,25 @@ function GoogleButton({ returnTo }: { returnTo: string }) {
   const { text } = useUiPreferences();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const signInInFlightRef = useRef(false);
 
   async function handleGoogleSignIn() {
+    if (signInInFlightRef.current) return;
+    signInInFlightRef.current = true;
     setError("");
     setLoading(true);
-    const result = await auth.signInWithGoogle(returnTo);
-    setLoading(false);
-    if (result.error) {
-      setError(authErrorMessage({ message: result.error }, "callback", text));
+    try {
+      const result = await auth.signInWithGoogle(returnTo);
+      if (result.error) {
+        setError(authErrorMessage({ message: result.error }, "callback", text));
+      }
+    } catch (error) {
+      setError(
+        authErrorMessage(error instanceof Error ? error : null, "callback", text),
+      );
+    } finally {
+      signInInFlightRef.current = false;
+      setLoading(false);
     }
   }
 
@@ -107,6 +118,7 @@ function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const submitInFlightRef = useRef(false);
 
   function switchMode(nextMode: AuthMode) {
     setMode(nextMode);
@@ -116,7 +128,7 @@ function LoginPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting) return;
+    if (submitInFlightRef.current) return;
     setMessage("");
     setError("");
 
@@ -133,41 +145,49 @@ function LoginPage() {
 
     const cleanEmail = email.trim();
     const cleanName = displayName.trim();
+    if (!cleanEmail) {
+      setError(text("أدخل بريدك الإلكتروني.", "Enter your email address."));
+      return;
+    }
 
     if (mode === "forgot") {
-      if (!cleanEmail) {
-        setError(
+      submitInFlightRef.current = true;
+      setSubmitting(true);
+      try {
+        const callbackUrl = new URL("/auth/callback", window.location.origin);
+        callbackUrl.searchParams.set("type", "recovery");
+        callbackUrl.searchParams.set("returnTo", returnTo);
+        const { error: resetError } = await client.auth.resetPasswordForEmail(cleanEmail, {
+          redirectTo: callbackUrl.toString(),
+        });
+        if (resetError) {
+          setError(authErrorMessage(resetError, "recovery", text));
+          return;
+        }
+        setMessage(
           text(
-            "أدخل بريدك الإلكتروني لإرسال رابط إعادة التعيين.",
-            "Enter your email to send the reset link.",
+            "إذا كان البريد مسجلاً، ستصلك رسالة لإعادة تعيين كلمة المرور. تحقق من البريد الوارد أو الرسائل غير المرغوب بها.",
+            "If the email is registered, you will receive a password reset message. Check your inbox or spam folder.",
           ),
         );
-        return;
+      } catch (error) {
+        setError(authErrorMessage(error instanceof Error ? error : null, "recovery", text));
+      } finally {
+        submitInFlightRef.current = false;
+        setSubmitting(false);
       }
+      return;
+    }
 
-      setSubmitting(true);
-      const callbackUrl = new URL("/auth/callback", window.location.origin);
-      callbackUrl.searchParams.set("type", "recovery");
-      callbackUrl.searchParams.set("returnTo", returnTo);
-      const { error: resetError } = await client.auth.resetPasswordForEmail(cleanEmail, {
-        redirectTo: callbackUrl.toString(),
-      });
-      setSubmitting(false);
-
-      if (resetError) {
-        setError(authErrorMessage(resetError, "recovery", text));
-        return;
-      }
-
-      setMessage(
+    if (password.length < 6) {
+      setError(
         text(
-          "إذا كان البريد مسجلاً، ستصلك رسالة لإعادة تعيين كلمة المرور. تحقق من البريد الوارد أو الرسائل غير المرغوب بها.",
-          "If the email is registered, you will receive a password reset message. Check your inbox or spam folder.",
+          "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
+          "Password must be at least 6 characters.",
         ),
       );
       return;
     }
-
     if (mode === "register" && cleanName.length < 2) {
       setError(text("أدخل اسما واضحا للحساب.", "Enter a clear account name."));
       return;
@@ -175,62 +195,69 @@ function LoginPage() {
 
     const signupCallbackUrl = new URL("/auth/callback", window.location.origin);
     signupCallbackUrl.searchParams.set("returnTo", returnTo);
-
+    submitInFlightRef.current = true;
     setSubmitting(true);
-    const result =
-      mode === "login"
-        ? await client.auth.signInWithPassword({ email: cleanEmail, password })
-        : await client.auth.signUp({
-            email: cleanEmail,
-            password,
-            options: {
-              emailRedirectTo: signupCallbackUrl.toString(),
-              data: { display_name: cleanName },
-            },
-          });
+    try {
+      const result =
+        mode === "login"
+          ? await client.auth.signInWithPassword({ email: cleanEmail, password })
+          : await client.auth.signUp({
+              email: cleanEmail,
+              password,
+              options: {
+                emailRedirectTo: signupCallbackUrl.toString(),
+                data: { display_name: cleanName },
+              },
+            });
 
-    if (result.error) {
-      setSubmitting(false);
-      setError(authErrorMessage(result.error, mode === "login" ? "login" : "register", text));
-      return;
-    }
-
-    const profileError =
-      result.data.session && result.data.user
-        ? await ensureOwnProfile(client, result.data.user, cleanName)
-        : null;
-    setSubmitting(false);
-
-    if (profileError) {
-      setError(
-        text(
-          "تم تسجيل الدخول، لكن تعذر تجهيز بيانات الحساب الآن. حاول مرة أخرى أو تواصل مع الدعم.",
-          "You are signed in, but account details could not be prepared right now. Try again or contact support.",
-        ),
-      );
-      return;
-    }
-
-    if (mode === "register") {
-      if (result.data.session) {
-        setMessage(
-          text("تم إنشاء الحساب. جارٍ إدخالك إلى رواج.", "Account created. Opening RAWAJ now."),
-        );
-        void navigate({ to: returnTo });
+      if (result.error) {
+        setError(authErrorMessage(result.error, mode === "login" ? "login" : "register", text));
         return;
       }
 
-      setMessage(
-        text(
-          "تم إرسال رابط تفعيل الحساب إلى بريدك الإلكتروني. افتح البريد واضغط على رابط التفعيل لإكمال إنشاء الحساب. إذا لم تجد الرسالة خلال دقائق، تحقق من مجلد الرسائل غير المرغوبة / Spam.",
-          "We sent an account activation link to your email. Open your inbox and click the activation link to complete account setup. If you do not see it within a few minutes, check your Spam or Junk folder.",
+      const profileError =
+        result.data.session && result.data.user
+          ? await ensureOwnProfile(client, result.data.user, cleanName)
+          : null;
+      if (profileError) {
+        setError(
+          text(
+            "تم تسجيل الدخول، لكن تعذر تجهيز بيانات الحساب الآن. حاول مرة أخرى أو تواصل مع الدعم.",
+            "You are signed in, but account details could not be prepared right now. Try again or contact support.",
+          ),
+        );
+        return;
+      }
+
+      if (mode === "register") {
+        if (result.data.session) {
+          setMessage(text("تم إنشاء الحساب. جارٍ إدخالك إلى رواج.", "Account created. Opening RAWAJ now."));
+          await navigate({ to: returnTo });
+          return;
+        }
+        setMessage(
+          text(
+            "تم إرسال رابط تفعيل الحساب إلى بريدك الإلكتروني. افتح البريد واضغط على رابط التفعيل لإكمال إنشاء الحساب. إذا لم تجد الرسالة خلال دقائق، تحقق من مجلد الرسائل غير المرغوبة / Spam.",
+            "We sent an account activation link to your email. Open your inbox and click the activation link to complete account setup. If you do not see it within a few minutes, check your Spam or Junk folder.",
+          ),
+        );
+        return;
+      }
+
+      setMessage(text("تم تسجيل الدخول", "Logged in"));
+      await navigate({ to: returnTo });
+    } catch (error) {
+      setError(
+        authErrorMessage(
+          error instanceof Error ? error : null,
+          mode === "login" ? "login" : "register",
+          text,
         ),
       );
-      return;
+    } finally {
+      submitInFlightRef.current = false;
+      setSubmitting(false);
     }
-
-    setMessage(text("تم تسجيل الدخول", "Logged in"));
-    void navigate({ to: returnTo });
   }
 
   return (

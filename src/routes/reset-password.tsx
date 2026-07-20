@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Eye, EyeOff, KeyRound, LogIn, User } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { authErrorMessage } from "@/lib/auth-errors";
 import {
@@ -38,6 +38,8 @@ function ResetPasswordPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const saveInFlightRef = useRef(false);
+  const navigationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -94,8 +96,16 @@ function ResetPasswordPage() {
     };
   }, []);
 
+  useEffect(
+    () => () => {
+      if (navigationTimerRef.current) clearTimeout(navigationTimerRef.current);
+    },
+    [],
+  );
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saveInFlightRef.current) return;
     setMessage("");
     setError("");
 
@@ -109,17 +119,10 @@ function ResetPasswordPage() {
       );
       return;
     }
-
     if (password.length < 6) {
-      setError(
-        text(
-          "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
-          "Password must be at least 6 characters.",
-        ),
-      );
+      setError(text("كلمة المرور يجب أن تكون 6 أحرف على الأقل.", "Password must be at least 6 characters."));
       return;
     }
-
     if (password !== confirmPassword) {
       setError(text("تأكيد كلمة المرور غير مطابق.", "Password confirmation does not match."));
       return;
@@ -127,34 +130,34 @@ function ResetPasswordPage() {
 
     const client = supabase;
     if (!client) {
-      setError(
+      setError(text("خدمة الحسابات غير متاحة الآن. حاول لاحقاً.", "Account service is unavailable right now. Try later."));
+      return;
+    }
+
+    saveInFlightRef.current = true;
+    setSaving(true);
+    try {
+      const { error: updateError } = await client.auth.updateUser({ password });
+      if (updateError) {
+        setError(authErrorMessage(updateError, "update-password", text));
+        return;
+      }
+      clearPasswordRecoverySession();
+      setPassword("");
+      setConfirmPassword("");
+      setMessage(
         text(
-          "خدمة الحسابات غير متاحة الآن. حاول لاحقاً.",
-          "Account service is unavailable right now. Try later.",
+          "تم تحديث كلمة المرور. جارٍ إعادتك إلى الصفحة التي كنت تريدها.",
+          "Password updated. Returning you to the page you wanted.",
         ),
       );
-      return;
+      navigationTimerRef.current = setTimeout(() => void navigate({ to: returnTo }), 700);
+    } catch (error) {
+      setError(authErrorMessage(error instanceof Error ? error : null, "update-password", text));
+    } finally {
+      saveInFlightRef.current = false;
+      setSaving(false);
     }
-
-    setSaving(true);
-    const { error: updateError } = await client.auth.updateUser({ password });
-    setSaving(false);
-
-    if (updateError) {
-      setError(authErrorMessage(updateError, "update-password", text));
-      return;
-    }
-
-    clearPasswordRecoverySession();
-    setPassword("");
-    setConfirmPassword("");
-    setMessage(
-      text(
-        "تم تحديث كلمة المرور. جارٍ إعادتك إلى الصفحة التي كنت تريدها.",
-        "Password updated. Returning you to the page you wanted.",
-      ),
-    );
-    setTimeout(() => void navigate({ to: returnTo }), 700);
   }
 
   const loginDestination = `/login?mode=forgot&returnTo=${encodeURIComponent(returnTo)}`;
@@ -209,7 +212,7 @@ function ResetPasswordPage() {
               </button>
             </div>
           ) : (
-            <form onSubmit={(event) => void submit(event)} className="space-y-3">
+            <form onSubmit={(event) => void submit(event)} aria-busy={saving} className="space-y-3">
               <label className="block">
                 <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">
                   {text("كلمة المرور الجديدة", "New password")}
@@ -222,6 +225,7 @@ function ResetPasswordPage() {
                     autoComplete="new-password"
                     minLength={6}
                     required
+                    disabled={saving}
                     className="input pe-11"
                   />
                   <button
@@ -251,6 +255,7 @@ function ResetPasswordPage() {
                     autoComplete="new-password"
                     minLength={6}
                     required
+                    disabled={saving}
                     className="input pe-11"
                   />
                   <button
