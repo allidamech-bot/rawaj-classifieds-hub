@@ -1,0 +1,46 @@
+name: Apply Final Public Operations Integrity
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/apply-final-public-operations-integrity.mjs"
+      - ".github/workflows/apply-final-public-operations-integrity.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/full-site-actions-integrity-audit
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply guarded final operations repair
+        id: repair
+        continue-on-error: true
+        run: node scripts/apply-final-public-operations-integrity.mjs > final-public-operations.log 2>&1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: final-public-operations-${{ github.sha }}
+          path: final-public-operations.log
+          retention-days: 7
+      - if: steps.repair.outcome == 'failure'
+        run: exit 1
+      - name: Commit repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/activity.tsx src/routes/offers.tsx src/routes/profile/listings.tsx scripts/apply-final-public-operations-integrity.mjs
+          git commit -m "fix: harden remaining public operation lifecycles"
+          git push origin HEAD:agent/full-site-actions-integrity-audit
