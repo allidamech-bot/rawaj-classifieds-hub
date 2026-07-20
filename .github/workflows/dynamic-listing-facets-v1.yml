@@ -9,7 +9,6 @@ on:
       - "src/lib/api/listing-facets.ts"
       - "src/lib/api/dynamic-listing-search.ts"
       - "src/lib/api/dynamic-filtered-listings.ts"
-      - "src/lib/api/listing-attributes.ts"
       - "src/features/listings/listing-attribute-filter-state.ts"
       - "src/features/listings/DynamicListingFacetFilters.tsx"
       - "src/features/listings/use-listing-facets.ts"
@@ -21,7 +20,6 @@ on:
       - "src/features/search/SearchResultsToolbar.tsx"
       - "src/routes/listings.tsx"
       - "src/routes/listings.index.tsx"
-      - "src/routes/profile/listings.$id.tsx"
       - "src/types/dynamic-listing-filters.d.ts"
       - "scripts/dynamic-listing-facets-v1.test.mjs"
       - "scripts/dynamic-listing-search-v1.test.mjs"
@@ -30,7 +28,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: dynamic-listing-facets-v1-${{ github.event.pull_request.number || github.ref }}
@@ -42,62 +40,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: feature/taxonomy-search-foundation-v1
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Apply pending TypeScript fixes
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-
-          attributes = Path("src/lib/api/listing-attributes.ts")
-          source = attributes.read_text(encoding="utf-8")
-          source = source.replace('      code: "forbidden",\n', '      code: "permission_denied",\n')
-          attributes.write_text(source, encoding="utf-8")
-
-          route = Path("src/routes/profile/listings.$id.tsx")
-          source = route.read_text(encoding="utf-8")
-          source = source.replace(
-              "        if (!dynamicValidation.ok) {",
-              "        if (dynamicValidation.summary.length > 0) {",
-          )
-          source = source.replace(
-              "setCondition(categoryDetailsGlobalCondition(categoryFieldKind, nextDetails));",
-              "setCondition(resolveLegacyDetailCondition(categoryFieldKind, nextDetails));",
-          )
-          marker = "\nfunction fileFingerprint(file: File) {"
-          helper = '''
-function resolveLegacyDetailCondition(
-  kind: CategoryFieldKind,
-  details: CategorySpecificDetails,
-): ListingCondition {
-  const value = kind === "vehicles" ? details.vehicle_condition ?? details.condition : details.condition;
-  if (value === "new") return "new";
-  if (value === "excellent" || value === "good") return "like_new";
-  if (value === "needs_work") return "for_parts";
-  if (value === "used") return "used";
-  return "not_applicable";
-}
-'''
-          if "function resolveLegacyDetailCondition(" not in source:
-              source = source.replace(marker, helper + marker, 1)
-          route.write_text(source, encoding="utf-8")
-          PY
-          npx prettier --write src/lib/api/listing-attributes.ts 'src/routes/profile/listings.$id.tsx'
-          if ! git diff --quiet; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add src/lib/api/listing-attributes.ts 'src/routes/profile/listings.$id.tsx'
-            git commit -m "fix: resolve taxonomy foundation type errors"
-            git push origin HEAD:feature/taxonomy-search-foundation-v1
-          fi
       - name: Dynamic listing facets contract
         run: node --test scripts/dynamic-listing-facets-v1.test.mjs
       - name: Dynamic listing search contract
