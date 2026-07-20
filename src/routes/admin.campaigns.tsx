@@ -12,7 +12,7 @@ import {
   ShieldAlert,
   Square,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   ownerFetchCampaignCreatives,
   ownerFetchCampaigns,
@@ -94,6 +94,7 @@ function CampaignManagerPage() {
   const [creativeForm, setCreativeForm] = useState<CreativeFormState>(emptyCreative);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const mutationInFlightRef = useRef(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [statusReason, setStatusReason] = useState("");
@@ -148,7 +149,7 @@ function CampaignManagerPage() {
     setNotice("");
   }
 
-  function editCampaign(campaign: CampaignSummary) {
+  function editCampaign(campaign: CampaignSummary, preserveFeedback = false) {
     setCampaignForm({
       id: campaign.id,
       expectedVersion: campaign.version,
@@ -161,7 +162,7 @@ function CampaignManagerPage() {
     });
     setCreativeForm({ ...emptyCreative, campaignId: campaign.id });
     setError("");
-    setNotice("");
+    if (!preserveFeedback) setNotice("");
     void refreshCreatives(campaign.id);
   }
 
@@ -176,51 +177,58 @@ function CampaignManagerPage() {
 
   async function saveCampaign(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (saving) return;
+    if (mutationInFlightRef.current) return;
+    mutationInFlightRef.current = true;
     setSaving(true);
     setError("");
     setNotice("");
 
-    const result = await ownerSaveCampaign(canManage, {
-      id: campaignForm.id,
-      expectedVersion: campaignForm.expectedVersion,
-      name: campaignForm.name,
-      status: campaignForm.status,
-      startsAt: fromLocalDateTimeInput(campaignForm.startsAt),
-      endsAt: fromLocalDateTimeInput(campaignForm.endsAt),
-      targetPages: campaignForm.targetPages,
-      targetCategoryIds: [
-        ...new Set(
-          campaignForm.categoryIdsText
-            .split(",")
-            .map((value) => value.trim())
-            .filter(Boolean),
-        ),
-      ],
-    });
+    try {
+      const result = await ownerSaveCampaign(canManage, {
+        id: campaignForm.id,
+        expectedVersion: campaignForm.expectedVersion,
+        name: campaignForm.name,
+        status: campaignForm.status,
+        startsAt: fromLocalDateTimeInput(campaignForm.startsAt),
+        endsAt: fromLocalDateTimeInput(campaignForm.endsAt),
+        targetPages: campaignForm.targetPages,
+        targetCategoryIds: [
+          ...new Set(
+            campaignForm.categoryIdsText
+              .split(",")
+              .map((value) => value.trim())
+              .filter(Boolean),
+          ),
+        ],
+      });
 
-    setSaving(false);
-    if (!result.ok) {
-      setError(result.error.message);
-      return;
-    }
+      if (!result.ok) {
+        setError(result.error.message);
+        return;
+      }
 
-    const campaignId = result.data.id;
-    setNotice(
-      campaignForm.id
-        ? text("تم تحديث الحملة وتسجيل العملية.", "Campaign updated and audited.")
-        : text("تم إنشاء الحملة وتسجيل العملية.", "Campaign created and audited."),
-    );
-    const refreshed = await ownerFetchCampaigns(canManage);
-    if (refreshed.ok) {
+      const campaignId = result.data.id;
+      setNotice(
+        campaignForm.id
+          ? text("تم تحديث الحملة وتسجيل العملية.", "Campaign updated and audited.")
+          : text("تم إنشاء الحملة وتسجيل العملية.", "Campaign created and audited."),
+      );
+      const refreshed = await ownerFetchCampaigns(canManage);
+      if (!refreshed.ok) {
+        setError(refreshed.error.message);
+        return;
+      }
       setCampaigns(refreshed.data);
       const campaign = refreshed.data.find((item) => item.id === campaignId);
-      if (campaign) editCampaign(campaign);
+      if (campaign) editCampaign(campaign, true);
+    } finally {
+      mutationInFlightRef.current = false;
+      setSaving(false);
     }
   }
 
   async function changeStatus(campaign: CampaignSummary, status: CampaignStatus) {
-    if (saving) return;
+    if (mutationInFlightRef.current) return;
     const reason = statusReason.trim();
     if (reason.length < 3) {
       setError(
@@ -231,23 +239,31 @@ function CampaignManagerPage() {
       );
       return;
     }
+
+    mutationInFlightRef.current = true;
     setSaving(true);
     setError("");
     setNotice("");
-    const result = await ownerSetCampaignStatus(canManage, {
-      id: campaign.id,
-      status,
-      expectedVersion: campaign.version,
-      reason,
-    });
-    setSaving(false);
-    if (!result.ok) {
-      setError(result.error.message);
-      return;
+    try {
+      const result = await ownerSetCampaignStatus(canManage, {
+        id: campaign.id,
+        status,
+        expectedVersion: campaign.version,
+        reason,
+      });
+      if (!result.ok) {
+        setError(result.error.message);
+        return;
+      }
+      setStatusReason("");
+      setNotice(
+        text("تم تغيير حالة الحملة وتسجيل السبب.", "Campaign status changed and audited."),
+      );
+      await refreshCampaigns();
+    } finally {
+      mutationInFlightRef.current = false;
+      setSaving(false);
     }
-    setStatusReason("");
-    setNotice(text("تم تغيير حالة الحملة وتسجيل السبب.", "Campaign status changed and audited."));
-    await refreshCampaigns();
   }
 
   function editCreative(creative: CampaignCreativeSummary) {
@@ -265,29 +281,34 @@ function CampaignManagerPage() {
 
   async function saveCreative(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!campaignForm.id || saving) return;
+    if (!campaignForm.id || mutationInFlightRef.current) return;
+    mutationInFlightRef.current = true;
     setSaving(true);
     setError("");
     setNotice("");
-    const result = await ownerSaveCampaignCreative(canManage, {
-      id: creativeForm.id,
-      expectedVersion: creativeForm.expectedVersion,
-      campaignId: campaignForm.id,
-      name: creativeForm.name,
-      imageUrl: creativeForm.imageUrl,
-      destinationUrl: creativeForm.destinationUrl,
-      weight: Number(creativeForm.weight || 100),
-      isActive: creativeForm.isActive,
-    });
-    setSaving(false);
-    if (!result.ok) {
-      setError(result.error.message);
-      return;
+    try {
+      const result = await ownerSaveCampaignCreative(canManage, {
+        id: creativeForm.id,
+        expectedVersion: creativeForm.expectedVersion,
+        campaignId: campaignForm.id,
+        name: creativeForm.name,
+        imageUrl: creativeForm.imageUrl,
+        destinationUrl: creativeForm.destinationUrl,
+        weight: Number(creativeForm.weight || 100),
+        isActive: creativeForm.isActive,
+      });
+      if (!result.ok) {
+        setError(result.error.message);
+        return;
+      }
+      setCreativeForm({ ...emptyCreative, campaignId: campaignForm.id });
+      setNotice(text("تم حفظ التصميم الإعلاني وتسجيل العملية.", "Creative saved and audited."));
+      await refreshCreatives(campaignForm.id);
+      await refreshCampaigns();
+    } finally {
+      mutationInFlightRef.current = false;
+      setSaving(false);
     }
-    setCreativeForm({ ...emptyCreative, campaignId: campaignForm.id });
-    setNotice(text("تم حفظ التصميم الإعلاني وتسجيل العملية.", "Creative saved and audited."));
-    await refreshCreatives(campaignForm.id);
-    await refreshCampaigns();
   }
 
   if (!canManage) {
@@ -317,7 +338,7 @@ function CampaignManagerPage() {
           <button
             type="button"
             onClick={() => void refreshCampaigns()}
-            disabled={loading}
+            disabled={loading || saving}
             className="rawaj-chip gap-2 px-3 py-2 text-xs font-bold"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
