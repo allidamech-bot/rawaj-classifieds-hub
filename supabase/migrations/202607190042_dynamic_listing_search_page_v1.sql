@@ -145,13 +145,8 @@ begin
       and (p_condition is null or listing_row.listing_condition::text = p_condition)
       and (
         v_query is null
-        or coalesce(
-          listing_row.search_document @@ websearch_to_tsquery(
-            'simple',
-            public.rawaj_normalize_arabic_search(v_query)
-          ),
-          false
-        )
+        or listing_row.search_text_normalized ilike
+        '%' || public.rawaj_normalize_arabic_search(v_query) || '%'
         or listing_row.title ilike '%' || v_query || '%'
         or listing_row.description ilike '%' || v_query || '%'
       )

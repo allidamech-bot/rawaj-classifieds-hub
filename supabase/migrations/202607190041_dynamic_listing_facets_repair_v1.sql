@@ -103,10 +103,8 @@ begin
       and (p_price_max is null or listing_row.price <= p_price_max)
       and (
         v_query is null
-        or listing_row.search_document @@ websearch_to_tsquery(
-          'simple',
-          public.rawaj_normalize_arabic_search(v_query)
-        )
+        or listing_row.search_text_normalized ilike
+          '%' || public.rawaj_normalize_arabic_search(v_query) || '%'
       )
       and not exists (
         select 1
