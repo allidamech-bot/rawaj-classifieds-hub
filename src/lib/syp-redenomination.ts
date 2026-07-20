@@ -15,9 +15,7 @@ export function convertSypAmount(
 ): number {
   assertValidSypAmount(amount);
   if (from === to) return amount;
-  return from === "old"
-    ? amount / SYP_REDENOMINATION_FACTOR
-    : amount * SYP_REDENOMINATION_FACTOR;
+  return from === "old" ? amount / SYP_REDENOMINATION_FACTOR : amount * SYP_REDENOMINATION_FACTOR;
 }
 
 export function toNewSyp(amount: number, denomination: SypDenomination): number {
@@ -28,10 +26,7 @@ export function toOldSyp(amount: number, denomination: SypDenomination): number 
   return convertSypAmount(amount, denomination, "old");
 }
 
-export function createDualSypAmount(
-  amount: number,
-  denomination: SypDenomination,
-): DualSypAmount {
+export function createDualSypAmount(amount: number, denomination: SypDenomination): DualSypAmount {
   return {
     oldSyp: toOldSyp(amount, denomination),
     newSyp: toNewSyp(amount, denomination),
