@@ -2,13 +2,32 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [router, monitoring, reporting, budget, server, qualityGate] = await Promise.all([
+const [
+  router,
+  monitoring,
+  reporting,
+  budget,
+  server,
+  qualityGate,
+  unreadActivity,
+  liveChatWorkspace,
+  publicAdSlot,
+  messagingGuarded,
+  publicListings,
+  publicListingDetail,
+] = await Promise.all([
   readFile(new URL("../src/router.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/client-error-monitoring.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/lovable-error-reporting.ts", import.meta.url), "utf8"),
   readFile(new URL("./performance-budget.mjs", import.meta.url), "utf8"),
   readFile(new URL("../src/server.ts", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/unread-activity.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/communication/useLiveChatWorkspace.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/messaging-guarded.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/location-aware-listings-v2.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/listing-detail-read-guarded.ts", import.meta.url), "utf8"),
 ]);
 
 test("phase 54 enforces production JavaScript, stylesheet, font and image budgets", () => {
@@ -58,4 +77,31 @@ test("SSR observability records build identity, duration and pathname only", () 
     server,
     /searchParams|request\.headers|get\("authorization"\)|request\.text\(/,
   );
+});
+
+test("launch traffic safeguards remove permanent polling from public and account surfaces", () => {
+  assert.doesNotMatch(unreadActivity, /UNREAD_ACTIVITY_POLL_MS|window\.setInterval\(/);
+  assert.match(unreadActivity, /table: "notifications"/);
+  assert.match(unreadActivity, /table: "conversation_messages"/);
+  assert.match(unreadActivity, /table: "conversations"/);
+
+  assert.doesNotMatch(liveChatWorkspace, /LIVE_CHAT_FALLBACK_POLL_MS|window\.setInterval\(/);
+  assert.match(liveChatWorkspace, /invalidateConversationMessagesCache/);
+
+  assert.doesNotMatch(publicAdSlot, /AD_PLACEMENT_SCHEDULE_REFRESH_MS|window\.setInterval\(/);
+  assert.match(publicAdSlot, /AD_PLACEMENT_RETRY_LIMIT = 3/);
+});
+
+test("launch traffic safeguards dedupe Signed URL reads without stale public listing caches", () => {
+  assert.match(messagingGuarded, /CONVERSATION_MESSAGE_CACHE_TTL_MS = 60_000/);
+  assert.match(messagingGuarded, /conversationMessageRequests = new Map/);
+  assert.match(messagingGuarded, /if \(pending\) return pending/);
+
+  assert.match(publicListings, /pendingPublicListingReads = new Map/);
+  assert.match(publicListings, /if \(pending\) return pending/);
+  assert.doesNotMatch(publicListings, /expiresAt|CACHE_TTL/);
+
+  assert.match(publicListingDetail, /pendingPublicListingDetailReads = new Map/);
+  assert.match(publicListingDetail, /if \(pending\) return pending/);
+  assert.doesNotMatch(publicListingDetail, /expiresAt|CACHE_TTL/);
 });
