@@ -2,15 +2,17 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [errors, authReturn, recoverySession, login, callback, reset, admin] = await Promise.all([
-  readFile(new URL("../src/lib/auth-errors.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/auth-return.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/auth-recovery-session.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/login.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/auth.callback.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/reset-password.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/admin.tsx", import.meta.url), "utf8"),
-]);
+const [errors, authReturn, recoverySession, supabaseClient, login, callback, reset, admin] =
+  await Promise.all([
+    readFile(new URL("../src/lib/auth-errors.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/auth-return.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/auth-recovery-session.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/supabase.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/login.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/auth.callback.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/reset-password.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/admin.tsx", import.meta.url), "utf8"),
+  ]);
 
 test("account failures are translated into safe bilingual messages", () => {
   assert.match(errors, /over_email_send_rate_limit/);
@@ -48,6 +50,27 @@ test("authentication callback derives recovery context from router search", () =
   assert.doesNotMatch(callback, /useMemo/);
 });
 
+test("password recovery events are captured immediately after creating the auth client", () => {
+  assert.match(recoverySession, /export function installPasswordRecoverySessionBridge/);
+  assert.match(recoverySession, /RECOVERY_BRIDGE_GLOBAL_KEY/);
+  assert.match(recoverySession, /if \(root\[RECOVERY_BRIDGE_GLOBAL_KEY\]\) return/);
+  assert.match(recoverySession, /root\[RECOVERY_BRIDGE_GLOBAL_KEY\] = true/);
+  assert.match(recoverySession, /client\.auth\.onAuthStateChange/);
+  assert.match(recoverySession, /event === "PASSWORD_RECOVERY" && session\?\.user\.id/);
+  assert.match(recoverySession, /markPasswordRecoverySession\(session\.user\.id\)/);
+  assert.match(recoverySession, /event === "SIGNED_OUT"/);
+  assert.match(recoverySession, /clearPasswordRecoverySession\(\)/);
+
+  assert.match(
+    supabaseClient,
+    /import \{ installPasswordRecoverySessionBridge \} from "@\/lib\/auth-recovery-session"/,
+  );
+  assert.match(
+    supabaseClient,
+    /const authenticatedSupabase:[\s\S]*createClient[\s\S]*installPasswordRecoverySessionBridge\(authenticatedSupabase\);[\s\S]*export const supabase/,
+  );
+});
+
 test("password recovery requires bounded account-bound proof instead of any signed-in session", () => {
   assert.match(recoverySession, /RECOVERY_SESSION_TTL_MS = 15 \* 60 \* 1000/);
   assert.match(recoverySession, /interface PasswordRecoveryProof/);
@@ -61,6 +84,10 @@ test("password recovery requires bounded account-bound proof instead of any sign
   assert.match(callback, /session\.access_token === recoveryHashAccessToken/);
   assert.match(callback, /event === "PASSWORD_RECOVERY"/);
   assert.match(callback, /markPasswordRecoverySession\(session\.user\.id\)/);
+  assert.match(callback, /hasActivePasswordRecoverySession\(session\.user\.id\)/);
+  assert.match(callback, /function hasRecoveryProof/);
+  assert.match(callback, /hasRecoveryProof\(data\.session\)/);
+  assert.match(callback, /hasRecoveryProof\(lateSession\.session\)/);
   assert.doesNotMatch(callback, /finish\(callbackContext\.isRecovery/);
   assert.doesNotMatch(callback, /data\.session\) \{\s*finish\(callbackContext\.isRecovery/);
 
@@ -74,7 +101,7 @@ test("password recovery requires bounded account-bound proof instead of any sign
   assert.doesNotMatch(reset, /event === "SIGNED_IN" \|\| event === "INITIAL_SESSION"/);
 });
 
-test("password recovery listener is always released on unmount", () => {
+test("route-scoped password recovery listeners are released on unmount", () => {
   assert.match(callback, /unsubscribeAuth\?\.\(\)/);
   assert.match(reset, /unsubscribeAuth\?\.\(\)/);
   assert.match(reset, /listener\.subscription\.unsubscribe/);
