@@ -10,7 +10,7 @@ const [
   packageSource,
   qualityGate,
   linking,
-  assetLinksRoute,
+  serverSource,
   capacitorConfig,
   androidManifest,
   androidStrings,
@@ -26,10 +26,7 @@ const [
   readFile(new URL("../package.json", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/production-linking.ts", import.meta.url), "utf8"),
-  readFile(
-    new URL("../src/routes/[.]well-known.assetlinks[.]json.ts", import.meta.url),
-    "utf8",
-  ),
+  readFile(new URL("../src/server.ts", import.meta.url), "utf8"),
   readFile(new URL("../capacitor.config.ts", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/AndroidManifest.xml", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/res/values/strings.xml", import.meta.url), "utf8"),
@@ -177,15 +174,23 @@ test("Digital Asset Links uses only validated release fingerprints and fails clo
   assert.match(linking, /namespace: "android_app"/);
   assert.match(linking, /package_name: RAWAJ_ANDROID_PACKAGE_NAME/);
 
-  assert.match(assetLinksRoute, /createFileRoute\("\/\.well-known\/assetlinks\.json"\)/);
-  assert.match(assetLinksRoute, /process\.env\[RAWAJ_ANDROID_FINGERPRINT_ENV_NAME\]/);
-  assert.match(assetLinksRoute, /fingerprints\.length === 0/);
-  assert.match(assetLinksRoute, /status: 503/);
-  assert.match(assetLinksRoute, /android_app_links_not_configured/);
-  assert.match(assetLinksRoute, /status: 200/);
-  assert.match(assetLinksRoute, /"Content-Type": "application\/json; charset=utf-8"/);
-  assert.match(assetLinksRoute, /"X-Content-Type-Options": "nosniff"/);
-  assert.doesNotMatch(assetLinksRoute, /redirect|Location/);
+  assert.match(serverSource, /androidAssetLinksPath = "\/\.well-known\/assetlinks\.json"/);
+  assert.match(
+    serverSource,
+    /readServerEnvironmentValue\(env, RAWAJ_ANDROID_FINGERPRINT_ENV_NAME\)/,
+  );
+  assert.match(serverSource, /function buildAndroidAssetLinksResponse/);
+  assert.match(serverSource, /fingerprints\.length === 0/);
+  assert.match(serverSource, /status: 503/);
+  assert.match(serverSource, /android_app_links_not_configured/);
+  assert.match(serverSource, /status: 200/);
+  assert.match(serverSource, /"Content-Type": "application\/json; charset=utf-8"/);
+  assert.match(serverSource, /"X-Content-Type-Options": "nosniff"/);
+  assert.match(
+    serverSource,
+    /request\.method === "GET" && url\.pathname === androidAssetLinksPath/,
+  );
+  assert.doesNotMatch(serverSource, /Response\.redirect|headers\.set\("location"/i);
 
   assert.match(envExample, /RAWAJ_ANDROID_SHA256_CERT_FINGERPRINTS=/);
   assert.doesNotMatch(envExample, /(?:[0-9A-F]{2}:){31}[0-9A-F]{2}/);
