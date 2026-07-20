@@ -99,35 +99,47 @@ export function useListingsResults(inputs: ListingsResultsInputs): ListingsResul
     let cancelled = false;
 
     async function loadListings() {
-      const [result, sellerResult] = await Promise.all([
-        fetchPublicListings(filters, null, 30),
-        searchPublicSellers(filterInputs.debouncedQ),
-      ]);
+      try {
+        const [result, sellerResult] = await Promise.all([
+          fetchPublicListings(filters, null, 30),
+          searchPublicSellers(filterInputs.debouncedQ),
+        ]);
 
-      if (cancelled) return;
-      if (version !== filterVersionRef.current) return;
+        if (cancelled || version !== filterVersionRef.current) return;
 
-      if (!result.ok) {
-        setError(result.error);
+        if (!result.ok) {
+          setError(result.error);
+          setItems([]);
+          setNextCursor(null);
+          setTotalCount(null);
+        } else {
+          lastCompletedFilterKeyRef.current = filterKey;
+          setItems(result.data.items);
+          setNextCursor(result.data.nextCursor);
+          setTotalCount(result.data.totalCount ?? null);
+        }
+
+        if (sellerResult.ok) {
+          setSellerResults(sellerResult.data);
+          setSellerSearchError(null);
+        } else {
+          setSellerResults([]);
+          setSellerSearchError(sellerResult.error);
+        }
+      } catch (caught) {
+        if (cancelled || version !== filterVersionRef.current) return;
         setItems([]);
         setNextCursor(null);
         setTotalCount(null);
-      } else {
-        lastCompletedFilterKeyRef.current = filterKey;
-        setItems(result.data.items);
-        setNextCursor(result.data.nextCursor);
-        setTotalCount(result.data.totalCount ?? null);
-      }
-
-      if (sellerResult.ok) {
-        setSellerResults(sellerResult.data);
-        setSellerSearchError(null);
-      } else {
         setSellerResults([]);
-        setSellerSearchError(sellerResult.error);
+        setError({
+          code: "unknown",
+          message: caught instanceof Error ? caught.message : "تعذر تحميل نتائج البحث.",
+          operation: "listings_search_load",
+        });
+      } finally {
+        if (!cancelled && version === filterVersionRef.current) setLoading(false);
       }
-
-      setLoading(false);
     }
 
     void loadListings();

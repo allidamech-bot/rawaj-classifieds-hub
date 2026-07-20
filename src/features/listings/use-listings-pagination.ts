@@ -64,65 +64,66 @@ export function useListingsPagination(inputs: ListingsPaginationInputs): Listing
 
   const loadMore = useCallback(async () => {
     if (filterDraftActive || isFilterDraftSessionActive()) return;
-    if (!nextCursor || loadingMoreRef.current) return;
-    if (hasPriceContradiction) return;
+    if (!nextCursor || loadingMoreRef.current || hasPriceContradiction) return;
     loadingMoreRef.current = true;
     setLoadingMore(true);
-
     const activeVersion = filterVersionRef.current;
 
-    const result = await fetchPublicListings(
-      buildListingFilters({
-        taxonomyFilterScope,
-        selectedCategoryId,
-        effectiveSubcategoryId,
-        taxonomyListingSearch,
-        taxonomyOwnsPropertyPurpose,
-        taxonomyOwnsPropertyType,
-        propertyPurpose,
-        propertyType,
-        govId,
-        districtAr,
-        parsedPriceMin,
-        parsedPriceMax,
-        priceType,
-        globalCondition,
-        carMake,
-        carModel,
-        fuelType,
-        transmission,
-        rooms,
-        rentalDuration,
-        electronicsBrand,
-        detailCondition,
-        employmentType,
-        salaryType,
-        withPhotos,
-        debouncedQ,
-        sort,
-        attributeFilters,
-      }),
-      nextCursor,
-      30,
-    );
+    try {
+      const result = await fetchPublicListings(
+        buildListingFilters({
+          taxonomyFilterScope,
+          selectedCategoryId,
+          effectiveSubcategoryId,
+          taxonomyListingSearch,
+          taxonomyOwnsPropertyPurpose,
+          taxonomyOwnsPropertyType,
+          propertyPurpose,
+          propertyType,
+          govId,
+          districtAr,
+          parsedPriceMin,
+          parsedPriceMax,
+          priceType,
+          globalCondition,
+          carMake,
+          carModel,
+          fuelType,
+          transmission,
+          rooms,
+          rentalDuration,
+          electronicsBrand,
+          detailCondition,
+          employmentType,
+          salaryType,
+          withPhotos,
+          debouncedQ,
+          sort,
+          attributeFilters,
+        }),
+        nextCursor,
+        30,
+      );
 
-    if (isFilterDraftSessionActive() || activeVersion !== filterVersionRef.current) {
+      if (isFilterDraftSessionActive() || activeVersion !== filterVersionRef.current) return;
+      if (!result.ok) {
+        onError(result.error);
+        return;
+      }
+      onItems(result.data.items);
+      onCursor(result.data.nextCursor);
+    } catch (caught) {
+      if (!isFilterDraftSessionActive() && activeVersion === filterVersionRef.current) {
+        onError({
+          code: "unknown",
+          message: caught instanceof Error ? caught.message : "تعذر تحميل المزيد من النتائج.",
+          operation: "listings_search_load_more",
+        });
+      }
+    } finally {
       loadingMoreRef.current = false;
       setLoadingMore(false);
-      return;
     }
-
-    if (!result.ok) {
-      onError(result.error);
-      loadingMoreRef.current = false;
-      setLoadingMore(false);
-      return;
-    }
-
-    onItems(result.data.items);
-    onCursor(result.data.nextCursor);
-    loadingMoreRef.current = false;
-    setLoadingMore(false);
   }, [
     filterDraftActive,
     nextCursor,
