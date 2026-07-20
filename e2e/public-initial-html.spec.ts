@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 
 function stylesheetHrefs(html: string) {
-  return [...html.matchAll(/<link\b[^>]*\brel="stylesheet"[^>]*\bhref="([^"]+)"/g)].map(
-    (match) => match[1],
+  return [...html.matchAll(/<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["']/gi)].map(
+    (match) => match[1] ?? "",
   );
 }
 
@@ -98,12 +98,12 @@ test.describe("public initial HTML", () => {
     const supportStyles = stylesheetHrefs(await supportResponse.text());
     expect(supportStyles.some((href) => href.includes("trust-support-hub-v2"))).toBeTruthy();
     expect(supportStyles.some((href) => href.includes("listing-studio-v3"))).toBeFalsy();
-    expect(supportStyles.some((href) => href.includes("communication-center-v2"))).toBeFalsy();
+    expect(supportStyles.some((href) => href.includes("communication-center-v3"))).toBeFalsy();
 
     const chatsResponse = await request.get("/chats", { headers: { accept: "text/html" } });
     const chatStyles = stylesheetHrefs(await chatsResponse.text());
     expect(chatStyles.some((href) => href.includes("messaging-signature"))).toBeTruthy();
-    expect(chatStyles.some((href) => href.includes("communication-center-v2"))).toBeTruthy();
+    expect(chatStyles.some((href) => href.includes("communication-center-v3"))).toBeTruthy();
     expect(chatStyles.some((href) => href.includes("personal-space-polish"))).toBeTruthy();
     expect(chatStyles.some((href) => href.includes("listing-studio-v3"))).toBeFalsy();
 
