@@ -1171,6 +1171,8 @@ begin
 
     if found then
       new.price_denomination_snapshot := coalesce(v_denomination, 'unclassified');
+    else
+      new.price_denomination_snapshot := 'unclassified';
     end if;
   else
     new.price_denomination_snapshot := 'unclassified';

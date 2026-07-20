@@ -68,6 +68,7 @@ test("Phase A edit, detail, queue, and SEO surfaces use explicit denomination", 
   const edit = await readPhaseAText("src/routes/profile/listings.$id.tsx");
   const detail = await readPhaseAText("src/routes/listings.$id.tsx");
   const owner = await readPhaseAText("src/routes/profile/listings.tsx");
+  const admin = await readPhaseAText("src/routes/admin.pending.tsx");
   const queue = await readPhaseAText("src/features/listings/SypClassificationQueue.tsx");
   const structured = await readPhaseAText("src/lib/listing-structured-data.ts");
 
@@ -78,6 +79,7 @@ test("Phase A edit, detail, queue, and SEO surfaces use explicit denomination", 
   assert.match(detail, /priceMax: listing\.priceNewSypNormalized/);
   assert.match(detail, /<SypPriceDisplay listing=\{listing\}/);
   assert.match(owner, /<SypClassificationQueue \/>/);
+  assert.match(admin, /<SypClassificationQueue \/>/);
   assert.match(queue, /classifySypListingPrice/);
   assert.match(structured, /listing\.priceNewSypNormalized/);
 });
@@ -92,6 +94,10 @@ test("Phase A normalized search and price history never compare mixed raw SYP", 
   assert.match(sql, /new_price_denomination/i);
   assert.match(sql, /l\.price_new_syp_normalized = d\.new_price_new_syp_normalized/i);
   assert.match(sql, /rawaj_sync_favorite_snapshot_syp_denomination/i);
+  assert.match(
+    sql,
+    /if found then[\s\S]*else[\s\S]*price_denomination_snapshot := 'unclassified'/i,
+  );
 });
 
 test("Phase A rollback restores replaced functions before dropping columns", async () => {

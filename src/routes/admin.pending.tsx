@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Clock, FileCheck, ShieldCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ResilientImage } from "@/components/media/ResilientImage";
+import { SypClassificationQueue } from "@/features/listings/SypClassificationQueue";
 import {
   adminFetchPendingListings,
   adminModerateListing,
@@ -195,6 +196,8 @@ function PendingPage() {
           <p className="mt-3 rounded-xl bg-muted-surface p-2 text-xs font-semibold">{message}</p>
         ) : null}
       </section>
+
+      <SypClassificationQueue />
 
       {error && hasLoaded ? (
         <div className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive hairline">
