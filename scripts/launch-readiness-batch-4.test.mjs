@@ -78,7 +78,7 @@ test("public categories and governorates use separate client-scoped TTL caches",
   assert.ok(referencesSource.includes("if (!result.ok && cache.get(client) === entry)"));
 });
 
-test("combined references share cached subset reads without coupling category-only callers", () => {
+test("combined references reuse the stable public client across SSR readers", () => {
   const referencesStart = referencesSource.indexOf("export async function readReferences");
   const categoriesStart = referencesSource.indexOf("export async function fetchPublicCategories");
   const subcategoriesStart = referencesSource.indexOf(
@@ -91,8 +91,9 @@ test("combined references share cached subset reads without coupling category-on
   const categoriesBlock = referencesSource.slice(categoriesStart, subcategoriesStart);
   const governoratesBlock = referencesSource.slice(governoratesStart);
 
-  assert.ok(referencesBlock.includes("readPublicCategories(client)"));
-  assert.ok(referencesBlock.includes("readPublicGovernorates(client)"));
+  assert.ok(referencesBlock.includes("const referenceClient = publicSupabase ?? client"));
+  assert.ok(referencesBlock.includes("readPublicCategories(referenceClient)"));
+  assert.ok(referencesBlock.includes("readPublicGovernorates(referenceClient)"));
   assert.ok(categoriesBlock.includes("readPublicCategories(clientResult.data)"));
   assert.ok(!categoriesBlock.includes("readPublicGovernorates"));
   assert.ok(!categoriesBlock.includes('.from("categories")'));
