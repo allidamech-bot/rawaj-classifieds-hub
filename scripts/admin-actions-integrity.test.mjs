@@ -22,16 +22,19 @@ const routeFiles = [
 ];
 
 const routeSources = new Map(
-  await Promise.all(routeFiles.map(async (file) => [file, await readFile(new URL(`../${file}`, import.meta.url), "utf8")])),
+  await Promise.all(
+    routeFiles.map(async (file) => [
+      file,
+      await readFile(new URL(`../${file}`, import.meta.url), "utf8"),
+    ]),
+  ),
 );
-const allAdminSource = [...routeSources.values()].join("
-");
+const allAdminSource = [...routeSources.values()].join("\n");
 const migrationsDir = new URL("../supabase/migrations/", import.meta.url);
 const migrationFiles = (await readdir(migrationsDir)).filter((file) => file.endsWith(".sql"));
 const migrationSql = (
   await Promise.all(migrationFiles.map((file) => readFile(new URL(file, migrationsDir), "utf8")))
-).join("
-");
+).join("\n");
 
 function source(path) {
   const value = routeSources.get(path);
@@ -52,10 +55,14 @@ test("admin route inventory is complete", () => {
     forms: count(allAdminSource, /<form\b/g),
     filtersAndFields: count(allAdminSource, /<(?:input|select|textarea)\b/g),
   };
-  inventory.interactiveElements = inventory.buttons + inventory.links + inventory.forms + inventory.filtersAndFields;
+  inventory.interactiveElements =
+    inventory.buttons + inventory.links + inventory.forms + inventory.filtersAndFields;
   console.log(`ADMIN_ACTIONS_INVENTORY ${JSON.stringify(inventory)}`);
   assert.ok(inventory.buttons > 40, "Expected a substantial admin button inventory");
-  assert.ok(inventory.interactiveElements > 100, "Expected all admin interactive controls to be inventoried");
+  assert.ok(
+    inventory.interactiveElements > 100,
+    "Expected all admin interactive controls to be inventoried",
+  );
 });
 
 test("record mutations serialize conflicting decisions per record", () => {
@@ -65,7 +72,7 @@ test("record mutations serialize conflicting decisions per record", () => {
   assert.doesNotMatch(source("src/routes/admin.data-quality.tsx"), /issue\.id}:\$\{decision/);
 });
 
-test("report moderation keeps controls busy until authoritative refetch", () => {
+test("report moderation stays busy until authoritative refetch", () => {
   for (const file of ["src/routes/admin.reports.tsx", "src/routes/admin.message-reports.tsx"]) {
     const value = source(file);
     assert.match(value, /await loadReports\(\);/);
@@ -74,15 +81,21 @@ test("report moderation keeps controls busy until authoritative refetch", () => 
   }
 });
 
-test("promotion and verification decisions expose loading and disable duplicate actions", () => {
+test("promotion and verification decisions expose loading and prevent duplicate actions", () => {
   for (const file of ["src/routes/admin.promotions.tsx", "src/routes/admin.verifications.tsx"]) {
     const value = source(file);
     assert.match(value, /disabled=\{workingRequestId === request\.id}/);
     assert.match(value, /aria-busy=\{workingRequestId === request\.id}/);
     assert.match(value, /type="button"/);
   }
-  assert.match(source("src/routes/admin.promotions.tsx"), /receiptInFlightRef\.current\.size > 0/);
-  assert.match(source("src/routes/admin.verifications.tsx"), /documentInFlightRef\.current\.size > 0/);
+  assert.match(
+    source("src/routes/admin.promotions.tsx"),
+    /receiptInFlightRef\.current\.size > 0/,
+  );
+  assert.match(
+    source("src/routes/admin.verifications.tsx"),
+    /documentInFlightRef\.current\.size > 0/,
+  );
 });
 
 test("campaign payload and status controls reject malformed or repeated actions", () => {
@@ -91,16 +104,19 @@ test("campaign payload and status controls reject malformed or repeated actions"
   assert.match(value, /targetCategoryIds: \[\.\.\.new Set\(/);
   assert.match(value, /\.map\(\(value\) => value\.trim\(\)\)/);
   assert.match(value, /\.filter\(Boolean\)/);
-  assert.doesNotMatch(value, /targetCategoryIds: campaignForm\.categoryIdsText\.split\(","\)/);
+  assert.doesNotMatch(
+    value,
+    /targetCategoryIds: campaignForm\.categoryIdsText\.split\(","\)/,
+  );
 });
 
-test("critical admin RPC contracts exist in frontend and migration ledger", () => {
+test("critical admin RPC contracts exist in frontend and migration ledger", async () => {
   const contracts = [
     ["rawaj_admin_moderate_listing", "p_listing_id", "p_expected_updated_at"],
     ["rawaj_admin_moderate_listing_report_v2", "p_report_id", "p_expected_updated_at"],
     ["rawaj_admin_moderate_message_report", "p_report_id", "p_expected_updated_at"],
-    ["rawaj_admin_moderate_promotion_request_v2", "p_request_id", "p_expected_updated_at"],
-    ["rawaj_admin_moderate_verification_request_v2", "p_request_id", "p_expected_updated_at"],
+    ["rawaj_admin_moderate_promotion_request", "p_request_id", "p_expected_updated_at"],
+    ["rawaj_admin_moderate_verification_request", "p_request_id", "p_expected_updated_at"],
     ["rawaj_owner_set_system_control", "p_key", "p_expected_version"],
   ];
   const apiFiles = [
@@ -111,16 +127,19 @@ test("critical admin RPC contracts exist in frontend and migration ledger", () =
     "src/lib/api/verification.ts",
     "src/lib/api/owner-system-controls.ts",
   ];
-  const apiSourcePromise = Promise.all(apiFiles.map((file) => readFile(new URL(`../${file}`, import.meta.url), "utf8"));
-  return apiSourcePromise.then((parts) => {
-    const apiSource = parts.join("
-");
-    for (const [rpc, ...keys] of contracts) {
-      assert.ok(apiSource.includes(`rpc("${rpc}"`), `Frontend RPC missing: ${rpc}`);
-      assert.ok(migrationSql.includes(rpc), `Migration ledger missing RPC: ${rpc}`);
-      for (const key of keys) assert.ok(apiSource.includes(key), `Payload key missing: ${rpc}.${key}`);
+  const apiSource = (
+    await Promise.all(
+      apiFiles.map((file) => readFile(new URL(`../${file}`, import.meta.url), "utf8")),
+    )
+  ).join("\n");
+
+  for (const [rpc, ...keys] of contracts) {
+    assert.ok(apiSource.includes(`rpc("${rpc}"`), `Frontend RPC missing: ${rpc}`);
+    assert.ok(migrationSql.includes(rpc), `Migration ledger missing RPC: ${rpc}`);
+    for (const key of keys) {
+      assert.ok(apiSource.includes(key), `Payload key missing: ${rpc}.${key}`);
     }
-  });
+  }
 });
 
 test("admin route permissions remain explicit", () => {
@@ -138,6 +157,8 @@ test("admin route permissions remain explicit", () => {
     "canViewAuditLogs",
     "canManageSystemSettings",
   ];
-  for (const permission of permissions) assert.ok(layout.includes(permission), `Missing route permission: ${permission}`);
+  for (const permission of permissions) {
+    assert.ok(layout.includes(permission), `Missing route permission: ${permission}`);
+  }
   assert.match(layout, /!auth\.hasPermission\(requestedTab\.permission\)/);
 });
