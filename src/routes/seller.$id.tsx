@@ -236,31 +236,38 @@ function ReviewsPanel({
     const requestId = ++eligibilityRequestIdRef.current;
     setEligibilityState("loading");
     setNotice("");
-    const result = await fetchSellerReviewEligibility(seller.id);
-    if (
-      requestId !== eligibilityRequestIdRef.current ||
-      currentProfileId !== profileIdRef.current ||
-      seller.id !== sellerIdRef.current
-    )
-      return;
-    if (!result.ok) {
-      setEligibilityState("error");
-      return;
+    try {
+      const result = await fetchSellerReviewEligibility(seller.id);
+      if (
+        requestId !== eligibilityRequestIdRef.current ||
+        currentProfileId !== profileIdRef.current ||
+        seller.id !== sellerIdRef.current
+      ) return;
+      if (!result.ok) {
+        setEligibilityState("error");
+        setNotice(result.error.message);
+        return;
+      }
+      if (result.data.eligible) {
+        setEligibilityState("eligible");
+      } else if (result.data.reason === "existing_review") {
+        setEligibilityState("existing_review");
+      } else if (result.data.reason === "no_qualifying_interaction") {
+        setEligibilityState("no_qualifying_interaction");
+      } else {
+        setEligibilityState("error");
+      }
+    } catch (caught) {
+      if (
+        requestId === eligibilityRequestIdRef.current &&
+        currentProfileId === profileIdRef.current &&
+        seller.id === sellerIdRef.current
+      ) {
+        setEligibilityState("error");
+        setNotice(caught instanceof Error ? caught.message : text("تعذر التحقق من أهلية التقييم.", "Could not check review eligibility."));
+      }
     }
-    if (result.data.eligible) {
-      setEligibilityState("eligible");
-      return;
-    }
-    if (result.data.reason === "existing_review") {
-      setEligibilityState("existing_review");
-      return;
-    }
-    if (result.data.reason === "no_qualifying_interaction") {
-      setEligibilityState("no_qualifying_interaction");
-      return;
-    }
-    setEligibilityState("error");
-  }, [profileId, seller.id, shouldCheckEligibility]);
+  }, [profileId, seller.id, shouldCheckEligibility, text]);
 
   useEffect(() => {
     void loadEligibility();
@@ -278,8 +285,12 @@ function ReviewsPanel({
     if (reviewSubmitScopesRef.current.has(scopeKey)) return;
 
     const currentRating = rating;
-    const currentComment = comment;
+    const currentComment = comment.trim();
     const currentTraits = selectedTraits;
+    if (currentComment.length > 0 && currentComment.length < 10) {
+      setNotice(text("اكتب 10 أحرف على الأقل أو اترك التعليق فارغاً.", "Write at least 10 characters or leave the comment empty."));
+      return;
+    }
     reviewSubmitScopesRef.current.add(scopeKey);
     setNotice("");
     setSaving(true);
@@ -310,6 +321,10 @@ function ReviewsPanel({
         } else if (result.error.code === "status_mismatch") {
           setEligibilityState("existing_review");
         }
+      }
+    } catch (caught) {
+      if (currentProfileId === profileIdRef.current && currentSellerId === sellerIdRef.current) {
+        setNotice(caught instanceof Error ? caught.message : text("تعذر إرسال التقييم.", "Could not submit the review."));
       }
     } finally {
       reviewSubmitScopesRef.current.delete(scopeKey);
@@ -464,7 +479,7 @@ function ReviewsPanel({
             </button>
           </div>
         ) : (
-          <form onSubmit={(event) => void submitReview(event)} className="mt-4 space-y-2">
+          <form onSubmit={(event) => void submitReview(event)} aria-busy={saving} className="mt-4 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
@@ -472,6 +487,7 @@ function ReviewsPanel({
                   type="button"
                   aria-label={text(`تقييم ${value} من 5`, `Rate ${value} out of 5`)}
                   aria-pressed={rating === value}
+                  disabled={saving}
                   onClick={() => setRating(value)}
                   className={`min-h-11 rounded-lg px-3 py-2 text-xs font-bold hairline ${
                     rating >= value ? "bg-gold text-gold-foreground" : "bg-white/72"
