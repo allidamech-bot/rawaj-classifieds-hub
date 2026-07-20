@@ -36,9 +36,11 @@ jobs:
           cursor_new = 'replaceExact("src/lib/api/listings.ts", "? { price: listings[safePageSize - 1].price }", "? { price: listings[safePageSize - 1].priceNewSypNormalized }", 1);'
           write_old = 'replaceExact("src/lib/api/listing-write-rpc.ts", "  if (payload.price !== undefined) patch.price = payload.price;\\n  if (payload.priceType !== undefined) patch.price_type = payload.priceType;", "  if (payload.price !== undefined) patch.price = payload.price;\\n  if (payload.priceDenomination !== undefined) {\\n    patch.price_denomination = payload.priceDenomination;\\n  }\\n  if (payload.priceType !== undefined) patch.price_type = payload.priceType;", 1);'
           write_new = 'replaceExact("src/lib/api/listing-write-rpc.ts", "  if (payload.price !== undefined) patch.price = payload.price;\\n  if (payload.priceType) patch.price_type = payload.priceType;", "  if (payload.price !== undefined) patch.price = payload.price;\\n  if (payload.priceDenomination !== undefined) {\\n    patch.price_denomination = payload.priceDenomination;\\n  }\\n  if (payload.priceType) patch.price_type = payload.priceType;", 1);'
+          export_old = 'replaceExact("src/lib/classifieds-api.ts", "export * from \\\"@/lib/api/listing-write-rpc\\\";", "export * from \\\"@/lib/api/listing-write-rpc\\\";\\nexport * from \\\"@/lib/api/syp-denomination\\\";", 1);'
+          export_new = 'replaceExact("src/lib/classifieds-api.ts", "export * from \\\"@/lib/api/listings\\\";", "export * from \\\"@/lib/api/listings\\\";\\nexport * from \\\"@/lib/api/syp-denomination\\\";", 1);'
           assertion_old = '  if (occurrences !== expected) throw new Error(`${path}: expected ${expected} exact matches, found ${occurrences}`);'
           assertion_new = '''  if (occurrences !== expected) {
-            console.error(`MISMATCH ${path}: expected ${expected} exact matches, found ${occurrences}`);
+            console.error(`MISMATCH ${path}: expected ${expected} exact matches, found ${occurrences}; anchor=${JSON.stringify(oldText)}`);
             globalThis.__phaseAAnchorFailure = true;
             return;
           }'''
@@ -46,6 +48,7 @@ jobs:
           for old, new, label in [
               (cursor_old, cursor_new, 'cursor'),
               (write_old, write_new, 'listing-write'),
+              (export_old, export_new, 'classifieds export'),
               (assertion_old, assertion_new, 'assertion collector'),
           ]:
               if old not in source:
