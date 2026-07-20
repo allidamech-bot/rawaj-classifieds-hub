@@ -82,7 +82,7 @@ test("changed-fields patch omits unchanged data and represents intentional clear
   assert.match(route, /No changes to save\./);
 });
 
-test("taxonomy assignment is change-only and uses the captured selection", () => {
+test("taxonomy and governed attributes are persisted only when changed", () => {
   const persistence = route.slice(
     route.indexOf("async function persistCapturedChanges("),
     route.indexOf("const handleSave"),
@@ -93,13 +93,13 @@ test("taxonomy assignment is change-only and uses the captured selection", () =>
   assert.match(persistence, /if \(taxonomyChanged\)/);
   assert.match(persistence, /assignOwnerListingTaxonomy\(/);
   assert.match(persistence, /taxonomyResult\.error\.code !== "schema_missing"/);
+  assert.match(persistence, /const attributesChanged =/);
+  assert.match(persistence, /replaceOwnerListingAttributes\(/);
+  assert.match(persistence, /hasChangedFields \|\| taxonomyChanged \|\| attributesChanged/);
 });
 
 test("save is non-submitting and resubmit runs save, taxonomy, then review", () => {
-  const save = route.slice(
-    route.indexOf("const handleSave"),
-    route.indexOf("const handleResubmit"),
-  );
+  const save = route.slice(route.indexOf("const handleSave"), route.indexOf("const handleResubmit"));
   const resubmit = route.slice(
     route.indexOf("const handleResubmit"),
     route.indexOf("const handleDelete"),
@@ -110,7 +110,7 @@ test("save is non-submitting and resubmit runs save, taxonomy, then review", () 
   assert.ok(
     resubmit.indexOf("persistCapturedChanges(") < resubmit.indexOf("submitOwnerListingForReview("),
   );
-  assert.match(route, /changed: hasChangedFields \|\| taxonomyChanged/);
+  assert.match(route, /const changed = hasChangedFields \|\| taxonomyChanged \|\| attributesChanged/);
 });
 
 test("textual persistence leaves image mutation to dedicated image controls", () => {
