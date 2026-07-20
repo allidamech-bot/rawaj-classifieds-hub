@@ -1,0 +1,43 @@
+name: Apply Admin Ledger 004
+
+on:
+  push:
+    branches:
+      - agent/admin-actions-rollback-integration
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/admin-actions-rollback-integration
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Register reconciliation migration
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path("docs/production-schema/migration-ledger.json")
+          data = json.loads(path.read_text())
+          name = "202607200004_fix_listing_generated_column_moderation_guard.sql"
+          reconciliation = data["classifications"]["reconciliation"]
+          if name not in reconciliation:
+              reconciliation.append(name)
+          path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+          PY
+      - name: Commit ledger update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/production-schema/migration-ledger.json
+          git commit -m "docs: register listing guard runtime repair"
+          git push origin HEAD:agent/admin-actions-rollback-integration
