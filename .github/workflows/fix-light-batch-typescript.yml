@@ -33,21 +33,16 @@ jobs:
 
           profile_path = Path("src/routes/profile/listings.$id.tsx")
           profile = profile_path.read_text(encoding="utf-8")
-
           old_validation = "if (!dynamicValidation.ok) {"
           new_validation = "if (dynamicValidation.summary.length > 0) {"
           if profile.count(old_validation) != 1:
-              raise SystemExit(
-                  f"Expected exactly one dynamicValidation.ok check, found {profile.count(old_validation)}"
-              )
+              raise SystemExit(f"Expected one dynamic validation check, found {profile.count(old_validation)}")
           profile = profile.replace(old_validation, new_validation)
 
           old_condition = "setCondition(categoryDetailsGlobalCondition(categoryFieldKind, nextDetails));"
           new_condition = "setCondition(legacyCategoryCondition(categoryFieldKind, nextDetails));"
           if profile.count(old_condition) != 1:
-              raise SystemExit(
-                  f"Expected exactly one legacy condition call, found {profile.count(old_condition)}"
-              )
+              raise SystemExit(f"Expected one legacy condition call, found {profile.count(old_condition)}")
           profile = profile.replace(old_condition, new_condition)
 
           insertion_anchor = "function readDetailString("
@@ -66,11 +61,8 @@ jobs:
           '''
           if helper.strip() not in profile:
               if profile.count(insertion_anchor) != 1:
-                  raise SystemExit(
-                      f"Expected exactly one helper insertion anchor, found {profile.count(insertion_anchor)}"
-                  )
+                  raise SystemExit(f"Expected one helper anchor, found {profile.count(insertion_anchor)}")
               profile = profile.replace(insertion_anchor, helper + insertion_anchor)
-
           profile_path.write_text(profile, encoding="utf-8")
       - name: Verify focused TypeScript changes
         run: |
@@ -83,8 +75,10 @@ jobs:
             echo "No changes to commit."
             exit 0
           fi
+          branch='${{ github.event.pull_request.head.ref || github.ref_name }}'
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/lib/api/listing-attributes.ts 'src/routes/profile/listings.$id.tsx'
           git commit -m "fix: resolve taxonomy TypeScript blockers"
-          git push origin HEAD:${{ github.event.pull_request.head.ref || github.ref_name }}
+          git pull --rebase origin "$branch"
+          git push origin HEAD:"$branch"
