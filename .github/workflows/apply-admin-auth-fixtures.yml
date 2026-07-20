@@ -1,0 +1,62 @@
+name: Apply Admin Auth Fixtures
+
+on:
+  push:
+    branches:
+      - agent/admin-actions-rollback-integration
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/admin-actions-rollback-integration
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Add auth user fixtures
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("scripts/sql/admin-actions-rollback-local-verification.sql")
+          text = path.read_text()
+          anchor = "set local session_replication_role = replica;\n\ninsert into public.profiles ("
+          block = """set local session_replication_role = replica;
+
+insert into auth.users (
+  instance_id,
+  id,
+  aud,
+  role,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at
+) values
+  ('00000000-0000-0000-0000-000000000000', 'a1100000-0000-4000-8000-000000000001', 'authenticated', 'authenticated', 'owner.rollback@rawaj.test', '', now(), '{\"provider\":\"email\",\"providers\":[\"email\"]}'::jsonb, '{}'::jsonb, now(), now()),
+  ('00000000-0000-0000-0000-000000000000', 'a1100000-0000-4000-8000-000000000002', 'authenticated', 'authenticated', 'seller.rollback@rawaj.test', '', now(), '{\"provider\":\"email\",\"providers\":[\"email\"]}'::jsonb, '{}'::jsonb, now(), now()),
+  ('00000000-0000-0000-0000-000000000000', 'a1100000-0000-4000-8000-000000000003', 'authenticated', 'authenticated', 'reporter.rollback@rawaj.test', '', now(), '{\"provider\":\"email\",\"providers\":[\"email\"]}'::jsonb, '{}'::jsonb, now(), now()),
+  ('00000000-0000-0000-0000-000000000000', 'a1100000-0000-4000-8000-000000000004', 'authenticated', 'authenticated', 'third.rollback@rawaj.test', '', now(), '{\"provider\":\"email\",\"providers\":[\"email\"]}'::jsonb, '{}'::jsonb, now(), now());
+
+insert into public.profiles ("""
+          if anchor not in text:
+              raise SystemExit("auth fixture anchor missing")
+          path.write_text(text.replace(anchor, block, 1))
+          PY
+      - name: Commit auth fixtures
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/sql/admin-actions-rollback-local-verification.sql
+          git commit -m "test: create complete auth fixtures for admin rollback"
+          git push origin HEAD:agent/admin-actions-rollback-integration
