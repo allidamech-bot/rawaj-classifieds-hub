@@ -58,19 +58,38 @@ function ActivityCenterPage() {
     const requestId = ++notificationRequestIdRef.current;
     setNotificationsLoading(true);
     setNotificationError(null);
-    const result = await fetchMyNotificationsPage({ limit: 8 });
-    if (requestId !== notificationRequestIdRef.current || currentProfileId !== profileIdRef.current)
-      return;
+    try {
+      const result = await fetchMyNotificationsPage({ limit: 8 });
+      if (
+        requestId !== notificationRequestIdRef.current ||
+        currentProfileId !== profileIdRef.current
+      ) return;
 
-    if (result.ok) {
-      setNotifications((current) => mergeNotifications(current, result.data.items));
-      setLoadedProfileId(currentProfileId);
-      setHasLoadedNotifications(true);
-    } else {
-      setNotificationError(result.error);
+      if (result.ok) {
+        setNotifications((current) => mergeNotifications(current, result.data.items));
+        setLoadedProfileId(currentProfileId);
+        setHasLoadedNotifications(true);
+      } else {
+        setNotificationError(result.error);
+      }
+    } catch (caught) {
+      if (
+        requestId === notificationRequestIdRef.current &&
+        currentProfileId === profileIdRef.current
+      ) {
+        setNotificationError({
+          code: "unknown",
+          message: caught instanceof Error ? caught.message : text("تعذر تحميل الإشعارات.", "Could not load notifications."),
+          operation: "activity_notifications_load",
+        });
+      }
+    } finally {
+      if (
+        requestId === notificationRequestIdRef.current &&
+        currentProfileId === profileIdRef.current
+      ) setNotificationsLoading(false);
     }
-    setNotificationsLoading(false);
-  }, [profileId]);
+  }, [profileId, text]);
 
   const loadConversations = useCallback(async () => {
     if (!profileId) return;
@@ -79,18 +98,37 @@ function ActivityCenterPage() {
     const requestId = ++conversationRequestIdRef.current;
     setConversationsLoading(true);
     setConversationError(null);
-    const result = await fetchMyConversations();
-    if (requestId !== conversationRequestIdRef.current || currentProfileId !== profileIdRef.current)
-      return;
+    try {
+      const result = await fetchMyConversations();
+      if (
+        requestId !== conversationRequestIdRef.current ||
+        currentProfileId !== profileIdRef.current
+      ) return;
 
-    if (result.ok) {
-      setConversations(result.data.slice(0, 8));
-      setHasLoadedConversations(true);
-    } else {
-      setConversationError(result.error);
+      if (result.ok) {
+        setConversations(result.data.slice(0, 8));
+        setHasLoadedConversations(true);
+      } else {
+        setConversationError(result.error);
+      }
+    } catch (caught) {
+      if (
+        requestId === conversationRequestIdRef.current &&
+        currentProfileId === profileIdRef.current
+      ) {
+        setConversationError({
+          code: "unknown",
+          message: caught instanceof Error ? caught.message : text("تعذر تحميل المحادثات.", "Could not load conversations."),
+          operation: "activity_conversations_load",
+        });
+      }
+    } finally {
+      if (
+        requestId === conversationRequestIdRef.current &&
+        currentProfileId === profileIdRef.current
+      ) setConversationsLoading(false);
     }
-    setConversationsLoading(false);
-  }, [profileId]);
+  }, [profileId, text]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {

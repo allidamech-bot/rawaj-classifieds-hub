@@ -74,18 +74,25 @@ function MyListingsPage() {
     const requestId = ++listingsRequestIdRef.current;
     setListingsLoading(true);
     setListingsError(null);
-    const result = await fetchCurrentUserListings(currentProfileId);
-    if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
-      return;
-
-    if (result.ok) {
-      setListings(result.data);
-      setListingsHasLoaded(true);
-    } else {
-      setListingsError(result.error);
+    try {
+      const result = await fetchCurrentUserListings(currentProfileId);
+      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (result.ok) {
+        setListings(result.data);
+        setListingsHasLoaded(true);
+      } else setListingsError(result.error);
+    } catch (caught) {
+      if (requestId === listingsRequestIdRef.current && currentProfileId === profileIdRef.current) {
+        setListingsError({
+          code: "unknown",
+          message: caught instanceof Error ? caught.message : text("تعذر تحميل إعلاناتك.", "Could not load your listings."),
+          operation: "owner_listings_load",
+        });
+      }
+    } finally {
+      if (requestId === listingsRequestIdRef.current && currentProfileId === profileIdRef.current) setListingsLoading(false);
     }
-    setListingsLoading(false);
-  }, [auth.profile?.id, profileId]);
+  }, [profileId, text]);
 
   const loadSellerProfile = useCallback(async () => {
     if (!profileId) return;
@@ -94,18 +101,25 @@ function MyListingsPage() {
     const requestId = ++sellerRequestIdRef.current;
     setSellerLoading(true);
     setSellerError(null);
-    const result = await fetchPublicSellerProfile(currentProfileId);
-    if (requestId !== sellerRequestIdRef.current || currentProfileId !== profileIdRef.current)
-      return;
-
-    if (result.ok) {
-      setSellerProfile(result.data);
-      setSellerHasLoaded(true);
-    } else {
-      setSellerError(result.error);
+    try {
+      const result = await fetchPublicSellerProfile(currentProfileId);
+      if (requestId !== sellerRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (result.ok) {
+        setSellerProfile(result.data);
+        setSellerHasLoaded(true);
+      } else setSellerError(result.error);
+    } catch (caught) {
+      if (requestId === sellerRequestIdRef.current && currentProfileId === profileIdRef.current) {
+        setSellerError({
+          code: "unknown",
+          message: caught instanceof Error ? caught.message : text("تعذر تحميل بيانات المتجر.", "Could not load store details."),
+          operation: "owner_store_load",
+        });
+      }
+    } finally {
+      if (requestId === sellerRequestIdRef.current && currentProfileId === profileIdRef.current) setSellerLoading(false);
     }
-    setSellerLoading(false);
-  }, [auth.profile?.id, profileId]);
+  }, [profileId, text]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
@@ -415,6 +429,10 @@ function StoreListingCard({
   const [expiryOption, setExpiryOption] = useState<ListingExpiryOption>(
     listing.expiryDays ?? "never",
   );
+  const deleteInFlightRef = useRef(false);
+  const lifecycleInFlightRef = useRef(false);
+  const reservationInFlightRef = useRef(false);
+  const priceDropInFlightRef = useRef(false);
 
   useEffect(() => {
     setExpiryOption(listing.expiryDays ?? "never");
@@ -436,86 +454,129 @@ function StoreListingCard({
   const canReactivate = isReactivatableListingStatus(listing.status);
 
   async function handleConfirmDelete() {
+    if (deleteInFlightRef.current) return;
+    deleteInFlightRef.current = true;
     setDeleteError("");
     setDeleting(true);
-    const result = await deleteOwnerListing(userId, listing.id);
-    setDeleting(false);
-    if (!result.ok) {
-      setDeleteError(result.error.message);
-      return;
+    try {
+      const result = await deleteOwnerListing(userId, listing.id);
+      if (!result.ok) {
+        setDeleteError(result.error.message);
+        return;
+      }
+      setShowDeleteConfirm(false);
+      onDeleted(userId, listing.id);
+    } catch (caught) {
+      setDeleteError(caught instanceof Error ? caught.message : text("تعذر حذف الإعلان.", "Could not delete the listing."));
+    } finally {
+      deleteInFlightRef.current = false;
+      setDeleting(false);
     }
-    setShowDeleteConfirm(false);
-    onDeleted(userId, listing.id);
   }
 
   async function handleClose(targetStatus: OwnerCloseListingStatus) {
-    if (lifecycleBusy) return;
+    if (lifecycleInFlightRef.current) return;
+    lifecycleInFlightRef.current = true;
     setLifecycleError("");
     setLifecycleBusy(true);
-    const result = await closeOwnerListing(userId, listing.id, targetStatus);
-    setLifecycleBusy(false);
-    if (!result.ok) {
-      setLifecycleError(result.error.message);
-      return;
+    try {
+      const result = await closeOwnerListing(userId, listing.id, targetStatus);
+      if (!result.ok) {
+        setLifecycleError(result.error.message);
+        return;
+      }
+      onChanged(userId, result.data);
+    } catch (caught) {
+      setLifecycleError(caught instanceof Error ? caught.message : text("تعذر تحديث حالة الإعلان.", "Could not update listing status."));
+    } finally {
+      lifecycleInFlightRef.current = false;
+      setLifecycleBusy(false);
     }
-    onChanged(userId, result.data);
   }
 
   async function handleReservationToggle() {
-    if (reservationBusy || !canManageReservation) return;
+    if (reservationInFlightRef.current || !canManageReservation) return;
+    reservationInFlightRef.current = true;
     setReservationError("");
     setReservationBusy(true);
-    const result = await setOwnerListingReserved(userId, listing.id, !listing.reservedAt);
-    setReservationBusy(false);
-    if (!result.ok) {
-      setReservationError(result.error.message);
-      return;
+    try {
+      const result = await setOwnerListingReserved(userId, listing.id, !listing.reservedAt);
+      if (!result.ok) {
+        setReservationError(result.error.message);
+        return;
+      }
+      onChanged(userId, result.data);
+    } catch (caught) {
+      setReservationError(caught instanceof Error ? caught.message : text("تعذر تحديث حالة الحجز.", "Could not update reservation status."));
+    } finally {
+      reservationInFlightRef.current = false;
+      setReservationBusy(false);
     }
-    onChanged(userId, result.data);
   }
 
   async function handlePriceDrop() {
-    if (priceDropBusy || !canReducePrice) return;
+    if (priceDropInFlightRef.current || !canReducePrice) return;
     const nextPrice = Number(priceDropDraft);
     setPriceDropError("");
-    if (!Number.isFinite(nextPrice) || nextPrice <= 0) {
-      setPriceDropError(text("أدخل سعراً جديداً صالحاً.", "Enter a valid new price."));
+    if (!Number.isFinite(nextPrice) || nextPrice <= 0 || (listing.price !== null && nextPrice >= listing.price)) {
+      setPriceDropError(text("أدخل سعراً جديداً أقل من السعر الحالي.", "Enter a valid price lower than the current price."));
       return;
     }
+    priceDropInFlightRef.current = true;
     setPriceDropBusy(true);
-    const result = await reduceOwnerListingPrice(userId, listing.id, nextPrice);
-    setPriceDropBusy(false);
-    if (!result.ok) {
-      setPriceDropError(result.error.message);
-      return;
+    try {
+      const result = await reduceOwnerListingPrice(userId, listing.id, nextPrice);
+      if (!result.ok) {
+        setPriceDropError(result.error.message);
+        return;
+      }
+      onChanged(userId, result.data);
+    } catch (caught) {
+      setPriceDropError(caught instanceof Error ? caught.message : text("تعذر خفض السعر.", "Could not reduce the price."));
+    } finally {
+      priceDropInFlightRef.current = false;
+      setPriceDropBusy(false);
     }
-    onChanged(userId, result.data);
   }
 
   async function handleReactivate() {
-    if (lifecycleBusy) return;
+    if (lifecycleInFlightRef.current) return;
+    lifecycleInFlightRef.current = true;
     setLifecycleError("");
     setLifecycleBusy(true);
-    const result = await reactivateOwnerListing(userId, listing.id);
-    setLifecycleBusy(false);
-    if (!result.ok) {
-      setLifecycleError(result.error.message);
-      return;
+    try {
+      const result = await reactivateOwnerListing(userId, listing.id);
+      if (!result.ok) {
+        setLifecycleError(result.error.message);
+        return;
+      }
+      onChanged(userId, result.data);
+    } catch (caught) {
+      setLifecycleError(caught instanceof Error ? caught.message : text("تعذر إعادة تفعيل الإعلان.", "Could not reactivate the listing."));
+    } finally {
+      lifecycleInFlightRef.current = false;
+      setLifecycleBusy(false);
     }
-    onChanged(userId, result.data);
   }
 
   async function handleExpiryUpdate() {
-    if (lifecycleBusy || listing.status !== "approved") return;
+    if (lifecycleInFlightRef.current || listing.status !== "approved") return;
+    lifecycleInFlightRef.current = true;
     setLifecycleError("");
     setLifecycleBusy(true);
-    const result = await setOwnerListingExpiry(userId, listing.id, expiryOption);
-    setLifecycleBusy(false);
-    if (!result.ok) {
-      setLifecycleError(result.error.message);
-      return;
+    try {
+      const result = await setOwnerListingExpiry(userId, listing.id, expiryOption);
+      if (!result.ok) {
+        setLifecycleError(result.error.message);
+        return;
+      }
+      onChanged(userId, result.data);
+    } catch (caught) {
+      setLifecycleError(caught instanceof Error ? caught.message : text("تعذر تحديث مدة الإعلان.", "Could not update listing expiry."));
+    } finally {
+      lifecycleInFlightRef.current = false;
+      setLifecycleBusy(false);
     }
-    onChanged(userId, result.data);
   }
 
   const lockedMessage = isClosedListingStatus(listing.status)
