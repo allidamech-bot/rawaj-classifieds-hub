@@ -74,7 +74,7 @@ function AdminVerificationsPage() {
   }, [load]);
 
   async function loadSecureDocument(request: AdminSellerVerificationRequest) {
-    if (!request.documentPath || documentInFlightRef.current.has(request.id)) return;
+    if (!request.documentPath || documentInFlightRef.current.size > 0) return;
     documentInFlightRef.current.add(request.id);
     setActionMessage("");
     setDocumentErrors((current) => ({ ...current, [request.id]: "" }));
@@ -225,7 +225,7 @@ function AdminVerificationsPage() {
                     ) : (
                       <button
                         type="button"
-                        disabled={loadingDocumentId === request.id}
+                        disabled={loadingDocumentId !== null}
                         onClick={() => void loadSecureDocument(request)}
                         className="inline-flex min-h-11 items-center rounded-xl bg-card px-3 py-2 text-xs font-bold hairline disabled:opacity-60"
                       >
@@ -259,6 +259,7 @@ function AdminVerificationsPage() {
 
               <textarea
                 value={notes[request.id] ?? ""}
+                disabled={workingRequestId === request.id}
                 onChange={(event) =>
                   setNotes((current) => ({ ...current, [request.id]: event.target.value }))
                 }
@@ -272,17 +273,25 @@ function AdminVerificationsPage() {
                 <div className="mt-3 flex gap-2">
                   <button
                     type="button"
+                    disabled={workingRequestId === request.id}
+                    aria-busy={workingRequestId === request.id}
                     onClick={() => void moderate(request, "approved")}
-                    className="inline-flex min-h-11 items-center rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground"
+                    className="inline-flex min-h-11 items-center rounded-xl bg-emerald-trust px-3 py-2 text-xs font-bold text-emerald-trust-foreground disabled:opacity-60"
                   >
-                    {text("موافقة", "Approve")}
+                    {workingRequestId === request.id
+                      ? text("جارٍ التحديث", "Updating")
+                      : text("موافقة", "Approve")}
                   </button>
                   <button
                     type="button"
+                    disabled={workingRequestId === request.id}
+                    aria-busy={workingRequestId === request.id}
                     onClick={() => void moderate(request, "rejected")}
-                    className="inline-flex min-h-11 items-center rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground"
+                    className="inline-flex min-h-11 items-center rounded-xl bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground disabled:opacity-60"
                   >
-                    {text("رفض", "Reject")}
+                    {workingRequestId === request.id
+                      ? text("جارٍ التحديث", "Updating")
+                      : text("رفض", "Reject")}
                   </button>
                 </div>
               ) : null}

@@ -93,16 +93,8 @@ function AdminMessageReportsPage() {
         setNotice(result.error.message);
         return;
       }
-      const updatedAt = new Date().toISOString();
-      setReports((current) =>
-        current.map((item) =>
-          item.id === report.id
-            ? { ...item, status, adminNote: notes[report.id] ?? null, updatedAt }
-            : item,
-        ),
-      );
       setNotice(text("تم تحديث بلاغ الرسالة.", "Message report updated."));
-      void loadReports();
+      await loadReports();
     } finally {
       actionInFlightRef.current.delete(report.id);
       setBusyIds((current) => {
