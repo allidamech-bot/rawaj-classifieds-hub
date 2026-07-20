@@ -1,0 +1,40 @@
+name: PR477 Typecheck Diagnostic
+
+on:
+  push:
+    branches:
+      - agent/recovery-event-bootstrap
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Capture TypeScript diagnostics
+        shell: bash
+        run: |
+          npm run typecheck -- --pretty false > pr477-typecheck.log 2>&1 || true
+          cat pr477-typecheck.log
+
+      - name: Upload TypeScript diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr477-typecheck-${{ github.sha }}
+          path: pr477-typecheck.log
+          if-no-files-found: error
+          retention-days: 1
