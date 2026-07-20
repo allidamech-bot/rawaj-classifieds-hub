@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - agent/full-site-actions-integrity-audit
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/apply-public-auth-integrity.mjs"
+      - ".github/workflows/apply-public-auth-integrity.yml"
   workflow_dispatch:
 
 permissions:
