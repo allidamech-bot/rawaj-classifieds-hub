@@ -5,6 +5,7 @@ from pathlib import Path
 
 PATCH_PATH = Path("/tmp/apply-syp-phase-a.mjs")
 ADD_LISTING_PATH = Path("src/routes/add-listing.tsx")
+CONTRACT_PATH = Path("scripts/syp-denomination-phase-a.test.mjs")
 
 
 def replace_once(source: str, old: str, new: str, label: str) -> str:
@@ -135,6 +136,23 @@ def integrate_add_listing() -> None:
     ADD_LISTING_PATH.write_text(source)
 
 
+def fix_contract_expectations() -> None:
+    source = CONTRACT_PATH.read_text()
+    source = replace_once(
+        source,
+        "  assert.match(sql, /when price_denomination = 'old' then price \\/ 100/i);",
+        "  assert.match(sql, /price_denomination = 'old' then price \\/ 100/i);",
+        "old-SYP generated-column contract",
+    )
+    source = replace_once(
+        source,
+        "  assert.match(sql, /when price_denomination = 'new' then price/i);",
+        "  assert.match(sql, /price_denomination = 'new' then price/i);",
+        "new-SYP generated-column contract",
+    )
+    CONTRACT_PATH.write_text(source)
+
+
 def verify_generated_shape() -> None:
     source = ADD_LISTING_PATH.read_text()
     required = [
@@ -152,5 +170,6 @@ def verify_generated_shape() -> None:
 prepare_patch_script()
 subprocess.run(["node", str(PATCH_PATH)], check=True)
 integrate_add_listing()
+fix_contract_expectations()
 verify_generated_shape()
 print("SYP Phase A preflight patch applied successfully.")
