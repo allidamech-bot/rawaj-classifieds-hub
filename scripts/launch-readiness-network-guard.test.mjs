@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [unreadActivity, liveChatWorkspace, publicAdSlot] = await Promise.all([
+const [unreadActivity, liveChatWorkspace, publicAdSlot, messagingGuarded] = await Promise.all([
   readFile(new URL("../src/lib/unread-activity.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/communication/useLiveChatWorkspace.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/messaging-guarded.ts", import.meta.url), "utf8"),
 ]);
 
 test("unread activity no longer polls on a permanent interval", () => {
@@ -29,6 +30,17 @@ test("live chat refreshes through realtime and lifecycle events without fallback
     liveChatWorkspace,
     /document\.addEventListener\("visibilitychange", refreshWhenAvailable\)/,
   );
+  assert.match(liveChatWorkspace, /invalidateConversationMessagesCache\(selectedConversationId\)/);
+});
+
+test("chat message reads cache signed attachment URLs and dedupe concurrent requests", () => {
+  assert.match(messagingGuarded, /CONVERSATION_MESSAGE_CACHE_TTL_MS = 60_000/);
+  assert.match(messagingGuarded, /conversationMessageCache = new Map/);
+  assert.match(messagingGuarded, /conversationMessageRequests = new Map/);
+  assert.match(messagingGuarded, /const pending = conversationMessageRequests\.get/);
+  assert.match(messagingGuarded, /if \(pending\) return pending/);
+  assert.match(messagingGuarded, /export function invalidateConversationMessagesCache/);
+  assert.match(messagingGuarded, /if \(result\.ok\) invalidateConversationMessagesCache/);
 });
 
 test("public ad placements avoid permanent polling and cap retries", () => {
