@@ -1,0 +1,37 @@
+name: Listing Actions Runtime Integrity
+
+on:
+  pull_request:
+    paths:
+      - "src/routes/add-listing.tsx"
+      - "src/routes/profile/listings.$id.tsx"
+      - "scripts/listing-actions-runtime-integrity.test.mjs"
+      - ".github/workflows/listing-actions-runtime-integrity.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: listing-actions-runtime-integrity-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Listing action runtime contract
+        run: node --test scripts/listing-actions-runtime-integrity.test.mjs
+      - name: ESLint
+        run: npm run lint
+      - name: TypeScript
+        run: npm run typecheck
+      - name: Production build
+        run: npm run build
