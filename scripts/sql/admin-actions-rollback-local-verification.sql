@@ -761,7 +761,7 @@ BEGIN
   END IF;
 
   SELECT count(*) INTO v_count FROM admin_action_test_results;
-  IF v_count <> 16 THEN
+  IF v_count <> 18 THEN
     RAISE EXCEPTION 'admin_action_result_count_invalid_%', v_count;
   END IF;
 
@@ -779,7 +779,7 @@ BEGIN
     RAISE EXCEPTION 'admin_notification_side_effect_count_too_low_%', v_count;
   END IF;
 
-  RAISE NOTICE 'RAWAJ admin action rollback integration passed: 16 action groups, database mutations, read models, audit logs, notifications, authorization, stale-write rejection, and refetch contracts verified.';
+  RAISE NOTICE 'RAWAJ admin action rollback integration passed: 18 action groups, database mutations, read models, audit logs, notifications, authorization, stale-write rejection, and refetch contracts verified.';
 END;
 $assertions$;
 
