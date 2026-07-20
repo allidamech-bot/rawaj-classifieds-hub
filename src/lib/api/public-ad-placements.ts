@@ -13,7 +13,7 @@ export interface PublicAdPlacement {
   priority: number;
 }
 
-const ACTIVE_PLACEMENT_CACHE_TTL_MS = 60_000;
+const ACTIVE_PLACEMENT_CACHE_TTL_MS = 5 * 60_000;
 const activePlacementCache = new Map<
   string,
   { expiresAt: number; result: ClassifiedsResult<PublicAdPlacement[]> }

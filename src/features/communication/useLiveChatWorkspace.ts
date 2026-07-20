@@ -3,15 +3,14 @@ import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } fr
 import "../../communication-center-v3.css";
 import {
   fetchConversationMessages,
-  fetchMyConversations,
-  markConversationRead,
-} from "@/lib/api/messaging";
+  invalidateConversationMessagesCache,
+} from "@/lib/api/messaging-guarded";
+import { fetchMyConversations, markConversationRead } from "@/lib/api/messaging";
 import { getClient } from "@/lib/api/shared";
 import type { Conversation, ConversationMessage } from "@/lib/classifieds-types";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 
 const LIVE_CHAT_EVENT_DEBOUNCE_MS = 150;
-const LIVE_CHAT_FALLBACK_POLL_MS = 60 * 1000;
 
 interface LiveChatWorkspaceOptions {
   signedIn: boolean;
@@ -41,6 +40,17 @@ export function useLiveChatWorkspace({
   const activeScopeRef = useRef<string | null>(null);
   const inFlightRefreshRef = useRef<InFlightChatRefresh | null>(null);
   const previousUnreadMessagesRef = useRef<number | null>(null);
+  const cacheProfileIdRef = useRef<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    const nextProfileId = signedIn ? profileId : null;
+    if (cacheProfileIdRef.current === nextProfileId) return;
+
+    cacheProfileIdRef.current = nextProfileId;
+    invalidateConversationMessagesCache();
+    inFlightRefreshRef.current = null;
+    previousUnreadMessagesRef.current = null;
+  }, [profileId, signedIn]);
 
   useEffect(() => {
     const scopeKey =
@@ -113,8 +123,9 @@ export function useLiveChatWorkspace({
     previousUnreadMessagesRef.current = counts.messages;
     if (previousUnreadMessages === null || previousUnreadMessages === counts.messages) return;
 
+    invalidateConversationMessagesCache(selectedConversationId);
     void refreshWorkspace();
-  }, [counts.messages, profileId, refreshWorkspace, signedIn]);
+  }, [counts.messages, profileId, refreshWorkspace, selectedConversationId, signedIn]);
 
   useEffect(() => {
     if (!signedIn || !profileId || typeof window === "undefined") return;
@@ -125,6 +136,7 @@ export function useLiveChatWorkspace({
 
     const refreshWhenAvailable = () => {
       if (document.visibilityState === "hidden" || navigator.onLine === false) return;
+      invalidateConversationMessagesCache(selectedConversationId);
       void refreshWorkspace();
     };
 
@@ -145,11 +157,12 @@ export function useLiveChatWorkspace({
         return;
       if (document.visibilityState === "hidden" || navigator.onLine === false) return;
       if (realtimeTimer !== null) clearTimeout(realtimeTimer);
+      invalidateConversationMessagesCache(selectedConversationId);
       realtimeTimer = setTimeout(refreshWhenAvailable, LIVE_CHAT_EVENT_DEBOUNCE_MS);
     };
 
-    const interval = window.setInterval(refreshWhenAvailable, LIVE_CHAT_FALLBACK_POLL_MS);
     window.addEventListener("online", refreshWhenAvailable);
+    window.addEventListener("focus", refreshWhenAvailable);
     document.addEventListener("visibilitychange", refreshWhenAvailable);
 
     const channel =
@@ -181,8 +194,8 @@ export function useLiveChatWorkspace({
 
     return () => {
       if (realtimeTimer !== null) clearTimeout(realtimeTimer);
-      window.clearInterval(interval);
       window.removeEventListener("online", refreshWhenAvailable);
+      window.removeEventListener("focus", refreshWhenAvailable);
       document.removeEventListener("visibilitychange", refreshWhenAvailable);
       if (channel && clientResult.ok) void clientResult.data.removeChannel(channel);
     };

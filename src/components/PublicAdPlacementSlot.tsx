@@ -20,9 +20,10 @@ interface LoadedPlacement {
 }
 
 const MOBILE_PLACEMENT_QUERY = "(max-width: 767px)";
-const AD_PLACEMENT_SCHEDULE_REFRESH_MS = 30_000;
-const AD_PLACEMENT_RETRY_BASE_MS = 1_500;
-const AD_PLACEMENT_RETRY_MAX_MS = 30_000;
+const AD_PLACEMENT_RETRY_BASE_MS = 2_000;
+const AD_PLACEMENT_RETRY_MAX_MS = 15_000;
+const AD_PLACEMENT_RETRY_LIMIT = 3;
+const AD_PLACEMENT_FRESHNESS_REFRESH_MS = 5 * 60_000;
 const AD_PLACEMENT_FRAME_CLASS =
   "relative block aspect-[16/7] w-full overflow-hidden rounded-[1.25rem] border border-border/70 bg-card shadow-[0_12px_32px_rgba(8,24,42,0.08)]";
 
@@ -58,6 +59,7 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
     let requestSequence = 0;
     let retryAttempt = 0;
     let retryTimer: number | null = null;
+    let freshnessTimer: number | null = null;
 
     function clearRetryTimer() {
       if (retryTimer === null) return;
@@ -65,8 +67,34 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
       retryTimer = null;
     }
 
+    function clearFreshnessTimer() {
+      if (freshnessTimer === null) return;
+      window.clearTimeout(freshnessTimer);
+      freshnessTimer = null;
+    }
+
+    function scheduleFreshnessRefresh() {
+      if (cancelled || freshnessTimer !== null) return;
+      freshnessTimer = window.setTimeout(() => {
+        freshnessTimer = null;
+        if (cancelled || document.visibilityState === "hidden" || navigator.onLine === false) {
+          return;
+        }
+        retryAttempt = 0;
+        clearRetryTimer();
+        load(true);
+      }, AD_PLACEMENT_FRESHNESS_REFRESH_MS);
+    }
+
     function scheduleRetry() {
-      if (cancelled || retryTimer !== null) return;
+      if (
+        cancelled ||
+        retryTimer !== null ||
+        retryAttempt >= AD_PLACEMENT_RETRY_LIMIT ||
+        navigator.onLine === false
+      ) {
+        return;
+      }
       const delay = Math.min(
         AD_PLACEMENT_RETRY_MAX_MS,
         AD_PLACEMENT_RETRY_BASE_MS * 2 ** retryAttempt,
@@ -74,12 +102,12 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
       retryAttempt += 1;
       retryTimer = window.setTimeout(() => {
         retryTimer = null;
-        load(true);
+        load();
       }, delay);
     }
 
     function load(forceRefresh = false) {
-      if (cancelled) return;
+      if (cancelled || document.visibilityState === "hidden") return;
       const requestId = ++requestSequence;
       const request = forceRefresh
         ? refreshActiveAdPlacements(page, activeDevice)
@@ -100,21 +128,31 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
           device: activeDevice,
           placement: result.data[0] ?? null,
         });
+        scheduleFreshnessRefresh();
       });
     }
 
+    const refreshWhenAvailable = () => {
+      if (document.visibilityState === "hidden" || navigator.onLine === false) return;
+      retryAttempt = 0;
+      clearRetryTimer();
+      load();
+    };
+
     load();
-    const unsubscribe = onAdPlacementInvalidation(() => load());
-    const scheduleRefreshTimer = window.setInterval(
-      () => load(true),
-      AD_PLACEMENT_SCHEDULE_REFRESH_MS,
-    );
+    const unsubscribe = onAdPlacementInvalidation(refreshWhenAvailable);
+    window.addEventListener("online", refreshWhenAvailable);
+    window.addEventListener("focus", refreshWhenAvailable);
+    document.addEventListener("visibilitychange", refreshWhenAvailable);
 
     return () => {
       cancelled = true;
       requestSequence += 1;
       clearRetryTimer();
-      window.clearInterval(scheduleRefreshTimer);
+      clearFreshnessTimer();
+      window.removeEventListener("online", refreshWhenAvailable);
+      window.removeEventListener("focus", refreshWhenAvailable);
+      document.removeEventListener("visibilitychange", refreshWhenAvailable);
       unsubscribe();
     };
   }, [device, placementPage]);
@@ -165,7 +203,7 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
           <img
             src={placement.imageUrl}
             alt={text("إعلان ترويجي", "Promotional advertisement")}
-            loading="eager"
+            loading={placementPage === "home" ? "eager" : "lazy"}
             decoding="async"
             width={1600}
             height={700}

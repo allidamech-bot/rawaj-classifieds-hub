@@ -236,9 +236,10 @@ function getPublicReferenceClient(): ClassifiedsResult<SupabaseClient> {
 }
 
 export async function readReferences(client: SupabaseClient) {
+  const referenceClient = publicSupabase ?? client;
   const [categoriesResult, governoratesResult] = await Promise.all([
-    readPublicCategories(client),
-    readPublicGovernorates(client),
+    readPublicCategories(referenceClient),
+    readPublicGovernorates(referenceClient),
   ]);
   if (!categoriesResult.ok) return categoriesResult;
   if (!governoratesResult.ok) return governoratesResult;

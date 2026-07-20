@@ -7,17 +7,21 @@ const [activitySource, packageSource] = await Promise.all([
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
 
-test("unread activity subscribes to the signed-in user's notification changes", () => {
+test("unread activity subscribes to signed-in notification and messaging changes", () => {
   assert.match(activitySource, /getClient\(\)/);
   assert.match(activitySource, /channel\(`rawaj-unread-activity:\$\{profileId\}`\)/);
   assert.match(activitySource, /"postgres_changes"/);
   assert.match(activitySource, /event: "\*"/);
   assert.match(activitySource, /table: "notifications"/);
   assert.match(activitySource, /filter: `recipient_id=eq\.\$\{profileId\}`/);
+  assert.match(activitySource, /event: "INSERT"/);
+  assert.match(activitySource, /table: "conversation_messages"/);
+  assert.match(activitySource, /event: "UPDATE"/);
+  assert.match(activitySource, /table: "conversations"/);
   assert.match(activitySource, /removeChannel\(channel\)/);
 });
 
-test("notification bursts are debounced before unread counts refresh", () => {
+test("notification and message bursts are debounced before unread counts refresh", () => {
   assert.match(activitySource, /UNREAD_ACTIVITY_EVENT_DEBOUNCE_MS = 250/);
   assert.match(activitySource, /if \(refreshTimer !== null\) clearTimeout\(refreshTimer\)/);
   assert.match(
@@ -25,17 +29,15 @@ test("notification bursts are debounced before unread counts refresh", () => {
     /setTimeout\(\(\) => void refresh\(\), UNREAD_ACTIVITY_EVENT_DEBOUNCE_MS\)/,
   );
   assert.match(activitySource, /document\.visibilityState === "hidden"/);
+  assert.match(activitySource, /navigator\.onLine === false/);
 });
 
-test("unread activity has a visible online polling fallback", () => {
-  assert.match(activitySource, /UNREAD_ACTIVITY_POLL_MS = 60 \* 1000/);
-  assert.match(
-    activitySource,
-    /window\.setInterval\(refreshWhenAvailable, UNREAD_ACTIVITY_POLL_MS\)/,
-  );
-  assert.match(activitySource, /navigator\.onLine === false/);
-  assert.match(activitySource, /addEventListener\("online", refreshWhenAvailable\)/);
-  assert.match(activitySource, /addEventListener\("visibilitychange", refreshWhenAvailable\)/);
+test("unread activity uses realtime and lifecycle refreshes without permanent polling", () => {
+  assert.doesNotMatch(activitySource, /UNREAD_ACTIVITY_POLL_MS/);
+  assert.doesNotMatch(activitySource, /window\.setInterval\(/);
+  assert.match(activitySource, /addEventListener\("focus", handleRefresh\)/);
+  assert.match(activitySource, /addEventListener\("online", handleRefresh\)/);
+  assert.match(activitySource, /UNREAD_ACTIVITY_CHANGED_EVENT/);
 });
 
 test("unread refreshes are deduplicated per profile and stale account results are ignored", () => {

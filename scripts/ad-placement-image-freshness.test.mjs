@@ -39,25 +39,32 @@ test("public ad placement cache broadcasts explicit invalidation only in browser
 });
 
 test("PublicAdPlacementSlot refetches after an explicit invalidation event", () => {
-  assert.match(slot, /const unsubscribe = onAdPlacementInvalidation\(\(\) => load\(\)\)/);
-  assert.match(slot, /setFailedImageUrl\(null\)/);
-  assert.match(slot, /requestId !== requestSequence/);
-  assert.match(slot, /cancelled = true;/);
-  assert.match(slot, /unsubscribe\(\);/);
+  assert.ok(
+    slot.includes("const unsubscribe = onAdPlacementInvalidation(refreshWhenAvailable);"),
+  );
+  assert.ok(slot.includes("setFailedImageUrl(null);"));
+  assert.ok(slot.includes("requestId !== requestSequence"));
+  assert.ok(slot.includes("cancelled = true;"));
+  assert.ok(slot.includes("unsubscribe();"));
 });
 
-test("scheduled placement state refreshes locally without broadcasting every poll", () => {
-  assert.match(publicApi, /export async function refreshActiveAdPlacements/);
-  assert.match(publicApi, /activePlacementCache\.delete\(cacheKey\)/);
-  assert.match(publicApi, /activePlacementRequests\.delete\(cacheKey\)/);
-  const refreshFunction =
-    publicApi.match(/export async function refreshActiveAdPlacements[\s\S]*?\n}/)?.[0] ?? "";
-  assert.doesNotMatch(refreshFunction, /postMessage|localStorage|emitAdPlacementInvalidation/);
-
-  assert.match(slot, /AD_PLACEMENT_SCHEDULE_REFRESH_MS = 30_000/);
-  assert.match(slot, /window\.setInterval\(/);
-  assert.match(slot, /\(\) => load\(true\)/);
-  assert.match(slot, /window\.clearInterval\(scheduleRefreshTimer\)/);
+test("scheduled placement refresh is event-driven, cached, low-frequency, and bounded", () => {
+  assert.ok(publicApi.includes("const ACTIVE_PLACEMENT_CACHE_TTL_MS = 5 * 60_000;"));
+  assert.ok(publicApi.includes("export async function refreshActiveAdPlacements("));
+  assert.ok(publicApi.includes("activePlacementCache.delete(cacheKey);"));
+  assert.ok(publicApi.includes("activePlacementRequests.delete(cacheKey);"));
+  assert.equal(slot.includes("AD_PLACEMENT_SCHEDULE_REFRESH_MS"), false);
+  assert.equal(slot.includes("window.setInterval("), false);
+  assert.ok(slot.includes("const AD_PLACEMENT_RETRY_LIMIT = 3;"));
+  assert.ok(slot.includes("retryAttempt >= AD_PLACEMENT_RETRY_LIMIT"));
+  assert.ok(slot.includes("const AD_PLACEMENT_FRESHNESS_REFRESH_MS = 5 * 60_000;"));
+  assert.ok(slot.includes("refreshActiveAdPlacements(page, activeDevice)"));
+  assert.ok(slot.includes("window.setTimeout(() =>"));
+  assert.ok(slot.includes("}, AD_PLACEMENT_FRESHNESS_REFRESH_MS);"));
+  assert.ok(slot.includes("clearFreshnessTimer();"));
+  assert.ok(slot.includes('window.addEventListener("online", refreshWhenAvailable);'));
+  assert.ok(slot.includes('window.addEventListener("focus", refreshWhenAvailable);'));
+  assert.ok(slot.includes('document.addEventListener("visibilitychange", refreshWhenAvailable);'));
 });
 
 test("public ad placement reads are isolated from account auth transitions", () => {
@@ -91,11 +98,11 @@ test("PublicAdPlacementSlot follows mobile and desktop viewport changes", () => 
 });
 
 test("public ad rendering uses the same 16:7 image contract as admin validation", () => {
-  assert.match(slot, /width=\{1600\}/);
-  assert.match(slot, /height=\{700\}/);
-  assert.match(slot, /aspect-\[16\/7\]/);
-  assert.doesNotMatch(slot, /aspect-\[3\.2\/1\]/);
-  assert.doesNotMatch(slot, /aspect-\[5\/1\]/);
+  assert.ok(slot.includes("width={1600}"));
+  assert.ok(slot.includes("height={700}"));
+  assert.ok(slot.includes("aspect-[16/7]"));
+  assert.equal(slot.includes("aspect-[3.2/1]"), false);
+  assert.equal(slot.includes("aspect-[5/1]"), false);
   assert.match(route, /~16:7 ratio/);
   assert.match(storage, /export const AD_PLACEMENT_IMAGE_RATIO = 16 \/ 7/);
 });
