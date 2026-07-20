@@ -1,0 +1,69 @@
+name: Apply SYP Denomination Phase A
+
+on:
+  push:
+    branches:
+      - agent/syp-denomination-phase-a
+    paths:
+      - "scripts/.apply-syp-phase-a.mjs.gz.b64"
+      - ".github/workflows/apply-syp-denomination-phase-a.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Decode and apply deterministic patch
+        run: |
+          base64 -d scripts/.apply-syp-phase-a.mjs.gz.b64 | gunzip > /tmp/apply-syp-phase-a.mjs
+          node /tmp/apply-syp-phase-a.mjs
+
+      - name: Format generated and modified source files
+        run: |
+          npx prettier --write \
+            src/lib/syp-denomination.ts \
+            src/features/listings/SypPriceDisplay.tsx \
+            src/lib/api/syp-denomination.ts \
+            src/lib/classifieds-types.ts \
+            src/lib/api/public-fields.ts \
+            src/lib/api/listings.ts \
+            src/lib/api/listing-draft-create-rpc.ts \
+            src/lib/api/listing-write-rpc.ts \
+            src/lib/classifieds-api.ts \
+            src/features/listings/cards/ListingCardShared.tsx \
+            src/routes/add-listing.tsx \
+            scripts/syp-denomination-phase-a.test.mjs \
+            docs/syp-denomination-phase-a.md
+
+      - name: Run Phase A contracts
+        run: node --test scripts/syp-denomination-phase-a.test.mjs
+
+      - name: Run TypeScript
+        run: npm run typecheck
+
+      - name: Remove one-shot machinery and commit
+        run: |
+          rm -f scripts/.apply-syp-phase-a.mjs.gz.b64
+          rm -f .github/workflows/apply-syp-denomination-phase-a.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: add SYP denomination Phase A foundation"
+          git push
