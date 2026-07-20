@@ -33,10 +33,7 @@ const [
   readFile(new URL("../src/routes/profile.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/account/AccountExperience.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/profile/listings.tsx", import.meta.url), "utf8"),
-  readFile(
-    new URL("../src/features/storefront/StorefrontIdentityHero.tsx", import.meta.url),
-    "utf8",
-  ),
+  readFile(new URL("../src/features/storefront/StorefrontIdentityHero.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/notifications.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
@@ -47,7 +44,7 @@ test("profile mutations refresh the shared authenticated profile", () => {
   assert.ok(authContext.includes("refreshProfile: () => Promise"));
   assert.ok(authProvider.includes("const refreshProfile = async () =>"));
   assert.ok(authProvider.includes("const nextProfile = await fetchProfile(client, user)"));
-  assert.ok(profile.match(/auth.refreshProfile()/g)?.length >= 3);
+  assert.ok(profile.match(/auth\.refreshProfile\(\)/g)?.length >= 3);
 });
 
 test("password change verifies ownership and uses Supabase Auth", () => {
@@ -88,20 +85,27 @@ test("account status labels cover the persisted frozen and disabled states", () 
   assert.ok(profile.includes('text("معطّل", "Disabled")'));
 });
 
-test("opening a notification records it as read before navigation", () => {
+test("opening a notification records it as read before awaited navigation", () => {
   const openTargetStart = notifications.indexOf(
     "async function openNotificationTarget(notification: NotificationItem)",
   );
+  const resolveIndex = notifications.indexOf(
+    "await resolveNotificationTarget(notification.id)",
+    openTargetStart,
+  );
   const markReadIndex = notifications.indexOf("await markOne(notification.id)", openTargetStart);
-  const firstNavigationIndex = notifications.indexOf("void navigate(", openTargetStart);
+  const firstNavigationIndex = notifications.indexOf("await navigate(", openTargetStart);
 
   assert.ok(openTargetStart >= 0);
-  assert.ok(markReadIndex > openTargetStart);
+  assert.ok(resolveIndex > openTargetStart);
+  assert.ok(markReadIndex > resolveIndex);
   assert.ok(firstNavigationIndex > markReadIndex);
   assert.match(
     notifications,
     /if \(!notification\.readAt\) \{[\s\S]*await markOne\(notification\.id\)/,
   );
+  assert.match(notifications, /openingTargetScopesRef\.current\.has\(scopeKey\)/);
+  assert.match(notifications, /openingTargetScopesRef\.current\.delete\(scopeKey\)/);
   assert.ok(notifications.includes("markAllNotificationsRead"));
   assert.ok(notifications.includes("resolveNotificationTarget"));
 });
