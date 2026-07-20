@@ -51,9 +51,9 @@ async function isDataQualityRuntimeReady(client: SupabaseClient): Promise<boolea
       !error &&
       Boolean(
         data &&
-          typeof data === "object" &&
-          !Array.isArray(data) &&
-          (data as Record<string, unknown>).dataQualityReady === true,
+        typeof data === "object" &&
+        !Array.isArray(data) &&
+        (data as Record<string, unknown>).dataQualityReady === true,
       );
     dataQualityCapabilityCache = {
       ready,
