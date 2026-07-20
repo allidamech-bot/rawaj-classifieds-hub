@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { installPasswordRecoverySessionBridge } from "@/lib/auth-recovery-session";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -98,6 +99,8 @@ const authenticatedSupabase: SupabaseClient | null = isSupabaseConfigured
       },
     })
   : null;
+
+installPasswordRecoverySessionBridge(authenticatedSupabase);
 
 export const supabase: SupabaseClient | null = authenticatedSupabase
   ? withAdminRuntimeGuards(authenticatedSupabase)
