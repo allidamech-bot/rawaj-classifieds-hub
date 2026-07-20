@@ -30,7 +30,7 @@ replacement = '''replace_pattern_once(
 replace_once(
     "all active chips",'''
 
-source, count = pattern.subn(replacement, source, count=1)
+source, count = pattern.subn(lambda _match: replacement, source, count=1)
 if count != 1:
     raise SystemExit(f"loaded result integrator repair count: {count}")
 
