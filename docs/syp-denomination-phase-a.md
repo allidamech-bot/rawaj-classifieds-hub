@@ -36,6 +36,15 @@ Phase A adds explicit denomination metadata without changing any stored `price`.
 - JSON-LD Offer generation from classified normalized values only.
 - Additive migration, self-contained rollback, contracts, TypeScript, and production-build verification.
 
+## Pre-migration deployment compatibility
+
+- The client probes once per Supabase client instance for the additive `price_denomination` column and caches the result.
+- Before the migration exists, public listing reads use the legacy field set and preserve the current raw-`price` filtering, ordering, and cursor behavior instead of failing on missing columns.
+- After the migration exists, the same paths automatically switch to denomination metadata and `price_new_syp_normalized`.
+- Draft creation and owner updates omit `price_denomination` only while connected to the legacy schema, preventing Preview environments from sending unsupported RPC patch keys or insert columns.
+- The unclassified queue returns an empty result before migration, and classification requests return an explicit `schema_missing` result.
+- This compatibility layer is a rollout safeguard only. It does not replace independent Staging acceptance and must not be used to authorize Production activation before the migration gate is complete.
+
 ## Staging acceptance
 
 1. Apply `202607210001_syp_denomination_phase_a.sql` to Staging only.
