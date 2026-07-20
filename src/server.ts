@@ -3,6 +3,11 @@ import "./lib/error-capture";
 import { rawajBuildInfo } from "./lib/build-info";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import {
+  buildAndroidAssetLinksStatements,
+  parseAndroidSha256Fingerprints,
+  RAWAJ_ANDROID_FINGERPRINT_ENV_NAME,
+} from "./lib/production-linking";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -20,6 +25,7 @@ async function getServerEntry(): Promise<ServerEntry> {
 }
 
 const sensitiveAuthPaths = ["/auth/callback", "/login", "/reset-password"];
+const androidAssetLinksPath = "/.well-known/assetlinks.json";
 const slowPublicRenderThresholdMs = 2_500;
 
 function isSensitiveAuthPath(pathname: string) {
@@ -39,6 +45,7 @@ function isPublicDocumentPath(pathname: string) {
     pathname === "/terms" ||
     pathname === "/robots.txt" ||
     pathname === "/sitemap.xml" ||
+    pathname === androidAssetLinksPath ||
     pathname.startsWith("/category/") ||
     pathname.startsWith("/syria/") ||
     pathname.startsWith("/listings/") ||
@@ -115,6 +122,45 @@ function applyResponseHeaders(response: Response, request: Request, durationMs: 
   }
 
   return new Response(response.body, { status: response.status, headers });
+}
+
+function readServerEnvironmentValue(env: unknown, key: string): unknown {
+  if (env && typeof env === "object" && key in env) {
+    return (env as Record<string, unknown>)[key];
+  }
+
+  return (
+    globalThis as typeof globalThis & {
+      process?: { env?: Record<string, string | undefined> };
+    }
+  ).process?.env?.[key];
+}
+
+function buildAndroidAssetLinksResponse(env: unknown): Response {
+  const fingerprints = parseAndroidSha256Fingerprints(
+    readServerEnvironmentValue(env, RAWAJ_ANDROID_FINGERPRINT_ENV_NAME),
+  );
+
+  if (fingerprints.length === 0) {
+    return new Response(JSON.stringify({ error: "android_app_links_not_configured" }), {
+      status: 503,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-store",
+        "Retry-After": "300",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
+  }
+
+  return new Response(JSON.stringify(buildAndroidAssetLinksStatements(fingerprints)), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
 }
 
 async function normalizeCatastrophicSsrResponse(
@@ -201,6 +247,14 @@ export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const startedAt = Date.now();
     try {
+      const url = new URL(request.url);
+      if (request.method === "GET" && url.pathname === androidAssetLinksPath) {
+        const response = buildAndroidAssetLinksResponse(env);
+        const durationMs = Date.now() - startedAt;
+        logSlowPublicRender(request, response, durationMs);
+        return applyResponseHeaders(response, request, durationMs);
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       const normalizedResponse = await normalizeCatastrophicSsrResponse(response, request);

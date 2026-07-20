@@ -2,15 +2,39 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [workflow, spec, stagingWorkflow, stagingSpec, packageSource, qualityGate] =
-  await Promise.all([
-    readFile(new URL("../.github/workflows/production-acceptance.yml", import.meta.url), "utf8"),
-    readFile(new URL("../e2e/production-acceptance.spec.ts", import.meta.url), "utf8"),
-    readFile(new URL("../.github/workflows/staging-write-acceptance.yml", import.meta.url), "utf8"),
-    readFile(new URL("../e2e/staging-write-acceptance.spec.ts", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
-  ]);
+const [
+  workflow,
+  spec,
+  stagingWorkflow,
+  stagingSpec,
+  packageSource,
+  qualityGate,
+  linking,
+  serverSource,
+  capacitorConfig,
+  androidManifest,
+  androidStrings,
+  authSource,
+  loginSource,
+  envExample,
+  linkingRunbook,
+] = await Promise.all([
+  readFile(new URL("../.github/workflows/production-acceptance.yml", import.meta.url), "utf8"),
+  readFile(new URL("../e2e/production-acceptance.spec.ts", import.meta.url), "utf8"),
+  readFile(new URL("../.github/workflows/staging-write-acceptance.yml", import.meta.url), "utf8"),
+  readFile(new URL("../e2e/staging-write-acceptance.spec.ts", import.meta.url), "utf8"),
+  readFile(new URL("../package.json", import.meta.url), "utf8"),
+  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/production-linking.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/server.ts", import.meta.url), "utf8"),
+  readFile(new URL("../capacitor.config.ts", import.meta.url), "utf8"),
+  readFile(new URL("../android/app/src/main/AndroidManifest.xml", import.meta.url), "utf8"),
+  readFile(new URL("../android/app/src/main/res/values/strings.xml", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/auth.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/login.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../.env.example", import.meta.url), "utf8"),
+  readFile(new URL("../docs/production-auth-app-links.md", import.meta.url), "utf8"),
+]);
 
 test("production acceptance is manual-only and uses dedicated secrets", () => {
   assert.match(workflow, /on:\s*\n\s*workflow_dispatch:/);
@@ -119,7 +143,63 @@ test("staging acceptance covers real multi-account write journeys and cleanup", 
   assert.doesNotMatch(stagingSpec, /https:\/\/rawa-j\.com/);
 });
 
-test("quality gate permanently enforces both acceptance safety contracts", () => {
+test("production domain, Android package, and auth callback stay canonical", () => {
+  assert.match(linking, /RAWAJ_PRODUCTION_ORIGIN = "https:\/\/rawa-j\.com"/);
+  assert.match(linking, /RAWAJ_PRODUCTION_HOST = "rawa-j\.com"/);
+  assert.match(linking, /RAWAJ_AUTH_CALLBACK_PATH = "\/auth\/callback"/);
+  assert.match(linking, /RAWAJ_ANDROID_PACKAGE_NAME = "com\.rawaj\.marketplace"/);
+
+  assert.match(capacitorConfig, /appId: "com\.rawaj\.marketplace"/);
+  assert.match(capacitorConfig, /url: "https:\/\/rawa-j\.com"/);
+  assert.match(capacitorConfig, /allowNavigation: \["rawa-j\.com", "\*\.rawa-j\.com"\]/);
+  assert.match(androidManifest, /android:autoVerify="true"/);
+  assert.match(androidManifest, /android:scheme="https" android:host="rawa-j\.com"/);
+  assert.match(androidStrings, /<string name="package_name">com\.rawaj\.marketplace<\/string>/);
+  assert.match(androidStrings, /<string name="custom_url_scheme">com\.rawaj\.marketplace<\/string>/);
+
+  assert.match(authSource, /new URL\("\/auth\/callback", window\.location\.origin\)/);
+  assert.match(loginSource, /new URL\("\/auth\/callback", window\.location\.origin\)/);
+  assert.match(loginSource, /callbackUrl\.searchParams\.set\("type", "recovery"\)/);
+  assert.match(loginSource, /redirectTo: callbackUrl\.toString\(\)/);
+  assert.match(envExample, /VITE_SITE_URL=https:\/\/rawa-j\.com/);
+});
+
+test("Digital Asset Links uses only validated release fingerprints and fails closed", () => {
+  assert.match(linking, /RAWAJ_ANDROID_FINGERPRINT_ENV_NAME/);
+  assert.match(linking, /RAWAJ_ANDROID_SHA256_CERT_FINGERPRINTS/);
+  assert.match(linking, /COLONIZED_SHA256_PATTERN/);
+  assert.match(linking, /COMPACT_SHA256_PATTERN/);
+  assert.match(linking, /return \[\.\.\.new Set\(normalized\)\]/);
+  assert.match(linking, /delegate_permission\/common\.handle_all_urls/);
+  assert.match(linking, /namespace: "android_app"/);
+  assert.match(linking, /package_name: RAWAJ_ANDROID_PACKAGE_NAME/);
+
+  assert.match(serverSource, /androidAssetLinksPath = "\/\.well-known\/assetlinks\.json"/);
+  assert.match(
+    serverSource,
+    /readServerEnvironmentValue\(env, RAWAJ_ANDROID_FINGERPRINT_ENV_NAME\)/,
+  );
+  assert.match(serverSource, /function buildAndroidAssetLinksResponse/);
+  assert.match(serverSource, /fingerprints\.length === 0/);
+  assert.match(serverSource, /status: 503/);
+  assert.match(serverSource, /android_app_links_not_configured/);
+  assert.match(serverSource, /status: 200/);
+  assert.match(serverSource, /"Content-Type": "application\/json; charset=utf-8"/);
+  assert.match(serverSource, /"X-Content-Type-Options": "nosniff"/);
+  assert.match(
+    serverSource,
+    /request\.method === "GET" && url\.pathname === androidAssetLinksPath/,
+  );
+  assert.doesNotMatch(serverSource, /Response\.redirect|headers\.set\("location"/i);
+
+  assert.match(envExample, /RAWAJ_ANDROID_SHA256_CERT_FINGERPRINTS=/);
+  assert.doesNotMatch(envExample, /(?:[0-9A-F]{2}:){31}[0-9A-F]{2}/);
+  assert.match(linkingRunbook, /Play App Signing/);
+  assert.match(linkingRunbook, /must never use a debug certificate/i);
+  assert.match(linkingRunbook, /intentionally returns HTTP `503`/);
+});
+
+test("quality gate permanently enforces production acceptance and linking contracts", () => {
   assert.match(packageSource, /"test:production-acceptance-contract"/);
   assert.match(packageSource, /production-acceptance-contract\.test\.mjs/);
   assert.match(qualityGate, /Production acceptance safety contract/);
