@@ -25,7 +25,27 @@ jobs:
 
       - name: Apply schema compatibility
         working-directory: repo
-        run: python scripts/.apply-syp-schema-compatibility.py
+        run: |
+          python scripts/.apply-syp-schema-compatibility.py
+          python - <<'PY'
+          from pathlib import Path
+
+          dynamic_path = Path("src/lib/api/dynamic-filtered-listings.ts")
+          dynamic = dynamic_path.read_text()
+          dynamic_old = "((data ?? []) as Record<string, unknown>[]).map"
+          dynamic_new = "((data ?? []) as unknown as Record<string, unknown>[]).map"
+          if dynamic.count(dynamic_old) != 1:
+              raise SystemExit("dynamic hydration cast anchor missing")
+          dynamic_path.write_text(dynamic.replace(dynamic_old, dynamic_new, 1))
+
+          listings_path = Path("src/lib/api/listings.ts")
+          listings = listings_path.read_text()
+          detail_old = "  const mappedListing = mapListing(\n    data as Record<string, unknown>,"
+          detail_new = "  const mappedListing = mapListing(\n    data as unknown as Record<string, unknown>,"
+          if listings.count(detail_old) != 1:
+              raise SystemExit("public detail cast anchor missing")
+          listings_path.write_text(listings.replace(detail_old, detail_new, 1))
+          PY
 
       - name: Install dependencies
         working-directory: repo
