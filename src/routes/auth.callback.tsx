@@ -66,7 +66,7 @@ function AuthCallbackPage() {
       let observedRecoveryEvent = false;
       let completed = false;
 
-      function hasRecoveryHashProof(session: Session | null): session is Session {
+      function hasRecoveryHashProof(session: Session | null): boolean {
         return Boolean(
           session && recoveryHashAccessToken && session.access_token === recoveryHashAccessToken,
         );
