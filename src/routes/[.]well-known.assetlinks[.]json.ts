@@ -29,8 +29,7 @@ export const Route = createFileRoute("/.well-known/assetlinks.json")({
           status: 200,
           headers: {
             "Content-Type": "application/json; charset=utf-8",
-            "Cache-Control":
-              "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
+            "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
             "X-Content-Type-Options": "nosniff",
           },
         });
