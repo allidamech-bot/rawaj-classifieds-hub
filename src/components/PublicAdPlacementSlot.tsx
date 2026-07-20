@@ -3,6 +3,7 @@ import type { AdPlacementPage } from "@/lib/api/ad-placements";
 import {
   fetchActiveAdPlacements,
   onAdPlacementInvalidation,
+  refreshActiveAdPlacements,
   type AdPlacementDevice,
   type PublicAdPlacement,
 } from "@/lib/api/public-ad-placements";
@@ -22,6 +23,7 @@ const MOBILE_PLACEMENT_QUERY = "(max-width: 767px)";
 const AD_PLACEMENT_RETRY_BASE_MS = 2_000;
 const AD_PLACEMENT_RETRY_MAX_MS = 15_000;
 const AD_PLACEMENT_RETRY_LIMIT = 3;
+const AD_PLACEMENT_FRESHNESS_REFRESH_MS = 5 * 60_000;
 const AD_PLACEMENT_FRAME_CLASS =
   "relative block aspect-[16/7] w-full overflow-hidden rounded-[1.25rem] border border-border/70 bg-card shadow-[0_12px_32px_rgba(8,24,42,0.08)]";
 
@@ -57,11 +59,35 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
     let requestSequence = 0;
     let retryAttempt = 0;
     let retryTimer: number | null = null;
+    let freshnessTimer: number | null = null;
 
     function clearRetryTimer() {
       if (retryTimer === null) return;
       window.clearTimeout(retryTimer);
       retryTimer = null;
+    }
+
+    function clearFreshnessTimer() {
+      if (freshnessTimer === null) return;
+      window.clearTimeout(freshnessTimer);
+      freshnessTimer = null;
+    }
+
+    function scheduleFreshnessRefresh() {
+      if (cancelled || freshnessTimer !== null) return;
+      freshnessTimer = window.setTimeout(() => {
+        freshnessTimer = null;
+        if (
+          cancelled ||
+          document.visibilityState === "hidden" ||
+          navigator.onLine === false
+        ) {
+          return;
+        }
+        retryAttempt = 0;
+        clearRetryTimer();
+        load(true);
+      }, AD_PLACEMENT_FRESHNESS_REFRESH_MS);
     }
 
     function scheduleRetry() {
@@ -84,11 +110,14 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
       }, delay);
     }
 
-    function load() {
+    function load(forceRefresh = false) {
       if (cancelled || document.visibilityState === "hidden") return;
       const requestId = ++requestSequence;
+      const request = forceRefresh
+        ? refreshActiveAdPlacements(page, activeDevice)
+        : fetchActiveAdPlacements(page, activeDevice);
 
-      void fetchActiveAdPlacements(page, activeDevice).then((result) => {
+      void request.then((result) => {
         if (cancelled || requestId !== requestSequence) return;
         if (!result.ok) {
           scheduleRetry();
@@ -103,6 +132,7 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
           device: activeDevice,
           placement: result.data[0] ?? null,
         });
+        scheduleFreshnessRefresh();
       });
     }
 
@@ -123,6 +153,7 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
       cancelled = true;
       requestSequence += 1;
       clearRetryTimer();
+      clearFreshnessTimer();
       window.removeEventListener("online", refreshWhenAvailable);
       window.removeEventListener("focus", refreshWhenAvailable);
       document.removeEventListener("visibilitychange", refreshWhenAvailable);
