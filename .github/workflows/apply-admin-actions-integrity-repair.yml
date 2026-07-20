@@ -9,6 +9,7 @@ on:
       - main
     paths:
       - "scripts/apply-admin-actions-integrity-repair.mjs"
+      - "scripts/fix-admin-repair-script.mjs"
       - ".github/workflows/apply-admin-actions-integrity-repair.yml"
   workflow_dispatch:
 
@@ -37,8 +38,12 @@ jobs:
         shell: bash
         run: |
           set +e
-          node scripts/apply-admin-actions-integrity-repair.mjs > repair-diagnostic.txt 2>&1
+          node scripts/fix-admin-repair-script.mjs > repair-diagnostic.txt 2>&1
           status=$?
+          if [ "$status" -eq 0 ]; then
+            node scripts/apply-admin-actions-integrity-repair.mjs >> repair-diagnostic.txt 2>&1
+            status=$?
+          fi
           if [ "$status" -ne 0 ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -47,7 +52,7 @@ jobs:
             git push origin HEAD:agent/admin-actions-integrity-audit
             exit "$status"
           fi
-          rm -f repair-diagnostic.txt
+          rm -f repair-diagnostic.txt scripts/fix-admin-repair-script.mjs
       - name: Commit repair
         run: |
           git config user.name "github-actions[bot]"
