@@ -25,7 +25,9 @@ jobs:
 
       - name: Apply remaining Phase A integrations
         working-directory: repo
-        run: python scripts/.complete-syp-phase-a.py
+        run: |
+          sed -i 's#202607090002_owner_update_rpc_runtime_v2.sql#202607080038_listing_submit_edit_rpc_repair.sql#' scripts/.complete-syp-phase-a.py
+          python scripts/.complete-syp-phase-a.py
 
       - name: Install dependencies
         working-directory: repo
