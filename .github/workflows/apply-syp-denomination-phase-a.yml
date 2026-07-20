@@ -10,6 +10,7 @@ on:
       - "scripts/.apply-syp-phase-a.mjs.gz.b64"
       - "scripts/.syp-phase-a-preflight.py"
       - "scripts/.syp-phase-a-contract-adjust.py"
+      - "scripts/.syp-phase-a-typescript-adjust.py"
       - ".github/workflows/apply-syp-denomination-phase-a.yml"
 
 permissions:
@@ -38,7 +39,8 @@ jobs:
         run: |
           python scripts/.syp-phase-a-preflight.py >/tmp/phase-a-apply.log 2>&1
           python scripts/.syp-phase-a-contract-adjust.py >>/tmp/phase-a-apply.log 2>&1
-          tail -n 4 /tmp/phase-a-apply.log
+          python scripts/.syp-phase-a-typescript-adjust.py >>/tmp/phase-a-apply.log 2>&1
+          tail -n 5 /tmp/phase-a-apply.log
 
       - name: Install dependencies
         working-directory: repo
@@ -56,6 +58,7 @@ jobs:
             src/lib/api/listings.ts \
             src/lib/api/listing-draft-create-rpc.ts \
             src/lib/api/listing-write-rpc.ts \
+            src/lib/api/reports.ts \
             src/lib/classifieds-api.ts \
             src/features/listings/cards/ListingCardShared.tsx \
             src/routes/add-listing.tsx \
