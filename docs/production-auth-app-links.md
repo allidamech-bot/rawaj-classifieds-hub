@@ -34,7 +34,7 @@ In **Authentication → Providers → Google**:
 
    `RAWAJ_ANDROID_SHA256_CERT_FINGERPRINTS=<PLAY_APP_SIGNING_SHA256>`
 
-   Multiple current fingerprints may be separated by commas or new lines during a controlled key transition.
+   Multiple current fingerprints may be separated by commas or new lines during a controlled key transition. Production must never use a debug certificate or the upload-key certificate in this value.
 3. Deploy the exact reviewed commit.
 4. Verify the endpoint:
 
