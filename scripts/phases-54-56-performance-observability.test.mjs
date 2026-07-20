@@ -91,9 +91,13 @@ test("launch traffic safeguards remove permanent polling from public and account
 
   assert.doesNotMatch(liveChatWorkspace, /LIVE_CHAT_FALLBACK_POLL_MS|window\.setInterval\(/);
   assert.match(liveChatWorkspace, /invalidateConversationMessagesCache/);
+  assert.match(liveChatWorkspace, /const nextProfileId = signedIn \? profileId : null/);
+  assert.match(liveChatWorkspace, /invalidateConversationMessagesCache\(\);/);
 
   assert.doesNotMatch(publicAdSlot, /AD_PLACEMENT_SCHEDULE_REFRESH_MS|window\.setInterval\(/);
   assert.match(publicAdSlot, /AD_PLACEMENT_RETRY_LIMIT = 3/);
+  assert.match(publicAdSlot, /AD_PLACEMENT_FRESHNESS_REFRESH_MS = 5 \* 60_000/);
+  assert.match(publicAdSlot, /refreshActiveAdPlacements\(page, activeDevice\)/);
 });
 
 test("launch traffic safeguards dedupe Signed URL reads without stale public listing caches", () => {
