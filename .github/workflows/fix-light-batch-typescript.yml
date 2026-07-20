@@ -1,0 +1,86 @@
+name: Fix Light Batch TypeScript
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/fix-light-batch-typescript.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
+          fetch-depth: 0
+      - name: Apply exact TypeScript fixes
+        shell: python
+        run: |
+          from pathlib import Path
+
+          attributes_path = Path("src/lib/api/listing-attributes.ts")
+          attributes = attributes_path.read_text(encoding="utf-8")
+          old = 'code: "forbidden",'
+          new = 'code: "permission_denied",'
+          if attributes.count(old) != 1:
+              raise SystemExit(f"Expected exactly one forbidden code, found {attributes.count(old)}")
+          attributes_path.write_text(attributes.replace(old, new), encoding="utf-8")
+
+          profile_path = Path("src/routes/profile/listings.$id.tsx")
+          profile = profile_path.read_text(encoding="utf-8")
+
+          old_validation = "if (!dynamicValidation.ok) {"
+          new_validation = "if (dynamicValidation.summary.length > 0) {"
+          if profile.count(old_validation) != 1:
+              raise SystemExit(
+                  f"Expected exactly one dynamicValidation.ok check, found {profile.count(old_validation)}"
+              )
+          profile = profile.replace(old_validation, new_validation)
+
+          old_condition = "condition: categoryDetailsGlobalCondition(categoryDetails),"
+          new_condition = "condition: legacyCategoryCondition(categoryDetails.condition),"
+          if profile.count(old_condition) != 1:
+              raise SystemExit(
+                  f"Expected exactly one legacy condition call, found {profile.count(old_condition)}"
+              )
+          profile = profile.replace(old_condition, new_condition)
+
+          insertion_anchor = "function readDetailString("
+          helper = '''function legacyCategoryCondition(value: unknown): ListingCondition {
+            if (value === "new") return "new";
+            if (value === "excellent" || value === "good") return "like_new";
+            if (value === "needs_work") return "for_parts";
+            if (value === "used") return "used";
+            return "not_applicable";
+          }
+
+          '''
+          if helper.strip() not in profile:
+              if profile.count(insertion_anchor) != 1:
+                  raise SystemExit(
+                      f"Expected exactly one helper insertion anchor, found {profile.count(insertion_anchor)}"
+                  )
+              profile = profile.replace(insertion_anchor, helper + insertion_anchor)
+
+          profile_path.write_text(profile, encoding="utf-8")
+      - name: Verify focused TypeScript changes
+        run: |
+          npm ci
+          npm run typecheck
+      - name: Commit fixes
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/api/listing-attributes.ts 'src/routes/profile/listings.$id.tsx'
+          git commit -m "fix: resolve taxonomy TypeScript blockers"
+          git push origin HEAD:${{ github.event.pull_request.head.ref || github.ref_name }}
