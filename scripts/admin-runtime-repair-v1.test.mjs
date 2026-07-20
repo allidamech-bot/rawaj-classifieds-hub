@@ -41,7 +41,10 @@ test("data-quality calls are gated by an authenticated runtime capability", () =
 test("Vercel tooling is allowed only for preview builds", () => {
   assert.match(server, /rawajBuildInfo\.provider === "vercel"/);
   assert.match(server, /rawajBuildInfo\.environment === "preview"/);
-  assert.match(server, /scriptSources\.push\("https:\/\/vercel\.live"\)/);
-  assert.match(server, /manifestSources\.push\("https:\/\/vercel\.com"\)/);
+  assert.match(server, /script-src 'self' 'unsafe-inline'[^"]*https:\/\/vercel\.live/);
+  assert.match(server, /manifest-src 'self' https:\/\/vercel\.com/);
+  assert.match(server, /frame-src 'self' https:\/\/vercel\.live/);
+  assert.match(server, /frame-src 'none'/);
+  assert.match(server, /manifest-src 'self'"/);
   assert.match(server, /buildContentSecurityPolicy\(isSecureRequest, isVercelPreviewBuild\(\)\)/);
 });
