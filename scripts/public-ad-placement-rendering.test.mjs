@@ -26,7 +26,7 @@ test("public ad slot loads device-targeted active placements and renders one ban
   assert.match(slot, /rel="noopener noreferrer sponsored"/);
 });
 
-test("public ad slot preserves the accepted 16:7 frame with bounded event-driven refresh", () => {
+test("public ad slot preserves the 16:7 frame with bounded low-frequency refresh", () => {
   assert.match(slot, /aspect-\[16\/7\]/);
   assert.doesNotMatch(slot, /AD_PLACEMENT_SCHEDULE_REFRESH_MS/);
   assert.doesNotMatch(slot, /window\.setInterval\(/);
@@ -34,6 +34,10 @@ test("public ad slot preserves the accepted 16:7 frame with bounded event-driven
   assert.match(slot, /AD_PLACEMENT_RETRY_MAX_MS = 15_000/);
   assert.match(slot, /AD_PLACEMENT_RETRY_LIMIT = 3/);
   assert.match(slot, /retryAttempt >= AD_PLACEMENT_RETRY_LIMIT/);
+  assert.match(slot, /AD_PLACEMENT_FRESHNESS_REFRESH_MS = 5 \* 60_000/);
+  assert.match(slot, /refreshActiveAdPlacements\(page, activeDevice\)/);
+  assert.match(slot, /window\.setTimeout\([\s\S]*AD_PLACEMENT_FRESHNESS_REFRESH_MS/);
+  assert.match(slot, /clearFreshnessTimer\(\)/);
   assert.match(slot, /onAdPlacementInvalidation\(refreshWhenAvailable\)/);
   assert.match(slot, /window\.addEventListener\("online", refreshWhenAvailable\)/);
   assert.match(slot, /window\.addEventListener\("focus", refreshWhenAvailable\)/);
