@@ -36,8 +36,9 @@ jobs:
           start = source.index(marker)
           prefix, completion = source[:start], source[start:]
           completion = completion.replace('", () => {', '", async () => {')
-          completion = completion.replace(' = read("', ' = await readFile("')
-          path.write_text(prefix + completion)
+          completion = completion.replace(' = read("', ' = await readPhaseAText("')
+          helper = 'const readPhaseAText = (path) => readFile(path, "utf8");\n\n'
+          path.write_text(prefix + helper + completion)
           PY
 
       - name: Install dependencies
