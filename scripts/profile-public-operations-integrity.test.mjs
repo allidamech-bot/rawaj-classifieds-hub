@@ -18,7 +18,7 @@ test("profile account actions are single-flight and exception safe", () => {
   assert.match(profile, /aria-busy=\{loggingOut\}/);
   assert.match(profile, /newPassword\.length < 8/);
   assert.match(profile, /handleChangePassword[\s\S]*?catch \(caught\)[\s\S]*?finally/);
-  assert.match(profile, /handleRequestAccountDeletion[\s\S]*?catch \(caught\)[\s\S]*?finally/);
+  assert.match(profile, /handleAccountDeletionRequest[\s\S]*?catch \(caught\)[\s\S]*?finally/);
 });
 
 test("profile data and media payloads are normalized and recover after failures", () => {
@@ -36,7 +36,7 @@ test("profile data and media payloads are normalized and recover after failures"
     assert.ok(profile.includes(field), `Missing normalized profile field: ${field}`);
   }
   assert.match(profile, /handleSaveProfileBasics[\s\S]*?catch \(caught\)[\s\S]*?finally/);
-  assert.match(profile, /handleUploadProfileMedia[\s\S]*?catch \(caught\)[\s\S]*?finally/);
+  assert.match(profile, /handleProfileMedia[\s\S]*?catch \(caught\)[\s\S]*?finally/);
   assert.match(profile, /handleRemoveProfileMedia[\s\S]*?catch \(caught\)[\s\S]*?finally/);
   assert.match(profile, /operation: "profile_listings_load"/);
   assert.match(profile, /operation: "profile_verification_load"/);
