@@ -1,3 +1,4 @@
+import { rememberOwnerListingUpdatedAt } from "@/lib/api/listing-owner-version";
 import { getClient, mapError } from "@/lib/api/shared";
 import type { ClassifiedsError, ClassifiedsResult } from "@/lib/classifieds-types";
 
@@ -75,6 +76,7 @@ export async function fetchOwnerListingAttributes(
     };
   }
 
+  rememberOwnerListingUpdatedAt(userId, returnedListingId, listingUpdatedAt);
   return {
     ok: true,
     data: {
@@ -158,6 +160,7 @@ export async function replaceOwnerListingAttributes(
     };
   }
 
+  rememberOwnerListingUpdatedAt(userId, returnedListingId, updatedAt);
   return {
     ok: true,
     data: {

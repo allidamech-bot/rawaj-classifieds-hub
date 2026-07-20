@@ -6,8 +6,18 @@ export function rememberOwnerListingVersion(
   userId: string | null,
   listing: ClassifiedListing,
 ): void {
-  if (!userId || !listing.id || !listing.updatedAt) return;
-  ownerListingVersions.set(versionKey(userId, listing.id), listing.updatedAt);
+  rememberOwnerListingUpdatedAt(userId, listing.id, listing.updatedAt);
+}
+
+export function rememberOwnerListingUpdatedAt(
+  userId: string | null,
+  listingId: string,
+  updatedAt: string,
+): void {
+  const cleanListingId = listingId.trim();
+  const cleanUpdatedAt = updatedAt.trim();
+  if (!userId || !cleanListingId || !cleanUpdatedAt) return;
+  ownerListingVersions.set(versionKey(userId, cleanListingId), cleanUpdatedAt);
 }
 
 export function readOwnerListingVersion(userId: string | null, listingId: string): string | null {

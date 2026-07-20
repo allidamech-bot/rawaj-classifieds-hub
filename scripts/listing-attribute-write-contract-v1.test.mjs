@@ -2,13 +2,18 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const migration = await readFile(
-  new URL(
-    "../supabase/migrations/202607190032_listing_attribute_write_contract_v1.sql",
-    import.meta.url,
+const [migration, attributesApi, ownerVersion, addListing] = await Promise.all([
+  readFile(
+    new URL(
+      "../supabase/migrations/202607190032_listing_attribute_write_contract_v1.sql",
+      import.meta.url,
+    ),
+    "utf8",
   ),
-  "utf8",
-);
+  readFile(new URL("../src/lib/api/listing-attributes.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/listing-owner-version.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
+]);
 
 test("public listing attributes require a visible live listing and a non-sensitive field", () => {
   assert.match(migration, /create policy listing_attribute_values_public_read/);
@@ -52,6 +57,18 @@ test("owner attribute replacement is authenticated, owned, editable, and stale-s
   assert.match(migration, /v_listing\.updated_at is distinct from p_expected_updated_at/);
   assert.match(migration, /raise exception 'stale_owner_update'/);
   assert.match(migration, /for update/);
+});
+
+test("successful attribute reads and writes refresh the client owner-version guard", () => {
+  assert.match(ownerVersion, /export function rememberOwnerListingUpdatedAt/);
+  assert.match(ownerVersion, /ownerListingVersions\.set\(versionKey\(userId, cleanListingId\)/);
+  assert.match(attributesApi, /import \{ rememberOwnerListingUpdatedAt \}/);
+  assert.match(
+    attributesApi,
+    /rememberOwnerListingUpdatedAt\(userId, returnedListingId, listingUpdatedAt\)/,
+  );
+  assert.match(attributesApi, /rememberOwnerListingUpdatedAt\(userId, returnedListingId, updatedAt\)/);
+  assert.match(addListing, /updatedAt: attributeResult\.data\.updatedAt/);
 });
 
 test("replacement accepts only fields in the published active leaf schema", () => {

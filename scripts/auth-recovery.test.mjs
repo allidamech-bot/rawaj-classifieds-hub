@@ -48,18 +48,34 @@ test("authentication callback derives recovery context from router search", () =
   assert.doesNotMatch(callback, /useMemo/);
 });
 
-test("password recovery requires a bounded verified proof instead of any signed-in session", () => {
+test("password recovery requires bounded account-bound proof instead of any signed-in session", () => {
   assert.match(recoverySession, /RECOVERY_SESSION_TTL_MS = 15 \* 60 \* 1000/);
+  assert.match(recoverySession, /interface PasswordRecoveryProof/);
+  assert.match(recoverySession, /userId: cleanUserId/);
+  assert.match(recoverySession, /JSON\.stringify\(proof\)/);
+  assert.match(recoverySession, /proof\.userId === cleanUserId/);
   assert.match(recoverySession, /window\.sessionStorage/);
+
   assert.match(callback, /recoveryCodeRequested = Boolean\(code && callbackContext\.isRecovery\)/);
-  assert.match(callback, /markPasswordRecoverySession\(\)/);
-  assert.match(reset, /hasActivePasswordRecoverySession\(\)/);
-  assert.match(reset, /event === "PASSWORD_RECOVERY"/);
+  assert.match(callback, /hashParams\.get\("type"\) === "recovery"/);
+  assert.match(callback, /session\.access_token === recoveryHashAccessToken/);
+  assert.match(callback, /event === "PASSWORD_RECOVERY"/);
+  assert.match(callback, /markPasswordRecoverySession\(session\.user\.id\)/);
+  assert.doesNotMatch(callback, /finish\(callbackContext\.isRecovery/);
+  assert.doesNotMatch(callback, /data\.session\) \{\s*finish\(callbackContext\.isRecovery/);
+
+  assert.match(reset, /recoveryUserId/);
+  assert.match(reset, /hasActivePasswordRecoverySession\(session\.user\.id\)/);
+  assert.match(reset, /markPasswordRecoverySession\(session\.user\.id\)/);
+  assert.match(reset, /currentUserId !== recoveryUserId/);
+  assert.match(reset, /hasActivePasswordRecoverySession\(currentUserId\)/);
   assert.match(reset, /clearPasswordRecoverySession\(\)/);
+  assert.doesNotMatch(reset, /hasActivePasswordRecoverySession\(\)/);
   assert.doesNotMatch(reset, /event === "SIGNED_IN" \|\| event === "INITIAL_SESSION"/);
 });
 
 test("password recovery listener is always released on unmount", () => {
+  assert.match(callback, /unsubscribeAuth\?\.\(\)/);
   assert.match(reset, /unsubscribeAuth\?\.\(\)/);
   assert.match(reset, /listener\.subscription\.unsubscribe/);
 });
