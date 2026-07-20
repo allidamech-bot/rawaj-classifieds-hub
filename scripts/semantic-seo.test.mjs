@@ -56,8 +56,9 @@ test("listing offer availability reflects reservation state", () => {
   assert.match(listingStructuredData, /https:\/\/schema\.org\/InStock/);
 });
 
-test("job postings do not inherit commerce offers", () => {
-  assert.match(listingStructuredData, /kind !== "jobs" && listing\.price !== null/);
+test("job postings and unclassified SYP values do not inherit commerce offers", () => {
+  assert.match(listingStructuredData, /listing\.priceNewSypNormalized/);
+  assert.match(listingStructuredData, /kind !== "jobs" && structuredPrice !== null/);
   assert.match(listingStructuredData, /employmentType/);
   assert.match(listingStructuredData, /validThrough/);
 });
