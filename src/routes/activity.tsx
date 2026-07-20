@@ -63,7 +63,8 @@ function ActivityCenterPage() {
       if (
         requestId !== notificationRequestIdRef.current ||
         currentProfileId !== profileIdRef.current
-      ) return;
+      )
+        return;
 
       if (result.ok) {
         setNotifications((current) => mergeNotifications(current, result.data.items));
@@ -79,7 +80,10 @@ function ActivityCenterPage() {
       ) {
         setNotificationError({
           code: "unknown",
-          message: caught instanceof Error ? caught.message : text("تعذر تحميل الإشعارات.", "Could not load notifications."),
+          message:
+            caught instanceof Error
+              ? caught.message
+              : text("تعذر تحميل الإشعارات.", "Could not load notifications."),
           operation: "activity_notifications_load",
         });
       }
@@ -87,7 +91,8 @@ function ActivityCenterPage() {
       if (
         requestId === notificationRequestIdRef.current &&
         currentProfileId === profileIdRef.current
-      ) setNotificationsLoading(false);
+      )
+        setNotificationsLoading(false);
     }
   }, [profileId, text]);
 
@@ -103,7 +108,8 @@ function ActivityCenterPage() {
       if (
         requestId !== conversationRequestIdRef.current ||
         currentProfileId !== profileIdRef.current
-      ) return;
+      )
+        return;
 
       if (result.ok) {
         setConversations(result.data.slice(0, 8));
@@ -118,7 +124,10 @@ function ActivityCenterPage() {
       ) {
         setConversationError({
           code: "unknown",
-          message: caught instanceof Error ? caught.message : text("تعذر تحميل المحادثات.", "Could not load conversations."),
+          message:
+            caught instanceof Error
+              ? caught.message
+              : text("تعذر تحميل المحادثات.", "Could not load conversations."),
           operation: "activity_conversations_load",
         });
       }
@@ -126,7 +135,8 @@ function ActivityCenterPage() {
       if (
         requestId === conversationRequestIdRef.current &&
         currentProfileId === profileIdRef.current
-      ) setConversationsLoading(false);
+      )
+        setConversationsLoading(false);
     }
   }, [profileId, text]);
 

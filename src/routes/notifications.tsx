@@ -508,7 +508,10 @@ function NotificationsPage() {
         setActionMessage(
           caught instanceof Error
             ? caught.message
-            : text("تعذر تعليم جميع التنبيهات كمقروءة.", "Could not mark all notifications as read."),
+            : text(
+                "تعذر تعليم جميع التنبيهات كمقروءة.",
+                "Could not mark all notifications as read.",
+              ),
         );
       }
     } finally {

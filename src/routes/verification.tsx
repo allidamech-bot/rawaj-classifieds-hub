@@ -300,7 +300,11 @@ function VerificationPage() {
           </p>
         </section>
 
-        <form onSubmit={(event) => void submit(event)} aria-busy={saving} className="rounded-2xl bg-card p-4 hairline">
+        <form
+          onSubmit={(event) => void submit(event)}
+          aria-busy={saving}
+          className="rounded-2xl bg-card p-4 hairline"
+        >
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label={text("نوع الطلب", "Request type")}>
               <select
@@ -335,7 +339,7 @@ function VerificationPage() {
                   maxLength={120}
                   required
                   disabled={saving}
-                className="input"
+                  className="input"
                 />
               </Field>
             ) : null}
@@ -371,7 +375,7 @@ function VerificationPage() {
               required
               onChange={(event) => setDocumentFile(event.target.files?.[0] ?? null)}
               disabled={saving}
-               className="mt-3 block w-full text-xs file:me-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-card file:px-3 file:py-2 file:font-bold file:text-foreground"
+              className="mt-3 block w-full text-xs file:me-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-card file:px-3 file:py-2 file:font-bold file:text-foreground"
             />
             {documentFile ? (
               <span className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">

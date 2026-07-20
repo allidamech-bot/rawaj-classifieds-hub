@@ -120,7 +120,8 @@ function ProfilePage() {
     setMyListingsError(null);
     try {
       const result = await fetchCurrentUserListings(currentProfileId);
-      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
       if (result.ok) {
         setMyListings(result.data);
         setMyListingsHasLoaded(true);
@@ -128,10 +129,14 @@ function ProfilePage() {
         setMyListingsError(result.error);
       }
     } catch (caught) {
-      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
       setMyListingsError({
         code: "unknown",
-        message: caught instanceof Error ? caught.message : text("تعذر تحميل إعلاناتك.", "Could not load your listings."),
+        message:
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحميل إعلاناتك.", "Could not load your listings."),
         operation: "profile_listings_load",
       });
     } finally {
@@ -149,7 +154,11 @@ function ProfilePage() {
     setVerificationError(null);
     try {
       const result = await fetchMyVerificationRequests();
-      if (requestId !== verificationRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (
+        requestId !== verificationRequestIdRef.current ||
+        currentProfileId !== profileIdRef.current
+      )
+        return;
       if (result.ok) {
         setVerificationRequests(result.data);
         setVerificationHasLoaded(true);
@@ -157,14 +166,24 @@ function ProfilePage() {
         setVerificationError(result.error);
       }
     } catch (caught) {
-      if (requestId !== verificationRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (
+        requestId !== verificationRequestIdRef.current ||
+        currentProfileId !== profileIdRef.current
+      )
+        return;
       setVerificationError({
         code: "unknown",
-        message: caught instanceof Error ? caught.message : text("تعذر تحميل طلبات التوثيق.", "Could not load verification requests."),
+        message:
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحميل طلبات التوثيق.", "Could not load verification requests."),
         operation: "profile_verification_load",
       });
     } finally {
-      if (requestId === verificationRequestIdRef.current && currentProfileId === profileIdRef.current) {
+      if (
+        requestId === verificationRequestIdRef.current &&
+        currentProfileId === profileIdRef.current
+      ) {
         setVerificationLoading(false);
       }
     }
@@ -195,7 +214,12 @@ function ProfilePage() {
 
     setPasswordNotice("");
     if (newPassword.length < 8) {
-      setPasswordNotice(text("كلمة المرور يجب أن تكون 8 أحرف على الأقل.", "Password must be at least 8 characters."));
+      setPasswordNotice(
+        text(
+          "كلمة المرور يجب أن تكون 8 أحرف على الأقل.",
+          "Password must be at least 8 characters.",
+        ),
+      );
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -218,7 +242,11 @@ function ProfilePage() {
       setPasswordNotice(text("تم تغيير كلمة المرور بنجاح.", "Password changed successfully."));
     } catch (caught) {
       if (currentProfileId === profileIdRef.current) {
-        setPasswordNotice(caught instanceof Error ? caught.message : text("تعذر تغيير كلمة المرور.", "Could not change the password."));
+        setPasswordNotice(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تغيير كلمة المرور.", "Could not change the password."),
+        );
       }
     } finally {
       passwordSavingProfilesRef.current.delete(currentProfileId);
@@ -249,7 +277,11 @@ function ProfilePage() {
       );
     } catch (caught) {
       if (currentProfileId === profileIdRef.current) {
-        setDeletionNotice(caught instanceof Error ? caught.message : text("تعذر تسجيل طلب حذف الحساب.", "Could not record the account deletion request."));
+        setDeletionNotice(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تسجيل طلب حذف الحساب.", "Could not record the account deletion request."),
+        );
       }
     } finally {
       deletionSavingProfilesRef.current.delete(currentProfileId);
@@ -296,7 +328,11 @@ function ProfilePage() {
       );
     } catch (caught) {
       if (currentProfileId === profileIdRef.current) {
-        setSettingsNotice(caught instanceof Error ? caught.message : text("تعذر حفظ معلومات الحساب.", "Could not save account information."));
+        setSettingsNotice(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر حفظ معلومات الحساب.", "Could not save account information."),
+        );
       }
     } finally {
       settingsSavingProfilesRef.current.delete(currentProfileId);
@@ -333,7 +369,11 @@ function ProfilePage() {
       );
     } catch (caught) {
       if (currentProfileId === profileIdRef.current) {
-        setSettingsNotice(caught instanceof Error ? caught.message : text("تعذر رفع صورة الحساب.", "Could not upload the account image."));
+        setSettingsNotice(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر رفع صورة الحساب.", "Could not upload the account image."),
+        );
       }
     } finally {
       mediaSavingProfilesRef.current.delete(currentProfileId);
@@ -367,7 +407,11 @@ function ProfilePage() {
       );
     } catch (caught) {
       if (currentProfileId === profileIdRef.current) {
-        setSettingsNotice(caught instanceof Error ? caught.message : text("تعذر إزالة صورة الحساب.", "Could not remove the account image."));
+        setSettingsNotice(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر إزالة صورة الحساب.", "Could not remove the account image."),
+        );
       }
     } finally {
       mediaSavingProfilesRef.current.delete(currentProfileId);
@@ -506,7 +550,12 @@ function ProfilePage() {
                   <BadgeCheck className="h-4 w-4" />
                   {text("التوثيق", "Verification")}
                 </Link>
-                <button type="button" onClick={handleLogout} disabled={loggingOut} aria-busy={loggingOut}>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  aria-busy={loggingOut}
+                >
                   <LogOut className="h-4 w-4" />
                   {loggingOut ? text("جارٍ الخروج", "Logging out") : text("خروج", "Log out")}
                 </button>
@@ -535,7 +584,11 @@ function ProfilePage() {
           icon={accountSectionIcons.identity}
         >
           {auth.status === "signedIn" ? (
-            <form onSubmit={(event) => void handleSaveProfileBasics(event)} aria-busy={settingsSaving} className="space-y-4">
+            <form
+              onSubmit={(event) => void handleSaveProfileBasics(event)}
+              aria-busy={settingsSaving}
+              className="space-y-4"
+            >
               <div className="rounded-2xl bg-muted-surface p-3 hairline">
                 <h3 className="mb-3 text-sm font-extrabold">
                   {text("صور الحساب", "Account photos")}

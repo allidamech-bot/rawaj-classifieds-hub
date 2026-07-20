@@ -37,9 +37,7 @@ function GoogleButton({ returnTo }: { returnTo: string }) {
         setError(authErrorMessage({ message: result.error }, "callback", text));
       }
     } catch (error) {
-      setError(
-        authErrorMessage(error instanceof Error ? error : null, "callback", text),
-      );
+      setError(authErrorMessage(error instanceof Error ? error : null, "callback", text));
     } finally {
       signInInFlightRef.current = false;
       setLoading(false);
@@ -231,7 +229,9 @@ function LoginPage() {
 
       if (mode === "register") {
         if (result.data.session) {
-          setMessage(text("تم إنشاء الحساب. جارٍ إدخالك إلى رواج.", "Account created. Opening RAWAJ now."));
+          setMessage(
+            text("تم إنشاء الحساب. جارٍ إدخالك إلى رواج.", "Account created. Opening RAWAJ now."),
+          );
           await navigate({ to: returnTo });
           return;
         }

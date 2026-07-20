@@ -74,7 +74,12 @@ export function SellerReviewCard({
 
     const normalizedResponse = responseText.trim();
     if (normalizedResponse.length > 0 && normalizedResponse.length < 3) {
-      setNotice(text("اكتب 3 أحرف على الأقل أو احذف الرد.", "Write at least 3 characters or remove the response."));
+      setNotice(
+        text(
+          "اكتب 3 أحرف على الأقل أو احذف الرد.",
+          "Write at least 3 characters or remove the response.",
+        ),
+      );
       return;
     }
 
@@ -272,7 +277,11 @@ export function SellerReviewCard({
       ) : null}
 
       {canManageResponse ? (
-        <form onSubmit={submitResponse} aria-busy={saving} className="mt-3 space-y-2 border-t border-border/70 pt-3">
+        <form
+          onSubmit={submitResponse}
+          aria-busy={saving}
+          className="mt-3 space-y-2 border-t border-border/70 pt-3"
+        >
           <label className="block">
             <span className="text-[10px] font-bold text-muted-foreground">
               {savedResponse

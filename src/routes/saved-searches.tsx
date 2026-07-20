@@ -107,7 +107,8 @@ function SavedSearchesPage() {
     setScanMessage("");
     try {
       const result = await fetchSavedSearches(currentProfileId);
-      if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
       if (!result.ok) {
         setLoadError(result.error);
         return;
@@ -119,7 +120,8 @@ function SavedSearchesPage() {
 
       try {
         const scanResult = await scanDueSavedSearchAlerts(currentProfileId);
-        if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+        if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current)
+          return;
         if (!scanResult.ok) {
           setScanMessage(
             text(
@@ -132,13 +134,17 @@ function SavedSearchesPage() {
         if (scanResult.data.createdNotifications > 0) {
           setScanMessage(
             text(
-              "تم العثور على " + scanResult.data.createdNotifications + " نتيجة جديدة وإضافتها إلى إشعاراتك.",
-              scanResult.data.createdNotifications + " new matches were added to your notifications.",
+              "تم العثور على " +
+                scanResult.data.createdNotifications +
+                " نتيجة جديدة وإضافتها إلى إشعاراتك.",
+              scanResult.data.createdNotifications +
+                " new matches were added to your notifications.",
             ),
           );
         }
         const refreshed = await fetchSavedSearches(currentProfileId);
-        if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+        if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current)
+          return;
         if (refreshed.ok) {
           setItems(refreshed.data);
         } else {
@@ -150,7 +156,8 @@ function SavedSearchesPage() {
           );
         }
       } catch {
-        if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+        if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current)
+          return;
         setScanMessage(
           text(
             "تم تحميل عمليات البحث، لكن تعذر فحص النتائج الجديدة الآن.",
@@ -159,16 +166,14 @@ function SavedSearchesPage() {
         );
       }
     } catch (caught) {
-      if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
       setLoadError({
         code: "unknown",
         message:
           caught instanceof Error
             ? caught.message
-            : text(
-                "تعذر تحميل عمليات البحث المحفوظة.",
-                "Could not load saved searches.",
-              ),
+            : text("تعذر تحميل عمليات البحث المحفوظة.", "Could not load saved searches."),
         operation: "saved_searches_load",
       });
     } finally {

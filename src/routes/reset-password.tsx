@@ -120,7 +120,12 @@ function ResetPasswordPage() {
       return;
     }
     if (password.length < 6) {
-      setError(text("كلمة المرور يجب أن تكون 6 أحرف على الأقل.", "Password must be at least 6 characters."));
+      setError(
+        text(
+          "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
+          "Password must be at least 6 characters.",
+        ),
+      );
       return;
     }
     if (password !== confirmPassword) {
@@ -130,7 +135,12 @@ function ResetPasswordPage() {
 
     const client = supabase;
     if (!client) {
-      setError(text("خدمة الحسابات غير متاحة الآن. حاول لاحقاً.", "Account service is unavailable right now. Try later."));
+      setError(
+        text(
+          "خدمة الحسابات غير متاحة الآن. حاول لاحقاً.",
+          "Account service is unavailable right now. Try later.",
+        ),
+      );
       return;
     }
 

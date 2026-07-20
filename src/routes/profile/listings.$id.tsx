@@ -1090,13 +1090,7 @@ function ManageListingPage() {
   }
 
   async function moveExistingImage(imageId: string, direction: -1 | 1) {
-    if (
-      !listing ||
-      !isEditable ||
-      imagesLoading ||
-      uploading ||
-      imageReorderInFlightRef.current
-    ) {
+    if (!listing || !isEditable || imagesLoading || uploading || imageReorderInFlightRef.current) {
       return;
     }
     const current = imagesRef.current;
@@ -1149,11 +1143,7 @@ function ManageListingPage() {
     setUploadError(null);
     void (async () => {
       try {
-        const result = await deleteListingImage(
-          auth.profile?.id ?? null,
-          currentListing.id,
-          image,
-        );
+        const result = await deleteListingImage(auth.profile?.id ?? null, currentListing.id, image);
         if (!result.ok) {
           setUploadError(result.error.message);
           return;

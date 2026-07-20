@@ -107,7 +107,8 @@ function PromotionPage() {
     setListingsError(null);
     try {
       const result = await fetchCurrentUserListings(currentProfileId);
-      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
       if (result.ok) {
         setListings(result.data);
         setHasLoadedListings(true);
@@ -122,10 +123,14 @@ function PromotionPage() {
         setListingsError(result.error);
       }
     } catch (caught) {
-      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
       setListingsError({
         code: "unknown",
-        message: caught instanceof Error ? caught.message : text("تعذر تحميل إعلاناتك.", "Could not load your listings."),
+        message:
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحميل إعلاناتك.", "Could not load your listings."),
         operation: "promotion_listings_load",
       });
     } finally {
@@ -143,7 +148,8 @@ function PromotionPage() {
     setRequestsError(null);
     try {
       const result = await fetchMyPromotionRequests(currentProfileId);
-      if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
       if (result.ok) {
         setRequests(result.data);
         setHasLoadedRequests(true);
@@ -151,10 +157,14 @@ function PromotionPage() {
         setRequestsError(result.error);
       }
     } catch (caught) {
-      if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
       setRequestsError({
         code: "unknown",
-        message: caught instanceof Error ? caught.message : text("تعذر تحميل طلبات الترويج.", "Could not load promotion requests."),
+        message:
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحميل طلبات الترويج.", "Could not load promotion requests."),
         operation: "promotion_requests_load",
       });
     } finally {
@@ -202,7 +212,12 @@ function PromotionPage() {
     if (!currentProfileId || submitInFlightRef.current) return;
     setNotice("");
     if (!hasLoadedListings || !hasLoadedRequests || listingsLoading || requestsLoading) {
-      setNotice(text("انتظر اكتمال تحميل بياناتك قبل الإرسال.", "Wait until your data finishes loading before submitting."));
+      setNotice(
+        text(
+          "انتظر اكتمال تحميل بياناتك قبل الإرسال.",
+          "Wait until your data finishes loading before submitting.",
+        ),
+      );
       return;
     }
     if (!selectedListingId) {
@@ -210,7 +225,12 @@ function PromotionPage() {
       return;
     }
     if (hasPendingForSelectedListing) {
-      setNotice(text("يوجد طلب ترويج قيد المراجعة لهذا الإعلان.", "A promotion request for this listing is already under review."));
+      setNotice(
+        text(
+          "يوجد طلب ترويج قيد المراجعة لهذا الإعلان.",
+          "A promotion request for this listing is already under review.",
+        ),
+      );
       return;
     }
 
@@ -231,7 +251,10 @@ function PromotionPage() {
         return;
       }
 
-      setRequests((current) => [result.data, ...current.filter((item) => item.id !== result.data.id)]);
+      setRequests((current) => [
+        result.data,
+        ...current.filter((item) => item.id !== result.data.id),
+      ]);
       setHasLoadedRequests(true);
       if (receiptFile) {
         const receiptResult = await uploadPromotionReceipt({
@@ -251,14 +274,20 @@ function PromotionPage() {
           return;
         }
       }
-      setNotice(text("تم إرسال طلب الترويج للمراجعة اليدوية.", "Promotion request sent for manual review."));
+      setNotice(
+        text("تم إرسال طلب الترويج للمراجعة اليدوية.", "Promotion request sent for manual review."),
+      );
       setPaymentMethod("");
       setPaymentReference("");
       setReceiptFile(null);
       await loadRequests();
     } catch (caught) {
       if (currentProfileId === profileIdRef.current) {
-        setNotice(caught instanceof Error ? caught.message : text("تعذر إرسال طلب الترويج.", "Could not submit the promotion request."));
+        setNotice(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر إرسال طلب الترويج.", "Could not submit the promotion request."),
+        );
       }
     } finally {
       submitInFlightRef.current = false;

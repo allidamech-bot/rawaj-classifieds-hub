@@ -592,7 +592,7 @@ function ListingDetailsPage() {
                 loading={sellerLoading}
                 fallbackName={sellerName}
                 canMessage={!isOwner}
-               messageBusy={messageBusy}
+                messageBusy={messageBusy}
                 onMessage={messageSeller}
                 language={language}
                 text={text}

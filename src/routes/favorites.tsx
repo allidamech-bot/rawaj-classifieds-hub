@@ -45,7 +45,8 @@ function FavoritesPage() {
     setError(null);
     try {
       const result = await fetchFavoriteJourneyItems(currentProfileId);
-      if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
       if (result.ok) {
         setItems(result.data);
         setHasLoaded(true);
@@ -53,7 +54,8 @@ function FavoritesPage() {
         setError(result.error);
       }
     } catch (caught) {
-      if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
       setError({
         code: "unknown",
         message:

@@ -175,11 +175,18 @@ function SupportPage() {
     const cleanMessage = message.trim();
     const cleanRelatedListingId = relatedListingId.trim();
     if (cleanSubject.length < 4) {
-      setNotice(text("اكتب عنواناً واضحاً من 4 أحرف على الأقل.", "Enter a clear subject of at least 4 characters."));
+      setNotice(
+        text(
+          "اكتب عنواناً واضحاً من 4 أحرف على الأقل.",
+          "Enter a clear subject of at least 4 characters.",
+        ),
+      );
       return;
     }
     if (cleanMessage.length < 10) {
-      setNotice(text("اكتب تفاصيل كافية من 10 أحرف على الأقل.", "Enter at least 10 characters of detail."));
+      setNotice(
+        text("اكتب تفاصيل كافية من 10 أحرف على الأقل.", "Enter at least 10 characters of detail."),
+      );
       return;
     }
 

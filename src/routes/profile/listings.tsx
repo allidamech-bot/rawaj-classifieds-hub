@@ -76,7 +76,8 @@ function MyListingsPage() {
     setListingsError(null);
     try {
       const result = await fetchCurrentUserListings(currentProfileId);
-      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
       if (result.ok) {
         setListings(result.data);
         setListingsHasLoaded(true);
@@ -85,12 +86,16 @@ function MyListingsPage() {
       if (requestId === listingsRequestIdRef.current && currentProfileId === profileIdRef.current) {
         setListingsError({
           code: "unknown",
-          message: caught instanceof Error ? caught.message : text("تعذر تحميل إعلاناتك.", "Could not load your listings."),
+          message:
+            caught instanceof Error
+              ? caught.message
+              : text("تعذر تحميل إعلاناتك.", "Could not load your listings."),
           operation: "owner_listings_load",
         });
       }
     } finally {
-      if (requestId === listingsRequestIdRef.current && currentProfileId === profileIdRef.current) setListingsLoading(false);
+      if (requestId === listingsRequestIdRef.current && currentProfileId === profileIdRef.current)
+        setListingsLoading(false);
     }
   }, [profileId, text]);
 
@@ -103,7 +108,8 @@ function MyListingsPage() {
     setSellerError(null);
     try {
       const result = await fetchPublicSellerProfile(currentProfileId);
-      if (requestId !== sellerRequestIdRef.current || currentProfileId !== profileIdRef.current) return;
+      if (requestId !== sellerRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        return;
       if (result.ok) {
         setSellerProfile(result.data);
         setSellerHasLoaded(true);
@@ -112,12 +118,16 @@ function MyListingsPage() {
       if (requestId === sellerRequestIdRef.current && currentProfileId === profileIdRef.current) {
         setSellerError({
           code: "unknown",
-          message: caught instanceof Error ? caught.message : text("تعذر تحميل بيانات المتجر.", "Could not load store details."),
+          message:
+            caught instanceof Error
+              ? caught.message
+              : text("تعذر تحميل بيانات المتجر.", "Could not load store details."),
           operation: "owner_store_load",
         });
       }
     } finally {
-      if (requestId === sellerRequestIdRef.current && currentProfileId === profileIdRef.current) setSellerLoading(false);
+      if (requestId === sellerRequestIdRef.current && currentProfileId === profileIdRef.current)
+        setSellerLoading(false);
     }
   }, [profileId, text]);
 
@@ -467,7 +477,11 @@ function StoreListingCard({
       setShowDeleteConfirm(false);
       onDeleted(userId, listing.id);
     } catch (caught) {
-      setDeleteError(caught instanceof Error ? caught.message : text("تعذر حذف الإعلان.", "Could not delete the listing."));
+      setDeleteError(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر حذف الإعلان.", "Could not delete the listing."),
+      );
     } finally {
       deleteInFlightRef.current = false;
       setDeleting(false);
@@ -487,7 +501,11 @@ function StoreListingCard({
       }
       onChanged(userId, result.data);
     } catch (caught) {
-      setLifecycleError(caught instanceof Error ? caught.message : text("تعذر تحديث حالة الإعلان.", "Could not update listing status."));
+      setLifecycleError(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر تحديث حالة الإعلان.", "Could not update listing status."),
+      );
     } finally {
       lifecycleInFlightRef.current = false;
       setLifecycleBusy(false);
@@ -507,7 +525,11 @@ function StoreListingCard({
       }
       onChanged(userId, result.data);
     } catch (caught) {
-      setReservationError(caught instanceof Error ? caught.message : text("تعذر تحديث حالة الحجز.", "Could not update reservation status."));
+      setReservationError(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر تحديث حالة الحجز.", "Could not update reservation status."),
+      );
     } finally {
       reservationInFlightRef.current = false;
       setReservationBusy(false);
@@ -518,8 +540,17 @@ function StoreListingCard({
     if (priceDropInFlightRef.current || !canReducePrice) return;
     const nextPrice = Number(priceDropDraft);
     setPriceDropError("");
-    if (!Number.isFinite(nextPrice) || nextPrice <= 0 || (listing.price !== null && nextPrice >= listing.price)) {
-      setPriceDropError(text("أدخل سعراً جديداً أقل من السعر الحالي.", "Enter a valid price lower than the current price."));
+    if (
+      !Number.isFinite(nextPrice) ||
+      nextPrice <= 0 ||
+      (listing.price !== null && nextPrice >= listing.price)
+    ) {
+      setPriceDropError(
+        text(
+          "أدخل سعراً جديداً أقل من السعر الحالي.",
+          "Enter a valid price lower than the current price.",
+        ),
+      );
       return;
     }
     priceDropInFlightRef.current = true;
@@ -532,7 +563,11 @@ function StoreListingCard({
       }
       onChanged(userId, result.data);
     } catch (caught) {
-      setPriceDropError(caught instanceof Error ? caught.message : text("تعذر خفض السعر.", "Could not reduce the price."));
+      setPriceDropError(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر خفض السعر.", "Could not reduce the price."),
+      );
     } finally {
       priceDropInFlightRef.current = false;
       setPriceDropBusy(false);
@@ -552,7 +587,11 @@ function StoreListingCard({
       }
       onChanged(userId, result.data);
     } catch (caught) {
-      setLifecycleError(caught instanceof Error ? caught.message : text("تعذر إعادة تفعيل الإعلان.", "Could not reactivate the listing."));
+      setLifecycleError(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر إعادة تفعيل الإعلان.", "Could not reactivate the listing."),
+      );
     } finally {
       lifecycleInFlightRef.current = false;
       setLifecycleBusy(false);
@@ -572,7 +611,11 @@ function StoreListingCard({
       }
       onChanged(userId, result.data);
     } catch (caught) {
-      setLifecycleError(caught instanceof Error ? caught.message : text("تعذر تحديث مدة الإعلان.", "Could not update listing expiry."));
+      setLifecycleError(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر تحديث مدة الإعلان.", "Could not update listing expiry."),
+      );
     } finally {
       lifecycleInFlightRef.current = false;
       setLifecycleBusy(false);

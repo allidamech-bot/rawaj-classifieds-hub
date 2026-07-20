@@ -242,7 +242,8 @@ function ReviewsPanel({
         requestId !== eligibilityRequestIdRef.current ||
         currentProfileId !== profileIdRef.current ||
         seller.id !== sellerIdRef.current
-      ) return;
+      )
+        return;
       if (!result.ok) {
         setEligibilityState("error");
         setNotice(result.error.message);
@@ -264,7 +265,11 @@ function ReviewsPanel({
         seller.id === sellerIdRef.current
       ) {
         setEligibilityState("error");
-        setNotice(caught instanceof Error ? caught.message : text("تعذر التحقق من أهلية التقييم.", "Could not check review eligibility."));
+        setNotice(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر التحقق من أهلية التقييم.", "Could not check review eligibility."),
+        );
       }
     }
   }, [profileId, seller.id, shouldCheckEligibility, text]);
@@ -288,7 +293,12 @@ function ReviewsPanel({
     const currentComment = comment.trim();
     const currentTraits = selectedTraits;
     if (currentComment.length > 0 && currentComment.length < 10) {
-      setNotice(text("اكتب 10 أحرف على الأقل أو اترك التعليق فارغاً.", "Write at least 10 characters or leave the comment empty."));
+      setNotice(
+        text(
+          "اكتب 10 أحرف على الأقل أو اترك التعليق فارغاً.",
+          "Write at least 10 characters or leave the comment empty.",
+        ),
+      );
       return;
     }
     reviewSubmitScopesRef.current.add(scopeKey);
@@ -324,7 +334,11 @@ function ReviewsPanel({
       }
     } catch (caught) {
       if (currentProfileId === profileIdRef.current && currentSellerId === sellerIdRef.current) {
-        setNotice(caught instanceof Error ? caught.message : text("تعذر إرسال التقييم.", "Could not submit the review."));
+        setNotice(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر إرسال التقييم.", "Could not submit the review."),
+        );
       }
     } finally {
       reviewSubmitScopesRef.current.delete(scopeKey);
@@ -479,7 +493,11 @@ function ReviewsPanel({
             </button>
           </div>
         ) : (
-          <form onSubmit={(event) => void submitReview(event)} aria-busy={saving} className="mt-4 space-y-2">
+          <form
+            onSubmit={(event) => void submitReview(event)}
+            aria-busy={saving}
+            className="mt-4 space-y-2"
+          >
             <div className="flex flex-wrap items-center gap-2">
               {[1, 2, 3, 4, 5].map((value) => (
                 <button

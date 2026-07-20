@@ -307,38 +307,40 @@ function AddListingPage() {
     }
 
     setDynamicSchemaLoading(true);
-    void fetchPublishedLeafSchema(taxonomyNodeId).then((result) => {
-      if (requestId !== dynamicSchemaRequestIdRef.current) return;
-      setDynamicSchemaLoading(false);
+    void fetchPublishedLeafSchema(taxonomyNodeId)
+      .then((result) => {
+        if (requestId !== dynamicSchemaRequestIdRef.current) return;
+        setDynamicSchemaLoading(false);
 
-      if (!result.ok) {
-        if (result.error.code !== "schema_missing") {
-          setDynamicSchemaError(result.error.message);
+        if (!result.ok) {
+          if (result.error.code !== "schema_missing") {
+            setDynamicSchemaError(result.error.message);
+          }
+          return;
         }
-        return;
-      }
 
-      if (!result.data.found || result.data.leaf?.id !== taxonomyNodeId) return;
+        if (!result.data.found || result.data.leaf?.id !== taxonomyNodeId) return;
 
-      const defaults = Object.fromEntries(
-        result.data.fields
-          .filter((field) => field.defaultValue !== null && field.defaultValue !== undefined)
-          .map((field) => [field.key, field.defaultValue]),
-      );
-      setDynamicSchema(result.data);
-      setDynamicValues(defaults);
-    }).catch((error: unknown) => {
-      if (requestId !== dynamicSchemaRequestIdRef.current) return;
-      setDynamicSchemaLoading(false);
-      setDynamicSchemaError(
-        error instanceof Error
-          ? error.message
-          : text(
-              "تعذر تحميل حقول التصنيف. حاول مرة أخرى.",
-              "Could not load category fields. Try again.",
-            ),
-      );
-    });
+        const defaults = Object.fromEntries(
+          result.data.fields
+            .filter((field) => field.defaultValue !== null && field.defaultValue !== undefined)
+            .map((field) => [field.key, field.defaultValue]),
+        );
+        setDynamicSchema(result.data);
+        setDynamicValues(defaults);
+      })
+      .catch((error: unknown) => {
+        if (requestId !== dynamicSchemaRequestIdRef.current) return;
+        setDynamicSchemaLoading(false);
+        setDynamicSchemaError(
+          error instanceof Error
+            ? error.message
+            : text(
+                "تعذر تحميل حقول التصنيف. حاول مرة أخرى.",
+                "Could not load category fields. Try again.",
+              ),
+        );
+      });
 
     return () => {
       dynamicSchemaRequestIdRef.current += 1;
@@ -1078,7 +1080,10 @@ function AddListingPage() {
         message:
           error instanceof Error
             ? error.message
-            : text("تعذر تجهيز نموذج النشر. حاول مرة أخرى.", "Could not prepare the posting form. Try again."),
+            : text(
+                "تعذر تجهيز نموذج النشر. حاول مرة أخرى.",
+                "Could not prepare the posting form. Try again.",
+              ),
         operation: "add_listing_setup",
       });
     } finally {
