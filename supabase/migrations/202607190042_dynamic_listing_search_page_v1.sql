@@ -131,13 +131,13 @@ begin
         or (
           listing_row.location_node_id is null
           and p_governorate_id is not null
-          and listing_row.governorate_id = p_governorate_id
+          and listing_row.governorate_id = p_governorate_id::text
         )
       )
       and (
         (p_location_node_ids is not null and cardinality(p_location_node_ids) > 0)
         or p_governorate_id is null
-        or listing_row.governorate_id = p_governorate_id
+        or listing_row.governorate_id = p_governorate_id::text
       )
       and (p_price_min is null or listing_row.price >= p_price_min)
       and (p_price_max is null or listing_row.price <= p_price_max)
