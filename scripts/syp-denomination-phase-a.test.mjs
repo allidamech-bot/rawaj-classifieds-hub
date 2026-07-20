@@ -1,0 +1,63 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
+
+const migrationPath = "supabase/migrations/202607210001_syp_denomination_phase_a.sql";
+const rollbackPath = "scripts/sql/syp-denomination-phase-a-rollback.sql";
+
+test("Phase A migration is additive and keeps source price untouched", async () => {
+  const sql = await readFile(migrationPath, "utf8");
+  assert.match(sql, /add column if not exists price_denomination/i);
+  assert.match(sql, /add column if not exists price_new_syp_normalized/i);
+  assert.match(sql, /generated always as/i);
+  assert.match(sql, /price_denomination = 'old' then price \/ 100/i);
+  assert.match(sql, /price_denomination = 'new' then price/i);
+  assert.doesNotMatch(sql, /update\s+public\.listings\s+set\s+price\s*=/i);
+});
+
+test("Submission is blocked until a priced SYP listing is classified", async () => {
+  const sql = await readFile(migrationPath, "utf8");
+  assert.match(sql, /syp_price_denomination_required/);
+  assert.match(sql, /price_denomination not in \('old', 'new'\)/i);
+  assert.match(sql, /rawaj_submit_listing_for_review/);
+});
+
+test("Owner and reviewer classification is stale-safe and limited to metadata", async () => {
+  const sql = await readFile(migrationPath, "utf8");
+  assert.match(sql, /rawaj_classify_syp_listing_price/);
+  assert.match(sql, /p_expected_updated_at/i);
+  assert.match(sql, /syp_denomination_stale_write/i);
+  assert.match(sql, /rawaj\.syp_denomination_write/);
+  assert.match(sql, /price_denomination = p_denomination/);
+});
+
+test("Price comparisons use normalized new-SYP values", async () => {
+  const sql = await readFile(migrationPath, "utf8");
+  const source = await readFile("src/lib/api/listings.ts", "utf8");
+  assert.match(sql, /price_new_syp_normalized/);
+  assert.match(source, /\.gte\("price_new_syp_normalized"/);
+  assert.match(source, /\.order\("price_new_syp_normalized"/);
+});
+
+test("Application contracts carry denomination metadata", async () => {
+  const types = await readFile("src/lib/classifieds-types.ts", "utf8");
+  const createRpc = await readFile("src/lib/api/listing-draft-create-rpc.ts", "utf8");
+  const updateRpc = await readFile("src/lib/api/listing-write-rpc.ts", "utf8");
+  const publicFields = await readFile("src/lib/api/public-fields.ts", "utf8");
+  assert.match(types, /priceDenomination: SypPriceDenomination/);
+  assert.match(types, /priceNewSypNormalized: number \| null/);
+  assert.match(createRpc, /price_denomination: payload\.priceDenomination/);
+  assert.match(updateRpc, /price_denomination\s*=\s*payload\.priceDenomination/);
+  assert.match(publicFields, /price_denomination/);
+  assert.match(publicFields, /price_new_syp_normalized/);
+});
+
+test("Rollback script explicitly removes Phase A schema after restoring boundaries", async () => {
+  const sql = await readFile(rollbackPath, "utf8");
+  assert.match(sql, /begin;/i);
+  assert.match(sql, /drop function if exists public\.rawaj_classify_syp_listing_price/i);
+  assert.match(sql, /drop column if exists price_new_syp_normalized/i);
+  assert.match(sql, /drop column if exists price_denomination/i);
+  assert.match(sql, /rollback backup/i);
+  assert.match(sql, /commit;/i);
+});

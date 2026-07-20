@@ -71,6 +71,7 @@ export async function createOwnerDraftListingIdempotent(
     title,
     description,
     price: payload.price,
+    price_denomination: payload.priceDenomination,
     price_type: payload.priceType,
     listing_condition: payload.condition,
     district_ar: locationWrite.data.districtAr,

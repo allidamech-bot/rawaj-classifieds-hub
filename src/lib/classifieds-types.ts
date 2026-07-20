@@ -1,3 +1,4 @@
+import type { SypPriceDenomination } from "@/lib/syp-denomination";
 import type { PlaceholderType, PriceType } from "@/types";
 
 export type ClassifiedsErrorCode =
@@ -120,6 +121,8 @@ export interface ClassifiedListing {
   description: string;
   price: number | null;
   currency: "SYP";
+  priceDenomination: SypPriceDenomination;
+  priceNewSypNormalized: number | null;
   priceType: PriceType;
   condition: ListingCondition;
   status: ListingStatus;
@@ -546,6 +549,7 @@ export interface CreateListingPayload {
   title: string;
   description: string;
   price: number | null;
+  priceDenomination: SypPriceDenomination;
   priceType: PriceType;
   condition: ListingCondition;
   districtAr: string | null;
@@ -561,6 +565,7 @@ export interface UpdateListingPayload {
   title?: string;
   description?: string;
   price?: number | null;
+  priceDenomination?: SypPriceDenomination;
   priceType?: PriceType;
   condition?: ListingCondition;
   districtAr?: string | null;

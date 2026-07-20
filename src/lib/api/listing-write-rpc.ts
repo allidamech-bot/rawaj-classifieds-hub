@@ -107,6 +107,9 @@ async function runOwnerListingUpdate(
     patch.description = payload.description?.trim() ?? null;
   }
   if (payload.price !== undefined) patch.price = payload.price;
+  if (payload.priceDenomination !== undefined) {
+    patch.price_denomination = payload.priceDenomination;
+  }
   if (payload.priceType) patch.price_type = payload.priceType;
   if (payload.condition) patch.listing_condition = payload.condition;
 

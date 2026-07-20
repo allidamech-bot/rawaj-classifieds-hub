@@ -171,6 +171,14 @@ function mapListing(
     description: rowString(row, "description"),
     price: rowNullableString(row, "price") ? Number(rowNullableString(row, "price")) : null,
     currency: "SYP",
+    priceDenomination: rowString(
+      row,
+      "price_denomination",
+      "unclassified",
+    ) as ClassifiedListing["priceDenomination"],
+    priceNewSypNormalized: rowNullableString(row, "price_new_syp_normalized")
+      ? Number(rowNullableString(row, "price_new_syp_normalized"))
+      : null,
     priceType: rowString(row, "price_type", "fixed") as import("@/types").PriceType,
     condition: rowString(
       row,

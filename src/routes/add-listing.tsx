@@ -100,6 +100,8 @@ import {
 } from "@/lib/taxonomy";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
+import type { SypPriceDenomination } from "@/lib/syp-denomination";
+import { createClassifiedSypPrice } from "@/lib/syp-denomination";
 import type { PriceType } from "@/types";
 
 const MAX_IMAGES = 6;
@@ -141,6 +143,7 @@ function AddListingPage() {
   const [taxonomyNodeId, setTaxonomyNodeId] = useState("");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
+  const [priceDenomination, setPriceDenomination] = useState<SypPriceDenomination>("unclassified");
   const [priceType, setPriceType] = useState<PriceType>("fixed");
   const [governorateId, setGovernorateId] = useState("");
   const [district, setDistrict] = useState("");
@@ -250,6 +253,7 @@ function AddListingPage() {
       preciseLocationSelected,
       requiresPreciseLocation,
       normalizedPrice,
+      priceDenomination,
       priceType,
       selectedImages,
       selectedTaxonomyNode?.isLeaf,
@@ -728,6 +732,7 @@ function AddListingPage() {
       title,
       description,
       price: normalizedPrice,
+      priceDenomination,
       priceType,
       governorateId,
       locationNodeId,
@@ -862,6 +867,7 @@ function AddListingPage() {
       title: title.trim(),
       description: description.trim(),
       price: normalizedPrice ? Number(normalizedPrice) : null,
+      priceDenomination,
       priceType,
       condition,
       districtAr: locationNodeId ? `@${locationNodeId}` : district,
@@ -892,6 +898,7 @@ function AddListingPage() {
       title: title.trim(),
       description: description.trim(),
       price: normalizedPrice ? Number(normalizedPrice) : null,
+      priceDenomination,
       priceType,
       condition,
       districtAr: locationNodeId ? `@${locationNodeId}` : district,
@@ -1831,6 +1838,31 @@ function AddListingPage() {
                           <option value="exchange">{text("للمبادلة", "Exchange")}</option>
                         </select>
                       </Field>
+                      {(priceType === "fixed" || priceType === "negotiable") && price ? (
+                        <Field
+                          label={text("وحدة الليرة السورية", "Syrian pound denomination")}
+                          error={fieldErrors.priceDenomination}
+                        >
+                          <select
+                            value={priceDenomination}
+                            onChange={(event) =>
+                              setPriceDenomination(event.target.value as SypPriceDenomination)
+                            }
+                            className="input"
+                            data-first-invalid={Boolean(fieldErrors.priceDenomination)}
+                          >
+                            <option value="unclassified">
+                              {text("اختر القديمة أو الجديدة", "Choose old or new")}
+                            </option>
+                            <option value="old">
+                              {text("ليرة سورية قديمة", "Old Syrian pounds")}
+                            </option>
+                            <option value="new">
+                              {text("ليرة سورية جديدة", "New Syrian pounds")}
+                            </option>
+                          </select>
+                        </Field>
+                      ) : null}
                     </div>
                     <Field
                       label={text("الموقع", "Location")}
@@ -1959,8 +1991,20 @@ function AddListingPage() {
                     <ReviewRow label={text("العنوان", "Title")} value={title || "-"} />
                     <ReviewRow
                       label={text("السعر", "Price")}
-                      value={priceReviewLabel(price, priceType, text)}
+                      value={priceReviewLabel(price, priceType, priceDenomination, text)}
                     />
+                    {(priceType === "fixed" || priceType === "negotiable") && price ? (
+                      <ReviewRow
+                        label={text("وحدة السعر", "Price denomination")}
+                        value={
+                          priceDenomination === "old"
+                            ? text("ليرة سورية قديمة", "Old Syrian pounds")
+                            : priceDenomination === "new"
+                              ? text("ليرة سورية جديدة", "New Syrian pounds")
+                              : text("غير مصنّفة", "Unclassified")
+                        }
+                      />
+                    ) : null}
                     <ReviewRow
                       label={text("نوع السعر", "Price type")}
                       value={priceTypeReviewLabel(priceType, text)}
@@ -2091,7 +2135,7 @@ function AddListingPage() {
                     : priceType === "contact"
                       ? text("عند التواصل", "On contact")
                       : price
-                        ? `${price} SYP`
+                        ? priceReviewLabel(price, priceType, priceDenomination, text)
                         : ""
                 }
                 location={
@@ -2204,12 +2248,19 @@ function priceTypeReviewLabel(priceType: PriceType, text: (ar: string, en: strin
 function priceReviewLabel(
   price: string,
   priceType: PriceType,
+  priceDenomination: SypPriceDenomination,
   text: (ar: string, en: string) => string,
 ) {
   if (priceType === "free") return text("مجاني", "Free");
   if (priceType === "contact") return text("يُحدد عند التواصل", "Set on contact");
   if (priceType === "exchange") return text("للمبادلة", "Exchange");
-  return price ? `${price} SYP` : "-";
+  if (!price) return "-";
+  const dual = createClassifiedSypPrice(Number(price), priceDenomination);
+  if (!dual) return `${price} SYP · ${text("الوحدة غير مصنّفة", "Denomination unclassified")}`;
+  return text(
+    `${dual.newSyp.toLocaleString("ar-SY")} ل.س جديدة · يعادل ${dual.oldSyp.toLocaleString("ar-SY")} قديمة`,
+    `${dual.newSyp.toLocaleString("en-US")} new SYP · equivalent to ${dual.oldSyp.toLocaleString("en-US")} old`,
+  );
 }
 
 function listingConditionReviewLabel(
@@ -2287,6 +2338,7 @@ function buildStepErrors({
   title,
   description,
   price,
+  priceDenomination,
   priceType,
   governorateId,
   locationNodeId,
@@ -2305,6 +2357,7 @@ function buildStepErrors({
   title: string;
   description: string;
   price: string;
+  priceDenomination: SypPriceDenomination;
   priceType: PriceType;
   governorateId: string;
   locationNodeId: string;
@@ -2390,6 +2443,13 @@ function buildStepErrors({
     }
     if (price && (!Number.isFinite(Number(price)) || Number(price) < 0)) {
       add("price", "السعر يجب أن يكون رقمًا صحيحًا.");
+    }
+    if (
+      price &&
+      (priceType === "fixed" || priceType === "negotiable") &&
+      priceDenomination === "unclassified"
+    ) {
+      add("priceDenomination", "حدد هل السعر بالليرة السورية القديمة أم الجديدة.");
     }
     if (contact.phone && !validatePhone(phone)) {
       add("phone", "رقم الهاتف يجب أن يحتوي أرقامًا فقط وبصيغة واضحة.");

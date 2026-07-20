@@ -83,6 +83,12 @@ export function mapListing(
     description: rowString(row, "description"),
     price: rowNullableNumber(row, "price"),
     currency: "SYP",
+    priceDenomination: rowString(
+      row,
+      "price_denomination",
+      "unclassified",
+    ) as ClassifiedListing["priceDenomination"],
+    priceNewSypNormalized: rowNullableNumber(row, "price_new_syp_normalized"),
     priceType: rowString(row, "price_type", "fixed") as PriceType,
     condition: rowString(
       row,
@@ -262,8 +268,12 @@ export async function fetchPublicListings(
   } else if (filters.governorateId) {
     query = query.eq("governorate_id", filters.governorateId);
   }
-  if (filters.priceMin !== undefined) query = query.gte("price", filters.priceMin);
-  if (filters.priceMax !== undefined) query = query.lte("price", filters.priceMax);
+  if (filters.priceMin !== undefined) {
+    query = query.gte("price_new_syp_normalized", filters.priceMin);
+  }
+  if (filters.priceMax !== undefined) {
+    query = query.lte("price_new_syp_normalized", filters.priceMax);
+  }
   if (filters.priceType) query = query.eq("price_type", filters.priceType);
   if (filters.condition) query = query.eq("listing_condition", filters.condition);
 
@@ -283,11 +293,11 @@ export async function fetchPublicListings(
   const sort = filters.sort ?? "latest";
   if (sort === "cheapest") {
     query = query
-      .order("price", { ascending: true, nullsFirst: false })
+      .order("price_new_syp_normalized", { ascending: true, nullsFirst: false })
       .order("id", { ascending: true });
   } else if (sort === "expensive") {
     query = query
-      .order("price", { ascending: false, nullsFirst: false })
+      .order("price_new_syp_normalized", { ascending: false, nullsFirst: false })
       .order("id", { ascending: true });
   } else if (sort === "featured") {
     query = query
@@ -352,7 +362,7 @@ export async function fetchPublicListings(
                   : "latest",
           id: listings[safePageSize - 1].id,
           ...(sort === "cheapest" || sort === "expensive"
-            ? { price: listings[safePageSize - 1].price }
+            ? { price: listings[safePageSize - 1].priceNewSypNormalized }
             : {}),
           ...(sort === "featured"
             ? {
@@ -864,6 +874,7 @@ async function createListingWithStatus(
     title,
     description,
     price: payload.price,
+    price_denomination: payload.priceDenomination,
     price_type: payload.priceType,
     listing_condition: payload.condition,
     status,
