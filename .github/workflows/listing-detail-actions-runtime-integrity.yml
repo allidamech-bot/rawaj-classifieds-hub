@@ -1,0 +1,33 @@
+name: Listing Detail Actions Runtime Integrity
+
+on:
+  pull_request:
+    paths:
+      - "src/routes/listings.$id.tsx"
+      - "src/features/listing-detail/**"
+      - "scripts/listing-detail-actions-runtime-integrity.test.mjs"
+      - ".github/workflows/listing-detail-actions-runtime-integrity.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: listing-detail-actions-runtime-integrity-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --test scripts/listing-detail-actions-runtime-integrity.test.mjs
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
