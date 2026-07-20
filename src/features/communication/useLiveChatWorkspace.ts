@@ -3,9 +3,9 @@ import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } fr
 import "../../communication-center-v3.css";
 import {
   fetchConversationMessages,
-  fetchMyConversations,
-  markConversationRead,
-} from "@/lib/api/messaging";
+  invalidateConversationMessagesCache,
+} from "@/lib/api/messaging-guarded";
+import { fetchMyConversations, markConversationRead } from "@/lib/api/messaging";
 import { getClient } from "@/lib/api/shared";
 import type { Conversation, ConversationMessage } from "@/lib/classifieds-types";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
@@ -112,8 +112,9 @@ export function useLiveChatWorkspace({
     previousUnreadMessagesRef.current = counts.messages;
     if (previousUnreadMessages === null || previousUnreadMessages === counts.messages) return;
 
+    invalidateConversationMessagesCache(selectedConversationId);
     void refreshWorkspace();
-  }, [counts.messages, profileId, refreshWorkspace, signedIn]);
+  }, [counts.messages, profileId, refreshWorkspace, selectedConversationId, signedIn]);
 
   useEffect(() => {
     if (!signedIn || !profileId || typeof window === "undefined") return;
@@ -124,6 +125,7 @@ export function useLiveChatWorkspace({
 
     const refreshWhenAvailable = () => {
       if (document.visibilityState === "hidden" || navigator.onLine === false) return;
+      invalidateConversationMessagesCache(selectedConversationId);
       void refreshWorkspace();
     };
 
@@ -144,6 +146,7 @@ export function useLiveChatWorkspace({
         return;
       if (document.visibilityState === "hidden" || navigator.onLine === false) return;
       if (realtimeTimer !== null) clearTimeout(realtimeTimer);
+      invalidateConversationMessagesCache(selectedConversationId);
       realtimeTimer = setTimeout(refreshWhenAvailable, LIVE_CHAT_EVENT_DEBOUNCE_MS);
     };
 
