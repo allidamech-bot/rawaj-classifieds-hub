@@ -2,7 +2,10 @@ import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-ro
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { authErrorMessage } from "@/lib/auth-errors";
-import { markPasswordRecoverySession } from "@/lib/auth-recovery-session";
+import {
+  hasActivePasswordRecoverySession,
+  markPasswordRecoverySession,
+} from "@/lib/auth-recovery-session";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
 import { supabase } from "@/lib/supabase";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -66,6 +69,15 @@ function AuthCallbackPage() {
       function hasRecoveryHashProof(session: Session | null): session is Session {
         return Boolean(
           session && recoveryHashAccessToken && session.access_token === recoveryHashAccessToken,
+        );
+      }
+
+      function hasRecoveryProof(session: Session | null): session is Session {
+        return Boolean(
+          session &&
+            (observedRecoveryEvent ||
+              hasRecoveryHashProof(session) ||
+              hasActivePasswordRecoverySession(session.user.id)),
         );
       }
 
@@ -143,11 +155,7 @@ function AuthCallbackPage() {
           finish(false, data.session);
           return;
         }
-        if (
-          callbackContext.isRecovery &&
-          data.session &&
-          (observedRecoveryEvent || hasRecoveryHashProof(data.session))
-        ) {
+        if (callbackContext.isRecovery && hasRecoveryProof(data.session)) {
           finish(true, data.session);
           return;
         }
@@ -160,11 +168,7 @@ function AuthCallbackPage() {
           if (cancelled || completed) return;
           const { data: lateSession, error: lateError } = await client.auth.getSession();
           if (cancelled || completed) return;
-          if (
-            !lateError &&
-            lateSession.session &&
-            (observedRecoveryEvent || hasRecoveryHashProof(lateSession.session))
-          ) {
+          if (!lateError && hasRecoveryProof(lateSession.session)) {
             finish(true, lateSession.session);
             return;
           }
