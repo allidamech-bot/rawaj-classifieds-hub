@@ -1,0 +1,37 @@
+name: Apply Admin Actions Integrity Repair
+
+on:
+  push:
+    branches:
+      - agent/admin-actions-integrity-audit
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-admin-actions-integrity-repair
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/admin-actions-integrity-audit
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply governed repair
+        run: node scripts/apply-admin-actions-integrity-repair.mjs
+      - name: Commit repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: harden admin action integrity"
+          git push origin HEAD:agent/admin-actions-integrity-audit
