@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - agent/admin-actions-integrity-audit
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/apply-admin-actions-integrity-repair.mjs"
+      - ".github/workflows/apply-admin-actions-integrity-repair.yml"
   workflow_dispatch:
 
 permissions:
