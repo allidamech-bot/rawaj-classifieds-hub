@@ -1,6 +1,7 @@
 import "../auth-stable-route-styles.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import communicationCenterV3Css from "../communication-center-v3.css?url";
+import messagingV4Css from "../messaging-v4.css?url";
 import homeDiscoveryV3Css from "../home-discovery-v3.css?url";
 import homeMarketplaceV2Css from "../home-marketplace-v2.css?url";
 import homeSignatureCss from "../home-signature.css?url";
@@ -12,7 +13,6 @@ import listingStudioV2Css from "../listing-studio-v2.css?url";
 import listingStudioV3Css from "../listing-studio-v3.css?url";
 import listingStudioV4Css from "../listing-studio-v4.css?url";
 import listingsResultsCss from "../listings-results.css?url";
-import messagingSignatureCss from "../messaging-signature.css?url";
 import myStoreBrandPolishCss from "../my-store-brand-polish.css?url";
 import myStoreHeaderRefinementCss from "../my-store-header-refinement.css?url";
 import myStoreRedesignCss from "../my-store-redesign.css?url";
@@ -41,8 +41,8 @@ export const routeStyleHrefs = {
   listingStudioV2: listingStudioV2Css,
   listingStudioV3: listingStudioV3Css,
   listingStudioV4: listingStudioV4Css,
-  messagingSignature: messagingSignatureCss,
   communicationCenterV2: communicationCenterV3Css,
+  messagingV4: messagingV4Css,
   activityMoreFoundation: activityMoreFoundationCss,
   personalSpacePolish: personalSpacePolishCss,
   myStoreRedesign: myStoreRedesignCss,

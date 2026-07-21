@@ -742,7 +742,7 @@ function ChatsPage() {
   return (
     <>
       <PageHeader title={text("المحادثات", "Messages")} />
-      <main className="rawaj-communication-v2 rawaj-communication-v2--messages container-wide mobile-page-bottom space-y-4 pt-4">
+      <main className="rawaj-communication-v2 rawaj-communication-v2--messages rawaj-messaging-v4 container-wide mobile-page-bottom space-y-4 pt-4">
         <div className="hidden lg:block">
           <CommunicationCenterHero
             mode="messages"
@@ -801,6 +801,11 @@ function ChatsPage() {
                     key={conversation.id}
                     conversation={conversation}
                     selected={selectedConversation?.id === conversation.id}
+                    dateLabel={
+                      conversation.lastMessageAt
+                        ? formatConversationTime(conversation.lastMessageAt, language)
+                        : ""
+                    }
                     onSelect={() => {
                       if (!isDesktop) setViewingConversationOnMobile(true);
                       void navigate({
@@ -1249,6 +1254,20 @@ function formatDateTime(value: string, language: "ar" | "en") {
     timeStyle: "short",
     timeZone: "UTC",
   }).format(new Date(value));
+}
+
+function formatConversationTime(value: string, language: "ar" | "en") {
+  const date = new Date(value);
+  const now = new Date();
+  const isToday =
+    date.getUTCFullYear() === now.getUTCFullYear() &&
+    date.getUTCMonth() === now.getUTCMonth() &&
+    date.getUTCDate() === now.getUTCDate();
+
+  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+    ...(isToday ? { hour: "numeric", minute: "2-digit" } : { month: "short", day: "numeric" }),
+    timeZone: "UTC",
+  }).format(date);
 }
 
 function VoiceDiagnosticsPreview() {

@@ -12,7 +12,7 @@ const scopedStyles = [
   "listing-studio-signature.css",
   "listing-studio-v2.css",
   "listing-studio-v3.css",
-  "messaging-signature.css",
+  "messaging-v4.css",
   "communication-center-v3.css",
   "activity-more-foundation.css",
   "personal-space-polish.css",
@@ -58,7 +58,7 @@ test("root conditionally emits all secondary route style groups", () => {
     "listingStudioSignature",
     "listingStudioV2",
     "listingStudioV3",
-    "messagingSignature",
+    "messagingV4",
     "communicationCenterV2",
     "activityMoreFoundation",
     "personalSpacePolish",
@@ -88,8 +88,8 @@ test("secondary style cascade remains stable inside each route group", () => {
       root.indexOf("routeStyleHrefs.listingStudioV2"),
   );
   assert.ok(
-    root.indexOf("routeStyleHrefs.communicationCenterV2") >
-      root.indexOf("routeStyleHrefs.messagingSignature"),
+    root.indexOf("routeStyleHrefs.messagingV4") >
+      root.indexOf("routeStyleHrefs.communicationCenterV2"),
   );
   assert.ok(
     root.indexOf("routeStyleHrefs.myStoreHeaderRefinement") >
