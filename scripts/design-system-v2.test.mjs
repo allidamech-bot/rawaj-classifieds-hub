@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [css, root, routeStyles, button, input, card, badge, header, bottomDock] = await Promise.all([
+const [css, foundation, root, routeStyles, button, input, card, badge, header, bottomDock] = await Promise.all([
   readFile(new URL("../src/design-system-v2.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/design-foundation.css", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/components/ui/button.tsx", import.meta.url), "utf8"),
@@ -29,14 +30,15 @@ test("design system V2 is loaded after legacy page styles", () => {
 });
 
 test("brand palette defines distinct page, card, sage, warm, and dark surfaces", () => {
-  assert.match(css, /--background: #f6f2e9;/);
-  assert.match(css, /--primary: #123f38;/);
-  assert.match(css, /--brand-orange: #f45f38;/);
-  assert.match(css, /--gold: #c99543;/);
-  assert.match(css, /--rawaj-surface-card: #fffdf9;/);
-  assert.match(css, /--rawaj-surface-sage: #e9f0ea;/);
-  assert.match(css, /--rawaj-surface-warm: #fff0e8;/);
-  assert.match(css, /--rawaj-shadow-md:/);
+  assert.match(foundation, /--rawaj-page-background: #f6f2e9;/);
+  assert.match(foundation, /--rawaj-primary: #123f38;/);
+  assert.match(foundation, /--rawaj-accent-orange: #f45f38;/);
+  assert.match(foundation, /--rawaj-accent-gold: #c99543;/);
+  assert.match(foundation, /--rawaj-surface-card: var\(--rawaj-card-background\);/);
+  assert.match(foundation, /--rawaj-surface-sage: var\(--rawaj-muted-surface\);/);
+  assert.match(foundation, /--rawaj-surface-warm: #fff0e8;/);
+  assert.match(foundation, /--rawaj-shadow-md:/);
+  assert.doesNotMatch(css, /:root\s*{/);
 });
 
 test("shared controls expose stable visual hooks and semantic variants", () => {

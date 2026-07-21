@@ -2,17 +2,28 @@
   /* Canonical RAWAJ palette */
   --rawaj-page-background: #f6f2e9;
   --rawaj-card-background: #fffdf9;
+  --rawaj-elevated-background: #ffffff;
+  --rawaj-subtle-background: #f0eee7;
+  --rawaj-brand-background: #123f38;
+  --rawaj-brand-muted-background: #e9f0ea;
   --rawaj-primary: #123f38;
   --rawaj-primary-deep: #0b2d29;
   --rawaj-accent-orange: #f45f38;
   --rawaj-accent-gold: #c99543;
   --rawaj-text-primary: #17372f;
   --rawaj-text-secondary: #63766f;
+  --rawaj-text-muted: #788981;
+  --rawaj-text-inverse: #ffffff;
   --rawaj-border: #d7e1da;
+  --rawaj-border-strong: #afc2b8;
+  --rawaj-border-brand: #7f9d90;
   --rawaj-muted-surface: #e9f0ea;
   --rawaj-success: #2f7a5c;
   --rawaj-warning: #d79027;
   --rawaj-danger: #c73d35;
+  --rawaj-success-surface: #e6f2eb;
+  --rawaj-warning-surface: #fff3dc;
+  --rawaj-danger-surface: #fbe9e6;
 
   /* Semantic aliases consumed by Tailwind and existing UI primitives */
   --background: var(--rawaj-page-background);
@@ -52,6 +63,13 @@
   --rawaj-ink-muted: var(--rawaj-text-secondary);
   --rawaj-surface-card: var(--rawaj-card-background);
   --rawaj-surface-sage: var(--rawaj-muted-surface);
+  --rawaj-surface-sage-strong: #dce8df;
+  --rawaj-surface-warm: #fff0e8;
+  --rawaj-surface-gold: #f7eddc;
+  --rawaj-surface-elevated: var(--rawaj-elevated-background);
+  --rawaj-ink-soft: var(--rawaj-text-secondary);
+  --rawaj-forest-deep: var(--rawaj-primary-deep);
+  --rawaj-forest: var(--rawaj-primary);
   --shadow-card: var(--shadow-soft);
 
   /* Spacing scale */
@@ -59,8 +77,10 @@
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
+  --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
+  --space-10: 2.5rem;
   --space-12: 3rem;
   --space-16: 4rem;
 
@@ -72,6 +92,13 @@
   --rawaj-form-max: 42rem;
   --rawaj-section-gap: clamp(1.5rem, 4vw, 3rem);
   --rawaj-stack-gap: clamp(0.875rem, 2.5vw, 1.5rem);
+  --rawaj-card-padding: clamp(1rem, 2.5vw, 1.5rem);
+  --rawaj-control-height-sm: 2.5rem;
+  --rawaj-control-height: 2.75rem;
+  --rawaj-control-height-lg: 3rem;
+  --rawaj-icon-sm: 1rem;
+  --rawaj-icon-md: 1.25rem;
+  --rawaj-icon-lg: 1.5rem;
 
   /* Radius scale */
   --radius-input: 0.75rem;
@@ -82,19 +109,40 @@
   --radius-hero: 1.5rem;
   --radius-sheet: 1.5rem;
   --radius-pill: 999px;
+  --rawaj-radius-input: var(--radius-input);
+  --rawaj-radius-button: var(--radius-button);
+  --rawaj-radius-card: var(--radius-card-sm);
+  --rawaj-radius-surface: var(--radius-feature);
+  --rawaj-radius-feature: var(--radius-hero);
 
   /* Elevation */
-  --shadow-soft:
-    0 1px 2px rgba(11, 45, 41, 0.04), 0 8px 24px rgba(11, 45, 41, 0.05);
-  --shadow-raised:
-    0 4px 12px rgba(11, 45, 41, 0.07), 0 16px 36px rgba(11, 45, 41, 0.09);
+  --shadow-soft: 0 1px 2px rgba(11, 45, 41, 0.04), 0 8px 24px rgba(11, 45, 41, 0.05);
+  --shadow-raised: 0 4px 12px rgba(11, 45, 41, 0.07), 0 16px 36px rgba(11, 45, 41, 0.09);
   --shadow-overlay: 0 20px 60px rgba(11, 45, 41, 0.18);
+  --rawaj-shadow-xs: 0 1px 4px rgba(11, 45, 41, 0.04);
+  --rawaj-shadow-sm: var(--shadow-soft);
+  --rawaj-shadow-md: var(--shadow-raised);
+  --rawaj-shadow-lg: var(--shadow-overlay);
+  --rawaj-shadow-soft: var(--shadow-soft);
+  --rawaj-shadow-card: var(--shadow-soft);
+  --rawaj-shadow-card-hover: var(--shadow-raised);
+  --rawaj-shadow-overlay: var(--shadow-overlay);
 
   /* Motion */
   --motion-fast: 150ms;
   --motion-base: 200ms;
   --motion-slow: 300ms;
   --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --rawaj-motion-fast: var(--motion-fast);
+  --rawaj-motion-base: var(--motion-base);
+  --rawaj-motion-slow: var(--motion-slow);
+
+  /* Predictable layering shared by shell and overlays */
+  --z-base: 0;
+  --z-sticky: 20;
+  --z-dock: 40;
+  --z-overlay: 50;
+  --z-toast: 60;
 
   /* App shell measurements */
   --rawaj-safe-top: env(safe-area-inset-top, 0px);
@@ -115,14 +163,28 @@
   --rawaj-text-secondary: #a9bbb4;
   --rawaj-border: rgba(215, 235, 228, 0.16);
   --rawaj-muted-surface: #1b2d29;
+  --rawaj-elevated-background: #182723;
+  --rawaj-subtle-background: #182723;
+  --rawaj-brand-background: #d7ebe4;
+  --rawaj-brand-muted-background: #1b2d29;
   --rawaj-success: #55a985;
   --rawaj-warning: #e2a44d;
   --rawaj-danger: #e16b62;
+  --rawaj-text-muted: #91a59d;
+  --rawaj-text-inverse: #0b2d29;
+  --rawaj-border-strong: rgba(215, 235, 228, 0.28);
+  --rawaj-border-brand: rgba(215, 235, 228, 0.38);
+  --rawaj-success-surface: #19372b;
+  --rawaj-warning-surface: #3a2d1d;
+  --rawaj-danger-surface: #3b211f;
 
   --primary-foreground: #0b2d29;
   --accent-foreground: #ffffff;
   --gold-foreground: #0b2d29;
   --input: rgba(215, 235, 228, 0.24);
+  --rawaj-surface-sage-strong: #243a33;
+  --rawaj-surface-warm: #33231d;
+  --rawaj-surface-gold: #30291d;
 }
 
 html {
@@ -134,10 +196,26 @@ html {
 body {
   min-height: 100dvh;
   color: var(--foreground);
-  background: var(--background);
+  background:
+    radial-gradient(32rem 22rem at 104% -3%, rgba(244, 95, 56, 0.08), transparent 68%),
+    linear-gradient(180deg, #fbf8f1 0%, var(--background) 24rem), var(--background);
   font-family: "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
   font-size: 1rem;
   line-height: 1.65;
+}
+
+.dark body {
+  background: var(--background);
+}
+
+:where(button, a, input, select, textarea, [role="button"]):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ring) 78%, white);
+  outline-offset: 3px;
+}
+
+:where(input, select, textarea)[aria-invalid="true"] {
+  border-color: var(--rawaj-danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rawaj-danger) 14%, transparent);
 }
 
 h1,
@@ -182,15 +260,11 @@ textarea,
 }
 
 .rawaj-app-shell[data-shell-dock="true"] {
-  --rawaj-shell-bottom-reserve: calc(
-    var(--dock-height) + var(--rawaj-safe-bottom) + 1rem
-  );
+  --rawaj-shell-bottom-reserve: calc(var(--dock-height) + var(--rawaj-safe-bottom) + 1rem);
 }
 
 .rawaj-app-shell[data-shell-sticky-action="true"] {
-  --rawaj-shell-bottom-reserve: calc(
-    var(--sticky-action-height) + var(--rawaj-safe-bottom) + 1rem
-  );
+  --rawaj-shell-bottom-reserve: calc(var(--sticky-action-height) + var(--rawaj-safe-bottom) + 1rem);
 }
 
 .rawaj-app-shell[data-shell-mode="conversation"],

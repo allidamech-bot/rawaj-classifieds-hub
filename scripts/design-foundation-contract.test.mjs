@@ -4,6 +4,12 @@ import test from "node:test";
 
 const rootRoute = await readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8");
 const foundation = await readFile(new URL("../src/design-foundation.css", import.meta.url), "utf8");
+const compatibilityLayer = await readFile(
+  new URL("../src/design-system-v2.css", import.meta.url),
+  "utf8",
+);
+const button = await readFile(new URL("../src/components/ui/button.tsx", import.meta.url), "utf8");
+const card = await readFile(new URL("../src/components/ui/card.tsx", import.meta.url), "utf8");
 const appShell = await readFile(
   new URL("../src/components/shell/AppShell.tsx", import.meta.url),
   "utf8",
@@ -44,6 +50,12 @@ test("canonical design foundation exposes required semantic contracts", () => {
     "--shadow-card",
     "--app-viewport-height",
     "--rawaj-shell-bottom-reserve",
+    "--rawaj-elevated-background",
+    "--rawaj-border-strong",
+    "--rawaj-control-height",
+    "--rawaj-card-padding",
+    "--rawaj-icon-md",
+    "--z-overlay",
   ];
 
   for (const token of requiredTokens) {
@@ -53,6 +65,22 @@ test("canonical design foundation exposes required semantic contracts", () => {
   assert.match(foundation, /min-height:\s*100dvh/);
   assert.match(foundation, /env\(safe-area-inset-bottom/);
   assert.match(foundation, /prefers-reduced-motion/);
+});
+
+test("the compatibility layer consumes the canonical token source", () => {
+  assert.doesNotMatch(compatibilityLayer, /:root\s*{/);
+  assert.doesNotMatch(compatibilityLayer, /\.dark\s*{/);
+  assert.match(compatibilityLayer, /Canonical tokens live in design-foundation\.css/);
+});
+
+test("shared primitives expose the premium calm component contracts", () => {
+  assert.match(button, /brand:/);
+  assert.match(button, /compact:/);
+  assert.match(button, /bg-brand-orange/);
+  assert.match(card, /variant:\s*{/);
+  assert.match(card, /subtle:/);
+  assert.match(card, /elevated:/);
+  assert.match(card, /interactive\?: boolean/);
 });
 
 test("legacy mobile UI is normalized to readable text and touch targets", () => {

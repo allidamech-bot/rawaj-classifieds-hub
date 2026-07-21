@@ -1,127 +1,7 @@
-/* RAWAJ Design System V2
- * Shared visual foundation for the marketplace. Page-specific redesigns build on
- * these tokens and primitives instead of reintroducing white-on-white surfaces.
+/* Compatibility component layer.
+ * Canonical tokens live in design-foundation.css and load after this file.
+ * Keep this layer token-only so page styles cannot establish a second palette.
  */
-
-:root {
-  --background: #f6f2e9;
-  --foreground: #17372f;
-  --card: #fffdf9;
-  --card-foreground: #17372f;
-  --card-warm: #fbf5ea;
-  --muted-surface: #e9f0ea;
-  --popover: #fffdf9;
-  --popover-foreground: #17372f;
-  --primary: #123f38;
-  --primary-foreground: #fffdf7;
-  --secondary: #e4ece6;
-  --secondary-foreground: #17372f;
-  --muted: #e8eee9;
-  --muted-foreground: #63766f;
-  --accent: #f45f38;
-  --accent-foreground: #ffffff;
-  --brand-orange: #f45f38;
-  --brand-orange-foreground: #ffffff;
-  --brand-navy: #123f38;
-  --gold: #c99543;
-  --gold-foreground: #2b251a;
-  --emerald-trust: #2f7a5c;
-  --emerald-trust-foreground: #ffffff;
-  --destructive: #c73d35;
-  --destructive-foreground: #ffffff;
-  --warning: #d79027;
-  --border: #d7e1da;
-  --input: #c6d3cb;
-  --ring: #f45f38;
-
-  --rawaj-surface-page: #f6f2e9;
-  --rawaj-surface-card: #fffdf9;
-  --rawaj-surface-sage: #e9f0ea;
-  --rawaj-surface-sage-strong: #dce8df;
-  --rawaj-surface-warm: #fff0e8;
-  --rawaj-surface-gold: #f7eddc;
-  --rawaj-ink-soft: #63766f;
-  --rawaj-forest-deep: #0b2d29;
-  --rawaj-forest: #123f38;
-  --rawaj-orange: #f45f38;
-  --rawaj-gold: #c99543;
-
-  --rawaj-radius-input: 0.875rem;
-  --rawaj-radius-button: 0.875rem;
-  --rawaj-radius-card: 1rem;
-  --rawaj-radius-surface: 1.25rem;
-  --rawaj-radius-feature: 1.5rem;
-
-  --rawaj-shadow-xs: 0 2px 8px rgba(18, 63, 56, 0.045);
-  --rawaj-shadow-sm: 0 4px 14px rgba(18, 63, 56, 0.065);
-  --rawaj-shadow-md: 0 10px 28px rgba(18, 63, 56, 0.09);
-  --rawaj-shadow-lg: 0 16px 42px rgba(18, 63, 56, 0.14);
-  --rawaj-shadow-soft: var(--rawaj-shadow-sm);
-  --rawaj-shadow-card: var(--rawaj-shadow-sm);
-  --rawaj-shadow-card-hover: var(--rawaj-shadow-md);
-  --rawaj-shadow-overlay: var(--rawaj-shadow-lg);
-
-  --rawaj-motion-fast: 150ms;
-  --rawaj-motion-base: 200ms;
-  --rawaj-motion-slow: 250ms;
-}
-
-.dark {
-  --background: #101713;
-  --foreground: #eff6f1;
-  --card: #18211c;
-  --card-foreground: #eff6f1;
-  --card-warm: #1d2821;
-  --muted-surface: #243229;
-  --popover: #18211c;
-  --popover-foreground: #eff6f1;
-  --primary: #dcece2;
-  --primary-foreground: #102019;
-  --secondary: #26342b;
-  --secondary-foreground: #eff6f1;
-  --muted: #26342b;
-  --muted-foreground: #a8b9b0;
-  --accent: #ff7651;
-  --brand-orange: #ff7651;
-  --brand-navy: #dcece2;
-  --gold: #ddb56f;
-  --gold-foreground: #17130d;
-  --emerald-trust: #56bd94;
-  --emerald-trust-foreground: #071811;
-  --destructive: #ee736b;
-  --warning: #e7a849;
-  --border: rgba(235, 244, 238, 0.14);
-  --input: rgba(235, 244, 238, 0.24);
-  --ring: #ff7651;
-
-  --rawaj-surface-page: #101713;
-  --rawaj-surface-card: #18211c;
-  --rawaj-surface-sage: #223128;
-  --rawaj-surface-sage-strong: #2b3c31;
-  --rawaj-surface-warm: #33231d;
-  --rawaj-surface-gold: #30291d;
-  --rawaj-ink-soft: #a8b9b0;
-  --rawaj-forest-deep: #09130f;
-  --rawaj-forest: #dcece2;
-}
-
-html,
-body {
-  background-color: var(--rawaj-surface-page);
-}
-
-body {
-  background:
-    radial-gradient(32rem 22rem at 104% -3%, rgba(244, 95, 56, 0.1), transparent 68%),
-    radial-gradient(30rem 22rem at -8% 24%, rgba(47, 122, 92, 0.08), transparent 70%),
-    linear-gradient(180deg, #fbf8f1 0%, var(--rawaj-surface-page) 24rem), var(--rawaj-surface-page);
-}
-
-.dark body {
-  background:
-    radial-gradient(30rem 20rem at 104% -3%, rgba(255, 118, 81, 0.08), transparent 70%),
-    var(--rawaj-surface-page);
-}
 
 /* Shared page and section surfaces */
 .rawaj-page-surface {
@@ -275,18 +155,24 @@ body {
 }
 
 [data-ui="button"][data-variant="default"] {
-  background: linear-gradient(145deg, #174d44, var(--color-primary));
+  background: var(--rawaj-orange);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.12) inset,
-    0 8px 20px rgba(18, 63, 56, 0.14);
+    0 8px 20px rgba(244, 95, 56, 0.18);
 }
 
 [data-ui="button"][data-variant="accent"] {
-  background: linear-gradient(145deg, #ff714b, var(--rawaj-orange));
+  background: var(--rawaj-orange);
   color: #fff;
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.2) inset,
     0 9px 22px rgba(244, 95, 56, 0.22);
+}
+
+[data-ui="button"][data-variant="brand"] {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  box-shadow: 0 8px 20px rgba(18, 63, 56, 0.14);
 }
 
 [data-ui="button"][data-variant="soft"] {
@@ -298,6 +184,21 @@ body {
 [data-ui="button"][data-variant="outline"] {
   border-color: color-mix(in srgb, var(--color-primary) 13%, var(--color-border));
   background: var(--rawaj-surface-card);
+}
+
+[data-ui="card"][data-variant="flat"] {
+  box-shadow: none;
+}
+
+[data-ui="card"][data-variant="subtle"] {
+  background: var(--rawaj-surface-sage);
+  box-shadow: none;
+}
+
+[data-ui="card"][data-variant="elevated"] {
+  border-color: var(--rawaj-border-strong);
+  background: var(--rawaj-surface-elevated);
+  box-shadow: var(--shadow-raised);
 }
 
 @media (hover: hover) and (pointer: fine) {
