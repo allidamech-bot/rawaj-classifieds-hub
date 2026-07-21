@@ -37,13 +37,181 @@
   min-width: 0;
 }
 
+/*
+ * Premium correction pass
+ *
+ * The ten-phase redesign improved coverage, but several visual layers still
+ * competed with one another. This pass restores one quiet RAWAJ identity,
+ * improves Arabic readability, reduces decorative depth, and tightens mobile
+ * information density without changing component behavior.
+ */
+
+html:root {
+  --rawaj-page-background: #f5f2e9;
+  --rawaj-card-background: #fffdf8;
+  --rawaj-elevated-background: #fffefb;
+  --rawaj-subtle-background: #ede9df;
+  --rawaj-brand-background: #123f38;
+  --rawaj-brand-muted-background: #e5eee8;
+  --rawaj-primary: #123f38;
+  --rawaj-primary-deep: #092d29;
+  --rawaj-accent-orange: #e9663c;
+  --rawaj-accent-gold: #b98d43;
+  --rawaj-text-primary: #18352f;
+  --rawaj-text-secondary: #536b63;
+  --rawaj-text-muted: #687c75;
+  --rawaj-border: #d5ded8;
+  --rawaj-border-strong: #aebfb6;
+  --rawaj-muted-surface: #e9efea;
+  --rawaj-control-height: 2.875rem;
+  --rawaj-control-height-lg: 3.125rem;
+  --radius-input: 0.7rem;
+  --radius-button: 0.78rem;
+  --radius-card-sm: 0.9rem;
+  --radius-card: 1rem;
+  --radius-feature: 1.1rem;
+  --radius-hero: 1.25rem;
+  --shadow-soft: 0 1px 2px rgba(9, 45, 41, 0.035), 0 6px 18px rgba(9, 45, 41, 0.045);
+  --shadow-raised: 0 3px 10px rgba(9, 45, 41, 0.055), 0 14px 30px rgba(9, 45, 41, 0.07);
+}
+
+body {
+  background:
+    radial-gradient(38rem 24rem at 102% -8%, rgba(185, 141, 67, 0.07), transparent 70%),
+    linear-gradient(180deg, #faf7f0 0%, var(--rawaj-page-background) 22rem),
+    var(--rawaj-page-background);
+}
+
+/* Replace tiny decorative labels with readable Arabic UI text. */
+.rawaj-eyebrow,
+.rawaj-chip,
+.rawaj-bottom-dock__label,
+.rawaj-bottom-dock__badge,
+.rawaj-listing-card__meta,
+.rawaj-listing-card__eyebrow,
+.rawaj-adaptive-card__meta,
+.rawaj-adaptive-card__category,
+.rawaj-featured-card__location,
+.rawaj-search-toolbar__recent {
+  font-size: max(0.75rem, 12px);
+  line-height: 1.45;
+}
+
+.rawaj-button-primary,
+.rawaj-button-secondary,
+.rawaj-search-toolbar button,
+.rawaj-app-shell button {
+  min-height: 2.875rem;
+  font-size: max(0.84rem, 13px);
+  letter-spacing: 0;
+}
+
+/* Quiet luxury: structural borders first, effects second. */
+.rawaj-surface,
+.rawaj-hero-surface,
+.rawaj-card,
+.rawaj-adaptive-card,
+.rawaj-featured-card {
+  border-color: color-mix(in srgb, var(--rawaj-border) 92%, var(--rawaj-primary));
+  box-shadow: var(--shadow-soft);
+}
+
+.rawaj-surface::after,
+.rawaj-hero-surface::before {
+  opacity: 0.48;
+}
+
+.rawaj-surface,
+.rawaj-hero-surface {
+  background-color: var(--rawaj-card-background);
+  background-image: none;
+}
+
+.rawaj-button-primary {
+  border-radius: var(--radius-button);
+  background: var(--rawaj-accent-orange);
+  box-shadow: 0 5px 14px rgba(233, 102, 60, 0.18);
+}
+
+.rawaj-button-primary:hover {
+  filter: brightness(0.97) saturate(1.02);
+}
+
+.rawaj-icon-button {
+  border-radius: 0.78rem;
+  box-shadow: 0 2px 8px rgba(9, 45, 41, 0.045);
+}
+
+/* Cards should scan in one second: image, price, title, concise metadata. */
+.rawaj-adaptive-card,
+.rawaj-featured-card {
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--rawaj-card-background);
+}
+
+.rawaj-adaptive-card__body {
+  padding: 0.82rem;
+}
+
+.rawaj-adaptive-card__price {
+  color: var(--rawaj-primary-deep);
+  font-size: clamp(0.95rem, 3.7vw, 1.12rem);
+  font-weight: 800;
+}
+
+.rawaj-adaptive-card__title,
+.rawaj-featured-card__content h3 {
+  line-height: 1.5;
+}
+
+.rawaj-adaptive-card__facts {
+  gap: 0.35rem;
+}
+
+.rawaj-adaptive-card__facts > div {
+  border-color: color-mix(in srgb, var(--rawaj-border) 86%, transparent);
+  background: color-mix(in srgb, var(--rawaj-muted-surface) 72%, white);
+}
+
+/* Section hierarchy: reduce giant introductions and strengthen content rhythm. */
+.rawaj-section-title {
+  font-size: clamp(1.08rem, 2vw, 1.3rem);
+  line-height: 1.4;
+}
+
+.rawaj-home-v3,
+.rawaj-app-shell__page > main,
+.rawaj-app-shell__content > main {
+  row-gap: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+/* Footer and shell must read as branded architecture, not another white card. */
+.rawaj-footer,
+.rawaj-app-footer,
+footer[class*="rawaj"] {
+  border-top: 1px solid color-mix(in srgb, var(--rawaj-primary) 24%, transparent);
+}
+
+/* Empty states stay compact and action-oriented. */
+.rawaj-search-empty-state,
+.rawaj-trust-empty,
+.rawaj-offers-empty,
+.rawaj-latest-discovery__empty {
+  min-height: 0;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border-color: var(--rawaj-border);
+  background: var(--rawaj-card-background);
+  box-shadow: none;
+}
+
 @media (max-width: 767px) {
   .rawaj-home-v3 {
-    gap: clamp(1.35rem, 4.5vw, 1.75rem);
+    gap: clamp(1.15rem, 4vw, 1.55rem);
   }
 
   .rawaj-featured-showcase .rawaj-featured-card {
-    min-height: 24rem;
+    min-height: 21.5rem;
   }
 
   .rawaj-featured-showcase__rail {
@@ -52,27 +220,35 @@
   }
 
   .rawaj-latest-discovery .rawaj-adaptive-card__body {
-    padding: 0.72rem;
+    padding: 0.78rem;
   }
 
   .rawaj-latest-discovery .rawaj-adaptive-card__facts {
     gap: 0.3rem;
-    margin-top: 0.5rem;
+    margin-top: 0.45rem;
   }
 
   .rawaj-latest-discovery .rawaj-adaptive-card__facts > div {
-    padding: 0.38rem 0.25rem;
+    padding: 0.36rem 0.24rem;
   }
 
   .rawaj-latest-discovery .rawaj-adaptive-card__meta {
     gap: 0.3rem;
-    padding-top: 0.55rem;
+    padding-top: 0.5rem;
+  }
+
+  .rawaj-hero-surface {
+    border-radius: var(--radius-hero);
+  }
+
+  .rawaj-chip {
+    padding-block: 0.32rem;
   }
 }
 
 @media (min-width: 768px) {
   .rawaj-featured-showcase .rawaj-featured-card {
-    min-height: 34rem;
+    min-height: 30rem;
   }
 }
 
@@ -82,6 +258,15 @@
   }
 
   .rawaj-latest-discovery .rawaj-adaptive-card__body {
-    padding: 0.64rem;
+    padding: 0.7rem;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .rawaj-surface,
+  .rawaj-card,
+  .rawaj-adaptive-card,
+  .rawaj-featured-card {
+    transform: none;
   }
 }
