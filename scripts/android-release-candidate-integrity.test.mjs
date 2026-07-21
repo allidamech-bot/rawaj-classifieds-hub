@@ -54,6 +54,19 @@ test("CI artifacts are proven unsigned before evidence is emitted", () => {
   assert.match(evidenceScript, /Google Play App Signing and publication remain external manual gates/);
 });
 
+test("evidence is bound to the source branch head rather than the temporary PR merge commit", () => {
+  assert.match(
+    workflow,
+    /ANDROID_RC_SOURCE_COMMIT:\s*\$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/,
+  );
+  assert.match(evidenceScript, /ANDROID_RC_SOURCE_COMMIT/);
+  assert.match(evidenceScript, /sourceCommitSha/);
+  assert.match(evidenceScript, /checkoutCommitSha/);
+  assert.match(evidenceScript, /commitSha:\s*sourceCommitSha\.toLowerCase\(\)/);
+  assert.match(evidenceScript, /checkoutCommitSha:\s*checkoutCommitSha\.toLowerCase\(\)/);
+  assert.match(evidenceScript, /const shortSha = sourceCommitSha\.slice/);
+});
+
 test("evidence generator ties artifact identity to Gradle and the canonical package", () => {
   assert.match(evidenceScript, /android\/app\/build\.gradle/);
   assert.match(evidenceScript, /android\/variables\.gradle/);
