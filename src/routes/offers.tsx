@@ -45,7 +45,7 @@ function OffersPage() {
   return (
     <>
       <PageHeader title={text("العروض", "Offers")} />
-      <main className="rawaj-pulse-page min-h-dvh">
+      <main className="rawaj-pulse-page rawaj-offers-premium-v3 min-h-dvh">
         <div className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
           <section className="rawaj-offers-stage">
             <div className="relative z-10 grid min-h-[15rem] gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.45fr)] lg:items-end lg:p-9">

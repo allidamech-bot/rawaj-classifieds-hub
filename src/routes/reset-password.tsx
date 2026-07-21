@@ -204,7 +204,7 @@ function ResetPasswordPage() {
         to="/login"
         backMode="history"
       />
-      <main className="container-wide pb-24 pt-3 sm:pt-5">
+      <main className="rawaj-auth-recovery-v3 container-wide pb-24 pt-3 sm:pt-5">
         <section className="rawaj-hero-surface mx-auto max-w-md rounded-[1.65rem] p-5 sm:rounded-[1.9rem] sm:p-6">
           <div className="mb-4 flex items-start gap-3">
             <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[1.05rem] bg-primary text-primary-foreground shadow-[0_9px_22px_rgba(16,43,70,0.16)]">

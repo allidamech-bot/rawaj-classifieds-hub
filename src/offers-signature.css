@@ -3,8 +3,31 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--rawaj-radius-surface);
-  background: linear-gradient(140deg, #102b46 0%, #0d243b 72%, #143653 100%);
-  box-shadow: var(--rawaj-shadow-soft);
+  background: radial-gradient(circle at 88% 0%, rgba(223, 105, 60, 0.22), transparent 36%), linear-gradient(140deg, #174b41 0%, #0d342c 72%, #123f36 100%);
+  box-shadow: 0 26px 68px rgba(13, 54, 45, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.11);
+}
+
+.rawaj-offers-premium-v3 .rawaj-product-card {
+  border-color: color-mix(in srgb, var(--color-primary) 11%, var(--color-border));
+  background: linear-gradient(145deg, #fffefa, #f8f7f1);
+  box-shadow: 0 16px 38px rgba(16, 63, 53, 0.08);
+  transition: transform 170ms ease, border-color 170ms ease, box-shadow 170ms ease;
+}
+
+.rawaj-offers-premium-v3 .rawaj-product-card:hover {
+  border-color: color-mix(in srgb, var(--brand-orange) 30%, var(--color-border));
+  box-shadow: 0 22px 46px rgba(16, 63, 53, 0.12);
+  transform: translateY(-2px);
+}
+
+.rawaj-offers-premium-v3 a.bg-primary {
+  border: 1px solid color-mix(in srgb, var(--brand-orange) 76%, #98381d);
+  background: linear-gradient(145deg, #ee7a4c, #d75c32);
+  box-shadow: 0 12px 25px rgba(201, 78, 35, 0.23);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-offers-premium-v3 * { transition: none !important; }
 }
 
 .rawaj-offers-stage::before {
