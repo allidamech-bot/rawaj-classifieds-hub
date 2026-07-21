@@ -6,8 +6,7 @@ import { fileURLToPath, URL } from "node:url";
 
 const AUTOMATION_USER_AGENT =
   /(playwright|headlesschrome|github[- ]actions|node\.js|\bnode\b|undici|vitest|jsdom|puppeteer)/i;
-const BROWSER_USER_AGENT =
-  /(mozilla\/5\.0|chrome|chromium|safari|firefox|edg\/)/i;
+const BROWSER_USER_AGENT = /(mozilla\/5\.0|chrome|chromium|safari|firefox|edg\/)/i;
 
 function asArray(value) {
   if (Array.isArray(value)) return value;
@@ -33,9 +32,7 @@ export function parseStorageLogExport(source) {
       try {
         records.push(JSON.parse(trimmed));
       } catch (error) {
-        throw new Error(
-          `Invalid JSON log line ${index + 1}: ${error.message}`,
-        );
+        throw new Error(`Invalid JSON log line ${index + 1}: ${error.message}`);
       }
     }
     return records;
@@ -45,9 +42,7 @@ export function parseStorageLogExport(source) {
 function collectPrimitiveFields(value, output = [], trail = []) {
   if (value === null || value === undefined) return output;
   if (Array.isArray(value)) {
-    value.forEach((item, index) =>
-      collectPrimitiveFields(item, output, [...trail, String(index)]),
-    );
+    value.forEach((item, index) => collectPrimitiveFields(item, output, [...trail, String(index)]));
     return output;
   }
   if (typeof value === "object") {
@@ -66,9 +61,7 @@ function collectPrimitiveFields(value, output = [], trail = []) {
 
 function firstString(fields, keys) {
   for (const key of keys) {
-    const match = fields.find(
-      (field) => field.key === key || field.path.endsWith(`.${key}`),
-    );
+    const match = fields.find((field) => field.key === key || field.path.endsWith(`.${key}`));
     if (match && typeof match.value === "string" && match.value.trim()) {
       return match.value.trim();
     }
@@ -78,9 +71,7 @@ function firstString(fields, keys) {
 
 function firstNumber(fields, keys) {
   for (const key of keys) {
-    const match = fields.find(
-      (field) => field.key === key || field.path.endsWith(`.${key}`),
-    );
+    const match = fields.find((field) => field.key === key || field.path.endsWith(`.${key}`));
     if (!match) continue;
     const numeric = Number(match.value);
     if (Number.isFinite(numeric) && numeric >= 0) return numeric;
@@ -89,16 +80,12 @@ function firstNumber(fields, keys) {
 }
 
 function parseMessageFallback(message) {
-  const method =
-    message.match(/\b(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\b/i)?.[1] ??
-    "";
+  const method = message.match(/\b(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\b/i)?.[1] ?? "";
   const path =
     message.match(/(\/storage\/v1\/[^\s|?]+)/i)?.[1] ??
     message.match(/(\/object\/[^\s|?]+)/i)?.[1] ??
     "";
-  const status = Number(
-    message.match(/(?:^|\s|\|)([1-5]\d{2})(?:\s|\||$)/)?.[1] ?? 0,
-  );
+  const status = Number(message.match(/(?:^|\s|\|)([1-5]\d{2})(?:\s|\||$)/)?.[1] ?? 0);
   return { method: method.toUpperCase(), path, status };
 }
 
@@ -108,13 +95,8 @@ export function normalizeStorageLogRecord(record) {
   const fallback = parseMessageFallback(message);
 
   const rawPath =
-    firstString(fields, [
-      "path",
-      "pathname",
-      "request_path",
-      "url",
-      "request_url",
-    ]) || fallback.path;
+    firstString(fields, ["path", "pathname", "request_path", "url", "request_url"]) ||
+    fallback.path;
   let pathname = rawPath;
   try {
     pathname = new URL(rawPath).pathname;
@@ -123,17 +105,10 @@ export function normalizeStorageLogRecord(record) {
   }
 
   const method = (
-    firstString(fields, ["method", "request_method", "http_method"]) ||
-    fallback.method
+    firstString(fields, ["method", "request_method", "http_method"]) || fallback.method
   ).toUpperCase();
-  const userAgent = firstString(fields, [
-    "user_agent",
-    "useragent",
-    "user-agent",
-  ]);
-  const status =
-    firstNumber(fields, ["status_code", "statuscode", "status"]) ||
-    fallback.status;
+  const userAgent = firstString(fields, ["user_agent", "useragent", "user-agent"]);
+  const status = firstNumber(fields, ["status_code", "statuscode", "status"]) || fallback.status;
   const responseBytes = firstNumber(fields, [
     "response_bytes",
     "response_size",
@@ -155,8 +130,7 @@ function increment(map, key, amount = 1) {
 
 function sortedEntries(map) {
   return [...map.entries()].sort(
-    (left, right) =>
-      right[1] - left[1] || left[0].localeCompare(right[0]),
+    (left, right) => right[1] - left[1] || left[0].localeCompare(right[0]),
   );
 }
 
@@ -196,18 +170,13 @@ export function summarizeStorageLogs(records) {
     if (record.method === "POST" && isSignedPath) {
       signRequests += 1;
       increment(signPaths, record.pathname);
-    } else if (
-      (record.method === "GET" || record.method === "HEAD") &&
-      isSignedPath
-    ) {
+    } else if ((record.method === "GET" || record.method === "HEAD") && isSignedPath) {
       signedDownloads += 1;
       increment(downloadPaths, record.pathname);
     }
   }
 
-  const repeatedSignPaths = new Map(
-    [...signPaths.entries()].filter(([, count]) => count > 1),
-  );
+  const repeatedSignPaths = new Map([...signPaths.entries()].filter(([, count]) => count > 1));
 
   return {
     input_records: records.length,
@@ -236,9 +205,7 @@ async function main() {
     );
   }
   const records = parseStorageLogExport(await readFile(inputPath, "utf8"));
-  process.stdout.write(
-    `${JSON.stringify(summarizeStorageLogs(records), null, 2)}\n`,
-  );
+  process.stdout.write(`${JSON.stringify(summarizeStorageLogs(records), null, 2)}\n`);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
