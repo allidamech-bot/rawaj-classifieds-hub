@@ -52,6 +52,7 @@ export function CommunicationCenterHero({
             "نظرة سريعة على الرسائل والتنبيهات قبل الانتقال إلى التفاصيل الكاملة.",
             "A quick view of messages and notifications before opening the full details.",
           );
+  const Heading = mode === "messages" ? "h2" : "h1";
 
   return (
     <section className="rawaj-communication-hero" data-mode={mode}>
@@ -60,7 +61,7 @@ export function CommunicationCenterHero({
           <Sparkles aria-hidden="true" />
           {text("مركز التواصل", "Communication center")}
         </p>
-        <h1>{title}</h1>
+        <Heading>{title}</Heading>
         <span>{description}</span>
       </div>
       <div className="rawaj-communication-hero__metrics">
@@ -144,10 +145,12 @@ export function ConversationSummaryItem({
   conversation,
   selected,
   onSelect,
+  dateLabel,
 }: {
   conversation: Conversation;
   selected: boolean;
   onSelect: () => void;
+  dateLabel: string;
 }) {
   return (
     <button
@@ -167,6 +170,7 @@ export function ConversationSummaryItem({
         {conversation.lastMessagePreview ? <p>{conversation.lastMessagePreview}</p> : null}
       </span>
       <span className="rawaj-conversation-summary__meta">
+        {dateLabel ? <time>{dateLabel}</time> : null}
         {conversation.unreadCount > 0 ? (
           <b>{conversation.unreadCount}</b>
         ) : (

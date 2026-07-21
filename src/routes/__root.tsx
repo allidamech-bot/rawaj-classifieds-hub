@@ -191,6 +191,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         ...(routeStyleScope.communication
           ? [{ rel: "stylesheet", href: routeStyleHrefs.communicationCenterV2 }]
           : []),
+        ...(routeStyleScope.messaging
+          ? [{ rel: "stylesheet", href: routeStyleHrefs.messagingV4 }]
+          : []),
         { rel: "stylesheet", href: comparisonFoundationCss },
         { rel: "stylesheet", href: marketplaceSystemCss },
         ...(routeStyleScope.ownerStore

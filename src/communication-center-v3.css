@@ -16,7 +16,7 @@
   display: none;
 }
 
-.rawaj-communication-hero[data-mode="messages"] .rawaj-communication-hero__copy h1 {
+.rawaj-communication-hero[data-mode="messages"] .rawaj-communication-hero__copy :is(h1, h2) {
   margin-top: 0;
   font-size: clamp(1.05rem, 3vw, 1.45rem);
   line-height: 1.25;
@@ -81,7 +81,7 @@
 
   .rawaj-message-workspace[data-view="conversation"] .rawaj-message-panel {
     display: flex !important;
-    min-height: calc(100dvh - 8.5rem);
+    min-height: calc(100dvh - 11rem);
   }
 
   .rawaj-message-workspace .rawaj-conversation-sidebar.hidden,

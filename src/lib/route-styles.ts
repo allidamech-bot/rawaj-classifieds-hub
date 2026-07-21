@@ -1,6 +1,7 @@
 import "../auth-stable-route-styles.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import communicationCenterV3Css from "../communication-center-v3.css?url";
+import messagingV4Css from "../messaging-v4.css?url";
 import homeDiscoveryV3Css from "../home-discovery-v3.css?url";
 import homeMarketplaceV2Css from "../home-marketplace-v2.css?url";
 import homeSignatureCss from "../home-signature.css?url";
@@ -43,6 +44,7 @@ export const routeStyleHrefs = {
   listingStudioV4: listingStudioV4Css,
   messagingSignature: messagingSignatureCss,
   communicationCenterV2: communicationCenterV3Css,
+  messagingV4: messagingV4Css,
   activityMoreFoundation: activityMoreFoundationCss,
   personalSpacePolish: personalSpacePolishCss,
   myStoreRedesign: myStoreRedesignCss,
