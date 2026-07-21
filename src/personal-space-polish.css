@@ -1,29 +1,32 @@
-/* Premium UI phase 6: coherent account, collection, and activity surfaces. */
+/* Premium account, collection, and activity surfaces — correction pass. */
 .rawaj-account-hub-v3,
 .rawaj-account-collection-v3,
 .rawaj-account-activity-v3,
 .rawaj-account-command-v3 {
-  --account-v3-ink: #123f36;
-  --account-v3-coral: #df693c;
-  --account-v3-gold: #c99a45;
-  --account-v3-line: color-mix(in srgb, var(--color-primary) 11%, var(--color-border));
-  --account-v3-surface: linear-gradient(145deg, #fffefa, #f8f7f1);
+  --account-v3-ink: var(--rawaj-primary, #123f38);
+  --account-v3-coral: var(--rawaj-accent-orange, #e9663c);
+  --account-v3-gold: var(--rawaj-accent-gold, #b98d43);
+  --account-v3-line: color-mix(in srgb, var(--rawaj-primary, #123f38) 16%, var(--rawaj-border, #d5ded8));
+  --account-v3-surface: var(--rawaj-card-background, #fffdf8);
   position: relative;
 }
 
+/* Remove decorative background haze that made sparse account pages look unfinished. */
 .rawaj-account-hub-v3::before,
 .rawaj-account-collection-v3::before,
 .rawaj-account-activity-v3::before,
 .rawaj-account-command-v3::before {
   content: "";
   position: absolute;
-  inset: -1rem 0 auto;
+  inset: -0.5rem 0 auto;
   z-index: -1;
-  height: 15rem;
-  border-radius: 2rem;
-  background:
-    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--account-v3-gold) 12%, transparent), transparent 38%),
-    radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--account-v3-coral) 9%, transparent), transparent 34%);
+  height: 10rem;
+  border-radius: 1.25rem;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--rawaj-brand-muted-background, #e5eee8) 62%, transparent),
+    transparent
+  );
   pointer-events: none;
 }
 
@@ -32,26 +35,35 @@
   position: relative;
   overflow: hidden;
   border: 1px solid var(--account-v3-line) !important;
-  border-radius: 1.45rem !important;
+  border-radius: var(--radius-card, 1rem) !important;
   background: var(--account-v3-surface) !important;
-  padding: 1.15rem !important;
-  box-shadow: 0 18px 42px rgba(16, 63, 53, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  padding: clamp(1rem, 3vw, 1.25rem) !important;
+  box-shadow: var(--shadow-soft, 0 6px 18px rgba(9, 45, 41, 0.045));
 }
 
 .rawaj-account-collection-v3 > section:first-child::after,
 .rawaj-account-activity-v3 > section:first-child::after {
   content: "";
   position: absolute;
-  inset-block: 0;
+  inset-block: 0.9rem;
   inset-inline-start: 0;
-  width: 0.28rem;
-  background: linear-gradient(180deg, var(--account-v3-coral), var(--account-v3-gold));
+  width: 3px;
+  border-radius: 999px;
+  background: var(--account-v3-coral);
 }
 
 .rawaj-account-collection-v3 > section:first-child h2,
 .rawaj-account-activity-v3 > section:first-child h2 {
   color: var(--account-v3-ink);
-  font-size: clamp(0.95rem, 2vw, 1.12rem);
+  font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+  line-height: 1.45;
+}
+
+.rawaj-account-collection-v3 > section:first-child p,
+.rawaj-account-activity-v3 > section:first-child p {
+  color: var(--rawaj-text-secondary, #536b63);
+  font-size: max(0.84rem, 13px);
+  line-height: 1.65;
 }
 
 .rawaj-account-collection-v3 > form,
@@ -62,39 +74,51 @@
 .rawaj-account-activity-v3 .rawaj-notification-preferences,
 .rawaj-account-activity-v3 .rawaj-communication-follow-up {
   border: 1px solid var(--account-v3-line) !important;
+  border-radius: var(--radius-card, 1rem) !important;
   background: var(--account-v3-surface) !important;
-  box-shadow: 0 14px 34px rgba(16, 63, 53, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  box-shadow: 0 3px 12px rgba(9, 45, 41, 0.045);
+}
+
+.rawaj-account-collection-v3 > ul,
+.rawaj-account-collection-v3 > div.grid,
+.rawaj-account-activity-v3 > div,
+.rawaj-account-hub-v3 .rawaj-account-overview-grid {
+  gap: clamp(0.75rem, 2vw, 1rem) !important;
 }
 
 .rawaj-account-collection-v3 > ul > li,
 .rawaj-account-collection-v3 > div.grid > article {
-  border-radius: 1.3rem !important;
-  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  min-height: 0;
+  padding: clamp(0.9rem, 2.5vw, 1.15rem) !important;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
-.rawaj-account-collection-v3 > ul > li:hover,
-.rawaj-account-collection-v3 > div.grid > article:hover {
-  border-color: color-mix(in srgb, var(--account-v3-coral) 30%, var(--account-v3-line)) !important;
-  box-shadow: 0 20px 42px rgba(16, 63, 53, 0.11);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .rawaj-account-collection-v3 > ul > li:hover,
+  .rawaj-account-collection-v3 > div.grid > article:hover {
+    border-color: color-mix(in srgb, var(--account-v3-coral) 24%, var(--account-v3-line)) !important;
+    box-shadow: 0 8px 22px rgba(9, 45, 41, 0.075);
+  }
 }
 
 :is(.rawaj-account-collection-v3, .rawaj-account-hub-v3) :is(button, a).bg-primary {
-  border: 1px solid color-mix(in srgb, var(--account-v3-coral) 75%, #9f3d20) !important;
-  background: linear-gradient(145deg, #ed7b4d, #d75d32) !important;
+  border: 1px solid color-mix(in srgb, var(--account-v3-coral) 78%, #a84427) !important;
+  border-radius: var(--radius-button, 0.78rem) !important;
+  background: var(--account-v3-coral) !important;
   color: white !important;
-  box-shadow: 0 12px 25px rgba(201, 81, 39, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow: 0 5px 14px rgba(233, 102, 60, 0.18);
 }
 
 :is(.rawaj-account-collection-v3, .rawaj-account-hub-v3) :is(button, a).bg-primary:hover {
-  filter: saturate(1.04) brightness(1.02);
-  transform: translateY(-1px);
+  filter: brightness(0.97) saturate(1.02);
 }
 
 :is(.rawaj-account-collection-v3, .rawaj-account-hub-v3) :is(input, textarea, select) {
-  border-color: var(--account-v3-line) !important;
-  background: rgba(255, 254, 250, 0.96) !important;
-  box-shadow: inset 0 1px 2px rgba(16, 63, 53, 0.035);
+  min-height: var(--rawaj-control-height, 2.875rem);
+  border-color: var(--rawaj-border-strong, #aebfb6) !important;
+  border-radius: var(--radius-input, 0.7rem) !important;
+  background: var(--rawaj-card-background, #fffdf8) !important;
+  box-shadow: none;
 }
 
 :is(.rawaj-account-collection-v3, .rawaj-account-hub-v3) :is(input, textarea, select):focus-visible {
@@ -104,72 +128,98 @@
 
 .rawaj-account-activity-v3 .rawaj-activity-tabs {
   border: 1px solid var(--account-v3-line);
-  border-radius: 1rem;
-  background: rgba(255, 254, 250, 0.82);
-  padding: 0.35rem;
-  box-shadow: 0 10px 28px rgba(16, 63, 53, 0.06);
+  border-radius: 0.85rem;
+  background: var(--rawaj-muted-surface, #e9efea);
+  padding: 0.28rem;
+  box-shadow: none;
+}
+
+.rawaj-account-activity-v3 .rawaj-activity-tabs button {
+  min-height: 2.55rem;
+  border-radius: 0.65rem;
+  font-size: max(0.82rem, 13px);
 }
 
 .rawaj-account-activity-v3 .rawaj-activity-tabs button[aria-selected="true"] {
-  background: linear-gradient(140deg, #174b41, #0f5b4d);
+  background: var(--rawaj-primary, #123f38);
   color: white;
-  box-shadow: 0 9px 20px rgba(16, 74, 62, 0.2);
+  box-shadow: 0 3px 10px rgba(9, 45, 41, 0.16);
 }
 
 .rawaj-account-activity-v3 :is(.rawaj-notification-timeline, .rawaj-activity-conversation) {
-  border-radius: 1rem;
-  transition: background-color 160ms ease, transform 160ms ease;
+  border-radius: 0.85rem;
+  transition: background-color 160ms ease, border-color 160ms ease;
 }
 
 .rawaj-account-activity-v3 .rawaj-notification-timeline[data-read="false"] {
   border-inline-start: 3px solid var(--account-v3-gold);
-  background: color-mix(in srgb, var(--account-v3-gold) 7%, #fffefa);
+  background: color-mix(in srgb, var(--account-v3-gold) 6%, var(--rawaj-card-background, #fffdf8));
 }
 
 .rawaj-account-command-v3 :is(.rawaj-more-v2__command, .rawaj-more-v2__secondary) > a {
+  min-height: 4.25rem;
   border-color: var(--account-v3-line) !important;
-  box-shadow: 0 14px 32px rgba(16, 63, 53, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.84);
+  border-radius: var(--radius-card, 1rem) !important;
+  background: var(--rawaj-card-background, #fffdf8) !important;
+  box-shadow: 0 3px 12px rgba(9, 45, 41, 0.045);
 }
 
 .rawaj-account-command-v3 .rawaj-more-v2__command > a:first-child {
-  background: radial-gradient(circle at 90% 0%, rgba(225, 112, 65, 0.18), transparent 36%), linear-gradient(145deg, #174b41, #0f392f) !important;
+  background: var(--rawaj-primary, #123f38) !important;
   color: white;
 }
 
-.rawaj-account-hub-v3 .rawaj-account-overview-grid { gap: 1rem; }
+.rawaj-account-hub-v3 .rawaj-account-overview-grid {
+  gap: 0.85rem;
+}
 
 .rawaj-account-hub-v3 .rawaj-account-card {
   position: relative;
   overflow: hidden;
+  min-height: 0;
   border: 1px solid var(--account-v3-line) !important;
-  border-radius: 1.35rem !important;
+  border-radius: var(--radius-card, 1rem) !important;
   background: var(--account-v3-surface) !important;
-  box-shadow: 0 16px 38px rgba(16, 63, 53, 0.08);
+  box-shadow: 0 4px 14px rgba(9, 45, 41, 0.05);
 }
 
 .rawaj-account-hub-v3 .rawaj-account-card::before {
-  content: "";
-  position: absolute;
-  inset-inline: 1rem;
-  top: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--account-v3-gold), transparent);
-  opacity: 0.7;
+  display: none;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-card :is(h2, h3, strong) {
+  color: var(--account-v3-ink);
+}
+
+.rawaj-account-hub-v3 .rawaj-account-card :is(p, span) {
+  line-height: 1.55;
 }
 
 @media (min-width: 768px) {
   :is(.rawaj-account-collection-v3, .rawaj-account-activity-v3, .rawaj-account-hub-v3, .rawaj-account-command-v3) {
-    padding-top: 1.25rem !important;
-  }
-
-  :is(.rawaj-account-collection-v3, .rawaj-account-activity-v3) > section:first-child {
-    padding: 1.4rem 1.5rem !important;
+    padding-top: 1rem !important;
   }
 }
 
 @media (max-width: 639px) {
   :is(.rawaj-account-hub-v3, .rawaj-account-collection-v3, .rawaj-account-activity-v3, .rawaj-account-command-v3) {
     padding-inline: 0.75rem !important;
+  }
+
+  .rawaj-account-collection-v3 > section:first-child,
+  .rawaj-account-activity-v3 > section:first-child {
+    padding: 0.95rem !important;
+  }
+
+  .rawaj-account-command-v3 :is(.rawaj-more-v2__command, .rawaj-more-v2__secondary) > a {
+    min-height: 3.9rem;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .rawaj-account-collection-v3 > ul > li,
+  .rawaj-account-collection-v3 > div.grid > article {
+    transform: none !important;
   }
 }
 
