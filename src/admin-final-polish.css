@@ -1,0 +1,8 @@
+/* Final admin overrides; the complete admin system remains in styles.css. */
+.rawaj-admin-v3{--admin-v3-coral:var(--rawaj-accent-orange,#e9663c);gap:1rem}
+.rawaj-admin-v3>div:first-child{margin-bottom:0!important;border-radius:.85rem!important;box-shadow:none!important}
+.rawaj-admin-v3>div:nth-child(2){margin-bottom:0!important;border-radius:1rem!important;box-shadow:0 5px 18px rgba(9,45,41,.06)!important}
+.rawaj-admin-v3 nav a[aria-current="page"]{background:var(--rawaj-primary,#123f38)!important;color:#fff!important}
+.rawaj-admin-v3 :is(input,textarea,select):focus-visible,.rawaj-admin-v3 :is(button,a):focus-visible{outline:3px solid color-mix(in srgb,var(--admin-v3-coral) 18%,transparent);outline-offset:2px}
+@media (hover:none),(pointer:coarse){.rawaj-admin-v3 :is(button,a,article,section){transform:none!important}}
+@media (prefers-reduced-motion:reduce){.rawaj-admin-v3 *{transition-duration:.01ms!important;animation-duration:.01ms!important}}
