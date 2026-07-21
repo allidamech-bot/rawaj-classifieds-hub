@@ -6,6 +6,11 @@ const header = await readFile(
   new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url),
   "utf8",
 );
+const brand = await readFile(
+  new URL("../src/components/shell/BrandLockup.tsx", import.meta.url),
+  "utf8",
+);
+const footer = await readFile(new URL("../src/components/SiteFooter.tsx", import.meta.url), "utf8");
 
 test("mobile header keeps secondary controls off small screens", () => {
   assert.match(header, /toggleLanguage[\s\S]*lg:inline-flex/);
@@ -14,7 +19,16 @@ test("mobile header keeps secondary controls off small screens", () => {
 
 test("header typography respects functional minimums", () => {
   assert.doesNotMatch(header, /text-\[8px\]|text-\[9px\]|text-\[10px\]/);
-  assert.match(header, /text-\[11px\]/);
+  assert.match(brand, /text-\[11px\]/);
+});
+
+test("global shell shares one bilingual brand lockup", () => {
+  assert.match(header, /<BrandLockup/);
+  assert.match(footer, /<BrandLockup inverse/);
+  assert.match(brand, /rawaj-mark-transparent-192\.png/);
+  assert.match(brand, />\s*رواج\s*</);
+  assert.match(brand, />\s*RAWAJ\s*</);
+  assert.match(footer, /rawaj-site-footer/);
 });
 
 test("header controls expose mobile touch targets", () => {

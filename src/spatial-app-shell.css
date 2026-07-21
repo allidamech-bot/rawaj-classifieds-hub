@@ -3,25 +3,22 @@
  */
 
 :root {
-  --depth-page: 0;
-  --depth-surface: 10;
-  --depth-card: 20;
-  --depth-floating: 30;
-  --depth-sheet: 50;
-  --depth-navigation: 60;
+  --depth-page: var(--z-base);
+  --depth-surface: calc(var(--z-base) + 1);
+  --depth-card: calc(var(--z-base) + 2);
+  --depth-floating: var(--z-sticky);
+  --depth-sheet: var(--z-overlay);
+  --depth-navigation: var(--z-dock);
 
   --shadow-xs: var(--rawaj-shadow-xs);
-  --shadow-card: 0 10px 28px rgba(18, 63, 56, 0.1);
-  --shadow-raised: 0 16px 40px rgba(18, 63, 56, 0.14);
-  --shadow-floating: 0 18px 46px rgba(18, 63, 56, 0.18);
-  --shadow-dock: 0 20px 52px rgba(11, 45, 41, 0.22);
-  --shadow-sheet: 0 -18px 50px rgba(11, 45, 41, 0.2);
-  --shadow-modal: 0 28px 70px rgba(11, 45, 41, 0.26);
+  --shadow-card: var(--rawaj-shadow-sm);
+  --shadow-raised: var(--rawaj-shadow-md);
+  --shadow-floating: var(--rawaj-shadow-md);
+  --shadow-dock: var(--rawaj-shadow-lg);
+  --shadow-sheet: var(--shadow-overlay);
+  --shadow-modal: var(--shadow-overlay);
 
-  --motion-fast: 150ms;
-  --motion-base: 220ms;
-  --motion-slow: 300ms;
-  --motion-spring: 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-spring: var(--rawaj-motion-slow) var(--motion-ease);
 
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -182,7 +179,7 @@ body {
   background: color-mix(in srgb, var(--color-card) 93%, transparent);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.82) inset,
-    var(--shadow-floating);
+    var(--rawaj-shadow-sm);
   backdrop-filter: blur(16px) saturate(135%);
 }
 
@@ -208,11 +205,13 @@ body {
 }
 
 .rawaj-bottom-nav-shell {
-  min-height: 4.55rem;
+  min-height: 4.4rem;
+  border: 1px solid var(--rawaj-border);
   border-radius: 1.35rem;
+  background: color-mix(in srgb, var(--rawaj-card-background) 96%, var(--rawaj-subtle-background));
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.82) inset,
-    var(--shadow-dock);
+    0 10px 32px rgba(11, 45, 41, 0.14);
 }
 
 .rawaj-dock-item {
@@ -240,8 +239,9 @@ body {
   transform: translateY(1px) scale(0.96);
 }
 
-.rawaj-dock-active-indicator {
-  background: linear-gradient(90deg, var(--rawaj-orange), var(--rawaj-gold));
+.rawaj-dock-create {
+  background: var(--rawaj-accent-orange);
+  box-shadow: 0 8px 20px rgba(228, 112, 69, 0.22);
 }
 
 .rawaj-notification-badge {
@@ -303,6 +303,29 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 
 .rawaj-page-transition {
   animation: none;
+}
+
+/* Desktop brand anchor */
+.rawaj-site-footer {
+  border-top: 1px solid color-mix(in srgb, var(--rawaj-accent-gold) 22%, transparent);
+  background: var(--rawaj-primary-deep);
+  color: var(--rawaj-text-inverse);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.rawaj-brand-mark {
+  border: 1px solid color-mix(in srgb, var(--rawaj-primary-deep) 10%, var(--rawaj-border));
+  border-radius: 0.8rem;
+  background: var(--rawaj-card-background);
+}
+
+.rawaj-brand-lockup[data-inverse="true"] .rawaj-brand-mark {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rawaj-brand-divider {
+  background: color-mix(in srgb, currentColor 18%, transparent);
 }
 
 @media (min-width: 1024px) {

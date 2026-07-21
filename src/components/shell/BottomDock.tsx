@@ -63,7 +63,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
       aria-label={text("التنقل الرئيسي", "Primary navigation")}
     >
       <div
-        className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid max-w-[31rem] grid-cols-5 items-end px-1.5 pb-1 pt-1.5"
+        className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid max-w-[30rem] grid-cols-5 items-end px-1.5 pb-1 pt-1.5"
         role="list"
       >
         {items.map((item) => {
@@ -94,7 +94,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
               data-active={active}
               data-primary={item.primary === true}
               data-badge-count={badgeCount > 0 ? badgeCount : undefined}
-              className={`rawaj-dock-item relative flex min-h-[3.7rem] min-w-0 flex-col items-center justify-end gap-1 rounded-[0.95rem] px-1 pb-1.5 pt-1 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
+              className={`rawaj-dock-item relative flex min-h-[3.6rem] min-w-0 flex-col items-center justify-end gap-1 rounded-[0.85rem] px-1 pb-1.5 pt-1 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
                 item.primary ? "text-brand-orange" : ""
               }`}
               aria-label={accessibleLabel}
@@ -104,7 +104,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
                 data-active={active && !item.primary}
                 className={`relative grid place-items-center ${
                   item.primary
-                    ? "rawaj-dock-create -mt-5 h-12 w-12 rounded-[1.15rem] ring-4 ring-card"
+                    ? "rawaj-dock-create -mt-3 h-11 w-11 rounded-[1rem] ring-[3px] ring-card"
                     : "rawaj-dock-icon h-8 w-9 rounded-xl"
                 }`}
               >
@@ -123,18 +123,12 @@ export function BottomDock({ pathname }: BottomDockProps) {
                 ) : null}
               </span>
               <span
-                className={`rawaj-bottom-dock__label max-w-full truncate text-[11px] leading-tight ${
+                className={`rawaj-bottom-dock__label max-w-full truncate text-xs leading-tight ${
                   active || item.primary ? "font-bold" : "font-medium"
                 }`}
               >
                 {label}
               </span>
-              {active && !item.primary ? (
-                <span
-                  aria-hidden="true"
-                  className="rawaj-dock-active-indicator absolute inset-x-4 bottom-0 h-0.5 rounded-full"
-                />
-              ) : null}
             </Link>
           );
         })}

@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 import { useUiPreferences } from "@/lib/ui-preferences";
+import { BrandLockup } from "@/components/shell/BrandLockup";
 
 const groups: {
   titleAr: string;
@@ -41,19 +42,34 @@ export function SiteFooter() {
   const { text } = useUiPreferences();
 
   return (
-    <footer className="mt-10 hidden border-t border-border bg-card-warm lg:block">
-      <div className="container-wide grid grid-cols-2 gap-6 py-8 sm:grid-cols-3">
+    <footer className="rawaj-site-footer mt-12 hidden lg:block">
+      <div className="container-wide grid grid-cols-[minmax(16rem,1.45fr)_repeat(3,minmax(0,1fr))] gap-10 py-12">
+        <div className="max-w-sm">
+          <Link to="/" aria-label={text("رواج — الرئيسية", "RAWAJ — Home")}>
+            <BrandLockup inverse />
+          </Link>
+          <p className="mt-5 text-sm leading-7 text-primary-foreground/70">
+            {text(
+              "سوق سوري منظم للإعلانات المبوبة، صُمم ليجعل الاكتشاف والتواصل أكثر وضوحاً وأماناً.",
+              "A focused Syrian classifieds marketplace built for clearer discovery and safer direct contact.",
+            )}
+          </p>
+          <span className="mt-5 inline-flex items-center gap-2 rounded-full border border-primary-foreground/15 bg-primary-foreground/5 px-3 py-2 text-xs font-bold text-primary-foreground/80">
+            <ShieldCheck className="h-4 w-4 text-gold" aria-hidden="true" />
+            {text("تصفح واعٍ وتواصل مباشر", "Thoughtful browsing, direct contact")}
+          </span>
+        </div>
         {groups.map((group) => (
           <div key={group.titleAr}>
-            <h4 className="mb-2 text-xs font-extrabold text-foreground">
+            <h2 className="mb-4 text-sm font-extrabold text-primary-foreground">
               {text(group.titleAr, group.titleEn)}
-            </h4>
-            <ul className="space-y-1.5">
+            </h2>
+            <ul className="space-y-3">
               {group.links.map((link) => (
                 <li key={link.to}>
                   <Link
                     to={link.to as "/"}
-                    className="text-xs text-muted-foreground transition hover:text-primary"
+                    className="text-sm text-primary-foreground/65 transition-colors hover:text-primary-foreground"
                   >
                     {text(link.labelAr, link.labelEn)}
                   </Link>
@@ -63,14 +79,13 @@ export function SiteFooter() {
           </div>
         ))}
       </div>
-      <div className="border-t border-border">
-        <div className="container-wide flex flex-wrap items-center justify-between gap-2 py-4">
-          <p className="text-[11px] text-muted-foreground">
+      <div className="border-t border-primary-foreground/10">
+        <div className="container-wide flex flex-wrap items-center justify-between gap-3 py-5">
+          <p className="text-xs text-primary-foreground/55">
             © {new Date().getFullYear()}{" "}
             {text("رَوَاج · سوق سوريا المجاني للإعلانات", "RAWAJ · Syria classifieds marketplace")}
           </p>
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted-surface px-2 py-1 text-[10px] font-bold text-muted-foreground">
-            <ShieldCheck className="h-3 w-3 text-gold" />{" "}
+          <span className="text-xs font-semibold text-primary-foreground/65">
             {text("سوريا فقط · تصفح آمن", "Syria only · Safe browsing")}
           </span>
         </div>
