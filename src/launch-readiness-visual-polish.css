@@ -120,7 +120,7 @@ body {
 
 .rawaj-surface::after,
 .rawaj-hero-surface::before {
-  opacity: 0.38;
+  opacity: 0.28;
 }
 
 .rawaj-surface,
@@ -222,21 +222,21 @@ body {
 
 /* Storefront: rating and trust belong beside identity, not buried below it. */
 .rawaj-storefront-v2::before {
-  opacity: 0.45;
+  opacity: 0.32;
 }
 
 .rawaj-storefront-identity {
   border-radius: var(--radius-hero);
-  background: linear-gradient(150deg, #092d29, #123f38 72%, #1a5147);
-  box-shadow: 0 16px 38px rgba(9, 45, 41, 0.16);
+  background: linear-gradient(150deg, #092d29, #123f38 76%, #1a5147);
+  box-shadow: 0 10px 30px rgba(9, 45, 41, 0.13);
 }
 
 .rawaj-storefront-identity__pattern {
-  opacity: 0.28;
+  opacity: 0.18;
 }
 
 .rawaj-storefront-identity__content {
-  min-height: clamp(20rem, 56vw, 27rem);
+  min-height: clamp(18rem, 50vw, 24rem);
   padding: clamp(1rem, 3.5vw, 1.65rem);
 }
 
@@ -244,12 +244,12 @@ body {
   width: clamp(4.75rem, 18vw, 6.25rem);
   height: clamp(4.75rem, 18vw, 6.25rem);
   border-width: 2px;
-  border-radius: 1.1rem;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+  border-radius: 1rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
 }
 
 .rawaj-storefront-identity__copy h1 {
-  font-size: clamp(1.45rem, 6vw, 2.35rem);
+  font-size: clamp(1.45rem, 6vw, 2.2rem);
   font-weight: 800;
 }
 
@@ -259,20 +259,20 @@ body {
 }
 
 .rawaj-storefront-identity__bio {
-  margin-top: 0.75rem;
-  line-height: 1.7;
+  margin-top: 0.7rem;
+  line-height: 1.65;
 }
 
 .rawaj-storefront-identity__metrics {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.45rem;
-  margin-top: 0.8rem;
+  margin-top: 0.75rem;
 }
 
 .rawaj-storefront-identity__metrics > div {
-  border-radius: 0.72rem;
-  padding: 0.58rem;
-  backdrop-filter: blur(8px);
+  border-radius: 0.7rem;
+  padding: 0.56rem;
+  backdrop-filter: none;
 }
 
 .rawaj-storefront-identity__metrics strong {
@@ -280,19 +280,19 @@ body {
 }
 
 .rawaj-storefront-identity__actions {
-  margin-top: 0.8rem;
+  margin-top: 0.75rem;
 }
 
 .rawaj-storefront-identity__actions a,
 .rawaj-storefront-identity__actions button {
-  border-radius: 0.75rem;
+  border-radius: 0.72rem;
   padding-inline: 0.85rem;
-  backdrop-filter: blur(8px);
+  backdrop-filter: none;
 }
 
 .rawaj-storefront-identity__actions [data-tone="primary"] {
   background: var(--rawaj-accent-orange);
-  box-shadow: 0 6px 16px rgba(233, 102, 60, 0.22);
+  box-shadow: 0 5px 14px rgba(233, 102, 60, 0.18);
 }
 
 .rawaj-storefront-section-header {
