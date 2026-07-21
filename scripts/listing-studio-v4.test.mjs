@@ -26,11 +26,13 @@ test("phase 4 keeps publishing behavior untouched while improving form semantics
   assert.doesNotMatch(css, /display:\s*none[^}]*\.input|pointer-events:\s*none[^}]*\.rawaj-studio-action-bar/);
 });
 
-test("phase 4 establishes readable controls, touch targets, and responsive layouts", () => {
-  assert.match(css, /min-height:\s*3\.25rem/);
-  assert.match(css, /font-size:\s*0\.75rem/);
+test("phase 4 establishes readable controls, compact sections, and responsive layouts", () => {
+  assert.match(css, /min-height:\s*3rem/);
+  assert.match(css, /font-size:\s*max\(0\.88rem, 14px\)/);
+  assert.match(css, /border-radius:\s*var\(--radius-card/);
+  assert.match(css, /@media \(hover: hover\) and \(pointer: fine\)/);
   assert.match(css, /@media \(min-width: 1024px\)/);
-  assert.match(css, /@media \(max-width: 639px\)/);
+  assert.match(css, /@media \(max-width: 767px\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
