@@ -1,0 +1,54 @@
+name: Public Release Audit Format Diagnostic
+
+on:
+  push:
+    branches:
+      - agent/syria-non-supabase-release-gate
+    paths:
+      - ".github/workflows/public-release-audit-format-diagnostic.yml"
+      - "scripts/audit-public-release-candidate.mjs"
+      - "scripts/public-release-candidate-audit.test.mjs"
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --silent
+
+      - name: Capture ESLint diagnostics
+        shell: bash
+        run: |
+          set +e
+          npx eslint scripts/audit-public-release-candidate.mjs scripts/public-release-candidate-audit.test.mjs \
+            > eslint-diagnostics.txt 2>&1
+          status=$?
+          printf '\nESLINT_EXIT=%s\n' "$status" >> eslint-diagnostics.txt
+          exit 0
+
+      - name: Produce exact Prettier output
+        run: npx prettier --write scripts/audit-public-release-candidate.mjs
+
+      - name: Upload diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-release-audit-format-${{ github.sha }}
+          path: |
+            eslint-diagnostics.txt
+            scripts/audit-public-release-candidate.mjs
+          if-no-files-found: error
+          retention-days: 2
