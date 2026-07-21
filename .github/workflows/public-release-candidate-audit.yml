@@ -1,0 +1,57 @@
+name: Public Release Candidate Audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Exact HTTPS origin to audit (rawa-j.com or a Vercel deployment)"
+        required: true
+        type: string
+      expected_commit:
+        description: "Expected Git commit SHA exposed by the deployed build"
+        required: true
+        type: string
+      require_configured_app_links:
+        description: "Require assetlinks.json HTTP 200 instead of accepting fail-closed 503"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-release-candidate-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      RAWAJ_RELEASE_BASE_URL: ${{ inputs.base_url }}
+      RAWAJ_EXPECTED_COMMIT_SHA: ${{ inputs.expected_commit }}
+      RAWAJ_ALLOW_ASSETLINKS_503: ${{ inputs.require_configured_app_links && '0' || '1' }}
+      RAWAJ_RELEASE_AUDIT_OUTPUT: rawaj-public-release-audit.json
+      RAWAJ_RELEASE_AUDIT_TIMEOUT_MS: "20000"
+
+    steps:
+      - name: Checkout selected release code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Audit public release candidate
+        run: node scripts/audit-public-release-candidate.mjs
+
+      - name: Upload public release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-release-candidate-audit-${{ github.run_id }}
+          path: rawaj-public-release-audit.json
+          if-no-files-found: warn
+          retention-days: 14
