@@ -117,7 +117,10 @@ test("public seller and review DTOs are explicit privacy allowlists", () => {
 
 test("seller inventory reuses the sanitized public listing contract and exact visibility count", () => {
   assert.equal(PUBLIC_SELLER_LISTING_LIMIT, 24);
-  assert.match(sellerApi, /\.select\(publicListingSelect, \{ count: "exact" \}\)/);
+  assert.match(
+    sellerApi,
+    /\.select\(publicListingSelectForSchema\(supportsSypDenomination\), \{ count: "exact" \}\)/,
+  );
   assert.match(sellerApi, /\.eq\("owner_id", sellerId\)/);
   assert.match(sellerApi, /\.eq\("status", "approved"\)/);
   assert.match(sellerApi, /\.is\("archived_at", null\)/);
