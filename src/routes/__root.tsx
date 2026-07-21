@@ -185,9 +185,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         ...(routeStyleScope.listingStudio
           ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioV4 }]
           : []),
-        ...(routeStyleScope.messaging
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.messagingSignature }]
-          : []),
         ...(routeStyleScope.communication
           ? [{ rel: "stylesheet", href: routeStyleHrefs.communicationCenterV2 }]
           : []),

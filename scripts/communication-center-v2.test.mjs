@@ -32,7 +32,7 @@ const [
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
 ]);
 
-test("communication center V3 refinement loads after messaging and retains the V2 base", () => {
+test("communication center V3 refinement retains the V2 base and precedes the phase 5 layer", () => {
   assert.match(
     routeStyles,
     /import communicationCenterV3Css from "\.\.\/communication-center-v3\.css\?url"/,
@@ -40,11 +40,9 @@ test("communication center V3 refinement loads after messaging and retains the V
   assert.match(routeStyles, /communicationCenterV2: communicationCenterV3Css/);
   assert.match(cssV3, /@import "\.\/communication-center-v2\.css"/);
 
-  const messaging = root.indexOf("routeStyleHrefs.messagingSignature");
   const communication = root.indexOf("routeStyleHrefs.communicationCenterV2");
-  assert.notEqual(messaging, -1);
   assert.notEqual(communication, -1);
-  assert.ok(communication > messaging);
+  assert.ok(root.indexOf("routeStyleHrefs.messagingV4") > communication);
 });
 
 test("shared communication components avoid unsupported presence and read claims", () => {
