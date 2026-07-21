@@ -73,19 +73,9 @@ const checkoutCommitSha = execFileSync("git", ["rev-parse", "HEAD"], {
   cwd: repositoryRoot,
   encoding: "utf8",
 }).trim();
-const sourceCommitSha = (
-  process.env.ANDROID_RC_SOURCE_COMMIT || checkoutCommitSha
-).trim();
-assert.match(
-  checkoutCommitSha,
-  /^[0-9a-f]{40}$/i,
-  "Could not resolve the checked-out commit SHA.",
-);
-assert.match(
-  sourceCommitSha,
-  /^[0-9a-f]{40}$/i,
-  "Could not resolve the source branch commit SHA.",
-);
+const sourceCommitSha = (process.env.ANDROID_RC_SOURCE_COMMIT || checkoutCommitSha).trim();
+assert.match(checkoutCommitSha, /^[0-9a-f]{40}$/i, "Could not resolve the checked-out commit SHA.");
+assert.match(sourceCommitSha, /^[0-9a-f]{40}$/i, "Could not resolve the source branch commit SHA.");
 
 const shortSha = sourceCommitSha.slice(0, 12).toLowerCase();
 const safeVersionName = expected.versionName.replace(/[^0-9A-Za-z._-]+/g, "-");
