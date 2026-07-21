@@ -1,27 +1,22 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const supportChecks = new WeakMap<object, Promise<boolean>>();
+const sypDenominationSchemaEnabled = import.meta.env.VITE_RAWAJ_SYP_DENOMINATION_SCHEMA === "1";
 
 /**
- * Detects whether the connected database has the additive Phase A columns.
+ * Returns the explicitly activated Phase A schema state.
  *
- * Pull-request previews intentionally continue to use the current Production
- * database before the reviewed migration is applied. Public reads therefore
- * need to work against both the legacy and Phase A schemas during rollout.
+ * Pull-request previews intentionally use the current Production database before
+ * the reviewed migration is applied. Probing a missing column makes compatibility
+ * work, but it also writes an avoidable PostgreSQL error for every fresh SSR
+ * client. Phase A therefore uses a two-step release gate instead:
+ *
+ * 1. Apply and verify the additive migration.
+ * 2. Set VITE_RAWAJ_SYP_DENOMINATION_SCHEMA=1 and rebuild the client.
+ *
+ * The flag defaults to disabled, so deploying application code before the
+ * migration keeps every read and write on the legacy schema without issuing an
+ * invalid database query.
  */
-export function supportsSypDenominationSchema(client: SupabaseClient): Promise<boolean> {
-  const cached = supportChecks.get(client);
-  if (cached) return cached;
-
-  const check = (async () => {
-    try {
-      const { error } = await client.from("listings").select("price_denomination").limit(0);
-      return error === null;
-    } catch {
-      return false;
-    }
-  })();
-
-  supportChecks.set(client, check);
-  return check;
+export function supportsSypDenominationSchema(_client: SupabaseClient): Promise<boolean> {
+  return Promise.resolve(sypDenominationSchemaEnabled);
 }

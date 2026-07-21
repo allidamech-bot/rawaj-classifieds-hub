@@ -136,7 +136,8 @@ test("Phase A reads and writes remain compatible before the additive migration",
   const listingWrite = await readPhaseAText("src/lib/api/listing-write-rpc.ts");
   const denominationApi = await readPhaseAText("src/lib/api/syp-denomination.ts");
 
-  assert.match(schema, /select\("price_denomination"\)\.limit\(0\)/);
+  assert.match(schema, /VITE_RAWAJ_SYP_DENOMINATION_SCHEMA === "1"/);
+  assert.doesNotMatch(schema, /select\("price_denomination"\)/);
   assert.match(fields, /publicListingLegacySelect/);
   assert.match(fields, /publicListingSelectForSchema\(supportsSypDenomination: boolean\): string/);
   assert.match(listings, /supportsSypDenominationSchema/);

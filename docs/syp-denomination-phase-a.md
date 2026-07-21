@@ -38,11 +38,13 @@ Phase A adds explicit denomination metadata without changing any stored `price`.
 
 ## Pre-migration deployment compatibility
 
-- The client probes once per Supabase client instance for the additive `price_denomination` column and caches the result.
-- Before the migration exists, public listing reads use the legacy field set and preserve the current raw-`price` filtering, ordering, and cursor behavior instead of failing on missing columns.
-- After the migration exists, the same paths automatically switch to denomination metadata and `price_new_syp_normalized`.
-- Draft creation and owner updates omit `price_denomination` only while connected to the legacy schema, preventing Preview environments from sending unsupported RPC patch keys or insert columns.
-- The unclassified queue returns an empty result before migration, and classification requests return an explicit `schema_missing` result.
+- Phase A activation is controlled by the explicit build flag `VITE_RAWAJ_SYP_DENOMINATION_SCHEMA=1`.
+- The flag defaults to disabled. Application code deployed before the migration therefore uses the legacy field set and preserves the current raw-`price` filtering, ordering, cursor, create, and update behavior.
+- The client does not probe the missing `price_denomination` column. This prevents Preview and SSR builds from writing expected missing-column errors into the Production PostgreSQL logs.
+- After the additive migration is applied and verified, set `VITE_RAWAJ_SYP_DENOMINATION_SCHEMA=1` for the intended environment and rebuild that client. The same paths then switch to denomination metadata and `price_new_syp_normalized`.
+- Draft creation and owner updates omit `price_denomination` while the flag is disabled, preventing Preview environments from sending unsupported RPC patch keys or insert columns.
+- The unclassified queue returns an empty result while the flag is disabled, and classification requests return an explicit `schema_missing` result.
+- Rollback requires disabling the flag and rebuilding clients before removing the additive database objects.
 - This compatibility layer is a rollout safeguard only. It does not replace independent Staging acceptance and must not be used to authorize Production activation before the migration gate is complete.
 
 ## Free local apply/rollback rehearsal
@@ -68,21 +70,30 @@ This is stronger than a normal schema replay, but it remains a local disposable 
 
 ## Staging acceptance
 
-1. Apply `202607210001_syp_denomination_phase_a.sql` to Staging only.
-2. Record the pre-apply count and checksum/snapshot of `listings.id`, `price`, and `currency`.
-3. Confirm existing `price` values are byte-for-byte unchanged after apply.
-4. Confirm all existing priced SYP rows are `unclassified` and have a null normalized value.
-5. Create one old-SYP and one new-SYP draft.
-6. Verify normalized values and dual display.
-7. Verify submission fails for `unclassified`.
-8. Verify owner and moderator classification queues, including stale-write rejection.
-9. Verify price filtering, sorting, and cursor pagination use normalized values.
-10. Verify saved-search price alerts exclude unclassified listings.
-11. Verify favorite snapshots and price-drop history retain denomination metadata.
-12. Verify structured data omits unclassified offers and uses the normalized new-SYP amount after classification.
-13. Rehearse `scripts/sql/syp-denomination-phase-a-rollback.sql` against a disposable Staging copy.
-14. Re-run the full local replay and acceptance suite after rollback and confirm the baseline schema/functions are restored.
+1. Keep `VITE_RAWAJ_SYP_DENOMINATION_SCHEMA` disabled in the existing Staging client.
+2. Apply `202607210001_syp_denomination_phase_a.sql` to Staging only.
+3. Record the pre-apply count and checksum/snapshot of `listings.id`, `price`, and `currency`.
+4. Confirm existing `price` values are byte-for-byte unchanged after apply.
+5. Confirm all existing priced SYP rows are `unclassified` and have a null normalized value.
+6. Set `VITE_RAWAJ_SYP_DENOMINATION_SCHEMA=1` in Staging and rebuild the client.
+7. Create one old-SYP and one new-SYP draft.
+8. Verify normalized values and dual display.
+9. Verify submission fails for `unclassified`.
+10. Verify owner and moderator classification queues, including stale-write rejection.
+11. Verify price filtering, sorting, and cursor pagination use normalized values.
+12. Verify saved-search price alerts exclude unclassified listings.
+13. Verify favorite snapshots and price-drop history retain denomination metadata.
+14. Verify structured data omits unclassified offers and uses the normalized new-SYP amount after classification.
+15. Disable the flag and rebuild the Staging client before rehearsing `scripts/sql/syp-denomination-phase-a-rollback.sql` against a disposable Staging copy.
+16. Re-run the full local replay and acceptance suite after rollback and confirm the baseline schema/functions are restored.
 
 ## Production gate
 
 Do not apply to Production until independent SQL review, affected-row evidence, Staging write acceptance, backup evidence, and a successful rollback rehearsal are attached to the deployment record. Merging the application code or migration file does not authorize a Production migration.
+
+Production activation must remain ordered:
+
+1. Deploy compatible application code with `VITE_RAWAJ_SYP_DENOMINATION_SCHEMA` disabled.
+2. Apply and verify the additive migration.
+3. Set `VITE_RAWAJ_SYP_DENOMINATION_SCHEMA=1` and rebuild Vercel and Android release artifacts.
+4. Verify reads, writes, classification, filtering, and structured data before promotion.
