@@ -729,3 +729,100 @@
     scroll-behavior: auto !important;
   }
 }
+/* Premium UI phase 9: responsive, RTL, accessibility, and resilience pass. */
+:root {
+  --rawaj-readable-measure: 72ch;
+  --rawaj-focus-ring: 0 0 0 3px color-mix(in srgb, var(--brand-orange) 22%, transparent);
+}
+
+html,
+body { max-width: 100%; overflow-x: clip; }
+
+main,
+main > *,
+.container-wide,
+[class*="grid"],
+[class*="flex"] { min-width: 0; }
+
+main :is(h1, h2, h3, p, a, button, label, td, th) {
+  overflow-wrap: break-word;
+}
+
+main :is([dir="ltr"], [lang="en"], code, kbd, time, [data-ltr]) {
+  unicode-bidi: isolate;
+}
+
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--brand-orange) 76%, white);
+  outline-offset: 3px;
+  box-shadow: var(--rawaj-focus-ring);
+}
+
+:where(button, input, select, textarea):disabled,
+:where(a, button)[aria-disabled="true"] {
+  cursor: not-allowed;
+  filter: saturate(0.68);
+  opacity: 0.56;
+}
+
+main :is(.rawaj-legal-v3, .rawaj-prohibited-v3) p,
+main article > p { max-width: var(--rawaj-readable-measure); }
+
+main img {
+  max-width: 100%;
+  height: auto;
+}
+
+main :is(table, [role="table"]) { max-width: 100%; }
+
+.mobile-page-bottom {
+  padding-bottom: max(6.25rem, calc(5rem + env(safe-area-inset-bottom)));
+}
+
+@media (pointer: coarse) {
+  main :is(button, a, summary, input, select):not(.rawaj-chip):not([class*="text-link"]) {
+    min-height: 2.75rem;
+  }
+
+  main :is(button, a)[aria-label]:not(:has(span:not(.sr-only))) {
+    min-width: 2.75rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .container-wide { width: 100%; padding-inline: 0.75rem; }
+
+  main :is(table, [role="table"]) {
+    display: block;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+
+  main :is(dialog, [role="dialog"]) {
+    max-width: calc(100vw - 1.5rem);
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+  }
+
+  main :is(h1, h2, h3) { text-wrap: balance; }
+}
+
+@media (min-width: 1440px) {
+  .container-wide { max-width: 82rem; }
+}
+
+@media (prefers-contrast: more) {
+  :where(.hairline, [class*="border-"]) { border-color: color-mix(in srgb, currentColor 34%, var(--color-border)); }
+  .text-muted-foreground { color: color-mix(in srgb, var(--color-foreground) 72%, var(--color-muted-foreground)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
