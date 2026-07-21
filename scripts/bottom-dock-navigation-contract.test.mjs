@@ -26,3 +26,9 @@ test("bottom dock retains exactly five primary destinations", () => {
   assert.equal(destinationMatches.length, 5);
   assert.match(itemsSource, /section:\s*"addListing"[\s\S]*primary:\s*true/);
 });
+
+test("bottom dock keeps the primary action restrained", () => {
+  assert.match(dock, /-mt-3 h-11 w-11/);
+  assert.match(dock, /ring-\[3px\]/);
+  assert.doesNotMatch(dock, /rawaj-dock-active-indicator/);
+});

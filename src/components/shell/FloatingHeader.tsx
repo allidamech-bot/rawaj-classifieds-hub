@@ -4,6 +4,7 @@ import { Languages, LogIn, MapPin, Plus, User, UserCog } from "lucide-react";
 import { NotificationTrigger } from "@/components/NotificationTrigger";
 import { OfflineNotice } from "@/components/OfflineNotice";
 import { PublicAdPlacementSlot } from "@/components/PublicAdPlacementSlot";
+import { BrandLockup } from "@/components/shell/BrandLockup";
 import { resolveAdPlacementPage } from "@/lib/ad-placement-route";
 import { resolvePrimaryNavigationSection } from "@/lib/primary-navigation";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -45,7 +46,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
             className="order-1 flex min-w-0 items-center gap-2 sm:gap-3"
             aria-label={text("العودة إلى الرئيسية", "Back to home")}
           >
-            <Logo />
+            <BrandLockup compact={compact} />
           </Link>
 
           {compact && title ? (
@@ -89,7 +90,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
           <div className="order-3 flex shrink-0 items-center gap-1.5 sm:gap-2">
             <Link
               to="/add-listing"
-              className="rawaj-header-cta hidden min-h-11 items-center gap-2 rounded-[var(--rawaj-radius-button)] bg-brand-orange px-4 text-xs font-bold text-white shadow-[0_8px_20px_rgba(244,95,56,0.18)] transition hover:bg-brand-orange/92 lg:inline-flex"
+              className="rawaj-header-cta hidden min-h-11 items-center gap-2 rounded-[var(--rawaj-radius-button)] bg-brand-orange px-4 text-sm font-bold text-white shadow-[var(--rawaj-shadow-xs)] transition-colors hover:bg-brand-orange/92 lg:inline-flex"
             >
               <Plus className="h-4 w-4" strokeWidth={2.2} />
               {text("أضف إعلان", "Post listing")}
@@ -145,29 +146,5 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
       <OfflineNotice />
       <PublicAdPlacementSlot placementPage={resolveAdPlacementPage(pathname)} />
     </>
-  );
-}
-
-function Logo() {
-  return (
-    <span className="rawaj-brand-lockup flex items-center gap-2 sm:gap-2.5">
-      <span className="rawaj-brand-mark grid h-9 w-9 shrink-0 place-items-center sm:h-10 sm:w-10">
-        <img
-          src="/brand/rawaj-mark-transparent-192.png"
-          alt=""
-          decoding="async"
-          width={32}
-          height={32}
-          draggable={false}
-          className="h-7 w-auto object-contain sm:h-8"
-        />
-      </span>
-
-      <span className="flex items-center gap-1.5 leading-none sm:gap-2">
-        <span className="font-display text-base font-bold text-primary sm:text-[18px]">رواج</span>
-        <span className="rawaj-brand-divider h-4 w-px sm:h-5" aria-hidden="true" />
-        <span className="text-[11px] font-bold tracking-[0.16em] text-brand-orange">RAWAJ</span>
-      </span>
-    </span>
   );
 }
