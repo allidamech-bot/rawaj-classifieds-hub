@@ -102,7 +102,7 @@ test.describe("public initial HTML", () => {
 
     const chatsResponse = await request.get("/chats", { headers: { accept: "text/html" } });
     const chatStyles = stylesheetHrefs(await chatsResponse.text());
-    expect(chatStyles.some((href) => href.includes("messaging-signature"))).toBeTruthy();
+    expect(chatStyles.some((href) => href.includes("messaging-v4"))).toBeTruthy();
     expect(chatStyles.some((href) => href.includes("communication-center-v3"))).toBeTruthy();
     expect(chatStyles.some((href) => href.includes("personal-space-polish"))).toBeTruthy();
     expect(chatStyles.some((href) => href.includes("listing-studio-v3"))).toBeFalsy();
