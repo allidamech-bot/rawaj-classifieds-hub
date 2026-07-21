@@ -45,6 +45,27 @@ Phase A adds explicit denomination metadata without changing any stored `price`.
 - The unclassified queue returns an empty result before migration, and classification requests return an explicit `schema_missing` result.
 - This compatibility layer is a rollout safeguard only. It does not replace independent Staging acceptance and must not be used to authorize Production activation before the migration gate is complete.
 
+## Free local apply/rollback rehearsal
+
+The repository owns a repeatable no-cost rehearsal at `.github/workflows/syp-denomination-phase-a-local-rehearsal.yml` and `scripts/sql/syp-denomination-phase-a-local-rehearsal.sql`.
+
+The workflow builds the canonical database baseline without Phase A, inserts deterministic SYP fixtures, then performs the following sequence on a disposable local Supabase stack:
+
+1. Snapshot fixture `id`, `price`, `currency`, and `updated_at` values before migration.
+2. Apply `202607210001_syp_denomination_phase_a.sql`.
+3. Prove all stored prices and currencies are unchanged.
+4. Prove existing priced SYP rows start as `unclassified` with null normalized values.
+5. Classify explicit old-SYP and new-SYP fixtures through the owner RPC and verify both normalize to the same new-SYP value.
+6. Prove stale classification writes are rejected.
+7. Prove a priced unclassified SYP draft cannot be submitted for review.
+8. Apply `scripts/sql/syp-denomination-phase-a-rollback.sql`.
+9. Prove additive columns and Phase A RPCs are removed, prices remain unchanged, and classification backup rows are retained.
+10. Re-apply Phase A cleanly and run database lint.
+
+The first recorded run, GitHub Actions run `29792768954`, passed the entire sequence and uploaded a 14-day evidence artifact. The evidence reported three unchanged fixture prices, two rollback backup rows, successful owner classification, rejected stale write, rejected unclassified submission, successful rollback, and successful clean re-apply.
+
+This is stronger than a normal schema replay, but it remains a local disposable environment. It does not claim independent Supabase Staging equivalence and does not authorize a Production migration.
+
 ## Staging acceptance
 
 1. Apply `202607210001_syp_denomination_phase_a.sql` to Staging only.
