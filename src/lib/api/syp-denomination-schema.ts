@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const sypDenominationSchemaEnabled =
-  import.meta.env.VITE_RAWAJ_SYP_DENOMINATION_SCHEMA === "1";
+const sypDenominationSchemaEnabled = import.meta.env.VITE_RAWAJ_SYP_DENOMINATION_SCHEMA === "1";
 
 /**
  * Returns the explicitly activated Phase A schema state.
