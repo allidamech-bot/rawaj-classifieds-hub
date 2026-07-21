@@ -113,6 +113,7 @@ jobs:
           ANDROID_RC_APK_PATH: android/app/build/outputs/apk/release/app-release-unsigned.apk
           ANDROID_RC_AAB_PATH: android/app/build/outputs/bundle/release/app-release.aab
           ANDROID_RC_OUTPUT_DIR: android-rc
+          ANDROID_RC_SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
           ANDROID_RC_ANALYZED_APPLICATION_ID: ${{ steps.identity.outputs.application_id }}
           ANDROID_RC_ANALYZED_VERSION_CODE: ${{ steps.identity.outputs.version_code }}
           ANDROID_RC_ANALYZED_VERSION_NAME: ${{ steps.identity.outputs.version_name }}
