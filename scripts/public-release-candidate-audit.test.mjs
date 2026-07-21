@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { URL } from "node:url";
 
 const [auditSource, workflowSource] = await Promise.all([
   readFile(new URL("./audit-public-release-candidate.mjs", import.meta.url), "utf8"),
