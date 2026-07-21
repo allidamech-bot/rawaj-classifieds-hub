@@ -12,6 +12,7 @@ interface Props {
   back?: boolean;
   backMode?: "link" | "history";
   placementPage?: AdPlacementPage | null;
+  titleIsPageHeading?: boolean;
 }
 
 function resolveTitlePlacement(title?: string): AdPlacementPage | null {
@@ -29,6 +30,7 @@ export function PageHeader({
   back = true,
   backMode = "link",
   placementPage,
+  titleIsPageHeading = true,
 }: Props) {
   const { text } = useUiPreferences();
   const navigate = useNavigate();
@@ -82,9 +84,15 @@ export function PageHeader({
 
           {title ? (
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-[15px] font-bold leading-tight text-primary sm:text-base">
-                {title}
-              </h1>
+              {titleIsPageHeading ? (
+                <h1 className="truncate text-[15px] font-bold leading-tight text-primary sm:text-base">
+                  {title}
+                </h1>
+              ) : (
+                <p className="truncate text-[15px] font-bold leading-tight text-primary sm:text-base">
+                  {title}
+                </p>
+              )}
             </div>
           ) : (
             <div className="flex-1" />
