@@ -1,0 +1,57 @@
+name: Android RC Format Diagnostic
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/android-rc-format-diagnostic.yml"
+      - "scripts/build-android-release-candidate-evidence.mjs"
+      - "scripts/android-release-candidate-integrity.test.mjs"
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --silent
+
+      - name: Capture ESLint diagnostics
+        shell: bash
+        run: |
+          set +e
+          npx eslint scripts/build-android-release-candidate-evidence.mjs scripts/android-release-candidate-integrity.test.mjs \
+            > eslint-diagnostics.txt 2>&1
+          status=$?
+          printf '\nESLINT_EXIT=%s\n' "$status" >> eslint-diagnostics.txt
+          exit 0
+
+      - name: Produce exact Prettier output
+        run: |
+          npx prettier --write scripts/build-android-release-candidate-evidence.mjs
+          npx prettier --write scripts/android-release-candidate-integrity.test.mjs
+
+      - name: Upload diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-rc-format-${{ github.sha }}
+          path: |
+            eslint-diagnostics.txt
+            scripts/build-android-release-candidate-evidence.mjs
+            scripts/android-release-candidate-integrity.test.mjs
+          if-no-files-found: error
+          retention-days: 2
