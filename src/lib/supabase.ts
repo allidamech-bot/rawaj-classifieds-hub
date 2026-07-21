@@ -3,8 +3,10 @@ import { installPasswordRecoverySessionBridge } from "@/lib/auth-recovery-sessio
 import { listingImagesBucket } from "@/lib/api/storage";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-const disableRemoteMediaForE2E = import.meta.env.VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA === "1";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as
+  string | undefined;
+const disableRemoteMediaForE2E =
+  import.meta.env.VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA === "1";
 
 const dataQualityRpcNames = new Set([
   "rawaj_admin_fetch_data_quality_context_v1",
@@ -13,11 +15,14 @@ const dataQualityRpcNames = new Set([
   "rawaj_admin_review_listing_data_quality_v1",
 ]);
 const dataQualityCapabilityTtlMs = 30_000;
-let dataQualityCapabilityCache: { ready: boolean; expiresAt: number } | null = null;
+let dataQualityCapabilityCache: { ready: boolean; expiresAt: number } | null =
+  null;
 let dataQualityCapabilityRequest: Promise<boolean> | null = null;
 
 type StorageBucketApi = ReturnType<SupabaseClient["storage"]["from"]>;
-type SignedUrlBatchResult = Awaited<ReturnType<StorageBucketApi["createSignedUrls"]>>;
+type SignedUrlBatchResult = Awaited<
+  ReturnType<StorageBucketApi["createSignedUrls"]>
+>;
 type SignedUrlEntry = NonNullable<SignedUrlBatchResult["data"]>[number];
 
 const signedUrlExpirySafetyMs = 60_000;
@@ -26,8 +31,14 @@ function hasUsableEnvValue(value: string | undefined, placeholder: string) {
   return Boolean(value && value.trim() && value.trim() !== placeholder);
 }
 
-const hasSupabaseUrl = hasUsableEnvValue(supabaseUrl, "https://YOUR_PROJECT_REF.supabase.co");
-const hasSupabaseAnonKey = hasUsableEnvValue(supabaseAnonKey, "YOUR_SUPABASE_ANON_KEY");
+const hasSupabaseUrl = hasUsableEnvValue(
+  supabaseUrl,
+  "https://YOUR_PROJECT_REF.supabase.co",
+);
+const hasSupabaseAnonKey = hasUsableEnvValue(
+  supabaseAnonKey,
+  "YOUR_SUPABASE_ANON_KEY",
+);
 
 export const isSupabaseConfigured = hasSupabaseUrl && hasSupabaseAnonKey;
 
@@ -47,15 +58,22 @@ function unavailableDataQualityResult() {
   };
 }
 
-async function isDataQualityRuntimeReady(client: SupabaseClient): Promise<boolean> {
+async function isDataQualityRuntimeReady(
+  client: SupabaseClient,
+): Promise<boolean> {
   const now = Date.now();
-  if (dataQualityCapabilityCache && dataQualityCapabilityCache.expiresAt > now) {
+  if (
+    dataQualityCapabilityCache &&
+    dataQualityCapabilityCache.expiresAt > now
+  ) {
     return dataQualityCapabilityCache.ready;
   }
   if (dataQualityCapabilityRequest) return dataQualityCapabilityRequest;
 
   dataQualityCapabilityRequest = (async () => {
-    const { data, error } = await client.rpc("rawaj_admin_runtime_capabilities_v1");
+    const { data, error } = await client.rpc(
+      "rawaj_admin_runtime_capabilities_v1",
+    );
     const ready =
       !error &&
       Boolean(
@@ -83,15 +101,27 @@ function withAdminRuntimeGuards(client: SupabaseClient): SupabaseClient {
     get(target, property, receiver) {
       if (property !== "rpc") return Reflect.get(target, property, receiver);
 
-      return ((functionName: string, args?: Record<string, unknown>, options?: unknown) => {
+      return ((
+        functionName: string,
+        args?: Record<string, unknown>,
+        options?: unknown,
+      ) => {
         if (!dataQualityRpcNames.has(functionName)) {
-          return originalRpc(functionName as never, args as never, options as never);
+          return originalRpc(
+            functionName as never,
+            args as never,
+            options as never,
+          );
         }
 
         return (async () => {
           const ready = await isDataQualityRuntimeReady(client);
           if (!ready) return unavailableDataQualityResult();
-          return originalRpc(functionName as never, args as never, options as never);
+          return originalRpc(
+            functionName as never,
+            args as never,
+            options as never,
+          );
         })();
       }) as SupabaseClient["rpc"];
     },
@@ -106,9 +136,17 @@ function serializeSignedUrlOptions(options: unknown) {
   }
 }
 
-function withListingImageSignedUrlCache(client: SupabaseClient): SupabaseClient {
-  const signedUrlCache = new Map<string, { item: SignedUrlEntry; expiresAt: number }>();
-  const signedUrlBatchRequests = new Map<string, Promise<SignedUrlBatchResult>>();
+function withListingImageSignedUrlCache(
+  client: SupabaseClient,
+): SupabaseClient {
+  const signedUrlCache = new Map<
+    string,
+    { item: SignedUrlEntry; expiresAt: number }
+  >();
+  const signedUrlBatchRequests = new Map<
+    string,
+    Promise<SignedUrlBatchResult>
+  >();
 
   client.auth.onAuthStateChange(() => {
     signedUrlCache.clear();
@@ -131,73 +169,85 @@ function withListingImageSignedUrlCache(client: SupabaseClient): SupabaseClient 
         return new Proxy(bucket, {
           get(bucketTarget, bucketProperty) {
             if (bucketProperty !== "createSignedUrls") {
-              const value = Reflect.get(bucketTarget, bucketProperty, bucketTarget);
-              return typeof value === "function" ? value.bind(bucketTarget) : value;
+              const value = Reflect.get(
+                bucketTarget,
+                bucketProperty,
+                bucketTarget,
+              );
+              return typeof value === "function"
+                ? value.bind(bucketTarget)
+                : value;
             }
 
-            const cachedCreateSignedUrls: StorageBucketApi["createSignedUrls"] = async (
-              paths,
-              expiresIn,
-              options,
-            ) => {
-              const normalizedPaths = [...new Set(paths.filter(Boolean))];
+            const cachedCreateSignedUrls: StorageBucketApi["createSignedUrls"] =
+              async (paths, expiresIn, options) => {
+                const normalizedPaths = [...new Set(paths.filter(Boolean))];
 
-              if (disableRemoteMediaForE2E) {
-                return {
-                  data: normalizedPaths.map((path) => ({ path, signedUrl: "", error: null })),
-                  error: null,
-                } as unknown as SignedUrlBatchResult;
-              }
-
-              const optionsKey = serializeSignedUrlOptions(options);
-              const now = Date.now();
-              const resolvedByPath = new Map<string, SignedUrlEntry>();
-              const missingPaths: string[] = [];
-
-              for (const path of normalizedPaths) {
-                const cacheKey = `${expiresIn}:${optionsKey}:${path}`;
-                const cached = signedUrlCache.get(cacheKey);
-                if (cached && cached.expiresAt > now) {
-                  resolvedByPath.set(path, cached.item);
-                } else {
-                  if (cached) signedUrlCache.delete(cacheKey);
-                  missingPaths.push(path);
-                }
-              }
-
-              if (missingPaths.length > 0) {
-                const requestKey = `${expiresIn}:${optionsKey}:${[...missingPaths].sort().join("\n")}`;
-                let request = signedUrlBatchRequests.get(requestKey);
-
-                if (!request) {
-                  request = originalCreateSignedUrls(missingPaths, expiresIn, options).finally(() => {
-                    signedUrlBatchRequests.delete(requestKey);
-                  });
-                  signedUrlBatchRequests.set(requestKey, request);
+                if (disableRemoteMediaForE2E) {
+                  return {
+                    data: normalizedPaths.map((path) => ({
+                      path,
+                      signedUrl: "",
+                      error: null,
+                    })),
+                    error: null,
+                  } as unknown as SignedUrlBatchResult;
                 }
 
-                const result = await request;
-                if (result.error || !result.data) return result;
+                const optionsKey = serializeSignedUrlOptions(options);
+                const now = Date.now();
+                const resolvedByPath = new Map<string, SignedUrlEntry>();
+                const missingPaths: string[] = [];
 
-                const expiresAt =
-                  Date.now() + Math.max(0, expiresIn * 1_000 - signedUrlExpirySafetyMs);
-
-                for (const item of result.data) {
-                  if (!item.path) continue;
-                  resolvedByPath.set(item.path, item);
-                  if (item.signedUrl) {
-                    const cacheKey = `${expiresIn}:${optionsKey}:${item.path}`;
-                    signedUrlCache.set(cacheKey, { item, expiresAt });
+                for (const path of normalizedPaths) {
+                  const cacheKey = `${expiresIn}:${optionsKey}:${path}`;
+                  const cached = signedUrlCache.get(cacheKey);
+                  if (cached && cached.expiresAt > now) {
+                    resolvedByPath.set(path, cached.item);
+                  } else {
+                    if (cached) signedUrlCache.delete(cacheKey);
+                    missingPaths.push(path);
                   }
                 }
-              }
 
-              const data = normalizedPaths
-                .map((path) => resolvedByPath.get(path))
-                .filter((item): item is SignedUrlEntry => Boolean(item));
+                if (missingPaths.length > 0) {
+                  const requestKey = `${expiresIn}:${optionsKey}:${[...missingPaths].sort().join("\n")}`;
+                  let request = signedUrlBatchRequests.get(requestKey);
 
-              return { data, error: null } as SignedUrlBatchResult;
-            };
+                  if (!request) {
+                    request = originalCreateSignedUrls(
+                      missingPaths,
+                      expiresIn,
+                      options,
+                    ).finally(() => {
+                      signedUrlBatchRequests.delete(requestKey);
+                    });
+                    signedUrlBatchRequests.set(requestKey, request);
+                  }
+
+                  const result = await request;
+                  if (result.error || !result.data) return result;
+
+                  const expiresAt =
+                    Date.now() +
+                    Math.max(0, expiresIn * 1_000 - signedUrlExpirySafetyMs);
+
+                  for (const item of result.data) {
+                    if (!item.path) continue;
+                    resolvedByPath.set(item.path, item);
+                    if (item.signedUrl) {
+                      const cacheKey = `${expiresIn}:${optionsKey}:${item.path}`;
+                      signedUrlCache.set(cacheKey, { item, expiresAt });
+                    }
+                  }
+                }
+
+                const data = normalizedPaths
+                  .map((path) => resolvedByPath.get(path))
+                  .filter((item): item is SignedUrlEntry => Boolean(item));
+
+                return { data, error: null } as SignedUrlBatchResult;
+              };
 
             return cachedCreateSignedUrls;
           },
@@ -228,7 +278,9 @@ const authenticatedSupabase: SupabaseClient | null = isSupabaseConfigured
 installPasswordRecoverySessionBridge(authenticatedSupabase);
 
 export const supabase: SupabaseClient | null = authenticatedSupabase
-  ? withAdminRuntimeGuards(withListingImageSignedUrlCache(authenticatedSupabase))
+  ? withAdminRuntimeGuards(
+      withListingImageSignedUrlCache(authenticatedSupabase),
+    )
   : null;
 
 /**
@@ -236,20 +288,22 @@ export const supabase: SupabaseClient | null = authenticatedSupabase
  * This client never persists or refreshes authentication and therefore keeps
  * public ad placements stable while sign-in state is being established.
  */
-const unauthenticatedPublicSupabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(supabaseUrl!, supabaseAnonKey!, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-        storageKey: "rawaj-public-read-client",
-      },
-    })
-  : null;
+const unauthenticatedPublicSupabase: SupabaseClient | null =
+  isSupabaseConfigured
+    ? createClient(supabaseUrl!, supabaseAnonKey!, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+          storageKey: "rawaj-public-read-client",
+        },
+      })
+    : null;
 
-export const publicSupabase: SupabaseClient | null = unauthenticatedPublicSupabase
-  ? withListingImageSignedUrlCache(unauthenticatedPublicSupabase)
-  : null;
+export const publicSupabase: SupabaseClient | null =
+  unauthenticatedPublicSupabase
+    ? withListingImageSignedUrlCache(unauthenticatedPublicSupabase)
+    : null;
 
 export function getSupabaseAuthUnavailableReason() {
   if (isSupabaseConfigured) return null;
