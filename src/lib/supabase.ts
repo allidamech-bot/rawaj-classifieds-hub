@@ -4,7 +4,8 @@ import { listingImagesBucket } from "@/lib/api/storage";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as
-  string | undefined;
+  | string
+  | undefined;
 const disableRemoteMediaForE2E =
   import.meta.env.VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA === "1";
 
