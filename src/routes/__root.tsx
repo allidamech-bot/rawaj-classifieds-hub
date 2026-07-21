@@ -33,6 +33,7 @@ import comparisonFoundationCss from "../comparison-foundation.css?url";
 import designSystemV2Css from "../design-system-v2.css?url";
 import desktopExperienceV1Css from "../desktop-experience-v1.css?url";
 import designFoundationCss from "../design-foundation.css?url";
+import discoveryMarketplaceV4Css from "../discovery-marketplace-v4.css?url";
 import launchReadinessVisualPolishCss from "../launch-readiness-visual-polish.css?url";
 import marketplaceDiscoveryCss from "../marketplace-discovery.css?url";
 import marketplaceSystemCss from "../marketplace-system.css?url";
@@ -222,6 +223,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: desktopExperienceV1Css },
         { rel: "stylesheet", href: launchReadinessVisualPolishCss },
         { rel: "stylesheet", href: designFoundationCss },
+        { rel: "stylesheet", href: discoveryMarketplaceV4Css },
         { rel: "icon", href: "/favicon.ico" },
         { rel: "manifest", href: "/manifest.webmanifest" },
         { rel: "apple-touch-icon", href: "/brand/rawaj-mark-transparent-192.png" },
