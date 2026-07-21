@@ -1,0 +1,150 @@
+name: SYP Phase A Local Rehearsal
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "supabase/migrations/202607210001_syp_denomination_phase_a.sql"
+      - "scripts/sql/syp-denomination-phase-a-rollback.sql"
+      - "scripts/sql/syp-denomination-phase-a-local-rehearsal.sql"
+      - "docs/production-schema/migration-ledger.json"
+      - "scripts/replay-supabase-local.mjs"
+      - ".github/workflows/syp-denomination-phase-a-local-rehearsal.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: syp-phase-a-local-rehearsal-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apply-rollback-reapply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v2
+        with:
+          version: 2.84.2
+          github-token: ${{ github.token }}
+
+      - name: Ensure PostgreSQL client
+        shell: bash
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -qq --yes --no-install-recommends postgresql-client
+          fi
+          psql --version
+
+      - name: Start disposable Supabase stack
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          supabase stop --no-backup >/dev/null 2>&1 || true
+
+          migration_backup="$RUNNER_TEMP/rawaj-supabase-migrations"
+          startup_log="$RUNNER_TEMP/syp-phase-a-supabase-start.log"
+          rm -rf "$migration_backup"
+          mv supabase/migrations "$migration_backup"
+          mkdir -p supabase/migrations
+
+          restore_migrations() {
+            rm -rf supabase/migrations
+            mv "$migration_backup" supabase/migrations
+          }
+          trap restore_migrations EXIT
+
+          if ! supabase start >"$startup_log" 2>&1; then
+            echo "Supabase startup failed. Last 80 log lines:"
+            tail -n 80 "$startup_log"
+            exit 1
+          fi
+
+          restore_migrations
+          trap - EXIT
+          echo "Disposable Supabase stack started successfully."
+
+      - name: Build canonical pre-Phase-A baseline
+        shell: bash
+        env:
+          SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: |
+          set -Eeuo pipefail
+          ledger="docs/production-schema/migration-ledger.json"
+          ledger_backup="$RUNNER_TEMP/syp-phase-a-migration-ledger.json"
+          cp "$ledger" "$ledger_backup"
+
+          restore_ledger() {
+            cp "$ledger_backup" "$ledger"
+          }
+          trap restore_ledger EXIT
+
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = "docs/production-schema/migration-ledger.json";
+          const target = "202607210001_syp_denomination_phase_a.sql";
+          const ledger = JSON.parse(fs.readFileSync(path, "utf8"));
+          for (const [key, value] of Object.entries(ledger.classifications ?? {})) {
+            if (Array.isArray(value)) {
+              ledger.classifications[key] = value.filter((filename) => filename !== target);
+            }
+          }
+          fs.writeFileSync(path, `${JSON.stringify(ledger, null, 2)}\n`);
+          NODE
+
+          node scripts/replay-supabase-local.mjs 2>&1 \
+            | tee "$RUNNER_TEMP/syp-phase-a-pre-migration-replay.log"
+
+          restore_ledger
+          trap - EXIT
+
+      - name: Rehearse apply rollback and clean re-apply
+        id: rehearsal
+        continue-on-error: true
+        shell: bash
+        env:
+          SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: |
+          set -o pipefail
+          psql "$SUPABASE_DB_URL" \
+            -X \
+            --set ON_ERROR_STOP=1 \
+            --file scripts/sql/syp-denomination-phase-a-local-rehearsal.sql \
+            2>&1 | tee "$RUNNER_TEMP/syp-phase-a-local-rehearsal.log"
+
+      - name: Lint final re-applied database
+        if: steps.rehearsal.outcome == 'success'
+        run: supabase db lint --local --level error
+
+      - name: Upload local rehearsal evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: syp-phase-a-local-rehearsal-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/syp-phase-a-supabase-start.log
+            ${{ runner.temp }}/syp-phase-a-pre-migration-replay.log
+            ${{ runner.temp }}/syp-phase-a-local-rehearsal.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Fail when local rehearsal failed
+        if: steps.rehearsal.outcome == 'failure'
+        run: exit 1
+
+      - name: Stop disposable Supabase stack
+        if: always()
+        run: supabase stop --no-backup >/dev/null 2>&1 || true
