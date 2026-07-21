@@ -111,8 +111,7 @@ export async function fetchPublicListingsLocationAware(
     ok: true,
     data: {
       items: hydrated,
-      nextCursor:
-        hasMore && last ? buildCursor(sort, last, supportsSypDenomination) : null,
+      nextCursor: hasMore && last ? buildCursor(sort, last, supportsSypDenomination) : null,
       pageSize: safePageSize,
     },
   };

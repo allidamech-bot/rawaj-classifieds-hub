@@ -83,10 +83,7 @@ test("all public listing reads use explicit schema-aware allowlists", () => {
   );
   assert.ok(publicList.includes("`${schemaListingSelect},listing_images!inner(id)`"));
   assert.ok(publicList.includes(".select(listingSelect)"));
-  assert.match(
-    publicDetail,
-    /\.select\(publicListingSelectForSchema\(supportsSypDenomination\)\)/,
-  );
+  assert.match(publicDetail, /\.select\(publicListingSelectForSchema\(supportsSypDenomination\)\)/);
   assert.match(locationAware, /publicListingSelectForSchema\(supportsSypDenomination\)/);
   assert.match(priceDrops, /publicListingSelectForSchema\(supportsSypDenomination\)/);
   assert.match(canonicalAware, /fetchPublicListings\(filters, cursor, pageSize\)/);

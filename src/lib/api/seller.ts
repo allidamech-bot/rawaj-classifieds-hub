@@ -9,10 +9,7 @@ import type {
 import { readReferences } from "@/lib/api/references";
 import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
 import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
-import {
-  publicListingSelectForSchema,
-  publicSellerReviewSelect,
-} from "@/lib/api/public-fields";
+import { publicListingSelectForSchema, publicSellerReviewSelect } from "@/lib/api/public-fields";
 import { supportsSypDenominationSchema } from "@/lib/api/syp-denomination-schema";
 import {
   getClient,
