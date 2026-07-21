@@ -13,7 +13,8 @@ import {
 } from "@/lib/api/shared";
 import { resolveLocationSubtreeIds } from "@/lib/api/location-filter";
 import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
-import { publicListingSelect } from "@/lib/api/public-fields";
+import { publicListingSelectForSchema } from "@/lib/api/public-fields";
+import { supportsSypDenominationSchema } from "@/lib/api/syp-denomination-schema";
 import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
 import { readReferences } from "@/lib/api/references";
 import {
@@ -32,12 +33,15 @@ export async function fetchPublicListingsLocationAware(
   const references = await readReferences(client);
   if (!references.ok) return { ok: false, error: references.error };
 
+  const supportsSypDenomination = await supportsSypDenominationSchema(client);
+  const priceColumn = supportsSypDenomination ? "price_new_syp_normalized" : "price";
+  const listingSelect = publicListingSelectForSchema(supportsSypDenomination);
   const rawSearchTerm = filters.query?.trim() ?? "";
   const useNormalizedSearch = rawSearchTerm ? await supportsNormalizedListingSearch(client) : false;
 
   let query = client
     .from("listings")
-    .select(publicListingSelect)
+    .select(listingSelect)
     .eq("status", "approved")
     .is("archived_at", null)
     .or(publicListingExpiryFilter());
@@ -66,8 +70,8 @@ export async function fetchPublicListingsLocationAware(
     }
   }
 
-  if (filters.priceMin !== undefined) query = query.gte("price", filters.priceMin);
-  if (filters.priceMax !== undefined) query = query.lte("price", filters.priceMax);
+  if (filters.priceMin !== undefined) query = query.gte(priceColumn, filters.priceMin);
+  if (filters.priceMax !== undefined) query = query.lte(priceColumn, filters.priceMax);
   if (filters.yearFrom !== undefined) {
     query = query.gte("details->>year", String(filters.yearFrom));
   }
@@ -88,14 +92,14 @@ export async function fetchPublicListingsLocationAware(
   }
 
   const sort = filters.sort ?? "latest";
-  query = applySort(query, sort);
-  query = applyCursor(query, cursor);
+  query = applySort(query, sort, priceColumn);
+  query = applyCursor(query, cursor, priceColumn);
 
   const safePageSize = Math.max(1, Math.min(pageSize, 50));
   const { data, error } = await query.limit(safePageSize + 1);
   if (error) return { ok: false, error: mapError(error) };
 
-  const listings = ((data ?? []) as Record<string, unknown>[]).map((row) =>
+  const listings = ((data ?? []) as unknown as Record<string, unknown>[]).map((row) =>
     mapListing(row, references.categories, references.governorates),
   );
   const hasMore = listings.length > safePageSize;
@@ -107,7 +111,8 @@ export async function fetchPublicListingsLocationAware(
     ok: true,
     data: {
       items: hydrated,
-      nextCursor: hasMore && last ? buildCursor(sort, last) : null,
+      nextCursor:
+        hasMore && last ? buildCursor(sort, last, supportsSypDenomination) : null,
       pageSize: safePageSize,
     },
   };
@@ -151,15 +156,15 @@ function applySort<
       },
     ): T;
   },
->(query: T, sort: string): T {
+>(query: T, sort: string, priceColumn: string): T {
   if (sort === "cheapest") {
     return query
-      .order("price", { ascending: true, nullsFirst: false })
+      .order(priceColumn, { ascending: true, nullsFirst: false })
       .order("id", { ascending: true });
   }
   if (sort === "expensive") {
     return query
-      .order("price", { ascending: false, nullsFirst: false })
+      .order(priceColumn, { ascending: false, nullsFirst: false })
       .order("id", { ascending: true });
   }
   if (sort === "featured") {
@@ -175,7 +180,7 @@ function applyCursor<
   T extends {
     or(filters: string): T;
   },
->(query: T, cursor: ListingCursor | null): T {
+>(query: T, cursor: ListingCursor | null, priceColumn: string): T {
   if (!cursor) return query;
   const id = escapePostgrestFilterValue(cursor.id);
 
@@ -196,20 +201,27 @@ function applyCursor<
   }
 
   if (cursor.price === null) {
-    return query.or(`and(price.is.null,id.gt.${id})`);
+    return query.or(`and(${priceColumn}.is.null,id.gt.${id})`);
   }
 
   const price = escapePostgrestFilterValue(String(cursor.price));
   const operator = cursor.type === "cheapest" ? "gt" : "lt";
-  return query.or(`price.${operator}.${price},price.is.null,and(price.eq.${price},id.gt.${id})`);
+  return query.or(
+    `${priceColumn}.${operator}.${price},${priceColumn}.is.null,and(${priceColumn}.eq.${price},id.gt.${id})`,
+  );
 }
 
-function buildCursor(sort: string, listing: ClassifiedListing): ListingCursor {
+function buildCursor(
+  sort: string,
+  listing: ClassifiedListing,
+  supportsSypDenomination: boolean,
+): ListingCursor {
+  const price = supportsSypDenomination ? listing.priceNewSypNormalized : listing.price;
   if (sort === "cheapest") {
-    return { type: "cheapest", price: listing.price, id: listing.id };
+    return { type: "cheapest", price, id: listing.id };
   }
   if (sort === "expensive") {
-    return { type: "expensive", price: listing.price, id: listing.id };
+    return { type: "expensive", price, id: listing.id };
   }
   if (sort === "featured") {
     return {
