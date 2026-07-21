@@ -51,6 +51,8 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run browser smoke tests
+        env:
+          VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
         run: npm run test:e2e:smoke
 
       - name: Upload browser diagnostics
