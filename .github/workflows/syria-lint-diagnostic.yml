@@ -1,15 +1,38 @@
-name: Syria Lint Diagnostic
+name: Syria Launch Tooling
 
 on:
   pull_request:
     branches:
       - main
+    paths:
+      - "docs/syria-launch-closure.md"
+      - "scripts/summarize-supabase-storage-logs.mjs"
+      - "scripts/supabase-storage-log-summary.test.mjs"
+      - "scripts/syria-launch-closure-contract.test.mjs"
+      - "scripts/sql/listing-images-storage-integrity-audit.sql"
+      - ".github/workflows/syria-launch-closure.yml"
+      - ".github/workflows/syria-lint-diagnostic.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/syria-launch-closure.md"
+      - "scripts/summarize-supabase-storage-logs.mjs"
+      - "scripts/supabase-storage-log-summary.test.mjs"
+      - "scripts/syria-launch-closure-contract.test.mjs"
+      - "scripts/sql/listing-images-storage-integrity-audit.sql"
+      - ".github/workflows/syria-launch-closure.yml"
+      - ".github/workflows/syria-lint-diagnostic.yml"
+
+concurrency:
+  group: syria-launch-tooling-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  diagnose:
+  validate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -26,20 +49,13 @@ jobs:
       - name: Install dependencies
         run: npm ci --silent
 
-      - name: Generate formatter and lint evidence
-        shell: bash
-        run: |
-          mkdir -p diagnostic
-          npx prettier scripts/summarize-supabase-storage-logs.mjs > diagnostic/summarize-supabase-storage-logs.formatted.mjs
-          set +e
-          npx eslint --quiet scripts/summarize-supabase-storage-logs.mjs > diagnostic/eslint.txt 2>&1
-          printf '%s\n' "$?" > diagnostic/eslint-exit-code.txt
-          set -e
+      - name: Lint Storage Egress tooling
+        run: npx eslint --quiet scripts/summarize-supabase-storage-logs.mjs
 
-      - name: Upload diagnostic evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: syria-lint-diagnostic
-          path: diagnostic
-          if-no-files-found: error
-          retention-days: 1
+      - name: Verify canonical formatting
+        run: npx prettier --check scripts/summarize-supabase-storage-logs.mjs
+
+      - name: Run Syria launch tooling contracts
+        run: |
+          node --test scripts/supabase-storage-log-summary.test.mjs
+          node --test scripts/syria-launch-closure-contract.test.mjs
