@@ -71,7 +71,7 @@ function TermsPage() {
   return (
     <>
       <PageHeader title={text("شروط الاستخدام", "Terms of use")} />
-      <main className="container-wide mobile-page-bottom pt-4">
+      <main className="rawaj-legal-v3 container-wide mobile-page-bottom pt-4">
         <p className="mb-4 text-xs text-muted-foreground">
           {text(
             "آخر تحديث: 12 تموز 2026. تسري هذه الشروط على استخدام موقع وتطبيق رَوَاج والخدمات المرتبطة بهما.",

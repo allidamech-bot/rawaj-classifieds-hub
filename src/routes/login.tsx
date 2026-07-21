@@ -263,7 +263,7 @@ function LoginPage() {
   return (
     <>
       <PageHeader title={text("الحساب", "Account")} />
-      <main className="rawaj-auth-v2 container-wide pb-10 pt-3 sm:pt-5">
+      <main className="rawaj-auth-v2 rawaj-auth-premium-v3 container-wide pb-10 pt-3 sm:pt-5">
         <section className="rawaj-auth-layout">
           <AuthExperienceAside mode={mode} />
           <div className="rawaj-auth-card">

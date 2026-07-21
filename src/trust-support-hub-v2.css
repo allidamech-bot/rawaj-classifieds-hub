@@ -728,3 +728,103 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Premium UI phase 7: readable legal and policy surfaces. */
+.rawaj-legal-v3,
+.rawaj-prohibited-v3 {
+  --legal-v3-green: #123f36;
+  --legal-v3-coral: #df693c;
+  --legal-v3-gold: #cda04c;
+  position: relative;
+  max-width: 64rem;
+  padding-bottom: 3rem;
+}
+
+.rawaj-legal-v3::before,
+.rawaj-prohibited-v3::before {
+  content: "";
+  position: absolute;
+  inset: -0.5rem 0 auto;
+  z-index: -1;
+  height: 13rem;
+  border-radius: 2rem;
+  background: radial-gradient(circle at 85% 0%, rgba(205, 160, 76, 0.13), transparent 42%);
+}
+
+.rawaj-legal-v3 > p:first-child {
+  border: 1px solid color-mix(in srgb, var(--legal-v3-gold) 22%, var(--color-border));
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--legal-v3-gold) 7%, #fffefa);
+  padding: 0.85rem 1rem;
+  color: color-mix(in srgb, var(--legal-v3-green) 74%, var(--color-muted-foreground));
+}
+
+.rawaj-legal-v3 > div > section {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--legal-v3-green) 10%, var(--color-border)) !important;
+  border-radius: 1.25rem !important;
+  background: linear-gradient(145deg, #fffefa, #f8f7f1) !important;
+  padding: 1.25rem !important;
+  box-shadow: 0 14px 34px rgba(16, 63, 53, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.rawaj-legal-v3 > div > section::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 0.22rem;
+  background: linear-gradient(180deg, var(--legal-v3-coral), var(--legal-v3-gold));
+}
+
+.rawaj-legal-v3 h2 { color: var(--legal-v3-green) !important; }
+.rawaj-legal-v3 p { max-width: 76ch; }
+
+.rawaj-prohibited-v3 > div:first-child {
+  border-color: color-mix(in srgb, var(--color-destructive) 22%, var(--color-border)) !important;
+  border-radius: 1.3rem !important;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--color-destructive) 9%, #fffefa), #fffefa) !important;
+  box-shadow: 0 15px 36px rgba(120, 37, 26, 0.08);
+}
+
+.rawaj-prohibited-v3 > div.grid > div {
+  border-color: color-mix(in srgb, var(--color-destructive) 12%, var(--color-border)) !important;
+  border-radius: 1.1rem !important;
+  background: linear-gradient(145deg, #fffefa, #f8f7f2) !important;
+  box-shadow: 0 10px 26px rgba(16, 63, 53, 0.055);
+}
+
+.rawaj-prohibited-v3 > div.grid > div:hover {
+  border-color: color-mix(in srgb, var(--color-destructive) 28%, var(--color-border)) !important;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 639px) {
+  :is(.rawaj-legal-v3, .rawaj-prohibited-v3) { padding-inline: 0.75rem !important; }
+  .rawaj-legal-v3 > div > section { padding: 1rem !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.rawaj-legal-v3, .rawaj-prohibited-v3) * { transition: none !important; }
+}
+
+.rawaj-support-v2 :is(.rawaj-support-panel, .rawaj-support-topics, .rawaj-support-faq),
+.rawaj-safety-v2 .rawaj-safety-guide {
+  border-color: color-mix(in srgb, var(--color-primary) 11%, var(--color-border));
+  background: linear-gradient(145deg, #fffefa, #f8f7f1);
+  box-shadow: 0 16px 38px rgba(16, 63, 53, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.rawaj-support-v2 :is(input, textarea, select):focus-visible {
+  border-color: color-mix(in srgb, var(--brand-orange) 55%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-orange) 14%, transparent);
+}
+
+.rawaj-support-v2 .rawaj-safety-actions a:last-child,
+.rawaj-safety-v2 .rawaj-safety-actions a:last-child {
+  border: 1px solid color-mix(in srgb, var(--brand-orange) 76%, #98381d);
+  background: linear-gradient(145deg, #ee7a4c, #d75c32);
+  color: white;
+  box-shadow: 0 12px 25px rgba(201, 78, 35, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}

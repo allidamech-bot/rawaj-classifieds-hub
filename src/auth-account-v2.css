@@ -682,3 +682,91 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Premium UI phase 7: confident authentication and recovery surfaces. */
+.rawaj-auth-premium-v3,
+.rawaj-auth-recovery-v3 {
+  --auth-v3-coral: #df693c;
+  --auth-v3-green: #123f36;
+  --auth-v3-gold: #cda04c;
+  position: relative;
+}
+
+.rawaj-auth-premium-v3::before,
+.rawaj-auth-recovery-v3::before {
+  content: "";
+  position: absolute;
+  inset: -1rem 0 auto;
+  z-index: -1;
+  height: 22rem;
+  border-radius: 2rem;
+  background:
+    radial-gradient(circle at 15% 5%, color-mix(in srgb, var(--auth-v3-gold) 12%, transparent), transparent 38%),
+    radial-gradient(circle at 88% 18%, color-mix(in srgb, var(--auth-v3-coral) 10%, transparent), transparent 34%);
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-aside {
+  border-color: color-mix(in srgb, var(--auth-v3-gold) 27%, transparent);
+  background:
+    radial-gradient(circle at 90% 0%, rgba(223, 105, 60, 0.2), transparent 38%),
+    linear-gradient(145deg, #16483e, #0d342c 72%);
+  box-shadow: 0 26px 68px rgba(13, 54, 45, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-card,
+.rawaj-auth-recovery-v3 > section {
+  border: 1px solid color-mix(in srgb, var(--auth-v3-green) 12%, var(--color-border));
+  background: linear-gradient(145deg, #fffefa, #f8f7f1);
+  box-shadow: 0 22px 54px rgba(16, 63, 53, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.94);
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-tabs {
+  border: 1px solid color-mix(in srgb, var(--auth-v3-green) 10%, var(--color-border));
+  background: #f2f3ee;
+  padding: 0.35rem;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-tabs button[aria-selected="true"] {
+  background: linear-gradient(140deg, #174b41, #0f5b4d);
+  color: white;
+  box-shadow: 0 9px 22px rgba(16, 70, 58, 0.21);
+}
+
+.rawaj-auth-premium-v3 :is(input, select),
+.rawaj-auth-recovery-v3 input {
+  border-color: color-mix(in srgb, var(--auth-v3-green) 12%, var(--color-border));
+  background: #fffefa;
+  box-shadow: inset 0 1px 2px rgba(16, 63, 53, 0.04);
+}
+
+.rawaj-auth-premium-v3 :is(input, select):focus-visible,
+.rawaj-auth-recovery-v3 input:focus-visible {
+  border-color: color-mix(in srgb, var(--auth-v3-coral) 55%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--auth-v3-coral) 14%, transparent);
+}
+
+.rawaj-auth-premium-v3 .rawaj-button-primary,
+.rawaj-auth-recovery-v3 .rawaj-button-primary {
+  border: 1px solid color-mix(in srgb, var(--auth-v3-coral) 76%, #98381d);
+  background: linear-gradient(145deg, #ee7a4c, #d75c32);
+  color: white;
+  box-shadow: 0 13px 27px rgba(201, 78, 35, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-google {
+  border-color: color-mix(in srgb, var(--auth-v3-green) 13%, var(--color-border));
+  background: #fffefa;
+  box-shadow: 0 8px 20px rgba(16, 63, 53, 0.07);
+}
+
+@media (max-width: 639px) {
+  .rawaj-auth-premium-v3,
+  .rawaj-auth-recovery-v3 { padding-inline: 0.75rem !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.rawaj-auth-premium-v3, .rawaj-auth-recovery-v3) * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
