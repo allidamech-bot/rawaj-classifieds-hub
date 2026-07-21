@@ -10,6 +10,7 @@ import listingDetailV3Css from "../listing-detail-v3.css?url";
 import listingStudioSignatureCss from "../listing-studio-signature.css?url";
 import listingStudioV2Css from "../listing-studio-v2.css?url";
 import listingStudioV3Css from "../listing-studio-v3.css?url";
+import listingStudioV4Css from "../listing-studio-v4.css?url";
 import listingsResultsCss from "../listings-results.css?url";
 import messagingSignatureCss from "../messaging-signature.css?url";
 import myStoreBrandPolishCss from "../my-store-brand-polish.css?url";
@@ -39,6 +40,7 @@ export const routeStyleHrefs = {
   listingStudioSignature: listingStudioSignatureCss,
   listingStudioV2: listingStudioV2Css,
   listingStudioV3: listingStudioV3Css,
+  listingStudioV4: listingStudioV4Css,
   messagingSignature: messagingSignatureCss,
   communicationCenterV2: communicationCenterV3Css,
   activityMoreFoundation: activityMoreFoundationCss,

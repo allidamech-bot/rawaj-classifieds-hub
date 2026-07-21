@@ -77,14 +77,16 @@ export function ListingStudioSteps({
   current,
   maxReachable = current,
   onStepChange,
+  progressLabel = "Listing progress",
 }: {
   steps: ListingStudioStep[];
   current: number;
   maxReachable?: number;
   onStepChange?: (step: number) => void;
+  progressLabel?: string;
 }) {
   return (
-    <ol className="rawaj-studio-steps" aria-label="Listing progress">
+    <ol className="rawaj-studio-steps" aria-label={progressLabel}>
       {steps.map((step, index) => {
         const done = index < current;
         const active = index === current;

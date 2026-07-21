@@ -1458,7 +1458,7 @@ function AddListingPage() {
   return (
     <>
       <PageHeader title={text("أضف إعلاناً", "Post a listing")} />
-      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v4 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
         <ListingStudioHero
           eyebrow={text("استوديو الإعلان", "Listing studio")}
           title={text(
@@ -1484,6 +1484,7 @@ function AddListingPage() {
         />
         <ListingStudioTrustStrip text={text} />
         <ListingStudioSteps
+          progressLabel={text("تقدم إنشاء الإعلان", "Listing creation progress")}
           steps={steps.map((label, index) => ({
             label,
             description:
@@ -2035,7 +2036,7 @@ function AddListingPage() {
               </div>
 
               {submitMessage && (
-                <div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-3.5 text-center text-xs font-medium text-foreground">
+                <div className="rawaj-studio-success" role="status" aria-live="polite">
                   <p>{submitMessage}</p>
                   {createdListingId && (
                     <div className="mt-3 flex flex-wrap justify-center gap-2">
