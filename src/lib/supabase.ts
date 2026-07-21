@@ -1,8 +1,10 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { installPasswordRecoverySessionBridge } from "@/lib/auth-recovery-session";
+import { listingImagesBucket } from "@/lib/api/storage";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const disableRemoteMediaForE2E = import.meta.env.VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA === "1";
 
 const dataQualityRpcNames = new Set([
   "rawaj_admin_fetch_data_quality_context_v1",
@@ -13,6 +15,12 @@ const dataQualityRpcNames = new Set([
 const dataQualityCapabilityTtlMs = 30_000;
 let dataQualityCapabilityCache: { ready: boolean; expiresAt: number } | null = null;
 let dataQualityCapabilityRequest: Promise<boolean> | null = null;
+
+type StorageBucketApi = ReturnType<SupabaseClient["storage"]["from"]>;
+type SignedUrlBatchResult = Awaited<ReturnType<StorageBucketApi["createSignedUrls"]>>;
+type SignedUrlEntry = NonNullable<SignedUrlBatchResult["data"]>[number];
+
+const signedUrlExpirySafetyMs = 60_000;
 
 function hasUsableEnvValue(value: string | undefined, placeholder: string) {
   return Boolean(value && value.trim() && value.trim() !== placeholder);
@@ -90,6 +98,129 @@ function withAdminRuntimeGuards(client: SupabaseClient): SupabaseClient {
   }) as SupabaseClient;
 }
 
+function serializeSignedUrlOptions(options: unknown) {
+  try {
+    return JSON.stringify(options ?? null) ?? "null";
+  } catch {
+    return "unserializable";
+  }
+}
+
+function withListingImageSignedUrlCache(client: SupabaseClient): SupabaseClient {
+  const signedUrlCache = new Map<string, { item: SignedUrlEntry; expiresAt: number }>();
+  const signedUrlBatchRequests = new Map<string, Promise<SignedUrlBatchResult>>();
+
+  client.auth.onAuthStateChange(() => {
+    signedUrlCache.clear();
+    signedUrlBatchRequests.clear();
+  });
+
+  const storageProxy = new Proxy(client.storage, {
+    get(storageTarget, property) {
+      if (property !== "from") {
+        const value = Reflect.get(storageTarget, property, storageTarget);
+        return typeof value === "function" ? value.bind(storageTarget) : value;
+      }
+
+      return (bucketId: string) => {
+        const bucket = storageTarget.from(bucketId);
+        if (bucketId !== listingImagesBucket) return bucket;
+
+        const originalCreateSignedUrls = bucket.createSignedUrls.bind(bucket);
+
+        return new Proxy(bucket, {
+          get(bucketTarget, bucketProperty) {
+            if (bucketProperty !== "createSignedUrls") {
+              const value = Reflect.get(bucketTarget, bucketProperty, bucketTarget);
+              return typeof value === "function" ? value.bind(bucketTarget) : value;
+            }
+
+            const cachedCreateSignedUrls: StorageBucketApi["createSignedUrls"] = async (
+              paths,
+              expiresIn,
+              options,
+            ) => {
+              const normalizedPaths = [...new Set(paths.filter(Boolean))];
+
+              if (disableRemoteMediaForE2E) {
+                return {
+                  data: normalizedPaths.map((path) => ({
+                    path,
+                    signedUrl: "",
+                    error: null,
+                  })),
+                  error: null,
+                } as unknown as SignedUrlBatchResult;
+              }
+
+              const optionsKey = serializeSignedUrlOptions(options);
+              const now = Date.now();
+              const resolvedByPath = new Map<string, SignedUrlEntry>();
+              const missingPaths: string[] = [];
+
+              for (const path of normalizedPaths) {
+                const cacheKey = `${expiresIn}:${optionsKey}:${path}`;
+                const cached = signedUrlCache.get(cacheKey);
+                if (cached && cached.expiresAt > now) {
+                  resolvedByPath.set(path, cached.item);
+                } else {
+                  if (cached) signedUrlCache.delete(cacheKey);
+                  missingPaths.push(path);
+                }
+              }
+
+              if (missingPaths.length > 0) {
+                const requestKey = `${expiresIn}:${optionsKey}:${[...missingPaths].sort().join("\n")}`;
+                let request = signedUrlBatchRequests.get(requestKey);
+
+                if (!request) {
+                  request = originalCreateSignedUrls(missingPaths, expiresIn, options).finally(
+                    () => {
+                      signedUrlBatchRequests.delete(requestKey);
+                    },
+                  );
+                  signedUrlBatchRequests.set(requestKey, request);
+                }
+
+                const result = await request;
+                if (result.error || !result.data) return result;
+
+                const expiresAt =
+                  Date.now() + Math.max(0, expiresIn * 1_000 - signedUrlExpirySafetyMs);
+
+                for (const item of result.data) {
+                  if (!item.path) continue;
+                  resolvedByPath.set(item.path, item);
+                  if (item.signedUrl) {
+                    const cacheKey = `${expiresIn}:${optionsKey}:${item.path}`;
+                    signedUrlCache.set(cacheKey, { item, expiresAt });
+                  }
+                }
+              }
+
+              const data = normalizedPaths
+                .map((path) => resolvedByPath.get(path))
+                .filter((item): item is SignedUrlEntry => Boolean(item));
+
+              return { data, error: null } as SignedUrlBatchResult;
+            };
+
+            return cachedCreateSignedUrls;
+          },
+        });
+      };
+    },
+  });
+
+  return new Proxy(client, {
+    get(target, property, receiver) {
+      if (property === "storage") return storageProxy;
+      const value = Reflect.get(target, property, receiver);
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  }) as SupabaseClient;
+}
+
 const authenticatedSupabase: SupabaseClient | null = isSupabaseConfigured
   ? createClient(supabaseUrl!, supabaseAnonKey!, {
       auth: {
@@ -103,7 +234,7 @@ const authenticatedSupabase: SupabaseClient | null = isSupabaseConfigured
 installPasswordRecoverySessionBridge(authenticatedSupabase);
 
 export const supabase: SupabaseClient | null = authenticatedSupabase
-  ? withAdminRuntimeGuards(authenticatedSupabase)
+  ? withAdminRuntimeGuards(withListingImageSignedUrlCache(authenticatedSupabase))
   : null;
 
 /**
@@ -111,7 +242,7 @@ export const supabase: SupabaseClient | null = authenticatedSupabase
  * This client never persists or refreshes authentication and therefore keeps
  * public ad placements stable while sign-in state is being established.
  */
-export const publicSupabase: SupabaseClient | null = isSupabaseConfigured
+const unauthenticatedPublicSupabase: SupabaseClient | null = isSupabaseConfigured
   ? createClient(supabaseUrl!, supabaseAnonKey!, {
       auth: {
         persistSession: false,
@@ -120,6 +251,10 @@ export const publicSupabase: SupabaseClient | null = isSupabaseConfigured
         storageKey: "rawaj-public-read-client",
       },
     })
+  : null;
+
+export const publicSupabase: SupabaseClient | null = unauthenticatedPublicSupabase
+  ? withListingImageSignedUrlCache(unauthenticatedPublicSupabase)
   : null;
 
 export function getSupabaseAuthUnavailableReason() {
