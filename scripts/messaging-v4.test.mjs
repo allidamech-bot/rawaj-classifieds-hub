@@ -32,9 +32,12 @@ test("messages retain one page heading and accessible interaction contracts", ()
   assert.match(route, /aria-label=\{text\([^)]*"Share location"/s);
 });
 
-test("phase 5 provides readable, responsive, reduced-motion messaging UI", () => {
-  assert.match(css, /font-size:\s*0\.75rem/);
+test("phase 5 provides readable, restrained, responsive messaging UI", () => {
+  assert.match(css, /font-size:\s*max\(0\.84rem, 13\.5px\)/);
+  assert.match(css, /background:\s*var\(--rawaj-primary/);
+  assert.match(css, /box-shadow:\s*0 3px 10px/);
   assert.match(css, /min-height:\s*3rem/);
+  assert.match(css, /@media \(hover: hover\) and \(pointer: fine\)/);
   assert.match(css, /@media \(min-width: 1024px\)/);
   assert.match(css, /@media \(max-width: 639px\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);

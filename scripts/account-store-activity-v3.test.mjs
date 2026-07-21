@@ -13,6 +13,7 @@ const [
   more,
   personalCss,
   storefrontCss,
+  ownerStoreCss,
   packageJson,
 ] = await Promise.all([
   readFile(new URL("../src/routes/profile.tsx", import.meta.url), "utf8"),
@@ -25,6 +26,7 @@ const [
   readFile(new URL("../src/routes/more.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/personal-space-polish.css", import.meta.url), "utf8"),
   readFile(new URL("../src/seller-storefront-v2.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/my-store-brand-polish.css", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
 
@@ -43,14 +45,17 @@ test("owner and public storefronts receive distinct premium identity scopes", ()
   assert.match(storefrontCss, /\.rawaj-storefront-identity__metrics/);
   assert.match(storefrontCss, /data-tone="rating"/);
   assert.match(storefrontCss, /--store-v3-coral/);
+  assert.match(ownerStoreCss, /Rating remains immediately beside identity/);
 });
 
-test("account collections use dimensional cards, coral actions, focus states, and restrained motion", () => {
+test("account collections use structural borders, clear actions, focus states, and restrained motion", () => {
   assert.match(personalCss, /--account-v3-coral/);
-  assert.match(personalCss, /linear-gradient\(145deg, #ed7b4d, #d75d32\)/);
+  assert.match(personalCss, /background:\s*var\(--account-v3-coral\)/);
+  assert.match(personalCss, /border:\s*1px solid var\(--account-v3-line\)/);
   assert.match(personalCss, /:focus-visible/);
+  assert.match(personalCss, /@media \(hover: hover\) and \(pointer: fine\)/);
   assert.match(personalCss, /prefers-reduced-motion: reduce/);
-  assert.match(personalCss, /translateY\(-2px\)/);
+  assert.doesNotMatch(personalCss, /translateY\(-2px\)/);
 });
 
 test("phase 6 contract is part of the permanent precheck", () => {
