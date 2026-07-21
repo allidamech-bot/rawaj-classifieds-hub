@@ -826,3 +826,68 @@ main :is(table, [role="table"]) { max-width: 100%; }
     transition-duration: 0.01ms !important;
   }
 }
+/* Premium UI phase 10: final cross-product consistency and release polish. */
+::selection {
+  background: color-mix(in srgb, var(--brand-orange) 26%, transparent);
+  color: var(--color-foreground);
+}
+
+* { scrollbar-color: color-mix(in srgb, var(--color-primary) 30%, transparent) transparent; }
+
+main :is(
+  .rawaj-search-empty-state,
+  .rawaj-trust-empty,
+  .rawaj-offers-empty,
+  .rawaj-latest-discovery__empty
+) {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 11%, var(--color-border));
+  border-radius: 1.35rem;
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--color-gold) 9%, transparent), transparent 38%),
+    linear-gradient(145deg, #fffefa, #f8f7f1);
+  box-shadow: 0 15px 36px rgba(16, 63, 53, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+main :is(.rawaj-search-empty-state__icon, .rawaj-trust-empty > span, .rawaj-offers-empty > span) {
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--brand-orange) 20%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.rawaj-admin-v3 :is(div, section).bg-card.text-center,
+.rawaj-account-collection-v3 > div.text-center,
+.rawaj-account-store-v3 section.text-center,
+main > div.rawaj-surface.text-center {
+  border-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-border)) !important;
+  border-radius: 1.35rem !important;
+  background: linear-gradient(145deg, #fffefa, #f8f7f1) !important;
+  box-shadow: 0 15px 36px rgba(16, 63, 53, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+main :is(.animate-pulse, [data-loading="true"]) {
+  animation-duration: 1.65s;
+  animation-timing-function: ease-in-out;
+}
+
+main :is(section, article, a, button) {
+  -webkit-tap-highlight-color: color-mix(in srgb, var(--brand-orange) 13%, transparent);
+}
+
+main :is(a, button):active:not(:disabled) { transform: translateY(1px); }
+
+@media (hover: none) {
+  main :is(a, button, article):hover { transform: none; }
+}
+
+@media (max-width: 639px) {
+  main :is(
+    .rawaj-search-empty-state,
+    .rawaj-trust-empty,
+    .rawaj-offers-empty,
+    .rawaj-latest-discovery__empty
+  ) { padding: 1.5rem 1rem !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main :is(.animate-pulse, [data-loading="true"]) { animation: none !important; }
+}
