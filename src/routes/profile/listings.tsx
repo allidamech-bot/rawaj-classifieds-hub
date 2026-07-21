@@ -224,7 +224,7 @@ function MyListingsPage() {
   return (
     <>
       <PageHeader title={text("إعلاناتي", "My listings")} to="/profile" backMode="history" />
-      <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner container-wide mobile-page-bottom space-y-5 pb-8 pt-3 sm:pt-5">
+      <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner rawaj-account-store-v3 container-wide mobile-page-bottom space-y-5 pb-8 pt-3 sm:pt-5">
         <StorefrontIdentityHero
           mode="owner"
           sellerId={profileId ?? ""}

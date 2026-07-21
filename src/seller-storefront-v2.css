@@ -575,3 +575,167 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Premium UI phase 6: stronger seller identity and owner-store hierarchy. */
+.rawaj-seller-premium-v3,
+.rawaj-account-store-v3 {
+  --store-v3-coral: #df693c;
+  --store-v3-gold: #d0a24d;
+  --store-v3-green: #123f36;
+}
+
+.rawaj-seller-premium-v3 .rawaj-storefront-identity,
+.rawaj-account-store-v3 .rawaj-storefront-identity {
+  border: 1px solid color-mix(in srgb, var(--store-v3-gold) 28%, transparent);
+  box-shadow:
+    0 28px 70px color-mix(in srgb, var(--store-v3-green) 22%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.13);
+}
+
+.rawaj-seller-premium-v3 .rawaj-storefront-identity__scrim,
+.rawaj-account-store-v3 .rawaj-storefront-identity__scrim {
+  background:
+    linear-gradient(180deg, rgba(8, 30, 25, 0.08), rgba(7, 37, 30, 0.92)),
+    linear-gradient(110deg, rgba(14, 73, 60, 0.28), transparent 56%);
+}
+
+.rawaj-seller-premium-v3 .rawaj-storefront-identity__avatar,
+.rawaj-account-store-v3 .rawaj-storefront-identity__avatar {
+  border-color: color-mix(in srgb, var(--store-v3-gold) 68%, white);
+  box-shadow:
+    0 16px 34px rgba(3, 25, 20, 0.35),
+    0 0 0 4px rgba(255, 255, 255, 0.1);
+}
+
+.rawaj-seller-premium-v3 .rawaj-storefront-identity__copy h1,
+.rawaj-account-store-v3 .rawaj-storefront-identity__copy h1 {
+  max-width: 18ch;
+  text-wrap: balance;
+  text-shadow: 0 2px 18px rgba(2, 23, 18, 0.32);
+}
+
+.rawaj-seller-premium-v3 .rawaj-storefront-identity__metrics > div,
+.rawaj-account-store-v3 .rawaj-storefront-identity__metrics > div {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.07));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.13);
+  backdrop-filter: blur(10px);
+}
+
+.rawaj-seller-premium-v3 .rawaj-storefront-identity__metrics > div[data-tone="rating"] strong,
+.rawaj-seller-premium-v3 .rawaj-storefront-identity__metrics > div:nth-child(2) strong {
+  color: #ffd98a;
+}
+
+.rawaj-seller-premium-v3 .rawaj-storefront-identity__actions a,
+.rawaj-account-store-v3 .rawaj-storefront-identity__actions a {
+  min-height: 2.85rem;
+  border-radius: 0.9rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.rawaj-seller-premium-v3 .rawaj-storefront-identity__actions [data-tone="primary"],
+.rawaj-account-store-v3 .rawaj-storefront-identity__actions [data-tone="primary"] {
+  border-color: color-mix(in srgb, var(--store-v3-coral) 76%, #9b371b);
+  background: linear-gradient(145deg, #ee7a4b, #d75b31);
+  box-shadow:
+    0 12px 26px rgba(202, 77, 34, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.rawaj-seller-premium-v3 .rawaj-storefront-v2__main,
+.rawaj-seller-premium-v3 .rawaj-storefront-v2__aside {
+  gap: 1rem;
+}
+
+.rawaj-seller-premium-v3 .rawaj-storefront-section-header {
+  position: relative;
+  padding-block-end: 0.75rem;
+  border-block-end: 1px solid color-mix(in srgb, var(--store-v3-green) 10%, var(--color-border));
+}
+
+.rawaj-seller-premium-v3 .rawaj-storefront-section-header::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: -1px;
+  width: 4.5rem;
+  height: 2px;
+  background: linear-gradient(90deg, var(--store-v3-coral), var(--store-v3-gold));
+}
+
+.rawaj-seller-premium-v3 #seller-reviews {
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--store-v3-gold) 10%, transparent), transparent 32%),
+    linear-gradient(145deg, #fffefa, #f8f7f1);
+  box-shadow: 0 18px 42px rgba(16, 63, 53, 0.09);
+}
+
+.rawaj-seller-premium-v3 #seller-reviews > div > div:first-of-type > div:last-child > span {
+  background: linear-gradient(145deg, var(--store-v3-green), #0e5b4c);
+  box-shadow: 0 9px 22px rgba(16, 71, 59, 0.2);
+}
+
+.rawaj-account-store-v3 .rawaj-storefront-owner-tabs {
+  border-color: color-mix(in srgb, var(--store-v3-green) 13%, var(--color-border));
+  background: linear-gradient(145deg, #fffefa, #f7f6f0);
+  padding: 0.42rem;
+  box-shadow: 0 14px 34px rgba(16, 63, 53, 0.09);
+}
+
+.rawaj-account-store-v3 .rawaj-storefront-owner-tabs button[data-active="true"] {
+  background: linear-gradient(140deg, #174b41, #0f5a4c);
+  box-shadow:
+    0 9px 22px rgba(16, 70, 58, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.rawaj-account-store-v3 > div.flex > a,
+.rawaj-account-store-v3 .rawaj-button-primary {
+  border: 1px solid color-mix(in srgb, var(--store-v3-coral) 74%, #9c3c20);
+  background: linear-gradient(145deg, #ed7a4c, #d85c32);
+  box-shadow:
+    0 12px 26px rgba(199, 79, 38, 0.23),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.rawaj-account-store-v3 .rawaj-owner-listing-card {
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--store-v3-green) 11%, var(--color-border));
+  background: linear-gradient(145deg, #fffefa, #f8f7f2);
+  box-shadow:
+    0 16px 38px rgba(16, 63, 53, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  transition: transform 170ms ease, border-color 170ms ease, box-shadow 170ms ease;
+}
+
+.rawaj-account-store-v3 .rawaj-owner-listing-card:hover {
+  border-color: color-mix(in srgb, var(--store-v3-coral) 28%, var(--color-border));
+  box-shadow: 0 22px 46px rgba(16, 63, 53, 0.12);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 639px) {
+  .rawaj-seller-premium-v3,
+  .rawaj-account-store-v3 {
+    padding-inline: 0.75rem !important;
+  }
+
+  .rawaj-seller-premium-v3 .rawaj-storefront-identity__metrics > div,
+  .rawaj-account-store-v3 .rawaj-storefront-identity__metrics > div {
+    min-height: 4.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-account-hub-v3 *,
+  .rawaj-account-collection-v3 *,
+  .rawaj-account-activity-v3 *,
+  .rawaj-account-command-v3 *,
+  .rawaj-seller-premium-v3 *,
+  .rawaj-account-store-v3 * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -61,7 +61,7 @@ function SellerPage() {
   return (
     <div className="rawaj-storefront-v2 min-h-dvh" dir={language === "ar" ? "rtl" : "ltr"}>
       <PageHeader title={text("واجهة البائع", "Seller storefront")} />
-      <main className="container-wide mobile-page-bottom pb-10 pt-3 sm:pt-5">
+      <main className="container-wide rawaj-seller-premium-v3 mobile-page-bottom pb-10 pt-3 sm:pt-5">
         <div className="space-y-7">
           <StorefrontIdentityHero
             mode="public"
