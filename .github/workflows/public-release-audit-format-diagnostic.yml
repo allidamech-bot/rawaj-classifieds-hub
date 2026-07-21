@@ -1,9 +1,9 @@
 name: Public Release Audit Format Diagnostic
 
 on:
-  push:
+  pull_request:
     branches:
-      - agent/syria-non-supabase-release-gate
+      - main
     paths:
       - ".github/workflows/public-release-audit-format-diagnostic.yml"
       - "scripts/audit-public-release-candidate.mjs"
