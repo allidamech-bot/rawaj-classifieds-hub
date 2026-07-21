@@ -9,7 +9,11 @@ import type {
 import { readReferences } from "@/lib/api/references";
 import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
 import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
-import { publicListingSelect, publicSellerReviewSelect } from "@/lib/api/public-fields";
+import {
+  publicListingSelectForSchema,
+  publicSellerReviewSelect,
+} from "@/lib/api/public-fields";
+import { supportsSypDenominationSchema } from "@/lib/api/syp-denomination-schema";
 import {
   getClient,
   mapError,
@@ -140,9 +144,10 @@ async function readPublicSellerInventory(
     } as const;
   }
 
+  const supportsSypDenomination = await supportsSypDenominationSchema(client);
   const { data, error, count } = await client
     .from("listings")
-    .select(publicListingSelect, { count: "exact" })
+    .select(publicListingSelectForSchema(supportsSypDenomination), { count: "exact" })
     .eq("owner_id", sellerId)
     .eq("status", "approved")
     .is("archived_at", null)
@@ -156,7 +161,7 @@ async function readPublicSellerInventory(
     return { status: sectionStatus(mapped.code), totalCount: null, listings: [] } as const;
   }
 
-  const mapped = ((data ?? []) as Record<string, unknown>[]).map((row) =>
+  const mapped = ((data ?? []) as unknown as Record<string, unknown>[]).map((row) =>
     sanitizePublicListing(mapListing(row, references.categories, references.governorates)),
   );
   const deduplicated = [...new Map(mapped.map((listing) => [listing.id, listing])).values()];
