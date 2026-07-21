@@ -1,0 +1,72 @@
+name: Fix Seller Trust SYP Contract
+
+on:
+  push:
+    branches:
+      - agent/syp-denomination-phase-a-compat-fix
+    paths:
+      - ".github/workflows/fix-seller-trust-syp-contract.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout temporary fix branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/syp-denomination-phase-a-compat-fix
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --silent
+
+      - name: Update seller trust contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/seller-storefront-trust-integrity.test.mjs")
+          source = path.read_text()
+          old = '  assert.match(sellerApi, /\\.select\\(publicListingSelect, \\{ count: "exact" \\}\\)/);'
+          new = '''  assert.match(
+            sellerApi,
+            /\\.select\\(publicListingSelectForSchema\\(supportsSypDenomination\\), \\{ count: "exact" \\}\\)/,
+          );'''
+          if source.count(old) != 1:
+              raise SystemExit("seller inventory select contract anchor missing")
+          path.write_text(source.replace(old, new, 1))
+          PY
+          npx prettier --write scripts/seller-storefront-trust-integrity.test.mjs >/dev/null
+
+      - name: Verify seller trust and public security contracts
+        run: |
+          npm run test:seller-storefront-trust
+          npm run test:public-data-security
+
+      - name: Verify lint
+        run: npx eslint --quiet scripts/seller-storefront-trust-integrity.test.mjs src/lib/api/seller.ts
+
+      - name: Verify TypeScript
+        run: npm run typecheck
+
+      - name: Verify production build
+        run: npm run build
+
+      - name: Remove temporary workflow and commit
+        run: |
+          rm -f .github/workflows/fix-seller-trust-syp-contract.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "test: align seller trust with SYP schema compatibility"
+          git push origin HEAD:agent/syp-denomination-phase-a-compat-fix
