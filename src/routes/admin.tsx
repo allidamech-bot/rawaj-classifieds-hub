@@ -194,7 +194,7 @@ function AdminLayout() {
   return (
     <>
       <PageHeader title={text("لوحة الإدارة", "Admin dashboard")} />
-      <main className="container-wide pt-3 pb-[calc(env(safe-area-inset-bottom)+2rem)] sm:pt-4">
+      <main className="rawaj-admin-v3 container-wide pt-3 pb-[calc(env(safe-area-inset-bottom)+2rem)] sm:pt-4">
         <div className="mb-4 flex items-start gap-2 rounded-[var(--rawaj-radius-card)] bg-warning/10 p-3 hairline">
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <p className="text-xs leading-6 text-foreground/90">
@@ -270,7 +270,7 @@ function AdminShellState({
   return (
     <>
       <PageHeader title={text("لوحة الإدارة", "Admin dashboard")} />
-      <main className="container-wide pt-4 pb-8">
+      <main className="rawaj-admin-v3 container-wide pt-4 pb-8">
         <section className="rounded-[var(--rawaj-radius-surface)] bg-card p-5 text-center hairline shadow-none">
           <Lock className="mx-auto h-7 w-7 text-warning" />
           <h2 className="mt-3 text-base font-extrabold">{title}</h2>
