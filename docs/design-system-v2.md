@@ -1,6 +1,6 @@
 # RAWAJ Design System V2
 
-This foundation is the visual contract for all subsequent page redesigns.
+This foundation is the visual contract for all subsequent page redesigns. `src/design-foundation.css` is the single canonical token source. `src/design-system-v2.css` is a temporary compatibility component layer and must not declare root palette, spacing, radius, shadow, or motion values.
 
 ## Brand roles
 
@@ -24,9 +24,19 @@ Use the lightest suitable layer instead of making every block white:
 
 ## Shared controls
 
-- `Button`: `default`, `accent`, `soft`, `success`, `secondary`, `outline`, `ghost`, `destructive`, `link`.
+- `Button`: `default`/`accent` for the dominant coral action, `brand` for deep-green secondary emphasis, plus `soft`, `success`, `secondary`, `outline`, `ghost`, `destructive`, and `link`.
 - `Badge`: `default`, `secondary`, `accent`, `success`, `warning`, `gold`, `destructive`, `outline`.
 - `Input`: 48px default height with visible hover, focus, disabled, and validation-compatible states.
+- `Card`: `default`, `flat`, `subtle`, and `elevated`, with `interactive` reserved for actionable cards.
+
+## Foundation scales
+
+- Spacing: `4 / 8 / 12 / 16 / 20 / 24 / 32 / 40 / 48 / 64`.
+- Controls: `40 / 44 / 48px`; compact controls are reserved for dense secondary actions.
+- Icons: `16 / 20 / 24px`.
+- Elevation: soft, raised, overlay; borders carry the default separation.
+- Layering: base, sticky, dock, overlay, toast.
+- Motion: 150 / 200 / 300ms with reduced-motion support.
 
 ## Page redesign rule
 
