@@ -1,5 +1,6 @@
 import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
-import { publicListingSelect } from "@/lib/api/public-fields";
+import { publicListingSelectForSchema } from "@/lib/api/public-fields";
+import { supportsSypDenominationSchema } from "@/lib/api/syp-denomination-schema";
 import {
   fetchOwnerListingDetail,
   hydrateListingsWithPrimaryImages,
@@ -142,10 +143,11 @@ export async function fetchActivePriceDropOffers(
   const references = await readReferences(clientResult.data);
   if (!references.ok) return { ok: false, error: references.error };
 
+  const supportsSypDenomination = await supportsSypDenominationSchema(clientResult.data);
   const listingIds = [...new Set(metadata.map((item) => item.listingId))];
   const { data: listingData, error: listingError } = await clientResult.data
     .from("listings")
-    .select(publicListingSelect)
+    .select(publicListingSelectForSchema(supportsSypDenomination))
     .in("id", listingIds)
     .eq("status", "approved")
     .is("archived_at", null)
@@ -155,7 +157,7 @@ export async function fetchActivePriceDropOffers(
     return { ok: false, error: mapError(listingError, "public_price_drop_listings") };
   }
 
-  const listings = ((listingData ?? []) as Record<string, unknown>[]).map((row) =>
+  const listings = ((listingData ?? []) as unknown as Record<string, unknown>[]).map((row) =>
     mapListing(row, references.categories, references.governorates),
   );
   const hydrated = await hydrateListingsWithPrimaryImages(clientResult.data, listings);
