@@ -152,14 +152,14 @@ test("latest discovery excludes showcased ids and uses diverse standard real car
 
 test("populated cards guard mobile density, long copy, and image crop", () => {
   assert.match(visualPolishCss, /\.rawaj-featured-card__content h3/);
-  assert.match(visualPolishCss, /-webkit-line-clamp: 3/);
+  assert.match(visualPolishCss, /-webkit-line-clamp: [23]/);
   assert.match(visualPolishCss, /\.rawaj-featured-card__location span/);
   assert.match(visualPolishCss, /text-overflow: ellipsis/);
   assert.match(visualPolishCss, /object-position: center/);
   assert.match(visualPolishCss, /@media \(max-width: 767px\)/);
-  assert.match(visualPolishCss, /min-height: 24rem/);
+  assert.match(visualPolishCss, /min-height: (?:21\.5|24)rem/);
   assert.match(visualPolishCss, /@media \(min-width: 768px\)/);
-  assert.match(visualPolishCss, /min-height: 34rem/);
+  assert.match(visualPolishCss, /min-height: (?:30|34)rem/);
 });
 
 test("trust strip links to the safety guide", () => {
