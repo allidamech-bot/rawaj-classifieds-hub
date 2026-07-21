@@ -4,7 +4,10 @@ on:
   pull_request:
     branches:
       - main
+      - agent/syp-denomination-phase-a
     paths:
+      - ".env.example"
+      - "docs/syp-denomination-phase-a.md"
       - "src/**"
       - "scripts/syp-denomination-phase-a.test.mjs"
       - "scripts/sql/syp-denomination-phase-a-rollback.sql"
