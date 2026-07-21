@@ -5,16 +5,11 @@ import process from "node:process";
 import { URL } from "node:url";
 
 const baseUrl = normalizeBaseUrl(process.env.RAWAJ_RELEASE_BASE_URL);
-const expectedCommit = normalizeExpectedCommit(
-  process.env.RAWAJ_EXPECTED_COMMIT_SHA,
-);
+const expectedCommit = normalizeExpectedCommit(process.env.RAWAJ_EXPECTED_COMMIT_SHA);
 const allowAssetLinks503 = process.env.RAWAJ_ALLOW_ASSETLINKS_503 !== "0";
 const outputPath =
-  process.env.RAWAJ_RELEASE_AUDIT_OUTPUT?.trim() ||
-  "rawaj-public-release-audit.json";
-const timeoutMs = normalizeTimeout(
-  process.env.RAWAJ_RELEASE_AUDIT_TIMEOUT_MS,
-);
+  process.env.RAWAJ_RELEASE_AUDIT_OUTPUT?.trim() || "rawaj-public-release-audit.json";
+const timeoutMs = normalizeTimeout(process.env.RAWAJ_RELEASE_AUDIT_TIMEOUT_MS);
 
 const htmlRoutes = [
   "/",
@@ -42,9 +37,7 @@ const failures = [];
 for (const route of documentRoutes) {
   const result = await auditRoute(route);
   results.push(result);
-  failures.push(
-    ...result.failures.map((message) => `${route.path}: ${message}`),
-  );
+  failures.push(...result.failures.map((message) => `${route.path}: ${message}`));
 }
 
 const report = {
@@ -97,10 +90,8 @@ async function auditRoute(route) {
   }
 
   const contentType = response.headers.get("content-type") ?? "";
-  const headerCommit =
-    response.headers.get("x-rawaj-build-commit")?.trim() || null;
-  const metaCommit =
-    route.kind === "html" ? extractBuildCommitMeta(body) : null;
+  const headerCommit = response.headers.get("x-rawaj-build-commit")?.trim() || null;
+  const metaCommit = route.kind === "html" ? extractBuildCommitMeta(body) : null;
   const buildCommit = headerCommit || metaCommit;
 
   if (isRedirect(response.status)) {
@@ -126,8 +117,7 @@ async function auditRoute(route) {
   }
 
   if (route.path === "/login" || route.path === "/reset-password") {
-    const cacheControl =
-      response.headers.get("cache-control")?.toLowerCase() ?? "";
+    const cacheControl = response.headers.get("cache-control")?.toLowerCase() ?? "";
     if (!cacheControl.includes("no-store")) {
       failures.push("sensitive auth route must use cache-control: no-store");
     }
@@ -173,9 +163,7 @@ function validateHtmlDocument(response, body, failures) {
 function validateAssetLinks(response, body, contentType, failures) {
   if (isRedirect(response.status)) return;
   if (!contentType.toLowerCase().includes("application/json")) {
-    failures.push(
-      `expected JSON content type, received ${contentType || "missing"}`,
-    );
+    failures.push(`expected JSON content type, received ${contentType || "missing"}`);
   }
 
   let payload;
@@ -188,9 +176,7 @@ function validateAssetLinks(response, body, contentType, failures) {
 
   if (response.status === 503 && allowAssetLinks503) {
     if (payload?.error !== "android_app_links_not_configured") {
-      failures.push(
-        "503 response must fail closed with android_app_links_not_configured",
-      );
+      failures.push("503 response must fail closed with android_app_links_not_configured");
     }
     return;
   }
@@ -214,21 +200,13 @@ function validateAssetLinks(response, body, contentType, failures) {
     failures.push("assetlinks payload is missing com.rawaj.marketplace");
     return;
   }
-  if (
-    !statement.relation?.includes(
-      "delegate_permission/common.handle_all_urls",
-    )
-  ) {
+  if (!statement.relation?.includes("delegate_permission/common.handle_all_urls")) {
     failures.push("assetlinks relation is missing handle_all_urls");
   }
   const fingerprints = statement.target?.sha256_cert_fingerprints;
   if (!Array.isArray(fingerprints) || fingerprints.length === 0) {
     failures.push("assetlinks payload has no SHA-256 fingerprints");
-  } else if (
-    fingerprints.some(
-      (value) => !/^(?:[0-9A-F]{2}:){31}[0-9A-F]{2}$/.test(value),
-    )
-  ) {
+  } else if (fingerprints.some((value) => !/^(?:[0-9A-F]{2}:){31}[0-9A-F]{2}$/.test(value))) {
     failures.push("assetlinks payload contains an invalid SHA-256 fingerprint");
   }
 }
@@ -238,9 +216,7 @@ function validateContentType(kind, contentType, failures) {
   const valid =
     (kind === "html" && normalized.includes("text/html")) ||
     (kind === "text" && normalized.includes("text/plain")) ||
-    (kind === "xml" &&
-      (normalized.includes("application/xml") ||
-        normalized.includes("text/xml")));
+    (kind === "xml" && (normalized.includes("application/xml") || normalized.includes("text/xml")));
   if (!valid) {
     failures.push(`unexpected content type ${contentType || "missing"}`);
   }
@@ -261,18 +237,14 @@ function normalizeBaseUrl(value) {
     throw new Error("RAWAJ_RELEASE_BASE_URL must contain only the origin");
   }
   if (!isAllowedHost(url.hostname)) {
-    throw new Error(
-      `Host is not approved for RAWAJ release audit: ${url.hostname}`,
-    );
+    throw new Error(`Host is not approved for RAWAJ release audit: ${url.hostname}`);
   }
   return url;
 }
 
 function isAllowedHost(hostname) {
   return (
-    hostname === "rawa-j.com" ||
-    hostname === "www.rawa-j.com" ||
-    hostname.endsWith(".vercel.app")
+    hostname === "rawa-j.com" || hostname === "www.rawa-j.com" || hostname.endsWith(".vercel.app")
   );
 }
 
@@ -288,18 +260,16 @@ function normalizeExpectedCommit(value) {
 function normalizeTimeout(value) {
   const parsed = Number(value || 20_000);
   if (!Number.isFinite(parsed) || parsed < 1_000 || parsed > 60_000) {
-    throw new Error(
-      "RAWAJ_RELEASE_AUDIT_TIMEOUT_MS must be between 1000 and 60000",
-    );
+    throw new Error("RAWAJ_RELEASE_AUDIT_TIMEOUT_MS must be between 1000 and 60000");
   }
   return parsed;
 }
 
 function extractBuildCommitMeta(body) {
   return (
-    body.match(
-      /<meta\s+name=["']rawaj-build-commit["']\s+content=["']([0-9a-f]{7,40})["']/i,
-    )?.[1]?.toLowerCase() ?? null
+    body
+      .match(/<meta\s+name=["']rawaj-build-commit["']\s+content=["']([0-9a-f]{7,40})["']/i)?.[1]
+      ?.toLowerCase() ?? null
   );
 }
 
@@ -318,7 +288,6 @@ function isRedirect(status) {
 
 function formatError(error) {
   if (!(error instanceof Error)) return String(error);
-  const cause =
-    error.cause instanceof Error ? `; cause: ${error.cause.message}` : "";
+  const cause = error.cause instanceof Error ? `; cause: ${error.cause.message}` : "";
   return `${error.message}${cause}`;
 }
