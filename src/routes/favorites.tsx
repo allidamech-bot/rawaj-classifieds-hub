@@ -173,7 +173,7 @@ function FavoritesPage() {
   return (
     <>
       <PageHeader title={text("المفضلة", "Favorites")} />
-      <main className="container-wide rawaj-content-stack mobile-page-bottom pt-4">
+      <main className="container-wide rawaj-account-collection-v3 rawaj-content-stack mobile-page-bottom pt-4">
         <section className="rounded-2xl bg-card p-4 hairline">
           <h2 className="text-sm font-extrabold">
             {text("إعلاناتك المحفوظة", "Your saved listings")}
@@ -319,7 +319,7 @@ function State({
   return (
     <>
       <PageHeader title={text("المفضلة", "Favorites")} />
-      <main className="container-wide rawaj-content-stack mobile-page-bottom pt-10">
+      <main className="container-wide rawaj-account-collection-v3 rawaj-content-stack mobile-page-bottom pt-10">
         <Panel
           title={heading}
           body={body}

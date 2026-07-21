@@ -188,7 +188,7 @@ function MorePage() {
     <div className="rawaj-trust-v2 rawaj-more-v2 min-h-dvh" dir={isArabic ? "rtl" : "ltr"}>
       <AppHeader compact title={text("مساحتي", "My space")} />
 
-      <main className="container-wide rawaj-content-stack mobile-page-bottom pb-8 pt-3 sm:pt-5">
+      <main className="container-wide rawaj-account-command-v3 rawaj-content-stack mobile-page-bottom pb-8 pt-3 sm:pt-5">
         <TrustHubHero
           mode="more"
           displayName={displayName}
