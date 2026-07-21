@@ -2,9 +2,13 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { installPasswordRecoverySessionBridge } from "@/lib/auth-recovery-session";
 import { listingImagesBucket } from "@/lib/api/storage";
 
+declare const __RAWAJ_DISABLE_REMOTE_MEDIA__: boolean | undefined;
+
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-const disableRemoteMediaForE2E = import.meta.env.VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA === "1";
+const disableRemoteMediaForE2E =
+  import.meta.env.VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA === "1" ||
+  (typeof __RAWAJ_DISABLE_REMOTE_MEDIA__ !== "undefined" && __RAWAJ_DISABLE_REMOTE_MEDIA__);
 
 const dataQualityRpcNames = new Set([
   "rawaj_admin_fetch_data_quality_context_v1",
