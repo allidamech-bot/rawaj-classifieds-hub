@@ -1,0 +1,313 @@
+/* RAWAJ Admin — final premium correction pass.
+ * Presentation only. Permissions, data access, moderation, owner controls,
+ * routing, and all backend behavior remain unchanged.
+ */
+
+.rawaj-admin-v3 {
+  --admin-v3-green: var(--rawaj-primary, #123f38);
+  --admin-v3-green-deep: var(--rawaj-primary-deep, #092d29);
+  --admin-v3-coral: var(--rawaj-accent-orange, #e9663c);
+  --admin-v3-gold: var(--rawaj-accent-gold, #b98d43);
+  --admin-v3-surface: var(--rawaj-card-background, #fffdf8);
+  --admin-v3-muted: var(--rawaj-muted-surface, #e9efea);
+  --admin-v3-line: color-mix(in srgb, var(--admin-v3-green) 15%, var(--rawaj-border, #d5ded8));
+  position: relative;
+  display: grid;
+  gap: 1rem;
+}
+
+.rawaj-admin-v3::before {
+  content: "";
+  position: absolute;
+  inset: -0.5rem 0 auto;
+  z-index: -1;
+  height: 11rem;
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--rawaj-brand-muted-background, #e5eee8) 58%, transparent), transparent);
+  pointer-events: none;
+}
+
+.rawaj-admin-v3 > div:first-child {
+  margin-bottom: 0 !important;
+  border: 1px solid color-mix(in srgb, var(--admin-v3-gold) 30%, var(--admin-v3-line)) !important;
+  border-radius: 0.85rem !important;
+  background: color-mix(in srgb, var(--admin-v3-gold) 7%, var(--admin-v3-surface)) !important;
+  padding: 0.85rem 0.95rem !important;
+  box-shadow: none !important;
+}
+
+.rawaj-admin-v3 > div:first-child p {
+  color: var(--rawaj-text-secondary, #536b63) !important;
+  font-size: max(0.8rem, 12.5px) !important;
+  line-height: 1.7 !important;
+}
+
+.rawaj-admin-v3 > div:nth-child(2) {
+  margin-bottom: 0 !important;
+  border: 1px solid var(--admin-v3-line) !important;
+  border-radius: 1rem !important;
+  background: color-mix(in srgb, var(--admin-v3-surface) 97%, transparent) !important;
+  padding: 0.45rem !important;
+  box-shadow: 0 5px 18px rgba(9, 45, 41, 0.06) !important;
+  backdrop-filter: blur(10px) saturate(1.02) !important;
+}
+
+.rawaj-admin-v3 > div:nth-child(2) nav {
+  gap: 0.45rem !important;
+}
+
+.rawaj-admin-v3 > div:nth-child(2) nav a {
+  min-height: 2.75rem !important;
+  border: 1px solid var(--admin-v3-line);
+  border-radius: 0.72rem !important;
+  background: var(--admin-v3-surface) !important;
+  color: var(--rawaj-text-primary, #18352f) !important;
+  padding-inline: 0.85rem !important;
+  font-size: max(0.78rem, 12.5px) !important;
+  box-shadow: none;
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+
+.rawaj-admin-v3 > div:nth-child(2) nav a[aria-current="page"] {
+  border-color: var(--admin-v3-green) !important;
+  background: var(--admin-v3-green) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(9, 45, 41, 0.15);
+}
+
+.rawaj-admin-v3 > div:nth-child(2) nav a svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.rawaj-admin-v3 :is(.rawaj-admin-dashboard-v3, section, article, form, [role="table"]) {
+  min-width: 0;
+}
+
+.rawaj-admin-v3 .rawaj-admin-dashboard-v3 {
+  display: grid;
+  gap: clamp(0.85rem, 2vw, 1.1rem);
+}
+
+.rawaj-admin-v3 .rawaj-admin-dashboard-v3 > :is(section, article, div) {
+  min-width: 0;
+}
+
+.rawaj-admin-v3 :is(.rawaj-admin-dashboard-v3, [class*="admin-"]) :is(h1, h2, h3) {
+  color: var(--admin-v3-green-deep);
+  line-height: 1.45;
+  text-wrap: balance;
+}
+
+.rawaj-admin-v3 :is(.rawaj-admin-dashboard-v3, [class*="admin-"]) h1 {
+  font-size: clamp(1.2rem, 3vw, 1.55rem);
+}
+
+.rawaj-admin-v3 :is(.rawaj-admin-dashboard-v3, [class*="admin-"]) h2 {
+  font-size: clamp(1rem, 2.3vw, 1.2rem);
+}
+
+.rawaj-admin-v3 :is(.rawaj-admin-dashboard-v3, [class*="admin-"]) :is(p, small, label, span) {
+  line-height: 1.6;
+}
+
+.rawaj-admin-v3 :is(.rawaj-admin-dashboard-v3, [class*="admin-"]) small,
+.rawaj-admin-v3 :is(.rawaj-admin-dashboard-v3, [class*="admin-"]) label,
+.rawaj-admin-v3 [role="columnheader"] {
+  font-size: max(0.75rem, 12px);
+}
+
+.rawaj-admin-v3 :is(.grid, [class*="grid"]) > :is(article, section, div).rounded-xl,
+.rawaj-admin-v3 :is(.grid, [class*="grid"]) > :is(article, section, div).rounded-2xl,
+.rawaj-admin-v3 :is(.grid, [class*="grid"]) > :is(article, section, div).hairline {
+  border-color: var(--admin-v3-line) !important;
+  border-radius: 0.95rem !important;
+  background: var(--admin-v3-surface) !important;
+  box-shadow: 0 4px 14px rgba(9, 45, 41, 0.045) !important;
+}
+
+.rawaj-admin-v3 :is(table, [role="table"]) {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid var(--admin-v3-line);
+  border-radius: 0.95rem;
+  background: var(--admin-v3-surface);
+}
+
+.rawaj-admin-v3 :is(thead, [role="rowgroup"]:first-child) {
+  background: color-mix(in srgb, var(--admin-v3-muted) 78%, var(--admin-v3-surface));
+}
+
+.rawaj-admin-v3 :is(th, [role="columnheader"]) {
+  min-height: 2.75rem;
+  padding: 0.72rem 0.8rem;
+  color: var(--admin-v3-green-deep);
+  font-weight: 800;
+  text-align: start;
+}
+
+.rawaj-admin-v3 :is(td, [role="cell"]) {
+  padding: 0.78rem 0.8rem;
+  border-top: 1px solid color-mix(in srgb, var(--admin-v3-line) 82%, transparent);
+  color: var(--rawaj-text-primary, #18352f);
+  font-size: max(0.8rem, 12.5px);
+  vertical-align: middle;
+}
+
+.rawaj-admin-v3 :is(input, textarea, select) {
+  min-height: var(--rawaj-control-height, 2.875rem);
+  border: 1px solid var(--rawaj-border-strong, #aebfb6) !important;
+  border-radius: 0.72rem !important;
+  background: var(--admin-v3-surface) !important;
+  color: var(--rawaj-text-primary, #18352f) !important;
+  font-size: max(0.84rem, 13px) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-admin-v3 textarea {
+  min-height: 7rem;
+}
+
+.rawaj-admin-v3 :is(input, textarea, select):focus-visible {
+  border-color: var(--admin-v3-coral) !important;
+  outline: 3px solid color-mix(in srgb, var(--admin-v3-coral) 15%, transparent);
+  outline-offset: 1px;
+}
+
+.rawaj-admin-v3 :is(button, a).bg-primary,
+.rawaj-admin-v3 :is(button, a)[data-tone="primary"] {
+  min-height: 2.75rem;
+  border: 1px solid color-mix(in srgb, var(--admin-v3-coral) 75%, #a84427) !important;
+  border-radius: 0.72rem !important;
+  background: var(--admin-v3-coral) !important;
+  color: white !important;
+  font-size: max(0.8rem, 12.5px) !important;
+  box-shadow: 0 4px 12px rgba(233, 102, 60, 0.18) !important;
+}
+
+.rawaj-admin-v3 :is(button, a).bg-destructive,
+.rawaj-admin-v3 :is(button, a)[data-tone="danger"] {
+  min-height: 2.75rem;
+  border-radius: 0.72rem !important;
+}
+
+.rawaj-admin-v3 :is(button, a):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--admin-v3-coral) 18%, transparent);
+  outline-offset: 2px;
+}
+
+.rawaj-admin-v3 :is([class*="badge"], .badge, [data-status]) {
+  border-radius: 0.55rem !important;
+  font-size: max(0.72rem, 11.5px) !important;
+}
+
+.rawaj-admin-v3 .overflow-x-auto {
+  border-radius: 0.95rem;
+  overscroll-behavior-inline: contain;
+}
+
+.rawaj-admin-v3 .sticky {
+  scroll-margin-top: calc(var(--rawaj-header-height, 4rem) + 1rem);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rawaj-admin-v3 > div:nth-child(2) nav a:hover:not([aria-current="page"]) {
+    border-color: color-mix(in srgb, var(--admin-v3-coral) 28%, var(--admin-v3-line));
+    background: color-mix(in srgb, var(--admin-v3-muted) 72%, var(--admin-v3-surface)) !important;
+  }
+
+  .rawaj-admin-v3 :is(button, a).bg-primary:hover,
+  .rawaj-admin-v3 :is(button, a)[data-tone="primary"]:hover {
+    filter: brightness(0.97) saturate(1.02);
+  }
+}
+
+@media (min-width: 1024px) {
+  .rawaj-admin-v3 {
+    grid-template-columns: minmax(13.5rem, 16rem) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .rawaj-admin-v3 > div:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .rawaj-admin-v3 > div:nth-child(2) {
+    position: sticky !important;
+    top: calc(var(--rawaj-header-height, 4rem) + 1rem) !important;
+    z-index: 10 !important;
+    align-self: start;
+  }
+
+  .rawaj-admin-v3 > div:nth-child(2) > div:first-child {
+    display: flex !important;
+  }
+
+  .rawaj-admin-v3 > div:nth-child(2) nav {
+    display: grid !important;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+  }
+
+  .rawaj-admin-v3 > div:nth-child(2) nav a {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  [dir="rtl"] .rawaj-admin-v3 > div:nth-child(2) nav a {
+    justify-content: flex-start;
+  }
+
+  .rawaj-admin-v3 > div:nth-child(3) {
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 767px) {
+  .rawaj-admin-v3 {
+    gap: 0.75rem;
+    padding-inline: 0.75rem !important;
+  }
+
+  .rawaj-admin-v3 > div:nth-child(2) {
+    top: calc(var(--rawaj-header-height, 4rem) + 0.35rem) !important;
+    margin-inline: -0.15rem;
+  }
+
+  .rawaj-admin-v3 > div:nth-child(2) nav a {
+    min-height: 2.65rem !important;
+    padding-inline: 0.75rem !important;
+  }
+
+  .rawaj-admin-v3 :is(table, [role="table"]) {
+    min-width: 42rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .rawaj-admin-v3 > div:first-child {
+    padding: 0.75rem !important;
+  }
+
+  .rawaj-admin-v3 :is(th, td, [role="columnheader"], [role="cell"]) {
+    padding: 0.68rem;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .rawaj-admin-v3 :is(button, a, article, section) {
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-admin-v3 *,
+  .rawaj-admin-v3 *::before,
+  .rawaj-admin-v3 *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
