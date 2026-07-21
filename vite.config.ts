@@ -16,10 +16,15 @@ const rawajBuildInfo = {
   provider: process.env.VERCEL ? "vercel" : process.env.GITHUB_ACTIONS ? "github-actions" : "local",
 };
 
+const rawajDisableRemoteMedia =
+  process.env.VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA === "1" ||
+  process.env.GITHUB_ACTIONS === "true";
+
 export default defineConfig({
   vite: {
     define: {
       __RAWAJ_BUILD_INFO__: JSON.stringify(rawajBuildInfo),
+      __RAWAJ_DISABLE_REMOTE_MEDIA__: JSON.stringify(rawajDisableRemoteMedia),
     },
   },
   tanstackStart: {
