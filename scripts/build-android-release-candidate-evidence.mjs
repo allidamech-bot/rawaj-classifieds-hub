@@ -69,16 +69,25 @@ assert.equal(
   "The CI AAB must remain unsigned; release signing is an external Play gate.",
 );
 
-const gitSha = (
-  process.env.GITHUB_SHA ||
-  execFileSync("git", ["rev-parse", "HEAD"], {
-    cwd: repositoryRoot,
-    encoding: "utf8",
-  })
+const checkoutCommitSha = execFileSync("git", ["rev-parse", "HEAD"], {
+  cwd: repositoryRoot,
+  encoding: "utf8",
+}).trim();
+const sourceCommitSha = (
+  process.env.ANDROID_RC_SOURCE_COMMIT || checkoutCommitSha
 ).trim();
-assert.match(gitSha, /^[0-9a-f]{40}$/i, "Could not resolve the source commit SHA.");
+assert.match(
+  checkoutCommitSha,
+  /^[0-9a-f]{40}$/i,
+  "Could not resolve the checked-out commit SHA.",
+);
+assert.match(
+  sourceCommitSha,
+  /^[0-9a-f]{40}$/i,
+  "Could not resolve the source branch commit SHA.",
+);
 
-const shortSha = gitSha.slice(0, 12).toLowerCase();
+const shortSha = sourceCommitSha.slice(0, 12).toLowerCase();
 const safeVersionName = expected.versionName.replace(/[^0-9A-Za-z._-]+/g, "-");
 const artifactStem = `rawaj-${safeVersionName}-vc${expected.versionCode}-${shortSha}-unsigned`;
 const aabName = `${artifactStem}.aab`;
@@ -100,7 +109,8 @@ const evidence = {
   generatedAt: new Date().toISOString(),
   repository: process.env.GITHUB_REPOSITORY || "allidamech-bot/rawaj-classifieds-hub",
   source: {
-    commitSha: gitSha.toLowerCase(),
+    commitSha: sourceCommitSha.toLowerCase(),
+    checkoutCommitSha: checkoutCommitSha.toLowerCase(),
     branch: process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || "local",
   },
   android: {
@@ -144,7 +154,8 @@ await Promise.all([
       `Application ID: ${analyzed.applicationId}`,
       `Version name: ${analyzed.versionName}`,
       `Version code: ${analyzed.versionCode}`,
-      `Source commit: ${gitSha.toLowerCase()}`,
+      `Source commit: ${sourceCommitSha.toLowerCase()}`,
+      `Workflow checkout commit: ${checkoutCommitSha.toLowerCase()}`,
       "Signing: unsigned CI candidate; Google Play App Signing and publication remain external manual gates.",
       "Do not distribute these unsigned artifacts to end users.",
       "",
