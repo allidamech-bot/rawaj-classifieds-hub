@@ -1,0 +1,45 @@
+name: Syria Lint Diagnostic
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --silent
+
+      - name: Generate formatter and lint evidence
+        shell: bash
+        run: |
+          mkdir -p diagnostic
+          npx prettier scripts/summarize-supabase-storage-logs.mjs > diagnostic/summarize-supabase-storage-logs.formatted.mjs
+          set +e
+          npx eslint --quiet scripts/summarize-supabase-storage-logs.mjs > diagnostic/eslint.txt 2>&1
+          printf '%s\n' "$?" > diagnostic/eslint-exit-code.txt
+          set -e
+
+      - name: Upload diagnostic evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: syria-lint-diagnostic
+          path: diagnostic
+          if-no-files-found: error
+          retention-days: 1
