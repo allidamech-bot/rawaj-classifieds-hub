@@ -9,7 +9,10 @@ on:
       - "capacitor.config.ts"
       - "package.json"
       - "package-lock.json"
+      - "scripts/build-android-release-candidate-evidence.mjs"
+      - "scripts/android-release-candidate-integrity.test.mjs"
       - ".github/workflows/android-release-candidate.yml"
+      - ".github/workflows/android-release-candidate-integrity.yml"
   workflow_dispatch:
 
 permissions:
@@ -21,46 +24,111 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
+
       - run: npm ci
+
       - name: Validate web and native contracts
         run: |
           npm run typecheck
           node --test scripts/android-media-location-permissions.test.mjs
           node --test scripts/android-deep-link-oauth-readiness.test.mjs
+          node --test scripts/android-release-candidate-integrity.test.mjs
+
       - name: Build web assets
         run: npm run build
+
       - name: Synchronize Capacitor Android project
         run: npx cap sync android
+
       - name: Build Android release candidate
         working-directory: android
         run: |
           chmod +x gradlew
           ./gradlew testDebugUnitTest bundleRelease assembleRelease --stacktrace --console=plain
-      - name: Collect release candidate metadata
+
+      - name: Inspect built Android identity and signing state
+        id: identity
+        shell: bash
         run: |
-          mkdir -p android-rc
-          cp android/app/build/outputs/bundle/release/app-release.aab android-rc/rawaj-1.0.4-rc1-unsigned.aab
-          cp android/app/build/outputs/apk/release/app-release-unsigned.apk android-rc/rawaj-1.0.4-rc1-unsigned.apk
-          sha256sum android-rc/* > android-rc/SHA256SUMS.txt
-          printf '%s\n' \
-            'RAWAJ Android Release Candidate' \
-            'Version name: 1.0.4' \
-            'Version code: 5' \
-            'Signing: unsigned CI candidate; Play signing remains an external acceptance gate' \
-            "Source commit: $GITHUB_SHA" \
-            > android-rc/README.txt
+          set -Eeuo pipefail
+
+          apk_path="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          aab_path="android/app/build/outputs/bundle/release/app-release.aab"
+          test -s "$apk_path"
+          test -s "$aab_path"
+
+          find_android_tool() {
+            local tool_name="$1"
+            local resolved
+            resolved="$(command -v "$tool_name" || true)"
+            if [ -z "$resolved" ] && [ -n "${ANDROID_HOME:-}" ]; then
+              resolved="$(find "$ANDROID_HOME" -type f -name "$tool_name" -perm -u+x 2>/dev/null | sort -V | tail -n 1)"
+            fi
+            if [ -z "$resolved" ]; then
+              echo "Could not locate Android SDK tool: $tool_name" >&2
+              exit 1
+            fi
+            printf '%s' "$resolved"
+          }
+
+          apkanalyzer="$(find_android_tool apkanalyzer)"
+          apksigner="$(find_android_tool apksigner)"
+
+          application_id="$("$apkanalyzer" manifest application-id "$apk_path" | tr -d '\r' | tail -n 1)"
+          version_code="$("$apkanalyzer" manifest version-code "$apk_path" | tr -d '\r' | tail -n 1)"
+          version_name="$("$apkanalyzer" manifest version-name "$apk_path" | tr -d '\r' | tail -n 1)"
+
+          if "$apksigner" verify --print-certs "$apk_path" > apk-signing-inspection.txt 2>&1; then
+            echo "APK unexpectedly contains a signing certificate; CI candidates must remain unsigned." >&2
+            cat apk-signing-inspection.txt >&2
+            exit 1
+          fi
+
+          jarsigner -verify -verbose -certs "$aab_path" > aab-signing-inspection.txt 2>&1 || true
+          if ! grep -qi "jar is unsigned" aab-signing-inspection.txt; then
+            echo "AAB is not the expected unsigned CI candidate." >&2
+            cat aab-signing-inspection.txt >&2
+            exit 1
+          fi
+
+          {
+            echo "application_id=$application_id"
+            echo "version_code=$version_code"
+            echo "version_name=$version_name"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Generate verified release candidate evidence
+        id: evidence
+        env:
+          ANDROID_RC_APK_PATH: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          ANDROID_RC_AAB_PATH: android/app/build/outputs/bundle/release/app-release.aab
+          ANDROID_RC_OUTPUT_DIR: android-rc
+          ANDROID_RC_ANALYZED_APPLICATION_ID: ${{ steps.identity.outputs.application_id }}
+          ANDROID_RC_ANALYZED_VERSION_CODE: ${{ steps.identity.outputs.version_code }}
+          ANDROID_RC_ANALYZED_VERSION_NAME: ${{ steps.identity.outputs.version_name }}
+          ANDROID_RC_APK_SIGNING_STATE: unsigned
+          ANDROID_RC_AAB_SIGNING_STATE: unsigned
+        run: node scripts/build-android-release-candidate-evidence.mjs
+
+      - name: Preserve signing inspection evidence
+        run: |
+          cp apk-signing-inspection.txt android-rc/
+          cp aab-signing-inspection.txt android-rc/
+
       - name: Upload Android release candidate
         uses: actions/upload-artifact@v4
         with:
-          name: rawaj-android-1.0.4-rc1
+          name: ${{ steps.evidence.outputs.artifact_name }}
           path: android-rc/
           if-no-files-found: error
           retention-days: 14
