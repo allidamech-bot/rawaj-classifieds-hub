@@ -38,11 +38,11 @@ function functionSource(source, start, end) {
 
 test("JSON-LD serialization neutralizes script-breaking characters", () => {
   assert.match(seo, /export function serializeJsonLd/);
-  assert.ok(seo.includes('.replace(/</g, "\\u003c")'));
-  assert.ok(seo.includes('.replace(/>/g, "\\u003e")'));
-  assert.ok(seo.includes('.replace(/&/g, "\\u0026")'));
-  assert.ok(seo.includes('.replace(/\u2028/g, "\\u2028")'));
-  assert.ok(seo.includes('.replace(/\u2029/g, "\\u2029")'));
+  assert.ok(seo.includes('.replace(/</g, "\\\\u003c")'));
+  assert.ok(seo.includes('.replace(/>/g, "\\\\u003e")'));
+  assert.ok(seo.includes('.replace(/&/g, "\\\\u0026")'));
+  assert.ok(seo.includes('.replace(/\\u2028/g, "\\\\u2028")'));
+  assert.ok(seo.includes('.replace(/\\u2029/g, "\\\\u2029")'));
   assert.match(seo, /__html: serializeJsonLd\(data\)/);
   assert.doesNotMatch(seo, /__html: JSON\.stringify\(data\)/);
 });
@@ -64,7 +64,7 @@ test("public listing allowlist excludes moderation-only fields", () => {
   assert.doesNotMatch(publicFields, /select\("\*"\)/);
 });
 
-test("all public listing reads use explicit allowlists", () => {
+test("all public listing reads use explicit schema-aware allowlists", () => {
   const publicList = functionSource(
     listings,
     "export async function fetchPublicListings(",
@@ -87,18 +87,21 @@ test("all public listing reads use explicit allowlists", () => {
     publicDetail,
     /\.select\(publicListingSelectForSchema\(supportsSypDenomination\)\)/,
   );
+  assert.match(locationAware, /publicListingSelectForSchema\(supportsSypDenomination\)/);
+  assert.match(priceDrops, /publicListingSelectForSchema\(supportsSypDenomination\)/);
+  assert.match(canonicalAware, /fetchPublicListings\(filters, cursor, pageSize\)/);
 
-  for (const source of [locationAware, canonicalAware, priceDrops]) {
-    assert.match(source, /\.select\(publicListingSelect\)/);
+  for (const source of [publicList, publicDetail, locationAware, priceDrops]) {
+    assert.doesNotMatch(source, /listing_images!inner\(\*\)/);
+    assert.doesNotMatch(source, /\.select\("\*"\)/);
   }
-
-  assert.doesNotMatch(publicList, /listing_images!inner\(\*\)/);
-  assert.doesNotMatch(publicList, /\.select\("\*"\)/);
-  assert.doesNotMatch(publicDetail, /\.select\("\*"\)/);
 });
 
-test("public seller page uses listing and review allowlists", () => {
-  assert.match(seller, /\.select\(publicListingSelect, \{ count: "exact" \}\)/);
+test("public seller page uses schema-aware listing and review allowlists", () => {
+  assert.match(
+    seller,
+    /\.select\(publicListingSelectForSchema\(supportsSypDenomination\), \{ count: "exact" \}\)/,
+  );
   assert.match(seller, /\.select\(publicSellerReviewSelect, \{ count: "exact" \}\)/);
   assert.match(seller, /sanitizePublicListing\(mapListing/);
   assert.doesNotMatch(seller, /\.select\("\*"\)/);
