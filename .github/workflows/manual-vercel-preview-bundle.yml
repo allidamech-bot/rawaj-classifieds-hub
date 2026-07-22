@@ -1,6 +1,9 @@
 name: Manual Vercel Preview Bundle
 
 on:
+  pull_request:
+    branches:
+      - feature/listing-user-journey-recovery
   push:
     branches:
       - feature/cloudflare-storage-migration-continuation
