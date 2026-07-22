@@ -1,0 +1,45 @@
+name: R2 Typecheck Diagnostics
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/lib/api/listing-image-delete-guarded.ts"
+      - "src/lib/api/listing-image-upload-guarded.ts"
+      - "src/lib/api/listing-images-read-guarded.ts"
+      - "src/lib/r2-listing-images-client.ts"
+      - "src/lib/server/r2-listing-images.ts"
+      - "src/routes/api.listing-images.ts"
+      - ".github/workflows/r2-typecheck-diagnostics.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Capture TypeScript diagnostics
+        shell: bash
+        run: |
+          set +e
+          npm run typecheck > r2-typecheck.log 2>&1
+          status=$?
+          cat r2-typecheck.log
+          echo "TYPECHECK_EXIT_CODE=$status" >> "$GITHUB_ENV"
+          exit 0
+      - name: Upload TypeScript diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: r2-typecheck-${{ github.sha }}
+          path: r2-typecheck.log
+          retention-days: 1
+      - name: Fail when TypeScript failed
+        run: test "$TYPECHECK_EXIT_CODE" = "0"
