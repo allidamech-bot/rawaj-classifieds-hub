@@ -1,5 +1,7 @@
 const LISTING_STUDIO_SELECTOR = ".rawaj-listing-studio-v4";
 const ACTION_BAR_SELECTOR = ".rawaj-studio-action-bar";
+const ACTION_BUTTON_SELECTOR = `${LISTING_STUDIO_SELECTOR} ${ACTION_BAR_SELECTOR} button`;
+const boundBackButtons = new WeakSet<HTMLButtonElement>();
 
 function normalizeLabel(value: string | null | undefined) {
   return (value ?? "").replace(/\s+/g, " ").trim().toLowerCase();
@@ -36,34 +38,37 @@ function moveToPreviousStep(studio: Element) {
   return true;
 }
 
-function normalizeActionButtonTypes(root: ParentNode = document) {
-  root
-    .querySelectorAll<HTMLButtonElement>(
-      `${LISTING_STUDIO_SELECTOR} ${ACTION_BAR_SELECTOR} button:not([type])`,
-    )
-    .forEach((button) => {
-      button.type = "button";
-    });
-}
-
-function handleListingStudioClick(event: MouseEvent) {
-  const target = event.target;
-  if (!(target instanceof Element)) return;
-
-  const button = target.closest<HTMLButtonElement>(`${ACTION_BAR_SELECTOR} button`);
-  if (!button || !isBackButton(button)) return;
+function handleBackButtonClick(event: MouseEvent) {
+  const button = event.currentTarget;
+  if (!(button instanceof HTMLButtonElement) || button.disabled) return;
 
   const studio = button.closest(LISTING_STUDIO_SELECTOR);
-  if (!studio || button.disabled) return;
+  if (!studio) return;
 
   event.preventDefault();
   event.stopImmediatePropagation();
   moveToPreviousStep(studio);
 }
 
+function bindActionButton(button: HTMLButtonElement) {
+  button.type = "button";
+  if (!isBackButton(button) || boundBackButtons.has(button)) return;
+
+  boundBackButtons.add(button);
+  button.dataset.listingStudioNavigationReady = "true";
+  button.addEventListener("click", handleBackButtonClick, true);
+}
+
+function normalizeActionButtonTypes(root: ParentNode = document) {
+  if (root instanceof HTMLButtonElement && root.matches(ACTION_BUTTON_SELECTOR)) {
+    bindActionButton(root);
+  }
+
+  root.querySelectorAll<HTMLButtonElement>(ACTION_BUTTON_SELECTOR).forEach(bindActionButton);
+}
+
 if (typeof document !== "undefined") {
   normalizeActionButtonTypes();
-  document.addEventListener("click", handleListingStudioClick, true);
 
   const observer = new MutationObserver((records) => {
     for (const record of records) {
