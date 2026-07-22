@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "rawaj-public-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-23",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "API_ALLOWED_ORIGINS": "https://rawa-j.com,https://www.rawa-j.com",
+    "API_CACHE_SECONDS": "60",
+    "MEDIA_CACHE_SECONDS": "86400"
+  }
+}
