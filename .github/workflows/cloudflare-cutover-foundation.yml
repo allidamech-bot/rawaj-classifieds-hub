@@ -1,0 +1,95 @@
+name: Cloudflare Cutover Foundation
+
+on:
+  pull_request:
+    paths:
+      - "cloudflare/**"
+      - "scripts/cloudflare-cutover-foundation.test.mjs"
+      - ".github/workflows/cloudflare-cutover-foundation.yml"
+  push:
+    branches:
+      - "feature/cloudflare-cutover-current-site"
+    paths:
+      - "cloudflare/**"
+      - "scripts/cloudflare-cutover-foundation.test.mjs"
+      - ".github/workflows/cloudflare-cutover-foundation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install repository dependencies
+        run: npm ci --ignore-scripts --silent
+
+      - name: Validate migration scripts
+        run: |
+          node --check cloudflare/migration/export-public-snapshot.mjs
+          node --check cloudflare/migration/migrate-media-to-r2.mjs
+          node --check cloudflare/migration/verify-public-snapshot.mjs
+          node --check cloudflare/worker/scripts/render-config.mjs
+
+      - name: Typecheck Worker
+        run: npx tsc -p cloudflare/worker/tsconfig.json
+
+      - name: Run Cloudflare cutover contract tests
+        run: node --test scripts/cloudflare-cutover-foundation.test.mjs
+
+      - name: Replay D1 migrations in SQLite
+        shell: python
+        run: |
+          import sqlite3
+          from pathlib import Path
+
+          connection = sqlite3.connect(":memory:")
+          for migration in sorted(Path("cloudflare/d1/migrations").glob("*.sql")):
+              connection.executescript(migration.read_text(encoding="utf-8"))
+
+          required = {
+              "categories",
+              "subcategories",
+              "governorates",
+              "taxonomy_nodes",
+              "media_assets",
+              "public_profiles",
+              "location_nodes",
+              "location_search_aliases",
+              "listings",
+              "listing_images",
+              "ad_placements",
+              "listings_fts",
+          }
+          actual = {
+              row[0]
+              for row in connection.execute(
+                  "SELECT name FROM sqlite_schema WHERE type IN ('table', 'view')"
+              )
+          }
+          missing = required - actual
+          if missing:
+              raise SystemExit(f"Missing D1 objects: {sorted(missing)}")
+
+          violations = list(connection.execute("PRAGMA foreign_key_check"))
+          if violations:
+              raise SystemExit(f"Foreign key violations: {violations}")
+          print(f"Validated {len(actual)} SQLite objects.")
+
+      - name: Reject tracked runtime secrets and snapshots
+        shell: bash
+        run: |
+          if git ls-files | grep -E '(^|/)(wrangler\.generated\.jsonc|\.dev\.vars|snapshots/)' ; then
+            echo "Runtime Cloudflare config or data snapshot must not be committed."
+            exit 1
+          fi
