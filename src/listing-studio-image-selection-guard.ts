@@ -31,9 +31,7 @@ function validationMessage(input: HTMLInputElement, rejected: File[]) {
   }
   if (oversized.length > 0) {
     reasons.push(
-      language === "ar"
-        ? "حجم الصورة يتجاوز 5MB"
-        : "image size exceeds 5MB",
+      language === "ar" ? "حجم الصورة يتجاوز 5MB" : "image size exceeds 5MB",
     );
   }
 
