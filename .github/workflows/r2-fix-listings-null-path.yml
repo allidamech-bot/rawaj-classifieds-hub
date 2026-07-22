@@ -1,0 +1,47 @@
+name: Apply R2 Signed Path Fix
+
+on:
+  push:
+    branches:
+      - agent/r2-listing-images-phase-1
+    paths:
+      - ".github/workflows/r2-fix-listings-null-path.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/r2-listing-images-phase-1
+          fetch-depth: 0
+      - name: Patch nullable signed path
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("src/lib/api/listings.ts")
+          text = path.read_text(encoding="utf-8")
+          old = "if (item.signedUrl) urlsByPath.set(item.path, item.signedUrl);"
+          new = "if (item.path && item.signedUrl) urlsByPath.set(item.path, item.signedUrl);"
+          if old in text:
+              text = text.replace(old, new, 1)
+              path.write_text(text, encoding="utf-8")
+          elif new not in text:
+              raise SystemExit("Signed path statement not found")
+          PY
+          git diff --check
+      - name: Commit fix
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "rawaj-r2-agent"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/lib/api/listings.ts
+          git commit -m "fix: guard nullable signed image paths"
+          git push origin HEAD:agent/r2-listing-images-phase-1
