@@ -30,7 +30,10 @@ const [
 ]);
 
 test("phase 4 listing studio layer is route-scoped and loaded last", () => {
-  assert.match(routeStyles, /listingStudioV4Css from "\.\.\/listing-studio-v4\.css\?url"/);
+  assert.match(
+    routeStyles,
+    /listingStudioV4Css from "\.\.\/listing-studio-v4\.css\?url"/,
+  );
   assert.match(routeStyles, /listingStudioV4: listingStudioV4Css/);
   assert.match(routeStyles, /import "\.\.\/listing-studio-navigation-fix"/);
   assert.match(routeStyles, /import "\.\.\/listing-studio-mobile-recovery\.css"/);
@@ -44,7 +47,10 @@ test("phase 4 keeps publishing behavior untouched while improving form semantics
   assert.match(route, /progressLabel=\{text\(/);
   assert.match(route, /role="status" aria-live="polite"/);
   assert.match(studio, /aria-label=\{progressLabel\}/);
-  assert.doesNotMatch(css, /display:\s*none[^}]*\.input|pointer-events:\s*none[^}]*\.rawaj-studio-action-bar/);
+  assert.doesNotMatch(
+    css,
+    /display:\s*none[^}]*\.input|pointer-events:\s*none[^}]*\.rawaj-studio-action-bar/,
+  );
 });
 
 test("taxonomy selector keeps the complete category tree visible", () => {
@@ -78,8 +84,14 @@ test("phase 4 establishes readable controls, compact sections, and responsive la
 
 test("mobile recovery keeps the add-listing surface readable and non-overlapping", () => {
   assert.match(recoveryCss, /background:\s*linear-gradient\(135deg, #fffaf1/);
-  assert.match(recoveryCss, /grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/);
-  assert.match(recoveryCss, /grid-template-columns:\s*minmax\(5\.25rem, 0\.34fr\) minmax\(0, 1fr\)/);
+  assert.match(
+    recoveryCss,
+    /grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/,
+  );
+  assert.match(
+    recoveryCss,
+    /grid-template-columns:\s*minmax\(5\.25rem, 0\.34fr\) minmax\(0, 1fr\)/,
+  );
   assert.match(recoveryCss, /touch-action:\s*manipulation/);
   assert.doesNotMatch(recoveryCss, /pointer-events:\s*none/);
   assert.doesNotMatch(
@@ -98,7 +110,13 @@ test("listing studio back navigation is explicit and cannot submit the form", ()
 
 test("phase 4 contract runs in the standard precheck flow", () => {
   const parsed = JSON.parse(packageJson);
-  assert.equal(parsed.scripts["test:listing-studio-v4"], "node --test scripts/listing-studio-v4.test.mjs");
+  assert.equal(
+    parsed.scripts["test:listing-studio-v4"],
+    "node --test scripts/listing-studio-v4.test.mjs",
+  );
   assert.match(parsed.scripts.precheck, /test:listing-studio-v4/);
-  assert.match(parsed.scripts.precheck, /^npm run test:conversations-messaging-realtime/);
+  assert.match(
+    parsed.scripts.precheck,
+    /^npm run test:conversations-messaging-realtime/,
+  );
 });
