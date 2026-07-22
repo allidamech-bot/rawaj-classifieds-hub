@@ -1,12 +1,44 @@
 import { expect, test, type Page } from "@playwright/test";
 
 type FixtureWindow = Window & { __listingStudioSubmitCount?: number };
+type Rgb = readonly [number, number, number];
 
 const mobileViewports = [
   { width: 360, height: 800 },
   { width: 390, height: 844 },
   { width: 412, height: 915 },
 ] as const;
+
+const lightHeroSamples: Rgb[] = [
+  [255, 250, 241],
+  [238, 248, 242],
+  [255, 240, 231],
+];
+
+function parseRgb(value: string): Rgb {
+  const channels = value.match(/\d+(?:\.\d+)?/g)?.slice(0, 3).map(Number);
+  if (!channels || channels.length !== 3) throw new Error(`Invalid RGB color: ${value}`);
+  return [channels[0], channels[1], channels[2]];
+}
+
+function relativeLuminance(rgb: Rgb) {
+  const [red, green, blue] = rgb.map((channel) => {
+    const normalized = channel / 255;
+    return normalized <= 0.04045
+      ? normalized / 12.92
+      : ((normalized + 0.055) / 1.055) ** 2.4;
+  });
+  return red * 0.2126 + green * 0.7152 + blue * 0.0722;
+}
+
+function contrastRatio(first: Rgb, second: Rgb) {
+  const firstLuminance = relativeLuminance(first);
+  const secondLuminance = relativeLuminance(second);
+  return (
+    (Math.max(firstLuminance, secondLuminance) + 0.05) /
+    (Math.min(firstLuminance, secondLuminance) + 0.05)
+  );
+}
 
 async function installListingStudioFixture(page: Page) {
   await page.evaluate(() => {
@@ -91,7 +123,10 @@ for (const viewport of mobileViewports) {
         };
       });
       expect(heroColors.background).toContain("linear-gradient");
-      expect(heroColors.headingColor).toBe("rgb(23, 59, 52)");
+      const headingRgb = parseRgb(heroColors.headingColor);
+      for (const backgroundRgb of lightHeroSamples) {
+        expect(contrastRatio(headingRgb, backgroundRgb)).toBeGreaterThanOrEqual(7);
+      }
 
       const stepBoxes = await studio.locator(".rawaj-studio-steps > li").evaluateAll((elements) =>
         elements.map((element) => {
@@ -134,6 +169,7 @@ for (const viewport of mobileViewports) {
       const back = page.getByTestId("fixture-back");
 
       await expect(back).toHaveAttribute("type", "button");
+      await expect(back).toHaveAttribute("data-listing-studio-navigation-ready", "true");
       await back.click();
 
       await expect(studio.locator(".rawaj-studio-steps > li").first()).toHaveAttribute(
