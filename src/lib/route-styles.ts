@@ -1,3 +1,4 @@
+import "../modern-syrian-commerce-foundation.css";
 import "../auth-stable-route-styles.css";
 import "../auth-support-correction-v1.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
