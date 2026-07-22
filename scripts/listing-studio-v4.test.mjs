@@ -2,17 +2,30 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [root, routeStyles, route, studio, css, recoveryCss, navigationFix, packageJson] =
-  await Promise.all([
-    readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/listing-studio/listing-studio.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/listing-studio-v4.css", import.meta.url), "utf8"),
-    readFile(new URL("../src/listing-studio-mobile-recovery.css", import.meta.url), "utf8"),
-    readFile(new URL("../src/listing-studio-navigation-fix.ts", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-  ]);
+const [
+  root,
+  routeStyles,
+  route,
+  studio,
+  taxonomySelector,
+  css,
+  recoveryCss,
+  navigationFix,
+  packageJson,
+] = await Promise.all([
+  readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/listing-studio/listing-studio.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/listing-studio/ListingTaxonomySelector.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(new URL("../src/listing-studio-v4.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/listing-studio-mobile-recovery.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/listing-studio-navigation-fix.ts", import.meta.url), "utf8"),
+  readFile(new URL("../package.json", import.meta.url), "utf8"),
+]);
 
 test("phase 4 listing studio layer is route-scoped and loaded last", () => {
   assert.match(routeStyles, /listingStudioV4Css from "\.\.\/listing-studio-v4\.css\?url"/);
@@ -29,6 +42,17 @@ test("phase 4 keeps publishing behavior untouched while improving form semantics
   assert.match(route, /role="status" aria-live="polite"/);
   assert.match(studio, /aria-label=\{progressLabel\}/);
   assert.doesNotMatch(css, /display:\s*none[^}]*\.input|pointer-events:\s*none[^}]*\.rawaj-studio-action-bar/);
+});
+
+test("taxonomy selector never offers a branch that cannot reach an active final category", () => {
+  assert.match(taxonomySelector, /function hasAvailableLeaf\(/);
+  assert.match(taxonomySelector, /rawOptions\.filter\(\(node\) => hasAvailableLeaf\(node\)\)/);
+  assert.match(taxonomySelector, /selectedPathIsDeadEnd/);
+  assert.match(taxonomySelector, /getTaxonomyRootNodes\(index\)\.filter/);
+  assert.doesNotMatch(
+    taxonomySelector,
+    /هذا المسار لا يحتوي تصنيفاً نهائياً متاحاً\. ارجع واختر مساراً آخر/,
+  );
 });
 
 test("phase 4 establishes readable controls, compact sections, and responsive layouts", () => {
