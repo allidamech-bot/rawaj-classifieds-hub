@@ -8,6 +8,7 @@ const wrangler = JSON.parse(read("wrangler.jsonc"));
 const r2Server = read("src/lib/server/r2-listing-images.ts");
 const r2Route = read("src/routes/api.listing-images.ts");
 const r2Client = read("src/lib/r2-listing-images-client.ts");
+const serverEntry = read("src/server.ts");
 const migrationTool = read("scripts/migrate-supabase-listing-images-to-r2.mjs");
 
 const secretNames = [
@@ -38,6 +39,11 @@ test("R2 credentials remain server-only", () => {
   }
 });
 
+test("listing image previews allow browser blob URLs", () => {
+  assert.match(serverEntry, /img-src 'self' data: blob: https:/);
+  assert.match(serverEntry, /worker-src 'self' blob:/);
+});
+
 test("R2 listing image API preserves authorization and upload limits", () => {
   assert.match(r2Route, /MAX_IMAGE_BYTES\s*=\s*5\s*\*\s*1024\s*\*\s*1024/);
   assert.match(r2Route, /image\/jpeg/);
@@ -46,6 +52,19 @@ test("R2 listing image API preserves authorization and upload limits", () => {
   assert.match(r2Route, /\.eq\("owner_id", auth\.userId\)/);
   assert.match(r2Route, /\.in\("status", \["draft", "rejected"\]\)/);
   assert.match(r2Route, /key\.startsWith\(`\$\{auth\.userId\}\/\$\{listingId\}\/`\)/);
+});
+
+test("protected previews preserve the Supabase access token", () => {
+  assert.match(r2Client, /X-Rawaj-Supabase-Authorization/);
+  assert.match(r2Client, /Authorization: bearer/);
+  assert.match(r2Client, /credentials: "same-origin"/);
+  assert.match(r2Client, /client\.auth\.refreshSession\(\)/);
+  assert.match(r2Route, /x-rawaj-supabase-authorization/);
+  assert.match(r2Route, /parseBearerToken\(rawajHeader\)/);
+  assert.match(r2Route, /runtimeEnvironment\("SUPABASE_URL"\)/);
+  assert.match(r2Route, /import\.meta\.env\.VITE_SUPABASE_URL/);
+  assert.match(r2Route, /server_supabase_unconfigured/);
+  assert.match(r2Route, /status:\s*503/);
 });
 
 test("R2 rollout remains backward compatible with Supabase images", () => {
