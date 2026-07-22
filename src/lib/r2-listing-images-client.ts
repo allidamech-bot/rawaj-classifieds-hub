@@ -87,10 +87,13 @@ export async function signR2ListingImagePaths(
   accessToken: string | null,
 ): Promise<Map<string, string>> {
   const uniquePaths = [...new Set(paths.filter(isR2ListingImagePath))];
-  if (uniquePaths.length === 0 || typeof window === "undefined") return new Map();
+  if (uniquePaths.length === 0) return new Map();
+
+  const endpoint = resolveR2ApiUrl("sign");
+  if (!endpoint) return new Map();
 
   try {
-    const response = await fetch(`${R2_API_PATH}?action=sign`, {
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -108,4 +111,19 @@ export async function signR2ListingImagePaths(
   } catch {
     return new Map();
   }
+}
+
+function resolveR2ApiUrl(action: string): string | null {
+  const path = `${R2_API_PATH}?action=${encodeURIComponent(action)}`;
+  if (typeof window !== "undefined") return path;
+
+  const deploymentHost =
+    typeof process !== "undefined"
+      ? process.env.VERCEL_URL?.trim() || process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim()
+      : "";
+  if (!deploymentHost) return null;
+  const origin = /^https?:\/\//i.test(deploymentHost)
+    ? deploymentHost
+    : `https://${deploymentHost}`;
+  return new URL(path, origin).toString();
 }
