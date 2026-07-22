@@ -30,8 +30,24 @@ export function ListingTaxonomySelector({
   const path = getTaxonomyPath(index, selected);
   const parentPath = selected?.isLeaf ? path.slice(0, -1) : path;
   const parent = parentPath[parentPath.length - 1];
-  const options = parent ? getTaxonomyChildren(index, parent.id) : getTaxonomyRootNodes(index);
+  const rawOptions = parent ? getTaxonomyChildren(index, parent.id) : getTaxonomyRootNodes(index);
   const DirectionIcon = language === "ar" ? ChevronLeft : ChevronRight;
+
+  function hasAvailableLeaf(node: TaxonomyNode, visited = new Set<string>()): boolean {
+    if (node.isLeaf) return true;
+    if (visited.has(node.id)) return false;
+    const nextVisited = new Set(visited);
+    nextVisited.add(node.id);
+    return getTaxonomyChildren(index, node.id).some((child) =>
+      hasAvailableLeaf(child, nextVisited),
+    );
+  }
+
+  const viableOptions = rawOptions.filter((node) => hasAvailableLeaf(node));
+  const selectedPathIsDeadEnd = Boolean(selected && !selected.isLeaf && viableOptions.length === 0);
+  const options = selectedPathIsDeadEnd
+    ? getTaxonomyRootNodes(index).filter((node) => node.id !== selected?.id && hasAvailableLeaf(node))
+    : viableOptions;
 
   function choose(node: TaxonomyNode) {
     onSelect(node, getTaxonomyPath(index, node));
@@ -78,43 +94,55 @@ export function ListingTaxonomySelector({
           </div>
         </div>
       ) : (
-        <div className="grid gap-2 sm:grid-cols-2" role="list">
-          {options.map((node) => {
-            const children = getTaxonomyChildren(index, node.id);
-            return (
-              <button
-                key={node.id}
-                type="button"
-                role="listitem"
-                onClick={() => choose(node)}
-                className="flex min-h-14 items-center justify-between gap-3 rounded-2xl border border-border/75 bg-card/85 p-3 text-start transition hover:border-primary/35 hover:bg-card active:scale-[0.99]"
-              >
-                <span>
-                  <span className="block text-sm font-bold">
-                    {taxonomyNodeName(node, language)}
+        <>
+          {selectedPathIsDeadEnd && options.length > 0 ? (
+            <p className="rounded-xl border border-warning/25 bg-warning/8 p-3 text-xs text-foreground">
+              {text(
+                "هذا القسم غير مكتمل حالياً. اختر أحد الأقسام المتاحة أدناه للمتابعة.",
+                "This category is currently incomplete. Choose an available category below to continue.",
+              )}
+            </p>
+          ) : null}
+          <div className="grid gap-2 sm:grid-cols-2" role="list">
+            {options.map((node) => {
+              const children = getTaxonomyChildren(index, node.id).filter((child) =>
+                hasAvailableLeaf(child),
+              );
+              return (
+                <button
+                  key={node.id}
+                  type="button"
+                  role="listitem"
+                  onClick={() => choose(node)}
+                  className="flex min-h-14 items-center justify-between gap-3 rounded-2xl border border-border/75 bg-card/85 p-3 text-start transition hover:border-primary/35 hover:bg-card active:scale-[0.99]"
+                >
+                  <span>
+                    <span className="block text-sm font-bold">
+                      {taxonomyNodeName(node, language)}
+                    </span>
+                    <span className="mt-1 block text-[11px] text-muted-foreground">
+                      {node.isLeaf
+                        ? text("اختيار نهائي", "Final selection")
+                        : text(`${children.length} خيارات`, `${children.length} options`)}
+                    </span>
                   </span>
-                  <span className="mt-1 block text-[11px] text-muted-foreground">
-                    {node.isLeaf
-                      ? text("اختيار نهائي", "Final selection")
-                      : text(`${children.length} خيارات`, `${children.length} options`)}
-                  </span>
-                </span>
-                {node.isLeaf ? (
-                  <Check className="h-4 w-4 text-primary" />
-                ) : (
-                  <DirectionIcon className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-            );
-          })}
-        </div>
+                  {node.isLeaf ? (
+                    <Check className="h-4 w-4 text-primary" />
+                  ) : (
+                    <DirectionIcon className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {!selected?.isLeaf && options.length === 0 && (
         <p className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive">
           {text(
-            "هذا المسار لا يحتوي تصنيفاً نهائياً متاحاً. ارجع واختر مساراً آخر.",
-            "This path has no available final category. Go back and choose another path.",
+            "لا توجد تصنيفات نهائية متاحة للنشر حالياً. حاول مرة أخرى لاحقاً.",
+            "No final publishing categories are available right now. Try again later.",
           )}
         </p>
       )}
