@@ -55,6 +55,13 @@ function HomePage() {
   return (
     <>
       <AppHeader />
+      <div
+        role="status"
+        aria-live="polite"
+        className="border-y border-amber-300/70 bg-amber-50 px-4 py-3 text-center text-sm font-bold text-amber-950 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-100 sm:text-base"
+      >
+        الموقع قيد التطوير لمدة 24 ساعة.
+      </div>
       <main className="rawaj-home-v3-main">
         <PageTransition>
           <PageContainer className="rawaj-home-v3 rawaj-content-stack py-3 sm:py-5 lg:py-7">
