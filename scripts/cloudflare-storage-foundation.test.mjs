@@ -17,7 +17,7 @@ const secretNames = [
   "R2_ENDPOINT",
 ];
 
-test("Cloudflare Worker deployment stays preview-safe and explicit", () => {
+test("Cloudflare Worker deployment stays private and explicit", () => {
   assert.equal(wrangler.name, "rawaj-classifieds-hub");
   assert.equal(wrangler.main, ".output/server/index.mjs");
   assert.equal(wrangler.assets?.directory, ".output/public");
@@ -25,7 +25,8 @@ test("Cloudflare Worker deployment stays preview-safe and explicit", () => {
   assert.equal(wrangler.observability?.enabled, true);
   assert.equal(wrangler.route, undefined);
   assert.equal(wrangler.routes, undefined);
-  assert.equal(wrangler.workers_dev, undefined);
+  assert.equal(wrangler.workers_dev, false);
+  assert.equal(wrangler.preview_urls, false);
 });
 
 test("R2 credentials remain server-only", () => {
