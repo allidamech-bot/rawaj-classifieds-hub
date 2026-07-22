@@ -26,6 +26,25 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Produce ESLint-normalized diagnostic files
+        continue-on-error: true
+        run: >-
+          npx eslint --fix
+          e2e/add-listing-mobile-recovery.spec.ts
+          src/listing-studio-navigation-fix.ts
+          src/lib/route-styles.ts
+          scripts/listing-studio-v4.test.mjs
+      - name: Upload ESLint-normalized diagnostic files
+        uses: actions/upload-artifact@v4
+        with:
+          name: add-listing-eslint-normalized
+          path: |
+            e2e/add-listing-mobile-recovery.spec.ts
+            src/listing-studio-navigation-fix.ts
+            src/lib/route-styles.ts
+            scripts/listing-studio-v4.test.mjs
+          if-no-files-found: error
+          retention-days: 1
       - run: npm run test:listing-studio-v4
       - run: npm run typecheck
       - run: npm run build
