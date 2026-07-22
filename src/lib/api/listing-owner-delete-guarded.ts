@@ -30,9 +30,7 @@ export async function deleteOwnerListing(
   if (!result.ok || r2Paths.length === 0) return result;
 
   const cleanupResults = await Promise.all(
-    r2Paths.map((storagePath) =>
-      deleteListingImageFromR2({ listingId, storagePath, accessToken }),
-    ),
+    r2Paths.map((storagePath) => deleteListingImageFromR2({ listingId, storagePath, accessToken })),
   );
   if (cleanupResults.some((removed) => !removed)) {
     console.error("Failed to clean up one or more R2 images after listing delete", {
