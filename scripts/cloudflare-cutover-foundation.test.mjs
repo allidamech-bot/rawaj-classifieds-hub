@@ -5,6 +5,8 @@ import test from "node:test";
 const read = (path) => readFileSync(path, "utf8");
 const schema = read("cloudflare/d1/migrations/0002_public_marketplace_foundation.sql");
 const worker = read("cloudflare/worker/src/index.ts");
+const workerEntry = read("cloudflare/worker/src/entry.ts");
+const publicListings = read("cloudflare/worker/src/public-listings.ts");
 const baseConfig = JSON.parse(read("cloudflare/worker/wrangler.base.jsonc"));
 const renderConfig = read("cloudflare/worker/scripts/render-config.mjs");
 const exporter = read("cloudflare/migration/export-public-snapshot.mjs");
@@ -52,12 +54,15 @@ test("Worker exposes a versioned API and never exposes arbitrary R2 keys", () =>
   assert.doesNotMatch(worker, /pathname\.slice\(1\).*MEDIA\.get/s);
 });
 
-test("Wrangler configuration is generated from deployment secrets", () => {
+test("Wrangler uses a modular entry without bypassing the base API", () => {
   assert.equal(baseConfig.workers_dev, false);
   assert.equal(baseConfig.preview_urls, false);
-  assert.equal(baseConfig.main, "src/index.ts");
+  assert.equal(baseConfig.main, "src/entry.ts");
   assert.equal(baseConfig.d1_databases, undefined);
   assert.equal(baseConfig.r2_buckets, undefined);
+  assert.match(workerEntry, /handlePublicListingsRequest/);
+  assert.match(workerEntry, /baseWorker\.fetch/);
+  assert.match(publicListings, /\.bind\(\.\.\.values\)/);
   assert.match(renderConfig, /CLOUDFLARE_D1_DATABASE_ID/);
   assert.match(renderConfig, /CLOUDFLARE_R2_BUCKET_NAME/);
   assert.match(renderConfig, /migrations_dir: "\.\.\/d1\/migrations"/);
