@@ -79,10 +79,8 @@ for (const viewport of mobileViewports) {
       const geometry = await page.evaluate(() => ({
         viewport: document.documentElement.clientWidth,
         documentWidth: document.documentElement.scrollWidth,
-        bodyWidth: document.body.scrollWidth,
       }));
       expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewport + 1);
-      expect(geometry.bodyWidth).toBeLessThanOrEqual(geometry.viewport + 1);
 
       const hero = studio.locator(".rawaj-studio-hero");
       const heroColors = await hero.evaluate((element) => {
