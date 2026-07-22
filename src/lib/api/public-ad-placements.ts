@@ -3,6 +3,8 @@ import { getClient, mapError, rowNumber, rowString } from "@/lib/api/shared";
 import type { AdPlacementPage } from "@/lib/api/ad-placements";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import { publicSupabase } from "@/lib/supabase";
+import { fetchCloudflareAdPlacements } from "@/lib/public-data/cloudflare-client";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 export type AdPlacementDevice = "mobile" | "desktop";
 
@@ -145,6 +147,10 @@ async function loadActiveAdPlacements(
   placementPage: AdPlacementPage,
   device: AdPlacementDevice,
 ): Promise<ClassifiedsResult<PublicAdPlacement[]>> {
+  if (isCloudflarePublicDataProvider()) {
+    return fetchCloudflareAdPlacements(placementPage, device);
+  }
+
   const client =
     publicSupabase ??
     (() => {
