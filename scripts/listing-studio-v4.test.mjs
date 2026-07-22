@@ -47,6 +47,10 @@ test("mobile recovery keeps the add-listing surface readable and non-overlapping
   assert.match(recoveryCss, /grid-template-columns:\s*minmax\(5\.25rem, 0\.34fr\) minmax\(0, 1fr\)/);
   assert.match(recoveryCss, /touch-action:\s*manipulation/);
   assert.doesNotMatch(recoveryCss, /pointer-events:\s*none/);
+  assert.doesNotMatch(
+    recoveryCss,
+    /\.rawaj-studio-section\s*\{[^}]*overflow:\s*hidden/,
+  );
 });
 
 test("listing studio back navigation is explicit and cannot submit the form", () => {
