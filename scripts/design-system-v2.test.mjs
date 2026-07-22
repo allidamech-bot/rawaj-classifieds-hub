@@ -2,10 +2,9 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [css, foundation, commerceFoundation, root, routeStyles, button, input, card, badge, header, bottomDock] = await Promise.all([
+const [css, foundation, root, routeStyles, button, input, card, badge, header, bottomDock] = await Promise.all([
   readFile(new URL("../src/design-system-v2.css", import.meta.url), "utf8"),
   readFile(new URL("../src/design-foundation.css", import.meta.url), "utf8"),
-  readFile(new URL("../src/modern-syrian-commerce-foundation.css", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/components/ui/button.tsx", import.meta.url), "utf8"),
@@ -27,27 +26,24 @@ test("design system V2 is loaded after legacy page styles", () => {
   assert.match(root, /theme-color", content: "#123f38"/);
 });
 
-test("modern Syrian commerce foundation is global, bright, and canonical", () => {
-  assert.match(routeStyles, /modern-syrian-commerce-foundation\.css/);
-  assert.match(commerceFoundation, /--color-action:#e9663c/);
-  assert.match(commerceFoundation, /--color-trust:#3f846f/);
-  assert.match(commerceFoundation, /--color-surface-page:#f8f3e9/);
-  assert.match(commerceFoundation, /\.rawaj-discovery-hero/);
-  assert.match(commerceFoundation, /#e5f3e9/);
-  assert.match(commerceFoundation, /#fff2e6/);
-  assert.match(commerceFoundation, /\.rawaj-search-toolbar-v2/);
-  assert.doesNotMatch(commerceFoundation, /#092d29/);
+test("canonical foundation is bright, mobile-first, and structural", () => {
+  assert.match(foundation, /--rawaj-page-background:#f8f3e9/);
+  assert.match(foundation, /--rawaj-primary:#3f846f/);
+  assert.match(foundation, /--rawaj-accent-orange:#e9663c/);
+  assert.match(foundation, /--rawaj-brand-background:#dff0e7/);
+  assert.match(foundation, /--rawaj-control-height:3rem/);
+  assert.match(foundation, /--rawaj-control-height-lg:3\.25rem/);
+  assert.match(foundation, /--rawaj-touch-target:3rem/);
+  assert.match(foundation, /--radius-button:\.8rem/);
+  assert.match(foundation, /radial-gradient\(34rem 24rem/);
+  assert.doesNotMatch(routeStyles, /modern-syrian-commerce-foundation\.css/);
 });
 
 test("brand palette keeps distinct page, card, sage, warm, and compatibility surfaces", () => {
-  assert.match(foundation, /--rawaj-page-background: #f6f2e9;/);
-  assert.match(foundation, /--rawaj-primary: #123f38;/);
-  assert.match(foundation, /--rawaj-accent-orange: #f45f38;/);
-  assert.match(foundation, /--rawaj-accent-gold: #c99543;/);
-  assert.match(foundation, /--rawaj-surface-card: var\(--rawaj-card-background\);/);
-  assert.match(foundation, /--rawaj-surface-sage: var\(--rawaj-muted-surface\);/);
-  assert.match(foundation, /--rawaj-surface-warm: #fff0e8;/);
-  assert.match(foundation, /--rawaj-shadow-md:/);
+  assert.match(foundation, /--rawaj-surface-card:var\(--rawaj-card-background\)/);
+  assert.match(foundation, /--rawaj-surface-sage:var\(--rawaj-muted-surface\)/);
+  assert.match(foundation, /--rawaj-surface-warm:#fff0e8/);
+  assert.match(foundation, /--rawaj-shadow-md:var\(--shadow-raised\)/);
   assert.doesNotMatch(css, /:root\s*{/);
 });
 
@@ -75,4 +71,5 @@ test("shared navigation uses explicit active-state hooks", () => {
 test("motion remains accessible", () => {
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /transition: none;/);
+  assert.match(foundation, /@media\(prefers-reduced-motion:reduce\)/);
 });
