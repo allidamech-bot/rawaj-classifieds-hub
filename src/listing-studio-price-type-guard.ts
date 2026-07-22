@@ -9,9 +9,9 @@ function findPriceControls(studio: Element) {
   );
   if (!priceType) return null;
 
-  const priceInput = Array.from(studio.querySelectorAll<HTMLInputElement>('input[inputmode="numeric"]')).find(
-    (input) => !input.disabled || input.dataset.rawajPriceInput === "true",
-  );
+  const priceInput = Array.from(
+    studio.querySelectorAll<HTMLInputElement>('input[inputmode="numeric"]'),
+  ).find((input) => !input.disabled || input.dataset.rawajPriceInput === "true");
   if (!priceInput) return null;
   priceInput.dataset.rawajPriceInput = "true";
   return { priceType, priceInput };
