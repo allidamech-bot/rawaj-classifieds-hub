@@ -8,10 +8,10 @@ const [
   route,
   studio,
   taxonomySelector,
+  imageValidation,
   css,
   recoveryCss,
   navigationFix,
-  imageSelectionGuard,
   packageJson,
 ] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
@@ -22,10 +22,10 @@ const [
     new URL("../src/features/listing-studio/ListingTaxonomySelector.tsx", import.meta.url),
     "utf8",
   ),
+  readFile(new URL("../src/listing-studio-image-validation.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/listing-studio-v4.css", import.meta.url), "utf8"),
   readFile(new URL("../src/listing-studio-mobile-recovery.css", import.meta.url), "utf8"),
   readFile(new URL("../src/listing-studio-navigation-fix.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/listing-studio-image-selection-guard.ts", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
 
@@ -33,8 +33,8 @@ test("phase 4 listing studio layer is route-scoped and loaded last", () => {
   assert.match(routeStyles, /listingStudioV4Css from "\.\.\/listing-studio-v4\.css\?url"/);
   assert.match(routeStyles, /listingStudioV4: listingStudioV4Css/);
   assert.match(routeStyles, /import "\.\.\/listing-studio-navigation-fix"/);
-  assert.match(routeStyles, /import "\.\.\/listing-studio-image-selection-guard"/);
   assert.match(routeStyles, /import "\.\.\/listing-studio-mobile-recovery\.css"/);
+  assert.match(routeStyles, /import "\.\.\/listing-studio-image-validation"/);
   assert.ok(root.indexOf("listingStudioV4") > root.indexOf("listingStudioV3"));
   assert.match(route, /rawaj-listing-studio-v4/);
 });
@@ -47,26 +47,21 @@ test("phase 4 keeps publishing behavior untouched while improving form semantics
   assert.doesNotMatch(css, /display:\s*none[^}]*\.input|pointer-events:\s*none[^}]*\.rawaj-studio-action-bar/);
 });
 
-test("taxonomy selector never offers a branch that cannot reach an active final category", () => {
-  assert.match(taxonomySelector, /function hasAvailableLeaf\(/);
-  assert.match(taxonomySelector, /rawOptions\.filter\(\(node\) => hasAvailableLeaf\(node\)\)/);
-  assert.match(taxonomySelector, /selectedPathIsDeadEnd/);
+test("taxonomy selector keeps every root section visible", () => {
+  assert.match(taxonomySelector, /const rawOptions = parent/);
+  assert.match(taxonomySelector, /const options = selectedPathIsDeadEnd/);
   assert.match(taxonomySelector, /getTaxonomyRootNodes\(index\)\.filter/);
-  assert.doesNotMatch(
-    taxonomySelector,
-    /هذا المسار لا يحتوي تصنيفاً نهائياً متاحاً\. ارجع واختر مساراً آخر/,
-  );
+  assert.doesNotMatch(taxonomySelector, /rawOptions\.filter\(\(node\) => hasAvailableLeaf\(node\)\)/);
+  assert.match(taxonomySelector, /بانتظار إضافة التصنيفات الفرعية/);
 });
 
-test("listing image selection rejects unsupported and oversized files before React receives them", () => {
-  assert.match(imageSelectionGuard, /MAX_IMAGE_BYTES = 5 \* 1024 \* 1024/);
-  assert.match(imageSelectionGuard, /image\/jpeg/);
-  assert.match(imageSelectionGuard, /image\/png/);
-  assert.match(imageSelectionGuard, /image\/webp/);
-  assert.match(imageSelectionGuard, /new DataTransfer\(\)/);
-  assert.match(imageSelectionGuard, /input\.files = transfer\.files/);
-  assert.match(imageSelectionGuard, /data-listing-image-validation/);
-  assert.match(imageSelectionGuard, /role", "alert"/);
+test("listing photos reject unsupported formats and oversized files before upload", () => {
+  assert.match(imageValidation, /MAX_LISTING_IMAGE_BYTES = 5 \* 1024 \* 1024/);
+  assert.match(imageValidation, /image\/jpeg/);
+  assert.match(imageValidation, /image\/png/);
+  assert.match(imageValidation, /image\/webp/);
+  assert.match(imageValidation, /validateListingImageSelection/);
+  assert.match(routeStyles, /listing-studio-image-validation/);
 });
 
 test("phase 4 establishes readable controls, compact sections, and responsive layouts", () => {
