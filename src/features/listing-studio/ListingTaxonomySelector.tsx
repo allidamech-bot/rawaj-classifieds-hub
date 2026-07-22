@@ -33,21 +33,12 @@ export function ListingTaxonomySelector({
   const rawOptions = parent ? getTaxonomyChildren(index, parent.id) : getTaxonomyRootNodes(index);
   const DirectionIcon = language === "ar" ? ChevronLeft : ChevronRight;
 
-  function hasAvailableLeaf(node: TaxonomyNode, visited = new Set<string>()): boolean {
-    if (node.isLeaf) return true;
-    if (visited.has(node.id)) return false;
-    const nextVisited = new Set(visited);
-    nextVisited.add(node.id);
-    return getTaxonomyChildren(index, node.id).some((child) =>
-      hasAvailableLeaf(child, nextVisited),
-    );
-  }
-
-  const viableOptions = rawOptions.filter((node) => hasAvailableLeaf(node));
-  const selectedPathIsDeadEnd = Boolean(selected && !selected.isLeaf && viableOptions.length === 0);
+  const selectedPathIsDeadEnd = Boolean(
+    selected && !selected.isLeaf && getTaxonomyChildren(index, selected.id).length === 0,
+  );
   const options = selectedPathIsDeadEnd
-    ? getTaxonomyRootNodes(index).filter((node) => node.id !== selected?.id && hasAvailableLeaf(node))
-    : viableOptions;
+    ? getTaxonomyRootNodes(index).filter((node) => node.id !== selected?.id)
+    : rawOptions;
 
   function choose(node: TaxonomyNode) {
     onSelect(node, getTaxonomyPath(index, node));
@@ -98,16 +89,14 @@ export function ListingTaxonomySelector({
           {selectedPathIsDeadEnd && options.length > 0 ? (
             <p className="rounded-xl border border-warning/25 bg-warning/8 p-3 text-xs text-foreground">
               {text(
-                "هذا القسم غير مكتمل حالياً. اختر أحد الأقسام المتاحة أدناه للمتابعة.",
-                "This category is currently incomplete. Choose an available category below to continue.",
+                "هذا القسم يحتاج تصنيفات فرعية إضافية قبل النشر. بقي القسم ظاهراً، ويمكنك اختيار قسم آخر متاح الآن.",
+                "This section needs additional subcategories before publishing. It remains visible, and you can choose another available section now.",
               )}
             </p>
           ) : null}
           <div className="grid gap-2 sm:grid-cols-2" role="list">
             {options.map((node) => {
-              const children = getTaxonomyChildren(index, node.id).filter((child) =>
-                hasAvailableLeaf(child),
-              );
+              const children = getTaxonomyChildren(index, node.id);
               return (
                 <button
                   key={node.id}
@@ -123,7 +112,9 @@ export function ListingTaxonomySelector({
                     <span className="mt-1 block text-[11px] text-muted-foreground">
                       {node.isLeaf
                         ? text("اختيار نهائي", "Final selection")
-                        : text(`${children.length} خيارات`, `${children.length} options`)}
+                        : children.length > 0
+                          ? text(`${children.length} خيارات`, `${children.length} options`)
+                          : text("بانتظار إضافة التصنيفات الفرعية", "Subcategories pending")}
                     </span>
                   </span>
                   {node.isLeaf ? (
@@ -141,8 +132,8 @@ export function ListingTaxonomySelector({
       {!selected?.isLeaf && options.length === 0 && (
         <p className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive">
           {text(
-            "لا توجد تصنيفات نهائية متاحة للنشر حالياً. حاول مرة أخرى لاحقاً.",
-            "No final publishing categories are available right now. Try again later.",
+            "لا توجد تصنيفات متاحة للنشر حالياً. حاول مرة أخرى لاحقاً.",
+            "No publishing categories are available right now. Try again later.",
           )}
         </p>
       )}
