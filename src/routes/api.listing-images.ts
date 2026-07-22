@@ -33,14 +33,20 @@ export const Route = createFileRoute("/api/listing-images")({
   },
 });
 
-async function handleUpload(request: Request, url: URL, config: NonNullable<ReturnType<typeof readR2Config>>) {
+async function handleUpload(
+  request: Request,
+  url: URL,
+  config: NonNullable<ReturnType<typeof readR2Config>>,
+) {
   const auth = await authenticatedClient(request);
   if (!auth) return json({ error: "Authentication required." }, 401);
 
   const listingId = url.searchParams.get("listingId")?.trim() ?? "";
   if (!listingId) return json({ error: "Listing id is required." }, 400);
   const contentType = request.headers.get("content-type")?.split(";")[0].trim() ?? "";
-  if (!ALLOWED_TYPES.has(contentType)) return json({ error: "Unsupported image type." }, 415);
+  if (!ALLOWED_TYPES.has(contentType)) {
+    return json({ error: "Unsupported image type." }, 415);
+  }
 
   const { data: listing, error } = await auth.client
     .from("listings")
@@ -56,18 +62,28 @@ async function handleUpload(request: Request, url: URL, config: NonNullable<Retu
     return json({ error: "Invalid image size." }, 413);
   }
 
-  const extension = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
+  const extension =
+    contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
   const key = `${auth.userId}/${listingId}/${crypto.randomUUID()}.${extension}`;
   await putR2Object(config, key, body, contentType);
   return json({ storagePath: toR2StoragePath(key) }, 201);
 }
 
-async function handleSign(request: Request, config: NonNullable<ReturnType<typeof readR2Config>>) {
+async function handleSign(
+  request: Request,
+  config: NonNullable<ReturnType<typeof readR2Config>>,
+) {
   const auth = await optionalClient(request);
   if (!auth) return json({ urls: {} });
   const payload = (await request.json().catch(() => null)) as { paths?: unknown } | null;
   const paths = Array.isArray(payload?.paths)
-    ? [...new Set(payload.paths.filter((value): value is string => typeof value === "string" && value.startsWith("r2:")))].slice(0, 100)
+    ? [
+        ...new Set(
+          payload.paths.filter(
+            (value): value is string => typeof value === "string" && value.startsWith("r2:"),
+          ),
+        ),
+      ].slice(0, 100)
     : [];
   if (paths.length === 0) return json({ urls: {} });
 
@@ -93,12 +109,16 @@ async function handleSign(request: Request, config: NonNullable<ReturnType<typeo
   return json({ urls: Object.fromEntries(entries) });
 }
 
-async function handleDelete(request: Request, config: NonNullable<ReturnType<typeof readR2Config>>) {
+async function handleDelete(
+  request: Request,
+  config: NonNullable<ReturnType<typeof readR2Config>>,
+) {
   const auth = await authenticatedClient(request);
   if (!auth) return json({ error: "Authentication required." }, 401);
-  const payload = (await request.json().catch(() => null)) as
-    | { listingId?: unknown; storagePath?: unknown }
-    | null;
+  const payload = (await request.json().catch(() => null)) as {
+    listingId?: unknown;
+    storagePath?: unknown;
+  } | null;
   const listingId = typeof payload?.listingId === "string" ? payload.listingId.trim() : "";
   const storagePath = typeof payload?.storagePath === "string" ? payload.storagePath : "";
   const key = fromR2StoragePath(storagePath);
