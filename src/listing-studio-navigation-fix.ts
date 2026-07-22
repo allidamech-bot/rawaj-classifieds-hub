@@ -26,7 +26,7 @@ function moveToPreviousStep(studio: Element) {
   )[index - 1];
   if (!previousStep || previousStep.disabled) return false;
 
-  queueMicrotask(() => {
+  window.setTimeout(() => {
     previousStep.click();
     window.requestAnimationFrame(() => {
       studio.querySelector<HTMLElement>(".rawaj-studio-steps")?.scrollIntoView({
@@ -34,7 +34,7 @@ function moveToPreviousStep(studio: Element) {
         behavior: "smooth",
       });
     });
-  });
+  }, 0);
   return true;
 }
 
