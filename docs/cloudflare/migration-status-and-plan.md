@@ -12,6 +12,27 @@ Captured: 2026-07-22
 - New image uploads use R2 only when all server-side R2 settings are available; otherwise the existing Supabase Storage path remains active.
 - Existing Supabase image records and objects have not been changed or deleted.
 
+## Protected-preview upload incident
+
+An authenticated manual test on the obsolete PR #509 Vercel Preview exposed two separate defects:
+
+1. Local `blob:` preview images were blocked by the deployed Content Security Policy.
+2. `POST /api/listing-images?action=upload` returned `401` even though Supabase Auth confirmed the user session with successful `/user` requests immediately before the upload.
+
+The listing remained a draft by design because RAWAJ does not submit an advertisement for moderation while a selected image is failed or unresolved. The affected listing had zero `listing_images` rows, so no database image record or Supabase Storage orphan was created.
+
+The continuation branch repairs this by:
+
+- allowing `blob:` in `img-src` and `worker-src`;
+- refreshing a near-expiry Supabase session before image upload;
+- sending the Supabase access token through both the standard `Authorization` header and the dedicated `X-Rawaj-Supabase-Authorization` header;
+- reading the dedicated header first on the server route so Vercel Preview protection cannot consume or replace the application token;
+- resolving Supabase public configuration from server runtime variables or the build-time Vite values;
+- returning `503 server_supabase_unconfigured` when server configuration is unavailable, which activates the existing Supabase Storage fallback instead of incorrectly returning `401` and blocking submission;
+- returning distinct error codes for missing tokens, invalid tokens, server configuration, image validation, ownership, and R2 configuration.
+
+The obsolete PR #509 Vercel URL does not contain this repair and must not be used for acceptance. A new Vercel Preview could not be produced immediately because the Free-plan daily deployment quota was exhausted. The current Cloudflare build for the repaired head succeeded, while public Worker and version Preview URLs remain disabled by the safety configuration.
+
 ## Live inventory
 
 ### Listing images
