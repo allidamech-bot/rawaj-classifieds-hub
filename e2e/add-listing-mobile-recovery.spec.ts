@@ -10,9 +10,7 @@ const mobileViewports = [
 
 async function installListingStudioFixture(page: Page) {
   await page.evaluate(() => {
-    document
-      .querySelector('[data-testid="listing-studio-recovery-fixture"]')
-      ?.remove();
+    document.querySelector('[data-testid="listing-studio-recovery-fixture"]')?.remove();
 
     const form = document.createElement("form");
     form.setAttribute("data-testid", "listing-studio-recovery-fixture");
@@ -43,16 +41,13 @@ async function installListingStudioFixture(page: Page) {
     state.__listingStudioSubmitCount = 0;
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      state.__listingStudioSubmitCount =
-        (state.__listingStudioSubmitCount ?? 0) + 1;
+      state.__listingStudioSubmitCount = (state.__listingStudioSubmitCount ?? 0) + 1;
     });
 
     const firstStep = form.querySelector<HTMLButtonElement>(
       '[data-testid="fixture-previous-step"]',
     );
-    const activeStep = form.querySelector<HTMLElement>(
-      'li[aria-current="step"]',
-    );
+    const activeStep = form.querySelector<HTMLElement>('li[aria-current="step"]');
     firstStep?.addEventListener("click", () => {
       activeStep?.removeAttribute("aria-current");
       firstStep.closest("li")?.setAttribute("aria-current", "step");
@@ -77,9 +72,7 @@ for (const viewport of mobileViewports) {
       expect(response?.status() ?? 200).toBeLessThan(500);
     });
 
-    test("renders readable, bounded, non-overlapping controls", async ({
-      page,
-    }) => {
+    test("renders readable, bounded, non-overlapping controls", async ({ page }) => {
       const studio = await installListingStudioFixture(page);
       await expect(page.locator("html")).toHaveAttribute("dir", /rtl/i);
 
@@ -88,9 +81,7 @@ for (const viewport of mobileViewports) {
         documentWidth: document.documentElement.scrollWidth,
         bodyWidth: document.body.scrollWidth,
       }));
-      expect(geometry.documentWidth).toBeLessThanOrEqual(
-        geometry.viewport + 1,
-      );
+      expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewport + 1);
       expect(geometry.bodyWidth).toBeLessThanOrEqual(geometry.viewport + 1);
 
       const hero = studio.locator(".rawaj-studio-hero");
@@ -104,29 +95,23 @@ for (const viewport of mobileViewports) {
       expect(heroColors.background).toContain("linear-gradient");
       expect(heroColors.headingColor).toBe("rgb(23, 59, 52)");
 
-      const stepBoxes = await studio
-        .locator(".rawaj-studio-steps > li")
-        .evaluateAll((elements) =>
-          elements.map((element) => {
-            const box = element.getBoundingClientRect();
-            return {
-              left: box.left,
-              right: box.right,
-              top: box.top,
-              bottom: box.bottom,
-            };
-          }),
-        );
+      const stepBoxes = await studio.locator(".rawaj-studio-steps > li").evaluateAll((elements) =>
+        elements.map((element) => {
+          const box = element.getBoundingClientRect();
+          return {
+            left: box.left,
+            right: box.right,
+            top: box.top,
+            bottom: box.bottom,
+          };
+        }),
+      );
       for (const box of stepBoxes) {
         expect(box.left).toBeGreaterThanOrEqual(-1);
         expect(box.right).toBeLessThanOrEqual(viewport.width + 1);
       }
       for (let first = 0; first < stepBoxes.length; first += 1) {
-        for (
-          let second = first + 1;
-          second < stepBoxes.length;
-          second += 1
-        ) {
+        for (let second = first + 1; second < stepBoxes.length; second += 1) {
           const horizontalOverlap =
             Math.min(stepBoxes[first].right, stepBoxes[second].right) -
             Math.max(stepBoxes[first].left, stepBoxes[second].left);
@@ -146,29 +131,25 @@ for (const viewport of mobileViewports) {
       expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height + 1);
     });
 
-    test("back returns without submitting or clearing values", async ({
-      page,
-    }) => {
+    test("back returns without submitting or clearing values", async ({ page }) => {
       const studio = await installListingStudioFixture(page);
       const back = page.getByTestId("fixture-back");
 
       await expect(back).toHaveAttribute("type", "button");
       await back.click();
 
-      await expect(
-        studio.locator(".rawaj-studio-steps > li").first(),
-      ).toHaveAttribute("aria-current", "step");
-      await expect(
-        studio.locator(".rawaj-studio-steps > li").nth(1),
-      ).not.toHaveAttribute("aria-current", "step");
-      await expect(page.getByTestId("fixture-title")).toHaveValue(
-        "هاتف للبيع",
+      await expect(studio.locator(".rawaj-studio-steps > li").first()).toHaveAttribute(
+        "aria-current",
+        "step",
       );
-      expect(
-        await page.evaluate(
-          () => (window as FixtureWindow).__listingStudioSubmitCount,
-        ),
-      ).toBe(0);
+      await expect(studio.locator(".rawaj-studio-steps > li").nth(1)).not.toHaveAttribute(
+        "aria-current",
+        "step",
+      );
+      await expect(page.getByTestId("fixture-title")).toHaveValue("هاتف للبيع");
+      expect(await page.evaluate(() => (window as FixtureWindow).__listingStudioSubmitCount)).toBe(
+        0,
+      );
     });
   });
 }
