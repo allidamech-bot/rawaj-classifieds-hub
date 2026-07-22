@@ -142,6 +142,7 @@ do $$
 declare
   v_definition text;
   v_generated text;
+  v_search_reference_count bigint;
 begin
   select c.is_generated
     into v_generated
@@ -158,8 +159,12 @@ begin
     'public.rawaj_protect_listing_moderation_update()'::regprocedure
   ) into v_definition;
 
-  if v_definition !~* E"'expires_at',\\s*'search_text_normalized'" then
-    raise exception 'Listing review guard does not exclude search_text_normalized.';
+  select count(*)
+    into v_search_reference_count
+  from regexp_matches(v_definition, '''search_text_normalized''', 'g');
+
+  if v_search_reference_count < 8 then
+    raise exception 'Listing moderation guard does not exclude search_text_normalized from every governed write comparison.';
   end if;
 
   if v_definition !~* 'rawaj\.promotion_moderation_write' then
