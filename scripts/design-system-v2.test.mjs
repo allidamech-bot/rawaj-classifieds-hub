@@ -17,10 +17,7 @@ const [css, foundation, root, routeStyles, button, input, card, badge, header, b
 
 test("design system V2 is loaded after legacy page styles", () => {
   assert.match(root, /import designSystemV2Css from "\.\.\/design-system-v2\.css\?url";/);
-  assert.match(
-    routeStyles,
-    /import personalSpacePolishCss from "\.\.\/personal-space-polish\.css\?url";/,
-  );
+  assert.match(routeStyles, /import personalSpacePolishCss from "\.\.\/personal-space-polish\.css\?url";/);
   const legacyIndex = root.indexOf("routeStyleHrefs.personalSpacePolish");
   const designSystemIndex = root.indexOf("href: designSystemV2Css");
   assert.notEqual(legacyIndex, -1);
@@ -29,15 +26,24 @@ test("design system V2 is loaded after legacy page styles", () => {
   assert.match(root, /theme-color", content: "#123f38"/);
 });
 
-test("brand palette defines distinct page, card, sage, warm, and dark surfaces", () => {
-  assert.match(foundation, /--rawaj-page-background: #f6f2e9;/);
-  assert.match(foundation, /--rawaj-primary: #123f38;/);
-  assert.match(foundation, /--rawaj-accent-orange: #f45f38;/);
-  assert.match(foundation, /--rawaj-accent-gold: #c99543;/);
-  assert.match(foundation, /--rawaj-surface-card: var\(--rawaj-card-background\);/);
-  assert.match(foundation, /--rawaj-surface-sage: var\(--rawaj-muted-surface\);/);
-  assert.match(foundation, /--rawaj-surface-warm: #fff0e8;/);
-  assert.match(foundation, /--rawaj-shadow-md:/);
+test("canonical foundation is bright, mobile-first, and structural", () => {
+  assert.match(foundation, /--rawaj-page-background:#f8f3e9/);
+  assert.match(foundation, /--rawaj-primary:#3f846f/);
+  assert.match(foundation, /--rawaj-accent-orange:#e9663c/);
+  assert.match(foundation, /--rawaj-brand-background:#dff0e7/);
+  assert.match(foundation, /--rawaj-control-height:3rem/);
+  assert.match(foundation, /--rawaj-control-height-lg:3\.25rem/);
+  assert.match(foundation, /--rawaj-touch-target:3rem/);
+  assert.match(foundation, /--radius-button:\.8rem/);
+  assert.match(foundation, /radial-gradient\(34rem 24rem/);
+  assert.doesNotMatch(routeStyles, /modern-syrian-commerce-foundation\.css/);
+});
+
+test("brand palette keeps distinct page, card, sage, warm, and compatibility surfaces", () => {
+  assert.match(foundation, /--rawaj-surface-card:var\(--rawaj-card-background\)/);
+  assert.match(foundation, /--rawaj-surface-sage:var\(--rawaj-muted-surface\)/);
+  assert.match(foundation, /--rawaj-surface-warm:#fff0e8/);
+  assert.match(foundation, /--rawaj-shadow-md:var\(--shadow-raised\)/);
   assert.doesNotMatch(css, /:root\s*{/);
 });
 
@@ -65,4 +71,5 @@ test("shared navigation uses explicit active-state hooks", () => {
 test("motion remains accessible", () => {
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /transition: none;/);
+  assert.match(foundation, /@media\(prefers-reduced-motion:reduce\)/);
 });
