@@ -2,10 +2,11 @@ const STUDIO_SELECTOR = ".rawaj-listing-studio-v4";
 const NON_NUMERIC_PRICE_TYPES = new Set(["contact", "free", "exchange"]);
 
 function findPriceControls(studio: Element) {
-  const priceType = Array.from(studio.querySelectorAll<HTMLSelectElement>("select")).find((select) =>
-    ["fixed", "negotiable", "contact", "free", "exchange"].every((value) =>
-      Array.from(select.options).some((option) => option.value === value),
-    ),
+  const priceType = Array.from(studio.querySelectorAll<HTMLSelectElement>("select")).find(
+    (select) =>
+      ["fixed", "negotiable", "contact", "free", "exchange"].every((value) =>
+        Array.from(select.options).some((option) => option.value === value),
+      ),
   );
   if (!priceType) return null;
 
