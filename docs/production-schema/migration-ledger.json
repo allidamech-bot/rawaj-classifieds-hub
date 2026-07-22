@@ -196,7 +196,8 @@
       "202607200004_fix_listing_generated_column_moderation_guard.sql",
       "202607220003_complete_listing_taxonomy.sql",
       "202607220004_fix_owner_draft_text_identifiers.sql",
-      "202607220005_fix_listing_taxonomy_assignment_ambiguity.sql"
+      "202607220005_fix_listing_taxonomy_assignment_ambiguity.sql",
+      "202607220006_fix_listing_review_generated_column_guard.sql"
     ],
     "manual": ["202607090004_reconcile_manual_production_hotfixes.sql"]
   }
