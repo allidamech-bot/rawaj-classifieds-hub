@@ -6,6 +6,8 @@ import type {
   PaginatedListingsResponse,
 } from "@/lib/classifieds-types";
 import { fetchPublicListings } from "@/lib/api/listings";
+import { fetchCloudflareListings } from "@/lib/public-data/cloudflare-client";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 const pendingPublicListingReads = new Map<
   string,
@@ -17,19 +19,20 @@ function publicListingReadKey(
   cursor: ListingCursor | null,
   pageSize: number,
 ): string {
-  return JSON.stringify({ filters, cursor, pageSize });
+  return JSON.stringify({
+    provider: isCloudflarePublicDataProvider() ? "cloudflare" : "supabase",
+    filters,
+    cursor,
+    pageSize,
+  });
 }
 
 /**
- * Compatibility entry point retained for saved-search alerts and older callers.
- * The public listings reader now owns taxonomy, location, visibility, and cursor
- * filtering in one source-side query contract, including its explicit
- * `.select(publicListingSelect)` allowlist, `.eq("status", "approved")`
- * visibility guard, and `.is("archived_at", null)` archive guard.
- *
- * Concurrent identical reads are deduplicated without retaining a stale result.
- * This prevents SSR/hydration or sibling consumers from repeating the database
- * read and Signed URL generation while preserving immediate visibility changes.
+ * Public marketplace listing reads use one explicit provider selected at build
+ * time. Concurrent identical reads are deduplicated without retaining stale
+ * completed results. There is deliberately no silent cross-provider fallback:
+ * a failed Cloudflare read remains visible as a Cloudflare failure instead of
+ * returning potentially inconsistent Supabase data from another snapshot.
  */
 export function fetchPublicListingsCanonicalAware(
   filters: ListingFilters = {},
@@ -40,7 +43,10 @@ export function fetchPublicListingsCanonicalAware(
   const pending = pendingPublicListingReads.get(key);
   if (pending) return pending;
 
-  const request = fetchPublicListings(filters, cursor, pageSize).finally(() => {
+  const request = (isCloudflarePublicDataProvider()
+    ? fetchCloudflareListings(filters, cursor, pageSize)
+    : fetchPublicListings(filters, cursor, pageSize)
+  ).finally(() => {
     if (pendingPublicListingReads.get(key) === request) pendingPublicListingReads.delete(key);
   });
   pendingPublicListingReads.set(key, request);
