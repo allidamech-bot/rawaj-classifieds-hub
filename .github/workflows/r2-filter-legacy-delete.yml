@@ -30,34 +30,18 @@ jobs:
           text = path.read_text(encoding="utf-8")
           old = '''  if (paths.length > 0) {
             const storageResult = await clientResult.data.storage.from(listingImagesBucket).remove(paths);
-
-            if (storageResult.error) {
-              console.error("Failed to clean up storage images after listing delete", {
-                listingId,
-                error: storageResult.error,
-              });
-            }
-          }
           '''
           new = '''  const supabaseStoragePaths = paths.filter((path) => !isR2ListingImagePath(path));
           if (supabaseStoragePaths.length > 0) {
             const storageResult = await clientResult.data.storage
               .from(listingImagesBucket)
               .remove(supabaseStoragePaths);
-
-            if (storageResult.error) {
-              console.error("Failed to clean up storage images after listing delete", {
-                listingId,
-                error: storageResult.error,
-              });
-            }
-          }
           '''
           if old in text:
               text = text.replace(old, new, 1)
               path.write_text(text, encoding="utf-8")
           elif "const supabaseStoragePaths = paths.filter" not in text:
-              raise SystemExit("Listing cleanup block not found")
+              raise SystemExit("Listing cleanup statement not found")
           PY
           npx prettier --write src/lib/api/listings.ts
           git diff --check
