@@ -26,12 +26,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Produce ESLint-normalized recovery files
-        continue-on-error: true
-        run: >-
-          npx eslint --fix
-          e2e/add-listing-mobile-recovery.spec.ts
-          src/listing-studio-navigation-fix.ts
       - run: npm run test:listing-studio-v4
       - run: npm run typecheck
       - run: npm run build
@@ -49,8 +43,6 @@ jobs:
         with:
           name: add-listing-mobile-recovery-${{ github.run_id }}
           path: |
-            e2e/add-listing-mobile-recovery.spec.ts
-            src/listing-studio-navigation-fix.ts
             add-listing-playwright.log
             test-results
           if-no-files-found: warn
