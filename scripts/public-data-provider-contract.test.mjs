@@ -11,6 +11,9 @@ const listings = read("src/lib/api/location-aware-listings-v2.ts");
 const detail = read("src/lib/api/listing-detail-read-guarded.ts");
 const images = read("src/lib/api/listing-images-read-guarded.ts");
 const placements = read("src/lib/api/public-ad-placements.ts");
+const workerEntry = read("cloudflare/worker/src/entry.ts");
+const workerListings = read("cloudflare/worker/src/public-listings.ts");
+const wrangler = read("cloudflare/worker/wrangler.base.jsonc");
 
 test("public data provider is selected explicitly and defaults safely", () => {
   assert.match(config, /VITE_PUBLIC_DATA_PROVIDER/);
@@ -25,8 +28,7 @@ test("Cloudflare client has bounded requests and no Supabase dependency", () => 
   assert.match(client, /REQUEST_TIMEOUT_MS/);
   assert.match(client, /AbortController/);
   assert.match(client, /credentials:\s*"omit"/);
-  assert.match(client, /unsupportedCloudflareFilters/);
-  assert.match(client, /setup_required/);
+  assert.doesNotMatch(client, /unsupportedCloudflareFilters/);
   assert.doesNotMatch(client, /@supabase\/supabase-js/);
   assert.doesNotMatch(client, /publicSupabase|supabase\.from|createClient/);
 });
@@ -51,4 +53,39 @@ test("Cloudflare public API coverage includes references, listings, detail, medi
   assert.match(client, /absoluteMediaUrl/);
   assert.match(client, /encodeWorkerCursor/);
   assert.match(client, /decodeWorkerCursor/);
+});
+
+test("advanced listing filters are carried end-to-end into bound D1 predicates", () => {
+  for (const filter of [
+    "legacyScope",
+    "carMake",
+    "carModel",
+    "yearFrom",
+    "yearTo",
+    "fuelType",
+    "transmission",
+    "taxonomyPropertyPurpose",
+    "taxonomyPropertyType",
+    "rooms",
+    "rentalDuration",
+    "electronicsBrand",
+    "detailCondition",
+    "employmentType",
+    "salaryType",
+  ]) {
+    assert.ok(client.includes(filter), `client does not transmit ${filter}`);
+  }
+
+  assert.match(workerListings, /json_extract\(l\.details/);
+  assert.match(workerListings, /WITH RECURSIVE location_scope/);
+  assert.match(workerListings, /listing_taxonomy_assignments/);
+  assert.match(workerListings, /legacyScopes/);
+  assert.match(workerListings, /\.bind\(\.\.\.values\)/);
+  assert.doesNotMatch(workerListings, /\$\{filters\./);
+});
+
+test("modular Worker entry owns listing search without changing other API routes", () => {
+  assert.match(workerEntry, /handlePublicListingsRequest/);
+  assert.match(workerEntry, /baseWorker\.fetch/);
+  assert.match(wrangler, /"main": "src\/entry\.ts"/);
 });
