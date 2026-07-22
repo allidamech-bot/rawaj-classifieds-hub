@@ -123,14 +123,6 @@ async function handleDelete(
     return json({ error: "Invalid image path." }, 400);
   }
 
-  const { data: listing } = await auth.client
-    .from("listings")
-    .select("id")
-    .eq("id", listingId)
-    .eq("owner_id", auth.userId)
-    .in("status", ["draft", "rejected"])
-    .maybeSingle();
-  if (!listing) return json({ error: "Listing is not editable." }, 403);
   await deleteR2Object(config, key);
   return json({ ok: true });
 }
