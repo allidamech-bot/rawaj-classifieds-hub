@@ -4,14 +4,28 @@ on:
   pull_request:
     paths:
       - "cloudflare/**"
+      - "src/lib/public-data/**"
+      - "src/lib/api/references.ts"
+      - "src/lib/api/public-ad-placements.ts"
+      - "src/lib/api/location-aware-listings-v2.ts"
+      - "src/lib/api/listing-detail-read-guarded.ts"
+      - "src/lib/api/listing-images-read-guarded.ts"
       - "scripts/cloudflare-cutover-foundation.test.mjs"
+      - "scripts/public-data-provider-contract.test.mjs"
       - ".github/workflows/cloudflare-cutover-foundation.yml"
   push:
     branches:
       - "feature/cloudflare-cutover-current-site"
     paths:
       - "cloudflare/**"
+      - "src/lib/public-data/**"
+      - "src/lib/api/references.ts"
+      - "src/lib/api/public-ad-placements.ts"
+      - "src/lib/api/location-aware-listings-v2.ts"
+      - "src/lib/api/listing-detail-read-guarded.ts"
+      - "src/lib/api/listing-images-read-guarded.ts"
       - "scripts/cloudflare-cutover-foundation.test.mjs"
+      - "scripts/public-data-provider-contract.test.mjs"
       - ".github/workflows/cloudflare-cutover-foundation.yml"
 
 permissions:
@@ -20,7 +34,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,11 +55,16 @@ jobs:
           node --check cloudflare/migration/verify-public-snapshot.mjs
           node --check cloudflare/worker/scripts/render-config.mjs
 
+      - name: Typecheck application provider boundary
+        run: npm run typecheck
+
       - name: Typecheck Worker
         run: npx tsc -p cloudflare/worker/tsconfig.json
 
       - name: Run Cloudflare cutover contract tests
-        run: node --test scripts/cloudflare-cutover-foundation.test.mjs
+        run: |
+          node --test scripts/cloudflare-cutover-foundation.test.mjs
+          node --test scripts/public-data-provider-contract.test.mjs
 
       - name: Replay D1 migrations in SQLite
         shell: python
