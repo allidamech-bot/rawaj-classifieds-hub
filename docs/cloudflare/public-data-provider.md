@@ -35,4 +35,17 @@ VITE_PUBLIC_DATA_API_BASE_URL=https://<rawaj-public-api-host>
 - public listing detail;
 - public listing media.
 
-Advanced dynamic filters that do not yet have verified D1 parity return an explicit `setup_required` result. They are never silently ignored.
+## Listing search parity
+
+The D1 listing reader supports the existing public filter contract, including:
+
+- taxonomy node assignments and legacy taxonomy scopes;
+- canonical location descendants through a recursive CTE;
+- category, subcategory, governorate, district, price and condition filters;
+- vehicles: make, model, year, fuel and transmission;
+- real estate: purpose, property type, rooms and rental duration;
+- electronics brand and detail condition;
+- jobs employment and salary types;
+- full-text search, photo presence, sort modes and cursor pagination.
+
+All dynamic values are passed as bound D1 parameters. Filter values are not interpolated into SQL.
