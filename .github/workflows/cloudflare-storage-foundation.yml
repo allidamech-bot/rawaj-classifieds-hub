@@ -1,0 +1,26 @@
+name: Cloudflare Storage Foundation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - feature/cloudflare-storage-migration-continuation
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate Cloudflare storage foundation
+        run: node --test scripts/cloudflare-storage-foundation.test.mjs

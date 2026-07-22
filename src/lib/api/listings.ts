@@ -48,6 +48,11 @@ import { publicListingDetailAliases, publicListingSelect } from "@/lib/api/publi
 import { selectPrimaryListingImages } from "@/lib/api/primary-listing-images";
 import { buildListingImagePath, listingImagesBucket, validateImageFile } from "@/lib/api/storage";
 import { prepareListingImageForUpload } from "@/lib/listing-image-processing";
+import {
+  isR2ListingImagePath,
+  readSupabaseAccessToken,
+  signR2ListingImagePaths,
+} from "@/lib/r2-listing-images-client";
 import { sanitizePublicListing } from "@/lib/public-listing-presentation";
 import {
   normalizeArabicSearchTerm,
@@ -711,26 +716,38 @@ async function signListingImages(
   const paths = [...new Set(images.map((image) => image.storagePath).filter(Boolean))] as string[];
   if (paths.length === 0) return images;
 
-  try {
-    const { data, error } = await client.storage
-      .from(listingImagesBucket)
-      .createSignedUrls(paths, signedImageUrlExpiresInSeconds);
+  const r2Paths = paths.filter(isR2ListingImagePath);
+  const supabasePaths = paths.filter((path) => !isR2ListingImagePath(path));
+  const urlsByPath = new Map<string, string>();
 
-    if (error || !data) return images;
+  if (supabasePaths.length > 0) {
+    try {
+      const { data, error } = await client.storage
+        .from(listingImagesBucket)
+        .createSignedUrls(supabasePaths, signedImageUrlExpiresInSeconds);
 
-    const urlsByPath = new Map(
-      data.filter((item) => item.signedUrl).map((item) => [item.path, item.signedUrl] as const),
-    );
-
-    return images.map((image) => {
-      const signedUrl = image.storagePath ? urlsByPath.get(image.storagePath) : null;
-      return signedUrl
-        ? { ...image, publicUrl: signedUrl, signedUrlExpiresIn: signedImageUrlExpiresInSeconds }
-        : image;
-    });
-  } catch {
-    return images;
+      if (!error && data) {
+        for (const item of data) {
+          if (item.path && item.signedUrl) urlsByPath.set(item.path, item.signedUrl);
+        }
+      }
+    } catch {
+      // Preserve any R2 URLs resolved below when legacy signing is unavailable.
+    }
   }
+
+  if (r2Paths.length > 0) {
+    const accessToken = await readSupabaseAccessToken(client);
+    const r2Urls = await signR2ListingImagePaths(r2Paths, accessToken);
+    for (const [path, url] of r2Urls) urlsByPath.set(path, url);
+  }
+
+  return images.map((image) => {
+    const signedUrl = image.storagePath ? urlsByPath.get(image.storagePath) : null;
+    return signedUrl
+      ? { ...image, publicUrl: signedUrl, signedUrlExpiresIn: signedImageUrlExpiresInSeconds }
+      : image;
+  });
 }
 
 async function readListingImagesByListingIds(

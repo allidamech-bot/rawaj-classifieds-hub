@@ -40,6 +40,7 @@ import { Route as ProfileListingsRouteImport } from './routes/profile/listings'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as ApiListingImagesRouteImport } from './routes/api.listing-images'
 import { Route as AdminVerificationsRouteImport } from './routes/admin.verifications'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSafetyRouteImport } from './routes/admin.safety'
@@ -211,6 +212,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiListingImagesRoute = ApiListingImagesRouteImport.update({
+  id: '/api/listing-images',
+  path: '/api/listing-images',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminVerificationsRoute = AdminVerificationsRouteImport.update({
   id: '/verifications',
   path: '/verifications',
@@ -325,6 +331,7 @@ export interface FileRoutesByFullPath {
   '/admin/safety': typeof AdminSafetyRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
+  '/api/listing-images': typeof ApiListingImagesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/category/$slug': typeof CategorySlugRoute
   '/listings/$id': typeof ListingsIdRoute
@@ -371,6 +378,7 @@ export interface FileRoutesByTo {
   '/admin/safety': typeof AdminSafetyRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
+  '/api/listing-images': typeof ApiListingImagesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/category/$slug': typeof CategorySlugRoute
   '/listings/$id': typeof ListingsIdRoute
@@ -420,6 +428,7 @@ export interface FileRoutesById {
   '/admin/safety': typeof AdminSafetyRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
+  '/api/listing-images': typeof ApiListingImagesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/category/$slug': typeof CategorySlugRoute
   '/listings/$id': typeof ListingsIdRoute
@@ -470,6 +479,7 @@ export interface FileRouteTypes {
     | '/admin/safety'
     | '/admin/users'
     | '/admin/verifications'
+    | '/api/listing-images'
     | '/auth/callback'
     | '/category/$slug'
     | '/listings/$id'
@@ -516,6 +526,7 @@ export interface FileRouteTypes {
     | '/admin/safety'
     | '/admin/users'
     | '/admin/verifications'
+    | '/api/listing-images'
     | '/auth/callback'
     | '/category/$slug'
     | '/listings/$id'
@@ -564,6 +575,7 @@ export interface FileRouteTypes {
     | '/admin/safety'
     | '/admin/users'
     | '/admin/verifications'
+    | '/api/listing-images'
     | '/auth/callback'
     | '/category/$slug'
     | '/listings/$id'
@@ -599,6 +611,7 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   VerificationRoute: typeof VerificationRoute
+  ApiListingImagesRoute: typeof ApiListingImagesRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   CategorySlugRoute: typeof CategorySlugRoute
   SellerIdRoute: typeof SellerIdRoute
@@ -824,6 +837,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/listing-images': {
+      id: '/api/listing-images'
+      path: '/api/listing-images'
+      fullPath: '/api/listing-images'
+      preLoaderRoute: typeof ApiListingImagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/verifications': {
       id: '/admin/verifications'
       path: '/verifications'
@@ -1031,6 +1051,7 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   VerificationRoute: VerificationRoute,
+  ApiListingImagesRoute: ApiListingImagesRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   CategorySlugRoute: CategorySlugRoute,
   SellerIdRoute: SellerIdRoute,

@@ -18,6 +18,8 @@ export {
   updateOwnerListing,
 } from "@/lib/api/listing-owner-write-guarded";
 export { uploadListingImage } from "@/lib/api/listing-image-upload-guarded";
+export { deleteListingImage } from "@/lib/api/listing-image-delete-guarded";
+export { deleteOwnerListing } from "@/lib/api/listing-owner-delete-guarded";
 export * from "@/lib/api/listing-taxonomy";
 export * from "@/lib/api/listing-attributes";
 export * from "@/lib/api/taxonomy-metadata";
