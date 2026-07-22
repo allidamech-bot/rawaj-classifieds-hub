@@ -47,12 +47,14 @@ test("phase 4 keeps publishing behavior untouched while improving form semantics
   assert.doesNotMatch(css, /display:\s*none[^}]*\.input|pointer-events:\s*none[^}]*\.rawaj-studio-action-bar/);
 });
 
-test("taxonomy selector keeps every root section visible", () => {
-  assert.match(taxonomySelector, /const rawOptions = parent/);
-  assert.match(taxonomySelector, /const options = selectedPathIsDeadEnd/);
-  assert.match(taxonomySelector, /getTaxonomyRootNodes\(index\)\.filter/);
-  assert.doesNotMatch(taxonomySelector, /rawOptions\.filter\(\(node\) => hasAvailableLeaf\(node\)\)/);
-  assert.match(taxonomySelector, /بانتظار إضافة التصنيفات الفرعية/);
+test("taxonomy selector keeps the complete category tree visible", () => {
+  assert.match(
+    taxonomySelector,
+    /const options = parent \? getTaxonomyChildren\(index, parent\.id\) : getTaxonomyRootNodes\(index\)/,
+  );
+  assert.doesNotMatch(taxonomySelector, /selectedPathIsDeadEnd/);
+  assert.doesNotMatch(taxonomySelector, /getTaxonomyRootNodes\(index\)\.filter/);
+  assert.doesNotMatch(taxonomySelector, /hasAvailableLeaf/);
 });
 
 test("listing photos reject unsupported formats and oversized files before upload", () => {
