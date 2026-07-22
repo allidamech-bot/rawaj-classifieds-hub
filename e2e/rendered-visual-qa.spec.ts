@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 
 const viewports = [
-  { name: "mobile-360", width: 360, height: 800 },
-  { name: "mobile-390", width: 390, height: 844 },
-  { name: "mobile-412", width: 412, height: 915 },
-  { name: "desktop-1440", width: 1440, height: 1000 },
+  { name: "mobile-360", width: 360, height: 800, project: "mobile" },
+  { name: "mobile-390", width: 390, height: 844, project: "mobile" },
+  { name: "mobile-412", width: 412, height: 915, project: "mobile" },
+  { name: "desktop-1440", width: 1440, height: 1000, project: "desktop" },
 ] as const;
 
 const routes = [
@@ -27,10 +27,15 @@ for (const viewport of viewports) {
 
     for (const route of routes) {
       test(`${route.name} rendered visual capture`, async ({ page }, testInfo) => {
-        const response = await page.goto(route.path, { waitUntil: "networkidle" });
+        test.skip(
+          !testInfo.project.name.startsWith(viewport.project),
+          `${viewport.name} belongs to the ${viewport.project} project`,
+        );
+        const response = await page.goto(route.path, { waitUntil: "domcontentloaded" });
         expect(response?.status() ?? 200).toBeLessThan(500);
         await expect(page.locator("main")).toBeVisible();
         await page.evaluate(() => document.fonts.ready);
+        await page.waitForTimeout(250);
         await page.screenshot({
           path: testInfo.outputPath(`${viewport.name}-${route.name}.png`),
           fullPage: true,
