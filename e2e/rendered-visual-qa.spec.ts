@@ -35,6 +35,9 @@ for (const viewport of viewports) {
         expect(response?.status() ?? 200).toBeLessThan(500);
         await expect(page.locator("main")).toBeVisible();
         await page.evaluate(() => document.fonts.ready);
+        await page.addStyleTag({
+          content: 'aside[data-placement-loading="true"]{display:none!important}',
+        });
         await page.waitForTimeout(250);
         await page.screenshot({
           path: testInfo.outputPath(`${viewport.name}-${route.name}.png`),
