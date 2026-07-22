@@ -16,7 +16,10 @@ const lightHeroSamples: Rgb[] = [
 ];
 
 function parseRgb(value: string): Rgb {
-  const channels = value.match(/\d+(?:\.\d+)?/g)?.slice(0, 3).map(Number);
+  const channels = value
+    .match(/\d+(?:\.\d+)?/g)
+    ?.slice(0, 3)
+    .map(Number);
   if (!channels || channels.length !== 3) throw new Error(`Invalid RGB color: ${value}`);
   return [channels[0], channels[1], channels[2]];
 }
@@ -24,9 +27,7 @@ function parseRgb(value: string): Rgb {
 function relativeLuminance(rgb: Rgb) {
   const [red, green, blue] = rgb.map((channel) => {
     const normalized = channel / 255;
-    return normalized <= 0.04045
-      ? normalized / 12.92
-      : ((normalized + 0.055) / 1.055) ** 2.4;
+    return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
   });
   return red * 0.2126 + green * 0.7152 + blue * 0.0722;
 }
