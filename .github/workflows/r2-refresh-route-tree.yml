@@ -1,0 +1,38 @@
+name: Refresh R2 Route Tree
+
+on:
+  push:
+    branches:
+      - agent/r2-listing-images-phase-1
+    paths:
+      - ".github/workflows/r2-refresh-route-tree.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/r2-listing-images-phase-1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Generate route tree
+        run: npm run build
+      - name: Commit generated route tree
+        shell: bash
+        run: |
+          if git diff --quiet -- src/routeTree.gen.ts; then
+            exit 0
+          fi
+          git config user.name "rawaj-r2-agent"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/routeTree.gen.ts
+          git commit -m "chore: register R2 listing image API route"
+          git push origin HEAD:agent/r2-listing-images-phase-1
