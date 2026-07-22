@@ -1,9 +1,8 @@
-/* RAWAJ — Modern Syrian Commerce foundation.
- * Canonical visual language for every route. Presentation only.
+/* RAWAJ — Modern Syrian Commerce compatibility layer.
+ * Canonical tokens already live in design-foundation.css; this layer only
+ * closes legacy navy, microcopy, pill, control, and interaction gaps.
  */
-
 :root {
-  /* Semantic color roles */
   --color-action: #e9663c;
   --color-action-hover: #d95932;
   --color-trust: #123f38;
@@ -17,41 +16,24 @@
   --color-copy: #18352f;
   --color-copy-secondary: #536b63;
   --color-copy-muted: #687c75;
-
-  /* Canonical aliases: retire the former navy/green split. */
   --background: var(--color-surface-page);
   --foreground: var(--color-copy);
   --card: var(--color-surface-card);
   --card-foreground: var(--color-copy);
-  --card-warm: #faf6ed;
-  --muted-surface: var(--color-surface-muted);
-  --popover: var(--color-surface-card);
-  --popover-foreground: var(--color-copy);
   --primary: var(--color-trust);
   --primary-foreground: #fffdf8;
-  --secondary: var(--color-surface-muted);
-  --secondary-foreground: var(--color-copy);
-  --muted: var(--color-surface-muted);
-  --muted-foreground: var(--color-copy-secondary);
   --accent: var(--color-action);
   --accent-foreground: #fff;
   --gold: var(--color-premium);
   --gold-foreground: var(--color-trust-deep);
   --brand-orange: var(--color-action);
-  --brand-orange-foreground: #fff;
   --brand-navy: var(--color-trust-deep);
   --emerald-trust: var(--color-trust);
-  --emerald-trust-foreground: #fff;
   --border: var(--color-line);
   --input: var(--color-line-strong);
   --ring: var(--color-action);
-
   --rawaj-page-background: var(--color-surface-page);
   --rawaj-card-background: var(--color-surface-card);
-  --rawaj-elevated-background: #fffefb;
-  --rawaj-subtle-background: #ede9df;
-  --rawaj-brand-background: var(--color-trust);
-  --rawaj-brand-muted-background: #e5eee8;
   --rawaj-primary: var(--color-trust);
   --rawaj-primary-deep: var(--color-trust-deep);
   --rawaj-accent-orange: var(--color-action);
@@ -61,153 +43,54 @@
   --rawaj-text-muted: var(--color-copy-muted);
   --rawaj-border: var(--color-line);
   --rawaj-border-strong: var(--color-line-strong);
-  --rawaj-muted-surface: var(--color-surface-muted);
-
-  /* Geometry */
-  --radius-input: 0.7rem;
-  --radius-button: 0.75rem;
-  --radius-card-sm: 0.85rem;
+  --radius-input: .7rem;
+  --radius-button: .75rem;
   --radius-card: 1rem;
   --radius-feature: 1.1rem;
   --radius-hero: 1.25rem;
-  --rawaj-radius-input: var(--radius-input);
-  --rawaj-radius-button: var(--radius-button);
-  --rawaj-radius-card: var(--radius-card);
-  --rawaj-radius-surface: var(--radius-feature);
-  --rawaj-radius-feature: var(--radius-hero);
-
-  /* Controls and elevation */
-  --rawaj-control-height-sm: 2.5rem;
   --rawaj-control-height: 2.875rem;
-  --rawaj-control-height-lg: 3.125rem;
-  --rawaj-touch-target: 2.75rem;
-  --shadow-soft: 0 1px 2px rgba(9, 45, 41, 0.035), 0 6px 18px rgba(9, 45, 41, 0.045);
-  --shadow-raised: 0 3px 10px rgba(9, 45, 41, 0.055), 0 14px 30px rgba(9, 45, 41, 0.07);
-  --shadow-overlay: 0 18px 50px rgba(9, 45, 41, 0.17);
-  --rawaj-shadow-xs: 0 1px 4px rgba(9, 45, 41, 0.04);
-  --rawaj-shadow-sm: var(--shadow-soft);
-  --rawaj-shadow-md: var(--shadow-raised);
-  --rawaj-shadow-lg: var(--shadow-overlay);
+  --shadow-soft: 0 1px 2px rgba(9,45,41,.035),0 6px 18px rgba(9,45,41,.045);
+  --shadow-raised: 0 3px 10px rgba(9,45,41,.055),0 14px 30px rgba(9,45,41,.07);
 }
 
-body {
-  color: var(--color-copy);
-  background:
-    radial-gradient(34rem 20rem at 102% -8%, rgba(185, 141, 67, 0.06), transparent 70%),
-    linear-gradient(180deg, #faf7f0 0%, var(--color-surface-page) 22rem),
-    var(--color-surface-page);
-  font-family: "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
-  font-size: 1rem;
-  line-height: 1.65;
-}
+body { color: var(--color-copy); }
+:is(h1,h2,h3,h4,h5,h6) { color: var(--color-copy); font-weight: 700; }
 
-:is(h1, h2, h3, h4, h5, h6) {
-  color: var(--color-copy);
-  font-family: "Alexandria", "IBM Plex Sans Arabic", system-ui, sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.014em;
-  line-height: 1.35;
-}
+:is(.rawaj-eyebrow,.rawaj-chip,.rawaj-bottom-dock__label,.rawaj-bottom-dock__badge,
+.rawaj-listing-card__meta,.rawaj-listing-card__eyebrow,.rawaj-adaptive-card__meta,
+.rawaj-adaptive-card__category,.rawaj-featured-card__location,.rawaj-trust-hero__identity p,
+.rawaj-trust-hero__identity strong,.rawaj-trust-hero__identity small,
+.rawaj-trust-hero__description,.rawaj-trust-hero__badges span,.rawaj-trust-hero__badges b,
+.rawaj-trust-section-header p,.rawaj-trust-section-header span,.rawaj-trust-link-card strong,
+.rawaj-trust-link-card p) { font-size: max(.75rem,12px); letter-spacing: 0; line-height: 1.5; }
 
-/* Functional Arabic text must never collapse to decorative microcopy. */
-:is(
-  .rawaj-eyebrow,
-  .rawaj-chip,
-  .rawaj-bottom-dock__label,
-  .rawaj-bottom-dock__badge,
-  .rawaj-listing-card__meta,
-  .rawaj-listing-card__eyebrow,
-  .rawaj-adaptive-card__meta,
-  .rawaj-adaptive-card__category,
-  .rawaj-featured-card__location,
-  .rawaj-trust-hero__identity p,
-  .rawaj-trust-hero__identity strong,
-  .rawaj-trust-hero__identity small,
-  .rawaj-trust-hero__description,
-  .rawaj-trust-hero__badges span,
-  .rawaj-trust-hero__badges b,
-  .rawaj-trust-hero__actions a,
-  .rawaj-trust-hero__actions button,
-  .rawaj-trust-section-header p,
-  .rawaj-trust-section-header span,
-  .rawaj-trust-link-card strong,
-  .rawaj-trust-link-card p
-) {
-  font-size: max(0.75rem, 12px);
-  letter-spacing: 0;
-  line-height: 1.5;
-}
-
-:is(button, a, input, select, textarea, [role="button"]) {
-  font-family: "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
-}
-
-:is(input, select, textarea, .input) {
+:is(input,select,textarea,.input) {
   min-height: var(--rawaj-control-height);
   border-color: var(--color-line-strong);
   border-radius: var(--radius-input);
   background: var(--color-surface-card);
   box-shadow: none;
-  font-size: max(0.875rem, 14px);
+  font-size: max(.875rem,14px);
 }
-
-:is(input, select, textarea, .input):focus-visible {
+:is(input,select,textarea,.input):focus-visible {
   border-color: var(--color-action);
-  outline: 3px solid color-mix(in srgb, var(--color-action) 15%, transparent);
+  outline: 3px solid color-mix(in srgb,var(--color-action) 15%,transparent);
   outline-offset: 1px;
   box-shadow: none;
 }
-
-:is(.rawaj-button-primary, button.bg-primary, a.bg-primary) {
+:is(.rawaj-button-primary,button.bg-primary,a.bg-primary) {
   min-height: var(--rawaj-control-height);
-  border: 1px solid color-mix(in srgb, var(--color-action) 78%, #a84427);
+  border: 1px solid color-mix(in srgb,var(--color-action) 78%,#a84427);
   border-radius: var(--radius-button);
   background: var(--color-action);
   color: #fff;
-  box-shadow: 0 5px 14px rgba(233, 102, 60, 0.18);
-  font-size: max(0.84rem, 13px);
+  box-shadow: 0 5px 14px rgba(233,102,60,.18);
+  font-size: max(.84rem,13px);
   font-weight: 700;
 }
-
-@media (hover: hover) and (pointer: fine) {
-  :is(.rawaj-button-primary, button.bg-primary, a.bg-primary):hover {
-    background: var(--color-action-hover);
-    filter: none;
-    transform: none;
-  }
+@media (hover:hover) and (pointer:fine) {
+  :is(.rawaj-button-primary,button.bg-primary,a.bg-primary):hover { background: var(--color-action-hover); filter: none; transform: none; }
 }
-
-:is(.rawaj-surface, .rawaj-card, .rawaj-spatial-card) {
-  border-color: var(--color-line);
-  border-radius: var(--radius-card);
-  background-color: var(--color-surface-card);
-  background-image: none;
-  box-shadow: var(--shadow-soft);
-}
-
-:is(.rawaj-surface, .rawaj-card, .rawaj-spatial-card)::before,
-:is(.rawaj-surface, .rawaj-card, .rawaj-spatial-card)::after {
-  opacity: 0.2;
-}
-
-/* Pills are reserved for statuses, not structural buttons or tabs. */
-:is(button, a)[class*="rounded-full"]:not([data-status]):not([data-tone]):not(.rawaj-avatar) {
-  border-radius: var(--radius-button);
-}
-
-@media (hover: none), (pointer: coarse) {
-  :is(button, a, [role="button"], .rawaj-card, .rawaj-surface) {
-    transform: none !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-  }
-}
+:is(button,a)[class*="rounded-full"]:not([data-status]):not([data-tone]):not(.rawaj-avatar) { border-radius: var(--radius-button); }
+@media (hover:none),(pointer:coarse) { :is(button,a,[role="button"],.rawaj-card,.rawaj-surface) { transform: none !important; } }
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:.01ms !important; } }
