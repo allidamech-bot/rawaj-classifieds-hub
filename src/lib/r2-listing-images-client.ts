@@ -2,6 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const R2_LISTING_IMAGE_PREFIX = "r2:";
 const R2_API_PATH = "/api/listing-images";
+const RAWAJ_SUPABASE_AUTH_HEADER = "X-Rawaj-Supabase-Authorization";
+const accessTokenRefreshSafetyMs = 30_000;
 
 export function isR2ListingImagePath(path: string | null | undefined): path is string {
   return Boolean(path?.startsWith(R2_LISTING_IMAGE_PREFIX));
@@ -14,7 +16,18 @@ export function r2ObjectKeyFromStoragePath(path: string): string {
 export async function readSupabaseAccessToken(client: SupabaseClient): Promise<string | null> {
   try {
     const { data } = await client.auth.getSession();
-    return data.session?.access_token ?? null;
+    const session = data.session;
+    const expiresAtMs = session?.expires_at ? session.expires_at * 1_000 : null;
+
+    if (
+      session?.access_token &&
+      (expiresAtMs === null || expiresAtMs > Date.now() + accessTokenRefreshSafetyMs)
+    ) {
+      return session.access_token;
+    }
+
+    const { data: refreshed } = await client.auth.refreshSession();
+    return refreshed.session?.access_token ?? session?.access_token ?? null;
   } catch {
     return null;
   }
@@ -34,9 +47,10 @@ export async function uploadListingImageToR2(input: {
       `${R2_API_PATH}?action=upload&listingId=${encodeURIComponent(input.listingId)}&filename=${encodeURIComponent(input.file.name)}`,
       {
         method: "POST",
+        credentials: "same-origin",
         headers: {
           "Content-Type": input.file.type,
-          ...(input.accessToken ? { Authorization: `Bearer ${input.accessToken}` } : {}),
+          ...authenticatedHeaders(input.accessToken),
         },
         body: input.file,
       },
@@ -46,13 +60,18 @@ export async function uploadListingImageToR2(input: {
     const payload = (await response.json().catch(() => null)) as {
       storagePath?: unknown;
       error?: unknown;
+      code?: unknown;
     } | null;
     if (!response.ok || typeof payload?.storagePath !== "string") {
       return {
         handled: true,
         ok: false,
         message:
-          typeof payload?.error === "string" ? payload.error : "تعذر رفع الصورة إلى مخزن الصور.",
+          typeof payload?.error === "string"
+            ? payload.error
+            : response.status === 401
+              ? "تعذر تمرير جلسة تسجيل الدخول إلى مخزن الصور. حدّث الصفحة ثم أعد المحاولة."
+              : "تعذر رفع الصورة إلى مخزن الصور.",
       };
     }
     return { handled: true, ok: true, storagePath: payload.storagePath };
@@ -70,9 +89,10 @@ export async function deleteListingImageFromR2(input: {
   try {
     const response = await fetch(R2_API_PATH, {
       method: "DELETE",
+      credentials: "same-origin",
       headers: {
         "Content-Type": "application/json",
-        ...(input.accessToken ? { Authorization: `Bearer ${input.accessToken}` } : {}),
+        ...authenticatedHeaders(input.accessToken),
       },
       body: JSON.stringify({ listingId: input.listingId, storagePath: input.storagePath }),
     });
@@ -95,9 +115,10 @@ export async function signR2ListingImagePaths(
   try {
     const response = await fetch(endpoint, {
       method: "POST",
+      credentials: "same-origin",
       headers: {
         "Content-Type": "application/json",
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...authenticatedHeaders(accessToken),
       },
       body: JSON.stringify({ paths: uniquePaths }),
     });
@@ -111,6 +132,15 @@ export async function signR2ListingImagePaths(
   } catch {
     return new Map();
   }
+}
+
+function authenticatedHeaders(accessToken: string | null): Record<string, string> {
+  if (!accessToken) return {};
+  const bearer = `Bearer ${accessToken}`;
+  return {
+    Authorization: bearer,
+    [RAWAJ_SUPABASE_AUTH_HEADER]: bearer,
+  };
 }
 
 function resolveR2ApiUrl(action: string): string | null {
