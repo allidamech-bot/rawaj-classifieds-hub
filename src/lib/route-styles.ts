@@ -1,7 +1,7 @@
 import "../auth-stable-route-styles.css";
 import "../auth-support-correction-v1.css";
 import "../listing-studio-navigation-fix";
-import "../listing-studio-image-selection-guard";
+import "../listing-studio-image-validation";
 import "../listing-studio-price-type-guard";
 import "../listing-studio-mobile-recovery.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
