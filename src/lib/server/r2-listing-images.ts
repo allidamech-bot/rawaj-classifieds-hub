@@ -148,8 +148,7 @@ function objectUrl(config: R2Config, key: string) {
 function canonicalSearchParams(params: URLSearchParams) {
   return [...params.entries()]
     .sort(
-      ([aKey, aValue], [bKey, bValue]) =>
-        aKey.localeCompare(bKey) || aValue.localeCompare(bValue),
+      ([aKey, aValue], [bKey, bValue]) => aKey.localeCompare(bKey) || aValue.localeCompare(bValue),
     )
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     .join("&");
