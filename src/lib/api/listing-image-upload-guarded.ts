@@ -114,7 +114,7 @@ export async function uploadListingImage({
     if (!r2Upload.ok) {
       return {
         ok: false,
-        error: { code: "storage_error", message: r2Upload.message },
+        error: mapStorageError({ message: r2Upload.message }),
       };
     }
     storagePath = r2Upload.storagePath;
