@@ -11,6 +11,7 @@ const [
   css,
   recoveryCss,
   navigationFix,
+  imageSelectionGuard,
   packageJson,
 ] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
@@ -24,6 +25,7 @@ const [
   readFile(new URL("../src/listing-studio-v4.css", import.meta.url), "utf8"),
   readFile(new URL("../src/listing-studio-mobile-recovery.css", import.meta.url), "utf8"),
   readFile(new URL("../src/listing-studio-navigation-fix.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/listing-studio-image-selection-guard.ts", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
 
@@ -31,6 +33,7 @@ test("phase 4 listing studio layer is route-scoped and loaded last", () => {
   assert.match(routeStyles, /listingStudioV4Css from "\.\.\/listing-studio-v4\.css\?url"/);
   assert.match(routeStyles, /listingStudioV4: listingStudioV4Css/);
   assert.match(routeStyles, /import "\.\.\/listing-studio-navigation-fix"/);
+  assert.match(routeStyles, /import "\.\.\/listing-studio-image-selection-guard"/);
   assert.match(routeStyles, /import "\.\.\/listing-studio-mobile-recovery\.css"/);
   assert.ok(root.indexOf("listingStudioV4") > root.indexOf("listingStudioV3"));
   assert.match(route, /rawaj-listing-studio-v4/);
@@ -53,6 +56,17 @@ test("taxonomy selector never offers a branch that cannot reach an active final 
     taxonomySelector,
     /هذا المسار لا يحتوي تصنيفاً نهائياً متاحاً\. ارجع واختر مساراً آخر/,
   );
+});
+
+test("listing image selection rejects unsupported and oversized files before React receives them", () => {
+  assert.match(imageSelectionGuard, /MAX_IMAGE_BYTES = 5 \* 1024 \* 1024/);
+  assert.match(imageSelectionGuard, /image\/jpeg/);
+  assert.match(imageSelectionGuard, /image\/png/);
+  assert.match(imageSelectionGuard, /image\/webp/);
+  assert.match(imageSelectionGuard, /new DataTransfer\(\)/);
+  assert.match(imageSelectionGuard, /input\.files = transfer\.files/);
+  assert.match(imageSelectionGuard, /data-listing-image-validation/);
+  assert.match(imageSelectionGuard, /role", "alert"/);
 });
 
 test("phase 4 establishes readable controls, compact sections, and responsive layouts", () => {
