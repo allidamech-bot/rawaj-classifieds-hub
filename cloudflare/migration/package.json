@@ -1,0 +1,14 @@
+{
+  "name": "@rawaj/cloudflare-migration",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "export:public": "node export-public-snapshot.mjs",
+    "verify:snapshot": "node verify-public-snapshot.mjs",
+    "migrate:media": "node migrate-media-to-r2.mjs"
+  },
+  "dependencies": {
+    "postgres": "^3.4.7",
+    "@supabase/supabase-js": "^2.87.1"
+  }
+}
