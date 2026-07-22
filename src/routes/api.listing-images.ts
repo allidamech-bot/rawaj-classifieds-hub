@@ -69,10 +69,7 @@ async function handleUpload(
   return json({ storagePath: toR2StoragePath(key) }, 201);
 }
 
-async function handleSign(
-  request: Request,
-  config: NonNullable<ReturnType<typeof readR2Config>>,
-) {
+async function handleSign(request: Request, config: NonNullable<ReturnType<typeof readR2Config>>) {
   const auth = await optionalClient(request);
   if (!auth) return json({ urls: {} });
   const payload = (await request.json().catch(() => null)) as { paths?: unknown } | null;
@@ -115,9 +112,10 @@ async function handleDelete(
 ) {
   const auth = await authenticatedClient(request);
   if (!auth) return json({ error: "Authentication required." }, 401);
-  const payload = (await request.json().catch(() => null)) as
-    | { listingId?: unknown; storagePath?: unknown }
-    | null;
+  const payload = (await request.json().catch(() => null)) as {
+    listingId?: unknown;
+    storagePath?: unknown;
+  } | null;
   const listingId = typeof payload?.listingId === "string" ? payload.listingId.trim() : "";
   const storagePath = typeof payload?.storagePath === "string" ? payload.storagePath : "";
   const key = fromR2StoragePath(storagePath);
