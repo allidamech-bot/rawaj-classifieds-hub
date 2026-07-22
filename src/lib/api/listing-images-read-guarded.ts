@@ -35,9 +35,7 @@ async function fetchListingImagesWithR2(
   const result = await fetchListingImagesBase(listingId);
   if (!result.ok) return result;
 
-  const r2Paths = result.data
-    .map((image) => image.storagePath)
-    .filter(isR2ListingImagePath);
+  const r2Paths = result.data.map((image) => image.storagePath).filter(isR2ListingImagePath);
   if (r2Paths.length === 0) return result;
 
   const clientResult = getClient();
