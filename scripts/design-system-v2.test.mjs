@@ -2,9 +2,22 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [css, foundation, root, routeStyles, button, input, card, badge, header, bottomDock] = await Promise.all([
+const [
+  css,
+  foundation,
+  commerceFoundation,
+  root,
+  routeStyles,
+  button,
+  input,
+  card,
+  badge,
+  header,
+  bottomDock,
+] = await Promise.all([
   readFile(new URL("../src/design-system-v2.css", import.meta.url), "utf8"),
   readFile(new URL("../src/design-foundation.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/modern-syrian-commerce-foundation.css", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/components/ui/button.tsx", import.meta.url), "utf8"),
@@ -27,6 +40,16 @@ test("design system V2 is loaded after legacy page styles", () => {
   assert.notEqual(designSystemIndex, -1);
   assert.ok(designSystemIndex > legacyIndex);
   assert.match(root, /theme-color", content: "#123f38"/);
+});
+
+test("modern Syrian commerce foundation is global and canonical", () => {
+  assert.match(routeStyles, /import "\.\.\/modern-syrian-commerce-foundation\.css";/);
+  assert.match(commerceFoundation, /--color-action: #e9663c;/);
+  assert.match(commerceFoundation, /--color-trust: #123f38;/);
+  assert.match(commerceFoundation, /--color-premium: #b98d43;/);
+  assert.match(commerceFoundation, /--primary: var\(--color-trust\);/);
+  assert.match(commerceFoundation, /--brand-navy: var\(--color-trust-deep\);/);
+  assert.match(commerceFoundation, /Functional Arabic text must never collapse/);
 });
 
 test("brand palette defines distinct page, card, sage, warm, and dark surfaces", () => {
@@ -65,4 +88,5 @@ test("shared navigation uses explicit active-state hooks", () => {
 test("motion remains accessible", () => {
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /transition: none;/);
+  assert.match(commerceFoundation, /animation-duration: 0\.01ms !important/);
 });
