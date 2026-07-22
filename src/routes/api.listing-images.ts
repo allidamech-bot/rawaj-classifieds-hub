@@ -49,7 +49,9 @@ async function handleUpload(
   if (!auth.ok) return json({ error: auth.message, code: auth.code }, auth.status);
 
   const listingId = url.searchParams.get("listingId")?.trim() ?? "";
-  if (!listingId) return json({ error: "Listing id is required.", code: "listing_id_required" }, 400);
+  if (!listingId) {
+    return json({ error: "Listing id is required.", code: "listing_id_required" }, 400);
+  }
   const contentType = request.headers.get("content-type")?.split(";")[0].trim() ?? "";
   if (!ALLOWED_TYPES.has(contentType)) {
     return json({ error: "Unsupported image type.", code: "unsupported_image_type" }, 415);
