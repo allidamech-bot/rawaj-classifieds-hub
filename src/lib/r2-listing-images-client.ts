@@ -43,9 +43,10 @@ export async function uploadListingImageToR2(input: {
     );
 
     if (response.status === 503) return { handled: false };
-    const payload = (await response.json().catch(() => null)) as
-      | { storagePath?: unknown; error?: unknown }
-      | null;
+    const payload = (await response.json().catch(() => null)) as {
+      storagePath?: unknown;
+      error?: unknown;
+    } | null;
     if (!response.ok || typeof payload?.storagePath !== "string") {
       return {
         handled: true,
