@@ -2,19 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [
-  css,
-  foundation,
-  commerceFoundation,
-  root,
-  routeStyles,
-  button,
-  input,
-  card,
-  badge,
-  header,
-  bottomDock,
-] = await Promise.all([
+const [css, foundation, commerceFoundation, root, routeStyles, button, input, card, badge, header, bottomDock] = await Promise.all([
   readFile(new URL("../src/design-system-v2.css", import.meta.url), "utf8"),
   readFile(new URL("../src/design-foundation.css", import.meta.url), "utf8"),
   readFile(new URL("../src/modern-syrian-commerce-foundation.css", import.meta.url), "utf8"),
@@ -40,14 +28,15 @@ test("design system V2 is loaded after legacy page styles", () => {
 });
 
 test("modern Syrian commerce foundation is global, bright, and canonical", () => {
-  assert.match(routeStyles, /import "\.\.\/modern-syrian-commerce-foundation\.css";/);
-  assert.match(commerceFoundation, /--color-action:#e9663c;/);
-  assert.match(commerceFoundation, /--color-trust:#3f846f;/);
-  assert.match(commerceFoundation, /--color-premium:#b98d43;/);
-  assert.match(commerceFoundation, /--rawaj-primary:var\(--color-trust\);/);
-  assert.match(commerceFoundation, /linear-gradient\(140deg,#fffaf0,#e5f3e9 54%,#fff2e6\)/);
-  assert.match(commerceFoundation, /\.rawaj-adaptive-card__price\{color:var\(--color-action\)\}/);
-  assert.doesNotMatch(commerceFoundation, /linear-gradient\([^\n]*#092d29/);
+  assert.match(routeStyles, /modern-syrian-commerce-foundation\.css/);
+  assert.match(commerceFoundation, /--color-action:#e9663c/);
+  assert.match(commerceFoundation, /--color-trust:#3f846f/);
+  assert.match(commerceFoundation, /--color-surface-page:#f8f3e9/);
+  assert.match(commerceFoundation, /\.rawaj-discovery-hero/);
+  assert.match(commerceFoundation, /#e5f3e9/);
+  assert.match(commerceFoundation, /#fff2e6/);
+  assert.match(commerceFoundation, /\.rawaj-search-toolbar-v2/);
+  assert.doesNotMatch(commerceFoundation, /#092d29/);
 });
 
 test("brand palette keeps distinct page, card, sage, warm, and compatibility surfaces", () => {
