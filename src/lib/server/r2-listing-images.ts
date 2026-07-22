@@ -29,7 +29,12 @@ export function fromR2StoragePath(path: string): string | null {
   return path.startsWith("r2:") ? path.slice(3) : null;
 }
 
-export async function putR2Object(config: R2Config, key: string, body: ArrayBuffer, contentType: string) {
+export async function putR2Object(
+  config: R2Config,
+  key: string,
+  body: ArrayBuffer,
+  contentType: string,
+) {
   const url = objectUrl(config, key);
   const payloadHash = await sha256Hex(body);
   const response = await signedFetch(config, url, "PUT", body, payloadHash, {
@@ -41,8 +46,17 @@ export async function putR2Object(config: R2Config, key: string, body: ArrayBuff
 
 export async function deleteR2Object(config: R2Config, key: string) {
   const url = objectUrl(config, key);
-  const response = await signedFetch(config, url, "DELETE", undefined, await sha256Hex(new Uint8Array()), {});
-  if (!response.ok && response.status !== 404) throw new Error(`R2 DELETE failed with ${response.status}`);
+  const response = await signedFetch(
+    config,
+    url,
+    "DELETE",
+    undefined,
+    await sha256Hex(new Uint8Array()),
+    {},
+  );
+  if (!response.ok && response.status !== 404) {
+    throw new Error(`R2 DELETE failed with ${response.status}`);
+  }
 }
 
 export async function presignR2Get(config: R2Config, key: string, expiresSeconds = 900) {
@@ -68,7 +82,12 @@ export async function presignR2Get(config: R2Config, key: string, expiresSeconds
     "host",
     "UNSIGNED-PAYLOAD",
   ].join("\n");
-  const stringToSign = [algorithm, amzDate, credentialScope, await sha256Hex(canonicalRequest)].join("\n");
+  const stringToSign = [
+    algorithm,
+    amzDate,
+    credentialScope,
+    await sha256Hex(canonicalRequest),
+  ].join("\n");
   const signingKey = await deriveSigningKey(config.secretAccessKey, dateStamp, config.region);
   const signature = bytesToHex(await hmac(signingKey, stringToSign));
   return `${base}?${canonicalQuery}&X-Amz-Signature=${signature}`;
@@ -93,7 +112,9 @@ async function signedFetch(
     ...extraHeaders,
   };
   const signedHeaderNames = Object.keys(headers).sort();
-  const canonicalHeaders = signedHeaderNames.map((name) => `${name}:${headers[name].trim()}\n`).join("");
+  const canonicalHeaders = signedHeaderNames
+    .map((name) => `${name}:${headers[name].trim()}\n`)
+    .join("");
   const credentialScope = `${dateStamp}/${config.region}/${service}/aws4_request`;
   const canonicalRequest = [
     method,
@@ -103,7 +124,12 @@ async function signedFetch(
     signedHeaderNames.join(";"),
     payloadHash,
   ].join("\n");
-  const stringToSign = [algorithm, amzDate, credentialScope, await sha256Hex(canonicalRequest)].join("\n");
+  const stringToSign = [
+    algorithm,
+    amzDate,
+    credentialScope,
+    await sha256Hex(canonicalRequest),
+  ].join("\n");
   const signingKey = await deriveSigningKey(config.secretAccessKey, dateStamp, config.region);
   const signature = bytesToHex(await hmac(signingKey, stringToSign));
   const authorization = `${algorithm} Credential=${config.accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaderNames.join(";")}, Signature=${signature}`;
@@ -121,7 +147,10 @@ function objectUrl(config: R2Config, key: string) {
 
 function canonicalSearchParams(params: URLSearchParams) {
   return [...params.entries()]
-    .sort(([aKey, aValue], [bKey, bValue]) => aKey.localeCompare(bKey) || aValue.localeCompare(bValue))
+    .sort(
+      ([aKey, aValue], [bKey, bValue]) =>
+        aKey.localeCompare(bKey) || aValue.localeCompare(bValue),
+    )
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     .join("&");
 }
@@ -138,8 +167,16 @@ async function deriveSigningKey(secret: string, dateStamp: string, region: strin
 }
 
 async function hmac(key: BufferSource, value: string) {
-  const cryptoKey = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  return new Uint8Array(await crypto.subtle.sign("HMAC", cryptoKey, new TextEncoder().encode(value)));
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    key,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  return new Uint8Array(
+    await crypto.subtle.sign("HMAC", cryptoKey, new TextEncoder().encode(value)),
+  );
 }
 
 async function sha256Hex(value: string | BufferSource) {
