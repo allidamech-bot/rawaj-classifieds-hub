@@ -87,20 +87,18 @@ export async function fetchCloudflareListings(
   cursor: ListingCursor | null = null,
   pageSize = 30,
 ): Promise<ClassifiedsResult<PaginatedListingsResponse<ClassifiedListing>>> {
-  const unsupported = unsupportedCloudflareFilters(filters);
-  if (unsupported.length > 0) {
-    return {
-      ok: false,
-      error: {
-        code: "setup_required",
-        message: "هذه الفلاتر قيد النقل إلى خدمة البحث الجديدة.",
-        details: `Unsupported Cloudflare listing filters: ${unsupported.join(", ")}`,
-        operation: "cloudflare_public_listings",
-      },
-    };
-  }
-
   const sort = filters.sort ?? "latest";
+  const taxonomyNodeIds = [
+    ...new Set(
+      [...(filters.taxonomyNodeIds ?? []), ...(filters.taxonomyNodeId ? [filters.taxonomyNodeId] : [])]
+        .map((value) => value.trim())
+        .filter(Boolean),
+    ),
+  ];
+  const legacyScopes = (filters.taxonomyLegacyScopes ?? []).map((scope) =>
+    base64UrlEncode(JSON.stringify(scope)),
+  );
+
   const query: Record<string, string | number | boolean | string[] | null | undefined> = {
     categoryId: filters.categoryId,
     subcategoryId: filters.subcategoryId,
@@ -114,7 +112,25 @@ export async function fetchCloudflareListings(
     q: filters.query,
     sort,
     pageSize: Math.max(1, Math.min(pageSize, 50)),
-    taxonomyNodeId: filters.taxonomyNodeIds,
+    taxonomyNodeId: taxonomyNodeIds,
+    legacyScope: legacyScopes,
+    taxonomyLegacySubcategoryId: filters.taxonomyLegacySubcategoryId,
+    carMake: filters.carMake,
+    carModel: filters.carModel,
+    yearFrom: filters.yearFrom,
+    yearTo: filters.yearTo,
+    fuelType: filters.fuelType,
+    transmission: filters.transmission,
+    propertyPurpose: filters.propertyPurpose,
+    propertyType: filters.propertyType,
+    taxonomyPropertyPurpose: filters.taxonomyPropertyPurpose,
+    taxonomyPropertyType: filters.taxonomyPropertyType,
+    rooms: filters.rooms,
+    rentalDuration: filters.rentalDuration,
+    electronicsBrand: filters.electronicsBrand,
+    detailCondition: filters.detailCondition,
+    employmentType: filters.employmentType,
+    salaryType: filters.salaryType,
     cursor: cursor ? encodeWorkerCursor(cursor, sort) : null,
   };
 
@@ -291,33 +307,6 @@ function absoluteMediaUrl(value: string): string {
   } catch {
     return value;
   }
-}
-
-function unsupportedCloudflareFilters(filters: ListingFilters): string[] {
-  const unsupported: Array<keyof ListingFilters> = [
-    "taxonomyLegacyScopes",
-    "carMake",
-    "carModel",
-    "yearFrom",
-    "yearTo",
-    "fuelType",
-    "transmission",
-    "propertyPurpose",
-    "propertyType",
-    "taxonomyPropertyPurpose",
-    "taxonomyPropertyType",
-    "taxonomyLegacySubcategoryId",
-    "rooms",
-    "rentalDuration",
-    "electronicsBrand",
-    "detailCondition",
-    "employmentType",
-    "salaryType",
-  ];
-  return unsupported.filter((key) => {
-    const value = filters[key];
-    return Array.isArray(value) ? value.length > 0 : value !== undefined && value !== null && value !== "";
-  });
 }
 
 function encodeWorkerCursor(
