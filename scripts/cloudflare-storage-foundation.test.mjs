@@ -8,6 +8,7 @@ const wrangler = JSON.parse(read("wrangler.jsonc"));
 const r2Server = read("src/lib/server/r2-listing-images.ts");
 const r2Route = read("src/routes/api.listing-images.ts");
 const r2Client = read("src/lib/r2-listing-images-client.ts");
+const migrationTool = read("scripts/migrate-supabase-listing-images-to-r2.mjs");
 
 const secretNames = [
   "R2_ACCOUNT_ID",
@@ -51,4 +52,17 @@ test("R2 rollout remains backward compatible with Supabase images", () => {
   assert.match(r2Client, /R2_LISTING_IMAGE_PREFIX\s*=\s*"r2:"/);
   assert.match(r2Client, /response\.status === 503/);
   assert.match(r2Client, /return \{ handled: false \}/);
+});
+
+test("existing image migration is dry-run first, verifiable, and non-destructive", () => {
+  assert.match(migrationTool, /apply:\s*false/);
+  assert.match(migrationTool, /if \(!options\.apply\)/);
+  assert.match(migrationTool, /const targetKey = row\.storage_path/);
+  assert.match(migrationTool, /futureStoragePath:\s*`r2:\$\{targetKey\}`/);
+  assert.match(migrationTool, /x-amz-meta-sha256/);
+  assert.match(migrationTool, /R2 checksum verification failed after upload/);
+  assert.match(migrationTool, /databaseMutation:\s*false/);
+  assert.match(migrationTool, /sourceDeletion:\s*false/);
+  assert.doesNotMatch(migrationTool, /\.from\("listing_images"\)\s*\.update\(/s);
+  assert.doesNotMatch(migrationTool, /method:\s*"DELETE"/);
 });

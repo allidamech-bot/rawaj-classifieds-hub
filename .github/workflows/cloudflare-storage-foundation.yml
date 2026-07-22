@@ -22,5 +22,8 @@ jobs:
         with:
           node-version: 22
 
+      - name: Validate migration tool syntax
+        run: node --check scripts/migrate-supabase-listing-images-to-r2.mjs
+
       - name: Validate Cloudflare storage foundation
         run: node --test scripts/cloudflare-storage-foundation.test.mjs
