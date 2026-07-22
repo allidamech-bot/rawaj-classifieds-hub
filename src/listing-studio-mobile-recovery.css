@@ -1,0 +1,121 @@
+.rawaj-listing-studio-v4 .rawaj-studio-hero {
+  border-color: #d7e6de;
+  background: linear-gradient(135deg, #fffaf1 0%, #eef8f2 56%, #fff0e7 100%);
+  color: #173b34;
+}
+
+.rawaj-listing-studio-v4 .rawaj-studio-hero :is(h1, p, span, a, button) {
+  color: inherit;
+}
+
+.rawaj-listing-studio-v4 .rawaj-studio-hero__description {
+  color: #526b62;
+}
+
+.rawaj-listing-studio-v4 :is(
+  .rawaj-studio-hero__eyebrow,
+  .rawaj-studio-hero__status > *,
+  .rawaj-studio-hero__actions a,
+  .rawaj-studio-hero__actions button
+) {
+  border-color: #d5e5dc;
+  background: rgb(255 255 255 / 78%);
+  color: #173b34;
+}
+
+.rawaj-listing-studio-v4 .rawaj-studio-action-bar {
+  z-index: 40;
+}
+
+.rawaj-listing-studio-v4 .rawaj-studio-action-bar button {
+  min-width: 0;
+  touch-action: manipulation;
+}
+
+@media (max-width: 767px) {
+  .rawaj-listing-studio-v4 .rawaj-studio-hero {
+    padding: 1rem;
+  }
+
+  .rawaj-listing-studio-v4 .rawaj-studio-hero h1 {
+    overflow-wrap: anywhere;
+    font-size: clamp(1.45rem, 7.5vw, 2rem);
+  }
+
+  .rawaj-listing-studio-v4 :is(
+    .rawaj-studio-hero__status,
+    .rawaj-studio-hero__actions
+  ) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .rawaj-listing-studio-v4 :is(
+    .rawaj-studio-hero__status > *,
+    .rawaj-studio-hero__actions a,
+    .rawaj-studio-hero__actions button
+  ) {
+    min-width: 0;
+    min-height: 3rem;
+    padding-inline: 0.65rem;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .rawaj-listing-studio-v4 .rawaj-studio-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.25rem;
+    overflow: visible;
+    padding: 0.3rem;
+  }
+
+  .rawaj-listing-studio-v4 .rawaj-studio-steps > li {
+    min-width: 0;
+    width: auto;
+  }
+
+  .rawaj-listing-studio-v4 .rawaj-studio-steps > li > button {
+    min-width: 0;
+    width: 100%;
+    min-height: 3.65rem;
+    gap: 0.2rem;
+    padding: 0.4rem 0.25rem;
+  }
+
+  .rawaj-listing-studio-v4 .rawaj-studio-steps__copy strong {
+    overflow: hidden;
+    font-size: 0.7rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rawaj-listing-studio-v4 .rawaj-studio-steps__copy small {
+    display: none;
+  }
+
+  .rawaj-listing-studio-v4 .rawaj-studio-action-bar {
+    position: sticky;
+    bottom: calc(var(--rawaj-bottom-dock-height, 4.75rem) + env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: minmax(5.25rem, 0.34fr) minmax(0, 1fr);
+    width: 100%;
+    padding: 0.45rem;
+  }
+
+  .rawaj-listing-studio-v4 .rawaj-studio-action-bar button {
+    width: 100%;
+    min-height: 3rem;
+    padding-inline: 0.75rem;
+  }
+
+  .rawaj-listing-studio-v4 :is(
+    .rawaj-studio-section,
+    .rawaj-studio-shell,
+    .rawaj-studio-shell__content
+  ) {
+    min-width: 0;
+    max-width: 100%;
+  }
+}

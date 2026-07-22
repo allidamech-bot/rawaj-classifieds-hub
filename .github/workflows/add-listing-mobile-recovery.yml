@@ -1,0 +1,49 @@
+name: Add Listing Mobile Recovery
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/listing-studio-navigation-fix.ts"
+      - "src/listing-studio-mobile-recovery.css"
+      - "src/lib/route-styles.ts"
+      - "scripts/listing-studio-v4.test.mjs"
+      - "e2e/add-listing-mobile-recovery.spec.ts"
+      - ".github/workflows/add-listing-mobile-recovery.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:listing-studio-v4
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: Verify add-listing recovery at exact mobile widths
+        env:
+          VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
+        shell: bash
+        run: |
+          set -o pipefail
+          npx playwright test e2e/add-listing-mobile-recovery.spec.ts --project=mobile-chromium 2>&1 | tee add-listing-playwright.log
+      - name: Upload add-listing browser diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: add-listing-mobile-recovery-${{ github.run_id }}
+          path: |
+            add-listing-playwright.log
+            test-results
+          if-no-files-found: warn
+          retention-days: 3
