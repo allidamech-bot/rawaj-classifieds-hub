@@ -30,10 +30,7 @@ const [
 
 test("design system V2 is loaded after legacy page styles", () => {
   assert.match(root, /import designSystemV2Css from "\.\.\/design-system-v2\.css\?url";/);
-  assert.match(
-    routeStyles,
-    /import personalSpacePolishCss from "\.\.\/personal-space-polish\.css\?url";/,
-  );
+  assert.match(routeStyles, /import personalSpacePolishCss from "\.\.\/personal-space-polish\.css\?url";/);
   const legacyIndex = root.indexOf("routeStyleHrefs.personalSpacePolish");
   const designSystemIndex = root.indexOf("href: designSystemV2Css");
   assert.notEqual(legacyIndex, -1);
@@ -42,17 +39,19 @@ test("design system V2 is loaded after legacy page styles", () => {
   assert.match(root, /theme-color", content: "#123f38"/);
 });
 
-test("modern Syrian commerce foundation is global and canonical", () => {
+test("modern Syrian commerce foundation is global, bright, and canonical", () => {
   assert.match(routeStyles, /import "\.\.\/modern-syrian-commerce-foundation\.css";/);
-  assert.match(commerceFoundation, /--color-action: #e9663c;/);
-  assert.match(commerceFoundation, /--color-trust: #123f38;/);
-  assert.match(commerceFoundation, /--color-premium: #b98d43;/);
-  assert.match(commerceFoundation, /--primary: var\(--color-trust\);/);
-  assert.match(commerceFoundation, /--brand-navy: var\(--color-trust-deep\);/);
-  assert.match(commerceFoundation, /Functional Arabic text must never collapse/);
+  assert.match(commerceFoundation, /--color-action:#ef704b;/);
+  assert.match(commerceFoundation, /--color-trust:#3f8b78;/);
+  assert.match(commerceFoundation, /--color-premium:#c59b55;/);
+  assert.match(commerceFoundation, /--primary:var\(--color-trust\);/);
+  assert.match(commerceFoundation, /--brand-navy:var\(--color-trust-deep\);/);
+  assert.match(commerceFoundation, /Bright marketplace hero/);
+  assert.match(commerceFoundation, /linear-gradient\(145deg,#fff8ef 0%,#f1fbf5 54%,#fff4eb 100%\)/);
+  assert.doesNotMatch(commerceFoundation, /linear-gradient\([^\n]*#092d29/);
 });
 
-test("brand palette defines distinct page, card, sage, warm, and dark surfaces", () => {
+test("brand palette keeps distinct page, card, sage, warm, and compatibility surfaces", () => {
   assert.match(foundation, /--rawaj-page-background: #f6f2e9;/);
   assert.match(foundation, /--rawaj-primary: #123f38;/);
   assert.match(foundation, /--rawaj-accent-orange: #f45f38;/);
@@ -88,5 +87,5 @@ test("shared navigation uses explicit active-state hooks", () => {
 test("motion remains accessible", () => {
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /transition: none;/);
-  assert.match(commerceFoundation, /animation-duration: 0\.01ms !important/);
+  assert.match(commerceFoundation, /animation-duration:0\.01ms!important/);
 });
