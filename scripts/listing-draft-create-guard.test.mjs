@@ -12,10 +12,22 @@ const [
   typeRepairMigration,
   serverSource,
 ] = await Promise.all([
-  readFile(new URL("../src/lib/api/listing-draft-create-guarded.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/api/listing-draft-creation-flow.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/api/listing-draft-create-rpc.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/lib/api/listing-owner-write-guarded.ts", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/lib/api/listing-draft-create-guarded.ts", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/lib/api/listing-draft-creation-flow.ts", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/lib/api/listing-draft-create-rpc.ts", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/lib/api/listing-owner-write-guarded.ts", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
   readFile(
     new URL(
@@ -36,7 +48,10 @@ const [
 
 test("owner draft creation reuses one in-flight request for an identical payload", () => {
   assert.match(guardedSource, /ownerDraftCreationRequests = new Map/);
-  assert.match(guardedSource, /const existing = ownerDraftCreationRequests\.get\(requestKey\)/);
+  assert.match(
+    guardedSource,
+    /const existing = ownerDraftCreationRequests\.get\(requestKey\)/,
+  );
   assert.match(guardedSource, /existing\.expiresAt === null/);
   assert.match(guardedSource, /return existing\.promise/);
   assert.match(guardedSource, /stablePayloadKey\(payload\)/);
@@ -44,8 +59,14 @@ test("owner draft creation reuses one in-flight request for an identical payload
 
 test("successful draft creation starts a bounded duplicate-click reuse window", () => {
   assert.match(guardedSource, /SUCCESS_REUSE_WINDOW_MS = 30_000/);
-  assert.match(guardedSource, /record\.expiresAt = Date\.now\(\) \+ SUCCESS_REUSE_WINDOW_MS/);
-  assert.match(guardedSource, /const record = \{ expiresAt: null \} as DraftCreationRequest/);
+  assert.match(
+    guardedSource,
+    /record\.expiresAt = Date\.now\(\) \+ SUCCESS_REUSE_WINDOW_MS/,
+  );
+  assert.match(
+    guardedSource,
+    /const record = \{ expiresAt: null \} as DraftCreationRequest/,
+  );
   assert.match(guardedSource, /record\.promise = request/);
   assert.match(
     guardedSource,
@@ -57,14 +78,20 @@ test("one add-listing URL flow keeps a durable UUID across reloads", () => {
   assert.match(flowSource, /FLOW_QUERY_PARAM = "draftFlow"/);
   assert.match(flowSource, /window\.sessionStorage/);
   assert.match(flowSource, /window\.history\.replaceState/);
-  assert.match(flowSource, /FLOW_MAX_AGE_MS = 7 \* 24 \* 60 \* 60 \* 1000/);
+  assert.match(
+    flowSource,
+    /FLOW_MAX_AGE_MS = 7 \* 24 \* 60 \* 60 \* 1000/,
+  );
   assert.match(flowSource, /crypto\.randomUUID/);
   assert.match(flowSource, /UUID_PATTERN/);
   assert.match(flowSource, /flowStorageKey\(userId, requestId\)/);
 });
 
 test("guarded draft creation sends the flow UUID and remembers its listing", () => {
-  assert.match(guardedSource, /readOrCreateOwnerDraftCreationRequestId\(userId\)/);
+  assert.match(
+    guardedSource,
+    /readOrCreateOwnerDraftCreationRequestId\(userId\)/,
+  );
   assert.match(
     guardedSource,
     /createOwnerDraftListingIdempotent\(userId, payload, creationRequestId\)/,
@@ -87,7 +114,10 @@ test("database draft creation is unique per owner and flow request", () => {
   );
   assert.match(migration, /for update;/);
   assert.match(migration, /when unique_violation/);
-  assert.match(migration, /rawaj_owner_update_listing\(v_listing\.id, v_patch\)/);
+  assert.match(
+    migration,
+    /rawaj_owner_update_listing\(v_listing\.id, v_patch\)/,
+  );
   assert.match(migration, /grant execute[\s\S]*to authenticated/);
 });
 
@@ -101,7 +131,10 @@ test("idempotent RPC keeps authorization and patch boundaries", () => {
 });
 
 test("latest owner draft RPC preserves text category, subcategory, and governorate identifiers", () => {
-  assert.match(typeRepairMigration, /create or replace function public\.rawaj_create_owner_draft_v2/);
+  assert.match(
+    typeRepairMigration,
+    /create or replace function public\.rawaj_create_owner_draft_v2/,
+  );
   assert.match(
     typeRepairMigration,
     /nullif\(btrim\(v_patch->>'category_id'\), ''\),/,
@@ -114,9 +147,18 @@ test("latest owner draft RPC preserves text category, subcategory, and governora
     typeRepairMigration,
     /nullif\(btrim\(v_patch->>'governorate_id'\), ''\),/,
   );
-  assert.doesNotMatch(typeRepairMigration, /v_patch->>'category_id'[^,\n]*::uuid/);
-  assert.doesNotMatch(typeRepairMigration, /v_patch->>'subcategory_id'[^,\n]*::uuid/);
-  assert.doesNotMatch(typeRepairMigration, /v_patch->>'governorate_id'[^,\n]*::uuid/);
+  assert.doesNotMatch(
+    typeRepairMigration,
+    /v_patch->>'category_id'[^,\n]*::uuid/,
+  );
+  assert.doesNotMatch(
+    typeRepairMigration,
+    /v_patch->>'subcategory_id'[^,\n]*::uuid/,
+  );
+  assert.doesNotMatch(
+    typeRepairMigration,
+    /v_patch->>'governorate_id'[^,\n]*::uuid/,
+  );
   assert.match(
     typeRepairMigration,
     /nullif\(btrim\(v_patch->>'location_node_id'\), ''\)::uuid/,
@@ -128,9 +170,15 @@ test("migration audits current create, update, and submit RPCs for text-id UUID 
   assert.match(typeRepairMigration, /rawaj_owner_update_listing_v2/);
   assert.match(typeRepairMigration, /rawaj_owner_update_listing_v3/);
   assert.match(typeRepairMigration, /rawaj_submit_listing_for_review/);
-  assert.match(typeRepairMigration, /\(category_id\|subcategory_id\|governorate_id\)/);
+  assert.match(
+    typeRepairMigration,
+    /\(category_id\|subcategory_id\|governorate_id\)/,
+  );
   assert.match(typeRepairMigration, /function_line\.line ~\* '::uuid'/);
-  assert.match(typeRepairMigration, /Listing text identifier contract violated/);
+  assert.match(
+    typeRepairMigration,
+    /Listing text identifier contract violated/,
+  );
 });
 
 test("server CSP allows blob image previews without wildcard expansion", () => {
@@ -150,10 +198,15 @@ test("client uses v2 with a temporary pre-migration fallback", () => {
 test("successful review submission completes only the matching creation flow", () => {
   assert.match(flowSource, /current\.listingId !== cleanListingId/);
   assert.match(flowSource, /removeFlowRequestIdFromUrl\(requestId\)/);
-  assert.match(ownerWriteSource, /completeOwnerDraftCreationFlow\(userId, result\.data\.id\)/);
+  assert.match(
+    ownerWriteSource,
+    /completeOwnerDraftCreationFlow\(userId, result\.data\.id\)/,
+  );
   assert.ok(
     ownerWriteSource.indexOf("if (result.ok)") <
-      ownerWriteSource.indexOf("completeOwnerDraftCreationFlow(userId, result.data.id)"),
+      ownerWriteSource.indexOf(
+        "completeOwnerDraftCreationFlow(userId, result.data.id)",
+      ),
   );
 });
 
