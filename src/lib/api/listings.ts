@@ -728,7 +728,7 @@ async function signListingImages(
 
       if (!error && data) {
         for (const item of data) {
-          if (item.signedUrl) urlsByPath.set(item.path, item.signedUrl);
+          if (item.path && item.signedUrl) urlsByPath.set(item.path, item.signedUrl);
         }
       }
     } catch {
