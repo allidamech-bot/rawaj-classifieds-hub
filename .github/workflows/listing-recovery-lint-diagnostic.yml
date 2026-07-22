@@ -1,0 +1,53 @@
+name: Listing Recovery Lint Diagnostic
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          show-progress: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --silent
+
+      - name: Capture changed-file lint report
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          mapfile -t files < <(
+            git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$GITHUB_SHA" -- \
+              '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
+          )
+          printf 'Linting %s\n' "${files[@]}" > eslint-report.txt
+          set +e
+          npx eslint --quiet "${files[@]}" >> eslint-report.txt 2>&1
+          status=$?
+          set -e
+          printf '\nESLINT_EXIT=%s\n' "$status" >> eslint-report.txt
+
+      - name: Upload lint report
+        uses: actions/upload-artifact@v4
+        with:
+          name: listing-recovery-eslint-report
+          path: eslint-report.txt
+          if-no-files-found: error
+          retention-days: 1
