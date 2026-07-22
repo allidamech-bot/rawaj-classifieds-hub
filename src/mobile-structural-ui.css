@@ -1,1 +1,1 @@
-[data-ui="textarea"]{min-height:8rem}[data-ui="card"]{overflow:clip}@media(max-width:639px){[data-ui="button"]:not([data-variant="link"]),[data-ui="input"],[data-ui="select-trigger"]{min-height:3rem}[data-ui="card"]{border-radius:var(--radius-card-sm)}}
+[data-ui="textarea"]{min-height:8rem}[data-ui="card"]{overflow:clip}
