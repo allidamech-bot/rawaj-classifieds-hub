@@ -1,4 +1,4 @@
-name: R2 Typecheck Diagnostics
+name: R2 Build Diagnostics
 
 on:
   pull_request:
@@ -17,7 +17,7 @@ permissions:
   contents: read
 
 jobs:
-  typecheck:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,11 +35,24 @@ jobs:
           cat r2-typecheck.log
           echo "TYPECHECK_EXIT_CODE=$status" >> "$GITHUB_ENV"
           exit 0
-      - name: Upload TypeScript diagnostics
+      - name: Capture production build diagnostics
+        shell: bash
+        run: |
+          set +e
+          npm run build > r2-build.log 2>&1
+          status=$?
+          cat r2-build.log
+          echo "BUILD_EXIT_CODE=$status" >> "$GITHUB_ENV"
+          exit 0
+      - name: Upload R2 diagnostics
         uses: actions/upload-artifact@v4
         with:
-          name: r2-typecheck-${{ github.sha }}
-          path: r2-typecheck.log
+          name: r2-diagnostics-${{ github.sha }}
+          path: |
+            r2-typecheck.log
+            r2-build.log
           retention-days: 1
-      - name: Fail when TypeScript failed
-        run: test "$TYPECHECK_EXIT_CODE" = "0"
+      - name: Fail when validation failed
+        run: |
+          test "$TYPECHECK_EXIT_CODE" = "0"
+          test "$BUILD_EXIT_CODE" = "0"
