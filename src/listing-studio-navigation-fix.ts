@@ -24,11 +24,13 @@ function moveToPreviousStep(studio: Element) {
   )[index - 1];
   if (!previousStep || previousStep.disabled) return false;
 
-  previousStep.click();
-  window.requestAnimationFrame(() => {
-    studio.querySelector<HTMLElement>(".rawaj-studio-steps")?.scrollIntoView({
-      block: "start",
-      behavior: "smooth",
+  queueMicrotask(() => {
+    previousStep.click();
+    window.requestAnimationFrame(() => {
+      studio.querySelector<HTMLElement>(".rawaj-studio-steps")?.scrollIntoView({
+        block: "start",
+        behavior: "smooth",
+      });
     });
   });
   return true;
