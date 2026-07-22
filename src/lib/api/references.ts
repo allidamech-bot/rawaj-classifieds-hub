@@ -17,6 +17,8 @@ import {
   normalizePlaceholder,
 } from "@/lib/api/shared";
 import { publicSupabase } from "@/lib/supabase";
+import { fetchCloudflareReferences } from "@/lib/public-data/cloudflare-client";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 export function mapCategory(row: Record<string, unknown>): ClassifiedCategory {
   return {
@@ -236,6 +238,16 @@ function getPublicReferenceClient(): ClassifiedsResult<SupabaseClient> {
 }
 
 export async function readReferences(client: SupabaseClient) {
+  if (isCloudflarePublicDataProvider()) {
+    const result = await fetchCloudflareReferences();
+    if (!result.ok) return result;
+    return {
+      ok: true as const,
+      categories: result.data.categories,
+      governorates: result.data.governorates,
+    };
+  }
+
   const referenceClient = publicSupabase ?? client;
   const [categoriesResult, governoratesResult] = await Promise.all([
     readPublicCategories(referenceClient),
@@ -251,6 +263,10 @@ export async function readReferences(client: SupabaseClient) {
 }
 
 export async function fetchPublicCategories(): Promise<ClassifiedsResult<ClassifiedCategory[]>> {
+  if (isCloudflarePublicDataProvider()) {
+    const result = await fetchCloudflareReferences();
+    return result.ok ? { ok: true, data: result.data.categories } : result;
+  }
   const clientResult = getPublicReferenceClient();
   if (!clientResult.ok) return clientResult;
   return readPublicCategories(clientResult.data);
@@ -259,12 +275,20 @@ export async function fetchPublicCategories(): Promise<ClassifiedsResult<Classif
 export async function fetchPublicSubcategories(): Promise<
   ClassifiedsResult<ClassifiedSubcategory[]>
 > {
+  if (isCloudflarePublicDataProvider()) {
+    const result = await fetchCloudflareReferences();
+    return result.ok ? { ok: true, data: result.data.subcategories } : result;
+  }
   const clientResult = getPublicReferenceClient();
   if (!clientResult.ok) return clientResult;
   return readPublicSubcategories(clientResult.data);
 }
 
 export async function fetchPublicTaxonomyNodes(): Promise<ClassifiedsResult<TaxonomyNode[]>> {
+  if (isCloudflarePublicDataProvider()) {
+    const result = await fetchCloudflareReferences();
+    return result.ok ? { ok: true, data: result.data.taxonomyNodes } : result;
+  }
   const clientResult = getPublicReferenceClient();
   if (!clientResult.ok) return clientResult;
   return readPublicTaxonomyNodes(clientResult.data);
@@ -273,6 +297,10 @@ export async function fetchPublicTaxonomyNodes(): Promise<ClassifiedsResult<Taxo
 export async function fetchPublicGovernorates(): Promise<
   ClassifiedsResult<ClassifiedGovernorate[]>
 > {
+  if (isCloudflarePublicDataProvider()) {
+    const result = await fetchCloudflareReferences();
+    return result.ok ? { ok: true, data: result.data.governorates } : result;
+  }
   const clientResult = getPublicReferenceClient();
   if (!clientResult.ok) return clientResult;
   return readPublicGovernorates(clientResult.data);
