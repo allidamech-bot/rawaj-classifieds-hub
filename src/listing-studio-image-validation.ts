@@ -8,9 +8,7 @@ export interface ListingImageSelectionValidation {
   rejected: File[];
 }
 
-export function validateListingImageSelection(
-  files: File[],
-): ListingImageSelectionValidation {
+export function validateListingImageSelection(files: File[]): ListingImageSelectionValidation {
   const accepted = files.filter(
     (file) => ALLOWED_IMAGE_TYPES.has(file.type) && file.size <= MAX_LISTING_IMAGE_BYTES,
   );
