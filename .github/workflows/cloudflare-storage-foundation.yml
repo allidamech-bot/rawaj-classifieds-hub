@@ -27,3 +27,41 @@ jobs:
 
       - name: Validate Cloudflare storage foundation
         run: node --test scripts/cloudflare-storage-foundation.test.mjs
+
+      - name: Validate D1 catalog contract
+        run: node --test scripts/d1-catalog-foundation.test.mjs
+
+      - name: Replay D1 catalog migration in SQLite
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          import sqlite3
+
+          sql = pathlib.Path('cloudflare/d1/migrations/0001_catalog_foundation.sql').read_text()
+          database = sqlite3.connect(':memory:')
+          database.executescript(sql)
+          expected = {
+              'rawaj_catalog_sync_state',
+              'categories',
+              'subcategories',
+              'governorates',
+              'taxonomy_nodes',
+              'option_sets',
+              'field_definitions',
+              'option_values',
+              'vehicle_makes',
+              'vehicle_models',
+              'vehicle_generations',
+              'vehicle_trims',
+          }
+          actual = {
+              row[0]
+              for row in database.execute(
+                  "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'"
+              )
+          }
+          if actual != expected:
+              raise SystemExit(f'D1 table set mismatch: expected={sorted(expected)} actual={sorted(actual)}')
+          print(f'Replayed D1 catalog migration with {len(actual)} tables.')
+          PY
