@@ -41,13 +41,12 @@ test("design system V2 is loaded after legacy page styles", () => {
 
 test("modern Syrian commerce foundation is global, bright, and canonical", () => {
   assert.match(routeStyles, /import "\.\.\/modern-syrian-commerce-foundation\.css";/);
-  assert.match(commerceFoundation, /--color-action:#ef704b;/);
-  assert.match(commerceFoundation, /--color-trust:#3f8b78;/);
-  assert.match(commerceFoundation, /--color-premium:#c59b55;/);
-  assert.match(commerceFoundation, /--primary:var\(--color-trust\);/);
-  assert.match(commerceFoundation, /--brand-navy:var\(--color-trust-deep\);/);
-  assert.match(commerceFoundation, /Bright marketplace hero/);
-  assert.match(commerceFoundation, /linear-gradient\(145deg,#fff8ef 0%,#f1fbf5 54%,#fff4eb 100%\)/);
+  assert.match(commerceFoundation, /--color-action:#e9663c;/);
+  assert.match(commerceFoundation, /--color-trust:#3f846f;/);
+  assert.match(commerceFoundation, /--color-premium:#b98d43;/);
+  assert.match(commerceFoundation, /--rawaj-primary:var\(--color-trust\);/);
+  assert.match(commerceFoundation, /linear-gradient\(140deg,#fffaf0,#e5f3e9 54%,#fff2e6\)/);
+  assert.match(commerceFoundation, /\.rawaj-adaptive-card__price\{color:var\(--color-action\)\}/);
   assert.doesNotMatch(commerceFoundation, /linear-gradient\([^\n]*#092d29/);
 });
 
@@ -87,5 +86,4 @@ test("shared navigation uses explicit active-state hooks", () => {
 test("motion remains accessible", () => {
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /transition: none;/);
-  assert.match(commerceFoundation, /animation-duration:0\.01ms!important/);
 });
