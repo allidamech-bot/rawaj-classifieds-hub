@@ -12,7 +12,7 @@ import {
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-export const Route = createFileRoute("/api/listing-images")({
+export const Route = createFileRoute("/api/listing-images" as never)({
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
