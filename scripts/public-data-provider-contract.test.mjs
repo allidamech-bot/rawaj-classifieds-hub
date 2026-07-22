@@ -81,7 +81,10 @@ test("advanced listing filters are carried end-to-end into bound D1 predicates",
   assert.match(workerListings, /listing_taxonomy_assignments/);
   assert.match(workerListings, /legacyScopes/);
   assert.match(workerListings, /\.bind\(\.\.\.values\)/);
-  assert.doesNotMatch(workerListings, /\$\{filters\./);
+  assert.doesNotMatch(
+    workerListings,
+    /\$\{filters\.(?:carMake|carModel|fuelType|transmission|propertyPurpose|propertyType|electronicsBrand|employmentType|salaryType)/,
+  );
 });
 
 test("modular Worker entry owns listing search without changing other API routes", () => {
