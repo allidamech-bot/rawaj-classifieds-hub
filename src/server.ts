@@ -80,7 +80,7 @@ function buildContentSecurityPolicy(isSecureRequest: boolean, allowVercelPreview
     "form-action 'self'",
     scriptSourceDirective,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: https:",
+    "img-src 'self' data: blob: https:",
     "media-src 'self' blob: https://*.supabase.co https://*.supabase.com",
     "font-src 'self' data: https://fonts.gstatic.com",
     connectSourceDirective,
