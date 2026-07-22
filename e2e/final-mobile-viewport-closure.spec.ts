@@ -21,9 +21,10 @@ for (const width of widths) {
 
     for (const path of routes) {
       const response = await page.goto(path, { waitUntil: "domcontentloaded" });
-      expect(response?.status() ?? 200, `${path} returned a server failure at ${width}px`).toBeLessThan(
-        500,
-      );
+      expect(
+        response?.status() ?? 200,
+        `${path} returned a server failure at ${width}px`,
+      ).toBeLessThan(500);
       await expect(page.locator("main")).toBeVisible();
       await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
 
@@ -48,7 +49,9 @@ test("interactive mobile controls preserve minimum touch geometry", async ({ pag
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/login", { waitUntil: "domcontentloaded" });
 
-  const controls = page.locator('button:visible, input:visible, select:visible, [role="button"]:visible');
+  const controls = page.locator(
+    'button:visible, input:visible, select:visible, [role="button"]:visible',
+  );
   const count = Math.min(await controls.count(), 12);
   expect(count).toBeGreaterThan(0);
 
