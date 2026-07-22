@@ -296,7 +296,9 @@ function parseArguments(args) {
     else if (argument === "--force") parsed.force = true;
     else if (argument.startsWith("--limit=")) {
       const value = Number.parseInt(argument.slice("--limit=".length), 10);
-      if (!Number.isInteger(value) || value < 1) throw new Error("--limit must be a positive integer.");
+      if (!Number.isInteger(value) || value < 1) {
+        throw new Error("--limit must be a positive integer.");
+      }
       parsed.limit = value;
     } else if (argument.startsWith("--manifest=")) {
       parsed.manifest = argument.slice("--manifest=".length).trim();
