@@ -13,7 +13,7 @@ on:
           - create_resources
           - import_read_model
       database_name:
-        description: Fresh staging D1 database name
+        description: D1 name; imports append the GitHub run ID for blue-green isolation
         required: true
         type: string
         default: rawaj-marketplace-staging
@@ -110,12 +110,16 @@ jobs:
         run: |
           set -euo pipefail
           apply_flag=""
+          database_name="${{ inputs.database_name }}"
           if [ "${{ inputs.operation }}" != "plan_resources" ]; then
             apply_flag="--apply"
           fi
+          if [ "${{ inputs.operation }}" = "import_read_model" ]; then
+            database_name="${database_name}-${GITHUB_RUN_ID}"
+          fi
           node cloudflare/migration/bootstrap-cloudflare-resources.mjs \
             $apply_flag \
-            --database-name="${{ inputs.database_name }}" \
+            --database-name="$database_name" \
             --bucket-name="${{ inputs.bucket_name }}" \
             --location-hint="${{ inputs.location_hint }}" \
             --output="$RESOURCE_MANIFEST"
@@ -196,12 +200,23 @@ jobs:
         env:
           R2_BUCKET_NAME: ${{ steps.resources.outputs.r2_bucket_name }}
           R2_ENDPOINT: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
-        run: >-
-          node cloudflare/migration/migrate-media-to-r2.mjs
-          --apply
-          --manifest="$SNAPSHOT_DIR/media-manifest.json"
-          --output="$SNAPSHOT_DIR/media-results.jsonl"
-          --finalize-sql="$SNAPSHOT_DIR/media-finalize.sql"
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if node cloudflare/migration/migrate-media-to-r2.mjs \
+              --apply \
+              --manifest="$SNAPSHOT_DIR/media-manifest.json" \
+              --output="$SNAPSHOT_DIR/media-results.jsonl" \
+              --finalize-sql="$SNAPSHOT_DIR/media-finalize.sql"; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "Media migration failed after three idempotent attempts."
+              exit 1
+            fi
+            sleep $((attempt * 10))
+          done
 
       - name: Finalize verified media metadata in D1
         if: inputs.operation == 'import_read_model'
