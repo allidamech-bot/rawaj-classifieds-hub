@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import type { Session, User } from "@supabase/supabase-js";
 import {
   canAccessAdmin,
   canAccessOwnerControls,
@@ -7,373 +7,121 @@ import {
   emptyRolePermissions,
   type RolePermission,
   type UserProfile,
-  type UserRole,
 } from "./auth-types";
 import { AuthContext, type AuthContextValue } from "./auth-context";
 import type { AuthStatus } from "./auth-status";
-import { disableNativePush } from "./native-push";
-import { privateAccountProfileSelect } from "./profile-dto";
-import { sanitizeAuthReturnTo } from "./auth-return";
-import { getSupabaseAuthUnavailableReason, isSupabaseConfigured, supabase } from "./supabase";
+import {
+  authLogin,
+  authLogout,
+  authRequestPasswordReset,
+  authSession,
+  authSignup,
+  sessionToProfile,
+  type CloudflareSession,
+} from "./cloudflare-auth";
 
-const rolePriority: UserRole[] = ["owner", "admin", "moderator", "seller", "user"];
-
-const unavailableReason = getSupabaseAuthUnavailableReason();
-
-const signedOutState: AuthContextValue = {
-  status: "signedOut",
-  user: null,
-  session: null,
-  profile: null,
-  reason: null,
-  permissions: emptyRolePermissions,
-  hasPermission: () => false,
-  canAccessAdmin: false,
-  canAccessOwnerControls: false,
-  emailConfirmed: false,
-  signOut: async () => ({ error: null }),
-  refreshProfile: async () => ({ error: null }),
-  signInWithGoogle: async () => ({ error: null }),
-};
-
-function normalizeRoles(roles: string[] | null | undefined): UserRole[] {
-  const knownRoles = new Set<UserRole>(rolePriority);
-  const normalized = (roles ?? []).filter((role): role is UserRole =>
-    knownRoles.has(role as UserRole),
-  );
-
-  return normalized.length > 0 ? normalized : ["user"];
-}
-
-function primaryRole(roles: UserRole[]): UserRole {
-  return rolePriority.find((role) => roles.includes(role)) ?? "user";
-}
-
-function isRejectedRefreshTokenError(error: { message?: string; status?: number }): boolean {
-  if (error.status !== 400) return false;
-  return (error.message ?? "").toLowerCase().includes("refresh token");
-}
-
-async function fetchProfile(client: SupabaseClient, user: User): Promise<UserProfile> {
-  const { data: profileData, error: profileError } = await client
-    .from("profiles")
-    .select(privateAccountProfileSelect)
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (profileError) {
-    throw new Error(profileError.message);
-  }
-
-  let profile = profileData;
-
-  if (!profileData) {
-    const metadataName =
-      typeof user.user_metadata?.display_name === "string"
-        ? user.user_metadata.display_name
-        : typeof user.user_metadata?.full_name === "string"
-          ? user.user_metadata.full_name
-          : (user.email?.split("@")[0] ?? "user");
-
-    const { error: upsertError } = await client.from("profiles").upsert(
-      {
-        id: user.id,
-        email: user.email ?? null,
-        display_name: metadataName,
-      },
-      { onConflict: "id", ignoreDuplicates: false },
-    );
-
-    if (upsertError && upsertError.code !== "23505") {
-      throw new Error(upsertError.message);
-    }
-
-    const { data: bootstrappedProfile, error: bootstrapReadError } = await client
-      .from("profiles")
-      .select(privateAccountProfileSelect)
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (bootstrapReadError) {
-      throw new Error(bootstrapReadError.message);
-    }
-
-    profile = bootstrappedProfile;
-  }
-
-  const { data: roleData, error: roleError } = await client
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id);
-
-  if (roleError) {
-    throw new Error(roleError.message);
-  }
-
-  const roles = normalizeRoles(roleData?.map((row) => row.role));
-  const role = primaryRole(roles);
-
+function compatibilityUser(session: CloudflareSession): User {
   return {
-    id: user.id,
-    email: profile?.email ?? user.email ?? null,
-    firstName: profile?.first_name ?? null,
-    lastName: profile?.last_name ?? null,
-    displayName: profile?.display_name ?? null,
-    role,
-    roles,
-    accountStatus: profile?.account_status ?? "pending_review",
-    verificationStatus: profile?.verification_status ?? "unverified",
-    governorate: profile?.governorate ?? null,
-    cityArea: profile?.city_area ?? null,
-    bio: profile?.bio ?? null,
-    businessName: profile?.business_name ?? null,
-    phone: profile?.phone ?? null,
-    whatsapp: profile?.whatsapp ?? null,
-    preferredContactMethod: profile?.preferred_contact_method ?? null,
-    avatarPath: profile?.avatar_path ?? null,
-    avatarUrl: profile?.avatar_url ?? null,
-    coverPath: profile?.cover_path ?? null,
-    coverUrl: profile?.cover_url ?? null,
-    createdAt: profile?.created_at ?? null,
-    updatedAt: profile?.updated_at ?? null,
-  };
+    id: session.user.id,
+    email: session.user.email,
+    email_confirmed_at: session.user.emailConfirmed ? new Date(0).toISOString() : undefined,
+    app_metadata: {},
+    user_metadata: { display_name: session.profile.displayName },
+    aud: "authenticated",
+    created_at: "",
+  } as User;
+}
+
+function compatibilitySession(session: CloudflareSession): Session {
+  return {
+    access_token: "cookie-session",
+    refresh_token: "",
+    expires_in: 0,
+    token_type: "bearer",
+    user: compatibilityUser(session),
+  } as Session;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<AuthStatus>(
-    isSupabaseConfigured ? "loading" : "authUnavailable",
-  );
-  const [session, setSession] = useState<Session | null>(null);
+  const [status, setStatus] = useState<AuthStatus>("loading");
+  const [session, setSession] = useState<CloudflareSession | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [reason, setReason] = useState<string | null>(unavailableReason);
-  const sessionUserIdRef = useRef<string | null>(null);
-  const sessionRequestIdRef = useRef(0);
-  const profileRequestIdRef = useRef(0);
+  const [reason, setReason] = useState<string | null>(null);
 
-  useEffect(() => {
-    const client = supabase;
-
-    if (!client) {
-      sessionUserIdRef.current = null;
-      sessionRequestIdRef.current += 1;
-      profileRequestIdRef.current += 1;
-      setStatus("authUnavailable");
+  const load = useCallback(async () => {
+    try {
+      const next = await authSession();
+      setSession(next);
+      setProfile(next ? sessionToProfile(next) : null);
+      setStatus(next ? "signedIn" : "signedOut");
+      setReason(null);
+      return { error: null };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "تعذر تحميل بيانات الحساب.";
       setSession(null);
       setProfile(null);
-      setReason(unavailableReason);
-      return;
+      setStatus("authError");
+      setReason(message);
+      return { error: message };
     }
-
-    let active = true;
-
-    async function loadProfile(client: SupabaseClient, user: User | null) {
-      const requestId = ++profileRequestIdRef.current;
-      const userId = user?.id ?? null;
-
-      if (!user) {
-        if (
-          !active ||
-          requestId !== profileRequestIdRef.current ||
-          sessionUserIdRef.current !== null
-        )
-          return;
-        setProfile(null);
-        setReason(null);
-        return;
-      }
-
-      try {
-        const nextProfile = await fetchProfile(client, user);
-        if (
-          !active ||
-          requestId !== profileRequestIdRef.current ||
-          sessionUserIdRef.current !== userId
-        )
-          return;
-        setProfile(nextProfile);
-        setReason(null);
-        setStatus("signedIn");
-      } catch (error) {
-        if (
-          !active ||
-          requestId !== profileRequestIdRef.current ||
-          sessionUserIdRef.current !== userId
-        )
-          return;
-        setProfile(null);
-        setStatus("authError");
-        setReason(error instanceof Error ? error.message : "تعذّر تحميل بيانات الحساب.");
-      }
-    }
-
-    async function loadSession(client: SupabaseClient) {
-      const requestId = ++sessionRequestIdRef.current;
-      const { data, error } = await client.auth.getSession();
-      if (!active || requestId !== sessionRequestIdRef.current) return;
-
-      if (error) {
-        if (isRejectedRefreshTokenError(error)) {
-          const { error: clearError } = await client.auth.signOut({ scope: "local" });
-          if (!active || requestId !== sessionRequestIdRef.current) return;
-
-          if (!clearError) {
-            sessionUserIdRef.current = null;
-            profileRequestIdRef.current += 1;
-            setSession(null);
-            setProfile(null);
-            setStatus("signedOut");
-            setReason(null);
-            return;
-          }
-        }
-
-        sessionUserIdRef.current = null;
-        profileRequestIdRef.current += 1;
-        setSession(null);
-        setProfile(null);
-        setStatus("authError");
-        setReason(error.message);
-        return;
-      }
-
-      const nextSession = data.session;
-      sessionUserIdRef.current = nextSession?.user.id ?? null;
-      setSession(nextSession);
-      setStatus(nextSession ? "signedIn" : "signedOut");
-      await loadProfile(client, nextSession?.user ?? null);
-    }
-
-    void loadSession(client);
-
-    const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => {
-      sessionRequestIdRef.current += 1;
-      const nextUserId = nextSession?.user.id ?? null;
-      const accountChanged = sessionUserIdRef.current !== nextUserId;
-      sessionUserIdRef.current = nextUserId;
-      if (accountChanged) {
-        profileRequestIdRef.current += 1;
-        setProfile(null);
-        setReason(null);
-      }
-      setSession(nextSession);
-      setStatus(nextSession ? "signedIn" : "signedOut");
-      void loadProfile(client, nextSession?.user ?? null);
-    });
-
-    return () => {
-      active = false;
-      sessionRequestIdRef.current += 1;
-      profileRequestIdRef.current += 1;
-      listener.subscription.unsubscribe();
-    };
   }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const value = useMemo<AuthContextValue>(() => {
     const signOut = async () => {
-      const client = supabase;
-
-      if (!client) {
-        return { error: unavailableReason };
-      }
-
-      const signedInUserId = sessionUserIdRef.current ?? session?.user.id ?? profile?.id ?? null;
-      if (signedInUserId) {
-        await disableNativePush(false).catch(() => undefined);
-      }
-
-      const { error } = await client.auth.signOut();
-      if (error) return { error: error.message };
-
-      sessionUserIdRef.current = null;
-      sessionRequestIdRef.current += 1;
-      profileRequestIdRef.current += 1;
+      const result = await authLogout();
+      if (!result.ok) return { error: result.error };
       setSession(null);
       setProfile(null);
       setStatus("signedOut");
       setReason(null);
       return { error: null };
     };
-
-    const refreshProfile = async () => {
-      const client = supabase;
-      const user = session?.user ?? null;
-      const userId = user?.id ?? null;
-      if (!client || !user || !userId || sessionUserIdRef.current !== userId) {
-        return { error: unavailableReason ?? "يجب تسجيل الدخول لتحديث بيانات الحساب." };
-      }
-
-      const requestId = ++profileRequestIdRef.current;
-      try {
-        const nextProfile = await fetchProfile(client, user);
-        if (requestId !== profileRequestIdRef.current || sessionUserIdRef.current !== userId) {
-          return { error: null };
-        }
-        setProfile(nextProfile);
-        setReason(null);
-        setStatus("signedIn");
-        return { error: null };
-      } catch (error) {
-        if (requestId !== profileRequestIdRef.current || sessionUserIdRef.current !== userId) {
-          return { error: null };
-        }
-        const message = error instanceof Error ? error.message : "تعذّر تحديث بيانات الحساب.";
-        setReason(message);
-        return { error: message };
-      }
-    };
-
-    const signInWithGoogle = async (returnTo?: string) => {
-      const client = supabase;
-      if (!client) {
-        return { error: unavailableReason ?? "Auth unavailable" };
-      }
-
-      const safeReturnTo = sanitizeAuthReturnTo(returnTo, "/more");
-      const callbackUrl = new URL("/auth/callback", window.location.origin);
-      callbackUrl.searchParams.set("returnTo", safeReturnTo);
-
-      const { error } = await client.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: callbackUrl.toString(),
-        },
-      });
-
-      if (error) return { error: error.message };
+    const signInWithPassword = async (email: string, password: string) => {
+      const result = await authLogin(email, password);
+      if (!result.ok) return { error: result.error };
+      await load();
       return { error: null };
     };
-
-    const permissions = effectiveRolePermissions(profile);
-    const hasPermission = (permission: RolePermission) => permissions[permission];
-
-    if (!isSupabaseConfigured) {
+    const signUpWithPassword = async (email: string, password: string, displayName: string) => {
+      const result = await authSignup(email, password, displayName);
+      if (!result.ok) return { error: result.error };
+      await load();
       return {
-        ...signedOutState,
-        status: "authUnavailable",
-        reason: unavailableReason,
-        emailConfirmed: false,
-        signOut,
-        refreshProfile,
-        signInWithGoogle,
+        error: null,
+        requiresEmailConfirmation: result.data.accepted === true && !result.data.session,
       };
-    }
-
+    };
+    const requestPasswordReset = async (email: string) => {
+      const result = await authRequestPasswordReset(email);
+      return result.ok
+        ? { error: null, developmentToken: result.data.developmentToken }
+        : { error: result.error };
+    };
+    const permissions = profile ? effectiveRolePermissions(profile) : emptyRolePermissions;
+    const hasPermission = (permission: RolePermission) => permissions[permission];
     return {
       status,
-      user: session?.user ?? null,
-      session,
+      user: session ? compatibilityUser(session) : null,
+      session: session ? compatibilitySession(session) : null,
       profile,
       reason,
       permissions,
       hasPermission,
       canAccessAdmin: canAccessAdmin(profile),
       canAccessOwnerControls: canAccessOwnerControls(profile),
-      emailConfirmed: Boolean(session?.user?.email_confirmed_at),
+      emailConfirmed: Boolean(session?.user.emailConfirmed),
       signOut,
-      refreshProfile,
-      signInWithGoogle,
+      refreshProfile: load,
+      signInWithGoogle: async () => ({ error: "تسجيل Google غير متاح بعد في خدمة Cloudflare." }),
+      signInWithPassword,
+      signUpWithPassword,
+      requestPasswordReset,
     };
-  }, [profile, reason, session, status]);
+  }, [load, profile, reason, session, status]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

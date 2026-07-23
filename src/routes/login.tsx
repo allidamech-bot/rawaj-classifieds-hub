@@ -6,7 +6,6 @@ import { PageHeader } from "@/components/PageHeader";
 import { AuthExperienceAside, AuthExperienceHeader } from "@/features/account/AccountExperience";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
-import { supabase } from "@/lib/supabase";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -130,7 +129,36 @@ function LoginPage() {
     setMessage("");
     setError("");
 
-    const client = supabase;
+    const client = {
+      auth: {
+        resetPasswordForEmail: async (address: string, _options?: unknown) => {
+          const result = await auth.requestPasswordReset(address);
+          return { error: result.error ? { message: result.error } : null };
+        },
+        signInWithPassword: async (credentials: { email: string; password: string }) => {
+          const result = await auth.signInWithPassword(credentials.email, credentials.password);
+          return {
+            data: { session: null, user: null },
+            error: result.error ? { message: result.error } : null,
+          };
+        },
+        signUp: async (input: {
+          email: string;
+          password: string;
+          options?: { data?: { display_name?: string }; emailRedirectTo?: string };
+        }) => {
+          const result = await auth.signUpWithPassword(
+            input.email,
+            input.password,
+            input.options?.data?.display_name ?? "",
+          );
+          return {
+            data: { session: null, user: null },
+            error: result.error ? { message: result.error } : null,
+          };
+        },
+      },
+    } as unknown as SupabaseClient;
     if (!client) {
       setError(
         text(

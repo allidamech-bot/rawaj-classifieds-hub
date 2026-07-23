@@ -16,6 +16,15 @@ export interface AuthContextValue {
   signOut: () => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<{ error: string | null }>;
   signInWithGoogle: (returnTo?: string) => Promise<{ error: string | null }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUpWithPassword: (
+    email: string,
+    password: string,
+    displayName: string,
+  ) => Promise<{ error: string | null; requiresEmailConfirmation?: boolean }>;
+  requestPasswordReset: (
+    email: string,
+  ) => Promise<{ error: string | null; developmentToken?: string }>;
   emailConfirmed: boolean;
 }
 
