@@ -82,7 +82,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     const signInWithPassword = async (email: string, password: string) => {
       const result = await authLogin(email, password);
-      if (!result.ok) return { error: result.error };
+      if (!result.ok) {
+        return {
+          error:
+            result.code === "account_recovery_required"
+              ? "account_recovery_required"
+              : result.error,
+        };
+      }
       await load();
       return { error: null };
     };
@@ -90,10 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await authSignup(email, password, displayName);
       if (!result.ok) return { error: result.error };
       await load();
-      return {
-        error: null,
-        requiresEmailConfirmation: result.data.accepted === true && !result.data.session,
-      };
+      return { error: null };
     };
     const requestPasswordReset = async (email: string) => {
       const result = await authRequestPasswordReset(email);

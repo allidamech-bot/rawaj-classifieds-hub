@@ -189,19 +189,13 @@ function LoginPage() {
       }
 
       if (mode === "register") {
-        if (!("requiresEmailConfirmation" in result) || !result.requiresEmailConfirmation) {
-          setMessage(
-            text("تم إنشاء الحساب. جارٍ إدخالك إلى رواج.", "Account created. Opening RAWAJ now."),
-          );
-          await navigate({ to: returnTo });
-          return;
-        }
         setMessage(
           text(
-            "تم إرسال رابط تفعيل الحساب إلى بريدك الإلكتروني. افتح البريد واضغط على رابط التفعيل لإكمال إنشاء الحساب. إذا لم تجد الرسالة خلال دقائق، تحقق من مجلد الرسائل غير المرغوبة / Spam.",
-            "We sent an account activation link to your email. Open your inbox and click the activation link to complete account setup. If you do not see it within a few minutes, check your Spam or Junk folder.",
+            "تم إنشاء الحساب. جارٍ إدخالك إلى رواج.",
+            "Account created. Opening RAWAJ now.",
           ),
         );
+        await navigate({ to: returnTo });
         return;
       }
 

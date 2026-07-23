@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "batchId": "deterministic-local-fixture",
+  "entries": [
+    {
+      "kind": "listing_image",
+      "sourceId": "fixture-listing-image",
+      "listingId": "test-public-listing",
+      "ownerId": "test-public-seller",
+      "sortOrder": 0,
+      "sourceType": "supabase_storage",
+      "sourceBucket": "listing-images",
+      "sourcePath": "test-public-seller/test-public-listing/image.png"
+    },
+    {
+      "kind": "profile_avatar",
+      "sourceId": "test-public-seller",
+      "ownerId": "test-public-seller",
+      "sourceType": "supabase_storage",
+      "sourceBucket": "profile-media",
+      "sourcePath": "test-public-seller/avatar.png"
+    },
+    {
+      "kind": "ad_placement",
+      "sourceId": "fixture-home-ad",
+      "name": "Fixture home advertisement",
+      "placementPage": "home",
+      "destinationUrl": "https://example.test/offer",
+      "status": "active",
+      "priority": 1,
+      "targetMobile": true,
+      "targetDesktop": true,
+      "sourceType": "url",
+      "sourceUrl": "https://example.test/banner.png"
+    }
+  ]
+}

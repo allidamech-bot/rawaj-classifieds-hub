@@ -21,7 +21,7 @@ export interface AuthContextValue {
     email: string,
     password: string,
     displayName: string,
-  ) => Promise<{ error: string | null; requiresEmailConfirmation?: boolean }>;
+  ) => Promise<{ error: string | null }>;
   requestPasswordReset: (
     email: string,
   ) => Promise<{ error: string | null; developmentToken?: string }>;

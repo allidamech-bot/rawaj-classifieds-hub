@@ -1,16 +1,10 @@
-import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import type { Session } from "@supabase/supabase-js";
-import { Eye, EyeOff, KeyRound, LogIn, User } from "lucide-react";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
+import { Eye, EyeOff, KeyRound } from "lucide-react";
+import { useRef, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { authErrorMessage } from "@/lib/auth-errors";
-import {
-  clearPasswordRecoverySession,
-  hasActivePasswordRecoverySession,
-  markPasswordRecoverySession,
-} from "@/lib/auth-recovery-session";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
-import { supabase } from "@/lib/supabase";
+import { authConfirmPasswordReset } from "@/lib/cloudflare-auth";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/reset-password")({
@@ -25,96 +19,19 @@ export const Route = createFileRoute("/reset-password")({
 
 function ResetPasswordPage() {
   const { text } = useUiPreferences();
-  const navigate = useNavigate();
   const locationSearch = useRouterState({ select: (state) => state.location.search });
   const looseSearch = locationSearch as unknown as Record<string, unknown>;
   const rawReturnTo = typeof looseSearch.returnTo === "string" ? looseSearch.returnTo : undefined;
   const returnTo = sanitizeAuthReturnTo(rawReturnTo, "/more");
+  const recoveryToken = typeof looseSearch.token === "string" ? looseSearch.token.trim() : "";
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
-  const [ready, setReady] = useState(false);
-  const [recoveryUserId, setRecoveryUserId] = useState<string | null>(null);
-  const [checking, setChecking] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const saveInFlightRef = useRef(false);
-  const navigationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    let expiryTimer: ReturnType<typeof setTimeout> | undefined;
-    let unsubscribeAuth: (() => void) | undefined;
-
-    async function checkSession() {
-      const client = supabase;
-      if (!client) {
-        if (!cancelled) {
-          setChecking(false);
-          setReady(false);
-          setRecoveryUserId(null);
-        }
-        return;
-      }
-
-      const markReady = (session: Session) => {
-        if (cancelled || !hasActivePasswordRecoverySession(session.user.id)) return;
-        clearTimeout(expiryTimer);
-        setRecoveryUserId(session.user.id);
-        setReady(true);
-        setChecking(false);
-      };
-
-      const { data: listener } = client.auth.onAuthStateChange((event, session) => {
-        if (!session) return;
-        if (event === "PASSWORD_RECOVERY") {
-          markPasswordRecoverySession(session.user.id);
-          markReady(session);
-        }
-      });
-      unsubscribeAuth = () => listener.subscription.unsubscribe();
-
-      const { data, error: sessionError } = await client.auth.getSession();
-      if (cancelled) return;
-      if (!sessionError && data.session && hasActivePasswordRecoverySession(data.session.user.id)) {
-        markReady(data.session);
-        return;
-      }
-
-      expiryTimer = setTimeout(async () => {
-        if (cancelled) return;
-        const { data: lateSession, error: lateError } = await client.auth.getSession();
-        if (cancelled) return;
-        if (
-          !lateError &&
-          lateSession.session &&
-          hasActivePasswordRecoverySession(lateSession.session.user.id)
-        ) {
-          markReady(lateSession.session);
-          return;
-        }
-        setRecoveryUserId(null);
-        setReady(false);
-        setChecking(false);
-      }, 15000);
-    }
-
-    void checkSession();
-    return () => {
-      cancelled = true;
-      clearTimeout(expiryTimer);
-      unsubscribeAuth?.();
-    };
-  }, []);
-
-  useEffect(
-    () => () => {
-      if (navigationTimerRef.current) clearTimeout(navigationTimerRef.current);
-    },
-    [],
-  );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -122,11 +39,11 @@ function ResetPasswordPage() {
     setMessage("");
     setError("");
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       setError(
         text(
-          "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
-          "Password must be at least 6 characters.",
+          "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
+          "Password must be at least 8 characters.",
         ),
       );
       return;
@@ -136,66 +53,30 @@ function ResetPasswordPage() {
       return;
     }
 
-    const client = supabase;
-    if (!client) {
-      setError(
-        text(
-          "خدمة الحسابات غير متاحة الآن. حاول لاحقاً.",
-          "Account service is unavailable right now. Try later.",
-        ),
-      );
-      return;
-    }
-
     saveInFlightRef.current = true;
     setSaving(true);
     try {
-      const { data: sessionData, error: sessionError } = await client.auth.getSession();
-      const currentUserId = sessionData.session?.user.id ?? null;
-      if (
-        sessionError ||
-        !currentUserId ||
-        !recoveryUserId ||
-        currentUserId !== recoveryUserId ||
-        !hasActivePasswordRecoverySession(currentUserId)
-      ) {
-        clearPasswordRecoverySession();
-        setRecoveryUserId(null);
-        setReady(false);
-        setError(
-          text(
-            "انتهت جلسة الاستعادة أو تغيّر الحساب. اطلب رابطًا جديدًا قبل تغيير كلمة المرور.",
-            "The recovery session expired or the account changed. Request a new link before changing your password.",
-          ),
-        );
+      const result = await authConfirmPasswordReset(recoveryToken, password);
+      if (!result.ok) {
+        setError(authErrorMessage({ message: result.error }, "update-password", text));
         return;
       }
-
-      const { error: updateError } = await client.auth.updateUser({ password });
-      if (updateError) {
-        setError(authErrorMessage(updateError, "update-password", text));
-        return;
-      }
-      clearPasswordRecoverySession();
-      setRecoveryUserId(null);
       setPassword("");
       setConfirmPassword("");
-      setMessage(
-        text(
-          "تم تحديث كلمة المرور. جارٍ إعادتك إلى الصفحة التي كنت تريدها.",
-          "Password updated. Returning you to the page you wanted.",
-        ),
-      );
-      navigationTimerRef.current = setTimeout(() => void navigate({ to: returnTo }), 700);
-    } catch (error) {
-      setError(authErrorMessage(error instanceof Error ? error : null, "update-password", text));
+      setMessage(text("تم تحديث كلمة المرور.", "Password updated."));
+      window.location.assign(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+    } catch (caught) {
+      setError(authErrorMessage(caught instanceof Error ? caught : null, "update-password", text));
     } finally {
       saveInFlightRef.current = false;
       setSaving(false);
     }
   }
 
-  const loginDestination = `/login?mode=forgot&returnTo=${encodeURIComponent(returnTo)}`;
+  const requestNewLink = () =>
+    window.location.assign(
+      `/login?mode=forgot&returnTo=${encodeURIComponent(returnTo)}`,
+    );
 
   return (
     <>
@@ -223,24 +104,17 @@ function ResetPasswordPage() {
             </div>
           </div>
 
-          {checking ? (
-            <Panel
-              title={text(
-                "جارٍ تجهيز جلسة الاستعادة الآمنة...",
-                "Preparing the secure recovery session...",
-              )}
-            />
-          ) : !ready ? (
+          {!recoveryToken ? (
             <div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-4 text-xs leading-6 text-muted-foreground">
               <p>
                 {text(
-                  "لم نتمكن من تجهيز جلسة الاستعادة بعد الانتظار. قد يكون الرابط منتهيًا أو استُخدم سابقًا. افتح أحدث رابط من بريدك أو اطلب رابطًا جديدًا.",
-                  "We could not prepare the recovery session after waiting. The link may be expired or already used. Open the newest email link or request a new one.",
+                  "رابط الاستعادة غير صالح أو منتهي. اطلب رابطاً جديداً قبل تغيير كلمة المرور.",
+                  "The recovery link is invalid or expired. Request a new link before changing your password.",
                 )}
               </p>
               <button
                 type="button"
-                onClick={() => window.location.assign(loginDestination)}
+                onClick={requestNewLink}
                 className="rawaj-button-primary mt-3 px-4 py-2"
               >
                 {text("طلب رابط جديد", "Request a new link")}
@@ -248,65 +122,26 @@ function ResetPasswordPage() {
             </div>
           ) : (
             <form onSubmit={(event) => void submit(event)} aria-busy={saving} className="space-y-3">
-              <label className="block">
-                <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">
-                  {text("كلمة المرور الجديدة", "New password")}
-                </span>
-                <div className="relative">
-                  <input
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    type={passwordVisible ? "text" : "password"}
-                    autoComplete="new-password"
-                    minLength={6}
-                    required
-                    disabled={saving}
-                    className="input pe-11"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setPasswordVisible((value) => !value)}
-                    className="absolute inset-y-0 end-0 grid w-11 place-items-center rounded-lg text-muted-foreground transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-                    aria-label={
-                      passwordVisible
-                        ? text("إخفاء كلمة المرور", "Hide password")
-                        : text("إظهار كلمة المرور", "Show password")
-                    }
-                  >
-                    {passwordVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </label>
-
-              <label className="block">
-                <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">
-                  {text("تأكيد كلمة المرور", "Confirm password")}
-                </span>
-                <div className="relative">
-                  <input
-                    value={confirmPassword}
-                    onChange={(event) => setConfirmPassword(event.target.value)}
-                    type={confirmVisible ? "text" : "password"}
-                    autoComplete="new-password"
-                    minLength={6}
-                    required
-                    disabled={saving}
-                    className="input pe-11"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setConfirmVisible((value) => !value)}
-                    className="absolute inset-y-0 end-0 grid w-11 place-items-center rounded-lg text-muted-foreground transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-                    aria-label={
-                      confirmVisible
-                        ? text("إخفاء تأكيد كلمة المرور", "Hide password confirmation")
-                        : text("إظهار تأكيد كلمة المرور", "Show password confirmation")
-                    }
-                  >
-                    {confirmVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </label>
+              <PasswordField
+                label={text("كلمة المرور الجديدة", "New password")}
+                value={password}
+                visible={passwordVisible}
+                saving={saving}
+                onChange={setPassword}
+                onToggle={() => setPasswordVisible((value) => !value)}
+                showLabel={text("إظهار كلمة المرور", "Show password")}
+                hideLabel={text("إخفاء كلمة المرور", "Hide password")}
+              />
+              <PasswordField
+                label={text("تأكيد كلمة المرور", "Confirm password")}
+                value={confirmPassword}
+                visible={confirmVisible}
+                saving={saving}
+                onChange={setConfirmPassword}
+                onToggle={() => setConfirmVisible((value) => !value)}
+                showLabel={text("إظهار تأكيد كلمة المرور", "Show password confirmation")}
+                hideLabel={text("إخفاء تأكيد كلمة المرور", "Hide password confirmation")}
+              />
 
               {error && (
                 <p className="rounded-[1rem] border border-destructive/15 bg-destructive/8 p-2.5 text-xs font-medium text-destructive">
@@ -328,24 +163,6 @@ function ResetPasswordPage() {
                   ? text("جارٍ الحفظ", "Saving")
                   : text("تحديث كلمة المرور", "Update password")}
               </button>
-
-              <div className="grid grid-cols-2 gap-2">
-                <Link
-                  to="/profile"
-                  className="rawaj-chip items-center justify-center gap-1 px-3 py-2 font-semibold text-primary transition hover:border-gold/40"
-                >
-                  <User className="h-4 w-4" />
-                  {text("فتح حسابي", "Open profile")}
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => window.location.assign(loginDestination)}
-                  className="rawaj-chip items-center justify-center gap-1 px-3 py-2 font-semibold text-primary transition hover:border-gold/40"
-                >
-                  <LogIn className="h-4 w-4" />
-                  {text("تسجيل الدخول", "Log in")}
-                </button>
-              </div>
             </form>
           )}
         </section>
@@ -354,10 +171,48 @@ function ResetPasswordPage() {
   );
 }
 
-function Panel({ title }: { title: string }) {
+function PasswordField({
+  label,
+  value,
+  visible,
+  saving,
+  onChange,
+  onToggle,
+  showLabel,
+  hideLabel,
+}: {
+  label: string;
+  value: string;
+  visible: boolean;
+  saving: boolean;
+  onChange: (value: string) => void;
+  onToggle: () => void;
+  showLabel: string;
+  hideLabel: string;
+}) {
   return (
-    <div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-4 text-center text-xs font-semibold text-muted-foreground">
-      {title}
-    </div>
+    <label className="block">
+      <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">{label}</span>
+      <div className="relative">
+        <input
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          type={visible ? "text" : "password"}
+          autoComplete="new-password"
+          minLength={8}
+          required
+          disabled={saving}
+          className="input pe-11"
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute inset-y-0 end-0 grid w-11 place-items-center rounded-lg text-muted-foreground transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          aria-label={visible ? hideLabel : showLabel}
+        >
+          {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      </div>
+    </label>
   );
 }

@@ -21,6 +21,28 @@ VALUES
   ('test-public-seller', 'بائع الاختبار', 'verified', 'active',
    '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');
 
+UPDATE public_profiles
+SET email = 'imported-seller@example.test'
+WHERE id = 'test-public-seller' AND email IS NULL;
+
+INSERT OR IGNORE INTO auth_users
+  (id, email, email_normalized, password_hash, password_algorithm,
+   email_confirmed_at, created_at, updated_at)
+VALUES
+  ('test-public-seller', 'imported-seller@example.test', 'imported-seller@example.test',
+   NULL, NULL, NULL, '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');
+
+UPDATE auth_users
+SET password_hash = NULL, password_algorithm = NULL, email_confirmed_at = NULL,
+    disabled_at = NULL, updated_at = '2026-01-01T00:00:00.000Z'
+WHERE id = 'test-public-seller';
+
+DELETE FROM auth_one_time_tokens WHERE user_id = 'test-public-seller';
+DELETE FROM auth_sessions WHERE user_id = 'test-public-seller';
+
+INSERT OR IGNORE INTO user_roles (user_id, role, created_at)
+VALUES ('test-public-seller', 'seller', '2026-01-01T00:00:00.000Z');
+
 INSERT OR IGNORE INTO listings
   (id, owner_id, category_id, subcategory_id, governorate_id, title, description,
    price, currency, price_type, listing_condition, status, contact_options, details,

@@ -22,6 +22,7 @@ interface D1Database {
 export interface AuthEnv {
   DB: D1Database;
   API_ALLOWED_ORIGINS?: string;
+  AUTH_RECOVERY_DELIVERY_MODE?: string;
 }
 
 const SESSION_COOKIE = "rawaj_session";
@@ -52,10 +53,18 @@ export async function handleAuthRequest(request: Request, env: AuthEnv): Promise
     if (url.pathname === "/v1/auth/logout" && request.method === "POST") {
       return logout(request, env, cors);
     }
-    if (url.pathname === "/v1/auth/password-reset/request" && request.method === "POST") {
+    if (
+      (url.pathname === "/v1/auth/password-reset/request" ||
+        url.pathname === "/v1/auth/recovery/request") &&
+      request.method === "POST"
+    ) {
       return requestPasswordReset(request, env, cors);
     }
-    if (url.pathname === "/v1/auth/password-reset/confirm" && request.method === "POST") {
+    if (
+      (url.pathname === "/v1/auth/password-reset/confirm" ||
+        url.pathname === "/v1/auth/recovery/complete") &&
+      request.method === "POST"
+    ) {
       return confirmPasswordReset(request, env, cors);
     }
     if (url.pathname === "/v1/auth/password/change" && request.method === "POST") {
@@ -91,7 +100,6 @@ async function signup(request: Request, env: AuthEnv, cors: Headers): Promise<Re
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
   const passwordHash = await hashPassword(password);
-  const local = isLocalRequest(request);
   const results = await env.DB.batch([
     env.DB.prepare(
       `INSERT INTO public_profiles
@@ -102,7 +110,7 @@ async function signup(request: Request, env: AuthEnv, cors: Headers): Promise<Re
       `INSERT INTO auth_users
       (id, email, email_normalized, password_hash, password_algorithm, email_confirmed_at, created_at, updated_at)
       VALUES (?, ?, ?, ?, 'pbkdf2-sha256-v1', ?, ?, ?)`,
-    ).bind(id, email, email, passwordHash, local ? now : null, now, now),
+    ).bind(id, email, email, passwordHash, now, now, now),
     env.DB.prepare("INSERT INTO user_roles (user_id, role, created_at) VALUES (?, 'user', ?)").bind(
       id,
       now,
@@ -114,12 +122,6 @@ async function signup(request: Request, env: AuthEnv, cors: Headers): Promise<Re
       results.map((result) => result.error),
     );
     return databaseFailure(cors);
-  }
-  if (!local) {
-    const token = await createOneTimeToken(env, id, "email_confirmation", 60 * 60 * 24);
-    console.info("rawaj_email_confirmation_required", { userId: id, tokenHashStored: true });
-    void token;
-    return json({ data: { requiresEmailConfirmation: true } }, 201, cors);
   }
   return createSessionResponse(request, env, cors, id, email, displayName, ["user"], 201);
 }
@@ -138,24 +140,29 @@ async function login(request: Request, env: AuthEnv, cors: Headers): Promise<Res
   )
     .bind(email)
     .first<JsonRecord>();
-  const valid = Boolean(
-    row &&
-    !row.disabled_at &&
-    typeof row.password_hash === "string" &&
-    (await verifyPassword(password, row.password_hash as string)),
-  );
-  if (!valid) {
+  if (row && !row.disabled_at && typeof row.password_hash !== "string") {
+    await constantTimeNoise(password);
+    return json(
+      {
+        error: {
+          code: "account_recovery_required",
+          message: "يلزم إعداد كلمة مرور جديدة لهذا الحساب.",
+        },
+      },
+      403,
+      cors,
+    );
+  }
+  if (
+    !row ||
+    row.disabled_at ||
+    typeof row.password_hash !== "string" ||
+    !(await verifyPassword(password, row.password_hash))
+  ) {
     await constantTimeNoise(password);
     return json(
       { error: { code: "invalid_credentials", message: "البريد أو كلمة المرور غير صحيحة." } },
       401,
-      cors,
-    );
-  }
-  if (!row?.email_confirmed_at) {
-    return json(
-      { error: { code: "email_unconfirmed", message: "يجب تأكيد البريد الإلكتروني أولاً." } },
-      403,
       cors,
     );
   }
@@ -206,8 +213,32 @@ async function requestPasswordReset(
         .bind(email)
         .first<{ id: string }>()
     : null;
+  const localDelivery =
+    isLocalRequest(request) && env.AUTH_RECOVERY_DELIVERY_MODE !== "disabled";
+  if (!localDelivery) {
+    return json(
+      {
+        error: {
+          code: "recovery_delivery_unavailable",
+          message: "خدمة استعادة الحساب غير متاحة مؤقتًا.",
+        },
+      },
+      503,
+      cors,
+    );
+  }
   let developmentToken: string | undefined;
-  if (user) developmentToken = await createOneTimeToken(env, user.id, "password_reset", 30 * 60);
+  if (user) {
+    const now = new Date().toISOString();
+    await env.DB.prepare(
+      `UPDATE auth_one_time_tokens
+       SET consumed_at = ?
+       WHERE user_id = ? AND purpose = 'password_reset' AND consumed_at IS NULL`,
+    )
+      .bind(now, user.id)
+      .run();
+    developmentToken = await createOneTimeToken(env, user.id, "password_reset", 30 * 60);
+  }
   return json(
     {
       data: {
@@ -225,6 +256,8 @@ async function confirmPasswordReset(
   env: AuthEnv,
   cors: Headers,
 ): Promise<Response> {
+  if (!(await consumeRateLimit(request, env, "auth_password_reset_complete", 10, 15 * 60)))
+    return rateLimited(cors);
   const body = await readJson(request);
   if (!body.ok) return json({ error: body.error }, body.status, cors);
   const token = typeof body.data.token === "string" ? body.data.token.trim() : "";

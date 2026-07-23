@@ -261,13 +261,45 @@ function buildMediaManifest(source) {
   for (const image of source.listing_images) {
     const objectKey = normalizeObjectKey(image.storage_path);
     assets.push(pendingAsset(image.id, image.owner_id, objectKey, image.storage_path, image.created_at));
-    entries.push({ assetId: image.id, kind: "listing_image", sourceType: "supabase_storage", sourceBucket: "listing-images", sourcePath: image.storage_path, targetKey: objectKey });
+    entries.push({
+      assetId: image.id,
+      kind: "listing_image",
+      sourceId: image.id,
+      listingId: image.listing_id,
+      ownerId: image.owner_id,
+      sortOrder: image.sort_order,
+      altAr: image.alt_ar,
+      createdAt: image.created_at,
+      sourceType: "supabase_storage",
+      sourceBucket: "listing-images",
+      sourcePath: image.storage_path,
+      targetKey: objectKey,
+    });
   }
   for (const placement of source.ad_placements) {
     const id = `ad:${placement.id}`;
     const objectKey = `ad-placements/${placement.id}/creative`;
     assets.push(pendingAsset(id, null, objectKey, placement.image_url, placement.created_at));
-    entries.push({ assetId: id, kind: "ad_placement", sourceType: "url", sourceUrl: placement.image_url, targetKey: objectKey });
+    entries.push({
+      assetId: id,
+      kind: "ad_placement",
+      sourceId: placement.id,
+      name: placement.name,
+      placementPage: placement.placement_page,
+      destinationUrl: placement.destination_url,
+      startsAt: placement.starts_at,
+      endsAt: placement.ends_at,
+      status: placement.status,
+      priority: placement.priority,
+      targetMobile: placement.target_mobile,
+      targetDesktop: placement.target_desktop,
+      version: placement.version,
+      createdAt: placement.created_at,
+      updatedAt: placement.updated_at,
+      sourceType: "url",
+      sourceUrl: placement.image_url,
+      targetKey: objectKey,
+    });
   }
   for (const profile of source.public_profiles) {
     for (const kind of ["avatar", "cover"]) {
@@ -278,7 +310,18 @@ function buildMediaManifest(source) {
       const objectKey = `profiles/${profile.id}/${kind}`;
       profileAssetIds.set(`${profile.id}:${kind}`, id);
       assets.push(pendingAsset(id, profile.id, objectKey, sourcePath || sourceUrl, profile.created_at));
-      entries.push({ assetId: id, kind: `profile_${kind}`, sourceType: sourcePath ? "supabase_storage" : "url", ...(sourcePath ? { sourceBucket: "profile-media", sourcePath } : { sourceUrl }), targetKey: objectKey });
+      entries.push({
+        assetId: id,
+        kind: `profile_${kind}`,
+        sourceId: profile.id,
+        ownerId: profile.id,
+        createdAt: profile.created_at,
+        sourceType: sourcePath ? "supabase_storage" : "url",
+        ...(sourcePath
+          ? { sourceBucket: "profile-media", sourcePath }
+          : { sourceUrl }),
+        targetKey: objectKey,
+      });
     }
   }
   return { assets, entries, profileAssetIds };

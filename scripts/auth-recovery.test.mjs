@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [errors, authReturn, recoverySession, supabaseClient, login, callback, reset, admin] =
+const [errors, authReturn, recoverySession, supabaseClient, cloudflareAuth, login, callback, reset, admin] =
   await Promise.all([
     readFile(new URL("../src/lib/auth-errors.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/auth-return.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/auth-recovery-session.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/supabase.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/cloudflare-auth.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/routes/login.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/routes/auth.callback.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/routes/reset-password.tsx", import.meta.url), "utf8"),
@@ -20,10 +21,10 @@ test("account failures are translated into safe bilingual messages", () => {
   assert.match(errors, /user_already_exists/);
   assert.match(errors, /weak_password/);
   assert.match(errors, /otp_expired/);
-  assert.match(login, /authErrorMessage\(resetError, "recovery", text\)/);
+  assert.match(login, /authErrorMessage\(\{ message: resetResult\.error \}, "recovery", text\)/);
   assert.match(
     login,
-    /authErrorMessage\(result\.error, mode === "login" \? "login" : "register", text\)/,
+    /authErrorMessage\(\{ message: result\.error \}, mode === "login" \? "login" : "register", text\)/,
   );
   assert.doesNotMatch(login, /: result\.error\.message/);
 });
@@ -71,7 +72,7 @@ test("password recovery events are captured immediately after creating the auth 
   );
 });
 
-test("password recovery requires bounded account-bound proof instead of any signed-in session", () => {
+test("legacy callback recovery remains bounded while the active reset route uses a one-time Cloudflare token", () => {
   assert.match(recoverySession, /RECOVERY_SESSION_TTL_MS = 15 \* 60 \* 1000/);
   assert.match(recoverySession, /interface PasswordRecoveryProof/);
   assert.match(recoverySession, /userId: cleanUserId/);
@@ -91,20 +92,18 @@ test("password recovery requires bounded account-bound proof instead of any sign
   assert.doesNotMatch(callback, /finish\(callbackContext\.isRecovery/);
   assert.doesNotMatch(callback, /data\.session\) \{\s*finish\(callbackContext\.isRecovery/);
 
-  assert.match(reset, /recoveryUserId/);
-  assert.match(reset, /hasActivePasswordRecoverySession\(session\.user\.id\)/);
-  assert.match(reset, /markPasswordRecoverySession\(session\.user\.id\)/);
-  assert.match(reset, /currentUserId !== recoveryUserId/);
-  assert.match(reset, /hasActivePasswordRecoverySession\(currentUserId\)/);
-  assert.match(reset, /clearPasswordRecoverySession\(\)/);
-  assert.doesNotMatch(reset, /hasActivePasswordRecoverySession\(\)/);
-  assert.doesNotMatch(reset, /event === "SIGNED_IN" \|\| event === "INITIAL_SESSION"/);
+  assert.match(cloudflareAuth, /authConfirmPasswordReset/);
+  assert.match(cloudflareAuth, /\/v1\/auth\/password-reset\/confirm/);
+  assert.match(reset, /looseSearch\.token/);
+  assert.match(reset, /authConfirmPasswordReset\(recoveryToken, password\)/);
+  assert.doesNotMatch(reset, /supabase/);
+  assert.doesNotMatch(reset, /\.auth\.(getSession|updateUser|onAuthStateChange)/);
 });
 
-test("route-scoped password recovery listeners are released on unmount", () => {
+test("legacy callback listeners are released and the Cloudflare reset route creates no auth listener", () => {
   assert.match(callback, /unsubscribeAuth\?\.\(\)/);
-  assert.match(reset, /unsubscribeAuth\?\.\(\)/);
-  assert.match(reset, /listener\.subscription\.unsubscribe/);
+  assert.doesNotMatch(reset, /onAuthStateChange/);
+  assert.doesNotMatch(reset, /subscription\.unsubscribe/);
 });
 
 test("admin child workspaces enforce permission before rendering the outlet", () => {
