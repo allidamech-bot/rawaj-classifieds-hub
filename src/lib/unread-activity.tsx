@@ -13,6 +13,7 @@ import { fetchUnreadNotificationsCount } from "@/lib/api/notifications";
 import { getClient } from "@/lib/api/shared";
 import { UNREAD_ACTIVITY_CHANGED_EVENT } from "@/lib/unread-activity-events";
 import { useAuth } from "@/lib/use-auth";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 export interface UnreadActivityCounts {
   messages: number;
@@ -128,6 +129,20 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId || typeof window === "undefined") return;
+
+    if (isCloudflarePublicDataProvider()) {
+      const refreshWhenVisible = () => {
+        if (document.visibilityState === "visible" && navigator.onLine !== false) {
+          void refresh();
+        }
+      };
+      const interval = window.setInterval(refreshWhenVisible, 30_000);
+      document.addEventListener("visibilitychange", refreshWhenVisible);
+      return () => {
+        window.clearInterval(interval);
+        document.removeEventListener("visibilitychange", refreshWhenVisible);
+      };
+    }
 
     const clientResult = getClient();
     if (!clientResult.ok) return;

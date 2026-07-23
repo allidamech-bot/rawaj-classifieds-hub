@@ -7,6 +7,8 @@ import type {
   SavedSearchAlertFrequency,
 } from "@/lib/classifieds-types";
 import { normalizeSavedSearchFilters } from "@/lib/saved-search-normalization";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 function mapSavedSearch(row: Record<string, unknown>): SavedSearch {
   const frequency = rowString(row, "alert_frequency", "weekly");
@@ -31,6 +33,12 @@ export async function fetchSavedSearches(
       ok: false,
       error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض عمليات البحث المحفوظة." },
     };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<SavedSearch[]>("/v1/account/saved-searches");
+    return result.ok
+      ? { ok: true, data: result.data }
+      : { ok: false, error: { code: "unknown", message: result.error } };
   }
 
   const clientResult = getClient();
@@ -70,6 +78,19 @@ export async function createSavedSearch(
       ok: false,
       error: { code: "validation_error", message: "أدخل اسماً واضحاً للبحث المحفوظ." },
     };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<SavedSearch>("/v1/account/saved-searches", {
+      method: "POST",
+      body: {
+        nameAr,
+        filters: normalizeSavedSearchFilters(payload.filters),
+        alertFrequency: payload.alertFrequency ?? "weekly",
+      },
+    });
+    return result.ok
+      ? { ok: true, data: result.data }
+      : { ok: false, error: { code: "unknown", message: result.error } };
   }
 
   const clientResult = getClient();
@@ -112,6 +133,15 @@ export async function updateSavedSearchAlertFrequency(
       error: { code: "validation_error", message: "تعذر تحديد البحث المحفوظ." },
     };
   }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<SavedSearch>(
+      `/v1/account/saved-searches/${encodeURIComponent(cleanId)}`,
+      { method: "PATCH", body: { alertFrequency: frequency } },
+    );
+    return result.ok
+      ? { ok: true, data: result.data }
+      : { ok: false, error: { code: "unknown", message: result.error } };
+  }
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
@@ -149,6 +179,15 @@ export async function deleteSavedSearch(
       ok: false,
       error: { code: "validation_error", message: "تعذر تحديد البحث المحفوظ." },
     };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<{ success: boolean }>(
+      `/v1/account/saved-searches/${encodeURIComponent(cleanId)}`,
+      { method: "DELETE" },
+    );
+    return result.ok
+      ? { ok: true, data: null }
+      : { ok: false, error: { code: "unknown", message: result.error } };
   }
 
   const clientResult = getClient();

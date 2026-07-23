@@ -31,6 +31,8 @@ import {
   rowString,
 } from "@/lib/api/shared";
 import { logRecorderDiagnostics } from "@/lib/chat-audio-diagnostics";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 const pendingMessageSends = new Map<string, Promise<ClassifiedsResult<ConversationMessage>>>();
 
@@ -93,6 +95,7 @@ export async function uploadChatImage(payload: {
         }
       : validation;
   }
+  if (isCloudflarePublicDataProvider()) return attachmentMigrationPending();
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
@@ -130,6 +133,7 @@ export async function uploadChatImage(payload: {
 
 export async function removeChatImage(path: string): Promise<void> {
   if (!path) return;
+  if (isCloudflarePublicDataProvider()) return;
   const clientResult = getClient();
   if (!clientResult.ok) return;
   await clientResult.data.storage.from("conversation-images").remove([path]);
@@ -137,6 +141,7 @@ export async function removeChatImage(path: string): Promise<void> {
 
 export async function createChatImageSignedUrl(path: string): Promise<string | null> {
   if (!path) return null;
+  if (isCloudflarePublicDataProvider()) return null;
   const clientResult = getClient();
   if (!clientResult.ok) return null;
   const { data, error } = await clientResult.data.storage
@@ -278,6 +283,7 @@ export async function uploadChatAudio(payload: {
       },
     };
   }
+  if (isCloudflarePublicDataProvider()) return attachmentMigrationPending();
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   const userResult = await clientResult.data.auth.getUser();
@@ -393,6 +399,7 @@ export async function uploadChatAudio(payload: {
 
 export async function removeChatAudio(path: string): Promise<void> {
   if (!path) return;
+  if (isCloudflarePublicDataProvider()) return;
   const clientResult = getClient();
   if (!clientResult.ok) return;
   await clientResult.data.storage.from("conversation-audio").remove([path]);
@@ -400,6 +407,7 @@ export async function removeChatAudio(path: string): Promise<void> {
 
 export async function createChatAudioSignedUrl(path: string): Promise<string | null> {
   if (!path) return null;
+  if (isCloudflarePublicDataProvider()) return null;
   const clientResult = getClient();
   if (!clientResult.ok) return null;
   const { data, error } = await clientResult.data.storage
@@ -410,6 +418,7 @@ export async function createChatAudioSignedUrl(path: string): Promise<string | n
 
 export async function downloadChatAudioObjectUrl(path: string): Promise<string | null> {
   if (!path || typeof URL === "undefined") return null;
+  if (isCloudflarePublicDataProvider()) return null;
   const clientResult = getClient();
   if (!clientResult.ok) return null;
   const { data, error } = await clientResult.data.storage.from("conversation-audio").download(path);
@@ -427,6 +436,15 @@ export async function startListingConversation(
       error: { code: "validation_error", message: "تعذر تحديد الإعلان لبدء المحادثة." },
     };
   }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<{ id: string }>("/v1/conversations", {
+      method: "POST",
+      body: { listingId: cleanListingId },
+    });
+    return result.ok
+      ? { ok: true, data: result.data.id }
+      : { ok: false, error: { code: "unknown", message: result.error } };
+  }
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
@@ -440,6 +458,17 @@ export async function startListingConversation(
 }
 
 export async function fetchMyConversations(): Promise<ClassifiedsResult<Conversation[]>> {
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<{ items: Record<string, unknown>[] }>(
+      "/v1/account/conversations?pageSize=50",
+    );
+    return result.ok
+      ? {
+          ok: true,
+          data: sortAndDedupeConversations(result.data.items.map(mapConversation)),
+        }
+      : { ok: false, error: { code: "unknown", message: result.error } };
+  }
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
@@ -462,6 +491,20 @@ export async function fetchConversationMessages(
       ok: false,
       error: { code: "validation_error", message: "تعذر تحديد المحادثة." },
     };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<{ items: Record<string, unknown>[] }>(
+      `/v1/conversations/${encodeURIComponent(cleanConversationId)}/messages?pageSize=${CHAT_HISTORY_PAGE_SIZE}`,
+    );
+    return result.ok
+      ? {
+          ok: true,
+          data: sortAndDedupeMessages(
+            result.data.items.map(mapCloudflareMessage),
+            cleanConversationId,
+          ),
+        }
+      : { ok: false, error: { code: "unknown", message: result.error } };
   }
 
   const clientResult = getClient();
@@ -535,6 +578,19 @@ export async function sendConversationMessage(payload: {
       ok: false,
       error: { code: "validation_error", message: "تعذر تحديد محاولة إرسال الرسالة." },
     };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    if (attachment) return attachmentMigrationPending();
+    const result = await cloudflareApiRequest<Record<string, unknown>>(
+      `/v1/conversations/${encodeURIComponent(cleanConversationId)}/messages`,
+      {
+        method: "POST",
+        body: { body: cleanBody, requestId: cleanRequestId },
+      },
+    );
+    return result.ok
+      ? { ok: true, data: mapCloudflareMessage({ ...result.data, is_mine: 1 }) }
+      : { ok: false, error: { code: "unknown", message: result.error } };
   }
 
   const clientResult = getClient();
@@ -756,6 +812,15 @@ export async function markConversationRead(
       error: { code: "validation_error", message: "تعذر تحديد المحادثة." },
     };
   }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<{ success: boolean }>(
+      `/v1/conversations/${encodeURIComponent(cleanConversationId)}/read`,
+      { method: "POST", body: {} },
+    );
+    if (!result.ok) return { ok: false, error: { code: "unknown", message: result.error } };
+    emitUnreadActivityChanged();
+    return { ok: true, data: null };
+  }
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
@@ -779,6 +844,15 @@ export async function createMessageReport(
     return {
       ok: false,
       error: { code: "validation_error", message: "اختر سبباً واضحاً للبلاغ." },
+    };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    return {
+      ok: false,
+      error: {
+        code: "setup_required",
+        message: "بلاغات الرسائل ستتاح بعد نقل أدوات الإشراف إلى Cloudflare.",
+      },
     };
   }
 
@@ -848,6 +922,15 @@ export async function blockConversationParticipant(
     return {
       ok: false,
       error: { code: "validation_error", message: "تعذر تحديد المستخدم المطلوب حظره." },
+    };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    return {
+      ok: false,
+      error: {
+        code: "setup_required",
+        message: "حظر مستخدمي المحادثة سيتاح بعد نقل أدوات الإشراف إلى Cloudflare.",
+      },
     };
   }
 
@@ -923,6 +1006,34 @@ function mapMessage(row: Record<string, unknown>, actorUserId: string): Conversa
     createdAt: rowString(row, "created_at"),
     editedAt: rowNullableString(row, "edited_at"),
     deletedAt: rowNullableString(row, "deleted_at"),
+  };
+}
+
+function mapCloudflareMessage(row: Record<string, unknown>): ConversationMessage {
+  return {
+    id: rowString(row, "id"),
+    conversationId: rowString(row, "conversation_id"),
+    isMine: rowBoolean(row, "is_mine"),
+    body: rowString(row, "body"),
+    attachmentPath: null,
+    attachmentMimeType: null,
+    attachmentSizeBytes: null,
+    attachmentKind: null,
+    attachmentDurationMs: null,
+    attachmentUrl: null,
+    createdAt: rowString(row, "created_at"),
+    editedAt: null,
+    deletedAt: rowNullableString(row, "deleted_at"),
+  };
+}
+
+function attachmentMigrationPending<T>(): ClassifiedsResult<T> {
+  return {
+    ok: false,
+    error: {
+      code: "setup_required",
+      message: "مرفقات المحادثة غير متاحة مؤقتًا أثناء نقل التخزين إلى Cloudflare.",
+    },
   };
 }
 

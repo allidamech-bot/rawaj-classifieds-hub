@@ -7,6 +7,7 @@ import {
 } from "@/lib/api/saved-searches";
 import { getClient, mapError, rowNumber, rowString } from "@/lib/api/shared";
 import type { ClassifiedsResult, SavedSearch } from "@/lib/classifieds-types";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 export interface SavedSearchAlertScanSummary {
   checkedSearches: number;
@@ -27,6 +28,18 @@ export async function scanDueSavedSearchAlerts(
     return {
       ok: false,
       error: { code: "auth_required", message: "يجب تسجيل الدخول لفحص تنبيهات البحث المحفوظ." },
+    };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    return {
+      ok: true,
+      data: {
+        checkedSearches: 0,
+        matchedListings: 0,
+        createdNotifications: 0,
+        skippedSearches: 0,
+        checkedAt: new Date().toISOString(),
+      },
     };
   }
 

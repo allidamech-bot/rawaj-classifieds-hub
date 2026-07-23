@@ -10,6 +10,8 @@ import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings
 import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
 import { fetchPublicGovernorates, mapGovernorate, readReferences } from "@/lib/api/references";
 import { getClient, mapError, rowNullableNumber, rowString } from "@/lib/api/shared";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 export type FavoriteJourneyAvailability = "available" | "unavailable";
 
@@ -42,6 +44,14 @@ export async function fetchFavoriteStatus(
   if (!listingId.trim()) {
     return { ok: false, error: { code: "validation_error", message: "تعذر تحديد الإعلان." } };
   }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<{ favorited: boolean }>(
+      `/v1/listings/${encodeURIComponent(listingId)}/favorite`,
+    );
+    return result.ok
+      ? { ok: true, data: result.data.favorited }
+      : { ok: false, error: { code: "unknown", message: result.error } };
+  }
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
@@ -64,6 +74,24 @@ export async function fetchFavorites(
     return {
       ok: false,
       error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض المفضلة." },
+    };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<Record<string, unknown>[]>("/v1/account/favorites");
+    if (!result.ok) return { ok: false, error: { code: "unknown", message: result.error } };
+    return {
+      ok: true,
+      data: result.data.map((row) => ({
+        userId: rowString(row, "user_id"),
+        listingId: rowString(row, "listing_id"),
+        createdAt: rowString(row, "created_at"),
+        listing: mapListing({
+          ...row,
+          id: row.listing_id,
+          created_at: row.listing_created_at,
+          updated_at: row.listing_updated_at,
+        }),
+      })),
     };
   }
 
@@ -123,6 +151,28 @@ export async function fetchFavoriteJourneyItems(
     return {
       ok: false,
       error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض المفضلة." },
+    };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const favorites = await fetchFavorites(userId);
+    if (!favorites.ok) return favorites;
+    return {
+      ok: true,
+      data: favorites.data.map((favorite) => ({
+        listingId: favorite.listingId,
+        availability: "available" as const,
+        snapshot: {
+          userId: favorite.userId,
+          listingId: favorite.listingId,
+          title: favorite.listing?.title ?? "إعلان غير متاح",
+          price: favorite.listing?.price ?? null,
+          currency: favorite.listing?.currency ?? "SYP",
+          status: favorite.listing?.status ?? "approved",
+          createdAt: favorite.createdAt,
+          updatedAt: favorite.listing?.updatedAt ?? favorite.createdAt,
+        },
+        listing: favorite.listing,
+      })),
     };
   }
 
@@ -196,6 +246,15 @@ export async function favoriteListing(
       error: { code: "auth_required", message: "يجب تسجيل الدخول لحفظ الإعلان." },
     };
   }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<{ favorited: boolean }>(
+      `/v1/listings/${encodeURIComponent(listingId)}/favorite`,
+      { method: "POST", body: {} },
+    );
+    return result.ok
+      ? { ok: true, data: null }
+      : { ok: false, error: { code: "unknown", message: result.error } };
+  }
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
@@ -233,6 +292,15 @@ export async function unfavoriteListing(
       ok: false,
       error: { code: "auth_required", message: "يجب تسجيل الدخول لتعديل المفضلة." },
     };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<{ favorited: boolean }>(
+      `/v1/listings/${encodeURIComponent(listingId)}/favorite`,
+      { method: "DELETE" },
+    );
+    return result.ok
+      ? { ok: true, data: null }
+      : { ok: false, error: { code: "unknown", message: result.error } };
   }
 
   const clientResult = getClient();
