@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "export:public": "node export-public-snapshot.mjs",
+    "audit:media": "node audit-supabase-media.mjs",
+    "export:public": "npm run audit:media && node export-public-snapshot.mjs",
     "verify:snapshot": "node verify-public-snapshot.mjs",
     "migrate:media": "node migrate-media-to-r2.mjs"
   },
