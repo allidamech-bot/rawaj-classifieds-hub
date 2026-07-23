@@ -1,0 +1,90 @@
+name: Supabase Orphan Media Cleanup
+
+on:
+  push:
+    branches:
+      - feature/cloudflare-full-backend-cutover
+    paths:
+      - .github/supabase-orphan-media-cleanup-approved
+      - cloudflare/migration/audit-and-clean-supabase-media.mjs
+      - .github/workflows/supabase-orphan-media-cleanup.yml
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Delete only DB-unreferenced Storage objects
+        required: true
+        type: boolean
+        default: false
+      confirmation:
+        description: Enter DELETE_CONFIRMED_ORPHAN_MEDIA to apply
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rawaj-supabase-orphan-media-cleanup
+  cancel-in-progress: false
+
+jobs:
+  audit-and-clean:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      REPORT_PATH: ${{ runner.temp }}/supabase-media-cleanup-report.json
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in SUPABASE_DATABASE_URL SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY; do
+            test -n "${!name}" || { echo "Missing $name"; exit 1; }
+          done
+
+      - name: Install migration dependencies
+        run: npm install --prefix cloudflare/migration --ignore-scripts --no-audit --no-fund
+
+      - name: Audit media references
+        if: github.event_name == 'workflow_dispatch' && inputs.apply != true
+        run: >-
+          node cloudflare/migration/audit-and-clean-supabase-media.mjs
+          --output="$REPORT_PATH"
+
+      - name: Delete confirmed orphan media
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.apply == true)
+        env:
+          CONFIRMATION: ${{ github.event_name == 'push' && 'DELETE_CONFIRMED_ORPHAN_MEDIA' || inputs.confirmation }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$CONFIRMATION" = "DELETE_CONFIRMED_ORPHAN_MEDIA" || {
+            echo "Apply mode requires DELETE_CONFIRMED_ORPHAN_MEDIA"
+            exit 1
+          }
+          node cloudflare/migration/audit-and-clean-supabase-media.mjs \
+            --apply \
+            --confirmation="$CONFIRMATION" \
+            --output="$REPORT_PATH"
+
+      - name: Upload cleanup evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-media-cleanup-${{ github.run_id }}
+          path: ${{ runner.temp }}/supabase-media-cleanup-report.json
+          if-no-files-found: warn
+          retention-days: 14
