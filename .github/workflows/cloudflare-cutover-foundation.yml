@@ -12,7 +12,9 @@ on:
       - "src/lib/api/listing-images-read-guarded.ts"
       - "scripts/cloudflare-cutover-foundation.test.mjs"
       - "scripts/public-data-provider-contract.test.mjs"
+      - "scripts/cloudflare-import-pipeline-contract.test.mjs"
       - ".github/workflows/cloudflare-cutover-foundation.yml"
+      - ".github/workflows/cloudflare-public-read-model-import.yml"
   push:
     branches:
       - "feature/cloudflare-cutover-current-site"
@@ -26,7 +28,9 @@ on:
       - "src/lib/api/listing-images-read-guarded.ts"
       - "scripts/cloudflare-cutover-foundation.test.mjs"
       - "scripts/public-data-provider-contract.test.mjs"
+      - "scripts/cloudflare-import-pipeline-contract.test.mjs"
       - ".github/workflows/cloudflare-cutover-foundation.yml"
+      - ".github/workflows/cloudflare-public-read-model-import.yml"
 
 permissions:
   contents: read
@@ -50,9 +54,11 @@ jobs:
 
       - name: Validate migration scripts
         run: |
+          node --check cloudflare/migration/bootstrap-cloudflare-resources.mjs
           node --check cloudflare/migration/export-public-snapshot.mjs
           node --check cloudflare/migration/migrate-media-to-r2.mjs
           node --check cloudflare/migration/verify-public-snapshot.mjs
+          node --check cloudflare/migration/verify-remote-d1.mjs
           node --check cloudflare/worker/scripts/render-config.mjs
 
       - name: Typecheck application provider boundary
@@ -65,6 +71,7 @@ jobs:
         run: |
           node --test scripts/cloudflare-cutover-foundation.test.mjs
           node --test scripts/public-data-provider-contract.test.mjs
+          node --test scripts/cloudflare-import-pipeline-contract.test.mjs
 
       - name: Replay D1 migrations in SQLite
         shell: python
