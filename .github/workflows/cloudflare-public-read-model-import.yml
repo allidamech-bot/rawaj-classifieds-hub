@@ -1,0 +1,237 @@
+name: Cloudflare Public Read Model Import
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Operation to run
+        required: true
+        type: choice
+        default: plan_resources
+        options:
+          - plan_resources
+          - create_resources
+          - import_read_model
+      database_name:
+        description: Fresh staging D1 database name
+        required: true
+        type: string
+        default: rawaj-marketplace-staging
+      bucket_name:
+        description: Staging R2 bucket name
+        required: true
+        type: string
+        default: rawaj-media-staging
+      location_hint:
+        description: R2 placement hint
+        required: true
+        type: choice
+        default: eeur
+        options:
+          - eeur
+          - weur
+          - apac
+          - enam
+          - wnam
+          - oc
+      confirmation:
+        description: CREATE_STAGING_RESOURCES or IMPORT_STAGING_READ_MODEL when required
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rawaj-cloudflare-staging-import
+  cancel-in-progress: false
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_REGION: auto
+      SNAPSHOT_DIR: ${{ runner.temp }}/rawaj-public-snapshot
+      RESOURCE_MANIFEST: ${{ runner.temp }}/rawaj-cloudflare-resources.json
+
+    steps:
+      - name: Validate requested operation
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ inputs.operation }}" in
+            plan_resources)
+              ;;
+            create_resources)
+              test "${{ inputs.confirmation }}" = "CREATE_STAGING_RESOURCES" || {
+                echo "create_resources requires confirmation CREATE_STAGING_RESOURCES"
+                exit 1
+              }
+              ;;
+            import_read_model)
+              test "${{ inputs.confirmation }}" = "IMPORT_STAGING_READ_MODEL" || {
+                echo "import_read_model requires confirmation IMPORT_STAGING_READ_MODEL"
+                exit 1
+              }
+              ;;
+            *)
+              echo "Unsupported operation"
+              exit 1
+              ;;
+          esac
+
+      - name: Checkout migration branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Validate required control-plane secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "Missing CLOUDFLARE_ACCOUNT_ID"; exit 1; }
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "Missing CLOUDFLARE_API_TOKEN"; exit 1; }
+
+      - name: Plan or create Cloudflare staging resources
+        id: resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          apply_flag=""
+          if [ "${{ inputs.operation }}" != "plan_resources" ]; then
+            apply_flag="--apply"
+          fi
+          node cloudflare/migration/bootstrap-cloudflare-resources.mjs \
+            $apply_flag \
+            --database-name="${{ inputs.database_name }}" \
+            --bucket-name="${{ inputs.bucket_name }}" \
+            --location-hint="${{ inputs.location_hint }}" \
+            --output="$RESOURCE_MANIFEST"
+
+      - name: Upload resource plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudflare-resource-plan-${{ github.run_id }}
+          path: ${{ runner.temp }}/rawaj-cloudflare-resources.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Stop after resource planning or creation
+        if: inputs.operation != 'import_read_model'
+        run: echo "Resource operation completed without data import."
+
+      - name: Validate import secrets
+        if: inputs.operation == 'import_read_model'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in SUPABASE_DATABASE_URL SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY; do
+            test -n "${!name}" || { echo "Missing $name"; exit 1; }
+          done
+
+      - name: Install migration dependencies
+        if: inputs.operation == 'import_read_model'
+        run: npm install --prefix cloudflare/migration --ignore-scripts --no-audit --no-fund
+
+      - name: Install Worker tooling
+        if: inputs.operation == 'import_read_model'
+        run: npm install --prefix cloudflare/worker --ignore-scripts --no-audit --no-fund
+
+      - name: Export one repeatable-read Supabase snapshot
+        if: inputs.operation == 'import_read_model'
+        env:
+          RAWAJ_SNAPSHOT_DIR: ${{ runner.temp }}/rawaj-public-snapshot
+        run: node cloudflare/migration/export-public-snapshot.mjs
+
+      - name: Verify snapshot integrity
+        if: inputs.operation == 'import_read_model'
+        run: node cloudflare/migration/verify-public-snapshot.mjs "$SNAPSHOT_DIR"
+
+      - name: Generate isolated Wrangler configuration
+        if: inputs.operation == 'import_read_model'
+        env:
+          CLOUDFLARE_D1_DATABASE_ID: ${{ steps.resources.outputs.d1_database_id }}
+          CLOUDFLARE_D1_DATABASE_NAME: ${{ steps.resources.outputs.d1_database_name }}
+          CLOUDFLARE_R2_BUCKET_NAME: ${{ steps.resources.outputs.r2_bucket_name }}
+        run: node cloudflare/worker/scripts/render-config.mjs
+
+      - name: Apply D1 schema migrations
+        if: inputs.operation == 'import_read_model'
+        working-directory: cloudflare/worker
+        run: npx wrangler d1 migrations apply DB --remote --config wrangler.generated.jsonc
+
+      - name: Require an empty staging read model
+        if: inputs.operation == 'import_read_model'
+        env:
+          CLOUDFLARE_D1_DATABASE_ID: ${{ steps.resources.outputs.d1_database_id }}
+        run: >-
+          node cloudflare/migration/verify-remote-d1.mjs
+          --expect-empty
+          --snapshot-dir="$SNAPSHOT_DIR"
+          --output="$SNAPSHOT_DIR/preflight-verification.json"
+
+      - name: Import snapshot into D1 transactionally
+        if: inputs.operation == 'import_read_model'
+        working-directory: cloudflare/worker
+        run: >-
+          npx wrangler d1 execute DB
+          --remote
+          --config wrangler.generated.jsonc
+          --file="$SNAPSHOT_DIR/public-snapshot.sql"
+
+      - name: Copy and checksum all public media into R2
+        if: inputs.operation == 'import_read_model'
+        env:
+          R2_BUCKET_NAME: ${{ steps.resources.outputs.r2_bucket_name }}
+          R2_ENDPOINT: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
+        run: >-
+          node cloudflare/migration/migrate-media-to-r2.mjs
+          --apply
+          --manifest="$SNAPSHOT_DIR/media-manifest.json"
+          --output="$SNAPSHOT_DIR/media-results.jsonl"
+          --finalize-sql="$SNAPSHOT_DIR/media-finalize.sql"
+
+      - name: Finalize verified media metadata in D1
+        if: inputs.operation == 'import_read_model'
+        working-directory: cloudflare/worker
+        run: >-
+          npx wrangler d1 execute DB
+          --remote
+          --config wrangler.generated.jsonc
+          --file="$SNAPSHOT_DIR/media-finalize.sql"
+
+      - name: Verify and finalize imported D1 batch
+        if: inputs.operation == 'import_read_model'
+        env:
+          CLOUDFLARE_D1_DATABASE_ID: ${{ steps.resources.outputs.d1_database_id }}
+        run: >-
+          node cloudflare/migration/verify-remote-d1.mjs
+          --finalize
+          --snapshot-dir="$SNAPSHOT_DIR"
+          --output="$SNAPSHOT_DIR/remote-d1-verification.json"
+
+      - name: Upload non-sensitive verification evidence
+        if: inputs.operation == 'import_read_model'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudflare-import-evidence-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/rawaj-cloudflare-resources.json
+            ${{ runner.temp }}/rawaj-public-snapshot/snapshot-manifest.json
+            ${{ runner.temp }}/rawaj-public-snapshot/preflight-verification.json
+            ${{ runner.temp }}/rawaj-public-snapshot/remote-d1-verification.json
+            ${{ runner.temp }}/rawaj-public-snapshot/media-results.jsonl
+          if-no-files-found: error
+          retention-days: 7
