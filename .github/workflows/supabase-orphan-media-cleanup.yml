@@ -6,8 +6,6 @@ on:
       - feature/cloudflare-full-backend-cutover
     paths:
       - .github/supabase-orphan-media-cleanup-approved
-      - cloudflare/migration/audit-and-clean-supabase-media.mjs
-      - .github/workflows/supabase-orphan-media-cleanup.yml
   workflow_dispatch:
     inputs:
       apply:
