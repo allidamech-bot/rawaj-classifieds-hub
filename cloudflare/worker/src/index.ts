@@ -75,6 +75,31 @@ export default {
         return await references(env, cors);
       }
 
+      if (url.pathname === `/${API_VERSION}/locations/roots`) {
+        return await locationRoots(url, env, cors);
+      }
+
+      if (url.pathname === `/${API_VERSION}/locations/search`) {
+        return await locationSearch(url, env, cors);
+      }
+
+      const locationChildrenMatch = url.pathname.match(
+        new RegExp(`^/${API_VERSION}/locations/([^/]+)/children$`),
+      );
+      if (locationChildrenMatch) {
+        return await locationChildren(decodeURIComponent(locationChildrenMatch[1]), env, cors);
+      }
+
+      const locationMatch = url.pathname.match(new RegExp(`^/${API_VERSION}/locations/([^/]+)$`));
+      if (locationMatch) {
+        return await locationDetail(
+          decodeURIComponent(locationMatch[1]),
+          url.searchParams.get("include"),
+          env,
+          cors,
+        );
+      }
+
       if (url.pathname === `/${API_VERSION}/ad-placements`) {
         return await adPlacements(url, env, cors);
       }
@@ -174,6 +199,105 @@ async function references(env: Env, cors: Headers): Promise<Response> {
     cors,
     cacheHeaders(env),
   );
+}
+
+const LOCATION_SELECT = `id, parent_id, country_code, node_type, name_ar, name_en, slug,
+  official_code, external_source, external_id, latitude, longitude, sort_order, depth,
+  is_active, search_aliases, legacy_governorate_id, legacy_district_ar`;
+
+async function locationRoots(url: URL, env: Env, cors: Headers): Promise<Response> {
+  const country = cleanText(url.searchParams.get("country"), 2) ?? "SY";
+  if (!/^[A-Z]{2}$/.test(country)) return validationFailure(cors, "Invalid country code.");
+  const result = await env.DB.prepare(
+    `SELECT ${LOCATION_SELECT} FROM location_nodes
+      WHERE country_code = ? AND is_active = 1 AND parent_id IS NULL
+      ORDER BY sort_order ASC, name_ar ASC LIMIT 100`,
+  ).bind(country).all<JsonRecord>();
+  if (!result.success) return databaseFailure(cors, result.error);
+  return json({ data: (result.results ?? []).map(mapLocationNode) }, 200, cors, cacheHeaders(env));
+}
+
+async function locationChildren(parentId: string, env: Env, cors: Headers): Promise<Response> {
+  if (!validId(parentId)) return validationFailure(cors, "Invalid location id.");
+  const result = await env.DB.prepare(
+    `SELECT ${LOCATION_SELECT} FROM location_nodes
+      WHERE parent_id = ? AND is_active = 1
+      ORDER BY sort_order ASC, name_ar ASC LIMIT 500`,
+  ).bind(parentId).all<JsonRecord>();
+  if (!result.success) return databaseFailure(cors, result.error);
+  return json({ data: (result.results ?? []).map(mapLocationNode) }, 200, cors, cacheHeaders(env));
+}
+
+async function locationDetail(
+  id: string,
+  include: string | null,
+  env: Env,
+  cors: Headers,
+): Promise<Response> {
+  if (!validId(id)) return validationFailure(cors, "Invalid location id.");
+  if (include === "descendants") {
+    const result = await env.DB.prepare(
+      `WITH RECURSIVE scope(id) AS (
+        SELECT id FROM location_nodes WHERE id = ? AND is_active = 1
+        UNION ALL
+        SELECT child.id FROM location_nodes child JOIN scope parent ON child.parent_id = parent.id
+        WHERE child.is_active = 1
+      ) SELECT id FROM scope LIMIT 10000`,
+    ).bind(id).all<{ id: string }>();
+    if (!result.success) return databaseFailure(cors, result.error);
+    if (!(result.results ?? []).length) return notFound(cors, "Location not found.");
+    return json({ data: (result.results ?? []).map((row) => row.id) }, 200, cors, cacheHeaders(env));
+  }
+  const rows = await env.DB.prepare(
+    `WITH RECURSIVE path AS (
+      SELECT ${LOCATION_SELECT} FROM location_nodes WHERE id = ? AND is_active = 1
+      UNION ALL
+      SELECT parent.id, parent.parent_id, parent.country_code, parent.node_type,
+        parent.name_ar, parent.name_en, parent.slug, parent.official_code,
+        parent.external_source, parent.external_id, parent.latitude, parent.longitude,
+        parent.sort_order, parent.depth, parent.is_active, parent.search_aliases,
+        parent.legacy_governorate_id, parent.legacy_district_ar
+      FROM location_nodes parent JOIN path child ON child.parent_id = parent.id
+      WHERE parent.is_active = 1
+    ) SELECT * FROM path ORDER BY depth ASC`,
+  ).bind(id).all<JsonRecord>();
+  if (!rows.success) return databaseFailure(cors, rows.error);
+  if (!(rows.results ?? []).length) return notFound(cors, "Location not found.");
+  return json({ data: (rows.results ?? []).map(mapLocationNode) }, 200, cors, cacheHeaders(env));
+}
+
+async function locationSearch(url: URL, env: Env, cors: Headers): Promise<Response> {
+  const query = cleanText(url.searchParams.get("q"), 100);
+  const limit = integerParam(url.searchParams.get("limit"), 12, 1, 20);
+  if (!query || query.length < 2) return validationFailure(cors, "Search requires two characters.");
+  const storedQuery = toWindows1256Mojibake(query);
+  const like = `%${storedQuery.replace(/[%_]/g, "\\$&")}%`;
+  const normalized = normalizeArabicSearch(storedQuery);
+  const result = await env.DB.prepare(
+    `SELECT DISTINCT n.id, n.parent_id, n.country_code, n.node_type, n.name_ar,
+       n.name_en, n.slug, n.official_code, n.external_source, n.external_id,
+       n.latitude, n.longitude, n.sort_order, n.depth, n.is_active, n.search_aliases,
+       n.legacy_governorate_id, n.legacy_district_ar,
+       (SELECT a.alias FROM location_search_aliases a
+         WHERE a.location_node_id = n.id AND a.normalized_alias LIKE ? ESCAPE '\\'
+         ORDER BY length(a.normalized_alias), a.alias LIMIT 1) AS matched_alias
+     FROM location_nodes n
+     LEFT JOIN location_search_aliases alias ON alias.location_node_id = n.id
+     WHERE n.country_code = 'SY' AND n.is_active = 1
+       AND (n.name_ar LIKE ? ESCAPE '\\' OR n.name_en LIKE ? ESCAPE '\\'
+         OR alias.normalized_alias LIKE ? ESCAPE '\\')
+     ORDER BY CASE WHEN n.name_ar = ? OR n.name_en = ? THEN 0 ELSE 1 END,
+       n.depth ASC, n.sort_order ASC, n.name_ar ASC LIMIT ?`,
+  ).bind(`%${normalized}%`, like, like, `%${normalized}%`, query, query, limit).all<JsonRecord>();
+  if (!result.success) return databaseFailure(cors, result.error);
+  return json({
+    data: (result.results ?? []).map((row) => ({
+      node: mapLocationNode(row),
+      matchedAlias: nullableString(row.matched_alias),
+      pathAr: stringValue(row.name_ar),
+      pathEn: nullableString(row.name_en) ?? stringValue(row.name_ar),
+    })),
+  }, 200, cors, cacheHeaders(env));
 }
 
 async function adPlacements(url: URL, env: Env, cors: Headers): Promise<Response> {
@@ -524,6 +648,51 @@ function mapTaxonomyNode(row: JsonRecord): JsonRecord {
   };
 }
 
+function mapLocationNode(row: JsonRecord): JsonRecord {
+  return {
+    id: stringValue(row.id),
+    parentId: nullableString(row.parent_id),
+    countryCode: stringValue(row.country_code, "SY"),
+    nodeType: stringValue(row.node_type, "locality"),
+    nameAr: stringValue(row.name_ar),
+    nameEn: nullableString(row.name_en),
+    slug: stringValue(row.slug),
+    officialCode: nullableString(row.official_code),
+    externalSource: nullableString(row.external_source),
+    externalId: nullableString(row.external_id),
+    latitude: nullableNumber(row.latitude),
+    longitude: nullableNumber(row.longitude),
+    sortOrder: numberValue(row.sort_order),
+    depth: numberValue(row.depth),
+    isActive: booleanValue(row.is_active),
+    searchAliases: jsonArray(row.search_aliases),
+    legacyGovernorateId: nullableString(row.legacy_governorate_id),
+    legacyDistrictAr: nullableString(row.legacy_district_ar),
+  };
+}
+
+function validId(value: string): boolean {
+  return value.length > 0 && value.length <= 160 && /^[\p{L}\p{N}._:-]+$/u.test(value);
+}
+
+function normalizeArabicSearch(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/\s+/g, " ");
+}
+
+function validationFailure(cors: Headers, message: string): Response {
+  return json({ error: { code: "validation_error", message } }, 400, cors);
+}
+
+function notFound(cors: Headers, message: string): Response {
+  return json({ error: { code: "not_found", message } }, 404, cors);
+}
+
 function mapListing(row: JsonRecord, requestUrl: URL): JsonRecord {
   const primaryAssetId = nullableString(row.primary_media_asset_id);
   return {
@@ -777,11 +946,35 @@ function json(
 }
 
 function stringValue(value: unknown, fallback = ""): string {
-  return typeof value === "string" ? value : fallback;
+  return typeof value === "string" ? repairWindows1256Mojibake(value) : fallback;
 }
 
 function nullableString(value: unknown): string | null {
-  return typeof value === "string" && value.length > 0 ? value : null;
+  return typeof value === "string" && value.length > 0 ? repairWindows1256Mojibake(value) : null;
+}
+
+const windows1256Decoder = new TextDecoder("windows-1256");
+const windows1256Reverse = new Map<string, number>(
+  Array.from({ length: 256 }, (_, byte) => [
+    windows1256Decoder.decode(Uint8Array.of(byte)),
+    byte,
+  ]),
+);
+
+function repairWindows1256Mojibake(value: string): string {
+  if (!/[طظ]/.test(value)) return value;
+  const bytes: number[] = [];
+  for (const character of value) {
+    const byte = windows1256Reverse.get(character);
+    if (byte === undefined) return value;
+    bytes.push(byte);
+  }
+  const repaired = new TextDecoder("utf-8", { fatal: false }).decode(Uint8Array.from(bytes));
+  return repaired.includes("\uFFFD") ? value : repaired;
+}
+
+function toWindows1256Mojibake(value: string): string {
+  return windows1256Decoder.decode(new TextEncoder().encode(value));
 }
 
 function numberValue(value: unknown, fallback = 0): number {

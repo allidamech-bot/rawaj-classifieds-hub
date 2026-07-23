@@ -617,11 +617,31 @@ function integerValue(value: string | undefined, fallback: number): number {
 }
 
 function stringValue(value: unknown, fallback = ""): string {
-  return typeof value === "string" ? value : fallback;
+  return typeof value === "string" ? repairWindows1256Mojibake(value) : fallback;
 }
 
 function nullableString(value: unknown): string | null {
-  return typeof value === "string" && value.length > 0 ? value : null;
+  return typeof value === "string" && value.length > 0 ? repairWindows1256Mojibake(value) : null;
+}
+
+const windows1256Decoder = new TextDecoder("windows-1256");
+const windows1256Reverse = new Map<string, number>(
+  Array.from({ length: 256 }, (_, byte) => [
+    windows1256Decoder.decode(Uint8Array.of(byte)),
+    byte,
+  ]),
+);
+
+function repairWindows1256Mojibake(value: string): string {
+  if (!/[طظ]/.test(value)) return value;
+  const bytes: number[] = [];
+  for (const character of value) {
+    const byte = windows1256Reverse.get(character);
+    if (byte === undefined) return value;
+    bytes.push(byte);
+  }
+  const repaired = new TextDecoder("utf-8", { fatal: false }).decode(Uint8Array.from(bytes));
+  return repaired.includes("\uFFFD") ? value : repaired;
 }
 
 function nullableNumber(value: unknown): number | null {

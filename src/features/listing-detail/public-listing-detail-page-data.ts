@@ -22,6 +22,7 @@ import {
   isPublicListingVisible,
   normalizePublicListingImages,
 } from "@/lib/public-listing-presentation";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 export interface PublicListingDetailPageData {
   listing: ClassifiedListing;
@@ -44,6 +45,7 @@ export async function loadPublicListingDetailPageData(
 
   const listing = listingResult.data;
   if (!isPublicListingVisible(listing)) return null;
+  const cloudflareMode = isCloudflarePublicDataProvider();
 
   const [
     imagesResult,
@@ -56,7 +58,9 @@ export async function loadPublicListingDetailPageData(
     locationPathResult,
   ] = await Promise.all([
     fetchListingImages(listing.id),
-    fetchPublicSellerProfile(listing.ownerId),
+    cloudflareMode
+      ? Promise.resolve({ ok: true as const, data: null })
+      : fetchPublicSellerProfile(listing.ownerId),
     fetchPublicListings(
       {
         categoryId: listing.categoryId,
@@ -69,8 +73,12 @@ export async function loadPublicListingDetailPageData(
     fetchPublicCategories(),
     fetchPublicSubcategories(),
     fetchPublicTaxonomyNodes(),
-    fetchPublicListingTaxonomyAssignment(listing.id),
-    fetchPublicListingLocationPath(listing.id),
+    cloudflareMode
+      ? Promise.resolve({ ok: true as const, data: null })
+      : fetchPublicListingTaxonomyAssignment(listing.id),
+    cloudflareMode
+      ? Promise.resolve({ ok: true as const, data: [] })
+      : fetchPublicListingLocationPath(listing.id),
   ]);
   const taxonomyContext = resolveListingTaxonomyContext({
     taxonomyNodes: taxonomyNodesResult.ok ? taxonomyNodesResult.data : [],

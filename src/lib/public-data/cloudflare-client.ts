@@ -13,6 +13,8 @@ import type {
   TaxonomyNode,
 } from "@/lib/classifieds-types";
 import { requireCloudflarePublicApiBaseUrl } from "@/lib/public-data/config";
+import type { LocationSearchResult } from "@/lib/api/location-taxonomy";
+import type { LocationNode } from "@/lib/location-types";
 
 export interface CloudflareReferenceBundle {
   categories: ClassifiedCategory[];
@@ -181,6 +183,41 @@ export async function fetchCloudflareListingDetail(
       })),
     },
   };
+}
+
+export function fetchCloudflareLocationRoots(
+  country = "SY",
+): Promise<ClassifiedsResult<LocationNode[]>> {
+  return requestJson<LocationNode[]>("/v1/locations/roots", { country });
+}
+
+export function fetchCloudflareLocationChildren(
+  parentId: string,
+): Promise<ClassifiedsResult<LocationNode[]>> {
+  return requestJson<LocationNode[]>(
+    `/v1/locations/${encodeURIComponent(parentId)}/children`,
+  );
+}
+
+export function fetchCloudflareLocationPath(
+  nodeId: string,
+): Promise<ClassifiedsResult<LocationNode[]>> {
+  return requestJson<LocationNode[]>(`/v1/locations/${encodeURIComponent(nodeId)}`);
+}
+
+export function fetchCloudflareLocationDescendantIds(
+  nodeId: string,
+): Promise<ClassifiedsResult<string[]>> {
+  return requestJson<string[]>(`/v1/locations/${encodeURIComponent(nodeId)}`, {
+    include: "descendants",
+  });
+}
+
+export function searchCloudflareLocations(
+  query: string,
+  limit = 12,
+): Promise<ClassifiedsResult<LocationSearchResult[]>> {
+  return requestJson<LocationSearchResult[]>("/v1/locations/search", { q: query, limit });
 }
 
 async function requestJson<T>(

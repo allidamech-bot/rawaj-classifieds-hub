@@ -10,6 +10,14 @@ import {
   rowNumber,
   rowString,
 } from "@/lib/api/shared";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
+import {
+  fetchCloudflareLocationChildren,
+  fetchCloudflareLocationDescendantIds,
+  fetchCloudflareLocationPath,
+  fetchCloudflareLocationRoots,
+  searchCloudflareLocations,
+} from "@/lib/public-data/cloudflare-client";
 
 export type LocationNodeType =
   | "country"
@@ -99,6 +107,7 @@ const LOCATION_NODE_SELECT =
 export async function fetchLocationRoots(
   countryCode = "SY",
 ): Promise<ClassifiedsResult<CanonicalLocationNode[]>> {
+  if (isCloudflarePublicDataProvider()) return fetchCloudflareLocationRoots(countryCode);
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
@@ -123,6 +132,7 @@ export async function fetchLocationRoots(
 export async function fetchLocationChildren(
   parentId: string,
 ): Promise<ClassifiedsResult<CanonicalLocationNode[]>> {
+  if (isCloudflarePublicDataProvider()) return fetchCloudflareLocationChildren(parentId);
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
@@ -146,6 +156,11 @@ export async function fetchLocationChildren(
 export async function fetchLocationNode(
   nodeId: string,
 ): Promise<ClassifiedsResult<CanonicalLocationNode | null>> {
+  if (isCloudflarePublicDataProvider()) {
+    const result = await fetchCloudflareLocationPath(nodeId);
+    if (!result.ok) return result.error.code === "not_found" ? { ok: true, data: null } : result;
+    return { ok: true, data: result.data.at(-1) ?? null };
+  }
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
@@ -169,6 +184,7 @@ export async function searchLocationNodes(
 ): Promise<ClassifiedsResult<LocationSearchResult[]>> {
   const clean = query.trim();
   if (clean.length < 2) return { ok: true, data: [] };
+  if (isCloudflarePublicDataProvider()) return searchCloudflareLocations(clean, limit);
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
@@ -266,6 +282,7 @@ export async function searchLocationNodes(
 export async function fetchLocationPath(
   nodeId: string,
 ): Promise<ClassifiedsResult<CanonicalLocationNode[]>> {
+  if (isCloudflarePublicDataProvider()) return fetchCloudflareLocationPath(nodeId);
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   return fetchLocationPathWithClient(clientResult.data, nodeId);
@@ -303,6 +320,7 @@ async function fetchLocationPathWithClient(
 export async function resolveLocationDescendantIds(
   nodeId: string,
 ): Promise<ClassifiedsResult<string[]>> {
+  if (isCloudflarePublicDataProvider()) return fetchCloudflareLocationDescendantIds(nodeId);
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 

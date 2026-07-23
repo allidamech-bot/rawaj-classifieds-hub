@@ -10,6 +10,13 @@ import {
   rowNumber,
   rowString,
 } from "@/lib/api/shared";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
+import {
+  fetchCloudflareLocationChildren,
+  fetchCloudflareLocationDescendantIds,
+  fetchCloudflareLocationPath,
+  fetchCloudflareLocationRoots,
+} from "@/lib/public-data/cloudflare-client";
 
 export function mapLocationNode(row: Record<string, unknown>): LocationNode {
   return {
@@ -37,6 +44,9 @@ export function mapLocationNode(row: Record<string, unknown>): LocationNode {
 export async function fetchPublicLocationNodes(
   countryCode = "SY",
 ): Promise<ClassifiedsResult<LocationNode[]>> {
+  if (isCloudflarePublicDataProvider()) {
+    return fetchCloudflareLocationRoots(countryCode);
+  }
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   const { data, error } = await clientResult.data
@@ -55,6 +65,11 @@ export async function fetchLocationChildren(
   parentId: string | null,
   countryCode = "SY",
 ): Promise<ClassifiedsResult<LocationNode[]>> {
+  if (isCloudflarePublicDataProvider()) {
+    return parentId
+      ? fetchCloudflareLocationChildren(parentId)
+      : fetchCloudflareLocationRoots(countryCode);
+  }
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   let query = clientResult.data
@@ -71,6 +86,14 @@ export async function fetchLocationChildren(
 }
 
 export async function fetchLocationNode(id: string): Promise<ClassifiedsResult<LocationNode>> {
+  if (isCloudflarePublicDataProvider()) {
+    const result = await fetchCloudflareLocationPath(id);
+    if (!result.ok) return result;
+    const node = result.data.at(-1);
+    return node
+      ? { ok: true, data: node }
+      : { ok: false, error: { code: "not_found", message: "الموقع المحدد غير متاح." } };
+  }
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   const { data, error } = await clientResult.data
@@ -87,6 +110,7 @@ export async function fetchLocationNode(id: string): Promise<ClassifiedsResult<L
 export async function fetchLocationDescendantIds(
   rootId: string,
 ): Promise<ClassifiedsResult<string[]>> {
+  if (isCloudflarePublicDataProvider()) return fetchCloudflareLocationDescendantIds(rootId);
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   const { data, error } = await clientResult.data.rpc("rawaj_location_descendant_ids", {
