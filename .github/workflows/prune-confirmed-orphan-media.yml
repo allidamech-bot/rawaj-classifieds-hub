@@ -1,0 +1,44 @@
+name: Prune confirmed orphan media
+
+on:
+  push:
+    branches:
+      - feature/cloudflare-full-backend-cutover
+    paths:
+      - cloudflare/migration/prune-confirmed-orphan-media.mjs
+      - .github/workflows/prune-confirmed-orphan-media.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prune-confirmed-orphan-media
+  cancel-in-progress: false
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out reviewed branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cloudflare/migration/package-lock.json
+
+      - name: Install migration dependencies
+        working-directory: cloudflare/migration
+        run: npm ci
+
+      - name: Delete exactly the six reviewed orphan objects
+        working-directory: cloudflare/migration
+        env:
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RAWAJ_CONFIRMED_ORPHAN_DELETE: DELETE_EXACTLY_6_CONFIRMED_ORPHANS
+        run: node prune-confirmed-orphan-media.mjs
