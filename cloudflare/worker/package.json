@@ -9,8 +9,9 @@
     "deploy": "wrangler deploy --config wrangler.generated.jsonc",
     "test:setup": "wrangler d1 migrations apply rawaj-staging --local --persist-to .wrangler/test-state-auth --config wrangler.generated.jsonc",
     "test:seed": "wrangler d1 execute rawaj-staging --local --persist-to .wrangler/test-state-auth --config wrangler.generated.jsonc --file ../snapshots/essential/essential-data.sql",
-    "pretest": "npm run test:setup",
-    "test": "node --test test/*.test.mjs",
+    "test:fixtures": "wrangler d1 execute rawaj-staging --local --persist-to .wrangler/test-state-auth --config wrangler.generated.jsonc --file test/marketplace-fixtures.sql",
+    "pretest": "npm run test:setup && npm run test:fixtures",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
     "migrate:local": "wrangler d1 migrations apply rawaj-staging --local --persist-to .wrangler/state --config wrangler.generated.jsonc",
     "migrate:remote": "wrangler d1 migrations apply rawaj-staging --remote --config wrangler.generated.jsonc"
   },

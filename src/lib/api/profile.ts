@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   ClassifiedsResult,
+  ClassifiedsErrorCode,
   ProfileMediaKind,
   ProfileMediaUploadPayload,
   UpdateProfileBasicsPayload,
@@ -15,6 +16,8 @@ import {
   profileMediaBucket,
   validateProfileImageFile,
 } from "@/lib/api/storage";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 const profilePrivateMediaSelect = "avatar_path,cover_path";
 
@@ -23,6 +26,18 @@ export async function updateMyProfile(
 ): Promise<ClassifiedsResult<null>> {
   const normalized = normalizeProfilePayload(payload);
   if (!normalized.ok) return normalized;
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<Record<string, unknown>>("/api/profile", {
+      method: "PATCH",
+      body: normalized.data,
+    });
+    return result.ok
+      ? { ok: true, data: null }
+      : {
+          ok: false,
+          error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+        };
+  }
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;

@@ -1,5 +1,6 @@
 import type {
   ClassifiedListing,
+  ClassifiedsErrorCode,
   ClassifiedsResult,
   UpdateListingPayload,
 } from "@/lib/classifieds-types";
@@ -10,6 +11,8 @@ import {
   buildOwnerUpdateRpcArgsV3,
 } from "@/lib/api/listing-write-contract";
 import { getClient, mapError, rowString } from "@/lib/api/shared";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 const ownerUpdateRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();
 const ownerSubmitRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();
@@ -68,6 +71,52 @@ async function runOwnerListingUpdate(
 
   if (!expectedUpdatedAt) {
     return staleOwnerUpdateResult();
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const current = await cloudflareApiRequest<{
+      listing: Record<string, unknown>;
+    }>(`/api/listings/${encodeURIComponent(cleanListingId)}`);
+    if (!current.ok) {
+      return {
+        ok: false,
+        error: { code: current.code as ClassifiedsErrorCode, message: current.error },
+      };
+    }
+    const listing = mapListing(current.data.listing);
+    const body = {
+      categoryId: payload.categoryId ?? listing.categoryId,
+      subcategoryId: payload.subcategoryId ?? listing.subcategoryId,
+      governorateId: payload.governorateId ?? listing.governorateId,
+      title: payload.title ?? listing.title,
+      description: payload.description ?? listing.description,
+      price: payload.price === undefined ? listing.price : payload.price,
+      priceType: payload.priceType ?? listing.priceType,
+      condition: payload.condition ?? listing.condition,
+      districtAr: payload.districtAr === undefined ? listing.districtAr : payload.districtAr,
+      contactName: payload.contactName === undefined ? listing.contactName : payload.contactName,
+      contactOptions: payload.contactOptions ?? listing.contactOptions,
+      details: payload.details ?? listing.details,
+      submit: false,
+    };
+    const updated = await cloudflareApiRequest<{ id: string; status: string }>(
+      `/v1/listings/${encodeURIComponent(cleanListingId)}`,
+      { method: "PATCH", body },
+    );
+    if (!updated.ok) {
+      return {
+        ok: false,
+        error: { code: updated.code as ClassifiedsErrorCode, message: updated.error },
+      };
+    }
+    const refreshed = await cloudflareApiRequest<{
+      listing: Record<string, unknown>;
+    }>(`/api/listings/${encodeURIComponent(cleanListingId)}`);
+    return refreshed.ok
+      ? { ok: true, data: mapListing(refreshed.data.listing) }
+      : {
+          ok: false,
+          error: { code: refreshed.code as ClassifiedsErrorCode, message: refreshed.error },
+        };
   }
 
   const clientResult = getClient();
@@ -203,6 +252,46 @@ async function runOwnerListingSubmit(
         message: "تعذر تحديد الإعلان المطلوب.",
       },
     };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const current = await cloudflareApiRequest<{
+      listing: Record<string, unknown>;
+    }>(`/api/listings/${encodeURIComponent(cleanListingId)}`);
+    if (!current.ok) {
+      return {
+        ok: false,
+        error: { code: current.code as ClassifiedsErrorCode, message: current.error },
+      };
+    }
+    const listing = mapListing(current.data.listing);
+    const submitted = await cloudflareApiRequest<{ id: string; status: string }>(
+      `/v1/listings/${encodeURIComponent(cleanListingId)}`,
+      {
+        method: "PATCH",
+        body: {
+          categoryId: listing.categoryId,
+          subcategoryId: listing.subcategoryId,
+          governorateId: listing.governorateId,
+          title: listing.title,
+          description: listing.description,
+          price: listing.price,
+          priceType: listing.priceType,
+          condition: listing.condition,
+          districtAr: listing.districtAr,
+          contactName: listing.contactName,
+          contactOptions: listing.contactOptions,
+          details: listing.details,
+          submit: true,
+        },
+      },
+    );
+    if (!submitted.ok) {
+      return {
+        ok: false,
+        error: { code: submitted.code as ClassifiedsErrorCode, message: submitted.error },
+      };
+    }
+    return { ok: true, data: { ...listing, status: "pending_review" } };
   }
 
   const clientResult = getClient();

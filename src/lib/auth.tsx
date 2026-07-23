@@ -16,7 +16,7 @@ import {
   authRequestPasswordReset,
   authSession,
   authSignup,
-  sessionToProfile,
+  loadCloudflareUserProfile,
   type CloudflareSession,
 } from "./cloudflare-auth";
 
@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const next = await authSession();
       setSession(next);
-      setProfile(next ? sessionToProfile(next) : null);
+      setProfile(next ? await loadCloudflareUserProfile(next) : null);
       setStatus(next ? "signedIn" : "signedOut");
       setReason(null);
       return { error: null };

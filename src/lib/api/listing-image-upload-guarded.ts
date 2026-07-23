@@ -1,5 +1,6 @@
 import type {
   ClassifiedsResult,
+  ClassifiedsErrorCode,
   ListingImage,
   ListingImageUploadPayload,
 } from "@/lib/classifieds-types";
@@ -17,6 +18,8 @@ import {
   prepareListingImageForUpload,
   validateListingImageContent,
 } from "@/lib/listing-image-processing";
+import { cloudflareApiRequest, cloudflareApiUrl } from "@/lib/cloudflare-auth";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 export async function uploadListingImage({
   userId,
@@ -44,6 +47,38 @@ export async function uploadListingImage({
       ok: false,
       error: { code: "permission_denied", message: "لا يمكن تعديل صور إعلان بعد اعتماده." },
     };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const form = new FormData();
+    form.set("file", file);
+    form.set("altAr", altAr ?? listing.title);
+    const result = await cloudflareApiRequest<{
+      id: string;
+      listingId: string;
+      mediaAssetId: string;
+      sortOrder: number;
+      publicUrl: string;
+    }>(`/v1/listings/${encodeURIComponent(listing.id)}/images`, {
+      method: "POST",
+      body: form,
+    });
+    return result.ok
+      ? {
+          ok: true,
+          data: {
+            id: result.data.id,
+            listingId: result.data.listingId,
+            storagePath: null,
+            publicUrl: cloudflareApiUrl(result.data.publicUrl),
+            altAr: altAr ?? listing.title,
+            sortOrder: result.data.sortOrder,
+            createdAt: new Date().toISOString(),
+          },
+        }
+      : {
+          ok: false,
+          error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+        };
   }
 
   const validation = validateImageFile(file);

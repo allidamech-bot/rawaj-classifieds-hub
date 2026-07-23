@@ -11,6 +11,43 @@ type Envelope<T> = { data?: T; error?: { code?: string; message?: string } };
 
 let csrfToken = "";
 
+export function cloudflareApiUrl(path: string): string {
+  const base = requireCloudflarePublicApiBaseUrl();
+  return base.ok ? new URL(path, `${base.data}/`).toString() : path;
+}
+
+export async function cloudflareApiRequest<T>(
+  path: string,
+  init: { method?: string; body?: Record<string, unknown> | FormData } = {},
+): Promise<{ ok: true; data: T } | { ok: false; error: string; code: string }> {
+  const base = requireCloudflarePublicApiBaseUrl();
+  if (!base.ok) return { ok: false, error: base.error.message, code: base.error.code };
+  const isForm = init.body instanceof FormData;
+  try {
+    const response = await fetch(new URL(path, `${base.data}/`), {
+      method: init.method ?? "GET",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        ...(!isForm && init.body ? { "Content-Type": "application/json" } : {}),
+        ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+      },
+      body: isForm ? (init.body as FormData) : init.body ? JSON.stringify(init.body) : undefined,
+    });
+    const payload = (await response.json().catch(() => null)) as Envelope<T> | null;
+    if (!response.ok || payload?.data === undefined) {
+      return {
+        ok: false,
+        error: payload?.error?.message ?? "تعذر إكمال العملية.",
+        code: payload?.error?.code ?? "unknown",
+      };
+    }
+    return { ok: true, data: payload.data };
+  } catch {
+    return { ok: false, error: "تعذر الاتصال بالخدمة.", code: "network_error" };
+  }
+}
+
 export async function authSession(): Promise<CloudflareSession | null> {
   const result = await authRequest<{ session: CloudflareSession | null }>(
     "/v1/auth/session",
@@ -117,4 +154,25 @@ export function sessionToProfile(session: CloudflareSession): UserProfile {
     createdAt: null,
     updatedAt: null,
   };
+}
+
+export async function loadCloudflareUserProfile(session: CloudflareSession): Promise<UserProfile> {
+  const baseProfile = sessionToProfile(session);
+  const result = await cloudflareApiRequest<{
+    firstName: string | null;
+    lastName: string | null;
+    displayName: string | null;
+    businessName: string | null;
+    bio: string | null;
+    governorate: string | null;
+    cityArea: string | null;
+    phone: string | null;
+    whatsapp: string | null;
+    preferredContactMethod: string | null;
+    verificationStatus: UserProfile["verificationStatus"];
+    accountStatus: UserProfile["accountStatus"];
+    createdAt: string | null;
+    updatedAt: string | null;
+  }>("/api/profile");
+  return result.ok ? { ...baseProfile, ...result.data } : baseProfile;
 }

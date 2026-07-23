@@ -6,9 +6,12 @@ import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
 import { getClient, mapError } from "@/lib/api/shared";
 import type {
   ClassifiedListing,
+  ClassifiedsErrorCode,
   ClassifiedsResult,
   CreateListingPayload,
 } from "@/lib/classifieds-types";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 export async function createOwnerDraftListingIdempotent(
   userId: string | null,
@@ -20,6 +23,27 @@ export async function createOwnerDraftListingIdempotent(
       ok: false,
       error: { code: "auth_required", message: "يجب تسجيل الدخول لحفظ مسودة الإعلان." },
     };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<{ id: string; status: string }>("/v1/listings", {
+      method: "POST",
+      body: { ...payload, submit: false },
+    });
+    if (!result.ok) {
+      return {
+        ok: false,
+        error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+      };
+    }
+    const detail = await cloudflareApiRequest<{
+      listing: Record<string, unknown>;
+    }>(`/api/listings/${encodeURIComponent(result.data.id)}`);
+    return detail.ok
+      ? { ok: true, data: mapListing(detail.data.listing) }
+      : {
+          ok: false,
+          error: { code: detail.code as ClassifiedsErrorCode, message: detail.error },
+        };
   }
 
   const cleanRequestId = creationRequestId.trim();

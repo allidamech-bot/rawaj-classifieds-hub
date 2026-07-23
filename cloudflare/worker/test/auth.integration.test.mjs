@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const port = 8791;
 const baseUrl = `http://127.0.0.1:${port}`;
-const testIp = `198.51.100.${(Date.now() % 200) + 1}`;
+const testIp = `198.51.${(process.pid % 200) + 1}.${(Date.now() % 200) + 1}`;
 let worker;
 
 before(async () => {

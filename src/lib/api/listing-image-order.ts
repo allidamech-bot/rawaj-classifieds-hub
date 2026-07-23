@@ -1,6 +1,8 @@
 import { fetchListingImages } from "@/lib/api/listings";
 import { getClient, mapError, rowNumber, rowString } from "@/lib/api/shared";
 import type { ClassifiedsResult, ListingImage } from "@/lib/classifieds-types";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 export interface ListingImageOrderUpdate {
   id: string;
@@ -39,6 +41,26 @@ export async function reorderListingImages(
       ok: false,
       error: { code: "validation_error", message: "ترتيب الصور غير صالح." },
     };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<Record<string, unknown>[]>(
+      `/v1/listings/${encodeURIComponent(cleanListingId)}/images`,
+      {
+        method: "PATCH",
+        body: {
+          imageIds: [...normalized]
+            .sort((left, right) => left.sortOrder - right.sortOrder)
+            .map((item) => item.id),
+        },
+      },
+    );
+    if (!result.ok) {
+      return {
+        ok: false,
+        error: { code: "unknown", message: result.error },
+      };
+    }
+    return fetchListingImages(cleanListingId);
   }
 
   const clientResult = getClient();

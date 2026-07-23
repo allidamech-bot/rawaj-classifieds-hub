@@ -4,6 +4,7 @@ import type {
   ClassifiedGovernorate,
   ClassifiedListing,
   ClassifiedsResult,
+  ClassifiedsErrorCode,
   ClassifiedSubcategory,
   CreateListingPayload,
   ListingCursor,
@@ -43,6 +44,8 @@ import { fetchDynamicFilteredPublicListings } from "@/lib/api/dynamic-filtered-l
 import { hasDynamicListingFilters } from "@/lib/api/dynamic-listing-search";
 import { resolveListingLocationWrite } from "@/lib/api/listing-location-write";
 import { resolveCanonicalLocationIds } from "@/lib/api/canonical-location-filter";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 import { isListingPastExpiry, publicListingExpiryFilter } from "@/lib/api/listing-expiry";
 import { publicListingDetailAliases, publicListingSelect } from "@/lib/api/public-fields";
 import { selectPrimaryListingImages } from "@/lib/api/primary-listing-images";
@@ -544,6 +547,17 @@ export async function fetchOwnerListingDetail(
       error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض تفاصيل الإعلان." },
     };
   }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<{
+      listing: Record<string, unknown>;
+    }>(`/api/listings/${encodeURIComponent(listingId)}`);
+    return result.ok
+      ? { ok: true, data: mapListing(result.data.listing) }
+      : {
+          ok: false,
+          error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+        };
+  }
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
@@ -583,6 +597,15 @@ export async function fetchCurrentUserListings(
       ok: false,
       error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض إعلاناتك." },
     };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<Record<string, unknown>[]>("/v1/account/listings");
+    return result.ok
+      ? { ok: true, data: result.data.map((row) => mapListing(row)) }
+      : {
+          ok: false,
+          error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+        };
   }
 
   const clientResult = getClient();
@@ -627,6 +650,18 @@ export async function deleteOwnerListing(
       ok: false,
       error: { code: "auth_required", message: "يجب تسجيل الدخول لحذف الإعلان." },
     };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<{ success: boolean }>(
+      `/v1/listings/${encodeURIComponent(listingId)}`,
+      { method: "DELETE" },
+    );
+    return result.ok
+      ? { ok: true, data: null }
+      : {
+          ok: false,
+          error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+        };
   }
 
   const clientResult = getClient();
@@ -1054,6 +1089,18 @@ export async function deleteListingImage(
       ok: false,
       error: { code: "auth_required", message: "يجب تسجيل الدخول لحذف صورة الإعلان." },
     };
+  }
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<{ success: boolean }>(
+      `/v1/listing-images/${encodeURIComponent(image.id)}`,
+      { method: "DELETE" },
+    );
+    return result.ok
+      ? { ok: true, data: null }
+      : {
+          ok: false,
+          error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+        };
   }
 
   const clientResult = getClient();
