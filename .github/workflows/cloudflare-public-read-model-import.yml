@@ -38,11 +38,6 @@ on:
         description: CREATE_STAGING_RESOURCES or IMPORT_STAGING_READ_MODEL when required
         required: false
         type: string
-  push:
-    branches:
-      - feature/cloudflare-cutover-current-site
-    paths:
-      - .github/cloudflare-import-approved
 
 permissions:
   contents: read
@@ -56,11 +51,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      OPERATION: ${{ inputs.operation || 'import_read_model' }}
-      DATABASE_NAME: ${{ inputs.database_name || 'rawaj-marketplace-staging' }}
-      BUCKET_NAME: ${{ inputs.bucket_name || 'rawaj-media-staging' }}
-      LOCATION_HINT: ${{ inputs.location_hint || 'eeur' }}
-      CONFIRMATION: ${{ inputs.confirmation || 'IMPORT_STAGING_READ_MODEL' }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
@@ -77,17 +67,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          case "$OPERATION" in
+          case "${{ inputs.operation }}" in
             plan_resources)
               ;;
             create_resources)
-              test "$CONFIRMATION" = "CREATE_STAGING_RESOURCES" || {
+              test "${{ inputs.confirmation }}" = "CREATE_STAGING_RESOURCES" || {
                 echo "create_resources requires confirmation CREATE_STAGING_RESOURCES"
                 exit 1
               }
               ;;
             import_read_model)
-              test "$CONFIRMATION" = "IMPORT_STAGING_READ_MODEL" || {
+              test "${{ inputs.confirmation }}" = "IMPORT_STAGING_READ_MODEL" || {
                 echo "import_read_model requires confirmation IMPORT_STAGING_READ_MODEL"
                 exit 1
               }
@@ -120,18 +110,18 @@ jobs:
         run: |
           set -euo pipefail
           apply_flag=""
-          database_name="$DATABASE_NAME"
-          if [ "$OPERATION" != "plan_resources" ]; then
+          database_name="${{ inputs.database_name }}"
+          if [ "${{ inputs.operation }}" != "plan_resources" ]; then
             apply_flag="--apply"
           fi
-          if [ "$OPERATION" = "import_read_model" ]; then
+          if [ "${{ inputs.operation }}" = "import_read_model" ]; then
             database_name="${database_name}-${GITHUB_RUN_ID}"
           fi
           node cloudflare/migration/bootstrap-cloudflare-resources.mjs \
             $apply_flag \
             --database-name="$database_name" \
-            --bucket-name="$BUCKET_NAME" \
-            --location-hint="$LOCATION_HINT" \
+            --bucket-name="${{ inputs.bucket_name }}" \
+            --location-hint="${{ inputs.location_hint }}" \
             --output="$RESOURCE_MANIFEST"
 
       - name: Upload resource plan
@@ -143,11 +133,11 @@ jobs:
           retention-days: 7
 
       - name: Stop after resource planning or creation
-        if: env.OPERATION != 'import_read_model'
+        if: inputs.operation != 'import_read_model'
         run: echo "Resource operation completed without data import."
 
       - name: Validate import secrets
-        if: env.OPERATION == 'import_read_model'
+        if: inputs.operation == 'import_read_model'
         shell: bash
         run: |
           set -euo pipefail
@@ -156,25 +146,25 @@ jobs:
           done
 
       - name: Install migration dependencies
-        if: env.OPERATION == 'import_read_model'
+        if: inputs.operation == 'import_read_model'
         run: npm install --prefix cloudflare/migration --ignore-scripts --no-audit --no-fund
 
       - name: Install Worker tooling
-        if: env.OPERATION == 'import_read_model'
+        if: inputs.operation == 'import_read_model'
         run: npm install --prefix cloudflare/worker --ignore-scripts --no-audit --no-fund
 
       - name: Export one repeatable-read Supabase snapshot
-        if: env.OPERATION == 'import_read_model'
+        if: inputs.operation == 'import_read_model'
         env:
           RAWAJ_SNAPSHOT_DIR: ${{ runner.temp }}/rawaj-public-snapshot
         run: node cloudflare/migration/export-public-snapshot.mjs
 
       - name: Verify snapshot integrity
-        if: env.OPERATION == 'import_read_model'
+        if: inputs.operation == 'import_read_model'
         run: node cloudflare/migration/verify-public-snapshot.mjs "$SNAPSHOT_DIR"
 
       - name: Generate isolated Wrangler configuration
-        if: env.OPERATION == 'import_read_model'
+        if: inputs.operation == 'import_read_model'
         env:
           CLOUDFLARE_D1_DATABASE_ID: ${{ steps.resources.outputs.d1_database_id }}
           CLOUDFLARE_D1_DATABASE_NAME: ${{ steps.resources.outputs.d1_database_name }}
@@ -182,12 +172,12 @@ jobs:
         run: node cloudflare/worker/scripts/render-config.mjs
 
       - name: Apply D1 schema migrations
-        if: env.OPERATION == 'import_read_model'
+        if: inputs.operation == 'import_read_model'
         working-directory: cloudflare/worker
         run: npx wrangler d1 migrations apply DB --remote --config wrangler.generated.jsonc
 
       - name: Require an empty staging read model
-        if: env.OPERATION == 'import_read_model'
+        if: inputs.operation == 'import_read_model'
         env:
           CLOUDFLARE_D1_DATABASE_ID: ${{ steps.resources.outputs.d1_database_id }}
         run: >-
@@ -197,7 +187,7 @@ jobs:
           --output="$SNAPSHOT_DIR/preflight-verification.json"
 
       - name: Import snapshot into D1 transactionally
-        if: env.OPERATION == 'import_read_model'
+        if: inputs.operation == 'import_read_model'
         working-directory: cloudflare/worker
         run: >-
           npx wrangler d1 execute DB
@@ -206,7 +196,7 @@ jobs:
           --file="$SNAPSHOT_DIR/public-snapshot.sql"
 
       - name: Copy and checksum all public media into R2
-        if: env.OPERATION == 'import_read_model'
+        if: inputs.operation == 'import_read_model'
         env:
           R2_BUCKET_NAME: ${{ steps.resources.outputs.r2_bucket_name }}
           R2_ENDPOINT: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
@@ -229,7 +219,7 @@ jobs:
           done
 
       - name: Finalize verified media metadata in D1
-        if: env.OPERATION == 'import_read_model'
+        if: inputs.operation == 'import_read_model'
         working-directory: cloudflare/worker
         run: >-
           npx wrangler d1 execute DB
@@ -238,7 +228,7 @@ jobs:
           --file="$SNAPSHOT_DIR/media-finalize.sql"
 
       - name: Verify and finalize imported D1 batch
-        if: env.OPERATION == 'import_read_model'
+        if: inputs.operation == 'import_read_model'
         env:
           CLOUDFLARE_D1_DATABASE_ID: ${{ steps.resources.outputs.d1_database_id }}
         run: >-
@@ -248,7 +238,7 @@ jobs:
           --output="$SNAPSHOT_DIR/remote-d1-verification.json"
 
       - name: Upload non-sensitive verification evidence
-        if: env.OPERATION == 'import_read_model'
+        if: inputs.operation == 'import_read_model'
         uses: actions/upload-artifact@v4
         with:
           name: cloudflare-import-evidence-${{ github.run_id }}
