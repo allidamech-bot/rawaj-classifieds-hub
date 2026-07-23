@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Eye, EyeOff, Lock, LogIn, ShieldCheck, UserPlus } from "lucide-react";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
-import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { PageHeader } from "@/components/PageHeader";
 import { AuthExperienceAside, AuthExperienceHeader } from "@/features/account/AccountExperience";
 import { authErrorMessage } from "@/lib/auth-errors";
@@ -129,46 +128,6 @@ function LoginPage() {
     setMessage("");
     setError("");
 
-    const client = {
-      auth: {
-        resetPasswordForEmail: async (address: string, _options?: unknown) => {
-          const result = await auth.requestPasswordReset(address);
-          return { error: result.error ? { message: result.error } : null };
-        },
-        signInWithPassword: async (credentials: { email: string; password: string }) => {
-          const result = await auth.signInWithPassword(credentials.email, credentials.password);
-          return {
-            data: { session: null, user: null },
-            error: result.error ? { message: result.error } : null,
-          };
-        },
-        signUp: async (input: {
-          email: string;
-          password: string;
-          options?: { data?: { display_name?: string }; emailRedirectTo?: string };
-        }) => {
-          const result = await auth.signUpWithPassword(
-            input.email,
-            input.password,
-            input.options?.data?.display_name ?? "",
-          );
-          return {
-            data: { session: null, user: null },
-            error: result.error ? { message: result.error } : null,
-          };
-        },
-      },
-    } as unknown as SupabaseClient;
-    if (!client) {
-      setError(
-        text(
-          "خدمة الحسابات غير متاحة الآن. يمكنك تصفح الإعلانات والمحاولة لاحقاً.",
-          "Account service is unavailable right now. You can browse listings and try again later.",
-        ),
-      );
-      return;
-    }
-
     const cleanEmail = email.trim();
     const cleanName = displayName.trim();
     if (!cleanEmail) {
@@ -180,14 +139,9 @@ function LoginPage() {
       submitInFlightRef.current = true;
       setSubmitting(true);
       try {
-        const callbackUrl = new URL("/auth/callback", window.location.origin);
-        callbackUrl.searchParams.set("type", "recovery");
-        callbackUrl.searchParams.set("returnTo", returnTo);
-        const { error: resetError } = await client.auth.resetPasswordForEmail(cleanEmail, {
-          redirectTo: callbackUrl.toString(),
-        });
-        if (resetError) {
-          setError(authErrorMessage(resetError, "recovery", text));
+        const resetResult = await auth.requestPasswordReset(cleanEmail);
+        if (resetResult.error) {
+          setError(authErrorMessage({ message: resetResult.error }, "recovery", text));
           return;
         }
         setMessage(
@@ -219,44 +173,23 @@ function LoginPage() {
       return;
     }
 
-    const signupCallbackUrl = new URL("/auth/callback", window.location.origin);
-    signupCallbackUrl.searchParams.set("returnTo", returnTo);
     submitInFlightRef.current = true;
     setSubmitting(true);
     try {
       const result =
         mode === "login"
-          ? await client.auth.signInWithPassword({ email: cleanEmail, password })
-          : await client.auth.signUp({
-              email: cleanEmail,
-              password,
-              options: {
-                emailRedirectTo: signupCallbackUrl.toString(),
-                data: { display_name: cleanName },
-              },
-            });
+          ? await auth.signInWithPassword(cleanEmail, password)
+          : await auth.signUpWithPassword(cleanEmail, password, cleanName);
 
       if (result.error) {
-        setError(authErrorMessage(result.error, mode === "login" ? "login" : "register", text));
-        return;
-      }
-
-      const profileError =
-        result.data.session && result.data.user
-          ? await ensureOwnProfile(client, result.data.user, cleanName)
-          : null;
-      if (profileError) {
         setError(
-          text(
-            "تم تسجيل الدخول، لكن تعذر تجهيز بيانات الحساب الآن. حاول مرة أخرى أو تواصل مع الدعم.",
-            "You are signed in, but account details could not be prepared right now. Try again or contact support.",
-          ),
+          authErrorMessage({ message: result.error }, mode === "login" ? "login" : "register", text),
         );
         return;
       }
 
       if (mode === "register") {
-        if (result.data.session) {
+        if (!("requiresEmailConfirmation" in result) || !result.requiresEmailConfirmation) {
           setMessage(
             text("تم إنشاء الحساب. جارٍ إدخالك إلى رواج.", "Account created. Opening RAWAJ now."),
           );
@@ -490,33 +423,4 @@ function FieldLabel({ label, children }: { label: string; children: ReactNode })
       {children}
     </label>
   );
-}
-
-async function ensureOwnProfile(
-  client: SupabaseClient,
-  user: User,
-  displayName: string,
-): Promise<string | null> {
-  const metadataName =
-    typeof user.user_metadata.display_name === "string" ? user.user_metadata.display_name : null;
-  const { data: existingProfile, error: readError } = await client
-    .from("profiles")
-    .select("id")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (readError) return readError.message;
-  if (existingProfile) return null;
-
-  const { error } = await client.from("profiles").upsert(
-    {
-      id: user.id,
-      email: user.email ?? null,
-      display_name: displayName.trim() || metadataName,
-    },
-    { onConflict: "id", ignoreDuplicates: false },
-  );
-
-  if (!error || error.code === "23505") return null;
-  return error.message;
 }
