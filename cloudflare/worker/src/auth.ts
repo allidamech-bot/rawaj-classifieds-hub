@@ -414,7 +414,7 @@ async function createOneTimeToken(env: AuthEnv, userId: string, purpose: string,
   return token;
 }
 
-async function readJson(
+export async function readJson(
   request: Request,
 ): Promise<{ ok: true; data: JsonRecord } | { ok: false; status: number; error: JsonRecord }> {
   if (!request.headers.get("Content-Type")?.toLowerCase().startsWith("application/json")) {
@@ -585,7 +585,7 @@ function clearCookies(headers: Headers, request: Request) {
   );
   headers.append("Set-Cookie", `${CSRF_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax${secure}`);
 }
-function corsHeaders(request: Request, env: AuthEnv) {
+export function corsHeaders(request: Request, env: AuthEnv) {
   const headers = new Headers({
     Vary: "Origin",
     "Access-Control-Allow-Credentials": "true",
@@ -621,7 +621,7 @@ function rateLimited(cors: Headers) {
     headers,
   );
 }
-function json(payload: unknown, status: number, headers: Headers) {
+export function json(payload: unknown, status: number, headers: Headers) {
   const output = new Headers(headers);
   output.set("Content-Type", "application/json; charset=utf-8");
   output.set("X-Content-Type-Options", "nosniff");
