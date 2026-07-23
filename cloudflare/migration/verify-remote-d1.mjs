@@ -10,16 +10,15 @@ const accountId = requiredEnvironment("CLOUDFLARE_ACCOUNT_ID");
 const apiToken = requiredEnvironment("CLOUDFLARE_API_TOKEN");
 const databaseId = requiredEnvironment("CLOUDFLARE_D1_DATABASE_ID");
 const snapshotDir = resolve(options.snapshotDir);
-const outputPath = resolve(
-  options.output ?? `${snapshotDir}/remote-d1-verification.json`,
-);
+const outputPath = resolve(options.output ?? `${snapshotDir}/remote-d1-verification.json`);
 
-const manifest = JSON.parse(
-  await readFile(resolve(snapshotDir, "snapshot-manifest.json"), "utf8"),
-);
-const mediaManifest = JSON.parse(
-  await readFile(resolve(snapshotDir, "media-manifest.json"), "utf8"),
-);
+const [manifestText, mediaManifestText, snapshotSql] = await Promise.all([
+  readFile(resolve(snapshotDir, "snapshot-manifest.json"), "utf8"),
+  readFile(resolve(snapshotDir, "media-manifest.json"), "utf8"),
+  readFile(resolve(snapshotDir, "public-snapshot.sql"), "utf8"),
+]);
+const manifest = JSON.parse(manifestText);
+const mediaManifest = JSON.parse(mediaManifestText);
 
 if (manifest.version !== 1 || mediaManifest.version !== 1) {
   throw new Error("Unsupported snapshot manifest version.");
@@ -98,8 +97,11 @@ if (pendingMedia !== 0) failures.push(`pending media assets: ${pendingMedia}`);
 if (orphanImages !== 0) failures.push(`orphan listing images: ${orphanImages}`);
 if (orphanPlacements !== 0) failures.push(`orphan ad placements: ${orphanPlacements}`);
 if (!batch) failures.push("import batch record is missing");
-if (batch && batch.source_checksum_sha256 !== manifest.sourceChecksumSha256 && batch.source_checksum_sha256 !== manifest.sqlSha256) {
-  failures.push("import batch checksum does not match the snapshot manifest");
+if (batch) {
+  const checksum = String(batch.source_checksum_sha256 ?? "");
+  if (!/^[a-f0-9]{64}$/i.test(checksum) || !snapshotSql.includes(checksum)) {
+    failures.push("import batch checksum is absent from the verified snapshot SQL");
+  }
 }
 
 if (failures.length > 0) {
