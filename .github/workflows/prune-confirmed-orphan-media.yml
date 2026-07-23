@@ -1,9 +1,12 @@
 name: Prune confirmed orphan media
 
 on:
-  push:
+  pull_request:
     branches:
-      - feature/cloudflare-full-backend-cutover
+      - feature/cloudflare-cutover-current-site
+    types:
+      - synchronize
+      - reopened
     paths:
       - cloudflare/migration/prune-confirmed-orphan-media.mjs
       - .github/workflows/prune-confirmed-orphan-media.yml
@@ -17,6 +20,7 @@ concurrency:
 
 jobs:
   prune:
+    if: github.head_ref == 'feature/cloudflare-full-backend-cutover'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
