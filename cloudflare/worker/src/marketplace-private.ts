@@ -297,7 +297,9 @@ async function createListing(request: Request, env: MarketplaceEnv, cors: Header
       timestamp,
     )
     .run();
-  return result.success ? json({ data: { id, status, updatedAt: timestamp } }, 201, cors) : databaseError(cors);
+  return result.success
+    ? json({ data: { id, status, updatedAt: timestamp } }, 201, cors)
+    : databaseError(cors);
 }
 
 async function updateListing(request: Request, env: MarketplaceEnv, cors: Headers, id: string) {

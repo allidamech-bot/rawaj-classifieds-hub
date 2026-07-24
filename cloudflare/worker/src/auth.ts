@@ -33,6 +33,7 @@ export interface AuthEnv {
   API_ALLOWED_ORIGINS?: string;
   FIREBASE_PROJECT_ID?: string;
   FIREBASE_AUTH_TEST_JWKS?: string;
+  FIREBASE_JWKS_URL?: string;
 }
 
 type Authenticated = {
@@ -52,9 +53,8 @@ type VerifiedIdentity = {
 
 const MAX_BODY_BYTES = 16_384;
 const encoder = new TextEncoder();
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const FIREBASE_JWKS_URL =
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const DEFAULT_FIREBASE_JWKS_URL =
   "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
 const remoteKeySets = new Map<string, JWTVerifyGetKey>();
 
@@ -108,7 +108,7 @@ export async function requireMutationAuth(
 
 export async function verifyFirebaseIdToken(
   token: string,
-  env: Pick<AuthEnv, "FIREBASE_PROJECT_ID" | "FIREBASE_AUTH_TEST_JWKS">,
+  env: Pick<AuthEnv, "FIREBASE_PROJECT_ID" | "FIREBASE_AUTH_TEST_JWKS" | "FIREBASE_JWKS_URL">,
 ): Promise<VerifiedIdentity | null> {
   const projectId = env.FIREBASE_PROJECT_ID?.trim();
   if (!projectId) throw new Error("firebase_project_id_missing");
@@ -152,9 +152,7 @@ async function ensureApplicationIdentity(
   if (linked) return linked.id;
 
   const existingSameId = UUID_PATTERN.test(identity.subject)
-    ? await env.DB.prepare(
-        "SELECT id, auth_provider, auth_user_id FROM auth_users WHERE id = ?",
-      )
+    ? await env.DB.prepare("SELECT id, auth_provider, auth_user_id FROM auth_users WHERE id = ?")
         .bind(identity.subject)
         .first<{ id: string; auth_provider: string | null; auth_user_id: string | null }>()
     : null;
@@ -163,7 +161,8 @@ async function ensureApplicationIdentity(
   if (
     existingSameId &&
     (!existingSameId.auth_user_id ||
-      (existingSameId.auth_provider === "supabase" && existingSameId.auth_user_id === identity.subject))
+      (existingSameId.auth_provider === "supabase" &&
+        existingSameId.auth_user_id === identity.subject))
   ) {
     const result = await env.DB.prepare(
       `UPDATE auth_users
@@ -178,7 +177,9 @@ async function ensureApplicationIdentity(
   }
   if (existingSameId) throw new Error("identity_collision");
 
-  const applicationUserId = UUID_PATTERN.test(identity.subject) ? identity.subject : crypto.randomUUID();
+  const applicationUserId = UUID_PATTERN.test(identity.subject)
+    ? identity.subject
+    : crypto.randomUUID();
   const displayName = identity.displayName ?? identity.email.split("@")[0].slice(0, 100);
   const results = await env.DB.batch([
     env.DB.prepare(
@@ -191,15 +192,7 @@ async function ensureApplicationIdentity(
         (id, email, email_normalized, email_confirmed_at, created_at, updated_at,
          auth_provider, auth_user_id)
        VALUES (?, ?, ?, ?, ?, ?, 'firebase', ?)`,
-    ).bind(
-      applicationUserId,
-      identity.email,
-      identity.email,
-      now,
-      now,
-      now,
-      identity.subject,
-    ),
+    ).bind(applicationUserId, identity.email, identity.email, now, now, now, identity.subject),
     env.DB.prepare(
       `INSERT OR IGNORE INTO user_roles (user_id, role, created_at) VALUES (?, 'user', ?)`,
     ).bind(applicationUserId, now),
@@ -217,20 +210,21 @@ async function ensureApplicationIdentity(
 }
 
 function verificationKeySet(
-  env: Pick<AuthEnv, "FIREBASE_AUTH_TEST_JWKS">,
+  env: Pick<AuthEnv, "FIREBASE_AUTH_TEST_JWKS" | "FIREBASE_JWKS_URL">,
   issuer: string,
 ): JWTVerifyGetKey {
+  const jwksUrl = env.FIREBASE_JWKS_URL ?? DEFAULT_FIREBASE_JWKS_URL;
   if (env.FIREBASE_AUTH_TEST_JWKS) {
     const parsed = JSON.parse(env.FIREBASE_AUTH_TEST_JWKS) as JSONWebKeySet;
     return createLocalJWKSet(parsed);
   }
-  const cached = remoteKeySets.get(FIREBASE_JWKS_URL);
+  const cached = remoteKeySets.get(jwksUrl);
   if (cached) return cached;
-  const remote = createRemoteJWKSet(new URL(FIREBASE_JWKS_URL), {
+  const remote = createRemoteJWKSet(new URL(jwksUrl), {
     cacheMaxAge: 10 * 60 * 1000,
     cooldownDuration: 30 * 1000,
   });
-  remoteKeySets.set(FIREBASE_JWKS_URL, remote);
+  remoteKeySets.set(jwksUrl, remote);
   return remote;
 }
 

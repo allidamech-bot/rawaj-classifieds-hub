@@ -197,7 +197,9 @@ export async function handlePublicListingsRequest(
     LIMIT ?`;
 
   values.push(pageSize + 1);
-  const result = await env.DB.prepare(sql).bind(...values).all<JsonRecord>();
+  const result = await env.DB.prepare(sql)
+    .bind(...values)
+    .all<JsonRecord>();
   if (!result.success) {
     if (result.error) console.error("rawaj_public_listings_database_error", result.error);
     return json(
@@ -229,11 +231,7 @@ export async function handlePublicListingsRequest(
   );
 }
 
-function applyTaxonomyScope(
-  where: string[],
-  values: D1Value[],
-  filters: ListingFilters,
-): void {
+function applyTaxonomyScope(where: string[], values: D1Value[], filters: ListingFilters): void {
   const clauses: string[] = [];
 
   if (filters.taxonomyNodeIds.length > 0) {
@@ -315,10 +313,7 @@ function readListingFilters(params: URLSearchParams): ListingFilters {
       params.get("taxonomyPropertyPurpose") ?? params.get("propertyPurpose"),
       100,
     ),
-    propertyType: cleanText(
-      params.get("taxonomyPropertyType") ?? params.get("propertyType"),
-      100,
-    ),
+    propertyType: cleanText(params.get("taxonomyPropertyType") ?? params.get("propertyType"), 100),
     rooms: integerOrNull(params.get("rooms")),
     rentalDuration: cleanText(params.get("rentalDuration"), 80),
     electronicsBrand: cleanText(params.get("electronicsBrand"), 120),
@@ -403,9 +398,7 @@ function addJsonNumberRange(
 }
 
 function readSort(value: string | null): ListingSort {
-  return value === "featured" || value === "cheapest" || value === "expensive"
-    ? value
-    : "latest";
+  return value === "featured" || value === "cheapest" || value === "expensive" ? value : "latest";
 }
 
 function listingOrder(sort: ListingSort): string {
@@ -456,13 +449,9 @@ function cursorFromRow(sort: ListingSort, row: JsonRecord): WorkerCursor {
   return {
     sort,
     id: stringValue(row.id),
-    ...(sort === "latest" || sort === "featured"
-      ? { createdAt: stringValue(row.created_at) }
-      : {}),
+    ...(sort === "latest" || sort === "featured" ? { createdAt: stringValue(row.created_at) } : {}),
     ...(sort === "featured" ? { isFeatured: booleanValue(row.is_featured) } : {}),
-    ...(sort === "cheapest" || sort === "expensive"
-      ? { price: nullableNumber(row.price) }
-      : {}),
+    ...(sort === "cheapest" || sort === "expensive" ? { price: nullableNumber(row.price) } : {}),
   };
 }
 
@@ -480,10 +469,8 @@ function decodeCursor(value: string | null): WorkerCursor | null {
       sort,
       id: parsed.id,
       createdAt: typeof parsed.createdAt === "string" ? parsed.createdAt : undefined,
-      price:
-        typeof parsed.price === "number" || parsed.price === null ? parsed.price : undefined,
-      isFeatured:
-        typeof parsed.isFeatured === "boolean" ? parsed.isFeatured : undefined,
+      price: typeof parsed.price === "number" || parsed.price === null ? parsed.price : undefined,
+      isFeatured: typeof parsed.isFeatured === "boolean" ? parsed.isFeatured : undefined,
     };
   } catch {
     return null;
@@ -626,10 +613,7 @@ function nullableString(value: unknown): string | null {
 
 const windows1256Decoder = new TextDecoder("windows-1256");
 const windows1256Reverse = new Map<string, number>(
-  Array.from({ length: 256 }, (_, byte) => [
-    windows1256Decoder.decode(Uint8Array.of(byte)),
-    byte,
-  ]),
+  Array.from({ length: 256 }, (_, byte) => [windows1256Decoder.decode(Uint8Array.of(byte)), byte]),
 );
 
 function repairWindows1256Mojibake(value: string): string {
@@ -675,10 +659,10 @@ function base64UrlEncode(value: string): string {
 }
 
 function base64UrlDecode(value: string): string {
-  const padded = value.replace(/-/g, "+").replace(/_/g, "/").padEnd(
-    Math.ceil(value.length / 4) * 4,
-    "=",
-  );
+  const padded = value
+    .replace(/-/g, "+")
+    .replace(/_/g, "/")
+    .padEnd(Math.ceil(value.length / 4) * 4, "=");
   const binary = atob(padded);
   const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
   return new TextDecoder().decode(bytes);

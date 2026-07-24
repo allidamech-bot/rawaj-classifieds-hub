@@ -148,38 +148,34 @@ async function health(env: Env, cors: Headers): Promise<Response> {
 
 async function references(env: Env, cors: Headers): Promise<Response> {
   const results = await env.DB.batch([
-    env.DB
-      .prepare(
-        `SELECT id, slug, name_ar, name_en, hint_ar, hint_en, placeholder,
+    env.DB.prepare(
+      `SELECT id, slug, name_ar, name_en, hint_ar, hint_en, placeholder,
                 sort_order, is_active
            FROM categories
           WHERE is_active = 1
           ORDER BY sort_order ASC, id ASC`,
-      ),
-    env.DB
-      .prepare(
-        `SELECT id, category_id, name_ar, name_en, sort_order
+    ),
+    env.DB.prepare(
+      `SELECT id, category_id, name_ar, name_en, sort_order
            FROM subcategories
           ORDER BY category_id ASC, sort_order ASC, id ASC`,
-      ),
-    env.DB
-      .prepare(
-        `SELECT id, slug, name_ar, name_en, districts_ar, districts_en,
+    ),
+    env.DB.prepare(
+      `SELECT id, slug, name_ar, name_en, districts_ar, districts_en,
                 sort_order, is_active
            FROM governorates
           WHERE is_active = 1
           ORDER BY sort_order ASC, id ASC`,
-      ),
-    env.DB
-      .prepare(
-        `SELECT id, parent_id, slug, name_ar, name_en, description_ar,
+    ),
+    env.DB.prepare(
+      `SELECT id, parent_id, slug, name_ar, name_en, description_ar,
                 description_en, icon_key, sort_order, depth, is_active,
                 is_leaf, filter_schema_key, classification_key,
                 classification_value, legacy_category_id, legacy_subcategory_id
            FROM taxonomy_nodes
           WHERE is_active = 1
           ORDER BY sort_order ASC, name_ar ASC, id ASC`,
-      ),
+    ),
   ]);
 
   if (results.some((result) => !result.success)) {
@@ -212,7 +208,9 @@ async function locationRoots(url: URL, env: Env, cors: Headers): Promise<Respons
     `SELECT ${LOCATION_SELECT} FROM location_nodes
       WHERE country_code = ? AND is_active = 1 AND parent_id IS NULL
       ORDER BY sort_order ASC, name_ar ASC LIMIT 100`,
-  ).bind(country).all<JsonRecord>();
+  )
+    .bind(country)
+    .all<JsonRecord>();
   if (!result.success) return databaseFailure(cors, result.error);
   return json({ data: (result.results ?? []).map(mapLocationNode) }, 200, cors, cacheHeaders(env));
 }
@@ -223,7 +221,9 @@ async function locationChildren(parentId: string, env: Env, cors: Headers): Prom
     `SELECT ${LOCATION_SELECT} FROM location_nodes
       WHERE parent_id = ? AND is_active = 1
       ORDER BY sort_order ASC, name_ar ASC LIMIT 500`,
-  ).bind(parentId).all<JsonRecord>();
+  )
+    .bind(parentId)
+    .all<JsonRecord>();
   if (!result.success) return databaseFailure(cors, result.error);
   return json({ data: (result.results ?? []).map(mapLocationNode) }, 200, cors, cacheHeaders(env));
 }
@@ -243,10 +243,17 @@ async function locationDetail(
         SELECT child.id FROM location_nodes child JOIN scope parent ON child.parent_id = parent.id
         WHERE child.is_active = 1
       ) SELECT id FROM scope LIMIT 10000`,
-    ).bind(id).all<{ id: string }>();
+    )
+      .bind(id)
+      .all<{ id: string }>();
     if (!result.success) return databaseFailure(cors, result.error);
     if (!(result.results ?? []).length) return notFound(cors, "Location not found.");
-    return json({ data: (result.results ?? []).map((row) => row.id) }, 200, cors, cacheHeaders(env));
+    return json(
+      { data: (result.results ?? []).map((row) => row.id) },
+      200,
+      cors,
+      cacheHeaders(env),
+    );
   }
   const rows = await env.DB.prepare(
     `WITH RECURSIVE path AS (
@@ -260,7 +267,9 @@ async function locationDetail(
       FROM location_nodes parent JOIN path child ON child.parent_id = parent.id
       WHERE parent.is_active = 1
     ) SELECT * FROM path ORDER BY depth ASC`,
-  ).bind(id).all<JsonRecord>();
+  )
+    .bind(id)
+    .all<JsonRecord>();
   if (!rows.success) return databaseFailure(cors, rows.error);
   if (!(rows.results ?? []).length) return notFound(cors, "Location not found.");
   return json({ data: (rows.results ?? []).map(mapLocationNode) }, 200, cors, cacheHeaders(env));
@@ -288,16 +297,23 @@ async function locationSearch(url: URL, env: Env, cors: Headers): Promise<Respon
          OR alias.normalized_alias LIKE ? ESCAPE '\\')
      ORDER BY CASE WHEN n.name_ar = ? OR n.name_en = ? THEN 0 ELSE 1 END,
        n.depth ASC, n.sort_order ASC, n.name_ar ASC LIMIT ?`,
-  ).bind(`%${normalized}%`, like, like, `%${normalized}%`, query, query, limit).all<JsonRecord>();
+  )
+    .bind(`%${normalized}%`, like, like, `%${normalized}%`, query, query, limit)
+    .all<JsonRecord>();
   if (!result.success) return databaseFailure(cors, result.error);
-  return json({
-    data: (result.results ?? []).map((row) => ({
-      node: mapLocationNode(row),
-      matchedAlias: nullableString(row.matched_alias),
-      pathAr: stringValue(row.name_ar),
-      pathEn: nullableString(row.name_en) ?? stringValue(row.name_ar),
-    })),
-  }, 200, cors, cacheHeaders(env));
+  return json(
+    {
+      data: (result.results ?? []).map((row) => ({
+        node: mapLocationNode(row),
+        matchedAlias: nullableString(row.matched_alias),
+        pathAr: stringValue(row.name_ar),
+        pathEn: nullableString(row.name_en) ?? stringValue(row.name_ar),
+      })),
+    },
+    200,
+    cors,
+    cacheHeaders(env),
+  );
 }
 
 async function adPlacements(url: URL, env: Env, cors: Headers): Promise<Response> {
@@ -424,7 +440,9 @@ async function listings(url: URL, env: Env, cors: Headers): Promise<Response> {
   `;
 
   values.push(pageSize + 1);
-  const result = await env.DB.prepare(sql).bind(...values).all<JsonRecord>();
+  const result = await env.DB.prepare(sql)
+    .bind(...values)
+    .all<JsonRecord>();
   if (!result.success) return databaseFailure(cors, result.error);
 
   const rows = result.results ?? [];
@@ -452,11 +470,7 @@ async function listings(url: URL, env: Env, cors: Headers): Promise<Response> {
 
 async function listingDetail(id: string, env: Env, cors: Headers): Promise<Response> {
   if (!id || id.length > 120) {
-    return json(
-      { error: { code: "validation_error", message: "Invalid listing id." } },
-      400,
-      cors,
-    );
+    return json({ error: { code: "validation_error", message: "Invalid listing id." } }, 400, cors);
   }
 
   const listingResult = await env.DB.prepare(
@@ -508,12 +522,7 @@ async function listingDetail(id: string, env: Env, cors: Headers): Promise<Respo
     createdAt: stringValue(row.created_at),
   }));
 
-  return json(
-    { data: { listing, images } },
-    200,
-    cors,
-    cacheHeaders(env),
-  );
+  return json({ data: { listing, images } }, 200, cors, cacheHeaders(env));
 }
 
 async function mediaAsset(
@@ -786,9 +795,7 @@ type ListingCursor = {
 };
 
 function readSort(value: string | null): ListingSort {
-  return value === "featured" || value === "cheapest" || value === "expensive"
-    ? value
-    : "latest";
+  return value === "featured" || value === "cheapest" || value === "expensive" ? value : "latest";
 }
 
 function listingOrder(sort: ListingSort): string {
@@ -839,13 +846,9 @@ function cursorFromRow(sort: ListingSort, row: JsonRecord): ListingCursor {
   return {
     sort,
     id: stringValue(row.id),
-    ...(sort === "latest" || sort === "featured"
-      ? { createdAt: stringValue(row.created_at) }
-      : {}),
+    ...(sort === "latest" || sort === "featured" ? { createdAt: stringValue(row.created_at) } : {}),
     ...(sort === "featured" ? { isFeatured: booleanValue(row.is_featured) } : {}),
-    ...(sort === "cheapest" || sort === "expensive"
-      ? { price: nullableNumber(row.price) }
-      : {}),
+    ...(sort === "cheapest" || sort === "expensive" ? { price: nullableNumber(row.price) } : {}),
   };
 }
 
@@ -863,10 +866,8 @@ function decodeCursor(value: string | null): ListingCursor | null {
       sort,
       id: parsed.id,
       createdAt: typeof parsed.createdAt === "string" ? parsed.createdAt : undefined,
-      price:
-        typeof parsed.price === "number" || parsed.price === null ? parsed.price : undefined,
-      isFeatured:
-        typeof parsed.isFeatured === "boolean" ? parsed.isFeatured : undefined,
+      price: typeof parsed.price === "number" || parsed.price === null ? parsed.price : undefined,
+      isFeatured: typeof parsed.isFeatured === "boolean" ? parsed.isFeatured : undefined,
     };
   } catch {
     return null;
@@ -889,8 +890,7 @@ function mediaUrl(url: URL, assetId: string): string {
 }
 
 function cacheHeaders(env: Env, override?: number): Headers {
-  const seconds =
-    override ?? integerValue(env.API_CACHE_SECONDS, DEFAULT_API_CACHE_SECONDS);
+  const seconds = override ?? integerValue(env.API_CACHE_SECONDS, DEFAULT_API_CACHE_SECONDS);
   const headers = new Headers();
   headers.set(
     "Cache-Control",
@@ -907,7 +907,7 @@ function corsHeaders(origin: string | null, env: Env): Headers {
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, If-None-Match",
     "Access-Control-Max-Age": "86400",
-    "Vary": "Origin",
+    Vary: "Origin",
   });
 
   if (!origin) return headers;
@@ -930,11 +930,7 @@ function databaseFailure(cors: Headers, detail?: string): Response {
   );
 }
 
-function json(
-  payload: unknown,
-  status: number,
-  ...headerSets: Headers[]
-): Response {
+function json(payload: unknown, status: number, ...headerSets: Headers[]): Response {
   const headers = new Headers({
     "Content-Type": "application/json; charset=utf-8",
     "X-Content-Type-Options": "nosniff",
@@ -955,10 +951,7 @@ function nullableString(value: unknown): string | null {
 
 const windows1256Decoder = new TextDecoder("windows-1256");
 const windows1256Reverse = new Map<string, number>(
-  Array.from({ length: 256 }, (_, byte) => [
-    windows1256Decoder.decode(Uint8Array.of(byte)),
-    byte,
-  ]),
+  Array.from({ length: 256 }, (_, byte) => [windows1256Decoder.decode(Uint8Array.of(byte)), byte]),
 );
 
 function repairWindows1256Mojibake(value: string): string {
@@ -1029,12 +1022,7 @@ function numericParam(value: string | null): number | null {
   return Number.isFinite(number) ? number : null;
 }
 
-function integerParam(
-  value: string | null,
-  fallback: number,
-  min: number,
-  max: number,
-): number {
+function integerParam(value: string | null, fallback: number, min: number, max: number): number {
   const number = Number.parseInt(value ?? "", 10);
   return Number.isFinite(number) ? Math.max(min, Math.min(max, number)) : fallback;
 }
@@ -1052,10 +1040,10 @@ function base64UrlEncode(value: string): string {
 }
 
 function base64UrlDecode(value: string): string {
-  const padded = value.replace(/-/g, "+").replace(/_/g, "/").padEnd(
-    Math.ceil(value.length / 4) * 4,
-    "=",
-  );
+  const padded = value
+    .replace(/-/g, "+")
+    .replace(/_/g, "/")
+    .padEnd(Math.ceil(value.length / 4) * 4, "=");
   const binary = atob(padded);
   const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
   return new TextDecoder().decode(bytes);

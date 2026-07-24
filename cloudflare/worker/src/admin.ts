@@ -33,10 +33,7 @@ function asAuthEnv(env: AdminEnv): AuthEnv {
   return env as unknown as AuthEnv;
 }
 
-export async function handleAdmin(
-  request: Request,
-  env: AdminEnv,
-): Promise<Response | null> {
+export async function handleAdmin(request: Request, env: AdminEnv): Promise<Response | null> {
   const url = new URL(request.url);
   const path = url.pathname.replace(/^\/api\b/, "/v1");
   const cors = corsHeaders(request, asAuthEnv(env));
@@ -84,42 +81,33 @@ async function adminMetrics(request: Request, env: AdminEnv, cors: Headers) {
 
   const totalUsers = await env.DB.prepare(
     "SELECT count(*) AS count FROM auth_users WHERE disabled_at IS NULL",
-  )
-    .first<{ count: number }>();
+  ).first<{ count: number }>();
   const activeUsers = await env.DB.prepare(
     `SELECT count(*) AS count FROM auth_users u
      WHERE u.disabled_at IS NULL
        AND EXISTS (SELECT 1 FROM listings l WHERE l.owner_id = u.id AND l.created_at > datetime('now', '-30 days'))`,
-  )
-    .first<{ count: number }>();
+  ).first<{ count: number }>();
   const frozenUsers = await env.DB.prepare(
     `SELECT count(*) AS count FROM public_profiles WHERE account_status = 'frozen'`,
-  )
-    .first<{ count: number }>();
+  ).first<{ count: number }>();
   const disabledUsers = await env.DB.prepare(
     `SELECT count(*) AS count FROM public_profiles WHERE account_status = 'disabled'`,
-  )
-    .first<{ count: number }>();
+  ).first<{ count: number }>();
   const pendingListings = await env.DB.prepare(
     "SELECT count(*) AS count FROM listings WHERE status = 'pending_review'",
-  )
-    .first<{ count: number }>();
+  ).first<{ count: number }>();
   const openListingReports = await env.DB.prepare(
     "SELECT count(*) AS count FROM listing_reports WHERE status IN ('new', 'under_review')",
-  )
-    .first<{ count: number }>();
+  ).first<{ count: number }>();
   const activeRestrictions = await env.DB.prepare(
     "SELECT count(*) AS count FROM user_restrictions WHERE ends_at IS NULL OR ends_at > datetime('now')",
-  )
-    .first<{ count: number }>();
+  ).first<{ count: number }>();
   const adminCount = await env.DB.prepare(
     "SELECT count(*) AS count FROM user_roles WHERE role IN ('admin', 'owner')",
-  )
-    .first<{ count: number }>();
+  ).first<{ count: number }>();
   const moderatorCount = await env.DB.prepare(
     "SELECT count(*) AS count FROM user_roles WHERE role = 'moderator'",
-  )
-    .first<{ count: number }>();
+  ).first<{ count: number }>();
 
   return json(
     {
@@ -209,9 +197,10 @@ async function adminAuditLogs(request: Request, env: AdminEnv, cors: Headers) {
     action: stringValue(row.action),
     targetTable: nullableString(row.entity_type),
     targetId: nullableString(row.entity_id),
-    metadata: row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
-      ? (row.metadata as Record<string, unknown>)
-      : {},
+    metadata:
+      row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
+        ? (row.metadata as Record<string, unknown>)
+        : {},
     createdAt: nullableString(row.created_at),
   }));
 
@@ -230,8 +219,7 @@ async function adminPendingListings(request: Request, env: AdminEnv, cors: Heade
       WHERE l.status IN ('pending_review', 'approved', 'rejected', 'archived', 'expired')
       ORDER BY l.updated_at DESC
       LIMIT 250`,
-  )
-    .all<Row>();
+  ).all<Row>();
 
   if (!result.success) return databaseError(cors);
 
@@ -266,8 +254,7 @@ async function adminModerationListings(request: Request, env: AdminEnv, cors: He
       WHERE l.status IN ('pending_review', 'approved', 'rejected', 'archived', 'expired')
       ORDER BY l.updated_at DESC
       LIMIT 250`,
-  )
-    .all<Row>();
+  ).all<Row>();
 
   if (!result.success) return databaseError(cors);
 
@@ -308,9 +295,7 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
     return validation(cors, "Invalid moderation payload.");
   }
 
-  const listing = await env.DB.prepare(
-    "SELECT status, updated_at FROM listings WHERE id = ?",
-  )
+  const listing = await env.DB.prepare("SELECT status, updated_at FROM listings WHERE id = ?")
     .bind(listingId)
     .first<{ status: string; updated_at: string }>();
   if (!listing) return notFound(cors);
@@ -346,7 +331,10 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
       nextStatus = "expired";
       break;
     case "extend_expiry": {
-      const days = Number.isInteger(extendDays) && typeof extendDays === "number" && extendDays > 0 ? extendDays : 30;
+      const days =
+        Number.isInteger(extendDays) && typeof extendDays === "number" && extendDays > 0
+          ? extendDays
+          : 30;
       const newExpires = new Date();
       newExpires.setDate(newExpires.getDate() + days);
       const result = await env.DB.prepare(
@@ -355,7 +343,15 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
         .bind(newExpires.toISOString(), now(), listingId)
         .run();
       if (!result.success) return databaseError(cors);
-      await writeAuditLog(env, auth.userId, auth.roles[0] ?? "admin", "listing_extend_expiry", "listings", listingId, { extendDays: days });
+      await writeAuditLog(
+        env,
+        auth.userId,
+        auth.roles[0] ?? "admin",
+        "listing_extend_expiry",
+        "listings",
+        listingId,
+        { extendDays: days },
+      );
       return json(
         {
           data: {
@@ -374,15 +370,21 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
   }
 
   const reviewedAt = ["approved", "rejected", "archived"].includes(nextStatus) ? now() : null;
-  const result = await env.DB.prepare(
-    `UPDATE listings SET status = ?, updated_at = ? WHERE id = ?`,
-  )
+  const result = await env.DB.prepare(`UPDATE listings SET status = ?, updated_at = ? WHERE id = ?`)
     .bind(nextStatus, now(), listingId)
     .run();
 
   if (!result.success) return databaseError(cors);
 
-  await writeAuditLog(env, auth.userId, auth.roles[0] ?? "admin", `listing_${action}`, "listings", listingId, { reason });
+  await writeAuditLog(
+    env,
+    auth.userId,
+    auth.roles[0] ?? "admin",
+    `listing_${action}`,
+    "listings",
+    listingId,
+    { reason },
+  );
 
   return json(
     {
@@ -475,10 +477,7 @@ function databaseError(cors: Headers) {
 
 const windows1256Decoder = new TextDecoder("windows-1256");
 const windows1256Reverse = new Map<string, number>(
-  Array.from({ length: 256 }, (_, byte) => [
-    windows1256Decoder.decode(Uint8Array.of(byte)),
-    byte,
-  ]),
+  Array.from({ length: 256 }, (_, byte) => [windows1256Decoder.decode(Uint8Array.of(byte)), byte]),
 );
 
 function repairWindows1256Mojibake(value: string): string {
