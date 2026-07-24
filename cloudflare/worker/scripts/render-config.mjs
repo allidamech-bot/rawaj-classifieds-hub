@@ -21,7 +21,8 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-const base = JSON.parse(await readFile(sourcePath, "utf8"));
+const baseText = await readFile(sourcePath, "utf8");
+const base = JSON.parse(baseText.replace(/,\s*([}\]])/g, "$1"));
 const customDomain = process.env.CLOUDFLARE_WORKER_CUSTOM_DOMAIN?.trim();
 const generated = {
   ...base,

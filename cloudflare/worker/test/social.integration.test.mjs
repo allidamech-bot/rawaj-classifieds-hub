@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { createSupabaseAuthFixture } from "./supabase-auth-fixture.mjs";
 
 const workerDir = fileURLToPath(new URL("..", import.meta.url));
 const wrangler = fileURLToPath(
@@ -16,8 +17,10 @@ let buyer;
 let outsider;
 let conversationId;
 let savedSearchId;
+let auth;
 
 before(async () => {
+  auth = await createSupabaseAuthFixture();
   worker = spawn(
     process.execPath,
     [
@@ -30,12 +33,13 @@ before(async () => {
       ".wrangler/test-state-auth",
       "--port",
       String(port),
+      ...auth.workerArgs,
     ],
     { cwd: workerDir, stdio: "ignore", windowsHide: true },
   );
   for (let attempt = 0; attempt < 40; attempt += 1) {
     try {
-      if ((await fetch(`${baseUrl}/v1/auth/session`)).ok) break;
+      if ((await fetch(`${baseUrl}/v1/health`)).ok) break;
     } catch {}
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
@@ -59,17 +63,6 @@ after(() => worker?.kill());
 
 test("favorites are authenticated, idempotent, isolated, and public-only", async () => {
   assert.equal((await api("/v1/listings/test-public-listing/favorite")).response.status, 401);
-  assert.equal(
-    (
-      await api("/v1/listings/test-public-listing/favorite", {
-        ...buyer,
-        method: "POST",
-        csrf: undefined,
-        body: {},
-      })
-    ).response.status,
-    403,
-  );
   const first = await api("/v1/listings/test-public-listing/favorite", {
     ...buyer,
     method: "POST",
@@ -131,17 +124,6 @@ test("favorites are authenticated, idempotent, isolated, and public-only", async
 
 test("saved searches validate schema and enforce ownership", async () => {
   assert.equal((await api("/v1/account/saved-searches")).response.status, 401);
-  assert.equal(
-    (
-      await api("/v1/account/saved-searches", {
-        ...buyer,
-        method: "POST",
-        csrf: undefined,
-        body: validSearch(),
-      })
-    ).response.status,
-    403,
-  );
   assert.equal(
     (
       await api("/v1/account/saved-searches", {
@@ -260,17 +242,6 @@ test("conversations enforce identity, idempotency, messaging, unread, and pagina
   assert.equal(conversations.response.status, 200);
   assert.equal(conversations.payload.data.items.length, 1);
   assert.equal((await api(`/v1/conversations/${conversationId}`, outsider)).response.status, 404);
-  assert.equal(
-    (
-      await api(`/v1/conversations/${conversationId}/messages`, {
-        ...buyer,
-        method: "POST",
-        csrf: undefined,
-        body: { body: "hello", requestId: crypto.randomUUID() },
-      })
-    ).response.status,
-    403,
-  );
   for (const body of ["", " ".repeat(3), "x".repeat(2001)]) {
     assert.equal(
       (
@@ -333,20 +304,10 @@ test("conversations enforce identity, idempotency, messaging, unread, and pagina
 });
 
 async function signup(label) {
-  const result = await api("/v1/auth/signup", {
-    method: "POST",
-    body: {
-      email: `${label}-${Date.now()}-${crypto.randomUUID()}@example.test`,
-      password: "SafePass123!",
-      displayName: label,
-    },
-  });
-  assert.equal(result.response.status, 201);
-  return {
-    cookie: result.cookie,
-    csrf: result.payload.data.session.csrfToken,
-    userId: result.payload.data.session.user.id,
-  };
+  const session = await auth.session(label);
+  const profile = await api("/api/profile", session);
+  assert.equal(profile.response.status, 200);
+  return session;
 }
 
 function validSearch() {
@@ -401,7 +362,7 @@ function executeLocalSql(sql) {
 async function waitForWorker() {
   for (let attempt = 0; attempt < 80; attempt += 1) {
     try {
-      if ((await fetch(`${baseUrl}/v1/auth/session`)).ok) return;
+      if ((await fetch(`${baseUrl}/v1/health`)).ok) return;
     } catch {}
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
@@ -412,8 +373,7 @@ function headers(session = {}, extra = {}) {
   return {
     Origin: "http://localhost:8080",
     "CF-Connecting-IP": testIp,
-    ...(session.cookie ? { Cookie: session.cookie } : {}),
-    ...(session.csrf ? { "X-CSRF-Token": session.csrf } : {}),
+    ...(session.token ? { Authorization: `Bearer ${session.token}` } : {}),
     ...extra,
   };
 }
@@ -425,10 +385,5 @@ async function api(path, options = {}) {
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
   const payload = await response.json();
-  const setCookies = response.headers.getSetCookie?.() ?? [];
-  return {
-    response,
-    payload,
-    cookie: setCookies.map((value) => value.split(";", 1)[0]).join("; "),
-  };
+  return { response, payload };
 }

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { createSupabaseAuthFixture } from "./supabase-auth-fixture.mjs";
 
 const port = 8792;
 const baseUrl = `http://127.0.0.1:${port}`;
@@ -11,8 +12,10 @@ let owner;
 let other;
 let listingId;
 let imageId;
+let auth;
 
 before(async () => {
+  auth = await createSupabaseAuthFixture();
   worker = spawn(
     process.execPath,
     [
@@ -25,6 +28,7 @@ before(async () => {
       ".wrangler/test-state-auth",
       "--port",
       String(port),
+      ...auth.workerArgs,
     ],
     {
       cwd: fileURLToPath(new URL("..", import.meta.url)),
@@ -34,7 +38,7 @@ before(async () => {
   );
   for (let attempt = 0; attempt < 40; attempt += 1) {
     try {
-      if ((await fetch(`${baseUrl}/v1/auth/session`)).ok) break;
+      if ((await fetch(`${baseUrl}/v1/health`)).ok) break;
     } catch {}
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
@@ -44,7 +48,7 @@ before(async () => {
 
 after(() => worker?.kill());
 
-test("profile access, validation, CSRF, and immutable identity", async () => {
+test("profile access, validation, bearer authentication, and immutable identity", async () => {
   assert.equal((await api("/api/profile")).response.status, 401);
 
   const read = await api("/api/profile", owner);
@@ -55,9 +59,8 @@ test("profile access, validation, CSRF, and immutable identity", async () => {
     ...owner,
     method: "PATCH",
     body: { displayName: "Updated Owner" },
-    csrf: undefined,
   });
-  assert.equal(noCsrf.response.status, 403);
+  assert.equal(noCsrf.response.status, 200);
 
   const malformed = await fetch(`${baseUrl}/api/profile`, {
     method: "PATCH",
@@ -94,17 +97,6 @@ test("profile access, validation, CSRF, and immutable identity", async () => {
 test("listing creation security, reads, filtering, ownership, and deletion", async () => {
   const input = listingInput();
   assert.equal((await api("/v1/listings", { method: "POST", body: input })).response.status, 401);
-  assert.equal(
-    (
-      await api("/v1/listings", {
-        ...owner,
-        method: "POST",
-        body: input,
-        csrf: undefined,
-      })
-    ).response.status,
-    403,
-  );
   assert.equal(
     (
       await api("/v1/listings", {
@@ -247,20 +239,10 @@ test("R2 upload constraints, ownership, deletion, and cleanup", async () => {
 });
 
 async function signup(label) {
-  const result = await api("/v1/auth/signup", {
-    method: "POST",
-    body: {
-      email: `${label}-${Date.now()}-${crypto.randomUUID()}@example.test`,
-      password: "SafePass123!",
-      displayName: `${label} user`,
-    },
-  });
-  assert.equal(result.response.status, 201);
-  return {
-    cookie: result.cookie,
-    csrf: result.payload.data.session.csrfToken,
-    userId: result.payload.data.session.user.id,
-  };
+  const session = await auth.session(label);
+  const profile = await api("/api/profile", session);
+  assert.equal(profile.response.status, 200);
+  return session;
 }
 
 function listingInput() {
@@ -293,8 +275,7 @@ function headers(session = {}, extra = {}) {
   return {
     Origin: "http://localhost:8080",
     "CF-Connecting-IP": testIp,
-    ...(session.cookie ? { Cookie: session.cookie } : {}),
-    ...(session.csrf ? { "X-CSRF-Token": session.csrf } : {}),
+    ...(session.token ? { Authorization: `Bearer ${session.token}` } : {}),
     ...extra,
   };
 }
@@ -306,10 +287,5 @@ async function api(path, options = {}) {
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
   const payload = await response.json();
-  const setCookies = response.headers.getSetCookie?.() ?? [];
-  return {
-    response,
-    payload,
-    cookie: setCookies.map((value) => value.split(";", 1)[0]).join("; "),
-  };
+  return { response, payload };
 }

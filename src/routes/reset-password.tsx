@@ -1,10 +1,11 @@
 import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { Eye, EyeOff, KeyRound } from "lucide-react";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
-import { authConfirmPasswordReset } from "@/lib/cloudflare-auth";
+import { hasActivePasswordRecoverySession } from "@/lib/auth-recovery-session";
+import { supabase } from "@/lib/supabase";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/reset-password")({
@@ -23,7 +24,7 @@ function ResetPasswordPage() {
   const looseSearch = locationSearch as unknown as Record<string, unknown>;
   const rawReturnTo = typeof looseSearch.returnTo === "string" ? looseSearch.returnTo : undefined;
   const returnTo = sanitizeAuthReturnTo(rawReturnTo, "/more");
-  const recoveryToken = typeof looseSearch.token === "string" ? looseSearch.token.trim() : "";
+  const [recoveryReady, setRecoveryReady] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -32,6 +33,20 @@ function ResetPasswordPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const saveInFlightRef = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void supabase?.auth.getSession().then(({ data }) => {
+      if (!cancelled) {
+        setRecoveryReady(
+          Boolean(data.session?.user.id && hasActivePasswordRecoverySession(data.session.user.id)),
+        );
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,9 +71,18 @@ function ResetPasswordPage() {
     saveInFlightRef.current = true;
     setSaving(true);
     try {
-      const result = await authConfirmPasswordReset(recoveryToken, password);
-      if (!result.ok) {
-        setError(authErrorMessage({ message: result.error }, "update-password", text));
+      if (!supabase || !recoveryReady) {
+        setError(
+          text(
+            "رابط الاستعادة غير صالح أو منتهي. اطلب رابطًا جديدًا.",
+            "The recovery link is invalid or expired. Request a new link.",
+          ),
+        );
+        return;
+      }
+      const result = await supabase.auth.updateUser({ password });
+      if (result.error) {
+        setError(authErrorMessage(result.error, "update-password", text));
         return;
       }
       setPassword("");
@@ -104,7 +128,7 @@ function ResetPasswordPage() {
             </div>
           </div>
 
-          {!recoveryToken ? (
+          {!recoveryReady ? (
             <div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-4 text-xs leading-6 text-muted-foreground">
               <p>
                 {text(

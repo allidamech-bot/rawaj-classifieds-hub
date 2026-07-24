@@ -127,7 +127,7 @@ async function getProfile(request: Request, env: MarketplaceEnv, cors: Headers) 
     .bind(auth.userId)
     .first<Row>();
   return row
-    ? json({ data: mapProfile(row) }, 200, cors)
+    ? json({ data: { ...mapProfile(row), roles: auth.roles } }, 200, cors)
     : json({ error: { code: "not_found", message: "Profile not found." } }, 404, cors);
 }
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { Session, User } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
 import {
   canAccessAdmin,
   canAccessOwnerControls,
@@ -10,62 +10,37 @@ import {
 } from "./auth-types";
 import { AuthContext, type AuthContextValue } from "./auth-context";
 import type { AuthStatus } from "./auth-status";
-import {
-  authLogin,
-  authLogout,
-  authRequestPasswordReset,
-  authSession,
-  authSignup,
-  loadCloudflareUserProfile,
-  type CloudflareSession,
-} from "./cloudflare-auth";
+import { sanitizeAuthReturnTo } from "./auth-return";
+import { loadCloudflareUserProfile } from "./cloudflare-auth";
 import { clearLocalNativePushState } from "./native-push";
-
-function compatibilityUser(session: CloudflareSession): User {
-  return {
-    id: session.user.id,
-    email: session.user.email,
-    email_confirmed_at: session.user.emailConfirmed ? new Date(0).toISOString() : undefined,
-    app_metadata: {},
-    user_metadata: { display_name: session.profile.displayName },
-    aud: "authenticated",
-    created_at: "",
-  } as User;
-}
-
-function compatibilitySession(session: CloudflareSession): Session {
-  return {
-    access_token: "cookie-session",
-    refresh_token: "",
-    expires_in: 0,
-    token_type: "bearer",
-    user: compatibilityUser(session),
-  } as Session;
-}
+import { getSupabaseAuthUnavailableReason, supabase } from "./supabase";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
-  const [session, setSession] = useState<CloudflareSession | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [reason, setReason] = useState<string | null>(null);
   const loadRequestIdRef = useRef(0);
 
-  const load = useCallback(async () => {
+  const applySession = useCallback(async (nextSession: Session | null) => {
     const requestId = ++loadRequestIdRef.current;
+    setSession(nextSession);
+    if (!nextSession) {
+      setProfile(null);
+      setStatus("signedOut");
+      setReason(null);
+      return { error: null };
+    }
     try {
-      const next = await authSession();
+      const nextProfile = await loadCloudflareUserProfile(nextSession.user);
       if (requestId !== loadRequestIdRef.current) return { error: null };
-      const nextProfile = next ? await loadCloudflareUserProfile(next) : null;
-      if (requestId !== loadRequestIdRef.current) return { error: null };
-      setSession(next);
       setProfile(nextProfile);
-      setStatus(next ? "signedIn" : "signedOut");
+      setStatus("signedIn");
       setReason(null);
       return { error: null };
     } catch (error) {
       if (requestId !== loadRequestIdRef.current) return { error: null };
       const message = error instanceof Error ? error.message : "تعذر تحميل بيانات الحساب.";
-      setSession(null);
       setProfile(null);
       setStatus("authError");
       setReason(message);
@@ -73,17 +48,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const load = useCallback(async () => {
+    if (!supabase) {
+      const message = getSupabaseAuthUnavailableReason() ?? "خدمة الحسابات غير متاحة.";
+      setStatus("authError");
+      setReason(message);
+      return { error: message };
+    }
+    const result = await supabase.auth.getSession();
+    if (result.error) {
+      setStatus("authError");
+      setReason(result.error.message);
+      return { error: result.error.message };
+    }
+    return applySession(result.data.session);
+  }, [applySession]);
+
   useEffect(() => {
+    if (!supabase) {
+      void load();
+      return;
+    }
     void load();
-  }, [load]);
+    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      queueMicrotask(() => void applySession(nextSession));
+    });
+    return () => data.subscription.unsubscribe();
+  }, [applySession, load]);
 
   const value = useMemo<AuthContextValue>(() => {
     const signOut = async () => {
+      if (!supabase) return { error: getSupabaseAuthUnavailableReason() };
       loadRequestIdRef.current += 1;
       const localNotificationCleanup = clearLocalNativePushState();
-      const result = await authLogout();
+      const result = await supabase.auth.signOut();
       await localNotificationCleanup;
-      if (!result.ok) return { error: result.error };
+      if (result.error) return { error: result.error.message };
       setSession(null);
       setProfile(null);
       setStatus("signedOut");
@@ -91,51 +91,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: null };
     };
     const signInWithPassword = async (email: string, password: string) => {
-      const result = await authLogin(email, password);
-      if (!result.ok) {
-        return {
-          error:
-            result.code === "account_recovery_required"
-              ? "account_recovery_required"
-              : result.error,
-        };
-      }
-      await load();
+      if (!supabase) return { error: getSupabaseAuthUnavailableReason() };
+      const result = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (result.error) return { error: result.error.message };
+      await applySession(result.data.session);
       return { error: null };
     };
     const signUpWithPassword = async (email: string, password: string, displayName: string) => {
-      const result = await authSignup(email, password, displayName);
-      if (!result.ok) return { error: result.error };
-      await load();
+      if (!supabase) return { error: getSupabaseAuthUnavailableReason() };
+      const result = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: { data: { display_name: displayName.trim() } },
+      });
+      if (result.error) return { error: result.error.message };
+      if (result.data.session) await applySession(result.data.session);
       return { error: null };
     };
     const requestPasswordReset = async (email: string) => {
-      const result = await authRequestPasswordReset(email);
-      return result.ok
-        ? { error: null, developmentToken: result.data.developmentToken }
-        : { error: result.error };
+      if (!supabase) return { error: getSupabaseAuthUnavailableReason() };
+      const redirectTo =
+        typeof window === "undefined"
+          ? "https://rawa-j.com/auth/callback?type=recovery"
+          : `${window.location.origin}/auth/callback?type=recovery`;
+      const result = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
+      return { error: result.error?.message ?? null };
     };
     const permissions = profile ? effectiveRolePermissions(profile) : emptyRolePermissions;
     const hasPermission = (permission: RolePermission) => permissions[permission];
     return {
       status,
-      user: session ? compatibilityUser(session) : null,
-      session: session ? compatibilitySession(session) : null,
+      user: session?.user ?? null,
+      session,
       profile,
       reason,
       permissions,
       hasPermission,
       canAccessAdmin: canAccessAdmin(profile),
       canAccessOwnerControls: canAccessOwnerControls(profile),
-      emailConfirmed: Boolean(session?.user.emailConfirmed),
+      emailConfirmed: Boolean(session?.user.email_confirmed_at),
       signOut,
       refreshProfile: load,
-      signInWithGoogle: async () => ({ error: "تسجيل Google غير متاح بعد في خدمة Cloudflare." }),
+      signInWithGoogle: async (returnTo) => {
+        if (!supabase) return { error: getSupabaseAuthUnavailableReason() };
+        const safeReturnTo = sanitizeAuthReturnTo(returnTo, "/more");
+        const origin = typeof window === "undefined" ? "https://rawa-j.com" : window.location.origin;
+        const redirectTo = `${origin}/auth/callback?returnTo=${encodeURIComponent(safeReturnTo)}`;
+        const result = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo },
+        });
+        return { error: result.error?.message ?? null };
+      },
       signInWithPassword,
       signUpWithPassword,
       requestPasswordReset,
     };
-  }, [load, profile, reason, session, status]);
+  }, [applySession, load, profile, reason, session, status]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

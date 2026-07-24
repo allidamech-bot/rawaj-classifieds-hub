@@ -135,7 +135,7 @@ async function health(env: Env, cors: Headers): Promise<Response> {
   return json(
     {
       data: {
-        service: "rawaj-public-api",
+        service: "rawaj-classifieds-hub",
         version: API_VERSION,
         database: row?.ok === 1 ? "ready" : "unavailable",
       },

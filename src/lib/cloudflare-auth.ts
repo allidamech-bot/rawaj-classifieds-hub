@@ -1,15 +1,12 @@
+import type { User } from "@supabase/supabase-js";
 import type { UserProfile } from "@/lib/auth-types";
 import { requireCloudflarePublicApiBaseUrl } from "@/lib/public-data/config";
-
-export interface CloudflareSession {
-  user: { id: string; email: string; emailConfirmed: boolean };
-  profile: { id: string; displayName: string | null; roles: string[] };
-  csrfToken: string;
-}
+import { supabase } from "@/lib/supabase";
 
 type Envelope<T> = { data?: T; error?: { code?: string; message?: string } };
-
-let csrfToken = "";
+type ApiResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: string; code: string };
 
 export function cloudflareApiUrl(path: string): string {
   const base = requireCloudflarePublicApiBaseUrl();
@@ -19,150 +16,67 @@ export function cloudflareApiUrl(path: string): string {
 export async function cloudflareApiRequest<T>(
   path: string,
   init: { method?: string; body?: Record<string, unknown> | FormData } = {},
-): Promise<{ ok: true; data: T } | { ok: false; error: string; code: string }> {
+): Promise<ApiResult<T>> {
   const base = requireCloudflarePublicApiBaseUrl();
   if (!base.ok) return { ok: false, error: base.error.message, code: base.error.code };
-  const isForm = init.body instanceof FormData;
-  try {
-    const response = await fetch(new URL(path, `${base.data}/`), {
-      method: init.method ?? "GET",
-      credentials: "include",
-      headers: {
-        Accept: "application/json",
-        ...(!isForm && init.body ? { "Content-Type": "application/json" } : {}),
-        ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
-      },
-      body: isForm ? (init.body as FormData) : init.body ? JSON.stringify(init.body) : undefined,
-    });
-    const payload = (await response.json().catch(() => null)) as Envelope<T> | null;
-    if (!response.ok || payload?.data === undefined) {
-      return {
-        ok: false,
-        error: payload?.error?.message ?? "تعذر إكمال العملية.",
-        code: payload?.error?.code ?? "unknown",
-      };
-    }
-    return { ok: true, data: payload.data };
-  } catch {
-    return { ok: false, error: "تعذر الاتصال بالخدمة.", code: "network_error" };
+
+  const session = await supabase?.auth.getSession();
+  const initialToken = session?.data.session?.access_token ?? null;
+  const first = await sendRequest<T>(base.data, path, init, initialToken);
+  if (first.response.status !== 401 || !initialToken || !supabase) return first.result;
+
+  const refreshed = await supabase.auth.refreshSession();
+  const refreshedToken = refreshed.data.session?.access_token ?? null;
+  if (refreshed.error || !refreshedToken) {
+    await supabase.auth.signOut({ scope: "local" });
+    return first.result;
   }
+
+  return (await sendRequest<T>(base.data, path, init, refreshedToken)).result;
 }
 
-export async function authSession(): Promise<CloudflareSession | null> {
-  const result = await authRequest<{ session: CloudflareSession | null }>(
-    "/v1/auth/session",
-    "GET",
-  );
-  if (!result.ok) throw new Error(result.error);
-  csrfToken = result.data.session?.csrfToken ?? "";
-  return result.data.session;
-}
-
-export async function authLogin(email: string, password: string) {
-  return authMutation("/v1/auth/login", { email, password });
-}
-
-export async function authSignup(email: string, password: string, displayName: string) {
-  return authMutation("/v1/auth/signup", { email, password, displayName });
-}
-
-export async function authLogout() {
-  return authMutation("/v1/auth/logout", {});
-}
-
-export async function authRequestPasswordReset(email: string) {
-  return authMutation("/v1/auth/password-reset/request", { email });
-}
-
-export async function authConfirmPasswordReset(token: string, password: string) {
-  return authMutation("/v1/auth/password-reset/confirm", { token, password });
-}
-
-export async function authChangePassword(currentPassword: string, password: string) {
-  return authMutation("/v1/auth/password/change", { currentPassword, password });
-}
-
-async function authMutation(path: string, body: Record<string, unknown>) {
-  const result = await authRequest<{
-    session?: CloudflareSession;
-    accepted?: boolean;
-    developmentToken?: string;
-    success?: boolean;
-  }>(path, "POST", body);
-  if (result.ok && result.data.session) csrfToken = result.data.session.csrfToken;
-  return result;
-}
-
-async function authRequest<T>(
+async function sendRequest<T>(
+  base: string,
   path: string,
-  method: "GET" | "POST",
-  body?: Record<string, unknown>,
-): Promise<{ ok: true; data: T } | { ok: false; error: string; code: string }> {
-  const base = requireCloudflarePublicApiBaseUrl();
-  if (!base.ok) return { ok: false, error: base.error.message, code: base.error.code };
+  init: { method?: string; body?: Record<string, unknown> | FormData },
+  accessToken: string | null,
+): Promise<{ response: Response; result: ApiResult<T> }> {
+  const body = init.body;
+  const isForm = body instanceof FormData;
+  const jsonBody = !isForm && body ? JSON.stringify(body) : undefined;
   try {
-    const response = await fetch(new URL(path, `${base.data}/`), {
-      method,
-      credentials: "include",
+    const response = await fetch(new URL(path, `${base}/`), {
+      method: init.method ?? "GET",
+      credentials: "omit",
       headers: {
         Accept: "application/json",
-        ...(body ? { "Content-Type": "application/json" } : {}),
-        ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...(!isForm && body ? { "Content-Type": "application/json" } : {}),
       },
-      body: body ? JSON.stringify(body) : undefined,
+      body: isForm ? body : jsonBody,
     });
     const payload = (await response.json().catch(() => null)) as Envelope<T> | null;
-    if (!response.ok || payload?.data === undefined) {
-      return {
-        ok: false,
-        error: payload?.error?.message ?? "تعذر إكمال العملية.",
-        code: payload?.error?.code ?? "unknown",
-      };
-    }
-    return { ok: true, data: payload.data };
+    const result: ApiResult<T> =
+      response.ok && payload?.data !== undefined
+        ? { ok: true, data: payload.data }
+        : {
+            ok: false,
+            error: payload?.error?.message ?? "تعذر إكمال العملية.",
+            code: payload?.error?.code ?? "unknown",
+          };
+    return { response, result };
   } catch {
-    return { ok: false, error: "تعذر الاتصال بخدمة الحسابات.", code: "network_error" };
+    return {
+      response: new Response(null, { status: 599 }),
+      result: { ok: false, error: "تعذر الاتصال بالخدمة.", code: "network_error" },
+    };
   }
 }
 
-export function sessionToProfile(session: CloudflareSession): UserProfile {
-  const roles = session.profile.roles.filter((role) =>
-    ["owner", "admin", "moderator", "seller", "user"].includes(role),
-  ) as UserProfile["roles"];
-  const normalizedRoles: UserProfile["roles"] = roles.length ? roles : ["user"];
-  const role =
-    (["owner", "admin", "moderator", "seller", "user"] as const).find((item) =>
-      normalizedRoles.includes(item),
-    ) ?? "user";
-  return {
-    id: session.user.id,
-    email: session.user.email,
-    firstName: null,
-    lastName: null,
-    displayName: session.profile.displayName,
-    role,
-    roles: normalizedRoles,
-    accountStatus: "active",
-    verificationStatus: "unverified",
-    governorate: null,
-    cityArea: null,
-    bio: null,
-    businessName: null,
-    phone: null,
-    whatsapp: null,
-    preferredContactMethod: null,
-    avatarPath: null,
-    avatarUrl: null,
-    coverPath: null,
-    coverUrl: null,
-    createdAt: null,
-    updatedAt: null,
-  };
-}
-
-export async function loadCloudflareUserProfile(session: CloudflareSession): Promise<UserProfile> {
-  const baseProfile = sessionToProfile(session);
+export async function loadCloudflareUserProfile(user: User): Promise<UserProfile> {
   const result = await cloudflareApiRequest<{
+    id: string;
+    email: string;
     firstName: string | null;
     lastName: string | null;
     displayName: string | null;
@@ -175,8 +89,26 @@ export async function loadCloudflareUserProfile(session: CloudflareSession): Pro
     preferredContactMethod: string | null;
     verificationStatus: UserProfile["verificationStatus"];
     accountStatus: UserProfile["accountStatus"];
+    roles?: UserProfile["roles"];
     createdAt: string | null;
     updatedAt: string | null;
   }>("/api/profile");
-  return result.ok ? { ...baseProfile, ...result.data } : baseProfile;
+  if (!result.ok) throw new Error(result.error);
+
+  const roles = (result.data.roles?.length ? result.data.roles : ["user"]) as UserProfile["roles"];
+  const role =
+    (["owner", "admin", "moderator", "seller", "user"] as const).find((item) =>
+      roles.includes(item),
+    ) ?? "user";
+  return {
+    ...result.data,
+    id: result.data.id || user.id,
+    email: result.data.email || user.email || "",
+    role,
+    roles,
+    avatarPath: null,
+    avatarUrl: null,
+    coverPath: null,
+    coverUrl: null,
+  };
 }

@@ -52,3 +52,8 @@ android/app/google-services.json
 data/locations/sources/
 data/locations/syria-ocha-location-nodes.json
 data/locations/syria-ocha-location-nodes.csv
+
+.vercel
+.env*
+
+test-results/
