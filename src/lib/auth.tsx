@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  getRedirectResult,
   onIdTokenChanged,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
   signOut as firebaseSignOut,
   updateProfile,
   type User as FirebaseUser,
@@ -24,6 +25,8 @@ import { sanitizeAuthReturnTo } from "./auth-return";
 import { loadCloudflareUserProfile } from "./cloudflare-auth";
 import { firebaseAuth } from "./firebase";
 import { clearLocalNativePushState } from "./native-push";
+
+const GOOGLE_RETURN_TO_KEY = "rawaj.firebase.google.returnTo";
 
 function firebaseErrorMessage(error: unknown): string {
   if (!error || typeof error !== "object") return "تعذر إكمال عملية الحساب.";
@@ -101,6 +104,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, [applyFirebaseUser]);
 
+  useEffect(() => {
+    let cancelled = false;
+    async function finishGoogleRedirect() {
+      try {
+        const result = await getRedirectResult(firebaseAuth);
+        if (!result || cancelled) return;
+        const applied = await applyFirebaseUser(result.user);
+        if (cancelled || applied.error) return;
+        const storedReturnTo = window.sessionStorage.getItem(GOOGLE_RETURN_TO_KEY);
+        window.sessionStorage.removeItem(GOOGLE_RETURN_TO_KEY);
+        window.location.replace(sanitizeAuthReturnTo(storedReturnTo ?? undefined, "/more"));
+      } catch (error) {
+        if (cancelled) return;
+        window.sessionStorage.removeItem(GOOGLE_RETURN_TO_KEY);
+        setReason(firebaseErrorMessage(error));
+      }
+    }
+    void finishGoogleRedirect();
+    return () => {
+      cancelled = true;
+    };
+  }, [applyFirebaseUser]);
+
   const value = useMemo<AuthContextValue>(() => {
     const signOut = async () => {
       loadRequestIdRef.current += 1;
@@ -171,13 +197,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const provider = new GoogleAuthProvider();
           provider.setCustomParameters({ prompt: "select_account" });
-          const result = await signInWithPopup(firebaseAuth, provider);
-          const applied = await applyFirebaseUser(result.user);
-          if (applied.error) return applied;
-          const safeReturnTo = sanitizeAuthReturnTo(returnTo, "/more");
-          if (typeof window !== "undefined") window.location.assign(safeReturnTo);
+          if (typeof window !== "undefined") {
+            window.sessionStorage.setItem(
+              GOOGLE_RETURN_TO_KEY,
+              sanitizeAuthReturnTo(returnTo, "/more"),
+            );
+          }
+          await signInWithRedirect(firebaseAuth, provider);
           return { error: null };
         } catch (error) {
+          if (typeof window !== "undefined") {
+            window.sessionStorage.removeItem(GOOGLE_RETURN_TO_KEY);
+          }
           return { error: firebaseErrorMessage(error) };
         }
       },
