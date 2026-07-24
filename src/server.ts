@@ -67,9 +67,14 @@ function buildContentSecurityPolicy(isSecureRequest: boolean, allowVercelPreview
   const manifestSourceDirective = allowVercelPreviewTools
     ? "manifest-src 'self' https://vercel.com"
     : "manifest-src 'self'";
+  const localDevelopmentConnectSources = isSecureRequest
+    ? ""
+    : " http://localhost:8787 http://127.0.0.1:8787";
+  const cloudflareApiConnectSource = " https://api.rawa-j.com";
+
   const connectSourceDirective = allowVercelPreviewTools
-    ? "connect-src 'self' https://*.supabase.co https://*.supabase.com wss://*.supabase.co wss://*.supabase.com https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com https://vercel.live wss://vercel.live"
-    : "connect-src 'self' https://*.supabase.co https://*.supabase.com wss://*.supabase.co wss://*.supabase.com https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com";
+    ? `connect-src 'self'${cloudflareApiConnectSource} https://*.supabase.co https://*.supabase.com wss://*.supabase.co wss://*.supabase.com https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com https://vercel.live wss://vercel.live${localDevelopmentConnectSources}`
+    : `connect-src 'self'${cloudflareApiConnectSource} https://*.supabase.co https://*.supabase.com wss://*.supabase.co wss://*.supabase.com https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com${localDevelopmentConnectSources}`;
 
   const directives = [
     "default-src 'self'",

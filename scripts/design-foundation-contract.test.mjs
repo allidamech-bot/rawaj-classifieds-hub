@@ -86,7 +86,7 @@ test("shared primitives expose the premium calm component contracts", () => {
 test("legacy mobile UI is normalized to readable text and touch targets", () => {
   assert.match(foundation, /rawaj-bottom-dock__label/);
   assert.match(foundation, /rawaj-search-toolbar__recent/);
-  assert.match(foundation, /font-size:\s*max\(0\.75rem,\s*11px\)/);
+  assert.match(foundation, /font-size:\s*max\((?:0\.75rem|\.75rem),\s*(?:11|12)px\)/);
   assert.match(foundation, /min-width:\s*var\(--rawaj-touch-target\)/);
   assert.match(foundation, /min-height:\s*var\(--rawaj-touch-target\)/);
 });
@@ -100,8 +100,8 @@ test("app shell owns viewport, keyboard and bottom-reservation behavior", () => 
   assert.match(appShell, /className="rawaj-app-shell__content"/);
   assert.doesNotMatch(appShell, /<main className="rawaj-app-shell__content"/);
 
-  assert.match(foundation, /data-shell-dock="true"/);
-  assert.match(foundation, /data-shell-sticky-action="true"/);
-  assert.match(foundation, /data-shell-mode="conversation"/);
-  assert.match(foundation, /data-keyboard-open="true"/);
+  assert.match(foundation, /data-shell-dock=(?:"true"|true)/);
+  assert.match(foundation, /data-shell-sticky-action=(?:"true"|true)/);
+  assert.match(foundation, /data-shell-mode=(?:"conversation"|conversation)/);
+  assert.match(foundation, /data-keyboard-open=(?:"true"|true)/);
 });

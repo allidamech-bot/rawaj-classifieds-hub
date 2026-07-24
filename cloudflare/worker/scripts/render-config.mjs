@@ -22,8 +22,19 @@ if (missing.length > 0) {
 }
 
 const base = JSON.parse(await readFile(sourcePath, "utf8"));
+const customDomain = process.env.CLOUDFLARE_WORKER_CUSTOM_DOMAIN?.trim();
 const generated = {
   ...base,
+  ...(customDomain
+    ? {
+        routes: [
+          {
+            pattern: customDomain,
+            custom_domain: true,
+          },
+        ],
+      }
+    : {}),
   d1_databases: [
     {
       binding: "DB",

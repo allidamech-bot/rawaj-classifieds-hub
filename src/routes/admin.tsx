@@ -24,6 +24,7 @@ import { uiLabel } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 export const Route = createFileRoute("/admin")({
   head: () => createSeo({ title: "لوحة الإدارة | رَوَاج", noindex: true }),
@@ -158,6 +159,18 @@ function AdminLayout() {
         )}
         actionTo="/login"
         actionLabel={text("تسجيل الدخول", "Log in")}
+      />
+    );
+  }
+
+  if (isCloudflarePublicDataProvider()) {
+    return (
+      <AdminShellState
+        title={text("الإدارة غير متاحة مؤقتًا", "Admin is temporarily unavailable")}
+        message={text(
+          "يجري استكمال نقل أدوات الإدارة إلى البنية الجديدة. لا تُنفّذ هذه الصفحة أي إجراء عبر النظام القديم.",
+          "The administration tools are still being migrated. This page does not perform actions through the legacy backend.",
+        )}
       />
     );
   }

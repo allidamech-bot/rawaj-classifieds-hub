@@ -19,6 +19,7 @@ import {
   rowString,
 } from "@/lib/api/shared";
 import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 const DEFAULT_NOTIFICATIONS_PAGE_SIZE = 20;
 const MAX_NOTIFICATIONS_PAGE_SIZE = 50;
@@ -52,6 +53,9 @@ export async function fetchMyNotifications(
 export async function fetchMyNotificationsPage(
   options: NotificationPageOptions = {},
 ): Promise<ClassifiedsResult<NotificationsPage>> {
+  if (isCloudflarePublicDataProvider()) {
+    return { ok: true, data: { items: [], nextCursor: null, hasMore: false } };
+  }
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   const actorResult = await getAuthenticatedUserId(clientResult.data);
@@ -101,6 +105,7 @@ export async function fetchMyNotificationsPage(
 export async function fetchMyNotificationById(
   notificationId: string,
 ): Promise<ClassifiedsResult<NotificationItem | null>> {
+  if (isCloudflarePublicDataProvider()) return { ok: true, data: null };
   const id = normalizeNotificationId(notificationId);
   if (!id) return validationError("تعذر تحديد الإشعار.");
 
@@ -120,6 +125,7 @@ export async function fetchMyNotificationById(
 }
 
 export async function fetchUnreadNotificationsCount(): Promise<ClassifiedsResult<number>> {
+  if (isCloudflarePublicDataProvider()) return { ok: true, data: 0 };
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   const actorResult = await getAuthenticatedUserId(clientResult.data);
@@ -137,6 +143,7 @@ export async function fetchUnreadNotificationsCount(): Promise<ClassifiedsResult
 export async function markNotificationRead(
   notificationId: string,
 ): Promise<ClassifiedsResult<null>> {
+  if (isCloudflarePublicDataProvider()) return cloudflareUnavailable();
   const id = normalizeNotificationId(notificationId);
   if (!id) return validationError("تعذر تحديد الإشعار.");
 
@@ -159,6 +166,7 @@ export async function markNotificationRead(
 export async function markAllNotificationsRead(): Promise<
   ClassifiedsResult<MarkAllNotificationsReadResult>
 > {
+  if (isCloudflarePublicDataProvider()) return cloudflareUnavailable();
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
   const actorResult = await getAuthenticatedUserId(clientResult.data);
@@ -234,6 +242,17 @@ function normalizeCursor(cursor: NotificationCursor | null | undefined): Notific
 
 function validationError<T>(message: string): ClassifiedsResult<T> {
   return { ok: false, error: { code: "validation_error", message } };
+}
+
+function cloudflareUnavailable<T>(): ClassifiedsResult<T> {
+  return {
+    ok: false,
+    error: {
+      code: "setup_required",
+      message: "الإشعارات غير متاحة مؤقتًا أثناء استكمال نقل الخدمة.",
+      operation: "cloudflare_notifications_unavailable",
+    },
+  };
 }
 
 function isMissingMarkAllRpc(error: { code?: string; message?: string; details?: string }) {
