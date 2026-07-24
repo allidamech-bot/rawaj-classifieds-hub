@@ -1,11 +1,11 @@
 import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { Eye, EyeOff, KeyRound } from "lucide-react";
+import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
-import { hasActivePasswordRecoverySession } from "@/lib/auth-recovery-session";
-import { supabase } from "@/lib/supabase";
+import { firebaseAuth } from "@/lib/firebase";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/reset-password")({
@@ -24,7 +24,10 @@ function ResetPasswordPage() {
   const looseSearch = locationSearch as unknown as Record<string, unknown>;
   const rawReturnTo = typeof looseSearch.returnTo === "string" ? looseSearch.returnTo : undefined;
   const returnTo = sanitizeAuthReturnTo(rawReturnTo, "/more");
+  const oobCode = typeof looseSearch.oobCode === "string" ? looseSearch.oobCode : "";
+  const mode = typeof looseSearch.mode === "string" ? looseSearch.mode : "";
   const [recoveryReady, setRecoveryReady] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -36,17 +39,31 @@ function ResetPasswordPage() {
 
   useEffect(() => {
     let cancelled = false;
-    void supabase?.auth.getSession().then(({ data }) => {
-      if (!cancelled) {
-        setRecoveryReady(
-          Boolean(data.session?.user.id && hasActivePasswordRecoverySession(data.session.user.id)),
-        );
+    async function verifyCode() {
+      if (mode !== "resetPassword" || !oobCode) {
+        if (!cancelled) {
+          setChecking(false);
+          setRecoveryReady(false);
+        }
+        return;
       }
-    });
+      try {
+        await verifyPasswordResetCode(firebaseAuth, oobCode);
+        if (!cancelled) setRecoveryReady(true);
+      } catch (caught) {
+        if (!cancelled) {
+          setRecoveryReady(false);
+          setError(authErrorMessage(caught instanceof Error ? caught : null, "recovery", text));
+        }
+      } finally {
+        if (!cancelled) setChecking(false);
+      }
+    }
+    void verifyCode();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [mode, oobCode, text]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -71,7 +88,7 @@ function ResetPasswordPage() {
     saveInFlightRef.current = true;
     setSaving(true);
     try {
-      if (!supabase || !recoveryReady) {
+      if (!recoveryReady || !oobCode) {
         setError(
           text(
             "رابط الاستعادة غير صالح أو منتهي. اطلب رابطًا جديدًا.",
@@ -80,11 +97,7 @@ function ResetPasswordPage() {
         );
         return;
       }
-      const result = await supabase.auth.updateUser({ password });
-      if (result.error) {
-        setError(authErrorMessage(result.error, "update-password", text));
-        return;
-      }
+      await confirmPasswordReset(firebaseAuth, oobCode, password);
       setPassword("");
       setConfirmPassword("");
       setMessage(text("تم تحديث كلمة المرور.", "Password updated."));
@@ -98,9 +111,7 @@ function ResetPasswordPage() {
   }
 
   const requestNewLink = () =>
-    window.location.assign(
-      `/login?mode=forgot&returnTo=${encodeURIComponent(returnTo)}`,
-    );
+    window.location.assign(`/login?mode=forgot&returnTo=${encodeURIComponent(returnTo)}`);
 
   return (
     <>
@@ -128,13 +139,18 @@ function ResetPasswordPage() {
             </div>
           </div>
 
-          {!recoveryReady ? (
+          {checking ? (
+            <div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-4 text-xs leading-6 text-muted-foreground">
+              {text("جارٍ التحقق من رابط الاستعادة...", "Checking the recovery link...")}
+            </div>
+          ) : !recoveryReady ? (
             <div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-4 text-xs leading-6 text-muted-foreground">
               <p>
-                {text(
-                  "رابط الاستعادة غير صالح أو منتهي. اطلب رابطاً جديداً قبل تغيير كلمة المرور.",
-                  "The recovery link is invalid or expired. Request a new link before changing your password.",
-                )}
+                {error ||
+                  text(
+                    "رابط الاستعادة غير صالح أو منتهي. اطلب رابطاً جديداً قبل تغيير كلمة المرور.",
+                    "The recovery link is invalid or expired. Request a new link before changing your password.",
+                  )}
               </p>
               <button
                 type="button"
@@ -183,9 +199,7 @@ function ResetPasswordPage() {
                 disabled={saving}
                 className="rawaj-button-primary min-h-11 w-full rounded-[1rem] px-4 py-2.5 disabled:opacity-60"
               >
-                {saving
-                  ? text("جارٍ الحفظ", "Saving")
-                  : text("تحديث كلمة المرور", "Update password")}
+                {saving ? text("جارٍ الحفظ", "Saving") : text("تحديث كلمة المرور", "Update password")}
               </button>
             </form>
           )}
