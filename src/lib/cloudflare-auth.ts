@@ -76,7 +76,9 @@ function looksLikeCorruptedArabic(value: string | null): boolean {
   if (!value) return false;
   if (value.includes("�") || /[ÃÂØÙÐÑ]/.test(value)) return true;
   const compact = value.replace(/\s+/g, "");
-  const suspiciousArabicMarkers = [...compact].filter((character) => character === "ط" || character === "ظ").length;
+  const suspiciousArabicMarkers = [...compact].filter(
+    (character) => character === "ط" || character === "ظ",
+  ).length;
   return compact.length >= 5 && suspiciousArabicMarkers >= 3;
 }
 
@@ -86,6 +88,23 @@ function firebaseIdentityDisplayName(user: AuthUser): string | null {
     user.user_metadata.full_name?.trim() ||
     null
   );
+}
+
+function accountDisplayNameFallback(
+  user: AuthUser,
+  firstName: string | null,
+  lastName: string | null,
+): string | null {
+  const firebaseName = firebaseIdentityDisplayName(user);
+  if (firebaseName) return firebaseName;
+
+  const storedName = [firstName?.trim(), lastName?.trim()].filter(Boolean).join(" ");
+  if (storedName && !looksLikeCorruptedArabic(storedName)) return storedName;
+
+  const email = user.email?.trim();
+  if (!email) return null;
+  const localPart = email.split("@", 1)[0]?.trim();
+  return localPart || null;
 }
 
 export async function loadCloudflareUserProfile(user: AuthUser): Promise<UserProfile> {
@@ -115,10 +134,14 @@ export async function loadCloudflareUserProfile(user: AuthUser): Promise<UserPro
     (["owner", "admin", "moderator", "seller", "user"] as const).find((item) =>
       roles.includes(item),
     ) ?? "user";
-  const identityDisplayName = firebaseIdentityDisplayName(user);
+  const fallbackDisplayName = accountDisplayNameFallback(
+    user,
+    result.data.firstName,
+    result.data.lastName,
+  );
   const displayName =
-    looksLikeCorruptedArabic(result.data.displayName) && identityDisplayName
-      ? identityDisplayName
+    !result.data.displayName || looksLikeCorruptedArabic(result.data.displayName)
+      ? fallbackDisplayName
       : result.data.displayName;
 
   return {
