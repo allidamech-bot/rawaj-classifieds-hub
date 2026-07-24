@@ -72,6 +72,22 @@ async function sendRequest<T>(
   }
 }
 
+function looksLikeCorruptedArabic(value: string | null): boolean {
+  if (!value) return false;
+  if (value.includes("�") || /[ÃÂØÙÐÑ]/.test(value)) return true;
+  const compact = value.replace(/\s+/g, "");
+  const suspiciousArabicMarkers = [...compact].filter((character) => character === "ط" || character === "ظ").length;
+  return compact.length >= 5 && suspiciousArabicMarkers >= 3;
+}
+
+function firebaseIdentityDisplayName(user: AuthUser): string | null {
+  return (
+    user.user_metadata.display_name?.trim() ||
+    user.user_metadata.full_name?.trim() ||
+    null
+  );
+}
+
 export async function loadCloudflareUserProfile(user: AuthUser): Promise<UserProfile> {
   const result = await cloudflareApiRequest<{
     id: string;
@@ -99,8 +115,15 @@ export async function loadCloudflareUserProfile(user: AuthUser): Promise<UserPro
     (["owner", "admin", "moderator", "seller", "user"] as const).find((item) =>
       roles.includes(item),
     ) ?? "user";
+  const identityDisplayName = firebaseIdentityDisplayName(user);
+  const displayName =
+    looksLikeCorruptedArabic(result.data.displayName) && identityDisplayName
+      ? identityDisplayName
+      : result.data.displayName;
+
   return {
     ...result.data,
+    displayName,
     id: result.data.id || user.id,
     email: result.data.email || user.email || "",
     role,
