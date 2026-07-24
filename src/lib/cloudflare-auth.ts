@@ -1,7 +1,7 @@
-import type { User } from "@supabase/supabase-js";
 import type { UserProfile } from "@/lib/auth-types";
+import type { AuthUser } from "@/lib/auth-context";
+import { firebaseAuth } from "@/lib/firebase";
 import { requireCloudflarePublicApiBaseUrl } from "@/lib/public-data/config";
-import { supabase } from "@/lib/supabase";
 
 type Envelope<T> = { data?: T; error?: { code?: string; message?: string } };
 type ApiResult<T> =
@@ -20,19 +20,18 @@ export async function cloudflareApiRequest<T>(
   const base = requireCloudflarePublicApiBaseUrl();
   if (!base.ok) return { ok: false, error: base.error.message, code: base.error.code };
 
-  const session = await supabase?.auth.getSession();
-  const initialToken = session?.data.session?.access_token ?? null;
+  const currentUser = firebaseAuth.currentUser;
+  const initialToken = currentUser ? await currentUser.getIdToken() : null;
   const first = await sendRequest<T>(base.data, path, init, initialToken);
-  if (first.response.status !== 401 || !initialToken || !supabase) return first.result;
+  if (first.response.status !== 401 || !currentUser) return first.result;
 
-  const refreshed = await supabase.auth.refreshSession();
-  const refreshedToken = refreshed.data.session?.access_token ?? null;
-  if (refreshed.error || !refreshedToken) {
-    await supabase.auth.signOut({ scope: "local" });
+  try {
+    const refreshedToken = await currentUser.getIdToken(true);
+    return (await sendRequest<T>(base.data, path, init, refreshedToken)).result;
+  } catch {
+    await firebaseAuth.signOut().catch(() => undefined);
     return first.result;
   }
-
-  return (await sendRequest<T>(base.data, path, init, refreshedToken)).result;
 }
 
 async function sendRequest<T>(
@@ -73,7 +72,7 @@ async function sendRequest<T>(
   }
 }
 
-export async function loadCloudflareUserProfile(user: User): Promise<UserProfile> {
+export async function loadCloudflareUserProfile(user: AuthUser): Promise<UserProfile> {
   const result = await cloudflareApiRequest<{
     id: string;
     email: string;
