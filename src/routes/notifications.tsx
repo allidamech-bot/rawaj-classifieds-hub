@@ -37,6 +37,7 @@ import {
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 import { useAuth } from "@/lib/use-auth";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 const notificationsSearchSchema = z.object({
   open: z.string().optional(),
@@ -258,6 +259,25 @@ function NotificationsPage() {
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId || typeof window === "undefined") return;
+
+    if (isCloudflarePublicDataProvider()) {
+      const refreshWhenVisible = () => {
+        if (document.visibilityState === "visible" && navigator.onLine !== false) {
+          void refreshUnreadActivity();
+        }
+      };
+      const interval = window.setInterval(refreshWhenVisible, 15_000);
+      document.addEventListener("visibilitychange", refreshWhenVisible);
+      window.addEventListener("online", refreshWhenVisible);
+      window.addEventListener("focus", refreshWhenVisible);
+      return () => {
+        window.clearInterval(interval);
+        document.removeEventListener("visibilitychange", refreshWhenVisible);
+        window.removeEventListener("online", refreshWhenVisible);
+        window.removeEventListener("focus", refreshWhenVisible);
+      };
+    }
+
     const clientResult = getClient();
     if (!clientResult.ok) return;
 

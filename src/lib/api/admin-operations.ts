@@ -1,6 +1,7 @@
-import { getClient, mapError, rowNullableString, rowNumber, rowString } from "@/lib/api/shared";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import type { UserRole } from "@/lib/auth-types";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 
 export interface AdminCommandCenterMetrics {
   totalUsers: number;
@@ -38,35 +39,24 @@ export async function adminFetchCommandCenterMetrics(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data.rpc("rawaj_admin_command_center_metrics");
-  if (error) return { ok: false, error: mapError(error, "admin_command_center_metrics") };
-
-  const row = Array.isArray(data) ? (data[0] as Record<string, unknown> | undefined) : null;
-  if (!row) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "تعذر تحميل مؤشرات مركز القيادة." },
-    };
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<AdminCommandCenterMetrics>("/v1/admin/metrics");
+    return result.ok
+      ? { ok: true, data: result.data }
+      : {
+          ok: false,
+          error: {
+            code: result.code as import("@/lib/classifieds-types").ClassifiedsErrorCode,
+            message: result.error,
+          },
+        };
   }
 
   return {
-    ok: true,
-    data: {
-      totalUsers: rowNumber(row, "total_users"),
-      activeUsers: rowNumber(row, "active_users"),
-      frozenUsers: rowNumber(row, "frozen_users"),
-      disabledUsers: rowNumber(row, "disabled_users"),
-      pendingListings: rowNumber(row, "pending_listings"),
-      openListingReports: rowNumber(row, "open_listing_reports"),
-      openMessageReports: rowNumber(row, "open_message_reports"),
-      pendingVerifications: rowNumber(row, "pending_verifications"),
-      pendingPromotions: rowNumber(row, "pending_promotions"),
-      activeRestrictions: rowNumber(row, "active_restrictions"),
-      adminCount: rowNumber(row, "admin_count"),
-      moderatorCount: rowNumber(row, "moderator_count"),
+    ok: false,
+    error: {
+      code: "setup_required",
+      message: "مؤشرات التشغيل متاحة فقط في وضع Cloudflare.",
     },
   };
 }
@@ -82,31 +72,28 @@ export async function adminFetchAuditLogs(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data.rpc("rawaj_admin_fetch_audit_logs", {
-    p_limit: options.limit ?? 50,
-    p_offset: options.offset ?? 0,
-    p_action_prefix: options.actionPrefix?.trim() || null,
-  });
-
-  if (error) return { ok: false, error: mapError(error) };
+  if (isCloudflarePublicDataProvider()) {
+    const params = new URLSearchParams();
+    params.set("limit", String(options.limit ?? 50));
+    const result = await cloudflareApiRequest<AdminAuditLogEntry[]>(
+      `/v1/admin/audit?${params.toString()}`,
+    );
+    return result.ok
+      ? { ok: true, data: result.data }
+      : {
+          ok: false,
+          error: {
+            code: result.code as import("@/lib/classifieds-types").ClassifiedsErrorCode,
+            message: result.error,
+          },
+        };
+  }
 
   return {
-    ok: true,
-    data: ((data ?? []) as Record<string, unknown>[]).map((row) => ({
-      id: rowString(row, "id"),
-      actorId: rowNullableString(row, "actor_id"),
-      actorRole: (rowNullableString(row, "actor_role") as UserRole | null) ?? null,
-      action: rowString(row, "action"),
-      targetTable: rowNullableString(row, "target_table"),
-      targetId: rowNullableString(row, "target_id"),
-      metadata:
-        row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
-          ? (row.metadata as Record<string, unknown>)
-          : {},
-      createdAt: rowNullableString(row, "created_at"),
-    })),
+    ok: false,
+    error: {
+      code: "setup_required",
+      message: "سجل التدقيق متاح فقط في وضع Cloudflare.",
+    },
   };
 }

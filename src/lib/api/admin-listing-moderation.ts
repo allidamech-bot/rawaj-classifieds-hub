@@ -1,5 +1,6 @@
 import type { ClassifiedsResult, ListingStatus } from "@/lib/classifieds-types";
-import { getClient, mapError, rowNullableString, rowString } from "@/lib/api/shared";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 
 export type AdminListingModerationAction =
   | "approve"
@@ -52,37 +53,26 @@ export async function adminFetchModerationListings(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data
-    .from("listings")
-    .select(
-      "id, owner_id, title, status, category_id, governorate_id, rejection_reason, expires_at, reviewed_at, published_at, archived_at, created_at, updated_at",
-    )
-    .in("status", ["pending_review", "approved", "rejected", "archived", "expired"])
-    .order("updated_at", { ascending: false })
-    .limit(250);
-
-  if (error) return { ok: false, error: mapError(error) };
+  if (isCloudflarePublicDataProvider()) {
+    const result =
+      await cloudflareApiRequest<AdminModerationListingSummary[]>("/v1/admin/listings");
+    return result.ok
+      ? { ok: true, data: result.data }
+      : {
+          ok: false,
+          error: {
+            code: result.code as import("@/lib/classifieds-types").ClassifiedsErrorCode,
+            message: result.error,
+          },
+        };
+  }
 
   return {
-    ok: true,
-    data: ((data ?? []) as Record<string, unknown>[]).map((row) => ({
-      id: rowString(row, "id"),
-      ownerId: rowString(row, "owner_id"),
-      title: rowString(row, "title"),
-      status: rowString(row, "status", "pending_review") as ListingStatus,
-      categoryId: rowString(row, "category_id"),
-      governorateId: rowString(row, "governorate_id"),
-      rejectionReason: rowNullableString(row, "rejection_reason"),
-      expiresAt: rowNullableString(row, "expires_at"),
-      reviewedAt: rowNullableString(row, "reviewed_at"),
-      publishedAt: rowNullableString(row, "published_at"),
-      archivedAt: rowNullableString(row, "archived_at"),
-      createdAt: rowString(row, "created_at"),
-      updatedAt: rowString(row, "updated_at"),
-    })),
+    ok: false,
+    error: {
+      code: "setup_required",
+      message: "إدارة الإعلانات متاحة فقط في وضع Cloudflare.",
+    },
   };
 }
 
@@ -120,46 +110,37 @@ export async function adminApplyListingModerationAction(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data.rpc("rawaj_admin_moderate_listing", {
-    p_listing_id: payload.listingId,
-    p_action: payload.action,
-    p_reason: reason,
-    p_expected_updated_at: payload.expectedUpdatedAt,
-    p_extend_days: payload.action === "extend_expiry" ? (payload.extendDays ?? null) : null,
-  });
-
-  if (error) {
-    const mapped = mapError(error);
-    if (error.message?.includes("stale_review")) {
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<AdminListingModerationResult>(
+      "/v1/admin/listings/moderate",
+      {
+        method: "POST",
+        body: {
+          listingId: payload.listingId,
+          action: payload.action,
+          reason,
+          expectedUpdatedAt: payload.expectedUpdatedAt,
+          extendDays: payload.extendDays,
+        },
+      },
+    );
+    if (!result.ok) {
       return {
         ok: false,
         error: {
-          code: "stale_review",
-          message: "تغيّر الإعلان منذ تحميله. أعد تحميل القائمة قبل اتخاذ قرار جديد.",
+          code: result.code === "stale_review" ? "stale_review" : "unknown",
+          message: result.error,
         },
       };
     }
-    return { ok: false, error: mapped };
-  }
-
-  const row = ((data ?? []) as Record<string, unknown>[])[0];
-  if (!row) {
-    return {
-      ok: false,
-      error: { code: "unknown", message: "تم تنفيذ الطلب دون نتيجة قابلة للتحقق." },
-    };
+    return { ok: true, data: result.data };
   }
 
   return {
-    ok: true,
-    data: {
-      listingId: rowString(row, "listing_id"),
-      previousStatus: rowString(row, "previous_status", "pending_review") as ListingStatus,
-      nextStatus: rowString(row, "next_status", "pending_review") as ListingStatus,
-      updatedAt: rowString(row, "updated_at"),
+    ok: false,
+    error: {
+      code: "setup_required",
+      message: "إجراءات الإعلانات متاحة فقط في وضع Cloudflare.",
     },
   };
 }

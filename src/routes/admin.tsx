@@ -24,7 +24,7 @@ import { uiLabel } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
-import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
+import { isAdminModuleAvailable, getUnavailableAdminModuleMessage } from "@/lib/admin-availability";
 
 export const Route = createFileRoute("/admin")({
   head: () => createSeo({ title: "لوحة الإدارة | رَوَاج", noindex: true }),
@@ -163,13 +163,13 @@ function AdminLayout() {
     );
   }
 
-  if (isCloudflarePublicDataProvider()) {
+  if (!isAdminModuleAvailable(pathname)) {
     return (
       <AdminShellState
-        title={text("الإدارة غير متاحة مؤقتًا", "Admin is temporarily unavailable")}
+        title={text("هذه الوحدة غير متاحة حالياً", "This module is currently unavailable")}
         message={text(
-          "يجري استكمال نقل أدوات الإدارة إلى البنية الجديدة. لا تُنفّذ هذه الصفحة أي إجراء عبر النظام القديم.",
-          "The administration tools are still being migrated. This page does not perform actions through the legacy backend.",
+          getUnavailableAdminModuleMessage(pathname),
+          "This module is still being migrated and will be available soon.",
         )}
       />
     );

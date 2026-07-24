@@ -226,7 +226,23 @@ async function listingDetail(request: Request, env: MarketplaceEnv, cors: Header
   )
     .bind(id)
     .all();
-  return json({ data: { listing: row, images: images.results ?? [] } }, 200, cors);
+  return json(
+    {
+      data: {
+        listing: mapListingRow(row),
+        images: (images.results ?? []).map((image) => ({
+          id: stringValue(image.id),
+          listingId: stringValue(image.listing_id),
+          mediaAssetId: stringValue(image.media_asset_id),
+          altAr: nullableString(image.alt_ar),
+          sortOrder: numberValue(image.sort_order),
+          createdAt: stringValue(image.created_at),
+        })),
+      },
+    },
+    200,
+    cors,
+  );
 }
 
 async function ownerListings(request: Request, env: MarketplaceEnv, cors: Headers) {
@@ -240,7 +256,9 @@ async function ownerListings(request: Request, env: MarketplaceEnv, cors: Header
   )
     .bind(auth.userId)
     .all();
-  return result.success ? json({ data: result.results ?? [] }, 200, cors) : databaseError(cors);
+  return result.success
+    ? json({ data: (result.results ?? []).map(mapListingRow) }, 200, cors)
+    : databaseError(cors);
 }
 
 async function createListing(request: Request, env: MarketplaceEnv, cors: Headers) {
@@ -550,12 +568,7 @@ async function deleteImage(request: Request, env: MarketplaceEnv, cors: Headers,
     : databaseError(cors);
 }
 
-async function privateMedia(
-  request: Request,
-  env: MarketplaceEnv,
-  cors: Headers,
-  assetId: string,
-) {
+async function privateMedia(request: Request, env: MarketplaceEnv, cors: Headers, assetId: string) {
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
   const asset = await env.DB.prepare(
@@ -666,16 +679,16 @@ function mapProfile(row: Row) {
   return {
     id: row.id,
     email: row.email,
-    displayName: row.display_name,
-    firstName: row.first_name,
-    lastName: row.last_name,
-    businessName: row.business_name,
-    bio: row.bio,
-    governorate: row.governorate,
-    cityArea: row.city_area,
-    phone: row.phone,
-    whatsapp: row.whatsapp,
-    preferredContactMethod: row.preferred_contact_method,
+    displayName: nullableString(row.display_name),
+    firstName: nullableString(row.first_name),
+    lastName: nullableString(row.last_name),
+    businessName: nullableString(row.business_name),
+    bio: nullableString(row.bio),
+    governorate: nullableString(row.governorate),
+    cityArea: nullableString(row.city_area),
+    phone: nullableString(row.phone),
+    whatsapp: nullableString(row.whatsapp),
+    preferredContactMethod: nullableString(row.preferred_contact_method),
     verificationStatus: row.verification_status,
     accountStatus: row.account_status,
     avatarAssetId: row.avatar_asset_id,
@@ -683,6 +696,86 @@ function mapProfile(row: Row) {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+function mapListingRow(row: Row) {
+  return {
+    id: stringValue(row.id),
+    categoryId: stringValue(row.category_id),
+    subcategoryId: nullableString(row.subcategory_id),
+    governorateId: stringValue(row.governorate_id),
+    locationNodeId: nullableString(row.location_node_id),
+    title: stringValue(row.title),
+    description: stringValue(row.description),
+    price: nullableNumber(row.price),
+    currency: "SYP",
+    priceType: stringValue(row.price_type, "fixed"),
+    condition: stringValue(row.listing_condition, "not_applicable"),
+    status: stringValue(row.status),
+    districtAr: nullableString(row.district_ar),
+    contactName: nullableString(row.contact_name),
+    contactOptions:
+      row.contact_options &&
+      typeof row.contact_options === "object" &&
+      !Array.isArray(row.contact_options)
+        ? (row.contact_options as Row)
+        : {},
+    details:
+      row.details && typeof row.details === "object" && !Array.isArray(row.details)
+        ? (row.details as Row)
+        : {},
+    isFeatured: row.is_featured === true || row.is_featured === 1,
+    featuredUntil: nullableString(row.featured_until),
+    reviewedBy: null,
+    reviewedAt: nullableString(row.reviewed_at),
+    rejectionReason: null,
+    publishedAt: nullableString(row.published_at),
+    archivedAt: nullableString(row.archived_at),
+    reservedAt: nullableString(row.reserved_at),
+    expiresAt: nullableString(row.expires_at),
+    renewedAt: nullableString(row.renewed_at),
+    expiryDays: nullableNumber(row.expiry_days),
+    createdAt: stringValue(row.created_at),
+    updatedAt: stringValue(row.updated_at),
+  };
+}
+
+function stringValue(value: unknown, fallback = ""): string {
+  if (typeof value !== "string") return fallback;
+  return repairWindows1256Mojibake(value) || fallback;
+}
+
+function nullableString(value: unknown): string | null {
+  if (typeof value !== "string" || !value.length) return null;
+  return repairWindows1256Mojibake(value);
+}
+
+function nullableNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const number = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function numberValue(value: unknown, fallback = 0): number {
+  const number = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+const windows1256Decoder = new TextDecoder("windows-1256");
+const windows1256Reverse = new Map<string, number>(
+  Array.from({ length: 256 }, (_, byte) => [windows1256Decoder.decode(Uint8Array.of(byte)), byte]),
+);
+
+function repairWindows1256Mojibake(value: string): string {
+  if (!/[طظ]/.test(value)) return value;
+  const bytes: number[] = [];
+  for (const character of value) {
+    const byte = windows1256Reverse.get(character);
+    if (byte === undefined) return value;
+    bytes.push(byte);
+  }
+  const repaired = new TextDecoder("utf-8", { fatal: false }).decode(Uint8Array.from(bytes));
+  return repaired.includes("\uFFFD") ? value : repaired;
 }
 function matchesImageSignature(bytes: Uint8Array, type: string) {
   if (type === "image/jpeg") return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;

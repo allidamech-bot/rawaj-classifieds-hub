@@ -4,9 +4,7 @@ import { firebaseAuth } from "@/lib/firebase";
 import { requireCloudflarePublicApiBaseUrl } from "@/lib/public-data/config";
 
 type Envelope<T> = { data?: T; error?: { code?: string; message?: string } };
-type ApiResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: string; code: string };
+type ApiResult<T> = { ok: true; data: T } | { ok: false; error: string; code: string };
 
 export function cloudflareApiUrl(path: string): string {
   const base = requireCloudflarePublicApiBaseUrl();
@@ -82,12 +80,21 @@ function looksLikeCorruptedArabic(value: string | null): boolean {
   return compact.length >= 5 && suspiciousArabicMarkers >= 3;
 }
 
+function repairWindows1256Mojibake(value: string): string {
+  if (!/[طظ]/.test(value)) return value;
+  try {
+    const encoded = new TextEncoder().encode(value);
+    const decoded = new TextDecoder("windows-1256").decode(encoded);
+    const roundTrip = new TextEncoder().encode(decoded);
+    if (roundTrip.length === encoded.length && decoded !== value) return decoded;
+  } catch {
+    // ignore
+  }
+  return value;
+}
+
 function firebaseIdentityDisplayName(user: AuthUser): string | null {
-  return (
-    user.user_metadata.display_name?.trim() ||
-    user.user_metadata.full_name?.trim() ||
-    null
-  );
+  return user.user_metadata.display_name?.trim() || user.user_metadata.full_name?.trim() || null;
 }
 
 function accountDisplayNameFallback(
@@ -96,15 +103,42 @@ function accountDisplayNameFallback(
   lastName: string | null,
 ): string | null {
   const firebaseName = firebaseIdentityDisplayName(user);
-  if (firebaseName) return firebaseName;
+  if (firebaseName && !looksLikeCorruptedArabic(firebaseName)) return firebaseName;
 
   const storedName = [firstName?.trim(), lastName?.trim()].filter(Boolean).join(" ");
-  if (storedName && !looksLikeCorruptedArabic(storedName)) return storedName;
+  if (storedName) {
+    const repaired = repairWindows1256Mojibake(storedName);
+    if (repaired !== storedName || !looksLikeCorruptedArabic(repaired)) return repaired;
+  }
 
   const email = user.email?.trim();
   if (!email) return null;
   const localPart = email.split("@", 1)[0]?.trim();
   return localPart || null;
+}
+
+export function resolveDisplayName(
+  profile: UserProfile | null,
+  email: string | null | undefined,
+  text: (ar: string, en: string) => string,
+): string {
+  if (!profile) return text("حساب رواج", "RAWAJ account");
+  const candidates = [
+    profile.businessName,
+    profile.displayName,
+    profile.firstName && profile.lastName ? `${profile.firstName} ${profile.lastName}` : null,
+    profile.firstName,
+    profile.lastName,
+    email,
+  ];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const repaired = repairWindows1256Mojibake(candidate);
+    if (repaired && !looksLikeCorruptedArabic(repaired)) return repaired;
+  }
+  const localPart = email?.split("@", 1)[0]?.trim();
+  if (localPart) return localPart;
+  return text("حساب رواج", "RAWAJ account");
 }
 
 export async function loadCloudflareUserProfile(user: AuthUser): Promise<UserProfile> {

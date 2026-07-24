@@ -3,13 +3,16 @@ import { handlePublicListingsRequest, type PublicListingsEnv } from "./public-li
 import type { AuthEnv } from "./auth";
 import { handleMarketplacePrivate, type MarketplaceEnv } from "./marketplace-private";
 import { handleAccountSocial, type AccountSocialEnv } from "./account-social";
+import { handleAdmin, type AdminEnv } from "./admin";
 
 export default {
   async fetch(
     request: Request,
-    env: PublicListingsEnv & AuthEnv & MarketplaceEnv & AccountSocialEnv,
+    env: PublicListingsEnv & AuthEnv & MarketplaceEnv & AccountSocialEnv & AdminEnv,
   ): Promise<Response> {
     const url = new URL(request.url);
+    const adminResponse = await handleAdmin(request, env);
+    if (adminResponse) return adminResponse;
     const socialResponse = await handleAccountSocial(request, env);
     if (socialResponse) return socialResponse;
     const marketplaceResponse = await handleMarketplacePrivate(request, env);

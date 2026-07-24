@@ -7,6 +7,7 @@ import {
 } from "@/lib/api/messaging-guarded";
 import { fetchMyConversations, markConversationRead } from "@/lib/api/messaging";
 import { getClient } from "@/lib/api/shared";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 import type { Conversation, ConversationMessage } from "@/lib/classifieds-types";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 
@@ -129,6 +130,25 @@ export function useLiveChatWorkspace({
 
   useEffect(() => {
     if (!signedIn || !profileId || typeof window === "undefined") return;
+
+    if (isCloudflarePublicDataProvider()) {
+      const refreshWhenVisible = () => {
+        if (document.visibilityState === "visible" && navigator.onLine !== false) {
+          invalidateConversationMessagesCache(selectedConversationId);
+          void refreshWorkspace();
+        }
+      };
+      const interval = window.setInterval(refreshWhenVisible, 15_000);
+      document.addEventListener("visibilitychange", refreshWhenVisible);
+      window.addEventListener("online", refreshWhenVisible);
+      window.addEventListener("focus", refreshWhenVisible);
+      return () => {
+        window.clearInterval(interval);
+        document.removeEventListener("visibilitychange", refreshWhenVisible);
+        window.removeEventListener("online", refreshWhenVisible);
+        window.removeEventListener("focus", refreshWhenVisible);
+      };
+    }
 
     const clientResult = getClient();
     const scopeKey = buildScopeKey(profileId, selectedConversationId);
