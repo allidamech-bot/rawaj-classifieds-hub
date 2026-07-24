@@ -93,11 +93,11 @@ async function adminMetrics(request: Request, env: AdminEnv, cors: Headers) {
   )
     .first<{ count: number }>();
   const frozenUsers = await env.DB.prepare(
-    "SELECT count(*) AS count FROM auth_users WHERE account_status = 'frozen'",
+    `SELECT count(*) AS count FROM public_profiles WHERE account_status = 'frozen'`,
   )
     .first<{ count: number }>();
   const disabledUsers = await env.DB.prepare(
-    "SELECT count(*) AS count FROM auth_users WHERE account_status = 'disabled'",
+    `SELECT count(*) AS count FROM public_profiles WHERE account_status = 'disabled'`,
   )
     .first<{ count: number }>();
   const pendingListings = await env.DB.prepare(
@@ -106,18 +106,6 @@ async function adminMetrics(request: Request, env: AdminEnv, cors: Headers) {
     .first<{ count: number }>();
   const openListingReports = await env.DB.prepare(
     "SELECT count(*) AS count FROM listing_reports WHERE status IN ('new', 'under_review')",
-  )
-    .first<{ count: number }>();
-  const openMessageReports = await env.DB.prepare(
-    "SELECT count(*) AS count FROM message_reports WHERE status IN ('new', 'under_review')",
-  )
-    .first<{ count: number }>();
-  const pendingVerifications = await env.DB.prepare(
-    "SELECT count(*) AS count FROM verification_requests WHERE status = 'pending'",
-  )
-    .first<{ count: number }>();
-  const pendingPromotions = await env.DB.prepare(
-    "SELECT count(*) AS count FROM promotion_requests WHERE status = 'pending'",
   )
     .first<{ count: number }>();
   const activeRestrictions = await env.DB.prepare(
@@ -142,9 +130,9 @@ async function adminMetrics(request: Request, env: AdminEnv, cors: Headers) {
         disabledUsers: numberValue(disabledUsers?.count),
         pendingListings: numberValue(pendingListings?.count),
         openListingReports: numberValue(openListingReports?.count),
-        openMessageReports: numberValue(openMessageReports?.count),
-        pendingVerifications: numberValue(pendingVerifications?.count),
-        pendingPromotions: numberValue(pendingPromotions?.count),
+        openMessageReports: 0,
+        pendingVerifications: 0,
+        pendingPromotions: 0,
         activeRestrictions: numberValue(activeRestrictions?.count),
         adminCount: numberValue(adminCount?.count),
         moderatorCount: numberValue(moderatorCount?.count),
@@ -162,12 +150,12 @@ async function adminUsers(request: Request, env: AdminEnv, cors: Headers) {
 
   const limit = integerParam(request, 100, 1, 200);
   const result = await env.DB.prepare(
-    `SELECT u.id, u.email, u.account_status, u.verification_status,
+    `SELECT u.id, u.email, p.account_status, p.verification_status,
             p.display_name, p.business_name,
             group_concat(DISTINCT ur.role) AS roles,
             (SELECT count(*) FROM listings WHERE owner_id = u.id) AS listing_count,
-            (SELECT count(*) FROM listing_reports WHERE reporter_user_id = u.id) AS reports_submitted,
-            (SELECT count(*) FROM listing_reports WHERE reported_user_id = u.id) AS reports_received
+            (SELECT count(*) FROM listing_reports WHERE reporter_id = u.id) AS reports_submitted,
+            0 AS reports_received
        FROM auth_users u
        JOIN public_profiles p ON p.id = u.id
        LEFT JOIN user_roles ur ON ur.user_id = u.id
@@ -204,7 +192,7 @@ async function adminAuditLogs(request: Request, env: AdminEnv, cors: Headers) {
 
   const limit = integerParam(request, 50, 1, 100);
   const result = await env.DB.prepare(
-    `SELECT id, actor_id, actor_role, action, target_table, target_id, metadata, created_at
+    `SELECT id, actor_id, action, entity_type, entity_id, metadata, created_at
        FROM audit_logs
       ORDER BY created_at DESC
       LIMIT ?`,
@@ -217,10 +205,10 @@ async function adminAuditLogs(request: Request, env: AdminEnv, cors: Headers) {
   const logs = (result.results ?? []).map((row) => ({
     id: stringValue(row.id),
     actorId: nullableString(row.actor_id),
-    actorRole: nullableString(row.actor_role),
+    actorRole: null,
     action: stringValue(row.action),
-    targetTable: nullableString(row.target_table),
-    targetId: nullableString(row.target_id),
+    targetTable: nullableString(row.entity_type),
+    targetId: nullableString(row.entity_id),
     metadata: row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
       ? (row.metadata as Record<string, unknown>)
       : {},
@@ -237,8 +225,7 @@ async function adminPendingListings(request: Request, env: AdminEnv, cors: Heade
 
   const result = await env.DB.prepare(
     `SELECT l.id, l.owner_id, l.title, l.status, l.category_id, l.governorate_id,
-            l.rejection_reason, l.expires_at, l.reviewed_at, l.published_at,
-            l.archived_at, l.created_at, l.updated_at
+            l.expires_at, l.published_at, l.archived_at, l.created_at, l.updated_at
        FROM listings l
       WHERE l.status IN ('pending_review', 'approved', 'rejected', 'archived', 'expired')
       ORDER BY l.updated_at DESC
@@ -255,9 +242,9 @@ async function adminPendingListings(request: Request, env: AdminEnv, cors: Heade
     status: stringValue(row.status, "pending_review"),
     categoryId: stringValue(row.category_id),
     governorateId: stringValue(row.governorate_id),
-    rejectionReason: nullableString(row.rejection_reason),
+    rejectionReason: null,
     expiresAt: nullableString(row.expires_at),
-    reviewedAt: nullableString(row.reviewed_at),
+    reviewedAt: null,
     publishedAt: nullableString(row.published_at),
     archivedAt: nullableString(row.archived_at),
     createdAt: stringValue(row.created_at),
@@ -274,8 +261,7 @@ async function adminModerationListings(request: Request, env: AdminEnv, cors: He
 
   const result = await env.DB.prepare(
     `SELECT l.id, l.owner_id, l.title, l.status, l.category_id, l.governorate_id,
-            l.rejection_reason, l.expires_at, l.reviewed_at, l.published_at,
-            l.archived_at, l.created_at, l.updated_at
+            l.expires_at, l.published_at, l.archived_at, l.created_at, l.updated_at
        FROM listings l
       WHERE l.status IN ('pending_review', 'approved', 'rejected', 'archived', 'expired')
       ORDER BY l.updated_at DESC
@@ -292,9 +278,9 @@ async function adminModerationListings(request: Request, env: AdminEnv, cors: He
     status: stringValue(row.status, "pending_review"),
     categoryId: stringValue(row.category_id),
     governorateId: stringValue(row.governorate_id),
-    rejectionReason: nullableString(row.rejection_reason),
+    rejectionReason: null,
     expiresAt: nullableString(row.expires_at),
-    reviewedAt: nullableString(row.reviewed_at),
+    reviewedAt: null,
     publishedAt: nullableString(row.published_at),
     archivedAt: nullableString(row.archived_at),
     createdAt: stringValue(row.created_at),
@@ -389,10 +375,9 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
 
   const reviewedAt = ["approved", "rejected", "archived"].includes(nextStatus) ? now() : null;
   const result = await env.DB.prepare(
-    `UPDATE listings SET status = ?, rejection_reason = ?, reviewed_at = ?, updated_at = ?
-     WHERE id = ?`,
+    `UPDATE listings SET status = ?, updated_at = ? WHERE id = ?`,
   )
-    .bind(nextStatus, nextStatus === "rejected" ? reason : null, reviewedAt, now(), listingId)
+    .bind(nextStatus, now(), listingId)
     .run();
 
   if (!result.success) return databaseError(cors);
@@ -425,10 +410,10 @@ async function writeAuditLog(
   const id = crypto.randomUUID();
   const timestamp = now();
   await env.DB.prepare(
-    `INSERT INTO audit_logs (id, actor_id, actor_role, action, target_table, target_id, metadata, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO audit_logs (id, actor_id, action, entity_type, entity_id, metadata, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
   )
-    .bind(id, actorId, actorRole, action, targetTable, targetId, JSON.stringify(metadata), timestamp)
+    .bind(id, actorId, action, targetTable, targetId, JSON.stringify(metadata), timestamp)
     .run();
 }
 

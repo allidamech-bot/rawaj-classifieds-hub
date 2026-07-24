@@ -297,7 +297,7 @@ async function createListing(request: Request, env: MarketplaceEnv, cors: Header
       timestamp,
     )
     .run();
-  return result.success ? json({ data: { id, status } }, 201, cors) : databaseError(cors);
+  return result.success ? json({ data: { id, status, updatedAt: timestamp } }, 201, cors) : databaseError(cors);
 }
 
 async function updateListing(request: Request, env: MarketplaceEnv, cors: Headers, id: string) {
@@ -701,6 +701,7 @@ function mapProfile(row: Row) {
 function mapListingRow(row: Row) {
   return {
     id: stringValue(row.id),
+    ownerId: stringValue(row.owner_id),
     categoryId: stringValue(row.category_id),
     subcategoryId: nullableString(row.subcategory_id),
     governorateId: stringValue(row.governorate_id),

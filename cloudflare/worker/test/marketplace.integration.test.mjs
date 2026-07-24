@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { createSupabaseAuthFixture } from "./supabase-auth-fixture.mjs";
@@ -10,6 +10,8 @@ const testIp = `203.0.113.${(Date.now() % 200) + 1}`;
 let worker;
 let owner;
 let other;
+let admin;
+let moderator;
 let listingId;
 let imageId;
 let auth;
@@ -32,7 +34,7 @@ before(async () => {
     ],
     {
       cwd: fileURLToPath(new URL("..", import.meta.url)),
-      stdio: "ignore",
+      stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
     },
   );
@@ -42,8 +44,20 @@ before(async () => {
     } catch {}
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
+  worker.stderr.on("data", (data) => {
+    console.error("[worker stderr]", data.toString());
+  });
+  worker.stdout.on("data", (data) => {
+    console.error("[worker stdout]", data.toString());
+  });
   owner = await signup("owner");
   other = await signup("other");
+  admin = await signup("admin");
+  moderator = await signup("moderator");
+  await assignRole(owner.userId, "owner");
+  await assignRole(admin.userId, "admin");
+  await assignRole(moderator.userId, "moderator");
+  await new Promise((resolve) => setTimeout(resolve, 500));
 });
 
 after(() => worker?.kill());
@@ -116,7 +130,7 @@ test("listing creation security, reads, filtering, ownership, and deletion", asy
   assert.equal((await api(`/api/listings/${listingId}`)).response.status, 404);
   const ownerRead = await api(`/api/listings/${listingId}`, owner);
   assert.equal(ownerRead.response.status, 200);
-  assert.equal(ownerRead.payload.data.listing.owner_id, owner.userId);
+  assert.equal(ownerRead.payload.data.listing.ownerId, owner.userId);
 
   const publicRead = await api("/api/listings/test-public-listing");
   assert.equal(publicRead.response.status, 200);
@@ -149,7 +163,7 @@ test("listing creation security, reads, filtering, ownership, and deletion", asy
   });
   assert.equal(updated.response.status, 200);
   const afterUpdate = await api(`/api/listings/${listingId}`, owner);
-  assert.equal(afterUpdate.payload.data.listing.owner_id, owner.userId);
+  assert.equal(afterUpdate.payload.data.listing.ownerId, owner.userId);
   assert.equal(afterUpdate.payload.data.listing.status, "draft");
 
   assert.equal(
@@ -288,4 +302,268 @@ async function api(path, options = {}) {
   });
   const payload = await response.json();
   return { response, payload };
+}
+
+async function assignRole(userId, role) {
+  const wrangler = fileURLToPath(new URL("../node_modules/wrangler/bin/wrangler.js", import.meta.url));
+  const result = spawnSync(
+    process.execPath,
+    [
+      wrangler,
+      "d1",
+      "execute",
+      "rawaj-staging",
+      "--local",
+      "--persist-to",
+      ".wrangler/test-state-auth",
+      "--config",
+      "wrangler.generated.jsonc",
+      "--command",
+      `INSERT OR IGNORE INTO user_roles (user_id, role, created_at) VALUES ('${userId}', '${role}', datetime('now'))`,
+    ],
+    {
+      cwd: fileURLToPath(new URL("..", import.meta.url)),
+      encoding: "utf8",
+      windowsHide: true,
+    },
+  );
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+}
+
+test("owner can read admin metrics", async () => {
+  const result = await api("/v1/admin/metrics", owner);
+  assert.equal(result.response.status, 200);
+  assert.ok(typeof result.payload.data.totalUsers === "number");
+});
+
+test("admin can read admin metrics", async () => {
+  const result = await api("/v1/admin/metrics", admin);
+  assert.equal(result.response.status, 200);
+  assert.ok(typeof result.payload.data.totalUsers === "number");
+});
+
+test("moderator cannot read admin metrics", async () => {
+  const result = await api("/v1/admin/metrics", moderator);
+  assert.equal(result.response.status, 403);
+});
+
+test("normal user cannot read admin metrics", async () => {
+  const result = await api("/v1/admin/metrics", other);
+  assert.equal(result.response.status, 403);
+});
+
+test("unauthenticated request to admin metrics is rejected", async () => {
+  const response = await fetch(`${baseUrl}/v1/admin/metrics`);
+  assert.equal(response.status, 401);
+});
+
+test("owner can read admin users", async () => {
+  const result = await api("/v1/admin/users", owner);
+  assert.equal(result.response.status, 200);
+  assert.ok(Array.isArray(result.payload.data));
+});
+
+test("admin cannot read admin users", async () => {
+  const result = await api("/v1/admin/users", admin);
+  assert.equal(result.response.status, 403);
+});
+
+test("owner can read admin audit logs", async () => {
+  const result = await api("/v1/admin/audit", owner);
+  assert.equal(result.response.status, 200);
+  assert.ok(Array.isArray(result.payload.data));
+});
+
+test("admin can read admin audit logs", async () => {
+  const result = await api("/v1/admin/audit", admin);
+  assert.equal(result.response.status, 200);
+  assert.ok(Array.isArray(result.payload.data));
+});
+
+test("moderator cannot read admin audit logs", async () => {
+  const result = await api("/v1/admin/audit", moderator);
+  assert.equal(result.response.status, 403);
+});
+
+test("owner can read pending listings", async () => {
+  const result = await api("/v1/admin/listings/pending", owner);
+  assert.equal(result.response.status, 200);
+  assert.ok(Array.isArray(result.payload.data));
+});
+
+test("admin can read pending listings", async () => {
+  const result = await api("/v1/admin/listings/pending", admin);
+  assert.equal(result.response.status, 200);
+  assert.ok(Array.isArray(result.payload.data));
+});
+
+test("moderator can read pending listings", async () => {
+  const result = await api("/v1/admin/listings/pending", moderator);
+  assert.equal(result.response.status, 200);
+  assert.ok(Array.isArray(result.payload.data));
+});
+
+test("normal user cannot read pending listings", async () => {
+  const result = await api("/v1/admin/listings/pending", other);
+  assert.equal(result.response.status, 403);
+});
+
+test("owner can read all listings", async () => {
+  const result = await api("/v1/admin/listings", owner);
+  assert.equal(result.response.status, 200);
+  assert.ok(Array.isArray(result.payload.data));
+});
+
+test("admin can read all listings", async () => {
+  const result = await api("/v1/admin/listings", admin);
+  assert.equal(result.response.status, 200);
+  assert.ok(Array.isArray(result.payload.data));
+});
+
+test("moderator can read all listings", async () => {
+  const result = await api("/v1/admin/listings", moderator);
+  assert.equal(result.response.status, 200);
+  assert.ok(Array.isArray(result.payload.data));
+});
+
+test("normal user cannot read all listings", async () => {
+  const result = await api("/v1/admin/listings", other);
+  assert.equal(result.response.status, 403);
+});
+
+test("owner can approve listing and audit log is created", async () => {
+  const listing = await createListing(owner, {
+    title: "Admin test listing",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 201);
+  const listingId = listing.payload.data.id;
+
+  const moderate = await api("/v1/admin/listings/moderate", { ...owner, method: "POST", body: {
+    listingId,
+    action: "approve",
+    expectedUpdatedAt: listing.payload.data.updatedAt,
+  } });
+  assert.equal(moderate.response.status, 200);
+  assert.equal(moderate.payload.data.previousStatus, "pending_review");
+  assert.equal(moderate.payload.data.nextStatus, "approved");
+
+  const audit = await api("/v1/admin/audit", owner);
+  assert.equal(audit.response.status, 200);
+  const approveLog = audit.payload.data.find(
+    (log) => log.targetId === listingId && log.action === "listing_approve",
+  );
+  assert.ok(approveLog, "approve audit log not found");
+});
+
+test("moderator can reject listing and audit log is created", async () => {
+  const listing = await createListing(owner, {
+    title: "Moderator reject test",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 201);
+  const listingId = listing.payload.data.id;
+
+  const moderate = await api("/v1/admin/listings/moderate", { ...moderator, method: "POST", body: {
+    listingId,
+    action: "reject",
+    reason: "Invalid listing",
+    expectedUpdatedAt: listing.payload.data.updatedAt,
+  } });
+  assert.equal(moderate.response.status, 200);
+  assert.equal(moderate.payload.data.previousStatus, "pending_review");
+  assert.equal(moderate.payload.data.nextStatus, "rejected");
+
+  const audit = await api("/v1/admin/audit", moderator);
+  assert.equal(audit.response.status, 403);
+});
+
+test("normal user cannot moderate listings", async () => {
+  const listing = await createListing(owner, {
+    title: "Normal user moderation test",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 201);
+  const listingId = listing.payload.data.id;
+
+  const moderate = await api("/v1/admin/listings/moderate", { ...other, method: "POST", body: {
+    listingId,
+    action: "approve",
+    expectedUpdatedAt: listing.payload.data.updatedAt,
+  } });
+  assert.equal(moderate.response.status, 403);
+});
+
+test("invalid listing ID returns not found", async () => {
+  const moderate = await api("/v1/admin/listings/moderate", owner, {
+    method: "POST",
+    body: {
+      listingId: "00000000-0000-0000-0000-000000000000",
+      action: "approve",
+      expectedUpdatedAt: new Date().toISOString(),
+    },
+  });
+  assert.equal(moderate.response.status, 404);
+});
+
+test("invalid moderation action returns validation error", async () => {
+  const listing = await createListing(owner, {
+    title: "Invalid action test",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 201);
+
+  const moderate = await api("/v1/admin/listings/moderate", { ...owner, method: "POST", body: {
+    listingId: listing.payload.data.id,
+    action: "invalid_action",
+    expectedUpdatedAt: listing.payload.data.updatedAt,
+  } });
+  assert.equal(moderate.response.status, 400);
+});
+
+test("moderator cannot escalate to owner-only action", async () => {
+  const result = await api("/v1/admin/users", moderator);
+  assert.equal(result.response.status, 403);
+});
+
+test("stale review is rejected with 409", async () => {
+  const listing = await createListing(owner, {
+    title: "Stale review test",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 201);
+
+  const moderate = await api("/v1/admin/listings/moderate", { ...owner, method: "POST", body: {
+    listingId: listing.payload.data.id,
+    action: "approve",
+    expectedUpdatedAt: "stale-timestamp",
+  } });
+  assert.equal(moderate.response.status, 409);
+});
+
+async function createListing(session, overrides = {}) {
+  const body = {
+    categoryId: "test-category",
+    subcategoryId: "test-subcategory",
+    governorateId: "test-governorate",
+    title: "Admin test listing",
+    description: "Test listing for admin integration",
+    price: 100,
+    priceType: "fixed",
+    condition: "used",
+    details: {},
+    submit: true,
+    ...overrides,
+  };
+  const response = await fetch(`${baseUrl}/v1/listings`, {
+    method: "POST",
+    headers: {
+      Origin: "http://localhost:8080",
+      "CF-Connecting-IP": testIp,
+      Authorization: `Bearer ${session.token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  return { response, payload: await response.json() };
 }
