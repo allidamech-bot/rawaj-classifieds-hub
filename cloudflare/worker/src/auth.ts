@@ -31,9 +31,8 @@ interface D1Database {
 export interface AuthEnv {
   DB: D1Database;
   API_ALLOWED_ORIGINS?: string;
-  SUPABASE_AUTH_ISSUER?: string;
-  SUPABASE_AUTH_AUDIENCE?: string;
-  SUPABASE_AUTH_TEST_JWKS?: string;
+  FIREBASE_PROJECT_ID?: string;
+  FIREBASE_AUTH_TEST_JWKS?: string;
 }
 
 type Authenticated = {
@@ -55,13 +54,15 @@ const MAX_BODY_BYTES = 16_384;
 const encoder = new TextEncoder();
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const FIREBASE_JWKS_URL =
+  "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
 const remoteKeySets = new Map<string, JWTVerifyGetKey>();
 
 export async function authenticate(request: Request, env: AuthEnv): Promise<Authenticated | null> {
   const token = bearerToken(request);
   if (!token) return null;
 
-  const identity = await verifySupabaseAccessToken(token, env);
+  const identity = await verifyFirebaseIdToken(token, env);
   if (!identity) return null;
 
   const userId = await ensureApplicationIdentity(env, identity);
@@ -69,7 +70,7 @@ export async function authenticate(request: Request, env: AuthEnv): Promise<Auth
     `SELECT u.id, u.email, u.disabled_at, p.display_name
        FROM auth_users u
        JOIN public_profiles p ON p.id = u.id
-      WHERE u.id = ? AND u.auth_provider = 'supabase' AND u.auth_user_id = ?`,
+      WHERE u.id = ? AND u.auth_provider = 'firebase' AND u.auth_user_id = ?`,
   )
     .bind(userId, identity.subject)
     .first<JsonRecord>();
@@ -105,45 +106,35 @@ export async function requireMutationAuth(
   return auth;
 }
 
-export async function verifySupabaseAccessToken(
+export async function verifyFirebaseIdToken(
   token: string,
-  env: Pick<
-    AuthEnv,
-    "SUPABASE_AUTH_ISSUER" | "SUPABASE_AUTH_AUDIENCE" | "SUPABASE_AUTH_TEST_JWKS"
-  >,
+  env: Pick<AuthEnv, "FIREBASE_PROJECT_ID" | "FIREBASE_AUTH_TEST_JWKS">,
 ): Promise<VerifiedIdentity | null> {
-  const issuer = normalizedIssuer(env.SUPABASE_AUTH_ISSUER);
-  if (!issuer) throw new Error("supabase_auth_issuer_missing");
-  const audience = env.SUPABASE_AUTH_AUDIENCE?.trim() || "authenticated";
+  const projectId = env.FIREBASE_PROJECT_ID?.trim();
+  if (!projectId) throw new Error("firebase_project_id_missing");
+  const issuer = `https://securetoken.google.com/${projectId}`;
 
   try {
     const { payload } = await jwtVerify(token, verificationKeySet(env, issuer), {
       issuer,
-      audience,
-      algorithms: ["RS256", "ES256", "EdDSA"],
+      audience: projectId,
+      algorithms: ["RS256"],
       requiredClaims: ["exp", "iat", "iss", "aud", "sub"],
     });
-    if (
-      typeof payload.sub !== "string" ||
-      !UUID_PATTERN.test(payload.sub) ||
-      payload.role !== "authenticated" ||
-      payload.is_anonymous === true
-    ) {
-      return null;
-    }
+    if (typeof payload.sub !== "string" || !validFirebaseUid(payload.sub)) return null;
     const email = typeof payload.email === "string" ? normalizeEmail(payload.email) : "";
     if (!email || !validEmail(email)) return null;
-    const sessionId = typeof payload.session_id === "string" ? payload.session_id : "";
-    if (!sessionId || !UUID_PATTERN.test(sessionId)) return null;
+    const issuedAt = typeof payload.iat === "number" ? String(payload.iat) : "unknown";
+    const tokenId = typeof payload.jti === "string" && payload.jti ? payload.jti : issuedAt;
     return {
       subject: payload.sub,
-      sessionId,
+      sessionId: `${payload.sub}:${tokenId}`,
       email,
-      displayName: safeDisplayName(payload.user_metadata),
+      displayName: safeFirebaseDisplayName(payload),
     };
   } catch (error) {
     if (error instanceof joseErrors.JOSEError) return null;
-    console.error("rawaj_auth_jwt_verification_failed", error);
+    console.error("rawaj_firebase_jwt_verification_failed", error);
     return null;
   }
 }
@@ -154,25 +145,31 @@ async function ensureApplicationIdentity(
 ): Promise<string> {
   const linked = await env.DB.prepare(
     `SELECT id FROM auth_users
-      WHERE auth_provider = 'supabase' AND auth_user_id = ?`,
+      WHERE auth_provider = 'firebase' AND auth_user_id = ?`,
   )
     .bind(identity.subject)
     .first<{ id: string }>();
   if (linked) return linked.id;
 
-  const existingSameId = await env.DB.prepare(
-    "SELECT id, auth_provider, auth_user_id FROM auth_users WHERE id = ?",
-  )
-    .bind(identity.subject)
-    .first<{ id: string; auth_provider: string | null; auth_user_id: string | null }>();
+  const existingSameId = UUID_PATTERN.test(identity.subject)
+    ? await env.DB.prepare(
+        "SELECT id, auth_provider, auth_user_id FROM auth_users WHERE id = ?",
+      )
+        .bind(identity.subject)
+        .first<{ id: string; auth_provider: string | null; auth_user_id: string | null }>()
+    : null;
   const now = new Date().toISOString();
 
-  if (existingSameId && !existingSameId.auth_user_id) {
+  if (
+    existingSameId &&
+    (!existingSameId.auth_user_id ||
+      (existingSameId.auth_provider === "supabase" && existingSameId.auth_user_id === identity.subject))
+  ) {
     const result = await env.DB.prepare(
       `UPDATE auth_users
-          SET auth_provider = 'supabase', auth_user_id = ?, email = ?,
+          SET auth_provider = 'firebase', auth_user_id = ?, email = ?,
               email_normalized = ?, updated_at = ?
-        WHERE id = ? AND auth_user_id IS NULL`,
+        WHERE id = ?`,
     )
       .bind(identity.subject, identity.email, identity.email, now, identity.subject)
       .run();
@@ -181,20 +178,21 @@ async function ensureApplicationIdentity(
   }
   if (existingSameId) throw new Error("identity_collision");
 
+  const applicationUserId = UUID_PATTERN.test(identity.subject) ? identity.subject : crypto.randomUUID();
   const displayName = identity.displayName ?? identity.email.split("@")[0].slice(0, 100);
   const results = await env.DB.batch([
     env.DB.prepare(
       `INSERT OR IGNORE INTO public_profiles
         (id, display_name, verification_status, account_status, created_at, updated_at, email)
        VALUES (?, ?, 'unverified', 'active', ?, ?, ?)`,
-    ).bind(identity.subject, displayName, now, now, identity.email),
+    ).bind(applicationUserId, displayName, now, now, identity.email),
     env.DB.prepare(
       `INSERT OR IGNORE INTO auth_users
         (id, email, email_normalized, email_confirmed_at, created_at, updated_at,
          auth_provider, auth_user_id)
-       VALUES (?, ?, ?, ?, ?, ?, 'supabase', ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, 'firebase', ?)`,
     ).bind(
-      identity.subject,
+      applicationUserId,
       identity.email,
       identity.email,
       now,
@@ -204,13 +202,13 @@ async function ensureApplicationIdentity(
     ),
     env.DB.prepare(
       `INSERT OR IGNORE INTO user_roles (user_id, role, created_at) VALUES (?, 'user', ?)`,
-    ).bind(identity.subject, now),
+    ).bind(applicationUserId, now),
   ]);
   if (results.some((result) => !result.success)) throw new Error("identity_create_failed");
 
   const created = await env.DB.prepare(
     `SELECT id FROM auth_users
-      WHERE auth_provider = 'supabase' AND auth_user_id = ?`,
+      WHERE auth_provider = 'firebase' AND auth_user_id = ?`,
   )
     .bind(identity.subject)
     .first<{ id: string }>();
@@ -219,32 +217,21 @@ async function ensureApplicationIdentity(
 }
 
 function verificationKeySet(
-  env: Pick<AuthEnv, "SUPABASE_AUTH_TEST_JWKS">,
+  env: Pick<AuthEnv, "FIREBASE_AUTH_TEST_JWKS">,
   issuer: string,
 ): JWTVerifyGetKey {
-  if (env.SUPABASE_AUTH_TEST_JWKS && new URL(issuer).hostname === "localhost") {
-    const parsed = JSON.parse(env.SUPABASE_AUTH_TEST_JWKS) as JSONWebKeySet;
+  if (env.FIREBASE_AUTH_TEST_JWKS) {
+    const parsed = JSON.parse(env.FIREBASE_AUTH_TEST_JWKS) as JSONWebKeySet;
     return createLocalJWKSet(parsed);
   }
-  const jwksUrl = new URL(`${issuer}/.well-known/jwks.json`).toString();
-  const cached = remoteKeySets.get(jwksUrl);
+  const cached = remoteKeySets.get(FIREBASE_JWKS_URL);
   if (cached) return cached;
-  const remote = createRemoteJWKSet(new URL(jwksUrl), {
+  const remote = createRemoteJWKSet(new URL(FIREBASE_JWKS_URL), {
     cacheMaxAge: 10 * 60 * 1000,
     cooldownDuration: 30 * 1000,
   });
-  remoteKeySets.set(jwksUrl, remote);
+  remoteKeySets.set(FIREBASE_JWKS_URL, remote);
   return remote;
-}
-
-function normalizedIssuer(value: string | undefined): string | null {
-  try {
-    const url = new URL(value?.trim() ?? "");
-    if (url.protocol !== "https:" && url.hostname !== "localhost") return null;
-    return url.toString().replace(/\/$/, "");
-  } catch {
-    return null;
-  }
 }
 
 function bearerToken(request: Request): string | null {
@@ -253,14 +240,13 @@ function bearerToken(request: Request): string | null {
   return match?.[1] ?? null;
 }
 
-function safeDisplayName(metadata: unknown): string | null {
-  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return null;
-  const source = metadata as JsonRecord;
-  for (const key of ["display_name", "full_name", "name"]) {
-    const value = source[key];
-    if (typeof value === "string" && value.trim()) return value.trim().slice(0, 100);
-  }
-  return null;
+function validFirebaseUid(value: string): boolean {
+  return value.length > 0 && value.length <= 128 && !/\s/.test(value);
+}
+
+function safeFirebaseDisplayName(payload: JsonRecord): string | null {
+  const value = payload.name;
+  return typeof value === "string" && value.trim() ? value.trim().slice(0, 100) : null;
 }
 
 export async function readJson(
