@@ -3,11 +3,19 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const read = (path) => readFileSync(path, "utf8");
+const parseJsonc = (source) =>
+  JSON.parse(
+    source
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/(^|[^:])\/\/.*$/gm, "$1")
+      .replace(/,\s*([}\]])/g, "$1"),
+  );
+
 const schema = read("cloudflare/d1/migrations/0002_public_marketplace_foundation.sql");
 const worker = read("cloudflare/worker/src/index.ts");
 const workerEntry = read("cloudflare/worker/src/entry.ts");
 const publicListings = read("cloudflare/worker/src/public-listings.ts");
-const baseConfig = JSON.parse(read("cloudflare/worker/wrangler.base.jsonc"));
+const baseConfig = parseJsonc(read("cloudflare/worker/wrangler.base.jsonc"));
 const renderConfig = read("cloudflare/worker/scripts/render-config.mjs");
 const exporter = read("cloudflare/migration/export-public-snapshot.mjs");
 const mediaMigration = read("cloudflare/migration/migrate-media-to-r2.mjs");
