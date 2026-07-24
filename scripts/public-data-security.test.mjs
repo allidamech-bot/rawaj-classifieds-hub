@@ -77,9 +77,12 @@ test("all public listing reads use explicit allowlists", () => {
   assert.ok(publicList.includes("`${publicListingSelect},listing_images!inner(id)`"));
   assert.ok(publicList.includes(".select(listingSelect)"));
 
-  for (const source of [publicDetail, locationAware, canonicalAware, priceDrops]) {
+  for (const source of [publicDetail, locationAware, priceDrops]) {
     assert.match(source, /\.select\(publicListingSelect\)/);
   }
+  assert.match(canonicalAware, /fetchCloudflareListings\(filters, cursor, pageSize\)/);
+  assert.match(canonicalAware, /isCloudflarePublicDataProvider\(\)/);
+  assert.match(canonicalAware, /there is deliberately no silent cross-provider fallback/i);
 
   assert.doesNotMatch(publicList, /listing_images!inner\(\*\)/);
   assert.doesNotMatch(publicList, /\.select\("\*"\)/);

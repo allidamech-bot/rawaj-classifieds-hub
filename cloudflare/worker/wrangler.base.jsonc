@@ -3,17 +3,23 @@
   "name": "rawaj-public-api",
   "main": "src/entry.ts",
   "compatibility_date": "2026-07-23",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "preview_urls": false,
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
   "vars": {
     "API_ALLOWED_ORIGINS": "https://rawa-j.com,https://www.rawa-j.com",
     "API_CACHE_SECONDS": "60",
-    "MEDIA_CACHE_SECONDS": "86400"
-  }
+    "MEDIA_CACHE_SECONDS": "86400",
+    "AUTH_RECOVERY_FROM": "noreply@rawa-j.com",
+    "AUTH_RECOVERY_APP_ORIGIN": "https://rawa-j.com",
+  },
+  "send_email": [
+    {
+      "name": "RECOVERY_EMAIL",
+      "allowed_sender_addresses": ["noreply@rawa-j.com"],
+    },
+  ],
 }

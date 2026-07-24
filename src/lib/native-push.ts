@@ -176,6 +176,16 @@ export async function resetNativePushSession(): Promise<void> {
   await clearNativePushListeners();
 }
 
+export async function clearLocalNativePushState(): Promise<void> {
+  await unregisterNativePushLocally();
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(PUSH_DEVICE_KEY_STORAGE);
+  } catch {
+    // Logout must still complete when browser storage is unavailable.
+  }
+}
+
 async function waitForRegistrationToken(
   PushNotifications: typeof import("@capacitor/push-notifications").PushNotifications,
 ): Promise<ClassifiedsResult<string>> {

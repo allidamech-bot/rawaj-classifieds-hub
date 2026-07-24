@@ -19,10 +19,23 @@ interface D1Database {
   batch<T = JsonRecord>(statements: D1Statement[]): Promise<D1Result<T>[]>;
 }
 
+interface RecoveryEmailBinding {
+  send(message: {
+    to: string;
+    from: string | { address: string; name?: string };
+    subject: string;
+    text?: string;
+    html?: string;
+  }): Promise<{ messageId?: string }>;
+}
+
 export interface AuthEnv {
   DB: D1Database;
   API_ALLOWED_ORIGINS?: string;
   AUTH_RECOVERY_DELIVERY_MODE?: string;
+  AUTH_RECOVERY_FROM?: string;
+  AUTH_RECOVERY_APP_ORIGIN?: string;
+  RECOVERY_EMAIL?: RecoveryEmailBinding;
 }
 
 const SESSION_COOKIE = "rawaj_session";
@@ -213,9 +226,9 @@ async function requestPasswordReset(
         .bind(email)
         .first<{ id: string }>()
     : null;
-  const localDelivery =
-    isLocalRequest(request) && env.AUTH_RECOVERY_DELIVERY_MODE !== "disabled";
-  if (!localDelivery) {
+  const localDelivery = isLocalRequest(request) && env.AUTH_RECOVERY_DELIVERY_MODE !== "disabled";
+  const productionDelivery = recoveryEmailConfiguration(env);
+  if (!localDelivery && !productionDelivery) {
     return json(
       {
         error: {
@@ -238,6 +251,29 @@ async function requestPasswordReset(
       .bind(now, user.id)
       .run();
     developmentToken = await createOneTimeToken(env, user.id, "password_reset", 30 * 60);
+    if (!localDelivery && productionDelivery && email) {
+      try {
+        await env.RECOVERY_EMAIL!.send(
+          buildRecoveryEmail(
+            email,
+            productionDelivery.from,
+            productionDelivery.appOrigin,
+            developmentToken,
+          ),
+        );
+      } catch (error) {
+        await env.DB.prepare(
+          `UPDATE auth_one_time_tokens
+             SET consumed_at = ?
+           WHERE user_id = ? AND purpose = 'password_reset' AND consumed_at IS NULL`,
+        )
+          .bind(new Date().toISOString(), user.id)
+          .run();
+        console.error("rawaj_recovery_delivery_failed", {
+          code: safeEmailErrorCode(error),
+        });
+      }
+    }
   }
   return json(
     {
@@ -249,6 +285,69 @@ async function requestPasswordReset(
     202,
     cors,
   );
+}
+
+function recoveryEmailConfiguration(env: AuthEnv): { from: string; appOrigin: string } | null {
+  if (!env.RECOVERY_EMAIL) return null;
+  const from = normalizeEmail(env.AUTH_RECOVERY_FROM);
+  if (!from || !validEmail(from) || !from.endsWith("@rawa-j.com")) return null;
+  try {
+    const origin = new URL(env.AUTH_RECOVERY_APP_ORIGIN ?? "");
+    if (origin.protocol !== "https:" || origin.origin !== env.AUTH_RECOVERY_APP_ORIGIN) return null;
+    return { from, appOrigin: origin.origin };
+  } catch {
+    return null;
+  }
+}
+
+export function buildRecoveryEmail(to: string, from: string, appOrigin: string, token: string) {
+  const recoveryUrl = new URL("/reset-password", appOrigin);
+  recoveryUrl.searchParams.set("token", token);
+  const link = recoveryUrl.toString();
+  const escapedLink = escapeHtml(link);
+  return {
+    to,
+    from: { address: from, name: "رواج" },
+    subject: "استعادة كلمة المرور في رواج",
+    text: [
+      "مرحبًا،",
+      "",
+      "تلقينا طلبًا لاستعادة كلمة المرور لحسابك في رواج.",
+      `استخدم الرابط الآمن التالي خلال 30 دقيقة: ${link}`,
+      "",
+      "الرابط مخصص للاستخدام مرة واحدة فقط. إذا لم تطلب استعادة كلمة المرور فتجاهل هذه الرسالة.",
+    ].join("\n"),
+    html: `<div dir="rtl" lang="ar" style="font-family:Arial,sans-serif;line-height:1.7;color:#173f35">
+      <h1 style="color:#0f4c3a">استعادة كلمة المرور في رواج</h1>
+      <p>تلقينا طلبًا لاستعادة كلمة المرور لحسابك.</p>
+      <p><a href="${escapedLink}" style="background:#0f4c3a;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none">إنشاء كلمة مرور جديدة</a></p>
+      <p>تنتهي صلاحية هذا الرابط بعد 30 دقيقة، ويمكن استخدامه مرة واحدة فقط.</p>
+      <p>إذا لم تطلب استعادة كلمة المرور فتجاهل هذه الرسالة.</p>
+    </div>`,
+  };
+}
+
+function escapeHtml(value: string): string {
+  const replacements: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  };
+  return value.replace(/[&<>"']/g, (character) => replacements[character]);
+}
+
+function safeEmailErrorCode(error: unknown): string {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "string"
+  ) {
+    return error.code.slice(0, 80);
+  }
+  return "unknown";
 }
 
 async function confirmPasswordReset(

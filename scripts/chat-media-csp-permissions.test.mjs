@@ -4,7 +4,10 @@ import test from "node:test";
 
 const [server, attachment, chats] = await Promise.all([
   readFile(new URL("../src/server.ts", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/communication/ChatVoiceAttachment.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/communication/ChatVoiceAttachment.tsx", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
 ]);
 
@@ -47,16 +50,23 @@ test("no disabled or wildcard permissions/CSP values are introduced", () => {
 });
 
 test("Vercel Preview tooling is not opened inside Production CSP", () => {
-  assert.doesNotMatch(server, /vercel\.live/);
-  assert.doesNotMatch(server, /vercel\.com/);
-  assert.doesNotMatch(server, /script-src[^;]*vercel\.live/);
-  assert.doesNotMatch(server, /manifest-src[^;]*vercel\.com/);
+  assert.match(server, /isVercelPreviewBuild\(\)/);
+  assert.match(
+    server,
+    /rawajBuildInfo\.provider === "vercel" && rawajBuildInfo\.environment === "preview"/,
+  );
+  assert.match(server, /allowVercelPreviewTools\s*\?/);
+  assert.match(server, /: "script-src 'self' 'unsafe-inline' https:\/\/va\.vercel-scripts\.com"/);
+  assert.match(server, /: "manifest-src 'self'"/);
 });
 
 test("voice playback keeps a single private-download Blob and revokes it once on unmount", () => {
   assert.match(attachment, /ownedObjectUrlRef/);
   assert.match(attachment, /URL\.revokeObjectURL\(ownedObjectUrlRef\.current\)/);
-  assert.match(attachment, /useEffect\(\(\) => \{[\s\S]{0,120}releaseOwnedUrl\(\);[\s\S]{0,80}\}, \[releaseOwnedUrl\]\)/);
+  assert.match(
+    attachment,
+    /useEffect\(\(\) => \{[\s\S]{0,120}releaseOwnedUrl\(\);[\s\S]{0,80}\}, \[releaseOwnedUrl\]\)/,
+  );
   assert.match(attachment, /loadingRef/);
 });
 

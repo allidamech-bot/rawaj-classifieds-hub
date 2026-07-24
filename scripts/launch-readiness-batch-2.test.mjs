@@ -33,7 +33,10 @@ const [
   readFile(new URL("../src/routes/profile.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/account/AccountExperience.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/profile/listings.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/storefront/StorefrontIdentityHero.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/storefront/StorefrontIdentityHero.tsx", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/routes/notifications.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
@@ -42,19 +45,18 @@ const [
 
 test("profile mutations refresh the shared authenticated profile", () => {
   assert.ok(authContext.includes("refreshProfile: () => Promise"));
-  assert.ok(authProvider.includes("const refreshProfile = async () =>"));
-  assert.ok(authProvider.includes("const nextProfile = await fetchProfile(client, user)"));
+  assert.ok(authProvider.includes("refreshProfile: load"));
+  assert.ok(authProvider.includes("await loadCloudflareUserProfile(next)"));
   assert.ok(profile.match(/auth\.refreshProfile\(\)/g)?.length >= 3);
 });
 
-test("password change verifies ownership and uses Supabase Auth", () => {
+test("password change verifies the current password through Cloudflare Auth", () => {
   assert.ok(barrel.includes('export * from "@/lib/api/account-security";'));
-  assert.ok(accountSecurity.includes("resolveAuthenticatedAccountId(client"));
-  assert.ok(accountSecurity.includes("accountSessionStillMatches("));
-  assert.ok(accountIdentity.includes("client.auth.getUser()"));
-  assert.ok(!accountSecurity.includes("userId: string"));
-  assert.ok(accountSecurity.includes("client.auth.updateUser({ password: newPassword })"));
+  assert.ok(accountSecurity.includes("authChangePassword(currentPassword, newPassword)"));
+  assert.ok(!accountSecurity.includes("client.auth.updateUser"));
+  assert.ok(!accountSecurity.includes("getClient()"));
   assert.ok(profile.includes("handleChangePassword"));
+  assert.ok(profile.includes('autoComplete="current-password"'));
   assert.ok(profile.includes('autoComplete="new-password"'));
 });
 

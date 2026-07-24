@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import {
   canAccessAdmin,
@@ -19,6 +19,7 @@ import {
   loadCloudflareUserProfile,
   type CloudflareSession,
 } from "./cloudflare-auth";
+import { clearLocalNativePushState } from "./native-push";
 
 function compatibilityUser(session: CloudflareSession): User {
   return {
@@ -47,16 +48,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<CloudflareSession | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [reason, setReason] = useState<string | null>(null);
+  const loadRequestIdRef = useRef(0);
 
   const load = useCallback(async () => {
+    const requestId = ++loadRequestIdRef.current;
     try {
       const next = await authSession();
+      if (requestId !== loadRequestIdRef.current) return { error: null };
+      const nextProfile = next ? await loadCloudflareUserProfile(next) : null;
+      if (requestId !== loadRequestIdRef.current) return { error: null };
       setSession(next);
-      setProfile(next ? await loadCloudflareUserProfile(next) : null);
+      setProfile(nextProfile);
       setStatus(next ? "signedIn" : "signedOut");
       setReason(null);
       return { error: null };
     } catch (error) {
+      if (requestId !== loadRequestIdRef.current) return { error: null };
       const message = error instanceof Error ? error.message : "تعذر تحميل بيانات الحساب.";
       setSession(null);
       setProfile(null);
@@ -72,7 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextValue>(() => {
     const signOut = async () => {
+      loadRequestIdRef.current += 1;
+      const localNotificationCleanup = clearLocalNativePushState();
       const result = await authLogout();
+      await localNotificationCleanup;
       if (!result.ok) return { error: result.error };
       setSession(null);
       setProfile(null);

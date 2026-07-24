@@ -79,6 +79,7 @@ function ProfilePage() {
   const [settingsPreferredContact, setSettingsPreferredContact] = useState("");
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsNotice, setSettingsNotice] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -227,16 +228,16 @@ function ProfilePage() {
       return;
     }
 
-    const currentPassword = newPassword;
     passwordSavingProfilesRef.current.add(currentProfileId);
     setPasswordSaving(true);
     try {
-      const result = await changeOwnPassword(currentPassword);
+      const result = await changeOwnPassword(currentPassword, newPassword);
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setPasswordNotice(result.error.message);
         return;
       }
+      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       setPasswordNotice(text("تم تغيير كلمة المرور بنجاح.", "Password changed successfully."));
@@ -434,6 +435,7 @@ function ProfilePage() {
       setSettingsPreferredContact("");
       setSettingsSaving(false);
       setSettingsNotice("");
+      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       setPasswordSaving(false);
@@ -466,6 +468,7 @@ function ProfilePage() {
     if (accountChanged) {
       setSettingsSaving(false);
       setSettingsNotice("");
+      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       setPasswordSaving(false);
@@ -748,6 +751,21 @@ function ProfilePage() {
                   {text("تغيير كلمة المرور", "Change password")}
                 </h3>
                 <div className="mt-3 grid gap-3">
+                  <label className="block">
+                    <span className="text-xs font-bold text-muted-foreground">
+                      {text("كلمة المرور الحالية", "Current password")}
+                    </span>
+                    <input
+                      type="password"
+                      autoComplete="current-password"
+                      minLength={8}
+                      maxLength={72}
+                      required
+                      value={currentPassword}
+                      onChange={(event) => setCurrentPassword(event.target.value)}
+                      className="input mt-1"
+                    />
+                  </label>
                   <label className="block">
                     <span className="text-xs font-bold text-muted-foreground">
                       {text("كلمة المرور الجديدة", "New password")}

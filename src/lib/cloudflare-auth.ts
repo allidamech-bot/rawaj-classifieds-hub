@@ -78,6 +78,10 @@ export async function authConfirmPasswordReset(token: string, password: string) 
   return authMutation("/v1/auth/password-reset/confirm", { token, password });
 }
 
+export async function authChangePassword(currentPassword: string, password: string) {
+  return authMutation("/v1/auth/password/change", { currentPassword, password });
+}
+
 async function authMutation(path: string, body: Record<string, unknown>) {
   const result = await authRequest<{
     session?: CloudflareSession;

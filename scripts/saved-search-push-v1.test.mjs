@@ -117,12 +117,14 @@ test("native registration is explicit, permission-aware, logout-safe, offline-sa
   assert.match(scanner, /<PushNotificationBridge \/>/);
   assert.doesNotMatch(moreRoute, /disableNativePush/);
 
-  assert.match(auth, /import \{ disableNativePush \} from "\.\/native-push"/);
-  assert.match(auth, /await disableNativePush\(false\)/);
-  const detachIndex = auth.indexOf("await disableNativePush(false)");
-  const signOutIndex = auth.indexOf("await client.auth.signOut()");
-  assert.ok(detachIndex >= 0, "AuthProvider must detach the current native push device");
-  assert.ok(signOutIndex > detachIndex, "Push detachment must happen before Supabase sign out");
+  assert.match(auth, /import \{ clearLocalNativePushState \} from "\.\/native-push"/);
+  assert.match(auth, /const localNotificationCleanup = clearLocalNativePushState\(\)/);
+  assert.match(auth, /const result = await authLogout\(\)/);
+  assert.match(auth, /await localNotificationCleanup/);
+  assert.doesNotMatch(auth, /disableNativePush|client\.auth\.signOut|createClient\(/);
+  assert.match(auth, /import type \{ Session, User \} from "@supabase\/supabase-js"/);
+  assert.match(nativePush, /export async function clearLocalNativePushState/);
+  assert.match(nativePush, /window\.localStorage\.removeItem\(PUSH_DEVICE_KEY_STORAGE\)/);
 
   assert.match(nativePush, /await disableNativePush\(false\)/);
   assert.doesNotMatch(nativePush, /disablePushDevice\(userId,/);

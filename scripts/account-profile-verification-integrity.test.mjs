@@ -65,13 +65,15 @@ test("private account APIs derive the current actor and expose actor-free signat
   const password = exportedFunction(accountSecurity, "changeOwnPassword");
   const deletion = exportedFunction(supportApi, "createAccountDeletionRequest");
 
-  for (const fn of [update, upload, remove, history, create, password, deletion]) {
+  for (const fn of [update, upload, remove, history, create, deletion]) {
     assert.match(fn, /resolveAuthenticatedAccountId/);
   }
   for (const fn of [update, upload, remove, history, create, password, deletion]) {
     const signature = fn.slice(0, fn.indexOf("):"));
     assert.doesNotMatch(signature, /userId|profileId|ownerId|accountId/);
   }
+  assert.match(password, /authChangePassword\(currentPassword, newPassword\)/);
+  assert.doesNotMatch(password, /getClient|client\.auth|userId|profileId|ownerId|accountId/);
   assert.doesNotMatch(profileRoute, /updateOwnProfileBasics\(currentProfileId/);
   assert.doesNotMatch(verificationRoute, /fetchMyVerificationRequests\(profileId/);
   assert.doesNotMatch(verificationRoute, /userId:\s*profileId/);
@@ -81,7 +83,8 @@ test("public and private profile DTO boundaries are explicit and allowlisted", (
   assert.match(authTypes, /export interface PrivateAccountProfile/);
   assert.match(profileDto, /privateAccountProfileSelect/);
   assert.match(profileDto, /publicSellerProfileSelect/);
-  assert.match(auth, /\.select\(privateAccountProfileSelect\)/);
+  assert.match(auth, /loadCloudflareUserProfile\(next\)/);
+  assert.doesNotMatch(auth, /\.select\(|getClient\(|client\.auth/);
   assert.match(sellerApi, /\.select\(publicSellerProfileSelect\)/);
 
   const publicSelect = profileDto.match(/publicSellerProfileSelect\s*=\s*\n?\s*"([^"]+)"/)?.[1];
@@ -206,9 +209,9 @@ test("account switching and logout invalidate private route state and stale comp
   assert.match(profileRoute, /currentProfileId !== profileIdRef\.current/);
   assert.match(profileRoute, /setVerificationRequests\(\[\]\)/);
   assert.match(profileRoute, /setMediaSaving\(null\)/);
-  assert.match(auth, /profileRequestIdRef\.current \+= 1/);
+  assert.match(auth, /loadRequestIdRef\.current \+= 1/);
   assert.match(auth, /setProfile\(null\)/);
-  assert.match(auth, /disableNativePush\(false\)/);
+  assert.match(auth, /clearLocalNativePushState\(\)/);
   assert.match(adminRoute, /setDocumentUrls\(\{\}\)/);
 });
 
@@ -220,10 +223,9 @@ test("login and recovery redirect boundaries remain internal and session-bound",
   assert.match(authReturn, /containsEncodedRedirectBypass/);
   assert.match(authReturn, /decodeURIComponent/);
   assert.match(authReturn, /new URL\(trimmed, origin\)/);
-  assert.match(resetRoute, /auth\.onAuthStateChange/);
-  assert.match(resetRoute, /PASSWORD_RECOVERY/);
-  assert.match(resetRoute, /getSession\(\)/);
-  assert.match(resetRoute, /listener\.subscription\.unsubscribe/);
+  assert.match(resetRoute, /authConfirmPasswordReset\(recoveryToken, password\)/);
+  assert.match(resetRoute, /const recoveryToken =/);
+  assert.doesNotMatch(resetRoute, /onAuthStateChange|PASSWORD_RECOVERY|getSession\(\)/);
 });
 
 test("account deletion is reviewed, auth-derived, and duplicate-safe", () => {

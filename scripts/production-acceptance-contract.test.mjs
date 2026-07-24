@@ -143,7 +143,7 @@ test("staging acceptance covers real multi-account write journeys and cleanup", 
   assert.doesNotMatch(stagingSpec, /https:\/\/rawa-j\.com/);
 });
 
-test("production domain, Android package, and auth callback stay canonical", () => {
+test("production domain, Android package, and Cloudflare recovery entry stay canonical", () => {
   assert.match(linking, /RAWAJ_PRODUCTION_ORIGIN = "https:\/\/rawa-j\.com"/);
   assert.match(linking, /RAWAJ_PRODUCTION_HOST = "rawa-j\.com"/);
   assert.match(linking, /RAWAJ_AUTH_CALLBACK_PATH = "\/auth\/callback"/);
@@ -155,12 +155,15 @@ test("production domain, Android package, and auth callback stay canonical", () 
   assert.match(androidManifest, /android:autoVerify="true"/);
   assert.match(androidManifest, /android:scheme="https" android:host="rawa-j\.com"/);
   assert.match(androidStrings, /<string name="package_name">com\.rawaj\.marketplace<\/string>/);
-  assert.match(androidStrings, /<string name="custom_url_scheme">com\.rawaj\.marketplace<\/string>/);
+  assert.match(
+    androidStrings,
+    /<string name="custom_url_scheme">com\.rawaj\.marketplace<\/string>/,
+  );
 
-  assert.match(authSource, /new URL\("\/auth\/callback", window\.location\.origin\)/);
-  assert.match(loginSource, /new URL\("\/auth\/callback", window\.location\.origin\)/);
-  assert.match(loginSource, /callbackUrl\.searchParams\.set\("type", "recovery"\)/);
-  assert.match(loginSource, /redirectTo: callbackUrl\.toString\(\)/);
+  assert.match(authSource, /authRequestPasswordReset/);
+  assert.match(loginSource, /auth\.requestPasswordReset\(cleanEmail\)/);
+  assert.doesNotMatch(authSource, /supabase\.auth/);
+  assert.doesNotMatch(loginSource, /resetPasswordForEmail/);
   assert.match(envExample, /VITE_SITE_URL=https:\/\/rawa-j\.com/);
 });
 

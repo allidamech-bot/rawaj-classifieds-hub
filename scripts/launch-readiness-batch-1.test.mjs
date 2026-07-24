@@ -13,14 +13,16 @@ const [login, callback, addRoute, editRoute, api, barrel, packageJson] = await P
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
 
-test("new accounts with an immediate Supabase session enter RAWAJ directly", () => {
+test("new accounts with an immediate Cloudflare session enter RAWAJ directly", () => {
   const registerStart = login.indexOf('if (mode === "register")');
   const loginSuccess = login.indexOf('setMessage(text("تم تسجيل الدخول"', registerStart);
   const registrationBranch = login.slice(registerStart, loginSuccess);
   assert.ok(registerStart >= 0 && loginSuccess > registerStart);
-  assert.ok(registrationBranch.includes("if (result.data.session)"));
-  assert.ok(registrationBranch.includes("Account created. Opening RAWAJ now."));
-  assert.ok(registrationBranch.includes("void navigate({ to: returnTo });"));
+  assert.ok(login.includes("await auth.signUpWithPassword"));
+  assert.ok(login.includes("Account created. Opening RAWAJ now."));
+  assert.ok(login.includes("await navigate({ to: returnTo });"));
+  assert.ok(!login.includes("result.data.session"));
+  assert.ok(!login.includes("confirm your email"));
 });
 
 test("authentication callback always releases its auth listener", () => {
