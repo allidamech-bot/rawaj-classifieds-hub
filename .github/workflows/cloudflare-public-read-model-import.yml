@@ -38,11 +38,6 @@ on:
         description: CREATE_STAGING_RESOURCES or IMPORT_STAGING_READ_MODEL when required
         required: false
         type: string
-  push:
-    branches:
-      - feature/cloudflare-cutover-current-site
-    paths:
-      - .github/cloudflare-import-approved
 
 permissions:
   contents: read

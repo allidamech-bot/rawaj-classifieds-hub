@@ -15,22 +15,6 @@ on:
       - "scripts/cloudflare-import-pipeline-contract.test.mjs"
       - ".github/workflows/cloudflare-cutover-foundation.yml"
       - ".github/workflows/cloudflare-public-read-model-import.yml"
-  push:
-    branches:
-      - "feature/cloudflare-cutover-current-site"
-    paths:
-      - "cloudflare/**"
-      - "src/lib/public-data/**"
-      - "src/lib/api/references.ts"
-      - "src/lib/api/public-ad-placements.ts"
-      - "src/lib/api/location-aware-listings-v2.ts"
-      - "src/lib/api/listing-detail-read-guarded.ts"
-      - "src/lib/api/listing-images-read-guarded.ts"
-      - "scripts/cloudflare-cutover-foundation.test.mjs"
-      - "scripts/public-data-provider-contract.test.mjs"
-      - "scripts/cloudflare-import-pipeline-contract.test.mjs"
-      - ".github/workflows/cloudflare-cutover-foundation.yml"
-      - ".github/workflows/cloudflare-public-read-model-import.yml"
 
 permissions:
   contents: read

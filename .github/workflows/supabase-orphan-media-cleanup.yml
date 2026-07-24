@@ -1,11 +1,6 @@
 name: Supabase Orphan Media Cleanup
 
 on:
-  push:
-    branches:
-      - feature/cloudflare-full-backend-cutover
-    paths:
-      - .github/supabase-orphan-media-cleanup-approved
   workflow_dispatch:
     inputs:
       apply:
@@ -63,9 +58,9 @@ jobs:
           --output="$REPORT_PATH"
 
       - name: Delete confirmed orphan media
-        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.apply == true)
+        if: github.event_name == 'workflow_dispatch' && inputs.apply == true
         env:
-          CONFIRMATION: ${{ github.event_name == 'push' && 'DELETE_CONFIRMED_ORPHAN_MEDIA' || inputs.confirmation }}
+          CONFIRMATION: ${{ inputs.confirmation }}
         shell: bash
         run: |
           set -euo pipefail

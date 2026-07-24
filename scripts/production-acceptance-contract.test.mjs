@@ -160,10 +160,10 @@ test("production domain, Android package, and Cloudflare recovery entry stay can
     /<string name="custom_url_scheme">com\.rawaj\.marketplace<\/string>/,
   );
 
-  assert.match(authSource, /authRequestPasswordReset/);
+  assert.match(authSource, /sendPasswordResetEmail/);
   assert.match(loginSource, /auth\.requestPasswordReset\(cleanEmail\)/);
   assert.doesNotMatch(authSource, /supabase\.auth/);
-  assert.doesNotMatch(loginSource, /resetPasswordForEmail/);
+  assert.doesNotMatch(authSource, /requestPasswordReset[^"]*\(\s*["']https:\/\/[^"']+["']/);
   assert.match(envExample, /VITE_SITE_URL=https:\/\/rawa-j\.com/);
 });
 
