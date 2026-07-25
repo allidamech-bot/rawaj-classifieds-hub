@@ -39,31 +39,18 @@ export default {
     const requestId = crypto.randomUUID();
 
     try {
-      const url = new URL(request.url);
-      const response =
-        (await handleSystemControls(request, env)) ??
-        (await handleListingAttributes(request, env)) ??
-        (await handleTaxonomy(request, env)) ??
-        (await handleAdPlacements(request, env)) ??
-        (await handleAdmin(request, env)) ??
-        (await handleNotifications(request, env)) ??
-        (await handleAccountSocial(request, env)) ??
-        (await handleMarketplacePrivate(request, env)) ??
-        (await handlePublicSellers(request, env)) ??
-        (request.method === "GET" && url.pathname === "/v1/listings"
-          ? await handlePublicListingsRequest(request, env)
-          : await baseWorker.fetch(request, env as never));
-
+      const response = await routeRequest(request, env);
       const headers = new Headers(cors);
       headers.set("X-Request-Id", requestId);
       return withCors(response, headers);
     } catch (error) {
+      const pathname = new URL(request.url).pathname;
       console.error(
         JSON.stringify({
           event: "worker_unhandled_exception",
           requestId,
           method: request.method,
-          pathname: new URL(request.url).pathname,
+          pathname,
           errorName: error instanceof Error ? error.name : "UnknownError",
           errorMessage: error instanceof Error ? error.message : String(error),
         }),
@@ -80,6 +67,7 @@ export default {
             code: "internal_error",
             message: "حدث خطأ داخلي في خدمة رواج.",
             requestId,
+            path: pathname,
           },
         }),
         { status: 500, headers },
@@ -87,6 +75,76 @@ export default {
     }
   },
 };
+
+async function routeRequest(request: Request, env: EntryEnv): Promise<Response> {
+  const url = new URL(request.url);
+  const path = url.pathname;
+
+  if (/^\/v1\/system-controls\b/.test(path)) {
+    return required(await handleSystemControls(request, env));
+  }
+  if (/^\/v1\/listing-attributes\b/.test(path)) {
+    return required(await handleListingAttributes(request, env));
+  }
+  if (/^\/v1\/taxonomy\b/.test(path)) {
+    return required(await handleTaxonomy(request, env));
+  }
+  if (/^\/v1\/ad-placements\b/.test(path)) {
+    return required(await handleAdPlacements(request, env));
+  }
+  if (/^\/v1\/admin\b/.test(path)) {
+    return required(await handleAdmin(request, env));
+  }
+  if (/^\/v1\/(?:account\/)?notifications\b/.test(path)) {
+    return required(await handleNotifications(request, env));
+  }
+  if (isAccountSocialPath(path)) {
+    return required(await handleAccountSocial(request, env));
+  }
+  if (isMarketplacePrivatePath(path, request.method)) {
+    return required(await handleMarketplacePrivate(request, env));
+  }
+  if (/^\/v1\/sellers(?:\/|$)/.test(path)) {
+    return required(await handlePublicSellers(request, env));
+  }
+  if (request.method === "GET" && path === "/v1/listings") {
+    return handlePublicListingsRequest(request, env);
+  }
+
+  return baseWorker.fetch(request, env as never);
+}
+
+function isAccountSocialPath(path: string): boolean {
+  return (
+    path === "/v1/account/favorites" ||
+    path === "/v1/account/saved-searches" ||
+    /^\/v1\/account\/saved-searches\//.test(path) ||
+    path === "/v1/account/conversations" ||
+    path === "/v1/account/messages/unread-count" ||
+    path === "/v1/conversations" ||
+    /^\/v1\/conversations\//.test(path) ||
+    /^\/v1\/listings\/[^/]+\/favorite$/.test(path)
+  );
+}
+
+function isMarketplacePrivatePath(path: string, method: string): boolean {
+  if (path === "/api/profile" || path === "/v1/profile") return true;
+  if (/^\/v1\/account\/(?:listings|media)\b/.test(path)) return true;
+  if (/^\/v1\/listing-images\//.test(path)) return true;
+  if (/^\/v1\/listings\/[^/]+\/images$/.test(path)) return true;
+  if (/^\/v1\/listings\/[^/]+$/.test(path) && method !== "GET") return true;
+  return path === "/v1/listings" && method !== "GET";
+}
+
+function required(response: Response | null): Response {
+  return (
+    response ??
+    new Response(
+      JSON.stringify({ error: { code: "route_not_handled", message: "Route not handled." } }),
+      { status: 404, headers: { "Content-Type": "application/json; charset=utf-8" } },
+    )
+  );
+}
 
 function corsHeaders(origin: string | null, env: EntryEnv): Headers {
   const headers = new Headers({
