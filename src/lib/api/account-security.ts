@@ -1,9 +1,5 @@
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
-import {
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-  updatePassword,
-} from "firebase/auth";
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { firebaseAuth } from "@/lib/firebase";
 
 export async function changeOwnPassword(

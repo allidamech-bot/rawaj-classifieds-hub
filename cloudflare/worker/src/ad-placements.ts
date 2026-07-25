@@ -152,11 +152,7 @@ async function uploadMedia(request: Request, env: AdPlacementsEnv, cors: Headers
     return databaseError(cors);
   }
 
-  return json(
-    { data: { id, imageUrl: mediaUrl(request.url, id) } },
-    201,
-    cors,
-  );
+  return json({ data: { id, imageUrl: mediaUrl(request.url, id) } }, 201, cors);
 }
 
 async function savePlacement(
@@ -216,7 +212,11 @@ async function savePlacement(
       .bind(id)
       .first<{ version: number; updated_at: string }>();
     if (!row || row.version === expectedVersion) {
-      return json({ error: { code: "stale_ad_placement", message: "Placement changed. Reload and retry." } }, 409, cors);
+      return json(
+        { error: { code: "stale_ad_placement", message: "Placement changed. Reload and retry." } },
+        409,
+        cors,
+      );
     }
     await audit(env, auth.userId, "ad_placement.update", id, { version: row.version });
     return json({ data: { id, version: row.version, updatedAt: row.updated_at } }, 200, cors);
@@ -249,12 +249,7 @@ async function savePlacement(
   return json({ data: { id, version: 1, updatedAt: now } }, 201, cors);
 }
 
-async function setStatus(
-  request: Request,
-  env: AdPlacementsEnv,
-  cors: Headers,
-  id: string,
-) {
+async function setStatus(request: Request, env: AdPlacementsEnv, cors: Headers, id: string) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   if (!isOwner(auth.roles)) return forbidden(cors);
@@ -263,7 +258,13 @@ async function setStatus(
   const status = clean(body.data.status, 20);
   const reason = clean(body.data.reason, 500);
   const expectedVersion = integer(body.data.expectedVersion, 0);
-  if (!status || !STATUS_VALUES.has(status) || !reason || reason.length < 3 || expectedVersion < 1) {
+  if (
+    !status ||
+    !STATUS_VALUES.has(status) ||
+    !reason ||
+    reason.length < 3 ||
+    expectedVersion < 1
+  ) {
     return validation(cors, "Invalid status change.");
   }
   const now = new Date().toISOString();
@@ -278,18 +279,21 @@ async function setStatus(
     .bind(id)
     .first<{ version: number; updated_at: string }>();
   if (!row || row.version === expectedVersion) {
-    return json({ error: { code: "stale_ad_placement", message: "Placement changed. Reload and retry." } }, 409, cors);
+    return json(
+      { error: { code: "stale_ad_placement", message: "Placement changed. Reload and retry." } },
+      409,
+      cors,
+    );
   }
-  await audit(env, auth.userId, "ad_placement.status", id, { status, reason, version: row.version });
+  await audit(env, auth.userId, "ad_placement.status", id, {
+    status,
+    reason,
+    version: row.version,
+  });
   return json({ data: { id, version: row.version, updatedAt: row.updated_at } }, 200, cors);
 }
 
-async function deletePlacement(
-  request: Request,
-  env: AdPlacementsEnv,
-  cors: Headers,
-  id: string,
-) {
+async function deletePlacement(request: Request, env: AdPlacementsEnv, cors: Headers, id: string) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   if (!isOwner(auth.roles)) return forbidden(cors);
@@ -297,7 +301,8 @@ async function deletePlacement(
   if (!body.ok) return json({ error: body.error }, body.status, cors);
   const expectedVersion = integer(body.data.expectedVersion, 0);
   const reason = clean(body.data.reason, 500);
-  if (expectedVersion < 1 || !reason || reason.length < 3) return validation(cors, "Invalid delete request.");
+  if (expectedVersion < 1 || !reason || reason.length < 3)
+    return validation(cors, "Invalid delete request.");
 
   const existing = await env.DB.prepare(
     `SELECT p.media_asset_id, m.object_key
@@ -306,7 +311,12 @@ async function deletePlacement(
   )
     .bind(id, expectedVersion)
     .first<{ media_asset_id: string; object_key: string }>();
-  if (!existing) return json({ error: { code: "stale_ad_placement", message: "Placement changed. Reload and retry." } }, 409, cors);
+  if (!existing)
+    return json(
+      { error: { code: "stale_ad_placement", message: "Placement changed. Reload and retry." } },
+      409,
+      cors,
+    );
 
   const deleted = await env.DB.prepare("DELETE FROM ad_placements WHERE id = ? AND version = ?")
     .bind(id, expectedVersion)
@@ -314,7 +324,9 @@ async function deletePlacement(
   if (!deleted.success) return databaseError(cors);
   await audit(env, auth.userId, "ad_placement.delete", id, { reason, version: expectedVersion });
 
-  const inUse = await env.DB.prepare("SELECT id FROM ad_placements WHERE media_asset_id = ? LIMIT 1")
+  const inUse = await env.DB.prepare(
+    "SELECT id FROM ad_placements WHERE media_asset_id = ? LIMIT 1",
+  )
     .bind(existing.media_asset_id)
     .first<{ id: string }>();
   if (!inUse) {
@@ -324,7 +336,17 @@ async function deletePlacement(
       .run();
   }
 
-  return json({ data: { id, imageUrl: mediaUrl(request.url, existing.media_asset_id), storagePath: existing.object_key } }, 200, cors);
+  return json(
+    {
+      data: {
+        id,
+        imageUrl: mediaUrl(request.url, existing.media_asset_id),
+        storagePath: existing.object_key,
+      },
+    },
+    200,
+    cors,
+  );
 }
 
 function normalizePayload(body: Row) {
@@ -339,12 +361,31 @@ function normalizePayload(body: Row) {
   const targetMobile = body.targetMobile === true;
   const targetDesktop = body.targetDesktop === true;
   if (
-    !name || name.length < 2 || !placementPage || !PAGE_VALUES.has(placementPage) ||
-    !imageUrl || !destinationUrl || !safeHttps(destinationUrl) || !status ||
-    !STATUS_VALUES.has(status) || (!targetMobile && !targetDesktop) ||
+    !name ||
+    name.length < 2 ||
+    !placementPage ||
+    !PAGE_VALUES.has(placementPage) ||
+    !imageUrl ||
+    !destinationUrl ||
+    !safeHttps(destinationUrl) ||
+    !status ||
+    !STATUS_VALUES.has(status) ||
+    (!targetMobile && !targetDesktop) ||
     (startsAt && endsAt && startsAt >= endsAt)
-  ) return null;
-  return { name, placementPage, imageUrl, destinationUrl, startsAt, endsAt, status, priority, targetMobile, targetDesktop };
+  )
+    return null;
+  return {
+    name,
+    placementPage,
+    imageUrl,
+    destinationUrl,
+    startsAt,
+    endsAt,
+    status,
+    priority,
+    targetMobile,
+    targetDesktop,
+  };
 }
 
 function mapPlacement(row: Row, requestUrl: string) {
@@ -367,12 +408,25 @@ function mapPlacement(row: Row, requestUrl: string) {
   };
 }
 
-async function audit(env: AdPlacementsEnv, actorId: string, action: string, id: string, metadata: Row) {
+async function audit(
+  env: AdPlacementsEnv,
+  actorId: string,
+  action: string,
+  id: string,
+  metadata: Row,
+) {
   await env.DB.prepare(
     `INSERT INTO audit_logs (id, actor_id, action, entity_type, entity_id, metadata, created_at)
      VALUES (?, ?, ?, 'ad_placement', ?, ?, ?)`,
   )
-    .bind(crypto.randomUUID(), actorId, action, id, JSON.stringify(metadata), new Date().toISOString())
+    .bind(
+      crypto.randomUUID(),
+      actorId,
+      action,
+      id,
+      JSON.stringify(metadata),
+      new Date().toISOString(),
+    )
     .run();
 }
 
@@ -389,7 +443,9 @@ function mediaAssetIdFromUrl(value: string): string | null {
 function mediaUrl(requestUrl: string, id: string): string {
   return new URL(`/v1/media/assets/${encodeURIComponent(id)}`, requestUrl).toString();
 }
-function isOwner(roles: string[]) { return roles.includes("owner"); }
+function isOwner(roles: string[]) {
+  return roles.includes("owner");
+}
 function clean(value: unknown, max: number): string | null {
   return typeof value === "string" && value.trim() ? value.trim().slice(0, max) : null;
 }
@@ -399,17 +455,46 @@ function nullableDate(value: unknown): string | null {
   return new Date(value).toISOString();
 }
 function safeHttps(value: string) {
-  try { return new URL(value).protocol === "https:"; } catch { return false; }
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 function integer(value: unknown, fallback: number) {
   const number = typeof value === "number" ? value : Number(value);
   return Number.isInteger(number) ? number : fallback;
 }
-function stringValue(value: unknown, fallback = "") { return typeof value === "string" ? value : fallback; }
-function nullableString(value: unknown) { return typeof value === "string" ? value : null; }
-function numberValue(value: unknown, fallback = 0) { const n = Number(value); return Number.isFinite(n) ? n : fallback; }
-function booleanValue(value: unknown) { return value === true || value === 1 || value === "1"; }
-function unauthorized(cors: Headers) { return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors); }
-function forbidden(cors: Headers) { return json({ error: { code: "permission_denied", message: "Owner permission required." } }, 403, cors); }
-function validation(cors: Headers, message: string) { return json({ error: { code: "validation_error", message } }, 400, cors); }
-function databaseError(cors: Headers) { return json({ error: { code: "database_error", message: "Database operation failed." } }, 500, cors); }
+function stringValue(value: unknown, fallback = "") {
+  return typeof value === "string" ? value : fallback;
+}
+function nullableString(value: unknown) {
+  return typeof value === "string" ? value : null;
+}
+function numberValue(value: unknown, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+function booleanValue(value: unknown) {
+  return value === true || value === 1 || value === "1";
+}
+function unauthorized(cors: Headers) {
+  return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors);
+}
+function forbidden(cors: Headers) {
+  return json(
+    { error: { code: "permission_denied", message: "Owner permission required." } },
+    403,
+    cors,
+  );
+}
+function validation(cors: Headers, message: string) {
+  return json({ error: { code: "validation_error", message } }, 400, cors);
+}
+function databaseError(cors: Headers) {
+  return json(
+    { error: { code: "database_error", message: "Database operation failed." } },
+    500,
+    cors,
+  );
+}

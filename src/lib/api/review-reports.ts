@@ -3,12 +3,7 @@ import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 import { normalizeModerationText } from "@/lib/moderation-contract";
 
 export type SellerReviewReportReason =
-  | "abuse"
-  | "spam"
-  | "misleading"
-  | "personal_data"
-  | "prohibited_content"
-  | "other";
+  "abuse" | "spam" | "misleading" | "personal_data" | "prohibited_content" | "other";
 
 export type SellerReviewReportStatus = "new" | "under_review" | "resolved" | "rejected";
 
@@ -58,9 +53,7 @@ export async function adminFetchSellerReviewReports(): Promise<
   ClassifiedsResult<SellerReviewReport[]>
 > {
   return fromApi(
-    await cloudflareApiRequest<SellerReviewReport[]>(
-      "/v1/admin/seller-review-reports?limit=200",
-    ),
+    await cloudflareApiRequest<SellerReviewReport[]>("/v1/admin/seller-review-reports?limit=200"),
   );
 }
 

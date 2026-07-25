@@ -208,9 +208,7 @@ export function fetchVehicleMakes(
   return cachedRequest(cacheKey, REFERENCE_CACHE_TTL_MS, async () => {
     const params = new URLSearchParams({ limit: String(cleanLimit) });
     if (cleanQuery) params.set("q", cleanQuery);
-    const result = await cloudflareApiRequest<unknown>(
-      `/v1/vehicles/makes?${params.toString()}`,
-    );
+    const result = await cloudflareApiRequest<unknown>(`/v1/vehicles/makes?${params.toString()}`);
     if (!result.ok) return apiFailure(result);
     return {
       ok: true,
@@ -241,9 +239,7 @@ export function fetchVehicleModels(
     const params = new URLSearchParams({ makeId: cleanMakeId, limit: String(cleanLimit) });
     if (cleanQuery) params.set("q", cleanQuery);
     if (cleanYear !== null) params.set("year", String(cleanYear));
-    const result = await cloudflareApiRequest<unknown>(
-      `/v1/vehicles/models?${params.toString()}`,
-    );
+    const result = await cloudflareApiRequest<unknown>(`/v1/vehicles/models?${params.toString()}`);
     if (!result.ok) return apiFailure(result);
     return {
       ok: true,
@@ -273,11 +269,7 @@ export function fetchVehicleModelChildren(
   });
 }
 
-function apiFailure<T>(result: {
-  ok: false;
-  error: string;
-  code: string;
-}): ClassifiedsResult<T> {
+function apiFailure<T>(result: { ok: false; error: string; code: string }): ClassifiedsResult<T> {
   return {
     ok: false,
     error: {

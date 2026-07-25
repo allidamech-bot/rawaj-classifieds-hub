@@ -44,8 +44,14 @@ export interface ListingDataQualityContext {
 export async function fetchListingDataQualityContext(
   userId: string | null,
 ): Promise<ClassifiedsResult<ListingDataQualityContext>> {
-  if (!userId) return { ok: false, error: { code: "auth_required", message: "يجب تسجيل الدخول لفتح مركز جودة البيانات." } };
-  const result = await cloudflareApiRequest<ListingDataQualityContext>("/v1/admin/data-quality/context");
+  if (!userId)
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لفتح مركز جودة البيانات." },
+    };
+  const result = await cloudflareApiRequest<ListingDataQualityContext>(
+    "/v1/admin/data-quality/context",
+  );
   return result.ok
     ? { ok: true, data: result.data }
     : { ok: false, error: { code: result.code as ClassifiedsErrorCode, message: result.error } };

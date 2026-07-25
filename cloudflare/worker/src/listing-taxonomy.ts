@@ -9,14 +9,21 @@ import {
 
 type Value = string | number | null;
 type Row = Record<string, unknown>;
-interface Result<T = Row> { results?: T[]; success: boolean; error?: string }
+interface Result<T = Row> {
+  results?: T[];
+  success: boolean;
+  error?: string;
+}
 interface Statement {
   bind(...values: Value[]): Statement;
   first<T = Row>(): Promise<T | null>;
   all<T = Row>(): Promise<Result<T>>;
   run(): Promise<Result>;
 }
-interface Database { prepare(query: string): Statement; batch(statements: Statement[]): Promise<Result[]> }
+interface Database {
+  prepare(query: string): Statement;
+  batch(statements: Statement[]): Promise<Result[]>;
+}
 
 export interface ListingTaxonomyEnv {
   DB: Database;
@@ -26,7 +33,9 @@ export interface ListingTaxonomyEnv {
   FIREBASE_JWKS_URL?: string;
 }
 
-function asAuthEnv(env: ListingTaxonomyEnv): AuthEnv { return env as unknown as AuthEnv }
+function asAuthEnv(env: ListingTaxonomyEnv): AuthEnv {
+  return env as unknown as AuthEnv;
+}
 
 export async function handleListingTaxonomy(
   request: Request,
@@ -52,7 +61,12 @@ export async function handleListingTaxonomy(
   return json({ error: { code: "method_not_allowed", message: "Method not allowed." } }, 405, cors);
 }
 
-async function getAssignment(request: Request, env: ListingTaxonomyEnv, cors: Headers, listingId: string) {
+async function getAssignment(
+  request: Request,
+  env: ListingTaxonomyEnv,
+  cors: Headers,
+  listingId: string,
+) {
   const auth = await authenticate(request, asAuthEnv(env));
   const listing = await env.DB.prepare("SELECT owner_id, status FROM listings WHERE id = ?")
     .bind(listingId)
@@ -69,7 +83,12 @@ async function getAssignment(request: Request, env: ListingTaxonomyEnv, cors: He
   return json({ data: row ? mapAssignment(row) : null }, 200, cors);
 }
 
-async function assignTaxonomy(request: Request, env: ListingTaxonomyEnv, cors: Headers, listingId: string) {
+async function assignTaxonomy(
+  request: Request,
+  env: ListingTaxonomyEnv,
+  cors: Headers,
+  listingId: string,
+) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   const listing = await env.DB.prepare("SELECT owner_id, status FROM listings WHERE id = ?")
@@ -77,7 +96,11 @@ async function assignTaxonomy(request: Request, env: ListingTaxonomyEnv, cors: H
     .first<{ owner_id: string; status: string }>();
   if (!listing || listing.owner_id !== auth.userId) return forbidden(cors);
   if (!["draft", "rejected"].includes(listing.status)) {
-    return json({ error: { code: "invalid_transition", message: "Listing taxonomy cannot be changed." } }, 409, cors);
+    return json(
+      { error: { code: "invalid_transition", message: "Listing taxonomy cannot be changed." } },
+      409,
+      cors,
+    );
   }
   const body = await readJson(request);
   if (!body.ok) return json({ error: body.error }, body.status, cors);
@@ -115,7 +138,11 @@ async function leafSchema(env: ListingTaxonomyEnv, cors: Headers, nodeId: string
     .bind(nodeId)
     .first<Row>();
   if (!node || Number(node.is_active) !== 1 || Number(node.is_leaf) !== 1) {
-    return json({ data: { found: false, version: null, leaf: null, fields: [], conditionalRules: [] } }, 200, cors);
+    return json(
+      { data: { found: false, version: null, leaf: null, fields: [], conditionalRules: [] } },
+      200,
+      cors,
+    );
   }
   return json(
     {
@@ -153,9 +180,25 @@ function mapAssignment(row: Row) {
     updatedAt: stringValue(row.created_at),
   };
 }
-function clean(value: unknown, max: number) { return typeof value === "string" && value.trim() ? value.trim().slice(0, max) : null }
-function stringValue(value: unknown, fallback = "") { return typeof value === "string" ? value : fallback }
-function nullableString(value: unknown) { return typeof value === "string" ? value : null }
-function validation(cors: Headers, message: string) { return json({ error: { code: "validation_error", message } }, 400, cors) }
-function forbidden(cors: Headers) { return json({ error: { code: "permission_denied", message: "Permission denied." } }, 403, cors) }
-function databaseError(cors: Headers) { return json({ error: { code: "database_error", message: "Database operation failed." } }, 500, cors) }
+function clean(value: unknown, max: number) {
+  return typeof value === "string" && value.trim() ? value.trim().slice(0, max) : null;
+}
+function stringValue(value: unknown, fallback = "") {
+  return typeof value === "string" ? value : fallback;
+}
+function nullableString(value: unknown) {
+  return typeof value === "string" ? value : null;
+}
+function validation(cors: Headers, message: string) {
+  return json({ error: { code: "validation_error", message } }, 400, cors);
+}
+function forbidden(cors: Headers) {
+  return json({ error: { code: "permission_denied", message: "Permission denied." } }, 403, cors);
+}
+function databaseError(cors: Headers) {
+  return json(
+    { error: { code: "database_error", message: "Database operation failed." } },
+    500,
+    cors,
+  );
+}

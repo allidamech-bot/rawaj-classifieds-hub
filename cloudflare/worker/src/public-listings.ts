@@ -371,7 +371,9 @@ function applyAttributeFilters(
       where.push("CAST(json_extract(l.details, ?) AS INTEGER) = ?");
       values.push(path, filter ? 1 : 0);
     } else if (Array.isArray(filter) && filter.length > 0) {
-      where.push(`CAST(json_extract(l.details, ?) AS TEXT) IN (${filter.map(() => "?").join(",")})`);
+      where.push(
+        `CAST(json_extract(l.details, ?) AS TEXT) IN (${filter.map(() => "?").join(",")})`,
+      );
       values.push(path, ...filter);
     } else if (filter && typeof filter === "object" && !Array.isArray(filter)) {
       if (typeof filter.min === "number" && Number.isFinite(filter.min)) {

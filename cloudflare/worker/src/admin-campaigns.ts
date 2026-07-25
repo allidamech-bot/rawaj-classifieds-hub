@@ -226,7 +226,8 @@ async function setCampaignStatus(
     .bind(status, auth.userId, timestamp, campaignId, expectedVersion)
     .run();
   if (!result.success) return databaseError(cors);
-  if (!changed(result)) return conflict(cors, "تغيّرت الحملة منذ تحميلها. أعد التحميل قبل تغيير الحالة.");
+  if (!changed(result))
+    return conflict(cors, "تغيّرت الحملة منذ تحميلها. أعد التحميل قبل تغيير الحالة.");
   const version = expectedVersion + 1;
   await audit(env, auth.userId, "campaign.status_changed", "ad_campaigns", campaignId, {
     status,
@@ -318,7 +319,18 @@ function parseCampaign(
   body: Row,
   update: boolean,
 ):
-  | { ok: true; value: { name: string; status: string; startsAt: string | null; endsAt: string | null; targetPages: string[]; targetCategoryIds: string[]; expectedVersion: number } }
+  | {
+      ok: true;
+      value: {
+        name: string;
+        status: string;
+        startsAt: string | null;
+        endsAt: string | null;
+        targetPages: string[];
+        targetCategoryIds: string[];
+        expectedVersion: number;
+      };
+    }
   | { ok: false; message: string } {
   const name = clean(body.name, 160);
   const status = clean(body.status, 20) || "draft";
@@ -333,14 +345,27 @@ function parseCampaign(
   if (startsAt && endsAt && endsAt <= startsAt) {
     return { ok: false, message: "وقت نهاية الحملة يجب أن يكون بعد وقت بدايتها." };
   }
-  return { ok: true, value: { name, status, startsAt, endsAt, targetPages, targetCategoryIds, expectedVersion } };
+  return {
+    ok: true,
+    value: { name, status, startsAt, endsAt, targetPages, targetCategoryIds, expectedVersion },
+  };
 }
 
 function parseCreative(
   body: Row,
   update: boolean,
 ):
-  | { ok: true; value: { name: string; imageUrl: string; destinationUrl: string; weight: number; isActive: boolean; expectedVersion: number } }
+  | {
+      ok: true;
+      value: {
+        name: string;
+        imageUrl: string;
+        destinationUrl: string;
+        weight: number;
+        isActive: boolean;
+        expectedVersion: number;
+      };
+    }
   | { ok: false; message: string } {
   const name = clean(body.name, 160);
   const imageUrl = safeHttpsUrl(body.imageUrl);
@@ -407,7 +432,15 @@ async function audit(
     `INSERT INTO audit_logs (id, actor_id, action, entity_type, entity_id, metadata, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
   )
-    .bind(crypto.randomUUID(), actorId, action, entityType, entityId, JSON.stringify(metadata), now())
+    .bind(
+      crypto.randomUUID(),
+      actorId,
+      action,
+      entityType,
+      entityId,
+      JSON.stringify(metadata),
+      now(),
+    )
     .run();
 }
 
@@ -435,7 +468,9 @@ function parseStringArray(value: unknown): string[] {
   if (typeof value !== "string") return [];
   try {
     const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string")
+      : [];
   } catch {
     return [];
   }
@@ -477,7 +512,11 @@ function unauthorized(cors: Headers) {
   return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors);
 }
 function forbidden(cors: Headers) {
-  return json({ error: { code: "permission_denied", message: "Owner permission required." } }, 403, cors);
+  return json(
+    { error: { code: "permission_denied", message: "Owner permission required." } },
+    403,
+    cors,
+  );
 }
 function validation(cors: Headers, message: string) {
   return json({ error: { code: "validation_error", message } }, 400, cors);
@@ -489,5 +528,9 @@ function notFound(cors: Headers, message: string) {
   return json({ error: { code: "not_found", message } }, 404, cors);
 }
 function databaseError(cors: Headers) {
-  return json({ error: { code: "database_error", message: "Database operation failed." } }, 500, cors);
+  return json(
+    { error: { code: "database_error", message: "Database operation failed." } },
+    500,
+    cors,
+  );
 }

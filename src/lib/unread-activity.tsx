@@ -36,7 +36,6 @@ const EMPTY_COUNTS: UnreadActivityCounts = {
   total: 0,
 };
 
-
 const UnreadActivityContext = createContext<UnreadActivityContextValue>({
   counts: EMPTY_COUNTS,
   loading: false,

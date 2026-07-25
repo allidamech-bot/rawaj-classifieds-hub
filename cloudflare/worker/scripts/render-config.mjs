@@ -14,9 +14,7 @@ const base = JSON.parse(baseText.replace(/,\s*([}\]])/g, "$1"));
 const d1DatabaseId = local
   ? "00000000-0000-0000-0000-000000000000"
   : process.env.CLOUDFLARE_D1_DATABASE_ID?.trim();
-const r2BucketName = local
-  ? "rawaj-media-local"
-  : process.env.CLOUDFLARE_R2_BUCKET_NAME?.trim();
+const r2BucketName = local ? "rawaj-media-local" : process.env.CLOUDFLARE_R2_BUCKET_NAME?.trim();
 
 if (!d1DatabaseId || !r2BucketName) {
   console.error(

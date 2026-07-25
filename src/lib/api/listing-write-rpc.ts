@@ -123,7 +123,9 @@ function mergedListingPayload(
   return {
     categoryId: patch.categoryId?.trim() || current.categoryId,
     subcategoryId:
-      patch.subcategoryId === undefined ? current.subcategoryId : patch.subcategoryId?.trim() || null,
+      patch.subcategoryId === undefined
+        ? current.subcategoryId
+        : patch.subcategoryId?.trim() || null,
     governorateId: patch.governorateId?.trim() || current.governorateId,
     locationNodeId: canonicalLocationId,
     title: patch.title === undefined ? current.title : patch.title.trim(),

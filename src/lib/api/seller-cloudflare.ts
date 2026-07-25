@@ -64,10 +64,7 @@ export async function searchCloudflarePublicSellers(
   };
 }
 
-async function requestJson<T>(
-  path: string,
-  operation: string,
-): Promise<ClassifiedsResult<T>> {
+async function requestJson<T>(path: string, operation: string): Promise<ClassifiedsResult<T>> {
   const base = requireCloudflarePublicApiBaseUrl();
   if (!base.ok) return base;
   const controller = new AbortController();

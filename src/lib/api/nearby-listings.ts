@@ -1,4 +1,9 @@
-import type { ClassifiedListing, ClassifiedsErrorCode, ClassifiedsResult, ListingFilters } from "@/lib/classifieds-types";
+import type {
+  ClassifiedListing,
+  ClassifiedsErrorCode,
+  ClassifiedsResult,
+  ListingFilters,
+} from "@/lib/classifieds-types";
 import { fetchCloudflareNearbyListings } from "@/lib/public-data/cloudflare-client";
 import {
   isValidNearbyPoint,
@@ -8,10 +13,19 @@ import {
   type NearbyRadiusKm,
 } from "@/lib/nearby-location";
 
-export interface NearbyListingMatch { listingId: string; distanceKm: number }
-export interface NearbyListingResult { listing: ClassifiedListing; distanceKm: number }
+export interface NearbyListingMatch {
+  listingId: string;
+  distanceKm: number;
+}
+export interface NearbyListingResult {
+  listing: ClassifiedListing;
+  distanceKm: number;
+}
 export interface NearbyListingsRequest {
-  point: NearbyPoint; radiusKm?: NearbyRadiusKm; limit?: number; filters?: ListingFilters;
+  point: NearbyPoint;
+  radiusKm?: NearbyRadiusKm;
+  limit?: number;
+  filters?: ListingFilters;
 }
 
 export async function fetchNearbyListingMatches(
@@ -19,7 +33,13 @@ export async function fetchNearbyListingMatches(
 ): Promise<ClassifiedsResult<NearbyListingMatch[]>> {
   const result = await fetchNearbyPublicListings(request);
   return result.ok
-    ? { ok: true, data: result.data.map((item) => ({ listingId: item.listing.id, distanceKm: item.distanceKm })) }
+    ? {
+        ok: true,
+        data: result.data.map((item) => ({
+          listingId: item.listing.id,
+          distanceKm: item.distanceKm,
+        })),
+      }
     : result;
 }
 
@@ -44,9 +64,23 @@ export async function fetchNearbyPublicListings(
   });
   return result.ok
     ? result
-    : { ok: false, error: { code: result.error.code as ClassifiedsErrorCode, message: result.error.message, operation: "public_nearby_listing_matches" } };
+    : {
+        ok: false,
+        error: {
+          code: result.error.code as ClassifiedsErrorCode,
+          message: result.error.message,
+          operation: "public_nearby_listing_matches",
+        },
+      };
 }
 
 function invalidPointResult<T>(): ClassifiedsResult<T> {
-  return { ok: false, error: { code: "validation_error", message: "إحداثيات الموقع غير صالحة.", operation: "public_nearby_listing_matches" } };
+  return {
+    ok: false,
+    error: {
+      code: "validation_error",
+      message: "إحداثيات الموقع غير صالحة.",
+      operation: "public_nearby_listing_matches",
+    },
+  };
 }

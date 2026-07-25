@@ -1,10 +1,5 @@
-import {
-  authenticate,
-  corsHeaders,
-  json,
-  requireMutationAuth,
-  type AuthEnv,
-} from "./auth";
+/* eslint-disable no-control-regex -- This file intentionally sanitizes ASCII control characters. */
+import { authenticate, corsHeaders, json, requireMutationAuth, type AuthEnv } from "./auth";
 
 type Value = string | number | null;
 type Row = Record<string, unknown>;
@@ -93,15 +88,15 @@ function relevant(path: string): boolean {
   return /^\/v1\/(?:account\/verifications|admin\/verifications)(?:\/|$)/.test(path);
 }
 
-async function createOwn(
-  request: Request,
-  env: VerificationEnv,
-  cors: Headers,
-): Promise<Response> {
+async function createOwn(request: Request, env: VerificationEnv, cors: Headers): Promise<Response> {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   if (!request.headers.get("Content-Type")?.toLowerCase().startsWith("multipart/form-data")) {
-    return json({ error: { code: "unsupported_media_type", message: "Multipart form required." } }, 415, cors);
+    return json(
+      { error: { code: "unsupported_media_type", message: "Multipart form required." } },
+      415,
+      cors,
+    );
   }
 
   const form = await request.formData();
@@ -119,7 +114,11 @@ async function createOwn(
   if (requestType === "business" && (!businessName || businessName.length < 3)) {
     return validation(cors, "Business name is required.");
   }
-  if (!documentType || !DOCUMENT_TYPES.has(documentType) || !documentMatches(requestType, documentType)) {
+  if (
+    !documentType ||
+    !DOCUMENT_TYPES.has(documentType) ||
+    !documentMatches(requestType, documentType)
+  ) {
     return validation(cors, "Document type does not match the request.");
   }
   if (!(file instanceof File)) return validation(cors, "Verification document is required.");
@@ -139,7 +138,11 @@ async function createOwn(
     .bind(auth.userId)
     .first<{ verification_status: string }>();
   if (profile?.verification_status === "verified") {
-    return json({ error: { code: "status_mismatch", message: "Account is already verified." } }, 409, cors);
+    return json(
+      { error: { code: "status_mismatch", message: "Account is already verified." } },
+      409,
+      cors,
+    );
   }
   const pending = await env.DB.prepare(
     "SELECT id FROM seller_verification_requests WHERE user_id = ? AND status = 'pending_review'",
@@ -147,7 +150,11 @@ async function createOwn(
     .bind(auth.userId)
     .first();
   if (pending) {
-    return json({ error: { code: "status_mismatch", message: "A verification request is already pending." } }, 409, cors);
+    return json(
+      { error: { code: "status_mismatch", message: "A verification request is already pending." } },
+      409,
+      cors,
+    );
   }
 
   const contentType = normalizeContentType(file.type);
@@ -309,7 +316,11 @@ async function moderateRequest(
   if (!canManage(auth.roles)) return forbidden(cors);
   const contentType = request.headers.get("Content-Type")?.toLowerCase() ?? "";
   if (!contentType.startsWith("application/json")) {
-    return json({ error: { code: "unsupported_media_type", message: "JSON required." } }, 415, cors);
+    return json(
+      { error: { code: "unsupported_media_type", message: "JSON required." } },
+      415,
+      cors,
+    );
   }
   let body: Row;
   try {
@@ -330,10 +341,18 @@ async function moderateRequest(
     .first<{ user_id: string; status: string; updated_at: string }>();
   if (!existing) return notFound(cors);
   if (existing.updated_at !== expectedUpdatedAt) {
-    return json({ error: { code: "status_mismatch", message: "Request changed. Reload and retry." } }, 409, cors);
+    return json(
+      { error: { code: "status_mismatch", message: "Request changed. Reload and retry." } },
+      409,
+      cors,
+    );
   }
   if (existing.status !== "pending_review") {
-    return json({ error: { code: "invalid_transition", message: "Request is already reviewed." } }, 409, cors);
+    return json(
+      { error: { code: "invalid_transition", message: "Request is already reviewed." } },
+      409,
+      cors,
+    );
   }
   const timestamp = now();
   const results = await env.DB.batch([
@@ -398,7 +417,12 @@ function matchesDocumentSignature(bytes: Uint8Array, contentType: string): boole
     return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
   }
   if (contentType === "image/png") {
-    return bytes.length >= 8 && [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((value, index) => bytes[index] === value);
+    return (
+      bytes.length >= 8 &&
+      [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every(
+        (value, index) => bytes[index] === value,
+      )
+    );
   }
   if (contentType === "image/webp") {
     return bytes.length >= 12 && ascii(bytes, 0, 4) === "RIFF" && ascii(bytes, 8, 4) === "WEBP";
@@ -423,13 +447,20 @@ function canManage(roles: string[]): boolean {
 
 function clean(value: unknown, max: number): string | null {
   if (typeof value !== "string") return null;
-  const normalized = value.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+  const normalized = value
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   return normalized && normalized.length <= max ? normalized : null;
 }
 
 function cleanOptional(value: unknown, max: number): string | null {
   if (typeof value !== "string") return null;
-  const normalized = value.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
+  const normalized = value
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max);
   return normalized || null;
 }
 

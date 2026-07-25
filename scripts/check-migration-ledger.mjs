@@ -8,9 +8,7 @@ const root = process.cwd();
 const migrationsDir = path.join(root, "cloudflare", "d1", "migrations");
 const filenamePattern = /^(\d{4})_([a-z0-9][a-z0-9_-]*)\.sql$/;
 
-const files = (await readdir(migrationsDir))
-  .filter((file) => file.endsWith(".sql"))
-  .sort();
+const files = (await readdir(migrationsDir)).filter((file) => file.endsWith(".sql")).sort();
 
 const errors = [];
 const parsed = [];
@@ -61,4 +59,6 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log(`D1 migration ledger check passed (${files.length} migrations, continuous 0001-${String(orderedSequences.at(-1)).padStart(4, "0")}).`);
+console.log(
+  `D1 migration ledger check passed (${files.length} migrations, continuous 0001-${String(orderedSequences.at(-1)).padStart(4, "0")}).`,
+);

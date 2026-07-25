@@ -305,7 +305,9 @@ async function api(path, options = {}) {
 }
 
 async function assignRole(userId, role) {
-  const wrangler = fileURLToPath(new URL("../node_modules/wrangler/bin/wrangler.js", import.meta.url));
+  const wrangler = fileURLToPath(
+    new URL("../node_modules/wrangler/bin/wrangler.js", import.meta.url),
+  );
   const result = spawnSync(
     process.execPath,
     [
@@ -439,11 +441,15 @@ test("owner can approve listing and audit log is created", async () => {
   assert.equal(listing.response.status, 201);
   const listingId = listing.payload.data.id;
 
-  const moderate = await api("/v1/admin/listings/moderate", { ...owner, method: "POST", body: {
-    listingId,
-    action: "approve",
-    expectedUpdatedAt: listing.payload.data.updatedAt,
-  } });
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "approve",
+      expectedUpdatedAt: listing.payload.data.updatedAt,
+    },
+  });
   assert.equal(moderate.response.status, 200);
   assert.equal(moderate.payload.data.previousStatus, "pending_review");
   assert.equal(moderate.payload.data.nextStatus, "approved");
@@ -464,12 +470,16 @@ test("moderator can reject listing and audit log is created", async () => {
   assert.equal(listing.response.status, 201);
   const listingId = listing.payload.data.id;
 
-  const moderate = await api("/v1/admin/listings/moderate", { ...moderator, method: "POST", body: {
-    listingId,
-    action: "reject",
-    reason: "Invalid listing",
-    expectedUpdatedAt: listing.payload.data.updatedAt,
-  } });
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...moderator,
+    method: "POST",
+    body: {
+      listingId,
+      action: "reject",
+      reason: "Invalid listing",
+      expectedUpdatedAt: listing.payload.data.updatedAt,
+    },
+  });
   assert.equal(moderate.response.status, 200);
   assert.equal(moderate.payload.data.previousStatus, "pending_review");
   assert.equal(moderate.payload.data.nextStatus, "rejected");
@@ -486,11 +496,15 @@ test("normal user cannot moderate listings", async () => {
   assert.equal(listing.response.status, 201);
   const listingId = listing.payload.data.id;
 
-  const moderate = await api("/v1/admin/listings/moderate", { ...other, method: "POST", body: {
-    listingId,
-    action: "approve",
-    expectedUpdatedAt: listing.payload.data.updatedAt,
-  } });
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...other,
+    method: "POST",
+    body: {
+      listingId,
+      action: "approve",
+      expectedUpdatedAt: listing.payload.data.updatedAt,
+    },
+  });
   assert.equal(moderate.response.status, 403);
 });
 
@@ -513,11 +527,15 @@ test("invalid moderation action returns validation error", async () => {
   });
   assert.equal(listing.response.status, 201);
 
-  const moderate = await api("/v1/admin/listings/moderate", { ...owner, method: "POST", body: {
-    listingId: listing.payload.data.id,
-    action: "invalid_action",
-    expectedUpdatedAt: listing.payload.data.updatedAt,
-  } });
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId: listing.payload.data.id,
+      action: "invalid_action",
+      expectedUpdatedAt: listing.payload.data.updatedAt,
+    },
+  });
   assert.equal(moderate.response.status, 400);
 });
 
@@ -533,11 +551,15 @@ test("stale review is rejected with 409", async () => {
   });
   assert.equal(listing.response.status, 201);
 
-  const moderate = await api("/v1/admin/listings/moderate", { ...owner, method: "POST", body: {
-    listingId: listing.payload.data.id,
-    action: "approve",
-    expectedUpdatedAt: "stale-timestamp",
-  } });
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId: listing.payload.data.id,
+      action: "approve",
+      expectedUpdatedAt: "stale-timestamp",
+    },
+  });
   assert.equal(moderate.response.status, 409);
 });
 

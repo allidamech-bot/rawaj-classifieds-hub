@@ -67,7 +67,10 @@ for (const path of [...manifestFiles, ...environmentFiles]) {
   scannedFiles += 1;
   collect(content, path, [
     ["retired-sdk-package", new RegExp(escapeRegex(VENDOR_PACKAGE), "gi")],
-    ["retired-environment-variable", new RegExp(`\\b(?:VITE_)?${VENDOR.toUpperCase()}_[A-Z0-9_]+\\b`, "g")],
+    [
+      "retired-environment-variable",
+      new RegExp(`\\b(?:VITE_)?${VENDOR.toUpperCase()}_[A-Z0-9_]+\\b`, "g"),
+    ],
     ["retired-service-host", new RegExp(`https?:\\/\\/[^\\s\"']*${VENDOR}\\.(?:co|com)`, "gi")],
   ]);
 }
@@ -82,7 +85,10 @@ for (const root of runtimeRoots) {
       ["retired-client-module", new RegExp(`(?:@\\/lib\\/${VENDOR}|lib\\/${VENDOR})`, "gi")],
       ["retired-client-construction", /\bcreateClient\s*\(/g],
       ["retired-client-type", new RegExp(`\\b${capitalize(VENDOR)}Client\\b`, "g")],
-      ["retired-environment-variable", new RegExp(`\\b(?:VITE_)?${VENDOR.toUpperCase()}_[A-Z0-9_]+\\b`, "g")],
+      [
+        "retired-environment-variable",
+        new RegExp(`\\b(?:VITE_)?${VENDOR.toUpperCase()}_[A-Z0-9_]+\\b`, "g"),
+      ],
       ["retired-service-host", new RegExp(`https?:\\/\\/[^\\s\"']*${VENDOR}\\.(?:co|com)`, "gi")],
       ["retired-realtime-channel", /\.channel\s*\(/g],
     ]);
@@ -190,13 +196,18 @@ async function walk(relativeDirectory, extensions) {
   }
 
   for (const entry of entries) {
-    if ([".git", "node_modules", "dist", "build", ".output", ".wrangler", ".tanstack"].includes(entry.name)) {
+    if (
+      [".git", "node_modules", "dist", "build", ".output", ".wrangler", ".tanstack"].includes(
+        entry.name,
+      )
+    ) {
       continue;
     }
     const absolutePath = resolve(absoluteDirectory, entry.name);
     const path = relative(ROOT, absolutePath).replaceAll("\\", "/");
     if (entry.isDirectory()) output.push(...(await walk(path, extensions)));
-    else if (extensions.has(extname(entry.name)) || environmentFiles.includes(path)) output.push(path);
+    else if (extensions.has(extname(entry.name)) || environmentFiles.includes(path))
+      output.push(path);
   }
   return output;
 }

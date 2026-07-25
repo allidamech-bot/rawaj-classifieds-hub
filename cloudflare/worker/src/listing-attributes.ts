@@ -9,14 +9,20 @@ import {
 
 type Value = string | number | null;
 type Row = Record<string, unknown>;
-interface Result<T = Row> { results?: T[]; success: boolean; error?: string }
+interface Result<T = Row> {
+  results?: T[];
+  success: boolean;
+  error?: string;
+}
 interface Statement {
   bind(...values: Value[]): Statement;
   first<T = Row>(): Promise<T | null>;
   all<T = Row>(): Promise<Result<T>>;
   run(): Promise<Result>;
 }
-interface Database { prepare(query: string): Statement }
+interface Database {
+  prepare(query: string): Statement;
+}
 
 export interface ListingAttributesEnv {
   DB: Database;
@@ -26,7 +32,9 @@ export interface ListingAttributesEnv {
   FIREBASE_JWKS_URL?: string;
 }
 
-function asAuthEnv(env: ListingAttributesEnv): AuthEnv { return env as unknown as AuthEnv }
+function asAuthEnv(env: ListingAttributesEnv): AuthEnv {
+  return env as unknown as AuthEnv;
+}
 
 export async function handleListingAttributes(
   request: Request,
@@ -106,13 +114,15 @@ async function completeness(
   const taxonomyNodeId = await assignmentFor(listingId, env);
   const values = objectValue(owner.row.details);
   const required = taxonomyNodeId ? await requiredFields(taxonomyNodeId, env) : [];
-  const missing = required.filter((field) => !hasValue(values[field.key])).map((field) => ({
-    fieldKey: field.key,
-    labelAr: field.labelAr,
-    labelEn: field.labelEn,
-    groupKey: field.groupKey,
-    sortOrder: field.sortOrder,
-  }));
+  const missing = required
+    .filter((field) => !hasValue(values[field.key]))
+    .map((field) => ({
+      fieldKey: field.key,
+      labelAr: field.labelAr,
+      labelEn: field.labelEn,
+      groupKey: field.groupKey,
+      sortOrder: field.sortOrder,
+    }));
   const filledRequiredCount = required.length - missing.length;
   return json(
     {
@@ -152,10 +162,18 @@ async function replaceAttributes(
     .first<Row>();
   if (!listing || listing.owner_id !== auth.userId) return forbidden(cors);
   if (!["draft", "rejected"].includes(stringValue(listing.status))) {
-    return json({ error: { code: "invalid_transition", message: "Listing attributes cannot be changed." } }, 409, cors);
+    return json(
+      { error: { code: "invalid_transition", message: "Listing attributes cannot be changed." } },
+      409,
+      cors,
+    );
   }
   if (stringValue(listing.updated_at) !== expectedUpdatedAt) {
-    return json({ error: { code: "status_mismatch", message: "Listing changed. Reload and retry." } }, 409, cors);
+    return json(
+      { error: { code: "status_mismatch", message: "Listing changed. Reload and retry." } },
+      409,
+      cors,
+    );
   }
   const taxonomyNodeId = await assignmentFor(listingId, env);
   if (!taxonomyNodeId) return validation(cors, "Choose the final taxonomy node first.");
@@ -172,13 +190,15 @@ async function replaceAttributes(
     .run();
   if (!result.success) return databaseError(cors);
   const required = await requiredFields(taxonomyNodeId, env);
-  const missing = required.filter((field) => !hasValue(merged[field.key])).map((field) => ({
-    fieldKey: field.key,
-    labelAr: field.labelAr,
-    labelEn: field.labelEn,
-    groupKey: field.groupKey,
-    sortOrder: field.sortOrder,
-  }));
+  const missing = required
+    .filter((field) => !hasValue(merged[field.key]))
+    .map((field) => ({
+      fieldKey: field.key,
+      labelAr: field.labelAr,
+      labelEn: field.labelEn,
+      groupKey: field.groupKey,
+      sortOrder: field.sortOrder,
+    }));
   return json(
     {
       data: {
@@ -242,7 +262,15 @@ async function allowedFields(nodeId: string, env: ListingAttributesEnv): Promise
 async function requiredFields(
   nodeId: string,
   env: ListingAttributesEnv,
-): Promise<Array<{ key: string; labelAr: string; labelEn: string | null; groupKey: string | null; sortOrder: number }>> {
+): Promise<
+  Array<{
+    key: string;
+    labelAr: string;
+    labelEn: string | null;
+    groupKey: string | null;
+    sortOrder: number;
+  }>
+> {
   const key = await schemaKeyFor(nodeId, env);
   if (!key) return [];
   const tokens = schemaTokens(key);
@@ -278,20 +306,30 @@ async function requiredFields(
 function schemaTokens(value: string): string[] {
   try {
     const parsed = JSON.parse(value);
-    if (Array.isArray(parsed)) return parsed.filter((item): item is string => typeof item === "string");
+    if (Array.isArray(parsed))
+      return parsed.filter((item): item is string => typeof item === "string");
     if (parsed && typeof parsed === "object" && Array.isArray((parsed as Row).fields)) {
-      return ((parsed as Row).fields as unknown[]).filter((item): item is string => typeof item === "string");
+      return ((parsed as Row).fields as unknown[]).filter(
+        (item): item is string => typeof item === "string",
+      );
     }
   } catch {
     // Plain schema keys are supported.
   }
-  return value.split(/[\s,|]+/).map((item) => item.trim()).filter(Boolean);
+  return value
+    .split(/[\s,|]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 function objectValue(value: unknown): Row {
   if (value && typeof value === "object" && !Array.isArray(value)) return value as Row;
   if (typeof value === "string") {
-    try { const parsed = JSON.parse(value); return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Row : {}; }
-    catch { return {}; }
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Row) : {};
+    } catch {
+      return {};
+    }
   }
   return {};
 }
@@ -300,11 +338,32 @@ function hasValue(value: unknown): boolean {
   if (Array.isArray(value)) return value.length > 0;
   return true;
 }
-function clean(value: unknown, max: number): string | null { return typeof value === "string" && value.trim() ? value.trim().slice(0, max) : null }
-function stringValue(value: unknown, fallback = ""): string { return typeof value === "string" ? value : fallback }
-function nullableString(value: unknown): string | null { return typeof value === "string" && value ? value : null }
-function numberValue(value: unknown, fallback = 0): number { const number = Number(value); return Number.isFinite(number) ? number : fallback }
-function unauthorized(cors: Headers): Response { return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors) }
-function forbidden(cors: Headers): Response { return json({ error: { code: "permission_denied", message: "Permission denied." } }, 403, cors) }
-function validation(cors: Headers, message: string): Response { return json({ error: { code: "validation_error", message } }, 400, cors) }
-function databaseError(cors: Headers): Response { return json({ error: { code: "database_error", message: "Database operation failed." } }, 500, cors) }
+function clean(value: unknown, max: number): string | null {
+  return typeof value === "string" && value.trim() ? value.trim().slice(0, max) : null;
+}
+function stringValue(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback;
+}
+function nullableString(value: unknown): string | null {
+  return typeof value === "string" && value ? value : null;
+}
+function numberValue(value: unknown, fallback = 0): number {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+function unauthorized(cors: Headers): Response {
+  return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors);
+}
+function forbidden(cors: Headers): Response {
+  return json({ error: { code: "permission_denied", message: "Permission denied." } }, 403, cors);
+}
+function validation(cors: Headers, message: string): Response {
+  return json({ error: { code: "validation_error", message } }, 400, cors);
+}
+function databaseError(cors: Headers): Response {
+  return json(
+    { error: { code: "database_error", message: "Database operation failed." } },
+    500,
+    cors,
+  );
+}

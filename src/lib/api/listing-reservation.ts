@@ -1,6 +1,10 @@
 import { fetchOwnerListingDetail } from "@/lib/api/listings";
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
-import type { ClassifiedListing, ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
+import type {
+  ClassifiedListing,
+  ClassifiedsErrorCode,
+  ClassifiedsResult,
+} from "@/lib/classifieds-types";
 
 export async function setOwnerListingReserved(
   userId: string | null,

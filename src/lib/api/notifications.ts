@@ -53,9 +53,7 @@ export async function fetchMyNotificationById(
 ): Promise<ClassifiedsResult<NotificationItem | null>> {
   const id = notificationId.trim();
   if (!id) return validationError("تعذر تحديد الإشعار.");
-  return request<NotificationItem | null>(
-    `/v1/account/notifications/${encodeURIComponent(id)}`,
-  );
+  return request<NotificationItem | null>(`/v1/account/notifications/${encodeURIComponent(id)}`);
 }
 
 export function fetchUnreadNotificationsCount(): Promise<ClassifiedsResult<number>> {
@@ -67,10 +65,10 @@ export async function markNotificationRead(
 ): Promise<ClassifiedsResult<null>> {
   const id = notificationId.trim();
   if (!id) return validationError("تعذر تحديد الإشعار.");
-  const result = await request<null>(
-    `/v1/account/notifications/${encodeURIComponent(id)}`,
-    { method: "PATCH", body: {} },
-  );
+  const result = await request<null>(`/v1/account/notifications/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: {},
+  });
   if (result.ok) emitUnreadActivityChanged();
   return result;
 }

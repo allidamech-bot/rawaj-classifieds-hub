@@ -45,7 +45,8 @@ export function mapListing(
     subcategoryId: nullableText(row.subcategoryId ?? row.subcategory_id),
     categoryNameAr: nullableText(row.categoryNameAr ?? row.category_name_ar) ?? category?.nameAr,
     categoryPlaceholder:
-      normalizePlaceholder(row.categoryPlaceholder ?? row.category_placeholder) ?? category?.placeholder,
+      normalizePlaceholder(row.categoryPlaceholder ?? row.category_placeholder) ??
+      category?.placeholder,
     governorateId,
     governorateNameAr:
       nullableText(row.governorateNameAr ?? row.governorate_name_ar) ?? governorate?.nameAr,
@@ -75,13 +76,10 @@ export function mapListing(
     statusChangedAt: nullableText(row.statusChangedAt ?? row.status_changed_at),
     expiresAt: nullableText(row.expiresAt ?? row.expires_at),
     renewedAt: nullableText(row.renewedAt ?? row.renewed_at),
-    expiryDays:
-      expiryDays === 30 || expiryDays === 60 || expiryDays === 90 ? expiryDays : null,
+    expiryDays: expiryDays === 30 || expiryDays === 60 || expiryDays === 90 ? expiryDays : null,
     createdAt: text(row.createdAt ?? row.created_at),
     updatedAt: text(row.updatedAt ?? row.updated_at),
-    primaryImageUrl: absoluteMediaUrl(
-      nullableText(row.primaryImageUrl ?? row.primary_image_url),
-    ),
+    primaryImageUrl: absoluteMediaUrl(nullableText(row.primaryImageUrl ?? row.primary_image_url)),
   };
 }
 
@@ -146,7 +144,9 @@ export async function fetchCurrentUserListings(
 ): Promise<ClassifiedsResult<ClassifiedListing[]>> {
   if (!userId) return authFailure("يجب تسجيل الدخول لعرض إعلاناتك.");
   const result = await cloudflareApiRequest<Record<string, unknown>[]>("/v1/account/listings");
-  return result.ok ? { ok: true, data: result.data.map((row) => mapListing(row)) } : apiFailure(result);
+  return result.ok
+    ? { ok: true, data: result.data.map((row) => mapListing(row)) }
+    : apiFailure(result);
 }
 
 export const OWNER_DELETABLE_STATUSES = [
@@ -225,7 +225,9 @@ async function createListingWithSubmit(
   submit: boolean,
 ): Promise<ClassifiedsResult<ClassifiedListing>> {
   if (!userId) {
-    return authFailure(submit ? "يجب تسجيل الدخول لنشر إعلان حقيقي." : "يجب تسجيل الدخول لحفظ المسودة.");
+    return authFailure(
+      submit ? "يجب تسجيل الدخول لنشر إعلان حقيقي." : "يجب تسجيل الدخول لحفظ المسودة.",
+    );
   }
   const normalized = normalizeListingPayload(payload);
   if (!normalized.ok) return normalized;

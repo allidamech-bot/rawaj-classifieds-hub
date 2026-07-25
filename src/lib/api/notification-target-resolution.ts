@@ -108,9 +108,7 @@ async function resolveOwnedListing(
 async function currentAccountOwnsSavedSearch(
   resourceId: string,
 ): Promise<ClassifiedsResult<boolean>> {
-  const result = await cloudflareApiRequest<Array<{ id: string }>>(
-    "/v1/account/saved-searches",
-  );
+  const result = await cloudflareApiRequest<Array<{ id: string }>>("/v1/account/saved-searches");
   if (!result.ok) {
     return {
       ok: false,

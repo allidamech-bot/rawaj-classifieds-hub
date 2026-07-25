@@ -54,7 +54,10 @@ export async function fetchOwnerListingAttributes(
 
   const payload = normalizeOwnerValues(result.data);
   if (!payload.listingId || !payload.listingUpdatedAt) {
-    return confirmationFailure("لم يؤكد الخادم تحميل تفاصيل الإعلان المنظمة.", "listing_attribute_fetch");
+    return confirmationFailure(
+      "لم يؤكد الخادم تحميل تفاصيل الإعلان المنظمة.",
+      "listing_attribute_fetch",
+    );
   }
   rememberOwnerListingUpdatedAt(userId, payload.listingId, payload.listingUpdatedAt);
   return { ok: true, data: payload };
@@ -100,7 +103,10 @@ export async function replaceOwnerListingAttributes(
   const returnedListingId = text(payload.listingId);
   const updatedAt = text(payload.updatedAt);
   if (!returnedListingId || !updatedAt) {
-    return confirmationFailure("لم يؤكد الخادم حفظ تفاصيل الإعلان المنظمة.", "listing_attribute_replace");
+    return confirmationFailure(
+      "لم يؤكد الخادم حفظ تفاصيل الإعلان المنظمة.",
+      "listing_attribute_replace",
+    );
   }
 
   rememberOwnerListingUpdatedAt(userId, returnedListingId, updatedAt);

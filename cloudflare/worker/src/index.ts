@@ -241,7 +241,11 @@ async function locationRoots(url: URL, env: PublicCoreEnv, cors: Headers): Promi
   return json({ data: (result.results ?? []).map(mapLocationNode) }, 200, cors, cacheHeaders(env));
 }
 
-async function locationChildren(parentId: string, env: PublicCoreEnv, cors: Headers): Promise<Response> {
+async function locationChildren(
+  parentId: string,
+  env: PublicCoreEnv,
+  cors: Headers,
+): Promise<Response> {
   if (!validId(parentId)) return validationFailure(cors, "Invalid location id.");
   const result = await env.DB.prepare(
     `SELECT ${LOCATION_SELECT} FROM location_nodes

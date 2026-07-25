@@ -88,7 +88,8 @@ export async function handleSystemControls(
     const enabled = body.data.enabled;
     const reason = typeof body.data.reason === "string" ? body.data.reason.trim() : "";
     const expectedVersion = Number(body.data.expectedVersion);
-    if (!CONTROL_KEYS.includes(key as ControlKey)) return validation(cors, "Invalid system control.");
+    if (!CONTROL_KEYS.includes(key as ControlKey))
+      return validation(cors, "Invalid system control.");
     if (typeof enabled !== "boolean") return validation(cors, "Invalid control state.");
     if (reason.length < 3 || reason.length > 1000) {
       return validation(cors, "A clear reason between 3 and 1000 characters is required.");
@@ -132,11 +133,7 @@ export async function handleSystemControls(
       );
     }
 
-    return json(
-      { data: { key, enabled, version: nextVersion, updatedAt: timestamp } },
-      200,
-      cors,
-    );
+    return json({ data: { key, enabled, version: nextVersion, updatedAt: timestamp } }, 200, cors);
   }
 
   return json({ error: { code: "method_not_allowed", message: "Method not allowed." } }, 405, cors);
@@ -167,11 +164,19 @@ function unauthorized(cors: Headers): Response {
   return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors);
 }
 function forbidden(cors: Headers): Response {
-  return json({ error: { code: "permission_denied", message: "Owner permission required." } }, 403, cors);
+  return json(
+    { error: { code: "permission_denied", message: "Owner permission required." } },
+    403,
+    cors,
+  );
 }
 function validation(cors: Headers, message: string): Response {
   return json({ error: { code: "validation_error", message } }, 400, cors);
 }
 function databaseError(cors: Headers): Response {
-  return json({ error: { code: "database_error", message: "Database operation failed." } }, 500, cors);
+  return json(
+    { error: { code: "database_error", message: "Database operation failed." } },
+    500,
+    cors,
+  );
 }

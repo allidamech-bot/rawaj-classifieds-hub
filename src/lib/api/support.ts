@@ -27,7 +27,9 @@ export async function createMySupportRequest(
 export const createSupportRequest = createMySupportRequest;
 
 export async function fetchMySupportRequests(): Promise<ClassifiedsResult<SupportRequest[]>> {
-  return fromApi(await cloudflareApiRequest<SupportRequest[]>("/v1/account/support-requests?limit=50"));
+  return fromApi(
+    await cloudflareApiRequest<SupportRequest[]>("/v1/account/support-requests?limit=50"),
+  );
 }
 
 export async function fetchMySupportRequest(
@@ -84,9 +86,7 @@ function validateSupportPayload(payload: CreateSupportRequestPayload): Classifie
 }
 
 function fromApi<T>(
-  result:
-    | { ok: true; data: T }
-    | { ok: false; error: string; code: string },
+  result: { ok: true; data: T } | { ok: false; error: string; code: string },
 ): ClassifiedsResult<T> {
   return result.ok
     ? { ok: true, data: result.data }

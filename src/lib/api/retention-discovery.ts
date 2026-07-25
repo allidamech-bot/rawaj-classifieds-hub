@@ -1,4 +1,8 @@
-import type { ClassifiedListing, ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
+import type {
+  ClassifiedListing,
+  ClassifiedsErrorCode,
+  ClassifiedsResult,
+} from "@/lib/classifieds-types";
 import { mapListing } from "@/lib/api/listings";
 import { cloudflareApiRequest, cloudflareApiUrl } from "@/lib/cloudflare-auth";
 import { fetchCloudflareListingDetail } from "@/lib/public-data/cloudflare-client";
@@ -71,7 +75,10 @@ function readLocalRecentViews(): LocalRecentListingView[] {
 function writeLocalRecentViews(rows: LocalRecentListingView[]): void {
   if (!canUseLocalStorage()) return;
   try {
-    window.localStorage.setItem(localRecentViewsKey, JSON.stringify(rows.slice(0, maxLocalRecentViews)));
+    window.localStorage.setItem(
+      localRecentViewsKey,
+      JSON.stringify(rows.slice(0, maxLocalRecentViews)),
+    );
   } catch {
     // Browsing remains functional when local storage is blocked or full.
   }

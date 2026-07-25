@@ -37,13 +37,12 @@ export async function uploadMyProfileMedia({
   const form = new FormData();
   form.set("kind", kind);
   form.set("file", file, file.name);
-  const result = await cloudflareApiRequest<{ assetId: string; kind: ProfileMediaKind; url: string }>(
-    "/v1/profile/media",
-    { method: "POST", body: form },
-  );
-  return result.ok
-    ? { ok: true, data: cloudflareApiUrl(result.data.url) }
-    : apiFailure(result);
+  const result = await cloudflareApiRequest<{
+    assetId: string;
+    kind: ProfileMediaKind;
+    url: string;
+  }>("/v1/profile/media", { method: "POST", body: form });
+  return result.ok ? { ok: true, data: cloudflareApiUrl(result.data.url) } : apiFailure(result);
 }
 
 export const uploadProfileMedia = uploadMyProfileMedia;

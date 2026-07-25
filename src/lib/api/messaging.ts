@@ -19,10 +19,7 @@ import {
 import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
 import { isMessageReportReason, normalizeModerationText } from "@/lib/moderation-contract";
 import { logRecorderDiagnostics } from "@/lib/chat-audio-diagnostics";
-import {
-  cloudflareApiRequest,
-  cloudflareAuthorizedFetch,
-} from "@/lib/cloudflare-auth";
+import { cloudflareApiRequest, cloudflareAuthorizedFetch } from "@/lib/cloudflare-auth";
 
 const pendingMessageSends = new Map<string, Promise<ClassifiedsResult<ConversationMessage>>>();
 const chatMediaObjectUrls = new Map<string, { url: string; expiresAt: number }>();
@@ -78,9 +75,7 @@ export async function uploadChatImage(payload: {
   const requestId = normalizeChatResourceId(payload.requestId);
   const validation = validateChatImage(payload.file);
   if (!conversationId || !requestId || !validation.ok) {
-    return validation.ok
-      ? failure("validation_error", "تعذر تحديد مرفق المحادثة.")
-      : validation;
+    return validation.ok ? failure("validation_error", "تعذر تحديد مرفق المحادثة.") : validation;
   }
 
   const form = new FormData();
@@ -132,8 +127,7 @@ function normalizeChatAudioMimeType(value: string): UploadedChatAudio["mimeType"
 
 function normalizeChatAudioFileName(originalName: string, mimeType: string): string {
   const extension = extensionForChatAudioMime(mimeType);
-  const base =
-    originalName.replace(/\.[^.]+$/, "").replace(/[^\p{L}\p{N}_-]+/gu, "-") || "voice";
+  const base = originalName.replace(/\.[^.]+$/, "").replace(/[^\p{L}\p{N}_-]+/gu, "-") || "voice";
   return `${base}.${extension}`;
 }
 
@@ -306,9 +300,7 @@ export async function startListingConversation(
     method: "POST",
     body: { listingId: cleanListingId },
   });
-  return result.ok
-    ? { ok: true, data: result.data.id }
-    : apiFailure(result, "conversation_start");
+  return result.ok ? { ok: true, data: result.data.id } : apiFailure(result, "conversation_start");
 }
 
 export async function fetchMyConversations(): Promise<ClassifiedsResult<Conversation[]>> {
@@ -447,9 +439,7 @@ export async function createMessageReport(
     `/v1/messages/${encodeURIComponent(messageId)}/report`,
     { method: "POST", body: { reason, details } },
   );
-  return result.ok
-    ? { ok: true, data: null }
-    : apiFailure(result, "message_report_create");
+  return result.ok ? { ok: true, data: null } : apiFailure(result, "message_report_create");
 }
 
 export async function blockConversationParticipant(
@@ -464,9 +454,7 @@ export async function blockConversationParticipant(
     `/v1/conversations/${encodeURIComponent(conversationId)}/block`,
     { method: "POST", body: { reason } },
   );
-  return result.ok
-    ? { ok: true, data: null }
-    : apiFailure(result, "conversation_block");
+  return result.ok ? { ok: true, data: null } : apiFailure(result, "conversation_block");
 }
 
 export function fromDbMessageReportStatus(status: string): MessageReport["status"] {
@@ -480,9 +468,7 @@ export function toDbMessageReportStatus(status: MessageReport["status"]): string
 }
 
 export async function adminFetchMessageReports(): Promise<ClassifiedsResult<MessageReport[]>> {
-  const result = await cloudflareApiRequest<Record<string, unknown>[]>(
-    "/v1/admin/message-reports",
-  );
+  const result = await cloudflareApiRequest<Record<string, unknown>[]>("/v1/admin/message-reports");
   return result.ok
     ? { ok: true, data: result.data.map(mapMessageReport) }
     : apiFailure(result, "message_report_admin_queue");
@@ -509,9 +495,7 @@ export async function adminModerateMessageReport(payload: {
       },
     },
   );
-  return result.ok
-    ? { ok: true, data: null }
-    : apiFailure(result, "message_report_moderate");
+  return result.ok ? { ok: true, data: null } : apiFailure(result, "message_report_moderate");
 }
 
 function mapConversation(row: Record<string, unknown>): Conversation {
@@ -542,19 +526,13 @@ function mapCloudflareMessage(row: Record<string, unknown>): ConversationMessage
     isMine: rowBoolean(row, "is_mine", "isMine"),
     body: rowString(row, "body"),
     attachmentPath,
-    attachmentMimeType: rowNullableString(
-      row,
-      "attachment_mime_type",
-      "attachmentMimeType",
-    ),
+    attachmentMimeType: rowNullableString(row, "attachment_mime_type", "attachmentMimeType"),
     attachmentSizeBytes: attachmentPath
       ? rowNumber(row, "attachment_size_bytes", "attachmentSizeBytes")
       : null,
     attachmentKind: kind === "audio" || kind === "image" ? kind : attachmentPath ? "image" : null,
     attachmentDurationMs:
-      kind === "audio"
-        ? rowNumber(row, "attachment_duration_ms", "attachmentDurationMs")
-        : null,
+      kind === "audio" ? rowNumber(row, "attachment_duration_ms", "attachmentDurationMs") : null,
     attachmentUrl: null,
     createdAt: rowString(row, "created_at", "", "createdAt"),
     editedAt: rowNullableString(row, "edited_at", "editedAt"),
@@ -580,16 +558,8 @@ function mapMessageReport(row: Record<string, unknown>): MessageReport {
     messageBody: rowNullableString(row, "message_body", "messageBody"),
     listingId: rowNullableString(row, "listing_id", "listingId"),
     listingTitle: rowNullableString(row, "listing_title", "listingTitle"),
-    reporterDisplayName: rowNullableString(
-      row,
-      "reporter_display_name",
-      "reporterDisplayName",
-    ),
-    reportedDisplayName: rowNullableString(
-      row,
-      "reported_display_name",
-      "reportedDisplayName",
-    ),
+    reporterDisplayName: rowNullableString(row, "reporter_display_name", "reporterDisplayName"),
+    reportedDisplayName: rowNullableString(row, "reported_display_name", "reportedDisplayName"),
   };
 }
 

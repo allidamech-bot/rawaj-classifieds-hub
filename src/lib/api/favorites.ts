@@ -39,9 +39,7 @@ export async function fetchFavoriteStatus(
   const result = await cloudflareApiRequest<{ favorited: boolean }>(
     `/v1/listings/${encodeURIComponent(cleanListingId)}/favorite`,
   );
-  return result.ok
-    ? { ok: true, data: result.data.favorited }
-    : apiFailure(result);
+  return result.ok ? { ok: true, data: result.data.favorited } : apiFailure(result);
 }
 
 export async function fetchFavorites(

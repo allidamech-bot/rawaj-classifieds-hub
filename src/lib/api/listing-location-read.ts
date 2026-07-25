@@ -22,7 +22,8 @@ export async function fetchListingLocationNodeId(
   userId: string,
   listingId: string,
 ): Promise<ClassifiedsResult<string | null>> {
-  if (!userId) return { ok: false, error: { code: "auth_required", message: "تسجيل الدخول مطلوب." } };
+  if (!userId)
+    return { ok: false, error: { code: "auth_required", message: "تسجيل الدخول مطلوب." } };
   const cleanId = listingId.trim();
   if (!cleanId) return unavailable();
   const result = await cloudflareApiRequest<{ listing: Record<string, unknown> }>(

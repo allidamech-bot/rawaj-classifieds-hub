@@ -87,7 +87,9 @@ export interface VehicleReferenceDraft {
   endYear?: number | null;
 }
 
-function fromApi<T>(result: Awaited<ReturnType<typeof cloudflareApiRequest<T>>>): ClassifiedsResult<T> {
+function fromApi<T>(
+  result: Awaited<ReturnType<typeof cloudflareApiRequest<T>>>,
+): ClassifiedsResult<T> {
   return result.ok
     ? { ok: true, data: result.data }
     : { ok: false, error: { code: result.code as ClassifiedsErrorCode, message: result.error } };
@@ -103,21 +105,32 @@ export async function fetchTaxonomyMappingQueue(
     offset: String(clampInteger(options.offset, 0, 1_000_000, 0)),
   });
   if (options.status) params.set("status", options.status);
-  return fromApi(await cloudflareApiRequest<ReviewQueuePage<TaxonomyMappingQueueItem>>(
-    `/v1/admin/taxonomy-mappings?${params.toString()}`,
-  ));
+  return fromApi(
+    await cloudflareApiRequest<ReviewQueuePage<TaxonomyMappingQueueItem>>(
+      `/v1/admin/taxonomy-mappings?${params.toString()}`,
+    ),
+  );
 }
 
 export async function reviewTaxonomyMapping(
   userId: string | null,
-  input: { listingId: string; decision: "confirm" | "reject"; versionId?: string | null; taxonomyNodeId?: string | null; note?: string | null; expectedQueueUpdatedAt: string },
+  input: {
+    listingId: string;
+    decision: "confirm" | "reject";
+    versionId?: string | null;
+    taxonomyNodeId?: string | null;
+    note?: string | null;
+    expectedQueueUpdatedAt: string;
+  },
 ): Promise<ClassifiedsResult<Record<string, unknown>>> {
   if (!userId) return authenticationFailure();
   if (!input.listingId.trim() || !input.expectedQueueUpdatedAt.trim()) return validationFailure();
-  return fromApi(await cloudflareApiRequest<Record<string, unknown>>(
-    `/v1/admin/taxonomy-mappings/${encodeURIComponent(input.listingId.trim())}/review`,
-    { method: "PATCH", body: input },
-  ));
+  return fromApi(
+    await cloudflareApiRequest<Record<string, unknown>>(
+      `/v1/admin/taxonomy-mappings/${encodeURIComponent(input.listingId.trim())}/review`,
+      { method: "PATCH", body: input },
+    ),
+  );
 }
 
 export async function applyConfirmedTaxonomyMapping(
@@ -127,15 +140,22 @@ export async function applyConfirmedTaxonomyMapping(
 ): Promise<ClassifiedsResult<Record<string, unknown>>> {
   if (!userId) return authenticationFailure();
   if (!listingId.trim() || !expectedReviewedAt.trim()) return validationFailure();
-  return fromApi(await cloudflareApiRequest<Record<string, unknown>>(
-    `/v1/admin/taxonomy-mappings/${encodeURIComponent(listingId.trim())}/apply`,
-    { method: "POST", body: { expectedReviewedAt: expectedReviewedAt.trim() } },
-  ));
+  return fromApi(
+    await cloudflareApiRequest<Record<string, unknown>>(
+      `/v1/admin/taxonomy-mappings/${encodeURIComponent(listingId.trim())}/apply`,
+      { method: "POST", body: { expectedReviewedAt: expectedReviewedAt.trim() } },
+    ),
+  );
 }
 
 export async function fetchVehicleReferenceQueue(
   userId: string | null,
-  options: { status?: VehicleReferenceQueueStatus | null; entityType?: VehicleReferenceEntityType | null; limit?: number; offset?: number } = {},
+  options: {
+    status?: VehicleReferenceQueueStatus | null;
+    entityType?: VehicleReferenceEntityType | null;
+    limit?: number;
+    offset?: number;
+  } = {},
 ): Promise<ClassifiedsResult<ReviewQueuePage<VehicleReferenceQueueItem>>> {
   if (!userId) return authenticationFailure();
   const params = new URLSearchParams({
@@ -144,33 +164,58 @@ export async function fetchVehicleReferenceQueue(
   });
   if (options.status) params.set("status", options.status);
   if (options.entityType) params.set("entityType", options.entityType);
-  return fromApi(await cloudflareApiRequest<ReviewQueuePage<VehicleReferenceQueueItem>>(
-    `/v1/admin/vehicle-references?${params.toString()}`,
-  ));
+  return fromApi(
+    await cloudflareApiRequest<ReviewQueuePage<VehicleReferenceQueueItem>>(
+      `/v1/admin/vehicle-references?${params.toString()}`,
+    ),
+  );
 }
 
 export async function reviewVehicleReference(
   userId: string | null,
-  input: { queueId: string; decision: "match" | "reject"; matchId?: string | null; note?: string | null; expectedQueueUpdatedAt: string },
+  input: {
+    queueId: string;
+    decision: "match" | "reject";
+    matchId?: string | null;
+    note?: string | null;
+    expectedQueueUpdatedAt: string;
+  },
 ): Promise<ClassifiedsResult<Record<string, unknown>>> {
   if (!userId) return authenticationFailure();
   if (!input.queueId.trim() || !input.expectedQueueUpdatedAt.trim()) return validationFailure();
-  return fromApi(await cloudflareApiRequest<Record<string, unknown>>(
-    `/v1/admin/vehicle-references/${encodeURIComponent(input.queueId.trim())}/review`,
-    { method: "PATCH", body: input },
-  ));
+  return fromApi(
+    await cloudflareApiRequest<Record<string, unknown>>(
+      `/v1/admin/vehicle-references/${encodeURIComponent(input.queueId.trim())}/review`,
+      { method: "PATCH", body: input },
+    ),
+  );
 }
 
 export async function createVehicleReferenceFromQueue(
   userId: string | null,
-  input: { queueId: string; reference: VehicleReferenceDraft; note?: string | null; expectedQueueUpdatedAt: string },
+  input: {
+    queueId: string;
+    reference: VehicleReferenceDraft;
+    note?: string | null;
+    expectedQueueUpdatedAt: string;
+  },
 ): Promise<ClassifiedsResult<Record<string, unknown>>> {
   if (!userId) return authenticationFailure();
-  if (!input.queueId.trim() || !input.reference.id.trim() || !input.expectedQueueUpdatedAt.trim()) return validationFailure();
-  return fromApi(await cloudflareApiRequest<Record<string, unknown>>(
-    `/v1/admin/vehicle-references/${encodeURIComponent(input.queueId.trim())}/create`,
-    { method: "POST", body: { reference: input.reference as unknown as Record<string, unknown>, note: input.note ?? null, expectedQueueUpdatedAt: input.expectedQueueUpdatedAt } },
-  ));
+  if (!input.queueId.trim() || !input.reference.id.trim() || !input.expectedQueueUpdatedAt.trim())
+    return validationFailure();
+  return fromApi(
+    await cloudflareApiRequest<Record<string, unknown>>(
+      `/v1/admin/vehicle-references/${encodeURIComponent(input.queueId.trim())}/create`,
+      {
+        method: "POST",
+        body: {
+          reference: input.reference as unknown as Record<string, unknown>,
+          note: input.note ?? null,
+          expectedQueueUpdatedAt: input.expectedQueueUpdatedAt,
+        },
+      },
+    ),
+  );
 }
 
 export async function applyVehicleReferenceResolution(
@@ -180,19 +225,32 @@ export async function applyVehicleReferenceResolution(
 ): Promise<ClassifiedsResult<Record<string, unknown>>> {
   if (!userId) return authenticationFailure();
   if (!queueId.trim() || !expectedReviewedAt.trim()) return validationFailure();
-  return fromApi(await cloudflareApiRequest<Record<string, unknown>>(
-    `/v1/admin/vehicle-references/${encodeURIComponent(queueId.trim())}/apply`,
-    { method: "POST", body: { expectedReviewedAt: expectedReviewedAt.trim() } },
-  ));
+  return fromApi(
+    await cloudflareApiRequest<Record<string, unknown>>(
+      `/v1/admin/vehicle-references/${encodeURIComponent(queueId.trim())}/apply`,
+      { method: "POST", body: { expectedReviewedAt: expectedReviewedAt.trim() } },
+    ),
+  );
 }
 
 function authenticationFailure<T>(): ClassifiedsResult<T> {
-  return { ok: false, error: { code: "auth_required", message: "يجب تسجيل الدخول لإدارة قوائم المراجعة." } };
+  return {
+    ok: false,
+    error: { code: "auth_required", message: "يجب تسجيل الدخول لإدارة قوائم المراجعة." },
+  };
 }
 function validationFailure<T>(): ClassifiedsResult<T> {
-  return { ok: false, error: { code: "validation_error", message: "بيانات عملية المراجعة غير مكتملة." } };
+  return {
+    ok: false,
+    error: { code: "validation_error", message: "بيانات عملية المراجعة غير مكتملة." },
+  };
 }
-function clampInteger(value: number | undefined, minimum: number, maximum: number, fallback: number) {
+function clampInteger(
+  value: number | undefined,
+  minimum: number,
+  maximum: number,
+  fallback: number,
+) {
   if (!Number.isFinite(value)) return fallback;
   return Math.max(minimum, Math.min(maximum, Math.trunc(value as number)));
 }

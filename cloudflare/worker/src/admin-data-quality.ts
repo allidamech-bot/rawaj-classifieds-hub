@@ -31,7 +31,14 @@ export interface AdminDataQualityEnv {
 }
 
 const STATUSES = new Set(["open", "needs_review", "seller_action", "dismissed", "resolved"]);
-const ISSUE_TYPES = new Set(["taxonomy", "required_field", "unexpected_field", "invalid_value", "legacy_payload", "specialized_reference"]);
+const ISSUE_TYPES = new Set([
+  "taxonomy",
+  "required_field",
+  "unexpected_field",
+  "invalid_value",
+  "legacy_payload",
+  "specialized_reference",
+]);
 const SEVERITIES = new Set(["info", "warning", "error", "blocking"]);
 const DECISIONS: Record<string, string> = {
   needs_review: "needs_review",
@@ -152,12 +159,7 @@ async function context(request: Request, env: AdminDataQualityEnv, cors: Headers
   );
 }
 
-async function listIssues(
-  request: Request,
-  env: AdminDataQualityEnv,
-  cors: Headers,
-  url: URL,
-) {
+async function listIssues(request: Request, env: AdminDataQualityEnv, cors: Headers, url: URL) {
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
   if (!isAdminLike(auth.roles)) return forbidden(cors);
@@ -166,18 +168,34 @@ async function listIssues(
   const categoryId = nullableQuery(url, "categoryId", 160);
   const severity = nullableQuery(url, "severity", 30);
   if (status && !STATUSES.has(status)) return validation(cors, "حالة المشكلة غير صالحة.");
-  if (issueType && !ISSUE_TYPES.has(issueType)) return validation(cors, "نوع مشكلة الجودة غير صالح.");
-  if (severity && !SEVERITIES.has(severity)) return validation(cors, "درجة مشكلة الجودة غير صالحة.");
+  if (issueType && !ISSUE_TYPES.has(issueType))
+    return validation(cors, "نوع مشكلة الجودة غير صالح.");
+  if (severity && !SEVERITIES.has(severity))
+    return validation(cors, "درجة مشكلة الجودة غير صالحة.");
   const limit = integerParam(url, "limit", 50, 1, 200);
   const offset = integerParam(url, "offset", 0, 0, 1_000_000);
   const clauses: string[] = [];
   const values: Value[] = [];
-  if (status) { clauses.push("i.status = ?"); values.push(status); }
-  if (issueType) { clauses.push("i.issue_type = ?"); values.push(issueType); }
-  if (categoryId) { clauses.push("i.category_id = ?"); values.push(categoryId); }
-  if (severity) { clauses.push("i.severity = ?"); values.push(severity); }
+  if (status) {
+    clauses.push("i.status = ?");
+    values.push(status);
+  }
+  if (issueType) {
+    clauses.push("i.issue_type = ?");
+    values.push(issueType);
+  }
+  if (categoryId) {
+    clauses.push("i.category_id = ?");
+    values.push(categoryId);
+  }
+  if (severity) {
+    clauses.push("i.severity = ?");
+    values.push(severity);
+  }
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
-  const count = await env.DB.prepare(`SELECT count(*) AS total FROM listing_data_quality_issues i ${where}`)
+  const count = await env.DB.prepare(
+    `SELECT count(*) AS total FROM listing_data_quality_issues i ${where}`,
+  )
     .bind(...values)
     .first<{ total: number }>();
   const result = await env.DB.prepare(
@@ -203,7 +221,14 @@ async function listIssues(
     .all<Row>();
   if (!result.success) return databaseError(cors);
   return json(
-    { data: { total: numberValue(count?.total), limit, offset, items: (result.results ?? []).map(mapIssue) } },
+    {
+      data: {
+        total: numberValue(count?.total),
+        limit,
+        offset,
+        items: (result.results ?? []).map(mapIssue),
+      },
+    },
     200,
     cors,
   );
@@ -325,7 +350,10 @@ async function scanListing(env: AdminDataQualityEnv, versionId: string, listing:
       issueType: "taxonomy",
       issueCode: "taxonomy_category_mismatch",
       severity: "error",
-      evidence: { expectedCategoryId: assignment.legacy_category_id, listingCategoryId: listing.category_id },
+      evidence: {
+        expectedCategoryId: assignment.legacy_category_id,
+        listingCategoryId: listing.category_id,
+      },
       timestamp,
     });
   }
@@ -387,7 +415,11 @@ async function requiredFields(env: AdminDataQualityEnv, schemaKey: string | null
     .bind(...values)
     .all<Row>();
   return (result.results ?? [])
-    .map((row) => ({ key: stringValue(row.key), labelAr: stringValue(row.label_ar), validation: objectValue(row.validation_schema) }))
+    .map((row) => ({
+      key: stringValue(row.key),
+      labelAr: stringValue(row.label_ar),
+      validation: objectValue(row.validation_schema),
+    }))
     .filter((field) => field.validation.required === true);
 }
 
@@ -407,7 +439,9 @@ async function upsertIssue(
     timestamp: string;
   },
 ) {
-  const issueKey = [input.listingId, input.versionId, input.issueCode, input.fieldKey ?? "-"].join(":");
+  const issueKey = [input.listingId, input.versionId, input.issueCode, input.fieldKey ?? "-"].join(
+    ":",
+  );
   await env.DB.prepare(
     `INSERT INTO listing_data_quality_issues (
        id, issue_key, listing_id, taxonomy_version_id, taxonomy_node_id, category_id,
@@ -467,7 +501,8 @@ async function reviewIssue(
   const note = nullableClean(body.data.note, 2000);
   const expectedUpdatedAt = clean(body.data.expectedUpdatedAt, 100);
   const nextStatus = DECISIONS[decision];
-  if (!nextStatus || !expectedUpdatedAt) return validation(cors, "بيانات مراجعة مشكلة الجودة غير مكتملة.");
+  if (!nextStatus || !expectedUpdatedAt)
+    return validation(cors, "بيانات مراجعة مشكلة الجودة غير مكتملة.");
   const timestamp = now();
   const result = await env.DB.prepare(
     `UPDATE listing_data_quality_issues
@@ -476,15 +511,36 @@ async function reviewIssue(
             updated_at = ?
       WHERE id = ? AND updated_at = ?`,
   )
-    .bind(nextStatus, auth.userId, timestamp, note, nextStatus, timestamp, timestamp, issueId, expectedUpdatedAt)
+    .bind(
+      nextStatus,
+      auth.userId,
+      timestamp,
+      note,
+      nextStatus,
+      timestamp,
+      timestamp,
+      issueId,
+      expectedUpdatedAt,
+    )
     .run();
   if (!result.success) return databaseError(cors);
   if (!changed(result)) return stale(cors);
-  await audit(env, auth.userId, "listing_data_quality.reviewed", "listing_data_quality_issues", issueId, {
-    decision,
-    status: nextStatus,
-  });
-  return json({ data: { id: issueId, status: nextStatus, reviewedAt: timestamp, updatedAt: timestamp } }, 200, cors);
+  await audit(
+    env,
+    auth.userId,
+    "listing_data_quality.reviewed",
+    "listing_data_quality_issues",
+    issueId,
+    {
+      decision,
+      status: nextStatus,
+    },
+  );
+  return json(
+    { data: { id: issueId, status: nextStatus, reviewedAt: timestamp, updatedAt: timestamp } },
+    200,
+    cors,
+  );
 }
 
 function mapIssue(row: Row) {
@@ -525,32 +581,155 @@ function mapIssue(row: Row) {
   };
 }
 
-async function audit(env: AdminDataQualityEnv, actorId: string, action: string, entityType: string, entityId: string, metadata: Row) {
+async function audit(
+  env: AdminDataQualityEnv,
+  actorId: string,
+  action: string,
+  entityType: string,
+  entityId: string,
+  metadata: Row,
+) {
   await env.DB.prepare(
     `INSERT INTO audit_logs (id, actor_id, action, entity_type, entity_id, metadata, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  ).bind(crypto.randomUUID(), actorId, action, entityType, entityId, JSON.stringify(metadata), now()).run();
+  )
+    .bind(
+      crypto.randomUUID(),
+      actorId,
+      action,
+      entityType,
+      entityId,
+      JSON.stringify(metadata),
+      now(),
+    )
+    .run();
 }
-function schemaTokens(value: string): string[] { try { const parsed = JSON.parse(value); if (Array.isArray(parsed)) return parsed.filter((item): item is string => typeof item === "string"); if (parsed && typeof parsed === "object" && Array.isArray((parsed as Row).fields)) return ((parsed as Row).fields as unknown[]).filter((item): item is string => typeof item === "string"); } catch { /* plain key */ } return value.split(/[\s,|]+/).map((item) => item.trim()).filter(Boolean); }
-function objectValue(value: unknown): Row { if (value && typeof value === "object" && !Array.isArray(value)) return value as Row; if (typeof value === "string") { try { const parsed = JSON.parse(value); return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Row : {}; } catch { return {}; } } return {}; }
-function hasValue(value: unknown) { if (value === null || value === undefined || value === "") return false; return !Array.isArray(value) || value.length > 0; }
-function safeCode(value: string) { return value.toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 80) || "field"; }
-function isAdminLike(roles: string[]) { return roles.some((role) => role === "owner" || role === "admin" || role === "moderator"); }
-function changed(result: Result) { return (result.meta?.changes ?? 0) > 0; }
-function integerParam(url: URL, key: string, fallback: number, min: number, max: number) { const number = Number(url.searchParams.get(key)); return Number.isFinite(number) ? Math.max(min, Math.min(max, Math.trunc(number))) : fallback; }
-function boundedInteger(value: unknown, fallback: number, min: number, max: number) { const number = Number(value); return Number.isFinite(number) ? Math.max(min, Math.min(max, Math.trunc(number))) : fallback; }
-function nullableQuery(url: URL, key: string, max: number) { return nullableClean(url.searchParams.get(key), max); }
-function clean(value: unknown, max: number) { return typeof value === "string" ? value.trim().slice(0, max) : ""; }
-function nullableClean(value: unknown, max: number): string | null { const result = clean(value, max); return result || null; }
-function stringValue(value: unknown, fallback = "") { return typeof value === "string" ? value : fallback; }
-function nullableString(value: unknown) { return typeof value === "string" && value ? value : null; }
-function numberValue(value: unknown) { const number = Number(value); return Number.isFinite(number) ? number : 0; }
-function truthy(value: unknown) { return value === true || value === 1 || value === "1"; }
-function now() { return new Date().toISOString(); }
-function unauthorized(cors: Headers) { return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors); }
-function forbidden(cors: Headers) { return json({ error: { code: "permission_denied", message: "Data quality administration permission required." } }, 403, cors); }
-function ownerOnly(cors: Headers) { return json({ error: { code: "permission_denied", message: "Owner permission required." } }, 403, cors); }
-function validation(cors: Headers, message: string) { return json({ error: { code: "validation_error", message } }, 400, cors); }
-function stale(cors: Headers) { return json({ error: { code: "status_mismatch", message: "تغيّرت نتيجة الفحص. حدّث مركز الجودة قبل إعادة المحاولة." } }, 409, cors); }
-function notFound(cors: Headers, message: string) { return json({ error: { code: "not_found", message } }, 404, cors); }
-function databaseError(cors: Headers) { return json({ error: { code: "database_error", message: "Database operation failed." } }, 500, cors); }
+function schemaTokens(value: string): string[] {
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed))
+      return parsed.filter((item): item is string => typeof item === "string");
+    if (parsed && typeof parsed === "object" && Array.isArray((parsed as Row).fields))
+      return ((parsed as Row).fields as unknown[]).filter(
+        (item): item is string => typeof item === "string",
+      );
+  } catch {
+    /* plain key */
+  }
+  return value
+    .split(/[\s,|]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+function objectValue(value: unknown): Row {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value as Row;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Row) : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+function hasValue(value: unknown) {
+  if (value === null || value === undefined || value === "") return false;
+  return !Array.isArray(value) || value.length > 0;
+}
+function safeCode(value: string) {
+  return (
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9_]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 80) || "field"
+  );
+}
+function isAdminLike(roles: string[]) {
+  return roles.some((role) => role === "owner" || role === "admin" || role === "moderator");
+}
+function changed(result: Result) {
+  return (result.meta?.changes ?? 0) > 0;
+}
+function integerParam(url: URL, key: string, fallback: number, min: number, max: number) {
+  const number = Number(url.searchParams.get(key));
+  return Number.isFinite(number) ? Math.max(min, Math.min(max, Math.trunc(number))) : fallback;
+}
+function boundedInteger(value: unknown, fallback: number, min: number, max: number) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(min, Math.min(max, Math.trunc(number))) : fallback;
+}
+function nullableQuery(url: URL, key: string, max: number) {
+  return nullableClean(url.searchParams.get(key), max);
+}
+function clean(value: unknown, max: number) {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+function nullableClean(value: unknown, max: number): string | null {
+  const result = clean(value, max);
+  return result || null;
+}
+function stringValue(value: unknown, fallback = "") {
+  return typeof value === "string" ? value : fallback;
+}
+function nullableString(value: unknown) {
+  return typeof value === "string" && value ? value : null;
+}
+function numberValue(value: unknown) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+function truthy(value: unknown) {
+  return value === true || value === 1 || value === "1";
+}
+function now() {
+  return new Date().toISOString();
+}
+function unauthorized(cors: Headers) {
+  return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors);
+}
+function forbidden(cors: Headers) {
+  return json(
+    {
+      error: {
+        code: "permission_denied",
+        message: "Data quality administration permission required.",
+      },
+    },
+    403,
+    cors,
+  );
+}
+function ownerOnly(cors: Headers) {
+  return json(
+    { error: { code: "permission_denied", message: "Owner permission required." } },
+    403,
+    cors,
+  );
+}
+function validation(cors: Headers, message: string) {
+  return json({ error: { code: "validation_error", message } }, 400, cors);
+}
+function stale(cors: Headers) {
+  return json(
+    {
+      error: {
+        code: "status_mismatch",
+        message: "تغيّرت نتيجة الفحص. حدّث مركز الجودة قبل إعادة المحاولة.",
+      },
+    },
+    409,
+    cors,
+  );
+}
+function notFound(cors: Headers, message: string) {
+  return json({ error: { code: "not_found", message } }, 404, cors);
+}
+function databaseError(cors: Headers) {
+  return json(
+    { error: { code: "database_error", message: "Database operation failed." } },
+    500,
+    cors,
+  );
+}

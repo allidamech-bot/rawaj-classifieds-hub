@@ -87,7 +87,11 @@ async function leafSchema(nodeId: string, env: TaxonomyEnv, cors: Headers): Prom
     .bind(nodeId)
     .first<Row>();
   if (!leaf || !truthy(leaf.is_active) || !truthy(leaf.is_leaf)) {
-    return json({ data: { found: false, version: null, leaf: null, fields: [], conditionalRules: [] } }, 200, cors);
+    return json(
+      { data: { found: false, version: null, leaf: null, fields: [], conditionalRules: [] } },
+      200,
+      cors,
+    );
   }
 
   const schemaKey = nullableString(leaf.filter_schema_key);
@@ -256,8 +260,12 @@ async function vehicleChildren(
   )
     .bind(modelId)
     .first<Row>();
-  if (!model) return json({ data: { found: false, model: null, generations: [], trims: [] } }, 200, cors);
-  const yearClause = year === null ? "" : " AND (start_year IS NULL OR start_year <= ?) AND (end_year IS NULL OR end_year >= ?)";
+  if (!model)
+    return json({ data: { found: false, model: null, generations: [], trims: [] } }, 200, cors);
+  const yearClause =
+    year === null
+      ? ""
+      : " AND (start_year IS NULL OR start_year <= ?) AND (end_year IS NULL OR end_year >= ?)";
   const generationsStatement = env.DB.prepare(
     `SELECT id, model_id, name_ar, name_en, start_year, end_year, sort_order
        FROM vehicle_generations WHERE model_id = ? AND is_active = 1${yearClause}
@@ -268,12 +276,14 @@ async function vehicleChildren(
        FROM vehicle_trims WHERE model_id = ? AND is_active = 1${yearClause}
        ORDER BY sort_order, name_ar`,
   );
-  const generations = year === null
-    ? await generationsStatement.bind(modelId).all<Row>()
-    : await generationsStatement.bind(modelId, year, year).all<Row>();
-  const trims = year === null
-    ? await trimsStatement.bind(modelId).all<Row>()
-    : await trimsStatement.bind(modelId, year, year).all<Row>();
+  const generations =
+    year === null
+      ? await generationsStatement.bind(modelId).all<Row>()
+      : await generationsStatement.bind(modelId, year, year).all<Row>();
+  const trims =
+    year === null
+      ? await trimsStatement.bind(modelId).all<Row>()
+      : await trimsStatement.bind(modelId, year, year).all<Row>();
   if (!generations.success || !trims.success) return databaseError(cors);
   return json(
     {
@@ -365,15 +375,20 @@ function schemaTokens(value: string): string[] {
   if (!trimmed) return [];
   try {
     const parsed = JSON.parse(trimmed);
-    if (Array.isArray(parsed)) return parsed.filter((item): item is string => typeof item === "string");
+    if (Array.isArray(parsed))
+      return parsed.filter((item): item is string => typeof item === "string");
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
       const fields = (parsed as Row).fields;
-      if (Array.isArray(fields)) return fields.filter((item): item is string => typeof item === "string");
+      if (Array.isArray(fields))
+        return fields.filter((item): item is string => typeof item === "string");
     }
   } catch {
     // Non-JSON schema keys are supported below.
   }
-  return trimmed.split(/[\s,|]+/).map((item) => item.trim()).filter(Boolean);
+  return trimmed
+    .split(/[\s,|]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function mapAssignment(row: Row): Row {
@@ -386,52 +401,109 @@ function mapAssignment(row: Row): Row {
 }
 function mapMake(row: Row): Row {
   return {
-    id: stringValue(row.id), slug: stringValue(row.slug), nameAr: stringValue(row.name_ar),
-    nameEn: stringValue(row.name_en), aliases: arrayValue(parseJson(row.aliases, [])),
-    countryCode: nullableString(row.country_code), sortOrder: numberValue(row.sort_order),
+    id: stringValue(row.id),
+    slug: stringValue(row.slug),
+    nameAr: stringValue(row.name_ar),
+    nameEn: stringValue(row.name_en),
+    aliases: arrayValue(parseJson(row.aliases, [])),
+    countryCode: nullableString(row.country_code),
+    sortOrder: numberValue(row.sort_order),
   };
 }
 function mapModel(row: Row): Row {
   return {
-    id: stringValue(row.id), makeId: stringValue(row.make_id), slug: stringValue(row.slug),
-    nameAr: stringValue(row.name_ar), nameEn: stringValue(row.name_en),
-    aliases: arrayValue(parseJson(row.aliases, [])), vehicleType: nullableString(row.vehicle_type),
-    startYear: nullableNumber(row.start_year), endYear: nullableNumber(row.end_year),
+    id: stringValue(row.id),
+    makeId: stringValue(row.make_id),
+    slug: stringValue(row.slug),
+    nameAr: stringValue(row.name_ar),
+    nameEn: stringValue(row.name_en),
+    aliases: arrayValue(parseJson(row.aliases, [])),
+    vehicleType: nullableString(row.vehicle_type),
+    startYear: nullableNumber(row.start_year),
+    endYear: nullableNumber(row.end_year),
     sortOrder: numberValue(row.sort_order),
   };
 }
 function mapGeneration(row: Row): Row {
   return {
-    id: stringValue(row.id), modelId: stringValue(row.model_id), nameAr: stringValue(row.name_ar),
-    nameEn: stringValue(row.name_en), startYear: nullableNumber(row.start_year),
-    endYear: nullableNumber(row.end_year), sortOrder: numberValue(row.sort_order),
+    id: stringValue(row.id),
+    modelId: stringValue(row.model_id),
+    nameAr: stringValue(row.name_ar),
+    nameEn: stringValue(row.name_en),
+    startYear: nullableNumber(row.start_year),
+    endYear: nullableNumber(row.end_year),
+    sortOrder: numberValue(row.sort_order),
   };
 }
 function mapTrim(row: Row): Row {
   return {
-    id: stringValue(row.id), modelId: stringValue(row.model_id), generationId: nullableString(row.generation_id),
-    nameAr: stringValue(row.name_ar), nameEn: stringValue(row.name_en),
-    startYear: nullableNumber(row.start_year), endYear: nullableNumber(row.end_year),
+    id: stringValue(row.id),
+    modelId: stringValue(row.model_id),
+    generationId: nullableString(row.generation_id),
+    nameAr: stringValue(row.name_ar),
+    nameEn: stringValue(row.name_en),
+    startYear: nullableNumber(row.start_year),
+    endYear: nullableNumber(row.end_year),
     sortOrder: numberValue(row.sort_order),
   };
 }
 function parseJson(value: unknown, fallback: unknown): unknown {
   if (typeof value !== "string") return value ?? fallback;
-  try { return JSON.parse(value); } catch { return fallback; }
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
 }
 function arrayValue(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
 }
-function stringValue(value: unknown, fallback = ""): string { return typeof value === "string" ? value : fallback; }
-function nullableString(value: unknown): string | null { return typeof value === "string" && value ? value : null; }
-function numberValue(value: unknown, fallback = 0): number { const number = Number(value); return Number.isFinite(number) ? number : fallback; }
-function nullableNumber(value: unknown): number | null { const number = Number(value); return value === null || value === undefined || !Number.isFinite(number) ? null : number; }
-function truthy(value: unknown): boolean { return value === true || value === 1 || value === "1"; }
-function clean(value: unknown, max: number): string | null { return typeof value === "string" && value.trim() ? value.trim().slice(0, max) : null; }
-function nullableInt(value: unknown): number | null { const number = Number(value); return Number.isInteger(number) ? number : null; }
-function clampInt(value: unknown, fallback: number, min: number, max: number): number { const number = nullableInt(value); return number === null ? fallback : Math.max(min, Math.min(max, number)); }
-function unauthorized(cors: Headers): Response { return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors); }
-function forbidden(cors: Headers): Response { return json({ error: { code: "permission_denied", message: "Permission denied." } }, 403, cors); }
-function notFound(cors: Headers): Response { return json({ error: { code: "not_found", message: "Resource not found." } }, 404, cors); }
-function validation(cors: Headers, message: string): Response { return json({ error: { code: "validation_error", message } }, 400, cors); }
-function databaseError(cors: Headers): Response { return json({ error: { code: "database_error", message: "Database operation failed." } }, 500, cors); }
+function stringValue(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback;
+}
+function nullableString(value: unknown): string | null {
+  return typeof value === "string" && value ? value : null;
+}
+function numberValue(value: unknown, fallback = 0): number {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+function nullableNumber(value: unknown): number | null {
+  const number = Number(value);
+  return value === null || value === undefined || !Number.isFinite(number) ? null : number;
+}
+function truthy(value: unknown): boolean {
+  return value === true || value === 1 || value === "1";
+}
+function clean(value: unknown, max: number): string | null {
+  return typeof value === "string" && value.trim() ? value.trim().slice(0, max) : null;
+}
+function nullableInt(value: unknown): number | null {
+  const number = Number(value);
+  return Number.isInteger(number) ? number : null;
+}
+function clampInt(value: unknown, fallback: number, min: number, max: number): number {
+  const number = nullableInt(value);
+  return number === null ? fallback : Math.max(min, Math.min(max, number));
+}
+function unauthorized(cors: Headers): Response {
+  return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors);
+}
+function forbidden(cors: Headers): Response {
+  return json({ error: { code: "permission_denied", message: "Permission denied." } }, 403, cors);
+}
+function notFound(cors: Headers): Response {
+  return json({ error: { code: "not_found", message: "Resource not found." } }, 404, cors);
+}
+function validation(cors: Headers, message: string): Response {
+  return json({ error: { code: "validation_error", message } }, 400, cors);
+}
+function databaseError(cors: Headers): Response {
+  return json(
+    { error: { code: "database_error", message: "Database operation failed." } },
+    500,
+    cors,
+  );
+}

@@ -169,7 +169,6 @@ async function routeRequest(request: Request, env: EntryEnv): Promise<Response> 
   );
 }
 
-
 function isPublicCorePath(path: string): boolean {
   return (
     path === "/v1/health" ||
@@ -177,7 +176,7 @@ function isPublicCorePath(path: string): boolean {
     path === "/v1/ad-placements" ||
     /^\/v1\/locations(?:\/|$)/.test(path) ||
     /^\/v1\/media\/assets\/[^/]+$/.test(path) ||
-    (requestMethodIndependentListingDetail(path))
+    requestMethodIndependentListingDetail(path)
   );
 }
 
@@ -187,9 +186,7 @@ function requestMethodIndependentListingDetail(path: string): boolean {
 
 function isDiscoveryPath(path: string): boolean {
   return (
-    path === "/v1/listing-facets" ||
-    path === "/v1/listings/nearby" ||
-    /^\/v1\/sitemap\//.test(path)
+    path === "/v1/listing-facets" || path === "/v1/listings/nearby" || /^\/v1\/sitemap\//.test(path)
   );
 }
 

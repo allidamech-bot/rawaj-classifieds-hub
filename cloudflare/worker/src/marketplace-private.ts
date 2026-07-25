@@ -169,7 +169,6 @@ async function updateProfile(request: Request, env: MarketplaceEnv, cors: Header
   return result.success ? getProfile(request, env, cors) : databaseError(cors);
 }
 
-
 async function uploadProfileMedia(request: Request, env: MarketplaceEnv, cors: Headers) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
@@ -191,7 +190,8 @@ async function uploadProfileMedia(request: Request, env: MarketplaceEnv, cors: H
     return validation(cors, "Unsupported image type or size.");
   }
   const bytes = new Uint8Array(await file.arrayBuffer());
-  if (!matchesImageSignature(bytes, file.type)) return validation(cors, "Image content is invalid.");
+  if (!matchesImageSignature(bytes, file.type))
+    return validation(cors, "Image content is invalid.");
 
   const profileColumn = kind === "avatar" ? "avatar_asset_id" : "cover_asset_id";
   const previous = await env.DB.prepare(
@@ -684,14 +684,7 @@ async function uploadImage(
     ),
     env.DB.prepare(
       "INSERT INTO listing_images (id, listing_id, media_asset_id, alt_ar, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-    ).bind(
-      imageId,
-      listingId,
-      assetId,
-      altAr,
-      sortOrder,
-      timestamp,
-    ),
+    ).bind(imageId, listingId, assetId, altAr, sortOrder, timestamp),
   ]);
   if (results.some((result) => !result.success)) {
     await env.MEDIA.delete(objectKey);
@@ -715,12 +708,7 @@ async function uploadImage(
   );
 }
 
-async function listImages(
-  request: Request,
-  env: MarketplaceEnv,
-  cors: Headers,
-  listingId: string,
-) {
+async function listImages(request: Request, env: MarketplaceEnv, cors: Headers, listingId: string) {
   const auth = await authenticate(request, asAuthEnv(env));
   const listing = await env.DB.prepare("SELECT owner_id, status FROM listings WHERE id = ?")
     .bind(listingId)
@@ -738,7 +726,8 @@ async function listImages(
     .all();
   if (!result.success) return databaseError(cors);
 
-  const mediaPrefix = listing.status === "approved" ? "/v1/media/assets" : "/v1/account/media/assets";
+  const mediaPrefix =
+    listing.status === "approved" ? "/v1/media/assets" : "/v1/account/media/assets";
   return json(
     {
       data: (result.results ?? []).map((row) => ({

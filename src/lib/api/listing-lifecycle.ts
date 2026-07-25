@@ -1,7 +1,11 @@
 import { fetchOwnerListingDetail } from "@/lib/api/listings";
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 import type { ListingExpiryOption } from "@/lib/api/listing-expiry";
-import type { ClassifiedListing, ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
+import type {
+  ClassifiedListing,
+  ClassifiedsErrorCode,
+  ClassifiedsResult,
+} from "@/lib/classifieds-types";
 
 export type OwnerCloseListingStatus = "sold" | "rented" | "unavailable";
 const ownerLifecycleRequests = new Map<string, Promise<ClassifiedsResult<ClassifiedListing>>>();
@@ -31,7 +35,11 @@ async function perform(
   return fetchOwnerListingDetail(userId, cleanId);
 }
 
-export function closeOwnerListing(userId: string | null, listingId: string, targetStatus: OwnerCloseListingStatus) {
+export function closeOwnerListing(
+  userId: string | null,
+  listingId: string,
+  targetStatus: OwnerCloseListingStatus,
+) {
   const id = listingId.trim();
   return runOnce(`${userId ?? "anonymous"}:${id}:close:${targetStatus}`, () =>
     perform(userId, id, targetStatus),
@@ -40,10 +48,16 @@ export function closeOwnerListing(userId: string | null, listingId: string, targ
 
 export function reactivateOwnerListing(userId: string | null, listingId: string) {
   const id = listingId.trim();
-  return runOnce(`${userId ?? "anonymous"}:${id}:reactivate`, () => perform(userId, id, "reactivate"));
+  return runOnce(`${userId ?? "anonymous"}:${id}:reactivate`, () =>
+    perform(userId, id, "reactivate"),
+  );
 }
 
-export function setOwnerListingExpiry(userId: string | null, listingId: string, option: ListingExpiryOption) {
+export function setOwnerListingExpiry(
+  userId: string | null,
+  listingId: string,
+  option: ListingExpiryOption,
+) {
   const id = listingId.trim();
   return runOnce(`${userId ?? "anonymous"}:${id}:expiry:${option}`, () =>
     perform(userId, id, "set_expiry", { expiryDays: option === "never" ? null : option }),

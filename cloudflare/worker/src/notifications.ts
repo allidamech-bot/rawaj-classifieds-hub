@@ -50,9 +50,11 @@ export async function handleNotifications(
 ): Promise<Response | null> {
   const url = new URL(request.url);
   const path = url.pathname;
-  if (!path.startsWith("/v1/account/notifications") &&
-      !path.startsWith("/v1/account/notification-preferences") &&
-      !path.startsWith("/v1/account/push-devices")) {
+  if (
+    !path.startsWith("/v1/account/notifications") &&
+    !path.startsWith("/v1/account/notification-preferences") &&
+    !path.startsWith("/v1/account/push-devices")
+  ) {
     return null;
   }
 
@@ -138,12 +140,7 @@ async function updatePreference(request: Request, env: NotificationsEnv, cors: H
   return result.success ? getPreferences(request, env, cors) : databaseError(cors);
 }
 
-async function pushChannelStatus(
-  request: Request,
-  env: NotificationsEnv,
-  cors: Headers,
-  url: URL,
-) {
+async function pushChannelStatus(request: Request, env: NotificationsEnv, cors: Headers, url: URL) {
   const auth = await authenticate(request, env as unknown as AuthEnv);
   if (!auth) return unauthorized(cors);
   const deviceKey = clean(url.searchParams.get("deviceKey"), 200);
@@ -308,18 +305,14 @@ async function disablePushDevice(
   return json({ data: true }, 200, cors);
 }
 
-async function listNotifications(
-  request: Request,
-  env: NotificationsEnv,
-  cors: Headers,
-  url: URL,
-) {
+async function listNotifications(request: Request, env: NotificationsEnv, cors: Headers, url: URL) {
   const auth = await authenticate(request, env as unknown as AuthEnv);
   if (!auth) return unauthorized(cors);
   const limit = integer(url.searchParams.get("limit"), 20, 1, 50);
   const cursorAt = clean(url.searchParams.get("cursorAt"), 80);
   const cursorId = clean(url.searchParams.get("cursorId"), 120);
-  const cursorClause = cursorAt && cursorId ? "AND (created_at < ? OR (created_at = ? AND id < ?))" : "";
+  const cursorClause =
+    cursorAt && cursorId ? "AND (created_at < ? OR (created_at = ? AND id < ?))" : "";
   const statement = env.DB.prepare(
     `SELECT id, type, title, body, data, read_at, created_at
        FROM notifications
@@ -446,7 +439,9 @@ function notificationRow(row: Row) {
 
 async function encryptToken(token: string, secret: string): Promise<string> {
   const secretDigest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(secret));
-  const key = await crypto.subtle.importKey("raw", secretDigest, { name: "AES-GCM" }, false, ["encrypt"]);
+  const key = await crypto.subtle.importKey("raw", secretDigest, { name: "AES-GCM" }, false, [
+    "encrypt",
+  ]);
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encrypted = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
@@ -492,7 +487,11 @@ function validation(cors: Headers, message: string) {
   return json({ error: { code: "validation_error", message } }, 400, cors);
 }
 function databaseError(cors: Headers) {
-  return json({ error: { code: "database_unavailable", message: "Data service unavailable." } }, 503, cors);
+  return json(
+    { error: { code: "database_unavailable", message: "Data service unavailable." } },
+    503,
+    cors,
+  );
 }
 function integer(value: string | null, fallback: number, min: number, max: number) {
   const parsed = Number.parseInt(value ?? "", 10);

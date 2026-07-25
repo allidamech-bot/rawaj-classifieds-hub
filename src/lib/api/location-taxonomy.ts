@@ -1,9 +1,6 @@
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import { sortLocationNodesForDisplay } from "@/lib/location-node-order";
-import type {
-  LocationNode as CanonicalLocationNode,
-  LocationNodeType,
-} from "@/lib/location-types";
+import type { LocationNode as CanonicalLocationNode, LocationNodeType } from "@/lib/location-types";
 import {
   fetchCloudflareLocationChildren,
   fetchCloudflareLocationDescendantIds,
@@ -26,18 +23,14 @@ export async function fetchLocationRoots(
   countryCode = "SY",
 ): Promise<ClassifiedsResult<CanonicalLocationNode[]>> {
   const result = await fetchCloudflareLocationRoots(countryCode);
-  return result.ok
-    ? { ok: true, data: sortLocationNodesForDisplay(result.data) }
-    : result;
+  return result.ok ? { ok: true, data: sortLocationNodesForDisplay(result.data) } : result;
 }
 
 export async function fetchLocationChildren(
   parentId: string,
 ): Promise<ClassifiedsResult<CanonicalLocationNode[]>> {
   const result = await fetchCloudflareLocationChildren(parentId);
-  return result.ok
-    ? { ok: true, data: sortLocationNodesForDisplay(result.data) }
-    : result;
+  return result.ok ? { ok: true, data: sortLocationNodesForDisplay(result.data) } : result;
 }
 
 export async function fetchLocationNode(
@@ -63,8 +56,6 @@ export function fetchLocationPath(
   return fetchCloudflareLocationPath(nodeId);
 }
 
-export function resolveLocationDescendantIds(
-  nodeId: string,
-): Promise<ClassifiedsResult<string[]>> {
+export function resolveLocationDescendantIds(nodeId: string): Promise<ClassifiedsResult<string[]>> {
   return fetchCloudflareLocationDescendantIds(nodeId);
 }

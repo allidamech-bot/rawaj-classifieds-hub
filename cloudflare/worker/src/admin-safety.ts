@@ -219,12 +219,7 @@ async function saveCase(
   return json({ data: { id, version, updatedAt: timestamp } }, 200, cors);
 }
 
-async function setStatus(
-  request: Request,
-  env: AdminSafetyEnv,
-  cors: Headers,
-  caseId: string,
-) {
+async function setStatus(request: Request, env: AdminSafetyEnv, cors: Headers, caseId: string) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   if (!isAdminLike(auth.roles)) return forbidden(cors);
@@ -258,7 +253,8 @@ async function setStatus(
     )
     .run();
   if (!result.success) return databaseError(cors);
-  if (!changed(result)) return conflict(cors, "تغيّرت القضية منذ تحميلها. أعد التحميل قبل تغيير الحالة.");
+  if (!changed(result))
+    return conflict(cors, "تغيّرت القضية منذ تحميلها. أعد التحميل قبل تغيير الحالة.");
   const version = expectedVersion + 1;
   await audit(env, auth.userId, "safety_case.status_changed", "safety_cases", caseId, {
     status,
@@ -269,12 +265,7 @@ async function setStatus(
   return json({ data: { id: caseId, version, updatedAt: timestamp } }, 200, cors);
 }
 
-async function escalate(
-  request: Request,
-  env: AdminSafetyEnv,
-  cors: Headers,
-  caseId: string,
-) {
+async function escalate(request: Request, env: AdminSafetyEnv, cors: Headers, caseId: string) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   if (!isAdminLike(auth.roles)) return forbidden(cors);
@@ -282,7 +273,8 @@ async function escalate(
   if (!body.ok) return json({ error: body.error }, body.status, cors);
   const reason = clean(body.data.reason, 1000);
   const expectedVersion = positiveInteger(body.data.expectedVersion);
-  if (reason.length < 3 || expectedVersion === null) return validation(cors, "أدخل سبباً واضحاً للتصعيد.");
+  if (reason.length < 3 || expectedVersion === null)
+    return validation(cors, "أدخل سبباً واضحاً للتصعيد.");
   const timestamp = now();
   const result = await env.DB.prepare(
     `UPDATE safety_cases
@@ -293,7 +285,8 @@ async function escalate(
     .bind(timestamp, auth.userId, timestamp, caseId, expectedVersion)
     .run();
   if (!result.success) return databaseError(cors);
-  if (!changed(result)) return conflict(cors, "تغيّرت القضية منذ تحميلها. أعد التحميل قبل التصعيد.");
+  if (!changed(result))
+    return conflict(cors, "تغيّرت القضية منذ تحميلها. أعد التحميل قبل التصعيد.");
   const version = expectedVersion + 1;
   await audit(env, auth.userId, "safety_case.escalated_to_owner", "safety_cases", caseId, {
     reason,
@@ -358,7 +351,8 @@ async function addLink(request: Request, env: AdminSafetyEnv, cors: Headers, cas
   if (!body.ok) return json({ error: body.error }, body.status, cors);
   const linkType = clean(body.data.linkType, 30);
   const linkId = clean(body.data.linkId, 200);
-  if (!LINK_TYPES.has(linkType) || !linkId) return validation(cors, "بيانات الرابط المرتبط غير مكتملة.");
+  if (!LINK_TYPES.has(linkType) || !linkId)
+    return validation(cors, "بيانات الرابط المرتبط غير مكتملة.");
   if (!(await caseExists(env, caseId))) return notFound(cors);
   const id = crypto.randomUUID();
   const result = await env.DB.prepare(
@@ -368,7 +362,8 @@ async function addLink(request: Request, env: AdminSafetyEnv, cors: Headers, cas
     .bind(id, caseId, linkType, linkId, auth.userId, now())
     .run();
   if (!result.success) {
-    if ((result.error ?? "").includes("UNIQUE")) return conflict(cors, "الرابط مضاف إلى القضية مسبقًا.");
+    if ((result.error ?? "").includes("UNIQUE"))
+      return conflict(cors, "الرابط مضاف إلى القضية مسبقًا.");
     return databaseError(cors);
   }
   await audit(env, auth.userId, "safety_case.link_added", "safety_cases", caseId, {
@@ -382,7 +377,19 @@ function parseCase(
   body: Row,
   update: boolean,
 ):
-  | { ok: true; value: { sourceType: string; sourceId: string | null; subjectUserId: string | null; title: string; summary: string; severity: string; assignedTo: string | null; expectedVersion: number } }
+  | {
+      ok: true;
+      value: {
+        sourceType: string;
+        sourceId: string | null;
+        subjectUserId: string | null;
+        title: string;
+        summary: string;
+        severity: string;
+        assignedTo: string | null;
+        expectedVersion: number;
+      };
+    }
   | { ok: false; message: string } {
   const sourceType = clean(body.sourceType, 30) || "manual";
   const sourceId = nullableClean(body.sourceId, 200);
@@ -392,11 +399,29 @@ function parseCase(
   const severity = clean(body.severity, 30) || "medium";
   const assignedTo = nullableClean(body.assignedTo, 120);
   const expectedVersion = update ? positiveInteger(body.expectedVersion) : 1;
-  if (!SOURCES.has(sourceType) || !SEVERITIES.has(severity) || title.length < 3 || expectedVersion === null) {
+  if (
+    !SOURCES.has(sourceType) ||
+    !SEVERITIES.has(severity) ||
+    title.length < 3 ||
+    expectedVersion === null
+  ) {
     return { ok: false, message: "بيانات قضية السلامة غير مكتملة." };
   }
-  if (sourceType !== "manual" && !sourceId) return { ok: false, message: "القضية المرتبطة تحتاج معرف المصدر." };
-  return { ok: true, value: { sourceType, sourceId, subjectUserId, title, summary, severity, assignedTo, expectedVersion } };
+  if (sourceType !== "manual" && !sourceId)
+    return { ok: false, message: "القضية المرتبطة تحتاج معرف المصدر." };
+  return {
+    ok: true,
+    value: {
+      sourceType,
+      sourceId,
+      subjectUserId,
+      title,
+      summary,
+      severity,
+      assignedTo,
+      expectedVersion,
+    },
+  };
 }
 
 function mapCase(row: Row) {
@@ -442,7 +467,9 @@ function mapLink(row: Row) {
 }
 
 async function caseExists(env: AdminSafetyEnv, caseId: string) {
-  return Boolean(await env.DB.prepare("SELECT id FROM safety_cases WHERE id = ?").bind(caseId).first());
+  return Boolean(
+    await env.DB.prepare("SELECT id FROM safety_cases WHERE id = ?").bind(caseId).first(),
+  );
 }
 async function isSafetyStaff(env: AdminSafetyEnv, userId: string) {
   const row = await env.DB.prepare(
@@ -453,12 +480,27 @@ async function isSafetyStaff(env: AdminSafetyEnv, userId: string) {
     .first<{ allowed: number }>();
   return Boolean(row?.allowed);
 }
-async function audit(env: AdminSafetyEnv, actorId: string, action: string, entityType: string, entityId: string, metadata: Row) {
+async function audit(
+  env: AdminSafetyEnv,
+  actorId: string,
+  action: string,
+  entityType: string,
+  entityId: string,
+  metadata: Row,
+) {
   await env.DB.prepare(
     `INSERT INTO audit_logs (id, actor_id, action, entity_type, entity_id, metadata, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
   )
-    .bind(crypto.randomUUID(), actorId, action, entityType, entityId, JSON.stringify(metadata), now())
+    .bind(
+      crypto.randomUUID(),
+      actorId,
+      action,
+      entityType,
+      entityId,
+      JSON.stringify(metadata),
+      now(),
+    )
     .run();
 }
 function isAdminLike(roles: string[]) {
@@ -498,7 +540,11 @@ function unauthorized(cors: Headers) {
   return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors);
 }
 function forbidden(cors: Headers) {
-  return json({ error: { code: "permission_denied", message: "Safety administration permission required." } }, 403, cors);
+  return json(
+    { error: { code: "permission_denied", message: "Safety administration permission required." } },
+    403,
+    cors,
+  );
 }
 function validation(cors: Headers, message: string) {
   return json({ error: { code: "validation_error", message } }, 400, cors);
@@ -510,5 +556,9 @@ function notFound(cors: Headers) {
   return json({ error: { code: "not_found", message: "قضية السلامة غير موجودة." } }, 404, cors);
 }
 function databaseError(cors: Headers) {
-  return json({ error: { code: "database_error", message: "Database operation failed." } }, 500, cors);
+  return json(
+    { error: { code: "database_error", message: "Database operation failed." } },
+    500,
+    cors,
+  );
 }

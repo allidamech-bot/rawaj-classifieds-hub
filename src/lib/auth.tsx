@@ -18,7 +18,12 @@ import {
   type RolePermission,
   type UserProfile,
 } from "./auth-types";
-import { AuthContext, type AuthContextValue, type AuthSession, type AuthUser } from "./auth-context";
+import {
+  AuthContext,
+  type AuthContextValue,
+  type AuthSession,
+  type AuthUser,
+} from "./auth-context";
 import type { AuthStatus } from "./auth-status";
 import { sanitizeAuthReturnTo } from "./auth-return";
 import { loadCloudflareUserProfile } from "./cloudflare-auth";
@@ -136,7 +141,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const load = useCallback(async () => applyFirebaseUser(firebaseAuth.currentUser), [applyFirebaseUser]);
+  const load = useCallback(
+    async () => applyFirebaseUser(firebaseAuth.currentUser),
+    [applyFirebaseUser],
+  );
 
   useEffect(() => {
     const unsubscribe = onIdTokenChanged(firebaseAuth, (nextUser) => {
@@ -174,9 +182,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signUpWithPassword = async (email: string, password: string, displayName: string) => {
       try {
-        const credential = await createUserWithEmailAndPassword(firebaseAuth, email.trim(), password);
+        const credential = await createUserWithEmailAndPassword(
+          firebaseAuth,
+          email.trim(),
+          password,
+        );
         const cleanDisplayName = displayName.trim();
-        if (cleanDisplayName) await updateProfile(credential.user, { displayName: cleanDisplayName });
+        if (cleanDisplayName)
+          await updateProfile(credential.user, { displayName: cleanDisplayName });
         return applyFirebaseUser(credential.user);
       } catch (error) {
         return { error: firebaseErrorMessage(error) };
@@ -185,7 +198,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const requestPasswordReset = async (email: string) => {
       try {
-        const origin = typeof window === "undefined" ? "https://rawa-j.com" : window.location.origin;
+        const origin =
+          typeof window === "undefined" ? "https://rawa-j.com" : window.location.origin;
         await sendPasswordResetEmail(firebaseAuth, email.trim(), {
           url: `${origin}/login`,
           handleCodeInApp: false,

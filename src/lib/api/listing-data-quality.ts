@@ -70,7 +70,9 @@ export interface ListingDataQualityRefreshResult {
   blockingIssueCount: number;
 }
 
-function fromApi<T>(result: Awaited<ReturnType<typeof cloudflareApiRequest<T>>>): ClassifiedsResult<T> {
+function fromApi<T>(
+  result: Awaited<ReturnType<typeof cloudflareApiRequest<T>>>,
+): ClassifiedsResult<T> {
   return result.ok
     ? { ok: true, data: result.data }
     : { ok: false, error: { code: result.code as ClassifiedsErrorCode, message: result.error } };
@@ -78,7 +80,14 @@ function fromApi<T>(result: Awaited<ReturnType<typeof cloudflareApiRequest<T>>>)
 
 export async function fetchListingDataQualityIssues(
   userId: string | null,
-  options: { status?: ListingDataQualityStatus | null; issueType?: ListingDataQualityIssueType | null; categoryId?: string | null; severity?: ListingDataQualitySeverity | null; limit?: number; offset?: number } = {},
+  options: {
+    status?: ListingDataQualityStatus | null;
+    issueType?: ListingDataQualityIssueType | null;
+    categoryId?: string | null;
+    severity?: ListingDataQualitySeverity | null;
+    limit?: number;
+    offset?: number;
+  } = {},
 ): Promise<ClassifiedsResult<ListingDataQualityPage>> {
   if (!userId) return authenticationFailure();
   const params = new URLSearchParams({
@@ -89,9 +98,11 @@ export async function fetchListingDataQualityIssues(
   if (options.issueType) params.set("issueType", options.issueType);
   if (options.categoryId?.trim()) params.set("categoryId", options.categoryId.trim());
   if (options.severity) params.set("severity", options.severity);
-  return fromApi(await cloudflareApiRequest<ListingDataQualityPage>(
-    `/v1/admin/data-quality/issues?${params.toString()}`,
-  ));
+  return fromApi(
+    await cloudflareApiRequest<ListingDataQualityPage>(
+      `/v1/admin/data-quality/issues?${params.toString()}`,
+    ),
+  );
 }
 
 export async function refreshListingDataQualityIssues(
@@ -100,31 +111,51 @@ export async function refreshListingDataQualityIssues(
 ): Promise<ClassifiedsResult<ListingDataQualityRefreshResult>> {
   if (!userId) return authenticationFailure();
   if (!input.versionId.trim()) return validationFailure();
-  return fromApi(await cloudflareApiRequest<ListingDataQualityRefreshResult>(
-    "/v1/admin/data-quality/refresh",
-    { method: "POST", body: { versionId: input.versionId.trim(), limit: input.limit, offset: input.offset } },
-  ));
+  return fromApi(
+    await cloudflareApiRequest<ListingDataQualityRefreshResult>("/v1/admin/data-quality/refresh", {
+      method: "POST",
+      body: { versionId: input.versionId.trim(), limit: input.limit, offset: input.offset },
+    }),
+  );
 }
 
 export async function reviewListingDataQualityIssue(
   userId: string | null,
-  input: { issueId: string; decision: ListingDataQualityDecision; note?: string | null; expectedUpdatedAt: string },
+  input: {
+    issueId: string;
+    decision: ListingDataQualityDecision;
+    note?: string | null;
+    expectedUpdatedAt: string;
+  },
 ): Promise<ClassifiedsResult<Record<string, unknown>>> {
   if (!userId) return authenticationFailure();
   if (!input.issueId.trim() || !input.expectedUpdatedAt.trim()) return validationFailure();
-  return fromApi(await cloudflareApiRequest<Record<string, unknown>>(
-    `/v1/admin/data-quality/issues/${encodeURIComponent(input.issueId.trim())}/review`,
-    { method: "PATCH", body: input },
-  ));
+  return fromApi(
+    await cloudflareApiRequest<Record<string, unknown>>(
+      `/v1/admin/data-quality/issues/${encodeURIComponent(input.issueId.trim())}/review`,
+      { method: "PATCH", body: input },
+    ),
+  );
 }
 
 function authenticationFailure<T>(): ClassifiedsResult<T> {
-  return { ok: false, error: { code: "auth_required", message: "يجب تسجيل الدخول لاستخدام مركز جودة البيانات." } };
+  return {
+    ok: false,
+    error: { code: "auth_required", message: "يجب تسجيل الدخول لاستخدام مركز جودة البيانات." },
+  };
 }
 function validationFailure<T>(): ClassifiedsResult<T> {
-  return { ok: false, error: { code: "validation_error", message: "بيانات عملية جودة الإعلانات غير مكتملة." } };
+  return {
+    ok: false,
+    error: { code: "validation_error", message: "بيانات عملية جودة الإعلانات غير مكتملة." },
+  };
 }
-function clampInteger(value: number | undefined, minimum: number, maximum: number, fallback: number) {
+function clampInteger(
+  value: number | undefined,
+  minimum: number,
+  maximum: number,
+  fallback: number,
+) {
   if (!Number.isFinite(value)) return fallback;
   return Math.min(maximum, Math.max(minimum, Math.trunc(value as number)));
 }

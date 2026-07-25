@@ -28,7 +28,9 @@ export async function createListingPromotionRequest(
       paymentReference: payload.paymentReference?.trim() || null,
     },
   });
-  return result.ok ? { ok: true, data: result.data } : failure(result.code as ClassifiedsErrorCode, result.error);
+  return result.ok
+    ? { ok: true, data: result.data }
+    : failure(result.code as ClassifiedsErrorCode, result.error);
 }
 
 export async function uploadPromotionReceipt({
@@ -64,10 +66,13 @@ export async function createPromotionReceiptSignedUrl(
   );
   if (!response) return failure("unknown", "تعذر الاتصال بخدمة إيصالات الترويج.");
   if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as
-      | { error?: { code?: ClassifiedsErrorCode; message?: string } }
-      | null;
-    return failure(payload?.error?.code ?? "unknown", payload?.error?.message ?? "تعذر فتح الإيصال.");
+    const payload = (await response.json().catch(() => null)) as {
+      error?: { code?: ClassifiedsErrorCode; message?: string };
+    } | null;
+    return failure(
+      payload?.error?.code ?? "unknown",
+      payload?.error?.message ?? "تعذر فتح الإيصال.",
+    );
   }
   const blob = await response.blob();
   return { ok: true, data: URL.createObjectURL(blob) };
@@ -78,22 +83,28 @@ export async function fetchMyPromotionRequests(
 ): Promise<ClassifiedsResult<ListingPromotionRequest[]>> {
   if (!userId) return failure("auth_required", "يجب تسجيل الدخول لعرض طلبات الترويج.");
   const result = await cloudflareApiRequest<ListingPromotionRequest[]>("/v1/account/promotions");
-  return result.ok ? { ok: true, data: result.data } : failure(result.code as ClassifiedsErrorCode, result.error);
+  return result.ok
+    ? { ok: true, data: result.data }
+    : failure(result.code as ClassifiedsErrorCode, result.error);
 }
 
 export async function adminFetchPromotionRequests(
   canUseAdminAccess: boolean,
 ): Promise<ClassifiedsResult<ListingPromotionRequest[]>> {
-  if (!canUseAdminAccess) return failure("permission_denied", "مراجعة الترويج متاحة لحساب إداري مخول فقط.");
+  if (!canUseAdminAccess)
+    return failure("permission_denied", "مراجعة الترويج متاحة لحساب إداري مخول فقط.");
   const result = await cloudflareApiRequest<ListingPromotionRequest[]>("/v1/admin/promotions");
-  return result.ok ? { ok: true, data: result.data } : failure(result.code as ClassifiedsErrorCode, result.error);
+  return result.ok
+    ? { ok: true, data: result.data }
+    : failure(result.code as ClassifiedsErrorCode, result.error);
 }
 
 export async function adminModeratePromotionRequest(
   canUseAdminAccess: boolean,
   payload: ModerateListingPromotionRequestPayload & { expectedUpdatedAt: string },
 ): Promise<ClassifiedsResult<null>> {
-  if (!canUseAdminAccess) return failure("permission_denied", "مراجعة الترويج متاحة لحساب إداري مخول فقط.");
+  if (!canUseAdminAccess)
+    return failure("permission_denied", "مراجعة الترويج متاحة لحساب إداري مخول فقط.");
   const requestId = payload.requestId.trim();
   if (!requestId || !payload.expectedUpdatedAt) {
     return failure("validation_error", "تعذر تحديد طلب الترويج أو نسخته الحالية.");
@@ -109,7 +120,9 @@ export async function adminModeratePromotionRequest(
       },
     },
   );
-  return result.ok ? { ok: true, data: null } : failure(result.code as ClassifiedsErrorCode, result.error);
+  return result.ok
+    ? { ok: true, data: null }
+    : failure(result.code as ClassifiedsErrorCode, result.error);
 }
 
 function failure<T>(code: ClassifiedsErrorCode, message: string): ClassifiedsResult<T> {

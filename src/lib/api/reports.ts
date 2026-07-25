@@ -70,7 +70,9 @@ export async function adminFetchPendingListings(
 }
 
 export async function adminFetchReports(): Promise<ClassifiedsResult<ListingReport[]>> {
-  return fromApi(await cloudflareApiRequest<ListingReport[]>("/v1/admin/listing-reports?limit=200"));
+  return fromApi(
+    await cloudflareApiRequest<ListingReport[]>("/v1/admin/listing-reports?limit=200"),
+  );
 }
 
 export async function adminModerateReport(
@@ -110,7 +112,10 @@ function mapAdminListing(row: Record<string, unknown>): ClassifiedListing {
     description: stringValue(row.description),
     price: nullableNumber(row.price),
     currency: "SYP",
-    priceType: stringValue(row.priceType ?? row.price_type, "fixed") as ClassifiedListing["priceType"],
+    priceType: stringValue(
+      row.priceType ?? row.price_type,
+      "fixed",
+    ) as ClassifiedListing["priceType"],
     condition: stringValue(
       row.condition ?? row.listing_condition,
       "not_applicable",

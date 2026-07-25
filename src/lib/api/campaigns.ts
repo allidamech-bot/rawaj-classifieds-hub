@@ -43,7 +43,10 @@ const campaignMutationInFlight = new Set<string>();
 const creativeMutationInFlight = new Set<string>();
 
 function denied<T>(): ClassifiedsResult<T> {
-  return { ok: false, error: { code: "permission_denied", message: "إدارة الحملات متاحة للمالك فقط." } };
+  return {
+    ok: false,
+    error: { code: "permission_denied", message: "إدارة الحملات متاحة للمالك فقط." },
+  };
 }
 function staleRead<T>(operation: string): ClassifiedsResult<T> {
   return { ok: false, error: { code: "unknown", message: "", operation } };
@@ -51,7 +54,9 @@ function staleRead<T>(operation: string): ClassifiedsResult<T> {
 function inProgress<T>(message: string, operation: string): ClassifiedsResult<T> {
   return { ok: false, error: { code: "unknown", message, operation } };
 }
-function fromApi<T>(result: Awaited<ReturnType<typeof cloudflareApiRequest<T>>>): ClassifiedsResult<T> {
+function fromApi<T>(
+  result: Awaited<ReturnType<typeof cloudflareApiRequest<T>>>,
+): ClassifiedsResult<T> {
   return result.ok
     ? { ok: true, data: result.data }
     : { ok: false, error: { code: result.code as ClassifiedsErrorCode, message: result.error } };
@@ -76,7 +81,8 @@ export async function ownerFetchCampaignCreatives(
   const result = await cloudflareApiRequest<CampaignCreativeSummary[]>(
     `/v1/admin/campaigns/${encodeURIComponent(campaignId)}/creatives`,
   );
-  if (generation !== creativeReadGeneration) return staleRead("admin_campaign_creatives_stale_read");
+  if (generation !== creativeReadGeneration)
+    return staleRead("admin_campaign_creatives_stale_read");
   return fromApi(result);
 }
 
@@ -98,12 +104,15 @@ export async function ownerSaveCampaign(
     return { ok: false, error: { code: "validation_error", message: "أدخل اسماً واضحاً للحملة." } };
   }
   const key = `campaign:${payload.id || "new"}`;
-  if (campaignMutationInFlight.has(key)) return inProgress("حفظ الحملة قيد التنفيذ بالفعل.", "admin_campaign_save_in_progress");
+  if (campaignMutationInFlight.has(key))
+    return inProgress("حفظ الحملة قيد التنفيذ بالفعل.", "admin_campaign_save_in_progress");
   campaignMutationInFlight.add(key);
   try {
     return fromApi(
       await cloudflareApiRequest<{ id: string; version: number; updatedAt: string }>(
-        payload.id ? `/v1/admin/campaigns/${encodeURIComponent(payload.id)}` : "/v1/admin/campaigns",
+        payload.id
+          ? `/v1/admin/campaigns/${encodeURIComponent(payload.id)}`
+          : "/v1/admin/campaigns",
         {
           method: payload.id ? "PATCH" : "POST",
           body: {
@@ -112,7 +121,9 @@ export async function ownerSaveCampaign(
             startsAt: payload.startsAt ?? null,
             endsAt: payload.endsAt ?? null,
             targetPages: payload.targetPages,
-            targetCategoryIds: payload.targetCategoryIds.map((value) => value.trim()).filter(Boolean),
+            targetCategoryIds: payload.targetCategoryIds
+              .map((value) => value.trim())
+              .filter(Boolean),
             expectedVersion: payload.id ? (payload.expectedVersion ?? null) : undefined,
           },
         },
@@ -129,10 +140,17 @@ export async function ownerSetCampaignStatus(
 ): Promise<ClassifiedsResult<{ id: string; version: number; updatedAt: string }>> {
   if (!canManageCampaigns) return denied();
   if (payload.reason.trim().length < 3) {
-    return { ok: false, error: { code: "validation_error", message: "أدخل سبباً واضحاً لتغيير الحالة." } };
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "أدخل سبباً واضحاً لتغيير الحالة." },
+    };
   }
   const key = `campaign:${payload.id}`;
-  if (campaignMutationInFlight.has(key)) return inProgress("هناك عملية أخرى قيد التنفيذ على هذه الحملة.", "admin_campaign_status_in_progress");
+  if (campaignMutationInFlight.has(key))
+    return inProgress(
+      "هناك عملية أخرى قيد التنفيذ على هذه الحملة.",
+      "admin_campaign_status_in_progress",
+    );
   campaignMutationInFlight.add(key);
   try {
     return fromApi(
@@ -160,11 +178,26 @@ export async function ownerSaveCampaignCreative(
   },
 ): Promise<ClassifiedsResult<{ id: string; version: number; updatedAt: string }>> {
   if (!canManageCampaigns) return denied();
-  if (!payload.campaignId || payload.name.trim().length < 2 || !payload.imageUrl.trim() || !payload.destinationUrl.trim()) {
-    return { ok: false, error: { code: "validation_error", message: "أدخل الحملة واسم التصميم والصورة ورابط الوجهة." } };
+  if (
+    !payload.campaignId ||
+    payload.name.trim().length < 2 ||
+    !payload.imageUrl.trim() ||
+    !payload.destinationUrl.trim()
+  ) {
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: "أدخل الحملة واسم التصميم والصورة ورابط الوجهة.",
+      },
+    };
   }
   const key = `creative:${payload.id || `${payload.campaignId}:new`}`;
-  if (creativeMutationInFlight.has(key)) return inProgress("حفظ التصميم الإعلاني قيد التنفيذ بالفعل.", "admin_campaign_creative_save_in_progress");
+  if (creativeMutationInFlight.has(key))
+    return inProgress(
+      "حفظ التصميم الإعلاني قيد التنفيذ بالفعل.",
+      "admin_campaign_creative_save_in_progress",
+    );
   creativeMutationInFlight.add(key);
   try {
     const path = payload.id

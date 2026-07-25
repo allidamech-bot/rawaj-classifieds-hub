@@ -114,7 +114,8 @@ async function listTaxonomyMappings(
   if (!auth) return unauthorized(cors);
   if (!isAdminLike(auth.roles)) return forbidden(cors);
   const status = nullableQuery(url, "status", 30);
-  if (status && !TAXONOMY_STATUSES.has(status)) return validation(cors, "حالة قائمة المراجعة غير صالحة.");
+  if (status && !TAXONOMY_STATUSES.has(status))
+    return validation(cors, "حالة قائمة المراجعة غير صالحة.");
   const limit = integerParam(url, "limit", 50, 1, 200);
   const offset = integerParam(url, "offset", 0, 0, 1_000_000);
   const where = status ? "WHERE q.status = ?" : "";
@@ -122,7 +123,9 @@ async function listTaxonomyMappings(
     ? await env.DB.prepare("SELECT count(*) AS total FROM taxonomy_mapping_queue WHERE status = ?")
         .bind(status)
         .first<{ total: number }>()
-    : await env.DB.prepare("SELECT count(*) AS total FROM taxonomy_mapping_queue").first<{ total: number }>();
+    : await env.DB.prepare("SELECT count(*) AS total FROM taxonomy_mapping_queue").first<{
+        total: number;
+      }>();
   const statement = env.DB.prepare(
     `SELECT q.*, l.title AS listing_title, l.status AS listing_status,
             l.category_id AS listing_category_id, l.subcategory_id AS listing_subcategory_id,
@@ -145,7 +148,14 @@ async function listTaxonomyMappings(
     : await statement.bind(limit, offset).all<Row>();
   if (!result.success) return databaseError(cors);
   return json(
-    { data: { total: numberValue(count?.total), limit, offset, items: (result.results ?? []).map(mapTaxonomyQueue) } },
+    {
+      data: {
+        total: numberValue(count?.total),
+        limit,
+        offset,
+        items: (result.results ?? []).map(mapTaxonomyQueue),
+      },
+    },
     200,
     cors,
   );
@@ -177,8 +187,11 @@ async function reviewTaxonomyMapping(
   if (!current) return notFound(cors, "عنصر مراجعة التصنيف غير موجود.");
   if (stringValue(current.updated_at) !== expectedUpdatedAt) return stale(cors);
 
-  let versionId = nullableClean(body.data.versionId, 120) ?? nullableString(current.suggested_version_id);
-  let nodeId = nullableClean(body.data.taxonomyNodeId, 160) ?? nullableString(current.suggested_taxonomy_node_id);
+  let versionId =
+    nullableClean(body.data.versionId, 120) ?? nullableString(current.suggested_version_id);
+  let nodeId =
+    nullableClean(body.data.taxonomyNodeId, 160) ??
+    nullableString(current.suggested_taxonomy_node_id);
   if (decision === "confirm") {
     if (!versionId || !nodeId) return validation(cors, "اختر نسخة التصنيف والعقدة قبل التأكيد.");
     const target = await env.DB.prepare(
@@ -222,7 +235,11 @@ async function reviewTaxonomyMapping(
     versionId,
     nodeId,
   });
-  return json({ data: { listingId, status, reviewedAt: timestamp, updatedAt: timestamp } }, 200, cors);
+  return json(
+    { data: { listingId, status, reviewedAt: timestamp, updatedAt: timestamp } },
+    200,
+    cors,
+  );
 }
 
 async function applyTaxonomyMapping(
@@ -276,7 +293,11 @@ async function applyTaxonomyMapping(
   await audit(env, auth.userId, "taxonomy_mapping.applied", "taxonomy_mapping_queue", listingId, {
     nodeId,
   });
-  return json({ data: { listingId, taxonomyNodeId: nodeId, status: "applied", appliedAt: timestamp } }, 200, cors);
+  return json(
+    { data: { listingId, taxonomyNodeId: nodeId, status: "applied", appliedAt: timestamp } },
+    200,
+    cors,
+  );
 }
 
 async function listVehicleReferences(
@@ -290,16 +311,26 @@ async function listVehicleReferences(
   if (!isAdminLike(auth.roles)) return forbidden(cors);
   const status = nullableQuery(url, "status", 30);
   const entityType = nullableQuery(url, "entityType", 30);
-  if (status && !VEHICLE_STATUSES.has(status)) return validation(cors, "حالة مرجع المركبة غير صالحة.");
-  if (entityType && !VEHICLE_TYPES.has(entityType)) return validation(cors, "نوع مرجع المركبة غير صالح.");
+  if (status && !VEHICLE_STATUSES.has(status))
+    return validation(cors, "حالة مرجع المركبة غير صالحة.");
+  if (entityType && !VEHICLE_TYPES.has(entityType))
+    return validation(cors, "نوع مرجع المركبة غير صالح.");
   const limit = integerParam(url, "limit", 50, 1, 200);
   const offset = integerParam(url, "offset", 0, 0, 1_000_000);
   const where: string[] = [];
   const values: Value[] = [];
-  if (status) { where.push("q.status = ?"); values.push(status); }
-  if (entityType) { where.push("q.entity_type = ?"); values.push(entityType); }
+  if (status) {
+    where.push("q.status = ?");
+    values.push(status);
+  }
+  if (entityType) {
+    where.push("q.entity_type = ?");
+    values.push(entityType);
+  }
   const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
-  const count = await env.DB.prepare(`SELECT count(*) AS total FROM vehicle_reference_review_queue q ${whereSql}`)
+  const count = await env.DB.prepare(
+    `SELECT count(*) AS total FROM vehicle_reference_review_queue q ${whereSql}`,
+  )
     .bind(...values)
     .first<{ total: number }>();
   const result = await env.DB.prepare(
@@ -338,7 +369,8 @@ async function reviewVehicleReference(
   const expectedUpdatedAt = clean(body.data.expectedQueueUpdatedAt, 100);
   const matchId = nullableClean(body.data.matchId, 160);
   const note = nullableClean(body.data.note, 2000);
-  if (!expectedUpdatedAt || !["match", "reject"].includes(decision)) return validation(cors, "بيانات المراجعة غير مكتملة.");
+  if (!expectedUpdatedAt || !["match", "reject"].includes(decision))
+    return validation(cors, "بيانات المراجعة غير مكتملة.");
   const queue = await env.DB.prepare(
     `SELECT q.*, l.updated_at AS listing_updated_at FROM vehicle_reference_review_queue q
      LEFT JOIN listings l ON l.id = q.listing_id WHERE q.id = ?`,
@@ -373,11 +405,29 @@ async function reviewVehicleReference(
     .run();
   if (!result.success) return databaseError(cors);
   if (!changed(result)) return stale(cors);
-  await audit(env, auth.userId, "vehicle_reference.reviewed", "vehicle_reference_review_queue", queueId, {
-    decision,
-    matchId,
-  });
-  return json({ data: { id: queueId, status: decision === "match" ? "matched" : "rejected", reviewedAt: timestamp, updatedAt: timestamp } }, 200, cors);
+  await audit(
+    env,
+    auth.userId,
+    "vehicle_reference.reviewed",
+    "vehicle_reference_review_queue",
+    queueId,
+    {
+      decision,
+      matchId,
+    },
+  );
+  return json(
+    {
+      data: {
+        id: queueId,
+        status: decision === "match" ? "matched" : "rejected",
+        reviewedAt: timestamp,
+        updatedAt: timestamp,
+      },
+    },
+    200,
+    cors,
+  );
 }
 
 async function createVehicleReference(
@@ -403,7 +453,8 @@ async function createVehicleReference(
   const timestamp = now();
   const insert = vehicleInsert(env, parsed.value, timestamp);
   const created = await insert.run();
-  if (!created.success) return conflict(cors, "تعذر إنشاء المرجع؛ تحقق من المعرف والاسم والعلاقات الأبويّة.");
+  if (!created.success)
+    return conflict(cors, "تعذر إنشاء المرجع؛ تحقق من المعرف والاسم والعلاقات الأبويّة.");
   const updated = await env.DB.prepare(
     `UPDATE vehicle_reference_review_queue
         SET status = 'created', created_reference_id = ?, suggested_match_id = ?, review_note = ?,
@@ -412,14 +463,35 @@ async function createVehicleReference(
             updated_at = ?
       WHERE id = ? AND updated_at = ?`,
   )
-    .bind(parsed.value.id, parsed.value.id, nullableClean(body.data.note, 2000), auth.userId, timestamp, timestamp, queueId, expectedUpdatedAt)
+    .bind(
+      parsed.value.id,
+      parsed.value.id,
+      nullableClean(body.data.note, 2000),
+      auth.userId,
+      timestamp,
+      timestamp,
+      queueId,
+      expectedUpdatedAt,
+    )
     .run();
   if (!updated.success || !changed(updated)) return stale(cors);
   await audit(env, auth.userId, "vehicle_reference.created", parsed.value.table, parsed.value.id, {
     queueId,
     entityType: parsed.value.entityType,
   });
-  return json({ data: { id: queueId, referenceId: parsed.value.id, status: "created", reviewedAt: timestamp, updatedAt: timestamp } }, 201, cors);
+  return json(
+    {
+      data: {
+        id: queueId,
+        referenceId: parsed.value.id,
+        status: "created",
+        reviewedAt: timestamp,
+        updatedAt: timestamp,
+      },
+    },
+    201,
+    cors,
+  );
 }
 
 async function applyVehicleReference(
@@ -446,7 +518,8 @@ async function applyVehicleReference(
     queue.reviewed_at !== expectedReviewedAt ||
     !queue.suggested_match_id ||
     (queue.listing_id && queue.listing_updated_at !== queue.reviewed_listing_updated_at)
-  ) return stale(cors);
+  )
+    return stale(cors);
 
   const timestamp = now();
   if (queue.listing_id) {
@@ -455,7 +528,12 @@ async function applyVehicleReference(
     const listingUpdate = await env.DB.prepare(
       "UPDATE listings SET details = ?, updated_at = ? WHERE id = ? AND updated_at = ?",
     )
-      .bind(JSON.stringify(details), timestamp, stringValue(queue.listing_id), stringValue(queue.listing_updated_at))
+      .bind(
+        JSON.stringify(details),
+        timestamp,
+        stringValue(queue.listing_id),
+        stringValue(queue.listing_updated_at),
+      )
       .run();
     if (!listingUpdate.success || !changed(listingUpdate)) return stale(cors);
   }
@@ -466,10 +544,17 @@ async function applyVehicleReference(
     .bind(auth.userId, timestamp, timestamp, queueId, expectedReviewedAt)
     .run();
   if (!result.success || !changed(result)) return stale(cors);
-  await audit(env, auth.userId, "vehicle_reference.applied", "vehicle_reference_review_queue", queueId, {
-    referenceId: queue.suggested_match_id,
-    listingId: queue.listing_id,
-  });
+  await audit(
+    env,
+    auth.userId,
+    "vehicle_reference.applied",
+    "vehicle_reference_review_queue",
+    queueId,
+    {
+      referenceId: queue.suggested_match_id,
+      listingId: queue.listing_id,
+    },
+  );
   return json({ data: { id: queueId, status: "applied", appliedAt: timestamp } }, 200, cors);
 }
 
@@ -478,23 +563,53 @@ function parseVehicleDraft(
   reference: Row,
   queue: Row,
 ):
-  | { ok: true; value: { entityType: string; table: string; id: string; slug: string; nameAr: string; nameEn: string; aliases: string[]; countryCode: string | null; vehicleType: string | null; generationId: string | null; startYear: number | null; endYear: number | null; parentMakeId: string | null; parentModelId: string | null } }
+  | {
+      ok: true;
+      value: {
+        entityType: string;
+        table: string;
+        id: string;
+        slug: string;
+        nameAr: string;
+        nameEn: string;
+        aliases: string[];
+        countryCode: string | null;
+        vehicleType: string | null;
+        generationId: string | null;
+        startYear: number | null;
+        endYear: number | null;
+        parentMakeId: string | null;
+        parentModelId: string | null;
+      };
+    }
   | { ok: false; message: string } {
   const id = clean(reference.id, 160);
   const nameAr = clean(reference.nameAr, 160);
   const nameEn = clean(reference.nameEn, 160) || nameAr;
   const slug = clean(reference.slug, 160) || slugify(nameEn || nameAr || id);
   const aliases = stringArray(reference.aliases, 50);
-  const parentMakeId = nullableClean(reference.parentMakeId, 160) ?? nullableString(queue.parent_make_id);
-  const parentModelId = nullableClean(reference.parentModelId, 160) ?? nullableString(queue.parent_model_id);
-  if (!VEHICLE_TYPES.has(entityType) || !id || !nameAr || !slug) return { ok: false, message: "بيانات مرجع المركبة غير مكتملة." };
-  if (entityType === "model" && !parentMakeId) return { ok: false, message: "موديل المركبة يحتاج شركة مصنّعة." };
-  if ((entityType === "generation" || entityType === "trim") && !parentModelId) return { ok: false, message: "هذا المرجع يحتاج موديل مركبة أبًا." };
+  const parentMakeId =
+    nullableClean(reference.parentMakeId, 160) ?? nullableString(queue.parent_make_id);
+  const parentModelId =
+    nullableClean(reference.parentModelId, 160) ?? nullableString(queue.parent_model_id);
+  if (!VEHICLE_TYPES.has(entityType) || !id || !nameAr || !slug)
+    return { ok: false, message: "بيانات مرجع المركبة غير مكتملة." };
+  if (entityType === "model" && !parentMakeId)
+    return { ok: false, message: "موديل المركبة يحتاج شركة مصنّعة." };
+  if ((entityType === "generation" || entityType === "trim") && !parentModelId)
+    return { ok: false, message: "هذا المرجع يحتاج موديل مركبة أبًا." };
   return {
     ok: true,
     value: {
       entityType,
-      table: entityType === "make" ? "vehicle_makes" : entityType === "model" ? "vehicle_models" : entityType === "generation" ? "vehicle_generations" : "vehicle_trims",
+      table:
+        entityType === "make"
+          ? "vehicle_makes"
+          : entityType === "model"
+            ? "vehicle_models"
+            : entityType === "generation"
+              ? "vehicle_generations"
+              : "vehicle_trims",
       id,
       slug,
       nameAr,
@@ -511,42 +626,104 @@ function parseVehicleDraft(
   };
 }
 
-function vehicleInsert(env: AdminTaxonomyReviewEnv, value: VehicleInsertValue, timestamp: string): Statement {
+function vehicleInsert(
+  env: AdminTaxonomyReviewEnv,
+  value: VehicleInsertValue,
+  timestamp: string,
+): Statement {
   if (value.entityType === "make") {
     return env.DB.prepare(
       `INSERT INTO vehicle_makes (id, slug, name_ar, name_en, aliases, country_code, sort_order, is_active, metadata, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, 0, 1, '{}', ?, ?)`,
-    ).bind(value.id, value.slug, value.nameAr, value.nameEn, JSON.stringify(value.aliases), value.countryCode, timestamp, timestamp);
+    ).bind(
+      value.id,
+      value.slug,
+      value.nameAr,
+      value.nameEn,
+      JSON.stringify(value.aliases),
+      value.countryCode,
+      timestamp,
+      timestamp,
+    );
   }
   if (value.entityType === "model") {
     return env.DB.prepare(
       `INSERT INTO vehicle_models (id, make_id, slug, name_ar, name_en, aliases, vehicle_type, start_year, end_year, sort_order, is_active, metadata, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, '{}', ?, ?)`,
-    ).bind(value.id, value.parentMakeId, value.slug, value.nameAr, value.nameEn, JSON.stringify(value.aliases), value.vehicleType, value.startYear, value.endYear, timestamp, timestamp);
+    ).bind(
+      value.id,
+      value.parentMakeId,
+      value.slug,
+      value.nameAr,
+      value.nameEn,
+      JSON.stringify(value.aliases),
+      value.vehicleType,
+      value.startYear,
+      value.endYear,
+      timestamp,
+      timestamp,
+    );
   }
   if (value.entityType === "generation") {
     return env.DB.prepare(
       `INSERT INTO vehicle_generations (id, model_id, slug, name_ar, name_en, aliases, start_year, end_year, sort_order, is_active, metadata, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 1, '{}', ?, ?)`,
-    ).bind(value.id, value.parentModelId, value.slug, value.nameAr, value.nameEn, JSON.stringify(value.aliases), value.startYear, value.endYear, timestamp, timestamp);
+    ).bind(
+      value.id,
+      value.parentModelId,
+      value.slug,
+      value.nameAr,
+      value.nameEn,
+      JSON.stringify(value.aliases),
+      value.startYear,
+      value.endYear,
+      timestamp,
+      timestamp,
+    );
   }
   return env.DB.prepare(
     `INSERT INTO vehicle_trims (id, model_id, generation_id, slug, name_ar, name_en, aliases, start_year, end_year, sort_order, is_active, metadata, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, '{}', ?, ?)`,
-  ).bind(value.id, value.parentModelId, value.generationId, value.slug, value.nameAr, value.nameEn, JSON.stringify(value.aliases), value.startYear, value.endYear, timestamp, timestamp);
+  ).bind(
+    value.id,
+    value.parentModelId,
+    value.generationId,
+    value.slug,
+    value.nameAr,
+    value.nameEn,
+    JSON.stringify(value.aliases),
+    value.startYear,
+    value.endYear,
+    timestamp,
+    timestamp,
+  );
 }
 
-
 async function vehicleReferenceExists(env: AdminTaxonomyReviewEnv, entityType: string, id: string) {
-  const table = entityType === "make" ? "vehicle_makes" : entityType === "model" ? "vehicle_models" : entityType === "generation" ? "vehicle_generations" : entityType === "trim" ? "vehicle_trims" : null;
+  const table =
+    entityType === "make"
+      ? "vehicle_makes"
+      : entityType === "model"
+        ? "vehicle_models"
+        : entityType === "generation"
+          ? "vehicle_generations"
+          : entityType === "trim"
+            ? "vehicle_trims"
+            : null;
   if (!table) return false;
-  const row = await env.DB.prepare(`SELECT id FROM ${table} WHERE id = ? AND is_active = 1`).bind(id).first<{ id: string }>();
+  const row = await env.DB.prepare(`SELECT id FROM ${table} WHERE id = ? AND is_active = 1`)
+    .bind(id)
+    .first<{ id: string }>();
   return Boolean(row);
 }
 
 async function mapVehicleQueue(env: AdminTaxonomyReviewEnv, row: Row) {
   const match = row.suggested_match_id
-    ? await vehicleReferenceName(env, stringValue(row.entity_type), stringValue(row.suggested_match_id))
+    ? await vehicleReferenceName(
+        env,
+        stringValue(row.entity_type),
+        stringValue(row.suggested_match_id),
+      )
     : null;
   return {
     id: stringValue(row.id),
@@ -581,9 +758,20 @@ async function mapVehicleQueue(env: AdminTaxonomyReviewEnv, row: Row) {
 }
 
 async function vehicleReferenceName(env: AdminTaxonomyReviewEnv, entityType: string, id: string) {
-  const table = entityType === "make" ? "vehicle_makes" : entityType === "model" ? "vehicle_models" : entityType === "generation" ? "vehicle_generations" : entityType === "trim" ? "vehicle_trims" : null;
+  const table =
+    entityType === "make"
+      ? "vehicle_makes"
+      : entityType === "model"
+        ? "vehicle_models"
+        : entityType === "generation"
+          ? "vehicle_generations"
+          : entityType === "trim"
+            ? "vehicle_trims"
+            : null;
   if (!table) return null;
-  const row = await env.DB.prepare(`SELECT name_ar, name_en FROM ${table} WHERE id = ?`).bind(id).first<Row>();
+  const row = await env.DB.prepare(`SELECT name_ar, name_en FROM ${table} WHERE id = ?`)
+    .bind(id)
+    .first<Row>();
   return row ? { nameAr: nullableString(row.name_ar), nameEn: nullableString(row.name_en) } : null;
 }
 
@@ -618,33 +806,144 @@ function mapTaxonomyQueue(row: Row) {
   };
 }
 
-async function audit(env: AdminTaxonomyReviewEnv, actorId: string, action: string, entityType: string, entityId: string, metadata: Row) {
+async function audit(
+  env: AdminTaxonomyReviewEnv,
+  actorId: string,
+  action: string,
+  entityType: string,
+  entityId: string,
+  metadata: Row,
+) {
   await env.DB.prepare(
     `INSERT INTO audit_logs (id, actor_id, action, entity_type, entity_id, metadata, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  ).bind(crypto.randomUUID(), actorId, action, entityType, entityId, JSON.stringify(metadata), now()).run();
+  )
+    .bind(
+      crypto.randomUUID(),
+      actorId,
+      action,
+      entityType,
+      entityId,
+      JSON.stringify(metadata),
+      now(),
+    )
+    .run();
 }
-function isAdminLike(roles: string[]) { return roles.some((role) => role === "owner" || role === "admin" || role === "moderator"); }
-function changed(result: Result) { return (result.meta?.changes ?? 0) > 0; }
-function integerParam(url: URL, key: string, fallback: number, min: number, max: number) { const number = Number(url.searchParams.get(key)); return Number.isFinite(number) ? Math.max(min, Math.min(max, Math.trunc(number))) : fallback; }
-function nullableQuery(url: URL, key: string, max: number) { return nullableClean(url.searchParams.get(key), max); }
-function clean(value: unknown, max: number): string { return typeof value === "string" ? value.trim().slice(0, max) : ""; }
-function nullableClean(value: unknown, max: number): string | null { const result = clean(value, max); return result || null; }
-function stringArray(value: unknown, max: number) { return Array.isArray(value) ? [...new Set(value.map((item) => clean(item, 120)).filter(Boolean))].slice(0, max) : []; }
-function nullableYear(value: unknown): number | null { if (value === null || value === undefined || value === "") return null; const number = Number(value); return Number.isInteger(number) && number >= 1886 && number <= 2200 ? number : null; }
-function slugify(value: string) { return value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9\u0600-\u06ff]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 140) || crypto.randomUUID(); }
-function objectValue(value: unknown): Row { if (value && typeof value === "object" && !Array.isArray(value)) return value as Row; if (typeof value === "string") { try { const parsed = JSON.parse(value); return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Row : {}; } catch { return {}; } } return {}; }
-function stringValue(value: unknown, fallback = "") { return typeof value === "string" ? value : fallback; }
-function nullableString(value: unknown) { return typeof value === "string" && value ? value : null; }
-function nullableNumber(value: unknown) { if (value === null || value === undefined || value === "") return null; const number = Number(value); return Number.isFinite(number) ? number : null; }
-function numberValue(value: unknown) { const number = Number(value); return Number.isFinite(number) ? number : 0; }
-function truthy(value: unknown) { return value === true || value === 1 || value === "1"; }
-function now() { return new Date().toISOString(); }
-function unauthorized(cors: Headers) { return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors); }
-function forbidden(cors: Headers) { return json({ error: { code: "permission_denied", message: "Administrative review permission required." } }, 403, cors); }
-function ownerOnly(cors: Headers) { return json({ error: { code: "permission_denied", message: "Owner permission required." } }, 403, cors); }
-function validation(cors: Headers, message: string) { return json({ error: { code: "validation_error", message } }, 400, cors); }
-function stale(cors: Headers) { return json({ error: { code: "status_mismatch", message: "تغيّرت بيانات المراجعة. حدّث القائمة قبل إعادة المحاولة." } }, 409, cors); }
-function conflict(cors: Headers, message: string) { return json({ error: { code: "status_mismatch", message } }, 409, cors); }
-function notFound(cors: Headers, message: string) { return json({ error: { code: "not_found", message } }, 404, cors); }
-function databaseError(cors: Headers) { return json({ error: { code: "database_error", message: "Database operation failed." } }, 500, cors); }
+function isAdminLike(roles: string[]) {
+  return roles.some((role) => role === "owner" || role === "admin" || role === "moderator");
+}
+function changed(result: Result) {
+  return (result.meta?.changes ?? 0) > 0;
+}
+function integerParam(url: URL, key: string, fallback: number, min: number, max: number) {
+  const number = Number(url.searchParams.get(key));
+  return Number.isFinite(number) ? Math.max(min, Math.min(max, Math.trunc(number))) : fallback;
+}
+function nullableQuery(url: URL, key: string, max: number) {
+  return nullableClean(url.searchParams.get(key), max);
+}
+function clean(value: unknown, max: number): string {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+function nullableClean(value: unknown, max: number): string | null {
+  const result = clean(value, max);
+  return result || null;
+}
+function stringArray(value: unknown, max: number) {
+  return Array.isArray(value)
+    ? [...new Set(value.map((item) => clean(item, 120)).filter(Boolean))].slice(0, max)
+    : [];
+}
+function nullableYear(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isInteger(number) && number >= 1886 && number <= 2200 ? number : null;
+}
+function slugify(value: string) {
+  return (
+    value
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[^a-z0-9\u0600-\u06ff]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 140) || crypto.randomUUID()
+  );
+}
+function objectValue(value: unknown): Row {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value as Row;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Row) : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+function stringValue(value: unknown, fallback = "") {
+  return typeof value === "string" ? value : fallback;
+}
+function nullableString(value: unknown) {
+  return typeof value === "string" && value ? value : null;
+}
+function nullableNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+function numberValue(value: unknown) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+function truthy(value: unknown) {
+  return value === true || value === 1 || value === "1";
+}
+function now() {
+  return new Date().toISOString();
+}
+function unauthorized(cors: Headers) {
+  return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors);
+}
+function forbidden(cors: Headers) {
+  return json(
+    { error: { code: "permission_denied", message: "Administrative review permission required." } },
+    403,
+    cors,
+  );
+}
+function ownerOnly(cors: Headers) {
+  return json(
+    { error: { code: "permission_denied", message: "Owner permission required." } },
+    403,
+    cors,
+  );
+}
+function validation(cors: Headers, message: string) {
+  return json({ error: { code: "validation_error", message } }, 400, cors);
+}
+function stale(cors: Headers) {
+  return json(
+    {
+      error: {
+        code: "status_mismatch",
+        message: "تغيّرت بيانات المراجعة. حدّث القائمة قبل إعادة المحاولة.",
+      },
+    },
+    409,
+    cors,
+  );
+}
+function conflict(cors: Headers, message: string) {
+  return json({ error: { code: "status_mismatch", message } }, 409, cors);
+}
+function notFound(cors: Headers, message: string) {
+  return json({ error: { code: "not_found", message } }, 404, cors);
+}
+function databaseError(cors: Headers) {
+  return json(
+    { error: { code: "database_error", message: "Database operation failed." } },
+    500,
+    cors,
+  );
+}

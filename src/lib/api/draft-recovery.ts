@@ -1,7 +1,14 @@
-import type { ClassifiedListing, ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
+import type {
+  ClassifiedListing,
+  ClassifiedsErrorCode,
+  ClassifiedsResult,
+} from "@/lib/classifieds-types";
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 
-export interface RecoverableDraft { listing: ClassifiedListing; lastSavedAt: string }
+export interface RecoverableDraft {
+  listing: ClassifiedListing;
+  lastSavedAt: string;
+}
 
 export async function fetchLatestRecoverableOwnerDraft(
   userId: string | null,
@@ -26,7 +33,9 @@ export async function discardRecoverableOwnerDraft(
     `/v1/listings/${encodeURIComponent(cleanId)}`,
     { method: "DELETE", body: {} },
   );
-  return result.ok ? { ok: true, data: null } : failure(result.code as ClassifiedsErrorCode, result.error);
+  return result.ok
+    ? { ok: true, data: null }
+    : failure(result.code as ClassifiedsErrorCode, result.error);
 }
 
 function failure<T>(code: ClassifiedsErrorCode, message: string): ClassifiedsResult<T> {

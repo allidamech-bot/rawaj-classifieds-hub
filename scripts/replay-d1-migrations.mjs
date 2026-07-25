@@ -40,7 +40,9 @@ for (const migration of migrations) {
   try {
     database.exec(await readFile(path.join(migrationsDirectory, migration), "utf8"));
   } catch (error) {
-    throw new Error(`D1 migration failed: ${migration}: ${error instanceof Error ? error.message : error}`);
+    throw new Error(
+      `D1 migration failed: ${migration}: ${error instanceof Error ? error.message : error}`,
+    );
   }
 }
 
@@ -60,7 +62,9 @@ if (violations.length > 0) {
 
 const tableCount = Number(
   database
-    .prepare("SELECT count(*) AS count FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
+    .prepare(
+      "SELECT count(*) AS count FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+    )
     .get().count,
 );
 

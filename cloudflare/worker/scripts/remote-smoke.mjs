@@ -1,4 +1,6 @@
-const baseUrl = (process.env.RAWAJ_WORKER_BASE_URL || "https://rawaj-classifieds-hub.allidamech.workers.dev").replace(/\/$/, "");
+const baseUrl = (
+  process.env.RAWAJ_WORKER_BASE_URL || "https://rawaj-classifieds-hub.allidamech.workers.dev"
+).replace(/\/$/, "");
 const origin = "https://rawa-j.com";
 
 const checks = [

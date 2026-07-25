@@ -54,9 +54,7 @@ export async function fetchLocationNode(id: string): Promise<ClassifiedsResult<L
     : { ok: false, error: { code: "not_found", message: "الموقع المحدد غير متاح." } };
 }
 
-export function fetchLocationDescendantIds(
-  rootId: string,
-): Promise<ClassifiedsResult<string[]>> {
+export function fetchLocationDescendantIds(rootId: string): Promise<ClassifiedsResult<string[]>> {
   return fetchCloudflareLocationDescendantIds(rootId.trim());
 }
 

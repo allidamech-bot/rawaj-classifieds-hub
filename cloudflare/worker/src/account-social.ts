@@ -51,7 +51,14 @@ const CHAT_AUDIO_MAX_BYTES = 10 * 1024 * 1024;
 const CHAT_AUDIO_MAX_DURATION_MS = 120_000;
 const CHAT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const CHAT_AUDIO_TYPES = new Set(["audio/webm", "audio/mp4", "audio/mpeg", "audio/ogg"]);
-const MESSAGE_REPORT_REASONS = new Set(["abusive_or_suspicious", "harassment", "spam", "fraud", "privacy_violation", "other"]);
+const MESSAGE_REPORT_REASONS = new Set([
+  "abusive_or_suspicious",
+  "harassment",
+  "spam",
+  "fraud",
+  "privacy_violation",
+  "other",
+]);
 const MESSAGE_REPORT_STATUSES = new Set(["new", "under_review", "resolved", "rejected"]);
 
 interface ChatAttachmentRow {
@@ -237,12 +244,7 @@ async function recordRecentView(
     : databaseError(cors);
 }
 
-async function listRecentViews(
-  request: Request,
-  env: AccountSocialEnv,
-  cors: Headers,
-  url: URL,
-) {
+async function listRecentViews(request: Request, env: AccountSocialEnv, cors: Headers, url: URL) {
   const auth = await authenticate(request, env as unknown as AuthEnv);
   if (!auth) return unauthorized(cors);
   const limit = integer(url.searchParams.get("limit"), 12, 1, 30);
@@ -505,8 +507,10 @@ async function setFavorite(
         ).bind(auth.userId, timestamp, timestamp, listingId),
       ])
     : await env.DB.batch([
-        env.DB.prepare("DELETE FROM favorites WHERE user_id = ? AND listing_id = ?")
-          .bind(auth.userId, listingId),
+        env.DB.prepare("DELETE FROM favorites WHERE user_id = ? AND listing_id = ?").bind(
+          auth.userId,
+          listingId,
+        ),
         env.DB.prepare(
           "DELETE FROM favorite_listing_snapshots WHERE user_id = ? AND listing_id = ?",
         ).bind(auth.userId, listingId),
@@ -829,7 +833,8 @@ async function sendMessage(
       cors,
     );
   }
-  const otherUserId = conversation.buyer_id === auth.userId ? conversation.seller_id : conversation.buyer_id;
+  const otherUserId =
+    conversation.buyer_id === auth.userId ? conversation.seller_id : conversation.buyer_id;
   if (await usersBlocked(env, auth.userId, otherUserId)) {
     return json(
       { error: { code: "permission_denied", message: "Messaging is blocked." } },
@@ -939,10 +944,18 @@ async function uploadChatAttachment(
   const conversation = await participantRecord(env, conversationId, auth.userId);
   if (!conversation) return notFound(cors);
   if (conversation.status !== "active") {
-    return json({ error: { code: "invalid_transition", message: "Conversation is not active." } }, 409, cors);
+    return json(
+      { error: { code: "invalid_transition", message: "Conversation is not active." } },
+      409,
+      cors,
+    );
   }
   if (!request.headers.get("Content-Type")?.toLowerCase().startsWith("multipart/form-data")) {
-    return json({ error: { code: "unsupported_media_type", message: "Multipart form required." } }, 415, cors);
+    return json(
+      { error: { code: "unsupported_media_type", message: "Multipart form required." } },
+      415,
+      cors,
+    );
   }
 
   const form = await request.formData();
@@ -975,7 +988,10 @@ async function uploadChatAttachment(
   if (file.size <= 0 || file.size > maximumBytes) {
     return validation(cors, "Chat attachment size is invalid.");
   }
-  const durationMs = kind === "audio" ? boundedInteger(form.get("durationMs"), 1000, CHAT_AUDIO_MAX_DURATION_MS) : null;
+  const durationMs =
+    kind === "audio"
+      ? boundedInteger(form.get("durationMs"), 1000, CHAT_AUDIO_MAX_DURATION_MS)
+      : null;
   if (kind === "audio" && durationMs === null) {
     return validation(cors, "Audio duration is invalid.");
   }
@@ -1060,7 +1076,12 @@ async function readChatMedia(
         AND (c.buyer_id = ? OR c.seller_id = ?)`,
   )
     .bind(assetId, auth.userId, auth.userId)
-    .first<{ object_key: string; content_type: string; byte_size: number; conversation_id: string }>();
+    .first<{
+      object_key: string;
+      content_type: string;
+      byte_size: number;
+      conversation_id: string;
+    }>();
   if (!row) return notFound(cors);
   const object = await env.MEDIA.get(row.object_key);
   if (!object) return notFound(cors);
@@ -1093,9 +1114,7 @@ async function removeChatMedia(
   } catch {
     return databaseError(cors);
   }
-  const result = await env.DB.prepare(
-    "DELETE FROM media_assets WHERE id = ? AND owner_id = ?",
-  )
+  const result = await env.DB.prepare("DELETE FROM media_assets WHERE id = ? AND owner_id = ?")
     .bind(assetId, auth.userId)
     .run();
   return result.success ? json({ data: { success: true } }, 200, cors) : databaseError(cors);
@@ -1122,9 +1141,16 @@ async function createMessageReport(
       WHERE m.id = ? AND m.deleted_at IS NULL AND (c.buyer_id = ? OR c.seller_id = ?)`,
   )
     .bind(messageId, auth.userId, auth.userId)
-    .first<{ id: string; conversation_id: string; sender_id: string; buyer_id: string; seller_id: string }>();
+    .first<{
+      id: string;
+      conversation_id: string;
+      sender_id: string;
+      buyer_id: string;
+      seller_id: string;
+    }>();
   if (!message) return notFound(cors);
-  if (message.sender_id === auth.userId) return validation(cors, "You cannot report your own message.");
+  if (message.sender_id === auth.userId)
+    return validation(cors, "You cannot report your own message.");
   const existing = await env.DB.prepare(
     "SELECT id FROM message_reports WHERE message_id = ? AND reporter_user_id = ?",
   )
@@ -1152,9 +1178,7 @@ async function createMessageReport(
       timestamp,
     )
     .run();
-  return result.success
-    ? json({ data: { id, created: true } }, 201, cors)
-    : databaseError(cors);
+  return result.success ? json({ data: { id, created: true } }, 201, cors) : databaseError(cors);
 }
 
 async function blockParticipant(
@@ -1167,15 +1191,17 @@ async function blockParticipant(
   if (auth instanceof Response) return auth;
   const conversation = await participantRecord(env, conversationId, auth.userId);
   if (!conversation) return notFound(cors);
-  const otherUserId = conversation.buyer_id === auth.userId ? conversation.seller_id : conversation.buyer_id;
+  const otherUserId =
+    conversation.buyer_id === auth.userId ? conversation.seller_id : conversation.buyer_id;
   const timestamp = now();
   const results = await env.DB.batch([
     env.DB.prepare(
       "INSERT OR IGNORE INTO user_blocks (blocker_id, blocked_id, created_at) VALUES (?, ?, ?)",
     ).bind(auth.userId, otherUserId, timestamp),
-    env.DB.prepare(
-      "UPDATE conversations SET status = 'blocked', updated_at = ? WHERE id = ?",
-    ).bind(timestamp, conversationId),
+    env.DB.prepare("UPDATE conversations SET status = 'blocked', updated_at = ? WHERE id = ?").bind(
+      timestamp,
+      conversationId,
+    ),
   ]);
   return results.every((result) => result.success)
     ? json({ data: { success: true } }, 200, cors)
@@ -1225,14 +1251,16 @@ async function moderateMessageReport(
   if (!status || !MESSAGE_REPORT_STATUSES.has(status) || !expectedUpdatedAt) {
     return validation(cors, "Invalid message-report decision.");
   }
-  const existing = await env.DB.prepare(
-    "SELECT updated_at FROM message_reports WHERE id = ?",
-  )
+  const existing = await env.DB.prepare("SELECT updated_at FROM message_reports WHERE id = ?")
     .bind(reportId)
     .first<{ updated_at: string }>();
   if (!existing) return notFound(cors);
   if (existing.updated_at !== expectedUpdatedAt) {
-    return json({ error: { code: "status_mismatch", message: "Report changed. Reload and retry." } }, 409, cors);
+    return json(
+      { error: { code: "status_mismatch", message: "Report changed. Reload and retry." } },
+      409,
+      cors,
+    );
   }
   const timestamp = now();
   const reviewedAt = status === "new" ? null : timestamp;
@@ -1306,7 +1334,11 @@ async function participantRecord(
     .first<ConversationParticipantRow>();
 }
 
-async function usersBlocked(env: AccountSocialEnv, first: string, second: string): Promise<boolean> {
+async function usersBlocked(
+  env: AccountSocialEnv,
+  first: string,
+  second: string,
+): Promise<boolean> {
   const row = await env.DB.prepare(
     `SELECT 1 AS blocked FROM user_blocks
       WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)
@@ -1386,7 +1418,6 @@ function normalizeLegacyScope(value: unknown): Row | null {
   };
 }
 
-
 function chatAttachmentPayload(row: ChatAttachmentRow) {
   return {
     path: row.asset_id,
@@ -1424,7 +1455,12 @@ function matchesImageSignature(bytes: Uint8Array, contentType: string): boolean 
     return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
   }
   if (contentType === "image/png") {
-    return bytes.length >= 8 && [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((value, index) => bytes[index] === value);
+    return (
+      bytes.length >= 8 &&
+      [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every(
+        (value, index) => bytes[index] === value,
+      )
+    );
   }
   if (contentType === "image/webp") {
     return bytes.length >= 12 && ascii(bytes, 0, 4) === "RIFF" && ascii(bytes, 8, 4) === "WEBP";
@@ -1434,7 +1470,13 @@ function matchesImageSignature(bytes: Uint8Array, contentType: string): boolean 
 
 function matchesAudioSignature(bytes: Uint8Array, contentType: string): boolean {
   if (contentType === "audio/webm") {
-    return bytes.length >= 4 && bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3;
+    return (
+      bytes.length >= 4 &&
+      bytes[0] === 0x1a &&
+      bytes[1] === 0x45 &&
+      bytes[2] === 0xdf &&
+      bytes[3] === 0xa3
+    );
   }
   if (contentType === "audio/mp4") {
     return bytes.length >= 12 && ascii(bytes, 4, 4) === "ftyp";
@@ -1505,7 +1547,12 @@ function objectValue(value: unknown): Row {
 
 function cleanOptional(value: unknown, max: number): string | null {
   if (typeof value !== "string") return null;
-  const normalized = value.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max);
+  // eslint-disable-next-line no-control-regex -- Intentional ASCII control-character sanitization.
+  const normalized = value
+    // eslint-disable-next-line no-control-regex -- Intentional ASCII control-character sanitization.
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .trim()
+    .slice(0, max);
   return normalized || null;
 }
 

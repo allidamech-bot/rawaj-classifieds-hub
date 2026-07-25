@@ -9,7 +9,6 @@ import { fetchMyConversations, markConversationRead } from "@/lib/api/messaging"
 import type { Conversation, ConversationMessage } from "@/lib/classifieds-types";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 
-
 interface LiveChatWorkspaceOptions {
   signedIn: boolean;
   profileId: string | null;

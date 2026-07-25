@@ -18,13 +18,33 @@ const files = await Promise.all([
   read("cloudflare/d1/migrations/0014_admin_governance_workspace.sql"),
 ]);
 
-const [auth, admin, campaigns, safety, taxonomyReview, dataQuality, trustSupport, verification, governanceMigration] = files;
+const [
+  auth,
+  admin,
+  campaigns,
+  safety,
+  taxonomyReview,
+  dataQuality,
+  trustSupport,
+  verification,
+  governanceMigration,
+] = files;
 
-const mutationModules = [admin, campaigns, safety, taxonomyReview, dataQuality, trustSupport, verification];
+const mutationModules = [
+  admin,
+  campaigns,
+  safety,
+  taxonomyReview,
+  dataQuality,
+  trustSupport,
+  verification,
+];
 const auditedModules = [admin, campaigns, safety, taxonomyReview, dataQuality, trustSupport];
 
 const hasAnyRoleGuard = (source) =>
-  /roles\.includes\("(?:owner|admin|moderator)"\)|requireAdminRole\(|isAdminLike\(|canModerate\(|canManage\(/.test(source);
+  /roles\.includes\("(?:owner|admin|moderator)"\)|requireAdminRole\(|isAdminLike\(|canModerate\(|canManage\(/.test(
+    source,
+  );
 
 test("authenticated identity and roles are derived by the Worker", () => {
   assert.match(auth, /export async function authenticate/);

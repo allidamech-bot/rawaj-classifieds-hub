@@ -310,11 +310,19 @@ async function createListingReport(
        listing_title_snapshot, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, 'open', ?, ?, ?)`,
   )
-    .bind(id, listingId, auth.userId, reportType, reason, reason, listing.title, timestamp, timestamp)
+    .bind(
+      id,
+      listingId,
+      auth.userId,
+      reportType,
+      reason,
+      reason,
+      listing.title,
+      timestamp,
+      timestamp,
+    )
     .run();
-  return result.success
-    ? json({ data: { id, duplicate: false } }, 201, cors)
-    : databaseError(cors);
+  return result.success ? json({ data: { id, duplicate: false } }, 201, cors) : databaseError(cors);
 }
 
 async function listListingReports(
@@ -355,7 +363,8 @@ async function moderateListingReportRequest(
   const expectedUpdatedAt = text(body.data.expectedUpdatedAt, 80);
   const adminNote = optionalText(body.data.adminNote, 1000);
   const dbStatus = listingReportStatusToDb(status);
-  if (!reportId || !dbStatus || !expectedUpdatedAt) return validation(cors, "Invalid report update.");
+  if (!reportId || !dbStatus || !expectedUpdatedAt)
+    return validation(cors, "Invalid report update.");
   const timestamp = now();
   const resolvedAt = dbStatus === "resolved" || dbStatus === "dismissed" ? timestamp : null;
   const result = await env.DB.prepare(
@@ -396,7 +405,14 @@ async function reviewEligibility(
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) {
     return json(
-      { data: { eligible: false, relatedListingId: null, conversationId: null, reason: "auth_required" } },
+      {
+        data: {
+          eligible: false,
+          relatedListingId: null,
+          conversationId: null,
+          reason: "auth_required",
+        },
+      },
       200,
       cors,
     );
@@ -419,7 +435,12 @@ async function resolveReviewEligibility(
   reason: string;
 }> {
   if (!sellerId || sellerId === reviewerId) {
-    return { eligible: false, relatedListingId: null, conversationId: null, reason: "invalid_seller" };
+    return {
+      eligible: false,
+      relatedListingId: null,
+      conversationId: null,
+      reason: "invalid_seller",
+    };
   }
   const seller = await env.DB.prepare(
     "SELECT id FROM public_profiles WHERE id = ? AND account_status = 'active'",
@@ -427,7 +448,12 @@ async function resolveReviewEligibility(
     .bind(sellerId)
     .first();
   if (!seller) {
-    return { eligible: false, relatedListingId: null, conversationId: null, reason: "invalid_seller" };
+    return {
+      eligible: false,
+      relatedListingId: null,
+      conversationId: null,
+      reason: "invalid_seller",
+    };
   }
   if (listingId) {
     const ownedListing = await env.DB.prepare(
@@ -436,7 +462,12 @@ async function resolveReviewEligibility(
       .bind(listingId, sellerId)
       .first();
     if (!ownedListing) {
-      return { eligible: false, relatedListingId: null, conversationId: null, reason: "invalid_seller" };
+      return {
+        eligible: false,
+        relatedListingId: null,
+        conversationId: null,
+        reason: "invalid_seller",
+      };
     }
   }
   const existing = await env.DB.prepare(
@@ -447,7 +478,12 @@ async function resolveReviewEligibility(
     .bind(sellerId, reviewerId)
     .first();
   if (existing) {
-    return { eligible: false, relatedListingId: null, conversationId: null, reason: "existing_review" };
+    return {
+      eligible: false,
+      relatedListingId: null,
+      conversationId: null,
+      reason: "existing_review",
+    };
   }
   const conversation = await env.DB.prepare(
     `SELECT c.id, c.listing_id FROM conversations c
@@ -509,12 +545,7 @@ async function createSellerReview(
   ) {
     return validation(cors, "Invalid seller review.");
   }
-  const eligibility = await resolveReviewEligibility(
-    env,
-    auth.userId,
-    sellerId,
-    relatedListingId,
-  );
+  const eligibility = await resolveReviewEligibility(env, auth.userId, sellerId, relatedListingId);
   if (!eligibility.eligible) {
     const code = eligibility.reason === "existing_review" ? "status_mismatch" : "permission_denied";
     return json({ error: { code, message: "Seller review is not permitted." } }, 409, cors);
@@ -566,7 +597,11 @@ async function setReviewResponse(
   if (!review) return notFound(cors);
   if (review.seller_id !== auth.userId) return forbidden(cors);
   if (review.status !== "approved") {
-    return json({ error: { code: "status_mismatch", message: "Only approved reviews can be answered." } }, 409, cors);
+    return json(
+      { error: { code: "status_mismatch", message: "Only approved reviews can be answered." } },
+      409,
+      cors,
+    );
   }
   const timestamp = now();
   const result = await env.DB.prepare(
@@ -616,7 +651,8 @@ async function moderateSellerReview(
   const expectedUpdatedAt = text(body.data.expectedUpdatedAt, 80);
   const adminNote = optionalText(body.data.adminNote, 1000);
   const dbStatus = status === "approved" ? "approved" : status === "rejected" ? "rejected" : null;
-  if (!reviewId || !dbStatus || !expectedUpdatedAt) return validation(cors, "Invalid review update.");
+  if (!reviewId || !dbStatus || !expectedUpdatedAt)
+    return validation(cors, "Invalid review update.");
   const timestamp = now();
   const result = await env.DB.prepare(
     `UPDATE seller_reviews SET status = ?, admin_note = ?, reviewed_by = ?, reviewed_at = ?, updated_at = ?
@@ -926,7 +962,9 @@ function stringArray(value: unknown, maxItems: number, maxLength: number): strin
 function jsonStringArray(value: unknown): string[] {
   try {
     const parsed = typeof value === "string" ? JSON.parse(value) : value;
-    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string")
+      : [];
   } catch {
     return [];
   }
@@ -976,7 +1014,11 @@ function notFound(cors: Headers): Response {
 }
 
 function stale(cors: Headers): Response {
-  return json({ error: { code: "stale_review", message: "Resource changed since it was loaded." } }, 409, cors);
+  return json(
+    { error: { code: "stale_review", message: "Resource changed since it was loaded." } },
+    409,
+    cors,
+  );
 }
 
 function validation(cors: Headers, message: string): Response {
@@ -984,5 +1026,9 @@ function validation(cors: Headers, message: string): Response {
 }
 
 function databaseError(cors: Headers): Response {
-  return json({ error: { code: "database_unavailable", message: "Data service unavailable." } }, 503, cors);
+  return json(
+    { error: { code: "database_unavailable", message: "Data service unavailable." } },
+    503,
+    cors,
+  );
 }

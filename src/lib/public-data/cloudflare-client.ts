@@ -46,9 +46,10 @@ interface ApiEnvelope<T> {
 
 const REQUEST_TIMEOUT_MS = 12_000;
 const REFERENCE_CACHE_TTL_MS = 5 * 60_000;
-let referenceCache:
-  | { expiresAt: number; promise: Promise<ClassifiedsResult<CloudflareReferenceBundle>> }
-  | null = null;
+let referenceCache: {
+  expiresAt: number;
+  promise: Promise<ClassifiedsResult<CloudflareReferenceBundle>>;
+} | null = null;
 
 export async function fetchCloudflareReferences(): Promise<
   ClassifiedsResult<CloudflareReferenceBundle>
@@ -92,7 +93,10 @@ export async function fetchCloudflareListings(
   const sort = filters.sort ?? "latest";
   const taxonomyNodeIds = [
     ...new Set(
-      [...(filters.taxonomyNodeIds ?? []), ...(filters.taxonomyNodeId ? [filters.taxonomyNodeId] : [])]
+      [
+        ...(filters.taxonomyNodeIds ?? []),
+        ...(filters.taxonomyNodeId ? [filters.taxonomyNodeId] : []),
+      ]
         .map((value) => value.trim())
         .filter(Boolean),
     ),
@@ -198,9 +202,7 @@ export function fetchCloudflareLocationRoots(
 export function fetchCloudflareLocationChildren(
   parentId: string,
 ): Promise<ClassifiedsResult<LocationNode[]>> {
-  return requestJson<LocationNode[]>(
-    `/v1/locations/${encodeURIComponent(parentId)}/children`,
-  );
+  return requestJson<LocationNode[]>(`/v1/locations/${encodeURIComponent(parentId)}/children`);
 }
 
 export function fetchCloudflareLocationPath(
@@ -224,7 +226,9 @@ export function searchCloudflareLocations(
   return requestJson<LocationSearchResult[]>("/v1/locations/search", { q: query, limit });
 }
 
-export function fetchCloudflareListingFacets<T>(query: Record<string, unknown>): Promise<ClassifiedsResult<T>> {
+export function fetchCloudflareListingFacets<T>(
+  query: Record<string, unknown>,
+): Promise<ClassifiedsResult<T>> {
   const parameters: Record<string, string | number | boolean | string[] | null | undefined> = {};
   for (const [key, value] of Object.entries(query)) {
     if (key === "attributeFilters" && value && typeof value === "object") {
@@ -238,7 +242,9 @@ export function fetchCloudflareListingFacets<T>(query: Record<string, unknown>):
   return requestJson<T>("/v1/listing-facets", parameters);
 }
 
-export function fetchCloudflareNearbyListings<T>(query: Record<string, unknown>): Promise<ClassifiedsResult<T>> {
+export function fetchCloudflareNearbyListings<T>(
+  query: Record<string, unknown>,
+): Promise<ClassifiedsResult<T>> {
   const parameters: Record<string, string | number | boolean | null | undefined> = {};
   for (const [key, value] of Object.entries(query)) {
     if (["string", "number", "boolean"].includes(typeof value)) {
@@ -364,9 +370,7 @@ function mapApiError(
     code,
     message:
       source?.message?.trim() ||
-      (status >= 500
-        ? "خدمة بيانات رَوَاج غير متاحة مؤقتًا."
-        : "تعذر تحميل البيانات المطلوبة."),
+      (status >= 500 ? "خدمة بيانات رَوَاج غير متاحة مؤقتًا." : "تعذر تحميل البيانات المطلوبة."),
     details: source?.details,
     operation: `cloudflare_public_api:${path}`,
   };
@@ -402,9 +406,7 @@ function encodeWorkerCursor(
       ? { createdAt: cursor.created_at }
       : {}),
     ...(cursor.type === "featured" ? { isFeatured: cursor.is_featured } : {}),
-    ...(cursor.type === "cheapest" || cursor.type === "expensive"
-      ? { price: cursor.price }
-      : {}),
+    ...(cursor.type === "cheapest" || cursor.type === "expensive" ? { price: cursor.price } : {}),
   };
   return base64UrlEncode(JSON.stringify(payload));
 }
@@ -446,10 +448,10 @@ function base64UrlEncode(value: string): string {
 }
 
 function base64UrlDecode(value: string): string {
-  const padded = value.replace(/-/g, "+").replace(/_/g, "/").padEnd(
-    Math.ceil(value.length / 4) * 4,
-    "=",
-  );
+  const padded = value
+    .replace(/-/g, "+")
+    .replace(/_/g, "/")
+    .padEnd(Math.ceil(value.length / 4) * 4, "=");
   const binary = atob(padded);
   const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
   return new TextDecoder().decode(bytes);

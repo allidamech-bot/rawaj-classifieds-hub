@@ -12,9 +12,14 @@ export async function fetchListingPriceChangeContext(
   userId: string | null,
   listingId: string,
 ): Promise<ClassifiedsResult<ListingPriceChangeContext | null>> {
-  if (!userId) return { ok: false, error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض سياق السعر." } };
+  if (!userId)
+    return {
+      ok: false,
+      error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض سياق السعر." },
+    };
   const cleanId = listingId.trim();
-  if (!cleanId) return { ok: false, error: { code: "validation_error", message: "تعذر تحديد الإعلان." } };
+  if (!cleanId)
+    return { ok: false, error: { code: "validation_error", message: "تعذر تحديد الإعلان." } };
   const result = await cloudflareApiRequest<ListingPriceChangeContext | null>(
     `/v1/listings/${encodeURIComponent(cleanId)}/price-context`,
   );

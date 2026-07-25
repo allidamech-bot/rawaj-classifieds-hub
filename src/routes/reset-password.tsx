@@ -199,7 +199,9 @@ function ResetPasswordPage() {
                 disabled={saving}
                 className="rawaj-button-primary min-h-11 w-full rounded-[1rem] px-4 py-2.5 disabled:opacity-60"
               >
-                {saving ? text("جارٍ الحفظ", "Saving") : text("تحديث كلمة المرور", "Update password")}
+                {saving
+                  ? text("جارٍ الحفظ", "Saving")
+                  : text("تحديث كلمة المرور", "Update password")}
               </button>
             </form>
           )}

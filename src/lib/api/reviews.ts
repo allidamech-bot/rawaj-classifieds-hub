@@ -12,11 +12,7 @@ import type {
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 
 export type SellerReviewEligibilityReason =
-  | "eligible"
-  | "auth_required"
-  | "invalid_seller"
-  | "existing_review"
-  | "no_qualifying_interaction";
+  "eligible" | "auth_required" | "invalid_seller" | "existing_review" | "no_qualifying_interaction";
 
 export interface SellerReviewEligibility {
   eligible: boolean;
@@ -221,7 +217,11 @@ export function buildRatingSummary(reviews: SellerReview[]): SellerRatingSummary
     distribution[rating] += 1;
     total += rating;
   }
-  return { average: Number((total / approved.length).toFixed(1)), count: approved.length, distribution };
+  return {
+    average: Number((total / approved.length).toFixed(1)),
+    count: approved.length,
+    distribution,
+  };
 }
 
 export function mapReview(row: Record<string, unknown>): SellerReviewWithResponse {
@@ -229,7 +229,9 @@ export function mapReview(row: Record<string, unknown>): SellerReviewWithRespons
     id: stringValue(row.id),
     sellerUserId: stringValue(row.sellerUserId ?? row.seller_id),
     reviewerUserId: stringValue(row.reviewerUserId ?? row.reviewer_id),
-    relatedListingId: nullableString(row.relatedListingId ?? row.listing_id ?? row.related_listing_id),
+    relatedListingId: nullableString(
+      row.relatedListingId ?? row.listing_id ?? row.related_listing_id,
+    ),
     rating: numberValue(row.rating),
     comment: nullableString(row.comment),
     traits: arrayValue(row.traits).filter((trait): trait is SellerReviewTrait =>
@@ -270,7 +272,9 @@ function arrayValue(value: unknown): string[] {
   if (typeof value !== "string") return [];
   try {
     const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string")
+      : [];
   } catch {
     return [];
   }

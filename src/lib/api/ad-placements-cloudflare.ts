@@ -3,11 +3,7 @@ import { validateAdPlacementImageFile } from "@/lib/api/storage";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 
 export type AdPlacementPage =
-  | "home"
-  | "search_results"
-  | "listing_detail"
-  | "categories"
-  | "offers";
+  "home" | "search_results" | "listing_detail" | "categories" | "offers";
 
 export type AdPlacementStatus = "draft" | "active" | "paused";
 

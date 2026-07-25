@@ -183,17 +183,18 @@ function LoginPage() {
 
       if (result.error) {
         setError(
-          authErrorMessage({ message: result.error }, mode === "login" ? "login" : "register", text),
+          authErrorMessage(
+            { message: result.error },
+            mode === "login" ? "login" : "register",
+            text,
+          ),
         );
         return;
       }
 
       if (mode === "register") {
         setMessage(
-          text(
-            "تم إنشاء الحساب. جارٍ إدخالك إلى رواج.",
-            "Account created. Opening RAWAJ now.",
-          ),
+          text("تم إنشاء الحساب. جارٍ إدخالك إلى رواج.", "Account created. Opening RAWAJ now."),
         );
         await navigate({ to: returnTo });
         return;

@@ -47,7 +47,9 @@ export async function handlePublicSellers(
   }
 
   const sellerId = decodeURIComponent(match[1]).trim();
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sellerId)) {
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sellerId)
+  ) {
     return json({ error: { code: "validation_error", message: "Invalid seller id." } }, 400);
   }
 
@@ -95,7 +97,10 @@ export async function handlePublicSellers(
 
   if (!inventory.success || !reviewsResult.success) {
     console.error("rawaj_public_seller_database_error", inventory.error ?? reviewsResult.error);
-    return json({ error: { code: "database_unavailable", message: "Data service unavailable." } }, 503);
+    return json(
+      { error: { code: "database_unavailable", message: "Data service unavailable." } },
+      503,
+    );
   }
 
   const listingRows = inventory.results ?? [];
@@ -117,7 +122,8 @@ export async function handlePublicSellers(
           cleanText(firstListing?.contact_name, 120) ??
           "بائع رواج",
         verified: stringValue(profile?.verification_status) === "verified",
-        joinedAt: nullableString(profile?.created_at) ?? nullableString(listingRows.at(-1)?.created_at),
+        joinedAt:
+          nullableString(profile?.created_at) ?? nullableString(listingRows.at(-1)?.created_at),
         locationAr:
           cleanText(profile?.governorate, 120) ?? nullableString(firstListing?.governorate_name_ar),
         bio: cleanText(profile?.bio, 1000),
@@ -172,7 +178,10 @@ async function searchPublicSellers(url: URL, env: PublicSellersEnv): Promise<Res
 
   if (!result.success) {
     console.error("rawaj_public_seller_search_database_error", result.error);
-    return json({ error: { code: "database_unavailable", message: "Data service unavailable." } }, 503);
+    return json(
+      { error: { code: "database_unavailable", message: "Data service unavailable." } },
+      503,
+    );
   }
 
   return json(
@@ -267,7 +276,14 @@ function mediaUrl(origin: string, assetId: unknown): string | null {
 }
 
 function sanitizeDetails(details: Row): Row {
-  const blocked = new Set(["phone", "mobile", "contact_phone", "whatsapp", "whatsApp", "contact_whatsapp"]);
+  const blocked = new Set([
+    "phone",
+    "mobile",
+    "contact_phone",
+    "whatsapp",
+    "whatsApp",
+    "contact_whatsapp",
+  ]);
   return Object.fromEntries(Object.entries(details).filter(([key]) => !blocked.has(key)));
 }
 
@@ -275,7 +291,10 @@ function cacheHeaders(env: PublicSellersEnv): Headers {
   const parsed = Number.parseInt(env.API_CACHE_SECONDS ?? "60", 10);
   const seconds = Number.isFinite(parsed) && parsed >= 0 ? parsed : 60;
   return new Headers({
-    "Cache-Control": seconds > 0 ? `public, max-age=${seconds}, stale-while-revalidate=${Math.max(seconds, 300)}` : "no-store",
+    "Cache-Control":
+      seconds > 0
+        ? `public, max-age=${seconds}, stale-while-revalidate=${Math.max(seconds, 300)}`
+        : "no-store",
     Vary: "Origin",
   });
 }

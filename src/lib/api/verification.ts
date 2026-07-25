@@ -8,10 +8,7 @@ import type {
   VerificationDocumentType,
   VerificationRequestStatus,
 } from "@/lib/classifieds-types";
-import {
-  cloudflareApiRequest,
-  cloudflareAuthorizedFetch,
-} from "@/lib/cloudflare-auth";
+import { cloudflareApiRequest, cloudflareAuthorizedFetch } from "@/lib/cloudflare-auth";
 
 /** Compatibility name only; verification documents are private R2 objects. */
 export const verificationDocumentsBucket = "r2-private-verification-documents";
@@ -31,7 +28,7 @@ type ApiFailure = { ok: false; error: string; code: string };
 export async function createMyVerificationRequest(
   payload: CreateSellerVerificationRequestPayload,
 ): Promise<ClassifiedsResult<SellerVerificationRequest>> {
-  if (!( ["personal", "business"] as const).includes(payload.requestType)) {
+  if (!(["personal", "business"] as const).includes(payload.requestType)) {
     return invalidVerificationInput("نوع طلب التوثيق غير مدعوم.");
   }
   const legalName = normalizePrivateName(payload.legalName);
@@ -51,21 +48,20 @@ export async function createMyVerificationRequest(
     return invalidVerificationInput("نوع المستند لا يطابق نوع طلب التوثيق.");
   }
 
-  const requestId =
-    verificationRequestIds.get(payload.documentFile) ?? crypto.randomUUID();
+  const requestId = verificationRequestIds.get(payload.documentFile) ?? crypto.randomUUID();
   verificationRequestIds.set(payload.documentFile, requestId);
   const form = new FormData();
   form.set("requestId", requestId);
   form.set("requestType", payload.requestType);
   form.set("legalName", legalName);
-  form.set("businessName", payload.requestType === "business" ? businessName ?? "" : "");
+  form.set("businessName", payload.requestType === "business" ? (businessName ?? "") : "");
   form.set("documentType", payload.documentType);
   form.set("file", payload.documentFile, payload.documentFile.name);
 
-  const result = await cloudflareApiRequest<Record<string, unknown>>(
-    "/v1/account/verifications",
-    { method: "POST", body: form },
-  );
+  const result = await cloudflareApiRequest<Record<string, unknown>>("/v1/account/verifications", {
+    method: "POST",
+    body: form,
+  });
   return result.ok
     ? { ok: true, data: mapOwnerVerificationRequest(result.data) }
     : apiFailure(result, "my_verification_create");
@@ -76,9 +72,7 @@ export const createSellerVerificationRequest = createMyVerificationRequest;
 export async function fetchMyVerificationRequests(): Promise<
   ClassifiedsResult<SellerVerificationRequest[]>
 > {
-  const result = await cloudflareApiRequest<Record<string, unknown>[]>(
-    "/v1/account/verifications",
-  );
+  const result = await cloudflareApiRequest<Record<string, unknown>[]>("/v1/account/verifications");
   return result.ok
     ? { ok: true, data: result.data.map(mapOwnerVerificationRequest) }
     : apiFailure(result, "my_verification_history");
@@ -88,9 +82,7 @@ export async function adminFetchVerificationRequests(
   canUseAdminAccess: boolean,
 ): Promise<ClassifiedsResult<AdminSellerVerificationRequest[]>> {
   if (!canUseAdminAccess) return adminDenied();
-  const result = await cloudflareApiRequest<Record<string, unknown>[]>(
-    "/v1/admin/verifications",
-  );
+  const result = await cloudflareApiRequest<Record<string, unknown>[]>("/v1/admin/verifications");
   return result.ok
     ? { ok: true, data: result.data.map(mapAdminVerificationRequest) }
     : apiFailure(result, "admin_verification_history");
@@ -130,7 +122,12 @@ export async function adminCreateVerificationDocumentSignedUrl(
     return {
       ok: false,
       error: {
-        code: response.status === 404 ? "not_found" : response.status === 403 ? "permission_denied" : "unknown",
+        code:
+          response.status === 404
+            ? "not_found"
+            : response.status === 403
+              ? "permission_denied"
+              : "unknown",
         message: "تعذر فتح وثيقة التوثيق.",
       },
     };
@@ -170,9 +167,7 @@ export async function adminModerateVerificationRequest(
       },
     },
   );
-  return result.ok
-    ? { ok: true, data: null }
-    : apiFailure(result, "admin_verification_moderate");
+  return result.ok ? { ok: true, data: null } : apiFailure(result, "admin_verification_moderate");
 }
 
 function validateVerificationDocumentFile(file: File): ClassifiedsResult<null> {
@@ -221,16 +216,19 @@ function normalizePrivateName(value: string | null | undefined): string {
 }
 
 function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value,
-  );
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 function mapOwnerVerificationRequest(row: Record<string, unknown>): SellerVerificationRequest {
   return {
     id: rowString(row, "id"),
     status: rowString(row, "status", "pending_review") as VerificationRequestStatus,
-    requestType: rowString(row, "request_type", "personal", "requestType") as SellerVerificationRequest["requestType"],
+    requestType: rowString(
+      row,
+      "request_type",
+      "personal",
+      "requestType",
+    ) as SellerVerificationRequest["requestType"],
     legalName: rowString(row, "legal_name", "", "legalName"),
     businessName: rowNullableString(row, "business_name", "businessName"),
     documentType: rowNullableString(row, "document_type", "documentType"),
@@ -240,9 +238,7 @@ function mapOwnerVerificationRequest(row: Record<string, unknown>): SellerVerifi
   };
 }
 
-function mapAdminVerificationRequest(
-  row: Record<string, unknown>,
-): AdminSellerVerificationRequest {
+function mapAdminVerificationRequest(row: Record<string, unknown>): AdminSellerVerificationRequest {
   return {
     ...mapOwnerVerificationRequest(row),
     userId: rowString(row, "user_id", "", "userId"),
@@ -264,7 +260,15 @@ function apiFailure<T>(result: ApiFailure, operation: string): ClassifiedsResult
 }
 
 function normalizeApiCode(code: string): ClassifiedsErrorCode {
-  if (["auth_required", "permission_denied", "not_found", "status_mismatch", "validation_error"].includes(code)) {
+  if (
+    [
+      "auth_required",
+      "permission_denied",
+      "not_found",
+      "status_mismatch",
+      "validation_error",
+    ].includes(code)
+  ) {
     return code as ClassifiedsErrorCode;
   }
   if (code === "invalid_transition") return "stale_review";

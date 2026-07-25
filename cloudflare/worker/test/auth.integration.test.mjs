@@ -111,7 +111,9 @@ test("legacy Worker password and session routes are disabled", async () => {
 });
 
 function localIdentityCount(userId) {
-  const wrangler = fileURLToPath(new URL("../node_modules/wrangler/bin/wrangler.js", import.meta.url));
+  const wrangler = fileURLToPath(
+    new URL("../node_modules/wrangler/bin/wrangler.js", import.meta.url),
+  );
   const result = spawnSync(
     process.execPath,
     [

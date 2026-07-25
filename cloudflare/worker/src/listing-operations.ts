@@ -163,7 +163,9 @@ async function lifecycleAction(
   } else if (action === "reactivate") {
     const status = stringValue(listing.status);
     const expiredApproved =
-      status === "approved" && Boolean(listing.expires_at) && String(listing.expires_at) <= timestamp;
+      status === "approved" &&
+      Boolean(listing.expires_at) &&
+      String(listing.expires_at) <= timestamp;
     if (!["sold", "rented", "unavailable", "expired"].includes(status) && !expiredApproved) {
       return conflict(cors, "Listing cannot be reactivated from its current state.");
     }
@@ -212,7 +214,8 @@ async function lifecycleAction(
     ) {
       return conflict(cors, "Only a public available listing may be reserved.");
     }
-    const reservedAt = action === "reserve" ? (nullableString(listing.reserved_at) ?? timestamp) : null;
+    const reservedAt =
+      action === "reserve" ? (nullableString(listing.reserved_at) ?? timestamp) : null;
     statement = env.DB.prepare(
       `UPDATE listings SET reserved_at = ?, updated_at = ?
         WHERE id = ? AND owner_id = ? AND status = 'approved' AND archived_at IS NULL
@@ -268,9 +271,9 @@ async function lifecycleAction(
       }),
     ]);
     if (results.some((result) => !result.success)) return databaseError(cors);
-    const changed = await env.DB.prepare(
-      "SELECT id FROM listing_price_changes WHERE id = ?",
-    ).bind(priceChangeId).first();
+    const changed = await env.DB.prepare("SELECT id FROM listing_price_changes WHERE id = ?")
+      .bind(priceChangeId)
+      .first();
     if (!changed) return conflict(cors, "Listing changed. Reload and retry.");
     return json({ data: { success: true, updatedAt: timestamp } }, 200, cors);
   } else {
@@ -279,10 +282,13 @@ async function lifecycleAction(
 
   const result = await statement.run();
   if (!result.success) return databaseError(cors);
-  const current = await env.DB.prepare("SELECT updated_at FROM listings WHERE id = ? AND owner_id = ?")
+  const current = await env.DB.prepare(
+    "SELECT updated_at FROM listings WHERE id = ? AND owner_id = ?",
+  )
     .bind(listingId, auth.userId)
     .first<{ updated_at: string }>();
-  if (!current || current.updated_at !== timestamp) return conflict(cors, "Listing changed. Reload and retry.");
+  if (!current || current.updated_at !== timestamp)
+    return conflict(cors, "Listing changed. Reload and retry.");
   await auditStatement(env, auth.userId, auditAction, listingId, metadata).run();
   return json({ data: { success: true, updatedAt: timestamp } }, 200, cors);
 }
@@ -298,7 +304,9 @@ async function scanExpiryReminders(
   const windowEnd = new Date(Date.now() + 7 * DAY_MS).toISOString();
   const preference = await env.DB.prepare(
     "SELECT listing_status_enabled FROM notification_preferences WHERE user_id = ?",
-  ).bind(auth.userId).first<{ listing_status_enabled: number }>();
+  )
+    .bind(auth.userId)
+    .first<{ listing_status_enabled: number }>();
   if (preference && !booleanValue(preference.listing_status_enabled)) {
     return json({ data: { deliveredCount: 0 } }, 200, cors);
   }
@@ -307,7 +315,9 @@ async function scanExpiryReminders(
       WHERE owner_id = ? AND status = 'approved' AND archived_at IS NULL
         AND expires_at IS NOT NULL AND expires_at > ? AND expires_at <= ?
       ORDER BY expires_at LIMIT ?`,
-  ).bind(auth.userId, timestamp, windowEnd, MAX_REMINDER_CANDIDATES).all<Row>();
+  )
+    .bind(auth.userId, timestamp, windowEnd, MAX_REMINDER_CANDIDATES)
+    .all<Row>();
   if (!candidates.success) return databaseError(cors);
 
   let deliveredCount = 0;
@@ -321,27 +331,34 @@ async function scanExpiryReminders(
     const inserted = await env.DB.prepare(
       `INSERT OR IGNORE INTO listing_expiry_reminder_deliveries
         (listing_id, user_id, reminder_kind, created_at) VALUES (?, ?, ?, ?)`,
-    ).bind(stringValue(row.id), auth.userId, kind, timestamp).run();
+    )
+      .bind(stringValue(row.id), auth.userId, kind, timestamp)
+      .run();
     if (!inserted.success) return databaseError(cors);
     const recorded = await env.DB.prepare(
       `SELECT 1 AS found FROM listing_expiry_reminder_deliveries
         WHERE listing_id = ? AND user_id = ? AND reminder_kind = ? AND created_at = ?`,
-    ).bind(stringValue(row.id), auth.userId, kind, timestamp).first();
+    )
+      .bind(stringValue(row.id), auth.userId, kind, timestamp)
+      .first();
     if (!recorded) continue;
-    const body = kind === "expiring_1d"
-      ? `إعلان "${stringValue(row.title)}" سينتهي خلال أقل من يوم.`
-      : `إعلان "${stringValue(row.title)}" سينتهي خلال 7 أيام.`;
+    const body =
+      kind === "expiring_1d"
+        ? `إعلان "${stringValue(row.title)}" سينتهي خلال أقل من يوم.`
+        : `إعلان "${stringValue(row.title)}" سينتهي خلال 7 أيام.`;
     const notification = await env.DB.prepare(
       `INSERT INTO notifications (id, user_id, type, title, body, data, created_at)
        VALUES (?, ?, 'listing.expiring_soon', ?, ?, ?, ?)`,
-    ).bind(
-      deliveryId,
-      auth.userId,
-      "إعلانك يقترب من الانتهاء",
-      body,
-      JSON.stringify({ listingId: row.id, reminderKind: kind, expiresAt }),
-      timestamp,
-    ).run();
+    )
+      .bind(
+        deliveryId,
+        auth.userId,
+        "إعلانك يقترب من الانتهاء",
+        body,
+        JSON.stringify({ listingId: row.id, reminderKind: kind, expiresAt }),
+        timestamp,
+      )
+      .run();
     if (!notification.success) return databaseError(cors);
     deliveredCount += 1;
   }
@@ -360,26 +377,41 @@ async function priceContext(
     `SELECT s.price_snapshot, l.price AS current_price, l.status, l.archived_at, l.expires_at
        FROM favorite_listing_snapshots s JOIN listings l ON l.id = s.listing_id
       WHERE s.user_id = ? AND s.listing_id = ?`,
-  ).bind(auth.userId, listingId).first<Row>();
+  )
+    .bind(auth.userId, listingId)
+    .first<Row>();
   const timestamp = now();
   if (
-    !row || stringValue(row.status) !== "approved" || row.archived_at ||
+    !row ||
+    stringValue(row.status) !== "approved" ||
+    row.archived_at ||
     (row.expires_at && String(row.expires_at) <= timestamp)
-  ) return json({ data: null }, 200, cors);
+  )
+    return json({ data: null }, 200, cors);
   const previousPrice = nullableNumber(row.price_snapshot);
   const currentPrice = nullableNumber(row.current_price);
   if (previousPrice === null || currentPrice === null || previousPrice === currentPrice) {
     return json({ data: null }, 200, cors);
   }
-  return json({ data: {
-    previousPrice,
-    currentPrice,
-    currency: "SYP",
-    direction: currentPrice > previousPrice ? "increased" : "decreased",
-  } }, 200, cors);
+  return json(
+    {
+      data: {
+        previousPrice,
+        currentPrice,
+        currency: "SYP",
+        direction: currentPrice > previousPrice ? "increased" : "decreased",
+      },
+    },
+    200,
+    cors,
+  );
 }
 
-async function activePriceDrops(url: URL, env: ListingOperationsEnv, cors: Headers): Promise<Response> {
+async function activePriceDrops(
+  url: URL,
+  env: ListingOperationsEnv,
+  cors: Headers,
+): Promise<Response> {
   const limit = clampInteger(url.searchParams.get("limit"), 30, 1, 50);
   const since = new Date(Date.now() - 30 * DAY_MS).toISOString();
   const timestamp = now();
@@ -411,15 +443,28 @@ async function activePriceDrops(url: URL, env: ListingOperationsEnv, cors: Heade
        AND d.old_price > d.new_price AND d.new_price > 0 AND d.created_at >= ?
        AND ((d.old_price - d.new_price) / d.old_price) * 100 >= 1
      ORDER BY d.created_at DESC, l.id DESC LIMIT ?`,
-  ).bind(timestamp, since, limit).all<Row>();
+  )
+    .bind(timestamp, since, limit)
+    .all<Row>();
   if (!result.success) return databaseError(cors);
-  return json({ data: (result.results ?? []).map((row) => ({
-    listing: mapPublicListing(row, url.origin),
-    oldPrice: numberValue(row.old_price),
-    newPrice: numberValue(row.new_price),
-    discountPercent: Math.round(((numberValue(row.old_price) - numberValue(row.new_price)) / numberValue(row.old_price)) * 1000) / 10,
-    droppedAt: stringValue(row.dropped_at),
-  })) }, 200, cors);
+  return json(
+    {
+      data: (result.results ?? []).map((row) => ({
+        listing: mapPublicListing(row, url.origin),
+        oldPrice: numberValue(row.old_price),
+        newPrice: numberValue(row.new_price),
+        discountPercent:
+          Math.round(
+            ((numberValue(row.old_price) - numberValue(row.new_price)) /
+              numberValue(row.old_price)) *
+              1000,
+          ) / 10,
+        droppedAt: stringValue(row.dropped_at),
+      })),
+    },
+    200,
+    cors,
+  );
 }
 
 async function createPromotion(
@@ -438,23 +483,37 @@ async function createPromotion(
   const clientRequestId = clean(body.data.clientRequestId, 100);
   const paymentMethod = cleanOptional(body.data.paymentMethod, 80);
   const paymentReference = cleanOptional(body.data.paymentReference, 160);
-  if (!listingId || !promotionType || !PROMOTION_TYPES.has(promotionType) || requestedDays < 1 || requestedDays > 90 || !clientRequestId) {
+  if (
+    !listingId ||
+    !promotionType ||
+    !PROMOTION_TYPES.has(promotionType) ||
+    requestedDays < 1 ||
+    requestedDays > 90 ||
+    !clientRequestId
+  ) {
     return validation(cors, "Invalid promotion request.");
   }
   const existingByRequest = await env.DB.prepare(
     "SELECT * FROM listing_promotion_requests WHERE requester_user_id = ? AND client_request_id = ?",
-  ).bind(auth.userId, clientRequestId).first<Row>();
+  )
+    .bind(auth.userId, clientRequestId)
+    .first<Row>();
   if (existingByRequest) return json({ data: mapPromotion(existingByRequest) }, 200, cors);
   const listing = await env.DB.prepare(
     `SELECT id, title FROM listings WHERE id = ? AND owner_id = ? AND status = 'approved'
       AND archived_at IS NULL AND (expires_at IS NULL OR expires_at > ?)`,
-  ).bind(listingId, auth.userId, now()).first<Row>();
+  )
+    .bind(listingId, auth.userId, now())
+    .first<Row>();
   if (!listing) return conflict(cors, "An approved owned listing is required.");
   const pending = await env.DB.prepare(
     `SELECT * FROM listing_promotion_requests
       WHERE listing_id = ? AND requester_user_id = ? AND status = 'pending_review'`,
-  ).bind(listingId, auth.userId).first<Row>();
-  if (pending) return json({ data: mapPromotion({ ...pending, listing_title: listing.title }) }, 200, cors);
+  )
+    .bind(listingId, auth.userId)
+    .first<Row>();
+  if (pending)
+    return json({ data: mapPromotion({ ...pending, listing_title: listing.title }) }, 200, cors);
   const id = crypto.randomUUID();
   const timestamp = now();
   const inserted = await env.DB.prepare(
@@ -462,27 +521,66 @@ async function createPromotion(
       (id, listing_id, requester_user_id, client_request_id, promotion_type, status,
        requested_days, payment_method, payment_reference, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, 'pending_review', ?, ?, ?, ?, ?)`,
-  ).bind(id, listingId, auth.userId, clientRequestId, promotionType, requestedDays, paymentMethod, paymentReference, timestamp, timestamp).run();
+  )
+    .bind(
+      id,
+      listingId,
+      auth.userId,
+      clientRequestId,
+      promotionType,
+      requestedDays,
+      paymentMethod,
+      paymentReference,
+      timestamp,
+      timestamp,
+    )
+    .run();
   if (!inserted.success) return databaseError(cors);
-  return json({ data: mapPromotion({
-    id, listing_id: listingId, requester_user_id: auth.userId, promotion_type: promotionType,
-    status: "pending_review", requested_days: requestedDays, payment_method: paymentMethod,
-    payment_reference: paymentReference, listing_title: listing.title, created_at: timestamp, updated_at: timestamp,
-  }) }, 201, cors);
+  return json(
+    {
+      data: mapPromotion({
+        id,
+        listing_id: listingId,
+        requester_user_id: auth.userId,
+        promotion_type: promotionType,
+        status: "pending_review",
+        requested_days: requestedDays,
+        payment_method: paymentMethod,
+        payment_reference: paymentReference,
+        listing_title: listing.title,
+        created_at: timestamp,
+        updated_at: timestamp,
+      }),
+    },
+    201,
+    cors,
+  );
 }
 
-async function listOwnPromotions(request: Request, env: ListingOperationsEnv, cors: Headers): Promise<Response> {
+async function listOwnPromotions(
+  request: Request,
+  env: ListingOperationsEnv,
+  cors: Headers,
+): Promise<Response> {
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
   const result = await env.DB.prepare(
     `SELECT p.*, l.title AS listing_title FROM listing_promotion_requests p
       JOIN listings l ON l.id = p.listing_id
       WHERE p.requester_user_id = ? ORDER BY p.created_at DESC LIMIT 100`,
-  ).bind(auth.userId).all<Row>();
-  return result.success ? json({ data: (result.results ?? []).map(mapPromotion) }, 200, cors) : databaseError(cors);
+  )
+    .bind(auth.userId)
+    .all<Row>();
+  return result.success
+    ? json({ data: (result.results ?? []).map(mapPromotion) }, 200, cors)
+    : databaseError(cors);
 }
 
-async function listAdminPromotions(request: Request, env: ListingOperationsEnv, cors: Headers): Promise<Response> {
+async function listAdminPromotions(
+  request: Request,
+  env: ListingOperationsEnv,
+  cors: Headers,
+): Promise<Response> {
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
   if (!canModerate(auth.roles)) return forbidden(cors);
@@ -491,7 +589,9 @@ async function listAdminPromotions(request: Request, env: ListingOperationsEnv, 
       JOIN listings l ON l.id = p.listing_id
       ORDER BY CASE p.status WHEN 'pending_review' THEN 0 ELSE 1 END, p.created_at DESC LIMIT 200`,
   ).all<Row>();
-  return result.success ? json({ data: (result.results ?? []).map(mapPromotion) }, 200, cors) : databaseError(cors);
+  return result.success
+    ? json({ data: (result.results ?? []).map(mapPromotion) }, 200, cors)
+    : databaseError(cors);
 }
 
 async function uploadPromotionReceipt(
@@ -503,13 +603,19 @@ async function uploadPromotionReceipt(
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   if (!request.headers.get("Content-Type")?.toLowerCase().startsWith("multipart/form-data")) {
-    return json({ error: { code: "unsupported_media_type", message: "Multipart form required." } }, 415, cors);
+    return json(
+      { error: { code: "unsupported_media_type", message: "Multipart form required." } },
+      415,
+      cors,
+    );
   }
   const promotion = await env.DB.prepare(
     `SELECT p.id, p.status, p.proof_asset_id, a.object_key AS old_object_key
        FROM listing_promotion_requests p LEFT JOIN media_assets a ON a.id = p.proof_asset_id
       WHERE p.id = ? AND p.requester_user_id = ?`,
-  ).bind(promotionId, auth.userId).first<Row>();
+  )
+    .bind(promotionId, auth.userId)
+    .first<Row>();
   if (!promotion || stringValue(promotion.status) !== "pending_review") return forbidden(cors);
   const form = await request.formData();
   const file = form.get("file");
@@ -519,14 +625,17 @@ async function uploadPromotionReceipt(
     return validation(cors, "Unsupported receipt type or size.");
   }
   const bytes = new Uint8Array(await file.arrayBuffer());
-  if (!matchesReceiptSignature(bytes, contentType)) return validation(cors, "Receipt content is invalid.");
+  if (!matchesReceiptSignature(bytes, contentType))
+    return validation(cors, "Receipt content is invalid.");
   const assetId = crypto.randomUUID();
   const objectKey = `promotion-receipts/${auth.userId}/${promotionId}/${assetId}.${extensionFor(contentType)}`;
   const timestamp = now();
   const checksum = await sha256Hex(bytes);
   let object: { httpEtag: string };
   try {
-    object = await env.MEDIA.put(objectKey, bytes.buffer, { httpMetadata: { contentType, cacheControl: "private, no-store" } });
+    object = await env.MEDIA.put(objectKey, bytes.buffer, {
+      httpMetadata: { contentType, cacheControl: "private, no-store" },
+    });
   } catch {
     return databaseError(cors);
   }
@@ -535,7 +644,17 @@ async function uploadPromotionReceipt(
       `INSERT INTO media_assets (id, owner_id, object_key, content_type, byte_size,
         checksum_sha256, etag, status, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'ready', ?, ?)`,
-    ).bind(assetId, auth.userId, objectKey, contentType, file.size, checksum, object.httpEtag, timestamp, timestamp),
+    ).bind(
+      assetId,
+      auth.userId,
+      objectKey,
+      contentType,
+      file.size,
+      checksum,
+      object.httpEtag,
+      timestamp,
+      timestamp,
+    ),
     env.DB.prepare(
       `UPDATE listing_promotion_requests SET proof_asset_id = ?, updated_at = ?
         WHERE id = ? AND requester_user_id = ? AND status = 'pending_review'`,
@@ -547,7 +666,9 @@ async function uploadPromotionReceipt(
   }
   const attached = await env.DB.prepare(
     "SELECT proof_asset_id FROM listing_promotion_requests WHERE id = ? AND requester_user_id = ?",
-  ).bind(promotionId, auth.userId).first<{ proof_asset_id: string }>();
+  )
+    .bind(promotionId, auth.userId)
+    .first<{ proof_asset_id: string }>();
   if (!attached || attached.proof_asset_id !== assetId) {
     await env.MEDIA.delete(objectKey).catch(() => undefined);
     await env.DB.prepare("DELETE FROM media_assets WHERE id = ?").bind(assetId).run();
@@ -558,7 +679,8 @@ async function uploadPromotionReceipt(
   if (oldAssetId && oldObjectKey && oldAssetId !== assetId) {
     await env.MEDIA.delete(oldObjectKey).catch(() => undefined);
     await env.DB.prepare("UPDATE media_assets SET status = 'deleted', updated_at = ? WHERE id = ?")
-      .bind(timestamp, oldAssetId).run();
+      .bind(timestamp, oldAssetId)
+      .run();
   }
   return json({ data: { proofPath: assetId } }, 200, cors);
 }
@@ -576,7 +698,9 @@ async function readPromotionReceipt(
     `SELECT a.object_key, a.content_type FROM listing_promotion_requests p
       JOIN media_assets a ON a.id = p.proof_asset_id AND a.status = 'ready'
       WHERE p.id = ?`,
-  ).bind(promotionId).first<Row>();
+  )
+    .bind(promotionId)
+    .first<Row>();
   if (!row) return notFound(cors);
   const object = await env.MEDIA.get(stringValue(row.object_key));
   if (!object) return notFound(cors);
@@ -601,7 +725,9 @@ async function readPromotionReceiptByAsset(
     `SELECT a.object_key, a.content_type FROM listing_promotion_requests p
       JOIN media_assets a ON a.id = p.proof_asset_id AND a.status = 'ready'
       WHERE a.id = ?`,
-  ).bind(assetId).first<Row>();
+  )
+    .bind(assetId)
+    .first<Row>();
   if (!row) return notFound(cors);
   const object = await env.MEDIA.get(stringValue(row.object_key));
   if (!object) return notFound(cors);
@@ -627,45 +753,89 @@ async function moderatePromotion(
   const status = clean(body.data.status, 30);
   const expectedUpdatedAt = clean(body.data.expectedUpdatedAt, 80);
   const adminNote = cleanOptional(body.data.adminNote, 1000);
-  if (!status || !PROMOTION_STATUSES.has(status) || !expectedUpdatedAt) return validation(cors, "Invalid moderation request.");
+  if (!status || !PROMOTION_STATUSES.has(status) || !expectedUpdatedAt)
+    return validation(cors, "Invalid moderation request.");
   const current = await env.DB.prepare(
     "SELECT requested_days, status, updated_at FROM listing_promotion_requests WHERE id = ?",
-  ).bind(promotionId).first<Row>();
+  )
+    .bind(promotionId)
+    .first<Row>();
   if (!current) return notFound(cors);
-  if (stringValue(current.status) !== "pending_review" || stringValue(current.updated_at) !== expectedUpdatedAt) {
-    return json({ error: { code: "stale_review", message: "Promotion request changed. Reload and retry." } }, 409, cors);
+  if (
+    stringValue(current.status) !== "pending_review" ||
+    stringValue(current.updated_at) !== expectedUpdatedAt
+  ) {
+    return json(
+      { error: { code: "stale_review", message: "Promotion request changed. Reload and retry." } },
+      409,
+      cors,
+    );
   }
   const timestamp = now();
   const startsAt = status === "approved" ? timestamp : null;
-  const endsAt = status === "approved"
-    ? new Date(Date.now() + integer(current.requested_days, 1) * DAY_MS).toISOString()
-    : null;
+  const endsAt =
+    status === "approved"
+      ? new Date(Date.now() + integer(current.requested_days, 1) * DAY_MS).toISOString()
+      : null;
   const updated = await env.DB.prepare(
     `UPDATE listing_promotion_requests
         SET status = ?, starts_at = ?, ends_at = ?, admin_note = ?, reviewed_by = ?,
             reviewed_at = ?, updated_at = ?
       WHERE id = ? AND status = 'pending_review' AND updated_at = ?`,
-  ).bind(status, startsAt, endsAt, adminNote, auth.userId, timestamp, timestamp, promotionId, expectedUpdatedAt).run();
+  )
+    .bind(
+      status,
+      startsAt,
+      endsAt,
+      adminNote,
+      auth.userId,
+      timestamp,
+      timestamp,
+      promotionId,
+      expectedUpdatedAt,
+    )
+    .run();
   if (!updated.success) return databaseError(cors);
-  const verified = await env.DB.prepare("SELECT status, updated_at FROM listing_promotion_requests WHERE id = ?")
-    .bind(promotionId).first<Row>();
-  if (!verified || stringValue(verified.updated_at) !== timestamp || stringValue(verified.status) !== status) {
-    return json({ error: { code: "stale_review", message: "Promotion request changed. Reload and retry." } }, 409, cors);
+  const verified = await env.DB.prepare(
+    "SELECT status, updated_at FROM listing_promotion_requests WHERE id = ?",
+  )
+    .bind(promotionId)
+    .first<Row>();
+  if (
+    !verified ||
+    stringValue(verified.updated_at) !== timestamp ||
+    stringValue(verified.status) !== status
+  ) {
+    return json(
+      { error: { code: "stale_review", message: "Promotion request changed. Reload and retry." } },
+      409,
+      cors,
+    );
   }
-  await auditStatement(env, auth.userId, `promotion.${status}`, promotionId, { adminNote, startsAt, endsAt }).run();
+  await auditStatement(env, auth.userId, `promotion.${status}`, promotionId, {
+    adminNote,
+    startsAt,
+    endsAt,
+  }).run();
   return json({ data: { success: true } }, 200, cors);
 }
 
-async function accountCanManageListings(env: ListingOperationsEnv, userId: string): Promise<boolean> {
+async function accountCanManageListings(
+  env: ListingOperationsEnv,
+  userId: string,
+): Promise<boolean> {
   const timestamp = now();
   const profile = await env.DB.prepare("SELECT account_status FROM public_profiles WHERE id = ?")
-    .bind(userId).first<{ account_status: string }>();
+    .bind(userId)
+    .first<{ account_status: string }>();
   if (!profile || profile.account_status !== "active") return false;
   const restriction = await env.DB.prepare(
     `SELECT id FROM user_restrictions
       WHERE user_id = ? AND restriction_type = 'posting' AND starts_at <= ?
         AND (ends_at IS NULL OR ends_at > ?) LIMIT 1`,
-  ).bind(userId, timestamp, timestamp).first();
+  )
+    .bind(userId, timestamp, timestamp)
+    .first();
   return !restriction;
 }
 
@@ -707,20 +877,39 @@ function mapPromotion(row: Row): Row {
 function mapPublicListing(row: Row, origin: string): Row {
   const assetId = nullableString(row.primary_media_asset_id);
   return {
-    id: stringValue(row.id), ownerId: stringValue(row.owner_id), categoryId: stringValue(row.category_id),
-    subcategoryId: nullableString(row.subcategory_id), categoryNameAr: nullableString(row.category_name_ar),
-    categoryPlaceholder: nullableString(row.category_placeholder), governorateId: stringValue(row.governorate_id),
-    governorateNameAr: nullableString(row.governorate_name_ar), locationNodeId: nullableString(row.location_node_id),
-    title: stringValue(row.title), description: stringValue(row.description), price: nullableNumber(row.price),
-    currency: "SYP", priceType: stringValue(row.price_type, "fixed"),
-    condition: stringValue(row.listing_condition, "not_applicable"), status: "approved",
-    districtAr: nullableString(row.district_ar), contactName: nullableString(row.contact_name),
-    contactOptions: jsonObject(row.contact_options), details: jsonObject(row.details),
-    isFeatured: booleanValue(row.is_featured), featuredUntil: nullableString(row.featured_until),
-    reviewedBy: null, reviewedAt: null, rejectionReason: null, publishedAt: nullableString(row.published_at),
-    archivedAt: null, reservedAt: nullableString(row.reserved_at), expiresAt: nullableString(row.expires_at),
-    renewedAt: nullableString(row.renewed_at), expiryDays: nullableNumber(row.expiry_days),
-    createdAt: stringValue(row.created_at), updatedAt: stringValue(row.updated_at),
+    id: stringValue(row.id),
+    ownerId: stringValue(row.owner_id),
+    categoryId: stringValue(row.category_id),
+    subcategoryId: nullableString(row.subcategory_id),
+    categoryNameAr: nullableString(row.category_name_ar),
+    categoryPlaceholder: nullableString(row.category_placeholder),
+    governorateId: stringValue(row.governorate_id),
+    governorateNameAr: nullableString(row.governorate_name_ar),
+    locationNodeId: nullableString(row.location_node_id),
+    title: stringValue(row.title),
+    description: stringValue(row.description),
+    price: nullableNumber(row.price),
+    currency: "SYP",
+    priceType: stringValue(row.price_type, "fixed"),
+    condition: stringValue(row.listing_condition, "not_applicable"),
+    status: "approved",
+    districtAr: nullableString(row.district_ar),
+    contactName: nullableString(row.contact_name),
+    contactOptions: jsonObject(row.contact_options),
+    details: jsonObject(row.details),
+    isFeatured: booleanValue(row.is_featured),
+    featuredUntil: nullableString(row.featured_until),
+    reviewedBy: null,
+    reviewedAt: null,
+    rejectionReason: null,
+    publishedAt: nullableString(row.published_at),
+    archivedAt: null,
+    reservedAt: nullableString(row.reserved_at),
+    expiresAt: nullableString(row.expires_at),
+    renewedAt: nullableString(row.renewed_at),
+    expiryDays: nullableNumber(row.expiry_days),
+    createdAt: stringValue(row.created_at),
+    updatedAt: stringValue(row.updated_at),
     primaryImageUrl: assetId ? `${origin}/v1/media/assets/${encodeURIComponent(assetId)}` : null,
   };
 }
@@ -728,24 +917,52 @@ function mapPublicListing(row: Row, origin: string): Row {
 function canModerate(roles: string[]): boolean {
   return roles.some((role) => ["owner", "admin", "moderator"].includes(role));
 }
-function now(): string { return new Date().toISOString(); }
+function now(): string {
+  return new Date().toISOString();
+}
 function clean(value: unknown, max: number): string | null {
   return typeof value === "string" && value.trim() ? value.trim().slice(0, max) : null;
 }
-function cleanOptional(value: unknown, max: number): string | null { return clean(value, max); }
-function stringValue(value: unknown, fallback = ""): string { return typeof value === "string" ? value : fallback; }
-function nullableString(value: unknown): string | null { return typeof value === "string" ? value : null; }
-function numberValue(value: unknown): number { const n = Number(value); return Number.isFinite(n) ? n : Number.NaN; }
-function nullableNumber(value: unknown): number | null { const n = Number(value); return value === null || value === undefined || !Number.isFinite(n) ? null : n; }
-function integer(value: unknown, fallback: number): number { const n = Number(value); return Number.isInteger(n) ? n : fallback; }
-function clampInteger(value: unknown, fallback: number, min: number, max: number): number { return Math.max(min, Math.min(max, integer(value, fallback))); }
-function booleanValue(value: unknown): boolean { return value === true || value === 1 || value === "1"; }
+function cleanOptional(value: unknown, max: number): string | null {
+  return clean(value, max);
+}
+function stringValue(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback;
+}
+function nullableString(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+function numberValue(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : Number.NaN;
+}
+function nullableNumber(value: unknown): number | null {
+  const n = Number(value);
+  return value === null || value === undefined || !Number.isFinite(n) ? null : n;
+}
+function integer(value: unknown, fallback: number): number {
+  const n = Number(value);
+  return Number.isInteger(n) ? n : fallback;
+}
+function clampInteger(value: unknown, fallback: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, integer(value, fallback)));
+}
+function booleanValue(value: unknown): boolean {
+  return value === true || value === 1 || value === "1";
+}
 function jsonObject(value: unknown): Row {
   if (value && typeof value === "object" && !Array.isArray(value)) return value as Row;
   if (typeof value !== "string") return {};
-  try { const parsed = JSON.parse(value); return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Row : {}; } catch { return {}; }
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Row) : {};
+  } catch {
+    return {};
+  }
 }
-function normalizeContentType(value: string): string { return value.split(";", 1)[0].trim().toLowerCase(); }
+function normalizeContentType(value: string): string {
+  return value.split(";", 1)[0].trim().toLowerCase();
+}
 function extensionFor(type: string): string {
   if (type === "image/png") return "png";
   if (type === "image/webp") return "webp";
@@ -753,22 +970,48 @@ function extensionFor(type: string): string {
   return "jpg";
 }
 function matchesReceiptSignature(bytes: Uint8Array, type: string): boolean {
-  if (type === "image/jpeg") return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
-  if (type === "image/png") return bytes.length >= 8 && [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a].every((v,i) => bytes[i] === v);
-  if (type === "image/webp") return bytes.length >= 12 && textBytes(bytes,0,4) === "RIFF" && textBytes(bytes,8,12) === "WEBP";
-  if (type === "application/pdf") return bytes.length >= 5 && textBytes(bytes,0,5) === "%PDF-";
+  if (type === "image/jpeg")
+    return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (type === "image/png")
+    return (
+      bytes.length >= 8 &&
+      [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((v, i) => bytes[i] === v)
+    );
+  if (type === "image/webp")
+    return (
+      bytes.length >= 12 && textBytes(bytes, 0, 4) === "RIFF" && textBytes(bytes, 8, 12) === "WEBP"
+    );
+  if (type === "application/pdf") return bytes.length >= 5 && textBytes(bytes, 0, 5) === "%PDF-";
   return false;
 }
-function textBytes(bytes: Uint8Array, start: number, end: number): string { return String.fromCharCode(...bytes.slice(start, end)); }
+function textBytes(bytes: Uint8Array, start: number, end: number): string {
+  return String.fromCharCode(...bytes.slice(start, end));
+}
 async function sha256Hex(bytes: Uint8Array): Promise<string> {
   const input = new ArrayBuffer(bytes.byteLength);
   new Uint8Array(input).set(bytes);
   const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", input));
   return Array.from(digest, (value) => value.toString(16).padStart(2, "0")).join("");
 }
-function unauthorized(cors: Headers): Response { return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors); }
-function forbidden(cors: Headers): Response { return json({ error: { code: "permission_denied", message: "Permission denied." } }, 403, cors); }
-function notFound(cors: Headers): Response { return json({ error: { code: "not_found", message: "Resource not found." } }, 404, cors); }
-function validation(cors: Headers, message: string): Response { return json({ error: { code: "validation_error", message } }, 400, cors); }
-function conflict(cors: Headers, message: string): Response { return json({ error: { code: "status_mismatch", message } }, 409, cors); }
-function databaseError(cors: Headers): Response { return json({ error: { code: "database_error", message: "Database operation failed." } }, 500, cors); }
+function unauthorized(cors: Headers): Response {
+  return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors);
+}
+function forbidden(cors: Headers): Response {
+  return json({ error: { code: "permission_denied", message: "Permission denied." } }, 403, cors);
+}
+function notFound(cors: Headers): Response {
+  return json({ error: { code: "not_found", message: "Resource not found." } }, 404, cors);
+}
+function validation(cors: Headers, message: string): Response {
+  return json({ error: { code: "validation_error", message } }, 400, cors);
+}
+function conflict(cors: Headers, message: string): Response {
+  return json({ error: { code: "status_mismatch", message } }, 409, cors);
+}
+function databaseError(cors: Headers): Response {
+  return json(
+    { error: { code: "database_error", message: "Database operation failed." } },
+    500,
+    cors,
+  );
+}

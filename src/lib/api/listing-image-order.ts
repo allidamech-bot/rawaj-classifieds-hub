@@ -1,5 +1,9 @@
 import { fetchListingImages, mapImage } from "@/lib/api/listings";
-import type { ClassifiedsErrorCode, ClassifiedsResult, ListingImage } from "@/lib/classifieds-types";
+import type {
+  ClassifiedsErrorCode,
+  ClassifiedsResult,
+  ListingImage,
+} from "@/lib/classifieds-types";
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 
 export interface ListingImageOrderUpdate {
@@ -26,8 +30,7 @@ export async function reorderListingImages(
   if (
     !cleanListingId ||
     normalized.some(
-      (item, index) =>
-        !item.id || !Number.isInteger(item.sortOrder) || item.sortOrder !== index,
+      (item, index) => !item.id || !Number.isInteger(item.sortOrder) || item.sortOrder !== index,
     ) ||
     new Set(normalized.map((item) => item.id)).size !== normalized.length
   ) {
