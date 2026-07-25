@@ -7,6 +7,7 @@ import { handleAdmin, type AdminEnv } from "./admin";
 import { handleAdPlacements, type AdPlacementsEnv } from "./ad-placements";
 import { handleTaxonomy, type TaxonomyEnv } from "./taxonomy";
 import { handleListingAttributes, type ListingAttributesEnv } from "./listing-attributes";
+import { handleSystemControls, type SystemControlsEnv } from "./system-controls";
 
 export default {
   async fetch(
@@ -18,9 +19,12 @@ export default {
       AdminEnv &
       AdPlacementsEnv &
       TaxonomyEnv &
-      ListingAttributesEnv,
+      ListingAttributesEnv &
+      SystemControlsEnv,
   ): Promise<Response> {
     const url = new URL(request.url);
+    const systemControlResponse = await handleSystemControls(request, env);
+    if (systemControlResponse) return systemControlResponse;
     const attributeResponse = await handleListingAttributes(request, env);
     if (attributeResponse) return attributeResponse;
     const taxonomyResponse = await handleTaxonomy(request, env);
