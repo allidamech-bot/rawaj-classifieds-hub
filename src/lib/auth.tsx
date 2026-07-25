@@ -55,6 +55,39 @@ async function toAuthSession(user: FirebaseUser): Promise<AuthSession> {
   };
 }
 
+function fallbackProfile(user: AuthUser): UserProfile {
+  const displayName =
+    user.user_metadata.display_name?.trim() ||
+    user.user_metadata.full_name?.trim() ||
+    user.email?.split("@", 1)[0]?.trim() ||
+    "حساب رواج";
+  const now = new Date().toISOString();
+  return {
+    id: user.id,
+    email: user.email ?? "",
+    firstName: null,
+    lastName: null,
+    displayName,
+    businessName: null,
+    bio: null,
+    governorate: null,
+    cityArea: null,
+    phone: null,
+    whatsapp: null,
+    preferredContactMethod: null,
+    verificationStatus: "unverified",
+    accountStatus: "active",
+    role: "user",
+    roles: ["user"],
+    avatarPath: null,
+    avatarUrl: user.user_metadata.avatar_url ?? user.user_metadata.picture ?? null,
+    coverPath: null,
+    coverUrl: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -76,15 +109,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const nextSession = await toAuthSession(firebaseUser);
       if (requestId !== loadRequestIdRef.current) return { error: null };
       setSession(nextSession);
-      const nextProfile = await loadCloudflareUserProfile(nextSession.user);
-      if (requestId !== loadRequestIdRef.current) return { error: null };
-      setProfile(nextProfile);
       setStatus("signedIn");
       setReason(null);
+
+      try {
+        const nextProfile = await loadCloudflareUserProfile(nextSession.user);
+        if (requestId !== loadRequestIdRef.current) return { error: null };
+        setProfile(nextProfile);
+      } catch (error) {
+        if (requestId !== loadRequestIdRef.current) return { error: null };
+        const message = error instanceof Error ? error.message : "تعذر تحميل بيانات الحساب.";
+        console.error("rawaj_profile_bootstrap_failed", message);
+        setProfile(fallbackProfile(nextSession.user));
+        setReason(message);
+      }
+
       return { error: null };
     } catch (error) {
       if (requestId !== loadRequestIdRef.current) return { error: null };
-      const message = error instanceof Error ? error.message : "تعذر تحميل بيانات الحساب.";
+      const message = error instanceof Error ? error.message : "تعذر إكمال تسجيل الدخول.";
+      setSession(null);
       setProfile(null);
       setStatus("authError");
       setReason(message);
