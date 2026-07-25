@@ -4,6 +4,7 @@ import { handlePublicSellers, type PublicSellersEnv } from "./public-sellers";
 import type { AuthEnv } from "./auth";
 import { handleMarketplacePrivate, type MarketplaceEnv } from "./marketplace-private";
 import { handleAccountSocial, type AccountSocialEnv } from "./account-social";
+import { handleNotifications, type NotificationsEnv } from "./notifications";
 import { handleAdmin, type AdminEnv } from "./admin";
 import { handleAdPlacements, type AdPlacementsEnv } from "./ad-placements";
 import { handleTaxonomy, type TaxonomyEnv } from "./taxonomy";
@@ -15,6 +16,7 @@ type EntryEnv = PublicListingsEnv &
   AuthEnv &
   MarketplaceEnv &
   AccountSocialEnv &
+  NotificationsEnv &
   AdminEnv &
   AdPlacementsEnv &
   TaxonomyEnv &
@@ -40,6 +42,7 @@ export default {
       (await handleTaxonomy(request, env)) ??
       (await handleAdPlacements(request, env)) ??
       (await handleAdmin(request, env)) ??
+      (await handleNotifications(request, env)) ??
       (await handleAccountSocial(request, env)) ??
       (await handleMarketplacePrivate(request, env)) ??
       (await handlePublicSellers(request, env)) ??
