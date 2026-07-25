@@ -36,23 +36,55 @@ export default {
       return new Response(null, { status: 204, headers: cors });
     }
 
-    const url = new URL(request.url);
+    const requestId = crypto.randomUUID();
 
-    const response =
-      (await handleSystemControls(request, env)) ??
-      (await handleListingAttributes(request, env)) ??
-      (await handleTaxonomy(request, env)) ??
-      (await handleAdPlacements(request, env)) ??
-      (await handleAdmin(request, env)) ??
-      (await handleNotifications(request, env)) ??
-      (await handleAccountSocial(request, env)) ??
-      (await handleMarketplacePrivate(request, env)) ??
-      (await handlePublicSellers(request, env)) ??
-      (request.method === "GET" && url.pathname === "/v1/listings"
-        ? await handlePublicListingsRequest(request, env)
-        : await baseWorker.fetch(request, env as never));
+    try {
+      const url = new URL(request.url);
+      const response =
+        (await handleSystemControls(request, env)) ??
+        (await handleListingAttributes(request, env)) ??
+        (await handleTaxonomy(request, env)) ??
+        (await handleAdPlacements(request, env)) ??
+        (await handleAdmin(request, env)) ??
+        (await handleNotifications(request, env)) ??
+        (await handleAccountSocial(request, env)) ??
+        (await handleMarketplacePrivate(request, env)) ??
+        (await handlePublicSellers(request, env)) ??
+        (request.method === "GET" && url.pathname === "/v1/listings"
+          ? await handlePublicListingsRequest(request, env)
+          : await baseWorker.fetch(request, env as never));
 
-    return withCors(response, cors);
+      const headers = new Headers(cors);
+      headers.set("X-Request-Id", requestId);
+      return withCors(response, headers);
+    } catch (error) {
+      console.error(
+        JSON.stringify({
+          event: "worker_unhandled_exception",
+          requestId,
+          method: request.method,
+          pathname: new URL(request.url).pathname,
+          errorName: error instanceof Error ? error.name : "UnknownError",
+          errorMessage: error instanceof Error ? error.message : String(error),
+        }),
+      );
+
+      const headers = new Headers(cors);
+      headers.set("Content-Type", "application/json; charset=utf-8");
+      headers.set("Cache-Control", "no-store");
+      headers.set("X-Request-Id", requestId);
+
+      return new Response(
+        JSON.stringify({
+          error: {
+            code: "internal_error",
+            message: "حدث خطأ داخلي في خدمة رواج.",
+            requestId,
+          },
+        }),
+        { status: 500, headers },
+      );
+    }
   },
 };
 
