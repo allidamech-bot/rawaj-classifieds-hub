@@ -1,5 +1,10 @@
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
-import { supabase } from "@/lib/supabase";
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+} from "firebase/auth";
+import { firebaseAuth } from "@/lib/firebase";
 
 export async function changeOwnPassword(
   currentPassword: string,
@@ -15,33 +20,53 @@ export async function changeOwnPassword(
     };
   }
 
-  if (!supabase) {
-    return {
-      ok: false,
-      error: { code: "unknown", message: "خدمة الحسابات غير متاحة مؤقتًا." },
-    };
-  }
-  const session = await supabase.auth.getSession();
-  const email = session.data.session?.user.email;
-  if (!email) {
+  const user = firebaseAuth.currentUser;
+  const email = user?.email;
+  if (!user || !email) {
     return {
       ok: false,
       error: { code: "permission_denied", message: "تسجيل الدخول مطلوب." },
     };
   }
-  const verified = await supabase.auth.signInWithPassword({ email, password: currentPassword });
-  if (verified.error) {
-    return {
-      ok: false,
-      error: {
-        code: "permission_denied",
-        message: verified.error.message,
-      },
-    };
+
+  try {
+    const credential = EmailAuthProvider.credential(email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+    await updatePassword(user, newPassword);
+    return { ok: true, data: null };
+  } catch (error) {
+    const source = error as { code?: unknown; message?: unknown };
+    const code = typeof source.code === "string" ? source.code : "";
+    const message = typeof source.message === "string" ? source.message : "تعذر تغيير كلمة المرور.";
+
+    if (
+      code === "auth/invalid-credential" ||
+      code === "auth/wrong-password" ||
+      code === "auth/user-mismatch"
+    ) {
+      return {
+        ok: false,
+        error: { code: "permission_denied", message: "كلمة المرور الحالية غير صحيحة." },
+      };
+    }
+
+    if (code === "auth/requires-recent-login") {
+      return {
+        ok: false,
+        error: {
+          code: "permission_denied",
+          message: "أعد تسجيل الدخول ثم حاول تغيير كلمة المرور مرة أخرى.",
+        },
+      };
+    }
+
+    if (code === "auth/weak-password") {
+      return {
+        ok: false,
+        error: { code: "validation_error", message: "كلمة المرور الجديدة ضعيفة." },
+      };
+    }
+
+    return { ok: false, error: { code: "unknown", message } };
   }
-  const updated = await supabase.auth.updateUser({ password: newPassword });
-  if (updated.error) {
-    return { ok: false, error: { code: "unknown", message: updated.error.message } };
-  }
-  return { ok: true, data: null };
 }
