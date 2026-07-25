@@ -1,4 +1,8 @@
-import type { ClassifiedsResult, PublicSellerProfile } from "@/lib/classifieds-types";
+import type {
+  ClassifiedsResult,
+  PublicSellerProfile,
+  PublicSellerSearchResult,
+} from "@/lib/classifieds-types";
 import { requireCloudflarePublicApiBaseUrl } from "@/lib/public-data/config";
 
 interface ApiEnvelope<T> {
@@ -14,22 +18,70 @@ export async function fetchCloudflarePublicSellerProfile(
     return { ok: false, error: { code: "validation_error", message: "تعذر تحديد البائع." } };
   }
 
+  const result = await requestJson<PublicSellerProfile>(
+    `/v1/sellers/${encodeURIComponent(cleanId)}`,
+    "cloudflare_public_seller_read",
+  );
+  if (!result.ok) return result;
+
   const base = requireCloudflarePublicApiBaseUrl();
   if (!base.ok) return base;
+  return {
+    ok: true,
+    data: {
+      ...result.data,
+      avatarUrl: absoluteUrl(result.data.avatarUrl, base.data),
+      coverUrl: absoluteUrl(result.data.coverUrl, base.data),
+      listings: result.data.listings.map((listing) => ({
+        ...listing,
+        primaryImageUrl: absoluteUrl(listing.primaryImageUrl ?? null, base.data),
+      })),
+    },
+  };
+}
 
-  const url = new URL(`/v1/sellers/${encodeURIComponent(cleanId)}`, `${base.data}/`);
+export async function searchCloudflarePublicSellers(
+  query: string,
+  limit = 8,
+): Promise<ClassifiedsResult<PublicSellerSearchResult[]>> {
+  const cleanQuery = query.trim();
+  if (cleanQuery.length < 2) return { ok: true, data: [] };
+  const boundedLimit = Math.max(1, Math.min(Math.floor(limit), 20));
+  const result = await requestJson<PublicSellerSearchResult[]>(
+    `/v1/sellers?q=${encodeURIComponent(cleanQuery)}&limit=${boundedLimit}`,
+    "cloudflare_public_seller_search",
+  );
+  if (!result.ok) return result;
+
+  const base = requireCloudflarePublicApiBaseUrl();
+  if (!base.ok) return base;
+  return {
+    ok: true,
+    data: result.data.map((seller) => ({
+      ...seller,
+      avatarUrl: absoluteUrl(seller.avatarUrl, base.data),
+    })),
+  };
+}
+
+async function requestJson<T>(
+  path: string,
+  operation: string,
+): Promise<ClassifiedsResult<T>> {
+  const base = requireCloudflarePublicApiBaseUrl();
+  if (!base.ok) return base;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12_000);
 
   try {
-    const response = await fetch(url, {
+    const response = await fetch(new URL(path, `${base.data}/`), {
       method: "GET",
       headers: { Accept: "application/json" },
       credentials: "omit",
       signal: controller.signal,
     });
-    const payload = (await response.json().catch(() => null)) as ApiEnvelope<PublicSellerProfile> | null;
-    if (!response.ok || !payload?.data) {
+    const payload = (await response.json().catch(() => null)) as ApiEnvelope<T> | null;
+    if (!response.ok || payload?.data === undefined) {
       return {
         ok: false,
         error: {
@@ -41,25 +93,13 @@ export async function fetchCloudflarePublicSellerProfile(
                 : response.status === 503
                   ? "setup_required"
                   : "unknown",
-          message: payload?.error?.message?.trim() || "تعذر تحميل ملف البائع.",
+          message: payload?.error?.message?.trim() || "تعذر تحميل بيانات البائع.",
           details: payload?.error?.details,
-          operation: "cloudflare_public_seller_read",
+          operation,
         },
       };
     }
-
-    return {
-      ok: true,
-      data: {
-        ...payload.data,
-        avatarUrl: absoluteUrl(payload.data.avatarUrl, base.data),
-        coverUrl: absoluteUrl(payload.data.coverUrl, base.data),
-        listings: payload.data.listings.map((listing) => ({
-          ...listing,
-          primaryImageUrl: absoluteUrl(listing.primaryImageUrl ?? null, base.data),
-        })),
-      },
-    };
+    return { ok: true, data: payload.data };
   } catch (error) {
     return {
       ok: false,
@@ -67,7 +107,7 @@ export async function fetchCloudflarePublicSellerProfile(
         code: "unknown",
         message: "تعذر الاتصال بخدمة بيانات رَوَاج.",
         details: error instanceof Error ? error.message : String(error),
-        operation: "cloudflare_public_seller_read",
+        operation,
       },
     };
   } finally {
