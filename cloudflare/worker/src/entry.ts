@@ -6,6 +6,7 @@ import { handleAccountSocial, type AccountSocialEnv } from "./account-social";
 import { handleAdmin, type AdminEnv } from "./admin";
 import { handleAdPlacements, type AdPlacementsEnv } from "./ad-placements";
 import { handleTaxonomy, type TaxonomyEnv } from "./taxonomy";
+import { handleListingAttributes, type ListingAttributesEnv } from "./listing-attributes";
 
 export default {
   async fetch(
@@ -16,9 +17,12 @@ export default {
       AccountSocialEnv &
       AdminEnv &
       AdPlacementsEnv &
-      TaxonomyEnv,
+      TaxonomyEnv &
+      ListingAttributesEnv,
   ): Promise<Response> {
     const url = new URL(request.url);
+    const attributeResponse = await handleListingAttributes(request, env);
+    if (attributeResponse) return attributeResponse;
     const taxonomyResponse = await handleTaxonomy(request, env);
     if (taxonomyResponse) return taxonomyResponse;
     const adPlacementResponse = await handleAdPlacements(request, env);
