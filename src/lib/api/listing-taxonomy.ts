@@ -1,6 +1,8 @@
-import type { ClassifiedsResult } from "@/lib/classifieds-types";
+import type { ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
 import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
 import { getClient, mapError } from "@/lib/api/shared";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 export interface ListingTaxonomyAssignment {
   listingId: string;
@@ -11,10 +13,13 @@ export interface ListingTaxonomyAssignment {
 
 function mapAssignment(row: Record<string, unknown>): ListingTaxonomyAssignment {
   return {
-    listingId: String(row.listing_id ?? ""),
-    taxonomyNodeId: String(row.taxonomy_node_id ?? ""),
-    assignmentSource: row.assignment_source === "explicit" ? "explicit" : "legacy_derived",
-    updatedAt: String(row.updated_at ?? ""),
+    listingId: String(row.listing_id ?? row.listingId ?? ""),
+    taxonomyNodeId: String(row.taxonomy_node_id ?? row.taxonomyNodeId ?? ""),
+    assignmentSource:
+      row.assignment_source === "explicit" || row.assignmentSource === "explicit"
+        ? "explicit"
+        : "legacy_derived",
+    updatedAt: String(row.updated_at ?? row.updatedAt ?? ""),
   };
 }
 
@@ -27,6 +32,18 @@ export async function fetchPublicListingTaxonomyAssignment(
       ok: false,
       error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
     };
+  }
+
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<ListingTaxonomyAssignment | null>(
+      `/v1/listings/${encodeURIComponent(normalizedListingId)}/taxonomy`,
+    );
+    return result.ok
+      ? { ok: true, data: result.data }
+      : {
+          ok: false,
+          error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+        };
   }
 
   const clientResult = getClient();
@@ -79,6 +96,18 @@ export async function fetchOwnerListingTaxonomyAssignment(
     };
   }
 
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<ListingTaxonomyAssignment | null>(
+      `/v1/listings/${encodeURIComponent(normalizedListingId)}/taxonomy`,
+    );
+    return result.ok
+      ? { ok: true, data: result.data }
+      : {
+          ok: false,
+          error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+        };
+  }
+
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
@@ -112,6 +141,19 @@ export async function assignOwnerListingTaxonomy(
       ok: false,
       error: { code: "validation_error", message: "اختر التصنيف النهائي للإعلان." },
     };
+  }
+
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<ListingTaxonomyAssignment>(
+      `/v1/listings/${encodeURIComponent(normalizedListingId)}/taxonomy`,
+      { method: "PUT", body: { taxonomyNodeId: normalizedNodeId } },
+    );
+    return result.ok
+      ? { ok: true, data: result.data }
+      : {
+          ok: false,
+          error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+        };
   }
 
   const clientResult = getClient();
