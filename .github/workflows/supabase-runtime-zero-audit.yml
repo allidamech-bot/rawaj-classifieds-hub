@@ -1,0 +1,27 @@
+name: Supabase Runtime Zero Audit
+
+on:
+  push:
+    branches:
+      - feature/cloudflare-full-backend-cutover
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Generate complete runtime inventory
+        run: node scripts/supabase-runtime-zero-audit.mjs | tee supabase-runtime-inventory.json
+      - name: Upload inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-runtime-inventory
+          path: supabase-runtime-inventory.json
+          if-no-files-found: error
