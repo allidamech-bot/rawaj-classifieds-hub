@@ -18,7 +18,10 @@ import {
   rowNumber,
   rowString,
 } from "@/lib/api/shared";
-import { fetchCloudflarePublicSellerProfile } from "@/lib/api/seller-cloudflare";
+import {
+  fetchCloudflarePublicSellerProfile,
+  searchCloudflarePublicSellers,
+} from "@/lib/api/seller-cloudflare";
 import { sanitizePublicListing } from "@/lib/public-listing-presentation";
 import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 import { publicSellerProfileSelect } from "@/lib/profile-dto";
@@ -209,6 +212,9 @@ export async function searchPublicSellers(
 ): Promise<ClassifiedsResult<PublicSellerSearchResult[]>> {
   const cleanQuery = query.trim();
   if (cleanQuery.length < 2) return { ok: true, data: [] };
+  if (isCloudflarePublicDataProvider()) {
+    return searchCloudflarePublicSellers(cleanQuery, limit);
+  }
 
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
