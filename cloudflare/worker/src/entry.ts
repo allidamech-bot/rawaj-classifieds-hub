@@ -5,6 +5,7 @@ import { handleMarketplacePrivate, type MarketplaceEnv } from "./marketplace-pri
 import { handleAccountSocial, type AccountSocialEnv } from "./account-social";
 import { handleAdmin, type AdminEnv } from "./admin";
 import { handleAdPlacements, type AdPlacementsEnv } from "./ad-placements";
+import { handleListingTaxonomy, type ListingTaxonomyEnv } from "./listing-taxonomy";
 
 export default {
   async fetch(
@@ -14,9 +15,12 @@ export default {
       MarketplaceEnv &
       AccountSocialEnv &
       AdminEnv &
-      AdPlacementsEnv,
+      AdPlacementsEnv &
+      ListingTaxonomyEnv,
   ): Promise<Response> {
     const url = new URL(request.url);
+    const taxonomyResponse = await handleListingTaxonomy(request, env);
+    if (taxonomyResponse) return taxonomyResponse;
     const adPlacementResponse = await handleAdPlacements(request, env);
     if (adPlacementResponse) return adPlacementResponse;
     const adminResponse = await handleAdmin(request, env);
