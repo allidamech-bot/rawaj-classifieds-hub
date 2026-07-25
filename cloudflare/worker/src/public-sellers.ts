@@ -25,15 +25,26 @@ export interface PublicSellersEnv {
 const LISTING_LIMIT = 24;
 const REVIEW_DISPLAY_LIMIT = 6;
 const REVIEW_SUMMARY_LIMIT = 500;
+const SELLER_SEARCH_LIMIT = 20;
 
 export async function handlePublicSellers(
   request: Request,
   env: PublicSellersEnv,
 ): Promise<Response | null> {
   const url = new URL(request.url);
+
+  if (url.pathname === "/v1/sellers") {
+    if (request.method !== "GET") {
+      return json({ error: { code: "method_not_allowed", message: "Method not allowed." } }, 405);
+    }
+    return searchPublicSellers(url, env);
+  }
+
   const match = url.pathname.match(/^\/v1\/sellers\/([^/]+)$/);
   if (!match) return null;
-  if (request.method !== "GET") return json({ error: { code: "method_not_allowed", message: "Method not allowed." } }, 405);
+  if (request.method !== "GET") {
+    return json({ error: { code: "method_not_allowed", message: "Method not allowed." } }, 405);
+  }
 
   const sellerId = decodeURIComponent(match[1]).trim();
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sellerId)) {
@@ -123,6 +134,61 @@ export async function handlePublicSellers(
         reviewDisplayLimit: REVIEW_DISPLAY_LIMIT,
         listings: listingRows.map((row) => mapListing(row, requestOrigin)),
       },
+    },
+    200,
+    cacheHeaders(env),
+  );
+}
+
+async function searchPublicSellers(url: URL, env: PublicSellersEnv): Promise<Response> {
+  const query = cleanText(url.searchParams.get("q"), 120);
+  if (!query || query.length < 2) return json({ data: [] }, 200, cacheHeaders(env));
+  const requestedLimit = Number.parseInt(url.searchParams.get("limit") ?? "8", 10);
+  const limit = Number.isFinite(requestedLimit)
+    ? Math.max(1, Math.min(requestedLimit, SELLER_SEARCH_LIMIT))
+    : 8;
+  const pattern = `%${escapeLike(query.toLowerCase())}%`;
+  const result = await env.DB.prepare(
+    `SELECT p.id, p.display_name, p.first_name, p.last_name, p.business_name,
+      p.governorate, p.bio, p.avatar_asset_id,
+      COUNT(l.id) AS approved_listing_count
+     FROM public_profiles p
+     JOIN listings l ON l.owner_id = p.id
+       AND l.status = 'approved'
+       AND l.archived_at IS NULL
+       AND (l.expires_at IS NULL OR l.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+     WHERE p.account_status = 'active'
+       AND (
+         lower(COALESCE(p.display_name, '')) LIKE ? ESCAPE '\\'
+         OR lower(COALESCE(p.business_name, '')) LIKE ? ESCAPE '\\'
+         OR lower(COALESCE(p.first_name, '') || ' ' || COALESCE(p.last_name, '')) LIKE ? ESCAPE '\\'
+       )
+     GROUP BY p.id
+     ORDER BY approved_listing_count DESC, p.updated_at DESC, p.id ASC
+     LIMIT ?`,
+  )
+    .bind(pattern, pattern, pattern, limit)
+    .all<Row>();
+
+  if (!result.success) {
+    console.error("rawaj_public_seller_search_database_error", result.error);
+    return json({ error: { code: "database_unavailable", message: "Data service unavailable." } }, 503);
+  }
+
+  return json(
+    {
+      data: (result.results ?? []).map((row) => ({
+        id: stringValue(row.id),
+        displayName:
+          cleanText(row.display_name, 120) ?? cleanText(row.business_name, 120) ?? "معلن على رواج",
+        firstName: cleanText(row.first_name, 80),
+        lastName: cleanText(row.last_name, 80),
+        businessName: cleanText(row.business_name, 120),
+        governorate: cleanText(row.governorate, 120),
+        bio: cleanText(row.bio, 500),
+        avatarUrl: mediaUrl(url.origin, row.avatar_asset_id),
+        approvedListingCount: Math.max(0, numberValue(row.approved_listing_count)),
+      })),
     },
     200,
     cacheHeaders(env),
@@ -264,4 +330,8 @@ function jsonObject(value: unknown): Row {
   } catch {
     return {};
   }
+}
+
+function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, "\\$&");
 }
