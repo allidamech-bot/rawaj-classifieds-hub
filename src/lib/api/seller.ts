@@ -18,7 +18,9 @@ import {
   rowNumber,
   rowString,
 } from "@/lib/api/shared";
+import { fetchCloudflarePublicSellerProfile } from "@/lib/api/seller-cloudflare";
 import { sanitizePublicListing } from "@/lib/public-listing-presentation";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 import { publicSellerProfileSelect } from "@/lib/profile-dto";
 import {
   buildPublicSellerRatingSummary,
@@ -33,6 +35,10 @@ import {
 export async function fetchPublicSellerProfile(
   sellerId: string,
 ): Promise<ClassifiedsResult<PublicSellerProfile>> {
+  if (isCloudflarePublicDataProvider()) {
+    return fetchCloudflarePublicSellerProfile(sellerId);
+  }
+
   const clientResult = getClient();
   if (!clientResult.ok) return clientResult;
 
