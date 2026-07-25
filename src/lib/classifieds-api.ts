@@ -1,7 +1,7 @@
 import {
   ownerSaveAdPlacement as ownerSaveAdPlacementBase,
   ownerDeleteAdPlacement as ownerDeleteAdPlacementBase,
-} from "@/lib/api/ad-placements";
+} from "@/lib/api/ad-placements-cloudflare";
 import { invalidateActiveAdPlacementCache } from "@/lib/api/public-ad-placements";
 
 export * from "@/lib/api/shared";
@@ -51,7 +51,7 @@ export * from "@/lib/api/admin";
 export * from "@/lib/api/admin-users";
 export * from "@/lib/api/admin-operations";
 export * from "@/lib/api/admin-listing-moderation-guarded";
-export * from "@/lib/api/ad-placements";
+export * from "@/lib/api/ad-placements-cloudflare";
 export * from "@/lib/api/campaigns";
 export * from "@/lib/api/safety-cases";
 export * from "@/lib/api/safety-case-details";
