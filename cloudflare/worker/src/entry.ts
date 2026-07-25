@@ -1,4 +1,4 @@
-import baseWorker from "./index";
+import { handlePublicCore, type PublicCoreEnv } from "./index";
 import { handlePublicListingsRequest, type PublicListingsEnv } from "./public-listings";
 import { handlePublicSellers, type PublicSellersEnv } from "./public-sellers";
 import type { AuthEnv } from "./auth";
@@ -10,8 +10,17 @@ import { handleAdPlacements, type AdPlacementsEnv } from "./ad-placements";
 import { handleTaxonomy, type TaxonomyEnv } from "./taxonomy";
 import { handleListingAttributes, type ListingAttributesEnv } from "./listing-attributes";
 import { handleSystemControls, type SystemControlsEnv } from "./system-controls";
+import { handleVerification, type VerificationEnv } from "./verification";
+import { handleTrustSupport, type TrustSupportEnv } from "./trust-support";
+import { handleListingOperations, type ListingOperationsEnv } from "./listing-operations";
+import { handleDiscovery, type DiscoveryEnv } from "./discovery";
+import { handleAdminCampaigns, type AdminCampaignsEnv } from "./admin-campaigns";
+import { handleAdminSafety, type AdminSafetyEnv } from "./admin-safety";
+import { handleAdminTaxonomyReview, type AdminTaxonomyReviewEnv } from "./admin-taxonomy-review";
+import { handleAdminDataQuality, type AdminDataQualityEnv } from "./admin-data-quality";
 
-type EntryEnv = PublicListingsEnv &
+type EntryEnv = PublicCoreEnv &
+  PublicListingsEnv &
   PublicSellersEnv &
   AuthEnv &
   MarketplaceEnv &
@@ -21,7 +30,15 @@ type EntryEnv = PublicListingsEnv &
   AdPlacementsEnv &
   TaxonomyEnv &
   ListingAttributesEnv &
-  SystemControlsEnv & {
+  SystemControlsEnv &
+  VerificationEnv &
+  TrustSupportEnv &
+  ListingOperationsEnv &
+  DiscoveryEnv &
+  AdminCampaignsEnv &
+  AdminSafetyEnv &
+  AdminTaxonomyReviewEnv &
+  AdminDataQualityEnv & {
     API_ALLOWED_ORIGINS?: string;
   };
 
@@ -80,22 +97,53 @@ async function routeRequest(request: Request, env: EntryEnv): Promise<Response> 
   const url = new URL(request.url);
   const path = url.pathname;
 
-  if (/^\/v1\/system-controls\b/.test(path)) {
+  if (path === "/v1/admin/system-controls") {
     return required(await handleSystemControls(request, env));
   }
-  if (/^\/v1\/listing-attributes\b/.test(path)) {
+  if (/^\/v1\/listings\/[^/]+\/attributes(?:\/completeness)?$/.test(path)) {
     return required(await handleListingAttributes(request, env));
   }
-  if (/^\/v1\/taxonomy\b/.test(path)) {
+  if (
+    /^\/v1\/taxonomy(?:\/|$)/.test(path) ||
+    /^\/v1\/vehicles(?:\/|$)/.test(path) ||
+    /^\/v1\/listings\/[^/]+\/taxonomy$/.test(path)
+  ) {
     return required(await handleTaxonomy(request, env));
   }
-  if (/^\/v1\/ad-placements\b/.test(path)) {
+  if (/^\/v1\/admin\/ad-placements(?:\/|$)/.test(path)) {
     return required(await handleAdPlacements(request, env));
+  }
+  if (/^\/v1\/(?:account\/verifications|admin\/verifications)(?:\/|$)/.test(path)) {
+    return required(await handleVerification(request, env));
+  }
+  if (isTrustSupportPath(path)) {
+    return required(await handleTrustSupport(request, env));
+  }
+  if (isListingOperationsPath(path)) {
+    return required(await handleListingOperations(request, env));
+  }
+  if (isDiscoveryPath(path)) {
+    return required(await handleDiscovery(request, env));
+  }
+  if (/^\/v1\/admin\/campaigns(?:\/|$)/.test(path)) {
+    return required(await handleAdminCampaigns(request, env));
+  }
+  if (/^\/v1\/admin\/safety(?:\/|$)/.test(path)) {
+    return required(await handleAdminSafety(request, env));
+  }
+  if (/^\/v1\/admin\/(?:taxonomy-mappings|vehicle-references)(?:\/|$)/.test(path)) {
+    return required(await handleAdminTaxonomyReview(request, env));
+  }
+  if (/^\/v1\/admin\/data-quality(?:\/|$)/.test(path)) {
+    return required(await handleAdminDataQuality(request, env));
+  }
+  if (/^\/v1\/admin\/message-reports(?:\/|$)/.test(path)) {
+    return required(await handleAccountSocial(request, env));
   }
   if (/^\/v1\/admin\b/.test(path)) {
     return required(await handleAdmin(request, env));
   }
-  if (/^\/v1\/(?:account\/)?notifications\b/.test(path)) {
+  if (/^\/v1\/account\/(?:notifications|notification-preferences|push-devices)\b/.test(path)) {
     return required(await handleNotifications(request, env));
   }
   if (isAccountSocialPath(path)) {
@@ -111,29 +159,91 @@ async function routeRequest(request: Request, env: EntryEnv): Promise<Response> 
     return handlePublicListingsRequest(request, env);
   }
 
-  return baseWorker.fetch(request, env as never);
+  if (isPublicCorePath(path)) {
+    return required(await handlePublicCore(request, env));
+  }
+
+  return new Response(
+    JSON.stringify({ error: { code: "not_found", message: "Resource not found." } }),
+    { status: 404, headers: { "Content-Type": "application/json; charset=utf-8" } },
+  );
+}
+
+
+function isPublicCorePath(path: string): boolean {
+  return (
+    path === "/v1/health" ||
+    path === "/v1/references" ||
+    path === "/v1/ad-placements" ||
+    /^\/v1\/locations(?:\/|$)/.test(path) ||
+    /^\/v1\/media\/assets\/[^/]+$/.test(path) ||
+    (requestMethodIndependentListingDetail(path))
+  );
+}
+
+function requestMethodIndependentListingDetail(path: string): boolean {
+  return /^\/v1\/listings\/[^/]+$/.test(path);
+}
+
+function isDiscoveryPath(path: string): boolean {
+  return (
+    path === "/v1/listing-facets" ||
+    path === "/v1/listings/nearby" ||
+    /^\/v1\/sitemap\//.test(path)
+  );
+}
+
+function isListingOperationsPath(path: string): boolean {
+  return (
+    /^\/v1\/listings\/[^/]+\/(?:lifecycle|price-context)$/.test(path) ||
+    path === "/v1/account/listings/expiry-reminders/scan" ||
+    path === "/v1/offers/price-drops" ||
+    /^\/v1\/(?:account|admin)\/promotions(?:\/|$)/.test(path) ||
+    /^\/v1\/admin\/promotion-receipts\//.test(path)
+  );
+}
+
+function isTrustSupportPath(path: string): boolean {
+  return (
+    /^\/v1\/account\/support-requests(?:\/|$)/.test(path) ||
+    /^\/v1\/listings\/[^/]+\/reports$/.test(path) ||
+    /^\/v1\/sellers\/[^/]+\/(?:review-eligibility|reviews)$/.test(path) ||
+    /^\/v1\/reviews\/[^/]+\/(?:response|reports)$/.test(path) ||
+    /^\/v1\/admin\/(?:listing-reports|seller-reviews|seller-review-reports)(?:\/|$)/.test(path)
+  );
 }
 
 function isAccountSocialPath(path: string): boolean {
   return (
     path === "/v1/account/favorites" ||
+    path === "/v1/account/recent-views" ||
+    path === "/v1/account/followed-sellers" ||
     path === "/v1/account/saved-searches" ||
     /^\/v1\/account\/saved-searches\//.test(path) ||
+    /^\/v1\/account\/recent-views\//.test(path) ||
     path === "/v1/account/conversations" ||
     path === "/v1/account/messages/unread-count" ||
+    /^\/v1\/account\/chat-media\//.test(path) ||
     path === "/v1/conversations" ||
     /^\/v1\/conversations\//.test(path) ||
-    /^\/v1\/listings\/[^/]+\/favorite$/.test(path)
+    /^\/v1\/messages\/[^/]+\/report$/.test(path) ||
+    /^\/v1\/admin\/message-reports(?:\/|$)/.test(path) ||
+    /^\/v1\/listings\/[^/]+\/(?:favorite|recent-view)$/.test(path) ||
+    /^\/v1\/sellers\/[^/]+\/follow$/.test(path)
   );
 }
 
 function isMarketplacePrivatePath(path: string, method: string): boolean {
-  if (path === "/api/profile" || path === "/v1/profile") return true;
-  if (/^\/v1\/account\/(?:listings|media)\b/.test(path)) return true;
-  if (/^\/v1\/listing-images\//.test(path)) return true;
-  if (/^\/v1\/listings\/[^/]+\/images$/.test(path)) return true;
-  if (/^\/v1\/listings\/[^/]+$/.test(path) && method !== "GET") return true;
-  return path === "/v1/listings" && method !== "GET";
+  const normalizedPath = path.replace(/^\/api\b/, "/v1");
+  if (normalizedPath === "/v1/profile" || normalizedPath === "/v1/profile/media") return true;
+  if (/^\/v1\/profile\/media\/(?:avatar|cover)$/.test(normalizedPath)) return true;
+  if (/^\/v1\/account\/(?:listings|media)\b/.test(normalizedPath)) return true;
+  if (/^\/v1\/listing-images\//.test(normalizedPath)) return true;
+  if (/^\/v1\/listings\/[^/]+\/images$/.test(normalizedPath)) return true;
+  if (/^\/v1\/listings\/[^/]+$/.test(normalizedPath)) {
+    return path.startsWith("/api/") || method !== "GET";
+  }
+  return normalizedPath === "/v1/listings" && (path.startsWith("/api/") || method !== "GET");
 }
 
 function required(response: Response | null): Response {

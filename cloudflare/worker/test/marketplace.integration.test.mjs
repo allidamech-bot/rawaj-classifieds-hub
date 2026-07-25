@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { createSupabaseAuthFixture } from "./supabase-auth-fixture.mjs";
+import { createFirebaseAuthFixture } from "./firebase-auth-fixture.mjs";
 
 const port = 8792;
 const baseUrl = `http://127.0.0.1:${port}`;
@@ -17,7 +17,7 @@ let imageId;
 let auth;
 
 before(async () => {
-  auth = await createSupabaseAuthFixture();
+  auth = await createFirebaseAuthFixture();
   worker = spawn(
     process.execPath,
     [

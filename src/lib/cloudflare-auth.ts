@@ -11,6 +11,47 @@ export function cloudflareApiUrl(path: string): string {
   return base.ok ? new URL(path, `${base.data}/`).toString() : path;
 }
 
+export async function cloudflareAuthorizedFetch(
+  path: string,
+  init: { method?: string; body?: BodyInit | null; headers?: Record<string, string> } = {},
+): Promise<Response | null> {
+  const base = requireCloudflarePublicApiBaseUrl();
+  if (!base.ok) return null;
+  const currentUser = firebaseAuth.currentUser;
+  const initialToken = currentUser ? await currentUser.getIdToken() : null;
+  const first = await sendAuthorizedFetch(base.data, path, init, initialToken);
+  if (first?.status !== 401 || !currentUser) return first;
+  try {
+    const refreshedToken = await currentUser.getIdToken(true);
+    return await sendAuthorizedFetch(base.data, path, init, refreshedToken);
+  } catch {
+    await firebaseAuth.signOut().catch(() => undefined);
+    return first;
+  }
+}
+
+async function sendAuthorizedFetch(
+  base: string,
+  path: string,
+  init: { method?: string; body?: BodyInit | null; headers?: Record<string, string> },
+  accessToken: string | null,
+): Promise<Response | null> {
+  try {
+    return await fetch(new URL(path, `${base}/`), {
+      method: init.method ?? "GET",
+      credentials: "omit",
+      headers: {
+        Accept: "*/*",
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...(init.headers ?? {}),
+      },
+      body: init.body ?? undefined,
+    });
+  } catch {
+    return null;
+  }
+}
+
 export async function cloudflareApiRequest<T>(
   path: string,
   init: { method?: string; body?: Record<string, unknown> | FormData } = {},
@@ -158,6 +199,8 @@ export async function loadCloudflareUserProfile(user: AuthUser): Promise<UserPro
     verificationStatus: UserProfile["verificationStatus"];
     accountStatus: UserProfile["accountStatus"];
     roles?: UserProfile["roles"];
+    avatarUrl?: string | null;
+    coverUrl?: string | null;
     createdAt: string | null;
     updatedAt: string | null;
   }>("/api/profile");
@@ -186,8 +229,8 @@ export async function loadCloudflareUserProfile(user: AuthUser): Promise<UserPro
     role,
     roles,
     avatarPath: null,
-    avatarUrl: null,
+    avatarUrl: result.data.avatarUrl ? cloudflareApiUrl(result.data.avatarUrl) : null,
     coverPath: null,
-    coverUrl: null,
+    coverUrl: result.data.coverUrl ? cloudflareApiUrl(result.data.coverUrl) : null,
   };
 }

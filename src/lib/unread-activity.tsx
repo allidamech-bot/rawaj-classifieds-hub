@@ -10,10 +10,8 @@ import {
 } from "react";
 import { fetchMyConversations } from "@/lib/api/messaging";
 import { fetchUnreadNotificationsCount } from "@/lib/api/notifications";
-import { getClient } from "@/lib/api/shared";
 import { UNREAD_ACTIVITY_CHANGED_EVENT } from "@/lib/unread-activity-events";
 import { useAuth } from "@/lib/use-auth";
-import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 export interface UnreadActivityCounts {
   messages: number;
@@ -38,7 +36,6 @@ const EMPTY_COUNTS: UnreadActivityCounts = {
   total: 0,
 };
 
-const UNREAD_ACTIVITY_EVENT_DEBOUNCE_MS = 250;
 
 const UnreadActivityContext = createContext<UnreadActivityContextValue>({
   counts: EMPTY_COUNTS,
@@ -130,65 +127,16 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId || typeof window === "undefined") return;
 
-    if (isCloudflarePublicDataProvider()) {
-      const refreshWhenVisible = () => {
-        if (document.visibilityState === "visible" && navigator.onLine !== false) {
-          void refresh();
-        }
-      };
-      const interval = window.setInterval(refreshWhenVisible, 30_000);
-      document.addEventListener("visibilitychange", refreshWhenVisible);
-      return () => {
-        window.clearInterval(interval);
-        document.removeEventListener("visibilitychange", refreshWhenVisible);
-      };
-    }
-
-    const clientResult = getClient();
-    if (!clientResult.ok) return;
-
-    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
-    const scheduleRefresh = () => {
-      if (document.visibilityState === "hidden" || navigator.onLine === false) return;
-      if (refreshTimer !== null) clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(() => void refresh(), UNREAD_ACTIVITY_EVENT_DEBOUNCE_MS);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible" && navigator.onLine !== false) {
+        void refresh();
+      }
     };
-
-    const channel = clientResult.data
-      .channel(`rawaj-unread-activity:${profileId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "notifications",
-          filter: `recipient_id=eq.${profileId}`,
-        },
-        scheduleRefresh,
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "conversation_messages",
-        },
-        scheduleRefresh,
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "conversations",
-        },
-        scheduleRefresh,
-      )
-      .subscribe();
-
+    const interval = window.setInterval(refreshWhenVisible, 30_000);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
     return () => {
-      if (refreshTimer !== null) clearTimeout(refreshTimer);
-      void clientResult.data.removeChannel(channel);
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
   }, [auth.status, profileId, refresh]);
 

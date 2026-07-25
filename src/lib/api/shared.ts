@@ -1,37 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { getSupabaseAuthUnavailableReason, supabase } from "@/lib/supabase";
-import type { ClassifiedsError, ClassifiedsResult } from "@/lib/classifieds-types";
+import type { ClassifiedsError } from "@/lib/classifieds-types";
 import type { PlaceholderType } from "@/types";
-
-export function getClient(): ClassifiedsResult<SupabaseClient> {
-  if (!supabase) {
-    return {
-      ok: false,
-      error: {
-        code: "supabase_unconfigured",
-        message: getSupabaseAuthUnavailableReason() ?? "تعذر الاتصال بالخدمة الآن. حاول مرة أخرى.",
-      },
-    };
-  }
-
-  return { ok: true, data: supabase };
-}
-
-export async function getAuthenticatedUserId(
-  client: SupabaseClient,
-): Promise<ClassifiedsResult<string>> {
-  const { data, error } = await client.auth.getUser();
-  if (error || !data.user?.id) {
-    return {
-      ok: false,
-      error: {
-        code: "auth_required",
-        message: "يجب تسجيل الدخول لإكمال هذا الإجراء.",
-      },
-    };
-  }
-  return { ok: true, data: data.user.id };
-}
 
 export function mapError(
   error: { code?: string; message?: string; details?: string },

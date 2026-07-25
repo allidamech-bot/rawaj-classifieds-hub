@@ -1,14 +1,6 @@
-import {
-  getClient,
-  mapError,
-  rowArray,
-  rowBoolean,
-  rowNullableString,
-  rowNumber,
-  rowString,
-} from "@/lib/api/shared";
-import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import type { AdPlacementPage } from "@/lib/api/ad-placements";
+import type { ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 
 export type CampaignStatus = "draft" | "active" | "paused" | "ended";
 
@@ -50,69 +42,42 @@ let creativeReadGeneration = 0;
 const campaignMutationInFlight = new Set<string>();
 const creativeMutationInFlight = new Set<string>();
 
-function staleReadResult<T>(operation: string): ClassifiedsResult<T> {
-  return {
-    ok: false,
-    error: { code: "unknown", message: "", operation },
-  };
+function denied<T>(): ClassifiedsResult<T> {
+  return { ok: false, error: { code: "permission_denied", message: "إدارة الحملات متاحة للمالك فقط." } };
 }
-
-function operationInProgressResult<T>(message: string, operation: string): ClassifiedsResult<T> {
-  return {
-    ok: false,
-    error: { code: "unknown", message, operation },
-  };
+function staleRead<T>(operation: string): ClassifiedsResult<T> {
+  return { ok: false, error: { code: "unknown", message: "", operation } };
+}
+function inProgress<T>(message: string, operation: string): ClassifiedsResult<T> {
+  return { ok: false, error: { code: "unknown", message, operation } };
+}
+function fromApi<T>(result: Awaited<ReturnType<typeof cloudflareApiRequest<T>>>): ClassifiedsResult<T> {
+  return result.ok
+    ? { ok: true, data: result.data }
+    : { ok: false, error: { code: result.code as ClassifiedsErrorCode, message: result.error } };
 }
 
 export async function ownerFetchCampaigns(
   canManageCampaigns: boolean,
 ): Promise<ClassifiedsResult<CampaignSummary[]>> {
-  if (!canManageCampaigns) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "إدارة الحملات متاحة للمالك فقط." },
-    };
-  }
-
-  const requestGeneration = ++campaignReadGeneration;
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const { data, error } = await clientResult.data.rpc("rawaj_owner_list_campaigns");
-  if (requestGeneration !== campaignReadGeneration) {
-    return staleReadResult("admin_campaign_list_stale_read");
-  }
-  if (error) return { ok: false, error: mapError(error) };
-  return {
-    ok: true,
-    data: ((data ?? []) as Record<string, unknown>[]).map(mapCampaign),
-  };
+  if (!canManageCampaigns) return denied();
+  const generation = ++campaignReadGeneration;
+  const result = await cloudflareApiRequest<CampaignSummary[]>("/v1/admin/campaigns");
+  if (generation !== campaignReadGeneration) return staleRead("admin_campaign_list_stale_read");
+  return fromApi(result);
 }
 
 export async function ownerFetchCampaignCreatives(
   canManageCampaigns: boolean,
   campaignId: string,
 ): Promise<ClassifiedsResult<CampaignCreativeSummary[]>> {
-  if (!canManageCampaigns) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "إدارة الحملات متاحة للمالك فقط." },
-    };
-  }
-
-  const requestGeneration = ++creativeReadGeneration;
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const { data, error } = await clientResult.data.rpc("rawaj_owner_list_campaign_creatives", {
-    p_campaign_id: campaignId,
-  });
-  if (requestGeneration !== creativeReadGeneration) {
-    return staleReadResult("admin_campaign_creatives_stale_read");
-  }
-  if (error) return { ok: false, error: mapError(error) };
-  return {
-    ok: true,
-    data: ((data ?? []) as Record<string, unknown>[]).map(mapCreative),
-  };
+  if (!canManageCampaigns) return denied();
+  const generation = ++creativeReadGeneration;
+  const result = await cloudflareApiRequest<CampaignCreativeSummary[]>(
+    `/v1/admin/campaigns/${encodeURIComponent(campaignId)}/creatives`,
+  );
+  if (generation !== creativeReadGeneration) return staleRead("admin_campaign_creatives_stale_read");
+  return fromApi(result);
 }
 
 export async function ownerSaveCampaign(
@@ -128,56 +93,33 @@ export async function ownerSaveCampaign(
     expectedVersion?: number | null;
   },
 ): Promise<ClassifiedsResult<{ id: string; version: number; updatedAt: string }>> {
-  if (!canManageCampaigns) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "إدارة الحملات متاحة للمالك فقط." },
-    };
+  if (!canManageCampaigns) return denied();
+  if (payload.name.trim().length < 2) {
+    return { ok: false, error: { code: "validation_error", message: "أدخل اسماً واضحاً للحملة." } };
   }
-
-  const name = payload.name.trim();
-  if (name.length < 2) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "أدخل اسماً واضحاً للحملة." },
-    };
-  }
-
-  const operationKey = `campaign:${payload.id || "new"}`;
-  if (campaignMutationInFlight.has(operationKey)) {
-    return operationInProgressResult(
-      "حفظ الحملة قيد التنفيذ بالفعل.",
-      "admin_campaign_save_in_progress",
-    );
-  }
-  campaignMutationInFlight.add(operationKey);
-
+  const key = `campaign:${payload.id || "new"}`;
+  if (campaignMutationInFlight.has(key)) return inProgress("حفظ الحملة قيد التنفيذ بالفعل.", "admin_campaign_save_in_progress");
+  campaignMutationInFlight.add(key);
   try {
-    const clientResult = getClient();
-    if (!clientResult.ok) return clientResult;
-    const { data, error } = await clientResult.data.rpc("rawaj_owner_upsert_campaign", {
-      p_id: payload.id || null,
-      p_name: name,
-      p_status: payload.status,
-      p_starts_at: payload.startsAt || null,
-      p_ends_at: payload.endsAt || null,
-      p_target_pages: payload.targetPages,
-      p_target_category_ids: payload.targetCategoryIds.map((value) => value.trim()).filter(Boolean),
-      p_expected_version: payload.id ? (payload.expectedVersion ?? null) : null,
-    });
-
-    if (error) {
-      if (error.message?.includes("stale_campaign")) {
-        return {
-          ok: false,
-          error: { code: "unknown", message: "تغيّرت الحملة منذ تحميلها. أعد التحميل قبل الحفظ." },
-        };
-      }
-      return { ok: false, error: mapError(error) };
-    }
-    return mapMutationResult(data);
+    return fromApi(
+      await cloudflareApiRequest<{ id: string; version: number; updatedAt: string }>(
+        payload.id ? `/v1/admin/campaigns/${encodeURIComponent(payload.id)}` : "/v1/admin/campaigns",
+        {
+          method: payload.id ? "PATCH" : "POST",
+          body: {
+            name: payload.name.trim(),
+            status: payload.status,
+            startsAt: payload.startsAt ?? null,
+            endsAt: payload.endsAt ?? null,
+            targetPages: payload.targetPages,
+            targetCategoryIds: payload.targetCategoryIds.map((value) => value.trim()).filter(Boolean),
+            expectedVersion: payload.id ? (payload.expectedVersion ?? null) : undefined,
+          },
+        },
+      ),
+    );
   } finally {
-    campaignMutationInFlight.delete(operationKey);
+    campaignMutationInFlight.delete(key);
   }
 }
 
@@ -185,53 +127,22 @@ export async function ownerSetCampaignStatus(
   canManageCampaigns: boolean,
   payload: { id: string; status: CampaignStatus; expectedVersion: number; reason: string },
 ): Promise<ClassifiedsResult<{ id: string; version: number; updatedAt: string }>> {
-  if (!canManageCampaigns) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "إدارة الحملات متاحة للمالك فقط." },
-    };
+  if (!canManageCampaigns) return denied();
+  if (payload.reason.trim().length < 3) {
+    return { ok: false, error: { code: "validation_error", message: "أدخل سبباً واضحاً لتغيير الحالة." } };
   }
-  const reason = payload.reason.trim();
-  if (reason.length < 3) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "أدخل سبباً واضحاً لتغيير الحالة." },
-    };
-  }
-
-  const operationKey = `campaign:${payload.id}`;
-  if (campaignMutationInFlight.has(operationKey)) {
-    return operationInProgressResult(
-      "هناك عملية أخرى قيد التنفيذ على هذه الحملة.",
-      "admin_campaign_status_in_progress",
-    );
-  }
-  campaignMutationInFlight.add(operationKey);
-
+  const key = `campaign:${payload.id}`;
+  if (campaignMutationInFlight.has(key)) return inProgress("هناك عملية أخرى قيد التنفيذ على هذه الحملة.", "admin_campaign_status_in_progress");
+  campaignMutationInFlight.add(key);
   try {
-    const clientResult = getClient();
-    if (!clientResult.ok) return clientResult;
-    const { data, error } = await clientResult.data.rpc("rawaj_owner_set_campaign_status", {
-      p_id: payload.id,
-      p_status: payload.status,
-      p_expected_version: payload.expectedVersion,
-      p_reason: reason,
-    });
-    if (error) {
-      if (error.message?.includes("stale_campaign")) {
-        return {
-          ok: false,
-          error: {
-            code: "unknown",
-            message: "تغيّرت الحملة منذ تحميلها. أعد التحميل قبل تغيير الحالة.",
-          },
-        };
-      }
-      return { ok: false, error: mapError(error) };
-    }
-    return mapMutationResult(data);
+    return fromApi(
+      await cloudflareApiRequest<{ id: string; version: number; updatedAt: string }>(
+        `/v1/admin/campaigns/${encodeURIComponent(payload.id)}/status`,
+        { method: "PATCH", body: payload },
+      ),
+    );
   } finally {
-    campaignMutationInFlight.delete(operationKey);
+    campaignMutationInFlight.delete(key);
   }
 }
 
@@ -248,118 +159,31 @@ export async function ownerSaveCampaignCreative(
     expectedVersion?: number | null;
   },
 ): Promise<ClassifiedsResult<{ id: string; version: number; updatedAt: string }>> {
-  if (!canManageCampaigns) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "إدارة الحملات متاحة للمالك فقط." },
-    };
+  if (!canManageCampaigns) return denied();
+  if (!payload.campaignId || payload.name.trim().length < 2 || !payload.imageUrl.trim() || !payload.destinationUrl.trim()) {
+    return { ok: false, error: { code: "validation_error", message: "أدخل الحملة واسم التصميم والصورة ورابط الوجهة." } };
   }
-
-  if (
-    !payload.campaignId ||
-    payload.name.trim().length < 2 ||
-    !payload.imageUrl.trim() ||
-    !payload.destinationUrl.trim()
-  ) {
-    return {
-      ok: false,
-      error: {
-        code: "validation_error",
-        message: "أدخل الحملة واسم التصميم والصورة ورابط الوجهة.",
-      },
-    };
-  }
-
-  const operationKey = `creative:${payload.id || `${payload.campaignId}:new`}`;
-  if (creativeMutationInFlight.has(operationKey)) {
-    return operationInProgressResult(
-      "حفظ التصميم الإعلاني قيد التنفيذ بالفعل.",
-      "admin_campaign_creative_save_in_progress",
-    );
-  }
-  creativeMutationInFlight.add(operationKey);
-
+  const key = `creative:${payload.id || `${payload.campaignId}:new`}`;
+  if (creativeMutationInFlight.has(key)) return inProgress("حفظ التصميم الإعلاني قيد التنفيذ بالفعل.", "admin_campaign_creative_save_in_progress");
+  creativeMutationInFlight.add(key);
   try {
-    const clientResult = getClient();
-    if (!clientResult.ok) return clientResult;
-    const { data, error } = await clientResult.data.rpc("rawaj_owner_upsert_campaign_creative", {
-      p_id: payload.id || null,
-      p_campaign_id: payload.campaignId,
-      p_name: payload.name.trim(),
-      p_image_url: payload.imageUrl.trim(),
-      p_destination_url: payload.destinationUrl.trim(),
-      p_weight: payload.weight,
-      p_is_active: payload.isActive,
-      p_expected_version: payload.id ? (payload.expectedVersion ?? null) : null,
-    });
-    if (error) {
-      if (error.message?.includes("stale_campaign_creative")) {
-        return {
-          ok: false,
-          error: { code: "unknown", message: "تغيّر التصميم منذ تحميله. أعد التحميل قبل الحفظ." },
-        };
-      }
-      return { ok: false, error: mapError(error) };
-    }
-    return mapMutationResult(data);
+    const path = payload.id
+      ? `/v1/admin/campaigns/${encodeURIComponent(payload.campaignId)}/creatives/${encodeURIComponent(payload.id)}`
+      : `/v1/admin/campaigns/${encodeURIComponent(payload.campaignId)}/creatives`;
+    return fromApi(
+      await cloudflareApiRequest<{ id: string; version: number; updatedAt: string }>(path, {
+        method: payload.id ? "PATCH" : "POST",
+        body: {
+          name: payload.name.trim(),
+          imageUrl: payload.imageUrl.trim(),
+          destinationUrl: payload.destinationUrl.trim(),
+          weight: payload.weight,
+          isActive: payload.isActive,
+          expectedVersion: payload.id ? (payload.expectedVersion ?? null) : undefined,
+        },
+      }),
+    );
   } finally {
-    creativeMutationInFlight.delete(operationKey);
+    creativeMutationInFlight.delete(key);
   }
-}
-
-function mapMutationResult(
-  data: unknown,
-): ClassifiedsResult<{ id: string; version: number; updatedAt: string }> {
-  const row = ((data ?? []) as Record<string, unknown>[])[0];
-  if (!row) {
-    return {
-      ok: false,
-      error: { code: "unknown", message: "تم تنفيذ الطلب دون نتيجة قابلة للتحقق." },
-    };
-  }
-  return {
-    ok: true,
-    data: {
-      id: rowString(row, "id"),
-      version: rowNumber(row, "version"),
-      updatedAt: rowString(row, "updated_at"),
-    },
-  };
-}
-
-function mapCampaign(row: Record<string, unknown>): CampaignSummary {
-  return {
-    id: rowString(row, "id"),
-    name: rowString(row, "name"),
-    status: rowString(row, "status", "draft") as CampaignStatus,
-    startsAt: rowNullableString(row, "starts_at"),
-    endsAt: rowNullableString(row, "ends_at"),
-    targetPages: rowArray(row, "target_pages") as AdPlacementPage[],
-    targetCategoryIds: rowArray(row, "target_category_ids"),
-    version: rowNumber(row, "version"),
-    createdAt: rowString(row, "created_at"),
-    updatedAt: rowString(row, "updated_at"),
-    creativeCount: rowNumber(row, "creative_count"),
-    impressions: rowNumber(row, "impressions"),
-    clicks: rowNumber(row, "clicks"),
-    ctr: rowNumber(row, "ctr"),
-  };
-}
-
-function mapCreative(row: Record<string, unknown>): CampaignCreativeSummary {
-  return {
-    id: rowString(row, "id"),
-    campaignId: rowString(row, "campaign_id"),
-    name: rowString(row, "name"),
-    imageUrl: rowString(row, "image_url"),
-    destinationUrl: rowString(row, "destination_url"),
-    weight: rowNumber(row, "weight"),
-    isActive: rowBoolean(row, "is_active"),
-    version: rowNumber(row, "version"),
-    createdAt: rowString(row, "created_at"),
-    updatedAt: rowString(row, "updated_at"),
-    impressions: rowNumber(row, "impressions"),
-    clicks: rowNumber(row, "clicks"),
-    ctr: rowNumber(row, "ctr"),
-  };
 }

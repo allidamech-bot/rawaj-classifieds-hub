@@ -1,12 +1,5 @@
-import {
-  getAuthenticatedUserId,
-  getClient,
-  mapError,
-  rowBoolean,
-  rowNullableString,
-  rowString,
-} from "@/lib/api/shared";
-import type { ClassifiedsResult } from "@/lib/classifieds-types";
+import type { ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 
 export interface PushChannelStatus {
   pushEnabled: boolean;
@@ -30,31 +23,10 @@ export async function fetchPushChannelStatus(
 ): Promise<ClassifiedsResult<PushChannelStatus>> {
   const cleanDeviceKey = normalizeDeviceKey(deviceKey);
   if (!cleanDeviceKey) return validationError("تعذر تحديد هذا الجهاز.");
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const actorResult = await getAuthenticatedUserId(clientResult.data);
-  if (!actorResult.ok) return actorResult;
-
-  const { data, error } = await clientResult.data.rpc("rawaj_get_push_channel_status_v1", {
-    p_device_key: cleanDeviceKey,
-  });
-  if (error) return { ok: false, error: mapError(error) };
-
-  const row = Array.isArray(data) ? (data[0] as Record<string, unknown> | undefined) : undefined;
-  if (!row) return { ok: true, data: emptyPushStatus() };
-  const permission = rowString(row, "permission_status", "prompt");
-  const platform = rowString(row, "platform", "android");
-  return {
-    ok: true,
-    data: {
-      pushEnabled: rowBoolean(row, "push_enabled", false),
-      registered: rowBoolean(row, "registered", false),
-      permissionStatus: permission === "granted" || permission === "denied" ? permission : "prompt",
-      platform: platform === "ios" || platform === "web" ? platform : "android",
-      lastSeenAt: rowNullableString(row, "last_seen_at"),
-    },
-  };
+  const result = await cloudflareApiRequest<PushChannelStatus>(
+    `/v1/account/push-devices/status?deviceKey=${encodeURIComponent(cleanDeviceKey)}`,
+  );
+  return result.ok ? { ok: true, data: normalizeStatus(result.data) } : apiFailure(result);
 }
 
 export async function registerPushDevice(
@@ -65,22 +37,18 @@ export async function registerPushDevice(
   if (!deviceKey || deviceToken.length < 20 || deviceToken.length > 4096) {
     return validationError("تعذر تسجيل هذا الجهاز للإشعارات.");
   }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const actorResult = await getAuthenticatedUserId(clientResult.data);
-  if (!actorResult.ok) return actorResult;
-
-  const { data, error } = await clientResult.data.rpc("rawaj_upsert_push_device_v1", {
-    p_device_key: deviceKey,
-    p_device_token: deviceToken,
-    p_platform: normalizePlatform(payload.platform),
-    p_permission_status: normalizePermission(payload.permissionStatus),
-    p_app_version: payload.appVersion?.trim().slice(0, 80) || null,
-    p_locale: payload.locale?.trim().slice(0, 20) || null,
+  const result = await cloudflareApiRequest<string>("/v1/account/push-devices", {
+    method: "POST",
+    body: {
+      deviceKey,
+      deviceToken,
+      platform: normalizePlatform(payload.platform),
+      permissionStatus: normalizePermission(payload.permissionStatus),
+      appVersion: payload.appVersion?.trim().slice(0, 80) || null,
+      locale: payload.locale?.trim().slice(0, 20) || null,
+    },
   });
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: typeof data === "string" ? data : "" };
+  return result.ok ? { ok: true, data: result.data } : apiFailure(result);
 }
 
 export async function disablePushDevice(
@@ -89,43 +57,38 @@ export async function disablePushDevice(
 ): Promise<ClassifiedsResult<boolean>> {
   const cleanDeviceKey = normalizeDeviceKey(deviceKey);
   if (!cleanDeviceKey) return validationError("تعذر تحديد هذا الجهاز.");
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const actorResult = await getAuthenticatedUserId(clientResult.data);
-  if (!actorResult.ok) return actorResult;
-
-  const { data, error } = await clientResult.data.rpc("rawaj_disable_push_device_v1", {
-    p_device_key: cleanDeviceKey,
-    p_disable_channel: disableChannel,
-  });
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: data === true };
+  const result = await cloudflareApiRequest<boolean>(
+    `/v1/account/push-devices/${encodeURIComponent(cleanDeviceKey)}?disableChannel=${disableChannel}`,
+    { method: "DELETE" },
+  );
+  return result.ok ? { ok: true, data: result.data === true } : apiFailure(result);
 }
 
 function normalizeDeviceKey(value: string): string | null {
   const clean = value.trim();
   return clean.length >= 8 && clean.length <= 200 ? clean : null;
 }
-
 function normalizePlatform(value: string): "android" | "ios" | "web" {
   return value === "ios" || value === "web" ? value : "android";
 }
-
 function normalizePermission(value: string): "granted" | "denied" | "prompt" {
   return value === "granted" || value === "denied" ? value : "prompt";
 }
-
-function emptyPushStatus(): PushChannelStatus {
+function normalizeStatus(value: PushChannelStatus): PushChannelStatus {
   return {
-    pushEnabled: false,
-    registered: false,
-    permissionStatus: "prompt",
-    platform: "android",
-    lastSeenAt: null,
+    pushEnabled: Boolean(value.pushEnabled),
+    registered: Boolean(value.registered),
+    permissionStatus: normalizePermission(value.permissionStatus),
+    platform: normalizePlatform(value.platform),
+    lastSeenAt: typeof value.lastSeenAt === "string" ? value.lastSeenAt : null,
   };
 }
-
 function validationError<T>(message: string): ClassifiedsResult<T> {
   return { ok: false, error: { code: "validation_error", message } };
+}
+function apiFailure<T>(result: { ok: false; error: string; code: string }): ClassifiedsResult<T> {
+  return {
+    ok: false,
+    error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+  };
 }

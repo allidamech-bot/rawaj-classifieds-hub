@@ -1,7 +1,7 @@
 import type { PluginListenerHandle } from "@capacitor/core";
 import { disablePushDevice, registerPushDevice } from "@/lib/api/push-notifications";
-import { getAuthenticatedUserId, getClient } from "@/lib/api/shared";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
+import { firebaseAuth } from "@/lib/firebase";
 import { notificationOpenPath } from "@/lib/notification-target-path";
 import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
 
@@ -300,9 +300,13 @@ async function clearNativePushListeners(): Promise<void> {
 }
 
 async function currentPushAccount(): Promise<ClassifiedsResult<string>> {
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  return getAuthenticatedUserId(clientResult.data);
+  const userId = firebaseAuth.currentUser?.uid?.trim();
+  return userId
+    ? { ok: true, data: userId }
+    : {
+        ok: false,
+        error: { code: "auth_required", message: "يجب تسجيل الدخول لإدارة الإشعارات الفورية." },
+      };
 }
 
 function stalePushAccountError<T>(): ClassifiedsResult<T> {

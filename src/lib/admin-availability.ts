@@ -1,27 +1,24 @@
-import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
-
 export const CLOUDFLARE_ADMIN_MODULES = {
   "/admin": true,
   "/admin/pending": true,
   "/admin/listings": true,
-  "/admin/data-quality": false,
-  "/admin/reviews": false,
-  "/admin/reports": false,
-  "/admin/message-reports": false,
-  "/admin/safety": false,
-  "/admin/verifications": false,
+  "/admin/data-quality": true,
+  "/admin/reviews": true,
+  "/admin/reports": true,
+  "/admin/message-reports": true,
+  "/admin/safety": true,
+  "/admin/verifications": true,
   "/admin/users": true,
-  "/admin/promotions": false,
-  "/admin/ad-placements": false,
-  "/admin/campaigns": false,
+  "/admin/promotions": true,
+  "/admin/ad-placements": true,
+  "/admin/campaigns": true,
   "/admin/audit": true,
-  "/admin/owner-controls": false,
+  "/admin/owner-controls": true,
 } as const;
 
 export type AdminModulePath = keyof typeof CLOUDFLARE_ADMIN_MODULES;
 
 export function isAdminModuleAvailable(pathname: string): boolean {
-  if (!isCloudflarePublicDataProvider()) return true;
   const match = Object.keys(CLOUDFLARE_ADMIN_MODULES).find(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
@@ -29,10 +26,6 @@ export function isAdminModuleAvailable(pathname: string): boolean {
   return CLOUDFLARE_ADMIN_MODULES[match as AdminModulePath];
 }
 
-export function getUnavailableAdminModuleMessage(pathname: string): string {
-  const match = Object.keys(CLOUDFLARE_ADMIN_MODULES).find(
-    (path) => pathname === path || pathname.startsWith(`${path}/`),
-  );
-  if (!match) return "هذه الوحدة غير متاحة حالياً في وضع Cloudflare.";
-  return "هذه الوحدة لا تزال migrate إلى البنية الجديدة وستتاح قريباً.";
+export function getUnavailableAdminModuleMessage(_pathname?: string): string {
+  return "هذه الوحدة غير متاحة مؤقتاً.";
 }

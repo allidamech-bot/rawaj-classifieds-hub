@@ -103,7 +103,121 @@ export async function requireMutationAuth(
       cors,
     );
   }
+
+  const path = normalizeApiPath(new URL(request.url).pathname);
+  if (path === "/v1/admin/system-controls") return auth;
+
+  const blocked = await blockedMutationControl(request, env);
+  if (blocked) return systemControlResponse(blocked, cors);
   return auth;
+}
+
+type MutationControlKey =
+  | "freeze_new_listings"
+  | "freeze_new_messages"
+  | "freeze_promotions"
+  | "freeze_verifications"
+  | "maintenance_mode"
+  | "emergency_read_only";
+
+type ActiveMutationControl = {
+  key: MutationControlKey;
+  reason: string;
+};
+
+async function blockedMutationControl(
+  request: Request,
+  env: AuthEnv,
+): Promise<ActiveMutationControl | null> {
+  let result: D1Result<{ key: MutationControlKey; reason: string }>;
+  try {
+    result = await env.DB.prepare(
+      `SELECT key, reason
+         FROM system_controls
+        WHERE enabled = 1`,
+    ).all<{ key: MutationControlKey; reason: string }>();
+  } catch (error) {
+    console.error("rawaj_system_control_lookup_failed", error);
+    return { key: "emergency_read_only", reason: "تعذر التحقق من حالة النظام بأمان." };
+  }
+
+  if (!result.success) {
+    console.error("rawaj_system_control_lookup_failed", result.error ?? "unknown_error");
+    return { key: "emergency_read_only", reason: "تعذر التحقق من حالة النظام بأمان." };
+  }
+
+  const active = new Map<MutationControlKey, string>();
+  for (const row of result.results ?? []) {
+    if (isMutationControlKey(row.key)) active.set(row.key, cleanControlReason(row.reason));
+  }
+
+  for (const key of ["emergency_read_only", "maintenance_mode"] as const) {
+    if (active.has(key)) return { key, reason: active.get(key) ?? "" };
+  }
+
+  const scoped = scopedMutationControl(request);
+  return scoped && active.has(scoped) ? { key: scoped, reason: active.get(scoped) ?? "" } : null;
+}
+
+function scopedMutationControl(request: Request): MutationControlKey | null {
+  const method = request.method.toUpperCase();
+  const path = normalizeApiPath(new URL(request.url).pathname);
+
+  if (method === "POST" && path === "/v1/listings") return "freeze_new_listings";
+  if (
+    method === "POST" &&
+    (path === "/v1/conversations" ||
+      /^\/v1\/conversations\/[^/]+\/(?:messages|attachments)$/.test(path))
+  ) {
+    return "freeze_new_messages";
+  }
+  if (method === "POST" && path === "/v1/account/promotions") return "freeze_promotions";
+  if (method === "POST" && path === "/v1/account/verifications") return "freeze_verifications";
+  return null;
+}
+
+function normalizeApiPath(pathname: string): string {
+  return pathname.replace(/^\/api\b/, "/v1");
+}
+
+function isMutationControlKey(value: unknown): value is MutationControlKey {
+  return (
+    value === "freeze_new_listings" ||
+    value === "freeze_new_messages" ||
+    value === "freeze_promotions" ||
+    value === "freeze_verifications" ||
+    value === "maintenance_mode" ||
+    value === "emergency_read_only"
+  );
+}
+
+function cleanControlReason(value: unknown): string {
+  return typeof value === "string" ? value.trim().slice(0, 1000) : "";
+}
+
+function systemControlResponse(control: ActiveMutationControl, cors: Headers): Response {
+  const headers = new Headers(cors);
+  headers.set("Retry-After", "60");
+  const messages: Record<MutationControlKey, string> = {
+    freeze_new_listings: "تم إيقاف إنشاء الإعلانات الجديدة مؤقتًا.",
+    freeze_new_messages: "تم إيقاف إرسال الرسائل والمرفقات مؤقتًا.",
+    freeze_promotions: "تم إيقاف طلبات الترويج الجديدة مؤقتًا.",
+    freeze_verifications: "تم إيقاف طلبات التوثيق الجديدة مؤقتًا.",
+    maintenance_mode: "الخدمة تحت الصيانة حاليًا. حاول مرة أخرى لاحقًا.",
+    emergency_read_only: "الخدمة في وضع القراءة فقط حاليًا.",
+  };
+  return json(
+    {
+      error: {
+        code: "system_control_active",
+        message: control.reason || messages[control.key],
+        control: control.key,
+        retryable: true,
+      },
+    },
+    503,
+    headers,
+  );
 }
 
 export async function verifyFirebaseIdToken(
@@ -161,7 +275,7 @@ async function ensureApplicationIdentity(
   if (
     existingSameId &&
     (!existingSameId.auth_user_id ||
-      (existingSameId.auth_provider === "supabase" &&
+      (existingSameId.auth_provider === "legacy_import" &&
         existingSameId.auth_user_id === identity.subject))
   ) {
     const result = await env.DB.prepare(

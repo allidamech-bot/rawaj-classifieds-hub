@@ -1,6 +1,6 @@
 import type {
   AdminSellerVerificationRequest,
-  ClassifiedsError,
+  ClassifiedsErrorCode,
   ClassifiedsResult,
   CreateSellerVerificationRequestPayload,
   ModerateSellerVerificationRequestPayload,
@@ -9,24 +9,16 @@ import type {
   VerificationRequestStatus,
 } from "@/lib/classifieds-types";
 import {
-  accountSessionStillMatches,
-  resolveAuthenticatedAccountId,
-} from "@/lib/api/account-identity";
-import {
-  getClient,
-  mapError,
-  mapStorageError,
-  rowNullableString,
-  rowString,
-} from "@/lib/api/shared";
+  cloudflareApiRequest,
+  cloudflareAuthorizedFetch,
+} from "@/lib/cloudflare-auth";
 
-export const verificationDocumentsBucket = "verification-documents";
+/** Compatibility name only; verification documents are private R2 objects. */
+export const verificationDocumentsBucket = "r2-private-verification-documents";
 const verificationDocumentMaxBytes = 10 * 1024 * 1024;
-const verificationDocumentSignedUrlSeconds = 120;
-const ownerVerificationRequestSelect =
-  "id,status,request_type,legal_name,business_name,document_type,reviewed_at,created_at,updated_at";
-const adminVerificationRequestSelect =
-  "id,user_id,status,request_type,legal_name,business_name,document_type,document_path,admin_note,reviewed_by,reviewed_at,created_at,updated_at";
+const verificationRequestIds = new WeakMap<File, string>();
+const verificationDocumentUrls = new Map<string, { url: string; expiresAt: number }>();
+const documentObjectUrlTtlMs = 2 * 60_000;
 const verificationDocumentExtensions: Record<string, readonly string[]> = {
   "image/jpeg": ["jpg", "jpeg"],
   "image/png": ["png"],
@@ -34,18 +26,18 @@ const verificationDocumentExtensions: Record<string, readonly string[]> = {
   "application/pdf": ["pdf"],
 };
 
+type ApiFailure = { ok: false; error: string; code: string };
+
 export async function createMyVerificationRequest(
   payload: CreateSellerVerificationRequestPayload,
 ): Promise<ClassifiedsResult<SellerVerificationRequest>> {
-  if (!(["personal", "business"] as const).includes(payload.requestType)) {
+  if (!( ["personal", "business"] as const).includes(payload.requestType)) {
     return invalidVerificationInput("نوع طلب التوثيق غير مدعوم.");
   }
-
   const legalName = normalizePrivateName(payload.legalName);
   if (legalName.length < 3 || legalName.length > 120) {
     return invalidVerificationInput("اكتب الاسم القانوني بين 3 و120 حرفاً.");
   }
-
   const businessName = normalizePrivateName(payload.businessName) || null;
   if (
     payload.requestType === "business" &&
@@ -53,66 +45,30 @@ export async function createMyVerificationRequest(
   ) {
     return invalidVerificationInput("اكتب اسم المنشأة القانوني بين 3 و120 حرفاً.");
   }
-
   const fileValidation = validateVerificationDocumentFile(payload.documentFile);
   if (!fileValidation.ok) return fileValidation;
   if (!documentTypeMatchesRequest(payload.requestType, payload.documentType)) {
     return invalidVerificationInput("نوع المستند لا يطابق نوع طلب التوثيق.");
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const client = clientResult.data;
-  const actor = await resolveAuthenticatedAccountId(client, "my_verification_create_auth");
-  if (!actor.ok) return actor;
+  const requestId =
+    verificationRequestIds.get(payload.documentFile) ?? crypto.randomUUID();
+  verificationRequestIds.set(payload.documentFile, requestId);
+  const form = new FormData();
+  form.set("requestId", requestId);
+  form.set("requestType", payload.requestType);
+  form.set("legalName", legalName);
+  form.set("businessName", payload.requestType === "business" ? businessName ?? "" : "");
+  form.set("documentType", payload.documentType);
+  form.set("file", payload.documentFile, payload.documentFile.name);
 
-  const requestId = crypto.randomUUID();
-  const storagePath = buildVerificationDocumentPath(actor.data, requestId, payload.documentFile);
-  const uploadResult = await client.storage
-    .from(verificationDocumentsBucket)
-    .upload(storagePath, payload.documentFile, {
-      cacheControl: "0",
-      contentType: payload.documentFile.type,
-      upsert: false,
-    });
-  if (uploadResult.error) return { ok: false, error: mapStorageError(uploadResult.error) };
-
-  const session = await accountSessionStillMatches(
-    client,
-    actor.data,
-    "my_verification_upload_stale_guard",
+  const result = await cloudflareApiRequest<Record<string, unknown>>(
+    "/v1/account/verifications",
+    { method: "POST", body: form },
   );
-  if (!session.ok) {
-    await cleanupUnattachedVerificationDocument(storagePath);
-    return session;
-  }
-
-  const { data, error } = await client.rpc("rawaj_create_verification_request_v2", {
-    p_request_id: requestId,
-    p_request_type: payload.requestType,
-    p_legal_name: legalName,
-    p_business_name: payload.requestType === "business" ? businessName : null,
-    p_document_type: payload.documentType,
-    p_document_path: storagePath,
-  });
-
-  if (error) {
-    await cleanupUnattachedVerificationDocument(storagePath);
-    return { ok: false, error: mapVerificationCreationError(error) };
-  }
-
-  const row = Array.isArray(data) ? data[0] : data;
-  if (!row || typeof row !== "object") {
-    return {
-      ok: false,
-      error: {
-        code: "unknown",
-        message: "تم إرسال طلب التوثيق دون نتيجة قابلة للتحقق.",
-      },
-    };
-  }
-
-  return { ok: true, data: mapOwnerVerificationRequest(row as Record<string, unknown>) };
+  return result.ok
+    ? { ok: true, data: mapOwnerVerificationRequest(result.data) }
+    : apiFailure(result, "my_verification_create");
 }
 
 export const createSellerVerificationRequest = createMyVerificationRequest;
@@ -120,66 +76,24 @@ export const createSellerVerificationRequest = createMyVerificationRequest;
 export async function fetchMyVerificationRequests(): Promise<
   ClassifiedsResult<SellerVerificationRequest[]>
 > {
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const actor = await resolveAuthenticatedAccountId(
-    clientResult.data,
-    "my_verification_history_auth",
+  const result = await cloudflareApiRequest<Record<string, unknown>[]>(
+    "/v1/account/verifications",
   );
-  if (!actor.ok) return actor;
-
-  const rpcResult = await clientResult.data.rpc("rawaj_fetch_my_verification_requests");
-  if (!rpcResult.error) {
-    return {
-      ok: true,
-      data: ((rpcResult.data ?? []) as Record<string, unknown>[]).map(mapOwnerVerificationRequest),
-    };
-  }
-  if (!isMissingVerificationIntegrityRpc(rpcResult.error)) {
-    return { ok: false, error: mapError(rpcResult.error, "my_verification_history") };
-  }
-
-  // Legacy compatibility: identity is still auth-derived and the select is owner-safe.
-  const { data, error } = await clientResult.data
-    .from("seller_verification_requests")
-    .select(ownerVerificationRequestSelect)
-    .eq("user_id", actor.data)
-    .order("created_at", { ascending: false });
-  if (error) return { ok: false, error: mapError(error, "my_verification_history_legacy") };
-  return {
-    ok: true,
-    data: ((data ?? []) as Record<string, unknown>[]).map(mapOwnerVerificationRequest),
-  };
+  return result.ok
+    ? { ok: true, data: result.data.map(mapOwnerVerificationRequest) }
+    : apiFailure(result, "my_verification_history");
 }
 
 export async function adminFetchVerificationRequests(
   canUseAdminAccess: boolean,
 ): Promise<ClassifiedsResult<AdminSellerVerificationRequest[]>> {
-  if (!canUseAdminAccess) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "مراجعة التوثيق متاحة لحساب إداري مخول فقط." },
-    };
-  }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const actor = await resolveAuthenticatedAccountId(
-    clientResult.data,
-    "admin_verification_history_auth",
+  if (!canUseAdminAccess) return adminDenied();
+  const result = await cloudflareApiRequest<Record<string, unknown>[]>(
+    "/v1/admin/verifications",
   );
-  if (!actor.ok) return actor;
-
-  const { data, error } = await clientResult.data
-    .from("seller_verification_requests")
-    .select(adminVerificationRequestSelect)
-    .order("created_at", { ascending: false })
-    .limit(100);
-  if (error) return { ok: false, error: mapError(error, "admin_verification_history") };
-  return {
-    ok: true,
-    data: ((data ?? []) as Record<string, unknown>[]).map(mapAdminVerificationRequest),
-  };
+  return result.ok
+    ? { ok: true, data: result.data.map(mapAdminVerificationRequest) }
+    : apiFailure(result, "admin_verification_history");
 }
 
 export async function adminCreateVerificationDocumentSignedUrl(
@@ -189,77 +103,76 @@ export async function adminCreateVerificationDocumentSignedUrl(
   if (!canManageVerifications) {
     return {
       ok: false,
-      error: { code: "permission_denied", message: "عرض وثائق التوثيق متاح لحساب مخول فقط." },
+      error: {
+        code: "permission_denied",
+        message: "عرض وثائق التوثيق متاح لحساب مخول فقط.",
+      },
     };
   }
-  if (!isUuid(requestId)) return invalidVerificationInput("تعذر تحديد طلب التوثيق.");
+  const cleanRequestId = requestId.trim();
+  if (!isUuid(cleanRequestId)) return invalidVerificationInput("تعذر تحديد طلب التوثيق.");
+  if (typeof URL === "undefined") return { ok: true, data: null };
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const actor = await resolveAuthenticatedAccountId(clientResult.data, "admin_document_auth");
-  if (!actor.ok) return actor;
-
-  const { data: request, error: requestError } = await clientResult.data
-    .from("seller_verification_requests")
-    .select("id,document_path")
-    .eq("id", requestId)
-    .maybeSingle();
-  if (requestError) {
-    return { ok: false, error: mapError(requestError, "admin_document_authorize") };
+  const cached = verificationDocumentUrls.get(cleanRequestId);
+  if (cached && cached.expiresAt > Date.now()) return { ok: true, data: cached.url };
+  if (cached) {
+    URL.revokeObjectURL(cached.url);
+    verificationDocumentUrls.delete(cleanRequestId);
   }
-  const documentPath = request
-    ? rowNullableString(request as Record<string, unknown>, "document_path")
-    : null;
-  if (!documentPath) return { ok: true, data: null };
 
-  const { data, error } = await clientResult.data.storage
-    .from(verificationDocumentsBucket)
-    .createSignedUrl(documentPath, verificationDocumentSignedUrlSeconds);
-  if (error) return { ok: false, error: mapStorageError(error) };
-  return { ok: true, data: data.signedUrl };
+  const response = await cloudflareAuthorizedFetch(
+    `/v1/admin/verifications/${encodeURIComponent(cleanRequestId)}/document`,
+  );
+  if (!response) {
+    return { ok: false, error: { code: "unknown", message: "تعذر الاتصال بخدمة التوثيق." } };
+  }
+  if (!response.ok) {
+    return {
+      ok: false,
+      error: {
+        code: response.status === 404 ? "not_found" : response.status === 403 ? "permission_denied" : "unknown",
+        message: "تعذر فتح وثيقة التوثيق.",
+      },
+    };
+  }
+  const blob = await response.blob();
+  if (!blob.size) return { ok: true, data: null };
+  const url = URL.createObjectURL(blob);
+  const expiresAt = Date.now() + documentObjectUrlTtlMs;
+  verificationDocumentUrls.set(cleanRequestId, { url, expiresAt });
+  setTimeout(() => {
+    const current = verificationDocumentUrls.get(cleanRequestId);
+    if (!current || current.url !== url || current.expiresAt > Date.now()) return;
+    URL.revokeObjectURL(url);
+    verificationDocumentUrls.delete(cleanRequestId);
+  }, documentObjectUrlTtlMs + 1_000);
+  return { ok: true, data: url };
 }
 
 export async function adminModerateVerificationRequest(
   canUseAdminAccess: boolean,
   payload: ModerateSellerVerificationRequestPayload & { expectedUpdatedAt: string },
 ): Promise<ClassifiedsResult<null>> {
-  if (!canUseAdminAccess) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "مراجعة التوثيق متاحة لحساب إداري مخول فقط." },
-    };
-  }
-  if (!isUuid(payload.requestId) || !payload.expectedUpdatedAt) {
+  if (!canUseAdminAccess) return adminDenied();
+  const requestId = payload.requestId.trim();
+  const expectedUpdatedAt = payload.expectedUpdatedAt.trim();
+  if (!isUuid(requestId) || !expectedUpdatedAt) {
     return invalidVerificationInput("تعذر تحديد طلب التوثيق أو نسخته الحالية.");
   }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const actor = await resolveAuthenticatedAccountId(
-    clientResult.data,
-    "admin_verification_moderate_auth",
+  const result = await cloudflareApiRequest<{ success: boolean; updatedAt: string }>(
+    `/v1/admin/verifications/${encodeURIComponent(requestId)}`,
+    {
+      method: "PATCH",
+      body: {
+        status: payload.status,
+        adminNote: normalizePrivateName(payload.adminNote) || null,
+        expectedUpdatedAt,
+      },
+    },
   );
-  if (!actor.ok) return actor;
-
-  const { error } = await clientResult.data.rpc("rawaj_admin_moderate_verification_request", {
-    p_request_id: payload.requestId,
-    p_status: payload.status,
-    p_admin_note: normalizePrivateName(payload.adminNote) || null,
-    p_expected_updated_at: payload.expectedUpdatedAt,
-  });
-  if (error) {
-    if (error.message?.includes("stale_verification_request")) {
-      return {
-        ok: false,
-        error: {
-          code: "stale_review",
-          message: "تغيّر طلب التوثيق منذ تحميله. أعد تحميل القائمة قبل اتخاذ قرار جديد.",
-        },
-      };
-    }
-    return { ok: false, error: mapError(error, "admin_verification_moderate") };
-  }
-  return { ok: true, data: null };
+  return result.ok
+    ? { ok: true, data: null }
+    : apiFailure(result, "admin_verification_moderate");
 }
 
 function validateVerificationDocumentFile(file: File): ClassifiedsResult<null> {
@@ -274,28 +187,27 @@ function validateVerificationDocumentFile(file: File): ClassifiedsResult<null> {
   return { ok: true, data: null };
 }
 
-function buildVerificationDocumentPath(userId: string, requestId: string, file: File) {
-  const extension = verificationDocumentExtensions[file.type]?.[0];
-  return `${userId}/${requestId}/${crypto.randomUUID()}.${extension}`;
-}
-
 function documentTypeMatchesRequest(
   requestType: "personal" | "business",
   documentType: VerificationDocumentType,
-) {
+): boolean {
   return requestType === "business"
     ? ["commercial_registration", "business_license", "tax_document"].includes(documentType)
     : ["national_id", "passport", "other_government_id"].includes(documentType);
 }
 
-async function cleanupUnattachedVerificationDocument(storagePath: string) {
-  const clientResult = getClient();
-  if (!clientResult.ok) return;
-  await clientResult.data.storage.from(verificationDocumentsBucket).remove([storagePath]);
-}
-
 function invalidVerificationInput<T = never>(message: string): ClassifiedsResult<T> {
   return { ok: false, error: { code: "validation_error", message } };
+}
+
+function adminDenied<T>(): ClassifiedsResult<T> {
+  return {
+    ok: false,
+    error: {
+      code: "permission_denied",
+      message: "مراجعة التوثيق متاحة لحساب إداري مخول فقط.",
+    },
+  };
 }
 
 function normalizePrivateName(value: string | null | undefined): string {
@@ -309,57 +221,88 @@ function normalizePrivateName(value: string | null | undefined): string {
 }
 
 function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value.trim(),
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
   );
-}
-
-function isMissingVerificationIntegrityRpc(error: { code?: string; message?: string }) {
-  return (
-    error.code === "PGRST202" ||
-    error.code === "42883" ||
-    (error.message ?? "").includes("rawaj_fetch_my_verification_requests")
-  );
-}
-
-function mapVerificationCreationError(error: {
-  code?: string;
-  message?: string;
-  details?: string;
-}): ClassifiedsError {
-  if (error.message?.includes("verification_request_already_pending")) {
-    return { code: "validation_error", message: "لديك طلب توثيق قيد المراجعة بالفعل." };
-  }
-  if (error.message?.includes("verification_document_not_owned")) {
-    return { code: "permission_denied", message: "تعذر التحقق من ملكية وثيقة التوثيق." };
-  }
-  return mapError(error, "my_verification_create");
 }
 
 function mapOwnerVerificationRequest(row: Record<string, unknown>): SellerVerificationRequest {
   return {
     id: rowString(row, "id"),
     status: rowString(row, "status", "pending_review") as VerificationRequestStatus,
-    requestType: rowString(
-      row,
-      "request_type",
-      "personal",
-    ) as SellerVerificationRequest["requestType"],
-    legalName: rowString(row, "legal_name"),
-    businessName: rowNullableString(row, "business_name"),
-    documentType: rowNullableString(row, "document_type"),
-    reviewedAt: rowNullableString(row, "reviewed_at"),
-    createdAt: rowString(row, "created_at"),
-    updatedAt: rowString(row, "updated_at"),
+    requestType: rowString(row, "request_type", "personal", "requestType") as SellerVerificationRequest["requestType"],
+    legalName: rowString(row, "legal_name", "", "legalName"),
+    businessName: rowNullableString(row, "business_name", "businessName"),
+    documentType: rowNullableString(row, "document_type", "documentType"),
+    reviewedAt: rowNullableString(row, "reviewed_at", "reviewedAt"),
+    createdAt: rowString(row, "created_at", "", "createdAt"),
+    updatedAt: rowString(row, "updated_at", "", "updatedAt"),
   };
 }
 
-function mapAdminVerificationRequest(row: Record<string, unknown>): AdminSellerVerificationRequest {
+function mapAdminVerificationRequest(
+  row: Record<string, unknown>,
+): AdminSellerVerificationRequest {
   return {
     ...mapOwnerVerificationRequest(row),
-    userId: rowString(row, "user_id"),
-    documentPath: rowNullableString(row, "document_path"),
-    adminNote: rowNullableString(row, "admin_note"),
-    reviewedBy: rowNullableString(row, "reviewed_by"),
+    userId: rowString(row, "user_id", "", "userId"),
+    documentPath: rowNullableString(row, "document_asset_id", "documentPath"),
+    adminNote: rowNullableString(row, "admin_note", "adminNote"),
+    reviewedBy: rowNullableString(row, "reviewed_by", "reviewedBy"),
   };
+}
+
+function apiFailure<T>(result: ApiFailure, operation: string): ClassifiedsResult<T> {
+  return {
+    ok: false,
+    error: {
+      code: normalizeApiCode(result.code),
+      message: localizedMessage(result),
+      operation,
+    },
+  };
+}
+
+function normalizeApiCode(code: string): ClassifiedsErrorCode {
+  if (["auth_required", "permission_denied", "not_found", "status_mismatch", "validation_error"].includes(code)) {
+    return code as ClassifiedsErrorCode;
+  }
+  if (code === "invalid_transition") return "stale_review";
+  return "unknown";
+}
+
+function localizedMessage(result: ApiFailure): string {
+  if (result.code === "status_mismatch" && /already pending/i.test(result.error)) {
+    return "لديك طلب توثيق قيد المراجعة بالفعل.";
+  }
+  if (result.code === "status_mismatch" && /already verified/i.test(result.error)) {
+    return "الحساب موثّق بالفعل.";
+  }
+  if (result.code === "status_mismatch" || result.code === "invalid_transition") {
+    return "تغيّر طلب التوثيق منذ تحميله. أعد تحميل القائمة قبل اتخاذ قرار جديد.";
+  }
+  return result.error || "تعذر إكمال عملية التوثيق.";
+}
+
+function rowValue(row: Record<string, unknown>, snake: string, camel?: string): unknown {
+  return row[snake] ?? (camel ? row[camel] : undefined);
+}
+
+function rowString(
+  row: Record<string, unknown>,
+  key: string,
+  fallback = "",
+  camel?: string,
+): string {
+  const value = rowValue(row, key, camel);
+  return typeof value === "string" ? value : fallback;
+}
+
+function rowNullableString(
+  row: Record<string, unknown>,
+  key: string,
+  camel?: string,
+): string | null {
+  const value = rowValue(row, key, camel);
+  return typeof value === "string" && value ? value : null;
 }

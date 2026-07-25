@@ -7,19 +7,19 @@ const client = await readFile(
   "utf8",
 );
 
-test("client uses only stable metadata RPC contracts", () => {
-  for (const rpc of [
-    "rawaj_fetch_published_taxonomy_v1",
-    "rawaj_fetch_published_leaf_schema_v1",
-    "rawaj_fetch_vehicle_makes_v1",
-    "rawaj_fetch_vehicle_models_v1",
-    "rawaj_fetch_vehicle_model_children_v1",
+test("client uses only Cloudflare taxonomy and vehicle contracts", () => {
+  for (const endpoint of [
+    "/v1/references",
+    "/v1/taxonomy/leaf/",
+    "/v1/vehicles/makes",
+    "/v1/vehicles/models",
+    "/children",
   ]) {
-    assert.match(client, new RegExp(`callPublicRpc\\("${rpc}"`));
+    assert.ok(client.includes(endpoint), `missing Cloudflare endpoint ${endpoint}`);
   }
 
-  assert.doesNotMatch(client, /\.from\("taxonomy_/);
-  assert.doesNotMatch(client, /\.from\("vehicle_/);
+  assert.match(client, /cloudflareApiRequest/);
+  assert.doesNotMatch(client, /@supabase\/supabase-js|publicSupabase|getClient|\.rpc\(|\.from\(/);
 });
 
 test("client exposes typed taxonomy, leaf schema, and vehicle metadata", () => {
@@ -60,7 +60,7 @@ test("client caches metadata and deduplicates concurrent requests", () => {
   assert.match(client, /invalidateTaxonomyMetadataCache/);
 });
 
-test("client parses untrusted JSONB payloads without unchecked field access", () => {
+test("client parses untrusted payloads without unchecked field access", () => {
   assert.match(client, /function record\(value: unknown\)/);
   assert.match(client, /function records\(value: unknown\)/);
   assert.match(client, /function text\(value: unknown\)/);
@@ -69,8 +69,8 @@ test("client parses untrusted JSONB payloads without unchecked field access", ()
   assert.match(client, /\.map\(parseLeafField\)\.filter\(present\)/);
 });
 
-test("client supports public SSR reads and configured authenticated fallback", () => {
-  assert.match(client, /if \(publicSupabase\) return \{ ok: true, data: publicSupabase \}/);
-  assert.match(client, /return getClient\(\)/);
-  assert.match(client, /mapError\(error, functionName\)/);
+test("client fails through the Cloudflare API envelope with no provider fallback", () => {
+  assert.match(client, /function apiFailure/);
+  assert.match(client, /code: result\.code as ClassifiedsErrorCode/);
+  assert.doesNotMatch(client, /SupabaseClient|mapError|publicSupabase|getClient/);
 });

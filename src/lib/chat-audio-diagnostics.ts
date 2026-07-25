@@ -10,7 +10,7 @@ export interface DiagnosticsPayload {
   fileSize?: number | null;
   arrayBufferSize?: number | null;
   durationMs?: number | null;
-  supabaseErrorCode?: string | null;
+  backendErrorCode?: string | null;
   httpStatus?: number | null;
   operation?: string | null;
   errorName?: string;
@@ -61,7 +61,7 @@ export function logRecorderDiagnostics(context: DiagnosticsPayload): void {
     fileSize: context.fileSize ?? null,
     arrayBufferSize: context.arrayBufferSize ?? null,
     durationMs: context.durationMs ?? null,
-    supabaseErrorCode: context.supabaseErrorCode ?? null,
+    backendErrorCode: context.backendErrorCode ?? null,
     httpStatus: context.httpStatus ?? null,
     operation: context.operation ?? null,
     errorName: context.errorName ?? null,

@@ -1,16 +1,6 @@
 name: Production Smoke
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "src/**"
-      - "e2e/**"
-      - "playwright.config.ts"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/production-smoke.yml"
   workflow_dispatch:
 
 concurrency:

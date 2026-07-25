@@ -24,9 +24,6 @@
       "@/lib/api/taxonomy-metadata": [
         "./src/lib/api/taxonomy-metadata-cloudflare.ts"
       ],
-      "@/lib/api/listing-attributes": [
-        "./src/lib/api/listing-attributes-cloudflare.ts"
-      ],
       "@/lib/api/ad-placements": [
         "./src/lib/api/ad-placements-cloudflare.ts"
       ],

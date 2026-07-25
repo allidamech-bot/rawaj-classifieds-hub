@@ -34,7 +34,7 @@ interface R2Bucket {
   get(key: string): Promise<R2ObjectBody | null>;
 }
 
-interface Env {
+export interface PublicCoreEnv {
   DB: D1Database;
   MEDIA: R2Bucket;
   API_ALLOWED_ORIGINS?: string;
@@ -48,89 +48,115 @@ const API_VERSION = "v1";
 const DEFAULT_API_CACHE_SECONDS = 60;
 const DEFAULT_MEDIA_CACHE_SECONDS = 86_400;
 
+export async function handlePublicCore(
+  request: Request,
+  env: PublicCoreEnv,
+): Promise<Response | null> {
+  const url = new URL(request.url);
+  if (!isPublicCorePath(url.pathname)) return null;
+
+  const origin = request.headers.get("Origin");
+  const cors = corsHeaders(origin, env);
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: cors });
+  }
+
+  if (request.method !== "GET") {
+    return json(
+      { error: { code: "method_not_allowed", message: "Method not allowed." } },
+      405,
+      cors,
+    );
+  }
+
+  try {
+    if (url.pathname === `/${API_VERSION}/health`) {
+      return await health(env, cors);
+    }
+
+    if (url.pathname === `/${API_VERSION}/references`) {
+      return await references(env, cors);
+    }
+
+    if (url.pathname === `/${API_VERSION}/locations/roots`) {
+      return await locationRoots(url, env, cors);
+    }
+
+    if (url.pathname === `/${API_VERSION}/locations/search`) {
+      return await locationSearch(url, env, cors);
+    }
+
+    const locationChildrenMatch = url.pathname.match(
+      new RegExp(`^/${API_VERSION}/locations/([^/]+)/children$`),
+    );
+    if (locationChildrenMatch) {
+      return await locationChildren(decodeURIComponent(locationChildrenMatch[1]), env, cors);
+    }
+
+    const locationMatch = url.pathname.match(new RegExp(`^/${API_VERSION}/locations/([^/]+)$`));
+    if (locationMatch) {
+      return await locationDetail(
+        decodeURIComponent(locationMatch[1]),
+        url.searchParams.get("include"),
+        env,
+        cors,
+      );
+    }
+
+    if (url.pathname === `/${API_VERSION}/ad-placements`) {
+      return await adPlacements(url, env, cors);
+    }
+
+    if (url.pathname === `/${API_VERSION}/listings`) {
+      return await listings(url, env, cors);
+    }
+
+    const listingMatch = url.pathname.match(new RegExp(`^/${API_VERSION}/listings/([^/]+)$`));
+    if (listingMatch) {
+      return await listingDetail(decodeURIComponent(listingMatch[1]), env, cors);
+    }
+
+    const mediaMatch = url.pathname.match(new RegExp(`^/${API_VERSION}/media/assets/([^/]+)$`));
+    if (mediaMatch) {
+      return await mediaAsset(request, decodeURIComponent(mediaMatch[1]), env, cors);
+    }
+
+    return null;
+  } catch (error) {
+    console.error("rawaj_public_api_unhandled", error);
+    return json(
+      { error: { code: "internal_error", message: "Unexpected service error." } },
+      500,
+      cors,
+    );
+  }
+}
+
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
-    const origin = request.headers.get("Origin");
-    const cors = corsHeaders(origin, env);
-
-    if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: cors });
-    }
-
-    if (request.method !== "GET") {
-      return json(
-        { error: { code: "method_not_allowed", message: "Method not allowed." } },
-        405,
-        cors,
-      );
-    }
-
-    try {
-      if (url.pathname === `/${API_VERSION}/health`) {
-        return await health(env, cors);
-      }
-
-      if (url.pathname === `/${API_VERSION}/references`) {
-        return await references(env, cors);
-      }
-
-      if (url.pathname === `/${API_VERSION}/locations/roots`) {
-        return await locationRoots(url, env, cors);
-      }
-
-      if (url.pathname === `/${API_VERSION}/locations/search`) {
-        return await locationSearch(url, env, cors);
-      }
-
-      const locationChildrenMatch = url.pathname.match(
-        new RegExp(`^/${API_VERSION}/locations/([^/]+)/children$`),
-      );
-      if (locationChildrenMatch) {
-        return await locationChildren(decodeURIComponent(locationChildrenMatch[1]), env, cors);
-      }
-
-      const locationMatch = url.pathname.match(new RegExp(`^/${API_VERSION}/locations/([^/]+)$`));
-      if (locationMatch) {
-        return await locationDetail(
-          decodeURIComponent(locationMatch[1]),
-          url.searchParams.get("include"),
-          env,
-          cors,
-        );
-      }
-
-      if (url.pathname === `/${API_VERSION}/ad-placements`) {
-        return await adPlacements(url, env, cors);
-      }
-
-      if (url.pathname === `/${API_VERSION}/listings`) {
-        return await listings(url, env, cors);
-      }
-
-      const listingMatch = url.pathname.match(new RegExp(`^/${API_VERSION}/listings/([^/]+)$`));
-      if (listingMatch) {
-        return await listingDetail(decodeURIComponent(listingMatch[1]), env, cors);
-      }
-
-      const mediaMatch = url.pathname.match(new RegExp(`^/${API_VERSION}/media/assets/([^/]+)$`));
-      if (mediaMatch) {
-        return await mediaAsset(request, decodeURIComponent(mediaMatch[1]), env, cors);
-      }
-
-      return json({ error: { code: "not_found", message: "Resource not found." } }, 404, cors);
-    } catch (error) {
-      console.error("rawaj_public_api_unhandled", error);
-      return json(
-        { error: { code: "internal_error", message: "Unexpected service error." } },
-        500,
-        cors,
-      );
-    }
+  async fetch(request: Request, env: PublicCoreEnv): Promise<Response> {
+    return (
+      (await handlePublicCore(request, env)) ??
+      json({ error: { code: "not_found", message: "Resource not found." } }, 404, new Headers())
+    );
   },
 };
 
-async function health(env: Env, cors: Headers): Promise<Response> {
+function isPublicCorePath(pathname: string): boolean {
+  return (
+    pathname === `/${API_VERSION}/health` ||
+    pathname === `/${API_VERSION}/references` ||
+    pathname === `/${API_VERSION}/locations/roots` ||
+    pathname === `/${API_VERSION}/locations/search` ||
+    new RegExp(`^/${API_VERSION}/locations/[^/]+(?:/children)?$`).test(pathname) ||
+    pathname === `/${API_VERSION}/ad-placements` ||
+    pathname === `/${API_VERSION}/listings` ||
+    new RegExp(`^/${API_VERSION}/listings/[^/]+$`).test(pathname) ||
+    new RegExp(`^/${API_VERSION}/media/assets/[^/]+$`).test(pathname)
+  );
+}
+
+async function health(env: PublicCoreEnv, cors: Headers): Promise<Response> {
   const row = await env.DB.prepare("SELECT 1 AS ok").first<{ ok: number }>();
   return json(
     {
@@ -146,7 +172,7 @@ async function health(env: Env, cors: Headers): Promise<Response> {
   );
 }
 
-async function references(env: Env, cors: Headers): Promise<Response> {
+async function references(env: PublicCoreEnv, cors: Headers): Promise<Response> {
   const results = await env.DB.batch([
     env.DB.prepare(
       `SELECT id, slug, name_ar, name_en, hint_ar, hint_en, placeholder,
@@ -201,7 +227,7 @@ const LOCATION_SELECT = `id, parent_id, country_code, node_type, name_ar, name_e
   official_code, external_source, external_id, latitude, longitude, sort_order, depth,
   is_active, search_aliases, legacy_governorate_id, legacy_district_ar`;
 
-async function locationRoots(url: URL, env: Env, cors: Headers): Promise<Response> {
+async function locationRoots(url: URL, env: PublicCoreEnv, cors: Headers): Promise<Response> {
   const country = cleanText(url.searchParams.get("country"), 2) ?? "SY";
   if (!/^[A-Z]{2}$/.test(country)) return validationFailure(cors, "Invalid country code.");
   const result = await env.DB.prepare(
@@ -215,7 +241,7 @@ async function locationRoots(url: URL, env: Env, cors: Headers): Promise<Respons
   return json({ data: (result.results ?? []).map(mapLocationNode) }, 200, cors, cacheHeaders(env));
 }
 
-async function locationChildren(parentId: string, env: Env, cors: Headers): Promise<Response> {
+async function locationChildren(parentId: string, env: PublicCoreEnv, cors: Headers): Promise<Response> {
   if (!validId(parentId)) return validationFailure(cors, "Invalid location id.");
   const result = await env.DB.prepare(
     `SELECT ${LOCATION_SELECT} FROM location_nodes
@@ -231,7 +257,7 @@ async function locationChildren(parentId: string, env: Env, cors: Headers): Prom
 async function locationDetail(
   id: string,
   include: string | null,
-  env: Env,
+  env: PublicCoreEnv,
   cors: Headers,
 ): Promise<Response> {
   if (!validId(id)) return validationFailure(cors, "Invalid location id.");
@@ -275,7 +301,7 @@ async function locationDetail(
   return json({ data: (rows.results ?? []).map(mapLocationNode) }, 200, cors, cacheHeaders(env));
 }
 
-async function locationSearch(url: URL, env: Env, cors: Headers): Promise<Response> {
+async function locationSearch(url: URL, env: PublicCoreEnv, cors: Headers): Promise<Response> {
   const query = cleanText(url.searchParams.get("q"), 100);
   const limit = integerParam(url.searchParams.get("limit"), 12, 1, 20);
   if (!query || query.length < 2) return validationFailure(cors, "Search requires two characters.");
@@ -316,7 +342,7 @@ async function locationSearch(url: URL, env: Env, cors: Headers): Promise<Respon
   );
 }
 
-async function adPlacements(url: URL, env: Env, cors: Headers): Promise<Response> {
+async function adPlacements(url: URL, env: PublicCoreEnv, cors: Headers): Promise<Response> {
   const placementPage = cleanText(url.searchParams.get("page"), 80);
   const device = url.searchParams.get("device") === "mobile" ? "mobile" : "desktop";
 
@@ -359,7 +385,7 @@ async function adPlacements(url: URL, env: Env, cors: Headers): Promise<Response
   );
 }
 
-async function listings(url: URL, env: Env, cors: Headers): Promise<Response> {
+async function listings(url: URL, env: PublicCoreEnv, cors: Headers): Promise<Response> {
   const pageSize = integerParam(url.searchParams.get("pageSize"), 30, 1, 50);
   const filters = readListingFilters(url.searchParams);
   const cursor = decodeCursor(url.searchParams.get("cursor"));
@@ -416,7 +442,7 @@ async function listings(url: URL, env: Env, cors: Headers): Promise<Response> {
   const sql = `
     SELECT
       l.id, l.owner_id, l.category_id, l.subcategory_id, l.governorate_id,
-      l.title, l.description, l.price, l.currency, l.price_type,
+      l.location_node_id, l.title, l.description, l.price, l.currency, l.price_type,
       l.listing_condition, l.status, l.district_ar, l.contact_name,
       l.contact_options, l.details, l.is_featured, l.featured_until,
       l.published_at, l.archived_at, l.reserved_at, l.expires_at,
@@ -468,7 +494,7 @@ async function listings(url: URL, env: Env, cors: Headers): Promise<Response> {
   );
 }
 
-async function listingDetail(id: string, env: Env, cors: Headers): Promise<Response> {
+async function listingDetail(id: string, env: PublicCoreEnv, cors: Headers): Promise<Response> {
   if (!id || id.length > 120) {
     return json({ error: { code: "validation_error", message: "Invalid listing id." } }, 400, cors);
   }
@@ -528,7 +554,7 @@ async function listingDetail(id: string, env: Env, cors: Headers): Promise<Respo
 async function mediaAsset(
   request: Request,
   assetId: string,
-  env: Env,
+  env: PublicCoreEnv,
   cors: Headers,
 ): Promise<Response> {
   if (!assetId || assetId.length > 160) {
@@ -713,6 +739,7 @@ function mapListing(row: JsonRecord, requestUrl: URL): JsonRecord {
     categoryPlaceholder: nullableString(row.category_placeholder),
     governorateId: stringValue(row.governorate_id),
     governorateNameAr: nullableString(row.governorate_name_ar),
+    locationNodeId: nullableString(row.location_node_id),
     title: stringValue(row.title),
     description: stringValue(row.description),
     price: nullableNumber(row.price),
@@ -889,7 +916,7 @@ function mediaUrl(url: URL, assetId: string): string {
   return `${url.origin}/${API_VERSION}/media/assets/${encodeURIComponent(assetId)}`;
 }
 
-function cacheHeaders(env: Env, override?: number): Headers {
+function cacheHeaders(env: PublicCoreEnv, override?: number): Headers {
   const seconds = override ?? integerValue(env.API_CACHE_SECONDS, DEFAULT_API_CACHE_SECONDS);
   const headers = new Headers();
   headers.set(
@@ -902,7 +929,7 @@ function cacheHeaders(env: Env, override?: number): Headers {
   return headers;
 }
 
-function corsHeaders(origin: string | null, env: Env): Headers {
+function corsHeaders(origin: string | null, env: PublicCoreEnv): Headers {
   const headers = new Headers({
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, If-None-Match",

@@ -12,7 +12,7 @@
  * Safe behavior:
  * - metadata-only by default
  * - downloads only when --download is supplied
- * - never writes to Supabase
+ * - never writes to the retired backend
  * - records provenance manifest with URLs, timestamps, sizes and SHA-256 hashes
  */
 

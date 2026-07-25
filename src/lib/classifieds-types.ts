@@ -1,7 +1,6 @@
 import type { PlaceholderType, PriceType } from "@/types";
 
 export type ClassifiedsErrorCode =
-  | "supabase_unconfigured"
   | "setup_required"
   | "schema_missing"
   | "storage_unconfigured"
@@ -11,6 +10,7 @@ export type ClassifiedsErrorCode =
   | "stale_account"
   | "stale_review"
   | "status_mismatch"
+  | "invalid_transition"
   | "rate_limited"
   | "validation_error"
   | "foreign_key_conflict"
@@ -116,6 +116,7 @@ export interface ClassifiedListing {
   categoryPlaceholder?: PlaceholderType;
   governorateId: string;
   governorateNameAr?: string;
+  locationNodeId?: string | null;
   title: string;
   description: string;
   price: number | null;

@@ -1,4 +1,4 @@
-﻿import "./lib/error-capture";
+import "./lib/error-capture";
 
 import { rawajBuildInfo } from "./lib/build-info";
 import { consumeLastCapturedError } from "./lib/error-capture";
@@ -74,8 +74,8 @@ function buildContentSecurityPolicy(isSecureRequest: boolean, allowVercelPreview
     " https://api.rawa-j.com https://rawaj-classifieds-hub.allidamech.workers.dev https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com";
 
   const connectSourceDirective = allowVercelPreviewTools
-    ? `connect-src 'self'${cloudflareApiConnectSource} https://*.supabase.co https://*.supabase.com wss://*.supabase.co wss://*.supabase.com https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com https://vercel.live wss://vercel.live${localDevelopmentConnectSources}`
-    : `connect-src 'self'${cloudflareApiConnectSource} https://*.supabase.co https://*.supabase.com wss://*.supabase.co wss://*.supabase.com https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com${localDevelopmentConnectSources}`;
+    ? `connect-src 'self'${cloudflareApiConnectSource} https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com https://vercel.live wss://vercel.live${localDevelopmentConnectSources}`
+    : `connect-src 'self'${cloudflareApiConnectSource} https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com${localDevelopmentConnectSources}`;
 
   const directives = [
     "default-src 'self'",
@@ -87,7 +87,7 @@ function buildContentSecurityPolicy(isSecureRequest: boolean, allowVercelPreview
     scriptSourceDirective,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https:",
-    "media-src 'self' blob: https://*.supabase.co https://*.supabase.com",
+    "media-src 'self' blob: https:",
     "font-src 'self' data: https://fonts.gstatic.com",
     connectSourceDirective,
     manifestSourceDirective,

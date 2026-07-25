@@ -12,7 +12,7 @@
  * - syr_neighborhoods.geojson
  *
  * Safety:
- * - never writes to Supabase
+ * - never writes to the retired backend
  * - deterministic UUIDs from source P-codes
  * - blocks orphan parents, duplicate external IDs, cycles, duplicate parent+slug keys
  * - blocks suspicious Arabic mojibake unless explicitly overridden

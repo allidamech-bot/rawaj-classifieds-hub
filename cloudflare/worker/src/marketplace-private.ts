@@ -69,6 +69,13 @@ export async function handleMarketplacePrivate(
       return updateProfile(request, env, cors);
     }
   }
+  if (path === "/v1/profile/media" && request.method === "POST") {
+    return uploadProfileMedia(request, env, cors);
+  }
+  const profileMediaMatch = path.match(/^\/v1\/profile\/media\/(avatar|cover)$/);
+  if (profileMediaMatch && request.method === "DELETE") {
+    return removeProfileMedia(request, env, cors, profileMediaMatch[1] as "avatar" | "cover");
+  }
   if (path === "/v1/account/listings" && request.method === "GET") {
     return ownerListings(request, env, cors);
   }
@@ -93,7 +100,7 @@ export async function handleMarketplacePrivate(
     return uploadImage(request, env, cors, decodeURIComponent(imagesMatch[1]));
   }
   if (imagesMatch && request.method === "GET") {
-    return listImages(env, cors, decodeURIComponent(imagesMatch[1]));
+    return listImages(request, env, cors, decodeURIComponent(imagesMatch[1]));
   }
   if (imagesMatch && request.method === "PATCH") {
     return reorderImages(request, env, cors, decodeURIComponent(imagesMatch[1]));
@@ -162,6 +169,157 @@ async function updateProfile(request: Request, env: MarketplaceEnv, cors: Header
   return result.success ? getProfile(request, env, cors) : databaseError(cors);
 }
 
+
+async function uploadProfileMedia(request: Request, env: MarketplaceEnv, cors: Headers) {
+  const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
+  if (auth instanceof Response) return auth;
+  if (!request.headers.get("Content-Type")?.toLowerCase().startsWith("multipart/form-data")) {
+    return json(
+      { error: { code: "unsupported_media_type", message: "Multipart form required." } },
+      415,
+      cors,
+    );
+  }
+
+  const form = await request.formData();
+  const kind = clean(form.get("kind"), 10);
+  const file = form.get("file");
+  if ((kind !== "avatar" && kind !== "cover") || !(file instanceof File)) {
+    return validation(cors, "Profile media kind and image are required.");
+  }
+  if (!IMAGE_TYPES.has(file.type) || file.size <= 0 || file.size > MAX_IMAGE_BYTES) {
+    return validation(cors, "Unsupported image type or size.");
+  }
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (!matchesImageSignature(bytes, file.type)) return validation(cors, "Image content is invalid.");
+
+  const profileColumn = kind === "avatar" ? "avatar_asset_id" : "cover_asset_id";
+  const previous = await env.DB.prepare(
+    `SELECT p.${profileColumn} AS asset_id, m.object_key
+       FROM public_profiles p
+       LEFT JOIN media_assets m ON m.id = p.${profileColumn}
+      WHERE p.id = ?`,
+  )
+    .bind(auth.userId)
+    .first<Row>();
+
+  const assetId = crypto.randomUUID();
+  const extension = file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1];
+  const objectKey = `profiles/${auth.userId}/${kind}/${crypto.randomUUID()}.${extension}`;
+  const checksum = await sha256Hex(bytes);
+  const timestamp = now();
+
+  let object;
+  try {
+    object = await env.MEDIA.put(objectKey, bytes.buffer, {
+      httpMetadata: { contentType: file.type, cacheControl: "public, max-age=31536000, immutable" },
+    });
+  } catch {
+    return databaseError(cors);
+  }
+
+  const results = await env.DB.batch([
+    env.DB.prepare(
+      `INSERT INTO media_assets (id, owner_id, object_key, content_type, byte_size,
+        checksum_sha256, etag, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'ready', ?, ?)`,
+    ).bind(
+      assetId,
+      auth.userId,
+      objectKey,
+      file.type,
+      file.size,
+      checksum,
+      object.httpEtag,
+      timestamp,
+      timestamp,
+    ),
+    env.DB.prepare(
+      `UPDATE public_profiles SET ${profileColumn} = ?, profile_version = profile_version + 1,
+        updated_at = ? WHERE id = ?`,
+    ).bind(assetId, timestamp, auth.userId),
+  ]);
+
+  if (results.some((result) => !result.success)) {
+    await env.MEDIA.delete(objectKey).catch(() => undefined);
+    return databaseError(cors);
+  }
+
+  const previousAssetId = nullableString(previous?.asset_id);
+  const previousObjectKey = nullableString(previous?.object_key);
+  if (previousAssetId && previousAssetId !== assetId) {
+    const deleted = await env.DB.prepare("DELETE FROM media_assets WHERE id = ? AND owner_id = ?")
+      .bind(previousAssetId, auth.userId)
+      .run();
+    if (deleted.success && previousObjectKey) {
+      await env.MEDIA.delete(previousObjectKey).catch((error) =>
+        console.error("rawaj_profile_media_orphan_cleanup_failed", {
+          userId: auth.userId,
+          assetId: previousAssetId,
+          error: error instanceof Error ? error.message : String(error),
+        }),
+      );
+    }
+  }
+
+  return json(
+    {
+      data: {
+        assetId,
+        kind,
+        url: `/v1/media/assets/${encodeURIComponent(assetId)}`,
+      },
+    },
+    201,
+    cors,
+  );
+}
+
+async function removeProfileMedia(
+  request: Request,
+  env: MarketplaceEnv,
+  cors: Headers,
+  kind: "avatar" | "cover",
+) {
+  const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
+  if (auth instanceof Response) return auth;
+  const profileColumn = kind === "avatar" ? "avatar_asset_id" : "cover_asset_id";
+  const previous = await env.DB.prepare(
+    `SELECT p.${profileColumn} AS asset_id, m.object_key
+       FROM public_profiles p
+       LEFT JOIN media_assets m ON m.id = p.${profileColumn}
+      WHERE p.id = ?`,
+  )
+    .bind(auth.userId)
+    .first<Row>();
+  const assetId = nullableString(previous?.asset_id);
+  const objectKey = nullableString(previous?.object_key);
+  if (!assetId) return json({ data: { success: true } }, 200, cors);
+
+  const timestamp = now();
+  const results = await env.DB.batch([
+    env.DB.prepare(
+      `UPDATE public_profiles SET ${profileColumn} = NULL,
+        profile_version = profile_version + 1, updated_at = ? WHERE id = ?`,
+    ).bind(timestamp, auth.userId),
+    env.DB.prepare("DELETE FROM media_assets WHERE id = ? AND owner_id = ?").bind(
+      assetId,
+      auth.userId,
+    ),
+  ]);
+  if (results.some((result) => !result.success)) return databaseError(cors);
+  if (objectKey) {
+    await env.MEDIA.delete(objectKey).catch((error) =>
+      console.error("rawaj_profile_media_delete_failed", {
+        userId: auth.userId,
+        assetId,
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    );
+  }
+  return json({ data: { success: true } }, 200, cors);
+}
+
 async function publicListings(url: URL, env: MarketplaceEnv, cors: Headers) {
   const page = integer(url.searchParams.get("page"), 1, 1, 100_000);
   const pageSize = integer(url.searchParams.get("pageSize"), 30, 1, 50);
@@ -197,7 +355,9 @@ async function publicListings(url: URL, env: MarketplaceEnv, cors: Headers) {
   const result = await env.DB.prepare(
     `SELECT l.id, l.owner_id, l.category_id, l.subcategory_id, l.governorate_id,
       l.location_node_id, l.title, l.description, l.price, l.currency, l.price_type,
-      l.listing_condition, l.status, l.district_ar, l.details, l.created_at, l.updated_at
+      l.listing_condition, l.status, l.district_ar, l.contact_name, l.contact_options,
+      l.details, l.is_featured, l.featured_until, l.published_at, l.archived_at,
+      l.reserved_at, l.expires_at, l.renewed_at, l.expiry_days, l.created_at, l.updated_at
       FROM listings l WHERE ${where.join(" AND ")} ORDER BY ${order} LIMIT ? OFFSET ?`,
   )
     .bind(...values)
@@ -212,7 +372,9 @@ async function listingDetail(request: Request, env: MarketplaceEnv, cors: Header
   const row = await env.DB.prepare(
     `SELECT id, owner_id, category_id, subcategory_id, governorate_id, location_node_id,
       title, description, price, currency, price_type, listing_condition, status,
-      district_ar, details, created_at, updated_at FROM listings WHERE id = ?`,
+      district_ar, contact_name, contact_options, details, is_featured, featured_until,
+      published_at, archived_at, reserved_at, expires_at, renewed_at, expiry_days,
+      created_at, updated_at FROM listings WHERE id = ?`,
   )
     .bind(id)
     .first<Row>();
@@ -234,6 +396,11 @@ async function listingDetail(request: Request, env: MarketplaceEnv, cors: Header
           id: stringValue(image.id),
           listingId: stringValue(image.listing_id),
           mediaAssetId: stringValue(image.media_asset_id),
+          storagePath: null,
+          publicUrl:
+            row.status === "approved"
+              ? `/v1/media/assets/${encodeURIComponent(stringValue(image.media_asset_id))}`
+              : `/v1/account/media/assets/${encodeURIComponent(stringValue(image.media_asset_id))}`,
           altAr: nullableString(image.alt_ar),
           sortOrder: numberValue(image.sort_order),
           createdAt: stringValue(image.created_at),
@@ -249,10 +416,14 @@ async function ownerListings(request: Request, env: MarketplaceEnv, cors: Header
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
   const result = await env.DB.prepare(
-    `SELECT id, category_id, subcategory_id, governorate_id, location_node_id,
+    `SELECT id, owner_id, category_id, subcategory_id, governorate_id, location_node_id,
       title, description, price, currency, price_type, listing_condition, status,
-      district_ar, details, created_at, updated_at FROM listings
-      WHERE owner_id = ? ORDER BY updated_at DESC LIMIT 200`,
+      district_ar, contact_name, contact_options, details, is_featured, featured_until,
+      published_at, archived_at, reserved_at, expires_at, renewed_at, expiry_days,
+      created_at, updated_at,
+      (SELECT li.media_asset_id FROM listing_images li WHERE li.listing_id = listings.id
+        ORDER BY li.sort_order, li.id LIMIT 1) AS primary_media_asset_id
+      FROM listings WHERE owner_id = ? ORDER BY updated_at DESC LIMIT 200`,
   )
     .bind(auth.userId)
     .all();
@@ -266,48 +437,94 @@ async function createListing(request: Request, env: MarketplaceEnv, cors: Header
   if (auth instanceof Response) return auth;
   const input = await parseListing(request, env, cors);
   if (input instanceof Response) return input;
+  if (!input.submit && input.creationRequestId) {
+    const existing = await env.DB.prepare(
+      `SELECT l.id, l.status, l.updated_at
+         FROM listing_creation_requests r
+         JOIN listings l ON l.id = r.listing_id
+        WHERE r.user_id = ? AND r.request_id = ?`,
+    )
+      .bind(auth.userId, input.creationRequestId)
+      .first<{ id: string; status: string; updated_at: string }>();
+    if (existing) {
+      return json(
+        { data: { id: existing.id, status: existing.status, updatedAt: existing.updated_at } },
+        200,
+        cors,
+      );
+    }
+  }
   const id = crypto.randomUUID();
   const timestamp = now();
   const status = input.submit ? "pending_review" : "draft";
-  const result = await env.DB.prepare(
+  const listingInsert = env.DB.prepare(
     `INSERT INTO listings (id, owner_id, category_id, subcategory_id, governorate_id,
       location_node_id, title, description, price, currency, price_type,
       listing_condition, status, district_ar, contact_name, contact_options, details,
       is_featured, search_text_normalized, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'SYP', ?, ?, ?, ?, ?, '{}', ?, 0, ?, ?, ?)`,
-  )
-    .bind(
-      id,
-      auth.userId,
-      input.categoryId,
-      input.subcategoryId,
-      input.governorateId,
-      input.locationNodeId,
-      input.title,
-      input.description,
-      input.price,
-      input.priceType,
-      input.condition,
-      status,
-      input.districtAr,
-      input.contactName,
-      JSON.stringify(input.details),
-      `${input.title} ${input.description}`.toLowerCase(),
-      timestamp,
-      timestamp,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'SYP', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+  ).bind(
+    id,
+    auth.userId,
+    input.categoryId,
+    input.subcategoryId,
+    input.governorateId,
+    input.locationNodeId,
+    input.title,
+    input.description,
+    input.price,
+    input.priceType,
+    input.condition,
+    status,
+    input.districtAr,
+    input.contactName,
+    JSON.stringify(input.contactOptions),
+    JSON.stringify(input.details),
+    `${input.title} ${input.description}`.toLowerCase(),
+    timestamp,
+    timestamp,
+  );
+  const statements = [listingInsert];
+  if (!input.submit && input.creationRequestId) {
+    statements.push(
+      env.DB.prepare(
+        `INSERT INTO listing_creation_requests (user_id, request_id, listing_id, created_at)
+         VALUES (?, ?, ?, ?)`,
+      ).bind(auth.userId, input.creationRequestId, id, timestamp),
+    );
+  }
+  const results = await env.DB.batch(statements);
+  if (results.every((result) => result.success)) {
+    return json({ data: { id, status, updatedAt: timestamp } }, 201, cors);
+  }
+  if (!input.submit && input.creationRequestId) {
+    const existing = await env.DB.prepare(
+      `SELECT l.id, l.status, l.updated_at
+         FROM listing_creation_requests r
+         JOIN listings l ON l.id = r.listing_id
+        WHERE r.user_id = ? AND r.request_id = ?`,
     )
-    .run();
-  return result.success
-    ? json({ data: { id, status, updatedAt: timestamp } }, 201, cors)
-    : databaseError(cors);
+      .bind(auth.userId, input.creationRequestId)
+      .first<{ id: string; status: string; updated_at: string }>();
+    if (existing) {
+      return json(
+        { data: { id: existing.id, status: existing.status, updatedAt: existing.updated_at } },
+        200,
+        cors,
+      );
+    }
+  }
+  return databaseError(cors);
 }
 
 async function updateListing(request: Request, env: MarketplaceEnv, cors: Headers, id: string) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
-  const existing = await env.DB.prepare("SELECT owner_id, status FROM listings WHERE id = ?")
+  const existing = await env.DB.prepare(
+    "SELECT owner_id, status, updated_at FROM listings WHERE id = ?",
+  )
     .bind(id)
-    .first<{ owner_id: string; status: string }>();
+    .first<{ owner_id: string; status: string; updated_at: string }>();
   if (!existing || existing.owner_id !== auth.userId) return forbidden(cors);
   if (!["draft", "rejected"].includes(existing.status)) {
     return json(
@@ -318,12 +535,20 @@ async function updateListing(request: Request, env: MarketplaceEnv, cors: Header
   }
   const input = await parseListing(request, env, cors);
   if (input instanceof Response) return input;
+  if (input.expectedUpdatedAt && input.expectedUpdatedAt !== existing.updated_at) {
+    return json(
+      { error: { code: "stale_write", message: "Listing changed since it was loaded." } },
+      409,
+      cors,
+    );
+  }
   const status = input.submit ? "pending_review" : existing.status;
+  const timestamp = now();
   const result = await env.DB.prepare(
     `UPDATE listings SET category_id = ?, subcategory_id = ?, governorate_id = ?,
       location_node_id = ?, title = ?, description = ?, price = ?, price_type = ?,
-      listing_condition = ?, status = ?, district_ar = ?, contact_name = ?, details = ?,
-      search_text_normalized = ?, updated_at = ? WHERE id = ? AND owner_id = ?`,
+      listing_condition = ?, status = ?, district_ar = ?, contact_name = ?, contact_options = ?,
+      details = ?, search_text_normalized = ?, updated_at = ? WHERE id = ? AND owner_id = ?`,
   )
     .bind(
       input.categoryId,
@@ -338,14 +563,17 @@ async function updateListing(request: Request, env: MarketplaceEnv, cors: Header
       status,
       input.districtAr,
       input.contactName,
+      JSON.stringify(input.contactOptions),
       JSON.stringify(input.details),
       `${input.title} ${input.description}`.toLowerCase(),
-      now(),
+      timestamp,
       id,
       auth.userId,
     )
     .run();
-  return result.success ? json({ data: { id, status } }, 200, cors) : databaseError(cors);
+  return result.success
+    ? json({ data: { id, status, updatedAt: timestamp } }, 200, cors)
+    : databaseError(cors);
 }
 
 async function deleteListing(request: Request, env: MarketplaceEnv, cors: Headers, id: string) {
@@ -436,6 +664,7 @@ async function uploadImage(
     return databaseError(cors);
   }
   const sortOrder = count?.count ?? 0;
+  const altAr = clean(form.get("altAr"), 200);
   const timestamp = now();
   const results = await env.DB.batch([
     env.DB.prepare(
@@ -459,7 +688,7 @@ async function uploadImage(
       imageId,
       listingId,
       assetId,
-      clean(form.get("altAr"), 200) ?? null,
+      altAr,
       sortOrder,
       timestamp,
     ),
@@ -474,7 +703,10 @@ async function uploadImage(
         id: imageId,
         listingId,
         mediaAssetId: assetId,
+        storagePath: null,
+        altAr,
         sortOrder,
+        createdAt: timestamp,
         publicUrl: `/v1/account/media/assets/${encodeURIComponent(assetId)}`,
       },
     },
@@ -483,7 +715,20 @@ async function uploadImage(
   );
 }
 
-async function listImages(env: MarketplaceEnv, cors: Headers, listingId: string) {
+async function listImages(
+  request: Request,
+  env: MarketplaceEnv,
+  cors: Headers,
+  listingId: string,
+) {
+  const auth = await authenticate(request, asAuthEnv(env));
+  const listing = await env.DB.prepare("SELECT owner_id, status FROM listings WHERE id = ?")
+    .bind(listingId)
+    .first<{ owner_id: string; status: string }>();
+  if (!listing || (listing.status !== "approved" && listing.owner_id !== auth?.userId)) {
+    return json({ error: { code: "not_found", message: "Listing not found." } }, 404, cors);
+  }
+
   const result = await env.DB.prepare(
     `SELECT li.id, li.listing_id, li.media_asset_id, li.alt_ar, li.sort_order, li.created_at
       FROM listing_images li JOIN media_assets m ON m.id = li.media_asset_id
@@ -491,7 +736,25 @@ async function listImages(env: MarketplaceEnv, cors: Headers, listingId: string)
   )
     .bind(listingId)
     .all();
-  return result.success ? json({ data: result.results ?? [] }, 200, cors) : databaseError(cors);
+  if (!result.success) return databaseError(cors);
+
+  const mediaPrefix = listing.status === "approved" ? "/v1/media/assets" : "/v1/account/media/assets";
+  return json(
+    {
+      data: (result.results ?? []).map((row) => ({
+        id: stringValue(row.id),
+        listingId: stringValue(row.listing_id),
+        mediaAssetId: stringValue(row.media_asset_id),
+        storagePath: null,
+        publicUrl: `${mediaPrefix}/${encodeURIComponent(stringValue(row.media_asset_id))}`,
+        altAr: nullableString(row.alt_ar),
+        sortOrder: numberValue(row.sort_order),
+        createdAt: stringValue(row.created_at),
+      })),
+    },
+    200,
+    cors,
+  );
 }
 
 async function reorderImages(
@@ -541,7 +804,7 @@ async function reorderImages(
     ),
   );
   return final.every((result) => result.success)
-    ? listImages(env, cors, listingId)
+    ? listImages(request, env, cors, listingId)
     : databaseError(cors);
 }
 
@@ -631,10 +894,13 @@ async function parseListing(request: Request, env: MarketplaceEnv, cors: Headers
   }
   const price = numberOrNull(body.data.price);
   if (price !== null && (price < 0 || price > 1e15)) return validation(cors, "Invalid price.");
-  const details =
-    body.data.details && typeof body.data.details === "object" && !Array.isArray(body.data.details)
-      ? (body.data.details as Row)
-      : {};
+  const details = jsonObject(body.data.details);
+  const contactOptions = booleanRecord(body.data.contactOptions);
+  const creationRequestId = clean(body.data.creationRequestId, 120);
+  const expectedUpdatedAt = clean(body.data.expectedUpdatedAt, 80);
+  if (creationRequestId && !/^[A-Za-z0-9_-]{8,120}$/.test(creationRequestId)) {
+    return validation(cors, "Invalid listing creation request id.");
+  }
   return {
     categoryId,
     subcategoryId,
@@ -647,7 +913,10 @@ async function parseListing(request: Request, env: MarketplaceEnv, cors: Headers
     condition: clean(body.data.condition, 40) ?? "not_applicable",
     districtAr: clean(body.data.districtAr, 160),
     contactName: clean(body.data.contactName, 120),
+    contactOptions,
     details,
+    creationRequestId,
+    expectedUpdatedAt,
     submit: body.data.submit === true,
   };
 }
@@ -695,6 +964,12 @@ function mapProfile(row: Row) {
     accountStatus: row.account_status,
     avatarAssetId: row.avatar_asset_id,
     coverAssetId: row.cover_asset_id,
+    avatarUrl: row.avatar_asset_id
+      ? `/v1/media/assets/${encodeURIComponent(String(row.avatar_asset_id))}`
+      : null,
+    coverUrl: row.cover_asset_id
+      ? `/v1/media/assets/${encodeURIComponent(String(row.cover_asset_id))}`
+      : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -717,16 +992,8 @@ function mapListingRow(row: Row) {
     status: stringValue(row.status),
     districtAr: nullableString(row.district_ar),
     contactName: nullableString(row.contact_name),
-    contactOptions:
-      row.contact_options &&
-      typeof row.contact_options === "object" &&
-      !Array.isArray(row.contact_options)
-        ? (row.contact_options as Row)
-        : {},
-    details:
-      row.details && typeof row.details === "object" && !Array.isArray(row.details)
-        ? (row.details as Row)
-        : {},
+    contactOptions: booleanRecord(row.contact_options),
+    details: jsonObject(row.details),
     isFeatured: row.is_featured === true || row.is_featured === 1,
     featuredUntil: nullableString(row.featured_until),
     reviewedBy: null,
@@ -738,9 +1005,31 @@ function mapListingRow(row: Row) {
     expiresAt: nullableString(row.expires_at),
     renewedAt: nullableString(row.renewed_at),
     expiryDays: nullableNumber(row.expiry_days),
+    primaryImageUrl: nullableString(row.primary_media_asset_id)
+      ? `/v1/account/media/assets/${encodeURIComponent(String(row.primary_media_asset_id))}`
+      : null,
     createdAt: stringValue(row.created_at),
     updatedAt: stringValue(row.updated_at),
   };
+}
+
+function jsonObject(value: unknown): Row {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value as Row;
+  if (typeof value !== "string") return {};
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Row) : {};
+  } catch {
+    return {};
+  }
+}
+
+function booleanRecord(value: unknown): Record<string, boolean> {
+  return Object.fromEntries(
+    Object.entries(jsonObject(value)).filter(
+      (entry): entry is [string, boolean] => typeof entry[1] === "boolean",
+    ),
+  );
 }
 
 function stringValue(value: unknown, fallback = ""): string {

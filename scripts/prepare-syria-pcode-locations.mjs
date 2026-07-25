@@ -7,7 +7,7 @@
  * - OCHA/HDX COD-AB Syria for formal administrative hierarchy
  * - Syria Humanitarian Atlas locality export where licensed/downloaded and reviewed
  *
- * This script never writes to Supabase. It validates and emits review artifacts only.
+ * This script never writes to the retired backend. It validates and emits review artifacts only.
  */
 
 import { createHash } from "node:crypto";

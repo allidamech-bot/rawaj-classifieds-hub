@@ -1,0 +1,27 @@
+name: Runtime Boundary Audit
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "cloudflare/worker/src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "cloudflare/worker/package-lock.json"
+      - "scripts/retired-backend-runtime-audit.mjs"
+      - ".github/workflows/runtime-boundary-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Reject retired backend runtime access
+        run: npm run test:runtime-boundary

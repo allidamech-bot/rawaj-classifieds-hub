@@ -15,16 +15,16 @@ const workerEntry = read("cloudflare/worker/src/entry.ts");
 const workerListings = read("cloudflare/worker/src/public-listings.ts");
 const wrangler = read("cloudflare/worker/wrangler.base.jsonc");
 
-test("public data provider is selected explicitly and defaults safely", () => {
-  assert.match(config, /VITE_PUBLIC_DATA_PROVIDER/);
+test("public data provider is permanently Cloudflare and fails closed", () => {
+  assert.match(config, /PublicDataProviderName = "cloudflare"/);
+  assert.match(config, /provider: "cloudflare"/);
   assert.match(config, /VITE_PUBLIC_DATA_API_BASE_URL/);
-  assert.match(config, /"supabase"/);
-  assert.match(config, /configuredProvider === "cloudflare"/);
-  assert.match(config, /https:/);
-  assert.doesNotMatch(config, /catch[\s\S]*provider\s*=\s*"supabase"/);
+  assert.match(config, /missing or invalid/);
+  assert.doesNotMatch(config, /supabase/i);
+  assert.doesNotMatch(config, /VITE_PUBLIC_DATA_PROVIDER/);
 });
 
-test("Cloudflare client has bounded requests and no Supabase dependency", () => {
+test("Cloudflare client has bounded requests and no retired backend dependency", () => {
   assert.match(client, /REQUEST_TIMEOUT_MS/);
   assert.match(client, /AbortController/);
   assert.match(client, /credentials:\s*"omit"/);
@@ -33,12 +33,16 @@ test("Cloudflare client has bounded requests and no Supabase dependency", () => 
   assert.doesNotMatch(client, /publicSupabase|supabase\.from|createClient/);
 });
 
-test("all public marketplace surfaces use the explicit provider boundary", () => {
-  for (const source of [references, listings, detail, images, placements]) {
-    assert.match(source, /isCloudflarePublicDataProvider/);
-    assert.doesNotMatch(source, /catch[\s\S]{0,500}fetch.*Supabase/i);
+test("all public marketplace surfaces are Cloudflare-only", () => {
+  assert.match(references, /fetchCloudflareReferences/);
+  assert.doesNotMatch(references, /getClient|publicSupabase|SupabaseClient|\.rpc\(|\.from\(/);
+
+  for (const source of [listings, detail, images]) {
+    assert.match(source, /Cloudflare|fetchCloudflare|fetchListingImagesBase/);
+    assert.doesNotMatch(source, /Supabase|isCloudflarePublicDataProvider|getClient|publicSupabase/);
   }
-  assert.match(listings, /There is deliberately no silent cross-provider fallback/);
+  assert.match(placements, /fetchCloudflareAdPlacements/);
+  assert.match(listings, /provider: "cloudflare"/);
 });
 
 test("Cloudflare public API coverage includes references, listings, detail, media and placements", () => {

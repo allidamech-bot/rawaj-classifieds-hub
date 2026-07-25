@@ -83,7 +83,7 @@ export async function handlePublicSellers(
       .bind(sellerId, LISTING_LIMIT)
       .all<Row>(),
     env.DB.prepare(
-      `SELECT id, rating, comment, created_at
+      `SELECT id, rating, comment, traits, seller_response, seller_response_updated_at, created_at
        FROM seller_reviews
        WHERE seller_id = ? AND status = 'approved'
        ORDER BY created_at DESC, id DESC
@@ -201,9 +201,9 @@ function mapReview(row: Row) {
     id: stringValue(row.id),
     rating,
     comment: cleanText(row.comment, 1200),
-    traits: [],
-    sellerResponse: null,
-    sellerResponseUpdatedAt: null,
+    traits: jsonStringArray(row.traits),
+    sellerResponse: cleanText(row.seller_response, 800),
+    sellerResponseUpdatedAt: nullableString(row.seller_response_updated_at),
     createdAt: stringValue(row.created_at),
   };
 }
@@ -319,6 +319,17 @@ function clampRating(value: number): number {
 
 function booleanValue(value: unknown): boolean {
   return value === true || value === 1 || value === "1";
+}
+
+function jsonStringArray(value: unknown): string[] {
+  try {
+    const parsed = typeof value === "string" ? JSON.parse(value) : value;
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string").slice(0, 3)
+      : [];
+  } catch {
+    return [];
+  }
 }
 
 function jsonObject(value: unknown): Row {

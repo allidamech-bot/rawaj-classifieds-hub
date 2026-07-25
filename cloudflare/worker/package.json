@@ -4,19 +4,19 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "prepare:config": "node scripts/prepare-generated-wrangler.mjs",
+    "prepare:config": "node scripts/render-config.mjs --local",
     "dev": "npm run prepare:config && wrangler dev --config wrangler.generated.jsonc",
     "dev:local": "npm run prepare:config && wrangler dev --config wrangler.generated.jsonc --local --persist-to .wrangler/state",
-    "deploy:worker": "npm run prepare:config && wrangler deploy --config wrangler.generated.jsonc",
-    "smoke:remote": "node scripts/remote-smoke.mjs",
-    "deploy": "npm run typecheck && npm run migrate:remote && npm run deploy:worker && npm run smoke:remote",
     "test:setup": "npm run prepare:config && wrangler d1 migrations apply rawaj-staging --local --persist-to .wrangler/test-state-auth --config wrangler.generated.jsonc",
     "test:seed": "wrangler d1 execute rawaj-staging --local --persist-to .wrangler/test-state-auth --config wrangler.generated.jsonc --file ../snapshots/essential/essential-data.sql",
     "test:fixtures": "wrangler d1 execute rawaj-staging --local --persist-to .wrangler/test-state-auth --config wrangler.generated.jsonc --file test/marketplace-fixtures.sql",
     "pretest": "npm run test:setup && npm run test:fixtures",
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
     "migrate:local": "npm run prepare:config && wrangler d1 migrations apply rawaj-staging --local --persist-to .wrangler/state --config wrangler.generated.jsonc",
-    "migrate:remote": "npm run prepare:config && wrangler d1 migrations apply rawaj-staging --remote --config wrangler.generated.jsonc"
+    "migrate:production": "node scripts/require-production-approval.mjs migrate && npm run render:production && wrangler d1 migrations apply rawaj-staging --remote --config wrangler.generated.jsonc",
+    "deploy:production": "node scripts/require-production-approval.mjs deploy && npm run typecheck && npm run render:production && wrangler deploy --config wrangler.generated.jsonc",
+    "smoke:production:read-only": "node scripts/remote-smoke.mjs",
+    "render:production": "node scripts/render-config.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

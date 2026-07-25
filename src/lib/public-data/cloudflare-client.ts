@@ -133,6 +133,10 @@ export async function fetchCloudflareListings(
     detailCondition: filters.detailCondition,
     employmentType: filters.employmentType,
     salaryType: filters.salaryType,
+    attrs:
+      filters.attributeFilters && Object.keys(filters.attributeFilters).length > 0
+        ? base64UrlEncode(JSON.stringify(filters.attributeFilters))
+        : null,
     cursor: cursor ? encodeWorkerCursor(cursor, sort) : null,
   };
 
@@ -218,6 +222,47 @@ export function searchCloudflareLocations(
   limit = 12,
 ): Promise<ClassifiedsResult<LocationSearchResult[]>> {
   return requestJson<LocationSearchResult[]>("/v1/locations/search", { q: query, limit });
+}
+
+export function fetchCloudflareListingFacets<T>(query: Record<string, unknown>): Promise<ClassifiedsResult<T>> {
+  const parameters: Record<string, string | number | boolean | string[] | null | undefined> = {};
+  for (const [key, value] of Object.entries(query)) {
+    if (key === "attributeFilters" && value && typeof value === "object") {
+      parameters.attrs = base64UrlEncode(JSON.stringify(value));
+    } else if (Array.isArray(value)) {
+      parameters[key] = value.filter((item): item is string => typeof item === "string");
+    } else if (["string", "number", "boolean"].includes(typeof value)) {
+      parameters[key] = value as string | number | boolean;
+    }
+  }
+  return requestJson<T>("/v1/listing-facets", parameters);
+}
+
+export function fetchCloudflareNearbyListings<T>(query: Record<string, unknown>): Promise<ClassifiedsResult<T>> {
+  const parameters: Record<string, string | number | boolean | null | undefined> = {};
+  for (const [key, value] of Object.entries(query)) {
+    if (["string", "number", "boolean"].includes(typeof value)) {
+      parameters[key] = value as string | number | boolean;
+    }
+  }
+  return requestJson<T>("/v1/listings/nearby", parameters);
+}
+
+export function fetchCloudflareSitemapReferences(): Promise<
+  ClassifiedsResult<{ categories: Array<{ slug: string }>; governorates: Array<{ slug: string }> }>
+> {
+  return requestJson("/v1/sitemap/references");
+}
+
+export function fetchCloudflareSitemapCount(): Promise<ClassifiedsResult<{ count: number }>> {
+  return requestJson("/v1/sitemap/count");
+}
+
+export function fetchCloudflareSitemapListings(
+  page: number,
+  pageSize: number,
+): Promise<ClassifiedsResult<Array<{ id: string; ownerId: string; updatedAt: string }>>> {
+  return requestJson("/v1/sitemap/listings", { page, pageSize });
 }
 
 async function requestJson<T>(

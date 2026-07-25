@@ -6,12 +6,9 @@ import {
   invalidateConversationMessagesCache,
 } from "@/lib/api/messaging-guarded";
 import { fetchMyConversations, markConversationRead } from "@/lib/api/messaging";
-import { getClient } from "@/lib/api/shared";
-import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 import type { Conversation, ConversationMessage } from "@/lib/classifieds-types";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 
-const LIVE_CHAT_EVENT_DEBOUNCE_MS = 150;
 
 interface LiveChatWorkspaceOptions {
   signedIn: boolean;
@@ -131,93 +128,21 @@ export function useLiveChatWorkspace({
   useEffect(() => {
     if (!signedIn || !profileId || typeof window === "undefined") return;
 
-    if (isCloudflarePublicDataProvider()) {
-      const refreshWhenVisible = () => {
-        if (document.visibilityState === "visible" && navigator.onLine !== false) {
-          invalidateConversationMessagesCache(selectedConversationId);
-          void refreshWorkspace();
-        }
-      };
-      const interval = window.setInterval(refreshWhenVisible, 15_000);
-      document.addEventListener("visibilitychange", refreshWhenVisible);
-      window.addEventListener("online", refreshWhenVisible);
-      window.addEventListener("focus", refreshWhenVisible);
-      return () => {
-        window.clearInterval(interval);
-        document.removeEventListener("visibilitychange", refreshWhenVisible);
-        window.removeEventListener("online", refreshWhenVisible);
-        window.removeEventListener("focus", refreshWhenVisible);
-      };
-    }
-
-    const clientResult = getClient();
-    const scopeKey = buildScopeKey(profileId, selectedConversationId);
-    let realtimeTimer: ReturnType<typeof setTimeout> | null = null;
-
-    const refreshWhenAvailable = () => {
-      if (document.visibilityState === "hidden" || navigator.onLine === false) return;
-      invalidateConversationMessagesCache(selectedConversationId);
-      void refreshWorkspace();
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible" && navigator.onLine !== false) {
+        invalidateConversationMessagesCache(selectedConversationId);
+        void refreshWorkspace();
+      }
     };
-
-    const scheduleRealtimeRefresh = (payload?: { new?: unknown; old?: unknown }) => {
-      if (activeScopeRef.current !== scopeKey) return;
-      const row =
-        payload?.new && typeof payload.new === "object"
-          ? (payload.new as Record<string, unknown>)
-          : payload?.old && typeof payload.old === "object"
-            ? (payload.old as Record<string, unknown>)
-            : null;
-      if (
-        row &&
-        selectedConversationId &&
-        typeof row.conversation_id === "string" &&
-        row.conversation_id !== selectedConversationId
-      )
-        return;
-      if (document.visibilityState === "hidden" || navigator.onLine === false) return;
-      if (realtimeTimer !== null) clearTimeout(realtimeTimer);
-      invalidateConversationMessagesCache(selectedConversationId);
-      realtimeTimer = setTimeout(refreshWhenAvailable, LIVE_CHAT_EVENT_DEBOUNCE_MS);
-    };
-
-    window.addEventListener("online", refreshWhenAvailable);
-    window.addEventListener("focus", refreshWhenAvailable);
-    document.addEventListener("visibilitychange", refreshWhenAvailable);
-
-    const channel =
-      clientResult.ok && selectedConversationId
-        ? clientResult.data
-            .channel(`rawaj-live-chat:${profileId}:${selectedConversationId}`)
-            .on(
-              "postgres_changes",
-              {
-                event: "*",
-                schema: "public",
-                table: "conversation_messages",
-                filter: `conversation_id=eq.${selectedConversationId}`,
-              },
-              scheduleRealtimeRefresh,
-            )
-            .on(
-              "postgres_changes",
-              {
-                event: "*",
-                schema: "public",
-                table: "conversations",
-                filter: `id=eq.${selectedConversationId}`,
-              },
-              scheduleRealtimeRefresh,
-            )
-            .subscribe()
-        : null;
-
+    const interval = window.setInterval(refreshWhenVisible, 15_000);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    window.addEventListener("online", refreshWhenVisible);
+    window.addEventListener("focus", refreshWhenVisible);
     return () => {
-      if (realtimeTimer !== null) clearTimeout(realtimeTimer);
-      window.removeEventListener("online", refreshWhenAvailable);
-      window.removeEventListener("focus", refreshWhenAvailable);
-      document.removeEventListener("visibilitychange", refreshWhenAvailable);
-      if (channel && clientResult.ok) void clientResult.data.removeChannel(channel);
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      window.removeEventListener("online", refreshWhenVisible);
+      window.removeEventListener("focus", refreshWhenVisible);
     };
   }, [profileId, refreshWorkspace, selectedConversationId, signedIn]);
 }

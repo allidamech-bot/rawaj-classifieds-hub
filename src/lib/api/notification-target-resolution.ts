@@ -3,7 +3,7 @@ import { fetchListingDetail } from "@/lib/api/listings";
 import { fetchMyConversations } from "@/lib/api/messaging";
 import { fetchPublicSellerProfile } from "@/lib/api/seller";
 import { fetchMySupportRequest } from "@/lib/api/support";
-import { getAuthenticatedUserId, getClient, mapError } from "@/lib/api/shared";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import { parseNotificationTargetReference } from "@/lib/notification-target-path";
 
@@ -68,7 +68,7 @@ export async function resolveNotificationTarget(
   }
 
   if (reference.kind === "saved_search") {
-    const owned = await currentAccountOwns("saved_searches", reference.id);
+    const owned = await currentAccountOwnsSavedSearch(reference.id);
     if (!owned.ok) return owned;
     return {
       ok: true,
@@ -90,31 +90,34 @@ export async function resolveNotificationTarget(
 async function resolveOwnedListing(
   listingId: string,
 ): Promise<ClassifiedsResult<ResolvedNotificationTarget | null>> {
-  const owned = await currentAccountOwns("listings", listingId, "owner_id");
-  if (!owned.ok) return owned;
+  const result = await cloudflareApiRequest<{ listing: Record<string, unknown> }>(
+    `/api/listings/${encodeURIComponent(listingId)}`,
+  );
+  if (result.ok) {
+    return { ok: true, data: { kind: "owner_listing", listingId } };
+  }
+  if (result.code === "not_found" || result.code === "permission_denied") {
+    return { ok: true, data: null };
+  }
   return {
-    ok: true,
-    data: owned.data ? { kind: "owner_listing", listingId } : null,
+    ok: false,
+    error: { code: result.code as never, message: result.error },
   };
 }
 
-async function currentAccountOwns(
-  table: "listings" | "saved_searches",
+async function currentAccountOwnsSavedSearch(
   resourceId: string,
-  ownerColumn = "user_id",
 ): Promise<ClassifiedsResult<boolean>> {
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const actorResult = await getAuthenticatedUserId(clientResult.data);
-  if (!actorResult.ok) return actorResult;
-  const { data, error } = await clientResult.data
-    .from(table)
-    .select("id")
-    .eq("id", resourceId)
-    .eq(ownerColumn, actorResult.data)
-    .maybeSingle();
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: Boolean(data) };
+  const result = await cloudflareApiRequest<Array<{ id: string }>>(
+    "/v1/account/saved-searches",
+  );
+  if (!result.ok) {
+    return {
+      ok: false,
+      error: { code: result.code as never, message: result.error },
+    };
+  }
+  return { ok: true, data: result.data.some((item) => item.id === resourceId) };
 }
 
 function isOwnerListingNotification(type: string): boolean {

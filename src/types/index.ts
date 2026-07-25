@@ -1,4 +1,4 @@
-// RAWAJ — domain types. These mirror planned Supabase tables.
+// RAWAJ — domain types aligned with the Cloudflare Worker and D1 contracts.
 // Tables planned: users, listings, categories, subcategories, listing_images,
 // favorites, saved_searches, chats, messages, reports, blocks, reviews,
 // promotions, support_tickets, admin_audit_logs, app_config.

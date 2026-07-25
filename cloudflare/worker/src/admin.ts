@@ -97,7 +97,7 @@ async function adminMetrics(request: Request, env: AdminEnv, cors: Headers) {
     "SELECT count(*) AS count FROM listings WHERE status = 'pending_review'",
   ).first<{ count: number }>();
   const openListingReports = await env.DB.prepare(
-    "SELECT count(*) AS count FROM listing_reports WHERE status IN ('new', 'under_review')",
+    "SELECT count(*) AS count FROM listing_reports WHERE status IN ('open', 'reviewing')",
   ).first<{ count: number }>();
   const activeRestrictions = await env.DB.prepare(
     "SELECT count(*) AS count FROM user_restrictions WHERE ends_at IS NULL OR ends_at > datetime('now')",

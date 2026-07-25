@@ -68,6 +68,7 @@ interface ListingFilters {
   detailCondition: string | null;
   employmentType: string | null;
   salaryType: string | null;
+  attributeFilters: Record<string, string | boolean | string[] | { min?: number; max?: number }>;
 }
 
 const API_VERSION = "v1";
@@ -161,6 +162,7 @@ export async function handlePublicListingsRequest(
   addJsonTextFilter(where, values, ["condition"], filters.detailCondition);
   addJsonTextFilter(where, values, ["employment_type"], filters.employmentType);
   addJsonTextFilter(where, values, ["salary_type"], filters.salaryType);
+  applyAttributeFilters(where, values, filters.attributeFilters);
 
   if (filters.query) {
     joins.push("JOIN listings_fts f ON f.listing_id = l.id");
@@ -174,7 +176,7 @@ export async function handlePublicListingsRequest(
   const sql = `${withClause}
     SELECT
       l.id, l.owner_id, l.category_id, l.subcategory_id, l.governorate_id,
-      l.title, l.description, l.price, l.currency, l.price_type,
+      l.location_node_id, l.title, l.description, l.price, l.currency, l.price_type,
       l.listing_condition, l.status, l.district_ar, l.contact_name,
       l.contact_options, l.details, l.is_featured, l.featured_until,
       l.published_at, l.archived_at, l.reserved_at, l.expires_at,
@@ -320,7 +322,68 @@ function readListingFilters(params: URLSearchParams): ListingFilters {
     detailCondition: cleanText(params.get("detailCondition"), 80),
     employmentType: cleanText(params.get("employmentType"), 80),
     salaryType: cleanText(params.get("salaryType"), 80),
+    attributeFilters: decodeAttributeFilters(params.get("attrs")),
   };
+}
+
+function decodeAttributeFilters(
+  value: string | null,
+): Record<string, string | boolean | string[] | { min?: number; max?: number }> {
+  if (!value || value.length > 12_000) return {};
+  try {
+    const parsed = JSON.parse(base64UrlDecode(value));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const output: Record<string, string | boolean | string[] | { min?: number; max?: number }> = {};
+    for (const [key, raw] of Object.entries(parsed as Record<string, unknown>).slice(0, 50)) {
+      if (!/^[A-Za-z0-9_.-]{1,120}$/.test(key)) continue;
+      if (typeof raw === "string") output[key] = raw.slice(0, 240);
+      else if (typeof raw === "boolean") output[key] = raw;
+      else if (Array.isArray(raw)) {
+        const values = raw.filter((item): item is string => typeof item === "string").slice(0, 50);
+        if (values.length) output[key] = values;
+      } else if (raw && typeof raw === "object") {
+        const source = raw as Record<string, unknown>;
+        const range: { min?: number; max?: number } = {};
+        const min = Number(source.min);
+        const max = Number(source.max);
+        if (Number.isFinite(min)) range.min = min;
+        if (Number.isFinite(max)) range.max = max;
+        if (Object.keys(range).length) output[key] = range;
+      }
+    }
+    return output;
+  } catch {
+    return {};
+  }
+}
+
+function applyAttributeFilters(
+  where: string[],
+  values: D1Value[],
+  filters: Record<string, string | boolean | string[] | { min?: number; max?: number }>,
+): void {
+  for (const [key, filter] of Object.entries(filters)) {
+    const path = `$."${key}"`;
+    if (typeof filter === "string") {
+      where.push("CAST(json_extract(l.details, ?) AS TEXT) = ?");
+      values.push(path, filter);
+    } else if (typeof filter === "boolean") {
+      where.push("CAST(json_extract(l.details, ?) AS INTEGER) = ?");
+      values.push(path, filter ? 1 : 0);
+    } else if (Array.isArray(filter) && filter.length > 0) {
+      where.push(`CAST(json_extract(l.details, ?) AS TEXT) IN (${filter.map(() => "?").join(",")})`);
+      values.push(path, ...filter);
+    } else if (filter && typeof filter === "object" && !Array.isArray(filter)) {
+      if (typeof filter.min === "number" && Number.isFinite(filter.min)) {
+        where.push("CAST(json_extract(l.details, ?) AS REAL) >= ?");
+        values.push(path, filter.min);
+      }
+      if (typeof filter.max === "number" && Number.isFinite(filter.max)) {
+        where.push("CAST(json_extract(l.details, ?) AS REAL) <= ?");
+        values.push(path, filter.max);
+      }
+    }
+  }
 }
 
 function decodeLegacyScope(value: string): LegacyScope | null {
@@ -488,6 +551,7 @@ function mapListing(row: JsonRecord, requestUrl: URL): JsonRecord {
     categoryPlaceholder: nullableString(row.category_placeholder),
     governorateId: stringValue(row.governorate_id),
     governorateNameAr: nullableString(row.governorate_name_ar),
+    locationNodeId: nullableString(row.location_node_id),
     title: stringValue(row.title),
     description: stringValue(row.description),
     price: nullableNumber(row.price),

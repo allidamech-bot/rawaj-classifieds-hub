@@ -13,7 +13,7 @@ Repository controls:
 - Upload validation rejects empty, unsupported or oversized listing, profile and receipt files before Storage work.
 - Owner, moderation and trust writes retain ownership, permission and stale-write protection.
 
-Acceptance evidence: `src/server.ts`, `scripts/public-data-security.test.mjs`, `scripts/auth-recovery.test.mjs`, `scripts/listing-studio-v3.test.mjs`, and the Supabase security contracts executed by Quality Gate.
+Acceptance evidence: `src/server.ts`, `scripts/public-data-security.test.mjs`, `scripts/auth-recovery.test.mjs`, `scripts/listing-studio-v3.test.mjs`, and the the retired backend security contracts executed by Quality Gate.
 
 ## Phase 42 — SEO, indexing and structured data
 

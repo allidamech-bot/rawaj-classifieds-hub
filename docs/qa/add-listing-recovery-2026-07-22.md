@@ -21,4 +21,4 @@ Scope: restore the mobile add-listing journey before continuing broader interact
 
 ## Safety boundary
 
-No Supabase, database, migration, API, authentication, permission, moderation, or Android configuration changes were made.
+No the retired backend, database, migration, API, authentication, permission, moderation, or Android configuration changes were made.

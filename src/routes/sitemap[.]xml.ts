@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
-import { getClient } from "@/lib/api/shared";
+import {
+  fetchCloudflareSitemapCount,
+  fetchCloudflareSitemapListings,
+  fetchCloudflareSitemapReferences,
+} from "@/lib/public-data/cloudflare-client";
 import { absoluteUrl } from "@/lib/seo";
 
 type SitemapEntry = {
@@ -13,16 +16,6 @@ type SitemapEntry = {
 type SitemapIndexEntry = {
   loc: string;
   lastmod?: string;
-};
-
-type PublicListingSitemapRow = {
-  id: string;
-  owner_id: string;
-  updated_at: string;
-};
-
-type PublicSlugRow = {
-  slug: string;
 };
 
 const SITEMAP_PAGE_SIZE = 1_000;
@@ -102,89 +95,53 @@ export const Route = createFileRoute("/sitemap.xml")({
 });
 
 async function readPublicReferenceEntries(): Promise<SitemapEntry[]> {
-  const clientResult = getClient();
-  if (!clientResult.ok) throw new Error(clientResult.error.message);
+  const result = await fetchCloudflareSitemapReferences();
+  if (!result.ok) throw new Error(result.error.message);
 
-  const [categoriesResult, governoratesResult] = await Promise.all([
-    clientResult.data.from("categories").select("slug").eq("is_active", true).order("sort_order"),
-    clientResult.data.from("governorates").select("slug").eq("is_active", true).order("sort_order"),
-  ]);
-
-  if (categoriesResult.error) throw categoriesResult.error;
-  if (governoratesResult.error) throw governoratesResult.error;
-
-  const categoryEntries: SitemapEntry[] = ((categoriesResult.data ?? []) as PublicSlugRow[])
+  const categoryEntries: SitemapEntry[] = result.data.categories
     .filter((row) => row.slug)
     .map((row) => ({
       loc: absoluteUrl(`/category/${encodeURIComponent(row.slug)}`),
       changefreq: "daily",
       priority: 0.8,
     }));
-
-  const governorateEntries: SitemapEntry[] = ((governoratesResult.data ?? []) as PublicSlugRow[])
+  const governorateEntries: SitemapEntry[] = result.data.governorates
     .filter((row) => row.slug)
     .map((row) => ({
       loc: absoluteUrl(`/syria/${encodeURIComponent(row.slug)}`),
       changefreq: "daily",
       priority: 0.8,
     }));
-
   return [...categoryEntries, ...governorateEntries];
 }
 
 async function readPublicListingCount(): Promise<number> {
-  const clientResult = getClient();
-  if (!clientResult.ok) throw new Error(clientResult.error.message);
-
-  const { count, error } = await clientResult.data
-    .from("listings")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "approved")
-    .is("archived_at", null)
-    .or(publicListingExpiryFilter());
-
-  if (error) throw error;
-  if (typeof count !== "number") throw new Error("Public listing count was not returned.");
-  return count;
+  const result = await fetchCloudflareSitemapCount();
+  if (!result.ok) throw new Error(result.error.message);
+  return result.data.count;
 }
 
 async function readMarketplacePage(page: number): Promise<SitemapEntry[]> {
-  const clientResult = getClient();
-  if (!clientResult.ok) throw new Error(clientResult.error.message);
-
-  const offset = (page - 1) * SITEMAP_PAGE_SIZE;
-  const { data, error } = await clientResult.data
-    .from("listings")
-    .select("id,owner_id,updated_at")
-    .eq("status", "approved")
-    .is("archived_at", null)
-    .or(publicListingExpiryFilter())
-    .order("id", { ascending: true })
-    .range(offset, offset + SITEMAP_PAGE_SIZE - 1);
-
-  if (error) throw error;
-  const rows = (data ?? []) as PublicListingSitemapRow[];
-
+  const result = await fetchCloudflareSitemapListings(page, SITEMAP_PAGE_SIZE);
+  if (!result.ok) throw new Error(result.error.message);
+  const rows = result.data;
   const listingEntries: SitemapEntry[] = rows.map((row) => ({
     loc: absoluteUrl(`/listings/${encodeURIComponent(row.id)}`),
-    lastmod: toIsoDate(row.updated_at),
+    lastmod: toIsoDate(row.updatedAt),
     changefreq: "weekly",
     priority: 0.7,
   }));
-
   const sellerLastModified = new Map<string, string>();
   for (const row of rows) {
-    const current = sellerLastModified.get(row.owner_id);
-    if (!current || row.updated_at > current) sellerLastModified.set(row.owner_id, row.updated_at);
+    const current = sellerLastModified.get(row.ownerId);
+    if (!current || row.updatedAt > current) sellerLastModified.set(row.ownerId, row.updatedAt);
   }
-
   const sellerEntries: SitemapEntry[] = Array.from(sellerLastModified, ([ownerId, updatedAt]) => ({
     loc: absoluteUrl(`/seller/${encodeURIComponent(ownerId)}`),
     lastmod: toIsoDate(updatedAt),
     changefreq: "weekly",
     priority: 0.6,
   }));
-
   return [...listingEntries, ...sellerEntries];
 }
 

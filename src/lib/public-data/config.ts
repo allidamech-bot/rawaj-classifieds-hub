@@ -1,44 +1,32 @@
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 
-export type PublicDataProviderName = "supabase" | "cloudflare";
+export type PublicDataProviderName = "cloudflare";
 
 export interface PublicDataRuntimeConfig {
   provider: PublicDataProviderName;
   cloudflareApiBaseUrl: string | null;
 }
 
-const configuredProvider = String(import.meta.env.VITE_PUBLIC_DATA_PROVIDER ?? "supabase")
-  .trim()
-  .toLowerCase();
-
-const provider: PublicDataProviderName =
-  configuredProvider === "cloudflare" ? "cloudflare" : "supabase";
-
 const cloudflareApiBaseUrl = normalizeApiBaseUrl(
   String(import.meta.env.VITE_PUBLIC_DATA_API_BASE_URL ?? ""),
 );
 
+/**
+ * RAWAJ has one runtime data provider: Cloudflare Worker + D1 + R2.
+ *
+ * This is intentionally not environment-switchable. A missing or malformed
+ * Cloudflare URL must fail closed instead of falling back to a retired backend.
+ */
 export const publicDataRuntimeConfig: PublicDataRuntimeConfig = {
-  provider,
+  provider: "cloudflare",
   cloudflareApiBaseUrl,
 };
 
-export function isCloudflarePublicDataProvider(): boolean {
-  return publicDataRuntimeConfig.provider === "cloudflare";
+export function isCloudflarePublicDataProvider(): true {
+  return true;
 }
 
 export function requireCloudflarePublicApiBaseUrl(): ClassifiedsResult<string> {
-  if (!isCloudflarePublicDataProvider()) {
-    return {
-      ok: false,
-      error: {
-        code: "setup_required",
-        message: "Cloudflare public data provider is not enabled.",
-        operation: "cloudflare_public_api_config",
-      },
-    };
-  }
-
   if (!publicDataRuntimeConfig.cloudflareApiBaseUrl) {
     return {
       ok: false,
