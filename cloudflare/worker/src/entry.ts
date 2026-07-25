@@ -25,6 +25,8 @@ type EntryEnv = PublicListingsEnv &
     API_ALLOWED_ORIGINS?: string;
   };
 
+const OFFICIAL_ORIGINS = ["https://rawa-j.com", "https://www.rawa-j.com"] as const;
+
 export default {
   async fetch(request: Request, env: EntryEnv): Promise<Response> {
     const origin = request.headers.get("Origin");
@@ -64,12 +66,11 @@ function corsHeaders(origin: string | null, env: EntryEnv): Headers {
 
   if (!origin) return headers;
 
-  const allowed = new Set(
-    (env.API_ALLOWED_ORIGINS ?? "https://rawa-j.com,https://www.rawa-j.com")
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean),
-  );
+  const allowed = new Set<string>(OFFICIAL_ORIGINS);
+  for (const value of (env.API_ALLOWED_ORIGINS ?? "").split(",")) {
+    const normalized = value.trim();
+    if (normalized) allowed.add(normalized);
+  }
 
   if (allowed.has(origin)) {
     headers.set("Access-Control-Allow-Origin", origin);
