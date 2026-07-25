@@ -27,6 +27,9 @@
       "@/lib/api/listing-attributes": [
         "./src/lib/api/listing-attributes-cloudflare.ts"
       ],
+      "@/lib/api/ad-placements": [
+        "./src/lib/api/ad-placements-cloudflare.ts"
+      ],
       "@/features/listings/listings-components": [
         "./src/features/listings/listings-components-public.tsx"
       ],
