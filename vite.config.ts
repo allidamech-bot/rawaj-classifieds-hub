@@ -30,6 +30,12 @@ export default defineConfig({
             new URL("./src/lib/api/taxonomy-metadata-cloudflare.ts", import.meta.url),
           ),
         },
+        {
+          find: "@/lib/api/listing-attributes",
+          replacement: fileURLToPath(
+            new URL("./src/lib/api/listing-attributes-cloudflare.ts", import.meta.url),
+          ),
+        },
       ],
     },
     define: {
