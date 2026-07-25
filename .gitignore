@@ -57,3 +57,5 @@ data/locations/syria-ocha-location-nodes.csv
 .env*
 
 test-results/
+
+cloudflare/backups/
