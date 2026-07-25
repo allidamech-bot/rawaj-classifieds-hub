@@ -4,16 +4,17 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "dev": "wrangler dev --config wrangler.generated.jsonc",
-    "dev:local": "wrangler dev --config wrangler.generated.jsonc --local --persist-to .wrangler/state",
-    "deploy": "wrangler deploy --config wrangler.generated.jsonc",
-    "test:setup": "wrangler d1 migrations apply rawaj-staging --local --persist-to .wrangler/test-state-auth --config wrangler.generated.jsonc",
+    "prepare:config": "node scripts/prepare-generated-wrangler.mjs",
+    "dev": "npm run prepare:config && wrangler dev --config wrangler.generated.jsonc",
+    "dev:local": "npm run prepare:config && wrangler dev --config wrangler.generated.jsonc --local --persist-to .wrangler/state",
+    "deploy": "npm run prepare:config && wrangler deploy --config wrangler.generated.jsonc",
+    "test:setup": "npm run prepare:config && wrangler d1 migrations apply rawaj-staging --local --persist-to .wrangler/test-state-auth --config wrangler.generated.jsonc",
     "test:seed": "wrangler d1 execute rawaj-staging --local --persist-to .wrangler/test-state-auth --config wrangler.generated.jsonc --file ../snapshots/essential/essential-data.sql",
     "test:fixtures": "wrangler d1 execute rawaj-staging --local --persist-to .wrangler/test-state-auth --config wrangler.generated.jsonc --file test/marketplace-fixtures.sql",
     "pretest": "npm run test:setup && npm run test:fixtures",
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
-    "migrate:local": "wrangler d1 migrations apply rawaj-staging --local --persist-to .wrangler/state --config wrangler.generated.jsonc",
-    "migrate:remote": "wrangler d1 migrations apply rawaj-staging --remote --config wrangler.generated.jsonc"
+    "migrate:local": "npm run prepare:config && wrangler d1 migrations apply rawaj-staging --local --persist-to .wrangler/state --config wrangler.generated.jsonc",
+    "migrate:remote": "npm run prepare:config && wrangler d1 migrations apply rawaj-staging --remote --config wrangler.generated.jsonc"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
