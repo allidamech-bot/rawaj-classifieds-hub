@@ -1,5 +1,6 @@
 import baseWorker from "./index";
 import { handlePublicListingsRequest, type PublicListingsEnv } from "./public-listings";
+import { handlePublicSellers, type PublicSellersEnv } from "./public-sellers";
 import type { AuthEnv } from "./auth";
 import { handleMarketplacePrivate, type MarketplaceEnv } from "./marketplace-private";
 import { handleAccountSocial, type AccountSocialEnv } from "./account-social";
@@ -10,6 +11,7 @@ import { handleListingAttributes, type ListingAttributesEnv } from "./listing-at
 import { handleSystemControls, type SystemControlsEnv } from "./system-controls";
 
 type EntryEnv = PublicListingsEnv &
+  PublicSellersEnv &
   AuthEnv &
   MarketplaceEnv &
   AccountSocialEnv &
@@ -40,6 +42,7 @@ export default {
       (await handleAdmin(request, env)) ??
       (await handleAccountSocial(request, env)) ??
       (await handleMarketplacePrivate(request, env)) ??
+      (await handlePublicSellers(request, env)) ??
       (request.method === "GET" && url.pathname === "/v1/listings"
         ? await handlePublicListingsRequest(request, env)
         : await baseWorker.fetch(request, env as never));
