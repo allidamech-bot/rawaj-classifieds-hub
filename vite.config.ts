@@ -36,6 +36,12 @@ export default defineConfig({
             new URL("./src/lib/api/listing-attributes-cloudflare.ts", import.meta.url),
           ),
         },
+        {
+          find: "@/lib/api/ad-placements",
+          replacement: fileURLToPath(
+            new URL("./src/lib/api/ad-placements-cloudflare.ts", import.meta.url),
+          ),
+        },
       ],
     },
     define: {
