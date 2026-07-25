@@ -1,7 +1,9 @@
 import { mapListing } from "@/lib/api/listings";
 import { readReferences } from "@/lib/api/references";
 import { getClient, mapError } from "@/lib/api/shared";
-import type { ClassifiedListing, ClassifiedsResult } from "@/lib/classifieds-types";
+import type { ClassifiedListing, ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
 
 export interface RecoverableDraft {
   listing: ClassifiedListing;
@@ -19,6 +21,22 @@ export async function fetchLatestRecoverableOwnerDraft(
         message: "يجب تسجيل الدخول لاسترجاع المسودة.",
       },
     };
+  }
+
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<ClassifiedListing[]>("/v1/account/listings");
+    if (!result.ok) {
+      return {
+        ok: false,
+        error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+      };
+    }
+    const draft = [...result.data]
+      .filter((listing) => listing.status === "draft")
+      .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0];
+    return draft
+      ? { ok: true, data: { listing: draft, lastSavedAt: draft.updatedAt } }
+      : { ok: true, data: null };
   }
 
   const clientResult = getClient();
@@ -77,6 +95,19 @@ export async function discardRecoverableOwnerDraft(
         message: "تعذر تحديد المسودة المطلوبة.",
       },
     };
+  }
+
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<{ success: boolean }>(
+      `/v1/listings/${encodeURIComponent(cleanListingId)}`,
+      { method: "DELETE", body: {} },
+    );
+    return result.ok
+      ? { ok: true, data: null }
+      : {
+          ok: false,
+          error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+        };
   }
 
   const clientResult = getClient();
