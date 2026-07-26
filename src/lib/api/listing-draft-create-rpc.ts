@@ -6,6 +6,10 @@ import type {
   CreateListingPayload,
 } from "@/lib/classifieds-types";
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
+import {
+  readOwnerDraftCreationListing,
+  rememberOwnerDraftCreationListing,
+} from "@/lib/api/listing-draft-creation-flow";
 
 export async function createOwnerDraftListingIdempotent(
   userId: string | null,
@@ -27,31 +31,45 @@ export async function createOwnerDraftListingIdempotent(
     };
   }
 
-  const canonicalLocationId = payload.districtAr?.trim().startsWith("@")
-    ? payload.districtAr.trim().slice(1)
-    : null;
-  const result = await cloudflareApiRequest<{ id: string; status: string }>("/v1/listings", {
-    method: "POST",
-    body: {
-      ...payload,
-      categoryId: payload.categoryId.trim(),
-      subcategoryId: payload.subcategoryId?.trim() || null,
-      governorateId: payload.governorateId.trim(),
-      title: payload.title.trim(),
-      description: payload.description.trim(),
-      districtAr: canonicalLocationId ? null : payload.districtAr?.trim() || null,
-      locationNodeId: canonicalLocationId || null,
-      contactName: payload.contactName?.trim() || null,
-      creationRequestId: cleanRequestId,
-      submit: false,
-    },
-  });
-  if (!result.ok) return failure(result);
+  const rememberedListingId = readOwnerDraftCreationListing(userId, cleanRequestId);
+  let listingId = rememberedListingId;
+  if (!listingId) {
+    const canonicalLocationId = payload.districtAr?.trim().startsWith("@")
+      ? payload.districtAr.trim().slice(1)
+      : null;
+    const result = await cloudflareApiRequest<{ id: string; status: string }>("/v1/listings", {
+      method: "POST",
+      body: {
+        ...payload,
+        categoryId: payload.categoryId.trim(),
+        subcategoryId: payload.subcategoryId?.trim() || null,
+        governorateId: payload.governorateId.trim(),
+        title: payload.title.trim(),
+        description: payload.description.trim(),
+        districtAr: canonicalLocationId ? null : payload.districtAr?.trim() || null,
+        locationNodeId: canonicalLocationId || null,
+        contactName: payload.contactName?.trim() || null,
+        creationRequestId: cleanRequestId,
+        submit: false,
+      },
+    });
+    if (!result.ok) return failure(result);
+    listingId = result.data.id;
+    rememberOwnerDraftCreationListing(userId, cleanRequestId, listingId);
+  }
 
   const detail = await cloudflareApiRequest<{ listing: Record<string, unknown> }>(
-    `/api/listings/${encodeURIComponent(result.data.id)}`,
+    `/api/listings/${encodeURIComponent(listingId)}`,
   );
-  return detail.ok ? { ok: true, data: mapListing(detail.data.listing) } : failure(detail);
+  return detail.ok
+    ? { ok: true, data: mapListing(detail.data.listing) }
+    : {
+        ok: false,
+        error: {
+          code: detail.code as ClassifiedsErrorCode,
+          message: `تم حفظ المسودة برقم ${listingId}، لكن تعذر تأكيد تحميلها. أعد المحاولة لاستعادة المسودة نفسها.`,
+        },
+      };
 }
 
 function failure<T>(result: { ok: false; error: string; code: string }): ClassifiedsResult<T> {

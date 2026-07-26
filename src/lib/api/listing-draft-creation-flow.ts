@@ -43,6 +43,16 @@ export function rememberOwnerDraftCreationListing(
   writeOwnerDraftCreationFlow(cleanUserId, { ...current, listingId: cleanListingId });
 }
 
+export function readOwnerDraftCreationListing(
+  userId: string,
+  requestId: string,
+): string | null {
+  const cleanUserId = userId.trim();
+  const cleanRequestId = requestId.trim();
+  if (!cleanUserId || !UUID_PATTERN.test(cleanRequestId)) return null;
+  return readOwnerDraftCreationFlow(cleanUserId, cleanRequestId)?.listingId ?? null;
+}
+
 export function completeOwnerDraftCreationFlow(userId: string | null, listingId: string): void {
   const cleanUserId = userId?.trim() ?? "";
   const cleanListingId = listingId.trim();

@@ -96,7 +96,7 @@ export function CanonicalLocationSelector({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-canonical-location-selector="true">
       <div className="relative">
         <input
           type="search"

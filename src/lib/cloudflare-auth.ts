@@ -1,10 +1,31 @@
 import type { UserProfile } from "@/lib/auth-types";
 import type { AuthUser } from "@/lib/auth-context";
+import type { User as FirebaseUser } from "firebase/auth";
 import { firebaseAuth } from "@/lib/firebase";
 import { requireCloudflarePublicApiBaseUrl } from "@/lib/public-data/config";
 
 type Envelope<T> = { data?: T; error?: { code?: string; message?: string } };
 type ApiResult<T> = { ok: true; data: T } | { ok: false; error: string; code: string };
+const forcedTokenRefreshes = new Map<string, Promise<string>>();
+
+function isCurrentFirebaseUser(user: FirebaseUser): boolean {
+  return firebaseAuth.currentUser?.uid === user.uid;
+}
+
+async function getFreshFirebaseToken(user: FirebaseUser): Promise<string> {
+  const existing = forcedTokenRefreshes.get(user.uid);
+  if (existing) return existing;
+
+  const refresh = user.getIdToken(true);
+  forcedTokenRefreshes.set(user.uid, refresh);
+  try {
+    return await refresh;
+  } finally {
+    if (forcedTokenRefreshes.get(user.uid) === refresh) {
+      forcedTokenRefreshes.delete(user.uid);
+    }
+  }
+}
 
 export function cloudflareApiUrl(path: string): string {
   const base = requireCloudflarePublicApiBaseUrl();
@@ -18,14 +39,19 @@ export async function cloudflareAuthorizedFetch(
   const base = requireCloudflarePublicApiBaseUrl();
   if (!base.ok) return null;
   const currentUser = firebaseAuth.currentUser;
-  const initialToken = currentUser ? await currentUser.getIdToken() : null;
-  const first = await sendAuthorizedFetch(base.data, path, init, initialToken);
-  if (first?.status !== 401 || !currentUser) return first;
+  let initialToken: string | null = null;
   try {
-    const refreshedToken = await currentUser.getIdToken(true);
+    initialToken = currentUser ? await currentUser.getIdToken() : null;
+  } catch {
+    return null;
+  }
+  const first = await sendAuthorizedFetch(base.data, path, init, initialToken);
+  if (first?.status !== 401 || !currentUser || !isCurrentFirebaseUser(currentUser)) return first;
+  try {
+    const refreshedToken = await getFreshFirebaseToken(currentUser);
+    if (!isCurrentFirebaseUser(currentUser)) return first;
     return await sendAuthorizedFetch(base.data, path, init, refreshedToken);
   } catch {
-    await firebaseAuth.signOut().catch(() => undefined);
     return first;
   }
 }
@@ -60,16 +86,35 @@ export async function cloudflareApiRequest<T>(
   if (!base.ok) return { ok: false, error: base.error.message, code: base.error.code };
 
   const currentUser = firebaseAuth.currentUser;
-  const initialToken = currentUser ? await currentUser.getIdToken() : null;
+  let initialToken: string | null = null;
+  try {
+    initialToken = currentUser ? await currentUser.getIdToken() : null;
+  } catch {
+    return {
+      ok: false,
+      error: "تعذر تحديث جلسة تسجيل الدخول. حاول مرة أخرى.",
+      code: "auth_token_unavailable",
+    };
+  }
   const first = await sendRequest<T>(base.data, path, init, initialToken);
-  if (first.response.status !== 401 || !currentUser) return first.result;
+  if (
+    first.response.status !== 401 ||
+    !currentUser ||
+    !isCurrentFirebaseUser(currentUser)
+  ) {
+    return first.result;
+  }
 
   try {
-    const refreshedToken = await currentUser.getIdToken(true);
+    const refreshedToken = await getFreshFirebaseToken(currentUser);
+    if (!isCurrentFirebaseUser(currentUser)) return first.result;
     return (await sendRequest<T>(base.data, path, init, refreshedToken)).result;
   } catch {
-    await firebaseAuth.signOut().catch(() => undefined);
-    return first.result;
+    return {
+      ok: false,
+      error: "تعذر تحديث جلسة تسجيل الدخول. حاول مرة أخرى.",
+      code: "auth_token_unavailable",
+    };
   }
 }
 

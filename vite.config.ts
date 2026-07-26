@@ -6,6 +6,7 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { createRawajE2eApiFixturePlugin } from "./e2e/rawaj-e2e-api-fixtures";
 
 const rawajBuildInfo = {
   commitSha: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? "unknown",
@@ -20,8 +21,24 @@ const rawajBuildInfo = {
 const rawajDisableRemoteMedia =
   process.env.VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA === "1" || process.env.GITHUB_ACTIONS === "true";
 
+const rawajE2eUseFixtures = process.env.RAWAJ_E2E_USE_FIXTURES === "1";
+const rawajE2eApiProxyTarget = process.env.RAWAJ_E2E_API_PROXY_TARGET?.trim();
+const rawajE2eApiProxyPath = "/v1";
+
 export default defineConfig({
   vite: {
+    plugins: rawajE2eUseFixtures ? [createRawajE2eApiFixturePlugin()] : [],
+    server: rawajE2eApiProxyTarget
+      ? {
+          proxy: {
+            [rawajE2eApiProxyPath]: {
+              target: rawajE2eApiProxyTarget,
+              changeOrigin: true,
+              secure: true,
+            },
+          },
+        }
+      : undefined,
     resolve: {
       alias: [
         {

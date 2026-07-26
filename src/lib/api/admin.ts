@@ -35,11 +35,12 @@ export async function adminModerateListing(
   }
 
   if (isCloudflarePublicDataProvider()) {
+    const action = payload.status === "approved" ? "approve" : "reject";
     const result = await cloudflareApiRequest<null>("/v1/admin/listings/moderate", {
       method: "POST",
       body: {
         listingId: payload.listingId,
-        action: payload.status,
+        action,
         reason:
           payload.status === "rejected"
             ? payload.rejectionReason

@@ -38,6 +38,10 @@ function firebaseErrorMessage(error: unknown): string {
   return code ? `${code}: ${message}` : message;
 }
 
+function normalizeAuthEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 function toAuthUser(user: FirebaseUser): AuthUser {
   const displayName = user.displayName?.trim() || undefined;
   const photoURL = user.photoURL?.trim() || undefined;
@@ -60,45 +64,16 @@ async function toAuthSession(user: FirebaseUser): Promise<AuthSession> {
   };
 }
 
-function fallbackProfile(user: AuthUser): UserProfile {
-  const displayName =
-    user.user_metadata.display_name?.trim() ||
-    user.user_metadata.full_name?.trim() ||
-    user.email?.split("@", 1)[0]?.trim() ||
-    "حساب رواج";
-  const now = new Date().toISOString();
-  return {
-    id: user.id,
-    email: user.email ?? "",
-    firstName: null,
-    lastName: null,
-    displayName,
-    businessName: null,
-    bio: null,
-    governorate: null,
-    cityArea: null,
-    phone: null,
-    whatsapp: null,
-    preferredContactMethod: null,
-    verificationStatus: "unverified",
-    accountStatus: "active",
-    role: "user",
-    roles: ["user"],
-    avatarPath: null,
-    avatarUrl: user.user_metadata.avatar_url ?? user.user_metadata.picture ?? null,
-    coverPath: null,
-    coverUrl: null,
-    createdAt: now,
-    updatedAt: now,
-  };
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [session, setSession] = useState<AuthSession | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [reason, setReason] = useState<string | null>(null);
   const loadRequestIdRef = useRef(0);
+  const profileLoadRef = useRef<{
+    userId: string;
+    promise: Promise<UserProfile>;
+  } | null>(null);
 
   const applyFirebaseUser = useCallback(async (firebaseUser: FirebaseUser | null) => {
     const requestId = ++loadRequestIdRef.current;
@@ -114,19 +89,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const nextSession = await toAuthSession(firebaseUser);
       if (requestId !== loadRequestIdRef.current) return { error: null };
       setSession(nextSession);
-      setStatus("signedIn");
+      setProfile(null);
+      setStatus("loading");
       setReason(null);
 
       try {
-        const nextProfile = await loadCloudflareUserProfile(nextSession.user);
+        const existingProfileLoad = profileLoadRef.current;
+        const profilePromise =
+          existingProfileLoad?.userId === firebaseUser.uid
+            ? existingProfileLoad.promise
+            : loadCloudflareUserProfile(nextSession.user);
+        profileLoadRef.current = { userId: firebaseUser.uid, promise: profilePromise };
+        const nextProfile = await profilePromise;
+        if (profileLoadRef.current?.promise === profilePromise) {
+          profileLoadRef.current = null;
+        }
         if (requestId !== loadRequestIdRef.current) return { error: null };
         setProfile(nextProfile);
+        setStatus("signedIn");
       } catch (error) {
+        if (profileLoadRef.current?.userId === firebaseUser.uid) {
+          profileLoadRef.current = null;
+        }
         if (requestId !== loadRequestIdRef.current) return { error: null };
         const message = error instanceof Error ? error.message : "تعذر تحميل بيانات الحساب.";
         console.error("rawaj_profile_bootstrap_failed", message);
-        setProfile(fallbackProfile(nextSession.user));
+        setProfile(null);
+        setStatus("authError");
         setReason(message);
+        return { error: message };
       }
 
       return { error: null };
@@ -156,24 +147,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(() => {
     const signOut = async () => {
       loadRequestIdRef.current += 1;
+      profileLoadRef.current = null;
       const localNotificationCleanup = clearLocalNativePushState();
       try {
         await firebaseSignOut(firebaseAuth);
-        await localNotificationCleanup;
         setSession(null);
         setProfile(null);
         setStatus("signedOut");
         setReason(null);
+        await localNotificationCleanup.catch(() => undefined);
         return { error: null };
       } catch (error) {
-        await localNotificationCleanup;
+        await localNotificationCleanup.catch(() => undefined);
+        if (!firebaseAuth.currentUser) {
+          setSession(null);
+          setProfile(null);
+          setStatus("signedOut");
+          setReason(null);
+        }
         return { error: firebaseErrorMessage(error) };
       }
     };
 
     const signInWithPassword = async (email: string, password: string) => {
       try {
-        const credential = await signInWithEmailAndPassword(firebaseAuth, email.trim(), password);
+        const credential = await signInWithEmailAndPassword(
+          firebaseAuth,
+          normalizeAuthEmail(email),
+          password,
+        );
         return applyFirebaseUser(credential.user);
       } catch (error) {
         return { error: firebaseErrorMessage(error) };
@@ -184,12 +186,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const credential = await createUserWithEmailAndPassword(
           firebaseAuth,
-          email.trim(),
+          normalizeAuthEmail(email),
           password,
         );
         const cleanDisplayName = displayName.trim();
-        if (cleanDisplayName)
+        if (cleanDisplayName) {
           await updateProfile(credential.user, { displayName: cleanDisplayName });
+          await credential.user.getIdToken(true);
+        }
         return applyFirebaseUser(credential.user);
       } catch (error) {
         return { error: firebaseErrorMessage(error) };
@@ -200,7 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const origin =
           typeof window === "undefined" ? "https://rawa-j.com" : window.location.origin;
-        await sendPasswordResetEmail(firebaseAuth, email.trim(), {
+        await sendPasswordResetEmail(firebaseAuth, normalizeAuthEmail(email), {
           url: `${origin}/login`,
           handleCodeInApp: false,
         });

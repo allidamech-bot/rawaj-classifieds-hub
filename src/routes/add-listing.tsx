@@ -103,7 +103,7 @@ import { useAuth } from "@/lib/use-auth";
 import type { PriceType } from "@/types";
 
 const MAX_IMAGES = 6;
-const IMAGE_UPLOAD_CONCURRENCY = 2;
+const IMAGE_UPLOAD_CONCURRENCY = 1;
 
 export const Route = createFileRoute("/add-listing")({
   head: () => ({
@@ -244,7 +244,6 @@ function AddListingPage() {
       dynamicSchemaActive,
       condition,
       description,
-      district,
       governorateId,
       locationNodeId,
       preciseLocationSelected,
@@ -748,6 +747,15 @@ function AddListingPage() {
       errors.summary.push(loadingMessage);
     }
 
+    if ((currentStep === 1 || currentStep === 3) && selectedImagesRef.current.length === 0) {
+      const imageMessage = text(
+        "أضف صورة واحدة على الأقل قبل إرسال الإعلان.",
+        "Add at least one photo before submitting the listing.",
+      );
+      errors.fields.images = imageMessage;
+      errors.summary.push(imageMessage);
+    }
+
     if ((currentStep === 1 || currentStep === 3) && dynamicSchemaActive && dynamicSchema) {
       const dynamicErrors = validateDynamicListingFields(dynamicSchema, dynamicValues, language);
       Object.assign(errors.fields, dynamicErrors.fields);
@@ -983,6 +991,9 @@ function AddListingPage() {
         }
 
         let persistedDraft = result.data;
+        draftListingRef.current = persistedDraft;
+        setDraftListing(persistedDraft);
+        setCreatedListingId(persistedDraft.id);
         if (taxonomyNodeId && taxonomyNodeIdRef.current === taxonomyNodeId) {
           const taxonomyResult = await assignOwnerListingTaxonomy(
             profileId,
@@ -1018,7 +1029,6 @@ function AddListingPage() {
 
         draftListingRef.current = persistedDraft;
         setDraftListing(persistedDraft);
-        setCreatedListingId(persistedDraft.id);
         lastAutosaveSignatureRef.current = signature;
         setLastAutosavedAt(persistedDraft.updatedAt || new Date().toISOString());
         setAutosaveState("saved");
@@ -1356,6 +1366,24 @@ function AddListingPage() {
         return;
       }
 
+      const finalImageOrder = selectedImagesRef.current.flatMap((entry, sortOrder) =>
+        entry.uploadedImage ? [{ id: entry.uploadedImage.id, sortOrder }] : [],
+      );
+      const reorderResult = await reorderListingImages(
+        auth.profile?.id ?? null,
+        listingDraft.id,
+        finalImageOrder,
+      );
+      if (!reorderResult.ok) {
+        setSubmitMessage(
+          text(
+            `تم حفظ الإعلان كمسودة، لكن تعذر تأكيد ترتيب الصور: ${reorderResult.error.message}`,
+            `Listing draft was saved, but image order could not be confirmed: ${reorderResult.error.message}`,
+          ),
+        );
+        return;
+      }
+
       const submitResult = await submitOwnerListingForReview(
         auth.profile?.id ?? null,
         listingDraft.id,
@@ -1407,6 +1435,24 @@ function AddListingPage() {
         title={text("أضف إعلاناً", "Post a listing")}
         heading={text("جارٍ التحقق من الجلسة", "Checking session")}
         body={text("نجهّز حالة حسابك قبل النشر.", "Preparing your account status before posting.")}
+      />
+    );
+  }
+
+  if (auth.status === "authError" || (auth.status === "signedIn" && !auth.profile)) {
+    return (
+      <PageState
+        title={text("أضف إعلاناً", "Post a listing")}
+        heading={text("تعذر تجهيز بيانات الحساب", "Could not prepare your account")}
+        body={
+          auth.reason ??
+          text(
+            "جلسة Firebase ما زالت موجودة، لكن تعذر تأكيد ملف الحساب. أعد المحاولة قبل النشر.",
+            "Your Firebase session still exists, but the account profile could not be confirmed. Retry before posting.",
+          )
+        }
+        actionLabel={text("إعادة المحاولة", "Retry")}
+        onAction={() => void auth.refreshProfile()}
       />
     );
   }
@@ -2008,6 +2054,7 @@ function AddListingPage() {
 
               <div className="rawaj-studio-action-bar">
                 <button
+                  type="button"
                   disabled={step === 0}
                   onClick={() => setStep((value) => Math.max(0, value - 1))}
                   className="min-h-11 rounded-[1rem] border border-border/80 bg-card px-5 py-2.5 text-sm font-semibold text-primary transition hover:border-gold/40 disabled:opacity-40"
@@ -2016,6 +2063,7 @@ function AddListingPage() {
                 </button>
                 {step < steps.length - 1 ? (
                   <button
+                    type="button"
                     disabled={!canContinue}
                     onClick={goNext}
                     className="rawaj-button-primary min-h-11 rounded-[1rem] px-6 py-2.5 disabled:opacity-50"
@@ -2024,6 +2072,7 @@ function AddListingPage() {
                   </button>
                 ) : (
                   <button
+                    type="button"
                     disabled={!canSubmit || submitting}
                     onClick={() => void submitListing()}
                     className="min-h-11 rounded-[1rem] bg-emerald-trust px-6 py-2.5 text-sm font-semibold text-emerald-trust-foreground shadow-soft transition hover:brightness-[0.98] disabled:opacity-50"
@@ -2041,6 +2090,7 @@ function AddListingPage() {
                   {createdListingId && (
                     <div className="mt-3 flex flex-wrap justify-center gap-2">
                       <button
+                        type="button"
                         onClick={() =>
                           void navigate({
                             to: "/profile/listings/$id",
@@ -2135,6 +2185,7 @@ function PageState({
   actionLabel,
   actionTo,
   actionSearch,
+  onAction,
 }: {
   title: string;
   heading: string;
@@ -2142,6 +2193,7 @@ function PageState({
   actionLabel?: string;
   actionTo?: string;
   actionSearch?: Record<string, string>;
+  onAction?: () => void;
 }) {
   return (
     <>
@@ -2158,6 +2210,11 @@ function PageState({
             >
               {actionLabel}
             </Link>
+          )}
+          {actionLabel && onAction && !actionTo && (
+            <button type="button" className="rawaj-button-primary mt-4 px-4 py-2" onClick={onAction}>
+              {actionLabel}
+            </button>
           )}
         </div>
       </main>
