@@ -18,6 +18,7 @@ import { handleAdminCampaigns, type AdminCampaignsEnv } from "./admin-campaigns"
 import { handleAdminSafety, type AdminSafetyEnv } from "./admin-safety";
 import { handleAdminTaxonomyReview, type AdminTaxonomyReviewEnv } from "./admin-taxonomy-review";
 import { handleAdminDataQuality, type AdminDataQualityEnv } from "./admin-data-quality";
+import { corsHeadersForOrigin } from "./cors";
 
 type EntryEnv = PublicCoreEnv &
   PublicListingsEnv &
@@ -42,12 +43,10 @@ type EntryEnv = PublicCoreEnv &
     API_ALLOWED_ORIGINS?: string;
   };
 
-const OFFICIAL_ORIGINS = ["https://rawa-j.com", "https://www.rawa-j.com"] as const;
-
 export default {
   async fetch(request: Request, env: EntryEnv): Promise<Response> {
     const origin = request.headers.get("Origin");
-    const cors = corsHeaders(origin, env);
+    const cors = corsHeadersForOrigin(origin, env);
 
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: cors });
@@ -251,29 +250,6 @@ function required(response: Response | null): Response {
       { status: 404, headers: { "Content-Type": "application/json; charset=utf-8" } },
     )
   );
-}
-
-function corsHeaders(origin: string | null, env: EntryEnv): Headers {
-  const headers = new Headers({
-    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Authorization, Content-Type, If-None-Match",
-    "Access-Control-Max-Age": "86400",
-    Vary: "Origin",
-  });
-
-  if (!origin) return headers;
-
-  const allowed = new Set<string>(OFFICIAL_ORIGINS);
-  for (const value of (env.API_ALLOWED_ORIGINS ?? "").split(",")) {
-    const normalized = value.trim();
-    if (normalized) allowed.add(normalized);
-  }
-
-  if (allowed.has(origin)) {
-    headers.set("Access-Control-Allow-Origin", origin);
-  }
-
-  return headers;
 }
 
 function withCors(response: Response, cors: Headers): Response {

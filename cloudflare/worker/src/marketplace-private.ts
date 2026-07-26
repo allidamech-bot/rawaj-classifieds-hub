@@ -437,6 +437,12 @@ async function createListing(request: Request, env: MarketplaceEnv, cors: Header
   if (auth instanceof Response) return auth;
   const input = await parseListing(request, env, cors);
   if (input instanceof Response) return input;
+  if (input.submit) {
+    return validation(
+      cors,
+      "Save the listing as a draft, assign its taxonomy, and upload an image before submission.",
+    );
+  }
   if (!input.submit && input.creationRequestId) {
     const existing = await env.DB.prepare(
       `SELECT l.id, l.status, l.updated_at
@@ -542,6 +548,10 @@ async function updateListing(request: Request, env: MarketplaceEnv, cors: Header
       cors,
     );
   }
+  if (input.submit) {
+    const submissionError = await validateListingSubmission(env, cors, id, input);
+    if (submissionError) return submissionError;
+  }
   const status = input.submit ? "pending_review" : existing.status;
   const timestamp = now();
   const result = await env.DB.prepare(
@@ -642,6 +652,37 @@ async function uploadImage(
   const bytes = new Uint8Array(await file.arrayBuffer());
   if (!matchesImageSignature(bytes, file.type))
     return validation(cors, "Image content is invalid.");
+  const checksum = await sha256Hex(bytes);
+  const existingImage = await env.DB.prepare(
+    `SELECT li.id, li.listing_id, li.alt_ar, li.sort_order, li.created_at,
+            m.id AS media_asset_id
+       FROM listing_images li
+       JOIN media_assets m ON m.id = li.media_asset_id
+      WHERE li.listing_id = ? AND m.owner_id = ? AND m.checksum_sha256 = ?
+        AND m.content_type = ? AND m.byte_size = ? AND m.status = 'ready'
+      ORDER BY li.created_at LIMIT 1`,
+  )
+    .bind(listingId, auth.userId, checksum, file.type, file.size)
+    .first<Row>();
+  if (existingImage) {
+    const mediaAssetId = stringValue(existingImage.media_asset_id);
+    return json(
+      {
+        data: {
+          id: stringValue(existingImage.id),
+          listingId: stringValue(existingImage.listing_id),
+          mediaAssetId,
+          storagePath: null,
+          altAr: nullableString(existingImage.alt_ar),
+          sortOrder: numberValue(existingImage.sort_order),
+          createdAt: stringValue(existingImage.created_at),
+          publicUrl: `/v1/account/media/assets/${encodeURIComponent(mediaAssetId)}`,
+        },
+      },
+      200,
+      cors,
+    );
+  }
   const count = await env.DB.prepare(
     "SELECT count(*) AS count FROM listing_images WHERE listing_id = ?",
   )
@@ -653,8 +694,7 @@ async function uploadImage(
   const assetId = crypto.randomUUID();
   const imageId = crypto.randomUUID();
   const extension = file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1];
-  const objectKey = `listings/${auth.userId}/${listingId}/${crypto.randomUUID()}.${extension}`;
-  const checksum = await sha256Hex(bytes);
+  const objectKey = `listings/${auth.userId}/${listingId}/${checksum}.${extension}`;
   let object;
   try {
     object = await env.MEDIA.put(objectKey, bytes.buffer, {
@@ -809,7 +849,26 @@ async function deleteImage(request: Request, env: MarketplaceEnv, cors: Headers,
     .first<Row>();
   if (!row || row.owner_id !== auth.userId || row.listing_owner !== auth.userId)
     return forbidden(cors);
-  await env.MEDIA.delete(String(row.object_key));
+  const marked = await env.DB.prepare(
+    "UPDATE media_assets SET status = 'deleted', updated_at = ? WHERE id = ? AND owner_id = ?",
+  )
+    .bind(now(), String(row.asset_id), auth.userId)
+    .run();
+  if (!marked.success) return databaseError(cors);
+  try {
+    await env.MEDIA.delete(String(row.object_key));
+  } catch {
+    await env.DB.prepare(
+      "UPDATE media_assets SET status = 'ready', updated_at = ? WHERE id = ? AND owner_id = ?",
+    )
+      .bind(now(), String(row.asset_id), auth.userId)
+      .run();
+    return json(
+      { error: { code: "storage_error", message: "Image storage deletion failed." } },
+      502,
+      cors,
+    );
+  }
   const results = await env.DB.batch([
     env.DB.prepare("DELETE FROM listing_images WHERE id = ?").bind(imageId),
     env.DB.prepare("DELETE FROM media_assets WHERE id = ? AND owner_id = ?").bind(
@@ -898,7 +957,11 @@ async function parseListing(request: Request, env: MarketplaceEnv, cors: Headers
     title,
     description,
     price,
-    priceType: allowed(body.data.priceType, ["fixed", "negotiable", "contact"], "fixed"),
+    priceType: allowed(
+      body.data.priceType,
+      ["fixed", "negotiable", "contact", "free", "exchange"],
+      "fixed",
+    ),
     condition: clean(body.data.condition, 40) ?? "not_applicable",
     districtAr: clean(body.data.districtAr, 160),
     contactName: clean(body.data.contactName, 120),
@@ -908,6 +971,96 @@ async function parseListing(request: Request, env: MarketplaceEnv, cors: Headers
     expectedUpdatedAt,
     submit: body.data.submit === true,
   };
+}
+
+async function validateListingSubmission(
+  env: MarketplaceEnv,
+  cors: Headers,
+  listingId: string,
+  input: {
+    taxonomyNodeId?: string | null;
+    description: string;
+    price: number | null;
+    priceType: string;
+    details: Row;
+  },
+): Promise<Response | null> {
+  if (input.description.trim().length < 10) {
+    return validation(cors, "A complete listing description is required.");
+  }
+  if (input.priceType === "fixed" && (input.price === null || input.price <= 0)) {
+    return validation(cors, "A positive price is required for fixed-price listings.");
+  }
+
+  const assignment = await env.DB.prepare(
+    `SELECT t.id, t.filter_schema_key
+       FROM listing_taxonomy_assignments a
+       JOIN taxonomy_nodes t ON t.id = a.taxonomy_node_id
+      WHERE a.listing_id = ? AND t.is_active = 1 AND t.is_leaf = 1
+      LIMIT 1`,
+  )
+    .bind(listingId)
+    .first<{ id: string; filter_schema_key: string | null }>();
+  if (!assignment) return validation(cors, "Choose a valid final taxonomy category.");
+
+  const image = await env.DB.prepare(
+    `SELECT li.id FROM listing_images li
+       JOIN media_assets m ON m.id = li.media_asset_id
+      WHERE li.listing_id = ? AND m.status = 'ready'
+      LIMIT 1`,
+  )
+    .bind(listingId)
+    .first<{ id: string }>();
+  if (!image) return validation(cors, "Upload at least one image before submission.");
+
+  const schemaTokens = parseSchemaTokens(assignment.filter_schema_key);
+  if (schemaTokens.length === 0) return null;
+  const clauses: string[] = [];
+  const values: Value[] = [];
+  for (const token of schemaTokens) {
+    clauses.push("(key = ? OR key LIKE ? OR key LIKE ?)");
+    values.push(token, `${token}.%`, `${token}_%`);
+  }
+  const fields = await env.DB.prepare(
+    `SELECT key, validation_schema FROM field_definitions
+      WHERE is_active = 1 AND (${clauses.join(" OR ")})`,
+  )
+    .bind(...values)
+    .all<{ key: string; validation_schema: string | null }>();
+  const missing = (fields.results ?? []).filter((field) => {
+    const rules = jsonObject(field.validation_schema);
+    return rules.required === true && !hasListingValue(input.details[field.key]);
+  });
+  return missing.length > 0
+    ? validation(cors, "Complete all required category fields before submission.")
+    : null;
+}
+
+function parseSchemaTokens(value: string | null): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((item): item is string => typeof item === "string");
+    }
+    if (parsed && typeof parsed === "object" && Array.isArray((parsed as Row).fields)) {
+      return ((parsed as Row).fields as unknown[]).filter(
+        (item): item is string => typeof item === "string",
+      );
+    }
+  } catch {
+    // Plain schema keys are supported.
+  }
+  return value
+    .split(/[\s,|]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function hasListingValue(value: unknown): boolean {
+  if (value === null || value === undefined || value === "") return false;
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
 }
 
 function normalizeProfile(data: Row) {

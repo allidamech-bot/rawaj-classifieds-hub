@@ -48,7 +48,7 @@ const generated = {
   d1_databases: [
     {
       binding: "DB",
-      database_name: process.env.CLOUDFLARE_D1_DATABASE_NAME?.trim() || "rawaj-marketplace",
+      database_name: process.env.CLOUDFLARE_D1_DATABASE_NAME?.trim() || "rawaj-staging",
       database_id: d1DatabaseId,
       ...(local
         ? {}

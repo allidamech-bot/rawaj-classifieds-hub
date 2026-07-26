@@ -6,6 +6,7 @@ import {
   type JSONWebKeySet,
   type JWTVerifyGetKey,
 } from "jose";
+import { corsHeadersForRequest } from "./cors";
 
 type D1Value = string | number | null;
 type JsonRecord = Record<string, unknown>;
@@ -263,7 +264,21 @@ async function ensureApplicationIdentity(
   )
     .bind(identity.subject)
     .first<{ id: string }>();
-  if (linked) return linked.id;
+  if (linked) {
+    if (identity.displayName) {
+      const defaultDisplayName = identity.email.split("@")[0].slice(0, 100);
+      const synchronized = await env.DB.prepare(
+        `UPDATE public_profiles
+            SET display_name = ?, updated_at = ?
+          WHERE id = ?
+            AND (display_name IS NULL OR trim(display_name) = '' OR display_name = ?)`,
+      )
+        .bind(identity.displayName, new Date().toISOString(), linked.id, defaultDisplayName)
+        .run();
+      if (!synchronized.success) throw new Error("identity_profile_sync_failed");
+    }
+    return linked.id;
+  }
 
   const existingSameId = UUID_PATTERN.test(identity.subject)
     ? await env.DB.prepare("SELECT id, auth_provider, auth_user_id FROM auth_users WHERE id = ?")
@@ -399,21 +414,7 @@ function validEmail(value: string): boolean {
 }
 
 export function corsHeaders(request: Request, env: AuthEnv): Headers {
-  const headers = new Headers({
-    Vary: "Origin",
-    "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Headers": "Authorization, Content-Type, Idempotency-Key",
-    "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-  });
-  const origin = request.headers.get("Origin");
-  const allowed = new Set(
-    (env.API_ALLOWED_ORIGINS ?? "")
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean),
-  );
-  if (origin && allowed.has(origin)) headers.set("Access-Control-Allow-Origin", origin);
-  return headers;
+  return corsHeadersForRequest(request, env);
 }
 
 export function json(payload: unknown, status: number, headers: Headers): Response {

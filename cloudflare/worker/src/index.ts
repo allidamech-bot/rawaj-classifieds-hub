@@ -56,7 +56,7 @@ export async function handlePublicCore(
   if (!isPublicCorePath(url.pathname)) return null;
 
   const origin = request.headers.get("Origin");
-  const cors = corsHeaders(origin, env);
+  const cors = corsHeadersForOrigin(origin, env);
 
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: cors });
@@ -933,25 +933,6 @@ function cacheHeaders(env: PublicCoreEnv, override?: number): Headers {
   return headers;
 }
 
-function corsHeaders(origin: string | null, env: PublicCoreEnv): Headers {
-  const headers = new Headers({
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, If-None-Match",
-    "Access-Control-Max-Age": "86400",
-    Vary: "Origin",
-  });
-
-  if (!origin) return headers;
-  const allowed = new Set(
-    (env.API_ALLOWED_ORIGINS ?? "https://rawa-j.com,https://www.rawa-j.com")
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean),
-  );
-  if (allowed.has(origin)) headers.set("Access-Control-Allow-Origin", origin);
-  return headers;
-}
-
 function databaseFailure(cors: Headers, detail?: string): Response {
   if (detail) console.error("rawaj_public_api_database_error", detail);
   return json(
@@ -1079,3 +1060,4 @@ function base64UrlDecode(value: string): string {
   const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
   return new TextDecoder().decode(bytes);
 }
+import { corsHeadersForOrigin } from "./cors";

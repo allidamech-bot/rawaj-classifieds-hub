@@ -286,22 +286,53 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
   if (!body.ok) return json({ error: body.error }, body.status, cors);
 
   const listingId = clean(body.data.listingId, 120);
-  const action = clean(body.data.action, 40);
+  const action = normalizeModerationAction(clean(body.data.action, 40));
   const reason = clean(body.data.reason, 500);
   const expectedUpdatedAt = clean(body.data.expectedUpdatedAt, 120);
   const extendDays = body.data.extendDays ?? null;
 
-  if (!listingId || !action || !expectedUpdatedAt || (action === "reject" && !reason)) {
-    return validation(cors, "Invalid moderation payload.");
+  if (!listingId || !expectedUpdatedAt) {
+    return validation(cors, "Listing id and expected update timestamp are required.");
+  }
+  if (!action) {
+    return json(
+      {
+        error: {
+          code: "unsupported_moderation_action",
+          message: "Moderation action must be approve, reject, request_changes, suspend, restore, or extend.",
+        },
+      },
+      400,
+      cors,
+    );
+  }
+  if (action === "reject" && !reason) {
+    return validation(cors, "A rejection reason is required.");
   }
 
   const listing = await env.DB.prepare("SELECT status, updated_at FROM listings WHERE id = ?")
     .bind(listingId)
     .first<{ status: string; updated_at: string }>();
-  if (!listing) return notFound(cors);
+  if (!listing) {
+    return json(
+      { error: { code: "listing_not_found", message: "The listing to moderate was not found." } },
+      404,
+      cors,
+    );
+  }
   if (listing.updated_at !== expectedUpdatedAt) {
     return json(
       { error: { code: "stale_review", message: "Listing changed since loaded." } },
+      409,
+      cors,
+    );
+  }
+  if (
+    ["approve", "reject", "request_changes"].includes(action) &&
+    listing.status !== "pending_review"
+  ) {
+    return json(
+      { error: { code: "invalid_transition", message: "Listing is not pending review." } },
       409,
       cors,
     );
@@ -369,12 +400,28 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
       return validation(cors, "Unsupported action.");
   }
 
-  const reviewedAt = ["approved", "rejected", "archived"].includes(nextStatus) ? now() : null;
-  const result = await env.DB.prepare(`UPDATE listings SET status = ?, updated_at = ? WHERE id = ?`)
-    .bind(nextStatus, now(), listingId)
-    .run();
+  const timestamp = now();
+  const publishedAt = nextStatus === "approved" ? timestamp : null;
+  const moderationAction =
+    action === "request_changes" ? "reject" : action === "suspend" ? "archive" : action;
+  const results = await env.DB.batch([
+    env.DB
+      .prepare(
+        `UPDATE listings
+            SET status = ?, published_at = COALESCE(?, published_at), updated_at = ?
+          WHERE id = ? AND updated_at = ?`,
+      )
+      .bind(nextStatus, publishedAt, timestamp, listingId, expectedUpdatedAt),
+    env.DB
+      .prepare(
+        `INSERT INTO listing_moderation_actions
+          (id, listing_id, actor_id, action, reason, metadata, created_at)
+         VALUES (?, ?, ?, ?, ?, '{}', ?)`,
+      )
+      .bind(crypto.randomUUID(), listingId, auth.userId, moderationAction, reason, timestamp),
+  ]);
 
-  if (!result.success) return databaseError(cors);
+  if (results.some((result) => !result.success)) return databaseError(cors);
 
   await writeAuditLog(
     env,
@@ -398,6 +445,16 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
     200,
     cors,
   );
+}
+
+function normalizeModerationAction(value: string | null): string | null {
+  if (value === "approved") return "approve";
+  if (value === "rejected") return "reject";
+  return ["approve", "reject", "request_changes", "suspend", "restore", "extend"].includes(
+    value ?? "",
+  )
+    ? value
+    : null;
 }
 
 async function writeAuditLog(

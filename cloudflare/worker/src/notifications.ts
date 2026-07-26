@@ -130,9 +130,8 @@ async function updatePreference(request: Request, env: NotificationsEnv, cors: H
   const enabled = body.data.enabled ? 1 : 0;
   const result = await env.DB.prepare(
     `INSERT INTO notification_preferences
-      (user_id, push_enabled, messages_enabled, listing_updates_enabled, marketing_enabled,
-       ${column}, updated_at)
-     VALUES (?, 0, 1, 1, 0, ?, ?)
+      (user_id, push_enabled, listing_updates_enabled, marketing_enabled, ${column}, updated_at)
+     VALUES (?, 0, 1, 0, ?, ?)
      ON CONFLICT(user_id) DO UPDATE SET ${column} = excluded.${column}, updated_at = excluded.updated_at`,
   )
     .bind(auth.userId, enabled, timestamp)
