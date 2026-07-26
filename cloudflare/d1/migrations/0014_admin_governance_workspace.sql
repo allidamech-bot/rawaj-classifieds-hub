@@ -135,7 +135,7 @@ CREATE TABLE taxonomy_versions (
   updated_at TEXT NOT NULL
 );
 
-INSERT INTO taxonomy_versions (
+INSERT OR IGNORE INTO taxonomy_versions (
   id, version_number, status, change_summary, published_at, created_at, updated_at
 ) VALUES (
   'cloudflare-catalog-v1',

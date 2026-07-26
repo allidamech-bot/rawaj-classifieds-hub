@@ -19,7 +19,7 @@ CREATE TABLE system_controls (
   FOREIGN KEY (updated_by) REFERENCES auth_users(id) ON DELETE SET NULL
 );
 
-INSERT INTO system_controls (key, enabled, reason, version, updated_by, updated_at)
+INSERT OR IGNORE INTO system_controls (key, enabled, reason, version, updated_by, updated_at)
 VALUES
   ('freeze_new_listings', 0, '', 1, NULL, strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   ('freeze_new_messages', 0, '', 1, NULL, strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),

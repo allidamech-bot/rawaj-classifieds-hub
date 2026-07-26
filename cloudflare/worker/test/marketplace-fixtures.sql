@@ -10,6 +10,13 @@ INSERT OR IGNORE INTO subcategories
 VALUES
   ('test-subcategory', 'test-category', 'فرعي', 'Subcategory', 1);
 
+INSERT OR IGNORE INTO taxonomy_nodes
+  (id, slug, name_ar, name_en, depth, is_active, is_leaf,
+   legacy_category_id, legacy_subcategory_id)
+VALUES
+  ('test-taxonomy-leaf', 'test-taxonomy-leaf', 'اختبار', 'Test taxonomy leaf',
+   0, 1, 1, 'test-category', 'test-subcategory');
+
 INSERT OR IGNORE INTO governorates
   (id, slug, name_ar, name_en, districts_ar, districts_en, sort_order, is_active)
 VALUES
