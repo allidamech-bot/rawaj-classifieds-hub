@@ -1,0 +1,86 @@
+name: One-shot integration lint fix
+
+on:
+  push:
+    branches:
+      - fix/integration-quality-gate-lint
+
+permissions:
+  contents: write
+
+jobs:
+  format-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: fix/integration-quality-gate-lint
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Remove unused migration-list probe
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile, writeFile } from "node:fs/promises";
+
+          const file = "scripts/check-0017-preservation.mjs";
+          let source = await readFile(file, "utf8");
+          source = source.replace(
+            'import { readdir, readFile } from "node:fs/promises";',
+            'import { readFile } from "node:fs/promises";',
+          );
+          source = source.replace(
+            /\nconst migrations = \(await readdir\(migrationsDirectory\)\)\n  \.filter\(\(file\) => file\.endsWith\("\\.sql"\)\)\n  \.sort\(\);\n/,
+            "\n",
+          );
+          await writeFile(file, source);
+          NODE
+
+      - name: Format affected files
+        run: |
+          npx prettier --write \
+            cloudflare/worker/src/admin.ts \
+            cloudflare/worker/test/marketplace.integration.test.mjs \
+            cloudflare/worker/test/parse-audit-metadata.test.mjs \
+            scripts/check-0017-preservation.mjs
+
+      - name: Verify affected files
+        run: |
+          npx eslint --quiet \
+            cloudflare/worker/src/admin.ts \
+            cloudflare/worker/test/marketplace.integration.test.mjs \
+            cloudflare/worker/test/parse-audit-metadata.test.mjs \
+            scripts/check-0017-preservation.mjs
+          npm run typecheck
+          npx tsc -p cloudflare/worker/tsconfig.json --noEmit
+
+      - name: Remove one-shot workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/one-shot-integration-lint-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            .github/workflows/one-shot-integration-lint-fix.yml \
+            cloudflare/worker/src/admin.ts \
+            cloudflare/worker/test/marketplace.integration.test.mjs \
+            cloudflare/worker/test/parse-audit-metadata.test.mjs \
+            scripts/check-0017-preservation.mjs
+          if git diff --cached --quiet; then
+            echo "No formatting changes were required."
+            exit 0
+          fi
+          git commit -m "chore: satisfy integration quality gate lint"
+          git push origin HEAD:fix/integration-quality-gate-lint
