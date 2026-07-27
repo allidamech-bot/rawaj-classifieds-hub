@@ -43,6 +43,8 @@ jobs:
           node scripts/.one-shot-supabase-auth-admin-followup.mjs
           node --check scripts/.one-shot-supabase-auth-fixture-followup.mjs
           node scripts/.one-shot-supabase-auth-fixture-followup.mjs
+          node --check scripts/.one-shot-supabase-auth-test-followup.mjs
+          node scripts/.one-shot-supabase-auth-test-followup.mjs
 
       - name: Update dependencies and lockfile
         run: npm install --ignore-scripts
@@ -142,6 +144,7 @@ jobs:
           rm -f scripts/.one-shot-supabase-auth-followup.mjs
           rm -f scripts/.one-shot-supabase-auth-admin-followup.mjs
           rm -f scripts/.one-shot-supabase-auth-fixture-followup.mjs
+          rm -f scripts/.one-shot-supabase-auth-test-followup.mjs
           rm -f .github/workflows/one-shot-supabase-auth-cutover.yml
           rm -f runtime-boundary-report.json worker-tests.log worker-tests.exit
           git config user.name 'allidamech-bot'
