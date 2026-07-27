@@ -299,7 +299,8 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
       {
         error: {
           code: "unsupported_moderation_action",
-          message: "Moderation action must be approve, reject, request_changes, suspend, restore, or extend.",
+          message:
+            "Moderation action must be approve, reject, request_changes, suspend, restore, or extend.",
         },
       },
       400,
@@ -405,20 +406,16 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
   const moderationAction =
     action === "request_changes" ? "reject" : action === "suspend" ? "archive" : action;
   const results = await env.DB.batch([
-    env.DB
-      .prepare(
-        `UPDATE listings
+    env.DB.prepare(
+      `UPDATE listings
             SET status = ?, published_at = COALESCE(?, published_at), updated_at = ?
           WHERE id = ? AND updated_at = ?`,
-      )
-      .bind(nextStatus, publishedAt, timestamp, listingId, expectedUpdatedAt),
-    env.DB
-      .prepare(
-        `INSERT INTO listing_moderation_actions
+    ).bind(nextStatus, publishedAt, timestamp, listingId, expectedUpdatedAt),
+    env.DB.prepare(
+      `INSERT INTO listing_moderation_actions
           (id, listing_id, actor_id, action, reason, metadata, created_at)
          VALUES (?, ?, ?, ?, ?, '{}', ?)`,
-      )
-      .bind(crypto.randomUUID(), listingId, auth.userId, moderationAction, reason, timestamp),
+    ).bind(crypto.randomUUID(), listingId, auth.userId, moderationAction, reason, timestamp),
   ]);
 
   if (results.some((result) => !result.success)) return databaseError(cors);

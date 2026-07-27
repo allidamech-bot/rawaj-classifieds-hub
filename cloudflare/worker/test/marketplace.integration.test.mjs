@@ -114,8 +114,7 @@ test("production CORS preflight exposes authenticated request headers", async ()
     headers: {
       Origin: "https://rawa-j.com",
       "Access-Control-Request-Method": "PATCH",
-      "Access-Control-Request-Headers":
-        "authorization,content-type,idempotency-key,if-none-match",
+      "Access-Control-Request-Headers": "authorization,content-type,idempotency-key,if-none-match",
     },
   });
   assert.equal(response.status, 204);

@@ -91,9 +91,7 @@ test.describe("live launch-critical customer journey", () => {
       await waitForPostingForm(page);
       await chooseFirstFinalCategory(page);
 
-      const titleInput = page.getByPlaceholder(
-        /مثال: سيارة كيا سيراتو|Example: Kia Cerato/i,
-      );
+      const titleInput = page.getByPlaceholder(/مثال: سيارة كيا سيراتو|Example: Kia Cerato/i);
       await titleInput.fill(listingTitle);
 
       await page.getByRole("button", { name: /^(Continue|متابعة)$/ }).click();
@@ -163,9 +161,11 @@ test.describe("live launch-critical customer journey", () => {
     });
 
     await test.step("upload to R2 and submit for review", async () => {
-      await page.getByRole("button", {
-        name: /^(Submit for review|إرسال للمراجعة)$/,
-      }).click();
+      await page
+        .getByRole("button", {
+          name: /^(Submit for review|إرسال للمراجعة)$/,
+        })
+        .click();
 
       const submissionStatus = page.locator(".rawaj-studio-success[role='status']");
       await expect(submissionStatus).toBeVisible({ timeout: 150_000 });
@@ -248,12 +248,7 @@ async function authenticateOrRegister(
   return "new-account-registration";
 }
 
-async function login(
-  page: Page,
-  email: string,
-  password: string,
-  returnTo: string,
-): Promise<void> {
+async function login(page: Page, email: string, password: string, returnTo: string): Promise<void> {
   await page.goto(`/login?returnTo=${encodeURIComponent(returnTo)}`, {
     waitUntil: "domcontentloaded",
   });
@@ -297,9 +292,7 @@ async function waitForPostingForm(page: Page): Promise<void> {
 
 async function chooseFirstFinalCategory(page: Page): Promise<void> {
   const selector = page.locator('[data-listing-taxonomy-selector="true"]');
-  const finalStatus = selector.getByText(
-    /تم اختيار التصنيف النهائي|Final category selected/i,
-  );
+  const finalStatus = selector.getByText(/تم اختيار التصنيف النهائي|Final category selected/i);
 
   for (let depth = 0; depth < 12; depth += 1) {
     if (await finalStatus.isVisible().catch(() => false)) return;
@@ -408,9 +401,7 @@ async function selectLocationFromSearch(searchInput: Locator): Promise<void> {
   for (const query of ["دمشق", "Damascus"]) {
     await searchInput.fill(query);
 
-    const resultButtons = searchInput
-      .locator("xpath=following-sibling::div[1]")
-      .locator("button");
+    const resultButtons = searchInput.locator("xpath=following-sibling::div[1]").locator("button");
 
     const appeared = await resultButtons
       .first()

@@ -2212,7 +2212,11 @@ function PageState({
             </Link>
           )}
           {actionLabel && onAction && !actionTo && (
-            <button type="button" className="rawaj-button-primary mt-4 px-4 py-2" onClick={onAction}>
+            <button
+              type="button"
+              className="rawaj-button-primary mt-4 px-4 py-2"
+              onClick={onAction}
+            >
               {actionLabel}
             </button>
           )}

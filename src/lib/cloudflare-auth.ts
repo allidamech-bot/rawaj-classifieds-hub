@@ -97,11 +97,7 @@ export async function cloudflareApiRequest<T>(
     };
   }
   const first = await sendRequest<T>(base.data, path, init, initialToken);
-  if (
-    first.response.status !== 401 ||
-    !currentUser ||
-    !isCurrentFirebaseUser(currentUser)
-  ) {
+  if (first.response.status !== 401 || !currentUser || !isCurrentFirebaseUser(currentUser)) {
     return first.result;
   }
 

@@ -11,8 +11,7 @@ export function corsHeadersForRequest(request: Request, env: CorsEnv): Headers {
 export function corsHeadersForOrigin(origin: string | null, env: CorsEnv): Headers {
   const headers = new Headers({
     "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Headers":
-      "Authorization, Content-Type, Idempotency-Key, If-None-Match",
+    "Access-Control-Allow-Headers": "Authorization, Content-Type, Idempotency-Key, If-None-Match",
     "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",

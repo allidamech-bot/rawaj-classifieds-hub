@@ -45,10 +45,7 @@ const report = {
   rehearsalRoot,
   migrationChecksums: Object.fromEntries(
     await Promise.all(
-      migrationFiles.slice(6).map(async (path) => [
-        basename(path),
-        sha256(await readFile(path)),
-      ]),
+      migrationFiles.slice(6).map(async (path) => [basename(path), sha256(await readFile(path))]),
     ),
   ),
   canonicalSchemaFingerprint: clean.schemaFingerprint,
@@ -90,13 +87,12 @@ async function rehearseLane(name, withFixtures) {
 
   const after = await dataEvidence(persist, withFixtures);
   const schema = inspectSchema(persist);
-  const ledger = query(
-    persist,
-    "SELECT id, name FROM d1_migrations ORDER BY id",
-  );
+  const ledger = query(persist, "SELECT id, name FROM d1_migrations ORDER BY id");
   assert(
     ledger.length === 16 &&
-      ledger.every((row, index) => row.id === index + 1 && row.name === basename(migrationFiles[index])),
+      ledger.every(
+        (row, index) => row.id === index + 1 && row.name === basename(migrationFiles[index]),
+      ),
     `${name}: migration ledger is not canonical through 0016.`,
   );
   const foreignKeyFailures = query(persist, "PRAGMA foreign_key_check");
@@ -105,15 +101,24 @@ async function rehearseLane(name, withFixtures) {
   if (withFixtures) {
     assert(before.messageCount === after.messageCount, `${name}: message count changed.`);
     assert(before.messageHash === after.messageHash, `${name}: message data hash changed.`);
-    assert(after.protectedDraftCount === protectedDraftIds.length, `${name}: protected drafts changed.`);
+    assert(
+      after.protectedDraftCount === protectedDraftIds.length,
+      `${name}: protected drafts changed.`,
+    );
     assert(after.protectedDraftHash === before.protectedDraftHash, `${name}: draft hash changed.`);
-    assert(after.firebaseIdentityCount === before.firebaseIdentityCount, `${name}: Firebase identities changed.`);
+    assert(
+      after.firebaseIdentityCount === before.firebaseIdentityCount,
+      `${name}: Firebase identities changed.`,
+    );
     assert(after.supabaseIdentityCount === 0, `${name}: legacy provider labels remain.`);
     assert(
       after.legacyImportIdentityCount === before.supabaseIdentityCount,
       `${name}: legacy identity relabel count is unexpected.`,
     );
-    assert(after.notificationExtendedDefaults === 5, `${name}: notification defaults are incomplete.`);
+    assert(
+      after.notificationExtendedDefaults === 5,
+      `${name}: notification defaults are incomplete.`,
+    );
     assert(after.listingReportBackfillCount === 1, `${name}: listing report backfill failed.`);
     await verifyConflictPolicies(persist);
     await verifyPromotionTriggers(persist);
@@ -187,22 +192,22 @@ async function dataEvidence(persist, withFixtures) {
     "promotions_enabled",
   ].every((column) => notificationColumns.includes(column));
   const notificationDefaults = hasExtendedNotifications
-    ? query(
+    ? (query(
         persist,
         `SELECT price_changes_enabled + saved_search_matches_enabled + listing_status_enabled +
                 reviews_enabled + promotions_enabled AS enabled_count
            FROM notification_preferences WHERE user_id = 'rehearsal-buyer'`,
-      )[0]?.enabled_count ?? 0
+      )[0]?.enabled_count ?? 0)
     : 0;
   const reportColumns = query(persist, 'PRAGMA table_info("listing_reports")').map(
     (row) => row.name,
   );
   const listingReportBackfillCount = reportColumns.includes("updated_at")
-    ? query(
+    ? (query(
         persist,
         `SELECT COUNT(*) AS count FROM listing_reports
           WHERE id = 'rehearsal-listing-report' AND updated_at = created_at`,
-      )[0]?.count ?? 0
+      )[0]?.count ?? 0)
     : 0;
   return {
     messageCount: messages.length,
@@ -387,7 +392,9 @@ function executeRaw(persist, sql, allowFailure) {
 }
 
 function query(persist, sql, bindings = []) {
-  return databaseFor(persist).prepare(sql).all(...bindings);
+  return databaseFor(persist)
+    .prepare(sql)
+    .all(...bindings);
 }
 
 function run(args, allowFailure = false) {
