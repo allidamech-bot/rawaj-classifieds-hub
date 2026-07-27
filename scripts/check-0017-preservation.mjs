@@ -8,10 +8,6 @@ import process from "node:process";
 const root = process.cwd();
 const migrationsDirectory = path.join(root, "cloudflare", "d1", "migrations");
 
-const migrations = (await readdir(migrationsDirectory))
-  .filter((file) => file.endsWith(".sql"))
-  .sort();
-
 const database = new DatabaseSync(":memory:");
 database.exec("PRAGMA foreign_keys = ON");
 
