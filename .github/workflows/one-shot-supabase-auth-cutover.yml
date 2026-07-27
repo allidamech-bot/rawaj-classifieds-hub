@@ -1,0 +1,104 @@
+name: One-shot Supabase Auth cutover
+
+on:
+  push:
+    branches:
+      - fix/supabase-auth-only-contract
+
+permissions:
+  contents: write
+
+concurrency:
+  group: one-shot-supabase-auth-cutover
+  cancel-in-progress: true
+
+jobs:
+  cutover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: fix/supabase-auth-only-contract
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Apply Supabase Auth-only edits
+        run: |
+          base64 --decode scripts/.one-shot-supabase-auth-cutover.mjs.gz.b64 | gunzip > /tmp/supabase-auth-cutover.mjs
+          node --check /tmp/supabase-auth-cutover.mjs
+          node /tmp/supabase-auth-cutover.mjs
+
+      - name: Update dependencies and lockfile
+        run: npm install --ignore-scripts
+
+      - name: Install Worker dependencies
+        run: npm ci --prefix cloudflare/worker --ignore-scripts
+
+      - name: Format changed source
+        run: |
+          npx prettier --write \
+            package.json \
+            src/lib/supabase-auth.ts \
+            src/lib/auth-recovery-session.ts \
+            src/lib/auth-context.ts \
+            src/lib/auth.tsx \
+            src/lib/cloudflare-auth.ts \
+            src/lib/native-push.ts \
+            src/routes/auth.callback.tsx \
+            src/routes/reset-password.tsx \
+            cloudflare/worker/wrangler.base.jsonc \
+            cloudflare/worker/src/auth.ts \
+            cloudflare/worker/test/*.mjs \
+            scripts/cloudflare-runtime-cleanup.test.mjs \
+            scripts/retired-backend-runtime-audit.mjs
+
+      - name: Verify runtime boundary
+        run: npm run test:runtime-boundary
+
+      - name: Verify Cloudflare contracts
+        run: npm run test:cloudflare-cutover
+
+      - name: Verify D1 migrations
+        run: npm run test:d1-migrations
+
+      - name: Verify admin security
+        run: npm run test:admin-security
+
+      - name: Run Worker tests
+        run: npm run test --prefix cloudflare/worker
+
+      - name: Typecheck application
+        run: npm run typecheck
+
+      - name: Typecheck Worker
+        run: npx tsc -p cloudflare/worker/tsconfig.json --noEmit
+
+      - name: Build application
+        run: npm run build
+
+      - name: Verify no Firebase runtime remains
+        shell: bash
+        run: |
+          if git grep -nEi 'firebase(/auth|Auth|_AUTH|_PROJECT|\.googleapis)' -- src cloudflare/worker/src; then
+            echo 'Firebase runtime reference remains.' >&2
+            exit 1
+          fi
+
+      - name: Commit validated cutover
+        shell: bash
+        run: |
+          rm -f scripts/.one-shot-supabase-auth-cutover.mjs.gz.b64
+          rm -f .github/workflows/one-shot-supabase-auth-cutover.yml
+          git config user.name 'allidamech-bot'
+          git config user.email '228416871+allidamech-bot@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'fix(auth): restore Supabase Auth-only contract'
+          git push origin HEAD:fix/supabase-auth-only-contract
