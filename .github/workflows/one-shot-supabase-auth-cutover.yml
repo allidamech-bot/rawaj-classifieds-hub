@@ -102,3 +102,5 @@ jobs:
           git diff --cached --check
           git commit -m 'fix(auth): restore Supabase Auth-only contract'
           git push origin HEAD:fix/supabase-auth-only-contract
+
+# retrigger: 2026-07-28
