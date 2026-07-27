@@ -62,8 +62,20 @@ jobs:
             scripts/cloudflare-runtime-cleanup.test.mjs \
             scripts/retired-backend-runtime-audit.mjs
 
-      - name: Verify runtime boundary
-        run: npm run test:runtime-boundary
+      - name: Generate runtime boundary report
+        run: node scripts/retired-backend-runtime-audit.mjs --report-only > runtime-boundary-report.json
+
+      - name: Upload runtime boundary report
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-boundary-report-${{ github.run_id }}
+          path: runtime-boundary-report.json
+          if-no-files-found: error
+          retention-days: 2
+
+      - name: Enforce runtime boundary
+        run: |
+          node -e "const fs=require('node:fs');const report=JSON.parse(fs.readFileSync('runtime-boundary-report.json','utf8'));if(report.totalFindings){console.error(JSON.stringify(report,null,2));process.exit(1)}"
 
       - name: Verify Cloudflare contracts
         run: npm run test:cloudflare-cutover
@@ -99,6 +111,7 @@ jobs:
         run: |
           rm -f scripts/.one-shot-supabase-auth-cutover.mjs.gz.b64
           rm -f .github/workflows/one-shot-supabase-auth-cutover.yml
+          rm -f runtime-boundary-report.json
           git config user.name 'allidamech-bot'
           git config user.email '228416871+allidamech-bot@users.noreply.github.com'
           git add -A
