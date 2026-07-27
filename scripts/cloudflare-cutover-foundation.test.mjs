@@ -54,7 +54,7 @@ test("Worker routing is explicit and unknown routes cannot fall through", () => 
 });
 
 test("Wrangler configuration has one source of truth and local bindings are generated safely", () => {
-  assert.equal(baseConfig.workers_dev, false);
+  assert.equal(baseConfig.workers_dev, true);
   assert.equal(baseConfig.preview_urls, false);
   assert.equal(baseConfig.main, "src/entry.ts");
   assert.equal(baseConfig.d1_databases, undefined);
@@ -72,8 +72,13 @@ test("production migration and deploy commands are separated and approval-gated"
   assert.equal(workerPackage.scripts["migrate:remote"], undefined);
   assert.match(workerPackage.scripts["migrate:production"], /require-production-approval/);
   assert.match(workerPackage.scripts["deploy:production"], /require-production-approval/);
-  assert.doesNotMatch(workerPackage.scripts["deploy:production"], /migrations apply|migrate:production/);
-  assert.match(approvalGuard, /I_UNDERSTAND_THIS_CHANGES_PRODUCTION/);
+  assert.doesNotMatch(
+    workerPackage.scripts["deploy:production"],
+    /migrations apply|migrate:production/,
+  );
+  assert.match(approvalGuard, /DEPLOY_RAWAJ_WORKER_PRODUCTION/);
+  assert.match(approvalGuard, /workflow_dispatch/);
+  assert.match(approvalGuard, /expectedCommitSha !== githubSha/);
 });
 
 test("retired external-backend migration tooling is absent from the operational tree", () => {

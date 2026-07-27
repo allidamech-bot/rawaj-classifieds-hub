@@ -1,0 +1,117 @@
+name: Cloudflare Production Worker Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      approval_phrase:
+        description: "Type DEPLOY_RAWAJ_WORKER_PRODUCTION exactly"
+        required: true
+        type: string
+      expected_commit_sha:
+        description: "Exact 40-character approved commit SHA selected for this dispatch"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rawaj-cloudflare-production-worker
+  cancel-in-progress: false
+
+jobs:
+  deploy-production-worker:
+    name: Deploy reviewed Worker SHA
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
+    env:
+      EXPECTED_COMMIT_SHA: ${{ inputs.expected_commit_sha }}
+      RAWAJ_EXPECTED_COMMIT_SHA: ${{ inputs.expected_commit_sha }}
+      RAWAJ_PRODUCTION_APPROVAL: ${{ inputs.approval_phrase }}
+      RAWAJ_WORKER_RELEASE_SHA: ${{ inputs.expected_commit_sha }}
+      RAWAJ_WORKER_ENVIRONMENT: production
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+      CLOUDFLARE_D1_DATABASE_NAME: ${{ vars.CLOUDFLARE_D1_DATABASE_NAME }}
+      CLOUDFLARE_R2_BUCKET_NAME: ${{ vars.CLOUDFLARE_R2_BUCKET_NAME }}
+      CLOUDFLARE_WORKER_CUSTOM_DOMAIN: ${{ vars.CLOUDFLARE_WORKER_CUSTOM_DOMAIN }}
+
+    steps:
+      - name: Validate manual approval and selected SHA
+        env:
+          DISPATCH_REF: ${{ github.ref }}
+          APPROVAL_PHRASE: ${{ inputs.approval_phrase }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" != "workflow_dispatch" ]]; then
+            echo "Production deployment is allowed only through workflow_dispatch." >&2
+            exit 1
+          fi
+          if [[ "$DISPATCH_REF" != "refs/heads/main" ]]; then
+            echo "Production deployment is allowed only from refs/heads/main; tags and other branches are rejected." >&2
+            exit 1
+          fi
+          if [[ "$APPROVAL_PHRASE" != "DEPLOY_RAWAJ_WORKER_PRODUCTION" ]]; then
+            echo "The Production approval phrase is invalid." >&2
+            exit 1
+          fi
+          if [[ ! "$EXPECTED_COMMIT_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "expected_commit_sha must be an exact lowercase 40-character Git SHA." >&2
+            exit 1
+          fi
+
+      - name: Checkout explicitly approved SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.expected_commit_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify approved SHA is the current main HEAD
+        run: |
+          set -euo pipefail
+          ACTUAL_COMMIT_SHA="$(git rev-parse HEAD)"
+          if [[ "$ACTUAL_COMMIT_SHA" != "$EXPECTED_COMMIT_SHA" ]]; then
+            echo "Checked-out HEAD does not match expected_commit_sha." >&2
+            exit 1
+          fi
+          git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
+          MAIN_HEAD_SHA="$(git rev-parse refs/remotes/origin/main)"
+          if [[ "$EXPECTED_COMMIT_SHA" != "$MAIN_HEAD_SHA" ]]; then
+            echo "expected_commit_sha is not the current HEAD of main; stale or non-main commits cannot be deployed." >&2
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            cloudflare/worker/package-lock.json
+
+      - name: Install Worker dependencies
+        run: npm ci --prefix cloudflare/worker --ignore-scripts
+
+      - name: Validate deployment safety contracts
+        run: npm run test:cloudflare-deployment-safety
+
+      - name: Deploy approved Worker version once
+        run: npm --prefix cloudflare/worker run deploy:production
+
+      - name: Verify deployed Worker release and read-only routes
+        env:
+          RAWAJ_WORKER_EXPECTED_RELEASE_SHA: ${{ inputs.expected_commit_sha }}
+          RAWAJ_WORKER_BASE_URL: https://rawaj-classifieds-hub.allidamech.workers.dev
+        run: npm --prefix cloudflare/worker run smoke:production:read-only
+
+      - name: Manual rollback instructions
+        if: ${{ failure() }}
+        run: |
+          echo "::error::Production Worker deployment or verification failed."
+          echo "Do not rerun this workflow until the failure is understood."
+          echo "No automatic rollback was attempted."
+          echo "If the failed release reached Production, use the Cloudflare dashboard deployment history to select the previously verified Worker version, obtain explicit approval, and perform a separate manual rollback."
