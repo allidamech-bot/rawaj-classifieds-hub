@@ -35,10 +35,14 @@ test("incoming Android intents remain restricted to RAWAJ-owned targets", () => 
   assert.match(activity, /bridge\.getWebView\(\)\.loadUrl\(trustedTarget\.toString\(\)\)/);
 });
 
-test("Google OAuth uses Firebase popup and a sanitized in-app return target", () => {
-  assert.match(auth, /new GoogleAuthProvider\(\)/);
-  assert.match(auth, /signInWithPopup\(firebaseAuth, provider\)/);
+test("Supabase Google OAuth uses native custom scheme and sanitized web fallback", () => {
+  assert.match(auth, /import \{ Capacitor \} from "@capacitor\/core"/);
+  assert.match(auth, /Capacitor\.isNativePlatform\(\)/);
+  assert.match(auth, /new URL\("com\.rawaj\.marketplace:\/\/auth\/callback"\)/);
+  assert.match(auth, /new URL\("\/auth\/callback", window\.location\.origin\)/);
   assert.match(auth, /sanitizeAuthReturnTo\(returnTo, "\/more"\)/);
-  assert.match(auth, /window\.location\.assign\(safeReturnTo\)/);
-  assert.doesNotMatch(auth, /redirectTo:\s*callbackUrl/);
+  assert.match(auth, /client\.auth\.signInWithOAuth\(\{/);
+  assert.match(auth, /provider: "google"/);
+  assert.match(auth, /redirectTo: buildOAuthCallbackUrl\(returnTo\)/);
+  assert.doesNotMatch(auth, /firebase|signInWithPopup|GoogleAuthProvider/i);
 });

@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import type { Session } from "@supabase/supabase-js";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
@@ -31,6 +32,15 @@ function authErrorMessage(error: unknown): string {
 
 function normalizeAuthEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+function buildOAuthCallbackUrl(returnTo: string | undefined): string {
+  const safeReturnTo = sanitizeAuthReturnTo(returnTo, "/more");
+  const callbackUrl = Capacitor.isNativePlatform()
+    ? new URL("com.rawaj.marketplace://auth/callback")
+    : new URL("/auth/callback", window.location.origin);
+  callbackUrl.searchParams.set("returnTo", safeReturnTo);
+  return callbackUrl.toString();
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -209,12 +219,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithGoogle: async (returnTo) => {
         const client = supabaseAuth;
         if (!client) return { error: unavailableReason ?? "Auth unavailable" };
-        const safeReturnTo = sanitizeAuthReturnTo(returnTo, "/more");
-        const callbackUrl = new URL("/auth/callback", window.location.origin);
-        callbackUrl.searchParams.set("returnTo", safeReturnTo);
         const { error } = await client.auth.signInWithOAuth({
           provider: "google",
-          options: { redirectTo: callbackUrl.toString() },
+          options: { redirectTo: buildOAuthCallbackUrl(returnTo) },
         });
         return { error: error?.message ?? null };
       },
