@@ -50,7 +50,9 @@ test("authenticated identity and roles are derived by the Worker", () => {
   assert.match(auth, /export async function authenticate/);
   assert.match(auth, /SELECT role FROM user_roles WHERE user_id = \?/);
   assert.match(auth, /export async function requireMutationAuth/);
-  assert.doesNotMatch(auth, /service_role|SUPABASE|supabase/i);
+  assert.match(auth, /verifySupabaseAccessToken/);
+  assert.match(auth, /SUPABASE_URL/);
+  assert.doesNotMatch(auth, /service_role|SUPABASE_(?:SERVICE_ROLE|SECRET|JWT_SECRET)|firebase/i);
 });
 
 test("all administrative mutation modules require authenticated mutation access", () => {
@@ -81,5 +83,8 @@ test("verification documents remain private and admin-scoped", () => {
   assert.match(verification, /\/v1\/admin\/verifications/);
   assert.match(verification, /canManage\(auth\.roles\)/);
   assert.match(verification, /document_asset_id/);
-  assert.doesNotMatch(verification, /getPublicUrl|createSignedUrl|supabase/i);
+  assert.doesNotMatch(
+    verification,
+    /getPublicUrl|createSignedUrl|@supabase\/supabase-js|\.storage(?:\.|\[)|\.from\s*\(/i,
+  );
 });

@@ -1,30 +1,38 @@
 import type { UserProfile } from "@/lib/auth-types";
 import type { AuthUser } from "@/lib/auth-context";
-import type { User as FirebaseUser } from "firebase/auth";
-import { firebaseAuth } from "@/lib/firebase";
 import { requireCloudflarePublicApiBaseUrl } from "@/lib/public-data/config";
+import { supabaseAuth } from "@/lib/supabase-auth";
 
 type Envelope<T> = { data?: T; error?: { code?: string; message?: string } };
 type ApiResult<T> = { ok: true; data: T } | { ok: false; error: string; code: string };
-const forcedTokenRefreshes = new Map<string, Promise<string>>();
+const forcedTokenRefreshes = new Map<string, Promise<string | null>>();
 
-function isCurrentFirebaseUser(user: FirebaseUser): boolean {
-  return firebaseAuth.currentUser?.uid === user.uid;
+async function currentAuthSession() {
+  const client = supabaseAuth;
+  if (!client) return null;
+  const { data, error } = await client.auth.getSession();
+  return error ? null : data.session;
 }
 
-async function getFreshFirebaseToken(user: FirebaseUser): Promise<string> {
-  const existing = forcedTokenRefreshes.get(user.uid);
+async function getFreshAuthToken(expectedUserId: string): Promise<string | null> {
+  const existing = forcedTokenRefreshes.get(expectedUserId);
   if (existing) return existing;
 
-  const refresh = user.getIdToken(true);
-  forcedTokenRefreshes.set(user.uid, refresh);
-  try {
-    return await refresh;
-  } finally {
-    if (forcedTokenRefreshes.get(user.uid) === refresh) {
-      forcedTokenRefreshes.delete(user.uid);
-    }
-  }
+  const client = supabaseAuth;
+  if (!client) return null;
+  const refresh = client.auth
+    .refreshSession()
+    .then(({ data, error }) => {
+      if (error || data.session?.user.id !== expectedUserId) return null;
+      return data.session.access_token;
+    })
+    .finally(() => {
+      if (forcedTokenRefreshes.get(expectedUserId) === refresh) {
+        forcedTokenRefreshes.delete(expectedUserId);
+      }
+    });
+  forcedTokenRefreshes.set(expectedUserId, refresh);
+  return refresh;
 }
 
 export function cloudflareApiUrl(path: string): string {
@@ -38,22 +46,17 @@ export async function cloudflareAuthorizedFetch(
 ): Promise<Response | null> {
   const base = requireCloudflarePublicApiBaseUrl();
   if (!base.ok) return null;
-  const currentUser = firebaseAuth.currentUser;
-  let initialToken: string | null = null;
-  try {
-    initialToken = currentUser ? await currentUser.getIdToken() : null;
-  } catch {
-    return null;
-  }
-  const first = await sendAuthorizedFetch(base.data, path, init, initialToken);
-  if (first?.status !== 401 || !currentUser || !isCurrentFirebaseUser(currentUser)) return first;
-  try {
-    const refreshedToken = await getFreshFirebaseToken(currentUser);
-    if (!isCurrentFirebaseUser(currentUser)) return first;
-    return await sendAuthorizedFetch(base.data, path, init, refreshedToken);
-  } catch {
-    return first;
-  }
+  const currentSession = await currentAuthSession();
+  const first = await sendAuthorizedFetch(
+    base.data,
+    path,
+    init,
+    currentSession?.access_token ?? null,
+  );
+  if (first?.status !== 401 || !currentSession) return first;
+
+  const refreshedToken = await getFreshAuthToken(currentSession.user.id);
+  return refreshedToken ? sendAuthorizedFetch(base.data, path, init, refreshedToken) : first;
 }
 
 async function sendAuthorizedFetch(
@@ -85,33 +88,19 @@ export async function cloudflareApiRequest<T>(
   const base = requireCloudflarePublicApiBaseUrl();
   if (!base.ok) return { ok: false, error: base.error.message, code: base.error.code };
 
-  const currentUser = firebaseAuth.currentUser;
-  let initialToken: string | null = null;
-  try {
-    initialToken = currentUser ? await currentUser.getIdToken() : null;
-  } catch {
-    return {
-      ok: false,
-      error: "تعذر تحديث جلسة تسجيل الدخول. حاول مرة أخرى.",
-      code: "auth_token_unavailable",
-    };
-  }
-  const first = await sendRequest<T>(base.data, path, init, initialToken);
-  if (first.response.status !== 401 || !currentUser || !isCurrentFirebaseUser(currentUser)) {
-    return first.result;
-  }
+  const currentSession = await currentAuthSession();
+  const first = await sendRequest<T>(base.data, path, init, currentSession?.access_token ?? null);
+  if (first.response.status !== 401 || !currentSession) return first.result;
 
-  try {
-    const refreshedToken = await getFreshFirebaseToken(currentUser);
-    if (!isCurrentFirebaseUser(currentUser)) return first.result;
-    return (await sendRequest<T>(base.data, path, init, refreshedToken)).result;
-  } catch {
+  const refreshedToken = await getFreshAuthToken(currentSession.user.id);
+  if (!refreshedToken) {
     return {
       ok: false,
       error: "تعذر تحديث جلسة تسجيل الدخول. حاول مرة أخرى.",
       code: "auth_token_unavailable",
     };
   }
+  return (await sendRequest<T>(base.data, path, init, refreshedToken)).result;
 }
 
 async function sendRequest<T>(
@@ -175,7 +164,7 @@ function repairWindows1256Mojibake(value: string): string {
   return value;
 }
 
-function firebaseIdentityDisplayName(user: AuthUser): string | null {
+function authIdentityDisplayName(user: AuthUser): string | null {
   return user.user_metadata.display_name?.trim() || user.user_metadata.full_name?.trim() || null;
 }
 
@@ -184,8 +173,8 @@ function accountDisplayNameFallback(
   firstName: string | null,
   lastName: string | null,
 ): string | null {
-  const firebaseName = firebaseIdentityDisplayName(user);
-  if (firebaseName && !looksLikeCorruptedArabic(firebaseName)) return firebaseName;
+  const identityName = authIdentityDisplayName(user);
+  if (identityName && !looksLikeCorruptedArabic(identityName)) return identityName;
 
   const storedName = [firstName?.trim(), lastName?.trim()].filter(Boolean).join(" ");
   if (storedName) {

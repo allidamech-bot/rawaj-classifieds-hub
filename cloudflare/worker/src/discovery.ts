@@ -19,9 +19,9 @@ interface Database {
 export interface DiscoveryEnv {
   DB: Database;
   API_ALLOWED_ORIGINS?: string;
-  FIREBASE_PROJECT_ID?: string;
-  FIREBASE_AUTH_TEST_JWKS?: string;
-  FIREBASE_JWKS_URL?: string;
+  SUPABASE_URL?: string;
+  SUPABASE_AUTH_TEST_JWKS?: string;
+  SUPABASE_JWKS_URL?: string;
 }
 
 type AttributeFilter = string | boolean | string[] | { min?: number; max?: number };

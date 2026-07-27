@@ -1,11 +1,16 @@
-import { createFileRoute, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
+import type { Session } from "@supabase/supabase-js";
 import { Eye, EyeOff, KeyRound } from "lucide-react";
-import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { authErrorMessage } from "@/lib/auth-errors";
+import {
+  clearPasswordRecoverySession,
+  hasActivePasswordRecoverySession,
+  markPasswordRecoverySession,
+} from "@/lib/auth-recovery-session";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
-import { firebaseAuth } from "@/lib/firebase";
+import { supabaseAuth } from "@/lib/supabase-auth";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/reset-password")({
@@ -20,50 +25,59 @@ export const Route = createFileRoute("/reset-password")({
 
 function ResetPasswordPage() {
   const { text } = useUiPreferences();
+  const navigate = useNavigate();
   const locationSearch = useRouterState({ select: (state) => state.location.search });
   const looseSearch = locationSearch as unknown as Record<string, unknown>;
-  const rawReturnTo = typeof looseSearch.returnTo === "string" ? looseSearch.returnTo : undefined;
-  const returnTo = sanitizeAuthReturnTo(rawReturnTo, "/more");
-  const oobCode = typeof looseSearch.oobCode === "string" ? looseSearch.oobCode : "";
-  const mode = typeof looseSearch.mode === "string" ? looseSearch.mode : "";
-  const [recoveryReady, setRecoveryReady] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const returnTo = sanitizeAuthReturnTo(
+    typeof looseSearch.returnTo === "string" ? looseSearch.returnTo : undefined,
+    "/more",
+  );
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
+  const [recoveryUserId, setRecoveryUserId] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const saveInFlightRef = useRef(false);
 
   useEffect(() => {
-    let cancelled = false;
-    async function verifyCode() {
-      if (mode !== "resetPassword" || !oobCode) {
-        if (!cancelled) {
-          setChecking(false);
-          setRecoveryReady(false);
-        }
-        return;
-      }
-      try {
-        await verifyPasswordResetCode(firebaseAuth, oobCode);
-        if (!cancelled) setRecoveryReady(true);
-      } catch (caught) {
-        if (!cancelled) {
-          setRecoveryReady(false);
-          setError(authErrorMessage(caught instanceof Error ? caught : null, "recovery", text));
-        }
-      } finally {
-        if (!cancelled) setChecking(false);
-      }
+    const client = supabaseAuth;
+    if (!client) {
+      setChecking(false);
+      return;
     }
-    void verifyCode();
-    return () => {
-      cancelled = true;
+
+    let active = true;
+    const accept = (session: Session) => {
+      if (!active || !hasActivePasswordRecoverySession(session.user.id)) return;
+      setRecoveryUserId(session.user.id);
+      setChecking(false);
     };
-  }, [mode, oobCode, text]);
+
+    const { data: listener } = client.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" && session) {
+        markPasswordRecoverySession(session.user.id);
+        accept(session);
+      }
+    });
+
+    void client.auth.getSession().then(({ data }) => {
+      if (data.session) accept(data.session);
+    });
+
+    const timeout = window.setTimeout(() => {
+      if (active) setChecking(false);
+    }, 15_000);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timeout);
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -71,11 +85,11 @@ function ResetPasswordPage() {
     setMessage("");
     setError("");
 
-    if (password.length < 8) {
+    if (password.length < 6) {
       setError(
         text(
-          "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
-          "Password must be at least 8 characters.",
+          "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
+          "Password must be at least 6 characters.",
         ),
       );
       return;
@@ -85,23 +99,49 @@ function ResetPasswordPage() {
       return;
     }
 
+    const client = supabaseAuth;
+    if (!client || !recoveryUserId) {
+      setError(
+        text(
+          "جلسة الاستعادة غير صالحة. اطلب رابطًا جديدًا.",
+          "The recovery session is invalid. Request a new link.",
+        ),
+      );
+      return;
+    }
+
     saveInFlightRef.current = true;
     setSaving(true);
     try {
-      if (!recoveryReady || !oobCode) {
+      const { data: sessionData, error: sessionError } = await client.auth.getSession();
+      const currentUserId = sessionData.session?.user.id ?? null;
+      if (
+        sessionError ||
+        currentUserId !== recoveryUserId ||
+        !hasActivePasswordRecoverySession(currentUserId)
+      ) {
+        clearPasswordRecoverySession();
+        setRecoveryUserId(null);
         setError(
           text(
-            "رابط الاستعادة غير صالح أو منتهي. اطلب رابطًا جديدًا.",
-            "The recovery link is invalid or expired. Request a new link.",
+            "انتهت جلسة الاستعادة. اطلب رابطًا جديدًا.",
+            "The recovery session expired. Request a new link.",
           ),
         );
         return;
       }
-      await confirmPasswordReset(firebaseAuth, oobCode, password);
+
+      const { error: updateError } = await client.auth.updateUser({ password });
+      if (updateError) {
+        setError(authErrorMessage(updateError, "update-password", text));
+        return;
+      }
+
+      clearPasswordRecoverySession();
       setPassword("");
       setConfirmPassword("");
       setMessage(text("تم تحديث كلمة المرور.", "Password updated."));
-      window.location.assign(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+      window.setTimeout(() => void navigate({ to: returnTo }), 700);
     } catch (caught) {
       setError(authErrorMessage(caught instanceof Error ? caught : null, "update-password", text));
     } finally {
@@ -133,7 +173,7 @@ function ResetPasswordPage() {
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
                 {text(
                   "اكتب كلمة مرور جديدة لحسابك ثم احفظ التغيير.",
-                  "Enter a new password for your account and save the change.",
+                  "Enter a new password and save the change.",
                 )}
               </p>
             </div>
@@ -141,16 +181,15 @@ function ResetPasswordPage() {
 
           {checking ? (
             <div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-4 text-xs leading-6 text-muted-foreground">
-              {text("جارٍ التحقق من رابط الاستعادة...", "Checking the recovery link...")}
+              {text("جارٍ التحقق من جلسة الاستعادة...", "Checking the recovery session...")}
             </div>
-          ) : !recoveryReady ? (
+          ) : !recoveryUserId ? (
             <div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-4 text-xs leading-6 text-muted-foreground">
               <p>
-                {error ||
-                  text(
-                    "رابط الاستعادة غير صالح أو منتهي. اطلب رابطاً جديداً قبل تغيير كلمة المرور.",
-                    "The recovery link is invalid or expired. Request a new link before changing your password.",
-                  )}
+                {text(
+                  "الرابط غير صالح أو منتهي. اطلب رابطًا جديدًا.",
+                  "The link is invalid or expired. Request a new one.",
+                )}
               </p>
               <button
                 type="button"
@@ -182,7 +221,6 @@ function ResetPasswordPage() {
                 showLabel={text("إظهار تأكيد كلمة المرور", "Show password confirmation")}
                 hideLabel={text("إخفاء تأكيد كلمة المرور", "Hide password confirmation")}
               />
-
               {error && (
                 <p className="rounded-[1rem] border border-destructive/15 bg-destructive/8 p-2.5 text-xs font-medium text-destructive">
                   {error}
@@ -193,7 +231,6 @@ function ResetPasswordPage() {
                   {message}
                 </p>
               )}
-
               <button
                 type="submit"
                 disabled={saving}
@@ -239,7 +276,7 @@ function PasswordField({
           onChange={(event) => onChange(event.target.value)}
           type={visible ? "text" : "password"}
           autoComplete="new-password"
-          minLength={8}
+          minLength={6}
           required
           disabled={saving}
           className="input pe-11"

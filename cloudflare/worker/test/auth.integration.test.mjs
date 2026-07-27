@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { createFirebaseAuthFixture } from "./firebase-auth-fixture.mjs";
+import { createSupabaseAuthFixture } from "./supabase-auth-fixture.mjs";
 
 const port = 8791;
 const baseUrl = `http://127.0.0.1:${port}`;
@@ -10,7 +10,7 @@ let worker;
 let auth;
 
 before(async () => {
-  auth = await createFirebaseAuthFixture();
+  auth = await createSupabaseAuthFixture();
   worker = spawn(
     process.execPath,
     [
@@ -48,7 +48,7 @@ before(async () => {
 
 after(() => worker?.kill());
 
-test("valid Firebase token creates and reuses one D1 identity", async () => {
+test("valid Supabase token creates and reuses one D1 identity", async () => {
   const session = await auth.session("identity");
   const first = await request("/api/profile", session.token);
   assert.equal(first.response.status, 200);
@@ -62,7 +62,7 @@ test("valid Firebase token creates and reuses one D1 identity", async () => {
   assert.equal(localIdentityCount(session.userId), 1);
 });
 
-test("a refreshed Firebase display name repairs only the initial fallback profile name", async () => {
+test("a refreshed Supabase display name repairs only the initial fallback profile name", async () => {
   const userId = crypto.randomUUID();
   const firstSession = await auth.session("profile-name", {
     sub: userId,
@@ -95,10 +95,12 @@ test("missing, malformed, expired, wrong issuer, wrong audience, and invalid sig
   });
   assert.equal((await request("/api/profile", expired.token)).response.status, 401);
 
-  const wrongIssuer = await auth.session("issuer", { iss: "https://securetoken.google.com/other" });
+  const wrongIssuer = await auth.session("issuer", {
+    iss: "https://other-project.supabase.co/auth/v1",
+  });
   assert.equal((await request("/api/profile", wrongIssuer.token)).response.status, 401);
 
-  const wrongAudience = await auth.session("audience", { aud: "other-project" });
+  const wrongAudience = await auth.session("audience", { aud: "anon" });
   assert.equal((await request("/api/profile", wrongAudience.token)).response.status, 401);
 
   const invalidSignature = await auth.invalidSignatureSession("signature");
@@ -157,7 +159,7 @@ function localIdentityCount(userId) {
       "wrangler.generated.jsonc",
       "--command",
       `SELECT count(*) AS count FROM auth_users
-        WHERE auth_provider = 'firebase' AND auth_user_id = '${userId}';`,
+        WHERE auth_provider = 'supabase' AND auth_user_id = '${userId}';`,
       "--json",
     ],
     {

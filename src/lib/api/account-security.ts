@@ -1,6 +1,5 @@
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
-import { firebaseAuth } from "@/lib/firebase";
+import { supabaseAuth } from "@/lib/supabase-auth";
 
 export async function changeOwnPassword(
   currentPassword: string,
@@ -16,53 +15,45 @@ export async function changeOwnPassword(
     };
   }
 
-  const user = firebaseAuth.currentUser;
-  const email = user?.email;
-  if (!user || !email) {
+  const client = supabaseAuth;
+  if (!client) {
+    return {
+      ok: false,
+      error: { code: "setup_required", message: "خدمة الحسابات غير متاحة الآن." },
+    };
+  }
+
+  const { data: sessionData, error: sessionError } = await client.auth.getSession();
+  const currentUser = sessionData.session?.user ?? null;
+  const email = currentUser?.email?.trim() ?? "";
+  if (sessionError || !currentUser || !email) {
     return {
       ok: false,
       error: { code: "permission_denied", message: "تسجيل الدخول مطلوب." },
     };
   }
 
-  try {
-    const credential = EmailAuthProvider.credential(email, currentPassword);
-    await reauthenticateWithCredential(user, credential);
-    await updatePassword(user, newPassword);
-    return { ok: true, data: null };
-  } catch (error) {
-    const source = error as { code?: unknown; message?: unknown };
-    const code = typeof source.code === "string" ? source.code : "";
-    const message = typeof source.message === "string" ? source.message : "تعذر تغيير كلمة المرور.";
-
-    if (
-      code === "auth/invalid-credential" ||
-      code === "auth/wrong-password" ||
-      code === "auth/user-mismatch"
-    ) {
-      return {
-        ok: false,
-        error: { code: "permission_denied", message: "كلمة المرور الحالية غير صحيحة." },
-      };
-    }
-
-    if (code === "auth/requires-recent-login") {
-      return {
-        ok: false,
-        error: {
-          code: "permission_denied",
-          message: "أعد تسجيل الدخول ثم حاول تغيير كلمة المرور مرة أخرى.",
-        },
-      };
-    }
-
-    if (code === "auth/weak-password") {
-      return {
-        ok: false,
-        error: { code: "validation_error", message: "كلمة المرور الجديدة ضعيفة." },
-      };
-    }
-
-    return { ok: false, error: { code: "unknown", message } };
+  const { data: reauthenticated, error: reauthError } = await client.auth.signInWithPassword({
+    email,
+    password: currentPassword,
+  });
+  if (reauthError || reauthenticated.user?.id !== currentUser.id) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "كلمة المرور الحالية غير صحيحة." },
+    };
   }
+
+  const { error: updateError } = await client.auth.updateUser({ password: newPassword });
+  if (!updateError) return { ok: true, data: null };
+
+  const message = updateError.message || "تعذر تغيير كلمة المرور.";
+  const normalized = message.toLowerCase();
+  if (normalized.includes("weak") || normalized.includes("password")) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "كلمة المرور الجديدة غير مقبولة." },
+    };
+  }
+  return { ok: false, error: { code: "unknown", message } };
 }
