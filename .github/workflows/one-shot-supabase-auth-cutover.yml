@@ -92,8 +92,29 @@ jobs:
       - name: Verify admin security
         run: npm run test:admin-security
 
-      - name: Run Worker tests
-        run: npm run test --prefix cloudflare/worker
+      - name: Run Worker tests with diagnostics
+        shell: bash
+        run: |
+          set +e
+          npm run test --prefix cloudflare/worker > worker-tests.log 2>&1
+          status=$?
+          echo "$status" > worker-tests.exit
+          cat worker-tests.log
+          exit 0
+
+      - name: Upload Worker test diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: worker-tests-${{ github.run_id }}
+          path: |
+            worker-tests.log
+            worker-tests.exit
+          if-no-files-found: error
+          retention-days: 2
+
+      - name: Enforce Worker tests
+        run: |
+          test "$(cat worker-tests.exit)" = "0"
 
       - name: Typecheck application
         run: npm run typecheck
@@ -119,7 +140,7 @@ jobs:
           rm -f scripts/.one-shot-supabase-auth-followup.mjs
           rm -f scripts/.one-shot-supabase-auth-admin-followup.mjs
           rm -f .github/workflows/one-shot-supabase-auth-cutover.yml
-          rm -f runtime-boundary-report.json
+          rm -f runtime-boundary-report.json worker-tests.log worker-tests.exit
           git config user.name 'allidamech-bot'
           git config user.email '228416871+allidamech-bot@users.noreply.github.com'
           git add -A
