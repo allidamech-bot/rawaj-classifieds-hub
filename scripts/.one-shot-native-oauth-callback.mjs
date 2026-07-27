@@ -18,7 +18,7 @@ const normalizeBlock = `function normalizeAuthEmail(email: string): string {
 }`;
 const callbackBlock = `${normalizeBlock}
 
-function buildOAuthCallbackUrl(returnTo: string): string {
+function buildOAuthCallbackUrl(returnTo: string | undefined): string {
   const safeReturnTo = sanitizeAuthReturnTo(returnTo, "/more");
   const callbackUrl = Capacitor.isNativePlatform()
     ? new URL("com.rawaj.marketplace://auth/callback")
