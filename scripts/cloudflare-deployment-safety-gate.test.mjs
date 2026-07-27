@@ -56,10 +56,25 @@ test("the only Worker deployment workflow is manual and SHA-gated", () => {
   const source = productionWorkflow.source;
   assert.match(source, /^\s{2}workflow_dispatch:/m);
   assert.doesNotMatch(source, /^\s{2}(?:pull_request|push):/m);
+  const triggerBlock = source.match(/^on:\s*\n(?<body>[\s\S]*?)^\S/m)?.groups?.body;
+  assert.ok(triggerBlock, "The workflow trigger block must be readable");
+  const declaredTriggers = [...triggerBlock.matchAll(/^\s{2}([a-zA-Z_][\w-]*):(?:\s|$)/gm)].map(
+    (match) => match[1],
+  );
+  assert.deepEqual(declaredTriggers, ["workflow_dispatch"]);
   assert.match(source, /DEPLOY_RAWAJ_WORKER_PRODUCTION/);
   assert.match(source, /expected_commit_sha/);
-  assert.match(source, /EXPECTED_COMMIT_SHA.*DISPATCH_SHA/s);
+  assert.match(source, /DISPATCH_REF: \$\{\{ github\.ref \}\}/);
+  assert.match(source, /\[\[ "\$DISPATCH_REF" != "refs\/heads\/main" \]\]/);
+  assert.match(source, /tags and other branches are rejected/);
+  assert.match(source, /ref: \$\{\{ inputs\.expected_commit_sha \}\}/);
   assert.match(source, /git rev-parse HEAD/);
+  assert.match(source, /git fetch --no-tags origin refs\/heads\/main:refs\/remotes\/origin\/main/);
+  assert.match(source, /MAIN_HEAD_SHA="\$\(git rev-parse refs\/remotes\/origin\/main\)"/);
+  assert.match(source, /\[\[ "\$EXPECTED_COMMIT_SHA" != "\$MAIN_HEAD_SHA" \]\]/);
+  assert.match(source, /stale or non-main commits cannot be deployed/);
+  assert.doesNotMatch(source, /DISPATCH_SHA:\s*\$\{\{\s*github\.sha\s*\}\}/);
+  assert.doesNotMatch(source, /\$EXPECTED_COMMIT_SHA"\s*!=\s*"\$(?:DISPATCH_SHA|GITHUB_SHA)/);
   assert.match(source, /npm --prefix cloudflare\/worker run deploy:production/);
   assert.equal(source.match(/npm --prefix cloudflare\/worker run deploy:production/g)?.length, 1);
   assert.doesNotMatch(source, /migrate:production|d1\s+migrations\s+apply/i);
