@@ -903,17 +903,85 @@ test("audit metadata is written as valid JSON and read back as object", async ()
   assert.equal(rejectLog.metadata.reason, "Test rejection reason");
 });
 
-test("malformed historical audit metadata does not crash the endpoint", async () => {
+test("pre-existing audit metadata is read back as object", async () => {
   const result = await api("/v1/admin/audit", owner);
   assert.equal(result.response.status, 200);
   assert.ok(Array.isArray(result.payload.data));
 
-  const logWithMalformed = result.payload.data.find(
+  const logWithPreexistingMetadata = result.payload.data.find(
     (log) => log.targetId === "test-public-listing",
   );
-  if (logWithMalformed) {
-    assert.ok(typeof logWithMalformed.metadata === "object", "metadata should always be an object");
-  }
+  assert.ok(logWithPreexistingMetadata, "pre-existing metadata log should be found");
+  assert.ok(typeof logWithPreexistingMetadata.metadata === "object", "metadata should always be an object");
+  assert.equal(logWithPreexistingMetadata.metadata.key, "value");
+  assert.equal(logWithPreexistingMetadata.metadata.number, 42);
+});
+
+test("zero-row UPDATE due to trigger returns 409 stale_review", async () => {
+  const listing = await createListing(owner, {
+    title: "Trigger test - zero row update",
+    status: "pending_review",
+    details: { triggerFail: true },
+  });
+  assert.equal(listing.response.status, 200);
+  const listingId = listing.payload.data.id;
+  const originalStatus = listing.payload.data.status;
+  const originalUpdatedAt = listing.payload.data.updatedAt;
+
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...moderator,
+    method: "POST",
+    body: {
+      listingId,
+      action: "reject",
+      reason: "Trigger test reason",
+      expectedUpdatedAt: originalUpdatedAt,
+    },
+  });
+  assert.equal(moderate.response.status, 409, "Expected 409 for zero-row UPDATE");
+  assert.equal(moderate.payload.error?.code, "stale_review", "Expected stale_review error code");
+
+  const checkListing = await api(`/api/listings/${listingId}`, moderator);
+  assert.equal(checkListing.response.status, 200);
+  assert.equal(checkListing.payload.data.status, originalStatus, "Listing status should not change");
+  assert.equal(checkListing.payload.data.updatedAt, originalUpdatedAt, "Listing updatedAt should not change");
+
+  const audit = await api("/v1/admin/audit", owner);
+  const modLog = audit.payload.data.find((log) => log.targetId === listingId && log.action === "listing_reject");
+  assert.equal(modLog, undefined, "No moderation audit log should exist");
+});
+
+test("audit INSERT failure rolls back transaction", async () => {
+  const listing = await createListing(owner, {
+    title: "Audit failure test",
+    status: "pending_review",
+    details: { auditFail: true },
+  });
+  assert.equal(listing.response.status, 200);
+  const listingId = listing.payload.data.id;
+  const originalStatus = listing.payload.data.status;
+  const originalUpdatedAt = listing.payload.data.updatedAt;
+
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...moderator,
+    method: "POST",
+    body: {
+      listingId,
+      action: "extend_expiry",
+      reason: "Audit failure test",
+      expectedUpdatedAt: originalUpdatedAt,
+    },
+  });
+  assert.ok(moderate.response.status !== 200, "API should not return HTTP 200 on audit INSERT failure");
+
+  const checkListing = await api(`/api/listings/${listingId}`, moderator);
+  assert.equal(checkListing.response.status, 200);
+  assert.equal(checkListing.payload.data.status, originalStatus, "Listing status should be rolled back");
+  assert.equal(checkListing.payload.data.updatedAt, originalUpdatedAt, "Listing updatedAt should be rolled back");
+
+  const audit = await api("/v1/admin/audit", owner);
+  const auditFailLog = audit.payload.data.find((log) => log.targetId === listingId && log.action === "listing_extend_expiry");
+  assert.equal(auditFailLog, undefined, "No audit log should exist after rollback");
 });
 
 test("moderator can moderate pending_review listings", async () => {
@@ -961,7 +1029,7 @@ test("moderator can reject listing", async () => {
   assert.equal(moderate.payload.data.nextStatus, "rejected");
 });
 
-test("moderator cannot extend_expiry on others' listings", async () => {
+test("moderator can extend_expiry on others' listings", async () => {
   const listing = await createListing(owner, {
     title: "Moderator expiry test",
     status: "pending_review",

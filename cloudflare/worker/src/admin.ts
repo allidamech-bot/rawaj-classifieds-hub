@@ -457,12 +457,18 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
   if (results.some((result) => !result.success)) return databaseError(cors);
 
   const updateMeta = results[0].meta as { changes?: number } | undefined;
+  const modActionMeta = results[1].meta as { changes?: number } | undefined;
+  const auditMeta = results[2].meta as { changes?: number } | undefined;
+
   if (!updateMeta?.changes || updateMeta.changes !== 1) {
     return json(
       { error: { code: "stale_review", message: "Listing changed since loaded." } },
       409,
       cors,
     );
+  }
+  if (!modActionMeta?.changes || modActionMeta.changes !== 1 || !auditMeta?.changes || auditMeta.changes !== 1) {
+    return databaseError(cors);
   }
 
   return json(
