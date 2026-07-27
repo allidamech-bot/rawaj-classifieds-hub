@@ -43,6 +43,15 @@ const emptySavedSearchParams = {
   sort: "latest" as ListingsSort,
 };
 
+function omitEmptySavedSearchParams(search: typeof emptySavedSearchParams) {
+  return Object.fromEntries(
+    Object.entries(search).map(([key, value]) => [
+      key,
+      value === "" || (key === "sort" && value === "latest") ? undefined : value,
+    ]),
+  ) as unknown as typeof emptySavedSearchParams;
+}
+
 interface SearchResultsToolbarProps {
   title: string;
   pathLabel?: string;
@@ -92,6 +101,7 @@ export function SearchResultsToolbar({
 }: SearchResultsToolbarProps) {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const savedSearchLinkParams = omitEmptySavedSearchParams(savedSearch);
 
   useEffect(() => {
     function focusSearch(event: KeyboardEvent) {
@@ -256,7 +266,11 @@ export function SearchResultsToolbar({
           </button>
         </div>
 
-        <Link to="/saved-searches" search={savedSearch} className="rawaj-search-toolbar__saved">
+        <Link
+          to="/saved-searches"
+          search={savedSearchLinkParams}
+          className="rawaj-search-toolbar__saved"
+        >
           <Bookmark aria-hidden="true" />
           <span>{text("عمليات البحث", "Saved searches")}</span>
         </Link>

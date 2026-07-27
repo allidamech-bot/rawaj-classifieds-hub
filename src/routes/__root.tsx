@@ -72,21 +72,25 @@ function NotFoundComponent() {
   const { text } = useUiPreferences();
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
-      <FeedbackState
-        code="404"
-        title={text("الصفحة غير موجودة", "Page not found")}
-        description={text(
-          "الصفحة التي تبحث عنها غير متاحة أو تم نقلها.",
-          "The page you are looking for is unavailable or has moved.",
-        )}
-        action={
-          <Button asChild>
-            <Link to="/">{text("العودة للرئيسية", "Back to home")}</Link>
-          </Button>
-        }
-      />
-    </div>
+    <>
+      <title>{text("الصفحة غير موجودة | رواج", "Page not found | RAWAJ")}</title>
+      <meta name="robots" content="noindex, nofollow" />
+      <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
+        <FeedbackState
+          code="404"
+          title={text("الصفحة غير موجودة", "Page not found")}
+          description={text(
+            "الصفحة التي تبحث عنها غير متاحة أو تم نقلها.",
+            "The page you are looking for is unavailable or has moved.",
+          )}
+          action={
+            <Button asChild>
+              <Link to="/">{text("العودة للرئيسية", "Back to home")}</Link>
+            </Button>
+          }
+        />
+      </div>
+    </>
   );
 }
 
@@ -139,7 +143,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         ...seo.meta,
       ],
       links: [
-        ...seo.links,
         { rel: "stylesheet", href: appCss },
         { rel: "stylesheet", href: visualFoundationCss },
         { rel: "stylesheet", href: signatureCss },
