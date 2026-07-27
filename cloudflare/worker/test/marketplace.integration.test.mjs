@@ -912,7 +912,10 @@ test("pre-existing audit metadata is read back as object", async () => {
     (log) => log.targetId === "test-public-listing",
   );
   assert.ok(logWithPreexistingMetadata, "pre-existing metadata log should be found");
-  assert.ok(typeof logWithPreexistingMetadata.metadata === "object", "metadata should always be an object");
+  assert.ok(
+    typeof logWithPreexistingMetadata.metadata === "object",
+    "metadata should always be an object",
+  );
   assert.equal(logWithPreexistingMetadata.metadata.key, "value");
   assert.equal(logWithPreexistingMetadata.metadata.number, 42);
 });
@@ -943,11 +946,21 @@ test("zero-row UPDATE due to trigger returns 409 stale_review", async () => {
 
   const checkListing = await api(`/api/listings/${listingId}`, moderator);
   assert.equal(checkListing.response.status, 200);
-  assert.equal(checkListing.payload.data.status, originalStatus, "Listing status should not change");
-  assert.equal(checkListing.payload.data.updatedAt, originalUpdatedAt, "Listing updatedAt should not change");
+  assert.equal(
+    checkListing.payload.data.status,
+    originalStatus,
+    "Listing status should not change",
+  );
+  assert.equal(
+    checkListing.payload.data.updatedAt,
+    originalUpdatedAt,
+    "Listing updatedAt should not change",
+  );
 
   const audit = await api("/v1/admin/audit", owner);
-  const modLog = audit.payload.data.find((log) => log.targetId === listingId && log.action === "listing_reject");
+  const modLog = audit.payload.data.find(
+    (log) => log.targetId === listingId && log.action === "listing_reject",
+  );
   assert.equal(modLog, undefined, "No moderation audit log should exist");
 });
 
@@ -972,15 +985,28 @@ test("audit INSERT failure rolls back transaction", async () => {
       expectedUpdatedAt: originalUpdatedAt,
     },
   });
-  assert.ok(moderate.response.status !== 200, "API should not return HTTP 200 on audit INSERT failure");
+  assert.ok(
+    moderate.response.status !== 200,
+    "API should not return HTTP 200 on audit INSERT failure",
+  );
 
   const checkListing = await api(`/api/listings/${listingId}`, moderator);
   assert.equal(checkListing.response.status, 200);
-  assert.equal(checkListing.payload.data.status, originalStatus, "Listing status should be rolled back");
-  assert.equal(checkListing.payload.data.updatedAt, originalUpdatedAt, "Listing updatedAt should be rolled back");
+  assert.equal(
+    checkListing.payload.data.status,
+    originalStatus,
+    "Listing status should be rolled back",
+  );
+  assert.equal(
+    checkListing.payload.data.updatedAt,
+    originalUpdatedAt,
+    "Listing updatedAt should be rolled back",
+  );
 
   const audit = await api("/v1/admin/audit", owner);
-  const auditFailLog = audit.payload.data.find((log) => log.targetId === listingId && log.action === "listing_extend_expiry");
+  const auditFailLog = audit.payload.data.find(
+    (log) => log.targetId === listingId && log.action === "listing_extend_expiry",
+  );
   assert.equal(auditFailLog, undefined, "No audit log should exist after rollback");
 });
 

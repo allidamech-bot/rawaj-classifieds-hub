@@ -436,7 +436,16 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
           (id, listing_id, actor_id, action, reason, metadata, created_at)
          SELECT ?, ?, ?, ?, ?, '{}', ?
          FROM listings WHERE id = ? AND updated_at = ?`,
-    ).bind(crypto.randomUUID(), listingId, auth.userId, moderationAction, reason, timestamp, listingId, timestamp),
+    ).bind(
+      crypto.randomUUID(),
+      listingId,
+      auth.userId,
+      moderationAction,
+      reason,
+      timestamp,
+      listingId,
+      timestamp,
+    ),
     env.DB.prepare(
       `INSERT INTO audit_logs (id, actor_id, action, entity_type, entity_id, metadata, created_at)
        SELECT ?, ?, ?, ?, ?, ?, ?
@@ -467,7 +476,12 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
       cors,
     );
   }
-  if (!modActionMeta?.changes || modActionMeta.changes !== 1 || !auditMeta?.changes || auditMeta.changes !== 1) {
+  if (
+    !modActionMeta?.changes ||
+    modActionMeta.changes !== 1 ||
+    !auditMeta?.changes ||
+    auditMeta.changes !== 1
+  ) {
     return databaseError(cors);
   }
 
