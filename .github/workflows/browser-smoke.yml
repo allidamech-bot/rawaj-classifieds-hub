@@ -8,6 +8,7 @@ on:
       - "src/**"
       - "e2e/**"
       - "playwright.config.ts"
+      - "vite.config.ts"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/browser-smoke.yml"
@@ -18,6 +19,7 @@ on:
       - "src/**"
       - "e2e/**"
       - "playwright.config.ts"
+      - "vite.config.ts"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/browser-smoke.yml"
@@ -52,6 +54,9 @@ jobs:
 
       - name: Run browser smoke tests
         env:
+          RAWAJ_E2E_USE_FIXTURES: "1"
+          RAWAJ_E2E_API_PROXY_TARGET: "https://rawaj-classifieds-hub.allidamech.workers.dev"
+          VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
           VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
         run: npm run test:e2e:smoke
 

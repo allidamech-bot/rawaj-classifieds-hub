@@ -108,6 +108,42 @@ test("profile access, validation, bearer authentication, and immutable identity"
   assert.equal(update.payload.data.phone, "+963900000000");
 });
 
+test("production CORS preflight exposes authenticated request headers", async () => {
+  const response = await fetch(`${baseUrl}/api/profile`, {
+    method: "OPTIONS",
+    headers: {
+      Origin: "https://rawa-j.com",
+      "Access-Control-Request-Method": "PATCH",
+      "Access-Control-Request-Headers":
+        "authorization,content-type,idempotency-key,if-none-match",
+    },
+  });
+  assert.equal(response.status, 204);
+  assert.equal(response.headers.get("access-control-allow-origin"), "https://rawa-j.com");
+  assert.match(response.headers.get("access-control-allow-headers") ?? "", /Idempotency-Key/);
+  assert.match(response.headers.get("access-control-allow-headers") ?? "", /If-None-Match/);
+});
+
+test("notification preferences return defaults and persist an authenticated update", async () => {
+  const initial = await api("/v1/account/notification-preferences", owner);
+  assert.equal(initial.response.status, 200);
+  assert.equal(initial.payload.data.messagesEnabled, true);
+
+  const updated = await api("/v1/account/notification-preferences", {
+    ...owner,
+    method: "PATCH",
+    body: { key: "messagesEnabled", enabled: false },
+  });
+  assert.equal(updated.response.status, 200);
+  assert.equal(updated.payload.data.messagesEnabled, false);
+});
+
+test("public ad placements route returns a successful collection", async () => {
+  const result = await api("/v1/ad-placements?page=home&device=desktop");
+  assert.equal(result.response.status, 200);
+  assert.ok(Array.isArray(result.payload.data));
+});
+
 test("listing creation security, reads, filtering, ownership, and deletion", async () => {
   const input = listingInput();
   assert.equal((await api("/v1/listings", { method: "POST", body: input })).response.status, 401);
@@ -198,7 +234,7 @@ test("R2 upload constraints, ownership, deletion, and cleanup", async () => {
   assert.equal(delivered.status, 200);
   assert.match(delivered.headers.get("cache-control") ?? "", /max-age/);
 
-  const listed = await api(`/v1/listings/${listingId}/images`);
+  const listed = await api(`/v1/listings/${listingId}/images`, owner);
   assert.equal(listed.response.status, 200);
   assert.equal(listed.payload.data.length, 1);
 
@@ -218,11 +254,11 @@ test("R2 upload constraints, ownership, deletion, and cleanup", async () => {
     body: { objectKey: "listings/arbitrary" },
   });
   assert.equal(deleted.response.status, 200);
-  assert.equal((await api(`/v1/listings/${listingId}/images`)).payload.data.length, 0);
+  assert.equal((await api(`/v1/listings/${listingId}/images`, owner)).payload.data.length, 0);
 
   const uploadedImages = [];
   for (let index = 0; index < 12; index += 1) {
-    const result = await upload(owner, png, "image/png");
+    const result = await upload(owner, new Uint8Array([...png, index]), "image/png");
     assert.equal(result.response.status, 201);
     uploadedImages.push(result.payload.data);
   }
@@ -241,7 +277,7 @@ test("R2 upload constraints, ownership, deletion, and cleanup", async () => {
   });
   assert.equal(listingDeleted.response.status, 200);
   assert.equal((await api(`/api/listings/${listingId}`, owner)).response.status, 404);
-  assert.equal((await api(`/v1/listings/${listingId}/images`)).payload.data.length, 0);
+  assert.equal((await api(`/v1/listings/${listingId}/images`, owner)).response.status, 404);
   assert.equal(
     (
       await fetch(`${baseUrl}${uploadedImages[0].publicUrl}`, {
@@ -274,10 +310,10 @@ function listingInput() {
   };
 }
 
-async function upload(session, bytes, type) {
+async function upload(session, bytes, type, targetListingId = listingId) {
   const form = new FormData();
   form.set("file", new File([bytes], "upload.bin", { type }));
-  const response = await fetch(`${baseUrl}/v1/listings/${listingId}/images`, {
+  const response = await fetch(`${baseUrl}/v1/listings/${targetListingId}/images`, {
     method: "POST",
     headers: headers(session),
     body: form,
@@ -438,7 +474,7 @@ test("owner can approve listing and audit log is created", async () => {
     title: "Admin test listing",
     status: "pending_review",
   });
-  assert.equal(listing.response.status, 201);
+  assert.equal(listing.response.status, 200);
   const listingId = listing.payload.data.id;
 
   const moderate = await api("/v1/admin/listings/moderate", {
@@ -446,7 +482,7 @@ test("owner can approve listing and audit log is created", async () => {
     method: "POST",
     body: {
       listingId,
-      action: "approve",
+      action: "approved",
       expectedUpdatedAt: listing.payload.data.updatedAt,
     },
   });
@@ -467,7 +503,7 @@ test("moderator can reject listing and audit log is created", async () => {
     title: "Moderator reject test",
     status: "pending_review",
   });
-  assert.equal(listing.response.status, 201);
+  assert.equal(listing.response.status, 200);
   const listingId = listing.payload.data.id;
 
   const moderate = await api("/v1/admin/listings/moderate", {
@@ -475,7 +511,7 @@ test("moderator can reject listing and audit log is created", async () => {
     method: "POST",
     body: {
       listingId,
-      action: "reject",
+      action: "rejected",
       reason: "Invalid listing",
       expectedUpdatedAt: listing.payload.data.updatedAt,
     },
@@ -493,7 +529,7 @@ test("normal user cannot moderate listings", async () => {
     title: "Normal user moderation test",
     status: "pending_review",
   });
-  assert.equal(listing.response.status, 201);
+  assert.equal(listing.response.status, 200);
   const listingId = listing.payload.data.id;
 
   const moderate = await api("/v1/admin/listings/moderate", {
@@ -525,7 +561,7 @@ test("invalid moderation action returns validation error", async () => {
     title: "Invalid action test",
     status: "pending_review",
   });
-  assert.equal(listing.response.status, 201);
+  assert.equal(listing.response.status, 200);
 
   const moderate = await api("/v1/admin/listings/moderate", {
     ...owner,
@@ -549,7 +585,7 @@ test("stale review is rejected with 409", async () => {
     title: "Stale review test",
     status: "pending_review",
   });
-  assert.equal(listing.response.status, 201);
+  assert.equal(listing.response.status, 200);
 
   const moderate = await api("/v1/admin/listings/moderate", {
     ...owner,
@@ -574,18 +610,37 @@ async function createListing(session, overrides = {}) {
     priceType: "fixed",
     condition: "used",
     details: {},
-    submit: true,
+    submit: false,
     ...overrides,
+    status: undefined,
   };
-  const response = await fetch(`${baseUrl}/v1/listings`, {
+  const draft = await api("/v1/listings", {
+    ...session,
     method: "POST",
-    headers: {
-      Origin: "http://localhost:8080",
-      "CF-Connecting-IP": testIp,
-      Authorization: `Bearer ${session.token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
+    body,
   });
-  return { response, payload: await response.json() };
+  assert.equal(draft.response.status, 201);
+  const createdListingId = draft.payload.data.id;
+  const taxonomy = await api(`/v1/listings/${createdListingId}/taxonomy`, {
+    ...session,
+    method: "PUT",
+    body: { taxonomyNodeId: "test-taxonomy-leaf" },
+  });
+  assert.equal(taxonomy.response.status, 200);
+  const image = await upload(
+    session,
+    new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, Date.now() % 255]),
+    "image/png",
+    createdListingId,
+  );
+  assert.equal(image.response.status, 201);
+  return api(`/v1/listings/${createdListingId}`, {
+    ...session,
+    method: "PATCH",
+    body: {
+      ...body,
+      submit: true,
+      expectedUpdatedAt: draft.payload.data.updatedAt,
+    },
+  });
 }

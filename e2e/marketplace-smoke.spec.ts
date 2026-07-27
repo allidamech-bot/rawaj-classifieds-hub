@@ -15,7 +15,8 @@ const publicRoutes = [
 ] as const;
 
 const protectedRoutes = ["/add-listing", "/profile", "/favorites", "/admin"] as const;
-const delayedReferenceRequest = "**/rest/v1/subcategories**";
+const delayedListingsRequest = /\/v1\/listings(?:\?|$)/;
+const delayedReferenceRequest = /\/v1\/references(?:\?|$)/;
 
 function isExpectedLocalRequestFailure(url: string, failure: string) {
   if (failure.includes("ERR_ABORTED")) return true;
@@ -192,7 +193,7 @@ test("pending navigation keeps the resolved page visible without mixing route sh
   });
   let delayedRequestCount = 0;
 
-  await page.route(delayedReferenceRequest, async (route) => {
+  await page.route(delayedListingsRequest, async (route) => {
     delayedRequestCount += 1;
     await requestGate;
     await route.continue();
@@ -222,7 +223,7 @@ test("pending navigation keeps the resolved page visible without mixing route sh
   await expect(page.locator('[data-shell-region="route-pending-mask"]')).toHaveCount(0);
   await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(0);
   await expect(page.locator("main.rawaj-search-results-v1")).toBeVisible();
-  await page.unroute(delayedReferenceRequest);
+  await page.unroute(delayedListingsRequest);
 });
 
 test("rapid bottom navigation resolves to one page without stacked route content", async ({
@@ -342,13 +343,9 @@ test("CSP header allows Vercel analytics script source", async ({ page }) => {
   expect(csp).toContain("va.vercel-scripts.com");
 });
 
-test("auth callback shows error immediately when no code is present", async ({ page }) => {
+test("auth callback without a Firebase action redirects safely to login", async ({ page }) => {
   const response = await page.goto("/auth/callback", { waitUntil: "domcontentloaded" });
   expect(response?.status() ?? 200).toBeLessThan(500);
-  await expect(page.locator("body")).toBeVisible();
-  await expect(
-    page.locator("text=تعذر تسجيل الدخول").or(page.locator("text=Could not sign in")),
-  ).toBeVisible({
-    timeout: 3000,
-  });
+  await expect(page).toHaveURL(/\/login\?returnTo=(?:%2F|\/)more$/i);
+  await expect(page.locator('input[type="email"]')).toBeVisible();
 });

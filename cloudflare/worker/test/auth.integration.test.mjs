@@ -27,10 +27,16 @@ before(async () => {
     ],
     {
       cwd: fileURLToPath(new URL("..", import.meta.url)),
-      stdio: "ignore",
+      stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
     },
   );
+  worker.stderr.on("data", (data) => {
+    console.error("[worker stderr]", data.toString());
+  });
+  worker.stdout.on("data", (data) => {
+    console.error("[worker stdout]", data.toString());
+  });
   for (let attempt = 0; attempt < 40; attempt += 1) {
     try {
       if ((await fetch(`${baseUrl}/v1/health`)).ok) return;
@@ -54,6 +60,29 @@ test("valid Firebase token creates and reuses one D1 identity", async () => {
   assert.equal(second.response.status, 200);
   assert.equal(second.payload.data.id, session.userId);
   assert.equal(localIdentityCount(session.userId), 1);
+});
+
+test("a refreshed Firebase display name repairs only the initial fallback profile name", async () => {
+  const userId = crypto.randomUUID();
+  const firstSession = await auth.session("profile-name", {
+    sub: userId,
+    name: "",
+    jti: crypto.randomUUID(),
+  });
+  const first = await request("/api/profile", firstSession.token);
+  assert.equal(first.response.status, 200);
+  assert.equal(first.payload.data.displayName, firstSession.email.split("@")[0]);
+
+  const refreshedSession = await auth.session("profile-name", {
+    sub: userId,
+    email: firstSession.email,
+    name: "Launch Test Seller",
+    jti: crypto.randomUUID(),
+  });
+  const refreshed = await request("/api/profile", refreshedSession.token);
+  assert.equal(refreshed.response.status, 200);
+  assert.equal(refreshed.payload.data.displayName, "Launch Test Seller");
+  assert.equal(localIdentityCount(userId), 1);
 });
 
 test("missing, malformed, expired, wrong issuer, wrong audience, and invalid signatures fail", async () => {

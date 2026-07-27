@@ -11,18 +11,20 @@ async function openHydrated(page: Page, path: string) {
 }
 
 function mockAdPlacementResponse() {
-  return JSON.stringify([
-    {
-      id: "00000000-0000-4000-8000-000000000001",
-      image_url: MOCK_AD_IMAGE,
-      destination_url: "https://example.com/rawaj-ad",
-      priority: 100,
-    },
-  ]);
+  return JSON.stringify({
+    data: [
+      {
+        id: "00000000-0000-4000-8000-000000000001",
+        imageUrl: MOCK_AD_IMAGE,
+        destinationUrl: "https://example.com/rawaj-ad",
+        priority: 100,
+      },
+    ],
+  });
 }
 
-async function mockPublicAdRpc(page: Page) {
-  await page.route("**/rest/v1/rpc/rawaj_fetch_active_ad_placements", async (route) => {
+async function mockPublicAdApi(page: Page) {
+  await page.route(/\/v1\/ad-placements(?:\?|$)/, async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -102,7 +104,7 @@ test("all supported routes mount one correctly targeted public ad slot", async (
     !["mobile-chromium", "desktop-chromium"].includes(testInfo.project.name),
     "Chromium mobile and desktop placement contract",
   );
-  await mockPublicAdRpc(page);
+  await mockPublicAdApi(page);
 
   await openHydrated(page, "/");
   const firstListingPath = await page
@@ -141,7 +143,7 @@ test("active home ad replaces its SSR placeholder without shifting main content"
   const requestGate = new Promise<void>((resolve) => {
     releaseRequest = resolve;
   });
-  await page.route("**/rest/v1/rpc/rawaj_fetch_active_ad_placements", async (route) => {
+  await page.route(/\/v1\/ad-placements(?:\?|$)/, async (route) => {
     await requestGate;
     await route.fulfill({
       status: 200,
