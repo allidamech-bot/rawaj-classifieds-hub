@@ -28,12 +28,23 @@ const localOrigins = [officialOrigins, "http://localhost:8080", "http://127.0.0.
   .filter(Boolean)
   .join(",");
 const customDomain = local ? null : process.env.CLOUDFLARE_WORKER_CUSTOM_DOMAIN?.trim();
+const releaseSha = local ? "local" : process.env.RAWAJ_WORKER_RELEASE_SHA?.trim();
+const workerEnvironment = local
+  ? "local"
+  : process.env.RAWAJ_WORKER_ENVIRONMENT?.trim() || "production";
+
+if (!local && (!releaseSha || !/^[0-9a-f]{40}$/.test(releaseSha))) {
+  console.error("Missing or invalid RAWAJ_WORKER_RELEASE_SHA for production rendering.");
+  process.exit(1);
+}
 
 const generated = {
   ...base,
   vars: {
     ...base.vars,
     API_ALLOWED_ORIGINS: local ? localOrigins : officialOrigins,
+    RAWAJ_WORKER_RELEASE_SHA: releaseSha,
+    RAWAJ_WORKER_ENVIRONMENT: workerEnvironment,
   },
   ...(customDomain
     ? {

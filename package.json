@@ -53,6 +53,7 @@
     "test:listing-quality-chat-safety": "node --test scripts/listing-quality-chat-safety-v1.test.mjs",
     "test:cloudflare-runtime-cleanup": "node --test scripts/cloudflare-runtime-cleanup.test.mjs",
     "test:cloudflare-cutover": "node --test scripts/cloudflare-*-cutover.test.mjs scripts/cloudflare-runtime-cleanup.test.mjs",
+    "test:cloudflare-deployment-safety": "node --test scripts/cloudflare-deployment-safety-gate.test.mjs",
     "test:runtime-boundary": "node scripts/retired-backend-runtime-audit.mjs",
     "test:d1-migrations": "node scripts/check-migration-ledger.mjs && node scripts/replay-d1-migrations.mjs",
     "test:admin-security": "node --test scripts/admin-security-regression.mjs",

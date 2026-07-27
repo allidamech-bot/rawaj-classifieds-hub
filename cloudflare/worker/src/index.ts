@@ -40,6 +40,8 @@ export interface PublicCoreEnv {
   API_ALLOWED_ORIGINS?: string;
   API_CACHE_SECONDS?: string;
   MEDIA_CACHE_SECONDS?: string;
+  RAWAJ_WORKER_RELEASE_SHA?: string;
+  RAWAJ_WORKER_ENVIRONMENT?: string;
 }
 
 type JsonRecord = Record<string, unknown>;
@@ -163,6 +165,8 @@ async function health(env: PublicCoreEnv, cors: Headers): Promise<Response> {
       data: {
         service: "rawaj-classifieds-hub",
         version: API_VERSION,
+        releaseSha: env.RAWAJ_WORKER_RELEASE_SHA ?? "unknown",
+        environment: env.RAWAJ_WORKER_ENVIRONMENT ?? "unknown",
         database: row?.ok === 1 ? "ready" : "unavailable",
       },
     },
