@@ -1,5 +1,26 @@
 PRAGMA foreign_keys = ON;
 
+-- Trigger to simulate zero-row UPDATE for testing stale_review
+-- Only affects listings where details JSON contains "triggerFail": true
+CREATE TRIGGER IF NOT EXISTS trig_zero_row_update_test
+BEFORE UPDATE ON listings
+FOR EACH ROW
+WHEN NEW.status = 'rejected' AND json_extract(NEW.details, '$.triggerFail') = 1
+BEGIN
+  SELECT RAISE(IGNORE);
+END;
+
+-- Trigger to simulate audit INSERT failure
+-- Activates for listing_extend_expiry where the listing details contain "auditFail": true
+CREATE TRIGGER IF NOT EXISTS trig_audit_insert_fail_test
+BEFORE INSERT ON audit_logs
+FOR EACH ROW
+WHEN NEW.action = 'listing_extend_expiry'
+  AND json_extract((SELECT details FROM listings WHERE id = NEW.entity_id), '$.auditFail') = 1
+BEGIN
+  SELECT RAISE(ABORT);
+END;
+
 INSERT OR IGNORE INTO categories
   (id, slug, name_ar, name_en, sort_order, is_active)
 VALUES
@@ -59,3 +80,6 @@ VALUES
    'test-governorate', 'إعلان اختبار منشور', 'وصف منشور للاختبارات المحلية', 250,
    'SYP', 'fixed', 'used', 'approved', '{}', '{}', 0, 'public integration test',
    '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');
+
+INSERT OR IGNORE INTO audit_logs (id, actor_id, action, entity_type, entity_id, metadata, created_at)
+VALUES ('valid-metadata-test-id', 'test-public-seller', 'listing_valid_test', 'listings', 'test-public-listing', '{"key":"value","number":42}', '2026-01-01T00:00:00.000Z');
