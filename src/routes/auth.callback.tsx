@@ -1,6 +1,7 @@
 import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
+import { supabaseAuth } from "@/lib/supabase-auth";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/auth/callback")({
@@ -18,21 +19,38 @@ function AuthCallbackPage() {
     typeof looseSearch.returnTo === "string" ? looseSearch.returnTo : undefined,
     "/more",
   );
-  const mode = typeof looseSearch.mode === "string" ? looseSearch.mode : "";
-  const oobCode = typeof looseSearch.oobCode === "string" ? looseSearch.oobCode : "";
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (mode === "resetPassword" && oobCode) {
-        window.location.replace(
-          `/reset-password?mode=resetPassword&oobCode=${encodeURIComponent(oobCode)}&returnTo=${encodeURIComponent(returnTo)}`,
-        );
-        return;
-      }
-      window.location.replace(`/login?returnTo=${encodeURIComponent(returnTo)}`);
-    }, 250);
-    return () => window.clearTimeout(timer);
-  }, [mode, oobCode, returnTo]);
+    const client = supabaseAuth;
+    let finished = false;
+    const finish = (destination: string) => {
+      if (finished) return;
+      finished = true;
+      window.location.replace(destination);
+    };
+
+    if (!client) {
+      finish(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+      return;
+    }
+
+    const { data: listener } = client.auth.onAuthStateChange((_event, session) => {
+      if (session) finish(returnTo);
+    });
+    void client.auth.getSession().then(({ data, error }) => {
+      if (data.session) finish(returnTo);
+      else if (error) finish(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+    });
+
+    const timeout = window.setTimeout(
+      () => finish(`/login?returnTo=${encodeURIComponent(returnTo)}`),
+      10_000,
+    );
+    return () => {
+      window.clearTimeout(timeout);
+      listener.subscription.unsubscribe();
+    };
+  }, [returnTo]);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">

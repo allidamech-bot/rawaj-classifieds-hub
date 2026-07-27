@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { createFirebaseAuthFixture } from "./firebase-auth-fixture.mjs";
+import { createSupabaseAuthFixture } from "./supabase-auth-fixture.mjs";
 
 const port = 8792;
 const baseUrl = `http://127.0.0.1:${port}`;
@@ -17,7 +17,7 @@ let imageId;
 let auth;
 
 before(async () => {
-  auth = await createFirebaseAuthFixture();
+  auth = await createSupabaseAuthFixture();
   worker = spawn(
     process.execPath,
     [
@@ -944,15 +944,15 @@ test("zero-row UPDATE due to trigger returns 409 stale_review", async () => {
   assert.equal(moderate.response.status, 409, "Expected 409 for zero-row UPDATE");
   assert.equal(moderate.payload.error?.code, "stale_review", "Expected stale_review error code");
 
-  const checkListing = await api(`/api/listings/${listingId}`, moderator);
+  const checkListing = await api(`/api/listings/${listingId}`, owner);
   assert.equal(checkListing.response.status, 200);
   assert.equal(
-    checkListing.payload.data.status,
+    checkListing.payload.data.listing.status,
     originalStatus,
     "Listing status should not change",
   );
   assert.equal(
-    checkListing.payload.data.updatedAt,
+    checkListing.payload.data.listing.updatedAt,
     originalUpdatedAt,
     "Listing updatedAt should not change",
   );
@@ -990,15 +990,15 @@ test("audit INSERT failure rolls back transaction", async () => {
     "API should not return HTTP 200 on audit INSERT failure",
   );
 
-  const checkListing = await api(`/api/listings/${listingId}`, moderator);
+  const checkListing = await api(`/api/listings/${listingId}`, owner);
   assert.equal(checkListing.response.status, 200);
   assert.equal(
-    checkListing.payload.data.status,
+    checkListing.payload.data.listing.status,
     originalStatus,
     "Listing status should be rolled back",
   );
   assert.equal(
-    checkListing.payload.data.updatedAt,
+    checkListing.payload.data.listing.updatedAt,
     originalUpdatedAt,
     "Listing updatedAt should be rolled back",
   );

@@ -18,7 +18,7 @@ FOR EACH ROW
 WHEN NEW.action = 'listing_extend_expiry'
   AND json_extract((SELECT details FROM listings WHERE id = NEW.entity_id), '$.auditFail') = 1
 BEGIN
-  SELECT RAISE(ABORT);
+  SELECT RAISE(ABORT, 'audit_insert_failure_test');
 END;
 
 INSERT OR IGNORE INTO categories

@@ -13,6 +13,6 @@
     "API_ALLOWED_ORIGINS": "https://rawa-j.com,https://www.rawa-j.com",
     "API_CACHE_SECONDS": "60",
     "MEDIA_CACHE_SECONDS": "86400",
-    "FIREBASE_PROJECT_ID": "project-af18fcaf-c46e-4ec5-93a",
+    "SUPABASE_URL": "https://dpymopdckflnpmowhlyq.supabase.co",
   },
 }

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { createFirebaseAuthFixture } from "./firebase-auth-fixture.mjs";
+import { createSupabaseAuthFixture } from "./supabase-auth-fixture.mjs";
 
 const workerDir = fileURLToPath(new URL("..", import.meta.url));
 const wrangler = fileURLToPath(
@@ -20,7 +20,7 @@ let savedSearchId;
 let auth;
 
 before(async () => {
-  auth = await createFirebaseAuthFixture();
+  auth = await createSupabaseAuthFixture();
   worker = spawn(
     process.execPath,
     [

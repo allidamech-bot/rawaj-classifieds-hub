@@ -1,7 +1,7 @@
 import type { PluginListenerHandle } from "@capacitor/core";
 import { disablePushDevice, registerPushDevice } from "@/lib/api/push-notifications";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
-import { firebaseAuth } from "@/lib/firebase";
+import { supabaseAuth } from "@/lib/supabase-auth";
 import { notificationOpenPath } from "@/lib/notification-target-path";
 import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
 
@@ -300,7 +300,9 @@ async function clearNativePushListeners(): Promise<void> {
 }
 
 async function currentPushAccount(): Promise<ClassifiedsResult<string>> {
-  const userId = firebaseAuth.currentUser?.uid?.trim();
+  const client = supabaseAuth;
+  const session = client ? (await client.auth.getSession()).data.session : null;
+  const userId = session?.user.id?.trim();
   return userId
     ? { ok: true, data: userId }
     : {

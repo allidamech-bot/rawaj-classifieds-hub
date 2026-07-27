@@ -25,33 +25,56 @@ test("retired backend directories, inventories, and compatibility modules are re
     `${vendor}-runtime-inventory-v2.json`,
     "cloudflare/migration",
     `src/lib/${vendor}.ts`,
-    "src/lib/auth-recovery-session.ts",
     "src/lib/api/account-identity.ts",
   ]) {
     await assert.rejects(access(new URL(relativePath, root)), { code: "ENOENT" }, relativePath);
   }
 });
 
-test("runtime source and package manifests contain no retired SDK or transport", async () => {
-  const [packageSource, packageLock, workerPackage, workerLock] = await Promise.all([
+test("Supabase is restricted to authentication while data and storage remain on Cloudflare", async () => {
+  const [packageSource, packageLock] = await Promise.all([
     read("package.json"),
     read("package-lock.json"),
-    read("cloudflare/worker/package.json"),
-    read("cloudflare/worker/package-lock.json"),
   ]);
   const packageJson = JSON.parse(packageSource);
-  const packageName = `@${vendor}/${vendor}-js`;
-  assert.equal(packageJson.dependencies?.[packageName], undefined);
-  for (const source of [packageSource, packageLock, workerPackage, workerLock]) {
-    assert.doesNotMatch(source, new RegExp(`@${vendor}|node_modules/@${vendor}|${vendor}-js-`, "i"));
-  }
+  assert.match(packageJson.dependencies?.["@supabase/supabase-js"] ?? "", /^\^2\./);
+  assert.equal(packageJson.dependencies?.firebase, undefined);
+  assert.doesNotMatch(packageLock, /node_modules\/firebase(?:\/|")/);
 
+  const allowedAuthFiles = new Set([
+    "src/lib/supabase-auth.ts",
+    "src/lib/auth-context.ts",
+    "src/lib/auth-recovery-session.ts",
+    "src/lib/auth.tsx",
+    "src/lib/cloudflare-auth.ts",
+    "src/lib/native-push.ts",
+    "src/lib/api/account-security.ts",
+    "src/routes/auth.callback.tsx",
+    "src/routes/reset-password.tsx",
+    "cloudflare/worker/src/auth.ts",
+  ]);
   const runtimeFiles = [...(await walk("src")), ...(await walk("cloudflare/worker/src"))];
   for (const relativePath of runtimeFiles) {
     const source = await read(relativePath);
     assert.doesNotMatch(
       source,
-      new RegExp(`@${vendor}|${vendor[0].toUpperCase()}${vendor.slice(1)}Client|createClient\\s*\\(|\\.${vendor}\\.(?:co|com)|getClient\\s*\\(|\\.channel\\s*\\(`, "i"),
+      /firebase(?:\/auth|Auth|_AUTH|_PROJECT|\.googleapis)/i,
+      relativePath,
+    );
+    if (relativePath.startsWith("src/") && !allowedAuthFiles.has(relativePath)) {
+      assert.doesNotMatch(
+        source,
+        /@supabase\/supabase-js|@\/lib\/supabase-auth|\bsupabaseAuth\b|VITE_SUPABASE_/,
+        relativePath,
+      );
+    }
+  }
+
+  for (const relativePath of allowedAuthFiles) {
+    const source = await read(relativePath);
+    assert.doesNotMatch(
+      source,
+      /\.from\s*\(|\.rpc\s*\(|\.storage(?:\.|\[)|\.channel\s*\(/,
       relativePath,
     );
   }
@@ -89,11 +112,11 @@ test("notifications and chat use bounded Cloudflare polling without realtime cha
   }
 });
 
-test("native push account stability is derived from Firebase", async () => {
+test("native push account stability is derived from Supabase Auth", async () => {
   const source = await read("src/lib/native-push.ts");
-  assert.match(source, /import \{ firebaseAuth \} from "@\/lib\/firebase"/);
-  assert.match(source, /firebaseAuth\.currentUser\?\.uid/);
-  assert.doesNotMatch(source, /getAuthenticatedUserId|getClient\s*\(/);
+  assert.match(source, /import \{ supabaseAuth \} from "@\/lib\/supabase-auth"/);
+  assert.match(source, /client\.auth\.getSession\(\)/);
+  assert.doesNotMatch(source, /firebaseAuth|getAuthenticatedUserId|getClient\s*\(/);
 });
 
 test("CSP and runtime provider fail closed on Cloudflare only", async () => {
@@ -108,15 +131,14 @@ test("CSP and runtime provider fail closed on Cloudflare only", async () => {
   assert.doesNotMatch(config, /VITE_PUBLIC_DATA_PROVIDER/);
 });
 
-test("legacy imported identities are relabeled before Firebase adoption", async () => {
+test("legacy imported identities fail closed while Supabase identities use the canonical provider", async () => {
   const [migration, auth] = await Promise.all([
     read("cloudflare/d1/migrations/0015_retire_legacy_auth_provider.sql"),
     read("cloudflare/worker/src/auth.ts"),
   ]);
   assert.match(migration, /SET auth_provider = 'legacy_import'/);
-  assert.match(migration, /DROP INDEX IF EXISTS idx_auth_users_/);
-  assert.match(auth, /existingSameId\.auth_provider === "legacy_import"/);
-  assert.doesNotMatch(auth, /auth_provider === "supabase"/);
+  assert.match(auth, /auth_provider = 'supabase'/);
+  assert.doesNotMatch(auth, /auth_provider = 'firebase'/);
 });
 
 test("public listing detail and all admin workspaces use Cloudflare implementations", async () => {

@@ -3,78 +3,35 @@ import { extname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
-const VENDOR = "supabase";
-const VENDOR_PACKAGE = `@${VENDOR}/${VENDOR}-js`;
 const REPORT_ONLY = process.argv.includes("--report-only");
-
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
-const TEXT_EXTENSIONS = new Set([
-  ...SOURCE_EXTENSIONS,
-  ".json",
-  ".jsonc",
-  ".md",
-  ".yml",
-  ".yaml",
-  ".toml",
-  ".sql",
-  ".txt",
-]);
-
-const forbiddenPaths = [
-  VENDOR,
-  `${VENDOR}-runtime-inventory.json`,
-  `${VENDOR}-runtime-inventory-v2.json`,
-  "cloudflare/migration",
-  `src/lib/${VENDOR}.ts`,
+const runtimeRoots = ["src", "cloudflare/worker/src"];
+const allowedSupabaseAuthFiles = new Set([
+  "src/lib/supabase-auth.ts",
+  "src/lib/auth-context.ts",
   "src/lib/auth-recovery-session.ts",
+  "src/lib/auth.tsx",
+  "src/lib/cloudflare-auth.ts",
+  "src/lib/native-push.ts",
+  "src/lib/api/account-security.ts",
+  "src/routes/auth.callback.tsx",
+  "src/routes/reset-password.tsx",
+  "cloudflare/worker/src/auth.ts",
+]);
+const forbiddenPaths = [
+  "supabase",
+  "supabase-runtime-inventory.json",
+  "supabase-runtime-inventory-v2.json",
+  "cloudflare/migration",
+  "src/lib/supabase.ts",
   "src/lib/api/account-identity.ts",
 ];
 
-const immutableHistoricalFiles = new Set([
-  "cloudflare/d1/migrations/0005_legacy_media_migration_tracking.sql",
-  `cloudflare/d1/migrations/0006_${VENDOR}_auth_identity.sql`,
-  "cloudflare/d1/migrations/0015_retire_legacy_auth_provider.sql",
-]);
-
-const evidenceFiles = new Set([
-  "scripts/retired-backend-runtime-audit.mjs",
-  "scripts/cloudflare-runtime-cleanup.test.mjs",
-  "scripts/admin-security-regression.mjs",
-  "cloudflare/worker/scripts/rehearse-d1-reconciliation.mjs",
-  "cloudflare/worker/test/migration-reconciliation-fixtures.sql",
-]);
-
-const runtimeRoots = ["src", "cloudflare/worker/src"];
-const manifestFiles = [
-  "package.json",
-  "package-lock.json",
-  "cloudflare/worker/package.json",
-  "cloudflare/worker/package-lock.json",
-];
-const environmentFiles = [".env", ".env.example", ".env.production"];
-
 const findings = [];
-const allowedReferences = [];
 let scannedFiles = 0;
 
 for (const path of forbiddenPaths) {
-  if (await exists(path)) {
-    findings.push({ path, line: 1, rule: "forbidden-retired-backend-path" });
-  }
-}
-
-for (const path of [...manifestFiles, ...environmentFiles]) {
-  if (!(await exists(path))) continue;
-  const content = await read(path);
-  scannedFiles += 1;
-  collect(content, path, [
-    ["retired-sdk-package", new RegExp(escapeRegex(VENDOR_PACKAGE), "gi")],
-    [
-      "retired-environment-variable",
-      new RegExp(`\\b(?:VITE_)?${VENDOR.toUpperCase()}_[A-Z0-9_]+\\b`, "g"),
-    ],
-    ["retired-service-host", new RegExp(`https?:\\/\\/[^\\s\"']*${VENDOR}\\.(?:co|com)`, "gi")],
-  ]);
+  if (await exists(path)) findings.push({ path, line: 1, rule: "forbidden-retired-data-path" });
 }
 
 for (const root of runtimeRoots) {
@@ -83,80 +40,64 @@ for (const root of runtimeRoots) {
     const content = await read(path);
     scannedFiles += 1;
     collect(content, path, [
-      ["retired-sdk-import", new RegExp(escapeRegex(VENDOR_PACKAGE), "gi")],
-      ["retired-client-module", new RegExp(`(?:@\\/lib\\/${VENDOR}|lib\\/${VENDOR})`, "gi")],
-      ["retired-client-construction", /\bcreateClient\s*\(/g],
-      ["retired-client-type", new RegExp(`\\b${capitalize(VENDOR)}Client\\b`, "g")],
-      [
-        "retired-environment-variable",
-        new RegExp(`\\b(?:VITE_)?${VENDOR.toUpperCase()}_[A-Z0-9_]+\\b`, "g"),
-      ],
-      ["retired-service-host", new RegExp(`https?:\\/\\/[^\\s\"']*${VENDOR}\\.(?:co|com)`, "gi")],
-      ["retired-realtime-channel", /\.channel\s*\(/g],
+      ["firebase-runtime-reference", /firebase(?:\/auth|Auth|_AUTH|_PROJECT|\.googleapis)/gi],
     ]);
 
-    if (hasRetiredClientMarker(content)) {
+    const referencesSupabaseClient =
+      /@supabase\/supabase-js|@\/lib\/supabase-auth|\bsupabaseAuth\b/.test(content);
+    if (referencesSupabaseClient) {
       collect(content, path, [
-        ["retired-database-transport", /\.(?:from|rpc)\s*\(/g],
-        ["retired-storage-transport", /\.storage(?:\.|\[)/g],
+        [
+          "retired-supabase-data-transport",
+          /\.from\s*\(|\.rpc\s*\(|\.storage(?:\.|\[)|\.channel\s*\(/g,
+        ],
+      ]);
+    }
+
+    if (path.startsWith("src/") && !allowedSupabaseAuthFiles.has(path)) {
+      collect(content, path, [
+        [
+          "supabase-auth-outside-boundary",
+          /@supabase\/supabase-js|@\/lib\/supabase-auth|\bsupabaseAuth\b|VITE_SUPABASE_/g,
+        ],
       ]);
     }
   }
 }
 
-for (const path of await walk(".", TEXT_EXTENSIONS)) {
-  if (path.startsWith(".git/") || path.startsWith("node_modules/")) continue;
-  if (immutableHistoricalFiles.has(path) || isEvidenceFile(path)) {
-    const content = await read(path);
-    const count = countMatches(content, new RegExp(VENDOR, "gi"));
-    if (count > 0) allowedReferences.push({ path, count });
-    continue;
-  }
-
+for (const path of [".env", ".env.example", ".env.production"]) {
+  if (!(await exists(path))) continue;
   const content = await read(path);
-  const regex = new RegExp(`\\b${VENDOR}\\b`, "gi");
-  for (const match of content.matchAll(regex)) {
-    findings.push({
-      path,
-      line: lineAt(content, match.index ?? 0),
-      rule: "retired-backend-reference-outside-evidence",
-    });
-  }
+  scannedFiles += 1;
+  collect(content, path, [
+    ["privileged-supabase-secret", /SUPABASE_(?:SERVICE_ROLE|SECRET|JWT_SECRET)/g],
+    ["firebase-environment-variable", /(?:VITE_)?FIREBASE_[A-Z0-9_]+/g],
+  ]);
+}
+
+const packageSource = await read("package.json");
+const packageJson = JSON.parse(packageSource);
+if (!packageJson.dependencies?.["@supabase/supabase-js"]) {
+  findings.push({ path: "package.json", line: 1, rule: "missing-supabase-auth-sdk" });
+}
+if (packageJson.dependencies?.firebase || packageJson.devDependencies?.["firebase-admin"]) {
+  findings.push({ path: "package.json", line: 1, rule: "firebase-sdk-not-retired" });
 }
 
 const uniqueFindings = dedupe(findings);
-const runtimeFindings = uniqueFindings.filter((item) =>
-  runtimeRoots.some((root) => item.path === root || item.path.startsWith(`${root}/`)),
+console.log(
+  JSON.stringify(
+    {
+      scannedFiles,
+      totalFindings: uniqueFindings.length,
+      findings: uniqueFindings,
+      boundary: "Supabase Auth only; Cloudflare D1/R2 for application data and media",
+    },
+    null,
+    2,
+  ),
 );
-
-const report = {
-  scannedFiles,
-  totalFindings: uniqueFindings.length,
-  runtimeFindings: runtimeFindings.length,
-  repositoryFindings: uniqueFindings.length - runtimeFindings.length,
-  allowedHistoricalReferences: allowedReferences,
-  findings: uniqueFindings,
-};
-
-console.log(JSON.stringify(report, null, 2));
-
 if (!REPORT_ONLY && uniqueFindings.length > 0) process.exitCode = 1;
-
-function hasRetiredClientMarker(content) {
-  return (
-    new RegExp(escapeRegex(VENDOR_PACKAGE), "i").test(content) ||
-    new RegExp(`@/lib/${VENDOR}`, "i").test(content) ||
-    new RegExp(`\\b${capitalize(VENDOR)}Client\\b`).test(content) ||
-    new RegExp(`\\b(?:public${capitalize(VENDOR)}|${VENDOR})\\b`, "i").test(content)
-  );
-}
-
-function isEvidenceFile(path) {
-  return (
-    evidenceFiles.has(path) ||
-    (path.startsWith("scripts/") && /(?:\.test\.|-cutover\.test\.)/.test(path))
-  );
-}
 
 function collect(content, path, rules) {
   for (const [rule, regex] of rules) {
@@ -165,11 +106,6 @@ function collect(content, path, rules) {
       findings.push({ path, line: lineAt(content, match.index ?? 0), rule });
     }
   }
-}
-
-function countMatches(content, regex) {
-  regex.lastIndex = 0;
-  return [...content.matchAll(regex)].length;
 }
 
 function lineAt(content, index) {
@@ -196,20 +132,17 @@ async function walk(relativeDirectory, extensions) {
     if (error?.code === "ENOENT") return output;
     throw error;
   }
-
   for (const entry of entries) {
     if (
       [".git", "node_modules", "dist", "build", ".output", ".wrangler", ".tanstack"].includes(
         entry.name,
       )
-    ) {
+    )
       continue;
-    }
     const absolutePath = resolve(absoluteDirectory, entry.name);
     const path = relative(ROOT, absolutePath).replaceAll("\\", "/");
     if (entry.isDirectory()) output.push(...(await walk(path, extensions)));
-    else if (extensions.has(extname(entry.name)) || environmentFiles.includes(path))
-      output.push(path);
+    else if (extensions.has(extname(entry.name))) output.push(path);
   }
   return output;
 }
@@ -226,12 +159,4 @@ async function exists(path) {
 
 function read(path) {
   return readFile(resolve(ROOT, path), "utf8");
-}
-
-function escapeRegex(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function capitalize(value) {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }

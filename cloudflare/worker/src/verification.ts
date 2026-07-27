@@ -36,9 +36,9 @@ export interface VerificationEnv {
   DB: Database;
   MEDIA: R2Bucket;
   API_ALLOWED_ORIGINS?: string;
-  FIREBASE_PROJECT_ID?: string;
-  FIREBASE_AUTH_TEST_JWKS?: string;
-  FIREBASE_JWKS_URL?: string;
+  SUPABASE_URL?: string;
+  SUPABASE_AUTH_TEST_JWKS?: string;
+  SUPABASE_JWKS_URL?: string;
 }
 
 const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
