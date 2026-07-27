@@ -365,45 +365,50 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
       updateSql = `UPDATE listings SET status = ?, published_at = COALESCE(?, published_at), updated_at = ? WHERE id = ? AND updated_at = ?`;
       updateParams = [nextStatus, timestamp, timestamp, listingId, expectedUpdatedAt];
       moderationAction = "approve";
+      auditAction = "listing_approve";
       break;
     case "reject":
       nextStatus = "rejected";
       updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
       updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
       moderationAction = "reject";
-      auditAction = "listing_rejected";
+      auditAction = "listing_reject";
       break;
     case "request_changes":
       nextStatus = "rejected";
       updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
       updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
-      moderationAction = "reject";
-      auditAction = "listing_rejected";
+      moderationAction = "request_changes";
+      auditAction = "listing_request_changes";
       auditMetadata = { reason };
       break;
     case "suspend":
       nextStatus = "archived";
       updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
       updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
-      moderationAction = "archive";
+      moderationAction = "suspend";
+      auditAction = "listing_suspend";
       break;
     case "unpublish":
       nextStatus = "archived";
       updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
       updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
-      moderationAction = "archive";
+      moderationAction = "unpublish";
+      auditAction = "listing_unpublish";
       break;
     case "archive":
       nextStatus = "archived";
       updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
       updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
       moderationAction = "archive";
+      auditAction = "listing_archive";
       break;
     case "expire_now":
       nextStatus = "expired";
       updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
       updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
-      moderationAction = "archive";
+      moderationAction = "expire_now";
+      auditAction = "listing_expire_now";
       break;
     case "extend_expiry": {
       const days =
@@ -429,11 +434,13 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
     env.DB.prepare(
       `INSERT INTO listing_moderation_actions
           (id, listing_id, actor_id, action, reason, metadata, created_at)
-         VALUES (?, ?, ?, ?, ?, '{}', ?)`,
-    ).bind(crypto.randomUUID(), listingId, auth.userId, moderationAction, reason, timestamp),
+         SELECT ?, ?, ?, ?, ?, '{}', ?
+         FROM listings WHERE id = ? AND updated_at = ?`,
+    ).bind(crypto.randomUUID(), listingId, auth.userId, moderationAction, reason, timestamp, listingId, timestamp),
     env.DB.prepare(
       `INSERT INTO audit_logs (id, actor_id, action, entity_type, entity_id, metadata, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+       SELECT ?, ?, ?, ?, ?, ?, ?
+       FROM listings WHERE id = ? AND updated_at = ?`,
     ).bind(
       crypto.randomUUID(),
       auth.userId,
@@ -442,10 +449,21 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
       listingId,
       JSON.stringify(auditMetadata),
       timestamp,
+      listingId,
+      timestamp,
     ),
   ]);
 
   if (results.some((result) => !result.success)) return databaseError(cors);
+
+  const updateMeta = results[0].meta as { changes?: number } | undefined;
+  if (!updateMeta?.changes || updateMeta.changes !== 1) {
+    return json(
+      { error: { code: "stale_review", message: "Listing changed since loaded." } },
+      409,
+      cors,
+    );
+  }
 
   return json(
     {

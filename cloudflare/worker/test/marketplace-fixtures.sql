@@ -59,3 +59,6 @@ VALUES
    'test-governorate', 'إعلان اختبار منشور', 'وصف منشور للاختبارات المحلية', 250,
    'SYP', 'fixed', 'used', 'approved', '{}', '{}', 0, 'public integration test',
    '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');
+
+INSERT OR IGNORE INTO audit_logs (id, actor_id, action, entity_type, entity_id, metadata, created_at)
+VALUES ('valid-metadata-test-id', 'test-public-seller', 'listing_valid_test', 'listings', 'test-public-listing', '{"key":"value","number":42}', '2026-01-01T00:00:00.000Z');
