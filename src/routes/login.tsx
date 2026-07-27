@@ -114,12 +114,14 @@ function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
   const submitInFlightRef = useRef(false);
 
   function switchMode(nextMode: AuthMode) {
     setMode(nextMode);
     setMessage("");
     setError("");
+    setEmailError("");
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -127,11 +129,21 @@ function LoginPage() {
     if (submitInFlightRef.current) return;
     setMessage("");
     setError("");
+    setEmailError("");
 
     const cleanEmail = email.trim();
     const cleanName = displayName.trim();
     if (!cleanEmail) {
-      setError(text("أدخل بريدك الإلكتروني.", "Enter your email address."));
+      setEmailError(text("أدخل بريدك الإلكتروني.", "Enter your email address."));
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setEmailError(
+        text(
+          "أدخل بريدًا إلكترونيًا صالحًا، مثل name@example.com.",
+          "Enter a valid email address, such as name@example.com.",
+        ),
+      );
       return;
     }
 
@@ -218,7 +230,7 @@ function LoginPage() {
 
   return (
     <>
-      <PageHeader title={text("الحساب", "Account")} />
+      <PageHeader title={text("الحساب", "Account")} titleIsPageHeading={false} />
       <main className="rawaj-auth-v2 rawaj-auth-premium-v3 container-wide pb-10 pt-3 sm:pt-5">
         <section className="rawaj-auth-layout">
           <AuthExperienceAside mode={mode} />
@@ -250,7 +262,7 @@ function LoginPage() {
                 )}
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-3">
+              <form onSubmit={handleSubmit} className="space-y-3" noValidate>
                 {mode === "register" && (
                   <FieldLabel label={text("اسم الحساب", "Account name")}>
                     <input
@@ -267,12 +279,26 @@ function LoginPage() {
                 <FieldLabel label={text("البريد الإلكتروني", "Email")}>
                   <input
                     value={email}
-                    onChange={(event) => setEmail(event.target.value)}
+                    onChange={(event) => {
+                      setEmail(event.target.value);
+                      if (emailError) setEmailError("");
+                    }}
                     type="email"
                     autoComplete="email"
                     required
+                    aria-invalid={Boolean(emailError)}
+                    aria-describedby={emailError ? "login-email-error" : undefined}
                     className="input"
                   />
+                  {emailError ? (
+                    <p
+                      id="login-email-error"
+                      role="alert"
+                      className="mt-1.5 text-xs font-medium text-destructive"
+                    >
+                      {emailError}
+                    </p>
+                  ) : null}
                 </FieldLabel>
 
                 {mode !== "forgot" && (
@@ -327,12 +353,18 @@ function LoginPage() {
                   </p>
                 )}
                 {message && (
-                  <p className="rounded-[1rem] border border-emerald-trust/15 bg-emerald-trust/8 p-2.5 text-xs font-medium text-emerald-trust">
+                  <p
+                    aria-live="polite"
+                    className="rounded-[1rem] border border-emerald-trust/15 bg-emerald-trust/8 p-2.5 text-xs font-medium text-emerald-trust"
+                  >
                     {message}
                   </p>
                 )}
                 {error && (
-                  <p className="rounded-[1rem] border border-destructive/15 bg-destructive/8 p-2.5 text-xs font-medium text-destructive">
+                  <p
+                    role="alert"
+                    className="rounded-[1rem] border border-destructive/15 bg-destructive/8 p-2.5 text-xs font-medium text-destructive"
+                  >
                     {error}
                   </p>
                 )}

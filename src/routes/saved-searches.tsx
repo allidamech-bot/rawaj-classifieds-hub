@@ -21,38 +21,53 @@ import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/saved-searches")({
   validateSearch: (search: Record<string, unknown>) => ({
-    taxonomy: typeof search.taxonomy === "string" ? search.taxonomy : "",
-    q: typeof search.q === "string" ? search.q : "",
-    category: typeof search.category === "string" ? search.category : "",
-    subcategory: typeof search.subcategory === "string" ? search.subcategory : "",
-    gov: typeof search.gov === "string" ? search.gov : "",
-    district: typeof search.district === "string" ? search.district : "",
+    taxonomy: typeof search.taxonomy === "string" ? search.taxonomy || undefined : undefined,
+    q: typeof search.q === "string" ? search.q || undefined : undefined,
+    category: typeof search.category === "string" ? search.category || undefined : undefined,
+    subcategory:
+      typeof search.subcategory === "string" ? search.subcategory || undefined : undefined,
+    gov: typeof search.gov === "string" ? search.gov || undefined : undefined,
+    district: typeof search.district === "string" ? search.district || undefined : undefined,
     price_min:
       typeof search.price_min === "string" || typeof search.price_min === "number"
-        ? String(search.price_min)
-        : "",
+        ? String(search.price_min) || undefined
+        : undefined,
     price_max:
       typeof search.price_max === "string" || typeof search.price_max === "number"
-        ? String(search.price_max)
-        : "",
-    price_type: typeof search.price_type === "string" ? search.price_type : "",
-    condition: typeof search.condition === "string" ? search.condition : "",
-    car_make: typeof search.car_make === "string" ? search.car_make : "",
-    car_model: typeof search.car_model === "string" ? search.car_model : "",
-    fuel: typeof search.fuel === "string" ? search.fuel : "",
-    transmission: typeof search.transmission === "string" ? search.transmission : "",
-    property_purpose: typeof search.property_purpose === "string" ? search.property_purpose : "",
-    property_type: typeof search.property_type === "string" ? search.property_type : "",
-    rooms: typeof search.rooms === "string" ? search.rooms : "",
-    rental_duration: typeof search.rental_duration === "string" ? search.rental_duration : "",
-    electronics_brand: typeof search.electronics_brand === "string" ? search.electronics_brand : "",
-    detail_condition: typeof search.detail_condition === "string" ? search.detail_condition : "",
-    employment_type: typeof search.employment_type === "string" ? search.employment_type : "",
-    salary_type: typeof search.salary_type === "string" ? search.salary_type : "",
+        ? String(search.price_max) || undefined
+        : undefined,
+    price_type: typeof search.price_type === "string" ? search.price_type || undefined : undefined,
+    condition: typeof search.condition === "string" ? search.condition || undefined : undefined,
+    car_make: typeof search.car_make === "string" ? search.car_make || undefined : undefined,
+    car_model: typeof search.car_model === "string" ? search.car_model || undefined : undefined,
+    fuel: typeof search.fuel === "string" ? search.fuel || undefined : undefined,
+    transmission:
+      typeof search.transmission === "string" ? search.transmission || undefined : undefined,
+    property_purpose:
+      typeof search.property_purpose === "string"
+        ? search.property_purpose || undefined
+        : undefined,
+    property_type:
+      typeof search.property_type === "string" ? search.property_type || undefined : undefined,
+    rooms: typeof search.rooms === "string" ? search.rooms || undefined : undefined,
+    rental_duration:
+      typeof search.rental_duration === "string" ? search.rental_duration || undefined : undefined,
+    electronics_brand:
+      typeof search.electronics_brand === "string"
+        ? search.electronics_brand || undefined
+        : undefined,
+    detail_condition:
+      typeof search.detail_condition === "string"
+        ? search.detail_condition || undefined
+        : undefined,
+    employment_type:
+      typeof search.employment_type === "string" ? search.employment_type || undefined : undefined,
+    salary_type:
+      typeof search.salary_type === "string" ? search.salary_type || undefined : undefined,
     sort:
       search.sort === "cheapest" || search.sort === "expensive" || search.sort === "featured"
         ? search.sort
-        : "latest",
+        : undefined,
   }),
   head: () => ({
     meta: [
@@ -242,11 +257,11 @@ function SavedSearchesPage() {
     if (search.gov) filters.governorateId = search.gov;
     if (search.district) filters.districtAr = search.district;
 
-    if (search.price_min !== "") {
+    if (search.price_min !== undefined) {
       const parsed = Number(search.price_min);
       if (!Number.isNaN(parsed)) filters.priceMin = parsed;
     }
-    if (search.price_max !== "") {
+    if (search.price_max !== undefined) {
       const parsed = Number(search.price_max);
       if (!Number.isNaN(parsed)) filters.priceMax = parsed;
     }
@@ -266,7 +281,7 @@ function SavedSearchesPage() {
     if (search.transmission) filters.transmission = search.transmission;
     if (search.property_purpose) filters.propertyPurpose = search.property_purpose;
     if (search.property_type) filters.propertyType = search.property_type;
-    if (search.rooms !== "") {
+    if (search.rooms !== undefined) {
       const parsed = Number(search.rooms);
       if (!Number.isNaN(parsed)) filters.rooms = parsed;
     }

@@ -22,8 +22,15 @@ test("site structured data exposes organization, website and real listings searc
   assert.match(seo, /"query-input": "required name=search_term_string"/);
 });
 
-test("root keeps canonical links and emits site structured data", () => {
-  assert.match(rootRoute, /\.\.\.seo\.links/);
+test("root leaves canonical ownership to the active public route", () => {
+  assert.doesNotMatch(rootRoute, /\.\.\.seo\.links/);
+  assert.match(rootRoute, /jsonLdScript\(buildSiteStructuredData\(\)\)/);
+});
+
+test("not-found metadata is noindex and does not reuse the home canonical", () => {
+  assert.match(rootRoute, /<title>\{text\("الصفحة غير موجودة \| رواج"/);
+  assert.match(rootRoute, /<meta name="robots" content="noindex, nofollow" \/>/);
+  assert.doesNotMatch(rootRoute, /NotFoundComponent[\s\S]*rel="canonical"/);
   assert.match(rootRoute, /jsonLdScript\(buildSiteStructuredData\(\)\)/);
 });
 

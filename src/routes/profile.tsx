@@ -526,7 +526,12 @@ function ProfilePage() {
 
   return (
     <>
-      <PageHeader title={text("حسابي", "My account")} to="/more" backMode="history" />
+      <PageHeader
+        title={text("حسابي", "My account")}
+        to="/more"
+        backMode="history"
+        titleIsPageHeading={false}
+      />
       <main className="rawaj-account-v2 rawaj-account-hub-v3 container-wide mobile-page-bottom space-y-5 pb-8 pt-4">
         <AccountIdentityHero
           displayName={displayName}

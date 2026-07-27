@@ -731,7 +731,7 @@ function ChatsPage() {
   if (auth.status !== "signedIn") {
     return (
       <>
-        <PageHeader title={text("المحادثات", "Messages")} />
+        <PageHeader title={text("المحادثات", "Messages")} titleIsPageHeading={false} />
         <main className="rawaj-communication-v2 container-wide mobile-page-bottom pt-4">
           <CommunicationSignedOut returnTo="/chats" />
         </main>
@@ -741,7 +741,7 @@ function ChatsPage() {
 
   return (
     <>
-      <PageHeader title={text("المحادثات", "Messages")} />
+      <PageHeader title={text("المحادثات", "Messages")} titleIsPageHeading={false} />
       <main className="rawaj-communication-v2 rawaj-communication-v2--messages rawaj-messaging-v4 container-wide mobile-page-bottom space-y-4 pt-4">
         <div className="hidden lg:block">
           <CommunicationCenterHero
