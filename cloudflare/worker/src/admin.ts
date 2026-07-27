@@ -13,6 +13,7 @@ interface Result<T = Row> {
   results?: T[];
   success: boolean;
   error?: string;
+  meta?: { changes?: number };
 }
 interface Statement {
   bind(...values: Value[]): Statement;
@@ -197,14 +198,25 @@ async function adminAuditLogs(request: Request, env: AdminEnv, cors: Headers) {
     action: stringValue(row.action),
     targetTable: nullableString(row.entity_type),
     targetId: nullableString(row.entity_id),
-    metadata:
-      row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
-        ? (row.metadata as Record<string, unknown>)
-        : {},
+    metadata: parseAuditMetadata(row.metadata),
     createdAt: nullableString(row.created_at),
   }));
 
   return json({ data: logs }, 200, cors);
+}
+
+function parseAuditMetadata(value: unknown): Record<string, unknown> {
+  if (value === null || value === undefined) return {};
+  if (typeof value === "object" && !Array.isArray(value)) return value as Record<string, unknown>;
+  if (typeof value !== "string") return {};
+  if (!value.length) return {};
+  try {
+    const parsed = JSON.parse(value);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
+  } catch {
+    // malformed JSON, fall through to fallback
+  }
+  return {};
 }
 
 async function adminPendingListings(request: Request, env: AdminEnv, cors: Headers) {
@@ -300,7 +312,7 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
         error: {
           code: "unsupported_moderation_action",
           message:
-            "Moderation action must be approve, reject, request_changes, suspend, restore, or extend.",
+            "Moderation action must be approve, reject, request_changes, suspend, unpublish, archive, expire_now, or extend_expiry.",
         },
       },
       400,
@@ -339,28 +351,59 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
     );
   }
 
+  const timestamp = now();
+  let updateSql: string;
+  let updateParams: Value[];
+  let moderationAction: string;
   let nextStatus = listing.status;
+  let auditAction = `listing_${action}`;
+  let auditMetadata: Record<string, unknown> = { reason };
+
   switch (action) {
     case "approve":
       nextStatus = "approved";
+      updateSql = `UPDATE listings SET status = ?, published_at = COALESCE(?, published_at), updated_at = ? WHERE id = ? AND updated_at = ?`;
+      updateParams = [nextStatus, timestamp, timestamp, listingId, expectedUpdatedAt];
+      moderationAction = "approve";
       break;
     case "reject":
       nextStatus = "rejected";
+      updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
+      updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
+      moderationAction = "reject";
+      auditAction = "listing_rejected";
       break;
     case "request_changes":
       nextStatus = "rejected";
+      updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
+      updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
+      moderationAction = "reject";
+      auditAction = "listing_rejected";
+      auditMetadata = { reason };
       break;
     case "suspend":
       nextStatus = "archived";
+      updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
+      updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
+      moderationAction = "archive";
       break;
     case "unpublish":
       nextStatus = "archived";
+      updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
+      updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
+      moderationAction = "archive";
       break;
     case "archive":
       nextStatus = "archived";
+      updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
+      updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
+      moderationAction = "archive";
       break;
     case "expire_now":
       nextStatus = "expired";
+      updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
+      updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
+      moderationAction = "archive";
       break;
     case "extend_expiry": {
       const days =
@@ -369,66 +412,40 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
           : 30;
       const newExpires = new Date();
       newExpires.setDate(newExpires.getDate() + days);
-      const result = await env.DB.prepare(
-        "UPDATE listings SET expires_at = ?, updated_at = ? WHERE id = ?",
-      )
-        .bind(newExpires.toISOString(), now(), listingId)
-        .run();
-      if (!result.success) return databaseError(cors);
-      await writeAuditLog(
-        env,
-        auth.userId,
-        auth.roles[0] ?? "admin",
-        "listing_extend_expiry",
-        "listings",
-        listingId,
-        { extendDays: days },
-      );
-      return json(
-        {
-          data: {
-            listingId,
-            previousStatus: listing.status,
-            nextStatus: listing.status,
-            updatedAt: now(),
-          },
-        },
-        200,
-        cors,
-      );
+      nextStatus = listing.status;
+      updateSql = `UPDATE listings SET expires_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
+      updateParams = [newExpires.toISOString(), timestamp, listingId, expectedUpdatedAt];
+      moderationAction = "extend_expiry";
+      auditAction = "listing_extend_expiry";
+      auditMetadata = { extendDays: days };
+      break;
     }
     default:
       return validation(cors, "Unsupported action.");
   }
 
-  const timestamp = now();
-  const publishedAt = nextStatus === "approved" ? timestamp : null;
-  const moderationAction =
-    action === "request_changes" ? "reject" : action === "suspend" ? "archive" : action;
   const results = await env.DB.batch([
-    env.DB.prepare(
-      `UPDATE listings
-            SET status = ?, published_at = COALESCE(?, published_at), updated_at = ?
-          WHERE id = ? AND updated_at = ?`,
-    ).bind(nextStatus, publishedAt, timestamp, listingId, expectedUpdatedAt),
+    env.DB.prepare(updateSql).bind(...updateParams),
     env.DB.prepare(
       `INSERT INTO listing_moderation_actions
           (id, listing_id, actor_id, action, reason, metadata, created_at)
          VALUES (?, ?, ?, ?, ?, '{}', ?)`,
     ).bind(crypto.randomUUID(), listingId, auth.userId, moderationAction, reason, timestamp),
+    env.DB.prepare(
+      `INSERT INTO audit_logs (id, actor_id, action, entity_type, entity_id, metadata, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    ).bind(
+      crypto.randomUUID(),
+      auth.userId,
+      auditAction,
+      "listings",
+      listingId,
+      JSON.stringify(auditMetadata),
+      timestamp,
+    ),
   ]);
 
   if (results.some((result) => !result.success)) return databaseError(cors);
-
-  await writeAuditLog(
-    env,
-    auth.userId,
-    auth.roles[0] ?? "admin",
-    `listing_${action}`,
-    "listings",
-    listingId,
-    { reason },
-  );
 
   return json(
     {
@@ -436,7 +453,7 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
         listingId,
         previousStatus: listing.status,
         nextStatus,
-        updatedAt: now(),
+        updatedAt: timestamp,
       },
     },
     200,
@@ -445,32 +462,18 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
 }
 
 function normalizeModerationAction(value: string | null): string | null {
-  if (value === "approved") return "approve";
-  if (value === "rejected") return "reject";
-  return ["approve", "reject", "request_changes", "suspend", "restore", "extend"].includes(
-    value ?? "",
-  )
+  return [
+    "approve",
+    "reject",
+    "request_changes",
+    "suspend",
+    "unpublish",
+    "archive",
+    "expire_now",
+    "extend_expiry",
+  ].includes(value ?? "")
     ? value
     : null;
-}
-
-async function writeAuditLog(
-  env: AdminEnv,
-  actorId: string,
-  actorRole: string,
-  action: string,
-  targetTable: string | null,
-  targetId: string | null,
-  metadata: Record<string, unknown>,
-) {
-  const id = crypto.randomUUID();
-  const timestamp = now();
-  await env.DB.prepare(
-    `INSERT INTO audit_logs (id, actor_id, action, entity_type, entity_id, metadata, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  )
-    .bind(id, actorId, action, targetTable, targetId, JSON.stringify(metadata), timestamp)
-    .run();
 }
 
 function stringValue(value: unknown, fallback = ""): string {

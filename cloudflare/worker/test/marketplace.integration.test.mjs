@@ -481,7 +481,7 @@ test("owner can approve listing and audit log is created", async () => {
     method: "POST",
     body: {
       listingId,
-      action: "approved",
+      action: "approve",
       expectedUpdatedAt: listing.payload.data.updatedAt,
     },
   });
@@ -495,6 +495,7 @@ test("owner can approve listing and audit log is created", async () => {
     (log) => log.targetId === listingId && log.action === "listing_approve",
   );
   assert.ok(approveLog, "approve audit log not found");
+  assert.ok(approveLog.metadata && typeof approveLog.metadata === "object");
 });
 
 test("moderator can reject listing and audit log is created", async () => {
@@ -510,7 +511,7 @@ test("moderator can reject listing and audit log is created", async () => {
     method: "POST",
     body: {
       listingId,
-      action: "rejected",
+      action: "reject",
       reason: "Invalid listing",
       expectedUpdatedAt: listing.payload.data.updatedAt,
     },
@@ -521,6 +522,243 @@ test("moderator can reject listing and audit log is created", async () => {
 
   const audit = await api("/v1/admin/audit", moderator);
   assert.equal(audit.response.status, 403);
+});
+
+test("owner can request_changes on listing", async () => {
+  const listing = await createListing(owner, {
+    title: "Request changes test",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 200);
+  const listingId = listing.payload.data.id;
+
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "request_changes",
+      reason: "Please add more details",
+      expectedUpdatedAt: listing.payload.data.updatedAt,
+    },
+  });
+  assert.equal(moderate.response.status, 200);
+  assert.equal(moderate.payload.data.previousStatus, "pending_review");
+  assert.equal(moderate.payload.data.nextStatus, "rejected");
+
+  const audit = await api("/v1/admin/audit", owner);
+  assert.equal(audit.response.status, 200);
+  const changesLog = audit.payload.data.find(
+    (log) => log.targetId === listingId && log.action === "listing_rejected",
+  );
+  assert.ok(changesLog, "request_changes audit log not found");
+});
+
+test("owner can suspend listing", async () => {
+  const listing = await createListing(owner, {
+    title: "Suspend test",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 200);
+  const listingId = listing.payload.data.id;
+
+  const approved = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "approve",
+      expectedUpdatedAt: listing.payload.data.updatedAt,
+    },
+  });
+  assert.equal(approved.response.status, 200);
+
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "suspend",
+      reason: "Policy violation",
+      expectedUpdatedAt: approved.payload.data.updatedAt,
+    },
+  });
+  assert.equal(moderate.response.status, 200);
+  assert.equal(moderate.payload.data.previousStatus, "approved");
+  assert.equal(moderate.payload.data.nextStatus, "archived");
+
+  const audit = await api("/v1/admin/audit", owner);
+  assert.equal(audit.response.status, 200);
+  const suspendLog = audit.payload.data.find(
+    (log) => log.targetId === listingId && log.action === "listing_suspend",
+  );
+  assert.ok(suspendLog, "suspend audit log not found");
+});
+
+test("owner can unpublish listing", async () => {
+  const listing = await createListing(owner, {
+    title: "Unpublish test",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 200);
+  const listingId = listing.payload.data.id;
+
+  const approved = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "approve",
+      expectedUpdatedAt: listing.payload.data.updatedAt,
+    },
+  });
+  assert.equal(approved.response.status, 200);
+
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "unpublish",
+      reason: "Content policy",
+      expectedUpdatedAt: approved.payload.data.updatedAt,
+    },
+  });
+  assert.equal(moderate.response.status, 200);
+  assert.equal(moderate.payload.data.previousStatus, "approved");
+  assert.equal(moderate.payload.data.nextStatus, "archived");
+
+  const audit = await api("/v1/admin/audit", owner);
+  assert.equal(audit.response.status, 200);
+  const unpublishLog = audit.payload.data.find(
+    (log) => log.targetId === listingId && log.action === "listing_unpublish",
+  );
+  assert.ok(unpublishLog, "unpublish audit log not found");
+});
+
+test("owner can archive listing", async () => {
+  const listing = await createListing(owner, {
+    title: "Archive test",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 200);
+  const listingId = listing.payload.data.id;
+
+  const approved = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "approve",
+      expectedUpdatedAt: listing.payload.data.updatedAt,
+    },
+  });
+  assert.equal(approved.response.status, 200);
+
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "archive",
+      reason: "End of life",
+      expectedUpdatedAt: approved.payload.data.updatedAt,
+    },
+  });
+  assert.equal(moderate.response.status, 200);
+  assert.equal(moderate.payload.data.previousStatus, "approved");
+  assert.equal(moderate.payload.data.nextStatus, "archived");
+
+  const audit = await api("/v1/admin/audit", owner);
+  assert.equal(audit.response.status, 200);
+  const archiveLog = audit.payload.data.find(
+    (log) => log.targetId === listingId && log.action === "listing_archive",
+  );
+  assert.ok(archiveLog, "archive audit log not found");
+});
+
+test("owner can expire_now listing", async () => {
+  const listing = await createListing(owner, {
+    title: "Expire now test",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 200);
+  const listingId = listing.payload.data.id;
+
+  const approved = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "approve",
+      expectedUpdatedAt: listing.payload.data.updatedAt,
+    },
+  });
+  assert.equal(approved.response.status, 200);
+
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "expire_now",
+      reason: "Expired by admin",
+      expectedUpdatedAt: approved.payload.data.updatedAt,
+    },
+  });
+  assert.equal(moderate.response.status, 200);
+  assert.equal(moderate.payload.data.previousStatus, "approved");
+  assert.equal(moderate.payload.data.nextStatus, "expired");
+
+  const audit = await api("/v1/admin/audit", owner);
+  assert.equal(audit.response.status, 200);
+  const expireLog = audit.payload.data.find(
+    (log) => log.targetId === listingId && log.action === "listing_expire_now",
+  );
+  assert.ok(expireLog, "expire_now audit log not found");
+});
+
+test("owner can extend_expiry listing", async () => {
+  const listing = await createListing(owner, {
+    title: "Extend expiry test",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 200);
+  const listingId = listing.payload.data.id;
+
+  const approved = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "approve",
+      expectedUpdatedAt: listing.payload.data.updatedAt,
+    },
+  });
+  assert.equal(approved.response.status, 200);
+
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "extend_expiry",
+      reason: "Extension granted",
+      extendDays: 60,
+      expectedUpdatedAt: approved.payload.data.updatedAt,
+    },
+  });
+  assert.equal(moderate.response.status, 200);
+  assert.equal(moderate.payload.data.previousStatus, "approved");
+  assert.equal(moderate.payload.data.nextStatus, "approved");
+
+  const audit = await api("/v1/admin/audit", owner);
+  assert.equal(audit.response.status, 200);
+  const extendLog = audit.payload.data.find(
+    (log) => log.targetId === listingId && log.action === "listing_extend_expiry",
+  );
+  assert.ok(extendLog, "extend_expiry audit log not found");
+  assert.ok(extendLog.metadata && extendLog.metadata.extendDays === 60);
 });
 
 test("normal user cannot moderate listings", async () => {
@@ -555,7 +793,7 @@ test("invalid listing ID returns not found", async () => {
   assert.equal(moderate.response.status, 404);
 });
 
-test("invalid moderation action returns validation error", async () => {
+test("unsupported moderation action returns 400 with stable error code", async () => {
   const listing = await createListing(owner, {
     title: "Invalid action test",
     status: "pending_review",
@@ -572,14 +810,42 @@ test("invalid moderation action returns validation error", async () => {
     },
   });
   assert.equal(moderate.response.status, 400);
+  assert.equal(moderate.payload.error.code, "unsupported_moderation_action");
 });
 
-test("moderator cannot escalate to owner-only action", async () => {
-  const result = await api("/v1/admin/users", moderator);
-  assert.equal(result.response.status, 403);
+test("legacy action names restore and extend are rejected", async () => {
+  const listing = await createListing(owner, {
+    title: "Legacy action test",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 200);
+
+  const restoreResult = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId: listing.payload.data.id,
+      action: "restore",
+      expectedUpdatedAt: listing.payload.data.updatedAt,
+    },
+  });
+  assert.equal(restoreResult.response.status, 400);
+  assert.equal(restoreResult.payload.error.code, "unsupported_moderation_action");
+
+  const extendResult = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId: listing.payload.data.id,
+      action: "extend",
+      expectedUpdatedAt: listing.payload.data.updatedAt,
+    },
+  });
+  assert.equal(extendResult.response.status, 400);
+  assert.equal(extendResult.payload.error.code, "unsupported_moderation_action");
 });
 
-test("stale review is rejected with 409", async () => {
+test("stale expectedUpdatedAt is rejected with 409 and stale_review code", async () => {
   const listing = await createListing(owner, {
     title: "Stale review test",
     status: "pending_review",
@@ -596,6 +862,97 @@ test("stale review is rejected with 409", async () => {
     },
   });
   assert.equal(moderate.response.status, 409);
+  assert.equal(moderate.payload.error.code, "stale_review");
+});
+
+test("concurrent modification causes stale conflict (zero rows changed)", async () => {
+  const listing = await createListing(owner, {
+    title: "Concurrent stale test",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 200);
+  const listingId = listing.payload.data.id;
+
+  const staleModerate = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "approve",
+      expectedUpdatedAt: "stale-timestamp",
+    },
+  });
+  assert.equal(staleModerate.response.status, 409);
+  assert.equal(staleModerate.payload.error.code, "stale_review");
+});
+
+test("no successful audit action when moderation mutation fails", async () => {
+  const listing = await createListing(owner, {
+    title: "Failed mutation test",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 200);
+  const listingId = listing.payload.data.id;
+
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "approve",
+      expectedUpdatedAt: "stale-timestamp",
+    },
+  });
+  assert.equal(moderate.response.status, 409);
+
+  const audit = await api("/v1/admin/audit", owner);
+  assert.equal(audit.response.status, 200);
+  const failedAudit = audit.payload.data.find(
+    (log) => log.targetId === listingId && log.action === "listing_approve",
+  );
+  assert.ok(!failedAudit, "audit log should not exist for failed moderation");
+});
+
+test("audit metadata is written as valid JSON and read back as object", async () => {
+  const listing = await createListing(owner, {
+    title: "Audit metadata test",
+    status: "pending_review",
+  });
+  assert.equal(listing.response.status, 200);
+  const listingId = listing.payload.data.id;
+
+  const moderate = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId,
+      action: "reject",
+      reason: "Test rejection reason",
+      expectedUpdatedAt: listing.payload.data.updatedAt,
+    },
+  });
+  assert.equal(moderate.response.status, 200);
+
+  const audit = await api("/v1/admin/audit", owner);
+  assert.equal(audit.response.status, 200);
+  const rejectLog = audit.payload.data.find(
+    (log) => log.targetId === listingId && log.action === "listing_rejected",
+  );
+  assert.ok(rejectLog, "reject audit log not found");
+  assert.ok(rejectLog.metadata, "metadata should not be null");
+  assert.equal(typeof rejectLog.metadata, "object");
+  assert.equal(rejectLog.metadata.reason, "Test rejection reason");
+});
+
+test("malformed historical audit metadata does not crash the endpoint", async () => {
+  const result = await api("/v1/admin/audit", owner);
+  assert.equal(result.response.status, 200);
+  assert.ok(Array.isArray(result.payload.data));
+});
+
+test("moderator cannot escalate to owner-only action", async () => {
+  const result = await api("/v1/admin/users", moderator);
+  assert.equal(result.response.status, 403);
 });
 
 async function createListing(session, overrides = {}) {
