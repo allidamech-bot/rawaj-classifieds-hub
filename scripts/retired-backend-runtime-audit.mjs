@@ -40,6 +40,8 @@ const evidenceFiles = new Set([
   "scripts/retired-backend-runtime-audit.mjs",
   "scripts/cloudflare-runtime-cleanup.test.mjs",
   "scripts/admin-security-regression.mjs",
+  "cloudflare/worker/scripts/rehearse-d1-reconciliation.mjs",
+  "cloudflare/worker/test/migration-reconciliation-fixtures.sql",
 ]);
 
 const runtimeRoots = ["src", "cloudflare/worker/src"];
