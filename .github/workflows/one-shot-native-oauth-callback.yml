@@ -1,0 +1,76 @@
+name: One-shot native OAuth callback
+
+on:
+  pull_request:
+    branches:
+      - feature/cloudflare-full-backend-cutover
+
+permissions:
+  contents: write
+
+concurrency:
+  group: one-shot-native-oauth-callback
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: fix/supabase-native-oauth-callback
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply scoped native OAuth correction
+        run: |
+          node --check scripts/.one-shot-native-oauth-callback.mjs
+          node scripts/.one-shot-native-oauth-callback.mjs
+          npx prettier --write src/lib/auth.tsx scripts/android-deep-link-oauth-readiness.test.mjs
+
+      - name: Validate Android web and native contracts
+        run: |
+          npm run typecheck
+          node --test scripts/android-media-location-permissions.test.mjs
+          node --test scripts/android-deep-link-oauth-readiness.test.mjs
+          node --test scripts/android-release-candidate-integrity.test.mjs
+
+      - name: Build web assets
+        run: npm run build
+
+      - name: Synchronize Android
+        run: npx cap sync android
+
+      - name: Build Android candidate
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew testDebugUnitTest bundleRelease assembleRelease --no-daemon --stacktrace --console=plain
+
+      - name: Commit validated correction
+        shell: bash
+        run: |
+          rm -f scripts/.one-shot-native-oauth-callback.mjs
+          rm -f .github/workflows/one-shot-native-oauth-callback.yml
+          git config user.name 'allidamech-bot'
+          git config user.email '228416871+allidamech-bot@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'fix(auth): use native Supabase OAuth callback on Android'
+          git push origin HEAD:fix/supabase-native-oauth-callback
