@@ -23,6 +23,7 @@ function AuthCallbackPage() {
   useEffect(() => {
     const client = supabaseAuth;
     let finished = false;
+    const loginDestination = `/login?returnTo=${encodeURIComponent(returnTo)}`;
     const finish = (destination: string) => {
       if (finished) return;
       finished = true;
@@ -30,22 +31,30 @@ function AuthCallbackPage() {
     };
 
     if (!client) {
-      finish(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+      finish(loginDestination);
       return;
     }
+
+    const currentUrl = new URL(window.location.href);
+    const hasCallbackMaterial =
+      currentUrl.searchParams.has("code") ||
+      currentUrl.searchParams.has("error") ||
+      currentUrl.searchParams.has("error_code") ||
+      currentUrl.hash.includes("access_token=") ||
+      currentUrl.hash.includes("refresh_token=");
 
     const { data: listener } = client.auth.onAuthStateChange((_event, session) => {
       if (session) finish(returnTo);
     });
-    void client.auth.getSession().then(({ data, error }) => {
-      if (data.session) finish(returnTo);
-      else if (error) finish(`/login?returnTo=${encodeURIComponent(returnTo)}`);
-    });
+    void client.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (data.session) finish(returnTo);
+        else if (error || !hasCallbackMaterial) finish(loginDestination);
+      })
+      .catch(() => finish(loginDestination));
 
-    const timeout = window.setTimeout(
-      () => finish(`/login?returnTo=${encodeURIComponent(returnTo)}`),
-      10_000,
-    );
+    const timeout = window.setTimeout(() => finish(loginDestination), 10_000);
     return () => {
       window.clearTimeout(timeout);
       listener.subscription.unsubscribe();
