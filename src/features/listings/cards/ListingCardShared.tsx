@@ -32,6 +32,7 @@ export function ListingCardFrame({
   children,
 }: ListingCardFrameProps) {
   const { text } = useUiPreferences();
+  const hasImage = Boolean(listing.primaryImageUrl);
 
   return (
     <article
@@ -39,8 +40,14 @@ export function ListingCardFrame({
       data-card-variant={variant}
       data-featured={listing.isFeatured}
       data-reserved={Boolean(listing.reservedAt)}
+      data-has-image={hasImage}
     >
-      <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-adaptive-card__link">
+      <Link
+        to="/listings/$id"
+        params={{ id: listing.id }}
+        className="rawaj-adaptive-card__link"
+        aria-label={text(`فتح إعلان: ${listing.title}`, `Open listing: ${listing.title}`)}
+      >
         <div className={cn("rawaj-adaptive-card__media", mediaClassName)}>
           <ListingCardImage
             src={listing.primaryImageUrl}
@@ -76,7 +83,9 @@ export function ListingCardHeading({ listing }: { listing: ClassifiedListing }) 
       <span className="rawaj-adaptive-card__category">
         {categoryName(listing.categoryId, listing.categoryNameAr, language)}
       </span>
-      <h3 className="rawaj-adaptive-card__title">{listing.title}</h3>
+      <h3 className="rawaj-adaptive-card__title" dir="auto">
+        {listing.title}
+      </h3>
     </div>
   );
 }
