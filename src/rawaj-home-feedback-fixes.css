@@ -1,165 +1,184 @@
-/* RAWAJ homepage review refinements
-   Scoped strictly to the approved home route. */
+/* RAWAJ homepage precision corrections.
+   These rules are scoped to the home route and intentionally override stale legacy layers. */
 
 .rawaj-app-shell[data-resolved-pathname="/"] {
-  --rawaj-approved-bg: #2b2c2e;
-  --rawaj-approved-bg-deep: #222326;
-  --rawaj-approved-surface: #333437;
-  --rawaj-approved-surface-strong: #3a3b3e;
-  --rawaj-approved-surface-soft: #292a2d;
-  --rawaj-approved-text: #f1efec;
-  --rawaj-approved-text-muted: #b9b5b0;
-  --rawaj-approved-border: rgba(255, 255, 255, 0.1);
-  color: var(--rawaj-approved-text);
-  background:
-    radial-gradient(circle at 82% 10%, rgba(79, 91, 128, 0.08), transparent 28rem),
-    linear-gradient(180deg, #303134 0%, #2b2c2e 42%, #27282a 100%) !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__page,
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__content,
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-home {
-  background: transparent !important;
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__content {
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
-/* Do not reserve a bright blank advertising block before an ad exists. */
+/* Never reserve an empty advertising area. */
 .rawaj-app-shell[data-resolved-pathname="/"] aside[data-placement-page="home"][aria-hidden="true"],
 .rawaj-app-shell[data-resolved-pathname="/"] aside[data-placement-page="home"][data-placement-loading="true"] {
   display: none !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] aside[data-placement-page="home"] {
-  color: var(--rawaj-approved-text);
-  background: transparent !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] aside[data-placement-page="home"] .rawaj-ad-placement-skeleton {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  background: linear-gradient(145deg, #343538, #2a2b2e) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
-}
-
-/* The mobile header must belong to the charcoal system, never a white capsule. */
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header {
+/* Header must read as part of the page, not as a detached rounded card. */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-floating-header-shell {
+  margin-block: 0 !important;
   border: 0 !important;
+  border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-floating-header-shell {
-  margin-block: 0.55rem 0.35rem;
-  border: 1px solid rgba(255, 255, 255, 0.095);
-  border-radius: 21px;
-  color: var(--rawaj-approved-text);
-  background: rgba(48, 49, 52, 0.96) !important;
-  box-shadow:
-    0 16px 34px rgba(10, 10, 12, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.045);
-  backdrop-filter: blur(20px) saturate(112%);
-  -webkit-backdrop-filter: blur(20px) saturate(112%);
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup {
+  min-width: 0;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-brand-mark {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #3a3b3e !important;
-  box-shadow:
-    0 8px 20px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.055);
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-brand-lockup .font-display {
-  color: #eeeae6 !important;
-  font-weight: 700;
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup > span:last-child {
+  min-width: 0;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-action,
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-home-menu-action,
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-location {
-  color: #d2ceca !important;
-  border-color: rgba(255, 255, 255, 0.085) !important;
-  background: rgba(255, 255, 255, 0.035) !important;
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-account,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .order-3 > .relative > button {
+  width: 2.3rem !important;
+  height: 2.3rem !important;
+  min-height: 2.3rem !important;
+  border-radius: 12px !important;
 }
 
-/* A dark optical field behind hero copy keeps it readable over the aurora. */
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-hero::after {
-  inset: 30% 0 0;
-  height: auto;
+/*
+ * RTL search correction:
+ * logical 50% positioning combined with a physical translateX moved the form left.
+ * On mobile it is now pinned to both physical edges of the hero.
+ */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search {
+  left: 0.72rem !important;
+  right: 0.72rem !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: auto !important;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  transform: none !important;
+  direction: rtl;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search label {
+  min-width: 0 !important;
+  overflow: hidden;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search input {
+  min-width: 0 !important;
+  text-align: start;
+  direction: rtl;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search button {
+  width: 4.35rem;
+  min-width: 4.35rem;
+  padding-inline: 0.65rem !important;
+  white-space: nowrap;
+}
+
+/* The primary action should be encountered first from the RTL reading edge. */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero__primary-action {
+  order: -1;
+  flex: 1 1 0;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-location {
+  order: 0;
+  flex: 0 1 auto;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero__utility {
+  min-width: 0;
+}
+
+/* Prevent the search overlap from compressing the trust row. */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero {
+  margin-bottom: 2.75rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-trust-row {
+  margin-top: 0.15rem !important;
+}
+
+/* Missing images should remain within the matte system instead of producing a white panel. */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-lead-card__media > div,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-support-card__media > div,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-latest-card__media > div {
+  display: grid !important;
+  place-items: center !important;
+  color: #74d2e3 !important;
   background:
-    radial-gradient(ellipse at 50% 62%, rgba(17, 17, 23, 0.38), transparent 48%),
-    linear-gradient(180deg, rgba(12, 13, 20, 0.02) 0%, rgba(12, 13, 20, 0.6) 48%, rgba(12, 13, 20, 0.94) 100%);
+    radial-gradient(circle at 50% 32%, rgba(82, 161, 180, 0.14), transparent 34%),
+    linear-gradient(145deg, #292c32, #202227) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-hero__kicker {
-  padding: 0.38rem 0.72rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  color: #e4dfda;
-  background: rgba(19, 19, 25, 0.45);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-lead-card__media > div svg,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-support-card__media > div svg,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-latest-card__media > div svg {
+  color: #75cfdf !important;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.26));
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-hero h1 {
-  color: #f5f1ec;
-  font-size: clamp(1.72rem, 7.4vw, 3.45rem);
-  font-weight: 700;
-  line-height: 1.22;
-  letter-spacing: -0.025em;
-  text-shadow:
-    0 3px 18px rgba(0, 0, 0, 0.78),
-    0 1px 2px rgba(0, 0, 0, 0.72);
+/* Keep content inside narrow mobile viewports. */
+@media (max-width: 27rem) {
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home__container {
+    padding-inline: 0.62rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero__content {
+    min-height: 20.7rem !important;
+    padding: 5rem 0.85rem 4.15rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero h1 {
+    max-width: 18.5rem;
+    font-size: clamp(1.62rem, 8.4vw, 2.05rem) !important;
+    line-height: 1.25 !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero__content > p {
+    font-size: 0.72rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search {
+    left: 0.58rem !important;
+    right: 0.58rem !important;
+    grid-template-columns: minmax(0, 1fr) 4.05rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search label {
+    gap: 0.42rem !important;
+    padding-inline: 0.62rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search input {
+    font-size: 0.72rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search button {
+    width: 4.05rem;
+    min-width: 4.05rem;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-trust-row span {
+    gap: 0.2rem !important;
+    padding-inline: 0.12rem !important;
+    font-size: 0.55rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-trust-row svg {
+    width: 0.78rem !important;
+  }
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-hero__content > p {
-  color: rgba(241, 237, 232, 0.86);
-  font-weight: 500;
-  line-height: 1.75;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.74);
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-section-header h2,
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-listing-card h3,
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-ad__copy strong,
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-safety strong {
-  color: #eeeae6;
-  font-weight: 700;
-  text-shadow: none;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-listing-card__heading > strong,
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-mini-card small {
-  color: #f0d9e6;
-  font-weight: 700;
-  text-shadow: none;
-}
-
-/* Active navigation uses a subtle lighter charcoal, not a white tile. */
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-bottom-nav-shell {
-  background: rgba(43, 44, 47, 0.96) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-bottom-nav-shell .rawaj-dock-item[data-active="true"]:not([data-primary="true"]) {
-  color: #f3c9df !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  background: rgba(255, 255, 255, 0.055) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.045),
-    0 8px 18px rgba(0, 0, 0, 0.12) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-bottom-nav-shell .rawaj-dock-item[data-active="true"] .rawaj-dock-icon {
-  color: #f7d7e7 !important;
-  background: rgba(213, 72, 158, 0.12) !important;
-  box-shadow: inset 0 0 0 1px rgba(232, 116, 185, 0.12) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-bottom-nav-shell .rawaj-dock-item[data-active="true"] .rawaj-bottom-dock__label {
-  color: #f3c9df !important;
-}
-
-@media (max-width: 63.99rem) {
-  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-home__container {
-    padding-top: 0.35rem;
+@media (min-width: 40rem) {
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search {
+    left: 50% !important;
+    right: auto !important;
+    width: min(39rem, calc(100% - 2rem)) !important;
+    transform: translateX(-50%) !important;
   }
 }
