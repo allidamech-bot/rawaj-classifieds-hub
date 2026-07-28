@@ -1,0 +1,20 @@
+/* RAWAJ home footer-to-dock spacing correction.
+ * The app shell already reserves the fixed mobile dock height, so the home page
+ * must not add a second dock-sized bottom padding of its own.
+ */
+
+.rawaj-app-shell[data-resolved-pathname="/"][data-shell-dock="true"] .rawaj-app-shell__page {
+  padding-bottom: calc(var(--dock-height) + var(--safe-bottom) - 0.15rem) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home {
+  padding-bottom: 0 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home__container {
+  padding-bottom: 0 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-footer {
+  margin-bottom: 0 !important;
+}
