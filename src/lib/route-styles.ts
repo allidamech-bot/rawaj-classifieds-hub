@@ -9,6 +9,7 @@ import "../rawaj-home-dock-spacing.css";
 import "../rawaj-semantic-tokens.css";
 import "../rawaj-global-dark-system.css";
 import "../rawaj-shell-system-v2.css";
+import "../rawaj-discovery-system-v3.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import communicationCenterV3Css from "../communication-center-v3.css?url";
 import messagingV4Css from "../messaging-v4.css?url";
