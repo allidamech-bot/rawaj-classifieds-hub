@@ -1,0 +1,1044 @@
+/* RAWAJ Personal Space System V5
+ * Unified dark experience for authentication, account, favorites, notifications,
+ * messaging, saved activity, and owner workspaces.
+ * Presentation only: Firebase Auth and Cloudflare-backed behavior remain unchanged.
+ */
+
+:is(
+    .rawaj-auth-premium-v3,
+    .rawaj-account-hub-v3,
+    .rawaj-account-collection-v3,
+    .rawaj-account-activity-v3,
+    .rawaj-account-command-v3,
+    .rawaj-communication-v2,
+    .rawaj-messaging-v4
+  ) {
+  --personal-panel: rgba(47, 48, 54, 0.98);
+  --personal-panel-raised: rgba(53, 54, 61, 0.98);
+  --personal-inset: rgba(25, 26, 31, 0.72);
+  --personal-line: rgba(255, 255, 255, 0.08);
+  --personal-line-strong: rgba(104, 173, 255, 0.24);
+  --personal-text: #f4f1ed;
+  --personal-text-soft: #c7c7cd;
+  --personal-muted: #9697a0;
+  --personal-coral: #ff7559;
+  --personal-pink: #df49b5;
+  --personal-blue: #68adff;
+  --personal-success: #55d8a4;
+  --personal-danger: #ff8189;
+  position: relative;
+  color: var(--personal-text);
+}
+
+:is(
+    .rawaj-auth-premium-v3,
+    .rawaj-account-hub-v3,
+    .rawaj-account-collection-v3,
+    .rawaj-account-activity-v3,
+    .rawaj-account-command-v3,
+    .rawaj-communication-v2,
+    .rawaj-messaging-v4
+  )::before {
+  content: "" !important;
+  position: absolute;
+  inset: -2rem 0 auto;
+  z-index: -1;
+  display: block !important;
+  height: 24rem;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 117, 89, 0.07), transparent 27%),
+    radial-gradient(circle at 46% 2%, rgba(223, 73, 181, 0.065), transparent 29%),
+    radial-gradient(circle at 84% 16%, rgba(104, 173, 255, 0.07), transparent 30%);
+  filter: blur(25px);
+}
+
+/* --------------------------------------------------------------------------
+   Authentication
+   -------------------------------------------------------------------------- */
+
+.rawaj-auth-premium-v3 .rawaj-auth-layout {
+  width: min(100%, 67rem) !important;
+  min-height: 39rem !important;
+  overflow: hidden;
+  border: 1px solid var(--personal-line) !important;
+  border-radius: 1.55rem !important;
+  background: linear-gradient(155deg, rgba(48, 49, 56, 0.99), rgba(38, 39, 45, 0.99)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 26px 66px rgba(0, 0, 0, 0.26) !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-aside {
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 4% 110%, rgba(255, 117, 89, 0.46), transparent 34%),
+    radial-gradient(circle at 42% -15%, rgba(223, 73, 181, 0.37), transparent 38%),
+    radial-gradient(circle at 98% 22%, rgba(82, 145, 255, 0.34), transparent 39%),
+    linear-gradient(145deg, #292a30, #24252a 58%, #222329) !important;
+  color: #fff !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-aside::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.42;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.48) 0 1px, transparent 1.35px);
+  background-size: 19px 19px;
+  mask-image: linear-gradient(110deg, #000, rgba(0, 0, 0, 0.72) 54%, transparent 94%);
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-aside::after {
+  inset: auto -7rem -8rem auto !important;
+  width: 22rem !important;
+  height: 22rem !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 0 0 3rem rgba(255, 255, 255, 0.018),
+    0 0 0 6rem rgba(255, 255, 255, 0.012) !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-aside__brand > span {
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  background: linear-gradient(145deg, #ff7659, #d948ad 58%, #5e9fff) !important;
+  color: #fff !important;
+  box-shadow: 0 14px 30px rgba(218, 67, 160, 0.2) !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-aside__copy > p {
+  color: #ff9b86 !important;
+  letter-spacing: 0 !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-aside__copy h1 {
+  color: #fff !important;
+  font-family: var(--font-family, "Cairo", sans-serif) !important;
+  font-size: clamp(1.8rem, 4vw, 2.8rem) !important;
+  line-height: 1.28 !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-aside__copy > span,
+.rawaj-auth-premium-v3 .rawaj-auth-aside__trust {
+  color: rgba(255, 255, 255, 0.66) !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-aside li {
+  border-color: rgba(255, 255, 255, 0.095) !important;
+  background: rgba(24, 25, 30, 0.24) !important;
+  backdrop-filter: blur(12px);
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-aside li > span {
+  background: rgba(104, 173, 255, 0.1) !important;
+  color: #8fc2ff !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-aside li > svg {
+  color: #69dfb2 !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.045), transparent 33%),
+    transparent !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-card__header > span {
+  border: 1px solid rgba(104, 173, 255, 0.16) !important;
+  background: rgba(104, 173, 255, 0.08) !important;
+  color: #8fc2ff !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-card__header p {
+  color: #ff927b !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-card__header h2 {
+  color: var(--personal-text) !important;
+  font-size: clamp(1.08rem, 3vw, 1.35rem) !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-card__header small {
+  color: var(--personal-muted) !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-tabs {
+  border: 1px solid var(--personal-line) !important;
+  background: rgba(24, 25, 30, 0.56) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-tabs button {
+  color: var(--personal-muted) !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-tabs button[data-active="true"] {
+  border: 1px solid rgba(104, 173, 255, 0.16) !important;
+  background: rgba(104, 173, 255, 0.1) !important;
+  color: var(--personal-text) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-auth-premium-v3 .input {
+  min-height: 3.2rem !important;
+  border: 1px solid var(--personal-line) !important;
+  background: rgba(24, 25, 30, 0.72) !important;
+  color: var(--personal-text) !important;
+  color-scheme: dark;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.018) !important;
+}
+
+.rawaj-auth-premium-v3 .input:focus-visible,
+.rawaj-auth-premium-v3 .input:focus {
+  border-color: rgba(104, 173, 255, 0.46) !important;
+  outline: 3px solid rgba(104, 173, 255, 0.1) !important;
+  outline-offset: 1px;
+  box-shadow: none !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-google {
+  border: 1px solid var(--personal-line) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+  color: var(--personal-text-soft) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-google:hover {
+  border-color: rgba(104, 173, 255, 0.2) !important;
+  background: rgba(104, 173, 255, 0.06) !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-button-primary,
+.rawaj-auth-premium-v3 button[type="submit"] {
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 26px rgba(218, 67, 160, 0.18) !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-security-note {
+  border-color: rgba(85, 216, 164, 0.18) !important;
+  background: rgba(85, 216, 164, 0.065) !important;
+  color: var(--personal-text-soft) !important;
+}
+
+.rawaj-auth-premium-v3 .rawaj-auth-security-note svg {
+  color: #69dfb2 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Account identity and settings
+   -------------------------------------------------------------------------- */
+
+.rawaj-account-hub-v3 .rawaj-account-identity {
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 1.45rem !important;
+  background:
+    radial-gradient(circle at 4% 110%, rgba(255, 117, 89, 0.44), transparent 32%),
+    radial-gradient(circle at 42% -12%, rgba(223, 73, 181, 0.35), transparent 38%),
+    radial-gradient(circle at 92% 18%, rgba(75, 139, 255, 0.32), transparent 36%),
+    linear-gradient(145deg, #292a30, #24252a 58%, #222329) !important;
+  color: #fff !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 22px 54px rgba(0, 0, 0, 0.24) !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-identity::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.34;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0 1px, transparent 1.35px);
+  background-size: 19px 19px;
+  mask-image: linear-gradient(90deg, #000, rgba(0, 0, 0, 0.72) 52%, transparent 92%);
+}
+
+.rawaj-account-hub-v3 .rawaj-account-identity__cover > img {
+  opacity: 0.32 !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-identity__cover > div {
+  background: linear-gradient(180deg, rgba(34, 35, 41, 0.18), rgba(34, 35, 41, 0.94)) !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-identity__avatar {
+  border: 2px solid rgba(255, 255, 255, 0.18) !important;
+  background:
+    radial-gradient(circle at 42% 34%, rgba(104, 173, 255, 0.18), transparent 36%),
+    linear-gradient(145deg, #363842, #292a30) !important;
+  color: #86bdff !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25) !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-identity__avatar > span {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(30, 31, 36, 0.84) !important;
+  color: #ff927b !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-identity__copy :is(h1, p, small, span),
+.rawaj-account-hub-v3 .rawaj-account-identity__copy strong {
+  color: inherit !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-identity__copy > p {
+  color: #ff9a85 !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-identity__copy small,
+.rawaj-account-hub-v3 .rawaj-account-identity__copy > span {
+  color: rgba(255, 255, 255, 0.66) !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-identity__badges b {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(24, 25, 30, 0.34) !important;
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-identity__actions :is(a, button) {
+  border: 1px solid rgba(255, 255, 255, 0.11) !important;
+  background: rgba(24, 25, 30, 0.34) !important;
+  color: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(10px);
+}
+
+.rawaj-account-hub-v3 .rawaj-account-identity__actions :is(a, button):hover {
+  border-color: rgba(104, 173, 255, 0.24) !important;
+  background: rgba(104, 173, 255, 0.09) !important;
+  color: #fff !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-quick-links {
+  gap: 0.62rem !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-quick-links > a {
+  min-height: 4.6rem;
+  border: 1px solid var(--personal-line) !important;
+  border-radius: 1rem !important;
+  background: linear-gradient(150deg, rgba(50, 51, 58, 0.97), rgba(40, 41, 47, 0.97)) !important;
+  color: var(--personal-text-soft) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.022) !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-quick-links > a:hover {
+  border-color: rgba(104, 173, 255, 0.2) !important;
+  background: linear-gradient(150deg, rgba(54, 55, 63, 0.98), rgba(42, 43, 49, 0.98)) !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-quick-links > a > span {
+  border: 1px solid rgba(104, 173, 255, 0.14) !important;
+  background: rgba(104, 173, 255, 0.075) !important;
+  color: #8fc2ff !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-quick-links strong {
+  color: var(--personal-text) !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-quick-links small {
+  color: var(--personal-muted) !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-section {
+  overflow: hidden;
+  border: 1px solid var(--personal-line) !important;
+  border-radius: 1.2rem !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.04), transparent 30%),
+    linear-gradient(155deg, rgba(49, 50, 57, 0.985), rgba(40, 41, 47, 0.985)) !important;
+  color: var(--personal-text) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.024),
+    0 14px 34px rgba(0, 0, 0, 0.15) !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-section > header {
+  border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-section > header > span {
+  border: 1px solid rgba(104, 173, 255, 0.15) !important;
+  background: rgba(104, 173, 255, 0.075) !important;
+  color: #8fc2ff !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-section > header p {
+  color: #ff927b !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-section > header h2 {
+  color: var(--personal-text) !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-section > header small {
+  color: var(--personal-muted) !important;
+}
+
+.rawaj-account-hub-v3 .rawaj-account-section__body .bg-muted-surface,
+.rawaj-account-hub-v3 .rawaj-account-section__body .bg-card,
+.rawaj-account-hub-v3 .rawaj-account-section__body form.rounded-2xl {
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: rgba(24, 25, 30, 0.43) !important;
+  color: var(--personal-text-soft) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-account-hub-v3 :is(input, textarea, select).input {
+  border: 1px solid var(--personal-line) !important;
+  background: rgba(24, 25, 30, 0.72) !important;
+  color: var(--personal-text) !important;
+  color-scheme: dark;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.018) !important;
+}
+
+.rawaj-account-hub-v3 :is(input, textarea, select).input:focus-visible {
+  border-color: rgba(104, 173, 255, 0.46) !important;
+  outline: 3px solid rgba(104, 173, 255, 0.1) !important;
+  outline-offset: 1px;
+  box-shadow: none !important;
+}
+
+.rawaj-account-hub-v3 label > span {
+  color: var(--personal-text-soft) !important;
+}
+
+.rawaj-account-hub-v3 :is(button, a).bg-primary,
+.rawaj-account-hub-v3 button[type="submit"] {
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 24px rgba(218, 67, 160, 0.16) !important;
+}
+
+.rawaj-account-hub-v3 .text-destructive {
+  color: #ff939a !important;
+}
+
+/* --------------------------------------------------------------------------
+   Collections: favorites, saved searches, listings, activity
+   -------------------------------------------------------------------------- */
+
+:is(.rawaj-account-collection-v3, .rawaj-account-activity-v3) > section:first-child {
+  overflow: hidden;
+  border: 1px solid var(--personal-line) !important;
+  border-radius: 1.15rem !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.08), transparent 32%),
+    radial-gradient(circle at 0% 100%, rgba(223, 73, 181, 0.055), transparent 34%),
+    linear-gradient(155deg, rgba(49, 50, 57, 0.985), rgba(40, 41, 47, 0.985)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 14px 32px rgba(0, 0, 0, 0.15) !important;
+}
+
+:is(.rawaj-account-collection-v3, .rawaj-account-activity-v3) > section:first-child::after {
+  width: 3px !important;
+  background: linear-gradient(180deg, #ff7559, #df49b5 58%, #68adff) !important;
+}
+
+:is(.rawaj-account-collection-v3, .rawaj-account-activity-v3) > section:first-child h2 {
+  color: var(--personal-text) !important;
+}
+
+:is(.rawaj-account-collection-v3, .rawaj-account-activity-v3) > section:first-child p {
+  color: var(--personal-muted) !important;
+}
+
+.rawaj-account-collection-v3 :is(article, li, form, .rawaj-surface),
+.rawaj-account-activity-v3 :is(.rawaj-activity-panel, .rawaj-notification-panel, .rawaj-notification-preferences, .rawaj-communication-follow-up) {
+  border-color: var(--personal-line) !important;
+  background: linear-gradient(155deg, rgba(48, 49, 55, 0.98), rgba(39, 40, 46, 0.98)) !important;
+  color: var(--personal-text-soft) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
+}
+
+.rawaj-account-collection-v3 :is(article, li):hover {
+  border-color: rgba(104, 173, 255, 0.19) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
+}
+
+.rawaj-account-collection-v3 :is(h2, h3, strong),
+.rawaj-account-activity-v3 :is(h2, h3, strong) {
+  color: var(--personal-text) !important;
+}
+
+.rawaj-account-collection-v3 :is(p, small, time, .text-muted-foreground),
+.rawaj-account-activity-v3 :is(p, small, time, .text-muted-foreground) {
+  color: var(--personal-muted) !important;
+}
+
+.rawaj-account-collection-v3 :is(button, a).bg-primary,
+.rawaj-account-activity-v3 :is(button, a).bg-primary {
+  border: 1px solid rgba(255, 255, 255, 0.13) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 22px rgba(218, 67, 160, 0.15) !important;
+}
+
+.rawaj-account-collection-v3 :is(input, textarea, select),
+.rawaj-account-activity-v3 :is(input, textarea, select) {
+  border-color: var(--personal-line) !important;
+  background: rgba(24, 25, 30, 0.7) !important;
+  color: var(--personal-text) !important;
+  color-scheme: dark;
+}
+
+/* --------------------------------------------------------------------------
+   Communication center and notifications
+   -------------------------------------------------------------------------- */
+
+.rawaj-communication-v2 .rawaj-communication-hero {
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 1.3rem !important;
+  background:
+    radial-gradient(circle at 4% 112%, rgba(255, 117, 89, 0.42), transparent 32%),
+    radial-gradient(circle at 42% -12%, rgba(223, 73, 181, 0.34), transparent 38%),
+    radial-gradient(circle at 94% 18%, rgba(77, 141, 255, 0.31), transparent 36%),
+    linear-gradient(145deg, #292a30, #24252a 58%, #222329) !important;
+  color: #fff !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 20px 48px rgba(0, 0, 0, 0.22) !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.34;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0 1px, transparent 1.35px);
+  background-size: 19px 19px;
+  mask-image: linear-gradient(90deg, #000, rgba(0, 0, 0, 0.7) 52%, transparent 92%);
+}
+
+.rawaj-communication-v2 .rawaj-communication-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.rawaj-communication-v2 .rawaj-communication-hero__copy > p {
+  color: #ff9a84 !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-hero__copy :is(h1, h2) {
+  color: #fff !important;
+  font-family: var(--font-family, "Cairo", sans-serif) !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-hero__copy > span {
+  color: rgba(255, 255, 255, 0.67) !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-hero__metrics > div {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(24, 25, 30, 0.28) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-hero__metrics svg {
+  color: #8fc2ff !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-hero__metrics span {
+  color: rgba(255, 255, 255, 0.64) !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-hero__actions :is(a, button) {
+  border: 1px solid rgba(255, 255, 255, 0.095) !important;
+  background: rgba(24, 25, 30, 0.28) !important;
+  color: rgba(255, 255, 255, 0.74) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-hero__actions :is(a, button)[data-active="true"] {
+  border-color: rgba(104, 173, 255, 0.23) !important;
+  background: rgba(104, 173, 255, 0.12) !important;
+  color: #fff !important;
+}
+
+.rawaj-communication-v2 .rawaj-notification-panel,
+.rawaj-communication-v2 .rawaj-notification-preferences,
+.rawaj-communication-v2 .rawaj-communication-follow-up,
+.rawaj-communication-v2 .rawaj-communication-safety,
+.rawaj-communication-v2 .rawaj-communication-signed-out {
+  border: 1px solid var(--personal-line) !important;
+  border-radius: 1.15rem !important;
+  background: linear-gradient(155deg, rgba(48, 49, 55, 0.98), rgba(39, 40, 46, 0.98)) !important;
+  color: var(--personal-text-soft) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.02),
+    0 12px 30px rgba(0, 0, 0, 0.14) !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-section-header {
+  border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-section-header p {
+  color: #ff927b !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-section-header h2 {
+  color: var(--personal-text) !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-section-header span {
+  color: var(--personal-muted) !important;
+}
+
+.rawaj-communication-v2 .rawaj-notification-list {
+  gap: 0.55rem !important;
+}
+
+.rawaj-communication-v2 :is(.rawaj-notification-timeline, [data-notification-card]) {
+  border: 1px solid rgba(255, 255, 255, 0.065) !important;
+  border-radius: 0.92rem !important;
+  background: rgba(255, 255, 255, 0.026) !important;
+  color: var(--personal-text-soft) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-communication-v2 .rawaj-notification-timeline[data-read="false"] {
+  border-inline-start: 3px solid #df49b5 !important;
+  background: rgba(223, 73, 181, 0.055) !important;
+}
+
+.rawaj-communication-v2 .rawaj-notification-timeline__icon {
+  border: 1px solid rgba(104, 173, 255, 0.14) !important;
+  background: rgba(104, 173, 255, 0.075) !important;
+  color: #8fc2ff !important;
+}
+
+.rawaj-communication-v2 .rawaj-notification-timeline__copy strong {
+  color: var(--personal-text) !important;
+}
+
+.rawaj-communication-v2 .rawaj-notification-timeline__copy :is(p, small),
+.rawaj-communication-v2 .rawaj-notification-timeline__chevron {
+  color: var(--personal-muted) !important;
+}
+
+.rawaj-communication-v2 .rawaj-notification-timeline__read {
+  border-color: rgba(85, 216, 164, 0.16) !important;
+  background: rgba(85, 216, 164, 0.065) !important;
+  color: #7ee4bc !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-follow-up__grid > a {
+  border: 1px solid rgba(255, 255, 255, 0.065) !important;
+  background: rgba(255, 255, 255, 0.028) !important;
+  color: var(--personal-text-soft) !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-follow-up__grid > a > span {
+  border: 1px solid rgba(104, 173, 255, 0.13) !important;
+  background: rgba(104, 173, 255, 0.07) !important;
+  color: #8fc2ff !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-signed-out > span {
+  border: 1px solid rgba(104, 173, 255, 0.15) !important;
+  background: rgba(104, 173, 255, 0.075) !important;
+  color: #8fc2ff !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-signed-out h1 {
+  color: var(--personal-text) !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-signed-out p {
+  color: var(--personal-muted) !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-signed-out > a:first-of-type {
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
+}
+
+/* --------------------------------------------------------------------------
+   Messaging workspace
+   -------------------------------------------------------------------------- */
+
+.rawaj-messaging-v4 {
+  --message-border: var(--personal-line) !important;
+  --message-muted: #2d2e34 !important;
+  --message-surface: #292a30 !important;
+  --message-ink: var(--personal-text) !important;
+  --message-subtle: var(--personal-muted) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-message-workspace {
+  min-height: min(75dvh, 50rem) !important;
+  border: 1px solid var(--personal-line) !important;
+  border-radius: 1.2rem !important;
+  background: #292a30 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.02),
+    0 18px 42px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-conversation-sidebar {
+  background: linear-gradient(180deg, #303137, #2b2c32) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-conversation-sidebar__heading h2 {
+  color: var(--personal-text) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-conversation-sidebar__heading h2 svg,
+.rawaj-messaging-v4 .rawaj-conversation-sidebar__heading > span {
+  color: #8fc2ff !important;
+}
+
+.rawaj-messaging-v4 .rawaj-conversation-sidebar__heading > span {
+  border: 1px solid rgba(104, 173, 255, 0.13) !important;
+  background: rgba(104, 173, 255, 0.07) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-communication-search {
+  border: 1px solid var(--personal-line) !important;
+  background: rgba(24, 25, 30, 0.72) !important;
+  color: #8fc2ff !important;
+}
+
+.rawaj-messaging-v4 .rawaj-communication-search input {
+  color: var(--personal-text) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-communication-search input::placeholder {
+  color: #777983 !important;
+}
+
+.rawaj-messaging-v4 .rawaj-conversation-summary {
+  border-color: transparent !important;
+  background: transparent !important;
+  color: var(--personal-text-soft) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-messaging-v4 .rawaj-conversation-summary:hover {
+  border-color: rgba(255, 255, 255, 0.07) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-messaging-v4 .rawaj-conversation-summary[data-selected="true"] {
+  border-color: rgba(104, 173, 255, 0.17) !important;
+  background: rgba(104, 173, 255, 0.085) !important;
+  color: var(--personal-text) !important;
+  box-shadow: inset 3px 0 0 #68adff !important;
+}
+
+[dir="rtl"] .rawaj-messaging-v4 .rawaj-conversation-summary[data-selected="true"] {
+  box-shadow: inset -3px 0 0 #68adff !important;
+}
+
+.rawaj-messaging-v4 .rawaj-participant-avatar {
+  border-color: #303137 !important;
+  background: linear-gradient(145deg, #393a42, #2b2c32) !important;
+  color: #8fc2ff !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-conversation-summary__copy strong {
+  color: var(--personal-text) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-conversation-summary__copy :is(small, p),
+.rawaj-messaging-v4 .rawaj-conversation-summary__meta time {
+  color: var(--personal-muted) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-conversation-summary__meta b {
+  background: linear-gradient(135deg, #f16f56, #d947aa) !important;
+  color: #fff !important;
+}
+
+.rawaj-messaging-v4 .rawaj-message-panel {
+  border-inline-start-color: rgba(255, 255, 255, 0.065) !important;
+  background: #292a30 !important;
+}
+
+.rawaj-messaging-v4 .rawaj-message-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.065) !important;
+  background: rgba(43, 44, 50, 0.96) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-messaging-v4 .rawaj-message-header__copy h2 {
+  color: var(--personal-text) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-message-header__copy :is(a, span) {
+  color: var(--personal-muted) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-message-header button,
+.rawaj-messaging-v4 .rawaj-message-header a {
+  border-color: rgba(255, 255, 255, 0.075) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: var(--personal-text-soft) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-message-stream {
+  background:
+    radial-gradient(circle at 12% 20%, rgba(104, 173, 255, 0.035), transparent 27%),
+    radial-gradient(circle at 85% 82%, rgba(223, 73, 181, 0.03), transparent 30%),
+    #24252a !important;
+}
+
+.rawaj-messaging-v4 .rawaj-message-bubble {
+  border: 1px solid rgba(255, 255, 255, 0.075) !important;
+  background: #33343b !important;
+  color: var(--personal-text-soft) !important;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.12) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-message-bubble[data-mine="true"] {
+  border-color: rgba(104, 173, 255, 0.18) !important;
+  background: linear-gradient(145deg, #3b5480, #41456d 58%, #553f69) !important;
+  color: #fff !important;
+  box-shadow: 0 7px 18px rgba(29, 41, 68, 0.22) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-message-bubble__time {
+  color: rgba(255, 255, 255, 0.48) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-message-bubble__time [data-message-state="read"] {
+  color: #82bbff !important;
+}
+
+.rawaj-messaging-v4 .rawaj-message-bubble__report {
+  color: #ff9aa0 !important;
+}
+
+.rawaj-messaging-v4 .rawaj-message-composer {
+  border-top: 1px solid rgba(255, 255, 255, 0.065) !important;
+  background: rgba(43, 44, 50, 0.97) !important;
+  box-shadow: 0 -12px 26px rgba(0, 0, 0, 0.18) !important;
+}
+
+.rawaj-messaging-v4 :is(.rawaj-message-composer__block-reason, .rawaj-message-composer textarea) {
+  border: 1px solid var(--personal-line) !important;
+  background: rgba(24, 25, 30, 0.72) !important;
+  color: var(--personal-text) !important;
+  color-scheme: dark;
+}
+
+.rawaj-messaging-v4 :is(.rawaj-message-composer__block-reason, .rawaj-message-composer textarea):focus-visible {
+  border-color: rgba(104, 173, 255, 0.46) !important;
+  outline: 3px solid rgba(104, 173, 255, 0.1) !important;
+  outline-offset: 1px;
+  box-shadow: none !important;
+}
+
+.rawaj-messaging-v4 .rawaj-quick-replies button {
+  border: 1px solid rgba(255, 255, 255, 0.065) !important;
+  background: rgba(255, 255, 255, 0.028) !important;
+  color: var(--personal-text-soft) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-quick-replies button:hover {
+  border-color: rgba(104, 173, 255, 0.18) !important;
+  background: rgba(104, 173, 255, 0.07) !important;
+}
+
+.rawaj-messaging-v4 .rawaj-message-composer button[type="submit"] {
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 22px rgba(218, 67, 160, 0.16) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Owner listing workspaces: route-scoped fallback for old page CSS
+   -------------------------------------------------------------------------- */
+
+.rawaj-app-shell[data-resolved-pathname^="/profile/listings"] .rawaj-app-shell__content main {
+  color: var(--personal-text);
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/profile/listings"] .rawaj-app-shell__content main :is(section, article, form).bg-card,
+.rawaj-app-shell[data-resolved-pathname^="/profile/listings"] .rawaj-app-shell__content main :is(section, article, form).rawaj-surface,
+.rawaj-app-shell[data-resolved-pathname^="/profile/listings"] .rawaj-app-shell__content main .bg-muted-surface {
+  border-color: var(--personal-line) !important;
+  background: linear-gradient(155deg, rgba(48, 49, 55, 0.98), rgba(39, 40, 46, 0.98)) !important;
+  color: var(--personal-text-soft) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/profile/listings"] .rawaj-app-shell__content main :is(h1, h2, h3, strong) {
+  color: var(--personal-text) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/profile/listings"] .rawaj-app-shell__content main :is(p, small, time, .text-muted-foreground) {
+  color: var(--personal-muted) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/profile/listings"] .rawaj-app-shell__content main :is(input, textarea, select) {
+  border-color: var(--personal-line) !important;
+  background: rgba(24, 25, 30, 0.72) !important;
+  color: var(--personal-text) !important;
+  color-scheme: dark;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive behavior
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  .rawaj-auth-premium-v3 .rawaj-auth-layout {
+    min-height: 0 !important;
+    border-radius: 1.15rem !important;
+  }
+
+  .rawaj-auth-premium-v3 .rawaj-auth-card {
+    padding: 1rem !important;
+  }
+
+  .rawaj-account-hub-v3 .rawaj-account-identity {
+    border-radius: 1.15rem !important;
+  }
+
+  .rawaj-account-hub-v3 .rawaj-account-identity__content {
+    align-items: flex-start !important;
+  }
+
+  .rawaj-account-hub-v3 .rawaj-account-identity__actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem !important;
+  }
+
+  .rawaj-account-hub-v3 .rawaj-account-identity__actions :is(a, button) {
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .rawaj-account-hub-v3 .rawaj-account-quick-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .rawaj-account-hub-v3 .rawaj-account-quick-links > a {
+    min-height: 4.2rem;
+    padding: 0.65rem !important;
+  }
+
+  .rawaj-communication-v2 .rawaj-communication-hero[data-mode="notifications"] {
+    padding: 1rem !important;
+  }
+
+  .rawaj-communication-v2 .rawaj-communication-hero__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .rawaj-messaging-v4 {
+    padding-inline: 0 !important;
+    padding-top: 0.35rem !important;
+  }
+
+  .rawaj-messaging-v4 .rawaj-message-workspace {
+    min-height: calc(100dvh - var(--rawaj-header-height, 3.75rem) - 1rem) !important;
+    border-inline: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .rawaj-messaging-v4 .rawaj-conversation-sidebar {
+    padding: 0.7rem !important;
+  }
+
+  .rawaj-messaging-v4 .rawaj-message-panel {
+    min-height: calc(100dvh - var(--rawaj-header-height, 3.75rem) - 1rem) !important;
+  }
+
+  .rawaj-messaging-v4 .rawaj-message-header {
+    padding: 0.72rem !important;
+  }
+
+  .rawaj-messaging-v4 .rawaj-message-stream {
+    padding: 0.75rem !important;
+  }
+
+  .rawaj-messaging-v4 .rawaj-message-bubble {
+    max-width: 86% !important;
+  }
+
+  .rawaj-messaging-v4 .rawaj-message-composer {
+    padding: 0.65rem !important;
+    padding-bottom: max(0.65rem, env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .rawaj-account-hub-v3 .rawaj-account-quick-links {
+    grid-template-columns: 1fr !important;
+  }
+
+  .rawaj-account-hub-v3 .rawaj-account-identity__actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .rawaj-communication-v2 .rawaj-communication-hero__metrics {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  :is(
+      .rawaj-auth-premium-v3,
+      .rawaj-account-hub-v3,
+      .rawaj-account-collection-v3,
+      .rawaj-account-activity-v3,
+      .rawaj-communication-v2,
+      .rawaj-messaging-v4
+    ) :is(button, a) {
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(
+      .rawaj-auth-premium-v3,
+      .rawaj-account-hub-v3,
+      .rawaj-account-collection-v3,
+      .rawaj-account-activity-v3,
+      .rawaj-communication-v2,
+      .rawaj-messaging-v4
+    ) *,
+  :is(
+      .rawaj-auth-premium-v3,
+      .rawaj-account-hub-v3,
+      .rawaj-account-collection-v3,
+      .rawaj-account-activity-v3,
+      .rawaj-communication-v2,
+      .rawaj-messaging-v4
+    ) *::before,
+  :is(
+      .rawaj-auth-premium-v3,
+      .rawaj-account-hub-v3,
+      .rawaj-account-collection-v3,
+      .rawaj-account-activity-v3,
+      .rawaj-communication-v2,
+      .rawaj-messaging-v4
+    ) *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
