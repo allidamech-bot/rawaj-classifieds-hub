@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import type { PlaceholderType } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface ListingCardImageProps {
   src?: string | null;
@@ -26,9 +27,16 @@ export function ListingCardImage({
   className,
 }: ListingCardImageProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const showPlaceholder = !src || failedSrc === src;
 
-  if (!src || failedSrc === src) {
-    return <PlaceholderArt type={placeholder} aspect={placeholderAspect} className={className} />;
+  if (showPlaceholder) {
+    return (
+      <PlaceholderArt
+        type={placeholder}
+        aspect={placeholderAspect}
+        className={cn("rawaj-listing-media rawaj-listing-media--placeholder", className)}
+      />
+    );
   }
 
   return (
@@ -42,7 +50,7 @@ export function ListingCardImage({
       height={height}
       draggable={false}
       onError={() => setFailedSrc(src)}
-      className={className}
+      className={cn("rawaj-listing-media rawaj-listing-media--image", className)}
     />
   );
 }
