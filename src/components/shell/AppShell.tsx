@@ -128,7 +128,7 @@ export function AppShell({
           {children}
         </div>
 
-        {config.showFooter ? <SiteFooter /> : null}
+        {config.showFooter ? <SiteFooter pathname={pathname} /> : null}
       </div>
 
       {isRouteNavigating ? (
