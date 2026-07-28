@@ -27,8 +27,8 @@ const items: NavItem[] = [
   {
     to: "/categories",
     section: "categories",
-    labelAr: "اكتشف",
-    labelEn: "Discover",
+    labelAr: "الأقسام",
+    labelEn: "Categories",
     icon: Grid3X3,
   },
   {
@@ -63,7 +63,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
       aria-label={text("التنقل الرئيسي", "Primary navigation")}
     >
       <div
-        className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid max-w-[30rem] grid-cols-5 items-end px-1.5 pb-1 pt-1.5"
+        className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid grid-cols-5 items-end"
         role="list"
       >
         {items.map((item) => {
@@ -91,21 +91,18 @@ export function BottomDock({ pathname }: BottomDockProps) {
               search={item.to === "/chats" ? {} : undefined}
               preload="intent"
               role="listitem"
+              data-section={item.section}
               data-active={active}
               data-primary={item.primary === true}
               data-badge-count={badgeCount > 0 ? badgeCount : undefined}
-              className={`rawaj-dock-item relative flex min-h-[3.6rem] min-w-0 flex-col items-center justify-end gap-1 rounded-[0.85rem] px-1 pb-1.5 pt-1 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
-                item.primary ? "text-brand-orange" : ""
-              }`}
+              className="rawaj-dock-item relative flex min-w-0 flex-col items-center justify-end active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
               aria-label={accessibleLabel}
               aria-current={active ? "page" : undefined}
             >
               <span
                 data-active={active && !item.primary}
                 className={`relative grid place-items-center ${
-                  item.primary
-                    ? "rawaj-dock-create -mt-3 h-11 w-11 rounded-[1rem] ring-[3px] ring-card"
-                    : "rawaj-dock-icon h-8 w-9 rounded-xl"
+                  item.primary ? "rawaj-dock-create ring-[3px] ring-card" : "rawaj-dock-icon rounded-xl"
                 }`}
               >
                 <Icon
@@ -123,7 +120,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
                 ) : null}
               </span>
               <span
-                className={`rawaj-bottom-dock__label max-w-full truncate text-xs leading-tight ${
+                className={`rawaj-bottom-dock__label max-w-full truncate ${
                   active || item.primary ? "font-bold" : "font-medium"
                 }`}
               >
