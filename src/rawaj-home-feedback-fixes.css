@@ -1,0 +1,165 @@
+/* RAWAJ homepage review refinements
+   Scoped strictly to the approved home route. */
+
+.rawaj-app-shell[data-resolved-pathname="/"] {
+  --rawaj-approved-bg: #2b2c2e;
+  --rawaj-approved-bg-deep: #222326;
+  --rawaj-approved-surface: #333437;
+  --rawaj-approved-surface-strong: #3a3b3e;
+  --rawaj-approved-surface-soft: #292a2d;
+  --rawaj-approved-text: #f1efec;
+  --rawaj-approved-text-muted: #b9b5b0;
+  --rawaj-approved-border: rgba(255, 255, 255, 0.1);
+  color: var(--rawaj-approved-text);
+  background:
+    radial-gradient(circle at 82% 10%, rgba(79, 91, 128, 0.08), transparent 28rem),
+    linear-gradient(180deg, #303134 0%, #2b2c2e 42%, #27282a 100%) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__page,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__content,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-home {
+  background: transparent !important;
+}
+
+/* Do not reserve a bright blank advertising block before an ad exists. */
+.rawaj-app-shell[data-resolved-pathname="/"] aside[data-placement-page="home"][aria-hidden="true"],
+.rawaj-app-shell[data-resolved-pathname="/"] aside[data-placement-page="home"][data-placement-loading="true"] {
+  display: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] aside[data-placement-page="home"] {
+  color: var(--rawaj-approved-text);
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] aside[data-placement-page="home"] .rawaj-ad-placement-skeleton {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: linear-gradient(145deg, #343538, #2a2b2e) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+}
+
+/* The mobile header must belong to the charcoal system, never a white capsule. */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-floating-header-shell {
+  margin-block: 0.55rem 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.095);
+  border-radius: 21px;
+  color: var(--rawaj-approved-text);
+  background: rgba(48, 49, 52, 0.96) !important;
+  box-shadow:
+    0 16px 34px rgba(10, 10, 12, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  backdrop-filter: blur(20px) saturate(112%);
+  -webkit-backdrop-filter: blur(20px) saturate(112%);
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-brand-mark {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #3a3b3e !important;
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-brand-lockup .font-display {
+  color: #eeeae6 !important;
+  font-weight: 700;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-action,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-home-menu-action,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-location {
+  color: #d2ceca !important;
+  border-color: rgba(255, 255, 255, 0.085) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+/* A dark optical field behind hero copy keeps it readable over the aurora. */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-hero::after {
+  inset: 30% 0 0;
+  height: auto;
+  background:
+    radial-gradient(ellipse at 50% 62%, rgba(17, 17, 23, 0.38), transparent 48%),
+    linear-gradient(180deg, rgba(12, 13, 20, 0.02) 0%, rgba(12, 13, 20, 0.6) 48%, rgba(12, 13, 20, 0.94) 100%);
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-hero__kicker {
+  padding: 0.38rem 0.72rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  color: #e4dfda;
+  background: rgba(19, 19, 25, 0.45);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-hero h1 {
+  color: #f5f1ec;
+  font-size: clamp(1.72rem, 7.4vw, 3.45rem);
+  font-weight: 700;
+  line-height: 1.22;
+  letter-spacing: -0.025em;
+  text-shadow:
+    0 3px 18px rgba(0, 0, 0, 0.78),
+    0 1px 2px rgba(0, 0, 0, 0.72);
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-hero__content > p {
+  color: rgba(241, 237, 232, 0.86);
+  font-weight: 500;
+  line-height: 1.75;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.74);
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-section-header h2,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-listing-card h3,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-ad__copy strong,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-safety strong {
+  color: #eeeae6;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-listing-card__heading > strong,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-mini-card small {
+  color: #f0d9e6;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+/* Active navigation uses a subtle lighter charcoal, not a white tile. */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-bottom-nav-shell {
+  background: rgba(43, 44, 47, 0.96) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-bottom-nav-shell .rawaj-dock-item[data-active="true"]:not([data-primary="true"]) {
+  color: #f3c9df !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 8px 18px rgba(0, 0, 0, 0.12) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-bottom-nav-shell .rawaj-dock-item[data-active="true"] .rawaj-dock-icon {
+  color: #f7d7e7 !important;
+  background: rgba(213, 72, 158, 0.12) !important;
+  box-shadow: inset 0 0 0 1px rgba(232, 116, 185, 0.12) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-bottom-nav-shell .rawaj-dock-item[data-active="true"] .rawaj-bottom-dock__label {
+  color: #f3c9df !important;
+}
+
+@media (max-width: 63.99rem) {
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-approved-home__container {
+    padding-top: 0.35rem;
+  }
+}
