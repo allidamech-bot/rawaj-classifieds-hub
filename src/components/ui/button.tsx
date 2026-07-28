@@ -9,17 +9,24 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-brand-orange text-brand-orange-foreground hover:bg-brand-orange/92",
-        accent: "bg-brand-orange text-brand-orange-foreground hover:bg-brand-orange/92",
-        brand: "bg-primary text-primary-foreground hover:bg-primary/92",
-        soft: "border border-border bg-muted-surface text-primary hover:border-primary/20 hover:bg-secondary",
+        default:
+          "border border-white/10 bg-[var(--rawaj-action-primary)] text-[var(--rawaj-action-primary-foreground)] shadow-[0_10px_24px_rgba(155,40,111,0.24)] hover:bg-[var(--rawaj-action-primary-hover)]",
+        accent:
+          "border border-white/10 bg-[var(--rawaj-action-coral)] text-white shadow-[0_10px_24px_rgba(194,68,49,0.2)] hover:bg-[var(--rawaj-action-coral-hover)]",
+        brand:
+          "border border-white/10 bg-[var(--rawaj-action-brand)] text-white shadow-[0_10px_24px_rgba(96,64,168,0.22)] hover:bg-[var(--rawaj-action-brand-hover)]",
+        soft:
+          "border border-[var(--rawaj-border-strong)] bg-[var(--rawaj-muted-surface)] text-[var(--rawaj-text-secondary)] hover:border-[var(--rawaj-border-active)] hover:bg-[var(--rawaj-surface-active)]",
         success: "bg-emerald-trust text-emerald-trust-foreground hover:bg-emerald-trust/92",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-input bg-card text-foreground hover:border-primary/25 hover:bg-muted-surface",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "text-foreground hover:bg-muted-surface",
-        link: "min-h-0 rounded-none px-0 py-0 text-primary underline-offset-4 hover:underline",
+          "border border-[var(--rawaj-border-strong)] bg-transparent text-[var(--rawaj-text-primary)] hover:border-[var(--rawaj-border-active)] hover:bg-[var(--rawaj-surface-active)]",
+        secondary:
+          "border border-[var(--rawaj-border)] bg-[var(--rawaj-muted-surface)] text-[var(--rawaj-text-primary)] hover:bg-[var(--rawaj-surface-active)]",
+        ghost:
+          "text-[var(--rawaj-text-secondary)] hover:bg-[var(--rawaj-surface-active)] hover:text-[var(--rawaj-text-primary)]",
+        link:
+          "min-h-0 rounded-none px-0 py-0 text-[var(--rawaj-link)] underline-offset-4 hover:underline",
       },
       size: {
         default: "h-[var(--rawaj-control-height)]",
