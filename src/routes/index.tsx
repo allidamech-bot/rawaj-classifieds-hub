@@ -38,6 +38,7 @@ import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 import "../rawaj-home-approved.css";
+import "../rawaj-home-final.css";
 
 const HOME_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
 const HOME_DESCRIPTION =
@@ -54,7 +55,47 @@ const categoryIcons: Record<string, LucideIcon> = {
   business: Store,
 };
 
-const categoryTones = ["coral", "cyan", "violet", "blue", "mint", "amber"] as const;
+const quickShortcuts: Array<{
+  node: string;
+  labelAr: string;
+  labelEn: string;
+  descriptionAr: string;
+  descriptionEn: string;
+  icon: LucideIcon;
+}> = [
+  {
+    node: "realestate",
+    labelAr: "العقارات",
+    labelEn: "Real estate",
+    descriptionAr: "بيع وإيجار",
+    descriptionEn: "Sale and rent",
+    icon: Building2,
+  },
+  {
+    node: "cars",
+    labelAr: "السيارات",
+    labelEn: "Cars",
+    descriptionAr: "مركبات وقطع",
+    descriptionEn: "Vehicles and parts",
+    icon: Car,
+  },
+  {
+    node: "electronics",
+    labelAr: "الإلكترونيات",
+    labelEn: "Electronics",
+    descriptionAr: "أجهزة وتقنيات",
+    descriptionEn: "Devices and tech",
+    icon: Laptop,
+  },
+  {
+    node: "services",
+    labelAr: "الخدمات",
+    labelEn: "Services",
+    descriptionAr: "خبرات وأعمال",
+    descriptionEn: "Skills and work",
+    icon: Wrench,
+  },
+];
 
 export const Route = createFileRoute("/")({
   loader: loadPublicHomePageData,
@@ -94,19 +135,21 @@ function HomePage() {
   return (
     <>
       <AppHeader />
-      <main className="rawaj-approved-home">
+      <main className="rawaj-home-v2">
         <PageTransition>
-          <div className="rawaj-approved-home__container">
-            <ApprovedHero
+          <div className="rawaj-home-v2__container">
+            <HomeLocationBar text={text} />
+            <HomeHero
               searchValue={searchValue}
               onSearchValueChange={setSearchValue}
               onSubmit={handleSearch}
               text={text}
             />
+            <HomeQuickShortcuts text={text} />
 
             {categoryLoadFailed ? (
               <EmptyState
-                className="rawaj-approved-home__load-state"
+                className="rawaj-home-v2__load-state"
                 title={text("تعذر تحميل أقسام السوق", "Marketplace categories could not be loaded")}
                 description={text(
                   "الإعلانات ما زالت متاحة. أعد المحاولة لاستعادة التنقل السريع بين الأقسام.",
@@ -115,14 +158,12 @@ function HomePage() {
                 action={retryAction}
               />
             ) : (
-              <ApprovedCategories worlds={categoryWorlds} language={language} text={text} />
+              <HomeCategories worlds={categoryWorlds} language={language} text={text} />
             )}
-
-            <ApprovedAdBanner text={text} />
 
             {listingLoadFailed ? (
               <EmptyState
-                className="rawaj-approved-home__load-state"
+                className="rawaj-home-v2__load-state"
                 title={text("تعذر تحميل إعلانات السوق", "Marketplace listings could not be loaded")}
                 description={text(
                   "الأقسام ما زالت متاحة. أعد المحاولة لتحميل أحدث الإعلانات.",
@@ -132,17 +173,18 @@ function HomePage() {
               />
             ) : (
               <>
-                <ApprovedFeaturedListings
+                <HomeFeaturedListings
                   listings={featuredListings}
                   language={language}
                   text={text}
                 />
-                <ApprovedLatestListings listings={latestListings} language={language} text={text} />
+                <HomePromotionBanner text={text} />
+                <HomeLatestListings listings={latestListings} language={language} text={text} />
               </>
             )}
 
-            <ApprovedSafetyStrip text={text} />
-            <ApprovedMobileFooter text={text} />
+            <HomeSafetyStrip text={text} />
+            <HomeMobileFooter text={text} />
           </div>
         </PageTransition>
       </main>
@@ -150,40 +192,55 @@ function HomePage() {
   );
 }
 
-interface ApprovedHeroProps {
+function HomeLocationBar({ text }: { text: (ar: string, en: string) => string }) {
+  return (
+    <div className="rawaj-home-location-row">
+      <Link to="/listings" search={{ open_filters: true }} className="rawaj-home-location-pill">
+        <MapPin aria-hidden="true" />
+        <span>
+          <small>{text("موقع التصفح", "Browse location")}</small>
+          <strong>{text("كل سوريا", "All Syria")}</strong>
+        </span>
+        <ChevronLeft aria-hidden="true" />
+      </Link>
+    </div>
+  );
+}
+
+interface HomeHeroProps {
   searchValue: string;
   onSearchValueChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   text: (ar: string, en: string) => string;
 }
 
-function ApprovedHero({ searchValue, onSearchValueChange, onSubmit, text }: ApprovedHeroProps) {
+function HomeHero({ searchValue, onSearchValueChange, onSubmit, text }: HomeHeroProps) {
   return (
-    <section className="rawaj-approved-hero" aria-labelledby="rawaj-approved-home-title">
-      <div className="rawaj-approved-hero__aurora" aria-hidden="true">
+    <section className="rawaj-home-hero" aria-labelledby="rawaj-home-title">
+      <div className="rawaj-home-hero__aurora" aria-hidden="true">
         <span data-wave="one" />
         <span data-wave="two" />
         <span data-wave="three" />
       </div>
 
-      <div className="rawaj-approved-hero__content">
-        <span className="rawaj-approved-hero__kicker">
+      <div className="rawaj-home-hero__content">
+        <span className="rawaj-home-hero__kicker">
           <Sparkles aria-hidden="true" />
-          {text("السوق الأقرب إليك", "Your closest marketplace")}
+          {text("بيع، اعرض، واكتشف", "Sell, post, and discover")}
         </span>
-        <h1 id="rawaj-approved-home-title">{text("أهلًا بك في رواج", "Welcome to RAWAJ")}</h1>
+        <h1 id="rawaj-home-title">{text("كل ما تحتاجه… في رواج", "Everything you need… on RAWAJ")}</h1>
         <p>
           {text(
-            "السوق العربي للإعلانات المبوبة في سوريا — بيع، اعرض، واكتشف بسهولة.",
-            "Syria's Arabic classifieds marketplace — sell, post, and discover with ease.",
+            "سوق سوري للأفراد والمتاجر والخدمات في مكان واحد.",
+            "A Syrian marketplace for people, stores, and services in one place.",
           )}
         </p>
 
-        <form className="rawaj-approved-search" role="search" onSubmit={onSubmit}>
-          <label htmlFor="rawaj-approved-search-input">
+        <form className="rawaj-home-search" role="search" onSubmit={onSubmit}>
+          <label htmlFor="rawaj-home-search-input">
             <Search aria-hidden="true" />
             <input
-              id="rawaj-approved-search-input"
+              id="rawaj-home-search-input"
               name="q"
               type="search"
               inputMode="search"
@@ -192,29 +249,21 @@ function ApprovedHero({ searchValue, onSearchValueChange, onSubmit, text }: Appr
               dir="auto"
               value={searchValue}
               onChange={(event) => onSearchValueChange(event.target.value)}
-              placeholder={text("ابحث عن أي شيء...", "Search for anything...")}
+              placeholder={text("ماذا تبحث عنه؟", "What are you looking for?")}
               aria-label={text("ابحث في رواج", "Search RAWAJ")}
             />
           </label>
           <button type="submit">{text("بحث", "Search")}</button>
         </form>
 
-        <div className="rawaj-approved-hero__actions" aria-label={text("إجراءات سريعة", "Quick actions")}>
-          <Link to="/add-listing" className="rawaj-approved-hero__primary-action">
+        <div className="rawaj-home-hero__actions" aria-label={text("إجراءات رئيسية", "Primary actions")}>
+          <Link to="/add-listing" className="rawaj-home-hero__primary-action">
             <Plus aria-hidden="true" />
             {text("أضف إعلان", "Post listing")}
           </Link>
-          <Link to="/categories">
+          <Link to="/categories" className="rawaj-home-hero__secondary-action">
             <Grid3X3 aria-hidden="true" />
             {text("تصفح الأقسام", "Browse categories")}
-          </Link>
-          <Link to="/listings" search={{ q: "عقار" }}>
-            <Building2 aria-hidden="true" />
-            {text("العقارات", "Real estate")}
-          </Link>
-          <Link to="/listings" search={{ q: "سيارة" }}>
-            <Car aria-hidden="true" />
-            {text("السيارات", "Cars")}
           </Link>
         </div>
       </div>
@@ -222,7 +271,29 @@ function ApprovedHero({ searchValue, onSearchValueChange, onSubmit, text }: Appr
   );
 }
 
-function ApprovedCategories({
+function HomeQuickShortcuts({ text }: { text: (ar: string, en: string) => string }) {
+  return (
+    <nav className="rawaj-home-shortcuts" aria-label={text("أقسام سريعة", "Quick categories")}>
+      {quickShortcuts.map((shortcut) => {
+        const Icon = shortcut.icon;
+        return (
+          <Link key={shortcut.node} to="/categories" search={{ node: shortcut.node }}>
+            <span aria-hidden="true">
+              <Icon />
+            </span>
+            <div>
+              <strong>{text(shortcut.labelAr, shortcut.labelEn)}</strong>
+              <small>{text(shortcut.descriptionAr, shortcut.descriptionEn)}</small>
+            </div>
+            <ChevronLeft aria-hidden="true" />
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+function HomeCategories({
   worlds,
   language,
   text,
@@ -234,12 +305,10 @@ function ApprovedCategories({
   if (worlds.length === 0) return null;
 
   return (
-    <section
-      className="rawaj-approved-section rawaj-approved-categories"
-      aria-labelledby="rawaj-approved-categories-title"
-    >
-      <ApprovedSectionHeader
-        title={<span id="rawaj-approved-categories-title">{text("تصفح الفئات", "Browse categories")}</span>}
+    <section className="rawaj-home-section rawaj-home-categories" aria-labelledby="rawaj-home-categories-title">
+      <HomeSectionHeader
+        title={<span id="rawaj-home-categories-title">{text("كل الأقسام", "All categories")}</span>}
+        eyebrow={text("اكتشف السوق", "Explore the market")}
         action={
           <Link to="/categories">
             {text("عرض الكل", "View all")}
@@ -247,53 +316,47 @@ function ApprovedCategories({
           </Link>
         }
       />
-      <div className="rawaj-approved-categories__grid">
-        {worlds.slice(0, 6).map((world, index) => (
-          <ApprovedCategoryTile
-            key={world.id}
-            world={world}
-            language={language}
-            tone={categoryTones[index % categoryTones.length]}
-            text={text}
-          />
+      <div className="rawaj-home-categories__grid">
+        {worlds.slice(0, 6).map((world) => (
+          <HomeCategoryTile key={world.id} world={world} language={language} text={text} />
         ))}
       </div>
     </section>
   );
 }
 
-function ApprovedCategoryTile({
+function HomeCategoryTile({
   world,
   language,
-  tone,
   text,
 }: {
   world: HomeCategoryWorld;
   language: "ar" | "en";
-  tone: (typeof categoryTones)[number];
   text: (ar: string, en: string) => string;
 }) {
   const Icon = categoryIcons[world.iconKey ?? ""] ?? Grid3X3;
   const label = language === "en" ? world.nameEn || world.nameAr : world.nameAr;
+  const description =
+    language === "en"
+      ? world.descriptionEn || world.descriptionAr || text("استكشف الإعلانات", "Explore listings")
+      : world.descriptionAr || text("استكشف الإعلانات", "Explore listings");
   const content = (
     <>
-      <span className="rawaj-approved-category-tile__icon" aria-hidden="true">
+      <span className="rawaj-home-category-tile__icon" aria-hidden="true">
         <Icon />
       </span>
-      <strong>{label}</strong>
-      <small>{text("استكشف الإعلانات", "Explore listings")}</small>
+      <div>
+        <strong>{label}</strong>
+        <small>{description}</small>
+      </div>
+      <ChevronLeft className="rawaj-home-category-tile__arrow" aria-hidden="true" />
     </>
   );
-  const className = "rawaj-approved-category-tile";
+  const className = "rawaj-home-category-tile";
 
   if (world.target.kind === "legacy") {
     return (
-      <Link
-        to="/category/$slug"
-        params={{ slug: world.target.slug }}
-        className={className}
-        data-tone={tone}
-      >
+      <Link to="/category/$slug" params={{ slug: world.target.slug }} className={className}>
         {content}
       </Link>
     );
@@ -301,50 +364,20 @@ function ApprovedCategoryTile({
 
   if (world.target.kind === "directory") {
     return (
-      <Link
-        to="/categories"
-        search={{ node: world.target.node }}
-        className={className}
-        data-tone={tone}
-      >
+      <Link to="/categories" search={{ node: world.target.node }} className={className}>
         {content}
       </Link>
     );
   }
 
   return (
-    <Link to="/listings" search={world.target.search} className={className} data-tone={tone}>
+    <Link to="/listings" search={world.target.search} className={className}>
       {content}
     </Link>
   );
 }
 
-function ApprovedAdBanner({ text }: { text: (ar: string, en: string) => string }) {
-  return (
-    <section className="rawaj-approved-ad" aria-label={text("مساحة إعلانية", "Advertising space")}>
-      <div className="rawaj-approved-ad__art" aria-hidden="true">
-        <span />
-        <Megaphone />
-      </div>
-      <div className="rawaj-approved-ad__copy">
-        <strong>{text("مساحة إعلانية مميزة", "Premium advertising space")}</strong>
-        <p>
-          {text(
-            "روّج إعلانك ووصل إلى جمهور أكبر داخل رواج.",
-            "Promote your listing to a wider RAWAJ audience.",
-          )}
-        </p>
-        <Link to="/support">{text("تواصل معنا", "Contact us")}</Link>
-      </div>
-      <div className="rawaj-approved-ad__slot" aria-hidden="true">
-        <span>{text("مساحة إعلانية", "Ad space")}</span>
-        <small>728 × 90</small>
-      </div>
-    </section>
-  );
-}
-
-function ApprovedFeaturedListings({
+function HomeFeaturedListings({
   listings,
   language,
   text,
@@ -356,12 +389,10 @@ function ApprovedFeaturedListings({
   if (listings.length === 0) return null;
 
   return (
-    <section
-      className="rawaj-approved-section rawaj-approved-featured"
-      aria-labelledby="rawaj-approved-featured-title"
-    >
-      <ApprovedSectionHeader
-        title={<span id="rawaj-approved-featured-title">{text("إعلانات مميزة", "Featured listings")}</span>}
+    <section className="rawaj-home-section rawaj-home-featured" aria-labelledby="rawaj-home-featured-title">
+      <HomeSectionHeader
+        title={<span id="rawaj-home-featured-title">{text("إعلانات مميزة", "Featured listings")}</span>}
+        eyebrow={text("مختارات رواج", "RAWAJ picks")}
         action={
           <Link to="/listings">
             {text("عرض الكل", "View all")}
@@ -369,9 +400,9 @@ function ApprovedFeaturedListings({
           </Link>
         }
       />
-      <div className="rawaj-approved-featured__grid">
+      <div className="rawaj-home-featured__grid">
         {listings.slice(0, 3).map((listing, index) => (
-          <ApprovedListingCard
+          <HomeListingCard
             key={listing.id}
             listing={listing}
             language={language}
@@ -384,7 +415,7 @@ function ApprovedFeaturedListings({
   );
 }
 
-function ApprovedListingCard({
+function HomeListingCard({
   listing,
   language,
   text,
@@ -396,9 +427,9 @@ function ApprovedListingCard({
   priority?: boolean;
 }) {
   return (
-    <article className="rawaj-approved-listing-card" data-featured={listing.isFeatured || undefined}>
+    <article className="rawaj-home-listing-card" data-featured={listing.isFeatured || undefined}>
       <Link to="/listings/$id" params={{ id: listing.id }}>
-        <div className="rawaj-approved-listing-card__media">
+        <div className="rawaj-home-listing-card__media">
           <ListingCardImage
             src={listing.primaryImageUrl}
             alt={listing.title}
@@ -409,25 +440,26 @@ function ApprovedListingCard({
             width={960}
             height={600}
           />
-          <span className="rawaj-approved-listing-card__favorite" aria-hidden="true">
+          {!listing.primaryImageUrl ? (
+            <span className="rawaj-home-listing-card__no-image">{text("لا توجد صورة", "No image")}</span>
+          ) : null}
+          <span className="rawaj-home-listing-card__favorite" aria-hidden="true">
             <Heart />
           </span>
           {listing.isFeatured ? (
-            <span className="rawaj-approved-listing-card__badge">{text("مميز", "Featured")}</span>
+            <span className="rawaj-home-listing-card__badge">{text("مميز", "Featured")}</span>
           ) : null}
         </div>
-        <div className="rawaj-approved-listing-card__body">
-          <div className="rawaj-approved-listing-card__heading">
-            <div>
-              <span>{categoryName(listing.categoryId, listing.categoryNameAr, language)}</span>
-              <h3>{listing.title}</h3>
-            </div>
-            <strong>
-              {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
-            </strong>
-          </div>
+        <div className="rawaj-home-listing-card__body">
+          <span className="rawaj-home-listing-card__category">
+            {categoryName(listing.categoryId, listing.categoryNameAr, language)}
+          </span>
+          <h3>{listing.title}</h3>
+          <strong className="rawaj-home-listing-card__price">
+            {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
+          </strong>
           <p>{listing.description}</p>
-          <div className="rawaj-approved-listing-card__meta">
+          <div className="rawaj-home-listing-card__meta">
             <span>
               <MapPin aria-hidden="true" />
               {listingLocationDisplay(listing, language)}
@@ -443,7 +475,26 @@ function ApprovedListingCard({
   );
 }
 
-function ApprovedLatestListings({
+function HomePromotionBanner({ text }: { text: (ar: string, en: string) => string }) {
+  return (
+    <section className="rawaj-home-promotion" aria-label={text("الترويج في رواج", "Promote on RAWAJ")}>
+      <span className="rawaj-home-promotion__icon" aria-hidden="true">
+        <Megaphone />
+      </span>
+      <div>
+        <small>{text("لأصحاب المتاجر والشركات", "For stores and businesses")}</small>
+        <strong>{text("خلّي إعلانك يوصل لعدد أكبر", "Reach a wider audience")}</strong>
+        <p>{text("مساحات ترويجية أنيقة داخل رواج عند توفرها.", "Elegant promotional placements when available.")}</p>
+      </div>
+      <Link to="/support">
+        {text("تواصل معنا", "Contact us")}
+        <ChevronLeft aria-hidden="true" />
+      </Link>
+    </section>
+  );
+}
+
+function HomeLatestListings({
   listings,
   language,
   text,
@@ -453,12 +504,10 @@ function ApprovedLatestListings({
   text: (ar: string, en: string) => string;
 }) {
   return (
-    <section
-      className="rawaj-approved-section rawaj-approved-latest"
-      aria-labelledby="rawaj-approved-latest-title"
-    >
-      <ApprovedSectionHeader
-        title={<span id="rawaj-approved-latest-title">{text("وصل حديثًا", "Just arrived")}</span>}
+    <section className="rawaj-home-section rawaj-home-latest" aria-labelledby="rawaj-home-latest-title">
+      <HomeSectionHeader
+        title={<span id="rawaj-home-latest-title">{text("وصل حديثًا", "Just arrived")}</span>}
+        eyebrow={text("أحدث الإعلانات", "Latest listings")}
         action={
           <Link to="/listings">
             {text("تصفح السوق", "Browse market")}
@@ -468,15 +517,15 @@ function ApprovedLatestListings({
       />
 
       {listings.length > 0 ? (
-        <div className="rawaj-approved-latest__rail">
+        <div className="rawaj-home-latest__rail">
           {listings.map((listing) => (
             <Link
               key={listing.id}
               to="/listings/$id"
               params={{ id: listing.id }}
-              className="rawaj-approved-mini-card"
+              className="rawaj-home-mini-card"
             >
-              <div className="rawaj-approved-mini-card__media">
+              <div className="rawaj-home-mini-card__media">
                 <ListingCardImage
                   src={listing.primaryImageUrl}
                   alt={listing.title}
@@ -502,31 +551,23 @@ function ApprovedLatestListings({
           ))}
         </div>
       ) : (
-        <div className="rawaj-approved-home__empty">
-          {text(
-            "لا توجد إعلانات معتمدة للعرض الآن.",
-            "No reviewed listings are available right now.",
-          )}
+        <div className="rawaj-home-v2__empty">
+          {text("لا توجد إعلانات معتمدة للعرض الآن.", "No reviewed listings are available right now.")}
         </div>
       )}
     </section>
   );
 }
 
-function ApprovedSafetyStrip({ text }: { text: (ar: string, en: string) => string }) {
+function HomeSafetyStrip({ text }: { text: (ar: string, en: string) => string }) {
   return (
-    <section className="rawaj-approved-safety" aria-label={text("التعامل الآمن", "Safe trading")}>
-      <span className="rawaj-approved-safety__icon" aria-hidden="true">
+    <section className="rawaj-home-safety" aria-label={text("التعامل الآمن", "Safe trading")}>
+      <span className="rawaj-home-safety__icon" aria-hidden="true">
         <ShieldCheck />
       </span>
       <div>
         <strong>{text("تعامل بأمان", "Trade safely")}</strong>
-        <p>
-          {text(
-            "افحص السلعة قبل الدفع، وقابل البائع في مكان آمن.",
-            "Inspect before paying and meet in a safe place.",
-          )}
-        </p>
+        <p>{text("افحص السلعة قبل الدفع، وقابل البائع في مكان آمن.", "Inspect before paying and meet safely.")}</p>
       </div>
       <Link to="/safety">
         {text("دليل الأمان", "Safety guide")}
@@ -536,13 +577,13 @@ function ApprovedSafetyStrip({ text }: { text: (ar: string, en: string) => strin
   );
 }
 
-function ApprovedMobileFooter({ text }: { text: (ar: string, en: string) => string }) {
+function HomeMobileFooter({ text }: { text: (ar: string, en: string) => string }) {
   return (
-    <footer className="rawaj-approved-mobile-footer">
+    <footer className="rawaj-home-mobile-footer">
       <Link to="/" aria-label={text("رواج — الرئيسية", "RAWAJ — Home")}>
         <BrandLockup inverse />
       </Link>
-      <p>{text("كل ما تحتاجه... في مكان واحد", "Everything you need, in one place")}</p>
+      <p>{text("كل ما تحتاجه… في مكان واحد", "Everything you need, in one place")}</p>
       <nav aria-label={text("روابط التذييل", "Footer links")}>
         <Link to="/more">{text("من نحن", "About")}</Link>
         <Link to="/support">{text("تواصل", "Contact")}</Link>
@@ -554,10 +595,21 @@ function ApprovedMobileFooter({ text }: { text: (ar: string, en: string) => stri
   );
 }
 
-function ApprovedSectionHeader({ title, action }: { title: ReactNode; action: ReactNode }) {
+function HomeSectionHeader({
+  title,
+  eyebrow,
+  action,
+}: {
+  title: ReactNode;
+  eyebrow: string;
+  action: ReactNode;
+}) {
   return (
-    <header className="rawaj-approved-section-header">
-      <h2>{title}</h2>
+    <header className="rawaj-home-section-header">
+      <div>
+        <small>{eyebrow}</small>
+        <h2>{title}</h2>
+      </div>
       <div>{action}</div>
     </header>
   );
