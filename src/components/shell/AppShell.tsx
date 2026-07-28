@@ -75,6 +75,21 @@ function useViewportState() {
   return keyboardOpen;
 }
 
+function useDarkBrowserChrome() {
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.colorScheme = "dark";
+
+    let themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (!themeMeta) {
+      themeMeta = document.createElement("meta");
+      themeMeta.name = "theme-color";
+      document.head.appendChild(themeMeta);
+    }
+    themeMeta.content = "#242529";
+  }, []);
+}
+
 export function AppShell({
   pathname,
   children,
@@ -86,6 +101,7 @@ export function AppShell({
   const config = resolveAppShellConfig(pathname);
   const keyboardOpen = useViewportState();
   const { text } = useUiPreferences();
+  useDarkBrowserChrome();
 
   return (
     <div
