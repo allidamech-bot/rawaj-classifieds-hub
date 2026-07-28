@@ -34,7 +34,7 @@ const items: NavItem[] = [
   {
     to: "/add-listing",
     section: "addListing",
-    labelAr: "أضف إعلان",
+    labelAr: "إعلان",
     labelEn: "Post",
     icon: Plus,
     primary: true,
