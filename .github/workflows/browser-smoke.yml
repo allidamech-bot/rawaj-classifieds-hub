@@ -58,6 +58,10 @@ jobs:
           RAWAJ_E2E_API_PROXY_TARGET: "https://rawaj-classifieds-hub.allidamech.workers.dev"
           VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
           VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
+          # Browser smoke needs the Auth UI enabled, but never performs a real Auth request.
+          # These deterministic public-only values keep tests isolated from Production secrets.
+          VITE_SUPABASE_URL: "https://rawaj-browser-smoke.supabase.co"
+          VITE_SUPABASE_ANON_KEY: "browser-smoke-public-anon-key"
         run: npm run test:e2e:smoke
 
       - name: Upload browser diagnostics
