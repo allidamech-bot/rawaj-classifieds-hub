@@ -155,7 +155,9 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
         </div>
       </header>
       <OfflineNotice />
-      <PublicAdPlacementSlot placementPage={resolveAdPlacementPage(pathname)} />
+      {pathname === "/" ? null : (
+        <PublicAdPlacementSlot placementPage={resolveAdPlacementPage(pathname)} />
+      )}
     </>
   );
 }
