@@ -12,6 +12,7 @@ import "../rawaj-shell-system-v2.css";
 import "../rawaj-discovery-system-v3.css";
 import "../rawaj-listing-studio-system-v5.css";
 import "../rawaj-personal-space-system-v5.css";
+import "../rawaj-final-site-system-v6.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import communicationCenterV3Css from "../communication-center-v3.css?url";
 import messagingV4Css from "../messaging-v4.css?url";
@@ -111,8 +112,15 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
       "/profile",
     ].includes(normalizedPathname),
     ownerStore: normalizedPathname === "/profile/listings",
-    trustSupport: ["/more", "/support", "/safety", "/terms", "/privacy"].includes(
-      normalizedPathname,
-    ),
+    trustSupport: [
+      "/more",
+      "/support",
+      "/safety",
+      "/terms",
+      "/privacy",
+      "/prohibited",
+      "/verification",
+      "/promotion",
+    ].includes(normalizedPathname),
   };
 }
