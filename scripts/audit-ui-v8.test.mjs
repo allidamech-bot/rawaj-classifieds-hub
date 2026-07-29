@@ -14,6 +14,7 @@ const [
   adminCorrections,
   activityCorrections,
   publicCorrections,
+  authCorrections,
   admin,
   adminOverview,
   adSlot,
@@ -21,6 +22,10 @@ const [
   categoriesDiscovery,
   storefrontIdentity,
   ownerWorkspace,
+  loginRoute,
+  resetRoute,
+  callbackRoute,
+  feedbackState,
 ] = await Promise.all([
   readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/rawaj-audit-corrections-v8.css", import.meta.url), "utf8"),
@@ -33,6 +38,7 @@ const [
   readFile(new URL("../src/admin-command-center-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/personal-activity-system-v10.css", import.meta.url), "utf8"),
   readFile(new URL("../src/public-journey-audit-v11.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/auth-feedback-system-v12.css", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/admin.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/admin.index.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
@@ -40,6 +46,10 @@ const [
   readFile(new URL("../src/features/categories/CategoriesListingDiscovery.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/storefront/StorefrontIdentityHero.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/storefront/OwnerStoreWorkspaceSummary.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/login.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/reset-password.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/auth.callback.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/feedback/FeedbackState.tsx", import.meta.url), "utf8"),
 ]);
 
 test("audited component corrections load after legacy recovery layers", () => {
@@ -54,6 +64,7 @@ test("audited component corrections load after legacy recovery layers", () => {
   const adminIndex = routeStyles.indexOf('import "../admin-command-center-v9.css";');
   const activityIndex = routeStyles.indexOf('import "../personal-activity-system-v10.css";');
   const publicIndex = routeStyles.indexOf('import "../public-journey-audit-v11.css";');
+  const authIndex = routeStyles.indexOf('import "../auth-feedback-system-v12.css";');
 
   for (const index of [
     recoveryIndex,
@@ -67,6 +78,7 @@ test("audited component corrections load after legacy recovery layers", () => {
     adminIndex,
     activityIndex,
     publicIndex,
+    authIndex,
   ]) {
     assert.notEqual(index, -1);
   }
@@ -80,6 +92,7 @@ test("audited component corrections load after legacy recovery layers", () => {
   assert.ok(adminIndex > adminWorkspaceIndex);
   assert.ok(activityIndex > adminIndex);
   assert.ok(publicIndex > activityIndex);
+  assert.ok(authIndex > publicIndex);
 });
 
 test("shell owns bottom navigation reserve without route-level double spacing", () => {
@@ -165,6 +178,38 @@ test("public listing seller offers and trust journeys use compact readable route
   assert.match(publicCorrections, /\.rawaj-support-panel :is\(input, textarea, select\)/);
   assert.match(publicCorrections, /data-resolved-pathname="\/promotion"/);
   assert.doesNotMatch(publicCorrections, /main\s+:is\(section, article, form/);
+});
+
+test("authentication recovery callback and feedback surfaces are explicit and accessible", () => {
+  assert.match(authCorrections, /data-resolved-pathname="\/login"/);
+  assert.match(authCorrections, /data-resolved-pathname="\/reset-password"/);
+  assert.match(authCorrections, /data-resolved-pathname="\/auth\/callback"/);
+  assert.match(authCorrections, /\.rawaj-feedback-state/);
+  assert.match(authCorrections, /@media \(max-width: 639px\)/);
+  assert.match(authCorrections, /:focus-visible/);
+  assert.match(authCorrections, /prefers-reduced-motion/);
+  assert.doesNotMatch(authCorrections, /main\s+:is\(section, article, form/);
+
+  assert.match(loginRoute, /rawaj-auth-audit-v12/);
+  assert.match(loginRoute, /role="tablist"/);
+  assert.match(loginRoute, /aria-selected=\{mode === "login"\}/);
+  assert.match(loginRoute, /rawaj-auth-password-toggle/);
+  assert.match(loginRoute, /data-tone="loading"/);
+  assert.match(loginRoute, /mobile-page-bottom/);
+
+  assert.match(resetRoute, /rawaj-auth-recovery-v4/);
+  assert.match(resetRoute, /rawaj-auth-recovery-card/);
+  assert.match(resetRoute, /mobile-page-bottom/);
+  assert.match(resetRoute, /role="status"/);
+  assert.match(resetRoute, /role="alert"/);
+  assert.doesNotMatch(resetRoute, /pb-24/);
+
+  assert.match(callbackRoute, /rawaj-auth-callback-v4/);
+  assert.match(callbackRoute, /aria-live="polite"/);
+  assert.match(callbackRoute, /aria-busy="true"/);
+
+  assert.match(feedbackState, /rawaj-feedback-state/);
+  assert.match(feedbackState, /data-tone=\{tone\}/);
 });
 
 test("admin navigation exposes visible, labelled previous and next controls", () => {
