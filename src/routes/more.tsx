@@ -21,6 +21,7 @@ import { TrustHubHero, TrustSectionHeader } from "@/features/trust/TrustSupportE
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 import { useAuth } from "@/lib/use-auth";
+import { resolveDisplayName } from "@/lib/cloudflare-auth";
 
 export const Route = createFileRoute("/more")({
   component: MorePage,
@@ -110,11 +111,7 @@ function MorePage() {
   const logoutInFlightRef = useRef(false);
   const isArabic = language === "ar";
   const profile = auth.profile;
-  const displayName =
-    profile?.businessName ||
-    profile?.displayName ||
-    user?.email ||
-    text("حساب رواج", "RAWAJ account");
+  const displayName = resolveDisplayName(profile, user?.email, text);
 
   async function handleLogout() {
     if (logoutInFlightRef.current) return;
@@ -186,7 +183,7 @@ function MorePage() {
 
   return (
     <div className="rawaj-trust-v2 rawaj-more-v2 min-h-dvh" dir={isArabic ? "rtl" : "ltr"}>
-      <AppHeader compact title={text("مساحتي", "My space")} />
+      <AppHeader compact />
 
       <main className="container-wide rawaj-account-command-v3 rawaj-content-stack mobile-page-bottom pb-8 pt-3 sm:pt-5">
         <TrustHubHero

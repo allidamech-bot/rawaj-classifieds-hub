@@ -193,7 +193,9 @@
       "202607200001_fix_owner_system_control_version_ambiguity.sql",
       "202607200002_admin_runtime_capability_gate_v1.sql",
       "202607200003_fix_admin_campaign_safety_version_ambiguity.sql",
-      "202607200004_fix_listing_generated_column_moderation_guard.sql"
+      "202607200004_fix_listing_generated_column_moderation_guard.sql",
+      "202607220003_complete_listing_taxonomy.sql",
+      "202607220004_fix_owner_draft_text_identifiers.sql"
     ],
     "manual": ["202607090004_reconcile_manual_production_hotfixes.sql"]
   }

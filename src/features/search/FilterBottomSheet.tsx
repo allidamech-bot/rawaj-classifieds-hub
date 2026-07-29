@@ -18,6 +18,9 @@ interface FilterBottomSheetProps {
   text: (ar: string, en: string) => string;
 }
 
+const COLLAPSED_SNAP_POINT = 0.62;
+const EXPANDED_SNAP_POINT = 0.94;
+
 export function FilterBottomSheet({
   open,
   onOpenChange,
@@ -27,10 +30,14 @@ export function FilterBottomSheet({
   children,
   text,
 }: FilterBottomSheetProps) {
-  const [activeSnapPoint, setActiveSnapPoint] = useState<number | string | null>(0.62);
+  const [activeSnapPoint, setActiveSnapPoint] = useState<number | string | null>(
+    COLLAPSED_SNAP_POINT,
+  );
+  const expanded = activeSnapPoint === EXPANDED_SNAP_POINT;
 
   useEffect(() => {
     if (!open) return;
+    setActiveSnapPoint(COLLAPSED_SNAP_POINT);
     return beginFilterDraftSession();
   }, [open]);
 
@@ -39,12 +46,16 @@ export function FilterBottomSheet({
       open={open}
       onOpenChange={onOpenChange}
       shouldScaleBackground={false}
-      snapPoints={[0.62, 0.94]}
+      snapPoints={[COLLAPSED_SNAP_POINT, EXPANDED_SNAP_POINT]}
       activeSnapPoint={activeSnapPoint}
       setActiveSnapPoint={setActiveSnapPoint}
       fadeFromIndex={1}
     >
-      <BottomSheetContent className="rawaj-filter-sheet" data-filter-state="draft">
+      <BottomSheetContent
+        className="rawaj-filter-sheet"
+        data-filter-state="draft"
+        data-expanded={expanded}
+      >
         <div className="rawaj-filter-sheet__header">
           <div>
             <BottomSheetTitle>{text("فلترة الإعلانات", "Filter listings")}</BottomSheetTitle>
@@ -57,17 +68,17 @@ export function FilterBottomSheet({
           <div className="rawaj-filter-sheet__header-actions">
             <button
               type="button"
-              onClick={() => setActiveSnapPoint(activeSnapPoint === 0.94 ? 0.62 : 0.94)}
+              onClick={() =>
+                setActiveSnapPoint(expanded ? COLLAPSED_SNAP_POINT : EXPANDED_SNAP_POINT)
+              }
               aria-label={
-                activeSnapPoint === 0.94
+                expanded
                   ? text("تصغير نافذة الفلاتر", "Collapse filter sheet")
                   : text("توسيع نافذة الفلاتر", "Expand filter sheet")
               }
+              aria-pressed={expanded}
             >
-              <ChevronUp
-                aria-hidden="true"
-                className={activeSnapPoint === 0.94 ? "rotate-180" : undefined}
-              />
+              <ChevronUp aria-hidden="true" className={expanded ? "rotate-180" : undefined} />
             </button>
             <button
               type="button"

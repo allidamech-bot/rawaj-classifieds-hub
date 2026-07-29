@@ -35,6 +35,13 @@ export function authErrorMessage(
     );
   }
 
+  if (contains("account_recovery_required")) {
+    return text(
+      "هذا حساب مستورد ويلزم إعداد كلمة مرور جديدة. استخدم «نسيت كلمة المرور؟» لاستعادة الحساب.",
+      "This imported account needs a new password. Use “Forgot password?” to recover it.",
+    );
+  }
+
   if (context === "login" || contains("invalid_credentials", "invalid login credentials")) {
     return text("البريد الإلكتروني أو كلمة المرور غير صحيحة.", "Incorrect email or password.");
   }

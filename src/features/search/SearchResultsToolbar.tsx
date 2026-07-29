@@ -5,7 +5,6 @@ import {
   Grid2X2,
   History,
   List,
-  Map,
   Search,
   SlidersHorizontal,
   X,
@@ -42,6 +41,15 @@ const emptySavedSearchParams = {
   attrs: "",
   sort: "latest" as ListingsSort,
 };
+
+function omitEmptySavedSearchParams(search: typeof emptySavedSearchParams) {
+  return Object.fromEntries(
+    Object.entries(search).map(([key, value]) => [
+      key,
+      value === "" || (key === "sort" && value === "latest") ? undefined : value,
+    ]),
+  ) as unknown as typeof emptySavedSearchParams;
+}
 
 interface SearchResultsToolbarProps {
   title: string;
@@ -92,6 +100,7 @@ export function SearchResultsToolbar({
 }: SearchResultsToolbarProps) {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const savedSearchLinkParams = omitEmptySavedSearchParams(savedSearch);
 
   useEffect(() => {
     function focusSearch(event: KeyboardEvent) {
@@ -122,8 +131,11 @@ export function SearchResultsToolbar({
     <section
       className="rawaj-search-toolbar rawaj-search-toolbar-v2"
       aria-labelledby="rawaj-results-title"
+      aria-busy={loading}
       data-state-contract="url-backed"
       data-view={view}
+      data-has-query={Boolean(query.trim())}
+      data-has-filters={activeFilterCount > 0}
     >
       <div className="rawaj-search-toolbar__heading">
         <div className="min-w-0">
@@ -131,17 +143,27 @@ export function SearchResultsToolbar({
           <h1 id="rawaj-results-title">{title}</h1>
           {pathLabel ? <span>{pathLabel}</span> : null}
         </div>
-        <strong aria-live="polite" aria-atomic="true" data-loading={loading || undefined}>
+        <strong
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          data-loading={loading || undefined}
+        >
           {loading
             ? text("جارٍ التحميل", "Loading")
             : text(`${resultCount} نتيجة`, `${resultCount} results`)}
         </strong>
       </div>
 
-      <div
+      <form
         className="rawaj-search-toolbar__search-row"
         role="search"
         aria-label={text("البحث ضمن النتائج", "Search within results")}
+        onSubmit={(event) => {
+          event.preventDefault();
+          rememberSearch(query);
+          searchInputRef.current?.blur();
+        }}
       >
         <label className="rawaj-search-toolbar__search">
           <Search aria-hidden="true" />
@@ -151,14 +173,15 @@ export function SearchResultsToolbar({
             onFocus={() => setRecentSearches(readRecentSearches())}
             onChange={(event) => onQueryChange(event.target.value)}
             onBlur={() => rememberSearch(query)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") rememberSearch(query);
-            }}
             placeholder={text("ابحث ضمن النتائج...", "Search within results...")}
             aria-label={text("بحث في الإعلانات", "Search listings")}
             aria-describedby="rawaj-search-shortcut"
             list="rawaj-recent-searches"
             type="search"
+            inputMode="search"
+            enterKeyHint="search"
+            autoComplete="off"
+            dir="auto"
           />
           {query ? (
             <button
@@ -189,12 +212,13 @@ export function SearchResultsToolbar({
           className="rawaj-search-toolbar__filter"
           aria-label={text("فتح الفلاتر", "Open filters")}
           aria-haspopup="dialog"
+          data-active={activeFilterCount > 0}
         >
           <SlidersHorizontal aria-hidden="true" />
           <span>{text("فلترة", "Filters")}</span>
           {activeFilterCount > 0 ? <b>{activeFilterCount}</b> : null}
         </button>
-      </div>
+      </form>
 
       {recentSearches.length > 0 ? (
         <div
@@ -246,17 +270,13 @@ export function SearchResultsToolbar({
           >
             <List aria-hidden="true" />
           </button>
-          <button
-            type="button"
-            disabled
-            data-view-foundation="map"
-            aria-label={text("عرض الخريطة قيد التجهيز", "Map view foundation")}
-          >
-            <Map aria-hidden="true" />
-          </button>
         </div>
 
-        <Link to="/saved-searches" search={savedSearch} className="rawaj-search-toolbar__saved">
+        <Link
+          to="/saved-searches"
+          search={savedSearchLinkParams}
+          className="rawaj-search-toolbar__saved"
+        >
           <Bookmark aria-hidden="true" />
           <span>{text("عمليات البحث", "Saved searches")}</span>
         </Link>

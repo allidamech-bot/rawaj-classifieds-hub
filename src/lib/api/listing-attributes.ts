@@ -1,6 +1,6 @@
 import { rememberOwnerListingUpdatedAt } from "@/lib/api/listing-owner-version";
-import { getClient, mapError } from "@/lib/api/shared";
-import type { ClassifiedsError, ClassifiedsResult } from "@/lib/classifieds-types";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
+import type { ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
 
 export interface MissingListingAttribute {
   fieldKey: string;
@@ -44,52 +44,23 @@ export async function fetchOwnerListingAttributes(
   listingId: string,
 ): Promise<ClassifiedsResult<OwnerListingAttributeValues>> {
   if (!userId) return authenticationFailure();
-
   const cleanListingId = listingId.trim();
   if (!cleanListingId) return listingValidationFailure();
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
+  const result = await cloudflareApiRequest<OwnerListingAttributeValues>(
+    `/v1/listings/${encodeURIComponent(cleanListingId)}/attributes`,
+  );
+  if (!result.ok) return apiFailure(result, "listing_attribute_fetch");
 
-  const { data, error } = await clientResult.data.rpc("rawaj_owner_fetch_listing_attributes_v1", {
-    p_listing_id: cleanListingId,
-  });
-
-  if (error) {
-    return {
-      ok: false,
-      error: mapListingAttributeError(error, "listing_attribute_fetch"),
-    };
+  const payload = normalizeOwnerValues(result.data);
+  if (!payload.listingId || !payload.listingUpdatedAt) {
+    return confirmationFailure(
+      "لم يؤكد الخادم تحميل تفاصيل الإعلان المنظمة.",
+      "listing_attribute_fetch",
+    );
   }
-
-  const payload = record(data);
-  const returnedListingId = text(payload.listingId);
-  const listingUpdatedAt = text(payload.listingUpdatedAt);
-  if (!returnedListingId || !listingUpdatedAt) {
-    return {
-      ok: false,
-      error: {
-        code: "unknown",
-        message: "لم يؤكد الخادم تحميل تفاصيل الإعلان المنظمة.",
-        operation: "listing_attribute_fetch",
-      },
-    };
-  }
-
-  rememberOwnerListingUpdatedAt(userId, returnedListingId, listingUpdatedAt);
-  return {
-    ok: true,
-    data: {
-      listingId: returnedListingId,
-      listingUpdatedAt,
-      listingStatus: text(payload.listingStatus),
-      taxonomyVersionId: nullableText(payload.taxonomyVersionId),
-      taxonomyVersionNumber: nullableNumber(payload.taxonomyVersionNumber),
-      taxonomyNodeId: nullableText(payload.taxonomyNodeId),
-      valueCount: integer(payload.valueCount),
-      values: record(payload.values),
-    },
-  };
+  rememberOwnerListingUpdatedAt(userId, payload.listingId, payload.listingUpdatedAt);
+  return { ok: true, data: payload };
 }
 
 export async function fetchOwnerListingAttributeCompleteness(
@@ -97,25 +68,15 @@ export async function fetchOwnerListingAttributeCompleteness(
   listingId: string,
 ): Promise<ClassifiedsResult<ListingAttributeCompleteness>> {
   if (!userId) return authenticationFailure();
-
   const cleanListingId = listingId.trim();
   if (!cleanListingId) return listingValidationFailure();
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data.rpc("rawaj_listing_attribute_completeness_v1", {
-    p_listing_id: cleanListingId,
-  });
-
-  if (error) {
-    return {
-      ok: false,
-      error: mapListingAttributeError(error, "listing_attribute_completeness"),
-    };
-  }
-
-  return { ok: true, data: parseCompleteness(data) };
+  const result = await cloudflareApiRequest<ListingAttributeCompleteness>(
+    `/v1/listings/${encodeURIComponent(cleanListingId)}/attributes/completeness`,
+  );
+  return result.ok
+    ? { ok: true, data: parseCompleteness(result.data) }
+    : apiFailure(result, "listing_attribute_completeness");
 }
 
 export async function replaceOwnerListingAttributes(
@@ -125,39 +86,27 @@ export async function replaceOwnerListingAttributes(
   attributes: Record<string, unknown>,
 ): Promise<ClassifiedsResult<ListingAttributeWriteResult>> {
   if (!userId) return authenticationFailure();
-
   const cleanListingId = listingId.trim();
   const cleanExpectedUpdatedAt = expectedUpdatedAt.trim();
   if (!cleanListingId || !cleanExpectedUpdatedAt) return listingValidationFailure();
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
+  const result = await cloudflareApiRequest<ListingAttributeWriteResult>(
+    `/v1/listings/${encodeURIComponent(cleanListingId)}/attributes`,
+    {
+      method: "PATCH",
+      body: { expectedUpdatedAt: cleanExpectedUpdatedAt, attributes },
+    },
+  );
+  if (!result.ok) return apiFailure(result, "listing_attribute_replace");
 
-  const { data, error } = await clientResult.data.rpc("rawaj_owner_replace_listing_attributes_v1", {
-    p_listing_id: cleanListingId,
-    p_expected_updated_at: cleanExpectedUpdatedAt,
-    p_attributes: attributes,
-  });
-
-  if (error) {
-    return {
-      ok: false,
-      error: mapListingAttributeError(error, "listing_attribute_replace"),
-    };
-  }
-
-  const payload = record(data);
+  const payload = record(result.data);
   const returnedListingId = text(payload.listingId);
   const updatedAt = text(payload.updatedAt);
   if (!returnedListingId || !updatedAt) {
-    return {
-      ok: false,
-      error: {
-        code: "unknown",
-        message: "لم يؤكد الخادم حفظ تفاصيل الإعلان المنظمة.",
-        operation: "listing_attribute_replace",
-      },
-    };
+    return confirmationFailure(
+      "لم يؤكد الخادم حفظ تفاصيل الإعلان المنظمة.",
+      "listing_attribute_replace",
+    );
   }
 
   rememberOwnerListingUpdatedAt(userId, returnedListingId, updatedAt);
@@ -172,64 +121,68 @@ export async function replaceOwnerListingAttributes(
   };
 }
 
-function mapListingAttributeError(
-  error: { code?: string; message?: string; details?: string },
+function normalizeOwnerValues(value: unknown): OwnerListingAttributeValues {
+  const payload = record(value);
+  return {
+    listingId: text(payload.listingId),
+    listingUpdatedAt: text(payload.listingUpdatedAt),
+    listingStatus: text(payload.listingStatus),
+    taxonomyVersionId: nullableText(payload.taxonomyVersionId),
+    taxonomyVersionNumber: nullableNumber(payload.taxonomyVersionNumber),
+    taxonomyNodeId: nullableText(payload.taxonomyNodeId),
+    valueCount: integer(payload.valueCount),
+    values: record(payload.values),
+  };
+}
+
+function apiFailure<T>(
+  result: { ok: false; code: string; error: string },
   operation: string,
-): ClassifiedsError {
-  const message = `${error.message ?? ""} ${error.details ?? ""}`;
-
-  if (message.includes("stale_owner_update")) {
+): ClassifiedsResult<T> {
+  const code = result.code as ClassifiedsErrorCode;
+  if (code === "status_mismatch") {
     return {
-      code: "status_mismatch",
-      message: "تغيّرت المسودة أثناء الحفظ. أعد المحاولة بعد تحديث الصفحة.",
-      details: error.details ?? error.message,
-      operation,
+      ok: false,
+      error: {
+        code,
+        message: "تغيّرت المسودة أثناء الحفظ. حدّث الصفحة ثم أعد المحاولة.",
+        details: result.error,
+        operation,
+      },
     };
   }
-
-  if (message.includes("listing_attribute_read_forbidden")) {
+  if (code === "permission_denied" || code === "auth_required") {
     return {
-      code: "permission_denied",
-      message: "لا تملك صلاحية قراءة تفاصيل هذا الإعلان المنظمة.",
-      details: error.details ?? error.message,
-      operation,
+      ok: false,
+      error: {
+        code,
+        message:
+          code === "auth_required"
+            ? "يجب تسجيل الدخول لحفظ تفاصيل الإعلان."
+            : "لا تملك صلاحية تعديل تفاصيل هذا الإعلان.",
+        details: result.error,
+        operation,
+      },
     };
   }
-
-  if (
-    message.includes("published_taxonomy_leaf_required") ||
-    message.includes("listing_published_taxonomy_leaf_required")
-  ) {
+  if (code === "validation_error" || code === "invalid_transition") {
     return {
-      code: "validation_error",
-      message: "اختر التصنيف النهائي المنشور قبل حفظ التفاصيل المنظمة.",
-      details: error.details ?? error.message,
-      operation,
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: result.error || "تحتوي تفاصيل الإعلان على قيمة غير صالحة لهذا التصنيف.",
+        operation,
+      },
     };
   }
-
-  if (message.includes("listing_attributes_incomplete")) {
-    return {
-      code: "validation_error",
-      message: "أكمل الحقول المطلوبة الخاصة بهذا التصنيف قبل إرسال الإعلان.",
-      details: error.details ?? error.message,
+  return {
+    ok: false,
+    error: {
+      code: code || "unknown",
+      message: result.error || "تعذر إكمال العملية.",
       operation,
-    };
-  }
-
-  if (
-    message.includes("listing_attribute_keys_not_allowed") ||
-    message.includes("listing_attribute_")
-  ) {
-    return {
-      code: "validation_error",
-      message: "تحتوي تفاصيل الإعلان على قيمة غير صالحة لهذا التصنيف.",
-      details: error.details ?? error.message,
-      operation,
-    };
-  }
-
-  return mapError(error, operation);
+    },
+  };
 }
 
 function parseCompleteness(value: unknown): ListingAttributeCompleteness {
@@ -262,10 +215,7 @@ function parseCompleteness(value: unknown): ListingAttributeCompleteness {
 function authenticationFailure<T>(): ClassifiedsResult<T> {
   return {
     ok: false,
-    error: {
-      code: "auth_required",
-      message: "يجب تسجيل الدخول لحفظ تفاصيل الإعلان.",
-    },
+    error: { code: "auth_required", message: "يجب تسجيل الدخول لحفظ تفاصيل الإعلان." },
   };
 }
 
@@ -277,6 +227,10 @@ function listingValidationFailure<T>(): ClassifiedsResult<T> {
       message: "تعذر تحديد مسودة الإعلان أو نسختها الحالية.",
     },
   };
+}
+
+function confirmationFailure<T>(message: string, operation: string): ClassifiedsResult<T> {
+  return { ok: false, error: { code: "unknown", message, operation } };
 }
 
 function record(value: unknown): Record<string, unknown> {
@@ -299,12 +253,8 @@ function nullableText(value: unknown): string | null {
 }
 
 function integer(value: unknown): number {
-  if (typeof value === "number" && Number.isFinite(value)) return Math.trunc(value);
-  if (typeof value === "string" && value.trim()) {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? Math.trunc(parsed) : 0;
-  }
-  return 0;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? Math.trunc(parsed) : 0;
 }
 
 function nullableNumber(value: unknown): number | null {
@@ -314,5 +264,5 @@ function nullableNumber(value: unknown): number | null {
 }
 
 function boolean(value: unknown): boolean {
-  return value === true || value === "true";
+  return value === true || value === "true" || value === 1;
 }

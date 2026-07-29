@@ -840,6 +840,7 @@ main :is(
   .rawaj-offers-empty,
   .rawaj-latest-discovery__empty
 ) {
+  padding: clamp(1.25rem, 3vw, 2rem);
   position: relative;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--color-primary) 11%, var(--color-border));

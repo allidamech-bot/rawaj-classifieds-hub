@@ -13,7 +13,7 @@ This document is the Phase 0 contract for the redesign. It records what is prote
 
 Visual-foundation work must not change any of the following unless a separate, explicitly scoped engineering change proves it necessary:
 
-- Supabase schema.
+- the retired backend schema.
 - Database migrations.
 - RLS policies.
 - RPC signatures or authorization behavior.
@@ -89,7 +89,7 @@ Visual-foundation work must not change any of the following unless a separate, e
 
 The batch is acceptable only if:
 
-- No Supabase or migration file changes.
+- No the retired backend or migration file changes.
 - No API/domain contract changes.
 - No route URL changes.
 - Bottom navigation no longer competes with listing-detail contact actions.

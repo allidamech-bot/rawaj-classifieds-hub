@@ -3,7 +3,7 @@
 ## Purpose
 
 This gate prepares a reproducible RAWAJ Android release candidate without signing, publishing,
-or changing any external service. It is independent of Supabase and does not authorize a Google
+or changing any external service. It is independent of the retired backend and does not authorize a Google
 Play release.
 
 ## Repository-owned evidence

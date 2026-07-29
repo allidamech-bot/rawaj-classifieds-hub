@@ -1,8 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-
-import { getClient, mapError } from "@/lib/api/shared";
-import type { ClassifiedsResult } from "@/lib/classifieds-types";
-import { publicSupabase } from "@/lib/supabase";
+import type { ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 
 export interface TaxonomyVersionMetadata {
   id: string;
@@ -173,9 +170,15 @@ export function invalidateTaxonomyMetadataCache(): void {
 
 export function fetchPublishedTaxonomy(): Promise<ClassifiedsResult<PublishedTaxonomy>> {
   return cachedRequest("taxonomy:published", METADATA_CACHE_TTL_MS, async () => {
-    const result = await callPublicRpc("rawaj_fetch_published_taxonomy_v1");
-    if (!result.ok) return result;
-    return { ok: true, data: parsePublishedTaxonomy(result.data) };
+    const result = await cloudflareApiRequest<{ taxonomyNodes?: unknown[] }>("/v1/references");
+    if (!result.ok) return apiFailure(result);
+    return {
+      ok: true,
+      data: {
+        version: null,
+        nodes: records(result.data.taxonomyNodes).map(parseTaxonomyNode).filter(present),
+      },
+    };
   });
 }
 
@@ -186,10 +189,10 @@ export function fetchPublishedLeafSchema(
   if (!cleanNodeId) return Promise.resolve(validationFailure("تعذر تحديد القسم المطلوب."));
 
   return cachedRequest(`taxonomy:leaf:${cleanNodeId}`, METADATA_CACHE_TTL_MS, async () => {
-    const result = await callPublicRpc("rawaj_fetch_published_leaf_schema_v1", {
-      p_taxonomy_node_id: cleanNodeId,
-    });
-    if (!result.ok) return result;
+    const result = await cloudflareApiRequest<unknown>(
+      `/v1/taxonomy/leaf/${encodeURIComponent(cleanNodeId)}`,
+    );
+    if (!result.ok) return apiFailure(result);
     return { ok: true, data: parsePublishedLeafSchema(result.data) };
   });
 }
@@ -203,11 +206,10 @@ export function fetchVehicleMakes(
   const cacheKey = `vehicle:makes:${cleanQuery.toLocaleLowerCase()}:${cleanLimit}`;
 
   return cachedRequest(cacheKey, REFERENCE_CACHE_TTL_MS, async () => {
-    const result = await callPublicRpc("rawaj_fetch_vehicle_makes_v1", {
-      p_query: cleanQuery || null,
-      p_limit: cleanLimit,
-    });
-    if (!result.ok) return result;
+    const params = new URLSearchParams({ limit: String(cleanLimit) });
+    if (cleanQuery) params.set("q", cleanQuery);
+    const result = await cloudflareApiRequest<unknown>(`/v1/vehicles/makes?${params.toString()}`);
+    if (!result.ok) return apiFailure(result);
     return {
       ok: true,
       data: records(record(result.data).items).map(parseVehicleMake).filter(present),
@@ -234,13 +236,11 @@ export function fetchVehicleModels(
   ].join(":");
 
   return cachedRequest(cacheKey, REFERENCE_CACHE_TTL_MS, async () => {
-    const result = await callPublicRpc("rawaj_fetch_vehicle_models_v1", {
-      p_make_id: cleanMakeId,
-      p_query: cleanQuery || null,
-      p_year: cleanYear,
-      p_limit: cleanLimit,
-    });
-    if (!result.ok) return result;
+    const params = new URLSearchParams({ makeId: cleanMakeId, limit: String(cleanLimit) });
+    if (cleanQuery) params.set("q", cleanQuery);
+    if (cleanYear !== null) params.set("year", String(cleanYear));
+    const result = await cloudflareApiRequest<unknown>(`/v1/vehicles/models?${params.toString()}`);
+    if (!result.ok) return apiFailure(result);
     return {
       ok: true,
       data: records(record(result.data).items).map(parseVehicleModel).filter(present),
@@ -258,30 +258,25 @@ export function fetchVehicleModelChildren(
   const cleanYear = nullableInteger(year);
   const cacheKey = `vehicle:children:${cleanModelId}:${cleanYear ?? "all"}`;
   return cachedRequest(cacheKey, REFERENCE_CACHE_TTL_MS, async () => {
-    const result = await callPublicRpc("rawaj_fetch_vehicle_model_children_v1", {
-      p_model_id: cleanModelId,
-      p_year: cleanYear,
-    });
-    if (!result.ok) return result;
+    const params = new URLSearchParams();
+    if (cleanYear !== null) params.set("year", String(cleanYear));
+    const suffix = params.size ? `?${params.toString()}` : "";
+    const result = await cloudflareApiRequest<unknown>(
+      `/v1/vehicles/models/${encodeURIComponent(cleanModelId)}/children${suffix}`,
+    );
+    if (!result.ok) return apiFailure(result);
     return { ok: true, data: parseVehicleModelChildren(result.data) };
   });
 }
 
-async function callPublicRpc(
-  functionName: string,
-  args: Record<string, unknown> = {},
-): Promise<ClassifiedsResult<unknown>> {
-  const clientResult = getPublicClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data.rpc(functionName, args);
-  if (error) return { ok: false, error: mapError(error, functionName) };
-  return { ok: true, data };
-}
-
-function getPublicClient(): ClassifiedsResult<SupabaseClient> {
-  if (publicSupabase) return { ok: true, data: publicSupabase };
-  return getClient();
+function apiFailure<T>(result: { ok: false; error: string; code: string }): ClassifiedsResult<T> {
+  return {
+    ok: false,
+    error: {
+      code: result.code as ClassifiedsErrorCode,
+      message: result.error,
+    },
+  };
 }
 
 function cachedRequest<T>(

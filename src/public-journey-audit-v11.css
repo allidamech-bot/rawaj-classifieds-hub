@@ -1,0 +1,766 @@
+/* RAWAJ public journey audit v11.
+ * Route-scoped visual ownership for listing detail, public seller, offers,
+ * support, safety, legal, verification, and promotion surfaces.
+ * Data loading, contact actions, moderation, reviews, and permissions remain unchanged.
+ */
+
+/* -------------------------------------------------------------------------- */
+/* Listing detail                                                             */
+/* -------------------------------------------------------------------------- */
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-v2 {
+  --detail-surface: #2d2e34;
+  --detail-surface-soft: #292a30;
+  --detail-border: rgba(255, 255, 255, 0.085);
+  --detail-border-strong: rgba(255, 112, 84, 0.22);
+  color: var(--rawaj-text-primary, #f5efe7);
+  background:
+    radial-gradient(circle at 92% 2%, rgba(63, 145, 255, 0.08), transparent 28rem),
+    linear-gradient(180deg, #25262b, #232429 68%, #222328) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-media {
+  width: min(100%, 82rem) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-media__stage {
+  min-height: clamp(18rem, 52vw, 32rem) !important;
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  background: #17181d !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.26) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-media__image {
+  background: #17181d !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(
+  .rawaj-detail-summary,
+  .rawaj-detail-section,
+  .rawaj-detail-seller,
+  .rawaj-detail-reference,
+  .rawaj-detail-safety
+) {
+  border-color: var(--detail-border) !important;
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+  background: linear-gradient(150deg, #303137, var(--detail-surface)) !important;
+  box-shadow: 0 13px 30px rgba(0, 0, 0, 0.16) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-summary {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 112, 84, 0.12), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(63, 145, 255, 0.08), transparent 38%),
+    linear-gradient(150deg, #34343a, #2d2e34) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(
+  .rawaj-detail-summary h1,
+  .rawaj-detail-section__heading h2,
+  .rawaj-detail-seller h2,
+  .rawaj-detail-seller h3,
+  .rawaj-detail-location strong,
+  .rawaj-detail-reference strong
+) {
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+  font-family: "Cairo", sans-serif !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(
+  .rawaj-detail-summary__meta,
+  .rawaj-detail-section__heading p,
+  .rawaj-detail-description,
+  .rawaj-detail-location p,
+  .rawaj-detail-reference span,
+  .rawaj-detail-seller p,
+  .rawaj-detail-seller small
+) {
+  color: var(--rawaj-text-secondary, #c9c4bd) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-summary h1 {
+  max-width: 34ch !important;
+  font-size: clamp(1.25rem, 4vw, 1.85rem) !important;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-summary__badges > * {
+  border: 1px solid var(--detail-border) !important;
+  color: var(--rawaj-text-secondary, #c9c4bd) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+  font-size: 0.76rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-summary__badges > :first-child {
+  border-color: rgba(255, 112, 84, 0.26) !important;
+  color: #ffd0c5 !important;
+  background: rgba(255, 112, 84, 0.08) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-price {
+  border-color: rgba(255, 112, 84, 0.24) !important;
+  background:
+    linear-gradient(120deg, rgba(255, 112, 84, 0.12), rgba(220, 62, 182, 0.08) 52%, rgba(63, 145, 255, 0.07)) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-price > span {
+  color: var(--rawaj-text-muted, #98938d) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-price > strong {
+  color: #fff4ec !important;
+  font-family: "Cairo", sans-serif !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-specs > div {
+  min-height: 4rem !important;
+  border-color: var(--detail-border) !important;
+  background: rgba(255, 255, 255, 0.026) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-specs > div span {
+  color: var(--rawaj-text-muted, #98938d) !important;
+  font-size: 0.75rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-specs > div strong {
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+  font-size: 0.88rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-location {
+  border-color: var(--detail-border) !important;
+  background: rgba(255, 255, 255, 0.026) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-reserved {
+  border-color: rgba(227, 160, 75, 0.27) !important;
+  color: #f2d2a6 !important;
+  background: rgba(227, 160, 75, 0.075) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-v2__message {
+  border: 1px solid rgba(63, 145, 255, 0.18) !important;
+  color: #dce8ff !important;
+  background: rgba(63, 145, 255, 0.06) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock {
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(36, 37, 42, 0.94) !important;
+  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.24) !important;
+  backdrop-filter: blur(18px) saturate(120%);
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock__inner {
+  gap: 0.45rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(
+  .rawaj-contact-dock__primary,
+  .rawaj-contact-dock__offer,
+  .rawaj-contact-dock__secondary
+) {
+  min-height: 2.9rem !important;
+  border-radius: 0.85rem !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock__primary {
+  border: 0 !important;
+  color: #fff !important;
+  background: linear-gradient(110deg, #ff7054, #dc3eb6 58%, #3f91ff) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(
+  .rawaj-contact-dock__offer,
+  .rawaj-contact-dock__secondary
+) {
+  border: 1px solid var(--detail-border) !important;
+  color: var(--rawaj-text-secondary, #c9c4bd) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Public seller storefront                                                   */
+/* -------------------------------------------------------------------------- */
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-v2 {
+  color: var(--rawaj-text-primary, #f5efe7);
+  background:
+    radial-gradient(circle at 88% 1%, rgba(220, 62, 182, 0.07), transparent 26rem),
+    linear-gradient(180deg, #25262b, #232429) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity {
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  border-radius: 1.4rem !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.15), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(220, 62, 182, 0.12), transparent 40%),
+    linear-gradient(145deg, #34343b, #2b2c32 70%, #292a30) !important;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__content {
+  min-height: clamp(17rem, 42vw, 22rem) !important;
+  align-content: end !important;
+  padding: clamp(1rem, 3vw, 1.5rem) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__scrim {
+  background: linear-gradient(180deg, rgba(25, 26, 31, 0.18), rgba(25, 26, 31, 0.92) 76%) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__avatar {
+  width: clamp(4.4rem, 15vw, 6rem) !important;
+  height: clamp(4.4rem, 15vw, 6rem) !important;
+  border-width: 2px !important;
+  border-radius: 1.2rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__copy h1 {
+  color: #fff7f1 !important;
+  font-family: "Cairo", sans-serif !important;
+  font-size: clamp(1.25rem, 5vw, 2rem) !important;
+  line-height: 1.35 !important;
+  overflow-wrap: anywhere;
+  text-overflow: clip !important;
+  white-space: normal !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] :is(
+  .rawaj-storefront-identity__copy > p,
+  .rawaj-storefront-identity__meta span,
+  .rawaj-storefront-identity__bio
+) {
+  color: rgba(245, 239, 231, 0.72) !important;
+  font-size: 0.76rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__bio {
+  max-width: 60ch !important;
+  margin-top: 0.7rem !important;
+  line-height: 1.75 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0.45rem !important;
+  margin-top: 0.75rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__metrics > div {
+  border-radius: 0.85rem !important;
+  padding: 0.55rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__metrics span {
+  color: rgba(245, 239, 231, 0.62) !important;
+  font-size: 0.67rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__actions {
+  flex-wrap: wrap !important;
+  overflow: visible !important;
+  margin-top: 0.75rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__actions :is(a, button) {
+  min-height: 2.7rem !important;
+  border-radius: 0.82rem !important;
+  font-size: 0.73rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-v2__layout {
+  gap: 1rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] :is(
+  .rawaj-storefront-v2__reviews,
+  .rawaj-storefront-v2__safety,
+  .rawaj-storefront-notice
+) {
+  border: 1px solid rgba(255, 255, 255, 0.085) !important;
+  border-radius: 1.15rem !important;
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+  background: linear-gradient(150deg, #303137, #2b2c32) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-section-header h2,
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-v2__reviews h3 {
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+  font-family: "Cairo", sans-serif !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] :is(
+  .rawaj-storefront-section-header > div > span,
+  .rawaj-storefront-v2__reviews p,
+  .rawaj-storefront-v2__safety p
+) {
+  color: var(--rawaj-text-secondary, #c9c4bd) !important;
+  font-size: 0.76rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-v2__reviews :is(.bg-white\/70, .bg-white\/72) {
+  border-color: rgba(255, 255, 255, 0.075) !important;
+  color: var(--rawaj-text-secondary, #c9c4bd) !important;
+  background: rgba(255, 255, 255, 0.028) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Offers                                                                      */
+/* -------------------------------------------------------------------------- */
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 {
+  min-height: auto !important;
+  color: var(--rawaj-text-primary, #f5efe7);
+  background: linear-gradient(180deg, #25262b, #232429) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 1.35rem !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 112, 84, 0.16), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(63, 145, 255, 0.11), transparent 42%),
+    linear-gradient(145deg, #35343a, #2b2c32) !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage > div {
+  min-height: 11.5rem !important;
+  gap: 1rem !important;
+  padding: clamp(1rem, 3vw, 1.4rem) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage h1 {
+  margin-top: 0.4rem !important;
+  font-family: "Cairo", sans-serif !important;
+  font-size: clamp(1.25rem, 4vw, 1.85rem) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage p {
+  margin-top: 0.45rem !important;
+  color: rgba(245, 239, 231, 0.7) !important;
+  font-size: 0.78rem !important;
+  line-height: 1.7 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-id-stat {
+  border: 1px solid rgba(255, 255, 255, 0.075) !important;
+  border-radius: 0.85rem !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-id-stat span {
+  color: var(--rawaj-text-secondary) !important;
+  font-size: 0.75rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-id-stat strong {
+  color: #fff4ec !important;
+  font-size: 0.76rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-product-card {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.085) !important;
+  border-radius: 1.05rem !important;
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+  background: linear-gradient(150deg, #303137, #2b2c32) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-product-card h3,
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-product-card strong {
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-product-card p,
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-product-card span:not(.absolute) {
+  color: var(--rawaj-text-secondary, #c9c4bd) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-empty {
+  border: 1px solid rgba(255, 255, 255, 0.085) !important;
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+  background: linear-gradient(150deg, #303137, #2b2c32) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Trust, support, safety, legal, verification, promotion                     */
+/* -------------------------------------------------------------------------- */
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) .rawaj-trust-v2 {
+  color: var(--rawaj-text-primary, #f5efe7);
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) .rawaj-trust-hero {
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  border-radius: 1.35rem !important;
+  padding: clamp(1rem, 3vw, 1.4rem) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.14), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(220, 62, 182, 0.1), transparent 40%),
+    linear-gradient(145deg, #34343a, #2b2c32) !important;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) .rawaj-trust-hero::after {
+  opacity: 0.38;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) .rawaj-trust-hero__symbol {
+  width: 3.5rem !important;
+  height: 3.5rem !important;
+  border-width: 1px !important;
+  border-radius: 1rem !important;
+  color: #fff !important;
+  background: linear-gradient(145deg, #ff7054, #dc3eb6 58%, #3f91ff) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) .rawaj-trust-hero__identity h1 {
+  color: #fff7f1 !important;
+  font-family: "Cairo", sans-serif !important;
+  font-size: clamp(1.2rem, 4vw, 1.75rem) !important;
+  overflow-wrap: anywhere;
+  text-overflow: clip !important;
+  white-space: normal !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) :is(
+  .rawaj-trust-hero__description,
+  .rawaj-trust-hero__identity strong,
+  .rawaj-trust-hero__identity small
+) {
+  color: rgba(245, 239, 231, 0.72) !important;
+  font-size: 0.76rem !important;
+  line-height: 1.7 !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) .rawaj-trust-hero__badges :is(span, b) {
+  min-height: 2rem !important;
+  color: rgba(245, 239, 231, 0.82) !important;
+  font-size: 0.68rem !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) .rawaj-trust-hero__actions {
+  flex-wrap: wrap !important;
+  overflow: visible !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) .rawaj-trust-hero__actions :is(a, button) {
+  min-height: 2.65rem !important;
+  border-radius: 0.82rem !important;
+  font-size: 0.72rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/support"] :is(
+  .rawaj-support-panel,
+  .rawaj-support-topics,
+  .rawaj-support-faq,
+  .rawaj-support-requests
+),
+.rawaj-app-shell[data-resolved-pathname="/safety"] .rawaj-safety-guide,
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) .rawaj-trust-v2 section:not(.rawaj-trust-hero) {
+  border: 1px solid rgba(255, 255, 255, 0.085) !important;
+  border-radius: 1.1rem !important;
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+  background: linear-gradient(150deg, #303137, #2b2c32) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) .rawaj-trust-section-header h2 {
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+  font-family: "Cairo", sans-serif !important;
+  font-size: 1rem !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) :is(
+  .rawaj-trust-section-header span,
+  .rawaj-trust-link-card p,
+  .rawaj-support-timeline p,
+  .rawaj-safety-guide li
+) {
+  color: var(--rawaj-text-secondary, #c9c4bd) !important;
+  font-size: 0.76rem !important;
+  line-height: 1.65 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-panel :is(input, textarea, select) {
+  min-height: 2.9rem;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0.8rem !important;
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+  font-size: 0.82rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-panel textarea {
+  min-height: 8rem;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-panel label > span {
+  color: var(--rawaj-text-secondary, #c9c4bd) !important;
+  font-size: 0.76rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-timeline article {
+  border: 1px solid rgba(255, 255, 255, 0.075) !important;
+  border-radius: 0.9rem !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-timeline h3,
+.rawaj-app-shell[data-resolved-pathname="/safety"] .rawaj-safety-guide h2 {
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) .rawaj-trust-link-card {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+  background: rgba(255, 255, 255, 0.028) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) .rawaj-trust-link-card strong {
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+  font-size: 0.82rem !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Responsive                                                                 */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-media__stage {
+    min-height: clamp(16.5rem, 76vw, 24rem) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-v2__container {
+    padding-inline: 0.75rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-v2__layout,
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-v2__content {
+    gap: 0.7rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(
+    .rawaj-detail-summary,
+    .rawaj-detail-section,
+    .rawaj-detail-seller,
+    .rawaj-detail-reference,
+    .rawaj-detail-safety
+  ) {
+    border-radius: 1rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__content {
+    min-height: 16rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__main {
+    align-items: center !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage > div {
+    min-height: auto !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage > div > div:last-child {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/support"],
+    [data-resolved-pathname="/safety"],
+    [data-resolved-pathname="/terms"],
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/prohibited"],
+    [data-resolved-pathname="/verification"],
+    [data-resolved-pathname="/promotion"]
+  ) .rawaj-trust-hero__badges {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/support"],
+    [data-resolved-pathname="/safety"],
+    [data-resolved-pathname="/terms"],
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/prohibited"],
+    [data-resolved-pathname="/verification"],
+    [data-resolved-pathname="/promotion"]
+  ) .rawaj-trust-hero__badges :is(span, b) {
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 430px) {
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock__inner {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock__inner > :only-child {
+    grid-column: 1 / -1;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__topline {
+    position: static !important;
+    margin-bottom: 0.65rem;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__main {
+    align-items: flex-start !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__avatar {
+    width: 4rem !important;
+    height: 4rem !important;
+  }
+
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/support"],
+    [data-resolved-pathname="/safety"],
+    [data-resolved-pathname="/terms"],
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/prohibited"],
+    [data-resolved-pathname="/verification"],
+    [data-resolved-pathname="/promotion"]
+  ) .rawaj-trust-hero__identity {
+    align-items: flex-start !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] *,
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] *,
+  .rawaj-app-shell[data-resolved-pathname="/offers"] * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

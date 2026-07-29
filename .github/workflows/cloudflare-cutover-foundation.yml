@@ -1,0 +1,60 @@
+name: Cloudflare Cutover Foundation
+
+on:
+  pull_request:
+    paths:
+      - "cloudflare/**"
+      - "src/**"
+      - "scripts/cloudflare-*.test.mjs"
+      - "scripts/retired-backend-runtime-audit.mjs"
+      - "scripts/check-migration-ledger.mjs"
+      - "scripts/replay-d1-migrations.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/cloudflare-cutover-foundation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install application dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install Worker dependencies
+        run: npm ci --prefix cloudflare/worker --ignore-scripts
+
+      - name: Verify runtime boundary
+        run: npm run test:runtime-boundary
+
+      - name: Validate and replay D1 migrations
+        run: npm run test:d1-migrations
+
+      - name: Run Cloudflare cutover contracts
+        run: npm run test:cloudflare-cutover
+
+      - name: Typecheck Worker
+        run: npx tsc -p cloudflare/worker/tsconfig.json --noEmit
+
+      - name: Generate local Wrangler configuration
+        run: npm --prefix cloudflare/worker run prepare:config
+
+      - name: Reject production bindings in local configuration
+        shell: bash
+        run: |
+          grep -q '00000000-0000-0000-0000-000000000000' cloudflare/worker/wrangler.generated.jsonc
+          grep -q 'http://localhost:8080' cloudflare/worker/wrangler.generated.jsonc
+          ! grep -q 'CLOUDFLARE_D1_DATABASE_ID' cloudflare/worker/wrangler.generated.jsonc

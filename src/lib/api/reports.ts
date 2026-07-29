@@ -1,15 +1,11 @@
 import type {
   ClassifiedListing,
+  ClassifiedsErrorCode,
   ClassifiedsResult,
   ListingReport,
   ListingReportType,
 } from "@/lib/classifieds-types";
-import {
-  accountSessionStillMatches,
-  resolveAuthenticatedAccountId,
-} from "@/lib/api/account-identity";
-import { mapModerationError } from "@/lib/api/moderation-errors";
-import { getClient, mapError, rowNullableString, rowRecord, rowString } from "@/lib/api/shared";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 import { isListingReportType, normalizeModerationText } from "@/lib/moderation-contract";
 
 interface ModerateReportPayload {
@@ -19,7 +15,7 @@ interface ModerateReportPayload {
 }
 
 export function fromDbReportStatus(status: string): ListingReport["status"] {
-  if (status === "in_review") return "under_review";
+  if (status === "reviewing" || status === "in_review") return "under_review";
   if (status === "dismissed") return "rejected";
   if (["new", "under_review", "resolved", "rejected"].includes(status)) {
     return status as ListingReport["status"];
@@ -28,8 +24,9 @@ export function fromDbReportStatus(status: string): ListingReport["status"] {
 }
 
 export function toDbReportStatus(status: ListingReport["status"]): string {
-  if (status === "under_review") return "in_review";
+  if (status === "under_review") return "reviewing";
   if (status === "rejected") return "dismissed";
+  if (status === "new") return "open";
   return status;
 }
 
@@ -51,166 +48,129 @@ export async function createListingReport(
       error: { code: "validation_error", message: "اختر سببًا صالحًا وأضف وصفًا واضحًا للبلاغ." },
     };
   }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const client = clientResult.data;
-  const actor = await resolveAuthenticatedAccountId(client, "listing_report_auth");
-  if (!actor.ok) return actor;
-  const { error } = await client.rpc("rawaj_create_listing_report_v2", {
-    p_listing_id: cleanListingId,
-    p_report_type: reportType,
-    p_reason: reportReason,
-  });
-  if (error) {
-    return {
-      ok: false,
-      error: mapModerationError(error, "listing_report_create", "تعذر إرسال البلاغ الآن."),
-    };
-  }
-  const current = await accountSessionStillMatches(client, actor.data, "listing_report_stale");
-  if (!current.ok) return current;
-  return { ok: true, data: null };
+  const result = await cloudflareApiRequest<{ id: string; duplicate: boolean }>(
+    `/v1/listings/${encodeURIComponent(cleanListingId)}/reports`,
+    { method: "POST", body: { reportType, reason: reportReason } },
+  );
+  return result.ok
+    ? { ok: true, data: null }
+    : { ok: false, error: { code: result.code as ClassifiedsErrorCode, message: result.error } };
 }
 
 export async function adminFetchPendingListings(
   canUseAdminAccess: boolean,
 ): Promise<ClassifiedsResult<ClassifiedListing[]>> {
-  if (!canUseAdminAccess) {
-    return {
-      ok: false,
-      error: { code: "permission_denied", message: "هذه البيانات متاحة لحساب إداري مخول فقط." },
-    };
-  }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const { readReferences } = await import("@/lib/api/references");
-  const references = await readReferences(clientResult.data);
-  if (!references.ok) return { ok: false, error: references.error };
-
-  let { data, error } = await clientResult.data.rpc("rawaj_review_queue_pending");
-  if (error && mapError(error).code === "schema_missing") {
-    const fallback = await clientResult.data
-      .from("listings")
-      .select("*")
-      .eq("status", "pending_review")
-      .order("created_at", { ascending: true });
-    data = fallback.data;
-    error = fallback.error;
-  }
-  if (error) return { ok: false, error: mapError(error, "admin_review_queue") };
-  return {
-    ok: true,
-    data: ((data ?? []) as Record<string, unknown>[]).map((row) =>
-      mapListing(row, references.categories, references.governorates),
-    ),
-  };
+  if (!canUseAdminAccess) return denied("هذه البيانات متاحة لحساب إداري مخول فقط.");
+  const result = await cloudflareApiRequest<Array<Record<string, unknown>>>(
+    "/v1/admin/listings/pending",
+  );
+  return result.ok
+    ? { ok: true, data: result.data.map(mapAdminListing) }
+    : { ok: false, error: { code: result.code as ClassifiedsErrorCode, message: result.error } };
 }
 
 export async function adminFetchReports(): Promise<ClassifiedsResult<ListingReport[]>> {
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const { data, error } = await clientResult.data.rpc("rawaj_fetch_listing_reports_for_admin", {
-    p_limit: 200,
-  });
-  if (error) {
-    return {
-      ok: false,
-      error: mapModerationError(error, "listing_report_admin_queue", "تعذر تحميل البلاغات."),
-    };
-  }
-  return { ok: true, data: ((data ?? []) as Record<string, unknown>[]).map(mapReport) };
+  return fromApi(
+    await cloudflareApiRequest<ListingReport[]>("/v1/admin/listing-reports?limit=200"),
+  );
 }
 
 export async function adminModerateReport(
   payload: ModerateReportPayload & { expectedUpdatedAt: string },
 ): Promise<ClassifiedsResult<null>> {
-  if (!payload.reportId.trim() || !payload.expectedUpdatedAt) {
+  const reportId = payload.reportId.trim();
+  if (!reportId || !payload.expectedUpdatedAt) {
     return {
       ok: false,
       error: { code: "validation_error", message: "تعذر تحديد البلاغ أو نسخته الحالية." },
     };
   }
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-  const { error } = await clientResult.data.rpc("rawaj_admin_moderate_listing_report_v2", {
-    p_report_id: payload.reportId.trim(),
-    p_status: toDbReportStatus(payload.status),
-    p_admin_note: normalizeModerationText(payload.adminNote ?? "", 1000) || null,
-    p_expected_updated_at: payload.expectedUpdatedAt,
-  });
-  if (error) {
-    return {
-      ok: false,
-      error: mapModerationError(error, "listing_report_moderate", "تعذر تحديث البلاغ."),
-    };
-  }
-  return { ok: true, data: null };
+  const result = await cloudflareApiRequest<{ success: boolean; updatedAt: string }>(
+    `/v1/admin/listing-reports/${encodeURIComponent(reportId)}`,
+    {
+      method: "PATCH",
+      body: {
+        status: payload.status,
+        adminNote: normalizeModerationText(payload.adminNote ?? "", 1000) || null,
+        expectedUpdatedAt: payload.expectedUpdatedAt,
+      },
+    },
+  );
+  return result.ok
+    ? { ok: true, data: null }
+    : { ok: false, error: { code: result.code as ClassifiedsErrorCode, message: result.error } };
 }
 
-function mapListing(
-  row: Record<string, unknown>,
-  categories: import("@/lib/classifieds-types").ClassifiedCategory[] = [],
-  governorates: import("@/lib/classifieds-types").ClassifiedGovernorate[] = [],
-): ClassifiedListing {
-  const categoryId = rowString(row, "category_id");
-  const governorateId = rowString(row, "governorate_id");
-  const category = categories.find((item) => item.id === categoryId);
-  const governorate = governorates.find((item) => item.id === governorateId);
+function mapAdminListing(row: Record<string, unknown>): ClassifiedListing {
   return {
-    id: rowString(row, "id"),
-    ownerId: rowString(row, "owner_id"),
-    categoryId,
-    subcategoryId: rowNullableString(row, "subcategory_id"),
-    categoryNameAr: category?.nameAr,
-    categoryPlaceholder: category?.placeholder,
-    governorateId,
-    governorateNameAr: governorate?.nameAr,
-    title: rowString(row, "title"),
-    description: rowString(row, "description"),
-    price: rowNullableString(row, "price") ? Number(rowNullableString(row, "price")) : null,
+    id: stringValue(row.id),
+    ownerId: stringValue(row.ownerId ?? row.owner_id),
+    categoryId: stringValue(row.categoryId ?? row.category_id),
+    subcategoryId: nullableString(row.subcategoryId ?? row.subcategory_id),
+    governorateId: stringValue(row.governorateId ?? row.governorate_id),
+    title: stringValue(row.title),
+    description: stringValue(row.description),
+    price: nullableNumber(row.price),
     currency: "SYP",
-    priceType: rowString(row, "price_type", "fixed") as import("@/types").PriceType,
-    condition: rowString(
-      row,
-      "listing_condition",
+    priceType: stringValue(
+      row.priceType ?? row.price_type,
+      "fixed",
+    ) as ClassifiedListing["priceType"],
+    condition: stringValue(
+      row.condition ?? row.listing_condition,
       "not_applicable",
-    ) as import("@/lib/classifieds-types").ListingCondition,
-    status: rowString(
-      row,
-      "status",
-      "pending_review",
-    ) as import("@/lib/classifieds-types").ListingStatus,
-    districtAr: rowNullableString(row, "district_ar"),
-    contactName: rowNullableString(row, "contact_name"),
-    contactOptions: rowRecord(row, "contact_options") as Record<string, boolean>,
-    details: rowRecord(row, "details"),
-    isFeatured: rowString(row, "is_featured") === "true",
-    featuredUntil: rowNullableString(row, "featured_until"),
-    reviewedBy: rowNullableString(row, "reviewed_by"),
-    reviewedAt: rowNullableString(row, "reviewed_at"),
-    rejectionReason: rowNullableString(row, "rejection_reason"),
-    publishedAt: rowNullableString(row, "published_at"),
-    archivedAt: rowNullableString(row, "archived_at"),
-    createdAt: rowString(row, "created_at"),
-    updatedAt: rowString(row, "updated_at"),
+    ) as ClassifiedListing["condition"],
+    status: stringValue(row.status, "pending_review") as ClassifiedListing["status"],
+    districtAr: nullableString(row.districtAr ?? row.district_ar),
+    contactName: nullableString(row.contactName ?? row.contact_name),
+    contactOptions: booleanObjectValue(row.contactOptions ?? row.contact_options),
+    details: objectValue(row.details),
+    isFeatured: Boolean(row.isFeatured ?? row.is_featured),
+    featuredUntil: nullableString(row.featuredUntil ?? row.featured_until),
+    reviewedBy: nullableString(row.reviewedBy ?? row.reviewed_by),
+    reviewedAt: nullableString(row.reviewedAt ?? row.reviewed_at),
+    rejectionReason: nullableString(row.rejectionReason ?? row.rejection_reason),
+    publishedAt: nullableString(row.publishedAt ?? row.published_at),
+    archivedAt: nullableString(row.archivedAt ?? row.archived_at),
+    expiresAt: nullableString(row.expiresAt ?? row.expires_at),
+    createdAt: stringValue(row.createdAt ?? row.created_at),
+    updatedAt: stringValue(row.updatedAt ?? row.updated_at),
   };
 }
 
-function mapReport(row: Record<string, unknown>): ListingReport {
-  return {
-    id: rowString(row, "id"),
-    listingId: rowNullableString(row, "listing_id"),
-    listingTitleSnapshot: rowNullableString(row, "listing_title_snapshot"),
-    reporterId: rowString(row, "reporter_id"),
-    reportType: rowString(row, "report_type", "other") as ListingReportType,
-    reason: rowString(row, "reason"),
-    status: fromDbReportStatus(rowString(row, "status", "new")),
-    assignedTo: rowNullableString(row, "assigned_to"),
-    adminNote: rowNullableString(row, "admin_note"),
-    resolvedAt: rowNullableString(row, "resolved_at"),
-    createdAt: rowString(row, "created_at"),
-    updatedAt: rowString(row, "updated_at"),
-  };
+function denied<T>(message: string): ClassifiedsResult<T> {
+  return { ok: false, error: { code: "permission_denied", message } };
+}
+
+function fromApi<T>(
+  result: { ok: true; data: T } | { ok: false; error: string; code: string },
+): ClassifiedsResult<T> {
+  return result.ok
+    ? { ok: true, data: result.data }
+    : { ok: false, error: { code: result.code as ClassifiedsErrorCode, message: result.error } };
+}
+
+function stringValue(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback;
+}
+function nullableString(value: unknown): string | null {
+  return typeof value === "string" && value ? value : null;
+}
+function nullableNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+function objectValue(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function booleanObjectValue(value: unknown): Record<string, boolean> {
+  return Object.fromEntries(
+    Object.entries(objectValue(value)).filter(
+      (entry): entry is [string, boolean] => typeof entry[1] === "boolean",
+    ),
+  );
 }

@@ -7,8 +7,8 @@
   "display": "standalone",
   "dir": "rtl",
   "lang": "ar",
-  "theme_color": "#153f37",
-  "background_color": "#f4f5f1",
+  "theme_color": "#242529",
+  "background_color": "#242529",
   "icons": [
     {
       "src": "/brand/rawaj-mark-transparent-192.png",

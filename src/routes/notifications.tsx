@@ -28,7 +28,6 @@ import {
 } from "@/lib/classifieds-api";
 import type { ClassifiedsError, NotificationItem } from "@/lib/classifieds-types";
 import type { NotificationCursor } from "@/lib/classifieds-types";
-import { getClient } from "@/lib/api/shared";
 import {
   mergeNotifications,
   normalizeNotificationId,
@@ -101,7 +100,6 @@ function NotificationsPage() {
   const openingTargetScopesRef = useRef<Set<string>>(new Set());
   const markingAllProfilesRef = useRef<Set<string>>(new Set());
   const handledPushOpenScopesRef = useRef<Set<string>>(new Set());
-  const realtimeGenerationRef = useRef(0);
   const openNotificationTargetRef = useRef<(notification: NotificationItem) => Promise<void>>(
     async () => undefined,
   );
@@ -258,68 +256,39 @@ function NotificationsPage() {
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId || typeof window === "undefined") return;
-    const clientResult = getClient();
-    if (!clientResult.ok) return;
 
+    let cancelled = false;
     const currentProfileId = profileId;
-    const generation = ++realtimeGenerationRef.current;
-    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
-    const refreshUnread = () => {
-      if (refreshTimer !== null) clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(async () => {
-        const result = await fetchUnreadNotificationsCount();
-        if (
-          generation !== realtimeGenerationRef.current ||
-          currentProfileId !== profileIdRef.current
-        )
-          return;
-        if (result.ok) {
-          setUnreadTotal(result.data);
-          setUnreadCountExact(true);
-        }
-        void refreshUnreadActivity();
-      }, 150);
+    const refreshWhenVisible = async () => {
+      if (document.visibilityState !== "visible" || navigator.onLine === false) return;
+      const [pageResult, unreadResult] = await Promise.all([
+        fetchMyNotificationsPage({ limit: NOTIFICATIONS_PAGE_SIZE }),
+        fetchUnreadNotificationsCount(),
+      ]);
+      if (cancelled || profileIdRef.current !== currentProfileId) return;
+      if (pageResult.ok) {
+        setNotifications((current) =>
+          applyKnownReadState(mergeNotifications(current, pageResult.data.items)),
+        );
+      }
+      if (unreadResult.ok) {
+        setUnreadTotal(unreadResult.data);
+        setUnreadCountExact(true);
+      }
+      void refreshUnreadActivity();
     };
-    const channel = clientResult.data
-      .channel(`rawaj-notifications:${currentProfileId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "notifications",
-          filter: `recipient_id=eq.${currentProfileId}`,
-        },
-        async (payload) => {
-          const record = payload.eventType === "DELETE" ? payload.old : payload.new;
-          const notificationId = normalizeNotificationId(record?.id);
-          if (!notificationId) return;
-          if (payload.eventType === "DELETE") {
-            setNotifications((current) => current.filter((item) => item.id !== notificationId));
-            refreshUnread();
-            return;
-          }
-          const result = await fetchMyNotificationById(notificationId);
-          if (
-            generation !== realtimeGenerationRef.current ||
-            currentProfileId !== profileIdRef.current ||
-            !result.ok ||
-            !result.data
-          )
-            return;
-          const notification = result.data;
-          setNotifications((current) =>
-            applyKnownReadState(mergeNotifications(current, [notification])),
-          );
-          refreshUnread();
-        },
-      )
-      .subscribe();
 
+    const interval = window.setInterval(() => void refreshWhenVisible(), 15_000);
+    const refreshOnEvent = () => void refreshWhenVisible();
+    document.addEventListener("visibilitychange", refreshOnEvent);
+    window.addEventListener("online", refreshOnEvent);
+    window.addEventListener("focus", refreshOnEvent);
     return () => {
-      realtimeGenerationRef.current += 1;
-      if (refreshTimer !== null) clearTimeout(refreshTimer);
-      void clientResult.data.removeChannel(channel);
+      cancelled = true;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshOnEvent);
+      window.removeEventListener("online", refreshOnEvent);
+      window.removeEventListener("focus", refreshOnEvent);
     };
   }, [applyKnownReadState, auth.status, profileId, refreshUnreadActivity]);
 

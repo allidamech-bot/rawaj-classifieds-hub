@@ -2,7 +2,7 @@
 
 Date: 2026-07-04
 
-Scope: research and design inventory only. No production schema, Supabase, route, auth, payment, storage, or business-logic changes are included.
+Scope: research and design inventory only. No production schema, the retired backend, route, auth, payment, storage, or business-logic changes are included.
 
 ## Current Data Shape
 
@@ -23,8 +23,8 @@ Primary code references:
 - `src/routes/add-listing.tsx`
 - `src/routes/listings.index.tsx`
 - `src/routes/profile/listings.$id.tsx`
-- `supabase/migrations/202606300001_core_marketplace_schema_rls.sql`
-- `supabase/migrations/202607020001_syrian_districts_completion.sql`
+- `retired-backend/migrations/202606300001_core_marketplace_schema_rls.sql`
+- `retired-backend/migrations/202607020001_syrian_districts_completion.sql`
 
 ## Current Main Categories
 

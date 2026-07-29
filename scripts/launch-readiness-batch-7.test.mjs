@@ -9,7 +9,7 @@ const [
   buildGradle,
   rootGitignore,
   androidGitignore,
-  qualityGate,
+  androidReleaseWorkflow,
   mainActivity,
   launchStyles,
   splashDrawable,
@@ -22,7 +22,7 @@ const [
   readFile(new URL("../android/app/build.gradle", import.meta.url), "utf8"),
   readFile(new URL("../.gitignore", import.meta.url), "utf8"),
   readFile(new URL("../android/.gitignore", import.meta.url), "utf8"),
-  readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
+  readFile(new URL("../.github/workflows/android-release-candidate.yml", import.meta.url), "utf8"),
   readFile(
     new URL(
       "../android/app/src/main/java/com/rawaj/marketplace/MainActivity.java",
@@ -116,7 +116,7 @@ test("Android signing credentials cannot be committed accidentally", () => {
   }
 });
 
-test("Batch 7 is permanently part of the Quality Gate", () => {
-  assert.match(qualityGate, /Launch readiness Batch 7 contract/);
-  assert.match(qualityGate, /node --test scripts\/launch-readiness-batch-7\.test\.mjs/);
+test("Batch 7 is permanently part of the Android release candidate gate", () => {
+  assert.match(androidReleaseWorkflow, /Validate web and native contracts/);
+  assert.match(androidReleaseWorkflow, /node --test scripts\/launch-readiness-batch-7\.test\.mjs/);
 });

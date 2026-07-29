@@ -17,4 +17,4 @@ Presentation-only refinement for the activity center and the More hub.
 - notification loading and pagination entry points
 - conversation navigation
 - authentication, profile, support, safety, and settings behavior
-- all routes, APIs, database objects, migrations, and Supabase configuration
+- all routes, APIs, database objects, migrations, and the retired backend configuration

@@ -7,7 +7,7 @@
  * GeoNames dump documentation/license: https://download.geonames.org/export/dump/readme.txt
  * License: Creative Commons Attribution 4.0.
  *
- * This script does not write to Supabase. It produces deterministic JSON + CSV for review/import.
+ * This script does not write to the retired backend. It produces deterministic JSON + CSV for review/import.
  */
 
 import { createHash } from "node:crypto";

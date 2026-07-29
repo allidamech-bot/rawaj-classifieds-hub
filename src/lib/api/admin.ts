@@ -1,5 +1,6 @@
 import type { ClassifiedsResult, ModerateListingPayload } from "@/lib/classifieds-types";
-import { getClient, mapError } from "@/lib/api/shared";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 
 export async function adminModerateListing(
   canUseAdminAccess: boolean,
@@ -33,32 +34,36 @@ export async function adminModerateListing(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const rpcResult = await clientResult.data.rpc("rawaj_review_listing_decision", {
-    p_listing_id: payload.listingId.trim(),
-    p_decision: payload.status,
-    p_reason:
-      payload.status === "rejected"
-        ? payload.rejectionReason?.trim()
-        : "Approved after complete listing review",
-    p_expected_updated_at: payload.expectedUpdatedAt,
-  });
-
-  const error = rpcResult.error;
-  if (error) {
-    if (error.message?.includes("stale_review")) {
-      return {
-        ok: false,
-        error: {
-          code: "stale_review",
-          message: "تغيّر الإعلان منذ فتحه للمراجعة. حدّث الصفحة وراجعه من جديد.",
-        },
-      };
-    }
-    return { ok: false, error: mapError(error, "admin_moderate_listing") };
+  if (isCloudflarePublicDataProvider()) {
+    const action = payload.status === "approved" ? "approve" : "reject";
+    const result = await cloudflareApiRequest<null>("/v1/admin/listings/moderate", {
+      method: "POST",
+      body: {
+        listingId: payload.listingId,
+        action,
+        reason:
+          payload.status === "rejected"
+            ? payload.rejectionReason
+            : "Approved after complete listing review",
+        expectedUpdatedAt: payload.expectedUpdatedAt,
+      },
+    });
+    return result.ok
+      ? { ok: true, data: null }
+      : {
+          ok: false,
+          error: {
+            code: result.code as import("@/lib/classifieds-types").ClassifiedsErrorCode,
+            message: result.error,
+          },
+        };
   }
 
-  return { ok: true, data: null };
+  return {
+    ok: false,
+    error: {
+      code: "setup_required",
+      message: "مراجعة الإعلانات متاحة فقط في وضع Cloudflare.",
+    },
+  };
 }

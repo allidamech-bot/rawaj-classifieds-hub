@@ -1,7 +1,7 @@
 import type { ClassifiedListing, ClassifiedsResult } from "@/lib/classifieds-types";
 import { guardPublicListingDetailResult } from "@/lib/api/listing-detail-load-guard";
-import { fetchListingDetail as fetchListingDetailBase } from "@/lib/api/listings";
 import { isPublicListingVisible } from "@/lib/public-listing-presentation";
+import { fetchCloudflareListingDetail } from "@/lib/public-data/cloudflare-client";
 
 const pendingPublicListingDetailReads = new Map<
   string,
@@ -16,7 +16,10 @@ export function fetchListingDetailGuarded(
   if (pending) return pending;
 
   const request = (async () => {
-    const result = guardPublicListingDetailResult(await fetchListingDetailBase(listingId));
+    const sourceResult = await fetchCloudflareListingDetail(listingId).then((result) =>
+      result.ok ? { ok: true as const, data: result.data.listing } : result,
+    );
+    const result = guardPublicListingDetailResult(sourceResult);
     if (result.ok && !isPublicListingVisible(result.data)) {
       return {
         ok: false,

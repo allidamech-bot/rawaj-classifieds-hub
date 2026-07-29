@@ -32,9 +32,13 @@ test("notification and message bursts are debounced before unread counts refresh
   assert.match(activitySource, /navigator\.onLine === false/);
 });
 
-test("unread activity uses realtime and lifecycle refreshes without permanent polling", () => {
+test("unread activity uses controlled Cloudflare polling and legacy realtime lifecycle refreshes", () => {
   assert.doesNotMatch(activitySource, /UNREAD_ACTIVITY_POLL_MS/);
-  assert.doesNotMatch(activitySource, /window\.setInterval\(/);
+  assert.match(activitySource, /if \(isCloudflarePublicDataProvider\(\)\)/);
+  assert.match(activitySource, /window\.setInterval\(refreshWhenVisible, 30_000\)/);
+  assert.match(activitySource, /document\.visibilityState === "visible"/);
+  assert.match(activitySource, /window\.clearInterval\(interval\)/);
+  assert.match(activitySource, /removeEventListener\("visibilitychange", refreshWhenVisible\)/);
   assert.match(activitySource, /addEventListener\("focus", handleRefresh\)/);
   assert.match(activitySource, /addEventListener\("online", handleRefresh\)/);
   assert.match(activitySource, /UNREAD_ACTIVITY_CHANGED_EVENT/);

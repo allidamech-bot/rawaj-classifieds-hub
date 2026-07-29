@@ -21,6 +21,12 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "paths": {
+      "@/lib/api/taxonomy-metadata": [
+        "./src/lib/api/taxonomy-metadata-cloudflare.ts"
+      ],
+      "@/lib/api/ad-placements": [
+        "./src/lib/api/ad-placements-cloudflare.ts"
+      ],
       "@/features/listings/listings-components": [
         "./src/features/listings/listings-components-public.tsx"
       ],

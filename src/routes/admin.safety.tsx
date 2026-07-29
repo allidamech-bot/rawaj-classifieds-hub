@@ -422,6 +422,7 @@ function AdminSafetyPage() {
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as SafetyCaseStatus | "all")}
+              aria-label={text("تصفية القضايا حسب الحالة", "Filter cases by status")}
               className="input max-w-44"
             >
               <option value="all">{text("كل الحالات", "All statuses")}</option>

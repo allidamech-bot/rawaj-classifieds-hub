@@ -88,12 +88,10 @@ function AdminOverview() {
 
   if (!canViewCommandCenterMetrics) {
     return (
-      <section className="rounded-2xl bg-card p-5 text-center hairline">
-        <ShieldCheck className="mx-auto h-7 w-7 text-primary" />
-        <h2 className="mt-3 text-base font-extrabold">
-          {text("مساحات الإدارة متاحة حسب الصلاحيات", "Admin workspaces follow your permissions")}
-        </h2>
-        <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">
+      <section className="rawaj-admin-dashboard-state" data-tone="permission">
+        <ShieldCheck aria-hidden="true" />
+        <h2>{text("مساحات الإدارة متاحة حسب الصلاحيات", "Admin workspaces follow your permissions")}</h2>
+        <p>
           {text(
             "المؤشرات التشغيلية التفصيلية متاحة للمالك والإدارة، بينما تبقى طوابير المراجعة المصرح بها متاحة من شريط التنقل.",
             "Detailed operational metrics are limited to Owner and Admin, while authorized moderation queues remain available from the navigation bar.",
@@ -134,55 +132,46 @@ function AdminOverview() {
     metrics.pendingPromotions;
 
   return (
-    <div className="rawaj-admin-dashboard-v3 space-y-6">
-      <section className="rounded-3xl bg-primary p-5 text-primary-foreground shadow-premium sm:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gold text-gold-foreground">
-              <Crown className="h-6 w-6" />
-            </span>
-            <div>
-              <p className="text-xs font-bold text-primary-foreground/70">
-                {text("مركز قيادة رواج", "RAWAJ command center")}
-              </p>
-              <h2 className="mt-1 text-xl font-extrabold">
-                {auth.canAccessOwnerControls
-                  ? text("تحكم المالك وتشغيل المنصة", "Owner control and platform operations")
-                  : text("تشغيل وإدارة المنصة", "Platform operations")}
-              </h2>
-              <p className="mt-2 max-w-3xl text-xs leading-6 text-primary-foreground/80">
-                {text(
-                  "صورة تشغيلية واحدة للمستخدمين، المراجعات، السلامة، التوثيق، الترويج والقيود النشطة.",
-                  "One operational view for users, moderation, safety, verification, promotions, and active restrictions.",
-                )}
-              </p>
-            </div>
-          </div>
-          <span className="rounded-xl bg-primary-foreground/10 px-3 py-2 text-xs font-bold hairline">
-            {auth.canAccessOwnerControls
-              ? text("Owner محمي", "Protected Owner")
-              : text("وصول إداري", "Admin access")}
+    <div className="rawaj-admin-dashboard-v3">
+      <section className="rawaj-admin-command-hero">
+        <div className="rawaj-admin-command-hero__copy">
+          <span className="rawaj-admin-command-hero__icon">
+            <Crown aria-hidden="true" />
           </span>
+          <div>
+            <p>{text("مركز قيادة رواج", "RAWAJ command center")}</p>
+            <h2>
+              {auth.canAccessOwnerControls
+                ? text("تحكم المالك وتشغيل المنصة", "Owner control and platform operations")
+                : text("تشغيل وإدارة المنصة", "Platform operations")}
+            </h2>
+            <span>
+              {text(
+                "صورة تشغيلية واحدة للمستخدمين، المراجعات، السلامة، التوثيق، الترويج والقيود النشطة.",
+                "One operational view for users, moderation, safety, verification, promotions, and active restrictions.",
+              )}
+            </span>
+          </div>
         </div>
+        <strong className="rawaj-admin-command-hero__access">
+          {auth.canAccessOwnerControls
+            ? text("Owner محمي", "Protected Owner")
+            : text("وصول إداري", "Admin access")}
+        </strong>
       </section>
 
       {error ? (
-        <div className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive hairline">
+        <div className="rawaj-admin-dashboard-error" role="alert">
           <p>{error}</p>
-          <button
-            type="button"
-            disabled={loading}
-            onClick={() => void loadMetrics()}
-            className="mt-2 rounded-lg bg-card px-3 py-1.5 font-bold text-foreground hairline disabled:opacity-60"
-          >
+          <button type="button" disabled={loading} onClick={() => void loadMetrics()}>
             {loading ? text("جارٍ التحديث", "Refreshing") : text("إعادة المحاولة", "Try again")}
           </button>
         </div>
       ) : null}
 
-      <section>
+      <section className="rawaj-admin-dashboard-section" data-section="pulse">
         <SectionTitle icon={Activity} title={text("نبض التشغيل", "Operations pulse")} />
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="rawaj-admin-metrics-grid">
           <MetricCard label={text("إجمالي المستخدمين", "Total users")} value={metrics.totalUsers} />
           <MetricCard
             label={text("المستخدمون النشطون", "Active users")}
@@ -201,12 +190,9 @@ function AdminOverview() {
         </div>
       </section>
 
-      <section>
-        <SectionTitle
-          icon={ShieldCheck}
-          title={text("السلامة والمراجعة", "Safety and moderation")}
-        />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <section className="rawaj-admin-dashboard-section" data-section="queues">
+        <SectionTitle icon={ShieldCheck} title={text("السلامة والمراجعة", "Safety and moderation")} />
+        <div className="rawaj-admin-queue-grid">
           <QueueCard
             icon={FileCheck}
             label={text("إعلانات للمراجعة", "Listings to review")}
@@ -240,9 +226,9 @@ function AdminOverview() {
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="rawaj-admin-command-grid">
         <CommandCard icon={Users} title={text("حالة المستخدمين", "User health")}>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="rawaj-admin-mini-metrics" data-columns="three">
             <MiniMetric label={text("موقوف", "Suspended")} value={metrics.frozenUsers} />
             <MiniMetric label={text("محظور", "Banned")} value={metrics.disabledUsers} />
             <MiniMetric label={text("قيود", "Restrictions")} value={metrics.activeRestrictions} />
@@ -254,11 +240,11 @@ function AdminOverview() {
         </CommandCard>
 
         <CommandCard icon={UserCog} title={text("الطاقم والصلاحيات", "Staff and permissions")}>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="rawaj-admin-mini-metrics" data-columns="two">
             <MiniMetric label="Admin" value={metrics.adminCount} />
             <MiniMetric label="Moderator" value={metrics.moderatorCount} />
           </div>
-          <p className="mt-3 text-xs leading-6 text-muted-foreground">
+          <p className="rawaj-admin-command-card__description">
             {text(
               "إضافة أو إزالة Admin وModerator متاحة للمالك فقط من إدارة المستخدمين.",
               "Only the Owner can add or remove Admin and Moderator roles from user management.",
@@ -268,7 +254,7 @@ function AdminOverview() {
         </CommandCard>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="rawaj-admin-quick-grid">
         <QuickLink
           icon={ShieldCheck}
           title={text("مركز السلامة", "Safety center")}
@@ -316,15 +302,12 @@ function AdminLoadState({
   onAction?: () => void;
 }) {
   return (
-    <section className="rounded-2xl bg-card p-8 text-center hairline">
-      <p className="text-sm font-bold">{title}</p>
-      {body ? <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p> : null}
+    <section className="rawaj-admin-dashboard-state" data-tone="loading">
+      <Activity aria-hidden="true" />
+      <h2>{title}</h2>
+      {body ? <p>{body}</p> : null}
       {actionLabel && onAction ? (
-        <button
-          type="button"
-          onClick={onAction}
-          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-        >
+        <button type="button" onClick={onAction}>
           {actionLabel}
         </button>
       ) : null}
@@ -334,10 +317,12 @@ function AdminLoadState({
 
 function SectionTitle({ icon: Icon, title }: { icon: typeof Crown; title: string }) {
   return (
-    <h2 className="mb-3 flex items-center gap-2 text-base font-extrabold">
-      <Icon className="h-4 w-4 text-primary" />
-      {title}
-    </h2>
+    <header className="rawaj-admin-section-title">
+      <span>
+        <Icon aria-hidden="true" />
+      </span>
+      <h2>{title}</h2>
+    </header>
   );
 }
 
@@ -351,9 +336,9 @@ function MetricCard({
   attention?: boolean;
 }) {
   return (
-    <div className={`rounded-2xl p-4 hairline ${attention ? "bg-warning/10" : "bg-card"}`}>
-      <div className="text-2xl font-extrabold">{value.toLocaleString()}</div>
-      <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+    <div className="rawaj-admin-metric-card" data-attention={attention}>
+      <strong>{value.toLocaleString()}</strong>
+      <span>{label}</span>
     </div>
   );
 }
@@ -370,17 +355,12 @@ function QueueCard({
   to: string;
 }) {
   return (
-    <Link
-      to={to as "/admin"}
-      className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface"
-    >
-      <div className="flex items-center justify-between gap-3">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-muted-surface text-primary">
-          <Icon className="h-4 w-4" />
-        </span>
-        <span className="text-xl font-extrabold">{value.toLocaleString()}</span>
-      </div>
-      <p className="mt-3 text-xs font-bold">{label}</p>
+    <Link to={to as "/admin"} className="rawaj-admin-queue-card" data-active={value > 0}>
+      <span className="rawaj-admin-queue-card__icon">
+        <Icon aria-hidden="true" />
+      </span>
+      <strong>{value.toLocaleString()}</strong>
+      <p>{label}</p>
     </Link>
   );
 }
@@ -395,28 +375,25 @@ function CommandCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl bg-card p-5 hairline">
+    <article className="rawaj-admin-command-card">
       <SectionTitle icon={Icon} title={title} />
       {children}
-    </div>
+    </article>
   );
 }
 
 function MiniMetric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl bg-muted-surface p-3 text-center">
-      <div className="text-lg font-extrabold">{value.toLocaleString()}</div>
-      <div className="mt-1 text-[10px] text-muted-foreground">{label}</div>
+    <div className="rawaj-admin-mini-metric">
+      <strong>{value.toLocaleString()}</strong>
+      <span>{label}</span>
     </div>
   );
 }
 
 function CommandLink({ to, label }: { to: string; label: string }) {
   return (
-    <Link
-      to={to as "/admin"}
-      className="mt-4 inline-flex rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
-    >
+    <Link to={to as "/admin"} className="rawaj-admin-command-link">
       {label}
     </Link>
   );
@@ -434,13 +411,14 @@ function QuickLink({
   to: string;
 }) {
   return (
-    <Link
-      to={to as "/admin"}
-      className="rounded-2xl bg-card p-4 transition hairline hover:bg-muted-surface"
-    >
-      <Icon className="h-5 w-5 text-primary" />
-      <h3 className="mt-3 text-sm font-extrabold">{title}</h3>
-      <p className="mt-1 text-xs leading-5 text-muted-foreground">{body}</p>
+    <Link to={to as "/admin"} className="rawaj-admin-quick-link">
+      <span>
+        <Icon aria-hidden="true" />
+      </span>
+      <div>
+        <h3>{title}</h3>
+        <p>{body}</p>
+      </div>
     </Link>
   );
 }

@@ -9,4 +9,4 @@ Presentation-only pass for listing studio, listing detail, messaging, account su
 - Account surfaces receive consistent mobile gutters and desktop max width.
 - Messaging and trust/support heroes use the same bright structural language.
 
-No data, authentication, permissions, Supabase, API, publishing, messaging, moderation, or Android behavior is changed.
+No data, authentication, permissions, the retired backend, API, publishing, messaging, moderation, or Android behavior is changed.

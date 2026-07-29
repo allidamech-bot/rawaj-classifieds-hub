@@ -1,12 +1,29 @@
 import { createContext } from "react";
-import type { Session, User } from "@supabase/supabase-js";
 import type { RolePermission, RolePermissions, UserProfile } from "./auth-types";
 import type { AuthStatus } from "./auth-status";
 
+export interface AuthUser {
+  id: string;
+  uid: string;
+  email: string | null;
+  email_confirmed_at: string | null;
+  user_metadata: {
+    display_name?: string;
+    full_name?: string;
+    avatar_url?: string;
+    picture?: string;
+  };
+}
+
+export interface AuthSession {
+  access_token: string;
+  user: AuthUser;
+}
+
 export interface AuthContextValue {
   status: AuthStatus;
-  user: User | null;
-  session: Session | null;
+  user: AuthUser | null;
+  session: AuthSession | null;
   profile: UserProfile | null;
   reason: string | null;
   permissions: RolePermissions;
@@ -16,6 +33,15 @@ export interface AuthContextValue {
   signOut: () => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<{ error: string | null }>;
   signInWithGoogle: (returnTo?: string) => Promise<{ error: string | null }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUpWithPassword: (
+    email: string,
+    password: string,
+    displayName: string,
+  ) => Promise<{ error: string | null }>;
+  requestPasswordReset: (
+    email: string,
+  ) => Promise<{ error: string | null; developmentToken?: string }>;
   emailConfirmed: boolean;
 }
 

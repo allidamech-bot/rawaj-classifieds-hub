@@ -1,15 +1,12 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
+  ClassifiedListing,
+  ClassifiedsErrorCode,
   ClassifiedsResult,
   Favorite,
-  ListingFilters,
-  PaginatedListingsResponse,
 } from "@/lib/classifieds-types";
-import type { ClassifiedListing } from "@/lib/classifieds-types";
-import { hydrateListingsWithPrimaryImages, mapListing } from "@/lib/api/listings";
-import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
-import { fetchPublicGovernorates, mapGovernorate, readReferences } from "@/lib/api/references";
-import { getClient, mapError, rowNullableNumber, rowString } from "@/lib/api/shared";
+import { mapListing } from "@/lib/api/listings";
+import { rowNullableNumber, rowString } from "@/lib/api/shared";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 
 export type FavoriteJourneyAvailability = "available" | "unavailable";
 
@@ -35,83 +32,38 @@ export async function fetchFavoriteStatus(
   userId: string | null,
   listingId: string,
 ): Promise<ClassifiedsResult<boolean>> {
-  if (!userId) {
-    return { ok: false, error: { code: "auth_required", message: "يجب تسجيل الدخول." } };
-  }
+  if (!userId) return authRequired("يجب تسجيل الدخول.");
+  const cleanListingId = listingId.trim();
+  if (!cleanListingId) return validation("تعذر تحديد الإعلان.");
 
-  if (!listingId.trim()) {
-    return { ok: false, error: { code: "validation_error", message: "تعذر تحديد الإعلان." } };
-  }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data
-    .from("favorites")
-    .select("user_id")
-    .eq("user_id", userId)
-    .eq("listing_id", listingId)
-    .maybeSingle();
-
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: !!data };
+  const result = await cloudflareApiRequest<{ favorited: boolean }>(
+    `/v1/listings/${encodeURIComponent(cleanListingId)}/favorite`,
+  );
+  return result.ok ? { ok: true, data: result.data.favorited } : apiFailure(result);
 }
 
 export async function fetchFavorites(
   userId: string | null,
 ): Promise<ClassifiedsResult<Favorite[]>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض المفضلة." },
-    };
-  }
+  if (!userId) return authRequired("يجب تسجيل الدخول لعرض المفضلة.");
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data
-    .from("favorites")
-    .select("user_id, listing_id, created_at")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
-
-  if (error) return { ok: false, error: mapError(error) };
-
-  const favorites = ((data ?? []) as Record<string, unknown>[]).map((row) => ({
-    userId: rowString(row, "user_id"),
-    listingId: rowString(row, "listing_id"),
-    createdAt: rowString(row, "created_at"),
-  }));
-
-  const listingIds = [...new Set(favorites.map((favorite) => favorite.listingId).filter(Boolean))];
-  if (listingIds.length === 0) return { ok: true, data: favorites };
-
-  const references = await readReferences(clientResult.data);
-  if (!references.ok) return { ok: true, data: favorites };
-
-  const listingsResult = await clientResult.data
-    .from("listings")
-    .select("*")
-    .in("id", listingIds)
-    .eq("status", "approved")
-    .or(publicListingExpiryFilter());
-
-  if (listingsResult.error) return { ok: true, data: favorites };
-
-  const listings = await hydrateListingsWithPrimaryImages(
-    clientResult.data,
-    ((listingsResult.data ?? []) as Record<string, unknown>[]).map((row) =>
-      mapListing(row, references.categories, references.governorates),
-    ),
+  const result = await cloudflareApiRequest<Record<string, unknown>[]>(
+    "/v1/account/favorites?pageSize=100",
   );
-  const listingById = new Map(listings.map((listing) => [listing.id, listing]));
+  if (!result.ok) return apiFailure(result);
 
   return {
     ok: true,
-    data: favorites.map((favorite) => ({
-      ...favorite,
-      listing: listingById.get(favorite.listingId),
+    data: result.data.map((row) => ({
+      userId: rowString(row, "user_id", userId),
+      listingId: rowString(row, "listing_id"),
+      createdAt: rowString(row, "created_at"),
+      listing: mapListing({
+        ...row,
+        id: row.listing_id,
+        created_at: row.listing_created_at,
+        updated_at: row.listing_updated_at,
+      }),
     })),
   };
 }
@@ -119,65 +71,26 @@ export async function fetchFavorites(
 export async function fetchFavoriteJourneyItems(
   userId: string | null,
 ): Promise<ClassifiedsResult<FavoriteJourneyItem[]>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض المفضلة." },
-    };
-  }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data
-    .from("favorite_listing_snapshots")
-    .select(
-      "user_id, listing_id, title_snapshot, price_snapshot, currency_snapshot, status_snapshot, created_at, updated_at",
-    )
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
-
-  if (error) return { ok: false, error: mapError(error) };
-
-  const snapshots = ((data ?? []) as Record<string, unknown>[]).map((row) => ({
-    userId: rowString(row, "user_id"),
-    listingId: rowString(row, "listing_id"),
-    title: rowString(row, "title_snapshot", "إعلان غير متاح"),
-    price: rowNullableNumber(row, "price_snapshot"),
-    currency: rowString(row, "currency_snapshot", "SYP"),
-    status: rowString(row, "status_snapshot", "approved"),
-    createdAt: rowString(row, "created_at"),
-    updatedAt: rowString(row, "updated_at"),
-  }));
-
-  const listingIds = [...new Set(snapshots.map((snapshot) => snapshot.listingId).filter(Boolean))];
-  if (listingIds.length === 0) return { ok: true, data: [] };
-
-  const references = await readReferences(clientResult.data);
-  const listingsResult = await clientResult.data
-    .from("listings")
-    .select("*")
-    .in("id", listingIds)
-    .eq("status", "approved")
-    .or(publicListingExpiryFilter());
-
-  const listings =
-    references.ok && !listingsResult.error
-      ? await hydrateListingsWithPrimaryImages(
-          clientResult.data,
-          ((listingsResult.data ?? []) as Record<string, unknown>[]).map((row) =>
-            mapListing(row, references.categories, references.governorates),
-          ),
-        )
-      : [];
-  const listingById = new Map(listings.map((listing) => [listing.id, listing]));
+  if (!userId) return authRequired("يجب تسجيل الدخول لعرض المفضلة.");
+  const favorites = await fetchFavorites(userId);
+  if (!favorites.ok) return favorites;
 
   return {
     ok: true,
-    data: snapshots.map((snapshot) => {
-      const listing = listingById.get(snapshot.listingId);
+    data: favorites.data.map((favorite) => {
+      const listing = favorite.listing;
+      const snapshot: FavoriteListingSnapshot = {
+        userId: favorite.userId,
+        listingId: favorite.listingId,
+        title: listing?.title ?? "إعلان غير متاح",
+        price: listing?.price ?? null,
+        currency: listing?.currency ?? "SYP",
+        status: listing?.status ?? "approved",
+        createdAt: favorite.createdAt,
+        updatedAt: listing?.updatedAt ?? favorite.createdAt,
+      };
       return {
-        listingId: snapshot.listingId,
+        listingId: favorite.listingId,
         availability: listing ? "available" : "unavailable",
         snapshot,
         listing,
@@ -190,59 +103,52 @@ export async function favoriteListing(
   userId: string | null,
   listingId: string,
 ): Promise<ClassifiedsResult<null>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لحفظ الإعلان." },
-    };
-  }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const cleanListingId = listingId.trim();
-  if (!cleanListingId) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
-    };
-  }
-
-  const { data, error } = await clientResult.data.rpc("rawaj_set_favorite_v1", {
-    p_listing_id: cleanListingId,
-    p_favorited: true,
-  });
-
-  if (error) return { ok: false, error: mapError(error, "favorite_listing") };
-  if (data !== true) {
-    return {
-      ok: false,
-      error: { code: "not_found", message: "لا يمكن حفظ إعلان غير متاح." },
-    };
-  }
-
-  return { ok: true, data: null };
+  return setFavorite(userId, listingId, true);
 }
 
 export async function unfavoriteListing(
   userId: string | null,
   listingId: string,
 ): Promise<ClassifiedsResult<null>> {
+  return setFavorite(userId, listingId, false);
+}
+
+async function setFavorite(
+  userId: string | null,
+  listingId: string,
+  favorited: boolean,
+): Promise<ClassifiedsResult<null>> {
   if (!userId) {
-    return {
-      ok: false,
-      error: { code: "auth_required", message: "يجب تسجيل الدخول لتعديل المفضلة." },
-    };
+    return authRequired(
+      favorited ? "يجب تسجيل الدخول لحفظ الإعلان." : "يجب تسجيل الدخول لتعديل المفضلة.",
+    );
   }
+  const cleanListingId = listingId.trim();
+  if (!cleanListingId) return validation("تعذر تحديد الإعلان المطلوب.");
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
+  const result = await cloudflareApiRequest<{ favorited: boolean }>(
+    `/v1/listings/${encodeURIComponent(cleanListingId)}/favorite`,
+    { method: favorited ? "POST" : "DELETE", ...(favorited ? { body: {} } : {}) },
+  );
+  return result.ok ? { ok: true, data: null } : apiFailure(result);
+}
 
-  const { error } = await clientResult.data.rpc("rawaj_set_favorite_v1", {
-    p_listing_id: listingId,
-    p_favorited: false,
-  });
+function apiFailure<T>(result: { ok: false; error: string; code: string }): ClassifiedsResult<T> {
+  return {
+    ok: false,
+    error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+  };
+}
 
-  if (error) return { ok: false, error: mapError(error, "unfavorite_listing") };
-  return { ok: true, data: null };
+function authRequired<T>(message: string): ClassifiedsResult<T> {
+  return { ok: false, error: { code: "auth_required", message } };
+}
+
+function validation<T>(message: string): ClassifiedsResult<T> {
+  return { ok: false, error: { code: "validation_error", message } };
+}
+
+// Kept as a named export for older consumers that imported the row helper.
+export function mapFavoritePriceSnapshot(row: Record<string, unknown>): number | null {
+  return rowNullableNumber(row, "price_snapshot");
 }

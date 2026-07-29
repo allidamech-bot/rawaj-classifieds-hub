@@ -11,6 +11,7 @@ on:
       - "package-lock.json"
       - "scripts/build-android-release-candidate-evidence.mjs"
       - "scripts/android-release-candidate-integrity.test.mjs"
+      - "scripts/launch-readiness-batch-7.test.mjs"
       - ".github/workflows/android-release-candidate.yml"
       - ".github/workflows/android-release-candidate-integrity.yml"
   workflow_dispatch:
@@ -43,6 +44,7 @@ jobs:
           node --test scripts/android-media-location-permissions.test.mjs
           node --test scripts/android-deep-link-oauth-readiness.test.mjs
           node --test scripts/android-release-candidate-integrity.test.mjs
+          node --test scripts/launch-readiness-batch-7.test.mjs
 
       - name: Build web assets
         run: npm run build

@@ -1,109 +1,64 @@
 /* eslint-disable no-console */
 
-import { readFile, readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
 const root = process.cwd();
-const migrationsDir = path.join(root, "supabase", "migrations");
-const ledgerPath = path.join(root, "docs", "production-schema", "migration-ledger.json");
-const versionPattern = /^(\d{12,14})_(.+)\.sql$/;
-
-function fail(messages) {
-  for (const message of messages) console.error(`ERROR: ${message}`);
-  process.exitCode = 1;
-}
+const migrationsDir = path.join(root, "cloudflare", "d1", "migrations");
+const filenamePattern = /^(\d{4})_([a-z0-9][a-z0-9_-]*)\.sql$/;
 
 const files = (await readdir(migrationsDir)).filter((file) => file.endsWith(".sql")).sort();
-console.log(`MIGRATION_INVENTORY_JSON=${JSON.stringify(files)}`);
 
-const malformed = files.filter((file) => !versionPattern.test(file));
-const parsed = files
-  .map((file) => {
-    const match = file.match(versionPattern);
-    return match ? { filename: file, version: match[1] } : null;
-  })
-  .filter(Boolean);
-
-const ledger = JSON.parse(await readFile(ledgerPath, "utf8"));
-const defaults = ledger.defaults ?? {};
-const classifications = ledger.classifications ?? {};
-const entries = Object.entries(classifications).flatMap(([classification, filenames]) =>
-  Array.isArray(filenames) ? filenames.map((filename) => ({ filename, classification })) : [],
-);
-const documentedCollisions = ledger.documentedCollisions ?? {};
 const errors = [];
+const parsed = [];
 
-if (malformed.length) {
-  errors.push(
-    `Migration filenames must match <12-14 digit version>_<name>.sql: ${malformed.join(", ")}`,
-  );
-}
-
-const repositoryFiles = new Set(files);
-const ledgerFiles = new Set();
-for (const entry of entries) {
-  if (typeof entry.filename !== "string") {
-    errors.push("Every grouped ledger entry must be a filename string.");
+for (const file of files) {
+  const match = file.match(filenamePattern);
+  if (!match) {
+    errors.push(`Invalid D1 migration filename: ${file}`);
     continue;
   }
-  if (ledgerFiles.has(entry.filename)) {
-    errors.push(`Duplicate ledger entry: ${entry.filename}`);
+
+  const sequence = Number(match[1]);
+  const content = await readFile(path.join(migrationsDir, file), "utf8");
+  if (!content.trim()) errors.push(`Empty D1 migration: ${file}`);
+  parsed.push({ file, sequence });
+}
+
+const seen = new Map();
+for (const migration of parsed) {
+  const existing = seen.get(migration.sequence);
+  if (existing) {
+    errors.push(
+      `Duplicate D1 migration sequence ${String(migration.sequence).padStart(4, "0")}: ${existing}, ${migration.file}`,
+    );
+  } else {
+    seen.set(migration.sequence, migration.file);
   }
-  ledgerFiles.add(entry.filename);
-  if (!repositoryFiles.has(entry.filename)) {
-    errors.push(`Ledger references a missing migration: ${entry.filename}`);
-  }
-  for (const field of ["classification", "productionState", "replaySafety"]) {
-    if (!(entry[field] ?? defaults[field])) {
-      errors.push(`${entry.filename} is missing effective ${field}.`);
+}
+
+const orderedSequences = [...seen.keys()].sort((left, right) => left - right);
+if (orderedSequences.length === 0) {
+  errors.push("No D1 migrations were found.");
+} else {
+  const first = orderedSequences[0];
+  const last = orderedSequences.at(-1);
+  if (first !== 1) errors.push(`D1 migration sequence must start at 0001, found ${first}.`);
+  for (let expected = first; expected <= last; expected += 1) {
+    if (!seen.has(expected)) {
+      errors.push(`Missing D1 migration sequence ${String(expected).padStart(4, "0")}.`);
     }
   }
 }
 
-for (const file of files) {
-  if (!ledgerFiles.has(file)) {
-    errors.push(`Migration is not registered in the canonical ledger: ${file}`);
-  }
+console.log(`D1_MIGRATION_INVENTORY_JSON=${JSON.stringify(files)}`);
+
+if (errors.length > 0) {
+  for (const error of errors) console.error(`ERROR: ${error}`);
+  process.exit(1);
 }
 
-const byVersion = new Map();
-for (const migration of parsed) {
-  const group = byVersion.get(migration.version) ?? [];
-  group.push(migration.filename);
-  byVersion.set(migration.version, group);
-}
-
-for (const [version, collisionFiles] of byVersion) {
-  if (collisionFiles.length < 2) continue;
-  const documented = documentedCollisions[version];
-  if (!Array.isArray(documented)) {
-    errors.push(
-      `Duplicate migration version ${version}: ${collisionFiles.join(", ")}. Add an exact documentedCollisions entry; do not rename historical files blindly.`,
-    );
-    continue;
-  }
-  const actual = [...collisionFiles].sort();
-  const expected = [...documented].sort();
-  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-    errors.push(
-      `Collision documentation mismatch for ${version}. Actual: ${actual.join(", ")}; documented: ${expected.join(", ")}`,
-    );
-  }
-}
-
-for (const [version, documented] of Object.entries(documentedCollisions)) {
-  const actual = [...(byVersion.get(version) ?? [])].sort();
-  const expected = Array.isArray(documented) ? [...documented].sort() : [];
-  if (actual.length < 2) {
-    errors.push(
-      `documentedCollisions.${version} is stale; the repository no longer has a collision.`,
-    );
-  }
-  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-    errors.push(`documentedCollisions.${version} does not exactly match repository files.`);
-  }
-}
-
-if (errors.length) fail(errors);
-else console.log(`Migration ledger and version collision checks passed (${files.length} files).`);
+console.log(
+  `D1 migration ledger check passed (${files.length} migrations, continuous 0001-${String(orderedSequences.at(-1)).padStart(4, "0")}).`,
+);

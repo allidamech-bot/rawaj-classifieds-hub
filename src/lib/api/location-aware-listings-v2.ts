@@ -5,7 +5,7 @@ import type {
   ListingFilters,
   PaginatedListingsResponse,
 } from "@/lib/classifieds-types";
-import { fetchPublicListings } from "@/lib/api/listings";
+import { fetchCloudflareListings } from "@/lib/public-data/cloudflare-client";
 
 const pendingPublicListingReads = new Map<
   string,
@@ -17,20 +17,9 @@ function publicListingReadKey(
   cursor: ListingCursor | null,
   pageSize: number,
 ): string {
-  return JSON.stringify({ filters, cursor, pageSize });
+  return JSON.stringify({ provider: "cloudflare", filters, cursor, pageSize });
 }
 
-/**
- * Compatibility entry point retained for saved-search alerts and older callers.
- * The public listings reader now owns taxonomy, location, visibility, and cursor
- * filtering in one source-side query contract, including its explicit
- * `.select(publicListingSelect)` allowlist, `.eq("status", "approved")`
- * visibility guard, and `.is("archived_at", null)` archive guard.
- *
- * Concurrent identical reads are deduplicated without retaining a stale result.
- * This prevents SSR/hydration or sibling consumers from repeating the database
- * read and Signed URL generation while preserving immediate visibility changes.
- */
 export function fetchPublicListingsCanonicalAware(
   filters: ListingFilters = {},
   cursor: ListingCursor | null = null,
@@ -40,7 +29,7 @@ export function fetchPublicListingsCanonicalAware(
   const pending = pendingPublicListingReads.get(key);
   if (pending) return pending;
 
-  const request = fetchPublicListings(filters, cursor, pageSize).finally(() => {
+  const request = fetchCloudflareListings(filters, cursor, pageSize).finally(() => {
     if (pendingPublicListingReads.get(key) === request) pendingPublicListingReads.delete(key);
   });
   pendingPublicListingReads.set(key, request);

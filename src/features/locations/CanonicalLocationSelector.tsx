@@ -96,7 +96,7 @@ export function CanonicalLocationSelector({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-canonical-location-selector="true">
       <div className="relative">
         <input
           type="search"
@@ -104,6 +104,7 @@ export function CanonicalLocationSelector({
           onChange={(event) => setQuery(event.target.value)}
           disabled={disabled}
           placeholder={text("ابحث باسم المكان أو اسمه الشائع", "Search location or common name")}
+          aria-label={text("البحث عن موقع", "Search for a location")}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm disabled:opacity-50"
         />
         {query.trim().length >= 2 ? (

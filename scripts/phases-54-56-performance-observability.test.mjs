@@ -25,7 +25,10 @@ const [
   readFile(new URL("../src/server.ts", import.meta.url), "utf8"),
   readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/unread-activity.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/communication/useLiveChatWorkspace.ts", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/communication/useLiveChatWorkspace.ts", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/messaging-guarded.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/location-aware-listings-v2.ts", import.meta.url), "utf8"),
@@ -83,8 +86,13 @@ test("SSR observability records build identity, duration and pathname only", () 
   );
 });
 
-test("launch traffic safeguards remove permanent polling from public and account surfaces", () => {
-  assert.doesNotMatch(unreadActivity, /UNREAD_ACTIVITY_POLL_MS|window\.setInterval\(/);
+test("launch traffic safeguards bound Cloudflare polling and remove it from public surfaces", () => {
+  assert.doesNotMatch(unreadActivity, /UNREAD_ACTIVITY_POLL_MS/);
+  assert.match(unreadActivity, /if \(isCloudflarePublicDataProvider\(\)\)/);
+  assert.match(unreadActivity, /window\.setInterval\(refreshWhenVisible, 30_000\)/);
+  assert.match(unreadActivity, /document\.visibilityState === "visible"/);
+  assert.match(unreadActivity, /navigator\.onLine !== false/);
+  assert.match(unreadActivity, /window\.clearInterval\(interval\)/);
   assert.match(unreadActivity, /table: "notifications"/);
   assert.match(unreadActivity, /table: "conversation_messages"/);
   assert.match(unreadActivity, /table: "conversations"/);

@@ -1,0 +1,10 @@
+.wrangler/
+worker/wrangler.generated.jsonc
+snapshots/
+migration-report*.json
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+**/downloaded-media/
+**/migration-checkpoint*.json
+**/recovery-token*.json

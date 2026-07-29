@@ -74,16 +74,12 @@ test("profile mutations and refreshes remain bound to one account", () => {
 });
 
 test("auth provider rejects stale session, profile, and refresh results", () => {
-  assert.match(authProvider, /sessionUserIdRef = useRef<string \| null>/);
-  assert.match(authProvider, /sessionRequestIdRef = useRef\(0\)/);
-  assert.match(authProvider, /profileRequestIdRef = useRef\(0\)/);
-  assert.match(authProvider, /requestId !== profileRequestIdRef\.current/);
-  assert.match(authProvider, /sessionUserIdRef\.current !== userId/);
-  assert.match(authProvider, /requestId !== sessionRequestIdRef\.current/);
-  assert.match(authProvider, /const accountChanged = sessionUserIdRef\.current !== nextUserId/);
-  assert.match(authProvider, /if \(accountChanged\) \{[\s\S]*setProfile\(null\)/);
-  assert.match(authProvider, /sessionRequestIdRef\.current \+= 1/);
-  assert.match(authProvider, /profileRequestIdRef\.current \+= 1/);
+  assert.match(authProvider, /loadRequestIdRef = useRef\(0\)/);
+  assert.match(authProvider, /const requestId = \+\+loadRequestIdRef\.current/);
+  assert.equal((authProvider.match(/requestId !== loadRequestIdRef\.current/g) ?? []).length, 3);
+  assert.match(authProvider, /const nextProfile = next \? await loadCloudflareUserProfile\(next\)/);
+  assert.match(authProvider, /loadRequestIdRef\.current \+= 1/);
+  assert.match(authProvider, /setProfile\(null\)/);
 });
 
 test("activity center reads compare results with the live account", () => {

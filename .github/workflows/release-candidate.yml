@@ -1,25 +1,7 @@
 name: Release Candidate
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/release-candidate.yml"
-      - ".github/workflows/quality-gate.yml"
-      - "e2e/release-core-journeys.spec.ts"
-      - "scripts/bottom-dock-navigation-contract.test.mjs"
   workflow_dispatch:
-    inputs:
-      expected_commit_sha:
-        description: Exact 40-character commit SHA to certify
-        required: true
-        type: string
-      run_production_acceptance:
-        description: Run authenticated read-only acceptance against rawa-j.com
-        required: true
-        default: false
-        type: boolean
 
 concurrency:
   group: release-candidate-${{ inputs.expected_commit_sha || github.sha }}
@@ -146,7 +128,7 @@ jobs:
             echo "- Workflow run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo "- Web, browser, Android, and manifest artifacts are attached to the workflow run when the result is successful."
             echo "- Authenticated Production Acceptance: ${{ github.event_name == 'workflow_dispatch' && inputs.run_production_acceptance && 'executed' || 'external run still required' }}"
-            echo "- Physical Android device, release signing, Play Console, real App Links certificate fingerprint, and Supabase dashboard evidence remain external gates."
+            echo "- Physical Android device, release signing, Play Console, real App Links certificate fingerprint, and Firebase and Cloudflare production-console evidence remain external gates."
             echo
             echo "This issue is intentionally reused for every candidate. Historical evidence remains in GitHub Actions runs and artifacts."
             if [ -f rc-quality-gate.log ]; then

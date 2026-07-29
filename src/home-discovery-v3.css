@@ -55,6 +55,56 @@
   color: #fffdf7;
 }
 
+/*
+ * The discovery hero owns RAWAJ's dark-green visual identity. Keep it
+ * authoritative over generic hero lightening rules loaded globally.
+ */
+.rawaj-home-v3 .rawaj-discovery-hero {
+  border-color: color-mix(in srgb, white 12%, transparent) !important;
+  background:
+    radial-gradient(
+      circle at 86% 12%,
+      color-mix(in srgb, var(--rawaj-gold) 28%, transparent),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 8% 100%,
+      color-mix(in srgb, var(--rawaj-orange) 22%, transparent),
+      transparent 35%
+    ),
+    linear-gradient(145deg, #092d29 0%, var(--color-primary) 48%, #1b594b 100%) !important;
+  color: #fffdf7 !important;
+  box-shadow: 0 28px 70px color-mix(in srgb, var(--color-primary) 25%, transparent) !important;
+}
+
+.rawaj-home-v3 .rawaj-discovery-hero .rawaj-discovery-kicker {
+  color: #f3cb8a !important;
+}
+
+.rawaj-home-v3 .rawaj-discovery-hero .rawaj-discovery-hero__copy h1 {
+  color: #fffdf7 !important;
+}
+
+.rawaj-home-v3 .rawaj-discovery-hero .rawaj-discovery-hero__copy > p:not(.rawaj-discovery-kicker) {
+  color: color-mix(in srgb, #fffdf7 73%, transparent) !important;
+}
+
+.rawaj-home-v3 .rawaj-discovery-hero .rawaj-discovery-benefits span {
+  color: color-mix(in srgb, #fffdf7 88%, transparent) !important;
+}
+
+.rawaj-home-v3 .rawaj-discovery-hero .rawaj-discovery-hero__geometry {
+  opacity: 1 !important;
+}
+
+.rawaj-home-v3 .rawaj-discovery-hero .rawaj-search-overlay {
+  border-color: color-mix(in srgb, white 30%, transparent) !important;
+  background: color-mix(in srgb, #fffdf9 92%, transparent) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, white 72%, transparent) inset,
+    0 28px 64px color-mix(in srgb, #061a17 34%, transparent) !important;
+}
+
 .rawaj-discovery-hero::after {
   position: absolute;
   inset: auto -15% -43% auto;

@@ -1,6 +1,5 @@
-import type { ClassifiedsResult } from "@/lib/classifieds-types";
-import { publicListingExpiryFilter } from "@/lib/api/listing-expiry";
-import { getClient, mapError } from "@/lib/api/shared";
+import type { ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 
 export interface ListingTaxonomyAssignment {
   listingId: string;
@@ -9,55 +8,10 @@ export interface ListingTaxonomyAssignment {
   updatedAt: string;
 }
 
-function mapAssignment(row: Record<string, unknown>): ListingTaxonomyAssignment {
-  return {
-    listingId: String(row.listing_id ?? ""),
-    taxonomyNodeId: String(row.taxonomy_node_id ?? ""),
-    assignmentSource: row.assignment_source === "explicit" ? "explicit" : "legacy_derived",
-    updatedAt: String(row.updated_at ?? ""),
-  };
-}
-
 export async function fetchPublicListingTaxonomyAssignment(
   listingId: string,
 ): Promise<ClassifiedsResult<ListingTaxonomyAssignment | null>> {
-  const normalizedListingId = listingId.trim();
-  if (!normalizedListingId) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
-    };
-  }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const publicListingResult = await clientResult.data
-    .from("listings")
-    .select("id")
-    .eq("id", normalizedListingId)
-    .eq("status", "approved")
-    .is("archived_at", null)
-    .or(publicListingExpiryFilter())
-    .maybeSingle();
-  if (publicListingResult.error) {
-    return {
-      ok: false,
-      error: mapError(publicListingResult.error, "public_listing_taxonomy_read"),
-    };
-  }
-  if (!publicListingResult.data) {
-    return { ok: false, error: { code: "not_found", message: "هذا الإعلان غير متاح." } };
-  }
-
-  const { data, error } = await clientResult.data
-    .from("listing_taxonomy_assignments")
-    .select("listing_id, taxonomy_node_id, assignment_source, updated_at")
-    .eq("listing_id", normalizedListingId)
-    .limit(1)
-    .maybeSingle();
-  if (error) return { ok: false, error: mapError(error, "public_listing_taxonomy_read") };
-  return { ok: true, data: data ? mapAssignment(data as Record<string, unknown>) : null };
+  return readAssignment(listingId);
 }
 
 export async function fetchOwnerListingTaxonomyAssignment(
@@ -70,27 +24,7 @@ export async function fetchOwnerListingTaxonomyAssignment(
       error: { code: "auth_required", message: "يجب تسجيل الدخول لقراءة تصنيف الإعلان." },
     };
   }
-
-  const normalizedListingId = listingId.trim();
-  if (!normalizedListingId) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
-    };
-  }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data
-    .from("listing_taxonomy_assignments")
-    .select("listing_id, taxonomy_node_id, assignment_source, updated_at")
-    .eq("listing_id", normalizedListingId)
-    .limit(1)
-    .maybeSingle();
-
-  if (error) return { ok: false, error: mapError(error, "owner_listing_taxonomy_read") };
-  return { ok: true, data: data ? mapAssignment(data as Record<string, unknown>) : null };
+  return readAssignment(listingId);
 }
 
 export async function assignOwnerListingTaxonomy(
@@ -104,36 +38,41 @@ export async function assignOwnerListingTaxonomy(
       error: { code: "auth_required", message: "يجب تسجيل الدخول لتحديد تصنيف الإعلان." },
     };
   }
-
-  const normalizedListingId = listingId.trim();
-  const normalizedNodeId = taxonomyNodeId.trim();
-  if (!normalizedListingId || !normalizedNodeId) {
+  const cleanListingId = listingId.trim();
+  const cleanNodeId = taxonomyNodeId.trim();
+  if (!cleanListingId || !cleanNodeId) {
     return {
       ok: false,
       error: { code: "validation_error", message: "اختر التصنيف النهائي للإعلان." },
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
+  const result = await cloudflareApiRequest<ListingTaxonomyAssignment>(
+    `/v1/listings/${encodeURIComponent(cleanListingId)}/taxonomy`,
+    { method: "PUT", body: { taxonomyNodeId: cleanNodeId } },
+  );
+  return result.ok ? { ok: true, data: result.data } : failure(result);
+}
 
-  const { data, error } = await clientResult.data.rpc("rawaj_assign_listing_taxonomy", {
-    p_listing_id: normalizedListingId,
-    p_taxonomy_node_id: normalizedNodeId,
-  });
-  if (error) return { ok: false, error: mapError(error, "owner_listing_taxonomy_assign") };
-
-  const row = ((data ?? []) as Record<string, unknown>[])[0];
-  if (!row) {
+async function readAssignment(
+  listingId: string,
+): Promise<ClassifiedsResult<ListingTaxonomyAssignment | null>> {
+  const cleanListingId = listingId.trim();
+  if (!cleanListingId) {
     return {
       ok: false,
-      error: {
-        code: "unknown",
-        message: "لم يؤكد الخادم حفظ تصنيف الإعلان.",
-        operation: "owner_listing_taxonomy_assign",
-      },
+      error: { code: "validation_error", message: "تعذر تحديد الإعلان المطلوب." },
     };
   }
+  const result = await cloudflareApiRequest<ListingTaxonomyAssignment | null>(
+    `/v1/listings/${encodeURIComponent(cleanListingId)}/taxonomy`,
+  );
+  return result.ok ? { ok: true, data: result.data } : failure(result);
+}
 
-  return { ok: true, data: mapAssignment(row) };
+function failure<T>(result: { ok: false; error: string; code: string }): ClassifiedsResult<T> {
+  return {
+    ok: false,
+    error: { code: result.code as ClassifiedsErrorCode, message: result.error },
+  };
 }

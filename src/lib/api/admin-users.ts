@@ -1,6 +1,7 @@
 import type { AccountStatus, UserRole, VerificationStatus } from "@/lib/auth-types";
-import { getClient, mapError, rowNullableString, rowNumber, rowString } from "@/lib/api/shared";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
+import { isCloudflarePublicDataProvider } from "@/lib/public-data/config";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 
 export type UserRestrictionType = "posting" | "messaging" | "reviews" | "promotions" | "uploads";
 
@@ -31,15 +32,25 @@ export async function adminFetchUsers(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data.rpc("rawaj_admin_fetch_users");
-  if (error) return { ok: false, error: mapError(error) };
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<AdminUserSummary[]>("/v1/admin/users");
+    return result.ok
+      ? { ok: true, data: result.data }
+      : {
+          ok: false,
+          error: {
+            code: result.code as import("@/lib/classifieds-types").ClassifiedsErrorCode,
+            message: result.error,
+          },
+        };
+  }
 
   return {
-    ok: true,
-    data: ((data ?? []) as Record<string, unknown>[]).map(mapAdminUserSummary),
+    ok: false,
+    error: {
+      code: "setup_required",
+      message: "إدارة المستخدمين متاحة فقط في وضع Cloudflare.",
+    },
   };
 }
 
@@ -61,17 +72,29 @@ export async function adminManageUserAccount(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<null>("/v1/admin/users/status", {
+      method: "POST",
+      body: { userId: payload.userId, status: payload.status, reason: payload.reason },
+    });
+    return result.ok
+      ? { ok: true, data: null }
+      : {
+          ok: false,
+          error: {
+            code: result.code as import("@/lib/classifieds-types").ClassifiedsErrorCode,
+            message: result.error,
+          },
+        };
+  }
 
-  const { error } = await clientResult.data.rpc("rawaj_manage_user_account", {
-    p_user_id: payload.userId,
-    p_status: payload.status,
-    p_reason: payload.reason.trim(),
-  });
-
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: null };
+  return {
+    ok: false,
+    error: {
+      code: "setup_required",
+      message: "إدارة الحسابات متاحة فقط في وضع Cloudflare.",
+    },
+  };
 }
 
 export async function adminSetUserRestriction(
@@ -97,18 +120,29 @@ export async function adminSetUserRestriction(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<string>("/v1/admin/users/restrictions", {
+      method: "POST",
+      body: { ...payload, action: "set" },
+    });
+    return result.ok
+      ? { ok: true, data: result.data }
+      : {
+          ok: false,
+          error: {
+            code: result.code as import("@/lib/classifieds-types").ClassifiedsErrorCode,
+            message: result.error,
+          },
+        };
+  }
 
-  const { data, error } = await clientResult.data.rpc("rawaj_set_user_restriction", {
-    p_user_id: payload.userId,
-    p_restriction_type: payload.restrictionType,
-    p_reason: payload.reason.trim(),
-    p_ends_at: payload.endsAt || null,
-  });
-
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: typeof data === "string" ? data : String(data) };
+  return {
+    ok: false,
+    error: {
+      code: "setup_required",
+      message: "تقييد المستخدمين متاح فقط في وضع Cloudflare.",
+    },
+  };
 }
 
 export async function adminLiftUserRestriction(
@@ -129,17 +163,29 @@ export async function adminLiftUserRestriction(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<null>("/v1/admin/users/restrictions", {
+      method: "POST",
+      body: { ...payload, action: "lift" },
+    });
+    return result.ok
+      ? { ok: true, data: null }
+      : {
+          ok: false,
+          error: {
+            code: result.code as import("@/lib/classifieds-types").ClassifiedsErrorCode,
+            message: result.error,
+          },
+        };
+  }
 
-  const { error } = await clientResult.data.rpc("rawaj_lift_user_restriction", {
-    p_user_id: payload.userId,
-    p_restriction_type: payload.restrictionType,
-    p_reason: payload.reason.trim(),
-  });
-
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: null };
+  return {
+    ok: false,
+    error: {
+      code: "setup_required",
+      message: "رفع التقييدات متاحة فقط في وضع Cloudflare.",
+    },
+  };
 }
 
 export async function ownerAssignStaffRole(
@@ -153,17 +199,29 @@ export async function ownerAssignStaffRole(
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<null>("/v1/admin/users/roles", {
+      method: "POST",
+      body: { ...payload, action: "assign" },
+    });
+    return result.ok
+      ? { ok: true, data: null }
+      : {
+          ok: false,
+          error: {
+            code: result.code as import("@/lib/classifieds-types").ClassifiedsErrorCode,
+            message: result.error,
+          },
+        };
+  }
 
-  const { error } = await clientResult.data.rpc("rawaj_owner_assign_staff_role", {
-    p_user_id: payload.userId,
-    p_role: payload.role,
-    p_note: payload.note?.trim() || null,
-  });
-
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: null };
+  return {
+    ok: false,
+    error: {
+      code: "setup_required",
+      message: "تعيين الأدوار متاح فقط في وضع Cloudflare.",
+    },
+  };
 }
 
 export async function ownerRemoveStaffRole(
@@ -173,24 +231,33 @@ export async function ownerRemoveStaffRole(
   if (!canUseOwnerAccess) {
     return {
       ok: false,
-      error: {
-        code: "permission_denied",
-        message: "إزالة صلاحية الطاقم متاحة للمالك فقط.",
-      },
+      error: { code: "permission_denied", message: "إزالة صلاحية الطاقم متاحة للمالك فقط." },
     };
   }
 
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
+  if (isCloudflarePublicDataProvider()) {
+    const result = await cloudflareApiRequest<null>("/v1/admin/users/roles", {
+      method: "POST",
+      body: { ...payload, action: "remove" },
+    });
+    return result.ok
+      ? { ok: true, data: null }
+      : {
+          ok: false,
+          error: {
+            code: result.code as import("@/lib/classifieds-types").ClassifiedsErrorCode,
+            message: result.error,
+          },
+        };
+  }
 
-  const { error } = await clientResult.data.rpc("rawaj_owner_remove_staff_role", {
-    p_user_id: payload.userId,
-    p_role: payload.role,
-    p_reason: payload.reason?.trim() || null,
-  });
-
-  if (error) return { ok: false, error: mapError(error) };
-  return { ok: true, data: null };
+  return {
+    ok: false,
+    error: {
+      code: "setup_required",
+      message: "إزالة الأدوار متاحة فقط في وضع Cloudflare.",
+    },
+  };
 }
 
 function mapAdminUserSummary(row: Record<string, unknown>): AdminUserSummary {
@@ -204,16 +271,20 @@ function mapAdminUserSummary(row: Record<string, unknown>): AdminUserSummary {
     : [];
 
   return {
-    id: rowString(row, "id"),
-    email: rowNullableString(row, "email"),
-    displayName: rowNullableString(row, "display_name"),
-    accountStatus: rowString(row, "account_status", "pending_review") as AccountStatus,
-    verificationStatus: rowString(row, "verification_status", "unverified") as VerificationStatus,
-    createdAt: rowNullableString(row, "created_at"),
+    id: typeof row.id === "string" ? row.id : "",
+    email: typeof row.email === "string" ? row.email : null,
+    displayName: typeof row.displayName === "string" ? row.displayName : null,
+    accountStatus:
+      typeof row.accountStatus === "string" ? (row.accountStatus as AccountStatus) : "active",
+    verificationStatus:
+      typeof row.verificationStatus === "string"
+        ? (row.verificationStatus as VerificationStatus)
+        : "unverified",
+    createdAt: typeof row.createdAt === "string" ? row.createdAt : null,
     roles,
-    listingCount: rowNumber(row, "listing_count"),
-    reportsSubmitted: rowNumber(row, "reports_submitted"),
-    reportsReceived: rowNumber(row, "reports_received"),
+    listingCount: typeof row.listingCount === "number" ? row.listingCount : 0,
+    reportsSubmitted: typeof row.reportsSubmitted === "number" ? row.reportsSubmitted : 0,
+    reportsReceived: typeof row.reportsReceived === "number" ? row.reportsReceived : 0,
     activeRestrictions,
   };
 }

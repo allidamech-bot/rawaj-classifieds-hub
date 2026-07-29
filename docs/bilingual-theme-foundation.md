@@ -42,7 +42,7 @@ The follow-up hardening pass completed remaining route-level polish for:
 - Seller profile route, including not-found/error states, demo seller boundaries, disabled contact actions, safety note, and active listing section labels.
 - Admin shell, owner overview, pending listings, reports, users, and promotions pages, limited to display text, badges, helper text, disabled action labels, and demo/readiness warnings.
 
-Listing/user data from Supabase or mock records remains data-driven and is not rewritten as fake translated production content. Demo, future, and beta labels remain visible in Arabic and English.
+Listing/user data from the retired backend or mock records remains data-driven and is not rewritten as fake translated production content. Demo, future, and beta labels remain visible in Arabic and English.
 
 ## Known Gaps
 
@@ -51,13 +51,13 @@ Listing/user data from Supabase or mock records remains data-driven and is not r
 
 ## Intentionally Not Changed
 
-- No Supabase SQL, schema changes, migrations, CLI actions, or backend features.
+- No the retired backend SQL, schema changes, migrations, CLI actions, or backend features.
 - No Lovable Cloud backend/auth/database/storage.
 - No service role keys or private secrets in frontend code.
 - No admin permission changes, owner checks, role logic changes, or RLS assumption changes.
 - No route renames.
 - No messaging, payment, notifications, ticket submission, moderation execution, or admin destructive actions.
-- No backend/Supabase/auth/schema/env/admin permission behavior was touched in the hardening pass.
+- No backend/the retired backend/auth/schema/env/admin permission behavior was touched in the hardening pass.
 
 ## Validation
 

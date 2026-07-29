@@ -1,6 +1,5 @@
-import { fetchListingDetail } from "@/lib/api/listings";
-import { getClient, mapError, rowNullableNumber } from "@/lib/api/shared";
-import type { ClassifiedsResult } from "@/lib/classifieds-types";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
+import type { ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
 
 export interface ListingPriceChangeContext {
   previousPrice: number;
@@ -13,55 +12,18 @@ export async function fetchListingPriceChangeContext(
   userId: string | null,
   listingId: string,
 ): Promise<ClassifiedsResult<ListingPriceChangeContext | null>> {
-  if (!userId) {
+  if (!userId)
     return {
       ok: false,
       error: { code: "auth_required", message: "يجب تسجيل الدخول لعرض سياق السعر." },
     };
-  }
-
-  const cleanListingId = listingId.trim();
-  if (!cleanListingId) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "تعذر تحديد الإعلان." },
-    };
-  }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data
-    .from("favorite_listing_snapshots")
-    .select("price_snapshot")
-    .eq("user_id", userId)
-    .eq("listing_id", cleanListingId)
-    .maybeSingle();
-
-  if (error) return { ok: false, error: mapError(error) };
-  if (!data) return { ok: true, data: null };
-
-  const previousPrice = rowNullableNumber(data as Record<string, unknown>, "price_snapshot");
-  if (previousPrice === null) return { ok: true, data: null };
-
-  const listingResult = await fetchListingDetail(cleanListingId);
-  if (!listingResult.ok) {
-    if (listingResult.error.code === "not_found") return { ok: true, data: null };
-    return listingResult;
-  }
-
-  const currentPrice = listingResult.data.price;
-  if (currentPrice === null || currentPrice === previousPrice) {
-    return { ok: true, data: null };
-  }
-
-  return {
-    ok: true,
-    data: {
-      previousPrice,
-      currentPrice,
-      currency: "SYP",
-      direction: currentPrice > previousPrice ? "increased" : "decreased",
-    },
-  };
+  const cleanId = listingId.trim();
+  if (!cleanId)
+    return { ok: false, error: { code: "validation_error", message: "تعذر تحديد الإعلان." } };
+  const result = await cloudflareApiRequest<ListingPriceChangeContext | null>(
+    `/v1/listings/${encodeURIComponent(cleanId)}/price-context`,
+  );
+  return result.ok
+    ? { ok: true, data: result.data }
+    : { ok: false, error: { code: result.code as ClassifiedsErrorCode, message: result.error } };
 }

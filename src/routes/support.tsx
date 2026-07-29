@@ -234,7 +234,7 @@ function SupportPage() {
 
   return (
     <>
-      <PageHeader title={text("الدعم والمساعدة", "Support and help")} />
+      <PageHeader title={text("الدعم والمساعدة", "Support and help")} titleIsPageHeading={false} />
       <main className="rawaj-trust-v2 rawaj-support-v2 container-wide mobile-page-bottom space-y-5 pb-8 pt-4">
         <TrustHubHero
           mode="support"

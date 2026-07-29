@@ -1,0 +1,247 @@
+/* RAWAJ homepage precision corrections.
+   These rules are scoped to the home route and intentionally override stale legacy layers. */
+
+.rawaj-app-shell[data-resolved-pathname="/"] {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__page,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__content {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Never reserve an empty advertising area. */
+.rawaj-app-shell[data-resolved-pathname="/"] aside[data-placement-page="home"][aria-hidden="true"],
+.rawaj-app-shell[data-resolved-pathname="/"] aside[data-placement-page="home"][data-placement-loading="true"] {
+  display: none !important;
+}
+
+/* Header must read as part of the page, not as a detached rounded card. */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-floating-header-shell {
+  margin-block: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup {
+  min-width: 0;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup > span:last-child {
+  min-width: 0;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-action,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-account,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .order-3 > .relative > button {
+  width: 2.3rem !important;
+  height: 2.3rem !important;
+  min-height: 2.3rem !important;
+  border-radius: 12px !important;
+}
+
+/*
+ * RTL search correction:
+ * logical 50% positioning combined with a physical translateX moved the form left.
+ * On mobile it is now pinned to both physical edges of the hero.
+ */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search {
+  left: 0.72rem !important;
+  right: 0.72rem !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: auto !important;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  transform: none !important;
+  direction: rtl;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search label {
+  min-width: 0 !important;
+  overflow: hidden;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search input {
+  min-width: 0 !important;
+  text-align: start;
+  direction: rtl;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search button {
+  width: 4.35rem;
+  min-width: 4.35rem;
+  padding-inline: 0.65rem !important;
+  white-space: nowrap;
+}
+
+/* The primary action should be encountered first from the RTL reading edge. */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero__primary-action {
+  order: -1;
+  flex: 1 1 0;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-location {
+  order: 0;
+  flex: 0 1 auto;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero__utility {
+  min-width: 0;
+}
+
+/* Prevent the search overlap from compressing the trust row. */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero {
+  margin-bottom: 2.75rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-trust-row {
+  margin-top: 0.15rem !important;
+}
+
+/* Missing images should remain within the matte system instead of producing a white panel. */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-lead-card__media > div,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-support-card__media > div,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-latest-card__media > div {
+  display: grid !important;
+  place-items: center !important;
+  color: #74d2e3 !important;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(82, 161, 180, 0.14), transparent 34%),
+    linear-gradient(145deg, #292c32, #202227) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-lead-card__media > div svg,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-support-card__media > div svg,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-latest-card__media > div svg {
+  color: #75cfdf !important;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.26));
+}
+
+/*
+ * Header signature treatment:
+ * a restrained particle field lives on the physical left half and fades before the brand.
+ */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header {
+  position: sticky;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(38, 39, 44, 0.985), rgba(34, 35, 40, 0.965)) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset-block: 0;
+  left: 0;
+  width: 58%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, rgba(255, 132, 101, 0.72) 0 0.8px, transparent 1.45px) 0 0 / 11px 11px,
+    radial-gradient(circle, rgba(225, 77, 191, 0.56) 0 0.9px, transparent 1.55px) 3px 5px / 15px 15px,
+    radial-gradient(circle, rgba(112, 115, 255, 0.42) 0 0.75px, transparent 1.4px) 7px 1px / 18px 18px,
+    radial-gradient(ellipse at 6% 50%, rgba(255, 111, 79, 0.19), transparent 43%),
+    radial-gradient(ellipse at 42% 50%, rgba(220, 62, 182, 0.16), transparent 50%),
+    radial-gradient(ellipse at 82% 53%, rgba(63, 145, 255, 0.12), transparent 48%);
+  opacity: 0.76;
+  filter: saturate(105%);
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 42%, rgba(0, 0, 0, 0.76) 68%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 0%, #000 42%, rgba(0, 0, 0, 0.76) 68%, transparent 100%);
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-floating-header-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-action,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-account,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .order-3 > .relative > button {
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  background: rgba(31, 31, 38, 0.58) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 20px rgba(0, 0, 0, 0.18) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home {
+  padding-bottom: calc(4.75rem + env(safe-area-inset-bottom)) !important;
+}
+
+/* Keep content inside narrow mobile viewports. */
+@media (max-width: 27rem) {
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home__container {
+    padding-inline: 0.62rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero__content {
+    min-height: 20.7rem !important;
+    padding: 5rem 0.85rem 4.15rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero h1 {
+    max-width: 18.5rem;
+    font-size: clamp(1.62rem, 8.4vw, 2.05rem) !important;
+    line-height: 1.25 !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero__content > p {
+    font-size: 0.72rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search {
+    left: 0.58rem !important;
+    right: 0.58rem !important;
+    grid-template-columns: minmax(0, 1fr) 4.05rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search label {
+    gap: 0.42rem !important;
+    padding-inline: 0.62rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search input {
+    font-size: 0.72rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search button {
+    width: 4.05rem;
+    min-width: 4.05rem;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-trust-row span {
+    gap: 0.2rem !important;
+    padding-inline: 0.12rem !important;
+    font-size: 0.55rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-trust-row svg {
+    width: 0.78rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header::before {
+    width: 62%;
+    opacity: 0.7;
+  }
+}
+
+@media (min-width: 40rem) {
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search {
+    left: 50% !important;
+    right: auto !important;
+    width: min(39rem, calc(100% - 2rem)) !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header::before {
+    width: 45%;
+  }
+}

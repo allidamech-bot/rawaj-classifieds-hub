@@ -72,26 +72,29 @@ function NotFoundComponent() {
   const { text } = useUiPreferences();
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
-      <FeedbackState
-        code="404"
-        title={text("الصفحة غير موجودة", "Page not found")}
-        description={text(
-          "الصفحة التي تبحث عنها غير متاحة أو تم نقلها.",
-          "The page you are looking for is unavailable or has moved.",
-        )}
-        action={
-          <Button asChild>
-            <Link to="/">{text("العودة للرئيسية", "Back to home")}</Link>
-          </Button>
-        }
-      />
-    </div>
+    <>
+      <title>{text("الصفحة غير موجودة | رواج", "Page not found | RAWAJ")}</title>
+      <meta name="robots" content="noindex, nofollow" />
+      <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
+        <FeedbackState
+          code="404"
+          title={text("الصفحة غير موجودة", "Page not found")}
+          description={text(
+            "الصفحة التي تبحث عنها غير متاحة أو تم نقلها.",
+            "The page you are looking for is unavailable or has moved.",
+          )}
+          action={
+            <Button asChild>
+              <Link to="/">{text("العودة للرئيسية", "Back to home")}</Link>
+            </Button>
+          }
+        />
+      </div>
+    </>
   );
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
   const router = useRouter();
   const { text } = useUiPreferences();
 
@@ -100,7 +103,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
+    <main className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
       <FeedbackState
         tone="error"
         title={text("حدث خطأ غير متوقع", "Something went wrong")}
@@ -119,7 +122,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           </Button>
         }
       />
-    </div>
+    </main>
   );
 }
 
@@ -132,14 +135,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       meta: [
         { charSet: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-        { name: "theme-color", content: "#123f38" },
+        { name: "theme-color", content: "#242529" },
         { name: "author", content: "RAWAJ" },
         { name: "rawaj-build-commit", content: rawajBuildInfo.commitSha },
         { name: "rawaj-build-environment", content: rawajBuildInfo.environment },
         ...seo.meta,
       ],
       links: [
-        ...seo.links,
         { rel: "stylesheet", href: appCss },
         { rel: "stylesheet", href: visualFoundationCss },
         { rel: "stylesheet", href: signatureCss },
@@ -234,7 +236,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
         {
           rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap",
+          href: "https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap",
         },
       ],
     };

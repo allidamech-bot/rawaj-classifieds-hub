@@ -292,6 +292,7 @@ function AdminDataQualityWorkspace() {
               <select
                 value={selectedVersionId}
                 onChange={(event) => setSelectedVersionId(event.target.value)}
+                aria-label={text("نسخة التصنيف المراد فحصها", "Taxonomy version to scan")}
                 className="input"
               >
                 {context?.versions.map((version) => (
@@ -351,6 +352,7 @@ function AdminDataQualityWorkspace() {
           <select
             value={categoryId}
             onChange={(event) => setCategoryId(event.target.value)}
+            aria-label={text("تصفية حسب القسم", "Filter by category")}
             className="input"
           >
             <option value="all">{text("كل الأقسام", "All categories")}</option>
@@ -366,6 +368,7 @@ function AdminDataQualityWorkspace() {
             onChange={(event) =>
               setSeverity(event.target.value as FilterValue<ListingDataQualitySeverity>)
             }
+            aria-label={text("تصفية حسب درجة الخطورة", "Filter by severity")}
             className="input"
           >
             <option value="all">{text("كل درجات الخطورة", "All severities")}</option>
@@ -379,6 +382,7 @@ function AdminDataQualityWorkspace() {
             onChange={(event) =>
               setStatus(event.target.value as FilterValue<ListingDataQualityStatus>)
             }
+            aria-label={text("تصفية حسب حالة المراجعة", "Filter by review status")}
             className="input"
           >
             <option value="all">{text("كل حالات المراجعة", "All review states")}</option>

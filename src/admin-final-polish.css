@@ -1,2 +1,84 @@
 /* Final admin overrides; the complete admin system remains in styles.css. */
-.rawaj-admin-v3{--admin-v3-coral:var(--rawaj-accent-orange,#e9663c);gap:1rem;max-width:96rem;margin-inline:auto}.rawaj-admin-v3>div:first-child{margin-bottom:0!important;border-radius:.85rem!important;box-shadow:none!important}.rawaj-admin-v3>div:nth-child(2){margin-bottom:0!important;border-radius:1rem!important;box-shadow:0 5px 18px rgba(39,95,81,.06)!important}.rawaj-admin-v3 nav{scrollbar-width:none}.rawaj-admin-v3 nav a{min-height:2.75rem}.rawaj-admin-v3 nav a[aria-current="page"]{background:linear-gradient(135deg,#eef8f2,#fff1e8)!important;color:#18352f!important;border-color:#dbe8e1!important}.rawaj-admin-v3 :is(input,textarea,select):focus-visible,.rawaj-admin-v3 :is(button,a):focus-visible{outline:3px solid color-mix(in srgb,var(--admin-v3-coral) 18%,transparent);outline-offset:2px}.rawaj-admin-v3 :is(table,[role="table"]){min-width:42rem}.rawaj-admin-v3 :is(dialog,[role="dialog"]){max-width:min(42rem,calc(100vw - 2rem));border-radius:1rem}@media(max-width:767px){.rawaj-admin-v3{gap:.75rem;padding-inline:1rem}.rawaj-admin-v3>div:first-child,.rawaj-admin-v3>div:nth-child(2){border-radius:1rem!important}.rawaj-admin-v3 nav{display:flex;overflow-x:auto;gap:.5rem;padding-bottom:.25rem}.rawaj-admin-v3 nav a{min-width:max-content;min-height:3rem;padding-inline:1rem}.rawaj-admin-v3 :is(.overflow-x-auto,[data-table-scroll]){margin-inline:-1rem;padding-inline:1rem}.rawaj-admin-v3 :is(button,a,input,select){min-height:3rem}.rawaj-admin-v3 :is(dialog,[role="dialog"]){width:calc(100vw - 2rem);max-height:calc(100dvh - 2rem);overflow:auto}}@media(hover:none),(pointer:coarse){.rawaj-admin-v3 :is(button,a,article,section){transform:none!important}}@media(prefers-reduced-motion:reduce){.rawaj-admin-v3 *{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+.rawaj-admin-v3 {
+  --admin-v3-coral: var(--rawaj-accent-orange, #e9663c);
+  gap: 1rem;
+  max-width: 96rem;
+  margin-inline: auto;
+}
+.rawaj-admin-v3 > div:first-child {
+  margin-bottom: 0 !important;
+  border-radius: 0.85rem !important;
+  box-shadow: none !important;
+}
+.rawaj-admin-v3 > div:nth-child(2) {
+  margin-bottom: 0 !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 5px 18px rgba(39, 95, 81, 0.06) !important;
+}
+.rawaj-admin-v3 nav {
+  scrollbar-width: none;
+}
+.rawaj-admin-v3 nav a {
+  min-height: 2.75rem;
+}
+.rawaj-admin-v3 nav a[aria-current="page"] {
+  background: linear-gradient(135deg, #eef8f2, #fff1e8) !important;
+  color: #18352f !important;
+  border-color: #dbe8e1 !important;
+}
+.rawaj-admin-v3 :is(input, textarea, select):focus-visible,
+.rawaj-admin-v3 :is(button, a):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--admin-v3-coral) 18%, transparent);
+  outline-offset: 2px;
+}
+.rawaj-admin-v3 :is(table, [role="table"]) {
+  min-width: 42rem;
+}
+.rawaj-admin-v3 :is(dialog, [role="dialog"]) {
+  max-width: min(42rem, calc(100vw - 2rem));
+  border-radius: 1rem;
+}
+@media (max-width: 767px) {
+  .rawaj-admin-v3 {
+    gap: 0.75rem;
+    padding-inline: 1rem;
+  }
+  .rawaj-admin-v3 > div:first-child,
+  .rawaj-admin-v3 > div:nth-child(2) {
+    border-radius: 1rem !important;
+  }
+  .rawaj-admin-v3 nav {
+    display: flex;
+    overflow-x: auto;
+    gap: 0.5rem;
+    padding-bottom: 0.25rem;
+  }
+  .rawaj-admin-v3 nav a {
+    min-width: max-content;
+    min-height: 3rem;
+    padding-inline: 1rem;
+  }
+  .rawaj-admin-v3 :is(.overflow-x-auto, [data-table-scroll]) {
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+  }
+  .rawaj-admin-v3 :is(button, a, input, select) {
+    min-height: 3rem;
+  }
+  .rawaj-admin-v3 :is(dialog, [role="dialog"]) {
+    width: calc(100vw - 2rem);
+    max-height: calc(100dvh - 2rem);
+    overflow: auto;
+  }
+}
+@media (hover:none),(pointer:coarse) {
+  .rawaj-admin-v3 :is(button, a, article, section) {
+    transform: none !important;
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  .rawaj-admin-v3 * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

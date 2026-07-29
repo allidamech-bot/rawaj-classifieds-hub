@@ -1,6 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
-import { mapError, rowNullableString, rowString } from "@/lib/api/shared";
+import { fetchLocationPath } from "@/lib/api/location-taxonomy";
+import { fetchCloudflareReferences } from "@/lib/public-data/cloudflare-client";
 
 export interface ListingLocationWrite {
   locationNodeId: string | null | undefined;
@@ -8,31 +8,19 @@ export interface ListingLocationWrite {
   districtAr: string | null;
 }
 
-interface CanonicalLocationContext {
-  id: string;
-  selectedNameAr: string | null;
-  governorateId: string | null;
-  governorateNameAr: string | null;
-  governorateNameEn: string | null;
-  governorateSlug: string | null;
-  districtAr: string | null;
-}
-
+/**
+ * Compatibility signature retained for legacy callers. Canonical location resolution
+ * is now handled through the Cloudflare public location tree and D1 references.
+ */
 export async function resolveListingLocationWrite(
-  client: SupabaseClient,
+  _retiredClient: unknown,
   governorateId: string,
   districtValue: string | null | undefined,
 ): Promise<ClassifiedsResult<ListingLocationWrite>> {
   const value = districtValue?.trim() ?? "";
   if (!value.startsWith("@")) {
     if (value && !governorateId) {
-      return {
-        ok: false,
-        error: {
-          code: "validation_error",
-          message: "اختر المحافظة قبل تحديد المنطقة.",
-        },
-      };
+      return validation("اختر المحافظة قبل تحديد المنطقة.");
     }
     return {
       ok: true,
@@ -45,178 +33,57 @@ export async function resolveListingLocationWrite(
   }
 
   const nodeId = value.slice(1).trim();
-  if (!nodeId) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "الموقع المحدد غير صالح." },
-    };
+  if (!nodeId) return validation("الموقع المحدد غير صالح.");
+  const pathResult = await fetchLocationPath(nodeId);
+  if (!pathResult.ok || pathResult.data.length === 0) {
+    return pathResult.ok ? validation("الموقع المحدد غير صالح أو لم يعد متاحًا.") : pathResult;
   }
 
-  const resolved = await resolveCanonicalLocationContext(client, nodeId);
-  if (!resolved.ok) return resolved;
+  const selected = pathResult.data.at(-1)!;
+  const canonicalGovernorate = [...pathResult.data]
+    .reverse()
+    .find((node) => node.nodeType === "governorate");
+  const directLegacyId =
+    selected.legacyGovernorateId ?? canonicalGovernorate?.legacyGovernorateId ?? null;
+  const mappedGovernorate = directLegacyId || (await matchLegacyGovernorate(canonicalGovernorate));
 
-  const mappedGovernorate = await resolveLegacyGovernorateId(client, resolved.data);
-  if (!mappedGovernorate.ok) return mappedGovernorate;
-
-  const canonicalGovernorateId = mappedGovernorate.data;
-  if (governorateId && canonicalGovernorateId && canonicalGovernorateId !== governorateId) {
-    return {
-      ok: false,
-      error: {
-        code: "validation_error",
-        message: "الموقع المحدد لا يتبع المحافظة المختارة.",
-      },
-    };
+  if (governorateId && mappedGovernorate && governorateId !== mappedGovernorate) {
+    return validation("الموقع المحدد لا يتبع المحافظة المختارة.");
   }
-
-  const effectiveGovernorateId = canonicalGovernorateId || governorateId;
-  if (!effectiveGovernorateId) {
-    return {
-      ok: false,
-      error: {
-        code: "validation_error",
-        message: "تعذر تحديد محافظة الموقع المختار.",
-      },
-    };
-  }
+  const effectiveGovernorateId = mappedGovernorate || governorateId;
+  if (!effectiveGovernorateId) return validation("تعذر تحديد محافظة الموقع المختار.");
 
   return {
     ok: true,
     data: {
-      locationNodeId: resolved.data.id,
+      locationNodeId: selected.id,
       governorateId: effectiveGovernorateId,
-      districtAr: resolved.data.districtAr || resolved.data.selectedNameAr,
+      districtAr: selected.legacyDistrictAr || selected.nameAr,
     },
   };
 }
 
-async function resolveCanonicalLocationContext(
-  client: SupabaseClient,
-  nodeId: string,
-): Promise<ClassifiedsResult<CanonicalLocationContext>> {
-  let currentId: string | null = nodeId;
-  let selectedId = "";
-  let selectedNameAr: string | null = null;
-  let governorateId: string | null = null;
-  let governorateNameAr: string | null = null;
-  let governorateNameEn: string | null = null;
-  let governorateSlug: string | null = null;
-  let districtAr: string | null = null;
-  const visited = new Set<string>();
-
-  for (let depth = 0; currentId && depth < 16; depth += 1) {
-    if (visited.has(currentId)) {
-      return {
-        ok: false,
-        error: {
-          code: "validation_error",
-          message: "تسلسل الموقع المحدد غير صالح.",
-        },
-      };
-    }
-    visited.add(currentId);
-
-    const { data, error } = await client
-      .from("location_nodes")
-      .select(
-        "id,parent_id,node_type,name_ar,name_en,slug,legacy_governorate_id,legacy_district_ar",
-      )
-      .eq("id", currentId)
-      .eq("is_active", true)
-      .maybeSingle();
-
-    if (error) return { ok: false, error: mapError(error) };
-    if (!data) {
-      return {
-        ok: false,
-        error: {
-          code: "validation_error",
-          message: "الموقع المحدد غير صالح أو لم يعد متاحًا.",
-        },
-      };
-    }
-
-    const row = data as Record<string, unknown>;
-    if (!selectedId) {
-      selectedId = rowString(row, "id");
-      selectedNameAr = rowNullableString(row, "name_ar");
-    }
-    governorateId ||= rowNullableString(row, "legacy_governorate_id");
-    districtAr ||= rowNullableString(row, "legacy_district_ar");
-
-    if (rowString(row, "node_type") === "governorate") {
-      governorateNameAr ||= rowNullableString(row, "name_ar");
-      governorateNameEn ||= rowNullableString(row, "name_en");
-      governorateSlug ||= rowNullableString(row, "slug");
-    }
-
-    currentId = rowNullableString(row, "parent_id");
-  }
-
-  if (currentId) {
-    return {
-      ok: false,
-      error: {
-        code: "validation_error",
-        message: "تسلسل الموقع المحدد أعمق من الحد المسموح.",
-      },
-    };
-  }
-
-  if (!selectedId || !selectedNameAr) {
-    return {
-      ok: false,
-      error: { code: "validation_error", message: "تعذر قراءة الموقع المحدد." },
-    };
-  }
-
-  return {
-    ok: true,
-    data: {
-      id: selectedId,
-      selectedNameAr,
-      governorateId,
-      governorateNameAr,
-      governorateNameEn,
-      governorateSlug,
-      districtAr,
-    },
-  };
-}
-
-async function resolveLegacyGovernorateId(
-  client: SupabaseClient,
-  context: CanonicalLocationContext,
-): Promise<ClassifiedsResult<string | null>> {
-  if (context.governorateId) return { ok: true, data: context.governorateId };
-
-  const { data, error } = await client
-    .from("governorates")
-    .select("id,slug,name_ar,name_en")
-    .eq("is_active", true);
-  if (error) return { ok: false, error: mapError(error) };
-
-  const candidates = (data ?? []) as Record<string, unknown>[];
+async function matchLegacyGovernorate(
+  governorate: { slug: string; nameAr: string; nameEn: string | null } | undefined,
+): Promise<string | null> {
+  if (!governorate) return null;
+  const references = await fetchCloudflareReferences();
+  if (!references.ok) return null;
   const wanted = new Set(
-    [context.governorateSlug, context.governorateNameAr, context.governorateNameEn]
+    [governorate.slug, governorate.nameAr, governorate.nameEn]
       .map(normalizeLocationKey)
       .filter(Boolean),
   );
-
-  if (wanted.size === 0) return { ok: true, data: null };
-
-  const match = candidates.find((row) =>
-    [
-      rowString(row, "id"),
-      rowString(row, "slug"),
-      rowString(row, "name_ar"),
-      rowString(row, "name_en"),
-    ]
+  const match = references.data.governorates.find((candidate) =>
+    [candidate.id, candidate.slug, candidate.nameAr]
       .map(normalizeLocationKey)
       .some((value) => value && wanted.has(value)),
   );
+  return match?.id ?? null;
+}
 
-  return { ok: true, data: match ? rowString(match, "id") : null };
+function validation<T>(message: string): ClassifiedsResult<T> {
+  return { ok: false, error: { code: "validation_error", message } };
 }
 
 function normalizeLocationKey(value: string | null | undefined): string {

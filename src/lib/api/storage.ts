@@ -133,9 +133,9 @@ export function isPathOwnedByUser(path: string, userId: string, kind: string): b
   return path.startsWith(`${userId}/${kind}/`);
 }
 
-export const AD_PLACEMENT_IMAGE_MIN_WIDTH = 960;
-export const AD_PLACEMENT_IMAGE_MIN_HEIGHT = 420;
-export const AD_PLACEMENT_IMAGE_RATIO = 16 / 7;
+export const AD_PLACEMENT_IMAGE_MIN_WIDTH = 600;
+export const AD_PLACEMENT_IMAGE_MIN_HEIGHT = 150;
+export const AD_PLACEMENT_IMAGE_RATIO = 1400 / 300;
 
 export interface AdPlacementImageValidation {
   ok: boolean;
@@ -168,17 +168,7 @@ export function validateAdPlacementImageDimensions(
   if (width < AD_PLACEMENT_IMAGE_MIN_WIDTH || height < AD_PLACEMENT_IMAGE_MIN_HEIGHT) {
     return {
       ok: false,
-      error: "الصورة صغيرة جداً. استخدم مقاساً لا يقل عن 960×420 بكسل.",
-      width,
-      height,
-    };
-  }
-  const ratio = width / height;
-  const tolerance = 0.12;
-  if (Math.abs(ratio - AD_PLACEMENT_IMAGE_RATIO) > tolerance) {
-    return {
-      ok: false,
-      error: "النسبة المطلوبة للصورة هي 16:7 تقريباً. عدّل المقاس أو الاقتصاص.",
+      error: "الصورة صغيرة جداً لإنتاج إعلان واضح. استخدم صورة لا تقل عن 600×150 بكسل.",
       width,
       height,
     };

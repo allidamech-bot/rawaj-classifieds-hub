@@ -1,5 +1,15 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  onIdTokenChanged,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut as firebaseSignOut,
+  updateProfile,
+  type User as FirebaseUser,
+} from "firebase/auth";
 import {
   canAccessAdmin,
   canAccessOwnerControls,
@@ -7,357 +17,205 @@ import {
   emptyRolePermissions,
   type RolePermission,
   type UserProfile,
-  type UserRole,
 } from "./auth-types";
-import { AuthContext, type AuthContextValue } from "./auth-context";
+import {
+  AuthContext,
+  type AuthContextValue,
+  type AuthSession,
+  type AuthUser,
+} from "./auth-context";
 import type { AuthStatus } from "./auth-status";
-import { disableNativePush } from "./native-push";
-import { privateAccountProfileSelect } from "./profile-dto";
 import { sanitizeAuthReturnTo } from "./auth-return";
-import { getSupabaseAuthUnavailableReason, isSupabaseConfigured, supabase } from "./supabase";
+import { loadCloudflareUserProfile } from "./cloudflare-auth";
+import { firebaseAuth } from "./firebase";
+import { clearLocalNativePushState } from "./native-push";
 
-const rolePriority: UserRole[] = ["owner", "admin", "moderator", "seller", "user"];
-
-const unavailableReason = getSupabaseAuthUnavailableReason();
-
-const signedOutState: AuthContextValue = {
-  status: "signedOut",
-  user: null,
-  session: null,
-  profile: null,
-  reason: null,
-  permissions: emptyRolePermissions,
-  hasPermission: () => false,
-  canAccessAdmin: false,
-  canAccessOwnerControls: false,
-  emailConfirmed: false,
-  signOut: async () => ({ error: null }),
-  refreshProfile: async () => ({ error: null }),
-  signInWithGoogle: async () => ({ error: null }),
-};
-
-function normalizeRoles(roles: string[] | null | undefined): UserRole[] {
-  const knownRoles = new Set<UserRole>(rolePriority);
-  const normalized = (roles ?? []).filter((role): role is UserRole =>
-    knownRoles.has(role as UserRole),
-  );
-
-  return normalized.length > 0 ? normalized : ["user"];
+function firebaseErrorMessage(error: unknown): string {
+  if (!error || typeof error !== "object") return "تعذر إكمال عملية الحساب.";
+  const source = error as { code?: unknown; message?: unknown };
+  const code = typeof source.code === "string" ? source.code : "";
+  const message = typeof source.message === "string" ? source.message : "تعذر إكمال عملية الحساب.";
+  return code ? `${code}: ${message}` : message;
 }
 
-function primaryRole(roles: UserRole[]): UserRole {
-  return rolePriority.find((role) => roles.includes(role)) ?? "user";
+function normalizeAuthEmail(email: string): string {
+  return email.trim().toLowerCase();
 }
 
-function isRejectedRefreshTokenError(error: { message?: string; status?: number }): boolean {
-  if (error.status !== 400) return false;
-  return (error.message ?? "").toLowerCase().includes("refresh token");
-}
-
-async function fetchProfile(client: SupabaseClient, user: User): Promise<UserProfile> {
-  const { data: profileData, error: profileError } = await client
-    .from("profiles")
-    .select(privateAccountProfileSelect)
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (profileError) {
-    throw new Error(profileError.message);
-  }
-
-  let profile = profileData;
-
-  if (!profileData) {
-    const metadataName =
-      typeof user.user_metadata?.display_name === "string"
-        ? user.user_metadata.display_name
-        : typeof user.user_metadata?.full_name === "string"
-          ? user.user_metadata.full_name
-          : (user.email?.split("@")[0] ?? "user");
-
-    const { error: upsertError } = await client.from("profiles").upsert(
-      {
-        id: user.id,
-        email: user.email ?? null,
-        display_name: metadataName,
-      },
-      { onConflict: "id", ignoreDuplicates: false },
-    );
-
-    if (upsertError && upsertError.code !== "23505") {
-      throw new Error(upsertError.message);
-    }
-
-    const { data: bootstrappedProfile, error: bootstrapReadError } = await client
-      .from("profiles")
-      .select(privateAccountProfileSelect)
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (bootstrapReadError) {
-      throw new Error(bootstrapReadError.message);
-    }
-
-    profile = bootstrappedProfile;
-  }
-
-  const { data: roleData, error: roleError } = await client
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id);
-
-  if (roleError) {
-    throw new Error(roleError.message);
-  }
-
-  const roles = normalizeRoles(roleData?.map((row) => row.role));
-  const role = primaryRole(roles);
-
+function toAuthUser(user: FirebaseUser): AuthUser {
+  const displayName = user.displayName?.trim() || undefined;
+  const photoURL = user.photoURL?.trim() || undefined;
   return {
-    id: user.id,
-    email: profile?.email ?? user.email ?? null,
-    firstName: profile?.first_name ?? null,
-    lastName: profile?.last_name ?? null,
-    displayName: profile?.display_name ?? null,
-    role,
-    roles,
-    accountStatus: profile?.account_status ?? "pending_review",
-    verificationStatus: profile?.verification_status ?? "unverified",
-    governorate: profile?.governorate ?? null,
-    cityArea: profile?.city_area ?? null,
-    bio: profile?.bio ?? null,
-    businessName: profile?.business_name ?? null,
-    phone: profile?.phone ?? null,
-    whatsapp: profile?.whatsapp ?? null,
-    preferredContactMethod: profile?.preferred_contact_method ?? null,
-    avatarPath: profile?.avatar_path ?? null,
-    avatarUrl: profile?.avatar_url ?? null,
-    coverPath: profile?.cover_path ?? null,
-    coverUrl: profile?.cover_url ?? null,
-    createdAt: profile?.created_at ?? null,
-    updatedAt: profile?.updated_at ?? null,
+    id: user.uid,
+    uid: user.uid,
+    email: user.email,
+    email_confirmed_at: user.emailVerified ? new Date().toISOString() : null,
+    user_metadata: {
+      ...(displayName ? { display_name: displayName, full_name: displayName } : {}),
+      ...(photoURL ? { avatar_url: photoURL, picture: photoURL } : {}),
+    },
+  };
+}
+
+async function toAuthSession(user: FirebaseUser): Promise<AuthSession> {
+  return {
+    access_token: await user.getIdToken(),
+    user: toAuthUser(user),
   };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<AuthStatus>(
-    isSupabaseConfigured ? "loading" : "authUnavailable",
-  );
-  const [session, setSession] = useState<Session | null>(null);
+  const [status, setStatus] = useState<AuthStatus>("loading");
+  const [session, setSession] = useState<AuthSession | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [reason, setReason] = useState<string | null>(unavailableReason);
-  const sessionUserIdRef = useRef<string | null>(null);
-  const sessionRequestIdRef = useRef(0);
-  const profileRequestIdRef = useRef(0);
+  const [reason, setReason] = useState<string | null>(null);
+  const loadRequestIdRef = useRef(0);
+  const profileLoadRef = useRef<{
+    userId: string;
+    promise: Promise<UserProfile>;
+  } | null>(null);
 
-  useEffect(() => {
-    const client = supabase;
-
-    if (!client) {
-      sessionUserIdRef.current = null;
-      sessionRequestIdRef.current += 1;
-      profileRequestIdRef.current += 1;
-      setStatus("authUnavailable");
-      setSession(null);
-      setProfile(null);
-      setReason(unavailableReason);
-      return;
-    }
-
-    let active = true;
-
-    async function loadProfile(client: SupabaseClient, user: User | null) {
-      const requestId = ++profileRequestIdRef.current;
-      const userId = user?.id ?? null;
-
-      if (!user) {
-        if (
-          !active ||
-          requestId !== profileRequestIdRef.current ||
-          sessionUserIdRef.current !== null
-        )
-          return;
-        setProfile(null);
-        setReason(null);
-        return;
-      }
-
-      try {
-        const nextProfile = await fetchProfile(client, user);
-        if (
-          !active ||
-          requestId !== profileRequestIdRef.current ||
-          sessionUserIdRef.current !== userId
-        )
-          return;
-        setProfile(nextProfile);
-        setReason(null);
-        setStatus("signedIn");
-      } catch (error) {
-        if (
-          !active ||
-          requestId !== profileRequestIdRef.current ||
-          sessionUserIdRef.current !== userId
-        )
-          return;
-        setProfile(null);
-        setStatus("authError");
-        setReason(error instanceof Error ? error.message : "تعذّر تحميل بيانات الحساب.");
-      }
-    }
-
-    async function loadSession(client: SupabaseClient) {
-      const requestId = ++sessionRequestIdRef.current;
-      const { data, error } = await client.auth.getSession();
-      if (!active || requestId !== sessionRequestIdRef.current) return;
-
-      if (error) {
-        if (isRejectedRefreshTokenError(error)) {
-          const { error: clearError } = await client.auth.signOut({ scope: "local" });
-          if (!active || requestId !== sessionRequestIdRef.current) return;
-
-          if (!clearError) {
-            sessionUserIdRef.current = null;
-            profileRequestIdRef.current += 1;
-            setSession(null);
-            setProfile(null);
-            setStatus("signedOut");
-            setReason(null);
-            return;
-          }
-        }
-
-        sessionUserIdRef.current = null;
-        profileRequestIdRef.current += 1;
-        setSession(null);
-        setProfile(null);
-        setStatus("authError");
-        setReason(error.message);
-        return;
-      }
-
-      const nextSession = data.session;
-      sessionUserIdRef.current = nextSession?.user.id ?? null;
-      setSession(nextSession);
-      setStatus(nextSession ? "signedIn" : "signedOut");
-      await loadProfile(client, nextSession?.user ?? null);
-    }
-
-    void loadSession(client);
-
-    const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => {
-      sessionRequestIdRef.current += 1;
-      const nextUserId = nextSession?.user.id ?? null;
-      const accountChanged = sessionUserIdRef.current !== nextUserId;
-      sessionUserIdRef.current = nextUserId;
-      if (accountChanged) {
-        profileRequestIdRef.current += 1;
-        setProfile(null);
-        setReason(null);
-      }
-      setSession(nextSession);
-      setStatus(nextSession ? "signedIn" : "signedOut");
-      void loadProfile(client, nextSession?.user ?? null);
-    });
-
-    return () => {
-      active = false;
-      sessionRequestIdRef.current += 1;
-      profileRequestIdRef.current += 1;
-      listener.subscription.unsubscribe();
-    };
-  }, []);
-
-  const value = useMemo<AuthContextValue>(() => {
-    const signOut = async () => {
-      const client = supabase;
-
-      if (!client) {
-        return { error: unavailableReason };
-      }
-
-      const signedInUserId = sessionUserIdRef.current ?? session?.user.id ?? profile?.id ?? null;
-      if (signedInUserId) {
-        await disableNativePush(false).catch(() => undefined);
-      }
-
-      const { error } = await client.auth.signOut();
-      if (error) return { error: error.message };
-
-      sessionUserIdRef.current = null;
-      sessionRequestIdRef.current += 1;
-      profileRequestIdRef.current += 1;
+  const applyFirebaseUser = useCallback(async (firebaseUser: FirebaseUser | null) => {
+    const requestId = ++loadRequestIdRef.current;
+    if (!firebaseUser) {
       setSession(null);
       setProfile(null);
       setStatus("signedOut");
       setReason(null);
       return { error: null };
-    };
+    }
 
-    const refreshProfile = async () => {
-      const client = supabase;
-      const user = session?.user ?? null;
-      const userId = user?.id ?? null;
-      if (!client || !user || !userId || sessionUserIdRef.current !== userId) {
-        return { error: unavailableReason ?? "يجب تسجيل الدخول لتحديث بيانات الحساب." };
-      }
+    try {
+      const nextSession = await toAuthSession(firebaseUser);
+      if (requestId !== loadRequestIdRef.current) return { error: null };
+      setSession(nextSession);
+      setProfile(null);
+      setStatus("loading");
+      setReason(null);
 
-      const requestId = ++profileRequestIdRef.current;
       try {
-        const nextProfile = await fetchProfile(client, user);
-        if (requestId !== profileRequestIdRef.current || sessionUserIdRef.current !== userId) {
-          return { error: null };
+        const existingProfileLoad = profileLoadRef.current;
+        const profilePromise =
+          existingProfileLoad?.userId === firebaseUser.uid
+            ? existingProfileLoad.promise
+            : loadCloudflareUserProfile(nextSession.user);
+        profileLoadRef.current = { userId: firebaseUser.uid, promise: profilePromise };
+        const nextProfile = await profilePromise;
+        if (profileLoadRef.current?.promise === profilePromise) {
+          profileLoadRef.current = null;
         }
+        if (requestId !== loadRequestIdRef.current) return { error: null };
         setProfile(nextProfile);
-        setReason(null);
         setStatus("signedIn");
-        return { error: null };
       } catch (error) {
-        if (requestId !== profileRequestIdRef.current || sessionUserIdRef.current !== userId) {
-          return { error: null };
+        if (profileLoadRef.current?.userId === firebaseUser.uid) {
+          profileLoadRef.current = null;
         }
-        const message = error instanceof Error ? error.message : "تعذّر تحديث بيانات الحساب.";
+        if (requestId !== loadRequestIdRef.current) return { error: null };
+        const message = error instanceof Error ? error.message : "تعذر تحميل بيانات الحساب.";
+        console.error("rawaj_profile_bootstrap_failed", message);
+        setProfile(null);
+        setStatus("authError");
         setReason(message);
         return { error: message };
       }
-    };
 
-    const signInWithGoogle = async (returnTo?: string) => {
-      const client = supabase;
-      if (!client) {
-        return { error: unavailableReason ?? "Auth unavailable" };
-      }
-
-      const safeReturnTo = sanitizeAuthReturnTo(returnTo, "/more");
-      const callbackUrl = new URL("/auth/callback", window.location.origin);
-      callbackUrl.searchParams.set("returnTo", safeReturnTo);
-
-      const { error } = await client.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: callbackUrl.toString(),
-        },
-      });
-
-      if (error) return { error: error.message };
       return { error: null };
+    } catch (error) {
+      if (requestId !== loadRequestIdRef.current) return { error: null };
+      const message = error instanceof Error ? error.message : "تعذر إكمال تسجيل الدخول.";
+      setSession(null);
+      setProfile(null);
+      setStatus("authError");
+      setReason(message);
+      return { error: message };
+    }
+  }, []);
+
+  const load = useCallback(
+    async () => applyFirebaseUser(firebaseAuth.currentUser),
+    [applyFirebaseUser],
+  );
+
+  useEffect(() => {
+    const unsubscribe = onIdTokenChanged(firebaseAuth, (nextUser) => {
+      queueMicrotask(() => void applyFirebaseUser(nextUser));
+    });
+    return unsubscribe;
+  }, [applyFirebaseUser]);
+
+  const value = useMemo<AuthContextValue>(() => {
+    const signOut = async () => {
+      loadRequestIdRef.current += 1;
+      profileLoadRef.current = null;
+      const localNotificationCleanup = clearLocalNativePushState();
+      try {
+        await firebaseSignOut(firebaseAuth);
+        setSession(null);
+        setProfile(null);
+        setStatus("signedOut");
+        setReason(null);
+        await localNotificationCleanup.catch(() => undefined);
+        return { error: null };
+      } catch (error) {
+        await localNotificationCleanup.catch(() => undefined);
+        if (!firebaseAuth.currentUser) {
+          setSession(null);
+          setProfile(null);
+          setStatus("signedOut");
+          setReason(null);
+        }
+        return { error: firebaseErrorMessage(error) };
+      }
     };
 
-    const permissions = effectiveRolePermissions(profile);
+    const signInWithPassword = async (email: string, password: string) => {
+      try {
+        const credential = await signInWithEmailAndPassword(
+          firebaseAuth,
+          normalizeAuthEmail(email),
+          password,
+        );
+        return applyFirebaseUser(credential.user);
+      } catch (error) {
+        return { error: firebaseErrorMessage(error) };
+      }
+    };
+
+    const signUpWithPassword = async (email: string, password: string, displayName: string) => {
+      try {
+        const credential = await createUserWithEmailAndPassword(
+          firebaseAuth,
+          normalizeAuthEmail(email),
+          password,
+        );
+        const cleanDisplayName = displayName.trim();
+        if (cleanDisplayName) {
+          await updateProfile(credential.user, { displayName: cleanDisplayName });
+          await credential.user.getIdToken(true);
+        }
+        return applyFirebaseUser(credential.user);
+      } catch (error) {
+        return { error: firebaseErrorMessage(error) };
+      }
+    };
+
+    const requestPasswordReset = async (email: string) => {
+      try {
+        const origin =
+          typeof window === "undefined" ? "https://rawa-j.com" : window.location.origin;
+        await sendPasswordResetEmail(firebaseAuth, normalizeAuthEmail(email), {
+          url: `${origin}/login`,
+          handleCodeInApp: false,
+        });
+        return { error: null };
+      } catch (error) {
+        return { error: firebaseErrorMessage(error) };
+      }
+    };
+
+    const permissions = profile ? effectiveRolePermissions(profile) : emptyRolePermissions;
     const hasPermission = (permission: RolePermission) => permissions[permission];
-
-    if (!isSupabaseConfigured) {
-      return {
-        ...signedOutState,
-        status: "authUnavailable",
-        reason: unavailableReason,
-        emailConfirmed: false,
-        signOut,
-        refreshProfile,
-        signInWithGoogle,
-      };
-    }
-
     return {
       status,
       user: session?.user ?? null,
@@ -368,12 +226,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       hasPermission,
       canAccessAdmin: canAccessAdmin(profile),
       canAccessOwnerControls: canAccessOwnerControls(profile),
-      emailConfirmed: Boolean(session?.user?.email_confirmed_at),
+      emailConfirmed: Boolean(session?.user.email_confirmed_at),
       signOut,
-      refreshProfile,
-      signInWithGoogle,
+      refreshProfile: load,
+      signInWithGoogle: async (returnTo) => {
+        try {
+          const provider = new GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: "select_account" });
+          const result = await signInWithPopup(firebaseAuth, provider);
+          const applied = await applyFirebaseUser(result.user);
+          if (applied.error) return applied;
+          const safeReturnTo = sanitizeAuthReturnTo(returnTo, "/more");
+          if (typeof window !== "undefined") window.location.assign(safeReturnTo);
+          return { error: null };
+        } catch (error) {
+          return { error: firebaseErrorMessage(error) };
+        }
+      },
+      signInWithPassword,
+      signUpWithPassword,
+      requestPasswordReset,
     };
-  }, [profile, reason, session, status]);
+  }, [applyFirebaseUser, load, profile, reason, session, status]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

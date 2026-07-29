@@ -1,234 +1,85 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import process from "node:process";
+#!/usr/bin/env node
 
-const root = process.cwd();
-const read = (path) => readFileSync(join(root, path), "utf8");
-const migrations = readdirSync(join(root, "supabase", "migrations"))
-  .filter((name) => name.endsWith(".sql"))
-  .sort()
-  .map((name) => read(`supabase/migrations/${name}`))
-  .join("\n");
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
 
-const authTypes = read("src/lib/auth-types.ts");
-const adminShell = read("src/routes/admin.tsx");
-const adminOverview = read("src/routes/admin.index.tsx");
-const adminUsers = read("src/routes/admin.users.tsx");
-const adminPending = read("src/routes/admin.pending.tsx");
-const adminReports = read("src/routes/admin.reports.tsx");
-const adminReviews = read("src/routes/admin.reviews.tsx");
-const adminMessageReports = read("src/routes/admin.message-reports.tsx");
-const adminListings = read("src/routes/admin.listings.tsx");
-const adminVerifications = read("src/routes/admin.verifications.tsx");
-const adminPromotions = read("src/routes/admin.promotions.tsx");
-const adminAudit = read("src/routes/admin.audit.tsx");
-const adminOwnerControls = read("src/routes/admin.owner-controls.tsx");
-const adminAdPlacements = read("src/routes/admin.ad-placements.tsx");
-const bottomDock = read("src/components/shell/BottomDock.tsx");
-const primaryNavigation = read("src/lib/primary-navigation.ts");
+const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-const failures = [];
-let assertions = 0;
+const files = await Promise.all([
+  read("cloudflare/worker/src/auth.ts"),
+  read("cloudflare/worker/src/admin.ts"),
+  read("cloudflare/worker/src/admin-campaigns.ts"),
+  read("cloudflare/worker/src/admin-safety.ts"),
+  read("cloudflare/worker/src/admin-taxonomy-review.ts"),
+  read("cloudflare/worker/src/admin-data-quality.ts"),
+  read("cloudflare/worker/src/trust-support.ts"),
+  read("cloudflare/worker/src/verification.ts"),
+  read("cloudflare/d1/migrations/0014_admin_governance_workspace.sql"),
+]);
 
-function expect(label, condition) {
-  assertions += 1;
-  if (!condition) failures.push(label);
-}
+const [
+  auth,
+  admin,
+  campaigns,
+  safety,
+  taxonomyReview,
+  dataQuality,
+  trustSupport,
+  verification,
+  governanceMigration,
+] = files;
 
-function roleBlock(role, nextRole) {
-  const start = authTypes.indexOf(`  ${role}: {`);
-  const end = nextRole
-    ? authTypes.indexOf(`  ${nextRole}: {`, start + 1)
-    : authTypes.indexOf("};", start + 1);
-  return start >= 0 && end > start ? authTypes.slice(start, end) : "";
-}
+const mutationModules = [
+  admin,
+  campaigns,
+  safety,
+  taxonomyReview,
+  dataQuality,
+  trustSupport,
+  verification,
+];
+const auditedModules = [admin, campaigns, safety, taxonomyReview, dataQuality, trustSupport];
 
-const owner = roleBlock("owner", "admin");
-const admin = roleBlock("admin", "moderator");
-const moderator = roleBlock("moderator", "seller");
-const seller = roleBlock("seller", "user");
+const hasAnyRoleGuard = (source) =>
+  /roles\.includes\("(?:owner|admin|moderator)"\)|requireAdminRole\(|isAdminLike\(|canModerate\(|canManage\(/.test(
+    source,
+  );
 
-expect("owner keeps owner controls", owner.includes("canManageOwnerControls: true"));
-expect("owner keeps system settings", owner.includes("canManageSystemSettings: true"));
-expect("admin cannot manage owner controls", admin.includes("canManageOwnerControls: false"));
-expect("admin cannot manage system settings", admin.includes("canManageSystemSettings: false"));
-expect("moderator cannot manage users", moderator.includes("canManageUsers: false"));
-expect("moderator cannot ban users", moderator.includes("canBanUsers: false"));
-expect("moderator cannot view audit logs", moderator.includes("canViewAuditLogs: false"));
-expect("seller cannot access admin", seller.includes("canViewAdminDashboard: false"));
+test("authenticated identity and roles are derived by the Worker", () => {
+  assert.match(auth, /export async function authenticate/);
+  assert.match(auth, /SELECT role FROM user_roles WHERE user_id = \?/);
+  assert.match(auth, /export async function requireMutationAuth/);
+  assert.doesNotMatch(auth, /service_role|SUPABASE|supabase/i);
+});
 
-expect(
-  "admin users route uses user permission",
-  adminUsers.includes('hasPermission("canManageUsers")'),
-);
-expect(
-  "pending moderation uses listing permission",
-  adminPending.includes('hasPermission("canModerateListings")'),
-);
-expect(
-  "review moderation separates review permission",
-  adminReviews.includes('hasPermission("canManageReviews")'),
-);
-expect(
-  "review reports separate report permission",
-  adminReviews.includes('hasPermission("canManageReports")'),
-);
-expect(
-  "admin navigation filters by permission",
-  adminShell.includes("auth.hasPermission(tab.permission)"),
-);
+test("all administrative mutation modules require authenticated mutation access", () => {
+  for (const source of mutationModules) {
+    assert.match(source, /requireMutationAuth\(/);
+    assert.ok(hasAnyRoleGuard(source));
+    assert.match(source, /permission_denied|forbidden\(/);
+  }
+});
 
-// These invariants keep the six admin recovery stages permanent in the security gate.
-// This source-only touch launches the formatted branch through the complete CI sequence.
-expect(
-  "admin overview preserves successful metrics and exposes retry",
-  adminOverview.includes("const [hasLoaded, setHasLoaded]") &&
-    adminOverview.includes("const requestIdRef = useRef(0)") &&
-    adminOverview.includes("const loadMetrics = useCallback") &&
-    adminOverview.includes("error && !hasLoaded") &&
-    adminOverview.includes("onAction={() => void loadMetrics()}") &&
-    !/setError\(result\.error\.message\);[\s\S]{0,160}setMetrics\(EMPTY_METRICS\)/.test(
-      adminOverview,
-    ),
-);
-expect(
-  "pending listing queue preserves successful data and deduplicates decisions",
-  adminPending.includes("const [hasLoaded, setHasLoaded]") &&
-    adminPending.includes("const loadRequestIdRef = useRef(0)") &&
-    adminPending.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
-    adminPending.includes("actionInFlightRef.current.has(actionKey)") &&
-    adminPending.includes("imagesError") &&
-    adminPending.includes("onRetryImages") &&
-    !/setError\(result\.error\);[\s\S]{0,120}setListings\(\[\]\)/.test(adminPending),
-);
-expect(
-  "listing report queue separates load and action failures",
-  adminReports.includes("const [hasLoaded, setHasLoaded]") &&
-    adminReports.includes("const [loadError, setLoadError]") &&
-    adminReports.includes("const [actionMessage, setActionMessage]") &&
-    adminReports.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
-    adminReports.includes("loadError && !hasLoaded") &&
-    !/setLoadError\(result\.error\);[\s\S]{0,120}setReports\(\[\]\)/.test(adminReports),
-);
-expect(
-  "seller review queue preserves data and deduplicates moderation",
-  adminReviews.includes("const [hasLoaded, setHasLoaded]") &&
-    adminReviews.includes("const [loadError, setLoadError]") &&
-    adminReviews.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
-    adminReviews.includes("actionInFlightRef.current.has(review.id)") &&
-    adminReviews.includes("loadError && !hasLoaded") &&
-    !/setLoadError\(result\.error\);[\s\S]{0,120}setReviews\(\[\]\)/.test(adminReviews),
-);
-expect(
-  "message report queue preserves data and deduplicates moderation",
-  adminMessageReports.includes("const [hasLoaded, setHasLoaded]") &&
-    adminMessageReports.includes("const [loadError, setLoadError]") &&
-    adminMessageReports.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
-    adminMessageReports.includes("actionInFlightRef.current.has(report.id)") &&
-    adminMessageReports.includes("loadError && !hasLoaded") &&
-    !/setLoadError\(result\.error\);[\s\S]{0,120}setReports\(\[\]\)/.test(adminMessageReports),
-);
-expect(
-  "user management separates load and action errors and deduplicates sensitive writes",
-  adminUsers.includes("const [hasLoaded, setHasLoaded]") &&
-    adminUsers.includes("const [loadError, setLoadError]") &&
-    adminUsers.includes("const [actionError, setActionError]") &&
-    adminUsers.includes("const actionInFlightRef = useRef(false)") &&
-    adminUsers.includes("if (actionInFlightRef.current) return") &&
-    adminUsers.includes("const refreshUsers = useCallback") &&
-    adminUsers.includes("loadError && !hasLoaded") &&
-    adminUsers.includes("finally {") &&
-    !/setLoadError\(result\.error\.message\);[\s\S]{0,120}setUsers\(\[\]\)/.test(adminUsers),
-);
+test("owner-only operations are enforced for the most sensitive workspaces", () => {
+  assert.match(campaigns, /roles\.includes\("owner"\)|hasOwnerRole/);
+  assert.match(taxonomyReview, /roles\.includes\("owner"\)/);
+  assert.match(dataQuality, /roles\.includes\("owner"\)/);
+  assert.match(admin, /requireAdminRole\(auth, "owner"\)/);
+});
 
-expect(
-  "listing console preserves data and deduplicates decisions",
-  adminListings.includes("const [hasLoaded, setHasLoaded]") &&
-    adminListings.includes("const loadRequestIdRef = useRef(0)") &&
-    adminListings.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
-    adminListings.includes("actionInFlightRef.current.has(actionKey)") &&
-    adminListings.includes("loadError && !hasLoaded") &&
-    !/setLoadError\(result\.error\.message\);[\s\S]{0,120}setListings\(\[\]\)/.test(adminListings),
-);
-expect(
-  "verification moderation recovers reads documents and actions independently",
-  adminVerifications.includes("const [hasLoaded, setHasLoaded]") &&
-    adminVerifications.includes("const [documentErrors, setDocumentErrors]") &&
-    adminVerifications.includes("const documentInFlightRef = useRef<Set<string>>(new Set())") &&
-    adminVerifications.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
-    adminVerifications.includes("loadError && !hasLoaded") &&
-    !/setLoadError\(result\.error\);[\s\S]{0,120}setRequests\(\[\]\)/.test(adminVerifications),
-);
-expect(
-  "promotion moderation decouples receipts and sensitive actions",
-  adminPromotions.includes("const [hasLoaded, setHasLoaded]") &&
-    adminPromotions.includes("async function loadReceipt") &&
-    adminPromotions.includes("const receiptInFlightRef = useRef<Set<string>>(new Set())") &&
-    adminPromotions.includes("const actionInFlightRef = useRef<Set<string>>(new Set())") &&
-    adminPromotions.includes("loadError && !hasLoaded") &&
-    !adminPromotions.includes("const receiptEntries = await Promise.all"),
-);
-expect(
-  "audit pagination retries and deduplicates without losing entries",
-  adminAudit.includes("const [hasLoaded, setHasLoaded]") &&
-    adminAudit.includes("const requestIdRef = useRef(0)") &&
-    adminAudit.includes("const loadMoreInFlightRef = useRef(false)") &&
-    adminAudit.includes("const byId = new Map") &&
-    adminAudit.includes("loadError && !hasLoaded") &&
-    !/setLoadError\(result\.error\.message\);[\s\S]{0,120}setEntries\(\[\]\)/.test(adminAudit),
-);
-expect(
-  "owner controls preserve state and deduplicate emergency writes",
-  adminOwnerControls.includes("const [hasLoaded, setHasLoaded]") &&
-    adminOwnerControls.includes("const [loadError, setLoadError]") &&
-    adminOwnerControls.includes("const [actionError, setActionError]") &&
-    adminOwnerControls.includes(
-      "const toggleInFlightRef = useRef<Set<OwnerSystemControlKey>>(new Set())",
-    ) &&
-    adminOwnerControls.includes("toggleInFlightRef.current.has(control.key)") &&
-    adminOwnerControls.includes("loadError && !hasLoaded"),
-);
-expect(
-  "ad placement management separates loading uploads and mutations",
-  adminAdPlacements.includes("const [hasLoaded, setHasLoaded]") &&
-    adminAdPlacements.includes("const [loadError, setLoadError]") &&
-    adminAdPlacements.includes("const [actionError, setActionError]") &&
-    adminAdPlacements.includes("const mutationInFlightRef = useRef(false)") &&
-    adminAdPlacements.includes("const uploadInFlightRef = useRef(false)") &&
-    adminAdPlacements.includes("loadError && !hasLoaded") &&
-    adminAdPlacements.includes("finally {"),
-);
+test("administrative mutations produce audit records", () => {
+  for (const source of auditedModules) {
+    assert.match(source, /INSERT INTO audit_logs/);
+  }
+  assert.match(governanceMigration, /CREATE TABLE(?: IF NOT EXISTS)? safety_cases/);
+  assert.match(governanceMigration, /CREATE TABLE(?: IF NOT EXISTS)? taxonomy_mapping_queue/);
+  assert.match(governanceMigration, /CREATE TABLE(?: IF NOT EXISTS)? listing_data_quality_issues/);
+});
 
-for (const permission of [
-  "canManageUsers",
-  "canModerateListings",
-  "canManageReports",
-  "canManageReviews",
-  "canManageVerifications",
-  "canManagePromotions",
-  "canManageAdPlacements",
-  "canManageAdCampaigns",
-  "canViewAuditLogs",
-  "canManageSystemSettings",
-]) {
-  expect(`role matrix declares ${permission}`, authTypes.includes(`${permission}: boolean`));
-}
-
-expect("sensitive migrations enable RLS", /enable row level security/i.test(migrations));
-expect("owner-sensitive RPCs recheck owner", migrations.includes("current_user_has_role('owner')"));
-expect("stale write guards exist", /stale_[a-z_]+/i.test(migrations));
-expect("sensitive mutations write audit events", migrations.includes("rawaj_insert_audit_log"));
-
-const primaryTargets = ["/", "/categories", "/add-listing", "/chats", "/more"];
-for (const target of primaryTargets) {
-  expect(`bottom navigation preserves ${target}`, bottomDock.includes(`to: "${target}"`));
-}
-expect("admin routes remain outside public navigation", primaryNavigation.includes('"/admin"'));
-
-if (failures.length > 0) {
-  process.stderr.write("Admin security regression failed:\n\n");
-  for (const failure of failures) process.stderr.write(`- ${failure}\n`);
-  process.exit(1);
-}
-
-process.stdout.write(`Admin security regression passed (${assertions} invariants).\n`);
+test("verification documents remain private and admin-scoped", () => {
+  assert.match(verification, /\/v1\/admin\/verifications/);
+  assert.match(verification, /canManage\(auth\.roles\)/);
+  assert.match(verification, /document_asset_id/);
+  assert.doesNotMatch(verification, /getPublicUrl|createSignedUrl|supabase/i);
+});

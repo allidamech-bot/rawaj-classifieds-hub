@@ -1,9 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-
 const combiningMarks = /\p{M}/gu;
 const arabicTatweel = /\u0640/g;
 const whitespace = /\s+/g;
-const normalizedSearchSupport = new WeakMap<SupabaseClient, boolean>();
 
 export function normalizeArabicSearchTerm(value: string): string {
   return value
@@ -21,17 +18,10 @@ export function normalizeArabicSearchTerm(value: string): string {
     .trim();
 }
 
-export async function supportsNormalizedListingSearch(client: SupabaseClient): Promise<boolean> {
-  const cached = normalizedSearchSupport.get(client);
-  if (cached !== undefined) return cached;
-
-  try {
-    const { error } = await client.from("listings").select("search_text_normalized").limit(0);
-    const supported = !error;
-    normalizedSearchSupport.set(client, supported);
-    return supported;
-  } catch {
-    normalizedSearchSupport.set(client, false);
-    return false;
-  }
+/**
+ * D1 search support is part of the Worker contract, so callers no longer probe
+ * database columns from the browser. The parameter remains for source compatibility.
+ */
+export async function supportsNormalizedListingSearch(_retiredClient?: unknown): Promise<boolean> {
+  return true;
 }

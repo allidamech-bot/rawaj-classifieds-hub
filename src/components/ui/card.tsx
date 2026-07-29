@@ -3,18 +3,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const cardVariants = cva("rounded-[var(--rawaj-radius-card)] border text-card-foreground", {
-  variants: {
-    variant: {
-      default: "border-border bg-card shadow-[var(--shadow-soft)]",
-      flat: "border-border bg-card shadow-none",
-      subtle: "border-border bg-muted-surface shadow-none",
-      elevated:
-        "border-[var(--rawaj-border-strong)] bg-[var(--rawaj-surface-elevated)] shadow-[var(--shadow-raised)]",
+const cardVariants = cva(
+  "rounded-[var(--rawaj-radius-card)] border text-[var(--rawaj-text-primary)]",
+  {
+    variants: {
+      variant: {
+        default:
+          "border-[var(--rawaj-border)] bg-[var(--rawaj-card-background)] shadow-[var(--shadow-soft)]",
+        flat: "border-[var(--rawaj-border)] bg-[var(--rawaj-card-background)] shadow-none",
+        subtle: "border-[var(--rawaj-border)] bg-[var(--rawaj-muted-surface)] shadow-none",
+        elevated:
+          "border-[var(--rawaj-border-strong)] bg-[var(--rawaj-elevated-background)] shadow-[var(--shadow-raised)]",
+      },
     },
+    defaultVariants: { variant: "default" },
   },
-  defaultVariants: { variant: "default" },
-});
+);
 
 export interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof cardVariants> {
@@ -51,7 +55,7 @@ const CardTitle = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivE
     <div
       ref={ref}
       className={cn(
-        "font-display font-bold leading-snug tracking-tight text-foreground",
+        "font-display font-bold leading-snug tracking-tight text-[var(--rawaj-text-primary)]",
         className,
       )}
       {...props}
@@ -64,7 +68,7 @@ const CardDescription = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HT
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("text-sm leading-6 text-muted-foreground", className)}
+      className={cn("text-sm leading-6 text-[var(--rawaj-text-muted)]", className)}
       {...props}
     />
   ),

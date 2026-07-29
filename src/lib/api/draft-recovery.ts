@@ -1,7 +1,9 @@
-import { mapListing } from "@/lib/api/listings";
-import { readReferences } from "@/lib/api/references";
-import { getClient, mapError } from "@/lib/api/shared";
-import type { ClassifiedListing, ClassifiedsResult } from "@/lib/classifieds-types";
+import type {
+  ClassifiedListing,
+  ClassifiedsErrorCode,
+  ClassifiedsResult,
+} from "@/lib/classifieds-types";
+import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 
 export interface RecoverableDraft {
   listing: ClassifiedListing;
@@ -11,96 +13,31 @@ export interface RecoverableDraft {
 export async function fetchLatestRecoverableOwnerDraft(
   userId: string | null,
 ): Promise<ClassifiedsResult<RecoverableDraft | null>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: {
-        code: "auth_required",
-        message: "يجب تسجيل الدخول لاسترجاع المسودة.",
-      },
-    };
-  }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const references = await readReferences(clientResult.data);
-  if (!references.ok) return { ok: false, error: references.error };
-
-  const { data, error } = await clientResult.data
-    .from("listings")
-    .select("*")
-    .eq("owner_id", userId)
-    .eq("status", "draft")
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) return { ok: false, error: mapError(error) };
-  if (!data) return { ok: true, data: null };
-
-  const listing = mapListing(
-    data as Record<string, unknown>,
-    references.categories,
-    references.governorates,
-  );
-
-  return {
-    ok: true,
-    data: {
-      listing,
-      lastSavedAt: listing.updatedAt,
-    },
-  };
+  if (!userId) return failure("auth_required", "يجب تسجيل الدخول لاسترجاع المسودة.");
+  const result = await cloudflareApiRequest<ClassifiedListing[]>("/v1/account/listings");
+  if (!result.ok) return failure(result.code as ClassifiedsErrorCode, result.error);
+  const draft = [...result.data]
+    .filter((listing) => listing.status === "draft")
+    .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0];
+  return { ok: true, data: draft ? { listing: draft, lastSavedAt: draft.updatedAt } : null };
 }
 
 export async function discardRecoverableOwnerDraft(
   userId: string | null,
   listingId: string,
 ): Promise<ClassifiedsResult<null>> {
-  if (!userId) {
-    return {
-      ok: false,
-      error: {
-        code: "auth_required",
-        message: "يجب تسجيل الدخول لحذف المسودة.",
-      },
-    };
-  }
+  if (!userId) return failure("auth_required", "يجب تسجيل الدخول لحذف المسودة.");
+  const cleanId = listingId.trim();
+  if (!cleanId) return failure("validation_error", "تعذر تحديد المسودة المطلوبة.");
+  const result = await cloudflareApiRequest<{ success: boolean }>(
+    `/v1/listings/${encodeURIComponent(cleanId)}`,
+    { method: "DELETE", body: {} },
+  );
+  return result.ok
+    ? { ok: true, data: null }
+    : failure(result.code as ClassifiedsErrorCode, result.error);
+}
 
-  const cleanListingId = listingId.trim();
-  if (!cleanListingId) {
-    return {
-      ok: false,
-      error: {
-        code: "validation_error",
-        message: "تعذر تحديد المسودة المطلوبة.",
-      },
-    };
-  }
-
-  const clientResult = getClient();
-  if (!clientResult.ok) return clientResult;
-
-  const { data, error } = await clientResult.data
-    .from("listings")
-    .delete()
-    .eq("id", cleanListingId)
-    .eq("owner_id", userId)
-    .eq("status", "draft")
-    .select("id")
-    .maybeSingle();
-
-  if (error) return { ok: false, error: mapError(error) };
-  if (!data) {
-    return {
-      ok: false,
-      error: {
-        code: "not_found",
-        message: "المسودة غير موجودة أو لم تعد قابلة للحذف.",
-      },
-    };
-  }
-
-  return { ok: true, data: null };
+function failure<T>(code: ClassifiedsErrorCode, message: string): ClassifiedsResult<T> {
+  return { ok: false, error: { code, message } };
 }

@@ -1,8 +1,6 @@
-import { normalizeAdPlacementMediaUrl } from "@/lib/ad-placement-media-url";
-import { getClient, mapError, rowNumber, rowString } from "@/lib/api/shared";
 import type { AdPlacementPage } from "@/lib/api/ad-placements";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
-import { publicSupabase } from "@/lib/supabase";
+import { fetchCloudflareAdPlacements } from "@/lib/public-data/cloudflare-client";
 
 export type AdPlacementDevice = "mobile" | "desktop";
 
@@ -126,7 +124,7 @@ export async function fetchActiveAdPlacements(
   if (pending) return pending;
 
   const requestGeneration = activePlacementCacheGeneration;
-  const request = loadActiveAdPlacements(placementPage, device).then((result) => {
+  const request = fetchCloudflareAdPlacements(placementPage, device).then((result) => {
     activePlacementRequests.delete(cacheKey);
     if (result.ok && requestGeneration === activePlacementCacheGeneration) {
       activePlacementCache.set(cacheKey, {
@@ -139,41 +137,4 @@ export async function fetchActiveAdPlacements(
 
   activePlacementRequests.set(cacheKey, request);
   return request;
-}
-
-async function loadActiveAdPlacements(
-  placementPage: AdPlacementPage,
-  device: AdPlacementDevice,
-): Promise<ClassifiedsResult<PublicAdPlacement[]>> {
-  const client =
-    publicSupabase ??
-    (() => {
-      const clientResult = getClient();
-      return clientResult.ok ? clientResult.data : null;
-    })();
-  if (!client) {
-    const clientResult = getClient();
-    return clientResult.ok
-      ? { ok: false, error: { code: "unknown", message: "تعذر تحميل المساحة الإعلانية." } }
-      : clientResult;
-  }
-
-  const { data, error } = await client.rpc("rawaj_fetch_active_ad_placements", {
-    p_placement_page: placementPage,
-    p_device: device,
-  });
-
-  if (error) return { ok: false, error: mapError(error) };
-
-  return {
-    ok: true,
-    data: ((data ?? []) as Record<string, unknown>[])
-      .map((row) => ({
-        id: rowString(row, "id"),
-        imageUrl: normalizeAdPlacementMediaUrl(rowString(row, "image_url")),
-        destinationUrl: rowString(row, "destination_url"),
-        priority: rowNumber(row, "priority"),
-      }))
-      .filter((placement) => placement.id && placement.imageUrl && placement.destinationUrl),
-  };
 }

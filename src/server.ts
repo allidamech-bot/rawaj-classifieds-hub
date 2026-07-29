@@ -59,17 +59,23 @@ function isVercelPreviewBuild() {
 
 function buildContentSecurityPolicy(isSecureRequest: boolean, allowVercelPreviewTools: boolean) {
   const scriptSourceDirective = allowVercelPreviewTools
-    ? "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://vercel.live"
-    : "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com";
+    ? "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://vercel.live https://apis.google.com"
+    : "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://apis.google.com";
   const frameSourceDirective = allowVercelPreviewTools
-    ? "frame-src 'self' https://vercel.live"
-    : "frame-src 'none'";
+    ? "frame-src 'self' https://vercel.live https://accounts.google.com https://project-af18fcaf-c46e-4ec5-93a.firebaseapp.com"
+    : "frame-src 'self' https://accounts.google.com https://project-af18fcaf-c46e-4ec5-93a.firebaseapp.com";
   const manifestSourceDirective = allowVercelPreviewTools
     ? "manifest-src 'self' https://vercel.com"
     : "manifest-src 'self'";
+  const localDevelopmentConnectSources = isSecureRequest
+    ? ""
+    : " http://localhost:8787 http://127.0.0.1:8787";
+  const cloudflareApiConnectSource =
+    " https://api.rawa-j.com https://rawaj-classifieds-hub.allidamech.workers.dev https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com";
+
   const connectSourceDirective = allowVercelPreviewTools
-    ? "connect-src 'self' https://*.supabase.co https://*.supabase.com wss://*.supabase.co wss://*.supabase.com https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com https://vercel.live wss://vercel.live"
-    : "connect-src 'self' https://*.supabase.co https://*.supabase.com wss://*.supabase.co wss://*.supabase.com https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com";
+    ? `connect-src 'self'${cloudflareApiConnectSource} https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com https://vercel.live wss://vercel.live${localDevelopmentConnectSources}`
+    : `connect-src 'self'${cloudflareApiConnectSource} https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com${localDevelopmentConnectSources}`;
 
   const directives = [
     "default-src 'self'",
@@ -80,8 +86,8 @@ function buildContentSecurityPolicy(isSecureRequest: boolean, allowVercelPreview
     "form-action 'self'",
     scriptSourceDirective,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: https:",
-    "media-src 'self' blob: https://*.supabase.co https://*.supabase.com",
+    "img-src 'self' data: blob: https:",
+    "media-src 'self' blob: https:",
     "font-src 'self' data: https://fonts.gstatic.com",
     connectSourceDirective,
     manifestSourceDirective,

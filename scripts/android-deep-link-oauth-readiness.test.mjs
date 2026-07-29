@@ -26,7 +26,7 @@ test("native OAuth custom scheme remains package-owned", () => {
   assert.match(manifest, /android:scheme="@string\/custom_url_scheme"/);
 });
 
-test("incoming Android intents are restricted to RAWAJ and the OAuth callback", () => {
+test("incoming Android intents remain restricted to RAWAJ-owned targets", () => {
   assert.match(activity, /TRUSTED_WEB_HOST = "rawa-j\.com"/);
   assert.match(activity, /OAUTH_CALLBACK_PATH = "\/auth\/callback"/);
   assert.match(activity, /TRUSTED_WEB_HOST\.equalsIgnoreCase\(host\)/);
@@ -35,7 +35,10 @@ test("incoming Android intents are restricted to RAWAJ and the OAuth callback", 
   assert.match(activity, /bridge\.getWebView\(\)\.loadUrl\(trustedTarget\.toString\(\)\)/);
 });
 
-test("Google OAuth returns through the canonical callback route", () => {
-  assert.match(auth, /new URL\("\/auth\/callback", window\.location\.origin\)/);
-  assert.match(auth, /redirectTo: callbackUrl\.toString\(\)/);
+test("Google OAuth uses Firebase popup and a sanitized in-app return target", () => {
+  assert.match(auth, /new GoogleAuthProvider\(\)/);
+  assert.match(auth, /signInWithPopup\(firebaseAuth, provider\)/);
+  assert.match(auth, /sanitizeAuthReturnTo\(returnTo, "\/more"\)/);
+  assert.match(auth, /window\.location\.assign\(safeReturnTo\)/);
+  assert.doesNotMatch(auth, /redirectTo:\s*callbackUrl/);
 });

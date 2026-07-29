@@ -1,12 +1,10 @@
 import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Eye, EyeOff, Lock, LogIn, ShieldCheck, UserPlus } from "lucide-react";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
-import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { PageHeader } from "@/components/PageHeader";
 import { AuthExperienceAside, AuthExperienceHeader } from "@/features/account/AccountExperience";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { sanitizeAuthReturnTo } from "@/lib/auth-return";
-import { supabase } from "@/lib/supabase";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -91,7 +89,7 @@ function GoogleButton({ returnTo }: { returnTo: string }) {
         {text("المتابعة باستخدام Google", "Continue with Google")}
       </button>
       {error && (
-        <p className="mt-2 rounded-xl bg-destructive/10 p-2 text-xs font-bold text-destructive">
+        <p className="rawaj-auth-state mt-2 p-2" data-tone="error" role="alert">
           {error}
         </p>
       )}
@@ -116,12 +114,14 @@ function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
   const submitInFlightRef = useRef(false);
 
   function switchMode(nextMode: AuthMode) {
     setMode(nextMode);
     setMessage("");
     setError("");
+    setEmailError("");
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -129,22 +129,21 @@ function LoginPage() {
     if (submitInFlightRef.current) return;
     setMessage("");
     setError("");
-
-    const client = supabase;
-    if (!client) {
-      setError(
-        text(
-          "خدمة الحسابات غير متاحة الآن. يمكنك تصفح الإعلانات والمحاولة لاحقاً.",
-          "Account service is unavailable right now. You can browse listings and try again later.",
-        ),
-      );
-      return;
-    }
+    setEmailError("");
 
     const cleanEmail = email.trim();
     const cleanName = displayName.trim();
     if (!cleanEmail) {
-      setError(text("أدخل بريدك الإلكتروني.", "Enter your email address."));
+      setEmailError(text("أدخل بريدك الإلكتروني.", "Enter your email address."));
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setEmailError(
+        text(
+          "أدخل بريدًا إلكترونيًا صالحًا، مثل name@example.com.",
+          "Enter a valid email address, such as name@example.com.",
+        ),
+      );
       return;
     }
 
@@ -152,14 +151,9 @@ function LoginPage() {
       submitInFlightRef.current = true;
       setSubmitting(true);
       try {
-        const callbackUrl = new URL("/auth/callback", window.location.origin);
-        callbackUrl.searchParams.set("type", "recovery");
-        callbackUrl.searchParams.set("returnTo", returnTo);
-        const { error: resetError } = await client.auth.resetPasswordForEmail(cleanEmail, {
-          redirectTo: callbackUrl.toString(),
-        });
-        if (resetError) {
-          setError(authErrorMessage(resetError, "recovery", text));
+        const resetResult = await auth.requestPasswordReset(cleanEmail);
+        if (resetResult.error) {
+          setError(authErrorMessage({ message: resetResult.error }, "recovery", text));
           return;
         }
         setMessage(
@@ -191,56 +185,30 @@ function LoginPage() {
       return;
     }
 
-    const signupCallbackUrl = new URL("/auth/callback", window.location.origin);
-    signupCallbackUrl.searchParams.set("returnTo", returnTo);
     submitInFlightRef.current = true;
     setSubmitting(true);
     try {
       const result =
         mode === "login"
-          ? await client.auth.signInWithPassword({ email: cleanEmail, password })
-          : await client.auth.signUp({
-              email: cleanEmail,
-              password,
-              options: {
-                emailRedirectTo: signupCallbackUrl.toString(),
-                data: { display_name: cleanName },
-              },
-            });
+          ? await auth.signInWithPassword(cleanEmail, password)
+          : await auth.signUpWithPassword(cleanEmail, password, cleanName);
 
       if (result.error) {
-        setError(authErrorMessage(result.error, mode === "login" ? "login" : "register", text));
-        return;
-      }
-
-      const profileError =
-        result.data.session && result.data.user
-          ? await ensureOwnProfile(client, result.data.user, cleanName)
-          : null;
-      if (profileError) {
         setError(
-          text(
-            "تم تسجيل الدخول، لكن تعذر تجهيز بيانات الحساب الآن. حاول مرة أخرى أو تواصل مع الدعم.",
-            "You are signed in, but account details could not be prepared right now. Try again or contact support.",
+          authErrorMessage(
+            { message: result.error },
+            mode === "login" ? "login" : "register",
+            text,
           ),
         );
         return;
       }
 
       if (mode === "register") {
-        if (result.data.session) {
-          setMessage(
-            text("تم إنشاء الحساب. جارٍ إدخالك إلى رواج.", "Account created. Opening RAWAJ now."),
-          );
-          await navigate({ to: returnTo });
-          return;
-        }
         setMessage(
-          text(
-            "تم إرسال رابط تفعيل الحساب إلى بريدك الإلكتروني. افتح البريد واضغط على رابط التفعيل لإكمال إنشاء الحساب. إذا لم تجد الرسالة خلال دقائق، تحقق من مجلد الرسائل غير المرغوبة / Spam.",
-            "We sent an account activation link to your email. Open your inbox and click the activation link to complete account setup. If you do not see it within a few minutes, check your Spam or Junk folder.",
-          ),
+          text("تم إنشاء الحساب. جارٍ إدخالك إلى رواج.", "Account created. Opening RAWAJ now."),
         );
+        await navigate({ to: returnTo });
         return;
       }
 
@@ -262,39 +230,57 @@ function LoginPage() {
 
   return (
     <>
-      <PageHeader title={text("الحساب", "Account")} />
-      <main className="rawaj-auth-v2 rawaj-auth-premium-v3 container-wide pb-10 pt-3 sm:pt-5">
+      <PageHeader title={text("الحساب", "Account")} titleIsPageHeading={false} />
+      <main className="rawaj-auth-v2 rawaj-auth-premium-v3 rawaj-auth-audit-v12 container-wide mobile-page-bottom pt-3 sm:pt-5">
         <section className="rawaj-auth-layout">
           <AuthExperienceAside mode={mode} />
           <div className="rawaj-auth-card">
             <AuthExperienceHeader mode={mode} />
 
-            <div className="rawaj-auth-tabs">
-              <button
-                type="button"
-                onClick={() => switchMode("login")}
-                data-active={mode === "login"}
+            {mode !== "forgot" ? (
+              <div
+                className="rawaj-auth-tabs"
+                role="tablist"
+                aria-label={text("اختيار نوع الدخول", "Choose account action")}
               >
-                {text("تسجيل الدخول", "Log in")}
-              </button>
-              <button
-                type="button"
-                onClick={() => switchMode("register")}
-                data-active={mode === "register"}
-              >
-                {text("إنشاء حساب", "Register")}
-              </button>
-            </div>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === "login"}
+                  aria-controls="rawaj-auth-form"
+                  onClick={() => switchMode("login")}
+                  data-active={mode === "login"}
+                >
+                  {text("تسجيل الدخول", "Log in")}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === "register"}
+                  aria-controls="rawaj-auth-form"
+                  onClick={() => switchMode("register")}
+                  data-active={mode === "register"}
+                >
+                  {text("إنشاء حساب", "Register")}
+                </button>
+              </div>
+            ) : null}
 
             {auth.status === "authUnavailable" ? (
-              <div className="rounded-[1rem] border border-warning/15 bg-warning/8 p-3.5 text-xs leading-5 text-foreground/90">
+              <div className="rawaj-auth-state p-3.5" data-tone="warning" role="alert">
                 {text(
                   "خدمة الحسابات غير متاحة الآن. يمكنك تصفح الإعلانات والمحاولة لاحقاً.",
                   "Account service is unavailable right now. You can browse listings and try again later.",
                 )}
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-3">
+              <form
+                id="rawaj-auth-form"
+                onSubmit={handleSubmit}
+                className="space-y-3"
+                noValidate
+                aria-busy={submitting}
+              >
                 {mode === "register" && (
                   <FieldLabel label={text("اسم الحساب", "Account name")}>
                     <input
@@ -311,12 +297,22 @@ function LoginPage() {
                 <FieldLabel label={text("البريد الإلكتروني", "Email")}>
                   <input
                     value={email}
-                    onChange={(event) => setEmail(event.target.value)}
+                    onChange={(event) => {
+                      setEmail(event.target.value);
+                      if (emailError) setEmailError("");
+                    }}
                     type="email"
                     autoComplete="email"
                     required
+                    aria-invalid={Boolean(emailError)}
+                    aria-describedby={emailError ? "login-email-error" : undefined}
                     className="input"
                   />
+                  {emailError ? (
+                    <p id="login-email-error" role="alert" className="mt-1.5 text-xs font-medium text-destructive">
+                      {emailError}
+                    </p>
+                  ) : null}
                 </FieldLabel>
 
                 {mode !== "forgot" && (
@@ -334,7 +330,7 @@ function LoginPage() {
                       <button
                         type="button"
                         onClick={() => setPasswordVisible((value) => !value)}
-                        className="absolute inset-y-0 end-0 grid w-11 place-items-center text-muted-foreground"
+                        className="rawaj-auth-password-toggle absolute inset-y-0 end-0 grid w-11 place-items-center"
                         aria-label={
                           passwordVisible
                             ? text("إخفاء كلمة المرور", "Hide password")
@@ -355,14 +351,19 @@ function LoginPage() {
                   <button
                     type="button"
                     onClick={() => switchMode("forgot")}
-                    className="inline-flex rounded-lg px-1 py-1 text-xs font-semibold text-brand-orange transition hover:text-primary"
+                    className="rawaj-auth-forgot-link inline-flex rounded-lg px-1 py-1 font-semibold transition"
                   >
                     {text("نسيت كلمة المرور؟", "Forgot password?")}
                   </button>
                 )}
 
                 {submitting && (
-                  <p className="rounded-[1rem] border border-border/65 bg-card-warm/70 p-2.5 text-xs font-medium text-muted-foreground">
+                  <p
+                    className="rawaj-auth-state p-2.5"
+                    data-tone="loading"
+                    role="status"
+                    aria-live="polite"
+                  >
                     {mode === "forgot"
                       ? text("جارٍ إرسال الرابط", "Sending link")
                       : mode === "login"
@@ -371,17 +372,22 @@ function LoginPage() {
                   </p>
                 )}
                 {message && (
-                  <p className="rounded-[1rem] border border-emerald-trust/15 bg-emerald-trust/8 p-2.5 text-xs font-medium text-emerald-trust">
+                  <p
+                    role="status"
+                    aria-live="polite"
+                    className="rawaj-auth-state p-2.5"
+                    data-tone="success"
+                  >
                     {message}
                   </p>
                 )}
                 {error && (
-                  <p className="rounded-[1rem] border border-destructive/15 bg-destructive/8 p-2.5 text-xs font-medium text-destructive">
+                  <p role="alert" className="rawaj-auth-state p-2.5" data-tone="error">
                     {error}
                   </p>
                 )}
                 {auth.status === "authError" && (
-                  <p className="rounded-[1rem] border border-warning/15 bg-warning/8 p-2.5 text-xs font-medium text-warning">
+                  <p role="alert" className="rawaj-auth-state p-2.5" data-tone="warning">
                     {text(
                       "تعذر فتح الحساب الآن. حاول مرة أخرى.",
                       "Could not open the account right now. Try again.",
@@ -412,7 +418,7 @@ function LoginPage() {
                   <button
                     type="button"
                     onClick={() => switchMode("login")}
-                    className="w-full text-center text-xs font-semibold text-primary transition hover:text-brand-orange"
+                    className="rawaj-auth-back-link flex w-full text-center font-semibold transition"
                   >
                     {text("العودة لتسجيل الدخول", "Back to login")}
                   </button>
@@ -422,12 +428,12 @@ function LoginPage() {
 
             {mode !== "forgot" && (
               <>
-                <div className="relative my-4">
+                <div className="rawaj-auth-divider relative my-4">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-border/80" />
                   </div>
-                  <div className="relative flex justify-center text-[10px] font-semibold text-muted-foreground">
-                    <span className="rounded-full bg-card/90 px-3 py-1">{text("أو", "Or")}</span>
+                  <div className="relative flex justify-center font-semibold text-muted-foreground">
+                    <span className="rounded-full px-3 py-1">{text("أو", "Or")}</span>
                   </div>
                 </div>
                 <GoogleButton returnTo={returnTo} />
@@ -442,10 +448,7 @@ function LoginPage() {
               )}
             </div>
 
-            <Link
-              to="/"
-              className="mt-4 inline-flex text-xs font-semibold text-primary transition hover:text-brand-orange"
-            >
+            <Link to="/" className="rawaj-auth-home-link mt-3 inline-flex font-semibold transition">
               {text("العودة للرئيسية", "Back to home")}
             </Link>
           </div>
@@ -458,37 +461,8 @@ function LoginPage() {
 function FieldLabel({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">{label}</span>
+      <span className="rawaj-auth-field-label mb-1.5 block">{label}</span>
       {children}
     </label>
   );
-}
-
-async function ensureOwnProfile(
-  client: SupabaseClient,
-  user: User,
-  displayName: string,
-): Promise<string | null> {
-  const metadataName =
-    typeof user.user_metadata.display_name === "string" ? user.user_metadata.display_name : null;
-  const { data: existingProfile, error: readError } = await client
-    .from("profiles")
-    .select("id")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (readError) return readError.message;
-  if (existingProfile) return null;
-
-  const { error } = await client.from("profiles").upsert(
-    {
-      id: user.id,
-      email: user.email ?? null,
-      display_name: displayName.trim() || metadataName,
-    },
-    { onConflict: "id", ignoreDuplicates: false },
-  );
-
-  if (!error || error.code === "23505") return null;
-  return error.message;
 }

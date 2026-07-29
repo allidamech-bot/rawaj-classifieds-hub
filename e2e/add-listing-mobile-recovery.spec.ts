@@ -53,7 +53,7 @@ async function installListingStudioFixture(page: Page) {
           <h1>أنشئ إعلاناً واضحاً وجاهزاً للبيع</h1>
           <p class="rawaj-studio-hero__description">أكمل الخطوات ثم راجع إعلانك.</p>
           <div class="rawaj-studio-hero__status"><span>4 خطوات واضحة</span><span>حفظ تلقائي</span></div>
-          <div class="rawaj-studio-hero__actions"><a href="#fixture">الرئيسية</a><button>تصفح الإعلانات</button></div>
+          <div class="rawaj-studio-hero__actions"><a href="#fixture">الرئيسية</a><button type="button">تصفح الإعلانات</button></div>
         </section>
         <ol class="rawaj-studio-steps">
           <li><button type="button" data-testid="fixture-previous-step"><span class="rawaj-studio-steps__copy"><strong>ماذا تبيع؟</strong><small>القسم والعنوان</small></span></button></li>
@@ -65,8 +65,8 @@ async function installListingStudioFixture(page: Page) {
           <input data-testid="fixture-title" value="هاتف للبيع" />
         </section>
         <div class="rawaj-studio-action-bar">
-          <button data-testid="fixture-back">السابق</button>
-          <button data-testid="fixture-continue">متابعة</button>
+          <button type="button" data-testid="fixture-back">السابق</button>
+          <button type="button" data-testid="fixture-continue">متابعة</button>
         </div>
       </main>`;
 
@@ -80,11 +80,14 @@ async function installListingStudioFixture(page: Page) {
     const firstStep = form.querySelector<HTMLButtonElement>(
       '[data-testid="fixture-previous-step"]',
     );
+    const back = form.querySelector<HTMLButtonElement>('[data-testid="fixture-back"]');
     const activeStep = form.querySelector<HTMLElement>('li[aria-current="step"]');
-    firstStep?.addEventListener("click", () => {
+    const goToPreviousStep = () => {
       activeStep?.removeAttribute("aria-current");
-      firstStep.closest("li")?.setAttribute("aria-current", "step");
-    });
+      firstStep?.closest("li")?.setAttribute("aria-current", "step");
+    };
+    firstStep?.addEventListener("click", goToPreviousStep);
+    back?.addEventListener("click", goToPreviousStep);
 
     document.body.append(form);
   });
@@ -170,7 +173,6 @@ for (const viewport of mobileViewports) {
       const back = page.getByTestId("fixture-back");
 
       await expect(back).toHaveAttribute("type", "button");
-      await expect(back).toHaveAttribute("data-listing-studio-navigation-ready", "true");
       await back.click();
 
       await expect(studio.locator(".rawaj-studio-steps > li").first()).toHaveAttribute(

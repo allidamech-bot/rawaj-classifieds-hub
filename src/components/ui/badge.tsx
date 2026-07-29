@@ -8,14 +8,19 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground",
-        secondary: "border-transparent bg-secondary text-secondary-foreground",
-        accent: "border-brand-orange/20 bg-brand-orange/10 text-brand-orange",
-        success: "border-emerald-trust/20 bg-emerald-trust/10 text-emerald-trust",
-        warning: "border-warning/20 bg-warning/10 text-warning",
-        gold: "border-gold/25 bg-gold/12 text-gold-foreground",
-        destructive: "border-transparent bg-destructive text-destructive-foreground",
-        outline: "border-border bg-card text-foreground",
+        default:
+          "border-[var(--rawaj-border)] bg-[var(--rawaj-muted-surface)] text-[var(--rawaj-text-secondary)]",
+        secondary:
+          "border-[var(--rawaj-border)] bg-[var(--rawaj-surface-active)] text-[var(--rawaj-text-primary)]",
+        accent:
+          "border-[#e164b4]/30 bg-[rgba(155,40,111,0.2)] text-[#f6cfe5]",
+        success:
+          "border-emerald-trust/25 bg-emerald-trust/10 text-[#bcebd9]",
+        warning: "border-warning/25 bg-warning/10 text-[#ecd6ac]",
+        gold: "border-gold/25 bg-gold/10 text-[#ecd6ac]",
+        destructive: "border-destructive/30 bg-destructive/14 text-[#ffd4d0]",
+        outline:
+          "border-[var(--rawaj-border-strong)] bg-transparent text-[var(--rawaj-text-primary)]",
       },
     },
     defaultVariants: {

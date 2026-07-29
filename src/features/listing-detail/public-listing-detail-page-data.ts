@@ -44,7 +44,6 @@ export async function loadPublicListingDetailPageData(
 
   const listing = listingResult.data;
   if (!isPublicListingVisible(listing)) return null;
-
   const [
     imagesResult,
     sellerResult,

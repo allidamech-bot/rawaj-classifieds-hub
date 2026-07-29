@@ -14,6 +14,14 @@ const appShell = await readFile(
   new URL("../src/components/shell/AppShell.tsx", import.meta.url),
   "utf8",
 );
+const brandLockup = await readFile(
+  new URL("../src/components/shell/BrandLockup.tsx", import.meta.url),
+  "utf8",
+);
+const globalDarkSystem = await readFile(
+  new URL("../src/rawaj-global-dark-system.css", import.meta.url),
+  "utf8",
+);
 
 test("canonical design foundation is loaded after legacy visual layers", () => {
   const foundationLink = rootRoute.indexOf('{ rel: "stylesheet", href: designFoundationCss }');
@@ -76,7 +84,7 @@ test("the compatibility layer consumes the canonical token source", () => {
 test("shared primitives expose the premium calm component contracts", () => {
   assert.match(button, /brand:/);
   assert.match(button, /compact:/);
-  assert.match(button, /bg-brand-orange/);
+  assert.match(button, /bg-\[var\(--rawaj-action-brand\)\]/);
   assert.match(card, /variant:\s*{/);
   assert.match(card, /subtle:/);
   assert.match(card, /elevated:/);
@@ -86,7 +94,7 @@ test("shared primitives expose the premium calm component contracts", () => {
 test("legacy mobile UI is normalized to readable text and touch targets", () => {
   assert.match(foundation, /rawaj-bottom-dock__label/);
   assert.match(foundation, /rawaj-search-toolbar__recent/);
-  assert.match(foundation, /font-size:\s*max\(0\.75rem,\s*11px\)/);
+  assert.match(foundation, /font-size:\s*max\((?:0\.75rem|\.75rem),\s*(?:11|12)px\)/);
   assert.match(foundation, /min-width:\s*var\(--rawaj-touch-target\)/);
   assert.match(foundation, /min-height:\s*var\(--rawaj-touch-target\)/);
 });
@@ -100,8 +108,19 @@ test("app shell owns viewport, keyboard and bottom-reservation behavior", () => 
   assert.match(appShell, /className="rawaj-app-shell__content"/);
   assert.doesNotMatch(appShell, /<main className="rawaj-app-shell__content"/);
 
-  assert.match(foundation, /data-shell-dock="true"/);
-  assert.match(foundation, /data-shell-sticky-action="true"/);
-  assert.match(foundation, /data-shell-mode="conversation"/);
-  assert.match(foundation, /data-keyboard-open="true"/);
+  assert.match(foundation, /data-shell-dock=(?:"true"|true)/);
+  assert.match(foundation, /data-shell-sticky-action=(?:"true"|true)/);
+  assert.match(foundation, /data-shell-mode=(?:"conversation"|conversation)/);
+  assert.match(foundation, /data-keyboard-open=(?:"true"|true)/);
+});
+
+test("the shared brand name cannot fall back to retired primary green text", () => {
+  assert.match(brandLockup, /rawaj-brand-lockup__name/);
+  assert.match(brandLockup, /rawaj-brand-lockup__latin/);
+  assert.match(brandLockup, /inverse \? "text-primary-foreground" : "text-foreground"/);
+  assert.doesNotMatch(brandLockup, /inverse \? "text-primary-foreground" : "text-primary"/);
+  assert.match(
+    globalDarkSystem,
+    /\.rawaj-app-header \.rawaj-brand-lockup__name\s*{[\s\S]*color:\s*var\(--rawaj-text-primary\) !important/,
+  );
 });

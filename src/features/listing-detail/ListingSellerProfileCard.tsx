@@ -11,6 +11,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SellerFollowButton } from "@/features/retention/SellerFollowButton";
 import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
+import { readableProfileLabel } from "@/lib/readable-profile-text";
 import type { Language } from "@/lib/ui-preferences";
 
 interface ListingSellerProfileCardProps {
@@ -40,6 +41,7 @@ export function ListingSellerProfileCard({
   const joinedLabel = seller?.joinedAt ? formatJoinedDate(seller.joinedAt, language) : null;
   const rating = seller?.ratingSummary?.average;
   const ratingCount = seller?.ratingSummary?.count ?? 0;
+  const sellerLocation = readableProfileLabel(seller?.locationAr);
 
   return (
     <section
@@ -76,7 +78,7 @@ export function ListingSellerProfileCard({
               </span>
             ) : null}
           </div>
-          {seller?.locationAr ? <small>{seller.locationAr}</small> : null}
+          {sellerLocation ? <small>{sellerLocation}</small> : null}
         </div>
       </div>
 
