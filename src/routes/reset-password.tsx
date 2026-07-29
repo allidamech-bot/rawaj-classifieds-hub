@@ -120,31 +120,37 @@ function ResetPasswordPage() {
         to="/login"
         backMode="history"
       />
-      <main className="rawaj-auth-recovery-v3 container-wide pb-24 pt-3 sm:pt-5">
-        <section className="rawaj-hero-surface mx-auto max-w-md rounded-[1.65rem] p-5 sm:rounded-[1.9rem] sm:p-6">
-          <div className="mb-4 flex items-start gap-3">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[1.05rem] bg-primary text-primary-foreground shadow-[0_9px_22px_rgba(16,43,70,0.16)]">
-              <KeyRound className="h-5 w-5 text-gold" />
+      <main className="rawaj-auth-recovery-v4 container-wide mobile-page-bottom pt-3 sm:pt-5">
+        <section className="rawaj-auth-recovery-card mx-auto max-w-md p-5 sm:p-6">
+          <header className="mb-4 flex items-start gap-3">
+            <span className="rawaj-auth-recovery-icon grid h-12 w-12 shrink-0 place-items-center rounded-[1.05rem]">
+              <KeyRound className="h-5 w-5" />
             </span>
             <div>
-              <h1 className="text-base font-bold text-primary sm:text-lg">
-                {text("تعيين كلمة مرور جديدة", "Set a new password")}
-              </h1>
-              <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              <h1>{text("تعيين كلمة مرور جديدة", "Set a new password")}</h1>
+              <p className="mt-1">
                 {text(
                   "اكتب كلمة مرور جديدة لحسابك ثم احفظ التغيير.",
                   "Enter a new password for your account and save the change.",
                 )}
               </p>
             </div>
-          </div>
+          </header>
 
           {checking ? (
-            <div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-4 text-xs leading-6 text-muted-foreground">
+            <div
+              className="rawaj-auth-recovery-state border border-border/70 p-4"
+              role="status"
+              aria-live="polite"
+            >
               {text("جارٍ التحقق من رابط الاستعادة...", "Checking the recovery link...")}
             </div>
           ) : !recoveryReady ? (
-            <div className="rounded-[1.1rem] border border-border/70 bg-card-warm/70 p-4 text-xs leading-6 text-muted-foreground">
+            <div
+              className="rawaj-auth-recovery-state border border-destructive/15 p-4"
+              role="alert"
+              data-tone="error"
+            >
               <p>
                 {error ||
                   text(
@@ -184,12 +190,21 @@ function ResetPasswordPage() {
               />
 
               {error && (
-                <p className="rounded-[1rem] border border-destructive/15 bg-destructive/8 p-2.5 text-xs font-medium text-destructive">
+                <p
+                  role="alert"
+                  className="rawaj-auth-recovery-state border border-destructive/15 p-2.5"
+                  data-tone="error"
+                >
                   {error}
                 </p>
               )}
               {message && (
-                <p className="rounded-[1rem] border border-emerald-trust/15 bg-emerald-trust/8 p-2.5 text-xs font-medium text-emerald-trust">
+                <p
+                  role="status"
+                  aria-live="polite"
+                  className="rawaj-auth-recovery-state border border-emerald-trust/15 p-2.5"
+                  data-tone="success"
+                >
                   {message}
                 </p>
               )}
@@ -232,7 +247,7 @@ function PasswordField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">{label}</span>
+      <span className="mb-1.5 block font-semibold">{label}</span>
       <div className="relative">
         <input
           value={value}
