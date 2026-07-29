@@ -23,6 +23,7 @@ import "../listing-studio-audit-v9.css";
 import "../personal-space-audit-v9.css";
 import "../admin-workspaces-v9.css";
 import "../admin-command-center-v9.css";
+import "../personal-activity-system-v10.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import communicationCenterV3Css from "../communication-center-v3.css?url";
 import messagingV4Css from "../messaging-v4.css?url";
