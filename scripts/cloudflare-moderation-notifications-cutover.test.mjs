@@ -4,7 +4,7 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const [migration, notificationsWorker, notificationsRoute, targetResolution] = await Promise.all([
-  read("cloudflare/d1/migrations/0016_listing_moderation_notification_delivery.sql"),
+  read("cloudflare/d1/migrations/0018_listing_moderation_notification_delivery.sql"),
   read("cloudflare/worker/src/notifications.ts"),
   read("src/routes/notifications.tsx"),
   read("src/lib/api/notification-target-resolution.ts"),
@@ -13,7 +13,10 @@ const [migration, notificationsWorker, notificationsRoute, targetResolution] = a
 test("listing moderation actions emit durable owner notifications", () => {
   assert.match(migration, /AFTER INSERT ON listing_moderation_actions/);
   assert.match(migration, /NEW\.action IN \('approve', 'reject', 'request_changes'\)/);
-  assert.match(migration, /INSERT INTO notifications \(id, user_id, type, title, body, data, created_at\)/);
+  assert.match(
+    migration,
+    /INSERT INTO notifications \(id, user_id, type, title, body, data, created_at\)/,
+  );
   assert.match(migration, /listing\.approved/);
   assert.match(migration, /listing\.rejected/);
   assert.match(migration, /listing\.changes_requested/);
