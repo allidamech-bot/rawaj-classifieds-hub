@@ -51,7 +51,8 @@ for (const viewport of viewports) {
         await page.addStyleTag({
           content: 'aside[data-placement-loading="true"]{display:none!important}',
         });
-        await page.waitForTimeout(250);
+        await expect(page.locator('html[data-rawaj-a11y-ready="true"]')).toHaveCount(1);
+        await page.waitForTimeout(50);
 
         await expectRenderedLayout(page, {
           label: `${viewport.name}:${route.name}`,
