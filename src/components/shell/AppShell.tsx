@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { SiteFooter } from "@/components/SiteFooter";
 import { BottomDock } from "@/components/shell/BottomDock";
 import { resolveAppShellConfig } from "@/lib/primary-navigation";
+import { auditedOverrideStyleHrefs } from "@/lib/route-styles";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface AppShellProps {
@@ -143,6 +144,22 @@ function useAccessibleFieldNameFallbacks(pathname: string) {
   }, [pathname]);
 }
 
+function AuditedOverrideStyles() {
+  return (
+    <>
+      {auditedOverrideStyleHrefs.map((href) => (
+        <link
+          key={href}
+          rel="stylesheet"
+          href={href}
+          precedence="rawaj-audited-overrides"
+          data-rawaj-audited-override="true"
+        />
+      ))}
+    </>
+  );
+}
+
 export function AppShell({
   pathname,
   children,
@@ -158,75 +175,78 @@ export function AppShell({
   useAccessibleFieldNameFallbacks(pathname);
 
   return (
-    <div
-      className={`rawaj-app-shell ${routeClassName}`.trim()}
-      data-shell-mode={config.mode}
-      data-shell-dock={config.showDock}
-      data-shell-footer={config.showFooter}
-      data-shell-header={config.showHeader}
-      data-shell-sticky-action={config.reserveStickyAction}
-      data-keyboard-open={keyboardOpen}
-      data-route-state={isRouteNavigating ? "pending" : "idle"}
-      data-resolved-pathname={pathname}
-      data-pending-pathname={isRouteNavigating ? pendingPathname : undefined}
-      aria-busy={isRouteNavigating}
-    >
-      <div className="rawaj-app-shell__page" data-shell-region="page-canvas">
-        {announcements ? (
-          <div className="rawaj-app-shell__announcements" data-shell-region="announcement-region">
-            {announcements}
+    <>
+      <AuditedOverrideStyles />
+      <div
+        className={`rawaj-app-shell ${routeClassName}`.trim()}
+        data-shell-mode={config.mode}
+        data-shell-dock={config.showDock}
+        data-shell-footer={config.showFooter}
+        data-shell-header={config.showHeader}
+        data-shell-sticky-action={config.reserveStickyAction}
+        data-keyboard-open={keyboardOpen}
+        data-route-state={isRouteNavigating ? "pending" : "idle"}
+        data-resolved-pathname={pathname}
+        data-pending-pathname={isRouteNavigating ? pendingPathname : undefined}
+        aria-busy={isRouteNavigating}
+      >
+        <div className="rawaj-app-shell__page" data-shell-region="page-canvas">
+          {announcements ? (
+            <div className="rawaj-app-shell__announcements" data-shell-region="announcement-region">
+              {announcements}
+            </div>
+          ) : null}
+
+          <div className="rawaj-app-shell__content" data-shell-region="page-content">
+            {children}
+          </div>
+
+          {config.showFooter ? <SiteFooter pathname={pathname} /> : null}
+        </div>
+
+        {isRouteNavigating ? (
+          <div
+            className="rawaj-route-pending-mask"
+            data-shell-region="route-pending-mask"
+            role="status"
+            aria-live="polite"
+            aria-label={text("جاري فتح الصفحة", "Opening page")}
+          >
+            <div className="rawaj-route-pending-mask__content">
+              <span className="rawaj-route-pending-mask__spinner" aria-hidden="true" />
+              <span>{text("جاري فتح الصفحة...", "Opening page...")}</span>
+            </div>
           </div>
         ) : null}
 
-        <div className="rawaj-app-shell__content" data-shell-region="page-content">
-          {children}
-        </div>
-
-        {config.showFooter ? <SiteFooter pathname={pathname} /> : null}
-      </div>
-
-      {isRouteNavigating ? (
         <div
-          className="rawaj-route-pending-mask"
-          data-shell-region="route-pending-mask"
-          role="status"
-          aria-live="polite"
-          aria-label={text("جاري فتح الصفحة", "Opening page")}
-        >
-          <div className="rawaj-route-pending-mask__content">
-            <span className="rawaj-route-pending-mask__spinner" aria-hidden="true" />
-            <span>{text("جاري فتح الصفحة...", "Opening page...")}</span>
-          </div>
-        </div>
-      ) : null}
+          id="rawaj-floating-layer"
+          className="rawaj-app-shell__floating-layer"
+          data-shell-region="floating-layer"
+          aria-hidden="true"
+        />
+        <div
+          id="rawaj-sticky-action-layer"
+          className="rawaj-app-shell__sticky-layer"
+          data-shell-region="sticky-action-region"
+          aria-hidden="true"
+        />
 
-      <div
-        id="rawaj-floating-layer"
-        className="rawaj-app-shell__floating-layer"
-        data-shell-region="floating-layer"
-        aria-hidden="true"
-      />
-      <div
-        id="rawaj-sticky-action-layer"
-        className="rawaj-app-shell__sticky-layer"
-        data-shell-region="sticky-action-region"
-        aria-hidden="true"
-      />
+        <BottomDock pathname={pathname} />
 
-      <BottomDock pathname={pathname} />
-
-      <div
-        id="rawaj-modal-layer"
-        className="rawaj-app-shell__modal-layer"
-        data-shell-region="modal-sheet-region"
-        aria-hidden="true"
-      />
-      <div
-        id="rawaj-toast-layer"
-        className="rawaj-app-shell__toast-layer"
-        data-shell-region="global-toast-region"
-        aria-hidden="true"
-      />
-    </div>
+        <div
+          id="rawaj-modal-layer"
+          className="rawaj-app-shell__modal-layer"
+          data-shell-region="modal-sheet-region"
+          aria-hidden="true"
+        />
+        <div
+          id="rawaj-toast-layer"
+          className="rawaj-app-shell__toast-layer"
+          data-shell-region="global-toast-region"
+          aria-hidden="true"
+        />
+      </div>
+    </>
   );
 }
