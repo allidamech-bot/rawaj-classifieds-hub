@@ -15,6 +15,7 @@ const [
   sheet,
   empty,
   css,
+  cssV2,
 ] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
@@ -28,6 +29,7 @@ const [
   readFile(new URL("../src/features/search/FilterBottomSheet.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/search/SearchEmptyState.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/search-filters-v1.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/search-filters-v2.css", import.meta.url), "utf8"),
 ]);
 
 test("search and filter styles load after adaptive listing cards", () => {
@@ -68,15 +70,23 @@ test("results use compact toolbar, contextual quick filters, and URL-backed view
   assert.match(quickFilters, /Newest/);
 });
 
-test("filter sheet has snap points, fixed apply action, and cancellable draft state", () => {
+test("filter sheet stays fixed while only the options area scrolls", () => {
   assert.match(route, /if \(!referencesLoaded \|\| filtersOpen\) return/);
   assert.match(route, /restoreFilterDraftFromSearch/);
   assert.match(route, /handleFilterSheetOpenChange/);
   assert.match(route, /<FilterBottomSheet/);
   assert.doesNotMatch(route, /fixed inset-0 z-50 bg-background/);
-  assert.match(sheet, /snapPoints=\{\[0\.62, 0\.94\]\}/);
+
+  assert.match(sheet, /dismissible=\{false\}/);
+  assert.match(sheet, /handleOnly/);
+  assert.match(sheet, /data-scroll-mode="content"/);
+  assert.match(sheet, /data-vaul-no-drag/);
+  assert.match(sheet, /overflowY: "auto"/);
+  assert.match(sheet, /touchAction: "pan-y"/);
   assert.match(sheet, /rawaj-filter-sheet__footer/);
   assert.match(sheet, /Apply and show results/);
+  assert.doesNotMatch(sheet, /snapPoints=/);
+  assert.doesNotMatch(sheet, /activeSnapPoint/);
 });
 
 test("filters stay category aware and hide irrelevant fields", () => {
@@ -114,10 +124,12 @@ test("empty results provide useful next actions", () => {
   assert.match(empty, /onReset/);
 });
 
-test("search presentation is responsive and reduced-motion safe", () => {
+test("search presentation is responsive, safe-area aware, and reduced-motion safe", () => {
   assert.match(css, /\.rawaj-results-grid\[data-view="list"\]/);
-  assert.match(css, /height: 94dvh/);
-  assert.match(css, /env\(safe-area-inset-bottom\)/);
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(css, /transition: none/);
+  assert.match(cssV2, /data-scroll-mode="content"/);
+  assert.match(cssV2, /overflow-y: auto !important/);
+  assert.match(cssV2, /touch-action: pan-y !important/);
+  assert.match(cssV2, /env\(safe-area-inset-bottom\)/);
+  assert.match(cssV2, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(cssV2, /scroll-behavior: auto/);
 });
